@@ -47,6 +47,73 @@ __global__ void fp16_gemv_baseline_kernel(
     }
 }
 
+// EXP-0004 candidate. Each workgroup computes one K slice for one output row.
+// The final reduction is intentionally a separate small kernel so the
+// benchmark measures the complete logical GEMV rather than only the enlarged
+// partial-dot grid.
+__global__ void fp16_gemv_k_split_partial_kernel(
+    const __half* weights,
+    const __half* input,
+    float* partials,
+    int m,
+    int k,
+    int workgroups_per_row) {
+    const int workgroup = static_cast<int>(blockIdx.x);
+    const int row = workgroup / workgroups_per_row;
+    const int split = workgroup % workgroups_per_row;
+    if (row >= m) {
+        return;
+    }
+
+    const int columns_per_split = k / workgroups_per_row;
+    const int first_column = split * columns_per_split;
+    const int last_column = split + 1 == workgroups_per_row
+                                ? k
+                                : first_column + columns_per_split;
+    const std::size_t row_offset = static_cast<std::size_t>(row)
+                                   * static_cast<std::size_t>(k);
+    float sum = 0.0F;
+    for (int column = first_column + static_cast<int>(threadIdx.x);
+         column < last_column;
+         column += static_cast<int>(blockDim.x)) {
+        sum += __half2float(weights[row_offset + static_cast<std::size_t>(column)])
+               * __half2float(input[static_cast<std::size_t>(column)]);
+    }
+
+    __shared__ float split_partials[kThreadsPerBlock];
+    split_partials[threadIdx.x] = sum;
+    __syncthreads();
+    for (unsigned int stride = kThreadsPerBlock / 2; stride > 0; stride /= 2) {
+        if (threadIdx.x < stride) {
+            split_partials[threadIdx.x] += split_partials[threadIdx.x + stride];
+        }
+        __syncthreads();
+    }
+    if (threadIdx.x == 0) {
+        partials[static_cast<std::size_t>(row) * workgroups_per_row + split]
+            = split_partials[0];
+    }
+}
+
+__global__ void fp16_gemv_k_split_finalize_kernel(
+    const float* partials,
+    __half* output,
+    int m,
+    int workgroups_per_row) {
+    const int row = static_cast<int>(blockIdx.x) * static_cast<int>(blockDim.x)
+                    + static_cast<int>(threadIdx.x);
+    if (row >= m) {
+        return;
+    }
+    float sum = 0.0F;
+    const std::size_t row_offset = static_cast<std::size_t>(row)
+                                   * static_cast<std::size_t>(workgroups_per_row);
+    for (int split = 0; split < workgroups_per_row; ++split) {
+        sum += partials[row_offset + static_cast<std::size_t>(split)];
+    }
+    output[row] = __float2half_rn(sum);
+}
+
 // DIAGNOSTIC ONLY. This intentionally stops after the per-thread dot-product
 // and exposes partials, allowing EXP-0003 to estimate reduction/synchronization
 // cost. It is not a candidate implementation because it changes the output
@@ -100,6 +167,45 @@ void launch_fp16_gemv_baseline(
         output,
         m,
         k);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_fp16_gemv_k_split(
+    const __half* weights,
+    const __half* input,
+    __half* output,
+    float* partials,
+    int m,
+    int k,
+    int workgroups_per_row,
+    hipStream_t stream) {
+    if ((workgroups_per_row != 2 && workgroups_per_row != 4)
+        || k <= 0 || k % workgroups_per_row != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(
+        fp16_gemv_k_split_partial_kernel,
+        dim3(static_cast<unsigned int>(m * workgroups_per_row)),
+        dim3(kThreadsPerBlock),
+        kThreadsPerBlock * sizeof(float),
+        stream,
+        weights,
+        input,
+        partials,
+        m,
+        k,
+        workgroups_per_row);
+    MIINFER_HIP_CHECK(hipGetLastError());
+    hipLaunchKernelGGL(
+        fp16_gemv_k_split_finalize_kernel,
+        dim3(static_cast<unsigned int>((m + kThreadsPerBlock - 1) / kThreadsPerBlock)),
+        dim3(kThreadsPerBlock),
+        0,
+        stream,
+        partials,
+        output,
+        m,
+        workgroups_per_row);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

@@ -36,12 +36,18 @@ bool run_shape(const miinfer::GemvShape& shape) {
     __half* device_weights = nullptr;
     __half* device_input = nullptr;
     __half* device_output = nullptr;
+    float* device_partials = nullptr;
     const std::size_t weight_bytes = weights.size() * sizeof(__half);
     const std::size_t input_bytes = input.size() * sizeof(__half);
     const std::size_t output_bytes = static_cast<std::size_t>(shape.m) * sizeof(__half);
     MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&device_weights), weight_bytes));
     MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&device_input), input_bytes));
     MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&device_output), output_bytes));
+    if (shape.k % 4 == 0) {
+        MIINFER_HIP_CHECK(hipMalloc(
+            reinterpret_cast<void**>(&device_partials),
+            static_cast<std::size_t>(shape.m) * 4 * sizeof(float)));
+    }
     MIINFER_HIP_CHECK(
         hipMemcpy(device_weights, weights.data(), weight_bytes, hipMemcpyHostToDevice));
     MIINFER_HIP_CHECK(hipMemcpy(device_input, input.data(), input_bytes, hipMemcpyHostToDevice));
@@ -53,6 +59,22 @@ bool run_shape(const miinfer::GemvShape& shape) {
     MIINFER_HIP_CHECK(
         hipMemcpy(output.data(), device_output, output_bytes, hipMemcpyDeviceToHost));
     const bool miinfer_pass = check_output("miinfer-baseline", shape, output, reference);
+
+    bool k_split_pass = true;
+    if (device_partials != nullptr) {
+        for (const int splits : {2, 4}) {
+            miinfer::launch_fp16_gemv_k_split(
+                device_weights, device_input, device_output, device_partials,
+                shape.m, shape.k, splits);
+            MIINFER_HIP_CHECK(hipDeviceSynchronize());
+            MIINFER_HIP_CHECK(
+                hipMemcpy(output.data(), device_output, output_bytes, hipMemcpyDeviceToHost));
+            k_split_pass = check_output(
+                              (std::string("miinfer-k-split-") + std::to_string(splits)).c_str(),
+                              shape, output, reference)
+                           && k_split_pass;
+        }
+    }
 
     miinfer::RocblasGemmHandle handle;
     std::string error;
@@ -74,7 +96,10 @@ bool run_shape(const miinfer::GemvShape& shape) {
     MIINFER_HIP_CHECK(hipFree(device_output));
     MIINFER_HIP_CHECK(hipFree(device_input));
     MIINFER_HIP_CHECK(hipFree(device_weights));
-    return miinfer_pass && rocblas_pass;
+    if (device_partials != nullptr) {
+        MIINFER_HIP_CHECK(hipFree(device_partials));
+    }
+    return miinfer_pass && k_split_pass && rocblas_pass;
 }
 
 }  // namespace
@@ -97,6 +122,7 @@ int main(int argc, char**) {
     const std::vector<miinfer::GemvShape> small_shapes = {
         {"small-tail", "small indexing/tail test", 7, 13},
         {"m-tail", "non-multiple workgroup test", 257, 37},
+        {"k-split-tail", "K-split indexing/tail test", 11, 20},
     };
     for (const auto& shape : small_shapes) {
         passed = run_shape(shape) && passed;

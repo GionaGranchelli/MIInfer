@@ -58,6 +58,20 @@ void launch_fp16_gemv_baseline(
     int k,
     hipStream_t stream = nullptr);
 
+// EXP-0004 candidate: split each output-row reduction across multiple
+// workgroups, then combine the partial sums in a separate final kernel.
+// The caller owns partials[M * workgroups_per_row] and must include both
+// dispatches when measuring the logical GEMV.
+void launch_fp16_gemv_k_split(
+    const __half* weights,
+    const __half* input,
+    __half* output,
+    float* partials,
+    int m,
+    int k,
+    int workgroups_per_row,
+    hipStream_t stream = nullptr);
+
 // DIAGNOSTIC ONLY: performs the same per-thread dot-product work as the
 // baseline, then writes one partial per thread instead of reducing to output.
 // The extra partial writes are reported as a diagnostic artifact, not a
