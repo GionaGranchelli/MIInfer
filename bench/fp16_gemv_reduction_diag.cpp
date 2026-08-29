@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <numeric>
@@ -22,6 +23,7 @@ struct Options {
     int warmup = 10;
     int iterations = 1000;
     int device = -1;
+    std::string json_output;
 };
 
 bool positive(const char* text, int& value) {
@@ -48,6 +50,8 @@ bool parse(int argc, char** argv, Options& options) {
             if (!positive(argv[++i], options.iterations)) return false;
         } else if (arg == "--device") {
             if (!nonnegative(argv[++i], options.device)) return false;
+        } else if (arg == "--json-output") {
+            options.json_output = argv[++i];
         } else {
             return false;
         }
@@ -154,7 +158,14 @@ int main(int argc, char** argv) {
     MIINFER_HIP_CHECK(hipMemcpy(device_input, input.data(), input.size() * sizeof(__half), hipMemcpyHostToDevice));
     const double full_us = time_full(device_weights, device_input, device_output, options.m, options.k, options.iterations, options.warmup);
     const double dot_us = time_dot_only(device_weights, device_input, device_partials, options.m, options.k, options.iterations, options.warmup);
-    std::cout << std::fixed << std::setprecision(6)
+    std::ofstream file;
+    std::ostream* output = &std::cout;
+    if (!options.json_output.empty()) {
+        file.open(options.json_output);
+        if (!file) return 1;
+        output = &file;
+    }
+    *output << std::fixed << std::setprecision(6)
               << "{\"experiment\":\"EXP-0003\",\"diagnostic\":\"reduction-overhead\","
               << "\"classification\":\"DIAGNOSTIC — NOT A PERFORMANCE CANDIDATE\","
               << "\"m\":" << options.m << ",\"k\":" << options.k
