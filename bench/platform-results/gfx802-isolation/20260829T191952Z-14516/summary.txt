@@ -1,0 +1,13 @@
+gfx802 isolation diagnostic
+===========================
+target_bdf: 0000:03:00.0
+gfx906_only_rocminfo_verdict: PASS
+gfx906_only_rocminfo_log: /home/fedora-workstation/Development/mi50/bench/platform-results/gfx802-isolation/20260829T191952Z-14516/gfx906-only-rocminfo.log
+gfx906_only_miinfer_device_info_log: /home/fedora-workstation/Development/mi50/bench/platform-results/gfx802-isolation/20260829T191952Z-14516/gfx906-only-mi50-device-info.log
+gfx906_only_release_ctest_log: /home/fedora-workstation/Development/mi50/bench/platform-results/gfx802-isolation/20260829T191952Z-14516/gfx906-only-release-ctest.log
+
+Interpretation:
+- PASS means rocminfo printed gfx906 without the observed HSA/no-device errors.
+- This is the gfx802-unbound half of the A/B test; post-cleanup results are captured by the EXIT trap.
+- With --leave-unbound, reboot after the script finishes to restore the normal two-GPU state.
+- Review raw logs and topology files before marking the root cause confirmed.
