@@ -397,6 +397,30 @@
       "source_location": "L29"
     },
     {
+      "id": "include_miinfer_hip_check_hip_check",
+      "label": "hip_check()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "DeviceInfo",
+      "file_type": "code",
+      "norm_label": "hip_check()",
+      "source_file": "include/miinfer/hip_check.hpp",
+      "source_location": "L26"
+    },
+    {
+      "id": "include_miinfer_hip_check_hip_check_failed",
+      "label": "hip_check_failed()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "DeviceInfo",
+      "file_type": "code",
+      "norm_label": "hip_check_failed()",
+      "source_file": "include/miinfer/hip_check.hpp",
+      "source_location": "L11"
+    },
+    {
       "id": "src_device_validation_inspect_device",
       "label": "inspect_device()",
       "_callable": true,
@@ -563,30 +587,6 @@
       "norm_label": "usage()",
       "source_file": "bench/memory_stream_bench.cpp",
       "source_location": "L45"
-    },
-    {
-      "id": "include_miinfer_hip_check_hip_check",
-      "label": "hip_check()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 36,
-      "community_name": "memory_stream_bench.cpp",
-      "file_type": "code",
-      "norm_label": "hip_check()",
-      "source_file": "include/miinfer/hip_check.hpp",
-      "source_location": "L26"
-    },
-    {
-      "id": "include_miinfer_hip_check_hip_check_failed",
-      "label": "hip_check_failed()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 36,
-      "community_name": "memory_stream_bench.cpp",
-      "file_type": "code",
-      "norm_label": "hip_check_failed()",
-      "source_file": "include/miinfer/hip_check.hpp",
-      "source_location": "L11"
     },
     {
       "id": "src_fp16_gemv_reference_evaluate_fp16_gemv",
@@ -6382,6 +6382,17 @@
       "source_location": "L23"
     },
     {
+      "id": "hiperror_t",
+      "label": "hipError_t",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "DeviceInfo",
+      "file_type": "code",
+      "norm_label": "hiperror_t",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
       "id": "include_miinfer_device_validation",
       "label": "device_validation.hpp",
       "_origin": "ast",
@@ -6457,6 +6468,17 @@
       "norm_label": "string",
       "source_file": "",
       "source_location": ""
+    },
+    {
+      "id": "include_miinfer_hip_check",
+      "label": "hip_check.hpp",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "DeviceInfo",
+      "file_type": "code",
+      "norm_label": "hip_check.hpp",
+      "source_file": "include/miinfer/hip_check.hpp",
+      "source_location": "L1"
     },
     {
       "id": "include_miinfer_vector_add",
@@ -7137,28 +7159,6 @@
       "norm_label": "warmup",
       "source_file": "bench/memory_stream_bench.cpp",
       "source_location": "L25"
-    },
-    {
-      "id": "hiperror_t",
-      "label": "hipError_t",
-      "_origin": "ast",
-      "community": 36,
-      "community_name": "memory_stream_bench.cpp",
-      "file_type": "code",
-      "norm_label": "hiperror_t",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "include_miinfer_hip_check",
-      "label": "hip_check.hpp",
-      "_origin": "ast",
-      "community": 36,
-      "community_name": "memory_stream_bench.cpp",
-      "file_type": "code",
-      "norm_label": "hip_check.hpp",
-      "source_file": "include/miinfer/hip_check.hpp",
-      "source_location": "L1"
     },
     {
       "id": "include_miinfer_memory_stream",
@@ -9251,196 +9251,220 @@
       "source_location": "L57"
     },
     {
-      "id": "docs_reference_baseline",
-      "label": "reference-baseline.md",
+      "id": "experiments_exp_0004_fp16_gemv_k_split_parallelism",
+      "label": "EXP-0004-fp16-gemv-k-split-parallelism.md",
       "_origin": "ast",
       "community": 56,
-      "community_name": "External gfx906 Reference Baseline",
+      "community_name": "EXP-0004 \u2014 FP16 GEMV K-Split Parallelism",
       "file_type": "document",
       "node_kind": "page",
-      "norm_label": "reference-baseline.md",
-      "source_file": "docs/reference-baseline.md",
+      "norm_label": "exp-0004-fp16-gemv-k-split-parallelism.md",
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
       "source_location": "L1"
     },
     {
-      "id": "docs_reference_baseline_baseline_status",
-      "label": "Baseline status",
+      "id": "experiments_exp_0004_fp16_gemv_k_split_parallelism_10_test_matrix",
+      "label": "10. Test Matrix",
       "_origin": "ast",
       "community": 56,
-      "community_name": "External gfx906 Reference Baseline",
+      "community_name": "EXP-0004 \u2014 FP16 GEMV K-Split Parallelism",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "baseline status",
-      "source_file": "docs/reference-baseline.md",
-      "source_location": "L99"
+      "norm_label": "10. test matrix",
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L112"
     },
     {
-      "id": "docs_reference_baseline_checkout",
-      "label": "Checkout",
+      "id": "experiments_exp_0004_fp16_gemv_k_split_parallelism_11_correctness_method",
+      "label": "11. Correctness Method",
       "_origin": "ast",
       "community": 56,
-      "community_name": "External gfx906 Reference Baseline",
+      "community_name": "EXP-0004 \u2014 FP16 GEMV K-Split Parallelism",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "checkout",
-      "source_file": "docs/reference-baseline.md",
-      "source_location": "L21"
+      "norm_label": "11. correctness method",
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L123"
     },
     {
-      "id": "docs_reference_baseline_external_gfx906_reference_baseline",
-      "label": "External gfx906 Reference Baseline",
+      "id": "experiments_exp_0004_fp16_gemv_k_split_parallelism_12_benchmark",
+      "label": "12. Benchmark",
       "_origin": "ast",
       "community": 56,
-      "community_name": "External gfx906 Reference Baseline",
+      "community_name": "EXP-0004 \u2014 FP16 GEMV K-Split Parallelism",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "external gfx906 reference baseline",
-      "source_file": "docs/reference-baseline.md",
-      "source_location": "L1"
+      "norm_label": "12. benchmark",
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L131"
     },
     {
-      "id": "docs_reference_baseline_initial_baseline",
-      "label": "Initial baseline",
+      "id": "experiments_exp_0004_fp16_gemv_k_split_parallelism_13_acceptance",
+      "label": "13. Acceptance",
       "_origin": "ast",
       "community": 56,
-      "community_name": "External gfx906 Reference Baseline",
+      "community_name": "EXP-0004 \u2014 FP16 GEMV K-Split Parallelism",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "initial baseline",
-      "source_file": "docs/reference-baseline.md",
-      "source_location": "L111"
+      "norm_label": "13. acceptance",
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L142"
     },
     {
-      "id": "docs_reference_baseline_mi50_build_starting_point",
-      "label": "MI50 build starting point",
+      "id": "experiments_exp_0004_fp16_gemv_k_split_parallelism_14_explicit_exclusions",
+      "label": "14. Explicit Exclusions",
       "_origin": "ast",
       "community": 56,
-      "community_name": "External gfx906 Reference Baseline",
+      "community_name": "EXP-0004 \u2014 FP16 GEMV K-Split Parallelism",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "mi50 build starting point",
-      "source_file": "docs/reference-baseline.md",
-      "source_location": "L31"
+      "norm_label": "14. explicit exclusions",
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L160"
     },
     {
-      "id": "docs_reference_baseline_option_validation_on_the_available_host",
-      "label": "Option validation on the available host",
+      "id": "experiments_exp_0004_fp16_gemv_k_split_parallelism_15_decision",
+      "label": "15. Decision",
       "_origin": "ast",
       "community": 56,
-      "community_name": "External gfx906 Reference Baseline",
+      "community_name": "EXP-0004 \u2014 FP16 GEMV K-Split Parallelism",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "option validation on the available host",
-      "source_file": "docs/reference-baseline.md",
-      "source_location": "L59"
+      "norm_label": "15. decision",
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L166"
     },
     {
-      "id": "docs_reference_baseline_pin",
-      "label": "Pin",
+      "id": "experiments_exp_0004_fp16_gemv_k_split_parallelism_16_follow_up",
+      "label": "16. Follow-up",
       "_origin": "ast",
       "community": 56,
-      "community_name": "External gfx906 Reference Baseline",
+      "community_name": "EXP-0004 \u2014 FP16 GEMV K-Split Parallelism",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "pin",
-      "source_file": "docs/reference-baseline.md",
-      "source_location": "L8"
+      "norm_label": "16. follow-up",
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L170"
     },
     {
-      "id": "docs_reference_baseline_toolchain_preflight_record",
-      "label": "Toolchain preflight record",
+      "id": "experiments_exp_0004_fp16_gemv_k_split_parallelism_1_question",
+      "label": "1. Question",
       "_origin": "ast",
       "community": 56,
-      "community_name": "External gfx906 Reference Baseline",
+      "community_name": "EXP-0004 \u2014 FP16 GEMV K-Split Parallelism",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "toolchain preflight record",
-      "source_file": "docs/reference-baseline.md",
-      "source_location": "L86"
+      "norm_label": "1. question",
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L10"
     },
     {
-      "id": "docs_current_state_completed",
-      "label": "Completed",
+      "id": "experiments_exp_0004_fp16_gemv_k_split_parallelism_2_hypothesis",
+      "label": "2. Hypothesis",
       "_origin": "ast",
-      "community": 57,
-      "community_name": "Current Project Status",
+      "community": 56,
+      "community_name": "EXP-0004 \u2014 FP16 GEMV K-Split Parallelism",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "completed",
-      "source_file": "docs/current-state.md",
+      "norm_label": "2. hypothesis",
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L16"
+    },
+    {
+      "id": "experiments_exp_0004_fp16_gemv_k_split_parallelism_3_motivation",
+      "label": "3. Motivation",
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "EXP-0004 \u2014 FP16 GEMV K-Split Parallelism",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "3. motivation",
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L23"
+    },
+    {
+      "id": "experiments_exp_0004_fp16_gemv_k_split_parallelism_4_source_prior_art",
+      "label": "4. Source / Prior Art",
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "EXP-0004 \u2014 FP16 GEMV K-Split Parallelism",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "4. source / prior art",
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L38"
+    },
+    {
+      "id": "experiments_exp_0004_fp16_gemv_k_split_parallelism_5_target_bottleneck",
+      "label": "5. Target Bottleneck",
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "EXP-0004 \u2014 FP16 GEMV K-Split Parallelism",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "5. target bottleneck",
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
       "source_location": "L43"
     },
     {
-      "id": "docs_current_state_completed_in_task_3",
-      "label": "Completed in Task 3",
+      "id": "experiments_exp_0004_fp16_gemv_k_split_parallelism_6_baseline",
+      "label": "6. Baseline",
       "_origin": "ast",
-      "community": 57,
-      "community_name": "Current Project Status",
+      "community": 56,
+      "community_name": "EXP-0004 \u2014 FP16 GEMV K-Split Parallelism",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "completed in task 3",
-      "source_file": "docs/current-state.md",
-      "source_location": "L66"
+      "norm_label": "6. baseline",
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L51"
     },
     {
-      "id": "docs_current_state_current_project_status",
-      "label": "Current Project Status",
+      "id": "experiments_exp_0004_fp16_gemv_k_split_parallelism_7_candidate",
+      "label": "7. Candidate",
       "_origin": "ast",
-      "community": 57,
-      "community_name": "Current Project Status",
+      "community": 56,
+      "community_name": "EXP-0004 \u2014 FP16 GEMV K-Split Parallelism",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "current project status",
-      "source_file": "docs/current-state.md",
-      "source_location": "L41"
+      "norm_label": "7. candidate",
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L67"
     },
     {
-      "id": "docs_current_state_not_implemented",
-      "label": "Not implemented",
+      "id": "experiments_exp_0004_fp16_gemv_k_split_parallelism_8_hardware",
+      "label": "8. Hardware",
       "_origin": "ast",
-      "community": 57,
-      "community_name": "Current Project Status",
+      "community": 56,
+      "community_name": "EXP-0004 \u2014 FP16 GEMV K-Split Parallelism",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "not implemented",
-      "source_file": "docs/current-state.md",
-      "source_location": "L87"
+      "norm_label": "8. hardware",
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L84"
     },
     {
-      "id": "docs_current_state_current_scope",
-      "label": "Current Scope",
+      "id": "experiments_exp_0004_fp16_gemv_k_split_parallelism_9_model_workload",
+      "label": "9. Model / Workload",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "Current Scope",
+      "community": 56,
+      "community_name": "EXP-0004 \u2014 FP16 GEMV K-Split Parallelism",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "current scope",
-      "source_file": "docs/current-state.md",
-      "source_location": "L331"
+      "norm_label": "9. model / workload",
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L98"
     },
     {
-      "id": "docs_current_state_in_scope_now",
-      "label": "In scope now",
+      "id": "experiments_exp_0004_fp16_gemv_k_split_parallelism_exp_0004_fp16_gemv_k_split_parallelism",
+      "label": "EXP-0004 \u2014 FP16 GEMV K-Split Parallelism",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "Current Scope",
+      "community": 56,
+      "community_name": "EXP-0004 \u2014 FP16 GEMV K-Split Parallelism",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "in scope now",
-      "source_file": "docs/current-state.md",
-      "source_location": "L333"
-    },
-    {
-      "id": "docs_current_state_not_in_scope_now",
-      "label": "Not in scope now",
-      "_origin": "ast",
-      "community": 58,
-      "community_name": "Current Scope",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "not in scope now",
-      "source_file": "docs/current-state.md",
-      "source_location": "L344"
+      "norm_label": "exp-0004 \u2014 fp16 gemv k-split parallelism",
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L1"
     },
     {
       "id": "codex_skills_graphify_references_add_watch",
@@ -9503,6 +9527,30 @@
       "source_location": "L1"
     },
     {
+      "id": "docs_current_state_completed",
+      "label": "Completed",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "current-state.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "completed",
+      "source_file": "docs/current-state.md",
+      "source_location": "L43"
+    },
+    {
+      "id": "docs_current_state_completed_in_task_3",
+      "label": "Completed in Task 3",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "current-state.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "completed in task 3",
+      "source_file": "docs/current-state.md",
+      "source_location": "L66"
+    },
+    {
       "id": "docs_current_state_current_benchmark_priority",
       "label": "Current Benchmark Priority",
       "_origin": "ast",
@@ -9536,7 +9584,7 @@
       "node_kind": "heading",
       "norm_label": "current correctness policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L280"
+      "source_location": "L285"
     },
     {
       "id": "docs_current_state_current_dependency_policy",
@@ -9560,7 +9608,7 @@
       "node_kind": "heading",
       "norm_label": "current experiment queue",
       "source_file": "docs/current-state.md",
-      "source_location": "L248"
+      "source_location": "L253"
     },
     {
       "id": "docs_current_state_current_hardware_observation_requirements",
@@ -9572,7 +9620,7 @@
       "node_kind": "heading",
       "norm_label": "current hardware observation requirements",
       "source_file": "docs/current-state.md",
-      "source_location": "L311"
+      "source_location": "L316"
     },
     {
       "id": "docs_current_state_current_hardware_target",
@@ -9596,7 +9644,7 @@
       "node_kind": "heading",
       "norm_label": "current performance policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L296"
+      "source_location": "L301"
     },
     {
       "id": "docs_current_state_current_phase",
@@ -9609,6 +9657,18 @@
       "norm_label": "current phase",
       "source_file": "docs/current-state.md",
       "source_location": "L16"
+    },
+    {
+      "id": "docs_current_state_current_project_status",
+      "label": "Current Project Status",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "current-state.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "current project status",
+      "source_file": "docs/current-state.md",
+      "source_location": "L41"
     },
     {
       "id": "docs_current_state_current_reference_strategy",
@@ -9635,6 +9695,18 @@
       "source_location": "L190"
     },
     {
+      "id": "docs_current_state_current_scope",
+      "label": "Current Scope",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "current-state.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "current scope",
+      "source_file": "docs/current-state.md",
+      "source_location": "L336"
+    },
+    {
       "id": "docs_current_state_definition_of_current_success",
       "label": "Definition of Current Success",
       "_origin": "ast",
@@ -9644,7 +9716,7 @@
       "node_kind": "heading",
       "norm_label": "definition of current success",
       "source_file": "docs/current-state.md",
-      "source_location": "L397"
+      "source_location": "L402"
     },
     {
       "id": "docs_current_state_do_not_start_yet",
@@ -9656,7 +9728,7 @@
       "node_kind": "heading",
       "norm_label": "do not start yet",
       "source_file": "docs/current-state.md",
-      "source_location": "L363"
+      "source_location": "L368"
     },
     {
       "id": "docs_current_state_first_major_gate",
@@ -9668,7 +9740,7 @@
       "node_kind": "heading",
       "norm_label": "first major gate",
       "source_file": "docs/current-state.md",
-      "source_location": "L270"
+      "source_location": "L275"
     },
     {
       "id": "docs_current_state_immediate_deliverables",
@@ -9695,6 +9767,18 @@
       "source_location": "L109"
     },
     {
+      "id": "docs_current_state_in_scope_now",
+      "label": "In scope now",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "current-state.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "in scope now",
+      "source_file": "docs/current-state.md",
+      "source_location": "L338"
+    },
+    {
       "id": "docs_current_state_last_updated",
       "label": "Last Updated",
       "_origin": "ast",
@@ -9704,7 +9788,7 @@
       "node_kind": "heading",
       "norm_label": "last updated",
       "source_file": "docs/current-state.md",
-      "source_location": "L421"
+      "source_location": "L426"
     },
     {
       "id": "docs_current_state_miinfer_current_state",
@@ -9728,7 +9812,139 @@
       "node_kind": "heading",
       "norm_label": "next implementation task",
       "source_file": "docs/current-state.md",
-      "source_location": "L384"
+      "source_location": "L389"
+    },
+    {
+      "id": "docs_current_state_not_implemented",
+      "label": "Not implemented",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "current-state.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "not implemented",
+      "source_file": "docs/current-state.md",
+      "source_location": "L87"
+    },
+    {
+      "id": "docs_current_state_not_in_scope_now",
+      "label": "Not in scope now",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "current-state.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "not in scope now",
+      "source_file": "docs/current-state.md",
+      "source_location": "L349"
+    },
+    {
+      "id": "docs_reference_baseline",
+      "label": "reference-baseline.md",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "current-state.md",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "reference-baseline.md",
+      "source_file": "docs/reference-baseline.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_reference_baseline_baseline_status",
+      "label": "Baseline status",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "current-state.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "baseline status",
+      "source_file": "docs/reference-baseline.md",
+      "source_location": "L99"
+    },
+    {
+      "id": "docs_reference_baseline_checkout",
+      "label": "Checkout",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "current-state.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "checkout",
+      "source_file": "docs/reference-baseline.md",
+      "source_location": "L21"
+    },
+    {
+      "id": "docs_reference_baseline_external_gfx906_reference_baseline",
+      "label": "External gfx906 Reference Baseline",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "current-state.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "external gfx906 reference baseline",
+      "source_file": "docs/reference-baseline.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_reference_baseline_initial_baseline",
+      "label": "Initial baseline",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "current-state.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "initial baseline",
+      "source_file": "docs/reference-baseline.md",
+      "source_location": "L111"
+    },
+    {
+      "id": "docs_reference_baseline_mi50_build_starting_point",
+      "label": "MI50 build starting point",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "current-state.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "mi50 build starting point",
+      "source_file": "docs/reference-baseline.md",
+      "source_location": "L31"
+    },
+    {
+      "id": "docs_reference_baseline_option_validation_on_the_available_host",
+      "label": "Option validation on the available host",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "current-state.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "option validation on the available host",
+      "source_file": "docs/reference-baseline.md",
+      "source_location": "L59"
+    },
+    {
+      "id": "docs_reference_baseline_pin",
+      "label": "Pin",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "current-state.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "pin",
+      "source_file": "docs/reference-baseline.md",
+      "source_location": "L8"
+    },
+    {
+      "id": "docs_reference_baseline_toolchain_preflight_record",
+      "label": "Toolchain preflight record",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "current-state.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "toolchain preflight record",
+      "source_file": "docs/reference-baseline.md",
+      "source_location": "L86"
     },
     {
       "id": "codex_skills_graphify_references_hooks",
@@ -18299,7 +18515,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L248",
+      "source_location": "L253",
       "weight": 1.0
     },
     {
@@ -18310,7 +18526,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L270",
+      "source_location": "L275",
       "weight": 1.0
     },
     {
@@ -18332,7 +18548,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L280",
+      "source_location": "L285",
       "weight": 1.0
     },
     {
@@ -18343,7 +18559,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L296",
+      "source_location": "L301",
       "weight": 1.0
     },
     {
@@ -18354,7 +18570,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L311",
+      "source_location": "L316",
       "weight": 1.0
     },
     {
@@ -18365,7 +18581,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L331",
+      "source_location": "L336",
       "weight": 1.0
     },
     {
@@ -18376,7 +18592,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L363",
+      "source_location": "L368",
       "weight": 1.0
     },
     {
@@ -18387,7 +18603,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L384",
+      "source_location": "L389",
       "weight": 1.0
     },
     {
@@ -18398,7 +18614,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L397",
+      "source_location": "L402",
       "weight": 1.0
     },
     {
@@ -18420,7 +18636,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L421",
+      "source_location": "L426",
       "weight": 1.0
     },
     {
@@ -18464,7 +18680,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L333",
+      "source_location": "L338",
       "weight": 1.0
     },
     {
@@ -18475,7 +18691,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L344",
+      "source_location": "L349",
       "weight": 1.0
     },
     {
@@ -23649,6 +23865,193 @@
       "weight": 1.0
     },
     {
+      "source": "experiments_exp_0004_fp16_gemv_k_split_parallelism",
+      "target": "experiments_exp_0004_fp16_gemv_k_split_parallelism_exp_0004_fp16_gemv_k_split_parallelism",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0004_fp16_gemv_k_split_parallelism_exp_0004_fp16_gemv_k_split_parallelism",
+      "target": "experiments_exp_0004_fp16_gemv_k_split_parallelism_1_question",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0004_fp16_gemv_k_split_parallelism_exp_0004_fp16_gemv_k_split_parallelism",
+      "target": "experiments_exp_0004_fp16_gemv_k_split_parallelism_10_test_matrix",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L112",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0004_fp16_gemv_k_split_parallelism_exp_0004_fp16_gemv_k_split_parallelism",
+      "target": "experiments_exp_0004_fp16_gemv_k_split_parallelism_11_correctness_method",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L123",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0004_fp16_gemv_k_split_parallelism_exp_0004_fp16_gemv_k_split_parallelism",
+      "target": "experiments_exp_0004_fp16_gemv_k_split_parallelism_12_benchmark",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L131",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0004_fp16_gemv_k_split_parallelism_exp_0004_fp16_gemv_k_split_parallelism",
+      "target": "experiments_exp_0004_fp16_gemv_k_split_parallelism_13_acceptance",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L142",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0004_fp16_gemv_k_split_parallelism_exp_0004_fp16_gemv_k_split_parallelism",
+      "target": "experiments_exp_0004_fp16_gemv_k_split_parallelism_2_hypothesis",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0004_fp16_gemv_k_split_parallelism_exp_0004_fp16_gemv_k_split_parallelism",
+      "target": "experiments_exp_0004_fp16_gemv_k_split_parallelism_14_explicit_exclusions",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L160",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0004_fp16_gemv_k_split_parallelism_exp_0004_fp16_gemv_k_split_parallelism",
+      "target": "experiments_exp_0004_fp16_gemv_k_split_parallelism_15_decision",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L166",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0004_fp16_gemv_k_split_parallelism_exp_0004_fp16_gemv_k_split_parallelism",
+      "target": "experiments_exp_0004_fp16_gemv_k_split_parallelism_16_follow_up",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L170",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0004_fp16_gemv_k_split_parallelism_exp_0004_fp16_gemv_k_split_parallelism",
+      "target": "experiments_exp_0004_fp16_gemv_k_split_parallelism_3_motivation",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0004_fp16_gemv_k_split_parallelism_exp_0004_fp16_gemv_k_split_parallelism",
+      "target": "experiments_exp_0004_fp16_gemv_k_split_parallelism_4_source_prior_art",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L38",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0004_fp16_gemv_k_split_parallelism_exp_0004_fp16_gemv_k_split_parallelism",
+      "target": "experiments_exp_0004_fp16_gemv_k_split_parallelism_5_target_bottleneck",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L43",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0004_fp16_gemv_k_split_parallelism_exp_0004_fp16_gemv_k_split_parallelism",
+      "target": "experiments_exp_0004_fp16_gemv_k_split_parallelism_6_baseline",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L51",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0004_fp16_gemv_k_split_parallelism_exp_0004_fp16_gemv_k_split_parallelism",
+      "target": "experiments_exp_0004_fp16_gemv_k_split_parallelism_7_candidate",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L67",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0004_fp16_gemv_k_split_parallelism_exp_0004_fp16_gemv_k_split_parallelism",
+      "target": "experiments_exp_0004_fp16_gemv_k_split_parallelism_8_hardware",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L84",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0004_fp16_gemv_k_split_parallelism_exp_0004_fp16_gemv_k_split_parallelism",
+      "target": "experiments_exp_0004_fp16_gemv_k_split_parallelism_9_model_workload",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L98",
+      "weight": 1.0
+    },
+    {
       "source": "experiments_template",
       "target": "experiments_template_exp_xxxx_experiment_title",
       "relation": "contains",
@@ -25498,5 +25901,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "345ff89d87dde34743fe904feed8e9696d25a3f7"
+  "built_at_commit": "b2492216e90429012d6b4e0ed9d9ab8f07788813"
 }

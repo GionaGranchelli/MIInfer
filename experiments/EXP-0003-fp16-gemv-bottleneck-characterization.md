@@ -222,15 +222,37 @@ not available because the host lacks a compatible profiler.
 
 ## Next experiment
 
-The single recommended specialization hypothesis is **different
-rows-per-workgroup geometry** for K/V, targeting `M=1024, K=4096`, with Q/O
-as a guard shape. The mechanism is to increase independent row work per
-dispatched workgroup and reduce the small-grid regime's per-row scheduling and
-synchronization exposure while preserving the numerical contract.
+The single recommended specialization hypothesis is **K-split parallelism:
+multiple workgroups per output row** for K/V, targeting `M=1024, K=4096`, with
+Q/O as a guard shape.
 
-Expected effect: move K/V toward the measured 32 MiB streaming regime without
-regressing Q/O. Reject if K/V median does not improve by at least 10%, Q/O
-regresses by more than 5%, or any correctness metric fails. This candidate is
-not implemented here. A compatible ROCm profiler should be exposed before
-accepting that follow-up so the external kernel contribution can also be
-measured.
+The M-sweep shows that the baseline becomes substantially more efficient as
+the number of independent output-row workgroups increases. Grouping multiple
+rows into one workgroup would reduce that grid size, so it is not the first
+test implied by the evidence. EXP-0004 instead keeps the real model shape and
+splits each row's K reduction across multiple workgroups:
+
+```text
+A: 1 WG/row -> 1024 workgroups; accepted EXP-0002 baseline
+B: 2 WG/row -> 2048 workgroups; each workgroup processes K=2048
+C: 4 WG/row -> 4096 workgroups; each workgroup processes K=1024
+```
+
+The timed operation must include both the partial-dot kernels and the final
+small partial-result reduction. The baseline's 256-thread workgroup and
+simple reduction mechanism remain otherwise unchanged. No DPP, swizzle,
+inline ISA, packing, prefetch, or other optimization is part of this
+hypothesis.
+
+Keep the candidate only if the best K/V configuration improves total median
+latency by at least 15%, preserves all existing correctness thresholds,
+requires negligible persistent VRAM, remains stable across five independent
+runs, and has valid hardware state. Q/O is a guard/control and need not
+improve; a Q/O regression is evidence against treating the candidate as a
+universal replacement. Reject if the complete logical GEMV does not meet the
+K/V criterion or if the reduction overhead consumes the apparent first-kernel
+gain.
+
+The missing compatible ROCm profiler remains non-blocking for this isolated
+M1 experiment, but is required before making an M2 or end-to-end claim about
+the real llama.cpp kernel competition.

@@ -238,10 +238,15 @@ The first benchmark families should approximately be:
 5. gfx906-specialized GEMV experiments
 ```
 
-The accepted EXP-0002 baseline is now being characterized in EXP-0003.
+The accepted EXP-0002 baseline has been characterized in EXP-0003. The
+external llama.cpp kernel-share measurement remains a `RETEST` item because a
+compatible ROCm profiler is not installed, but that gap does not block
+isolated M1 kernel experiments. It remains required before an M2 or end-to-end
+claim against the real llama.cpp decode path.
+
 Attention and MoE benchmarks should wait until representative target-model
 shapes and actual bottlenecks are frozen. Quantized GEMV remains queued after
-this control-path characterization.
+the first FP16 specialization hypothesis.
 
 ---
 
@@ -254,13 +259,13 @@ EXP-0001 — benchmark harness validation
 
 EXP-0002 — FP16 GEMV baseline
 
-EXP-0003 — quantized GEMV baseline
+EXP-0003 — FP16 GEMV bottleneck characterization (RETEST: external profiler gap)
 
-EXP-0004 — gfx906-specific Q4 × Q8 GEMV
+EXP-0004 — FP16 K-split parallelism for K/V (PROPOSED)
 
-EXP-0005 — Wave64 vs logical half-wave execution
+EXP-0005 — quantized GEMV baseline
 
-EXP-0006 — kernel-native weight packing
+EXP-0006 — gfx906-specific specialization experiments
 ```
 
 The exact ordering may change based on early measurements.

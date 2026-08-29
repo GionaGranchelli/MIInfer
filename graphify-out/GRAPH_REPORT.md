@@ -1,16 +1,16 @@
 # Graph Report - mi50  (2026-08-29)
 
 ## Corpus Check
-- 57 files · ~58,859 words
+- 58 files · ~59,968 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1061 nodes · 1144 edges · 115 communities (106 shown, 9 thin omitted)
+- 1079 nodes · 1161 edges · 113 communities (104 shown, 9 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `345ff89d`
+- Built from commit: `b2492216`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -71,9 +71,7 @@
 - capture-env.sh
 - 17. Correctness requirements
 - 3. Fundamental engineering rules
-- External gfx906 Reference Baseline
-- Current Project Status
-- Current Scope
+- EXP-0004 — FP16 GEMV K-Split Parallelism
 - graphify reference: add a URL and watch a folder
 - graphify reference: commit hook and native CLAUDE.md integration
 - graphify reference: incremental update and cluster-only
@@ -132,14 +130,14 @@
 ## God Nodes (most connected - your core abstractions)
 1. `MIInfer` - 19 edges
 2. `Options` - 18 edges
-3. `EXP-0003 — FP16 GEMV Bottleneck Characterization` - 15 edges
-4. `EXP-NNNN — Title` - 13 edges
-5. `DeviceInfo` - 12 edges
-6. `What You Must Do When Invoked` - 12 edges
-7. `5. ai-infos/vllm-gfx906-mobydick` - 12 edges
-8. `run_one()` - 11 edges
-9. `3. iacopPBK/llama.cpp-gfx906` - 11 edges
-10. `Fp16GemvMetrics` - 10 edges
+3. `EXP-0004 — FP16 GEMV K-Split Parallelism` - 17 edges
+4. `EXP-0003 — FP16 GEMV Bottleneck Characterization` - 15 edges
+5. `EXP-NNNN — Title` - 13 edges
+6. `DeviceInfo` - 12 edges
+7. `What You Must Do When Invoked` - 12 edges
+8. `5. ai-infos/vllm-gfx906-mobydick` - 12 edges
+9. `run_one()` - 11 edges
+10. `3. iacopPBK/llama.cpp-gfx906` - 11 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `selected_shapes()` --references--> `GemvShape`  [EXTRACTED]
@@ -156,7 +154,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (115 total, 9 thin omitted)
+## Communities (113 total, 9 thin omitted)
 
 ### Community 0 - "hardware.md"
 Cohesion: 0.04
@@ -171,8 +169,8 @@ Cohesion: 0.05
 Nodes (43): 10. Reversed Ordering, 11. Statistics, 12. Performance Delta, 13. Benchmark Stability, 14. Baseline Selection, 15. Baseline Pinning, 16. Model Equivalence, 17. Quantization Equivalence (+35 more)
 
 ### Community 3 - "DeviceInfo"
-Cohesion: 0.08
-Nodes (28): size_t, string, json_escape(), main(), Options, device, elements, iterations (+20 more)
+Cohesion: 0.07
+Nodes (31): size_t, string, json_escape(), main(), Options, device, elements, iterations (+23 more)
 
 ### Community 4 - "EXP-0001-benchmark-harness-validation.md"
 Cohesion: 0.06
@@ -183,8 +181,8 @@ Cohesion: 0.05
 Nodes (38): Architecture direction, Benchmark philosophy, Building, Contributing, Core hypothesis, Correctness before performance, Design principles, Development roadmap (+30 more)
 
 ### Community 6 - "current-state.md"
-Cohesion: 0.10
-Nodes (19): Current Benchmark Priority, Current Build Direction, Current Correctness Policy, Current Dependency Policy, Current Experiment Queue, Current Hardware Observation Requirements, Current Hardware Target, Current Performance Policy (+11 more)
+Cohesion: 0.06
+Nodes (34): Completed, Completed in Task 3, Current Benchmark Priority, Current Build Direction, Current Correctness Policy, Current Dependency Policy, Current Experiment Queue, Current Hardware Observation Requirements (+26 more)
 
 ### Community 7 - "AGENTS.md"
 Cohesion: 0.07
@@ -303,8 +301,8 @@ Cohesion: 0.33
 Nodes (6): 32. Codex task behavior, Before adding abstractions, Before adding fallback behavior, Before declaring a performance win, Before modifying code, Before removing apparently strange gfx906 code
 
 ### Community 36 - "memory_stream_bench.cpp"
-Cohesion: 0.14
-Nodes (19): size_t, string, vector, escape(), main(), median(), Options, bytes (+11 more)
+Cohesion: 0.18
+Nodes (16): size_t, string, vector, escape(), main(), median(), Options, bytes (+8 more)
 
 ### Community 37 - "graphify reference: query, path, explain"
 Cohesion: 0.33
@@ -382,17 +380,9 @@ Nodes (4): 17. Correctness requirements, Level 1 — numerical, Level 2 — laye
 Cohesion: 0.50
 Nodes (4): 3.1 Measure before optimizing, 3.2 Every optimization needs a baseline, 3.3 Negative results are valuable, 3. Fundamental engineering rules
 
-### Community 56 - "External gfx906 Reference Baseline"
-Cohesion: 0.22
-Nodes (8): Baseline status, Checkout, External gfx906 Reference Baseline, Initial baseline, MI50 build starting point, Option validation on the available host, Pin, Toolchain preflight record
-
-### Community 57 - "Current Project Status"
-Cohesion: 0.50
-Nodes (4): Completed, Completed in Task 3, Current Project Status, Not implemented
-
-### Community 58 - "Current Scope"
-Cohesion: 0.67
-Nodes (3): Current Scope, In scope now, Not in scope now
+### Community 56 - "EXP-0004 — FP16 GEMV K-Split Parallelism"
+Cohesion: 0.11
+Nodes (17): 10. Test Matrix, 11. Correctness Method, 12. Benchmark, 13. Acceptance, 14. Explicit Exclusions, 15. Decision, 16. Follow-up, 1. Question (+9 more)
 
 ### Community 59 - "graphify reference: add a URL and watch a folder"
 Cohesion: 0.50
@@ -575,7 +565,7 @@ Cohesion: 0.67
 Nodes (3): 35. Historical failed execution gate — superseded by Section 37, 36. Task 3 Platform-Recovery Pilot, 37. Accepted MI50 execution
 
 ## Knowledge Gaps
-- **761 isolated node(s):** `experiment`, `shape`, `implementation`, `cache_regime`, `custom_label` (+756 more)
+- **777 isolated node(s):** `experiment`, `shape`, `implementation`, `cache_regime`, `custom_label` (+772 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **9 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -583,13 +573,13 @@ Nodes (3): 35. Historical failed execution gate — superseded by Section 37, 36
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `MIInfer` connect `MIInfer` to `roadmap.md`?**
-  _High betweenness centrality (0.051) - this node is a cross-community bridge._
+  _High betweenness centrality (0.050) - this node is a cross-community bridge._
 - **Why does `5. ai-infos/vllm-gfx906-mobydick` connect `5. ai-infos/vllm-gfx906-mobydick` to `references.md`?**
   _High betweenness centrality (0.029) - this node is a cross-community bridge._
 - **Why does `8. anikifoss/llama.cpp-gfx906` connect `8. anikifoss/llama.cpp-gfx906` to `references.md`?**
-  _High betweenness centrality (0.023) - this node is a cross-community bridge._
+  _High betweenness centrality (0.022) - this node is a cross-community bridge._
 - **What connects `experiment`, `shape`, `implementation` to the rest of the system?**
-  _761 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _777 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `hardware.md` be split into smaller, more focused modules?**
   _Cohesion score 0.0425531914893617 - nodes in this community are weakly interconnected._
 - **Should `architecture.md` be split into smaller, more focused modules?**
