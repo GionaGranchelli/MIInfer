@@ -63,7 +63,7 @@ No other GPU architecture is currently supported.
 ## Not implemented
 
 * production C++ runtime
-* HIP kernel library
+* production HIP kernel library beyond the vector-add validation kernel
 * model loading
 * GGUF parsing
 * tensor packing
@@ -106,6 +106,9 @@ The current bootstrap phase should produce:
 * machine-readable benchmark output
 * hardware/environment capture
 * experiment scaffold
+
+The repository-side deliverables are complete. Physical MI50 execution remains
+required for the GPU-specific exit criteria.
 
 ---
 

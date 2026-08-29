@@ -80,8 +80,8 @@ bool parse_options(int argc, char** argv, Options& options, bool& informational)
             std::cerr << "missing value for " << argument << '\n';
             return false;
         }
-        if (argument == "--warmup" && !parse_positive(argv[++index], options.warmup)) {
-            std::cerr << "--warmup must be a positive integer\n";
+        if (argument == "--warmup" && !parse_nonnegative(argv[++index], options.warmup)) {
+            std::cerr << "--warmup must be a non-negative integer\n";
             return false;
         }
         if (argument == "--iterations" && !parse_positive(argv[++index], options.iterations)) {

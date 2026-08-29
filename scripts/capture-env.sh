@@ -78,7 +78,6 @@ for version_file in /opt/rocm/.info/version /opt/rocm/.info/version-dev; do
     fi
 done
 hip_compiler_version="$(first_line hipcc --version)"
-[[ "$rocm_version" != "$unavailable" ]] || rocm_version="$hip_compiler_version"
 
 rocm_smi_text="$unavailable"
 if command -v rocm-smi >/dev/null 2>&1; then
@@ -87,6 +86,13 @@ fi
 rocm_smi_json="$unavailable"
 if command -v rocm-smi >/dev/null 2>&1; then
     rocm_smi_json="$(full_output rocm-smi --json --showproductname --showmeminfo vram --showclocks --showtemp --showpower --showmaxpower)"
+fi
+rocm_smi_json_value='{"status":"UNAVAILABLE"}'
+if command -v jq >/dev/null 2>&1 && [[ "$rocm_smi_json" != "$unavailable" ]]; then
+    normalized_rocm_smi="$(printf '%s' "$rocm_smi_json" | jq -c . 2>/dev/null || true)"
+    if [[ -n "$normalized_rocm_smi" ]]; then
+        rocm_smi_json_value="$normalized_rocm_smi"
+    fi
 fi
 amd_smi_text="$unavailable"
 if command -v amd-smi >/dev/null 2>&1; then
@@ -122,8 +128,8 @@ json_body=$(cat <<EOF
   },
   "gpu": {
     "target_architecture": "gfx906",
-    "rocm_smi_json": $(json_quote "$rocm_smi_json"),
-    "metrics_note": "Parse rocm_smi_json for GPU identity, GFX Version, VRAM, SCLK, MCLK, temperature, power, and power limit; unavailable fields remain UNAVAILABLE."
+    "rocm_smi": $rocm_smi_json_value,
+    "metrics_note": "rocm_smi contains the machine-readable monitoring payload when available; the raw command output remains under software.tools.rocm_smi. Unavailable fields remain UNAVAILABLE."
   }
 }
 EOF
