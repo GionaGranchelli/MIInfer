@@ -1,16 +1,16 @@
 # Graph Report - mi50  (2026-08-29)
 
 ## Corpus Check
-- 56 files · ~57,438 words
+- 57 files · ~58,859 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1045 nodes · 1129 edges · 113 communities (104 shown, 9 thin omitted)
+- 1061 nodes · 1144 edges · 115 communities (106 shown, 9 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `f6963a82`
+- Built from commit: `345ff89d`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -18,7 +18,7 @@
 - hardware.md
 - architecture.md
 - benchmarking.md
-- fp16_gemv_reduction_diag.cpp
+- DeviceInfo
 - EXP-0001-benchmark-harness-validation.md
 - MIInfer
 - current-state.md
@@ -107,11 +107,13 @@
 - run-bench.sh
 - 2. Core hypothesis
 - 10. nick413-bit/gfx906-fa-vllm
+- fp16_gemv_reduction_diag.cpp
 - graphify reference: GitHub clone and cross-repo merge
 - graphify reference: transcribe video and audio
 - D010 — No Silent CPU or Generic Fallback
 - D015 — Repacking Should Not Occur in Hot Paths
 - D026 — Strongest Available Relevant Baseline Wins
+- EXP-0003 — FP16 GEMV Bottleneck Characterization
 - 10. Software Environment
 - 13. Correctness Method
 - 17. Raw Results
@@ -130,14 +132,14 @@
 ## God Nodes (most connected - your core abstractions)
 1. `MIInfer` - 19 edges
 2. `Options` - 18 edges
-3. `EXP-NNNN — Title` - 13 edges
-4. `DeviceInfo` - 12 edges
-5. `What You Must Do When Invoked` - 12 edges
-6. `5. ai-infos/vllm-gfx906-mobydick` - 12 edges
-7. `run_one()` - 11 edges
-8. `3. iacopPBK/llama.cpp-gfx906` - 11 edges
-9. `Fp16GemvMetrics` - 10 edges
-10. `/graphify` - 10 edges
+3. `EXP-0003 — FP16 GEMV Bottleneck Characterization` - 15 edges
+4. `EXP-NNNN — Title` - 13 edges
+5. `DeviceInfo` - 12 edges
+6. `What You Must Do When Invoked` - 12 edges
+7. `5. ai-infos/vllm-gfx906-mobydick` - 12 edges
+8. `run_one()` - 11 edges
+9. `3. iacopPBK/llama.cpp-gfx906` - 11 edges
+10. `Fp16GemvMetrics` - 10 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `selected_shapes()` --references--> `GemvShape`  [EXTRACTED]
@@ -154,7 +156,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (113 total, 9 thin omitted)
+## Communities (115 total, 9 thin omitted)
 
 ### Community 0 - "hardware.md"
 Cohesion: 0.04
@@ -168,9 +170,9 @@ Nodes (43): 10. Memory Architecture, 11. Weight Residency, 12. Tensor Layout, 13
 Cohesion: 0.05
 Nodes (43): 10. Reversed Ordering, 11. Statistics, 12. Performance Delta, 13. Benchmark Stability, 14. Baseline Selection, 15. Baseline Pinning, 16. Model Equivalence, 17. Quantization Equivalence (+35 more)
 
-### Community 3 - "fp16_gemv_reduction_diag.cpp"
-Cohesion: 0.05
-Nodes (48): __half, string, vector, main(), median(), nonnegative(), Options, device (+40 more)
+### Community 3 - "DeviceInfo"
+Cohesion: 0.08
+Nodes (28): size_t, string, json_escape(), main(), Options, device, elements, iterations (+20 more)
 
 ### Community 4 - "EXP-0001-benchmark-harness-validation.md"
 Cohesion: 0.06
@@ -301,8 +303,8 @@ Cohesion: 0.33
 Nodes (6): 32. Codex task behavior, Before adding abstractions, Before adding fallback behavior, Before declaring a performance win, Before modifying code, Before removing apparently strange gfx906 code
 
 ### Community 36 - "memory_stream_bench.cpp"
-Cohesion: 0.18
-Nodes (16): size_t, string, vector, escape(), main(), median(), Options, bytes (+8 more)
+Cohesion: 0.14
+Nodes (19): size_t, string, vector, escape(), main(), median(), Options, bytes (+11 more)
 
 ### Community 37 - "graphify reference: query, path, explain"
 Cohesion: 0.33
@@ -524,6 +526,10 @@ Nodes (3): 2. Core hypothesis, H0, H1
 Cohesion: 0.67
 Nodes (3): 10. nick413-bit/gfx906-fa-vllm, MIInfer implication, Role
 
+### Community 92 - "fp16_gemv_reduction_diag.cpp"
+Cohesion: 0.18
+Nodes (17): __half, string, vector, main(), median(), nonnegative(), Options, device (+9 more)
+
 ### Community 95 - "D010 — No Silent CPU or Generic Fallback"
 Cohesion: 0.67
 Nodes (3): D010 — No Silent CPU or Generic Fallback, Decision, Reason
@@ -535,6 +541,10 @@ Nodes (3): D015 — Repacking Should Not Occur in Hot Paths, Decision, Reason
 ### Community 97 - "D026 — Strongest Available Relevant Baseline Wins"
 Cohesion: 0.67
 Nodes (3): D026 — Strongest Available Relevant Baseline Wins, Decision, Reason
+
+### Community 98 - "EXP-0003 — FP16 GEMV Bottleneck Characterization"
+Cohesion: 0.12
+Nodes (15): Baseline and controls, Bottleneck classification, Cache regime, Decision, EXP-0003 — FP16 GEMV Bottleneck Characterization, Hypothesis and scope, K-scaling diagnostic, M-scaling diagnostic (+7 more)
 
 ### Community 99 - "10. Software Environment"
 Cohesion: 0.67
@@ -565,7 +575,7 @@ Cohesion: 0.67
 Nodes (3): 35. Historical failed execution gate — superseded by Section 37, 36. Task 3 Platform-Recovery Pilot, 37. Accepted MI50 execution
 
 ## Knowledge Gaps
-- **747 isolated node(s):** `experiment`, `shape`, `implementation`, `cache_regime`, `custom_label` (+742 more)
+- **761 isolated node(s):** `experiment`, `shape`, `implementation`, `cache_regime`, `custom_label` (+756 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **9 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -573,13 +583,13 @@ Nodes (3): 35. Historical failed execution gate — superseded by Section 37, 36
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `MIInfer` connect `MIInfer` to `roadmap.md`?**
-  _High betweenness centrality (0.040) - this node is a cross-community bridge._
-- **Why does `3. iacopPBK/llama.cpp-gfx906` connect `3. iacopPBK/llama.cpp-gfx906` to `references.md`?**
-  _High betweenness centrality (0.028) - this node is a cross-community bridge._
+  _High betweenness centrality (0.051) - this node is a cross-community bridge._
 - **Why does `5. ai-infos/vllm-gfx906-mobydick` connect `5. ai-infos/vllm-gfx906-mobydick` to `references.md`?**
+  _High betweenness centrality (0.029) - this node is a cross-community bridge._
+- **Why does `8. anikifoss/llama.cpp-gfx906` connect `8. anikifoss/llama.cpp-gfx906` to `references.md`?**
   _High betweenness centrality (0.023) - this node is a cross-community bridge._
 - **What connects `experiment`, `shape`, `implementation` to the rest of the system?**
-  _747 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _761 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `hardware.md` be split into smaller, more focused modules?**
   _Cohesion score 0.0425531914893617 - nodes in this community are weakly interconnected._
 - **Should `architecture.md` be split into smaller, more focused modules?**

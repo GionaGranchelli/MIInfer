@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788037721.60748,
-    "seen": 1788038568.66648,
-    "ast_hash": "b23e76b0a2d529335bddce1269b68ee9",
+    "mtime": 1788039296.66927,
+    "seen": 1788039398.4747245,
+    "ast_hash": "e1733270499475dc46456f3a30e88b45",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -357,6 +357,12 @@
     "mtime": 1788038864.6122577,
     "seen": 1788038870.0195026,
     "ast_hash": "34998d9c955b15c8f2f44ad620995eca",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0003-fp16-gemv-bottleneck-characterization.md": {
+    "mtime": 1788039354.7990024,
+    "seen": 1788039398.47474,
+    "ast_hash": "fc6a05b258e7ff16c20741007221c026",
     "semantic_hash": ""
   }
 }

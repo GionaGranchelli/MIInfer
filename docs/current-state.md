@@ -61,6 +61,7 @@ No other GPU architecture is currently supported.
 * official Qwen3-8B dense-control revision and exact configuration record
 * Qwen3-8B projection-shape record for EXP-0002
 * EXP-0002 FP16 GEMV baseline scaffold
+* EXP-0003 FP16 GEMV bottleneck characterization diagnostics
 
 ## Completed in Task 3
 
@@ -109,8 +110,9 @@ been implemented.
 
 The immediate technical objective is:
 
-> Establish correctness and performance baselines for FP16 GEMV on the exact
-> Qwen3-8B projection shapes before introducing gfx906-specific optimizations.
+> Characterize the accepted FP16 GEMV baseline and identify the actual gfx906
+> llama.cpp decode kernel path before selecting the first specialization
+> experiment.
 
 M0 is closed under the documented gfx802-isolated configuration. The
 repository-side infrastructure, physical MI50 validation, model artifact, and
@@ -236,7 +238,10 @@ The first benchmark families should approximately be:
 5. gfx906-specialized GEMV experiments
 ```
 
-Attention and MoE benchmarks should wait until representative target-model shapes and actual bottlenecks are frozen.
+The accepted EXP-0002 baseline is now being characterized in EXP-0003.
+Attention and MoE benchmarks should wait until representative target-model
+shapes and actual bottlenecks are frozen. Quantized GEMV remains queued after
+this control-path characterization.
 
 ---
 
