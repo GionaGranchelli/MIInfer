@@ -5,7 +5,7 @@
 **Author:**
 **Date:** 2026-08-29
 **Baseline commit:** 990b1912d72b — bootstrap implementation at task start
-**Candidate commit:** WORKTREE — M0 closure changes are intentionally uncommitted
+**Candidate commit:** PENDING — no physical MI50 benchmark has been executed on the Task 2 changes
 
 ---
 
@@ -117,7 +117,7 @@ Warm-up: 5 launches by default
 Measured runs: 100 launches by default
 Timing: HIP events around the asynchronous kernel launch
 Ordering: single benchmark; no A/B candidate exists
-Active telemetry: rocm-smi JSONL sampling every 250 ms by default
+Active telemetry: rocm-smi JSONL sampling every 250 ms by default, with millisecond UTC timestamps
 ```
 
 # 16. Pre-Run Hardware State
@@ -218,11 +218,24 @@ Decision: RETEST or INVALID
 # 35. Local Execution Gate
 
 An execution attempt on 2026-08-29 completed the repository-side checks but
-could not reach HIP execution. `rocm-smi` identified a gfx906 device and
-reported 34342961152 bytes of VRAM, but `rocminfo` failed during HSA
-initialization and HIP reported no ROCm-capable device because `/dev/kfd` was
-unavailable. The CTest host-only test passed; the GPU-required test and
+could not reach HIP execution. `/dev/kfd` was present and the user had the
+`render` and `video` groups, but `rocminfo` failed during HSA initialization
+with `HSA_STATUS_ERROR: A generic error has occurred`; HIP then reported no
+ROCm-capable device. `rocm-smi` exposed two AMD devices: card0 `gfx802` with
+8589934592 bytes of VRAM and card1 `gfx906` with 34342961152 bytes of VRAM,
+connected by PCIe. The CTest host-only test passed; the GPU-required test and
 benchmark failed explicitly before producing timing values.
+
+Preflight details: `/dev/kfd` was `crw-rw-rw-. root render`, render nodes
+`/dev/dri/renderD128` and `renderD129` were present, and the executing user was
+in both `render` and `video`. The exact `rocminfo` failure was emitted from
+`rocminfo.cc:1324` and returned the generic HSA error above. This is recorded
+as a platform/runtime blocker, not a reason to broaden device validation.
 
 No timing result is recorded. The experiment remains `PROPOSED` and must be
 executed on a usable physical MI50 before it receives a benchmark decision.
+
+The Task 2 repository changes are not represented by a clean commit yet, so
+there is no eligible provenance commit for physical benchmark evidence. When
+the MI50 run is performed, record the exact clean MIInfer commit, dirty state,
+release preset, benchmark command, and artifact directories here.

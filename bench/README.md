@@ -20,8 +20,11 @@ includes kernel execution, not host wall-clock launch overhead.
 
 Warm-up launches are excluded from statistics. The measured iterations report
 mean, median, minimum, maximum, and standard deviation in microseconds. The
-output is JSON on standard output; `--json-output PATH` writes the same JSON to
-a file while human-readable status is written to standard error.
+JSON includes every measured HIP-event sample in `samples_us`; no samples are
+discarded by the harness. The output is JSON on standard output;
+`--json-output PATH` writes the same JSON to a file while human-readable status
+is written to standard error. Successful results also include the compiled
+MIInfer commit and dirty-state marker.
 
 The runner captures the environment before and after a benchmark:
 
@@ -32,7 +35,8 @@ scripts/run-bench.sh ./build/mi50-release/miinfer-bench \
 
 Results are stored under `bench/results/<run-id>/` as `environment-before.json`,
 `result.json`, `telemetry.jsonl`, and `environment-after.json`. The runner
-samples `rocm-smi` during the benchmark at 250 ms by default; set
+samples `rocm-smi` during the benchmark at 250 ms by default; telemetry
+timestamps are UTC with millisecond precision. Set
 `MIINFER_TELEMETRY_INTERVAL_MS` to change that interval or
 `MIINFER_TELEMETRY=0` to disable it. Each telemetry line is a complete JSON
 object, so clock and thermal drift can be inspected without a special parser.

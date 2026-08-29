@@ -39,7 +39,7 @@ json_quote() {
 trap 'exit 0' TERM INT
 : > "$output_path"
 while true; do
-    timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+    timestamp=$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)
     payload='{"status":"UNAVAILABLE"}'
     if command -v rocm-smi >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
         raw_payload="$(rocm-smi --json --showproductname --showmeminfo vram --showclocks \

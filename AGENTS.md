@@ -134,6 +134,8 @@ instruction and register pressure.
 Decision:
 REJECT for this workload.
 
+```
+
 ---
 
 # 4. Repository philosophy
@@ -1166,4 +1168,3 @@ KEEP OR REJECT
 ```
 
 MIInfer succeeds only if its performance claims survive that loop.
-

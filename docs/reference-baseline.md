@@ -56,12 +56,48 @@ MI50 run must record the actual ROCm/HIP compiler, rocBLAS availability,
 environment variables, GPU visibility, and final build command before results
 are considered comparable.
 
+## Option validation on the available host
+
+The exact configure command above was attempted against the pinned commit on
+2026-08-29. CMake accepted the architecture and feature variables as cache
+entries, then stopped at `find_package(hipblas)` because this host has the
+runtime library but not the hipBLAS CMake development package
+(`hipblasConfig.cmake`). No reference binary was produced and no performance
+result is claimed.
+
+| Option | State at pinned commit | Evidence |
+| --- | --- | --- |
+| `GGML_HIP` | ACTIVE | consumed by `ggml/src/ggml-hip` |
+| `AMDGPU_TARGETS` | ACTIVE | forwarded to `GPU_TARGETS` / HIP architecture |
+| `GPU_TARGETS` | ACTIVE | forwarded to `CMAKE_HIP_ARCHITECTURES` |
+| `GGML_HIP_GRAPHS` | ACTIVE | HIP compile definition |
+| `GGML_HIP_NO_VMM` | ACTIVE | HIP compile definition |
+| `GGML_CUDA_FORCE_MMQ` | ACTIVE | HIP/CUDA MMQ compile definition |
+| `GGML_CUDA_FA_ALL_QUANTS` | ACTIVE | HIP flash-attention compile definition |
+| `GGML_LTO` | ACTIVE | declared ggml build option, OFF |
+| `GGML_VULKAN` | ACTIVE | declared backend option, OFF for single-MI50 run |
+
+`GGML_HIP_MMQ_MFMA` is available but intentionally not enabled: the pinned
+source gates its MFMA path to CDNA, while the target is Vega20/gfx906.
+
+## Toolchain preflight record
+
+```text
+ROCm: 7.1.52802-9999 (hipcc; system package layout)
+HIP compiler: clang 20.0.0.rocm
+rocBLAS: librocblas.so.5 is present; CMake development package is unavailable
+GPU visibility: rocm-smi sees two AMD GPUs; rocminfo HSA initialization fails
+Environment variables: no HIP/HSA/ROCm/GGML/GPU overrides were set
+CMake attempt: /tmp/milpster-gfx906-reference/cmake-mi50-task2.log
+Build: NOT RUN — configuration stopped before compilation
+```
+
 ## Baseline status
 
 ```text
 Commit pinned: YES
-Build on physical MI50: PENDING
-Model selected: PENDING
+Build on physical MI50: BLOCKED — HSA/hipBLAS development environment not validated
+Model selected: Qwen/Qwen3-8B at b968826d9c46dd6066d109eabc6255188de91218
 Correctness comparison: PENDING
 Performance measurements: PENDING
 ```

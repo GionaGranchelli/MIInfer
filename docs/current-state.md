@@ -56,12 +56,23 @@ No other GPU architecture is currently supported.
 * environment capture and benchmark runner
 * active-run GPU telemetry sampling
 * EXP-0001 benchmark harness scaffold
+* official Qwen3-8B dense-control revision and exact configuration record
+* Qwen3-8B projection-shape record for EXP-0002
+* EXP-0002 FP16 GEMV baseline scaffold
 
 ## In progress
 
 * physical MI50 execution of the bootstrap smoke test and benchmark
 * physical MI50 build/validation of the pinned external gfx906 reference
   baseline
+* reproducible Qwen3-8B F16 GGUF conversion and checksum
+* initial llama.cpp PP/TG measurements
+
+The current environment has not closed these gates: `/dev/kfd` and render
+nodes are present, but `rocminfo` fails HSA initialization with a generic
+error, so HIP reports no usable device. The pinned reference also cannot
+configure here because the hipBLAS CMake development package is absent. The
+16.4 GiB Qwen3-8B source snapshot and resulting F16 GGUF were not completed.
 
 ## Not implemented
 
@@ -191,8 +202,10 @@ MIInfer will maintain a separate external gfx906 reference implementation for:
 * research
 
 The primary reference is pinned to `milpster/gfx906-llama-cpp` commit
-`6e4ef6c1a553b8f61ad77bba18e9ca05aa677295`. Its physical MI50 build,
-model selection, and measurements remain pending; see
+`6e4ef6c1a553b8f61ad77bba18e9ca05aa677295`. The dense control model is pinned
+to `Qwen/Qwen3-8B` revision
+`b968826d9c46dd6066d109eabc6255188de91218`. The physical MI50 build,
+conversion artifact, and measurements remain pending; see
 [`reference-baseline.md`](reference-baseline.md).
 
 The reference implementation is not part of MIInfer's runtime architecture.

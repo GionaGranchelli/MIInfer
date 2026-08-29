@@ -70,6 +70,13 @@
       }
     },
     {
+      "name": "mi50-release",
+      "configurePreset": "mi50-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
       "name": "host-only",
       "configurePreset": "host-only",
       "output": {
