@@ -58,14 +58,13 @@ are considered comparable.
 
 ## Option validation on the available host
 
-The exact configure command above was attempted against the pinned commit on
-2026-08-29. The host runtime installation initially lacked the separate
-hipBLAS/rocBLAS/rocSOLVER development metadata. Fedora provides these as
-`hipblas-devel`, `hipblas-common-devel`, `rocblas-devel`, and
-`rocsolver-devel`; the primary Fedora config filename is
-`hipblas-config.cmake` (lowercase). A temporary extracted prefix containing
-those packages was used to validate normal CMake discovery. No performance
-result is claimed until HSA initialization is repaired.
+The exact configure command above was used against the pinned commit on
+2026-08-29. Fedora provides the required development metadata as
+`hipblas-devel`, `hipblas-common-devel`, `rocblas-devel`, and `rocsolver-devel`;
+the primary Fedora config filename is `hipblas-config.cmake` (lowercase).
+Those packages are installed system-wide and CMake resolved
+`hipblas_DIR=/usr/lib64/cmake/hipblas` and
+`hipblas-common_DIR=/usr/share/cmake/hipblas-common` without a custom prefix.
 
 | Option | State at pinned commit | Evidence |
 | --- | --- | --- |
@@ -79,33 +78,48 @@ result is claimed until HSA initialization is repaired.
 | `GGML_LTO` | ACTIVE | declared ggml build option, OFF |
 | `GGML_VULKAN` | ACTIVE | declared backend option, OFF for single-MI50 run |
 
-`GGML_HIP_MMQ_MFMA` is available but intentionally not enabled: the pinned
-source gates its MFMA path to CDNA, while the target is Vega20/gfx906.
+`GGML_HIP_MMQ_MFMA` defaults to ON in the pinned source, but its MFMA path is
+gated to CDNA targets; the gfx906 build therefore has no applicable CDNA MFMA
+path. This default is recorded rather than silently changing the canonical
+command.
 
 ## Toolchain preflight record
 
 ```text
 ROCm: 7.1.52802-9999 (hipcc; system package layout)
 HIP compiler: clang 20.0.0.rocm
-rocBLAS: librocblas.so.5 is present; `rocblas-devel` and `rocsolver-devel` are not installed
-GPU visibility: rocm-smi sees two AMD GPUs; rocminfo HSA initialization fails
+rocBLAS: `rocblas-devel-7.1.1-7.fc44`; `rocsolver-devel-7.1.1-4.fc44`
+hipBLAS: `hipblas-devel-7.1.0-6.fc44`; `hipblas-common-devel-7.1.0-3.fc44`
+GPU visibility: with gfx802 isolated, rocminfo reports one gfx906 MI50 device
 Environment variables: no HIP/HSA/ROCm/GGML/GPU overrides were set
-CMake attempt: `/tmp/milpster-gfx906-reference/build-mi50-localhipblas`
-Build: PASS — `llama-cli` and `llama-bench` built for gfx906 with the temporary development prefix
+CMake build: `/home/fedora-workstation/Development/mi50-artifacts/milpster-gfx906-reference-6e4ef6c/build-mi50`
+Build: PASS — `llama-cli` and `llama-bench` built for gfx906 with system package discovery
 ```
 
 ## Baseline status
 
 ```text
 Commit pinned: YES
-Configure/build: PASS — temporary Fedora development prefix; `llama-cli` and `llama-bench` target gfx906
-GPU execution on physical MI50: BLOCKED — ROCr HSA initialization fails
+Configure/build: PASS — `llama-cli` and `llama-bench` target gfx906
+GPU execution on physical MI50: PASS with gfx802 isolated
 Model selected: Qwen/Qwen3-8B at b968826d9c46dd6066d109eabc6255188de91218
 F16 GGUF: CREATED — SHA256 recorded in `docs/qwen3-8b-baseline.md`
-Correctness comparison: BLOCKED — reference GPU smoke test cannot initialize HSA
-Performance measurements: PENDING
+Correctness comparison: PASS — single-turn GPU smoke generation completed
+Performance measurements: PASS — canonical PP/TG records retained below
 ```
 
-The first model and exact benchmark matrix remain open until the reference is
-built and the target model is frozen. No external benchmark result is claimed
-by this record.
+## Initial baseline
+
+The benchmark used the pinned reference commit, Qwen3-8B F16 GGUF, `-ngl 99`,
+batch size 2048, ubatch size 512, F16 KV cache, and five repetitions. Each
+case was run separately with `-p`/`-n` so the tool's default PP512+TG128 rows
+were not mixed into the canonical record.
+
+```text
+PP512: 563.339377 t/s average; stddev 4.411476; samples 555.586, 565.649, 564.875, 564.200, 566.387
+PP2048: 550.789369 t/s average; stddev 2.638194; samples 547.321, 550.102, 554.387, 552.126, 550.011
+TG128: 31.598717 t/s average; stddev 0.040570; samples 31.5324, 31.6025, 31.6348, 31.5957, 31.6281
+```
+
+Raw JSONL and diagnostics are retained under
+`/home/fedora-workstation/Development/mi50-artifacts/qwen3-8b-reference-baseline-20260829/canonical/`.

@@ -138,21 +138,21 @@ rocsolver-devel-7.1.1-4.fc44
 
 The primary hipBLAS config is named `hipblas-config.cmake` and is installed
 under `/usr/lib64/cmake/hipblas`; `hipblas-common` is under
-`/usr/share/cmake/hipblas-common`. A temporary extracted prefix was initially
-validated for reference configuration with:
+`/usr/share/cmake/hipblas-common`. The system-wide installation was validated
+for reference configuration with:
 
 ```bash
 cmake -S . -B build-mi50-localhipblas \
   -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_PREFIX_PATH=/path/to/rocm-development-prefix \
   -DGGML_HIP=ON -DAMDGPU_TARGETS=gfx906 -DGPU_TARGETS=gfx906 \
   -DGGML_HIP_GRAPHS=ON -DGGML_HIP_NO_VMM=ON \
   -DGGML_CUDA_FORCE_MMQ=ON -DGGML_CUDA_FA_ALL_QUANTS=ON \
   -DGGML_LTO=OFF -DGGML_VULKAN=OFF
 ```
 
-The intended system fix is to install these packages normally, not to retain
-hardcoded library paths in the reference or MIInfer source trees.
+The reference resolved `hipblas_DIR=/usr/lib64/cmake/hipblas` and
+`hipblas-common_DIR=/usr/share/cmake/hipblas-common` from this installation;
+no hardcoded library path or temporary prefix is required.
 
 ## Current gate status
 
@@ -164,6 +164,8 @@ generic HIP device access: PASS with gfx802 isolated
 MIInfer GPU tests: PASS with gfx802 isolated
 privileged gfx802 isolation A/B: CONFIRMED
 hipBLAS CMake metadata: INSTALLED system-wide
-reference CMake configure: PASS with temporary development prefix
-reference build (llama-cli, llama-bench): PASS with temporary development prefix
+reference CMake configure: PASS with system hipBLAS/rocBLAS development packages
+reference build (llama-cli, llama-bench): PASS for gfx906
+reference Qwen3-8B F16 smoke: PASS with 37/37 layers offloaded
+reference PP512 / PP2048 / TG128 baseline: PASS; five repetitions each
 ```

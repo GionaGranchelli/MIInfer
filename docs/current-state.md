@@ -15,11 +15,12 @@ For long-term direction, see:
 
 # Current Phase
 
-**M0 — Baseline and Project Bootstrap**
+**M0 closed — M1 kernel laboratory ready**
 
 MIInfer is not yet an inference runtime.
 
-The current objective is to establish the build, benchmark, correctness, and hardware-observation infrastructure required for credible gfx906 kernel research.
+The baseline infrastructure and external reference are established. MIInfer is
+not yet an inference runtime; the next approved phase is kernel-level research.
 
 ---
 
@@ -60,19 +61,19 @@ No other GPU architecture is currently supported.
 * Qwen3-8B projection-shape record for EXP-0002
 * EXP-0002 FP16 GEMV baseline scaffold
 
-## In progress
+## Completed in Task 3
 
-* physical MI50 execution of the bootstrap smoke test and benchmark
-* physical MI50 build/validation of the pinned external gfx906 reference
-  baseline
+* physical MI50 execution with gfx802 isolated from KFD
+* physical MI50 Debug and Release GPU validation
+* EXP-0001 with five valid runs and active telemetry
+* physical MI50 build and validation of the pinned external gfx906 reference
 * reproducible Qwen3-8B F16 GGUF conversion and checksum
 * initial llama.cpp PP/TG measurements
 
-The current environment has not closed these gates: `/dev/kfd` and render
-nodes are present, but `rocminfo` fails HSA initialization with a generic
-error, so HIP reports no usable device. The pinned reference also cannot
-configure here because the hipBLAS CMake development package is absent. The
-16.4 GiB Qwen3-8B source snapshot and resulting F16 GGUF were not completed.
+ROCr/HSA initialization fails with both AMD GPUs exposed, but the confirmed
+gfx802-isolation workaround leaves the MI50/gfx906 device usable. With that
+configuration HIP, MIInfer, the pinned reference, and the Qwen3-8B smoke test
+all work. The gfx802 isolation remains an operational platform prerequisite.
 
 ## Not implemented
 
@@ -100,12 +101,12 @@ been implemented.
 
 The immediate technical objective is:
 
-> Close M0 through physical MI50 validation and establishment of the external
-> gfx906 reference baseline.
+> Begin M1 with measured gfx906 kernel-laboratory experiments against the
+> pinned external reference baseline.
 
-The repository-side infrastructure is complete. Remaining work is execution
-and evidence collection on the target machine, followed by freezing the
-reference configuration.
+M0 is closed under the documented gfx802-isolated configuration. The
+repository-side infrastructure, physical MI50 validation, model artifact, and
+reference baseline are recorded.
 
 ---
 
@@ -205,7 +206,7 @@ The primary reference is pinned to `milpster/gfx906-llama-cpp` commit
 `6e4ef6c1a553b8f61ad77bba18e9ca05aa677295`. The dense control model is pinned
 to `Qwen/Qwen3-8B` revision
 `b968826d9c46dd6066d109eabc6255188de91218`. The physical MI50 build,
-conversion artifact, and measurements remain pending; see
+conversion artifact, and measurements are recorded in
 [`reference-baseline.md`](reference-baseline.md).
 
 The reference implementation is not part of MIInfer's runtime architecture.
@@ -370,20 +371,12 @@ These do not help answer the current project question.
 
 The next Codex task should be:
 
-> Close M0 through physical MI50 validation and reference-baseline
-> establishment.
+> Decide whether to proceed to M1 kernel-laboratory work or first pursue a
+> durable ROCr fix that permits the gfx802 display GPU to remain attached.
 
-Expected scope:
-
-* run the Debug and Release builds on the physical MI50
-* execute host and GPU CTest checks
-* execute EXP-0001 with repeated benchmark runs
-* inspect active-run telemetry for clock/thermal contamination
-* pin `milpster/gfx906-llama-cpp` and record its build configuration
-* choose and document the initial baseline model
-
-Do not begin EXP-0002 or implement LLM inference until this evidence is
-recorded.
+The M0 evidence gates are complete under the documented gfx802-isolated
+configuration. Do not begin EXP-0002 or implement LLM inference until the
+project explicitly advances to M1.
 
 ---
 
@@ -413,7 +406,7 @@ Only then should the project begin serious kernel specialization work.
 
 # Last Updated
 
-2026-08-29 — repository bootstrap implemented; MI50 execution pending.
+2026-08-29 — M0 closed with gfx802 isolated from KFD; M1 ready.
 
 Update this document whenever:
 
