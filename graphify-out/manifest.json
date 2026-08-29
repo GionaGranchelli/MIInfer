@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788040388.519228,
-    "seen": 1788040402.4466896,
-    "ast_hash": "293bc2727c9b8b85b3c47dab7e58b7a0",
+    "mtime": 1788043689.0736036,
+    "seen": 1788043701.6400392,
+    "ast_hash": "75d3b4ab5a162b22e9d9698cbd9172b8",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -399,6 +399,12 @@
     "mtime": 1788042314.6961432,
     "seen": 1788042419.5872924,
     "ast_hash": "8d171828942e08982d3032084e8b5b53",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0005-q4-q8-gemv-baseline.md": {
+    "mtime": 1788043689.0726037,
+    "seen": 1788043701.6400568,
+    "ast_hash": "f705fdca6a590c28219bef7d7d5fd969",
     "semantic_hash": ""
   }
 }

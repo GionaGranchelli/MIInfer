@@ -1,16 +1,16 @@
 # Graph Report - mi50  (2026-08-30)
 
 ## Corpus Check
-- 63 files · ~64,771 words
+- 64 files · ~66,424 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1163 nodes · 1333 edges · 124 communities (115 shown, 9 thin omitted)
+- 1181 nodes · 1350 edges · 120 communities (111 shown, 9 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 4 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `c6b46236`
+- Built from commit: `4d9d31ad`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -18,7 +18,7 @@
 - hardware.md
 - architecture.md
 - benchmarking.md
-- string
+- EXP-0005 — Q4_0 × Q8_1 Quantized GEMV Baseline
 - EXP-0001-benchmark-harness-validation.md
 - MIInfer
 - current-state.md
@@ -51,7 +51,7 @@
 - M3 — Minimal Runtime
 - M1 — Kernel Laboratory
 - 32. Codex task behavior
-- memory_stream_bench.cpp
+- DeviceInfo
 - graphify reference: query, path, explain
 - 43. Initial MIInfer Benchmark Matrix
 - Qwen3-8B Dense Control Model
@@ -123,7 +123,6 @@
 - 34. Guiding principle
 - AGENTS.md
 - bench/README.md
-- fp16_gemv_test.cpp
 - Current Project Status
 - Current Scope
 - extraction-spec.md
@@ -132,10 +131,7 @@
 - 6. Baseline
 - 35. Historical failed execution gate — superseded by Section 37
 - fp16_gemv_k_split_bench.cpp
-- Options
-- DeviceInfo
 - GemvKernelResources
-- hip_check.hpp
 - q4_q8_gemv_bench.cpp
 
 ## God Nodes (most connected - your core abstractions)
@@ -146,9 +142,9 @@
 5. `DeviceInfo` - 16 edges
 6. `GemvShape` - 15 edges
 7. `EXP-0003 — FP16 GEMV Bottleneck Characterization` - 15 edges
-8. `Options` - 14 edges
-9. `run_shape()` - 13 edges
-10. `EXP-NNNN — Title` - 13 edges
+8. `EXP-0005 — Q4_0 × Q8_1 Quantized GEMV Baseline` - 15 edges
+9. `Options` - 14 edges
+10. `run_shape()` - 13 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `selected_shapes()` --references--> `GemvShape`  [EXTRACTED]
@@ -165,7 +161,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (124 total, 9 thin omitted)
+## Communities (120 total, 9 thin omitted)
 
 ### Community 0 - "hardware.md"
 Cohesion: 0.04
@@ -179,9 +175,9 @@ Nodes (43): 10. Memory Architecture, 11. Weight Residency, 12. Tensor Layout, 13
 Cohesion: 0.05
 Nodes (43): 10. Reversed Ordering, 11. Statistics, 12. Performance Delta, 13. Benchmark Stability, 14. Baseline Selection, 15. Baseline Pinning, 16. Model Equivalence, 17. Quantization Equivalence (+35 more)
 
-### Community 3 - "string"
-Cohesion: 0.19
-Nodes (5): string, RocblasGemmHandle, opaque, main(), run_shape()
+### Community 3 - "EXP-0005 — Q4_0 × Q8_1 Quantized GEMV Baseline"
+Cohesion: 0.11
+Nodes (17): 10. Comparison with accepted FP16 controls, 11. Projection-only sanity check, 12. External Q4_0 reference, 13. Decision, 14. Follow-up, 1. Question, 2. Hypothesis, 3. Baseline and scope (+9 more)
 
 ### Community 4 - "EXP-0001-benchmark-harness-validation.md"
 Cohesion: 0.06
@@ -311,9 +307,9 @@ Nodes (7): Benchmark harness, Exit criteria, Goal, Initial kernel areas, Initial
 Cohesion: 0.33
 Nodes (6): 32. Codex task behavior, Before adding abstractions, Before adding fallback behavior, Before declaring a performance win, Before modifying code, Before removing apparently strange gfx906 code
 
-### Community 36 - "memory_stream_bench.cpp"
-Cohesion: 0.18
-Nodes (16): size_t, string, vector, escape(), main(), median(), Options, bytes (+8 more)
+### Community 36 - "DeviceInfo"
+Cohesion: 0.07
+Nodes (37): size_t, string, vector, escape(), main(), median(), Options, bytes (+29 more)
 
 ### Community 37 - "graphify reference: query, path, explain"
 Cohesion: 0.33
@@ -571,10 +567,6 @@ Nodes (3): 17. Raw Results, Baseline, Candidate
 Cohesion: 0.67
 Nodes (3): 8. Hardware, GPU, Runtime state
 
-### Community 108 - "fp16_gemv_test.cpp"
-Cohesion: 0.53
-Nodes (5): check_output(), __half, vector, main(), run_shape()
-
 ### Community 109 - "Current Project Status"
 Cohesion: 0.50
 Nodes (4): Completed, Completed in Task 3, Current Project Status, Not implemented
@@ -596,31 +588,19 @@ Cohesion: 0.67
 Nodes (3): 35. Historical failed execution gate — superseded by Section 37, 36. Task 3 Platform-Recovery Pilot, 37. Accepted MI50 execution
 
 ### Community 118 - "fp16_gemv_k_split_bench.cpp"
-Cohesion: 0.30
-Nodes (11): ostream, string, vector, escape(), main(), median(), nonnegative(), parse() (+3 more)
-
-### Community 119 - "Options"
-Cohesion: 0.22
-Nodes (9): uint32_t, Options, device, iterations, json_output, seed, shape, warmup (+1 more)
-
-### Community 120 - "DeviceInfo"
-Cohesion: 0.24
-Nodes (12): DeviceInfo, architecture, index, name, total_vram_bytes, size_t, ostream, string (+4 more)
+Cohesion: 0.15
+Nodes (20): ostream, string, uint32_t, vector, escape(), main(), median(), nonnegative() (+12 more)
 
 ### Community 121 - "GemvKernelResources"
 Cohesion: 0.33
 Nodes (6): GemvKernelResources, local_bytes, max_threads_per_block, registers, shared_bytes, size_t
 
-### Community 122 - "hip_check.hpp"
-Cohesion: 0.83
-Nodes (3): hipError_t, hip_check(), hip_check_failed()
-
 ### Community 123 - "q4_q8_gemv_bench.cpp"
 Cohesion: 0.06
-Nodes (61): allocate_shape(), __half, ostream, string, vector, DeviceShapeData, device_input_fp16, device_input_q8 (+53 more)
+Nodes (65): allocate_shape(), __half, ostream, string, vector, DeviceShapeData, device_input_fp16, device_input_q8 (+57 more)
 
 ## Knowledge Gaps
-- **807 isolated node(s):** `experiment`, `shape`, `implementation`, `cache_regime`, `custom_label` (+802 more)
+- **822 isolated node(s):** `experiment`, `shape`, `implementation`, `cache_regime`, `custom_label` (+817 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **9 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -632,12 +612,12 @@ _Questions this graph is uniquely positioned to answer:_
 - **Why does `8. anikifoss/llama.cpp-gfx906` connect `8. anikifoss/llama.cpp-gfx906` to `references.md`?**
   _High betweenness centrality (0.020) - this node is a cross-community bridge._
 - **What connects `experiment`, `shape`, `implementation` to the rest of the system?**
-  _807 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _822 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `hardware.md` be split into smaller, more focused modules?**
   _Cohesion score 0.0425531914893617 - nodes in this community are weakly interconnected._
 - **Should `architecture.md` be split into smaller, more focused modules?**
   _Cohesion score 0.045454545454545456 - nodes in this community are weakly interconnected._
 - **Should `benchmarking.md` be split into smaller, more focused modules?**
   _Cohesion score 0.045454545454545456 - nodes in this community are weakly interconnected._
-- **Should `EXP-0001-benchmark-harness-validation.md` be split into smaller, more focused modules?**
-  _Cohesion score 0.05714285714285714 - nodes in this community are weakly interconnected._
+- **Should `EXP-0005 — Q4_0 × Q8_1 Quantized GEMV Baseline` be split into smaller, more focused modules?**
+  _Cohesion score 0.1111111111111111 - nodes in this community are weakly interconnected._
