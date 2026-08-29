@@ -11,9 +11,16 @@ json_quote() {
         printf '%s' "$value" | jq -Rs .
         return
     fi
-    value="$(printf '%s' "$value" | tr -d '\000-\011\013\014\016-\037')"
+    local first=1
     printf '"'
-    printf '%s' "$value" | sed ':a;N;$!ba;s/\\/\\\\/g;s/"/\\\"/g;s/\n/\\n/g'
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        if (( first == 0 )); then
+            printf '\\n'
+        fi
+        escaped_line="$(printf '%s' "$line" | sed 's/\\/\\\\/g;s/"/\\"/g')"
+        printf '%s' "$escaped_line"
+        first=0
+    done <<< "$value"
     printf '"'
 }
 

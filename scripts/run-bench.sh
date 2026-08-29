@@ -27,8 +27,24 @@ mkdir -p "$run_dir"
 
 "$script_dir/capture-env.sh" "$run_dir/environment-before.json"
 
+telemetry_pid=""
+if [[ "${MIINFER_TELEMETRY:-1}" != "0" ]]; then
+    "$script_dir/sample-gpu.sh" "$run_dir/telemetry.jsonl" \
+        "${MIINFER_TELEMETRY_INTERVAL_MS:-250}" &
+    telemetry_pid=$!
+    for _ in {1..40}; do
+        [[ -s "$run_dir/telemetry.jsonl" ]] && break
+        sleep 0.05
+    done
+fi
+
 status=0
 "$benchmark_path" "$@" --json-output "$run_dir/result.json" || status=$?
+
+if [[ -n "$telemetry_pid" ]]; then
+    kill "$telemetry_pid" 2>/dev/null || true
+    wait "$telemetry_pid" 2>/dev/null || true
+fi
 
 "$script_dir/capture-env.sh" "$run_dir/environment-after.json"
 

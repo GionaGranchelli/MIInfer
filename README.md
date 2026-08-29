@@ -523,7 +523,8 @@ scripts/run-bench.sh ./build/mi50-release/miinfer-bench \
 ```
 
 The benchmark emits JSON and uses HIP events. The runner stores before/after
-environment captures and the JSON result under `bench/results/<run-id>/`.
+environment captures, active-run `rocm-smi` telemetry, and the JSON result under
+`bench/results/<run-id>/`.
 
 > The project is currently being bootstrapped. The initial benchmark validates
 > infrastructure rather than MIInfer inference performance.

@@ -230,6 +230,14 @@ int main(int argc, char** argv) {
          << "  \"min_us\": " << minimum << ",\n"
          << "  \"max_us\": " << maximum << ",\n"
          << "  \"stddev_us\": " << standard_deviation << ",\n"
+         << "  \"samples_us\": [";
+    for (std::size_t index = 0; index < samples.size(); ++index) {
+        if (index != 0) {
+            json << ", ";
+        }
+        json << samples[index];
+    }
+    json << "],\n"
          << "  \"correctness\": \"PASS\"\n"
          << "}\n";
     if (options.json_output.empty()) {

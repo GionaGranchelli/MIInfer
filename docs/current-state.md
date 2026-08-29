@@ -52,13 +52,16 @@ No other GPU architecture is currently supported.
 * host-only and GPU-required CTest infrastructure
 * trivial HIP vector-add validation
 * HIP-event microbenchmark and JSON output
+* raw per-iteration benchmark samples
 * environment capture and benchmark runner
+* active-run GPU telemetry sampling
 * EXP-0001 benchmark harness scaffold
 
 ## In progress
 
 * physical MI50 execution of the bootstrap smoke test and benchmark
-* external gfx906 reference implementation selection and baseline capture
+* physical MI50 build/validation of the pinned external gfx906 reference
+  baseline
 
 ## Not implemented
 
@@ -86,9 +89,12 @@ been implemented.
 
 The immediate technical objective is:
 
-> Build the smallest reliable C++20/HIP environment capable of compiling, executing, validating, and benchmarking gfx906 kernels on the MI50.
+> Close M0 through physical MI50 validation and establishment of the external
+> gfx906 reference baseline.
 
-The first implementation work should therefore focus on infrastructure rather than model inference.
+The repository-side infrastructure is complete. Remaining work is execution
+and evidence collection on the target machine, followed by freezing the
+reference configuration.
 
 ---
 
@@ -184,7 +190,10 @@ MIInfer will maintain a separate external gfx906 reference implementation for:
 * model behavior reference
 * research
 
-The preferred reference direction is an actively maintained gfx906-specialized llama.cpp variant.
+The primary reference is pinned to `milpster/gfx906-llama-cpp` commit
+`6e4ef6c1a553b8f61ad77bba18e9ca05aa677295`. Its physical MI50 build,
+model selection, and measurements remain pending; see
+[`reference-baseline.md`](reference-baseline.md).
 
 The reference implementation is not part of MIInfer's runtime architecture.
 
@@ -348,21 +357,20 @@ These do not help answer the current project question.
 
 The next Codex task should be:
 
-> Bootstrap MIInfer M0/M1 infrastructure.
+> Close M0 through physical MI50 validation and reference-baseline
+> establishment.
 
 Expected scope:
 
-* CMake C++20/HIP project
-* explicit gfx906 target
-* trivial GPU kernel
-* GPU/device validation
-* CPU and GPU test harness
-* benchmark timer/harness
-* environment capture
-* first experiment scaffold
-* exact documented build/test/benchmark commands
+* run the Debug and Release builds on the physical MI50
+* execute host and GPU CTest checks
+* execute EXP-0001 with repeated benchmark runs
+* inspect active-run telemetry for clock/thermal contamination
+* pin `milpster/gfx906-llama-cpp` and record its build configuration
+* choose and document the initial baseline model
 
-Do not implement LLM inference as part of this task.
+Do not begin EXP-0002 or implement LLM inference until this evidence is
+recorded.
 
 ---
 

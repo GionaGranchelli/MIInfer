@@ -4,8 +4,8 @@
 **Milestone:** M0
 **Author:**
 **Date:** 2026-08-29
-**Baseline commit:** UNAVAILABLE — repository metadata is not present in this workspace
-**Candidate commit:** UNAVAILABLE — repository metadata is not present in this workspace
+**Baseline commit:** 990b1912d72b — bootstrap implementation at task start
+**Candidate commit:** WORKTREE — M0 closure changes are intentionally uncommitted
 
 ---
 
@@ -117,16 +117,21 @@ Warm-up: 5 launches by default
 Measured runs: 100 launches by default
 Timing: HIP events around the asynchronous kernel launch
 Ordering: single benchmark; no A/B candidate exists
+Active telemetry: rocm-smi JSONL sampling every 250 ms by default
 ```
 
 # 16. Pre-Run Hardware State
 
-Read from `environment-before.json`; do not guess unavailable fields.
+Read from `environment-before.json`, `telemetry.jsonl`, and
+`environment-after.json`; do not guess unavailable fields. A run with
+unexpectedly low clocks, thermal throttling, or another GPU workload must be
+marked contaminated.
 
 # 17. Raw Results
 
-The benchmark JSON retains aggregate values. Raw per-iteration samples are a
-follow-up improvement if this experiment requires variance analysis.
+The benchmark JSON retains every per-iteration HIP-event sample in
+`samples_us`, along with aggregate values. The runner additionally stores
+active-run GPU telemetry as JSON Lines.
 
 # 18. Aggregated Results
 
@@ -197,6 +202,7 @@ baseline experiment if the project still has a usable MI50 environment.
 ```text
 bench/results/<run-id>/environment-before.json
 bench/results/<run-id>/result.json
+bench/results/<run-id>/telemetry.jsonl
 bench/results/<run-id>/environment-after.json
 ```
 
@@ -208,3 +214,15 @@ Result: pending
 Correctness: pending
 Decision: RETEST or INVALID
 ```
+
+# 35. Local Execution Gate
+
+An execution attempt on 2026-08-29 completed the repository-side checks but
+could not reach HIP execution. `rocm-smi` identified a gfx906 device and
+reported 34342961152 bytes of VRAM, but `rocminfo` failed during HSA
+initialization and HIP reported no ROCm-capable device because `/dev/kfd` was
+unavailable. The CTest host-only test passed; the GPU-required test and
+benchmark failed explicitly before producing timing values.
+
+No timing result is recorded. The experiment remains `PROPOSED` and must be
+executed on a usable physical MI50 before it receives a benchmark decision.

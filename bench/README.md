@@ -31,7 +31,13 @@ scripts/run-bench.sh ./build/mi50-release/miinfer-bench \
 ```
 
 Results are stored under `bench/results/<run-id>/` as `environment-before.json`,
-`result.json`, and `environment-after.json`. The environment script records
-`UNAVAILABLE` when a command or metric is not exposed by the local ROCm/Linux
-installation. The initial benchmark must not be used to claim inference
-performance or to substitute for representative model-shape experiments.
+`result.json`, `telemetry.jsonl`, and `environment-after.json`. The runner
+samples `rocm-smi` during the benchmark at 250 ms by default; set
+`MIINFER_TELEMETRY_INTERVAL_MS` to change that interval or
+`MIINFER_TELEMETRY=0` to disable it. Each telemetry line is a complete JSON
+object, so clock and thermal drift can be inspected without a special parser.
+
+The environment script records `UNAVAILABLE` when a command or metric is not
+exposed by the local ROCm/Linux installation. The initial benchmark must not be
+used to claim inference performance or to substitute for representative
+model-shape experiments.
