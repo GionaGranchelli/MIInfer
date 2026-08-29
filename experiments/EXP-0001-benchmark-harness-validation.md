@@ -1,11 +1,11 @@
 # EXP-0001 — Benchmark Harness Validation
 
-**Status:** PROPOSED
+**Status:** RETEST
 **Milestone:** M0
 **Author:**
 **Date:** 2026-08-29
 **Baseline commit:** 990b1912d72b — bootstrap implementation at task start
-**Candidate commit:** PENDING — no physical MI50 benchmark has been executed on the Task 2 changes
+**Candidate commit:** `a344ff626b12` — physical pilot attempted; commit was dirty due pre-existing untracked `.claude/` and `CLAUDE.md`
 
 ---
 
@@ -239,3 +239,30 @@ The Task 2 repository changes are not represented by a clean commit yet, so
 there is no eligible provenance commit for physical benchmark evidence. When
 the MI50 run is performed, record the exact clean MIInfer commit, dirty state,
 release preset, benchmark command, and artifact directories here.
+
+## 36. Task 3 Platform-Recovery Pilot
+
+The requested pilot was attempted on 2026-08-29 with:
+
+```text
+run: bench/results/20260829T122124Z-874753
+command: scripts/run-bench.sh ./build/mi50-release/miinfer-bench --warmup 5 --iterations 100 --elements 1048576
+exit: 1
+failure: hipGetDeviceCount failed: no ROCm-capable device is detected
+```
+
+The runner retained `environment-before.json`, `telemetry.jsonl`, and
+`environment-after.json`. Telemetry captured one active sample while the
+benchmark was starting:
+
+```text
+gfx802: 398 MHz SCLK, 1250 MHz MCLK, 57 C, 30.551 W average package power
+gfx906: 930 MHz SCLK, 350 MHz MCLK, 35--36 C, 21 W socket package power
+```
+
+No `result.json` or HIP timing samples were produced. This is a retained
+failed pilot, not one of the five valid EXP-0001 runs. Five independent runs
+must wait until ROCr/HIP recovery and a clean MIInfer commit are available.
+
+The platform diagnosis and recovery constraints are recorded in
+[`docs/platform-mi50.md`](../docs/platform-mi50.md).

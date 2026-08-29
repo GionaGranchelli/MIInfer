@@ -62,9 +62,32 @@ python3 /path/to/gfx906-llama-cpp/convert_hf_to_gguf.py \
   --outtype f16
 ```
 
-Conversion status: NOT CREATED in this environment. The resulting F16 GGUF
-size and SHA256 must be recorded here after conversion completes on a suitable
-host. The GGUF is not committed to MIInfer.
+Conversion completed on 2026-08-29 with the command above. The artifact is
+stored outside the repository at
+`/home/fedora-workstation/Development/mi50-artifacts/Qwen3-8B-f16-b968826d.gguf`:
+
+```text
+size: 16388044192 bytes
+sha256: c1fd1fc17831ebc0001d81c97a3f78626dd1f977841dec532eef60177abb2a1c
+source shards: all five expected safetensors files present
+```
+
+Source shard SHA256 values:
+
+```text
+model-00001-of-00005.safetensors  31d6a825ae35f11fb85b195b4c42c146c051e446433125a215336abdf95cbf5f
+model-00002-of-00005.safetensors  5991236cea6fe21f3d43cab0f0e84448734fbbe0789816202989f2ddc9d18282
+model-00003-of-00005.safetensors  c5185c4794be2d8a9784d5753c9922db38df478ce11f9ed0b415b7304d896836
+model-00004-of-00005.safetensors  b5ee7de71fbf17db3d5704e0c8f2bc7d005ca9e1d7ca2aeb19827b0cfcaa917a
+model-00005-of-00005.safetensors  20c2d6366ab85c90786ccdd829cd2b9e7d30ef3b2ebbb998280e7e4014b542ff
+```
+
+The GGUF is not committed to MIInfer.
+
+Reference smoke status: BLOCKED. The pinned CLI loaded the GGUF metadata but
+reported `ggml_cuda_init: failed to initialize ROCm: no ROCm-capable device is
+detected`; `--gpu-layers` was ignored and the attempted run was stopped rather
+than accepted as a CPU fallback. No GPU generation result is claimed.
 
 ## Real model projection shapes
 

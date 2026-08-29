@@ -59,11 +59,13 @@ are considered comparable.
 ## Option validation on the available host
 
 The exact configure command above was attempted against the pinned commit on
-2026-08-29. CMake accepted the architecture and feature variables as cache
-entries, then stopped at `find_package(hipblas)` because this host has the
-runtime library but not the hipBLAS CMake development package
-(`hipblasConfig.cmake`). No reference binary was produced and no performance
-result is claimed.
+2026-08-29. The host runtime installation initially lacked the separate
+hipBLAS/rocBLAS/rocSOLVER development metadata. Fedora provides these as
+`hipblas-devel`, `hipblas-common-devel`, `rocblas-devel`, and
+`rocsolver-devel`; the primary Fedora config filename is
+`hipblas-config.cmake` (lowercase). A temporary extracted prefix containing
+those packages was used to validate normal CMake discovery. No performance
+result is claimed until HSA initialization is repaired.
 
 | Option | State at pinned commit | Evidence |
 | --- | --- | --- |
@@ -85,20 +87,22 @@ source gates its MFMA path to CDNA, while the target is Vega20/gfx906.
 ```text
 ROCm: 7.1.52802-9999 (hipcc; system package layout)
 HIP compiler: clang 20.0.0.rocm
-rocBLAS: librocblas.so.5 is present; CMake development package is unavailable
+rocBLAS: librocblas.so.5 is present; `rocblas-devel` and `rocsolver-devel` are not installed
 GPU visibility: rocm-smi sees two AMD GPUs; rocminfo HSA initialization fails
 Environment variables: no HIP/HSA/ROCm/GGML/GPU overrides were set
-CMake attempt: /tmp/milpster-gfx906-reference/cmake-mi50-task2.log
-Build: NOT RUN — configuration stopped before compilation
+CMake attempt: `/tmp/milpster-gfx906-reference/build-mi50-localhipblas`
+Build: PASS — `llama-cli` and `llama-bench` built for gfx906 with the temporary development prefix
 ```
 
 ## Baseline status
 
 ```text
 Commit pinned: YES
-Build on physical MI50: BLOCKED — HSA/hipBLAS development environment not validated
+Configure/build: PASS — temporary Fedora development prefix; `llama-cli` and `llama-bench` target gfx906
+GPU execution on physical MI50: BLOCKED — ROCr HSA initialization fails
 Model selected: Qwen/Qwen3-8B at b968826d9c46dd6066d109eabc6255188de91218
-Correctness comparison: PENDING
+F16 GGUF: CREATED — SHA256 recorded in `docs/qwen3-8b-baseline.md`
+Correctness comparison: BLOCKED — reference GPU smoke test cannot initialize HSA
 Performance measurements: PENDING
 ```
 
