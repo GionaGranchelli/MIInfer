@@ -15,12 +15,13 @@ For long-term direction, see:
 
 # Current Phase
 
-**M0 closed — M1 kernel laboratory ready**
+**M1 — Kernel Laboratory**
 
 MIInfer is not yet an inference runtime.
 
-The baseline infrastructure and external reference are established. MIInfer is
-not yet an inference runtime; the next approved phase is kernel-level research.
+M0 is closed. The baseline infrastructure and external reference are
+established, and the active phase is kernel-level research. MIInfer is not yet
+an inference runtime.
 
 ---
 
@@ -101,12 +102,13 @@ been implemented.
 
 The immediate technical objective is:
 
-> Begin M1 with measured gfx906 kernel-laboratory experiments against the
-> pinned external reference baseline.
+> Establish correctness and performance baselines for FP16 GEMV on the exact
+> Qwen3-8B projection shapes before introducing gfx906-specific optimizations.
 
 M0 is closed under the documented gfx802-isolated configuration. The
 repository-side infrastructure, physical MI50 validation, model artifact, and
-reference baseline are recorded.
+reference baseline are recorded. The gfx802-isolation requirement remains a
+documented platform prerequisite for M1 GPU execution.
 
 ---
 

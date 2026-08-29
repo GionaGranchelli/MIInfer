@@ -1,16 +1,16 @@
 # Graph Report - mi50  (2026-08-29)
 
 ## Corpus Check
-- 61 files · ~63,343 words
+- 53 files · ~54,698 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1008 nodes · 1010 edges · 118 communities (104 shown, 14 thin omitted)
+- 1008 nodes · 1067 edges · 109 communities (100 shown, 9 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `6ae036d0`
+- Built from commit: `90b2f034`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -18,13 +18,13 @@
 - hardware.md
 - architecture.md
 - benchmarking.md
-- hip_smoke_bench.cpp
+- DeviceInfo
 - EXP-0001-benchmark-harness-validation.md
 - MIInfer
 - current-state.md
 - AGENTS.md
 - TEMPLATE.md
-- What You Must Do When Invoked
+- Fp16GemvMetrics
 - What You Must Do When Invoked
 - context.md
 - EXP-0002-fp16-gemv-baseline.md
@@ -42,7 +42,7 @@
 - Candidate work
 - M0 — Baseline and Project Bootstrap
 - 29. Development sequence
-- graphify reference: extra exports and benchmark
+- fp16_gemv_bench.cpp
 - graphify reference: extra exports and benchmark
 - MI50 Platform Notes
 - 8. anikifoss/llama.cpp-gfx906
@@ -51,7 +51,6 @@
 - M3 — Minimal Runtime
 - M1 — Kernel Laboratory
 - 32. Codex task behavior
-- graphify reference: query, path, explain
 - graphify reference: query, path, explain
 - 43. Initial MIInfer Benchmark Matrix
 - Qwen3-8B Dense Control Model
@@ -71,9 +70,6 @@
 - capture-env.sh
 - 17. Correctness requirements
 - 3. Fundamental engineering rules
-- graphify reference: add a URL and watch a folder
-- graphify reference: commit hook and native CLAUDE.md integration
-- graphify reference: incremental update and cluster-only
 - graphify reference: add a URL and watch a folder
 - graphify reference: commit hook and native CLAUDE.md integration
 - graphify reference: incremental update and cluster-only
@@ -108,8 +104,6 @@
 - 2. Core hypothesis
 - graphify reference: GitHub clone and cross-repo merge
 - graphify reference: transcribe video and audio
-- graphify reference: GitHub clone and cross-repo merge
-- graphify reference: transcribe video and audio
 - D010 — No Silent CPU or Generic Fallback
 - D015 — Repacking Should Not Occur in Hot Paths
 - D026 — Strongest Available Relevant Baseline Wins
@@ -123,41 +117,40 @@
 - 34. Guiding principle
 - AGENTS.md
 - bench/README.md
-- CLAUDE.md
-- .claude/CLAUDE.md
-- .claude/skills/graphify/references/extraction-spec.md
-- .codex/skills/graphify/references/extraction-spec.md
+- extraction-spec.md
 - diagnose-gfx802-isolation.sh
 - tests/README.md
 - 6. Baseline
-- 35. Local Execution Gate
+- 35. Historical failed execution gate — superseded by Section 37
 
 ## God Nodes (most connected - your core abstractions)
 1. `MIInfer` - 19 edges
-2. `EXP-NNNN — Title` - 13 edges
-3. `What You Must Do When Invoked` - 12 edges
-4. `What You Must Do When Invoked` - 12 edges
-5. `5. ai-infos/vllm-gfx906-mobydick` - 12 edges
-6. `DeviceInfo` - 11 edges
-7. `3. iacopPBK/llama.cpp-gfx906` - 11 edges
-8. `/graphify` - 10 edges
-9. `/graphify` - 10 edges
-10. `2. milpster/gfx906-llama-cpp` - 10 edges
+2. `Options` - 13 edges
+3. `EXP-NNNN — Title` - 13 edges
+4. `DeviceInfo` - 12 edges
+5. `What You Must Do When Invoked` - 12 edges
+6. `5. ai-infos/vllm-gfx906-mobydick` - 12 edges
+7. `run_one()` - 11 edges
+8. `3. iacopPBK/llama.cpp-gfx906` - 11 edges
+9. `Fp16GemvMetrics` - 10 edges
+10. `/graphify` - 10 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `selected_shapes()` --references--> `GemvShape`  [EXTRACTED]
+  bench/fp16_gemv_bench.cpp → include/miinfer/fp16_gemv.hpp
+- `metrics_json()` --references--> `Fp16GemvMetrics`  [EXTRACTED]
+  bench/fp16_gemv_bench.cpp → include/miinfer/fp16_gemv.hpp
+- `run_one()` --references--> `DeviceInfo`  [EXTRACTED]
+  bench/fp16_gemv_bench.cpp → include/miinfer/device_validation.hpp
+- `run_one()` --references--> `GemvShape`  [EXTRACTED]
+  bench/fp16_gemv_bench.cpp → include/miinfer/fp16_gemv.hpp
 - `inspect_device()` --references--> `DeviceInfo`  [EXTRACTED]
-  src/device_validation.cpp → include/miinfer/device_validation.hpp
-- `is_gfx906()` --references--> `DeviceInfo`  [EXTRACTED]
-  src/device_validation.cpp → include/miinfer/device_validation.hpp
-- `print_device_info()` --references--> `DeviceInfo`  [EXTRACTED]
-  src/device_validation.cpp → include/miinfer/device_validation.hpp
-- `validate_gfx906_device()` --references--> `DeviceInfo`  [EXTRACTED]
   src/device_validation.cpp → include/miinfer/device_validation.hpp
 
 ## Import Cycles
 - None detected.
 
-## Communities (118 total, 14 thin omitted)
+## Communities (109 total, 9 thin omitted)
 
 ### Community 0 - "hardware.md"
 Cohesion: 0.04
@@ -171,7 +164,7 @@ Nodes (43): 10. Memory Architecture, 11. Weight Residency, 12. Tensor Layout, 13
 Cohesion: 0.05
 Nodes (43): 10. Reversed Ordering, 11. Statistics, 12. Performance Delta, 13. Benchmark Stability, 14. Baseline Selection, 15. Baseline Pinning, 16. Model Equivalence, 17. Quantization Equivalence (+35 more)
 
-### Community 3 - "hip_smoke_bench.cpp"
+### Community 3 - "DeviceInfo"
 Cohesion: 0.07
 Nodes (31): size_t, string, json_escape(), main(), Options, device, elements, iterations (+23 more)
 
@@ -195,9 +188,9 @@ Nodes (27): 11. Static specialization, 12. Static kernel selection, 13. HIP grap
 Cohesion: 0.07
 Nodes (27): 11. Model / Workload, 12. Test Matrix, 14. Correctness Results, 16. Pre-Run Hardware State, 19. Per-Shape Results, 1. Question, 20. Effective Bandwidth, 21. Resource Usage (+19 more)
 
-### Community 9 - "What You Must Do When Invoked"
-Cohesion: 0.08
-Nodes (24): For /graphify add and --watch, For /graphify query, For the commit hook and native CLAUDE.md integration, For --update and --cluster-only, /graphify, Honesty Rules, Interpreter guard for subcommands, Part A - Structural extraction for code files (+16 more)
+### Community 9 - "Fp16GemvMetrics"
+Cohesion: 0.07
+Nodes (32): Fp16GemvMetrics, cosine_similarity, inf_detected, max_abs_error, max_relative_error, mean_abs_error, nan_detected, pass (+24 more)
 
 ### Community 10 - "What You Must Do When Invoked"
 Cohesion: 0.08
@@ -267,9 +260,9 @@ Nodes (10): Benchmark protocol, Deliverables, Exit criteria, Goal, Hardware envi
 Cohesion: 0.22
 Nodes (9): 29. Development sequence, M0 — Baseline, M1 — Kernel laboratory, M2 — Prove specialization, M3 — Minimal runtime, M4 — First correct generation, M5 — Beat reference, M6 — Runtime specialization (+1 more)
 
-### Community 27 - "graphify reference: extra exports and benchmark"
-Cohesion: 0.22
-Nodes (8): graphify reference: extra exports and benchmark, Step 6b - Wiki (only if --wiki flag), Step 7 - Neo4j export (only if --neo4j or --neo4j-push flag), Step 7a - FalkorDB export (only if --falkordb or --falkordb-push flag), Step 7b - SVG export (only if --svg flag), Step 7c - GraphML export (only if --graphml flag), Step 7d - MCP server (only if --mcp flag), Step 8 - Token reduction benchmark (only if total_words > 5000)
+### Community 27 - "fp16_gemv_bench.cpp"
+Cohesion: 0.14
+Nodes (28): ostream, string, uint32_t, vector, implementation_label(), json_escape(), main(), median_of() (+20 more)
 
 ### Community 28 - "graphify reference: extra exports and benchmark"
 Cohesion: 0.22
@@ -302,10 +295,6 @@ Nodes (7): Benchmark harness, Exit criteria, Goal, Initial kernel areas, Initial
 ### Community 35 - "32. Codex task behavior"
 Cohesion: 0.33
 Nodes (6): 32. Codex task behavior, Before adding abstractions, Before adding fallback behavior, Before declaring a performance win, Before modifying code, Before removing apparently strange gfx906 code
-
-### Community 36 - "graphify reference: query, path, explain"
-Cohesion: 0.33
-Nodes (5): For /graphify explain, For /graphify path, graphify reference: query, path, explain, Step 0 — Constrained query expansion (REQUIRED before traversal), Step 1 — Traversal
 
 ### Community 37 - "graphify reference: query, path, explain"
 Cohesion: 0.33
@@ -382,18 +371,6 @@ Nodes (4): 17. Correctness requirements, Level 1 — numerical, Level 2 — laye
 ### Community 55 - "3. Fundamental engineering rules"
 Cohesion: 0.50
 Nodes (4): 3.1 Measure before optimizing, 3.2 Every optimization needs a baseline, 3.3 Negative results are valuable, 3. Fundamental engineering rules
-
-### Community 56 - "graphify reference: add a URL and watch a folder"
-Cohesion: 0.50
-Nodes (3): For /graphify add, For --watch, graphify reference: add a URL and watch a folder
-
-### Community 57 - "graphify reference: commit hook and native CLAUDE.md integration"
-Cohesion: 0.50
-Nodes (3): For git commit hook, For native CLAUDE.md integration, graphify reference: commit hook and native CLAUDE.md integration
-
-### Community 58 - "graphify reference: incremental update and cluster-only"
-Cohesion: 0.50
-Nodes (3): For --cluster-only, For --update (incremental re-extraction), graphify reference: incremental update and cluster-only
 
 ### Community 59 - "graphify reference: add a URL and watch a folder"
 Cohesion: 0.50
@@ -563,14 +540,14 @@ Nodes (7): capture_env(), capture_topology(), finish(), rebind_target(), run_cap
 Cohesion: 0.50
 Nodes (4): 6. Baseline, Implementation, Kernel, Relevant configuration
 
-### Community 117 - "35. Local Execution Gate"
+### Community 117 - "35. Historical failed execution gate — superseded by Section 37"
 Cohesion: 0.67
-Nodes (3): 35. Local Execution Gate, 36. Task 3 Platform-Recovery Pilot, 37. Accepted MI50 execution
+Nodes (3): 35. Historical failed execution gate — superseded by Section 37, 36. Task 3 Platform-Recovery Pilot, 37. Accepted MI50 execution
 
 ## Knowledge Gaps
-- **753 isolated node(s):** `device`, `warmup`, `iterations`, `elements`, `json_output` (+748 more)
+- **734 isolated node(s):** `shape`, `implementation`, `cache_regime`, `device`, `warmup` (+729 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **14 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **9 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
@@ -581,8 +558,8 @@ _Questions this graph is uniquely positioned to answer:_
   _High betweenness centrality (0.022) - this node is a cross-community bridge._
 - **Why does `5. ai-infos/vllm-gfx906-mobydick` connect `5. ai-infos/vllm-gfx906-mobydick` to `references.md`?**
   _High betweenness centrality (0.018) - this node is a cross-community bridge._
-- **What connects `device`, `warmup`, `iterations` to the rest of the system?**
-  _753 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **What connects `shape`, `implementation`, `cache_regime` to the rest of the system?**
+  _734 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `hardware.md` be split into smaller, more focused modules?**
   _Cohesion score 0.0425531914893617 - nodes in this community are weakly interconnected._
 - **Should `architecture.md` be split into smaller, more focused modules?**

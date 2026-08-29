@@ -237,7 +237,7 @@ Correctness: PASS in all five accepted runs
 Decision: KEEP
 ```
 
-# 35. Local Execution Gate
+# 35. Historical failed execution gate — superseded by Section 37
 
 An execution attempt on 2026-08-29 completed the repository-side checks but
 could not reach HIP execution. `/dev/kfd` was present and the user had the
@@ -254,13 +254,15 @@ in both `render` and `video`. The exact `rocminfo` failure was emitted from
 `rocminfo.cc:1324` and returned the generic HSA error above. This is recorded
 as a platform/runtime blocker, not a reason to broaden device validation.
 
-No timing result is recorded. The experiment remains `PROPOSED` and must be
-executed on a usable physical MI50 before it receives a benchmark decision.
+No timing result was recorded for this historical attempt. This failed gate is
+retained for provenance and is superseded by the accepted physical MI50
+execution documented in Section 37; it does not change the experiment's
+current `KEEP` decision.
 
-The Task 2 repository changes are not represented by a clean commit yet, so
-there is no eligible provenance commit for physical benchmark evidence. When
-the MI50 run is performed, record the exact clean MIInfer commit, dirty state,
-release preset, benchmark command, and artifact directories here.
+At the time of this historical attempt, the Task 2 repository changes were not
+represented by a clean commit, so it was not eligible provenance for physical
+benchmark evidence. The later accepted execution records the clean commit,
+release preset, command, and artifact directories.
 
 ## 36. Task 3 Platform-Recovery Pilot
 

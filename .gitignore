@@ -194,6 +194,18 @@ CMakeUserPresets.json
 docs/generated/
 
 # -----------------------------------------------------------------------------
+# Graphify generated/local state
+#
+# The portable graph.json, GRAPH_REPORT.md, and manifest.json are retained;
+# caches, dated snapshots, HTML exports, and local labels are not.
+# -----------------------------------------------------------------------------
+
+graphify-out/cache/
+graphify-out/[0-9]*/
+graphify-out/*.html
+graphify-out/.graphify_*
+
+# -----------------------------------------------------------------------------
 # Package manager artifacts if introduced locally
 # -----------------------------------------------------------------------------
 

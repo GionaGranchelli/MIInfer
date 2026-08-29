@@ -55,6 +55,7 @@ endif()
 if(MIINFER_ENABLE_HIP)
     set(MIINFER_HIP_AVAILABLE "true")
     set(MIINFER_HIP_COMPILER "${CMAKE_HIP_COMPILER_ID} ${CMAKE_HIP_COMPILER_VERSION}")
+    find_package(hipblas CONFIG REQUIRED)
 else()
     set(MIINFER_HIP_AVAILABLE "false")
     set(MIINFER_HIP_COMPILER "UNAVAILABLE")
@@ -80,7 +81,9 @@ target_compile_options(miinfer_build_info PRIVATE
 if(MIINFER_ENABLE_HIP)
     add_library(miinfer_hip STATIC
         src/device_validation.cpp
+        src/fp16_gemv_reference.cpp
         gfx906/kernels/vector_add.hip
+        gfx906/kernels/fp16_gemv.hip
     )
     target_include_directories(miinfer_hip
         PUBLIC
@@ -88,7 +91,7 @@ if(MIINFER_ENABLE_HIP)
             "${CMAKE_CURRENT_BINARY_DIR}/generated"
     )
     target_compile_features(miinfer_hip PUBLIC cxx_std_20)
-    target_link_libraries(miinfer_hip PUBLIC miinfer_build_info)
+    target_link_libraries(miinfer_hip PUBLIC miinfer_build_info roc::hipblas)
     target_compile_definitions(miinfer_hip PUBLIC __HIP_PLATFORM_AMD__)
     target_compile_options(miinfer_hip PRIVATE
         $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Wpedantic>
@@ -112,6 +115,14 @@ if(MIINFER_ENABLE_HIP)
     add_executable(miinfer-bench bench/hip_smoke_bench.cpp)
     target_link_libraries(miinfer-bench PRIVATE miinfer_hip)
     target_compile_options(miinfer-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-fp16-gemv-test tests/fp16_gemv_test.cpp)
+    target_link_libraries(miinfer-fp16-gemv-test PRIVATE miinfer_hip)
+    target_compile_options(miinfer-fp16-gemv-test PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-fp16-gemv-bench bench/fp16_gemv_bench.cpp)
+    target_link_libraries(miinfer-fp16-gemv-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-fp16-gemv-bench PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
 include(CTest)
@@ -121,10 +132,13 @@ if(BUILD_TESTING)
     if(MIINFER_ENABLE_HIP)
         add_test(NAME hip-smoke COMMAND miinfer-hip-smoke)
         set_tests_properties(hip-smoke PROPERTIES LABELS "gpu-required")
+        add_test(NAME fp16-gemv-correctness COMMAND miinfer-fp16-gemv-test)
+        set_tests_properties(fp16-gemv-correctness PROPERTIES LABELS "gpu-required")
     endif()
 endif()
 
 install(TARGETS miinfer-host-test)
 if(MIINFER_ENABLE_HIP)
-    install(TARGETS miinfer-device-info miinfer-hip-smoke miinfer-bench)
+    install(TARGETS miinfer-device-info miinfer-hip-smoke miinfer-bench
+                    miinfer-fp16-gemv-test miinfer-fp16-gemv-bench)
 endif()
