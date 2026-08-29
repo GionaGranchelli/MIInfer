@@ -70,6 +70,13 @@ No other GPU architecture is currently supported.
 * physical MI50 build and validation of the pinned external gfx906 reference
 * reproducible Qwen3-8B F16 GGUF conversion and checksum
 * initial llama.cpp PP/TG measurements
+* EXP-0002 FP16 GEMV baseline implementation and five-run MI50 measurement
+
+EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
+correctness-valid for both the project-owned HIP baseline and the strongest
+valid installed-library comparison (`hipblasGemmEx` with FP16 operands and
+FP32 compute). The canonical streaming results and raw artifacts are recorded
+in [`EXP-0002`](../experiments/EXP-0002-fp16-gemv-baseline.md).
 
 ROCr/HSA initialization fails with both AMD GPUs exposed, but the confirmed
 gfx802-isolation workaround leaves the MI50/gfx906 device usable. With that
