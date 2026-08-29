@@ -4,6 +4,58 @@
   "graph": {},
   "nodes": [
     {
+      "id": "include_miinfer_fp16_gemv_gemvshape",
+      "label": "GemvShape",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 108,
+      "community_name": "fp16_gemv.hpp",
+      "file_type": "code",
+      "norm_label": "gemvshape",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L12"
+    },
+    {
+      "id": "include_miinfer_fp16_gemv_rocblasgemmhandle",
+      "label": "RocblasGemmHandle",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 108,
+      "community_name": "fp16_gemv.hpp",
+      "file_type": "code",
+      "norm_label": "rocblasgemmhandle",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L96"
+    },
+    {
+      "id": "bench_fp16_gemv_k_split_bench_options",
+      "label": "Options",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 119,
+      "community_name": "Options",
+      "file_type": "code",
+      "norm_label": "options",
+      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
+      "source_location": "L23"
+    },
+    {
+      "id": "include_miinfer_fp16_gemv_gemvkernelresources",
+      "label": "GemvKernelResources",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 121,
+      "community_name": "GemvKernelResources",
+      "file_type": "code",
+      "norm_label": "gemvkernelresources",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L87"
+    },
+    {
       "id": "bench_fp16_gemv_bench_options",
       "label": "Options",
       "_callable": true,
@@ -17,43 +69,17 @@
       "source_location": "L24"
     },
     {
-      "id": "bench_fp16_gemv_k_split_bench_options",
-      "label": "Options",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "options",
-      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
-      "source_location": "L23"
-    },
-    {
       "id": "include_miinfer_device_validation_deviceinfo",
       "label": "DeviceInfo",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "community_name": "DeviceInfo",
       "file_type": "code",
       "norm_label": "deviceinfo",
       "source_file": "include/miinfer/device_validation.hpp",
       "source_location": "L9"
-    },
-    {
-      "id": "include_miinfer_fp16_gemv_gemvshape",
-      "label": "GemvShape",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "gemvshape",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L12"
     },
     {
       "id": "bench_memory_stream_bench_options",
@@ -88,37 +114,11 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 9,
-      "community_name": "fp16_gemv.hpp",
+      "community_name": "Fp16GemvMetrics",
       "file_type": "code",
       "norm_label": "fp16gemvmetrics",
       "source_file": "include/miinfer/fp16_gemv.hpp",
       "source_location": "L21"
-    },
-    {
-      "id": "include_miinfer_fp16_gemv_gemvkernelresources",
-      "label": "GemvKernelResources",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 9,
-      "community_name": "fp16_gemv.hpp",
-      "file_type": "code",
-      "norm_label": "gemvkernelresources",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L87"
-    },
-    {
-      "id": "include_miinfer_fp16_gemv_rocblasgemmhandle",
-      "label": "RocblasGemmHandle",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 9,
-      "community_name": "fp16_gemv.hpp",
-      "file_type": "code",
-      "norm_label": "rocblasgemmhandle",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L96"
     },
     {
       "id": "bench_fp16_gemv_reduction_diag_options",
@@ -144,6 +144,210 @@
       "norm_label": "print_build_info()",
       "source_file": "src/build_info.cpp",
       "source_location": "L9"
+    },
+    {
+      "id": "tests_fp16_gemv_test_check_output",
+      "label": "check_output()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 108,
+      "community_name": "fp16_gemv.hpp",
+      "file_type": "code",
+      "norm_label": "check_output()",
+      "source_file": "tests/fp16_gemv_test.cpp",
+      "source_location": "L16"
+    },
+    {
+      "id": "tests_fp16_gemv_test_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 108,
+      "community_name": "fp16_gemv.hpp",
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "tests/fp16_gemv_test.cpp",
+      "source_location": "L107"
+    },
+    {
+      "id": "tests_fp16_gemv_test_run_shape",
+      "label": "run_shape()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 108,
+      "community_name": "fp16_gemv.hpp",
+      "file_type": "code",
+      "norm_label": "run_shape()",
+      "source_file": "tests/fp16_gemv_test.cpp",
+      "source_location": "L30"
+    },
+    {
+      "id": "bench_fp16_gemv_k_split_bench_escape",
+      "label": "escape()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "escape()",
+      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
+      "source_location": "L110"
+    },
+    {
+      "id": "bench_fp16_gemv_k_split_bench_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
+      "source_location": "L269"
+    },
+    {
+      "id": "bench_fp16_gemv_k_split_bench_median",
+      "label": "median()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "median()",
+      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
+      "source_location": "L123"
+    },
+    {
+      "id": "bench_fp16_gemv_k_split_bench_nonnegative",
+      "label": "nonnegative()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "nonnegative()",
+      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
+      "source_location": "L52"
+    },
+    {
+      "id": "bench_fp16_gemv_k_split_bench_parse",
+      "label": "parse()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "parse()",
+      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
+      "source_location": "L61"
+    },
+    {
+      "id": "bench_fp16_gemv_k_split_bench_positive",
+      "label": "positive()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "positive()",
+      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
+      "source_location": "L43"
+    },
+    {
+      "id": "bench_fp16_gemv_k_split_bench_run_shape",
+      "label": "run_shape()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "run_shape()",
+      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
+      "source_location": "L131"
+    },
+    {
+      "id": "bench_fp16_gemv_k_split_bench_usage",
+      "label": "usage()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "usage()",
+      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
+      "source_location": "L33"
+    },
+    {
+      "id": "src_device_validation_inspect_device",
+      "label": "inspect_device()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 120,
+      "community_name": "device_validation.cpp",
+      "file_type": "code",
+      "norm_label": "inspect_device()",
+      "source_file": "src/device_validation.cpp",
+      "source_location": "L13"
+    },
+    {
+      "id": "src_device_validation_is_gfx906",
+      "label": "is_gfx906()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 120,
+      "community_name": "device_validation.cpp",
+      "file_type": "code",
+      "norm_label": "is_gfx906()",
+      "source_file": "src/device_validation.cpp",
+      "source_location": "L29"
+    },
+    {
+      "id": "src_device_validation_print_device_info",
+      "label": "print_device_info()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 120,
+      "community_name": "device_validation.cpp",
+      "file_type": "code",
+      "norm_label": "print_device_info()",
+      "source_file": "src/device_validation.cpp",
+      "source_location": "L87"
+    },
+    {
+      "id": "src_device_validation_validate_gfx906_device",
+      "label": "validate_gfx906_device()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 120,
+      "community_name": "device_validation.cpp",
+      "file_type": "code",
+      "norm_label": "validate_gfx906_device()",
+      "source_file": "src/device_validation.cpp",
+      "source_location": "L35"
+    },
+    {
+      "id": "include_miinfer_hip_check_hip_check",
+      "label": "hip_check()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 122,
+      "community_name": "hip_check.hpp",
+      "file_type": "code",
+      "norm_label": "hip_check()",
+      "source_file": "include/miinfer/hip_check.hpp",
+      "source_location": "L26"
+    },
+    {
+      "id": "include_miinfer_hip_check_hip_check_failed",
+      "label": "hip_check_failed()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 122,
+      "community_name": "hip_check.hpp",
+      "file_type": "code",
+      "norm_label": "hip_check_failed()",
+      "source_file": "include/miinfer/hip_check.hpp",
+      "source_location": "L11"
     },
     {
       "id": "bench_fp16_gemv_bench_implementation_label",
@@ -326,220 +530,16 @@
       "source_location": "L86"
     },
     {
-      "id": "bench_fp16_gemv_k_split_bench_escape",
-      "label": "escape()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "escape()",
-      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
-      "source_location": "L110"
-    },
-    {
-      "id": "bench_fp16_gemv_k_split_bench_main",
-      "label": "main()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
-      "source_location": "L269"
-    },
-    {
-      "id": "bench_fp16_gemv_k_split_bench_median",
-      "label": "median()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "median()",
-      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
-      "source_location": "L123"
-    },
-    {
-      "id": "bench_fp16_gemv_k_split_bench_nonnegative",
-      "label": "nonnegative()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "nonnegative()",
-      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
-      "source_location": "L52"
-    },
-    {
-      "id": "bench_fp16_gemv_k_split_bench_parse",
-      "label": "parse()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "parse()",
-      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
-      "source_location": "L61"
-    },
-    {
-      "id": "bench_fp16_gemv_k_split_bench_positive",
-      "label": "positive()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "positive()",
-      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
-      "source_location": "L43"
-    },
-    {
-      "id": "bench_fp16_gemv_k_split_bench_run_shape",
-      "label": "run_shape()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "run_shape()",
-      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
-      "source_location": "L131"
-    },
-    {
-      "id": "bench_fp16_gemv_k_split_bench_usage",
-      "label": "usage()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "usage()",
-      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
-      "source_location": "L33"
-    },
-    {
-      "id": "include_miinfer_hip_check_hip_check",
-      "label": "hip_check()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "hip_check()",
-      "source_file": "include/miinfer/hip_check.hpp",
-      "source_location": "L26"
-    },
-    {
-      "id": "include_miinfer_hip_check_hip_check_failed",
-      "label": "hip_check_failed()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "hip_check_failed()",
-      "source_file": "include/miinfer/hip_check.hpp",
-      "source_location": "L11"
-    },
-    {
-      "id": "src_device_validation_inspect_device",
-      "label": "inspect_device()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "inspect_device()",
-      "source_file": "src/device_validation.cpp",
-      "source_location": "L13"
-    },
-    {
-      "id": "src_device_validation_is_gfx906",
-      "label": "is_gfx906()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "is_gfx906()",
-      "source_file": "src/device_validation.cpp",
-      "source_location": "L29"
-    },
-    {
-      "id": "src_device_validation_print_device_info",
-      "label": "print_device_info()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "print_device_info()",
-      "source_file": "src/device_validation.cpp",
-      "source_location": "L87"
-    },
-    {
-      "id": "src_device_validation_validate_gfx906_device",
-      "label": "validate_gfx906_device()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "validate_gfx906_device()",
-      "source_file": "src/device_validation.cpp",
-      "source_location": "L35"
-    },
-    {
       "id": "tests_device_info_main",
       "label": "main()",
       "_callable": true,
       "_origin": "ast",
       "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "community_name": "DeviceInfo",
       "file_type": "code",
       "norm_label": "main()",
       "source_file": "tests/device_info.cpp",
       "source_location": "L8"
-    },
-    {
-      "id": "tests_fp16_gemv_test_check_output",
-      "label": "check_output()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "check_output()",
-      "source_file": "tests/fp16_gemv_test.cpp",
-      "source_location": "L16"
-    },
-    {
-      "id": "tests_fp16_gemv_test_main",
-      "label": "main()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "tests/fp16_gemv_test.cpp",
-      "source_location": "L107"
-    },
-    {
-      "id": "tests_fp16_gemv_test_run_shape",
-      "label": "run_shape()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "run_shape()",
-      "source_file": "tests/fp16_gemv_test.cpp",
-      "source_location": "L30"
     },
     {
       "id": "tests_hip_smoke_main",
@@ -547,7 +547,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "community_name": "DeviceInfo",
       "file_type": "code",
       "norm_label": "main()",
       "source_file": "tests/hip_smoke.cpp",
@@ -559,7 +559,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "community_name": "DeviceInfo",
       "file_type": "code",
       "norm_label": "main()",
       "source_file": "tests/host_test.cpp",
@@ -739,7 +739,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 9,
-      "community_name": "fp16_gemv.hpp",
+      "community_name": "Fp16GemvMetrics",
       "file_type": "code",
       "norm_label": "evaluate_fp16_gemv()",
       "source_file": "src/fp16_gemv_reference.cpp",
@@ -751,7 +751,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 9,
-      "community_name": "fp16_gemv.hpp",
+      "community_name": "Fp16GemvMetrics",
       "file_type": "code",
       "norm_label": "fp16_gemv_cpu_reference()",
       "source_file": "src/fp16_gemv_reference.cpp",
@@ -763,7 +763,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 9,
-      "community_name": "fp16_gemv.hpp",
+      "community_name": "Fp16GemvMetrics",
       "file_type": "code",
       "norm_label": "generate_fp16_gemv_data()",
       "source_file": "src/fp16_gemv_reference.cpp",
@@ -2497,64 +2497,103 @@
       "source_location": "L1"
     },
     {
-      "id": "docs_roadmap_comparison_dimensions",
-      "label": "Comparison dimensions",
+      "id": "include_miinfer_fp16_gemv",
+      "label": "fp16_gemv.hpp",
       "_origin": "ast",
       "community": 108,
-      "community_name": "Comparison dimensions",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "comparison dimensions",
-      "source_file": "docs/roadmap.md",
-      "source_location": "L464"
+      "community_name": "fp16_gemv.hpp",
+      "file_type": "code",
+      "norm_label": "fp16_gemv.hpp",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L1"
     },
     {
-      "id": "docs_roadmap_context_regimes",
-      "label": "Context regimes",
+      "id": "include_miinfer_fp16_gemv_gemvshape_id",
+      "label": "id",
       "_origin": "ast",
       "community": 108,
-      "community_name": "Comparison dimensions",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "context regimes",
-      "source_file": "docs/roadmap.md",
-      "source_location": "L480"
+      "community_name": "fp16_gemv.hpp",
+      "file_type": "code",
+      "norm_label": "id",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L13"
     },
     {
-      "id": "docs_roadmap_decode",
-      "label": "Decode",
+      "id": "include_miinfer_fp16_gemv_gemvshape_k",
+      "label": "k",
       "_origin": "ast",
       "community": 108,
-      "community_name": "Comparison dimensions",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "decode",
-      "source_file": "docs/roadmap.md",
-      "source_location": "L474"
+      "community_name": "fp16_gemv.hpp",
+      "file_type": "code",
+      "norm_label": "k",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L16"
     },
     {
-      "id": "docs_roadmap_prompt_processing",
-      "label": "Prompt processing",
+      "id": "include_miinfer_fp16_gemv_gemvshape_m",
+      "label": "m",
       "_origin": "ast",
       "community": 108,
-      "community_name": "Comparison dimensions",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "prompt processing",
-      "source_file": "docs/roadmap.md",
-      "source_location": "L468"
+      "community_name": "fp16_gemv.hpp",
+      "file_type": "code",
+      "norm_label": "m",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L15"
     },
     {
-      "id": "docs_roadmap_system_metrics",
-      "label": "System metrics",
+      "id": "include_miinfer_fp16_gemv_gemvshape_projection",
+      "label": "projection",
       "_origin": "ast",
       "community": 108,
-      "community_name": "Comparison dimensions",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "system metrics",
-      "source_file": "docs/roadmap.md",
-      "source_location": "L488"
+      "community_name": "fp16_gemv.hpp",
+      "file_type": "code",
+      "norm_label": "projection",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L14"
+    },
+    {
+      "id": "include_miinfer_fp16_gemv_rocblasgemmhandle_opaque",
+      "label": "opaque",
+      "_origin": "ast",
+      "community": 108,
+      "community_name": "fp16_gemv.hpp",
+      "file_type": "code",
+      "norm_label": "opaque",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L97"
+    },
+    {
+      "id": "tests_fp16_gemv_test",
+      "label": "fp16_gemv_test.cpp",
+      "_origin": "ast",
+      "community": 108,
+      "community_name": "fp16_gemv.hpp",
+      "file_type": "code",
+      "norm_label": "fp16_gemv_test.cpp",
+      "source_file": "tests/fp16_gemv_test.cpp",
+      "source_location": "L1"
+    },
+    {
+      "id": "tests_fp16_gemv_test_cpp_half",
+      "label": "__half",
+      "_origin": "ast",
+      "community": 108,
+      "community_name": "fp16_gemv.hpp",
+      "file_type": "code",
+      "norm_label": "__half",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "tests_fp16_gemv_test_cpp_vector",
+      "label": "vector",
+      "_origin": "ast",
+      "community": 108,
+      "community_name": "fp16_gemv.hpp",
+      "file_type": "code",
+      "norm_label": "vector",
+      "source_file": "",
+      "source_location": ""
     },
     {
       "id": "docs_current_state_completed",
@@ -2602,7 +2641,7 @@
       "node_kind": "heading",
       "norm_label": "not implemented",
       "source_file": "docs/current-state.md",
-      "source_location": "L87"
+      "source_location": "L88"
     },
     {
       "id": "context",
@@ -2890,7 +2929,7 @@
       "node_kind": "heading",
       "norm_label": "current scope",
       "source_file": "docs/current-state.md",
-      "source_location": "L336"
+      "source_location": "L341"
     },
     {
       "id": "docs_current_state_in_scope_now",
@@ -2902,7 +2941,7 @@
       "node_kind": "heading",
       "norm_label": "in scope now",
       "source_file": "docs/current-state.md",
-      "source_location": "L338"
+      "source_location": "L343"
     },
     {
       "id": "docs_current_state_not_in_scope_now",
@@ -2914,7 +2953,7 @@
       "node_kind": "heading",
       "norm_label": "not in scope now",
       "source_file": "docs/current-state.md",
-      "source_location": "L349"
+      "source_location": "L354"
     },
     {
       "id": "codex_skills_graphify_references_extraction_spec",
@@ -3192,6 +3231,138 @@
       "source_location": "L294"
     },
     {
+      "id": "bench_fp16_gemv_k_split_bench",
+      "label": "fp16_gemv_k_split_bench.cpp",
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "fp16_gemv_k_split_bench.cpp",
+      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
+      "source_location": "L1"
+    },
+    {
+      "id": "bench_fp16_gemv_k_split_bench_cpp_ostream",
+      "label": "ostream",
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "ostream",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "bench_fp16_gemv_k_split_bench_cpp_string",
+      "label": "string",
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "string",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "bench_fp16_gemv_k_split_bench_cpp_vector",
+      "label": "vector",
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "vector",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "bench_fp16_gemv_k_split_bench_cpp_uint32_t",
+      "label": "uint32_t",
+      "_origin": "ast",
+      "community": 119,
+      "community_name": "Options",
+      "file_type": "code",
+      "norm_label": "uint32_t",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "bench_fp16_gemv_k_split_bench_options_device",
+      "label": "device",
+      "_origin": "ast",
+      "community": 119,
+      "community_name": "Options",
+      "file_type": "code",
+      "norm_label": "device",
+      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
+      "source_location": "L26"
+    },
+    {
+      "id": "bench_fp16_gemv_k_split_bench_options_iterations",
+      "label": "iterations",
+      "_origin": "ast",
+      "community": 119,
+      "community_name": "Options",
+      "file_type": "code",
+      "norm_label": "iterations",
+      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
+      "source_location": "L28"
+    },
+    {
+      "id": "bench_fp16_gemv_k_split_bench_options_json_output",
+      "label": "json_output",
+      "_origin": "ast",
+      "community": 119,
+      "community_name": "Options",
+      "file_type": "code",
+      "norm_label": "json_output",
+      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
+      "source_location": "L30"
+    },
+    {
+      "id": "bench_fp16_gemv_k_split_bench_options_seed",
+      "label": "seed",
+      "_origin": "ast",
+      "community": 119,
+      "community_name": "Options",
+      "file_type": "code",
+      "norm_label": "seed",
+      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
+      "source_location": "L29"
+    },
+    {
+      "id": "bench_fp16_gemv_k_split_bench_options_shape",
+      "label": "shape",
+      "_origin": "ast",
+      "community": 119,
+      "community_name": "Options",
+      "file_type": "code",
+      "norm_label": "shape",
+      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
+      "source_location": "L24"
+    },
+    {
+      "id": "bench_fp16_gemv_k_split_bench_options_warmup",
+      "label": "warmup",
+      "_origin": "ast",
+      "community": 119,
+      "community_name": "Options",
+      "file_type": "code",
+      "norm_label": "warmup",
+      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
+      "source_location": "L27"
+    },
+    {
+      "id": "bench_fp16_gemv_k_split_bench_options_workgroups_per_row",
+      "label": "workgroups_per_row",
+      "_origin": "ast",
+      "community": 119,
+      "community_name": "Options",
+      "file_type": "code",
+      "norm_label": "workgroups_per_row",
+      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
+      "source_location": "L25"
+    },
+    {
       "id": "experiments_exp_0002_fp16_gemv_baseline",
       "label": "EXP-0002-fp16-gemv-baseline.md",
       "_origin": "ast",
@@ -3417,6 +3588,116 @@
       "node_kind": "heading",
       "norm_label": "exp-0002 \u2014 fp16 gemv baseline on qwen3-8b shapes",
       "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_device_validation",
+      "label": "device_validation.cpp",
+      "_origin": "ast",
+      "community": 120,
+      "community_name": "device_validation.cpp",
+      "file_type": "code",
+      "norm_label": "device_validation.cpp",
+      "source_file": "src/device_validation.cpp",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_device_validation_cpp_ostream",
+      "label": "ostream",
+      "_origin": "ast",
+      "community": 120,
+      "community_name": "device_validation.cpp",
+      "file_type": "code",
+      "norm_label": "ostream",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "src_device_validation_cpp_string",
+      "label": "string",
+      "_origin": "ast",
+      "community": 120,
+      "community_name": "device_validation.cpp",
+      "file_type": "code",
+      "norm_label": "string",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "include_miinfer_fp16_gemv_gemvkernelresources_local_bytes",
+      "label": "local_bytes",
+      "_origin": "ast",
+      "community": 121,
+      "community_name": "GemvKernelResources",
+      "file_type": "code",
+      "norm_label": "local_bytes",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L90"
+    },
+    {
+      "id": "include_miinfer_fp16_gemv_gemvkernelresources_max_threads_per_block",
+      "label": "max_threads_per_block",
+      "_origin": "ast",
+      "community": 121,
+      "community_name": "GemvKernelResources",
+      "file_type": "code",
+      "norm_label": "max_threads_per_block",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L91"
+    },
+    {
+      "id": "include_miinfer_fp16_gemv_gemvkernelresources_registers",
+      "label": "registers",
+      "_origin": "ast",
+      "community": 121,
+      "community_name": "GemvKernelResources",
+      "file_type": "code",
+      "norm_label": "registers",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L88"
+    },
+    {
+      "id": "include_miinfer_fp16_gemv_gemvkernelresources_shared_bytes",
+      "label": "shared_bytes",
+      "_origin": "ast",
+      "community": 121,
+      "community_name": "GemvKernelResources",
+      "file_type": "code",
+      "norm_label": "shared_bytes",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L89"
+    },
+    {
+      "id": "include_miinfer_fp16_gemv_hpp_size_t",
+      "label": "size_t",
+      "_origin": "ast",
+      "community": 121,
+      "community_name": "GemvKernelResources",
+      "file_type": "code",
+      "norm_label": "size_t",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "hiperror_t",
+      "label": "hipError_t",
+      "_origin": "ast",
+      "community": 122,
+      "community_name": "hip_check.hpp",
+      "file_type": "code",
+      "norm_label": "hiperror_t",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "include_miinfer_hip_check",
+      "label": "hip_check.hpp",
+      "_origin": "ast",
+      "community": 122,
+      "community_name": "hip_check.hpp",
+      "file_type": "code",
+      "norm_label": "hip_check.hpp",
+      "source_file": "include/miinfer/hip_check.hpp",
       "source_location": "L1"
     },
     {
@@ -5424,11 +5705,23 @@
       "source_location": "L824"
     },
     {
+      "id": "docs_roadmap_comparison_dimensions",
+      "label": "Comparison dimensions",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "Comparison dimensions",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "comparison dimensions",
+      "source_file": "docs/roadmap.md",
+      "source_location": "L464"
+    },
+    {
       "id": "docs_roadmap_comparison_rules",
       "label": "Comparison rules",
       "_origin": "ast",
       "community": 21,
-      "community_name": "M5 \u2014 Beat the Reference",
+      "community_name": "Comparison dimensions",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "comparison rules",
@@ -5436,11 +5729,35 @@
       "source_location": "L499"
     },
     {
+      "id": "docs_roadmap_context_regimes",
+      "label": "Context regimes",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "Comparison dimensions",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "context regimes",
+      "source_file": "docs/roadmap.md",
+      "source_location": "L480"
+    },
+    {
+      "id": "docs_roadmap_decode",
+      "label": "Decode",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "Comparison dimensions",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "decode",
+      "source_file": "docs/roadmap.md",
+      "source_location": "L474"
+    },
+    {
       "id": "docs_roadmap_exit_criteria_512",
       "label": "Exit criteria",
       "_origin": "ast",
       "community": 21,
-      "community_name": "M5 \u2014 Beat the Reference",
+      "community_name": "Comparison dimensions",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "exit criteria",
@@ -5452,7 +5769,7 @@
       "label": "Goal",
       "_origin": "ast",
       "community": 21,
-      "community_name": "M5 \u2014 Beat the Reference",
+      "community_name": "Comparison dimensions",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "goal",
@@ -5464,7 +5781,7 @@
       "label": "H0 supported",
       "_origin": "ast",
       "community": 21,
-      "community_name": "M5 \u2014 Beat the Reference",
+      "community_name": "Comparison dimensions",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "h0 supported",
@@ -5476,7 +5793,7 @@
       "label": "H1 supported",
       "_origin": "ast",
       "community": 21,
-      "community_name": "M5 \u2014 Beat the Reference",
+      "community_name": "Comparison dimensions",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "h1 supported",
@@ -5488,7 +5805,7 @@
       "label": "M5 \u2014 Beat the Reference",
       "_origin": "ast",
       "community": 21,
-      "community_name": "M5 \u2014 Beat the Reference",
+      "community_name": "Comparison dimensions",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "m5 \u2014 beat the reference",
@@ -5500,12 +5817,36 @@
       "label": "Mixed result",
       "_origin": "ast",
       "community": 21,
-      "community_name": "M5 \u2014 Beat the Reference",
+      "community_name": "Comparison dimensions",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "mixed result",
       "source_file": "docs/roadmap.md",
       "source_location": "L530"
+    },
+    {
+      "id": "docs_roadmap_prompt_processing",
+      "label": "Prompt processing",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "Comparison dimensions",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "prompt processing",
+      "source_file": "docs/roadmap.md",
+      "source_location": "L468"
+    },
+    {
+      "id": "docs_roadmap_system_metrics",
+      "label": "System metrics",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "Comparison dimensions",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "system metrics",
+      "source_file": "docs/roadmap.md",
+      "source_location": "L488"
     },
     {
       "id": "docs_references_4_mxxm_t_mx_llama_cpp",
@@ -6487,154 +6828,11 @@
       "source_location": "L6"
     },
     {
-      "id": "bench_fp16_gemv_k_split_bench",
-      "label": "fp16_gemv_k_split_bench.cpp",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "fp16_gemv_k_split_bench.cpp",
-      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
-      "source_location": "L1"
-    },
-    {
-      "id": "bench_fp16_gemv_k_split_bench_cpp_ostream",
-      "label": "ostream",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "ostream",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "bench_fp16_gemv_k_split_bench_cpp_string",
-      "label": "string",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "string",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "bench_fp16_gemv_k_split_bench_cpp_uint32_t",
-      "label": "uint32_t",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "uint32_t",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "bench_fp16_gemv_k_split_bench_cpp_vector",
-      "label": "vector",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "vector",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "bench_fp16_gemv_k_split_bench_options_device",
-      "label": "device",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "device",
-      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
-      "source_location": "L26"
-    },
-    {
-      "id": "bench_fp16_gemv_k_split_bench_options_iterations",
-      "label": "iterations",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "iterations",
-      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
-      "source_location": "L28"
-    },
-    {
-      "id": "bench_fp16_gemv_k_split_bench_options_json_output",
-      "label": "json_output",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "json_output",
-      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
-      "source_location": "L30"
-    },
-    {
-      "id": "bench_fp16_gemv_k_split_bench_options_seed",
-      "label": "seed",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "seed",
-      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
-      "source_location": "L29"
-    },
-    {
-      "id": "bench_fp16_gemv_k_split_bench_options_shape",
-      "label": "shape",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "shape",
-      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
-      "source_location": "L24"
-    },
-    {
-      "id": "bench_fp16_gemv_k_split_bench_options_warmup",
-      "label": "warmup",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "warmup",
-      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
-      "source_location": "L27"
-    },
-    {
-      "id": "bench_fp16_gemv_k_split_bench_options_workgroups_per_row",
-      "label": "workgroups_per_row",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "workgroups_per_row",
-      "source_file": "bench/fp16_gemv_k_split_bench.cpp",
-      "source_location": "L25"
-    },
-    {
-      "id": "hiperror_t",
-      "label": "hipError_t",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "hiperror_t",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
       "id": "include_miinfer_device_validation",
       "label": "device_validation.hpp",
       "_origin": "ast",
       "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "community_name": "DeviceInfo",
       "file_type": "code",
       "norm_label": "device_validation.hpp",
       "source_file": "include/miinfer/device_validation.hpp",
@@ -6645,7 +6843,7 @@
       "label": "architecture",
       "_origin": "ast",
       "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "community_name": "DeviceInfo",
       "file_type": "code",
       "norm_label": "architecture",
       "source_file": "include/miinfer/device_validation.hpp",
@@ -6656,7 +6854,7 @@
       "label": "index",
       "_origin": "ast",
       "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "community_name": "DeviceInfo",
       "file_type": "code",
       "norm_label": "index",
       "source_file": "include/miinfer/device_validation.hpp",
@@ -6667,7 +6865,7 @@
       "label": "name",
       "_origin": "ast",
       "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "community_name": "DeviceInfo",
       "file_type": "code",
       "norm_label": "name",
       "source_file": "include/miinfer/device_validation.hpp",
@@ -6678,7 +6876,7 @@
       "label": "total_vram_bytes",
       "_origin": "ast",
       "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "community_name": "DeviceInfo",
       "file_type": "code",
       "norm_label": "total_vram_bytes",
       "source_file": "include/miinfer/device_validation.hpp",
@@ -6689,7 +6887,7 @@
       "label": "size_t",
       "_origin": "ast",
       "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "community_name": "DeviceInfo",
       "file_type": "code",
       "norm_label": "size_t",
       "source_file": "",
@@ -6700,161 +6898,40 @@
       "label": "string",
       "_origin": "ast",
       "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "community_name": "DeviceInfo",
       "file_type": "code",
       "norm_label": "string",
       "source_file": "",
       "source_location": ""
-    },
-    {
-      "id": "include_miinfer_fp16_gemv_gemvshape_id",
-      "label": "id",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "id",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L13"
-    },
-    {
-      "id": "include_miinfer_fp16_gemv_gemvshape_k",
-      "label": "k",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "k",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L16"
-    },
-    {
-      "id": "include_miinfer_fp16_gemv_gemvshape_m",
-      "label": "m",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "m",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L15"
-    },
-    {
-      "id": "include_miinfer_fp16_gemv_gemvshape_projection",
-      "label": "projection",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "projection",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L14"
-    },
-    {
-      "id": "include_miinfer_hip_check",
-      "label": "hip_check.hpp",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "hip_check.hpp",
-      "source_file": "include/miinfer/hip_check.hpp",
-      "source_location": "L1"
     },
     {
       "id": "include_miinfer_vector_add",
       "label": "vector_add.hpp",
       "_origin": "ast",
       "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "community_name": "DeviceInfo",
       "file_type": "code",
       "norm_label": "vector_add.hpp",
       "source_file": "include/miinfer/vector_add.hpp",
       "source_location": "L1"
     },
     {
-      "id": "src_device_validation",
-      "label": "device_validation.cpp",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "device_validation.cpp",
-      "source_file": "src/device_validation.cpp",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_device_validation_cpp_ostream",
-      "label": "ostream",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "ostream",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "src_device_validation_cpp_string",
-      "label": "string",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "string",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
       "id": "tests_device_info",
       "label": "device_info.cpp",
       "_origin": "ast",
       "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "community_name": "DeviceInfo",
       "file_type": "code",
       "norm_label": "device_info.cpp",
       "source_file": "tests/device_info.cpp",
       "source_location": "L1"
     },
     {
-      "id": "tests_fp16_gemv_test",
-      "label": "fp16_gemv_test.cpp",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "fp16_gemv_test.cpp",
-      "source_file": "tests/fp16_gemv_test.cpp",
-      "source_location": "L1"
-    },
-    {
-      "id": "tests_fp16_gemv_test_cpp_half",
-      "label": "__half",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "__half",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "tests_fp16_gemv_test_cpp_vector",
-      "label": "vector",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
-      "file_type": "code",
-      "norm_label": "vector",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
       "id": "tests_hip_smoke",
       "label": "hip_smoke.cpp",
       "_origin": "ast",
       "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "community_name": "DeviceInfo",
       "file_type": "code",
       "norm_label": "hip_smoke.cpp",
       "source_file": "tests/hip_smoke.cpp",
@@ -6865,7 +6942,7 @@
       "label": "host_test.cpp",
       "_origin": "ast",
       "community": 3,
-      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "community_name": "DeviceInfo",
       "file_type": "code",
       "norm_label": "host_test.cpp",
       "source_file": "tests/host_test.cpp",
@@ -9637,28 +9714,40 @@
       "source_location": "L160"
     },
     {
-      "id": "experiments_exp_0004_fp16_gemv_k_split_parallelism_15_decision",
-      "label": "15. Decision",
+      "id": "experiments_exp_0004_fp16_gemv_k_split_parallelism_15_results",
+      "label": "15. Results",
       "_origin": "ast",
       "community": 56,
       "community_name": "EXP-0004 \u2014 FP16 GEMV K-Split Parallelism",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "15. decision",
+      "norm_label": "15. results",
       "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
       "source_location": "L166"
     },
     {
-      "id": "experiments_exp_0004_fp16_gemv_k_split_parallelism_16_follow_up",
-      "label": "16. Follow-up",
+      "id": "experiments_exp_0004_fp16_gemv_k_split_parallelism_16_decision",
+      "label": "16. Decision",
       "_origin": "ast",
       "community": 56,
       "community_name": "EXP-0004 \u2014 FP16 GEMV K-Split Parallelism",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "16. follow-up",
+      "norm_label": "16. decision",
       "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
-      "source_location": "L170"
+      "source_location": "L216"
+    },
+    {
+      "id": "experiments_exp_0004_fp16_gemv_k_split_parallelism_17_follow_up",
+      "label": "17. Follow-up",
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "EXP-0004 \u2014 FP16 GEMV K-Split Parallelism",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "17. follow-up",
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L226"
     },
     {
       "id": "experiments_exp_0004_fp16_gemv_k_split_parallelism_1_question",
@@ -10046,7 +10135,7 @@
       "node_kind": "heading",
       "norm_label": "current benchmark priority",
       "source_file": "docs/current-state.md",
-      "source_location": "L227"
+      "source_location": "L228"
     },
     {
       "id": "docs_current_state_current_build_direction",
@@ -10058,7 +10147,7 @@
       "node_kind": "heading",
       "norm_label": "current build direction",
       "source_file": "docs/current-state.md",
-      "source_location": "L144"
+      "source_location": "L145"
     },
     {
       "id": "docs_current_state_current_correctness_policy",
@@ -10070,7 +10159,7 @@
       "node_kind": "heading",
       "norm_label": "current correctness policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L285"
+      "source_location": "L290"
     },
     {
       "id": "docs_current_state_current_dependency_policy",
@@ -10082,7 +10171,7 @@
       "node_kind": "heading",
       "norm_label": "current dependency policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L170"
+      "source_location": "L171"
     },
     {
       "id": "docs_current_state_current_experiment_queue",
@@ -10094,7 +10183,7 @@
       "node_kind": "heading",
       "norm_label": "current experiment queue",
       "source_file": "docs/current-state.md",
-      "source_location": "L253"
+      "source_location": "L258"
     },
     {
       "id": "docs_current_state_current_hardware_observation_requirements",
@@ -10106,7 +10195,7 @@
       "node_kind": "heading",
       "norm_label": "current hardware observation requirements",
       "source_file": "docs/current-state.md",
-      "source_location": "L316"
+      "source_location": "L321"
     },
     {
       "id": "docs_current_state_current_hardware_target",
@@ -10130,7 +10219,7 @@
       "node_kind": "heading",
       "norm_label": "current performance policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L301"
+      "source_location": "L306"
     },
     {
       "id": "docs_current_state_current_phase",
@@ -10154,7 +10243,7 @@
       "node_kind": "heading",
       "norm_label": "current reference strategy",
       "source_file": "docs/current-state.md",
-      "source_location": "L207"
+      "source_location": "L208"
     },
     {
       "id": "docs_current_state_current_runtime_policy",
@@ -10166,7 +10255,7 @@
       "node_kind": "heading",
       "norm_label": "current runtime policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L190"
+      "source_location": "L191"
     },
     {
       "id": "docs_current_state_definition_of_current_success",
@@ -10178,7 +10267,7 @@
       "node_kind": "heading",
       "norm_label": "definition of current success",
       "source_file": "docs/current-state.md",
-      "source_location": "L402"
+      "source_location": "L407"
     },
     {
       "id": "docs_current_state_do_not_start_yet",
@@ -10190,7 +10279,7 @@
       "node_kind": "heading",
       "norm_label": "do not start yet",
       "source_file": "docs/current-state.md",
-      "source_location": "L368"
+      "source_location": "L373"
     },
     {
       "id": "docs_current_state_first_major_gate",
@@ -10202,7 +10291,7 @@
       "node_kind": "heading",
       "norm_label": "first major gate",
       "source_file": "docs/current-state.md",
-      "source_location": "L275"
+      "source_location": "L280"
     },
     {
       "id": "docs_current_state_immediate_deliverables",
@@ -10214,7 +10303,7 @@
       "node_kind": "heading",
       "norm_label": "immediate deliverables",
       "source_file": "docs/current-state.md",
-      "source_location": "L124"
+      "source_location": "L125"
     },
     {
       "id": "docs_current_state_immediate_objective",
@@ -10226,7 +10315,7 @@
       "node_kind": "heading",
       "norm_label": "immediate objective",
       "source_file": "docs/current-state.md",
-      "source_location": "L109"
+      "source_location": "L110"
     },
     {
       "id": "docs_current_state_last_updated",
@@ -10238,7 +10327,7 @@
       "node_kind": "heading",
       "norm_label": "last updated",
       "source_file": "docs/current-state.md",
-      "source_location": "L426"
+      "source_location": "L431"
     },
     {
       "id": "docs_current_state_miinfer_current_state",
@@ -10262,7 +10351,7 @@
       "node_kind": "heading",
       "norm_label": "next implementation task",
       "source_file": "docs/current-state.md",
-      "source_location": "L389"
+      "source_location": "L394"
     },
     {
       "id": "codex_skills_graphify_references_hooks",
@@ -12389,22 +12478,11 @@
       "source_location": "L32"
     },
     {
-      "id": "include_miinfer_fp16_gemv",
-      "label": "fp16_gemv.hpp",
-      "_origin": "ast",
-      "community": 9,
-      "community_name": "fp16_gemv.hpp",
-      "file_type": "code",
-      "norm_label": "fp16_gemv.hpp",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L1"
-    },
-    {
       "id": "include_miinfer_fp16_gemv_fp16gemvmetrics_cosine_similarity",
       "label": "cosine_similarity",
       "_origin": "ast",
       "community": 9,
-      "community_name": "fp16_gemv.hpp",
+      "community_name": "Fp16GemvMetrics",
       "file_type": "code",
       "norm_label": "cosine_similarity",
       "source_file": "include/miinfer/fp16_gemv.hpp",
@@ -12415,7 +12493,7 @@
       "label": "inf_detected",
       "_origin": "ast",
       "community": 9,
-      "community_name": "fp16_gemv.hpp",
+      "community_name": "Fp16GemvMetrics",
       "file_type": "code",
       "norm_label": "inf_detected",
       "source_file": "include/miinfer/fp16_gemv.hpp",
@@ -12426,7 +12504,7 @@
       "label": "max_abs_error",
       "_origin": "ast",
       "community": 9,
-      "community_name": "fp16_gemv.hpp",
+      "community_name": "Fp16GemvMetrics",
       "file_type": "code",
       "norm_label": "max_abs_error",
       "source_file": "include/miinfer/fp16_gemv.hpp",
@@ -12437,7 +12515,7 @@
       "label": "max_relative_error",
       "_origin": "ast",
       "community": 9,
-      "community_name": "fp16_gemv.hpp",
+      "community_name": "Fp16GemvMetrics",
       "file_type": "code",
       "norm_label": "max_relative_error",
       "source_file": "include/miinfer/fp16_gemv.hpp",
@@ -12448,7 +12526,7 @@
       "label": "mean_abs_error",
       "_origin": "ast",
       "community": 9,
-      "community_name": "fp16_gemv.hpp",
+      "community_name": "Fp16GemvMetrics",
       "file_type": "code",
       "norm_label": "mean_abs_error",
       "source_file": "include/miinfer/fp16_gemv.hpp",
@@ -12459,7 +12537,7 @@
       "label": "nan_detected",
       "_origin": "ast",
       "community": 9,
-      "community_name": "fp16_gemv.hpp",
+      "community_name": "Fp16GemvMetrics",
       "file_type": "code",
       "norm_label": "nan_detected",
       "source_file": "include/miinfer/fp16_gemv.hpp",
@@ -12470,84 +12548,18 @@
       "label": "pass",
       "_origin": "ast",
       "community": 9,
-      "community_name": "fp16_gemv.hpp",
+      "community_name": "Fp16GemvMetrics",
       "file_type": "code",
       "norm_label": "pass",
       "source_file": "include/miinfer/fp16_gemv.hpp",
       "source_location": "L28"
     },
     {
-      "id": "include_miinfer_fp16_gemv_gemvkernelresources_local_bytes",
-      "label": "local_bytes",
-      "_origin": "ast",
-      "community": 9,
-      "community_name": "fp16_gemv.hpp",
-      "file_type": "code",
-      "norm_label": "local_bytes",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L90"
-    },
-    {
-      "id": "include_miinfer_fp16_gemv_gemvkernelresources_max_threads_per_block",
-      "label": "max_threads_per_block",
-      "_origin": "ast",
-      "community": 9,
-      "community_name": "fp16_gemv.hpp",
-      "file_type": "code",
-      "norm_label": "max_threads_per_block",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L91"
-    },
-    {
-      "id": "include_miinfer_fp16_gemv_gemvkernelresources_registers",
-      "label": "registers",
-      "_origin": "ast",
-      "community": 9,
-      "community_name": "fp16_gemv.hpp",
-      "file_type": "code",
-      "norm_label": "registers",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L88"
-    },
-    {
-      "id": "include_miinfer_fp16_gemv_gemvkernelresources_shared_bytes",
-      "label": "shared_bytes",
-      "_origin": "ast",
-      "community": 9,
-      "community_name": "fp16_gemv.hpp",
-      "file_type": "code",
-      "norm_label": "shared_bytes",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L89"
-    },
-    {
-      "id": "include_miinfer_fp16_gemv_hpp_size_t",
-      "label": "size_t",
-      "_origin": "ast",
-      "community": 9,
-      "community_name": "fp16_gemv.hpp",
-      "file_type": "code",
-      "norm_label": "size_t",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "include_miinfer_fp16_gemv_rocblasgemmhandle_opaque",
-      "label": "opaque",
-      "_origin": "ast",
-      "community": 9,
-      "community_name": "fp16_gemv.hpp",
-      "file_type": "code",
-      "norm_label": "opaque",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L97"
-    },
-    {
       "id": "src_fp16_gemv_reference",
       "label": "fp16_gemv_reference.cpp",
       "_origin": "ast",
       "community": 9,
-      "community_name": "fp16_gemv.hpp",
+      "community_name": "Fp16GemvMetrics",
       "file_type": "code",
       "norm_label": "fp16_gemv_reference.cpp",
       "source_file": "src/fp16_gemv_reference.cpp",
@@ -12558,7 +12570,7 @@
       "label": "__half",
       "_origin": "ast",
       "community": 9,
-      "community_name": "fp16_gemv.hpp",
+      "community_name": "Fp16GemvMetrics",
       "file_type": "code",
       "norm_label": "__half",
       "source_file": "",
@@ -12569,7 +12581,7 @@
       "label": "uint32_t",
       "_origin": "ast",
       "community": 9,
-      "community_name": "fp16_gemv.hpp",
+      "community_name": "Fp16GemvMetrics",
       "file_type": "code",
       "norm_label": "uint32_t",
       "source_file": "",
@@ -12580,7 +12592,7 @@
       "label": "vector",
       "_origin": "ast",
       "community": 9,
-      "community_name": "fp16_gemv.hpp",
+      "community_name": "Fp16GemvMetrics",
       "file_type": "code",
       "norm_label": "vector",
       "source_file": "",
@@ -19103,7 +19115,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L109",
+      "source_location": "L110",
       "weight": 1.0
     },
     {
@@ -19114,7 +19126,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L124",
+      "source_location": "L125",
       "weight": 1.0
     },
     {
@@ -19125,7 +19137,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L144",
+      "source_location": "L145",
       "weight": 1.0
     },
     {
@@ -19147,7 +19159,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L170",
+      "source_location": "L171",
       "weight": 1.0
     },
     {
@@ -19158,7 +19170,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L190",
+      "source_location": "L191",
       "weight": 1.0
     },
     {
@@ -19169,7 +19181,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L207",
+      "source_location": "L208",
       "weight": 1.0
     },
     {
@@ -19180,7 +19192,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L227",
+      "source_location": "L228",
       "weight": 1.0
     },
     {
@@ -19191,18 +19203,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L253",
-      "weight": 1.0
-    },
-    {
-      "source": "docs_current_state",
-      "target": "docs_current_state_first_major_gate",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/current-state.md",
-      "source_location": "L275",
+      "source_location": "L258",
       "weight": 1.0
     },
     {
@@ -19218,13 +19219,24 @@
     },
     {
       "source": "docs_current_state",
+      "target": "docs_current_state_first_major_gate",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/current-state.md",
+      "source_location": "L280",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_current_state",
       "target": "docs_current_state_current_correctness_policy",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L285",
+      "source_location": "L290",
       "weight": 1.0
     },
     {
@@ -19235,7 +19247,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L301",
+      "source_location": "L306",
       "weight": 1.0
     },
     {
@@ -19246,7 +19258,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L316",
+      "source_location": "L321",
       "weight": 1.0
     },
     {
@@ -19257,7 +19269,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L336",
+      "source_location": "L341",
       "weight": 1.0
     },
     {
@@ -19268,7 +19280,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L368",
+      "source_location": "L373",
       "weight": 1.0
     },
     {
@@ -19279,7 +19291,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L389",
+      "source_location": "L394",
       "weight": 1.0
     },
     {
@@ -19290,7 +19302,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L402",
+      "source_location": "L407",
       "weight": 1.0
     },
     {
@@ -19312,7 +19324,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L426",
+      "source_location": "L431",
       "weight": 1.0
     },
     {
@@ -19345,7 +19357,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L87",
+      "source_location": "L88",
       "weight": 1.0
     },
     {
@@ -19356,7 +19368,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L338",
+      "source_location": "L343",
       "weight": 1.0
     },
     {
@@ -19367,7 +19379,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L349",
+      "source_location": "L354",
       "weight": 1.0
     },
     {
@@ -24630,7 +24642,7 @@
     },
     {
       "source": "experiments_exp_0004_fp16_gemv_k_split_parallelism_exp_0004_fp16_gemv_k_split_parallelism",
-      "target": "experiments_exp_0004_fp16_gemv_k_split_parallelism_15_decision",
+      "target": "experiments_exp_0004_fp16_gemv_k_split_parallelism_15_results",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -24641,13 +24653,24 @@
     },
     {
       "source": "experiments_exp_0004_fp16_gemv_k_split_parallelism_exp_0004_fp16_gemv_k_split_parallelism",
-      "target": "experiments_exp_0004_fp16_gemv_k_split_parallelism_16_follow_up",
+      "target": "experiments_exp_0004_fp16_gemv_k_split_parallelism_16_decision",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
-      "source_location": "L170",
+      "source_location": "L216",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0004_fp16_gemv_k_split_parallelism_exp_0004_fp16_gemv_k_split_parallelism",
+      "target": "experiments_exp_0004_fp16_gemv_k_split_parallelism_17_follow_up",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md",
+      "source_location": "L226",
       "weight": 1.0
     },
     {
@@ -26451,7 +26474,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L221",
+      "source_location": "L222",
       "weight": 1.0
     },
     {
@@ -26462,7 +26485,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L80",
+      "source_location": "L81",
       "weight": 1.0
     },
     {
@@ -26577,5 +26600,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "cd54f8d085013e48ad1eeb9281e5d73191c681c3"
+  "built_at_commit": "7d7d6ad5e27cf07f0c5a75bf998c665e23f9780e"
 }

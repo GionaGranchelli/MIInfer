@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788039851.4827096,
-    "seen": 1788039857.1156907,
-    "ast_hash": "19665a84154c2c03aa338f23ff772d5b",
+    "mtime": 1788040388.519228,
+    "seen": 1788040402.4466896,
+    "ast_hash": "293bc2727c9b8b85b3c47dab7e58b7a0",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -366,9 +366,9 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0004-fp16-gemv-k-split-parallelism.md": {
-    "mtime": 1788039851.4837096,
-    "seen": 1788039857.1157076,
-    "ast_hash": "3b7071a44a83fb0f3de5968345338b82",
+    "mtime": 1788040398.3491826,
+    "seen": 1788040402.4467063,
+    "ast_hash": "e2d4fd92158357be8a09bc8876eae761",
     "semantic_hash": ""
   },
   "bench/fp16_gemv_k_split_bench.cpp": {

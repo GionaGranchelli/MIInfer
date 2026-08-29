@@ -72,6 +72,7 @@ No other GPU architecture is currently supported.
 * reproducible Qwen3-8B F16 GGUF conversion and checksum
 * initial llama.cpp PP/TG measurements
 * EXP-0002 FP16 GEMV baseline implementation and five-run MI50 measurement
+* EXP-0004 FP16 K-split K/V specialization, accepted after five-run measurement
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -238,7 +239,9 @@ The first benchmark families should approximately be:
 5. gfx906-specialized GEMV experiments
 ```
 
-The accepted EXP-0002 baseline has been characterized in EXP-0003. The
+The accepted EXP-0002 baseline has been characterized in EXP-0003, and
+EXP-0004 established a K/V-specific FP16 K-split specialization with a 52%
+latency reduction on the real `M=1024, K=4096` shapes. The
 external llama.cpp kernel-share measurement remains a `RETEST` item because a
 compatible ROCm profiler is not installed, but that gap does not block
 isolated M1 kernel experiments. It remains required before an M2 or end-to-end
@@ -246,7 +249,9 @@ claim against the real llama.cpp decode path.
 
 Attention and MoE benchmarks should wait until representative target-model
 shapes and actual bottlenecks are frozen. Quantized GEMV remains queued after
-the first FP16 specialization hypothesis.
+the quantized GEMV baseline on the real Qwen3-8B projection shapes. The
+accepted K-split implementation is currently limited to the K/V shape family;
+Q/O continues to use the EXP-0002 baseline configuration.
 
 ---
 
@@ -261,7 +266,7 @@ EXP-0002 — FP16 GEMV baseline
 
 EXP-0003 — FP16 GEMV bottleneck characterization (RETEST: external profiler gap)
 
-EXP-0004 — FP16 K-split parallelism for K/V (PROPOSED)
+EXP-0004 — FP16 K-split parallelism for K/V (KEEP)
 
 EXP-0005 — quantized GEMV baseline
 

@@ -1,11 +1,11 @@
 # EXP-0004 — FP16 GEMV K-Split Parallelism
 
-**Status:** PROPOSED  
+**Status:** KEEP
 **Milestone:** M1  
 **Author:** MIInfer project  
 **Date:** 2026-08-29  
 **Baseline commit:** `b7dfbddce33f2dfd6d006bfe198a02a6f27dbf7f`  
-**Candidate commit:** not implemented
+**Candidate commit:** `7d7d6ad5e27c`
 
 ## 1. Question
 
@@ -163,11 +163,69 @@ This experiment does not implement or evaluate DPP reduction, DS swizzle,
 inline gfx906 ISA, logical half-wave execution, vectorized packing, software
 prefetch, autotuning, fusion, quantization, or runtime functionality.
 
-## 15. Decision
+## 15. Results
 
-Pending execution.
+The Release candidate was measured with 10,000 timed logical GEMVs per run,
+10 warmups, and five independent runs for each shape/configuration. The
+STREAMING regime rotated three equivalent device weight buffers. The result
+artifact root is:
 
-## 16. Follow-up
+```text
+bench/results/EXP-0004-k-split/runs/
+```
 
-Select one subsequent experiment from the measured result. Do not implement a
-follow-up optimization in EXP-0004.
+All 30 invocations retained `environment-before.json`, `result.json`,
+`telemetry.jsonl`, and `environment-after.json`. Every result reported
+`git_dirty=false`, commit `7d7d6ad5e27c`, and correctness `pass=true`.
+
+Aggregate median of the five per-run medians:
+
+| Shape | M | K | Impl | WG/row | Median us | Effective GB/s | Correctness |
+| --- | ---: | ---: | --- | ---: | ---: | ---: | --- |
+| K | 1024 | 4096 | baseline | 1 | 70.720 | 118.8 | PASS |
+| K | 1024 | 4096 | K-split | 2 | 70.880 | 118.5 | PASS |
+| K | 1024 | 4096 | K-split | 4 | 33.600 | 250.0 | PASS |
+| V | 1024 | 4096 | baseline | 1 | 70.560 | 119.0 | PASS |
+| V | 1024 | 4096 | K-split | 2 | 70.720 | 118.8 | PASS |
+| V | 1024 | 4096 | K-split | 4 | 33.600 | 250.0 | PASS |
+| Q | 4096 | 4096 | baseline | 1 | 88.320 | 380.1 | PASS |
+| Q | 4096 | 4096 | K-split | 2 | 85.440 | 392.9 | PASS |
+| Q | 4096 | 4096 | K-split | 4 | 100.800 | 333.0 | PASS |
+
+Relative to the corresponding baseline, split-4 improves K by 52.5% and V
+by 52.4%. Split-2 is neutral for K/V. Q split-2 improves by 3.3%, while Q
+split-4 regresses by 14.1%. This guard result rejects universal selection but
+supports a static K/V-specific selection.
+
+The split-4 partial buffer is `1024 * 4 * sizeof(float) = 16 KiB` for the
+tested K/V shape. This is temporary benchmark workspace, not persistent model
+storage.
+
+Active telemetry across accepted runs contained 141 active samples. The
+observed active ranges were:
+
+```text
+SCLK: 1725 MHz
+MCLK: 1000 MHz
+Temperature: 35–44 C
+Power: 94–196 W
+```
+
+No run was marked contaminated.
+
+## 16. Decision
+
+**EXP-0004 KEEP**
+
+The best candidate exceeds the 15% K/V threshold by a wide margin, is
+correctness-valid, stable across five independent runs, uses negligible
+temporary workspace, and was measured with valid active clocks. The result is
+accepted as a K/V-specific FP16 specialization baseline. Q split-4 is not
+accepted as a general replacement.
+
+## 17. Follow-up
+
+Recommend one next experiment: establish the **quantized GEMV baseline** on
+the real Qwen3-8B projection shapes. This keeps the project moving toward its
+primary inference path while preserving the accepted FP16 K/V specialization
+as a control. Do not implement that follow-up as part of EXP-0004.

@@ -1,16 +1,16 @@
 # Graph Report - mi50  (2026-08-29)
 
 ## Corpus Check
-- 59 files · ~61,194 words
+- 59 files · ~61,681 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1100 nodes · 1198 edges · 118 communities (109 shown, 9 thin omitted)
+- 1101 nodes · 1199 edges · 123 communities (114 shown, 9 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `cd54f8d0`
+- Built from commit: `7d7d6ad5`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -18,13 +18,13 @@
 - hardware.md
 - architecture.md
 - benchmarking.md
-- fp16_gemv_k_split_bench.cpp
+- DeviceInfo
 - EXP-0001-benchmark-harness-validation.md
 - MIInfer
 - current-state.md
 - AGENTS.md
 - TEMPLATE.md
-- fp16_gemv.hpp
+- Fp16GemvMetrics
 - What You Must Do When Invoked
 - context.md
 - EXP-0002-fp16-gemv-baseline.md
@@ -36,7 +36,7 @@
 - references.md
 - decisions.md
 - 7. Neroued/ninfer
-- M5 — Beat the Reference
+- Comparison dimensions
 - 4. mxxm-t/mx-llama.cpp
 - roadmap.md
 - Candidate work
@@ -123,7 +123,7 @@
 - 34. Guiding principle
 - AGENTS.md
 - bench/README.md
-- Comparison dimensions
+- fp16_gemv.hpp
 - Current Project Status
 - Current Scope
 - extraction-spec.md
@@ -131,11 +131,16 @@
 - tests/README.md
 - 6. Baseline
 - 35. Historical failed execution gate — superseded by Section 37
+- fp16_gemv_k_split_bench.cpp
+- Options
+- device_validation.cpp
+- GemvKernelResources
+- hip_check.hpp
 
 ## God Nodes (most connected - your core abstractions)
 1. `MIInfer` - 19 edges
 2. `Options` - 18 edges
-3. `EXP-0004 — FP16 GEMV K-Split Parallelism` - 17 edges
+3. `EXP-0004 — FP16 GEMV K-Split Parallelism` - 18 edges
 4. `EXP-0003 — FP16 GEMV Bottleneck Characterization` - 15 edges
 5. `DeviceInfo` - 13 edges
 6. `EXP-NNNN — Title` - 13 edges
@@ -159,7 +164,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (118 total, 9 thin omitted)
+## Communities (123 total, 9 thin omitted)
 
 ### Community 0 - "hardware.md"
 Cohesion: 0.04
@@ -173,9 +178,9 @@ Nodes (43): 10. Memory Architecture, 11. Weight Residency, 12. Tensor Layout, 13
 Cohesion: 0.05
 Nodes (43): 10. Reversed Ordering, 11. Statistics, 12. Performance Delta, 13. Benchmark Stability, 14. Baseline Selection, 15. Baseline Pinning, 16. Model Equivalence, 17. Quantization Equivalence (+35 more)
 
-### Community 3 - "fp16_gemv_k_split_bench.cpp"
-Cohesion: 0.05
-Nodes (46): ostream, string, uint32_t, vector, escape(), main(), median(), nonnegative() (+38 more)
+### Community 3 - "DeviceInfo"
+Cohesion: 0.14
+Nodes (7): DeviceInfo, architecture, index, name, total_vram_bytes, size_t, string
 
 ### Community 4 - "EXP-0001-benchmark-harness-validation.md"
 Cohesion: 0.06
@@ -197,9 +202,9 @@ Nodes (27): 11. Static specialization, 12. Static kernel selection, 13. HIP grap
 Cohesion: 0.07
 Nodes (27): 11. Model / Workload, 12. Test Matrix, 14. Correctness Results, 16. Pre-Run Hardware State, 19. Per-Shape Results, 1. Question, 20. Effective Bandwidth, 21. Resource Usage (+19 more)
 
-### Community 9 - "fp16_gemv.hpp"
-Cohesion: 0.10
-Nodes (22): Fp16GemvMetrics, cosine_similarity, inf_detected, max_abs_error, max_relative_error, mean_abs_error, nan_detected, pass (+14 more)
+### Community 9 - "Fp16GemvMetrics"
+Cohesion: 0.17
+Nodes (14): Fp16GemvMetrics, cosine_similarity, inf_detected, max_abs_error, max_relative_error, mean_abs_error, nan_detected, pass (+6 more)
 
 ### Community 10 - "What You Must Do When Invoked"
 Cohesion: 0.08
@@ -245,9 +250,9 @@ Nodes (12): D023 — Triton Is a Research Tool, Not a Required Runtime, D024 —
 Cohesion: 0.17
 Nodes (12): 7. Neroued/ninfer, Fixed memory planning, Graph-based decode, MIInfer implication, MIInfer implication, MIInfer implication, MIInfer implication, Packed artifact (+4 more)
 
-### Community 21 - "M5 — Beat the Reference"
-Cohesion: 0.29
-Nodes (7): Comparison rules, Exit criteria, Goal, H0 supported, H1 supported, M5 — Beat the Reference, Mixed result
+### Community 21 - "Comparison dimensions"
+Cohesion: 0.17
+Nodes (12): Comparison dimensions, Comparison rules, Context regimes, Decode, Exit criteria, Goal, H0 supported, H1 supported (+4 more)
 
 ### Community 22 - "4. mxxm-t/mx-llama.cpp"
 Cohesion: 0.20
@@ -387,7 +392,7 @@ Nodes (4): 3.1 Measure before optimizing, 3.2 Every optimization needs a baselin
 
 ### Community 56 - "EXP-0004 — FP16 GEMV K-Split Parallelism"
 Cohesion: 0.11
-Nodes (17): 10. Test Matrix, 11. Correctness Method, 12. Benchmark, 13. Acceptance, 14. Explicit Exclusions, 15. Decision, 16. Follow-up, 1. Question (+9 more)
+Nodes (18): 10. Test Matrix, 11. Correctness Method, 12. Benchmark, 13. Acceptance, 14. Explicit Exclusions, 15. Results, 16. Decision, 17. Follow-up (+10 more)
 
 ### Community 57 - "hip_smoke_bench.cpp"
 Cohesion: 0.20
@@ -565,9 +570,9 @@ Nodes (3): 17. Raw Results, Baseline, Candidate
 Cohesion: 0.67
 Nodes (3): 8. Hardware, GPU, Runtime state
 
-### Community 108 - "Comparison dimensions"
-Cohesion: 0.40
-Nodes (5): Comparison dimensions, Context regimes, Decode, Prompt processing, System metrics
+### Community 108 - "fp16_gemv.hpp"
+Cohesion: 0.20
+Nodes (12): GemvShape, id, k, m, projection, RocblasGemmHandle, opaque, check_output() (+4 more)
 
 ### Community 109 - "Current Project Status"
 Cohesion: 0.50
@@ -589,8 +594,28 @@ Nodes (4): 6. Baseline, Implementation, Kernel, Relevant configuration
 Cohesion: 0.67
 Nodes (3): 35. Historical failed execution gate — superseded by Section 37, 36. Task 3 Platform-Recovery Pilot, 37. Accepted MI50 execution
 
+### Community 118 - "fp16_gemv_k_split_bench.cpp"
+Cohesion: 0.30
+Nodes (11): ostream, string, vector, escape(), main(), median(), nonnegative(), parse() (+3 more)
+
+### Community 119 - "Options"
+Cohesion: 0.22
+Nodes (9): uint32_t, Options, device, iterations, json_output, seed, shape, warmup (+1 more)
+
+### Community 120 - "device_validation.cpp"
+Cohesion: 0.48
+Nodes (6): ostream, string, inspect_device(), is_gfx906(), print_device_info(), validate_gfx906_device()
+
+### Community 121 - "GemvKernelResources"
+Cohesion: 0.33
+Nodes (6): GemvKernelResources, local_bytes, max_threads_per_block, registers, shared_bytes, size_t
+
+### Community 122 - "hip_check.hpp"
+Cohesion: 0.83
+Nodes (3): hipError_t, hip_check(), hip_check_failed()
+
 ## Knowledge Gaps
-- **784 isolated node(s):** `experiment`, `shape`, `implementation`, `cache_regime`, `custom_label` (+779 more)
+- **785 isolated node(s):** `experiment`, `shape`, `implementation`, `cache_regime`, `custom_label` (+780 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **9 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -604,7 +629,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **Why does `5. ai-infos/vllm-gfx906-mobydick` connect `5. ai-infos/vllm-gfx906-mobydick` to `references.md`?**
   _High betweenness centrality (0.028) - this node is a cross-community bridge._
 - **What connects `experiment`, `shape`, `implementation` to the rest of the system?**
-  _784 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _785 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `hardware.md` be split into smaller, more focused modules?**
   _Cohesion score 0.0425531914893617 - nodes in this community are weakly interconnected._
 - **Should `architecture.md` be split into smaller, more focused modules?**
