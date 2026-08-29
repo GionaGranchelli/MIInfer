@@ -84,6 +84,7 @@ if(MIINFER_ENABLE_HIP)
         src/fp16_gemv_reference.cpp
         gfx906/kernels/vector_add.hip
         gfx906/kernels/fp16_gemv.hip
+        gfx906/kernels/memory_stream.hip
     )
     target_include_directories(miinfer_hip
         PUBLIC
@@ -123,6 +124,14 @@ if(MIINFER_ENABLE_HIP)
     add_executable(miinfer-fp16-gemv-bench bench/fp16_gemv_bench.cpp)
     target_link_libraries(miinfer-fp16-gemv-bench PRIVATE miinfer_hip)
     target_compile_options(miinfer-fp16-gemv-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-memory-stream-bench bench/memory_stream_bench.cpp)
+    target_link_libraries(miinfer-memory-stream-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-memory-stream-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-fp16-gemv-reduction-diag bench/fp16_gemv_reduction_diag.cpp)
+    target_link_libraries(miinfer-fp16-gemv-reduction-diag PRIVATE miinfer_hip)
+    target_compile_options(miinfer-fp16-gemv-reduction-diag PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
 include(CTest)
@@ -141,4 +150,6 @@ install(TARGETS miinfer-host-test)
 if(MIINFER_ENABLE_HIP)
     install(TARGETS miinfer-device-info miinfer-hip-smoke miinfer-bench
                     miinfer-fp16-gemv-test miinfer-fp16-gemv-bench)
+    install(TARGETS miinfer-memory-stream-bench)
+    install(TARGETS miinfer-fp16-gemv-reduction-diag)
 endif()

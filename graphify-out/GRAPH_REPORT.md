@@ -1,16 +1,16 @@
 # Graph Report - mi50  (2026-08-29)
 
 ## Corpus Check
-- 53 files · ~54,698 words
+- 56 files · ~57,406 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1008 nodes · 1067 edges · 109 communities (100 shown, 9 thin omitted)
+- 1043 nodes · 1127 edges · 110 communities (101 shown, 9 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `90b2f034`
+- Built from commit: `a82cd0d8`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -51,6 +51,7 @@
 - M3 — Minimal Runtime
 - M1 — Kernel Laboratory
 - 32. Codex task behavior
+- memory_stream_bench.cpp
 - graphify reference: query, path, explain
 - 43. Initial MIInfer Benchmark Matrix
 - Qwen3-8B Dense Control Model
@@ -70,6 +71,7 @@
 - capture-env.sh
 - 17. Correctness requirements
 - 3. Fundamental engineering rules
+- fp16_gemv_reduction_diag.cpp
 - graphify reference: add a URL and watch a folder
 - graphify reference: commit hook and native CLAUDE.md integration
 - graphify reference: incremental update and cluster-only
@@ -107,7 +109,6 @@
 - D010 — No Silent CPU or Generic Fallback
 - D015 — Repacking Should Not Occur in Hot Paths
 - D026 — Strongest Available Relevant Baseline Wins
-- 10. nick413-bit/gfx906-fa-vllm
 - 10. Software Environment
 - 13. Correctness Method
 - 17. Raw Results
@@ -125,7 +126,7 @@
 
 ## God Nodes (most connected - your core abstractions)
 1. `MIInfer` - 19 edges
-2. `Options` - 13 edges
+2. `Options` - 18 edges
 3. `EXP-NNNN — Title` - 13 edges
 4. `DeviceInfo` - 12 edges
 5. `What You Must Do When Invoked` - 12 edges
@@ -150,7 +151,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (109 total, 9 thin omitted)
+## Communities (110 total, 9 thin omitted)
 
 ### Community 0 - "hardware.md"
 Cohesion: 0.04
@@ -165,8 +166,8 @@ Cohesion: 0.05
 Nodes (43): 10. Reversed Ordering, 11. Statistics, 12. Performance Delta, 13. Benchmark Stability, 14. Baseline Selection, 15. Baseline Pinning, 16. Model Equivalence, 17. Quantization Equivalence (+35 more)
 
 ### Community 3 - "DeviceInfo"
-Cohesion: 0.07
-Nodes (31): size_t, string, json_escape(), main(), Options, device, elements, iterations (+23 more)
+Cohesion: 0.08
+Nodes (28): size_t, string, json_escape(), main(), Options, device, elements, iterations (+20 more)
 
 ### Community 4 - "EXP-0001-benchmark-harness-validation.md"
 Cohesion: 0.06
@@ -201,8 +202,8 @@ Cohesion: 0.09
 Nodes (22): 1. Situation, 2. Context & Complication, 3. Question / Goal, 4. Answer / Recommendation, 5. Socratic Clause, 6. Summary / Key Takeaways, Experiment 001, **iacopPBK: NO** (+14 more)
 
 ### Community 12 - "EXP-0002-fp16-gemv-baseline.md"
-Cohesion: 0.09
-Nodes (21): 10. Model / Workload, 11. Test Matrix — REAL MODEL SHAPES, 12. Correctness, 13. Benchmark Protocol, 14. Results, 15. Contamination / Interpretation, 16. Decision, 17. Follow-up (+13 more)
+Cohesion: 0.11
+Nodes (18): 10. Cache regime and benchmark command, 11. Correctness results, 12. Canonical performance results, 13. Hardware state and contamination, 14. Kernel resources, 15. Interpretation, 16. Decision, 17. Follow-up recommendation (+10 more)
 
 ### Community 13 - "5. ai-infos/vllm-gfx906-mobydick"
 Cohesion: 0.10
@@ -225,8 +226,8 @@ Cohesion: 0.13
 Nodes (14): Baseline, Benchmark, Candidate, Correctness, Decision, Environment, EXP-NNNN — Title, Follow-up (+6 more)
 
 ### Community 18 - "references.md"
-Cohesion: 0.12
-Nodes (15): 12. AMD gfx906 ISA Documentation, 13. AMD HIP / ROCm Documentation, 14. rocBLAS / hipBLAS, 16. Current Research Synthesis, 18. Research Intake Checklist, 19. External Code Policy, 20. Research Notes vs Decisions, 21. Updating This Document (+7 more)
+Cohesion: 0.11
+Nodes (18): 10. nick413-bit/gfx906-fa-vllm, 12. AMD gfx906 ISA Documentation, 13. AMD HIP / ROCm Documentation, 14. rocBLAS / hipBLAS, 16. Current Research Synthesis, 18. Research Intake Checklist, 19. External Code Policy, 20. Research Notes vs Decisions (+10 more)
 
 ### Community 19 - "decisions.md"
 Cohesion: 0.15
@@ -261,8 +262,8 @@ Cohesion: 0.22
 Nodes (9): 29. Development sequence, M0 — Baseline, M1 — Kernel laboratory, M2 — Prove specialization, M3 — Minimal runtime, M4 — First correct generation, M5 — Beat reference, M6 — Runtime specialization (+1 more)
 
 ### Community 27 - "fp16_gemv_bench.cpp"
-Cohesion: 0.14
-Nodes (28): ostream, string, uint32_t, vector, implementation_label(), json_escape(), main(), median_of() (+20 more)
+Cohesion: 0.12
+Nodes (32): ostream, string, uint32_t, vector, implementation_label(), json_escape(), main(), median_of() (+24 more)
 
 ### Community 28 - "graphify reference: extra exports and benchmark"
 Cohesion: 0.22
@@ -295,6 +296,10 @@ Nodes (7): Benchmark harness, Exit criteria, Goal, Initial kernel areas, Initial
 ### Community 35 - "32. Codex task behavior"
 Cohesion: 0.33
 Nodes (6): 32. Codex task behavior, Before adding abstractions, Before adding fallback behavior, Before declaring a performance win, Before modifying code, Before removing apparently strange gfx906 code
+
+### Community 36 - "memory_stream_bench.cpp"
+Cohesion: 0.18
+Nodes (16): size_t, string, vector, escape(), main(), median(), Options, bytes (+8 more)
 
 ### Community 37 - "graphify reference: query, path, explain"
 Cohesion: 0.33
@@ -371,6 +376,10 @@ Nodes (4): 17. Correctness requirements, Level 1 — numerical, Level 2 — laye
 ### Community 55 - "3. Fundamental engineering rules"
 Cohesion: 0.50
 Nodes (4): 3.1 Measure before optimizing, 3.2 Every optimization needs a baseline, 3.3 Negative results are valuable, 3. Fundamental engineering rules
+
+### Community 56 - "fp16_gemv_reduction_diag.cpp"
+Cohesion: 0.16
+Nodes (18): __half, vector, main(), median(), nonnegative(), Options, device, iterations (+10 more)
 
 ### Community 59 - "graphify reference: add a URL and watch a folder"
 Cohesion: 0.50
@@ -512,10 +521,6 @@ Nodes (3): D015 — Repacking Should Not Occur in Hot Paths, Decision, Reason
 Cohesion: 0.67
 Nodes (3): D026 — Strongest Available Relevant Baseline Wins, Decision, Reason
 
-### Community 98 - "10. nick413-bit/gfx906-fa-vllm"
-Cohesion: 0.67
-Nodes (3): 10. nick413-bit/gfx906-fa-vllm, MIInfer implication, Role
-
 ### Community 99 - "10. Software Environment"
 Cohesion: 0.67
 Nodes (3): 10. Software Environment, Compiler flags, Environment variables
@@ -545,7 +550,7 @@ Cohesion: 0.67
 Nodes (3): 35. Historical failed execution gate — superseded by Section 37, 36. Task 3 Platform-Recovery Pilot, 37. Accepted MI50 execution
 
 ## Knowledge Gaps
-- **734 isolated node(s):** `shape`, `implementation`, `cache_regime`, `device`, `warmup` (+729 more)
+- **746 isolated node(s):** `experiment`, `shape`, `implementation`, `cache_regime`, `custom_label` (+741 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **9 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -553,13 +558,13 @@ Nodes (3): 35. Historical failed execution gate — superseded by Section 37, 36
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `MIInfer` connect `MIInfer` to `roadmap.md`?**
-  _High betweenness centrality (0.040) - this node is a cross-community bridge._
+  _High betweenness centrality (0.034) - this node is a cross-community bridge._
 - **Why does `3. iacopPBK/llama.cpp-gfx906` connect `3. iacopPBK/llama.cpp-gfx906` to `references.md`?**
-  _High betweenness centrality (0.022) - this node is a cross-community bridge._
-- **Why does `5. ai-infos/vllm-gfx906-mobydick` connect `5. ai-infos/vllm-gfx906-mobydick` to `references.md`?**
-  _High betweenness centrality (0.018) - this node is a cross-community bridge._
-- **What connects `shape`, `implementation`, `cache_regime` to the rest of the system?**
-  _734 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _High betweenness centrality (0.028) - this node is a cross-community bridge._
+- **Why does `M0 — Baseline and Project Bootstrap` connect `M0 — Baseline and Project Bootstrap` to `roadmap.md`?**
+  _High betweenness centrality (0.024) - this node is a cross-community bridge._
+- **What connects `experiment`, `shape`, `implementation` to the rest of the system?**
+  _746 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `hardware.md` be split into smaller, more focused modules?**
   _Cohesion score 0.0425531914893617 - nodes in this community are weakly interconnected._
 - **Should `architecture.md` be split into smaller, more focused modules?**

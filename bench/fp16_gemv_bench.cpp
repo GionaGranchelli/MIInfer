@@ -22,9 +22,13 @@ namespace {
 constexpr std::uint32_t kDefaultSeed = 0x4D493050U;
 
 struct Options {
+    std::string experiment = "EXP-0002";
     std::string shape = "all";
     std::string implementation = "all";
     std::string cache_regime = "streaming";
+    std::string custom_label = "synthetic";
+    int custom_m = 0;
+    int custom_k = 0;
     int device = -1;
     int warmup = 5;
     int iterations = 1000;
@@ -34,7 +38,10 @@ struct Options {
 
 void print_usage() {
     std::cerr << "usage: miinfer-fp16-gemv-bench [options]\n"
+              << "  --experiment ID         experiment label (default: EXP-0002)\n"
               << "  --shape ID             q|k|v|o|gate|up|down|all (default: all)\n"
+              << "  --m N --k N             synthetic shape dimensions (requires both)\n"
+              << "  --label NAME            synthetic shape label (default: synthetic)\n"
               << "  --implementation NAME  miinfer|rocblas-gemm|all (default: all)\n"
               << "  --cache-regime NAME    hot|streaming (default: streaming)\n"
               << "  --warmup N             warm-up launches (default: 5)\n"
@@ -104,6 +111,20 @@ bool parse_options(int argc, char** argv, Options& options, bool& informational)
         }
         if (argument == "--shape") {
             options.shape = argv[++index];
+        } else if (argument == "--experiment") {
+            options.experiment = argv[++index];
+        } else if (argument == "--m") {
+            if (!parse_positive(argv[++index], options.custom_m)) {
+                std::cerr << "--m must be a positive integer\n";
+                return false;
+            }
+        } else if (argument == "--k") {
+            if (!parse_positive(argv[++index], options.custom_k)) {
+                std::cerr << "--k must be a positive integer\n";
+                return false;
+            }
+        } else if (argument == "--label") {
+            options.custom_label = argv[++index];
         } else if (argument == "--implementation") {
             options.implementation = argv[++index];
         } else if (argument == "--cache-regime") {
@@ -139,6 +160,14 @@ bool parse_options(int argc, char** argv, Options& options, bool& informational)
         std::cerr << "invalid --shape: " << options.shape << '\n';
         return false;
     }
+    if ((options.custom_m == 0) != (options.custom_k == 0)) {
+        std::cerr << "--m and --k must be supplied together\n";
+        return false;
+    }
+    if (options.custom_m > 0 && options.shape != "all") {
+        std::cerr << "--m/--k cannot be combined with a named --shape\n";
+        return false;
+    }
     if (!valid_implementation_name(options.implementation)) {
         std::cerr << "invalid --implementation: " << options.implementation << '\n';
         return false;
@@ -167,7 +196,12 @@ std::string json_escape(const std::string& value) {
     return escaped.str();
 }
 
-std::vector<miinfer::GemvShape> selected_shapes(const std::string& name) {
+std::vector<miinfer::GemvShape> selected_shapes(const Options& options) {
+    if (options.custom_m > 0) {
+        return {{options.custom_label.c_str(), "synthetic diagnostic", options.custom_m,
+                 options.custom_k}};
+    }
+    const auto& name = options.shape;
     if (name == "all") {
         return miinfer::qwen3_gemv_shapes();
     }
@@ -307,7 +341,8 @@ bool run_one(
     const double effective_gb_per_second = logical_bytes / (median * 1000.0);
 
     output << std::fixed << std::setprecision(9)
-           << "{\"experiment\":\"EXP-0002\",\"shape\":\"" << shape.id
+           << "{\"experiment\":" << json_escape(options.experiment)
+           << ",\"shape\":\"" << shape.id
            << "\",\"projection\":" << json_escape(shape.projection)
            << ",\"m\":" << shape.m << ",\"k\":" << shape.k
            << ",\"implementation\":\"" << implementation_label(implementation)
@@ -325,6 +360,9 @@ bool run_one(
            << ",\"stddev_us\":" << std::sqrt(variance)
            << ",\"effective_gb_per_second\":" << effective_gb_per_second
            << ",\"logical_bytes\":" << logical_bytes
+           << ",\"workgroups\":" << shape.m
+           << ",\"shape_classification\":"
+           << json_escape(options.custom_m > 0 ? "SYNTHETIC — SCALING DIAGNOSTIC" : "Qwen3-8B real shape")
            << ",\"gpu\":" << json_escape(device.name)
            << ",\"gfx\":" << json_escape(device.architecture)
            << ",\"vram_bytes\":" << device.total_vram_bytes
@@ -385,7 +423,7 @@ int main(int argc, char** argv) {
     }
 
     bool passed = true;
-    for (const auto& shape : selected_shapes(options.shape)) {
+    for (const auto& shape : selected_shapes(options)) {
         for (const auto& implementation : selected_implementations(options.implementation)) {
             passed = run_one(options, device, shape, implementation, *output) && passed;
         }

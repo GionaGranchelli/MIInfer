@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788036020.6192808,
-    "seen": 1788036725.980438,
-    "ast_hash": "1f27ef788ec58d48e26866ccac91e043",
+    "mtime": 1788038669.177157,
+    "seen": 1788038673.3633347,
+    "ast_hash": "d78af4d63f0d80b1a9fb614ffab868ce",
     "semantic_hash": ""
   },
   "README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788036497.7310853,
-    "seen": 1788036725.9804516,
-    "ast_hash": "fa8ef3c7a866c3d26002c01893f1d36d",
+    "mtime": 1788037721.60748,
+    "seen": 1788038568.66648,
+    "ast_hash": "b23e76b0a2d529335bddce1269b68ee9",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -240,9 +240,9 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0002-fp16-gemv-baseline.md": {
-    "mtime": 1788001839.3950431,
-    "seen": 1788003634.2733462,
-    "ast_hash": "96965590ca9e44ff8f5334242ee9705e",
+    "mtime": 1788037731.491435,
+    "seen": 1788038568.6664927,
+    "ast_hash": "1aa2eb27dd62e9d31bb9285c3017a518",
     "semantic_hash": ""
   },
   "experiments/TEMPLATE.md": {
@@ -318,15 +318,15 @@
     "semantic_hash": ""
   },
   "bench/fp16_gemv_bench.cpp": {
-    "mtime": 1788036497.5080864,
-    "seen": 1788036725.9803855,
-    "ast_hash": "6b1f136170d9199abd5523e3e8d6e1f4",
+    "mtime": 1788038562.0796497,
+    "seen": 1788038568.6664126,
+    "ast_hash": "2bd86b8c2d54498203b1e11233a28ba0",
     "semantic_hash": ""
   },
   "include/miinfer/fp16_gemv.hpp": {
-    "mtime": 1788036020.2922823,
-    "seen": 1788036725.9804006,
-    "ast_hash": "b30e17277e9b78d16452cbc813c05eff",
+    "mtime": 1788038669.175157,
+    "seen": 1788038673.3632874,
+    "ast_hash": "6cd505ba19525b3b8880ea83b15f5c19",
     "semantic_hash": ""
   },
   "src/fp16_gemv_reference.cpp": {
@@ -339,6 +339,24 @@
     "mtime": 1788036789.2987466,
     "seen": 1788036794.6264281,
     "ast_hash": "7eff420da1a12add696bb2e8890f6e1a",
+    "semantic_hash": ""
+  },
+  "bench/memory_stream_bench.cpp": {
+    "mtime": 1788038562.0806496,
+    "seen": 1788038568.666417,
+    "ast_hash": "94d8a0cd48103a8ae1aaf0902a0008cb",
+    "semantic_hash": ""
+  },
+  "include/miinfer/memory_stream.hpp": {
+    "mtime": 1788038562.0806496,
+    "seen": 1788038568.6664329,
+    "ast_hash": "456a8d0c60425a30a46104bb0c3ebe89",
+    "semantic_hash": ""
+  },
+  "bench/fp16_gemv_reduction_diag.cpp": {
+    "mtime": 1788038669.176157,
+    "seen": 1788038673.3632696,
+    "ast_hash": "6d802c0373ff4d20bb634e62c840adf2",
     "semantic_hash": ""
   }
 }

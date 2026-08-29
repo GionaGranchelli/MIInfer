@@ -47,6 +47,30 @@ __global__ void fp16_gemv_baseline_kernel(
     }
 }
 
+// DIAGNOSTIC ONLY. This intentionally stops after the per-thread dot-product
+// and exposes partials, allowing EXP-0003 to estimate reduction/synchronization
+// cost. It is not a candidate implementation because it changes the output
+// contract and adds diagnostic partial stores.
+__global__ void fp16_gemv_diagnostic_dot_only_kernel(
+    const __half* weights,
+    const __half* input,
+    float* partials,
+    int m,
+    int k) {
+    const int row = static_cast<int>(blockIdx.x);
+    if (row >= m) {
+        return;
+    }
+    float sum = 0.0F;
+    const std::size_t row_offset = static_cast<std::size_t>(row) * static_cast<std::size_t>(k);
+    for (int column = static_cast<int>(threadIdx.x); column < k;
+         column += static_cast<int>(blockDim.x)) {
+        sum += __half2float(weights[row_offset + static_cast<std::size_t>(column)])
+               * __half2float(input[static_cast<std::size_t>(column)]);
+    }
+    partials[static_cast<std::size_t>(row) * kThreadsPerBlock + threadIdx.x] = sum;
+}
+
 bool check_hipblas(hipblasStatus_t status, const char* operation, std::string& error) {
     if (status == HIPBLAS_STATUS_SUCCESS) {
         return true;
@@ -74,6 +98,27 @@ void launch_fp16_gemv_baseline(
         weights,
         input,
         output,
+        m,
+        k);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_fp16_gemv_diagnostic_dot_only(
+    const __half* weights,
+    const __half* input,
+    float* partials,
+    int m,
+    int k,
+    hipStream_t stream) {
+    hipLaunchKernelGGL(
+        fp16_gemv_diagnostic_dot_only_kernel,
+        dim3(static_cast<unsigned int>(m)),
+        dim3(kThreadsPerBlock),
+        0,
+        stream,
+        weights,
+        input,
+        partials,
         m,
         k);
     MIINFER_HIP_CHECK(hipGetLastError());

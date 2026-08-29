@@ -43,6 +43,32 @@
       "source_location": "L9"
     },
     {
+      "id": "bench_memory_stream_bench_options",
+      "label": "Options",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 36,
+      "community_name": "memory_stream_bench.cpp",
+      "file_type": "code",
+      "norm_label": "options",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L23"
+    },
+    {
+      "id": "bench_fp16_gemv_reduction_diag_options",
+      "label": "Options",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "fp16_gemv_reduction_diag.cpp",
+      "file_type": "code",
+      "norm_label": "options",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L19"
+    },
+    {
       "id": "include_miinfer_fp16_gemv_fp16gemvmetrics",
       "label": "Fp16GemvMetrics",
       "_callable": true,
@@ -66,7 +92,7 @@
       "file_type": "code",
       "norm_label": "gemvkernelresources",
       "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L61"
+      "source_location": "L73"
     },
     {
       "id": "include_miinfer_fp16_gemv_gemvshape",
@@ -92,7 +118,7 @@
       "file_type": "code",
       "norm_label": "rocblasgemmhandle",
       "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L70"
+      "source_location": "L82"
     },
     {
       "id": "src_build_info_print_build_info",
@@ -116,7 +142,7 @@
       "file_type": "code",
       "norm_label": "implementation_label()",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L188"
+      "source_location": "L222"
     },
     {
       "id": "bench_fp16_gemv_bench_json_escape",
@@ -128,7 +154,7 @@
       "file_type": "code",
       "norm_label": "json_escape()",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L153"
+      "source_location": "L182"
     },
     {
       "id": "bench_fp16_gemv_bench_main",
@@ -140,7 +166,7 @@
       "file_type": "code",
       "norm_label": "main()",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L362"
+      "source_location": "L400"
     },
     {
       "id": "bench_fp16_gemv_bench_median_of",
@@ -152,7 +178,7 @@
       "file_type": "code",
       "norm_label": "median_of()",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L199"
+      "source_location": "L233"
     },
     {
       "id": "bench_fp16_gemv_bench_metrics_json",
@@ -164,7 +190,7 @@
       "file_type": "code",
       "norm_label": "metrics_json()",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L207"
+      "source_location": "L241"
     },
     {
       "id": "bench_fp16_gemv_bench_parse_nonnegative",
@@ -176,7 +202,7 @@
       "file_type": "code",
       "norm_label": "parse_nonnegative()",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L57"
+      "source_location": "L64"
     },
     {
       "id": "bench_fp16_gemv_bench_parse_options",
@@ -188,7 +214,7 @@
       "file_type": "code",
       "norm_label": "parse_options()",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L88"
+      "source_location": "L95"
     },
     {
       "id": "bench_fp16_gemv_bench_parse_positive",
@@ -200,7 +226,7 @@
       "file_type": "code",
       "norm_label": "parse_positive()",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L48"
+      "source_location": "L55"
     },
     {
       "id": "bench_fp16_gemv_bench_parse_seed",
@@ -212,7 +238,7 @@
       "file_type": "code",
       "norm_label": "parse_seed()",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L66"
+      "source_location": "L73"
     },
     {
       "id": "bench_fp16_gemv_bench_print_usage",
@@ -224,7 +250,7 @@
       "file_type": "code",
       "norm_label": "print_usage()",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L35"
+      "source_location": "L39"
     },
     {
       "id": "bench_fp16_gemv_bench_run_one",
@@ -236,7 +262,7 @@
       "file_type": "code",
       "norm_label": "run_one()",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L220"
+      "source_location": "L254"
     },
     {
       "id": "bench_fp16_gemv_bench_selected_implementations",
@@ -248,7 +274,7 @@
       "file_type": "code",
       "norm_label": "selected_implementations()",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L192"
+      "source_location": "L226"
     },
     {
       "id": "bench_fp16_gemv_bench_selected_shapes",
@@ -260,7 +286,7 @@
       "file_type": "code",
       "norm_label": "selected_shapes()",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L170"
+      "source_location": "L199"
     },
     {
       "id": "bench_fp16_gemv_bench_valid_implementation_name",
@@ -272,7 +298,7 @@
       "file_type": "code",
       "norm_label": "valid_implementation_name()",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L84"
+      "source_location": "L91"
     },
     {
       "id": "bench_fp16_gemv_bench_valid_shape_name",
@@ -284,7 +310,7 @@
       "file_type": "code",
       "norm_label": "valid_shape_name()",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L79"
+      "source_location": "L86"
     },
     {
       "id": "bench_hip_smoke_bench_json_escape",
@@ -371,30 +397,6 @@
       "source_location": "L29"
     },
     {
-      "id": "include_miinfer_hip_check_hip_check",
-      "label": "hip_check()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "DeviceInfo",
-      "file_type": "code",
-      "norm_label": "hip_check()",
-      "source_file": "include/miinfer/hip_check.hpp",
-      "source_location": "L26"
-    },
-    {
-      "id": "include_miinfer_hip_check_hip_check_failed",
-      "label": "hip_check_failed()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "DeviceInfo",
-      "file_type": "code",
-      "norm_label": "hip_check_failed()",
-      "source_file": "include/miinfer/hip_check.hpp",
-      "source_location": "L11"
-    },
-    {
       "id": "src_device_validation_inspect_device",
       "label": "inspect_device()",
       "_callable": true,
@@ -477,6 +479,198 @@
       "norm_label": "main()",
       "source_file": "tests/host_test.cpp",
       "source_location": "L9"
+    },
+    {
+      "id": "bench_memory_stream_bench_escape",
+      "label": "escape()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 36,
+      "community_name": "memory_stream_bench.cpp",
+      "file_type": "code",
+      "norm_label": "escape()",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L75"
+    },
+    {
+      "id": "bench_memory_stream_bench_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 36,
+      "community_name": "memory_stream_bench.cpp",
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L94"
+    },
+    {
+      "id": "bench_memory_stream_bench_median",
+      "label": "median()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 36,
+      "community_name": "memory_stream_bench.cpp",
+      "file_type": "code",
+      "norm_label": "median()",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L86"
+    },
+    {
+      "id": "bench_memory_stream_bench_parse",
+      "label": "parse()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 36,
+      "community_name": "memory_stream_bench.cpp",
+      "file_type": "code",
+      "norm_label": "parse()",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L54"
+    },
+    {
+      "id": "bench_memory_stream_bench_parse_bytes",
+      "label": "parse_bytes()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 36,
+      "community_name": "memory_stream_bench.cpp",
+      "file_type": "code",
+      "norm_label": "parse_bytes()",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L36"
+    },
+    {
+      "id": "bench_memory_stream_bench_parse_positive",
+      "label": "parse_positive()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 36,
+      "community_name": "memory_stream_bench.cpp",
+      "file_type": "code",
+      "norm_label": "parse_positive()",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L31"
+    },
+    {
+      "id": "bench_memory_stream_bench_usage",
+      "label": "usage()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 36,
+      "community_name": "memory_stream_bench.cpp",
+      "file_type": "code",
+      "norm_label": "usage()",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L45"
+    },
+    {
+      "id": "bench_fp16_gemv_reduction_diag_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "fp16_gemv_reduction_diag.cpp",
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L130"
+    },
+    {
+      "id": "bench_fp16_gemv_reduction_diag_median",
+      "label": "median()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "fp16_gemv_reduction_diag.cpp",
+      "file_type": "code",
+      "norm_label": "median()",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L58"
+    },
+    {
+      "id": "bench_fp16_gemv_reduction_diag_nonnegative",
+      "label": "nonnegative()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "fp16_gemv_reduction_diag.cpp",
+      "file_type": "code",
+      "norm_label": "nonnegative()",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L32"
+    },
+    {
+      "id": "bench_fp16_gemv_reduction_diag_parse",
+      "label": "parse()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "fp16_gemv_reduction_diag.cpp",
+      "file_type": "code",
+      "norm_label": "parse()",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L37"
+    },
+    {
+      "id": "bench_fp16_gemv_reduction_diag_positive",
+      "label": "positive()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "fp16_gemv_reduction_diag.cpp",
+      "file_type": "code",
+      "norm_label": "positive()",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L27"
+    },
+    {
+      "id": "bench_fp16_gemv_reduction_diag_time_dot_only",
+      "label": "time_dot_only()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "fp16_gemv_reduction_diag.cpp",
+      "file_type": "code",
+      "norm_label": "time_dot_only()",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L96"
+    },
+    {
+      "id": "bench_fp16_gemv_reduction_diag_time_full",
+      "label": "time_full()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "fp16_gemv_reduction_diag.cpp",
+      "file_type": "code",
+      "norm_label": "time_full()",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L64"
+    },
+    {
+      "id": "include_miinfer_hip_check_hip_check",
+      "label": "hip_check()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "fp16_gemv_reduction_diag.cpp",
+      "file_type": "code",
+      "norm_label": "hip_check()",
+      "source_file": "include/miinfer/hip_check.hpp",
+      "source_location": "L26"
+    },
+    {
+      "id": "include_miinfer_hip_check_hip_check_failed",
+      "label": "hip_check_failed()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "fp16_gemv_reduction_diag.cpp",
+      "file_type": "code",
+      "norm_label": "hip_check_failed()",
+      "source_file": "include/miinfer/hip_check.hpp",
+      "source_location": "L11"
     },
     {
       "id": "src_fp16_gemv_reference_evaluate_fp16_gemv",
@@ -2757,76 +2951,76 @@
       "source_location": "L1"
     },
     {
-      "id": "experiments_exp_0002_fp16_gemv_baseline_10_model_workload",
-      "label": "10. Model / Workload",
+      "id": "experiments_exp_0002_fp16_gemv_baseline_10_cache_regime_and_benchmark_command",
+      "label": "10. Cache regime and benchmark command",
       "_origin": "ast",
       "community": 12,
       "community_name": "EXP-0002-fp16-gemv-baseline.md",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "10. model / workload",
+      "norm_label": "10. cache regime and benchmark command",
       "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L88"
+      "source_location": "L134"
     },
     {
-      "id": "experiments_exp_0002_fp16_gemv_baseline_11_test_matrix_real_model_shapes",
-      "label": "11. Test Matrix \u2014 REAL MODEL SHAPES",
+      "id": "experiments_exp_0002_fp16_gemv_baseline_11_correctness_results",
+      "label": "11. Correctness results",
       "_origin": "ast",
       "community": 12,
       "community_name": "EXP-0002-fp16-gemv-baseline.md",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "11. test matrix \u2014 real model shapes",
+      "norm_label": "11. correctness results",
       "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L98"
+      "source_location": "L174"
     },
     {
-      "id": "experiments_exp_0002_fp16_gemv_baseline_12_correctness",
-      "label": "12. Correctness",
+      "id": "experiments_exp_0002_fp16_gemv_baseline_12_canonical_performance_results",
+      "label": "12. Canonical performance results",
       "_origin": "ast",
       "community": 12,
       "community_name": "EXP-0002-fp16-gemv-baseline.md",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "12. correctness",
+      "norm_label": "12. canonical performance results",
       "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L113"
+      "source_location": "L189"
     },
     {
-      "id": "experiments_exp_0002_fp16_gemv_baseline_13_benchmark_protocol",
-      "label": "13. Benchmark Protocol",
+      "id": "experiments_exp_0002_fp16_gemv_baseline_13_hardware_state_and_contamination",
+      "label": "13. Hardware state and contamination",
       "_origin": "ast",
       "community": 12,
       "community_name": "EXP-0002-fp16-gemv-baseline.md",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "13. benchmark protocol",
+      "norm_label": "13. hardware state and contamination",
       "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L119"
+      "source_location": "L216"
     },
     {
-      "id": "experiments_exp_0002_fp16_gemv_baseline_14_results",
-      "label": "14. Results",
+      "id": "experiments_exp_0002_fp16_gemv_baseline_14_kernel_resources",
+      "label": "14. Kernel resources",
       "_origin": "ast",
       "community": 12,
       "community_name": "EXP-0002-fp16-gemv-baseline.md",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "14. results",
+      "norm_label": "14. kernel resources",
       "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L125"
+      "source_location": "L233"
     },
     {
-      "id": "experiments_exp_0002_fp16_gemv_baseline_15_contamination_interpretation",
-      "label": "15. Contamination / Interpretation",
+      "id": "experiments_exp_0002_fp16_gemv_baseline_15_interpretation",
+      "label": "15. Interpretation",
       "_origin": "ast",
       "community": 12,
       "community_name": "EXP-0002-fp16-gemv-baseline.md",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "15. contamination / interpretation",
+      "norm_label": "15. interpretation",
       "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L129"
+      "source_location": "L251"
     },
     {
       "id": "experiments_exp_0002_fp16_gemv_baseline_16_decision",
@@ -2838,19 +3032,19 @@
       "node_kind": "heading",
       "norm_label": "16. decision",
       "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L135"
+      "source_location": "L261"
     },
     {
-      "id": "experiments_exp_0002_fp16_gemv_baseline_17_follow_up",
-      "label": "17. Follow-up",
+      "id": "experiments_exp_0002_fp16_gemv_baseline_17_follow_up_recommendation",
+      "label": "17. Follow-up recommendation",
       "_origin": "ast",
       "community": 12,
       "community_name": "EXP-0002-fp16-gemv-baseline.md",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "17. follow-up",
+      "norm_label": "17. follow-up recommendation",
       "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L140"
+      "source_location": "L272"
     },
     {
       "id": "experiments_exp_0002_fp16_gemv_baseline_1_question",
@@ -2886,91 +3080,79 @@
       "node_kind": "heading",
       "norm_label": "3. motivation",
       "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L24"
+      "source_location": "L25"
     },
     {
-      "id": "experiments_exp_0002_fp16_gemv_baseline_4_source_prior_art",
-      "label": "4. Source / Prior Art",
+      "id": "experiments_exp_0002_fp16_gemv_baseline_4_scope_and_exclusions",
+      "label": "4. Scope and exclusions",
       "_origin": "ast",
       "community": 12,
       "community_name": "EXP-0002-fp16-gemv-baseline.md",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "4. source / prior art",
+      "norm_label": "4. scope and exclusions",
       "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L30"
+      "source_location": "L31"
     },
     {
-      "id": "experiments_exp_0002_fp16_gemv_baseline_5_target_bottleneck",
-      "label": "5. Target Bottleneck",
+      "id": "experiments_exp_0002_fp16_gemv_baseline_5_baseline_implementation",
+      "label": "5. Baseline implementation",
       "_origin": "ast",
       "community": 12,
       "community_name": "EXP-0002-fp16-gemv-baseline.md",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "5. target bottleneck",
+      "norm_label": "5. baseline implementation",
       "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L36"
+      "source_location": "L38"
     },
     {
-      "id": "experiments_exp_0002_fp16_gemv_baseline_6_baseline",
-      "label": "6. Baseline",
+      "id": "experiments_exp_0002_fp16_gemv_baseline_6_rocblas_comparison",
+      "label": "6. rocBLAS comparison",
       "_origin": "ast",
       "community": 12,
       "community_name": "EXP-0002-fp16-gemv-baseline.md",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "6. baseline",
+      "norm_label": "6. rocblas comparison",
       "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L42"
+      "source_location": "L59"
     },
     {
-      "id": "experiments_exp_0002_fp16_gemv_baseline_7_candidate",
-      "label": "7. Candidate",
+      "id": "experiments_exp_0002_fp16_gemv_baseline_7_hardware_and_software",
+      "label": "7. Hardware and software",
       "_origin": "ast",
       "community": 12,
       "community_name": "EXP-0002-fp16-gemv-baseline.md",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "7. candidate",
+      "norm_label": "7. hardware and software",
       "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L66"
+      "source_location": "L78"
     },
     {
-      "id": "experiments_exp_0002_fp16_gemv_baseline_8_hardware",
-      "label": "8. Hardware",
+      "id": "experiments_exp_0002_fp16_gemv_baseline_8_test_matrix_real_model_shapes",
+      "label": "8. Test matrix \u2014 real model shapes",
       "_origin": "ast",
       "community": 12,
       "community_name": "EXP-0002-fp16-gemv-baseline.md",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "8. hardware",
+      "norm_label": "8. test matrix \u2014 real model shapes",
       "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L71"
+      "source_location": "L104"
     },
     {
-      "id": "experiments_exp_0002_fp16_gemv_baseline_9_host_software_environment",
-      "label": "9. Host / Software Environment",
+      "id": "experiments_exp_0002_fp16_gemv_baseline_9_test_infrastructure",
+      "label": "9. Test infrastructure",
       "_origin": "ast",
       "community": 12,
       "community_name": "EXP-0002-fp16-gemv-baseline.md",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "9. host / software environment",
+      "norm_label": "9. test infrastructure",
       "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L83"
-    },
-    {
-      "id": "experiments_exp_0002_fp16_gemv_baseline_commit",
-      "label": "Commit",
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "EXP-0002-fp16-gemv-baseline.md",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "commit",
-      "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L50"
+      "source_location": "L119"
     },
     {
       "id": "experiments_exp_0002_fp16_gemv_baseline_exp_0002_fp16_gemv_baseline_on_qwen3_8b_shapes",
@@ -2983,30 +3165,6 @@
       "norm_label": "exp-0002 \u2014 fp16 gemv baseline on qwen3-8b shapes",
       "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
       "source_location": "L1"
-    },
-    {
-      "id": "experiments_exp_0002_fp16_gemv_baseline_implementation",
-      "label": "Implementation",
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "EXP-0002-fp16-gemv-baseline.md",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "implementation",
-      "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L44"
-    },
-    {
-      "id": "experiments_exp_0002_fp16_gemv_baseline_relevant_configuration",
-      "label": "Relevant configuration",
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "EXP-0002-fp16-gemv-baseline.md",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "relevant configuration",
-      "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L56"
     },
     {
       "id": "docs_references_5_ai_infos_vllm_gfx906_mobydick",
@@ -4005,6 +4163,18 @@
       "source_location": "L1"
     },
     {
+      "id": "docs_references_10_nick413_bit_gfx906_fa_vllm",
+      "label": "10. nick413-bit/gfx906-fa-vllm",
+      "_origin": "ast",
+      "community": 18,
+      "community_name": "references.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "10. nick413-bit/gfx906-fa-vllm",
+      "source_file": "docs/references.md",
+      "source_location": "L924"
+    },
+    {
       "id": "docs_references_12_amd_gfx906_isa_documentation",
       "label": "12. AMD gfx906 ISA Documentation",
       "_origin": "ast",
@@ -4125,6 +4295,18 @@
       "source_location": "L903"
     },
     {
+      "id": "docs_references_miinfer_implication_939",
+      "label": "MIInfer implication",
+      "_origin": "ast",
+      "community": 18,
+      "community_name": "references.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "miinfer implication",
+      "source_file": "docs/references.md",
+      "source_location": "L939"
+    },
+    {
       "id": "docs_references_miinfer_research_references",
       "label": "MIInfer Research References",
       "_origin": "ast",
@@ -4159,6 +4341,18 @@
       "norm_label": "role",
       "source_file": "docs/references.md",
       "source_location": "L907"
+    },
+    {
+      "id": "docs_references_role_928",
+      "label": "Role",
+      "_origin": "ast",
+      "community": 18,
+      "community_name": "references.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "role",
+      "source_file": "docs/references.md",
+      "source_location": "L928"
     },
     {
       "id": "docs_references_role_977",
@@ -5808,7 +6002,40 @@
       "file_type": "code",
       "norm_label": "cache_regime",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L27"
+      "source_location": "L28"
+    },
+    {
+      "id": "bench_fp16_gemv_bench_options_custom_k",
+      "label": "custom_k",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "fp16_gemv_bench.cpp",
+      "file_type": "code",
+      "norm_label": "custom_k",
+      "source_file": "bench/fp16_gemv_bench.cpp",
+      "source_location": "L31"
+    },
+    {
+      "id": "bench_fp16_gemv_bench_options_custom_label",
+      "label": "custom_label",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "fp16_gemv_bench.cpp",
+      "file_type": "code",
+      "norm_label": "custom_label",
+      "source_file": "bench/fp16_gemv_bench.cpp",
+      "source_location": "L29"
+    },
+    {
+      "id": "bench_fp16_gemv_bench_options_custom_m",
+      "label": "custom_m",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "fp16_gemv_bench.cpp",
+      "file_type": "code",
+      "norm_label": "custom_m",
+      "source_file": "bench/fp16_gemv_bench.cpp",
+      "source_location": "L30"
     },
     {
       "id": "bench_fp16_gemv_bench_options_device",
@@ -5819,7 +6046,18 @@
       "file_type": "code",
       "norm_label": "device",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L28"
+      "source_location": "L32"
+    },
+    {
+      "id": "bench_fp16_gemv_bench_options_experiment",
+      "label": "experiment",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "fp16_gemv_bench.cpp",
+      "file_type": "code",
+      "norm_label": "experiment",
+      "source_file": "bench/fp16_gemv_bench.cpp",
+      "source_location": "L25"
     },
     {
       "id": "bench_fp16_gemv_bench_options_implementation",
@@ -5830,7 +6068,7 @@
       "file_type": "code",
       "norm_label": "implementation",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L26"
+      "source_location": "L27"
     },
     {
       "id": "bench_fp16_gemv_bench_options_iterations",
@@ -5841,7 +6079,7 @@
       "file_type": "code",
       "norm_label": "iterations",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L30"
+      "source_location": "L34"
     },
     {
       "id": "bench_fp16_gemv_bench_options_json_output",
@@ -5852,7 +6090,7 @@
       "file_type": "code",
       "norm_label": "json_output",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L32"
+      "source_location": "L36"
     },
     {
       "id": "bench_fp16_gemv_bench_options_seed",
@@ -5863,7 +6101,7 @@
       "file_type": "code",
       "norm_label": "seed",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L31"
+      "source_location": "L35"
     },
     {
       "id": "bench_fp16_gemv_bench_options_shape",
@@ -5874,7 +6112,7 @@
       "file_type": "code",
       "norm_label": "shape",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L25"
+      "source_location": "L26"
     },
     {
       "id": "bench_fp16_gemv_bench_options_warmup",
@@ -5885,7 +6123,7 @@
       "file_type": "code",
       "norm_label": "warmup",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L29"
+      "source_location": "L33"
     },
     {
       "id": "codex_skills_graphify_references_exports",
@@ -6180,17 +6418,6 @@
       "source_location": "L23"
     },
     {
-      "id": "hiperror_t",
-      "label": "hipError_t",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "DeviceInfo",
-      "file_type": "code",
-      "norm_label": "hiperror_t",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
       "id": "include_miinfer_device_validation",
       "label": "device_validation.hpp",
       "_origin": "ast",
@@ -6266,17 +6493,6 @@
       "norm_label": "string",
       "source_file": "",
       "source_location": ""
-    },
-    {
-      "id": "include_miinfer_hip_check",
-      "label": "hip_check.hpp",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "DeviceInfo",
-      "file_type": "code",
-      "norm_label": "hip_check.hpp",
-      "source_file": "include/miinfer/hip_check.hpp",
-      "source_location": "L1"
     },
     {
       "id": "include_miinfer_vector_add",
@@ -6858,6 +7074,116 @@
       "norm_label": "before removing apparently strange gfx906 code",
       "source_file": "AGENTS.md",
       "source_location": "L1103"
+    },
+    {
+      "id": "bench_memory_stream_bench",
+      "label": "memory_stream_bench.cpp",
+      "_origin": "ast",
+      "community": 36,
+      "community_name": "memory_stream_bench.cpp",
+      "file_type": "code",
+      "norm_label": "memory_stream_bench.cpp",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L1"
+    },
+    {
+      "id": "bench_memory_stream_bench_cpp_size_t",
+      "label": "size_t",
+      "_origin": "ast",
+      "community": 36,
+      "community_name": "memory_stream_bench.cpp",
+      "file_type": "code",
+      "norm_label": "size_t",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "bench_memory_stream_bench_cpp_string",
+      "label": "string",
+      "_origin": "ast",
+      "community": 36,
+      "community_name": "memory_stream_bench.cpp",
+      "file_type": "code",
+      "norm_label": "string",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "bench_memory_stream_bench_cpp_vector",
+      "label": "vector",
+      "_origin": "ast",
+      "community": 36,
+      "community_name": "memory_stream_bench.cpp",
+      "file_type": "code",
+      "norm_label": "vector",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "bench_memory_stream_bench_options_bytes",
+      "label": "bytes",
+      "_origin": "ast",
+      "community": 36,
+      "community_name": "memory_stream_bench.cpp",
+      "file_type": "code",
+      "norm_label": "bytes",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L24"
+    },
+    {
+      "id": "bench_memory_stream_bench_options_device",
+      "label": "device",
+      "_origin": "ast",
+      "community": 36,
+      "community_name": "memory_stream_bench.cpp",
+      "file_type": "code",
+      "norm_label": "device",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L27"
+    },
+    {
+      "id": "bench_memory_stream_bench_options_iterations",
+      "label": "iterations",
+      "_origin": "ast",
+      "community": 36,
+      "community_name": "memory_stream_bench.cpp",
+      "file_type": "code",
+      "norm_label": "iterations",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L26"
+    },
+    {
+      "id": "bench_memory_stream_bench_options_json_output",
+      "label": "json_output",
+      "_origin": "ast",
+      "community": 36,
+      "community_name": "memory_stream_bench.cpp",
+      "file_type": "code",
+      "norm_label": "json_output",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L28"
+    },
+    {
+      "id": "bench_memory_stream_bench_options_warmup",
+      "label": "warmup",
+      "_origin": "ast",
+      "community": 36,
+      "community_name": "memory_stream_bench.cpp",
+      "file_type": "code",
+      "norm_label": "warmup",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L25"
+    },
+    {
+      "id": "include_miinfer_memory_stream",
+      "label": "memory_stream.hpp",
+      "_origin": "ast",
+      "community": 36,
+      "community_name": "memory_stream_bench.cpp",
+      "file_type": "code",
+      "norm_label": "memory_stream.hpp",
+      "source_file": "include/miinfer/memory_stream.hpp",
+      "source_location": "L1"
     },
     {
       "id": "codex_skills_graphify_references_query",
@@ -8939,6 +9265,116 @@
       "source_location": "L57"
     },
     {
+      "id": "bench_fp16_gemv_reduction_diag",
+      "label": "fp16_gemv_reduction_diag.cpp",
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "fp16_gemv_reduction_diag.cpp",
+      "file_type": "code",
+      "norm_label": "fp16_gemv_reduction_diag.cpp",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L1"
+    },
+    {
+      "id": "bench_fp16_gemv_reduction_diag_cpp_half",
+      "label": "__half",
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "fp16_gemv_reduction_diag.cpp",
+      "file_type": "code",
+      "norm_label": "__half",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "bench_fp16_gemv_reduction_diag_cpp_vector",
+      "label": "vector",
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "fp16_gemv_reduction_diag.cpp",
+      "file_type": "code",
+      "norm_label": "vector",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "bench_fp16_gemv_reduction_diag_options_device",
+      "label": "device",
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "fp16_gemv_reduction_diag.cpp",
+      "file_type": "code",
+      "norm_label": "device",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L24"
+    },
+    {
+      "id": "bench_fp16_gemv_reduction_diag_options_iterations",
+      "label": "iterations",
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "fp16_gemv_reduction_diag.cpp",
+      "file_type": "code",
+      "norm_label": "iterations",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L23"
+    },
+    {
+      "id": "bench_fp16_gemv_reduction_diag_options_k",
+      "label": "k",
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "fp16_gemv_reduction_diag.cpp",
+      "file_type": "code",
+      "norm_label": "k",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L21"
+    },
+    {
+      "id": "bench_fp16_gemv_reduction_diag_options_m",
+      "label": "m",
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "fp16_gemv_reduction_diag.cpp",
+      "file_type": "code",
+      "norm_label": "m",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L20"
+    },
+    {
+      "id": "bench_fp16_gemv_reduction_diag_options_warmup",
+      "label": "warmup",
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "fp16_gemv_reduction_diag.cpp",
+      "file_type": "code",
+      "norm_label": "warmup",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L22"
+    },
+    {
+      "id": "hiperror_t",
+      "label": "hipError_t",
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "fp16_gemv_reduction_diag.cpp",
+      "file_type": "code",
+      "norm_label": "hiperror_t",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "include_miinfer_hip_check",
+      "label": "hip_check.hpp",
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "fp16_gemv_reduction_diag.cpp",
+      "file_type": "code",
+      "norm_label": "hip_check.hpp",
+      "source_file": "include/miinfer/hip_check.hpp",
+      "source_location": "L1"
+    },
+    {
       "id": "codex_skills_graphify_references_add_watch",
       "label": "add-watch.md",
       "_origin": "ast",
@@ -9032,7 +9468,7 @@
       "node_kind": "heading",
       "norm_label": "current benchmark priority",
       "source_file": "docs/current-state.md",
-      "source_location": "L218"
+      "source_location": "L225"
     },
     {
       "id": "docs_current_state_current_build_direction",
@@ -9044,7 +9480,7 @@
       "node_kind": "heading",
       "norm_label": "current build direction",
       "source_file": "docs/current-state.md",
-      "source_location": "L135"
+      "source_location": "L142"
     },
     {
       "id": "docs_current_state_current_correctness_policy",
@@ -9056,7 +9492,7 @@
       "node_kind": "heading",
       "norm_label": "current correctness policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L268"
+      "source_location": "L275"
     },
     {
       "id": "docs_current_state_current_dependency_policy",
@@ -9068,7 +9504,7 @@
       "node_kind": "heading",
       "norm_label": "current dependency policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L161"
+      "source_location": "L168"
     },
     {
       "id": "docs_current_state_current_experiment_queue",
@@ -9080,7 +9516,7 @@
       "node_kind": "heading",
       "norm_label": "current experiment queue",
       "source_file": "docs/current-state.md",
-      "source_location": "L236"
+      "source_location": "L243"
     },
     {
       "id": "docs_current_state_current_hardware_observation_requirements",
@@ -9092,7 +9528,7 @@
       "node_kind": "heading",
       "norm_label": "current hardware observation requirements",
       "source_file": "docs/current-state.md",
-      "source_location": "L299"
+      "source_location": "L306"
     },
     {
       "id": "docs_current_state_current_hardware_target",
@@ -9116,7 +9552,7 @@
       "node_kind": "heading",
       "norm_label": "current performance policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L284"
+      "source_location": "L291"
     },
     {
       "id": "docs_current_state_current_phase",
@@ -9152,7 +9588,7 @@
       "node_kind": "heading",
       "norm_label": "current reference strategy",
       "source_file": "docs/current-state.md",
-      "source_location": "L198"
+      "source_location": "L205"
     },
     {
       "id": "docs_current_state_current_runtime_policy",
@@ -9164,7 +9600,7 @@
       "node_kind": "heading",
       "norm_label": "current runtime policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L181"
+      "source_location": "L188"
     },
     {
       "id": "docs_current_state_current_scope",
@@ -9176,7 +9612,7 @@
       "node_kind": "heading",
       "norm_label": "current scope",
       "source_file": "docs/current-state.md",
-      "source_location": "L319"
+      "source_location": "L326"
     },
     {
       "id": "docs_current_state_definition_of_current_success",
@@ -9188,7 +9624,7 @@
       "node_kind": "heading",
       "norm_label": "definition of current success",
       "source_file": "docs/current-state.md",
-      "source_location": "L385"
+      "source_location": "L392"
     },
     {
       "id": "docs_current_state_do_not_start_yet",
@@ -9200,7 +9636,7 @@
       "node_kind": "heading",
       "norm_label": "do not start yet",
       "source_file": "docs/current-state.md",
-      "source_location": "L351"
+      "source_location": "L358"
     },
     {
       "id": "docs_current_state_first_major_gate",
@@ -9212,7 +9648,7 @@
       "node_kind": "heading",
       "norm_label": "first major gate",
       "source_file": "docs/current-state.md",
-      "source_location": "L258"
+      "source_location": "L265"
     },
     {
       "id": "docs_current_state_immediate_deliverables",
@@ -9224,7 +9660,7 @@
       "node_kind": "heading",
       "norm_label": "immediate deliverables",
       "source_file": "docs/current-state.md",
-      "source_location": "L115"
+      "source_location": "L122"
     },
     {
       "id": "docs_current_state_immediate_objective",
@@ -9236,7 +9672,7 @@
       "node_kind": "heading",
       "norm_label": "immediate objective",
       "source_file": "docs/current-state.md",
-      "source_location": "L101"
+      "source_location": "L108"
     },
     {
       "id": "docs_current_state_in_scope_now",
@@ -9248,7 +9684,7 @@
       "node_kind": "heading",
       "norm_label": "in scope now",
       "source_file": "docs/current-state.md",
-      "source_location": "L321"
+      "source_location": "L328"
     },
     {
       "id": "docs_current_state_last_updated",
@@ -9260,7 +9696,7 @@
       "node_kind": "heading",
       "norm_label": "last updated",
       "source_file": "docs/current-state.md",
-      "source_location": "L409"
+      "source_location": "L416"
     },
     {
       "id": "docs_current_state_miinfer_current_state",
@@ -9284,7 +9720,7 @@
       "node_kind": "heading",
       "norm_label": "next implementation task",
       "source_file": "docs/current-state.md",
-      "source_location": "L372"
+      "source_location": "L379"
     },
     {
       "id": "docs_current_state_not_implemented",
@@ -9296,7 +9732,7 @@
       "node_kind": "heading",
       "norm_label": "not implemented",
       "source_file": "docs/current-state.md",
-      "source_location": "L79"
+      "source_location": "L86"
     },
     {
       "id": "docs_current_state_not_in_scope_now",
@@ -9308,7 +9744,7 @@
       "node_kind": "heading",
       "norm_label": "not in scope now",
       "source_file": "docs/current-state.md",
-      "source_location": "L332"
+      "source_location": "L339"
     },
     {
       "id": "docs_reference_baseline",
@@ -11639,7 +12075,7 @@
       "file_type": "code",
       "norm_label": "local_bytes",
       "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L64"
+      "source_location": "L76"
     },
     {
       "id": "include_miinfer_fp16_gemv_gemvkernelresources_max_threads_per_block",
@@ -11650,7 +12086,7 @@
       "file_type": "code",
       "norm_label": "max_threads_per_block",
       "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L65"
+      "source_location": "L77"
     },
     {
       "id": "include_miinfer_fp16_gemv_gemvkernelresources_registers",
@@ -11661,7 +12097,7 @@
       "file_type": "code",
       "norm_label": "registers",
       "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L62"
+      "source_location": "L74"
     },
     {
       "id": "include_miinfer_fp16_gemv_gemvkernelresources_shared_bytes",
@@ -11672,7 +12108,7 @@
       "file_type": "code",
       "norm_label": "shared_bytes",
       "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L63"
+      "source_location": "L75"
     },
     {
       "id": "include_miinfer_fp16_gemv_gemvshape_id",
@@ -11738,7 +12174,7 @@
       "file_type": "code",
       "norm_label": "opaque",
       "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L71"
+      "source_location": "L83"
     },
     {
       "id": "src_fp16_gemv_reference",
@@ -12034,42 +12470,6 @@
       "source_location": "L681"
     },
     {
-      "id": "docs_references_10_nick413_bit_gfx906_fa_vllm",
-      "label": "10. nick413-bit/gfx906-fa-vllm",
-      "_origin": "ast",
-      "community": 98,
-      "community_name": "10. nick413-bit/gfx906-fa-vllm",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "10. nick413-bit/gfx906-fa-vllm",
-      "source_file": "docs/references.md",
-      "source_location": "L924"
-    },
-    {
-      "id": "docs_references_miinfer_implication_939",
-      "label": "MIInfer implication",
-      "_origin": "ast",
-      "community": 98,
-      "community_name": "10. nick413-bit/gfx906-fa-vllm",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "miinfer implication",
-      "source_file": "docs/references.md",
-      "source_location": "L939"
-    },
-    {
-      "id": "docs_references_role_928",
-      "label": "Role",
-      "_origin": "ast",
-      "community": 98,
-      "community_name": "10. nick413-bit/gfx906-fa-vllm",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "role",
-      "source_file": "docs/references.md",
-      "source_location": "L928"
-    },
-    {
       "id": "experiments_template_10_software_environment",
       "label": "10. Software Environment",
       "_origin": "ast",
@@ -12116,7 +12516,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L365",
+      "source_location": "L403",
       "weight": 1.0
     },
     {
@@ -12128,7 +12528,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L388",
+      "source_location": "L426",
       "weight": 1.0
     },
     {
@@ -12140,7 +12540,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L389",
+      "source_location": "L427",
       "weight": 1.0
     },
     {
@@ -12152,19 +12552,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L390",
+      "source_location": "L428",
       "weight": 1.0
     },
     {
       "source": "bench_fp16_gemv_bench_parse_options",
-      "target": "bench_fp16_gemv_bench_parse_nonnegative",
+      "target": "bench_fp16_gemv_bench_print_usage",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L112",
+      "source_location": "L104",
       "weight": 1.0
     },
     {
@@ -12181,6 +12581,18 @@
     },
     {
       "source": "bench_fp16_gemv_bench_parse_options",
+      "target": "bench_fp16_gemv_bench_parse_nonnegative",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "bench/fp16_gemv_bench.cpp",
+      "source_location": "L133",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_bench_parse_options",
       "target": "bench_fp16_gemv_bench_parse_seed",
       "relation": "calls",
       "_origin": "ast",
@@ -12188,7 +12600,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L122",
+      "source_location": "L143",
       "weight": 1.0
     },
     {
@@ -12200,7 +12612,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L138",
+      "source_location": "L159",
       "weight": 1.0
     },
     {
@@ -12212,19 +12624,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L142",
-      "weight": 1.0
-    },
-    {
-      "source": "bench_fp16_gemv_bench_parse_options",
-      "target": "bench_fp16_gemv_bench_print_usage",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L97",
+      "source_location": "L171",
       "weight": 1.0
     },
     {
@@ -12236,7 +12636,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L297",
+      "source_location": "L331",
       "weight": 1.0
     },
     {
@@ -12248,7 +12648,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L311",
+      "source_location": "L344",
       "weight": 1.0
     },
     {
@@ -12260,7 +12660,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L313",
+      "source_location": "L348",
       "weight": 1.0
     },
     {
@@ -12272,7 +12672,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L337",
+      "source_location": "L375",
       "weight": 1.0
     },
     {
@@ -12284,7 +12684,91 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L175",
+      "source_location": "L209",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_reduction_diag_main",
+      "target": "bench_fp16_gemv_reduction_diag_parse",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L132",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_reduction_diag_main",
+      "target": "bench_fp16_gemv_reduction_diag_time_full",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L155",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_reduction_diag_main",
+      "target": "bench_fp16_gemv_reduction_diag_time_dot_only",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L156",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_reduction_diag_parse",
+      "target": "bench_fp16_gemv_reduction_diag_positive",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L42",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_reduction_diag_parse",
+      "target": "bench_fp16_gemv_reduction_diag_nonnegative",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L46",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_reduction_diag_time_dot_only",
+      "target": "bench_fp16_gemv_reduction_diag_median",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L125",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_reduction_diag_time_full",
+      "target": "bench_fp16_gemv_reduction_diag_median",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L93",
       "weight": 1.0
     },
     {
@@ -12357,6 +12841,78 @@
       "context": "call",
       "source_file": "bench/hip_smoke_bench.cpp",
       "source_location": "L91",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_memory_stream_bench_main",
+      "target": "bench_memory_stream_bench_median",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L136",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_memory_stream_bench_main",
+      "target": "bench_memory_stream_bench_escape",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L164",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_memory_stream_bench_main",
+      "target": "bench_memory_stream_bench_parse",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L96",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_memory_stream_bench_main",
+      "target": "bench_memory_stream_bench_usage",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L97",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_memory_stream_bench_parse",
+      "target": "bench_memory_stream_bench_parse_bytes",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L59",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_memory_stream_bench_parse",
+      "target": "bench_memory_stream_bench_parse_positive",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L61",
       "weight": 1.0
     },
     {
@@ -12577,7 +13133,7 @@
     },
     {
       "source": "bench_fp16_gemv_bench_options",
-      "target": "bench_fp16_gemv_bench_options_shape",
+      "target": "bench_fp16_gemv_bench_options_experiment",
       "relation": "defines",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -12589,7 +13145,7 @@
     },
     {
       "source": "bench_fp16_gemv_bench_options",
-      "target": "bench_fp16_gemv_bench_options_implementation",
+      "target": "bench_fp16_gemv_bench_options_shape",
       "relation": "defines",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -12601,7 +13157,7 @@
     },
     {
       "source": "bench_fp16_gemv_bench_options",
-      "target": "bench_fp16_gemv_bench_options_cache_regime",
+      "target": "bench_fp16_gemv_bench_options_implementation",
       "relation": "defines",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -12613,7 +13169,7 @@
     },
     {
       "source": "bench_fp16_gemv_bench_options",
-      "target": "bench_fp16_gemv_bench_options_device",
+      "target": "bench_fp16_gemv_bench_options_cache_regime",
       "relation": "defines",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -12625,7 +13181,7 @@
     },
     {
       "source": "bench_fp16_gemv_bench_options",
-      "target": "bench_fp16_gemv_bench_options_warmup",
+      "target": "bench_fp16_gemv_bench_options_custom_label",
       "relation": "defines",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -12637,7 +13193,7 @@
     },
     {
       "source": "bench_fp16_gemv_bench_options",
-      "target": "bench_fp16_gemv_bench_options_iterations",
+      "target": "bench_fp16_gemv_bench_options_custom_m",
       "relation": "defines",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -12649,7 +13205,7 @@
     },
     {
       "source": "bench_fp16_gemv_bench_options",
-      "target": "bench_fp16_gemv_bench_options_seed",
+      "target": "bench_fp16_gemv_bench_options_custom_k",
       "relation": "defines",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -12661,7 +13217,7 @@
     },
     {
       "source": "bench_fp16_gemv_bench_options",
-      "target": "bench_fp16_gemv_bench_options_json_output",
+      "target": "bench_fp16_gemv_bench_options_device",
       "relation": "defines",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -12669,6 +13225,114 @@
       "context": "field",
       "source_file": "bench/fp16_gemv_bench.cpp",
       "source_location": "L32",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_bench_options",
+      "target": "bench_fp16_gemv_bench_options_warmup",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "field",
+      "source_file": "bench/fp16_gemv_bench.cpp",
+      "source_location": "L33",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_bench_options",
+      "target": "bench_fp16_gemv_bench_options_iterations",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "field",
+      "source_file": "bench/fp16_gemv_bench.cpp",
+      "source_location": "L34",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_bench_options",
+      "target": "bench_fp16_gemv_bench_options_seed",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "field",
+      "source_file": "bench/fp16_gemv_bench.cpp",
+      "source_location": "L35",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_bench_options",
+      "target": "bench_fp16_gemv_bench_options_json_output",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "field",
+      "source_file": "bench/fp16_gemv_bench.cpp",
+      "source_location": "L36",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_reduction_diag_options",
+      "target": "bench_fp16_gemv_reduction_diag_options_m",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "field",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L20",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_reduction_diag_options",
+      "target": "bench_fp16_gemv_reduction_diag_options_k",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "field",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L21",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_reduction_diag_options",
+      "target": "bench_fp16_gemv_reduction_diag_options_warmup",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "field",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L22",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_reduction_diag_options",
+      "target": "bench_fp16_gemv_reduction_diag_options_iterations",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "field",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_reduction_diag_options",
+      "target": "bench_fp16_gemv_reduction_diag_options_device",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "field",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L24",
       "weight": 1.0
     },
     {
@@ -12729,6 +13393,66 @@
       "context": "field",
       "source_file": "bench/hip_smoke_bench.cpp",
       "source_location": "L26",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_memory_stream_bench_options",
+      "target": "bench_memory_stream_bench_options_bytes",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "field",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L24",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_memory_stream_bench_options",
+      "target": "bench_memory_stream_bench_options_warmup",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "field",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L25",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_memory_stream_bench_options",
+      "target": "bench_memory_stream_bench_options_iterations",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "field",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L26",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_memory_stream_bench_options",
+      "target": "bench_memory_stream_bench_options_device",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "field",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L27",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_memory_stream_bench_options",
+      "target": "bench_memory_stream_bench_options_json_output",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "field",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
@@ -12872,7 +13596,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L62",
+      "source_location": "L74",
       "weight": 1.0
     },
     {
@@ -12884,7 +13608,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L63",
+      "source_location": "L75",
       "weight": 1.0
     },
     {
@@ -12896,7 +13620,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L64",
+      "source_location": "L76",
       "weight": 1.0
     },
     {
@@ -12908,7 +13632,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L65",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -12968,7 +13692,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L71",
+      "source_location": "L83",
       "weight": 1.0
     },
     {
@@ -12980,7 +13704,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L31",
+      "source_location": "L35",
       "weight": 1.0
     },
     {
@@ -12992,7 +13716,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L32",
+      "source_location": "L36",
       "weight": 1.0
     },
     {
@@ -13017,6 +13741,30 @@
       "context": "field",
       "source_file": "bench/hip_smoke_bench.cpp",
       "source_location": "L26",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_memory_stream_bench_options",
+      "target": "bench_memory_stream_bench_cpp_size_t",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "field",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L24",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_memory_stream_bench_options",
+      "target": "bench_memory_stream_bench_cpp_string",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "field",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
@@ -13052,7 +13800,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L64",
+      "source_location": "L76",
       "weight": 1.0
     },
     {
@@ -13064,7 +13812,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L170",
+      "source_location": "L199",
       "weight": 1.0
     },
     {
@@ -13164,6 +13912,54 @@
       "weight": 1.0
     },
     {
+      "source": "bench_fp16_gemv_reduction_diag",
+      "target": "include_miinfer_device_validation_hpp_string",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_reduction_diag",
+      "target": "bench_fp16_gemv_reduction_diag_cpp_vector",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_reduction_diag",
+      "target": "include_miinfer_fp16_gemv",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_reduction_diag",
+      "target": "include_miinfer_hip_check",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
       "source": "bench_hip_smoke_bench",
       "target": "include_miinfer_device_validation_hpp_string",
       "relation": "imports",
@@ -13196,6 +13992,54 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "bench/hip_smoke_bench.cpp",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_memory_stream_bench",
+      "target": "include_miinfer_device_validation_hpp_string",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L18",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_memory_stream_bench",
+      "target": "bench_memory_stream_bench_cpp_vector",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L19",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_memory_stream_bench",
+      "target": "include_miinfer_hip_check",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_memory_stream_bench",
+      "target": "include_miinfer_memory_stream",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "bench/memory_stream_bench.cpp",
       "source_location": "L5",
       "weight": 1.0
     },
@@ -13376,7 +14220,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L188",
+      "source_location": "L222",
       "weight": 1.0
     },
     {
@@ -13388,7 +14232,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L153",
+      "source_location": "L182",
       "weight": 1.0
     },
     {
@@ -13400,7 +14244,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L199",
+      "source_location": "L233",
       "weight": 1.0
     },
     {
@@ -13412,7 +14256,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L207",
+      "source_location": "L241",
       "weight": 1.0
     },
     {
@@ -13424,7 +14268,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L88",
+      "source_location": "L95",
       "weight": 1.0
     },
     {
@@ -13436,7 +14280,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L66",
+      "source_location": "L73",
       "weight": 1.0
     },
     {
@@ -13448,7 +14292,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L220",
+      "source_location": "L254",
       "weight": 1.0
     },
     {
@@ -13460,7 +14304,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L220",
+      "source_location": "L254",
       "weight": 1.0
     },
     {
@@ -13472,7 +14316,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L220",
+      "source_location": "L254",
       "weight": 1.0
     },
     {
@@ -13484,7 +14328,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L220",
+      "source_location": "L254",
       "weight": 1.0
     },
     {
@@ -13496,7 +14340,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L220",
+      "source_location": "L254",
       "weight": 1.0
     },
     {
@@ -13508,7 +14352,19 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L192",
+      "source_location": "L226",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_bench_selected_shapes",
+      "target": "bench_fp16_gemv_bench_options",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "parameter_type",
+      "source_file": "bench/fp16_gemv_bench.cpp",
+      "source_location": "L199",
       "weight": 1.0
     },
     {
@@ -13520,7 +14376,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L84",
+      "source_location": "L91",
       "weight": 1.0
     },
     {
@@ -13532,7 +14388,55 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L79",
+      "source_location": "L86",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_reduction_diag_median",
+      "target": "bench_fp16_gemv_reduction_diag_cpp_vector",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "parameter_type",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L58",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_reduction_diag_parse",
+      "target": "bench_fp16_gemv_reduction_diag_options",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "parameter_type",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L37",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_reduction_diag_time_dot_only",
+      "target": "bench_fp16_gemv_reduction_diag_cpp_half",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "parameter_type",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L96",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_reduction_diag_time_full",
+      "target": "bench_fp16_gemv_reduction_diag_cpp_half",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "parameter_type",
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L64",
       "weight": 1.0
     },
     {
@@ -13569,6 +14473,54 @@
       "context": "parameter_type",
       "source_file": "bench/hip_smoke_bench.cpp",
       "source_location": "L57",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_memory_stream_bench_escape",
+      "target": "bench_memory_stream_bench_cpp_string",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "parameter_type",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L75",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_memory_stream_bench_median",
+      "target": "bench_memory_stream_bench_cpp_vector",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "parameter_type",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L86",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_memory_stream_bench_parse",
+      "target": "bench_memory_stream_bench_options",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "parameter_type",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L54",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_memory_stream_bench_parse_bytes",
+      "target": "bench_memory_stream_bench_cpp_size_t",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "parameter_type",
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L36",
       "weight": 1.0
     },
     {
@@ -13784,7 +14736,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L207",
+      "source_location": "L241",
       "weight": 1.0
     },
     {
@@ -13796,7 +14748,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L192",
+      "source_location": "L226",
       "weight": 1.0
     },
     {
@@ -13808,7 +14760,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L170",
+      "source_location": "L199",
       "weight": 1.0
     },
     {
@@ -14513,7 +15465,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L153",
+      "source_location": "L182",
       "weight": 1.0
     },
     {
@@ -14524,7 +15476,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L170",
+      "source_location": "L199",
       "weight": 1.0
     },
     {
@@ -14535,7 +15487,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L188",
+      "source_location": "L222",
       "weight": 1.0
     },
     {
@@ -14546,7 +15498,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L192",
+      "source_location": "L226",
       "weight": 1.0
     },
     {
@@ -14557,29 +15509,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L199",
-      "weight": 1.0
-    },
-    {
-      "source": "bench_fp16_gemv_bench",
-      "target": "bench_fp16_gemv_bench_metrics_json",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L207",
-      "weight": 1.0
-    },
-    {
-      "source": "bench_fp16_gemv_bench",
-      "target": "bench_fp16_gemv_bench_run_one",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L220",
+      "source_location": "L233",
       "weight": 1.0
     },
     {
@@ -14595,13 +15525,35 @@
     },
     {
       "source": "bench_fp16_gemv_bench",
+      "target": "bench_fp16_gemv_bench_metrics_json",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "bench/fp16_gemv_bench.cpp",
+      "source_location": "L241",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_bench",
+      "target": "bench_fp16_gemv_bench_run_one",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "bench/fp16_gemv_bench.cpp",
+      "source_location": "L254",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_bench",
       "target": "bench_fp16_gemv_bench_print_usage",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L35",
+      "source_location": "L39",
       "weight": 1.0
     },
     {
@@ -14612,7 +15564,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L362",
+      "source_location": "L400",
       "weight": 1.0
     },
     {
@@ -14623,7 +15575,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L48",
+      "source_location": "L55",
       "weight": 1.0
     },
     {
@@ -14634,7 +15586,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L57",
+      "source_location": "L64",
       "weight": 1.0
     },
     {
@@ -14645,7 +15597,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L66",
+      "source_location": "L73",
       "weight": 1.0
     },
     {
@@ -14656,7 +15608,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L79",
+      "source_location": "L86",
       "weight": 1.0
     },
     {
@@ -14667,7 +15619,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L84",
+      "source_location": "L91",
       "weight": 1.0
     },
     {
@@ -14678,7 +15630,95 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "bench/fp16_gemv_bench.cpp",
-      "source_location": "L88",
+      "source_location": "L95",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_reduction_diag",
+      "target": "bench_fp16_gemv_reduction_diag_main",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L130",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_reduction_diag",
+      "target": "bench_fp16_gemv_reduction_diag_options",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L19",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_reduction_diag",
+      "target": "bench_fp16_gemv_reduction_diag_positive",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L27",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_reduction_diag",
+      "target": "bench_fp16_gemv_reduction_diag_nonnegative",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L32",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_reduction_diag",
+      "target": "bench_fp16_gemv_reduction_diag_parse",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L37",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_reduction_diag",
+      "target": "bench_fp16_gemv_reduction_diag_median",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L58",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_reduction_diag",
+      "target": "bench_fp16_gemv_reduction_diag_time_full",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L64",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_fp16_gemv_reduction_diag",
+      "target": "bench_fp16_gemv_reduction_diag_time_dot_only",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "bench/fp16_gemv_reduction_diag.cpp",
+      "source_location": "L96",
       "weight": 1.0
     },
     {
@@ -14767,6 +15807,94 @@
       "confidence_score": 1.0,
       "source_file": "bench/hip_smoke_bench.cpp",
       "source_location": "L66",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_memory_stream_bench",
+      "target": "bench_memory_stream_bench_options",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_memory_stream_bench",
+      "target": "bench_memory_stream_bench_parse_positive",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L31",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_memory_stream_bench",
+      "target": "bench_memory_stream_bench_parse_bytes",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L36",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_memory_stream_bench",
+      "target": "bench_memory_stream_bench_usage",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L45",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_memory_stream_bench",
+      "target": "bench_memory_stream_bench_parse",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L54",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_memory_stream_bench",
+      "target": "bench_memory_stream_bench_escape",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L75",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_memory_stream_bench",
+      "target": "bench_memory_stream_bench_median",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L86",
+      "weight": 1.0
+    },
+    {
+      "source": "bench_memory_stream_bench",
+      "target": "bench_memory_stream_bench_main",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "bench/memory_stream_bench.cpp",
+      "source_location": "L94",
       "weight": 1.0
     },
     {
@@ -16845,7 +17973,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L101",
+      "source_location": "L108",
       "weight": 1.0
     },
     {
@@ -16856,7 +17984,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L115",
+      "source_location": "L122",
       "weight": 1.0
     },
     {
@@ -16867,7 +17995,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L135",
+      "source_location": "L142",
       "weight": 1.0
     },
     {
@@ -16889,7 +18017,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L161",
+      "source_location": "L168",
       "weight": 1.0
     },
     {
@@ -16900,7 +18028,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L181",
+      "source_location": "L188",
       "weight": 1.0
     },
     {
@@ -16911,7 +18039,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L198",
+      "source_location": "L205",
       "weight": 1.0
     },
     {
@@ -16922,7 +18050,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L218",
+      "source_location": "L225",
       "weight": 1.0
     },
     {
@@ -16933,7 +18061,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L236",
+      "source_location": "L243",
       "weight": 1.0
     },
     {
@@ -16944,7 +18072,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L258",
+      "source_location": "L265",
       "weight": 1.0
     },
     {
@@ -16955,7 +18083,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L268",
+      "source_location": "L275",
       "weight": 1.0
     },
     {
@@ -16977,7 +18105,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L284",
+      "source_location": "L291",
       "weight": 1.0
     },
     {
@@ -16988,7 +18116,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L299",
+      "source_location": "L306",
       "weight": 1.0
     },
     {
@@ -16999,7 +18127,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L319",
+      "source_location": "L326",
       "weight": 1.0
     },
     {
@@ -17010,7 +18138,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L351",
+      "source_location": "L358",
       "weight": 1.0
     },
     {
@@ -17021,7 +18149,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L372",
+      "source_location": "L379",
       "weight": 1.0
     },
     {
@@ -17032,18 +18160,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L385",
-      "weight": 1.0
-    },
-    {
-      "source": "docs_current_state",
-      "target": "docs_current_state_last_updated",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/current-state.md",
-      "source_location": "L409",
+      "source_location": "L392",
       "weight": 1.0
     },
     {
@@ -17055,6 +18172,17 @@
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
       "source_location": "L41",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_current_state",
+      "target": "docs_current_state_last_updated",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/current-state.md",
+      "source_location": "L416",
       "weight": 1.0
     },
     {
@@ -17087,7 +18215,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L79",
+      "source_location": "L86",
       "weight": 1.0
     },
     {
@@ -17098,7 +18226,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L321",
+      "source_location": "L328",
       "weight": 1.0
     },
     {
@@ -17109,7 +18237,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L332",
+      "source_location": "L339",
       "weight": 1.0
     },
     {
@@ -21932,18 +23060,18 @@
     },
     {
       "source": "experiments_exp_0002_fp16_gemv_baseline",
-      "target": "experiments_exp_0002_fp16_gemv_baseline_12_correctness",
+      "target": "experiments_exp_0002_fp16_gemv_baseline_8_test_matrix_real_model_shapes",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L113",
+      "source_location": "L104",
       "weight": 1.0
     },
     {
       "source": "experiments_exp_0002_fp16_gemv_baseline",
-      "target": "experiments_exp_0002_fp16_gemv_baseline_13_benchmark_protocol",
+      "target": "experiments_exp_0002_fp16_gemv_baseline_9_test_infrastructure",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -21965,46 +23093,24 @@
     },
     {
       "source": "experiments_exp_0002_fp16_gemv_baseline",
-      "target": "experiments_exp_0002_fp16_gemv_baseline_14_results",
+      "target": "experiments_exp_0002_fp16_gemv_baseline_10_cache_regime_and_benchmark_command",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L125",
+      "source_location": "L134",
       "weight": 1.0
     },
     {
       "source": "experiments_exp_0002_fp16_gemv_baseline",
-      "target": "experiments_exp_0002_fp16_gemv_baseline_15_contamination_interpretation",
+      "target": "experiments_exp_0002_fp16_gemv_baseline_11_correctness_results",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L129",
-      "weight": 1.0
-    },
-    {
-      "source": "experiments_exp_0002_fp16_gemv_baseline",
-      "target": "experiments_exp_0002_fp16_gemv_baseline_16_decision",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L135",
-      "weight": 1.0
-    },
-    {
-      "source": "experiments_exp_0002_fp16_gemv_baseline",
-      "target": "experiments_exp_0002_fp16_gemv_baseline_17_follow_up",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L140",
+      "source_location": "L174",
       "weight": 1.0
     },
     {
@@ -22020,134 +23126,123 @@
     },
     {
       "source": "experiments_exp_0002_fp16_gemv_baseline",
+      "target": "experiments_exp_0002_fp16_gemv_baseline_12_canonical_performance_results",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
+      "source_location": "L189",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0002_fp16_gemv_baseline",
+      "target": "experiments_exp_0002_fp16_gemv_baseline_13_hardware_state_and_contamination",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
+      "source_location": "L216",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0002_fp16_gemv_baseline",
+      "target": "experiments_exp_0002_fp16_gemv_baseline_14_kernel_resources",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
+      "source_location": "L233",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0002_fp16_gemv_baseline",
       "target": "experiments_exp_0002_fp16_gemv_baseline_3_motivation",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0
     },
     {
       "source": "experiments_exp_0002_fp16_gemv_baseline",
-      "target": "experiments_exp_0002_fp16_gemv_baseline_4_source_prior_art",
+      "target": "experiments_exp_0002_fp16_gemv_baseline_15_interpretation",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L30",
+      "source_location": "L251",
       "weight": 1.0
     },
     {
       "source": "experiments_exp_0002_fp16_gemv_baseline",
-      "target": "experiments_exp_0002_fp16_gemv_baseline_5_target_bottleneck",
+      "target": "experiments_exp_0002_fp16_gemv_baseline_16_decision",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L36",
+      "source_location": "L261",
       "weight": 1.0
     },
     {
       "source": "experiments_exp_0002_fp16_gemv_baseline",
-      "target": "experiments_exp_0002_fp16_gemv_baseline_6_baseline",
+      "target": "experiments_exp_0002_fp16_gemv_baseline_17_follow_up_recommendation",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L42",
+      "source_location": "L272",
       "weight": 1.0
     },
     {
       "source": "experiments_exp_0002_fp16_gemv_baseline",
-      "target": "experiments_exp_0002_fp16_gemv_baseline_7_candidate",
+      "target": "experiments_exp_0002_fp16_gemv_baseline_4_scope_and_exclusions",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L66",
+      "source_location": "L31",
       "weight": 1.0
     },
     {
       "source": "experiments_exp_0002_fp16_gemv_baseline",
-      "target": "experiments_exp_0002_fp16_gemv_baseline_8_hardware",
+      "target": "experiments_exp_0002_fp16_gemv_baseline_5_baseline_implementation",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L71",
+      "source_location": "L38",
       "weight": 1.0
     },
     {
       "source": "experiments_exp_0002_fp16_gemv_baseline",
-      "target": "experiments_exp_0002_fp16_gemv_baseline_9_host_software_environment",
+      "target": "experiments_exp_0002_fp16_gemv_baseline_6_rocblas_comparison",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L83",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
       "source": "experiments_exp_0002_fp16_gemv_baseline",
-      "target": "experiments_exp_0002_fp16_gemv_baseline_10_model_workload",
+      "target": "experiments_exp_0002_fp16_gemv_baseline_7_hardware_and_software",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L88",
-      "weight": 1.0
-    },
-    {
-      "source": "experiments_exp_0002_fp16_gemv_baseline",
-      "target": "experiments_exp_0002_fp16_gemv_baseline_11_test_matrix_real_model_shapes",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L98",
-      "weight": 1.0
-    },
-    {
-      "source": "experiments_exp_0002_fp16_gemv_baseline_6_baseline",
-      "target": "experiments_exp_0002_fp16_gemv_baseline_implementation",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L44",
-      "weight": 1.0
-    },
-    {
-      "source": "experiments_exp_0002_fp16_gemv_baseline_6_baseline",
-      "target": "experiments_exp_0002_fp16_gemv_baseline_commit",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L50",
-      "weight": 1.0
-    },
-    {
-      "source": "experiments_exp_0002_fp16_gemv_baseline_6_baseline",
-      "target": "experiments_exp_0002_fp16_gemv_baseline_relevant_configuration",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "experiments/EXP-0002-fp16-gemv-baseline.md",
-      "source_location": "L56",
+      "source_location": "L78",
       "weight": 1.0
     },
     {
@@ -22884,7 +23979,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L61",
+      "source_location": "L73",
       "weight": 1.0
     },
     {
@@ -22895,7 +23990,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L70",
+      "source_location": "L82",
       "weight": 1.0
     },
     {
@@ -23874,7 +24969,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L212",
+      "source_location": "L219",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_current_state",
+      "target": "experiments_exp_0002_fp16_gemv_baseline",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/current-state.md",
+      "source_location": "L79",
       "weight": 1.0
     },
     {
@@ -23989,5 +25095,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "90b2f0349fd3c0a82247a7561096f008d222c780"
+  "built_at_commit": "a82cd0d81d140d804c470d1d47c6f185e9b46367"
 }

@@ -58,6 +58,18 @@ void launch_fp16_gemv_baseline(
     int k,
     hipStream_t stream = nullptr);
 
+// DIAGNOSTIC ONLY: performs the same per-thread dot-product work as the
+// baseline, then writes one partial per thread instead of reducing to output.
+// The extra partial writes are reported as a diagnostic artifact, not a
+// performance candidate.
+void launch_fp16_gemv_diagnostic_dot_only(
+    const __half* weights,
+    const __half* input,
+    float* partials,
+    int m,
+    int k,
+    hipStream_t stream = nullptr);
+
 struct GemvKernelResources {
     int registers = 0;
     std::size_t shared_bytes = 0;
