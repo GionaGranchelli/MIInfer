@@ -73,6 +73,7 @@ No other GPU architecture is currently supported.
 * initial llama.cpp PP/TG measurements
 * EXP-0002 FP16 GEMV baseline implementation and five-run MI50 measurement
 * EXP-0004 FP16 K-split K/V specialization, accepted after five-run measurement
+* EXP-0005 Q4_0 × Q8_1 quantized GEMV baseline, accepted after five-run measurement
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -111,9 +112,10 @@ been implemented.
 
 The immediate technical objective is:
 
-> Characterize the accepted FP16 GEMV baseline and identify the actual gfx906
-> llama.cpp decode kernel path before selecting the first specialization
-> experiment.
+> Use the accepted Q4_0 × Q8_1 baseline to select and measure the first
+> gfx906-specific quantized specialization, beginning with packed integer dot
+> execution. EXP-0005 freezes the correctness and quantization contract; it
+> does not yet implement that specialization.
 
 M0 is closed under the documented gfx802-isolated configuration. The
 repository-side infrastructure, physical MI50 validation, model artifact, and
@@ -124,7 +126,7 @@ documented platform prerequisite for M1 GPU execution.
 
 # Immediate Deliverables
 
-The current bootstrap phase should produce:
+The M1 kernel-laboratory deliverables currently include:
 
 * root CMake project
 * canonical gfx906 build preset
@@ -136,6 +138,9 @@ The current bootstrap phase should produce:
 * machine-readable benchmark output
 * hardware/environment capture
 * experiment scaffold
+* deterministic Q4_0/Q8_1 host quantization and CPU oracle
+* project-owned Q4_0 × Q8_1 HIP baseline
+* activation-quantization and fan-out measurements
 
 The repository-side deliverables are complete. Physical MI50 execution remains
 required for the GPU-specific exit criteria.
@@ -248,10 +253,12 @@ isolated M1 kernel experiments. It remains required before an M2 or end-to-end
 claim against the real llama.cpp decode path.
 
 Attention and MoE benchmarks should wait until representative target-model
-shapes and actual bottlenecks are frozen. Quantized GEMV remains queued after
-the quantized GEMV baseline on the real Qwen3-8B projection shapes. The
-accepted K-split implementation is currently limited to the K/V shape family;
-Q/O continues to use the EXP-0002 baseline configuration.
+shapes and actual bottlenecks are frozen. EXP-0005 accepted the Q4_0 × Q8_1
+baseline on all seven real Qwen3-8B projection shapes. The baseline is
+correctness-valid but slower than the pinned external Q4_0 MMVQ path, leaving
+a clear target for packed-dot specialization. The accepted K-split
+implementation is currently limited to the K/V shape family; Q/O continues
+to use the EXP-0002 baseline configuration.
 
 ---
 
@@ -268,9 +275,9 @@ EXP-0003 — FP16 GEMV bottleneck characterization (RETEST: external profiler ga
 
 EXP-0004 — FP16 K-split parallelism for K/V (KEEP)
 
-EXP-0005 — quantized GEMV baseline
+EXP-0005 — quantized GEMV baseline (KEEP)
 
-EXP-0006 — gfx906-specific specialization experiments
+EXP-0006 — gfx906 Q4_0 × Q8_1 packed-dot specialization
 ```
 
 The exact ordering may change based on early measurements.
