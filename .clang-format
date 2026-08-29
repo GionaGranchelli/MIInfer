@@ -1,0 +1,151 @@
+---
+Language: Cpp
+BasedOnStyle: LLVM
+
+# -----------------------------------------------------------------------------
+# Layout
+# -----------------------------------------------------------------------------
+
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+
+ColumnLimit: 100
+
+ContinuationIndentWidth: 4
+ConstructorInitializerIndentWidth: 4
+
+AccessModifierOffset: -4
+
+IndentCaseLabels: true
+IndentCaseBlocks: false
+IndentPPDirectives: BeforeHash
+PPIndentWidth: 4
+
+NamespaceIndentation: None
+
+# -----------------------------------------------------------------------------
+# Braces
+# -----------------------------------------------------------------------------
+
+BreakBeforeBraces: Attach
+
+AllowShortBlocksOnASingleLine: Empty
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+
+# -----------------------------------------------------------------------------
+# Functions / arguments
+# -----------------------------------------------------------------------------
+
+BinPackArguments: false
+BinPackParameters: false
+
+AllowAllArgumentsOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+
+AlwaysBreakAfterReturnType: None
+
+BreakConstructorInitializers: BeforeColon
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
+
+# -----------------------------------------------------------------------------
+# Expressions
+# -----------------------------------------------------------------------------
+
+BreakBeforeBinaryOperators: None
+BreakBeforeTernaryOperators: true
+
+AlignOperands: AlignAfterOperator
+
+SpaceBeforeParens: ControlStatements
+
+SpacesInAngles: Never
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+
+PointerAlignment: Left
+ReferenceAlignment: Left
+
+# -----------------------------------------------------------------------------
+# Alignment
+# -----------------------------------------------------------------------------
+
+AlignAfterOpenBracket: Align
+
+AlignConsecutiveAssignments:
+  Enabled: false
+
+AlignConsecutiveDeclarations:
+  Enabled: false
+
+AlignConsecutiveMacros:
+  Enabled: false
+
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 0
+
+# -----------------------------------------------------------------------------
+# Includes
+# -----------------------------------------------------------------------------
+
+SortIncludes: CaseSensitive
+IncludeBlocks: Regroup
+
+IncludeCategories:
+  - Regex: '^<.*>'
+    Priority: 1
+
+  - Regex: '^"miinfer/'
+    Priority: 2
+
+  - Regex: '^"'
+    Priority: 3
+
+# -----------------------------------------------------------------------------
+# Comments
+# -----------------------------------------------------------------------------
+
+ReflowComments: true
+
+# -----------------------------------------------------------------------------
+# Templates
+# -----------------------------------------------------------------------------
+
+AlwaysBreakTemplateDeclarations: Yes
+
+# -----------------------------------------------------------------------------
+# Lambdas
+# -----------------------------------------------------------------------------
+
+LambdaBodyIndentation: Signature
+
+# -----------------------------------------------------------------------------
+# Misc
+# -----------------------------------------------------------------------------
+
+FixNamespaceComments: true
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 1
+
+Cpp11BracedListStyle: true
+DerivePointerAlignment: false
+Standard: c++20
+
+StatementAttributeLikeMacros:
+  - __global__
+  - __device__
+  - __host__
+
+# Avoid formatter fighting GPU/compiler attributes.
+AttributeMacros:
+  - __global__
+  - __device__
+  - __host__
+  - __shared__
+  - __launch_bounds__
+
+...

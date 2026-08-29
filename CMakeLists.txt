@@ -1,0 +1,130 @@
+cmake_minimum_required(VERSION 3.24)
+
+include(cmake/MIInferOptions.cmake)
+
+project(MIInfer VERSION 0.1.0 LANGUAGES CXX)
+
+if(MIINFER_ENABLE_HIP)
+    enable_language(HIP)
+endif()
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+if(MIINFER_ENABLE_HIP)
+    set(CMAKE_HIP_STANDARD 20)
+    set(CMAKE_HIP_STANDARD_REQUIRED ON)
+    set(CMAKE_HIP_EXTENSIONS OFF)
+endif()
+
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
+endif()
+
+set(MIINFER_GIT_COMMIT "UNAVAILABLE")
+set(MIINFER_GIT_DIRTY "UNAVAILABLE")
+execute_process(
+    COMMAND git -C "${CMAKE_SOURCE_DIR}" rev-parse --short=12 HEAD
+    OUTPUT_VARIABLE MIINFER_GIT_COMMIT
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+    RESULT_VARIABLE MIINFER_GIT_RESULT
+)
+if(MIINFER_GIT_RESULT)
+    set(MIINFER_GIT_COMMIT "UNAVAILABLE")
+else()
+    execute_process(
+        COMMAND git -C "${CMAKE_SOURCE_DIR}" status --porcelain
+        OUTPUT_VARIABLE MIINFER_GIT_STATUS
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+        RESULT_VARIABLE MIINFER_GIT_STATUS_RESULT
+    )
+    if(MIINFER_GIT_STATUS_RESULT)
+        set(MIINFER_GIT_DIRTY "UNAVAILABLE")
+    elseif(MIINFER_GIT_STATUS)
+        set(MIINFER_GIT_DIRTY "true")
+    else()
+        set(MIINFER_GIT_DIRTY "false")
+    endif()
+endif()
+
+if(MIINFER_ENABLE_HIP)
+    set(MIINFER_HIP_AVAILABLE "true")
+    set(MIINFER_HIP_COMPILER "${CMAKE_HIP_COMPILER_ID} ${CMAKE_HIP_COMPILER_VERSION}")
+else()
+    set(MIINFER_HIP_AVAILABLE "false")
+    set(MIINFER_HIP_COMPILER "UNAVAILABLE")
+endif()
+
+configure_file(
+    cmake/miinfer/build_config.hpp.in
+    "${CMAKE_CURRENT_BINARY_DIR}/generated/miinfer/build_config.hpp"
+    @ONLY
+)
+
+add_library(miinfer_build_info STATIC src/build_info.cpp)
+target_include_directories(miinfer_build_info
+    PUBLIC
+        "${CMAKE_CURRENT_SOURCE_DIR}/include"
+        "${CMAKE_CURRENT_BINARY_DIR}/generated"
+)
+target_compile_features(miinfer_build_info PUBLIC cxx_std_20)
+target_compile_options(miinfer_build_info PRIVATE
+    $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Wpedantic>
+)
+
+if(MIINFER_ENABLE_HIP)
+    add_library(miinfer_hip STATIC
+        src/device_validation.cpp
+        gfx906/kernels/vector_add.hip
+    )
+    target_include_directories(miinfer_hip
+        PUBLIC
+            "${CMAKE_CURRENT_SOURCE_DIR}/include"
+            "${CMAKE_CURRENT_BINARY_DIR}/generated"
+    )
+    target_compile_features(miinfer_hip PUBLIC cxx_std_20)
+    target_link_libraries(miinfer_hip PUBLIC miinfer_build_info)
+    target_compile_definitions(miinfer_hip PUBLIC __HIP_PLATFORM_AMD__)
+    target_compile_options(miinfer_hip PRIVATE
+        $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Wpedantic>
+        $<$<COMPILE_LANGUAGE:HIP>:-Wall;-Wextra>
+    )
+endif()
+
+add_executable(miinfer-host-test tests/host_test.cpp)
+target_link_libraries(miinfer-host-test PRIVATE miinfer_build_info)
+target_compile_options(miinfer-host-test PRIVATE -Wall -Wextra -Wpedantic)
+
+if(MIINFER_ENABLE_HIP)
+    add_executable(miinfer-device-info tests/device_info.cpp)
+    target_link_libraries(miinfer-device-info PRIVATE miinfer_hip)
+    target_compile_options(miinfer-device-info PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-hip-smoke tests/hip_smoke.cpp)
+    target_link_libraries(miinfer-hip-smoke PRIVATE miinfer_hip)
+    target_compile_options(miinfer-hip-smoke PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-bench bench/hip_smoke_bench.cpp)
+    target_link_libraries(miinfer-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-bench PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+include(CTest)
+if(BUILD_TESTING)
+    add_test(NAME host-only COMMAND miinfer-host-test)
+    set_tests_properties(host-only PROPERTIES LABELS "host-only")
+    if(MIINFER_ENABLE_HIP)
+        add_test(NAME hip-smoke COMMAND miinfer-hip-smoke)
+        set_tests_properties(hip-smoke PROPERTIES LABELS "gpu-required")
+    endif()
+endif()
+
+install(TARGETS miinfer-host-test)
+if(MIINFER_ENABLE_HIP)
+    install(TARGETS miinfer-device-info miinfer-hip-smoke miinfer-bench)
+endif()

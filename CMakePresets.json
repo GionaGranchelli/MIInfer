@@ -1,0 +1,80 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 24,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "mi50-debug",
+      "displayName": "MI50 gfx906 Debug",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/mi50-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_HIP_ARCHITECTURES": "gfx906",
+        "MIINFER_ENABLE_HIP": "ON",
+        "MIINFER_HIP_ARCHITECTURE": "gfx906",
+        "MIINFER_TARGET_ARCH": "gfx906"
+      }
+    },
+    {
+      "name": "mi50-release",
+      "displayName": "MI50 gfx906 Release",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/mi50-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_HIP_ARCHITECTURES": "gfx906",
+        "MIINFER_ENABLE_HIP": "ON",
+        "MIINFER_HIP_ARCHITECTURE": "gfx906",
+        "MIINFER_TARGET_ARCH": "gfx906"
+      }
+    },
+    {
+      "name": "host-only",
+      "displayName": "MIInfer host-only checks",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/host-only",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "MIINFER_ENABLE_HIP": "OFF",
+        "MIINFER_TARGET_ARCH": "gfx906"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "mi50-debug",
+      "configurePreset": "mi50-debug"
+    },
+    {
+      "name": "mi50-release",
+      "configurePreset": "mi50-release"
+    },
+    {
+      "name": "host-only",
+      "configurePreset": "host-only"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "mi50-debug",
+      "configurePreset": "mi50-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "host-only",
+      "configurePreset": "host-only",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}
