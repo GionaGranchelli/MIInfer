@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788040029.088889,
-    "seen": 1788040109.8168848,
-    "ast_hash": "6ae71cabe139d83d92153bf01ca5b4aa",
+    "mtime": 1788042321.5831106,
+    "seen": 1788042419.5873077,
+    "ast_hash": "5a147271d58065c515f46df85f819d69",
     "semantic_hash": ""
   },
   "README.md": {
@@ -375,6 +375,30 @@
     "mtime": 1788040029.087889,
     "seen": 1788040109.8168309,
     "ast_hash": "625d80f98316b5fe12e1538574e94180",
+    "semantic_hash": ""
+  },
+  "bench/q4_q8_gemv_bench.cpp": {
+    "mtime": 1788042032.799481,
+    "seen": 1788042419.5872626,
+    "ast_hash": "5d2d06f55abc597ed7d1f4722dd21240",
+    "semantic_hash": ""
+  },
+  "include/miinfer/q4_q8_gemv.hpp": {
+    "mtime": 1788041817.2145038,
+    "seen": 1788042419.5872717,
+    "ast_hash": "6711d14205b3943a91eb2f8b3b0254bb",
+    "semantic_hash": ""
+  },
+  "src/q4_q8_gemv_reference.cpp": {
+    "mtime": 1788042268.779361,
+    "seen": 1788042419.5872848,
+    "ast_hash": "17a493185ca3858e3862322622cc478a",
+    "semantic_hash": ""
+  },
+  "tests/q4_q8_gemv_test.cpp": {
+    "mtime": 1788042314.6961432,
+    "seen": 1788042419.5872924,
+    "ast_hash": "8d171828942e08982d3032084e8b5b53",
     "semantic_hash": ""
   }
 }
