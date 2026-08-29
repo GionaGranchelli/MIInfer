@@ -378,9 +378,9 @@
     "semantic_hash": ""
   },
   "bench/q4_q8_gemv_bench.cpp": {
-    "mtime": 1788042510.6542134,
-    "seen": 1788042660.6746378,
-    "ast_hash": "4073d13a908185d30bb0c23ba53f4d4f",
+    "mtime": 1788042791.3438787,
+    "seen": 1788042808.1780484,
+    "ast_hash": "084349b19e14217ff6fafc03eb5e883c",
     "semantic_hash": ""
   },
   "include/miinfer/q4_q8_gemv.hpp": {

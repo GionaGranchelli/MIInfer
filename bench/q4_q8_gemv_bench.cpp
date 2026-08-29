@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <cstring>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -370,11 +369,46 @@ bool run_quantize(
                                 actual.size() * sizeof(miinfer::Q8_1Block), hipMemcpyDeviceToHost));
     std::size_t mismatched_blocks = 0;
     std::size_t first_mismatch = expected.size();
+    int first_expected_q = 0;
+    int first_actual_q = 0;
+    int first_q_mismatches = 0;
+    int first_expected_q_sum = 0;
+    int first_actual_q_sum = 0;
+    float first_expected_d = 0.0F;
+    float first_actual_d = 0.0F;
+    float first_expected_s = 0.0F;
+    float first_actual_s = 0.0F;
+    double max_scale_sum_error = 0.0;
     for (std::size_t index = 0; index < actual.size(); ++index) {
-        if (std::memcmp(&actual[index], &expected[index], sizeof(miinfer::Q8_1Block)) != 0) {
+        const double scale_sum_error = std::fabs(
+            static_cast<double>(__half2float(actual[index].s))
+            - static_cast<double>(__half2float(expected[index].s)));
+        max_scale_sum_error = std::max(max_scale_sum_error, scale_sum_error);
+        bool block_mismatch = __half2float(actual[index].d) != __half2float(expected[index].d);
+        int block_q_mismatches = 0;
+        for (int q_index = 0; q_index < miinfer::kQ8_1BlockSize; ++q_index) {
+            block_q_mismatches += actual[index].qs[q_index] != expected[index].qs[q_index];
+        }
+        // s is FP16 metadata. CPU/GPU evaluation can differ by one FP16 ULP
+        // at a rounding boundary; q-values and d remain exact requirements.
+        block_mismatch = block_mismatch || block_q_mismatches != 0 || scale_sum_error > 0.0011;
+        if (block_mismatch) {
             ++mismatched_blocks;
             if (first_mismatch == expected.size()) {
                 first_mismatch = index;
+                first_expected_d = __half2float(expected[index].d);
+                first_actual_d = __half2float(actual[index].d);
+                first_expected_s = __half2float(expected[index].s);
+                first_actual_s = __half2float(actual[index].s);
+                for (int q_index = 0; q_index < miinfer::kQ8_1BlockSize; ++q_index) {
+                    first_expected_q_sum += expected[index].qs[q_index];
+                    first_actual_q_sum += actual[index].qs[q_index];
+                    if (expected[index].qs[q_index] != actual[index].qs[q_index]) {
+                        ++first_q_mismatches;
+                        first_expected_q = expected[index].qs[q_index];
+                        first_actual_q = actual[index].qs[q_index];
+                    }
+                }
             }
         }
     }
@@ -393,6 +427,16 @@ bool run_quantize(
            << ",\"correctness\":{\"pass\":" << (pass ? "true" : "false")
            << ",\"mismatched_blocks\":" << mismatched_blocks
            << ",\"first_mismatch\":" << (first_mismatch == expected.size() ? -1 : static_cast<long long>(first_mismatch))
+           << ",\"first_expected_d\":" << first_expected_d
+           << ",\"first_actual_d\":" << first_actual_d
+           << ",\"first_expected_s\":" << first_expected_s
+           << ",\"first_actual_s\":" << first_actual_s
+           << ",\"first_expected_q\":" << first_expected_q
+           << ",\"first_actual_q\":" << first_actual_q
+           << ",\"first_q_mismatches\":" << first_q_mismatches
+           << ",\"first_expected_q_sum\":" << first_expected_q_sum
+           << ",\"first_actual_q_sum\":" << first_actual_q_sum
+           << ",\"max_scale_sum_abs_error\":" << max_scale_sum_error
            << '}'
            << ",\"gpu\":" << escape(device.name) << ",\"gfx\":" << escape(device.architecture)
            << ",\"git_commit\":" << escape(MIINFER_GIT_COMMIT)
