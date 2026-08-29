@@ -368,8 +368,17 @@ bool run_quantize(
     std::vector<miinfer::Q8_1Block> actual(expected.size());
     MIINFER_HIP_CHECK(hipMemcpy(actual.data(), device_output,
                                 actual.size() * sizeof(miinfer::Q8_1Block), hipMemcpyDeviceToHost));
-    const bool pass = std::memcmp(actual.data(), expected.data(),
-                                  actual.size() * sizeof(miinfer::Q8_1Block)) == 0;
+    std::size_t mismatched_blocks = 0;
+    std::size_t first_mismatch = expected.size();
+    for (std::size_t index = 0; index < actual.size(); ++index) {
+        if (std::memcmp(&actual[index], &expected[index], sizeof(miinfer::Q8_1Block)) != 0) {
+            ++mismatched_blocks;
+            if (first_mismatch == expected.size()) {
+                first_mismatch = index;
+            }
+        }
+    }
+    const bool pass = mismatched_blocks == 0;
     const double logical_bytes = static_cast<double>(input.size() * sizeof(__half))
                                  + static_cast<double>(expected.size() * sizeof(miinfer::Q8_1Block));
     const double med = median(samples);
@@ -381,7 +390,10 @@ bool run_quantize(
     output << ",\"effective_io_gb_per_second\":" << logical_bytes / (med * 1000.0)
            << ",\"logical_input_bytes\":" << input.size() * sizeof(__half)
            << ",\"logical_output_bytes\":" << expected.size() * sizeof(miinfer::Q8_1Block)
-           << ",\"correctness\":{\"pass\":" << (pass ? "true" : "false") << '}'
+           << ",\"correctness\":{\"pass\":" << (pass ? "true" : "false")
+           << ",\"mismatched_blocks\":" << mismatched_blocks
+           << ",\"first_mismatch\":" << (first_mismatch == expected.size() ? -1 : static_cast<long long>(first_mismatch))
+           << '}'
            << ",\"gpu\":" << escape(device.name) << ",\"gfx\":" << escape(device.architecture)
            << ",\"git_commit\":" << escape(MIINFER_GIT_COMMIT)
            << ",\"git_dirty\":" << escape(MIINFER_GIT_DIRTY) << "}\n";
