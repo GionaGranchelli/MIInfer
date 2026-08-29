@@ -53,23 +53,30 @@ which makes the unsupported-device path skip Tonga instead of aborting the
 whole enumeration.
 
 `ROCR_VISIBLE_DEVICES` was tested with GPU indices, KFD GPU IDs, and node
-indices. Every value produced the same HSA error. This is expected when the
-failure occurs during agent discovery; these variables are not a valid
-workaround for this installed runtime.
+indices. Every value produced the same HSA error while both GPUs were
+exposed. This is expected when the failure occurs during agent discovery;
+these variables are not a valid workaround for this installed runtime.
 
 ### Root-cause status
 
-The mechanism is confirmed by the matching KFD capability data and the
-upstream reproducer/fix. The local privileged A/B test that temporarily
-unbinds `0000:03:00.0` has not been run: this Wayland session uses that display
-GPU, and the current user has no non-interactive root authorization. No
-persistent driver or boot configuration was changed.
+The mechanism is confirmed on this host by the retained A/B run in
+`bench/platform-results/gfx802-isolation/20260829T191952Z-14516/`:
+
+* with both KFD GPU nodes present, `rocminfo` returned the generic HSA error;
+* after unbinding `0000:03:00.0`, `rocminfo` exposed only `gfx906`;
+* MIInfer device validation and Release/Debug GPU smoke tests passed;
+* the post-cleanup KFD snapshot contained only `vega20`.
+
+The gfx802 display GPU did not restore a usable GNOME session after rebinding,
+so the validated operational procedure is to run the MI50 workload over SSH,
+leave gfx802 unbound, and reboot afterward.
 
 ## Recovery options
 
 The preferred durable recovery is to install a ROCr package containing the
-fix from PR #4936, while keeping the MI50 identified as real `gfx906`. Do not
-use `HSA_OVERRIDE_GFX_VERSION`.
+fix from PR #4936, while keeping the MI50 identified as real `gfx906`. Until
+that is available, use the validated gfx802 isolation procedure. Do not use
+`HSA_OVERRIDE_GFX_VERSION`.
 
 The controlled temporary A/B test should be performed from a console or
 remote session where losing the display GPU is acceptable:
@@ -84,10 +91,43 @@ The expected diagnostic result is that the gfx906-only configuration makes
 `rocminfo` succeed. This command sequence is a controlled test, not yet a
 validated permanent host configuration.
 
+For a single-password, retained-results run that also tests MIInfer, use:
+
+```bash
+scripts/diagnose-gfx802-isolation.sh
+```
+
+The script requests `sudo` authentication once, stores raw command output and
+environment captures under `bench/platform-results/gfx802-isolation/`, and
+attempts to rebind the display GPU automatically on exit. Run it from a TTY
+or remote session because unbinding `0000:03:00.0` may terminate the graphical
+session.
+
+The local keyboard/TTY may also become unusable because the same GPU owns the
+kernel display framebuffer. SSH is therefore the preferred control channel.
+To have the script restart Fedora's display manager after rebinding, use:
+
+```bash
+scripts/diagnose-gfx802-isolation.sh --restart-gdm
+```
+
+This ends the existing graphical session, so save any work first.
+
+Because this host did not restore GNOME successfully after rebinding, the
+preferred validation mode is to leave gfx802 detached and reboot afterward:
+
+```bash
+scripts/diagnose-gfx802-isolation.sh --leave-unbound
+```
+
+Run this over SSH. The script will retain the MI50-only results and will not
+attempt a display recovery; reboot once the test has finished.
+
 ## Fedora development packages
 
 The runtime packages do not include the CMake development metadata. Fedora
-provides the required packages separately:
+provides the required packages separately, and they are now installed on the
+host:
 
 ```text
 hipblas-devel-7.1.0-6.fc44
@@ -98,8 +138,7 @@ rocsolver-devel-7.1.1-4.fc44
 
 The primary hipBLAS config is named `hipblas-config.cmake` and is installed
 under `/usr/lib64/cmake/hipblas`; `hipblas-common` is under
-`/usr/share/cmake/hipblas-common`. The runtime-only installation currently
-has none of these development packages. A temporary extracted prefix was
+`/usr/share/cmake/hipblas-common`. A temporary extracted prefix was initially
 validated for reference configuration with:
 
 ```bash
@@ -118,12 +157,13 @@ hardcoded library paths in the reference or MIInfer source trees.
 ## Current gate status
 
 ```text
-ROCr/HSA: BLOCKED by installed ROCr multi-GPU initialization bug
-gfx906 in rocminfo: BLOCKED
-generic HIP device access: BLOCKED downstream of HSA
-MIInfer GPU tests: BLOCKED downstream of HSA
-privileged gfx802 isolation A/B: NOT RUN
-hipBLAS CMake metadata: LOCATED; not installed system-wide
+ROCr/HSA with both GPUs: BLOCKED by installed ROCr multi-GPU initialization bug
+ROCr/HSA with gfx802 isolated: PASS
+gfx906 in rocminfo: PASS with gfx802 isolated
+generic HIP device access: PASS with gfx802 isolated
+MIInfer GPU tests: PASS with gfx802 isolated
+privileged gfx802 isolation A/B: CONFIRMED
+hipBLAS CMake metadata: INSTALLED system-wide
 reference CMake configure: PASS with temporary development prefix
 reference build (llama-cli, llama-bench): PASS with temporary development prefix
 ```
