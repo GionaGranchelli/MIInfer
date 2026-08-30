@@ -1,6 +1,7 @@
 #include "miinfer/device_validation.hpp"
 #include "miinfer/fp16_gemv.hpp"
 #include "miinfer/hip_check.hpp"
+#include "miinfer/q4_q8_packed_dot.hpp"
 #include "miinfer/q4_q8_gemv.hpp"
 
 #include <hip/hip_runtime.h>
@@ -14,7 +15,7 @@ namespace {
 
 constexpr std::uint32_t kSeed = 0x4D493050U;
 
-bool run_shape(const miinfer::GemvShape& shape) {
+bool run_shape(const miinfer::GemvShape& shape, bool packed_dot) {
     std::vector<__half> weights_fp16;
     std::vector<__half> input_fp16;
     miinfer::generate_fp16_gemv_data(shape.m, shape.k, kSeed, weights_fp16, input_fp16);
@@ -37,13 +38,19 @@ bool run_shape(const miinfer::GemvShape& shape) {
     MIINFER_HIP_CHECK(hipMemcpy(device_input, input_q8.data(),
                                 input_q8.size() * sizeof(miinfer::Q8_1Block),
                                 hipMemcpyHostToDevice));
-    miinfer::launch_q4_q8_gemv(device_weights, device_input, device_output, shape.m, shape.k);
+    if (packed_dot) {
+        miinfer::launch_q4_q8_gemv_packed_dot(
+            device_weights, device_input, device_output, shape.m, shape.k);
+    } else {
+        miinfer::launch_q4_q8_gemv(device_weights, device_input, device_output, shape.m, shape.k);
+    }
     MIINFER_HIP_CHECK(hipDeviceSynchronize());
     std::vector<__half> output(static_cast<std::size_t>(shape.m));
     MIINFER_HIP_CHECK(hipMemcpy(output.data(), device_output,
                                 output.size() * sizeof(__half), hipMemcpyDeviceToHost));
     const auto metrics = miinfer::evaluate_fp16_gemv(output, oracle);
-    std::cout << "q4_q8 " << shape.id << " max_abs=" << metrics.max_abs_error
+    std::cout << "q4_q8 " << (packed_dot ? "packed-dot " : "scalar ") << shape.id
+              << " max_abs=" << metrics.max_abs_error
               << " mean_abs=" << metrics.mean_abs_error
               << " cosine=" << metrics.cosine_similarity
               << " result=" << (metrics.pass ? "PASS" : "FAIL") << '\n';
@@ -68,10 +75,12 @@ int main() {
         {"tail", "small Q4/Q8 row tail", 257, 64},
     };
     for (const auto& shape : small_shapes) {
-        passed = run_shape(shape) && passed;
+        passed = run_shape(shape, false) && passed;
+        passed = run_shape(shape, true) && passed;
     }
     for (const auto& shape : miinfer::qwen3_gemv_shapes()) {
-        passed = run_shape(shape) && passed;
+        passed = run_shape(shape, false) && passed;
+        passed = run_shape(shape, true) && passed;
     }
     return passed ? 0 : 1;
 }

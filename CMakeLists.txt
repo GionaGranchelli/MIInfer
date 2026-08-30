@@ -86,6 +86,7 @@ if(MIINFER_ENABLE_HIP)
         gfx906/kernels/vector_add.hip
         gfx906/kernels/fp16_gemv.hip
         gfx906/kernels/q4_q8_gemv.hip
+        gfx906/kernels/q4_q8_packed_dot.hip
         gfx906/kernels/memory_stream.hip
     )
     target_include_directories(miinfer_hip
@@ -127,6 +128,10 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-q4-q8-gemv-test PRIVATE miinfer_hip)
     target_compile_options(miinfer-q4-q8-gemv-test PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-q4-q8-dot4-probe tests/q4_q8_dot4_probe.cpp)
+    target_link_libraries(miinfer-q4-q8-dot4-probe PRIVATE miinfer_hip)
+    target_compile_options(miinfer-q4-q8-dot4-probe PRIVATE -Wall -Wextra -Wpedantic)
+
     add_executable(miinfer-fp16-gemv-bench bench/fp16_gemv_bench.cpp)
     target_link_libraries(miinfer-fp16-gemv-bench PRIVATE miinfer_hip)
     target_compile_options(miinfer-fp16-gemv-bench PRIVATE -Wall -Wextra -Wpedantic)
@@ -160,6 +165,8 @@ if(BUILD_TESTING)
         set_tests_properties(fp16-gemv-correctness PROPERTIES LABELS "gpu-required")
         add_test(NAME q4-q8-gemv-correctness COMMAND miinfer-q4-q8-gemv-test)
         set_tests_properties(q4-q8-gemv-correctness PROPERTIES LABELS "gpu-required")
+        add_test(NAME q4-q8-dot4-probe COMMAND miinfer-q4-q8-dot4-probe)
+        set_tests_properties(q4-q8-dot4-probe PROPERTIES LABELS "gpu-required")
     endif()
 endif()
 
@@ -168,6 +175,7 @@ if(MIINFER_ENABLE_HIP)
     install(TARGETS miinfer-device-info miinfer-hip-smoke miinfer-bench
                     miinfer-fp16-gemv-test miinfer-fp16-gemv-bench)
     install(TARGETS miinfer-q4-q8-gemv-test)
+    install(TARGETS miinfer-q4-q8-dot4-probe)
     install(TARGETS miinfer-memory-stream-bench)
     install(TARGETS miinfer-fp16-gemv-reduction-diag)
     install(TARGETS miinfer-fp16-gemv-k-split-bench)

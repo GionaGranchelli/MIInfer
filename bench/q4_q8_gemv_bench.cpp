@@ -2,6 +2,7 @@
 #include "miinfer/device_validation.hpp"
 #include "miinfer/fp16_gemv.hpp"
 #include "miinfer/hip_check.hpp"
+#include "miinfer/q4_q8_packed_dot.hpp"
 #include "miinfer/q4_q8_gemv.hpp"
 
 #include <hip/hip_runtime.h>
@@ -23,6 +24,7 @@ constexpr std::uint32_t kSeed = 0x4D493050U;
 
 struct Options {
     std::string mode = "gemv";
+    std::string implementation = "scalar";
     std::string shape = "all";
     int length = 4096;
     int device = -1;
@@ -34,6 +36,7 @@ struct Options {
 void usage() {
     std::cerr << "usage: miinfer-q4-q8-gemv-bench [options]\n"
               << "  --mode gemv|one|quantize|fanout-attention|fanout-ffn\n"
+              << "  --implementation scalar|packed-dot (default: scalar)\n"
               << "  --shape q|k|v|o|gate|up|down|all (gemv/one; default: all)\n"
               << "  --length N             activation length for quantize (default: 4096)\n"
               << "  --warmup N             warm-up operations (default: 5)\n"
@@ -73,6 +76,8 @@ bool parse(int argc, char** argv, Options& options) {
         }
         if (argument == "--mode") {
             options.mode = argv[++index];
+        } else if (argument == "--implementation") {
+            options.implementation = argv[++index];
         } else if (argument == "--shape") {
             options.shape = argv[++index];
         } else if (argument == "--length") {
@@ -106,11 +111,14 @@ bool parse(int argc, char** argv, Options& options) {
                             || options.mode == "quantize"
                             || options.mode == "fanout-attention"
                             || options.mode == "fanout-ffn";
+    const bool valid_implementation = options.implementation == "scalar"
+                                       || options.implementation == "packed-dot";
     const bool valid_shape = options.shape == "q" || options.shape == "k"
                              || options.shape == "v" || options.shape == "o"
                              || options.shape == "gate" || options.shape == "up"
                              || options.shape == "down" || options.shape == "all";
-    if (!valid_mode || !valid_shape || options.length % miinfer::kQ8_1BlockSize != 0) {
+    if (!valid_mode || !valid_implementation || !valid_shape
+        || options.length % miinfer::kQ8_1BlockSize != 0) {
         std::cerr << "invalid mode/shape or length is not a multiple of 32\n";
         return false;
     }
@@ -120,6 +128,20 @@ bool parse(int argc, char** argv, Options& options) {
         return false;
     }
     return true;
+}
+
+void launch_selected_gemv(
+    const Options& options,
+    const miinfer::Q4_0Block* weights,
+    const miinfer::Q8_1Block* input,
+    __half* output,
+    int rows,
+    int columns) {
+    if (options.implementation == "packed-dot") {
+        miinfer::launch_q4_q8_gemv_packed_dot(weights, input, output, rows, columns);
+    } else {
+        miinfer::launch_q4_q8_gemv(weights, input, output, rows, columns);
+    }
 }
 
 std::string escape(const std::string& value) {
@@ -295,7 +317,8 @@ bool run_shape(
         if (options.mode == "one") {
             miinfer::launch_q8_1_quantize(data.device_input_fp16, quantized_input, shape.k);
         }
-        miinfer::launch_q4_q8_gemv(weights, quantized_input, data.device_output, shape.m, shape.k);
+        launch_selected_gemv(options, weights, quantized_input, data.device_output,
+                             shape.m, shape.k);
     };
     if (options.mode == "gemv") {
         // Q8_1 already exists before the timed loop for the kernel-only view.
@@ -315,7 +338,8 @@ bool run_shape(
                                  + static_cast<double>(data.input_q8.size() * sizeof(miinfer::Q8_1Block))
                                  + static_cast<double>(shape.m * sizeof(__half));
     const double med = median(samples);
-    output << "{\"experiment\":\"EXP-0005\",\"mode\":" << escape(options.mode)
+    output << "{\"experiment\":\"EXP-0006\",\"mode\":" << escape(options.mode)
+           << ",\"implementation\":" << escape(options.implementation)
            << ",\"shape\":\"" << shape.id << "\",\"m\":" << shape.m
            << ",\"k\":" << shape.k << ",\"input_dtype\":\"q8_1\""
            << ",\"weight_dtype\":\"q4_0\",\"accumulator_dtype\":\"fp32\""
@@ -501,10 +525,17 @@ bool run_fanout(
         miinfer::launch_q8_1_quantize(device_input_fp16, device_input_q8,
                                       shapes.front().k);
         for (std::size_t shape_index = 0; shape_index < shapes.size(); ++shape_index) {
-            miinfer::launch_q4_q8_gemv(
+            if (options.implementation == "packed-dot") {
+                miinfer::launch_q4_q8_gemv_packed_dot(
+                    device_weights[shape_index][static_cast<std::size_t>(index) % 3],
+                    device_input_q8, device_outputs[shape_index], shapes[shape_index].m,
+                    shapes[shape_index].k);
+            } else {
+                miinfer::launch_q4_q8_gemv(
                 device_weights[shape_index][static_cast<std::size_t>(index) % 3],
                 device_input_q8, device_outputs[shape_index], shapes[shape_index].m,
                 shapes[shape_index].k);
+            }
         }
     };
     const auto samples = time_operations(options.warmup, options.iterations, operation);
@@ -515,7 +546,8 @@ bool run_fanout(
                                     actual.size() * sizeof(__half), hipMemcpyDeviceToHost));
         pass = miinfer::evaluate_fp16_gemv(actual, oracles[shape_index]).pass && pass;
     }
-    output << "{\"experiment\":\"EXP-0005\",\"mode\":" << escape(options.mode)
+    output << "{\"experiment\":\"EXP-0006\",\"mode\":" << escape(options.mode)
+           << ",\"implementation\":" << escape(options.implementation)
            << ",\"fanout\":\"" << (attention ? "Q/K/V" : "gate/up") << "\""
            << ",\"activation_length\":" << shapes.front().k
            << ",\"warmup_iterations\":" << options.warmup
