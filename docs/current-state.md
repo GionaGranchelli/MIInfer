@@ -457,14 +457,18 @@ These do not help answer the current project question.
 
 # Next Implementation Task
 
-The next Codex task should be:
+The next Codex task is:
 
-> Begin M4 first correct Qwen3-8B token generation using the closed M3 loader
-> and static plan. Do not add broader model support or serving infrastructure.
+> M4-B2 — localize full-depth numerical drift before changing tolerances.
+> Use teacher-forced layer replay, compare the MI50 path with the independent
+> offloaded reference where available, and keep the physical acceptance command
+> non-vacuous. Do not start token generation.
 
 The M0 evidence gates are complete under the documented gfx802-isolated
 configuration. The M2 gate is satisfied by EXP-0009 and M3 is closed by the
-pinned real-model acceptance. No token execution has been implemented yet.
+pinned real-model acceptance. M4-A is closed, while M4-B full-depth numeric
+parity remains open. A full-forward scaffold exists, but no accepted token
+generation path has been implemented yet.
 
 ---
 

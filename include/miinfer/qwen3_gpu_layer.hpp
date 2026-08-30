@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <span>
 #include <vector>
 
 namespace miinfer {
@@ -62,6 +63,16 @@ Qwen3LayerTrace execute_qwen3_layer0_gpu(
 Qwen3ForwardTrace execute_qwen3_forward_gpu(
     const Qwen3GpuPlan& plan,
     std::uint32_t token,
+    std::size_t position = 0);
+
+// Correctness-only teacher-forced replay of one selected layer.  The input
+// hidden state is copied to the device and the complete diagnostic trace is
+// copied back, allowing local GPU-vs-reference comparison without conflating
+// a layer defect with accumulated free-running depth error.
+Qwen3LayerTrace execute_qwen3_layer_gpu_teacher_forced(
+    const Qwen3GpuPlan& plan,
+    std::size_t layer_index,
+    std::span<const float> input,
     std::size_t position = 0);
 
 }  // namespace miinfer

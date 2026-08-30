@@ -746,29 +746,31 @@ M7
 
 # Current Execution Order
 
-The project has passed M2 and is entering M3. Work should proceed from the
-accepted direct comparison and shape-specialized kernels:
+The project has passed M2 and M3, and M4-A is complete. Work should proceed
+from the accepted model plan and layer-state correctness evidence:
 
 1. Preserve the M0 platform contract and pinned reference.
 2. Maintain the accepted FP16 and Q4/Q8 kernel controls.
-3. Compare candidate kernels with the actual pinned gfx906 reference path.
-4. Begin the minimal model/runtime scaffold with explicit supported-config
-   validation and static planning.
-5. Preserve the kernel controls and benchmark evidence while implementing M3.
+3. Localize M4-B full-depth numerical drift with teacher-forced replay.
+4. Compare the MI50 path with the independent offloaded reference before
+   changing numerical tolerances.
+5. Only after M4-B closes, proceed to validated token generation.
 
-Do not broaden M3 into a general-purpose runtime.
+Do not broaden M4 into a general-purpose runtime.
 
 ---
 
 # Immediate Next Milestone
 
-The current next milestone is:
+The current milestone is:
 
 ```text
-M3 — minimal Qwen3-8B runtime scaffold
+M4-B — full-depth numerical validation
 ```
 
-Exact experiment ordering may change once the target model and measured shapes are frozen.
+The immediate task is M4-B2: distinguish local computation defects from
+legitimate backend arithmetic drift. Exact experiment ordering may change
+only when supported by the resulting evidence.
 
 ---
 

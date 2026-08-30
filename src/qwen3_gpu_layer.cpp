@@ -15,6 +15,7 @@
 #include <cstdlib>
 #include <memory>
 #include <stdexcept>
+#include <span>
 #include <vector>
 
 namespace miinfer {
@@ -405,6 +406,25 @@ Qwen3ForwardTrace execute_qwen3_forward_gpu(
                                 config.vocab_size, config.hidden_size);
     forward.logits = capture(logits.data(), config.vocab_size);
     return forward;
+}
+
+Qwen3LayerTrace execute_qwen3_layer_gpu_teacher_forced(
+    const Qwen3GpuPlan& plan,
+    std::size_t layer_index,
+    std::span<const float> input,
+    std::size_t position) {
+    const auto& config = plan.model().config();
+    if (position != 0) {
+        throw std::invalid_argument("teacher-forced GPU replay currently supports position zero only");
+    }
+    if (input.size() != config.hidden_size || layer_index >= plan.model().layers().size()) {
+        throw std::invalid_argument("invalid teacher-forced GPU layer input/index");
+    }
+    DeviceBuffer<float> input_device(config.hidden_size);
+    MIINFER_HIP_CHECK(hipMemcpy(input_device.data(), input.data(),
+                                input.size() * sizeof(float), hipMemcpyHostToDevice));
+    Qwen3Layer0GpuKvCache cache(config.kv_heads, config.head_dim, 1);
+    return qwen3_layer_gpu_impl(plan, layer_index, input_device.data(), position, cache, nullptr);
 }
 
 }  // namespace miinfer

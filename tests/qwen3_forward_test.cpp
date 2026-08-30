@@ -2,6 +2,7 @@
 #include "miinfer/qwen3_primitives.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <filesystem>
@@ -9,6 +10,7 @@
 #include <iostream>
 #include <limits>
 #include <string>
+#include <stdexcept>
 #include <vector>
 
 namespace {
@@ -156,6 +158,38 @@ int run(const std::filesystem::path& model_path, const std::filesystem::path& tr
     return passed ? 0 : 1;
 }
 
+int run_teacher_forced(const std::filesystem::path& model_path,
+                       const std::filesystem::path& trace_path,
+                       bool all_layers) {
+    if (trace_path.empty()) throw std::invalid_argument("teacher-forced replay requires a trace path");
+    const auto model = miinfer::Qwen3Model::load(model_path.string());
+    const auto embedding = read_f32(trace_path / "embedding.f32");
+    std::vector<std::size_t> selected_layers;
+    if (all_layers) {
+        selected_layers.resize(model.config().layer_count);
+        for (std::size_t layer = 0; layer < selected_layers.size(); ++layer) {
+            selected_layers[layer] = layer;
+        }
+    } else {
+        selected_layers = {1, 2, 6};
+    }
+    bool passed = true;
+    std::cout << "host teacher-forced replay (reference input -> selected layer):\n";
+    for (const auto layer : selected_layers) {
+        const auto input = layer == 0
+            ? embedding
+            : read_f32(trace_path / (std::string("layer-") + std::to_string(layer - 1) + ".f32"));
+        const auto expected = read_f32(
+            trace_path / (std::string("layer-") + std::to_string(layer) + ".f32"));
+        const auto actual = miinfer::execute_qwen3_layer_host_teacher_forced(
+            model, layer, input).layer_output;
+        const auto name = std::string("teacher-layer-") + std::to_string(layer);
+        passed = compare_checkpoint(name.c_str(), actual, expected, 5.0e-2F) && passed;
+    }
+    std::cout << "host teacher-forced replay: " << (passed ? "PASS" : "FAIL") << '\n';
+    return passed ? 0 : 1;
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -164,9 +198,14 @@ int main(int argc, char** argv) {
         return 0;
     }
     try {
+        const auto trace_path = argc >= 3 ? std::filesystem::path(argv[2]) : std::filesystem::path{};
+        if (argc == 4 && (std::string(argv[3]) == "--teacher-forced"
+                          || std::string(argv[3]) == "--teacher-forced-all")) {
+            return run_teacher_forced(argv[1], trace_path,
+                                      std::string(argv[3]) == "--teacher-forced-all");
+        }
         const bool write_trace = argc == 4 && std::string(argv[3]) == "--write-trace";
-        return run(argv[1], argc >= 3 ? std::filesystem::path(argv[2]) : std::filesystem::path{},
-                   write_trace);
+        return run(argv[1], trace_path, write_trace);
     } catch (const std::exception& error) {
         std::cerr << "qwen3 full-forward host test error: " << error.what() << '\n';
         return 1;

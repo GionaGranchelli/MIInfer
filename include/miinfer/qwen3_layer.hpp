@@ -107,4 +107,15 @@ Qwen3ForwardTrace execute_qwen3_forward_host(
     std::uint32_t token,
     std::size_t position = 0);
 
+// Correctness-only teacher-forced replay.  The supplied hidden state is the
+// independent reference output of the preceding layer (or the embedding for
+// layer zero), so this diagnoses local layer arithmetic separately from
+// free-running depth error.  The returned trace is intentionally complete;
+// this is not a hot-path execution API.
+Qwen3LayerTrace execute_qwen3_layer_host_teacher_forced(
+    const Qwen3Model& model,
+    std::size_t layer_index,
+    std::span<const float> input,
+    std::size_t position = 0);
+
 }  // namespace miinfer

@@ -49,6 +49,53 @@ uses Q6_K × Q8_K in the reference, so that contract is mirrored separately.
 The separate offloaded capture helps distinguish numerical drift from a
 semantic layer-indexing or buffer-reuse error.
 
+## M4-B2 depth-drift diagnostics
+
+The correctness-only forward executables now support teacher-forced replay:
+
+```text
+reference layer[N-1] → MIInfer layer[N] → compare reference layer[N]
+```
+
+The initial replay set is layers 1, 2, and 6; `--teacher-forced-all` runs all
+36 layers. This separates a local layer defect from error propagated by the
+free-running stack. The host replay uses a GGML-compatible round-to-nearest
+FP16 conversion for Q8 scale metadata, while the normal host forward remains
+unchanged for accepted-result continuity.
+
+On the pinned CPU trace, host teacher-forced replay passes layers 1–5 and
+7–33, while layer 6 is just outside the existing absolute bound
+(`max_abs=0.103516`) and layers 34–35 are also outside it. This is evidence
+that the current `0.05` bound is not a sufficient full-depth acceptance
+criterion, but it is not a reason to widen that bound yet.
+
+MI50 teacher-forced replay is close at layer 2 (`max_abs=0.00270`) but fails
+layer 1 (`0.05169`) and layer 6 (`11.1719`) against the CPU trace. GPU-vs-host
+stage diagnostics localize the layer-6 GPU difference to the nonlinear FFN
+tail: the GPU and host gate/up values are close, while SwiGLU and the
+following down projection amplify the difference. This remains a numerical
+contract investigation, not a proven semantic failure.
+
+The independent offloaded reference is also not numerically identical to the
+CPU trace: the current MI50 comparison begins at `0.0521` on layer 0 and
+reaches about `136` absolute error by layer 6. Therefore the external GPU
+path does not yet justify replacing the CPU trace as the acceptance oracle.
+
+## Physical acceptance command
+
+The default CTest entries intentionally remain artifact-free unit/regression
+tests and may skip the real-model forward comparison when no paths are
+provided. The non-vacuous physical gate is:
+
+```bash
+scripts/run-m4b-acceptance.sh \
+  /path/to/Qwen3-8B-q4_0-b968826d.gguf \
+  tests/reference/qwen3/m4b-single-token
+```
+
+It fails if the model, required checkpoints, or MI50 Release binaries are
+missing, and it propagates a real host or GPU comparison failure.
+
 ## Acceptance target
 
 The gate remains:
