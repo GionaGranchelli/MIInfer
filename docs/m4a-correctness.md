@@ -147,10 +147,43 @@ fixture.  All compared vectors were finite.  A GPU-specific test-only
 `swap-gate-up` mutation was detected at `swiglu` and downstream checkpoints,
 demonstrating that the composition gate is sensitive to semantic breakage.
 
-The GPU executor is intentionally limited to position zero with an empty KV
-cache.  Multi-position execution, cache append/preservation, and
-position-aware attention remain M4-A4 work.  Therefore M4-A remains open and
-no token-generation or end-to-end performance claim is made here.
+The position-zero executor remains a compatibility wrapper around the
+stateful implementation.  Multi-position execution is covered separately
+below; no token-generation or end-to-end performance claim is made here.
+
+## M4-A4 KV-cache contract
+
+M4-A4 uses a single-sequence, layer-0 cache with capacity fixed by the test
+fixture.  Host and GPU storage have the same logical layout:
+
+```text
+[kv_head][position][head_dim]
+```
+
+Keys are stored after position-specific RoPE; values are stored unchanged.
+Only positions `[0, length)` are valid, and an append must use exactly the
+current `length`.  Reset clears storage and returns `length` to zero.  The
+position-zero executor remains available as a compatibility wrapper, while
+the stateful overloads own the four-position correctness test.
+
+The deterministic M4-A4 sequence is:
+
+```text
+[14990, 42, 31415, 2718]
+```
+
+The host and MI50 GPU tests execute positions `0..3` and require cache length
+`1..4`, preservation of every earlier entry, current K/V agreement, causal
+attention vectors of exactly `heads * (position + 1)` elements, finite
+probabilities summing to one, and deterministic results after reset.  The
+physical Release and Debug runs pass these checks.  Test-only mutations for
+wrong RoPE position, ignoring earlier cache entries, and corrupting a prior
+cache entry are all detected; out-of-order append is rejected.
+
+The stateful GPU test currently uses the validated host executor as its
+position `1..3` numerical authority.  The retained pinned external trace is
+still position-zero-only, so a four-step external callback trace remains the
+last evidence item before M4-A can close.
 
 ## Host layer-0 acceptance run
 

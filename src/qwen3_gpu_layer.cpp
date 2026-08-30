@@ -106,13 +106,84 @@ void capture_qwen3_head_norm(
 
 }  // namespace
 
+Qwen3Layer0GpuKvCache::Qwen3Layer0GpuKvCache(
+    std::size_t kv_heads, std::size_t head_dim, std::size_t capacity)
+    : kv_heads_(kv_heads), head_dim_(head_dim), capacity_(capacity) {
+    if (kv_heads == 0 || head_dim == 0 || capacity == 0) {
+        throw std::invalid_argument("invalid GPU KV-cache dimensions");
+    }
+    const auto bytes = kv_heads * head_dim * capacity * sizeof(float);
+    MIINFER_HIP_CHECK(hipMalloc(&keys_, bytes));
+    if (hipMalloc(&values_, bytes) != hipSuccess) {
+        (void)hipFree(keys_);
+        keys_ = nullptr;
+        throw std::runtime_error("GPU value-cache allocation failed");
+    }
+    reset();
+}
+
+Qwen3Layer0GpuKvCache::~Qwen3Layer0GpuKvCache() {
+    if (keys_ != nullptr) (void)hipFree(keys_);
+    if (values_ != nullptr) (void)hipFree(values_);
+}
+
+void Qwen3Layer0GpuKvCache::reset() {
+    const auto bytes = kv_heads_ * head_dim_ * capacity_ * sizeof(float);
+    MIINFER_HIP_CHECK(hipMemset(keys_, 0, bytes));
+    MIINFER_HIP_CHECK(hipMemset(values_, 0, bytes));
+    length_ = 0;
+}
+
+void Qwen3Layer0GpuKvCache::append(
+    std::size_t position, const float* keys, const float* values) {
+    if (keys == nullptr || values == nullptr || position != length_
+        || position >= capacity_) {
+        throw std::invalid_argument("invalid GPU KV-cache append");
+    }
+    const auto bytes = head_dim_ * sizeof(float);
+    for (std::size_t head = 0; head < kv_heads_; ++head) {
+        const auto offset = (head * capacity_ + position) * head_dim_;
+        MIINFER_HIP_CHECK(hipMemcpy(
+            static_cast<float*>(keys_) + offset, keys + head * head_dim_, bytes,
+            hipMemcpyDeviceToDevice));
+        MIINFER_HIP_CHECK(hipMemcpy(
+            static_cast<float*>(values_) + offset, values + head * head_dim_, bytes,
+            hipMemcpyDeviceToDevice));
+    }
+    ++length_;
+}
+
+std::vector<float> Qwen3Layer0GpuKvCache::snapshot_keys() const {
+    const auto elements = kv_heads_ * capacity_ * head_dim_;
+    std::vector<float> result(elements);
+    MIINFER_HIP_CHECK(hipMemcpy(result.data(), keys_, elements * sizeof(float), hipMemcpyDeviceToHost));
+    return result;
+}
+
+std::vector<float> Qwen3Layer0GpuKvCache::snapshot_values() const {
+    const auto elements = kv_heads_ * capacity_ * head_dim_;
+    std::vector<float> result(elements);
+    MIINFER_HIP_CHECK(hipMemcpy(result.data(), values_, elements * sizeof(float), hipMemcpyDeviceToHost));
+    return result;
+}
+
 Qwen3LayerTrace execute_qwen3_layer0_gpu(
     const Qwen3GpuPlan& plan,
     std::uint32_t token,
     std::size_t position) {
     if (position != 0) {
-        throw std::invalid_argument("GPU layer-0 fixture currently supports position zero only");
+        throw std::invalid_argument("standalone GPU layer-0 execution only supports position zero");
     }
+    const auto& config = plan.model().config();
+    Qwen3Layer0GpuKvCache cache(config.kv_heads, config.head_dim, 1);
+    return execute_qwen3_layer0_gpu(plan, token, position, cache);
+}
+
+Qwen3LayerTrace execute_qwen3_layer0_gpu(
+    const Qwen3GpuPlan& plan,
+    std::uint32_t token,
+    std::size_t position,
+    Qwen3Layer0GpuKvCache& cache) {
     const auto& model = plan.model();
     const auto& config = model.config();
     if (token >= config.vocab_size || model.layers().empty()) {
@@ -126,6 +197,10 @@ Qwen3LayerTrace execute_qwen3_layer0_gpu(
     const auto kv_heads = static_cast<std::size_t>(config.kv_heads);
     const auto head_dim = static_cast<std::size_t>(config.head_dim);
     const auto& layer = model.layers().front();
+    if (cache.kv_heads() != kv_heads || cache.head_dim() != head_dim
+        || position != cache.length() || position >= cache.capacity()) {
+        throw std::invalid_argument("GPU KV-cache does not match layer geometry or sequence position");
+    }
 
     DeviceBuffer<float> embedding(kMaxVector), attn_rms(kMaxVector), attn_norm(kMaxVector);
     DeviceBuffer<float> q(kMaxVector), q_rms(kMaxVector), q_normed(kMaxVector), q_rope(kMaxVector);
@@ -135,7 +210,8 @@ Qwen3LayerTrace execute_qwen3_layer0_gpu(
     DeviceBuffer<float> gate(kMaxVector), up(kMaxVector), swiglu(kMaxVector);
     DeviceBuffer<float> ffn_output(kMaxVector), layer_output(kMaxVector);
     DeviceBuffer<float> norm_weights(kMaxVector), head_weights(head_dim);
-    DeviceBuffer<float> scores(heads), probabilities(heads);
+    DeviceBuffer<float> scores(heads * cache.capacity());
+    DeviceBuffer<float> probabilities(heads * cache.capacity());
     DeviceBytes input_half(kMaxVector * sizeof(__half));
     DeviceBytes output_half(kMaxVector * sizeof(__half));
     DeviceBytes input_q8(kMaxQ8Bytes);
@@ -164,8 +240,12 @@ Qwen3LayerTrace execute_qwen3_layer0_gpu(
                             config.attention_heads, config.head_dim, config.rms_epsilon);
     trace.q_rms = capture(q_rms.data(), hidden);
     trace.q_normed = capture(q_normed.data(), hidden);
+    const char* kv_mutation = std::getenv("MIINFER_GPU_KV_MUTATE");
+    const bool wrong_rope_position = kv_mutation != nullptr
+        && std::strcmp(kv_mutation, "wrong-rope-position") == 0 && position > 0;
+    const auto rope_position = wrong_rope_position ? position - 1 : position;
     launch_qwen3_rope(q_normed.data(), q_rope.data(), config.attention_heads, config.head_dim,
-                      0, config.rope_theta);
+                      static_cast<std::uint32_t>(rope_position), config.rope_theta);
     trace.q_rope = capture(q_rope.data(), hidden);
 
     launch_projection(plan, layer.v, attn_norm.data(), config.hidden_size, v.data(),
@@ -185,17 +265,28 @@ Qwen3LayerTrace execute_qwen3_layer0_gpu(
     trace.k_rms = capture(k_rms.data(), kv_heads * head_dim);
     trace.k_normed = capture(k_normed.data(), kv_heads * head_dim);
     launch_qwen3_rope(k_normed.data(), k_rope.data(), config.kv_heads, config.head_dim,
-                      0, config.rope_theta);
+                      static_cast<std::uint32_t>(rope_position), config.rope_theta);
     trace.k_rope = capture(k_rope.data(), kv_heads * head_dim);
     trace.k_view = trace.k_rope;
     trace.v_view = trace.v_reshape;
     trace.q_view = trace.q_rope;
     trace.q_permuted = trace.q_rope;
 
-    launch_qwen3_single_token_attention(
-        q_rope.data(), k_rope.data(), v.data(), attention.data(), scores.data(), probabilities.data(),
-        config.attention_heads, config.kv_heads, config.head_dim,
-        1.0F / std::sqrt(static_cast<float>(config.head_dim)));
+    cache.append(position, k_rope.data(), v.data());
+    const bool ignore_earlier_cache = kv_mutation != nullptr
+        && std::strcmp(kv_mutation, "ignore-earlier-cache") == 0 && position > 0;
+    const auto attention_length = ignore_earlier_cache ? std::size_t{1} : cache.length();
+    if (ignore_earlier_cache) {
+        MIINFER_HIP_CHECK(hipMemset(scores.data(), 0, heads * cache.length() * sizeof(float)));
+        MIINFER_HIP_CHECK(hipMemset(probabilities.data(), 0,
+                                    heads * cache.length() * sizeof(float)));
+    }
+    launch_qwen3_cached_attention(
+        q_rope.data(), static_cast<const float*>(cache.device_keys()),
+        static_cast<const float*>(cache.device_values()),
+        static_cast<std::uint32_t>(attention_length), static_cast<std::uint32_t>(cache.capacity()),
+        attention.data(), scores.data(), probabilities.data(), config.attention_heads,
+        config.kv_heads, config.head_dim, 1.0F / std::sqrt(static_cast<float>(config.head_dim)));
     trace.attention_output = capture(attention.data(), hidden);
     launch_projection(plan, layer.output, attention.data(), config.hidden_size, attention_projected.data(),
                       config.hidden_size, config.hidden_size, half_input, q8_input, half_output, "o");
@@ -230,8 +321,8 @@ Qwen3LayerTrace execute_qwen3_layer0_gpu(
 
     // These are not present in the 28-file reference fixture, but retaining
     // them in the trace is useful for GPU↔host triangulation of attention.
-    trace.attention_scores = capture(scores.data(), heads);
-    trace.attention_probabilities = capture(probabilities.data(), heads);
+    trace.attention_scores = capture(scores.data(), heads * cache.length());
+    trace.attention_probabilities = capture(probabilities.data(), heads * cache.length());
     return trace;
 }
 

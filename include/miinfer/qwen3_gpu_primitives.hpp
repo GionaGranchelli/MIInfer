@@ -85,6 +85,21 @@ void launch_qwen3_single_token_attention(
     float scale,
     hipStream_t stream = nullptr);
 
+void launch_qwen3_cached_attention(
+    const float* q,
+    const float* key_cache,
+    const float* value_cache,
+    std::uint32_t cache_length,
+    std::uint32_t cache_capacity,
+    float* output,
+    float* scores,
+    float* probabilities,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float scale,
+    hipStream_t stream = nullptr);
+
 void launch_qwen3_silu_mul(
     const float* gate,
     const float* up,

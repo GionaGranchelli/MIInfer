@@ -165,15 +165,19 @@ The M1/M2 kernel-laboratory deliverables currently include:
 * M4-A3 complete MI50 GPU layer-0 composition for the same position-zero
   fixture, with GPU-to-host and GPU-to-reference comparison in Debug and
   Release, plus a GPU composition mutation discriminator
+* M4-A4 deterministic four-position host and MI50 layer-0 execution with an
+  explicit post-RoPE KV-cache contract, reset/append/preservation checks,
+  causal-prefix validation, and cache mutation discriminators
 
 The repository-side specialization and M3 runtime-scaffold deliverables are
 complete. The host and MI50 GPU layer-0 compositions match the retained
-reference trace within frozen, stage-specific tolerances. The GPU test also
-triangulates against the host executor and checks the additional attention
-score/probability diagnostics. M4-A remains open only for the next stateful
-slice: multi-position execution and KV-cache correctness. The current GPU
-executor is deliberately limited to the position-zero, empty-KV-cache fixture;
-no token-generation or end-to-end performance claim is made here.
+reference trace within frozen, stage-specific tolerances. The four-position
+stateful tests now prove append, preservation, reset, causal extent, and
+host/GPU cache parity for the deterministic layer-0 fixture. M4-A remains
+open because the retained external reference trace is still position-zero
+only; the four-position external callback trace must be captured before the
+stateful gate is closed. No token-generation or end-to-end performance claim
+is made here.
 
 ---
 

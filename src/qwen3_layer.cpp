@@ -132,20 +132,6 @@ std::vector<float> q4_q8_matvec(
     return output;
 }
 
-std::vector<float> repeat_kv_for_gqa(std::span<const float> values, std::size_t heads_per_kv) {
-    constexpr std::size_t kHeadDim = 128;
-    if (values.size() % kHeadDim != 0 || heads_per_kv == 0) throw std::invalid_argument("invalid GQA input");
-    const std::size_t kv_heads = values.size() / kHeadDim;
-    std::vector<float> output(values.size() * heads_per_kv);
-    for (std::size_t kv = 0; kv < kv_heads; ++kv) {
-        for (std::size_t group = 0; group < heads_per_kv; ++group) {
-            std::copy_n(values.data() + kv * kHeadDim, kHeadDim,
-                        output.data() + (kv * heads_per_kv + group) * kHeadDim);
-        }
-    }
-    return output;
-}
-
 void add_in_place(std::span<float> destination, std::span<const float> source) {
     if (destination.size() != source.size()) throw std::invalid_argument("residual size mismatch");
     for (std::size_t i = 0; i < destination.size(); ++i) destination[i] += source[i];
@@ -153,13 +139,54 @@ void add_in_place(std::span<float> destination, std::span<const float> source) {
 
 }  // namespace
 
+Qwen3Layer0KvCache::Qwen3Layer0KvCache(
+    std::size_t kv_heads, std::size_t head_dim, std::size_t capacity)
+    : kv_heads_(kv_heads), head_dim_(head_dim), capacity_(capacity),
+      keys_(kv_heads * capacity * head_dim, 0.0F),
+      values_(kv_heads * capacity * head_dim, 0.0F) {
+    if (kv_heads == 0 || head_dim == 0 || capacity == 0) {
+        throw std::invalid_argument("invalid KV-cache dimensions");
+    }
+}
+
+void Qwen3Layer0KvCache::reset() noexcept {
+    length_ = 0;
+    std::fill(keys_.begin(), keys_.end(), 0.0F);
+    std::fill(values_.begin(), values_.end(), 0.0F);
+}
+
+void Qwen3Layer0KvCache::append(
+    std::size_t position, std::span<const float> keys, std::span<const float> values) {
+    if (position != length_ || position >= capacity_
+        || keys.size() != kv_heads_ * head_dim_
+        || values.size() != kv_heads_ * head_dim_) {
+        throw std::invalid_argument("invalid KV-cache append");
+    }
+    for (std::size_t head = 0; head < kv_heads_; ++head) {
+        const auto destination = (head * capacity_ + position) * head_dim_;
+        std::copy_n(keys.data() + head * head_dim_, head_dim_, keys_.data() + destination);
+        std::copy_n(values.data() + head * head_dim_, head_dim_, values_.data() + destination);
+    }
+    ++length_;
+}
+
 Qwen3LayerTrace execute_qwen3_layer0_host(
     const Qwen3Model& model,
     std::uint32_t token,
     std::size_t position) {
     if (position != 0) {
-        throw std::invalid_argument("layer-0 host fixture currently supports position zero only");
+        throw std::invalid_argument("standalone layer-0 execution only supports position zero");
     }
+    const auto& config = model.config();
+    Qwen3Layer0KvCache cache(config.kv_heads, config.head_dim, 1);
+    return execute_qwen3_layer0_host(model, token, position, cache);
+}
+
+Qwen3LayerTrace execute_qwen3_layer0_host(
+    const Qwen3Model& model,
+    std::uint32_t token,
+    std::size_t position,
+    Qwen3Layer0KvCache& cache) {
     const auto& config = model.config();
     if (token >= config.vocab_size) throw std::invalid_argument("token ID is outside the vocabulary");
     if (model.layers().empty()) throw std::runtime_error("model has no layers");
@@ -169,7 +196,9 @@ Qwen3LayerTrace execute_qwen3_layer0_host(
     const auto heads = static_cast<std::size_t>(config.attention_heads);
     const auto kv_heads = static_cast<std::size_t>(config.kv_heads);
     const auto head_dim = static_cast<std::size_t>(config.head_dim);
-    if (heads * head_dim != hidden || kv_heads * head_dim != 1024 || heads % kv_heads != 0) {
+    if (heads * head_dim != hidden || kv_heads * head_dim != 1024 || heads % kv_heads != 0
+        || cache.kv_heads() != kv_heads || cache.head_dim() != head_dim
+        || position != cache.length() || position >= cache.capacity()) {
         throw std::runtime_error("unsupported Qwen3 head geometry");
     }
 
@@ -231,21 +260,41 @@ Qwen3LayerTrace execute_qwen3_layer0_host(
     trace.q_view = trace.q_rope;
     trace.q_permuted = trace.q_rope;
 
-    // Position zero with an empty cache has one attention key/value.  GQA
-    // therefore expands each KV head across its four query heads; attention
-    // probabilities are exactly one and attention output is the expanded V.
-    trace.attention_scores.resize(heads);
-    trace.attention_probabilities.assign(heads, 1.0F);
+    // Cache post-RoPE K and unmodified V before attention.  The explicit
+    // layout is [kv_head][position][head_dim], with position as the middle
+    // stride and length tracking the valid causal prefix.
+    cache.append(position, trace.k_rope, trace.v_view);
+
+    trace.attention_scores.resize(heads * cache.length());
+    trace.attention_probabilities.resize(heads * cache.length());
+    trace.attention_output.assign(hidden, 0.0F);
     for (std::size_t head = 0; head < heads; ++head) {
         const std::size_t q_base = head * head_dim;
-        const std::size_t kv_base = (head / (heads / kv_heads)) * head_dim;
-        float score = 0.0F;
-        for (std::size_t i = 0; i < head_dim; ++i) {
-            score += trace.q_rope[q_base + i] * trace.k_rope[kv_base + i];
+        const std::size_t score_base = head * cache.length();
+        for (std::size_t cached_position = 0; cached_position < cache.length(); ++cached_position) {
+            const std::size_t cache_offset =
+                ((head / (heads / kv_heads)) * cache.capacity() + cached_position) * head_dim;
+            float score = 0.0F;
+            for (std::size_t i = 0; i < head_dim; ++i) {
+                score += trace.q_rope[q_base + i] * cache.keys()[cache_offset + i];
+            }
+            trace.attention_scores[score_base + cached_position] =
+                score / std::sqrt(static_cast<float>(head_dim));
         }
-        trace.attention_scores[head] = score / std::sqrt(static_cast<float>(head_dim));
+        softmax_reference(
+            {trace.attention_scores.data() + score_base, cache.length()},
+            {trace.attention_probabilities.data() + score_base, cache.length()});
+        for (std::size_t i = 0; i < head_dim; ++i) {
+            float value = 0.0F;
+            for (std::size_t cached_position = 0; cached_position < cache.length(); ++cached_position) {
+                const std::size_t cache_offset =
+                    ((head / (heads / kv_heads)) * cache.capacity() + cached_position) * head_dim;
+                value += trace.attention_probabilities[score_base + cached_position]
+                         * cache.values()[cache_offset + i];
+            }
+            trace.attention_output[q_base + i] = value;
+        }
     }
-    trace.attention_output = repeat_kv_for_gqa(trace.v_view, heads / kv_heads);
     const auto attention_projected = q4_q8_matvec(layer.output, trace.attention_output, hidden, hidden);
     trace.ffn_input = attention_projected;
     add_in_place(trace.ffn_input, trace.embedding);
