@@ -91,6 +91,36 @@ std::vector<Q8_1Block> quantize_q8_1(const std::vector<__half>& source) {
     return result;
 }
 
+std::vector<Q8ExactBlock> quantize_q8_exact(const std::vector<__half>& source) {
+    if (source.empty() || source.size() % kQ8_1BlockSize != 0) {
+        throw std::invalid_argument("exact Q8 input length must be a non-zero multiple of 32");
+    }
+    const std::size_t block_count = source.size() / kQ8_1BlockSize;
+    std::vector<Q8ExactBlock> result(block_count);
+    for (std::size_t block = 0; block < block_count; ++block) {
+        const std::size_t source_offset = block * kQ8_1BlockSize;
+        float amax = 0.0F;
+        for (int index = 0; index < kQ8_1BlockSize; ++index) {
+            amax = std::max(amax, std::fabs(__half2float(
+                source[source_offset + static_cast<std::size_t>(index)])));
+        }
+        const float scale = amax / 127.0F;
+        const float inverse_scale = scale != 0.0F ? 1.0F / scale : 0.0F;
+        auto& destination = result[block];
+        destination.d = __float2half_rn(scale);
+        int sum = 0;
+        for (int index = 0; index < kQ8_1BlockSize; ++index) {
+            const int quantized = std::clamp(static_cast<int>(std::round(
+                __half2float(source[source_offset + static_cast<std::size_t>(index)])
+                * inverse_scale)), -127, 127);
+            destination.qs[index] = static_cast<std::int8_t>(quantized);
+            sum += quantized;
+        }
+        destination.sum = static_cast<std::int16_t>(sum);
+    }
+    return result;
+}
+
 std::vector<float> q4_q8_cpu_reference(
     const std::vector<Q4_0Block>& weights,
     const std::vector<Q8_1Block>& input,

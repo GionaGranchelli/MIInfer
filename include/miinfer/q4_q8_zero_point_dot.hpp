@@ -58,6 +58,32 @@ void launch_q4_q8_gemv_zero_point_dot_wave64_exact_sum(
     int columns,
     hipStream_t stream = nullptr);
 
+// Production-candidate kernels consuming Q8ExactBlock metadata.  These use
+// the stored integer lane sum and do not recompute it per output row.
+void launch_q4_q8_gemv_zero_point_dot_exact_metadata(
+    const Q4_0Block* weights,
+    const Q8ExactBlock* input,
+    __half* output,
+    int rows,
+    int columns,
+    hipStream_t stream = nullptr);
+
+void launch_q4_q8_gemv_zero_point_dot_128_exact_metadata(
+    const Q4_0Block* weights,
+    const Q8ExactBlock* input,
+    __half* output,
+    int rows,
+    int columns,
+    hipStream_t stream = nullptr);
+
+void launch_q4_q8_gemv_zero_point_dot_wave64_exact_metadata(
+    const Q4_0Block* weights,
+    const Q8ExactBlock* input,
+    __half* output,
+    int rows,
+    int columns,
+    hipStream_t stream = nullptr);
+
 // Correctness-only diagnostic outputs.  These preserve the same arithmetic
 // and geometry while exposing the GEMV result as FP32, so output-rounding
 // effects can be separated from input quantization effects.

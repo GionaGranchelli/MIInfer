@@ -90,15 +90,19 @@ bool run_shape(const miinfer::GemvShape& shape, const std::string& implementatio
     miinfer::generate_fp16_gemv_data(shape.m, shape.k, kSeed, weights_fp16, input_fp16);
     const auto weights_q4 = miinfer::quantize_q4_0(weights_fp16, shape.m, shape.k);
     const auto input_q8 = miinfer::quantize_q8_1(input_fp16);
+    const auto input_q8_exact = miinfer::quantize_q8_exact(input_fp16);
     const auto oracle = miinfer::q4_q8_cpu_reference(weights_q4, input_q8, shape.m, shape.k);
 
     miinfer::Q4_0Block* device_weights = nullptr;
     miinfer::Q8_1Block* device_input = nullptr;
+    miinfer::Q8ExactBlock* device_input_exact = nullptr;
     __half* device_output = nullptr;
     MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&device_weights),
                                 weights_q4.size() * sizeof(miinfer::Q4_0Block)));
     MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&device_input),
                                 input_q8.size() * sizeof(miinfer::Q8_1Block)));
+    MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&device_input_exact),
+                                input_q8_exact.size() * sizeof(miinfer::Q8ExactBlock)));
     MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&device_output),
                                 static_cast<std::size_t>(shape.m) * sizeof(__half)));
     MIINFER_HIP_CHECK(hipMemcpy(device_weights, weights_q4.data(),
@@ -106,6 +110,9 @@ bool run_shape(const miinfer::GemvShape& shape, const std::string& implementatio
                                 hipMemcpyHostToDevice));
     MIINFER_HIP_CHECK(hipMemcpy(device_input, input_q8.data(),
                                 input_q8.size() * sizeof(miinfer::Q8_1Block),
+                                hipMemcpyHostToDevice));
+    MIINFER_HIP_CHECK(hipMemcpy(device_input_exact, input_q8_exact.data(),
+                                input_q8_exact.size() * sizeof(miinfer::Q8ExactBlock),
                                 hipMemcpyHostToDevice));
     if (implementation == "packed-dot") {
         miinfer::launch_q4_q8_gemv_packed_dot(
@@ -119,6 +126,16 @@ bool run_shape(const miinfer::GemvShape& shape, const std::string& implementatio
     } else if (implementation == "zero-point-wave64") {
         miinfer::launch_q4_q8_gemv_zero_point_dot_wave64(
             device_weights, device_input, device_output, shape.m, shape.k);
+    } else if (implementation == "zero-point-exact-metadata") {
+        const bool use_wave64 = std::strcmp(shape.id, "k") == 0
+                             || std::strcmp(shape.id, "v") == 0;
+        if (use_wave64) {
+            miinfer::launch_q4_q8_gemv_zero_point_dot_wave64_exact_metadata(
+                device_weights, device_input_exact, device_output, shape.m, shape.k);
+        } else {
+            miinfer::launch_q4_q8_gemv_zero_point_dot_exact_metadata(
+                device_weights, device_input_exact, device_output, shape.m, shape.k);
+        }
     } else {
         miinfer::launch_q4_q8_gemv(device_weights, device_input, device_output, shape.m, shape.k);
     }
@@ -133,6 +150,7 @@ bool run_shape(const miinfer::GemvShape& shape, const std::string& implementatio
               << " cosine=" << metrics.cosine_similarity
               << " result=" << (metrics.pass ? "PASS" : "FAIL") << '\n';
     MIINFER_HIP_CHECK(hipFree(device_output));
+    MIINFER_HIP_CHECK(hipFree(device_input_exact));
     MIINFER_HIP_CHECK(hipFree(device_input));
     MIINFER_HIP_CHECK(hipFree(device_weights));
     return metrics.pass;
@@ -150,7 +168,8 @@ int main() {
     bool passed = true;
     passed = run_zero_point_identity_tests() && passed;
     const std::vector<std::string> implementations = {
-        "scalar", "packed-dot", "zero-point-dot", "zero-point-128", "zero-point-wave64"};
+        "scalar", "packed-dot", "zero-point-dot", "zero-point-128", "zero-point-wave64",
+        "zero-point-exact-metadata"};
     const std::vector<miinfer::GemvShape> small_shapes = {
         {"small", "small Q4/Q8 indexing", 7, 32},
         {"tail", "small Q4/Q8 row tail", 257, 64},

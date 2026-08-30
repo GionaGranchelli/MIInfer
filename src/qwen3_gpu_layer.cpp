@@ -16,6 +16,7 @@
 #include <memory>
 #include <stdexcept>
 #include <span>
+#include <string_view>
 #include <vector>
 
 namespace miinfer {
@@ -59,6 +60,27 @@ void upload_f32(const Qwen3TensorView& tensor, float* device, std::size_t elemen
     MIINFER_HIP_CHECK(hipMemcpy(device, tensor.data(), tensor.bytes(), hipMemcpyHostToDevice));
 }
 
+bool use_exact_q8_metadata(const char* projection) {
+    // The exact metadata contract is now the production Q4/Q8 contract.  An
+    // explicit list remains useful for controlled A/B replay; an empty list
+    // selects only the mandatory historical Down correction.
+    const char* configured = std::getenv("MIINFER_EXACT_Q8_PROJECTIONS");
+    if (configured == nullptr) return true;
+    if (std::strcmp(projection, "down") == 0) return true;
+    const std::string_view list(configured);
+    const std::string_view name(projection);
+    std::size_t begin = 0;
+    while (begin < list.size()) {
+        const auto end = list.find(',', begin);
+        const auto token = list.substr(begin, end == std::string_view::npos
+                                                 ? list.size() - begin : end - begin);
+        if (token == name) return true;
+        if (end == std::string_view::npos) break;
+        begin = end + 1;
+    }
+    return false;
+}
+
 void launch_projection(
     const Qwen3GpuPlan& plan,
     const Qwen3TensorView& weight,
@@ -69,35 +91,40 @@ void launch_projection(
     int columns,
     __half* input_half,
     Q8_1Block* input_q8,
+    Q8ExactBlock* input_q8_exact,
     __half* output_half,
     const char* projection) {
+    const bool exact_metadata = use_exact_q8_metadata(projection);
     launch_qwen3_f32_to_f16(input, input_half, input_elements);
-    launch_q8_1_quantize(input_half, input_q8, static_cast<int>(input_elements));
+    if (exact_metadata) {
+        launch_q8_exact_quantize(input_half, input_q8_exact, static_cast<int>(input_elements));
+    } else {
+        launch_q8_1_quantize(input_half, input_q8, static_cast<int>(input_elements));
+    }
     const auto* device_weight = static_cast<const Q4_0Block*>(plan.device_tensor_data(weight.name()));
-    const bool exact_zero_point = std::strcmp(projection, "down") == 0;
     switch (plan.kernel_for(projection)) {
     case Q4GemvKernel::zero_point_128:
-        if (exact_zero_point) {
-            launch_q4_q8_gemv_zero_point_dot_128_exact_sum(
-                device_weight, input_q8, output_half, rows, columns);
+        if (exact_metadata) {
+            launch_q4_q8_gemv_zero_point_dot_128_exact_metadata(
+                device_weight, input_q8_exact, output_half, rows, columns);
         } else {
             launch_q4_q8_gemv_zero_point_dot_128(device_weight, input_q8, output_half,
                                                  rows, columns);
         }
         break;
     case Q4GemvKernel::zero_point_128_wave64:
-        if (exact_zero_point) {
-            launch_q4_q8_gemv_zero_point_dot_wave64_exact_sum(
-                device_weight, input_q8, output_half, rows, columns);
+        if (exact_metadata) {
+            launch_q4_q8_gemv_zero_point_dot_wave64_exact_metadata(
+                device_weight, input_q8_exact, output_half, rows, columns);
         } else {
             launch_q4_q8_gemv_zero_point_dot_wave64(device_weight, input_q8, output_half,
                                                      rows, columns);
         }
         break;
     case Q4GemvKernel::zero_point_256:
-        if (exact_zero_point) {
-            launch_q4_q8_gemv_zero_point_dot_exact_sum(
-                device_weight, input_q8, output_half, rows, columns);
+        if (exact_metadata) {
+            launch_q4_q8_gemv_zero_point_dot_exact_metadata(
+                device_weight, input_q8_exact, output_half, rows, columns);
         } else {
             launch_q4_q8_gemv_zero_point_dot(device_weight, input_q8, output_half,
                                               rows, columns);
@@ -279,9 +306,11 @@ Qwen3LayerTrace qwen3_layer_gpu_impl(
     DeviceBytes input_half(kMaxVector * sizeof(__half));
     DeviceBytes output_half(kMaxVector * sizeof(__half));
     DeviceBytes input_q8(kMaxQ8Bytes);
+    DeviceBytes input_q8_exact(kMaxQ8Bytes);
     auto* half_input = static_cast<__half*>(input_half.data());
     auto* half_output = static_cast<__half*>(output_half.data());
     auto* q8_input = static_cast<Q8_1Block*>(input_q8.data());
+    auto* q8_exact_input = static_cast<Q8ExactBlock*>(input_q8_exact.data());
 
     Qwen3LayerTrace trace;
     MIINFER_HIP_CHECK(hipMemcpy(embedding.data(), input_device, hidden * sizeof(float),
@@ -295,7 +324,8 @@ Qwen3LayerTrace qwen3_layer_gpu_impl(
     trace.attn_norm = capture(attn_norm.data(), hidden);
 
     launch_projection(plan, layer.q, attn_norm.data(), config.hidden_size, q.data(),
-                      config.hidden_size, config.hidden_size, half_input, q8_input, half_output, "q");
+                      config.hidden_size, config.hidden_size, half_input, q8_input, q8_exact_input,
+                      half_output, "q");
     trace.q_projection = capture(q.data(), hidden);
     trace.q_reshape = trace.q_projection;
     upload_f32(layer.q_norm, head_weights.data(), head_dim);
@@ -313,13 +343,13 @@ Qwen3LayerTrace qwen3_layer_gpu_impl(
 
     launch_projection(plan, layer.v, attn_norm.data(), config.hidden_size, v.data(),
                       config.kv_heads * config.head_dim, config.hidden_size,
-                      half_input, q8_input, half_output, "v");
+                      half_input, q8_input, q8_exact_input, half_output, "v");
     trace.v_projection = capture(v.data(), kv_heads * head_dim);
     trace.v_reshape = trace.v_projection;
 
     launch_projection(plan, layer.k, attn_norm.data(), config.hidden_size, k.data(),
                       config.kv_heads * config.head_dim, config.hidden_size,
-                      half_input, q8_input, half_output, "k");
+                      half_input, q8_input, q8_exact_input, half_output, "k");
     trace.k_projection = capture(k.data(), kv_heads * head_dim);
     trace.k_reshape = trace.k_projection;
     upload_f32(layer.k_norm, head_weights.data(), head_dim);
@@ -352,7 +382,8 @@ Qwen3LayerTrace qwen3_layer_gpu_impl(
         config.kv_heads, config.head_dim, 1.0F / std::sqrt(static_cast<float>(config.head_dim)));
     trace.attention_output = capture(attention.data(), hidden);
     launch_projection(plan, layer.output, attention.data(), config.hidden_size, attention_projected.data(),
-                      config.hidden_size, config.hidden_size, half_input, q8_input, half_output, "o");
+                      config.hidden_size, config.hidden_size, half_input, q8_input, q8_exact_input,
+                      half_output, "o");
     launch_qwen3_add(attention_projected.data(), embedding.data(), ffn_input.data(), config.hidden_size);
     trace.ffn_input = capture(ffn_input.data(), hidden);
 
@@ -362,10 +393,12 @@ Qwen3LayerTrace qwen3_layer_gpu_impl(
     launch_qwen3_elementwise_mul(ffn_rms.data(), norm_weights.data(), ffn_norm.data(), config.hidden_size);
     trace.ffn_norm = capture(ffn_norm.data(), hidden);
     launch_projection(plan, layer.gate, ffn_norm.data(), config.hidden_size, gate.data(),
-                      config.intermediate_size, config.hidden_size, half_input, q8_input, half_output, "gate");
+                      config.intermediate_size, config.hidden_size, half_input, q8_input, q8_exact_input,
+                      half_output, "gate");
     trace.gate = capture(gate.data(), intermediate);
     launch_projection(plan, layer.up, ffn_norm.data(), config.hidden_size, up.data(),
-                      config.intermediate_size, config.hidden_size, half_input, q8_input, half_output, "up");
+                      config.intermediate_size, config.hidden_size, half_input, q8_input, q8_exact_input,
+                      half_output, "up");
     trace.up = capture(up.data(), intermediate);
     const char* mutation = std::getenv("MIINFER_GPU_LAYER_MUTATE");
     if (mutation != nullptr && std::strcmp(mutation, "swap-gate-up") == 0) {
@@ -377,7 +410,8 @@ Qwen3LayerTrace qwen3_layer_gpu_impl(
     }
     trace.swiglu = capture(swiglu.data(), intermediate);
     launch_projection(plan, layer.down, swiglu.data(), config.intermediate_size, ffn_output.data(),
-                      config.hidden_size, config.intermediate_size, half_input, q8_input, half_output, "down");
+                      config.hidden_size, config.intermediate_size, half_input, q8_input, q8_exact_input,
+                      half_output, "down");
     trace.ffn_output = capture(ffn_output.data(), hidden);
     launch_qwen3_add(ffn_output.data(), ffn_input.data(), layer_output.data(), config.hidden_size);
     trace.layer_output = capture(layer_output.data(), hidden);

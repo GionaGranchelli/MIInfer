@@ -772,12 +772,12 @@ The current milestone is:
 M4-B — full-depth numerical validation
 ```
 
-M4-B4 has established that the FP16-scaled Q8 zero-point correction is the
-local Down-projection defect: exact integer-sum dot4 and direct signed-Q4 GPU
-arithmetic agree, while the old FP16-scaled correction does not. The exact
-correction is integrated for Down only; the remaining full-depth layer-6 and
-late-layer drift is still under investigation. Exact experiment ordering may
-change only when supported by the resulting evidence.
+M4-B5 has propagated the proven exact Q8 integer-sum metadata through the
+Q4×Q8 projection path without increasing the 36-byte activation-block
+footprint. Layer 1 and most intermediate teacher-forced layers now pass, but
+layers 6, 34, and 35 still exceed the frozen bounds. The remaining full-depth
+drift is still under investigation. Exact experiment ordering may change only
+when supported by the resulting evidence.
 
 ---
 

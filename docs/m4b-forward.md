@@ -147,6 +147,32 @@ passes layer 1 before later depth drift, while the full GPU replay still fails
 the layer-6 and later layer-output gates. The isolated Down-contract
 improvement must therefore not be described as a complete model-level fix.
 
+## M4-B5 exact Q8 metadata propagation
+
+The exact-sum implementation was then moved into the activation metadata
+contract instead of recomputing the 32-lane Q8 sum inside every output-row
+dot. `Q8ExactBlock` stores FP16 `d`, an exact `int16` lane sum, and the 32
+int8 lanes in the same 36-byte footprint as `Q8_1Block`. The quantizer computes
+the sum once per activation block, and the gfx906 dot kernels reuse it.
+
+Focused real-shape Q4/Q8 tests pass for the exact-metadata kernel. In the
+layer-6 teacher-forced discriminator, exact Gate correction reduces the layer
+error from `11.1719` to `4.82812`; exact Up alone has no material effect, and
+Gate+Up remains `4.82812`. For layer 1, exact V correction reduces the local
+error from `0.0516891` to `0.0112991`; Q, K, and O alone do not materially
+change that result. With exact metadata enabled for all Q4×Q8 projections,
+teacher-forced layers 0–5 and 7–33 pass, while layers 6, 34, and 35 remain
+outside the frozen bound (`4.82812`, `3.41504`, and `0.29126`).
+
+The exact metadata path is now the default production Q4×Q8 contract. The
+environment variable `MIINFER_EXACT_Q8_PROJECTIONS` remains as a controlled
+replay selector; an empty value retains only the mandatory Down correction.
+The old FP16-`s` kernels remain benchmark/diagnostic controls. The full
+physical M4-B replay still fails intermediate layer gates, although the final
+GPU logits are within the current `0.1` absolute bound (`0.0941614`) and the
+argmax remains `8`. M4-B therefore remains open; no tolerance was widened and
+generation work has not started.
+
 The independent offloaded reference is also not numerically identical to the
 CPU trace: the current MI50 comparison begins at `0.0521` on layer 0 and
 reaches about `136` absolute error by layer 6. Therefore the external GPU
