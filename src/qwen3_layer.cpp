@@ -234,6 +234,17 @@ Qwen3LayerTrace execute_qwen3_layer0_host(
     // Position zero with an empty cache has one attention key/value.  GQA
     // therefore expands each KV head across its four query heads; attention
     // probabilities are exactly one and attention output is the expanded V.
+    trace.attention_scores.resize(heads);
+    trace.attention_probabilities.assign(heads, 1.0F);
+    for (std::size_t head = 0; head < heads; ++head) {
+        const std::size_t q_base = head * head_dim;
+        const std::size_t kv_base = (head / (heads / kv_heads)) * head_dim;
+        float score = 0.0F;
+        for (std::size_t i = 0; i < head_dim; ++i) {
+            score += trace.q_rope[q_base + i] * trace.k_rope[kv_base + i];
+        }
+        trace.attention_scores[head] = score / std::sqrt(static_cast<float>(head_dim));
+    }
     trace.attention_output = repeat_kv_for_gqa(trace.v_view, heads / kv_heads);
     const auto attention_projected = q4_q8_matvec(layer.output, trace.attention_output, hidden, hidden);
     trace.ffn_input = attention_projected;

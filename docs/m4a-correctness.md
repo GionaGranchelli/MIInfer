@@ -92,7 +92,7 @@ The comparator reports maximum/mean absolute error, meaningful relative error
 index, and the reference/actual values at that index.  A deliberate mutation
 test is included and is detected by the comparator.
 
-The currently frozen comparison policy is:
+The currently frozen host comparison policy is:
 
 | Stage | Absolute tolerance | Relative tolerance |
 |---|---:|---:|
@@ -108,11 +108,49 @@ These tolerances are not a performance escape hatch: the host run's observed
 errors are printed in full, and the mutation test verifies that a material
 checkpoint change fails.
 
-The host composition is intentionally not a performance path and currently
-supports only the position-zero, empty-KV-cache fixture.  A complete MI50
-GPU composition executor, multi-position KV cache, and production layer
-wiring remain open.  Therefore M4-A remains open and no token-generation or
-end-to-end performance claim is made here.
+## M4-A3 GPU composition acceptance
+
+The correctness-first MI50 executor now composes the same layer-0 path on the
+physical GPU.  It uses the M3 static model plan and the accepted M2 projection
+kernels, while deliberately copying intermediate vectors back for diagnosis.
+The GPU test compares every canonical checkpoint against both:
+
+```text
+the host layer-0 executor
+the pinned reference trace
+```
+
+The additional attention-score and attention-probability diagnostics are also
+checked against the host executor.  The accepted physical runs passed in both
+MI50 configurations:
+
+```text
+mi50-debug   28/28 checkpoints, host/reference parity: PASS
+mi50-release 28/28 checkpoints, host/reference parity: PASS
+```
+
+The position-zero acceptance commands are:
+
+```bash
+./build/mi50-debug/miinfer-qwen3-layer0-gpu-test \
+  /path/to/Qwen3-8B-q4_0-b968826d.gguf \
+  /path/to/m4a-trace-hello
+
+./build/mi50-release/miinfer-qwen3-layer0-gpu-test \
+  /path/to/Qwen3-8B-q4_0-b968826d.gguf \
+  /path/to/m4a-trace-hello
+```
+
+The observed attention-score maximum absolute difference was approximately
+`9.55e-3`; probabilities were identical for the one-token position-zero
+fixture.  All compared vectors were finite.  A GPU-specific test-only
+`swap-gate-up` mutation was detected at `swiglu` and downstream checkpoints,
+demonstrating that the composition gate is sensitive to semantic breakage.
+
+The GPU executor is intentionally limited to position zero with an empty KV
+cache.  Multi-position execution, cache append/preservation, and
+position-aware attention remain M4-A4 work.  Therefore M4-A remains open and
+no token-generation or end-to-end performance claim is made here.
 
 ## Host layer-0 acceptance run
 

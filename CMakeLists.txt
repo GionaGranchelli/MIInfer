@@ -96,6 +96,7 @@ if(MIINFER_ENABLE_HIP)
     add_library(miinfer_hip STATIC
         src/device_validation.cpp
         src/model_plan.cpp
+        src/qwen3_gpu_layer.cpp
         src/fp16_gemv_reference.cpp
         src/q4_q8_gemv_reference.cpp
         gfx906/kernels/vector_add.hip
@@ -193,6 +194,10 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-qwen3-primitives-test PRIVATE miinfer_hip)
     target_compile_options(miinfer-qwen3-primitives-test PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-qwen3-layer0-gpu-test tests/qwen3_layer0_gpu_test.cpp)
+    target_link_libraries(miinfer-qwen3-layer0-gpu-test PRIVATE miinfer_hip)
+    target_compile_options(miinfer-qwen3-layer0-gpu-test PRIVATE -Wall -Wextra -Wpedantic)
+
 endif()
 
 include(CTest)
@@ -221,6 +226,8 @@ if(BUILD_TESTING)
         set_tests_properties(model-gpu-arena PROPERTIES LABELS "gpu-required")
         add_test(NAME qwen3-primitives-gpu COMMAND miinfer-qwen3-primitives-test)
         set_tests_properties(qwen3-primitives-gpu PROPERTIES LABELS "gpu-required")
+        add_test(NAME qwen3-layer0-gpu COMMAND miinfer-qwen3-layer0-gpu-test)
+        set_tests_properties(qwen3-layer0-gpu PROPERTIES LABELS "gpu-required")
     endif()
 endif()
 
@@ -235,4 +242,5 @@ if(MIINFER_ENABLE_HIP)
     install(TARGETS miinfer-fp16-gemv-k-split-bench)
     install(TARGETS miinfer-q4-q8-gemv-bench)
     install(TARGETS miinfer-model-info miinfer-model-gpu-test miinfer-qwen3-primitives-test)
+    install(TARGETS miinfer-qwen3-layer0-gpu-test)
 endif()

@@ -31,6 +31,8 @@ struct Qwen3LayerTrace {
     std::vector<float> v_view;
     std::vector<float> q_view;
     std::vector<float> q_permuted;
+    std::vector<float> attention_scores;
+    std::vector<float> attention_probabilities;
     std::vector<float> attention_output;
     std::vector<float> ffn_input;
     std::vector<float> ffn_rms;

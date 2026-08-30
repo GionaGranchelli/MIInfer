@@ -72,6 +72,131 @@ __global__ void qwen3_rms_norm_kernel(
     }
 }
 
+__global__ void qwen3_rms_normalize_kernel(
+    const float* input, float* output, std::uint32_t elements, float epsilon) {
+    __shared__ float partials[256];
+    float sum = 0.0F;
+    for (std::uint32_t index = threadIdx.x; index < elements; index += blockDim.x) {
+        sum += input[index] * input[index];
+    }
+    partials[threadIdx.x] = sum;
+    __syncthreads();
+    for (std::uint32_t stride = blockDim.x / 2; stride > 0; stride /= 2) {
+        if (threadIdx.x < stride) partials[threadIdx.x] += partials[threadIdx.x + stride];
+        __syncthreads();
+    }
+    const float inverse_rms = rsqrtf(partials[0] / static_cast<float>(elements) + epsilon);
+    for (std::uint32_t index = threadIdx.x; index < elements; index += blockDim.x) {
+        output[index] = input[index] * inverse_rms;
+    }
+}
+
+__global__ void qwen3_elementwise_mul_kernel(
+    const float* left, const float* right, float* output, std::uint32_t elements) {
+    const std::uint32_t index = blockIdx.x * blockDim.x + threadIdx.x;
+    if (index < elements) output[index] = left[index] * right[index];
+}
+
+__global__ void qwen3_head_rms_normalize_kernel(
+    const float* input, float* output, std::uint32_t heads,
+    std::uint32_t head_dim, float epsilon) {
+    const std::uint32_t head = blockIdx.x;
+    if (head >= heads) return;
+    __shared__ float partials[128];
+    float sum = 0.0F;
+    const std::uint32_t base = head * head_dim;
+    for (std::uint32_t index = threadIdx.x; index < head_dim; index += blockDim.x) {
+        const float value = input[base + index];
+        sum += value * value;
+    }
+    partials[threadIdx.x] = sum;
+    __syncthreads();
+    for (std::uint32_t stride = blockDim.x / 2; stride > 0; stride /= 2) {
+        if (threadIdx.x < stride) partials[threadIdx.x] += partials[threadIdx.x + stride];
+        __syncthreads();
+    }
+    const float inverse_rms = rsqrtf(partials[0] / static_cast<float>(head_dim) + epsilon);
+    for (std::uint32_t index = threadIdx.x; index < head_dim; index += blockDim.x) {
+        output[base + index] = input[base + index] * inverse_rms;
+    }
+}
+
+__global__ void qwen3_head_mul_kernel(
+    const float* input, const float* weights, float* output,
+    std::uint32_t heads, std::uint32_t head_dim) {
+    const std::uint32_t index = blockIdx.x * blockDim.x + threadIdx.x;
+    if (index >= heads * head_dim) return;
+    output[index] = input[index] * weights[index % head_dim];
+}
+
+__global__ void qwen3_rope_kernel(
+    const float* input, float* output, std::uint32_t heads,
+    std::uint32_t head_dim, std::uint32_t position, float theta) {
+    const std::uint32_t index = blockIdx.x * blockDim.x + threadIdx.x;
+    if (index >= heads * head_dim) return;
+    const std::uint32_t local_index = index % head_dim;
+    const std::uint32_t pair = local_index / 2;
+    const std::uint32_t offset = local_index - (local_index % 2);
+    const std::uint32_t head_base = (index / head_dim) * head_dim;
+    const float frequency = powf(theta, -2.0F * static_cast<float>(pair) / static_cast<float>(head_dim));
+    const float angle = static_cast<float>(position) * frequency;
+    const float c = cosf(angle);
+    const float s = sinf(angle);
+    const float x0 = input[head_base + offset];
+    const float x1 = input[head_base + offset + 1];
+    output[head_base + offset] = x0 * c - x1 * s;
+    output[head_base + offset + 1] = x0 * s + x1 * c;
+}
+
+__global__ void qwen3_single_token_attention_kernel(
+    const float* q, const float* k, const float* v, float* output,
+    float* scores, float* probabilities, std::uint32_t query_heads,
+    std::uint32_t kv_heads, std::uint32_t head_dim, float scale) {
+    const std::uint32_t head = blockIdx.x;
+    if (head >= query_heads || kv_heads == 0 || query_heads % kv_heads != 0) return;
+    const std::uint32_t q_base = head * head_dim;
+    const std::uint32_t kv_base = (head / (query_heads / kv_heads)) * head_dim;
+    float score = 0.0F;
+    for (std::uint32_t index = 0; index < head_dim; ++index) {
+        score += q[q_base + index] * k[kv_base + index];
+    }
+    scores[head] = score * scale;
+    // With one key/value in the position-zero fixture, stabilized softmax is
+    // exactly one.  This kernel is intentionally limited to that fixture;
+    // multi-position causal attention belongs to the KV-cache slice.
+    probabilities[head] = 1.0F;
+    for (std::uint32_t index = 0; index < head_dim; ++index) {
+        output[q_base + index] = v[kv_base + index];
+    }
+}
+
+__global__ void qwen3_silu_mul_kernel(
+    const float* gate, const float* up, float* output, std::uint32_t elements) {
+    const std::uint32_t index = blockIdx.x * blockDim.x + threadIdx.x;
+    if (index < elements) {
+        const float value = gate[index];
+        output[index] = (value / (1.0F + expf(-value))) * up[index];
+    }
+}
+
+__global__ void qwen3_add_kernel(
+    const float* left, const float* right, float* output, std::uint32_t elements) {
+    const std::uint32_t index = blockIdx.x * blockDim.x + threadIdx.x;
+    if (index < elements) output[index] = left[index] + right[index];
+}
+
+__global__ void qwen3_f32_to_f16_kernel(
+    const float* input, __half* output, std::uint32_t elements) {
+    const std::uint32_t index = blockIdx.x * blockDim.x + threadIdx.x;
+    if (index < elements) output[index] = __float2half_rn(input[index]);
+}
+
+__global__ void qwen3_f16_to_f32_kernel(
+    const __half* input, float* output, std::uint32_t elements) {
+    const std::uint32_t index = blockIdx.x * blockDim.x + threadIdx.x;
+    if (index < elements) output[index] = __half2float(input[index]);
+}
+
 __global__ void qwen3_q6_k_gemv_kernel(
     const Q6KDeviceBlock* weights,
     const float* input,
@@ -136,6 +261,119 @@ void launch_qwen3_rms_norm(
     }
     hipLaunchKernelGGL(qwen3_rms_norm_kernel, dim3(1), dim3(256), 0, stream,
                        input, weights, output, elements, epsilon);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen3_rms_normalize(
+    const float* input, float* output, std::uint32_t elements,
+    float epsilon, hipStream_t stream) {
+    if (input == nullptr || output == nullptr || elements == 0
+        || elements > 256U * 1024U || epsilon <= 0.0F) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen3_rms_normalize_kernel, dim3(1), dim3(256), 0, stream,
+                       input, output, elements, epsilon);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen3_elementwise_mul(
+    const float* left, const float* right, float* output,
+    std::uint32_t elements, hipStream_t stream) {
+    if (left == nullptr || right == nullptr || output == nullptr || elements == 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen3_elementwise_mul_kernel,
+                       dim3((elements + 255) / 256), dim3(256), 0, stream,
+                       left, right, output, elements);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen3_head_rms_normalize(
+    const float* input, float* output, std::uint32_t heads,
+    std::uint32_t head_dim, float epsilon, hipStream_t stream) {
+    if (input == nullptr || output == nullptr || heads == 0 || head_dim == 0
+        || head_dim > 128 || epsilon <= 0.0F) MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    hipLaunchKernelGGL(qwen3_head_rms_normalize_kernel, dim3(heads), dim3(128), 0, stream,
+                       input, output, heads, head_dim, epsilon);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen3_head_mul(
+    const float* input, const float* weights, float* output,
+    std::uint32_t heads, std::uint32_t head_dim, hipStream_t stream) {
+    if (input == nullptr || weights == nullptr || output == nullptr || heads == 0 || head_dim == 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen3_head_mul_kernel,
+                       dim3((heads * head_dim + 255) / 256), dim3(256), 0, stream,
+                       input, weights, output, heads, head_dim);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen3_rope(
+    const float* input, float* output, std::uint32_t heads,
+    std::uint32_t head_dim, std::uint32_t position, float theta, hipStream_t stream) {
+    if (input == nullptr || output == nullptr || heads == 0 || head_dim == 0
+        || head_dim % 2 != 0 || theta <= 0.0F) MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    hipLaunchKernelGGL(qwen3_rope_kernel,
+                       dim3((heads * head_dim + 255) / 256), dim3(256), 0, stream,
+                       input, output, heads, head_dim, position, theta);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen3_single_token_attention(
+    const float* q, const float* k, const float* v, float* output,
+    float* scores, float* probabilities, std::uint32_t query_heads,
+    std::uint32_t kv_heads, std::uint32_t head_dim, float scale, hipStream_t stream) {
+    if (q == nullptr || k == nullptr || v == nullptr || output == nullptr
+        || scores == nullptr || probabilities == nullptr || query_heads == 0
+        || kv_heads == 0 || head_dim == 0 || query_heads % kv_heads != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen3_single_token_attention_kernel, dim3(query_heads), dim3(1), 0, stream,
+                       q, k, v, output, scores, probabilities, query_heads, kv_heads, head_dim, scale);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen3_silu_mul(
+    const float* gate, const float* up, float* output,
+    std::uint32_t elements, hipStream_t stream) {
+    if (gate == nullptr || up == nullptr || output == nullptr || elements == 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen3_silu_mul_kernel,
+                       dim3((elements + 255) / 256), dim3(256), 0, stream,
+                       gate, up, output, elements);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen3_add(
+    const float* left, const float* right, float* output,
+    std::uint32_t elements, hipStream_t stream) {
+    if (left == nullptr || right == nullptr || output == nullptr || elements == 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen3_add_kernel,
+                       dim3((elements + 255) / 256), dim3(256), 0, stream,
+                       left, right, output, elements);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen3_f32_to_f16(
+    const float* input, __half* output, std::uint32_t elements, hipStream_t stream) {
+    if (input == nullptr || output == nullptr || elements == 0) MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    hipLaunchKernelGGL(qwen3_f32_to_f16_kernel,
+                       dim3((elements + 255) / 256), dim3(256), 0, stream,
+                       input, output, elements);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen3_f16_to_f32(
+    const __half* input, float* output, std::uint32_t elements, hipStream_t stream) {
+    if (input == nullptr || output == nullptr || elements == 0) MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    hipLaunchKernelGGL(qwen3_f16_to_f32_kernel,
+                       dim3((elements + 255) / 256), dim3(256), 0, stream,
+                       input, output, elements);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

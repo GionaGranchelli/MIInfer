@@ -33,6 +33,84 @@ void launch_qwen3_rms_norm(
     float epsilon,
     hipStream_t stream = nullptr);
 
+void launch_qwen3_rms_normalize(
+    const float* input,
+    float* output,
+    std::uint32_t elements,
+    float epsilon,
+    hipStream_t stream = nullptr);
+
+void launch_qwen3_elementwise_mul(
+    const float* left,
+    const float* right,
+    float* output,
+    std::uint32_t elements,
+    hipStream_t stream = nullptr);
+
+void launch_qwen3_head_rms_normalize(
+    const float* input,
+    float* output,
+    std::uint32_t heads,
+    std::uint32_t head_dim,
+    float epsilon,
+    hipStream_t stream = nullptr);
+
+void launch_qwen3_head_mul(
+    const float* input,
+    const float* weights,
+    float* output,
+    std::uint32_t heads,
+    std::uint32_t head_dim,
+    hipStream_t stream = nullptr);
+
+void launch_qwen3_rope(
+    const float* input,
+    float* output,
+    std::uint32_t heads,
+    std::uint32_t head_dim,
+    std::uint32_t position,
+    float theta,
+    hipStream_t stream = nullptr);
+
+void launch_qwen3_single_token_attention(
+    const float* q,
+    const float* k,
+    const float* v,
+    float* output,
+    float* scores,
+    float* probabilities,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float scale,
+    hipStream_t stream = nullptr);
+
+void launch_qwen3_silu_mul(
+    const float* gate,
+    const float* up,
+    float* output,
+    std::uint32_t elements,
+    hipStream_t stream = nullptr);
+
+void launch_qwen3_add(
+    const float* left,
+    const float* right,
+    float* output,
+    std::uint32_t elements,
+    hipStream_t stream = nullptr);
+
+void launch_qwen3_f32_to_f16(
+    const float* input,
+    __half* output,
+    std::uint32_t elements,
+    hipStream_t stream = nullptr);
+
+void launch_qwen3_f16_to_f32(
+    const __half* input,
+    float* output,
+    std::uint32_t elements,
+    hipStream_t stream = nullptr);
+
 void launch_qwen3_q6_k_gemv(
     const Q6KDeviceBlock* weights,
     const float* input,

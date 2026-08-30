@@ -98,14 +98,14 @@ all work. The gfx802 isolation remains an operational platform prerequisite.
 
 * production C++ runtime
 * production inference runtime and model-facing kernel integration
-* model loading
-* GGUF parsing
-* tensor packing
-* execution planner
-* memory planner
+* model loading outside the pinned Qwen3-8B contract
+* general GGUF parsing
+* custom tensor packing
+* production execution planner
+* general-purpose memory planner
 * tokenizer
+* multi-position attention and KV-cache execution
 * sampling
-* attention
 * MoE execution
 * HIP graph capture
 * CLI
@@ -120,9 +120,9 @@ model/runtime functionality has been implemented.
 
 The immediate technical objective is:
 
-> Complete M4-A by wiring the correctness-first Qwen3 primitives into a
-> one-layer executor and matching its layer-0 checkpoints against the pinned
-> reference trace, then proceed to first token generation.
+> Complete M4-A by extending the validated position-zero MI50 layer executor
+> to deterministic multi-position execution with a correct KV cache, then
+> proceed to first token generation.
 > Do not broaden support beyond the pinned model contract.
 
 M0 is closed under the documented gfx802-isolated configuration. The
@@ -162,13 +162,18 @@ The M1/M2 kernel-laboratory deliverables currently include:
 * M4-A2 complete host-side layer-0 composition for the pinned single-token
   fixture, automatic comparison of all 28 reference checkpoints, and a
   comparator mutation test
+* M4-A3 complete MI50 GPU layer-0 composition for the same position-zero
+  fixture, with GPU-to-host and GPU-to-reference comparison in Debug and
+  Release, plus a GPU composition mutation discriminator
 
 The repository-side specialization and M3 runtime-scaffold deliverables are
-complete. The host layer-0 composition matches the retained reference trace
-within frozen, stage-specific tolerances. M4-A remains open because the
-composition is not yet executed as a complete MI50 GPU path and does not yet
-support a multi-position KV cache. Physical MI50 execution remains required
-for the GPU composition gate.
+complete. The host and MI50 GPU layer-0 compositions match the retained
+reference trace within frozen, stage-specific tolerances. The GPU test also
+triangulates against the host executor and checks the additional attention
+score/probability diagnostics. M4-A remains open only for the next stateful
+slice: multi-position execution and KV-cache correctness. The current GPU
+executor is deliberately limited to the position-zero, empty-KV-cache fixture;
+no token-generation or end-to-end performance claim is made here.
 
 ---
 
