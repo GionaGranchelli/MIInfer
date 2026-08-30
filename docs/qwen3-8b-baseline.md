@@ -81,7 +81,10 @@ model-00004-of-00005.safetensors  b5ee7de71fbf17db3d5704e0c8f2bc7d005ca9e1d7ca2a
 model-00005-of-00005.safetensors  20c2d6366ab85c90786ccdd829cd2b9e7d30ef3b2ebbb998280e7e4014b542ff
 ```
 
-The GGUF is not committed to MIInfer.
+The GGUF is not committed to MIInfer. The Q4_0 artifact uses Q4_0 for the
+embedding and projection tensors, F32 for normalization tensors, and Q6_K for
+the single output tensor; the MIInfer M3 loader validates this inventory
+explicitly rather than treating the file as uniformly Q4_0.
 
 Reference smoke status: PASS with gfx802 isolated. The pinned CLI reported one
 ROCm device (`gfx906`, MI50), offloaded all 37 layers, allocated a 14.4 GiB

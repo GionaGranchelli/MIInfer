@@ -10,19 +10,19 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M3 — Minimal Runtime**
+**Current phase: M4 — First Correct Generation**
 
 Immediate objective:
 
-> Build the smallest static Qwen3-8B runtime scaffold around the accepted
-> gfx906-specialized kernel family.
+> Execute the minimum correct Qwen3-8B path using the closed M3 loader and
+> static plan, then validate deterministic first-token generation.
 
 Current work should focus on:
 
-* model metadata and tensor loading
-* supported-configuration validation
-* GPU weight allocation
-* static execution-plan construction
+* embedding and normalization execution
+* Q/K/V projection integration
+* deterministic attention and residual execution
+* first-token correctness against the pinned reference
 * preserving the accepted kernel and benchmark controls
 
 Do not start model serving, generic model support, speculative decoding, or multi-GPU work.
@@ -396,6 +396,12 @@ M3 is complete when:
 * weights fit within the planned memory layout
 * static execution plan can be constructed
 * unsupported models/configurations fail clearly
+
+M3 was closed on 2026-08-30 by the pinned Qwen3-8B Q4_0 physical-MI50
+acceptance. The implementation recognizes the model, validates its 399
+tensors, uploads all immutable weights into a 4.77 GB arena, verifies bounded
+device-byte samples, and constructs the static buffer/kernel plan. It does not
+execute the transformer yet.
 
 No meaningful generated text is required yet.
 

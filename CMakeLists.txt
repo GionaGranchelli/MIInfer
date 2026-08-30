@@ -78,9 +78,22 @@ target_compile_options(miinfer_build_info PRIVATE
     $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Wpedantic>
 )
 
+add_library(miinfer_model STATIC
+    src/gguf.cpp
+    src/qwen3_model.cpp
+    src/sha256.cpp
+)
+target_include_directories(miinfer_model
+    PUBLIC
+        "${CMAKE_CURRENT_SOURCE_DIR}/include"
+)
+target_compile_features(miinfer_model PUBLIC cxx_std_20)
+target_compile_options(miinfer_model PRIVATE -Wall -Wextra -Wpedantic)
+
 if(MIINFER_ENABLE_HIP)
     add_library(miinfer_hip STATIC
         src/device_validation.cpp
+        src/model_plan.cpp
         src/fp16_gemv_reference.cpp
         src/q4_q8_gemv_reference.cpp
         gfx906/kernels/vector_add.hip
@@ -96,7 +109,7 @@ if(MIINFER_ENABLE_HIP)
             "${CMAKE_CURRENT_BINARY_DIR}/generated"
     )
     target_compile_features(miinfer_hip PUBLIC cxx_std_20)
-    target_link_libraries(miinfer_hip PUBLIC miinfer_build_info roc::hipblas)
+    target_link_libraries(miinfer_hip PUBLIC miinfer_build_info miinfer_model roc::hipblas)
     target_compile_definitions(miinfer_hip PUBLIC __HIP_PLATFORM_AMD__)
     target_compile_options(miinfer_hip PRIVATE
         $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Wpedantic>
@@ -105,8 +118,12 @@ if(MIINFER_ENABLE_HIP)
 endif()
 
 add_executable(miinfer-host-test tests/host_test.cpp)
-target_link_libraries(miinfer-host-test PRIVATE miinfer_build_info)
+target_link_libraries(miinfer-host-test PRIVATE miinfer_build_info miinfer_model)
 target_compile_options(miinfer-host-test PRIVATE -Wall -Wextra -Wpedantic)
+
+add_executable(miinfer-model-loader-test tests/model_loader_test.cpp)
+target_link_libraries(miinfer-model-loader-test PRIVATE miinfer_model)
+target_compile_options(miinfer-model-loader-test PRIVATE -Wall -Wextra -Wpedantic)
 
 if(MIINFER_ENABLE_HIP)
     add_executable(miinfer-device-info tests/device_info.cpp)
@@ -153,12 +170,22 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-q4-q8-gemv-bench PRIVATE miinfer_hip)
     target_compile_options(miinfer-q4-q8-gemv-bench PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-model-info tests/model_info.cpp)
+    target_link_libraries(miinfer-model-info PRIVATE miinfer_hip)
+    target_compile_options(miinfer-model-info PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-model-gpu-test tests/model_gpu_test.cpp)
+    target_link_libraries(miinfer-model-gpu-test PRIVATE miinfer_hip)
+    target_compile_options(miinfer-model-gpu-test PRIVATE -Wall -Wextra -Wpedantic)
+
 endif()
 
 include(CTest)
 if(BUILD_TESTING)
     add_test(NAME host-only COMMAND miinfer-host-test)
     set_tests_properties(host-only PROPERTIES LABELS "host-only")
+    add_test(NAME model-loader-host COMMAND miinfer-model-loader-test)
+    set_tests_properties(model-loader-host PROPERTIES LABELS "host-only")
     if(MIINFER_ENABLE_HIP)
         add_test(NAME hip-smoke COMMAND miinfer-hip-smoke)
         set_tests_properties(hip-smoke PROPERTIES LABELS "gpu-required")
@@ -168,6 +195,8 @@ if(BUILD_TESTING)
         set_tests_properties(q4-q8-gemv-correctness PROPERTIES LABELS "gpu-required")
         add_test(NAME q4-q8-dot4-probe COMMAND miinfer-q4-q8-dot4-probe)
         set_tests_properties(q4-q8-dot4-probe PROPERTIES LABELS "gpu-required")
+        add_test(NAME model-gpu-arena COMMAND miinfer-model-gpu-test)
+        set_tests_properties(model-gpu-arena PROPERTIES LABELS "gpu-required")
     endif()
 endif()
 
@@ -181,4 +210,5 @@ if(MIINFER_ENABLE_HIP)
     install(TARGETS miinfer-fp16-gemv-reduction-diag)
     install(TARGETS miinfer-fp16-gemv-k-split-bench)
     install(TARGETS miinfer-q4-q8-gemv-bench)
+    install(TARGETS miinfer-model-info miinfer-model-gpu-test)
 endif()

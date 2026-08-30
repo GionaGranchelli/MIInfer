@@ -91,6 +91,12 @@ The execution plan should be created once whenever possible.
 
 Hot-path execution should not rediscover information already known at model load.
 
+M3 implements this boundary for the pinned Qwen3-8B Q4_0 artifact: a
+mmap-backed, fail-closed loader produces strongly named tensor handles, one
+contiguous GPU weight arena, and an immutable static projection-kernel plan.
+The plan is validation and ownership infrastructure only; transformer
+execution remains a later milestone.
+
 ---
 
 # 4. Architectural Non-Goal: Generic Graph Runtime

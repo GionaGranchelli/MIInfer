@@ -15,13 +15,13 @@ For long-term direction, see:
 
 # Current Phase
 
-**M3 — Minimal Runtime**
+**M4 — First Correct Qwen3-8B Generation**
 
 MIInfer is not yet an inference runtime.
 
-M0 is closed, M1 established the kernel laboratory, and M2 passed its
-gfx906-specific specialization gate with EXP-0009. MIInfer is not yet an
-inference runtime; M3 now begins the minimal model/runtime scaffold.
+M0 is closed, M1 established the kernel laboratory, M2 passed its
+gfx906-specific specialization gate with EXP-0009, and M3 is closed. The
+minimal model/runtime scaffold is present; M4 now owns first token generation.
 
 ---
 
@@ -80,6 +80,8 @@ No other GPU architecture is currently supported.
   reference primitive is now measured
 * EXP-0009 128-thread K/V geometry and Wave64 reduction comparison; accepted
   with `KEEP`, with M2 marked `GO`
+* M3 minimal Qwen3-8B GGUF loader, GPU weight arena, and static plan; closed
+  after pinned physical-MI50 acceptance
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -118,9 +120,9 @@ model/runtime functionality has been implemented.
 
 The immediate technical objective is:
 
-> Begin M3 by scaffolding a minimal static Qwen3-8B runtime around the accepted
-> shape-specialized Q4_0 × Q8_1 kernels. EXP-0005 remains the frozen scalar
-> correctness baseline and EXP-0009 records the accepted geometry selection.
+> Begin M4 by executing the minimum correct Qwen3-8B path on the pinned MI50,
+> starting with deterministic model-side validation and one-token generation.
+> Do not broaden support beyond the pinned model contract.
 
 M0 is closed under the documented gfx802-isolated configuration. The
 repository-side infrastructure, physical MI50 validation, model artifact, and
@@ -152,9 +154,12 @@ The M1/M2 kernel-laboratory deliverables currently include:
 * EXP-0007 five-run scalar/control/candidate evidence and size-matched memory reference
 * EXP-0008 five-run direct primitive comparison against pinned llama.cpp MMVQ
 * EXP-0009 five-run 128-thread and Wave64 geometry comparison against MMVQ
+* M3 pinned Qwen3-8B model recognition, 399-tensor validation, 4.77 GB GPU
+  weight residency, and static kernel/buffer plan
 
-The repository-side specialization deliverables are complete. Physical MI50
-execution remains required for all future GPU-specific runtime validation.
+The repository-side specialization and M3 runtime-scaffold deliverables are
+complete. Physical MI50 execution remains required for all future
+GPU-specific runtime validation.
 
 ---
 
@@ -206,8 +211,8 @@ Small test or utility dependencies may be considered if they reduce complexity w
 
 # Current Runtime Policy
 
-There is currently **no production runtime**. M3 may now implement only the
-minimal model-facing scaffold required for the selected Qwen3-8B target.
+There is currently **no token-executing runtime**. M4 may implement only the
+minimum execution path required for the selected Qwen3-8B target.
 
 Do not prematurely create:
 
@@ -303,7 +308,9 @@ EXP-0008 — direct MIInfer versus pinned gfx906 llama.cpp MMVQ (KEEP)
 
 EXP-0009 — K/V workgroup and Wave64 reduction geometry (KEEP)
 
-M3 — minimal Qwen3-8B runtime scaffold (next milestone)
+M3 — minimal Qwen3-8B runtime scaffold (CLOSED)
+
+M4 — first correct Qwen3-8B token generation (next milestone)
 ```
 
 The exact ordering may change based on early measurements.
@@ -316,7 +323,7 @@ The first major project decision occurs at **M2 — Prove Specialization**.
 
 Before significant runtime implementation begins, MIInfer must demonstrate credible evidence that gfx906-specific specialization can improve important target-model operations against the strongest relevant gfx906 implementation. A complete MIInfer runtime is not required for the M2 gate.
 
-If M2 fails to show meaningful potential, the project should be reassessed rather than automatically continuing into a full runtime.
+If M2 fails to show meaningful potential, the project should be reassessed rather than automatically continuing into a full runtime. EXP-0009 passed this gate with `M2 GO`.
 
 ---
 
@@ -428,13 +435,12 @@ These do not help answer the current project question.
 
 The next Codex task should be:
 
-> Begin the M3 minimal Qwen3-8B runtime scaffold around the accepted
-> shape-specialized kernel family. Do not begin another optimization experiment
-> until the runtime can load and validate the selected model configuration.
+> Begin M4 first correct Qwen3-8B token generation using the closed M3 loader
+> and static plan. Do not add broader model support or serving infrastructure.
 
 The M0 evidence gates are complete under the documented gfx802-isolated
-configuration. The M2 gate is satisfied by EXP-0009; M3/runtime work may now
-begin, but no runtime implementation is present yet.
+configuration. The M2 gate is satisfied by EXP-0009 and M3 is closed by the
+pinned real-model acceptance. No token execution has been implemented yet.
 
 ---
 
@@ -458,16 +464,16 @@ capture hardware state
 produce reproducible benchmark output
 ```
 
-This M2 validation chain is complete. M3 success additionally requires the
-selected Qwen3-8B configuration to load, validate its tensors, and construct a
-static execution plan without broadening the project into a generic runtime.
+The M2 validation chain and M3 model-plan acceptance are complete. M4 success
+requires correct deterministic token generation without broadening the project
+into a generic runtime.
 
 ---
 
 # Last Updated
 
-2026-08-30 — EXP-0009 KEEP; M2 GO. The next milestone is M3 minimal runtime
-scaffolding around the accepted shape-specialized kernels.
+2026-08-30 — M3 CLOSED after pinned Qwen3-8B model-plan acceptance. The next
+milestone is M4 first correct token generation.
 
 Update this document whenever:
 
