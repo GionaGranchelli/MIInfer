@@ -76,6 +76,8 @@ No other GPU architecture is currently supported.
 * EXP-0005 Q4_0 × Q8_1 quantized GEMV baseline, accepted after five-run measurement
 * EXP-0006 packed-dot ISA proof, correctness validation, and five-run comparison
 * EXP-0007 zero-point-corrected Q4_0 × Q8_1 dot4 specialization, accepted after five-run measurement
+* EXP-0008 direct comparison with the pinned gfx906 llama.cpp MMVQ path; the
+  reference primitive is now measured, but M2 remains open
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -91,7 +93,7 @@ all work. The gfx802 isolation remains an operational platform prerequisite.
 ## Not implemented
 
 * production C++ runtime
-* production HIP kernel library beyond the vector-add validation kernel
+* production inference runtime and model-facing kernel integration
 * model loading
 * GGUF parsing
 * tensor packing
@@ -105,8 +107,8 @@ all work. The gfx802 isolation remains an operational platform prerequisite.
 * CLI
 * HTTP server
 
-The C++20/HIP infrastructure is present, but no model/runtime functionality has
-been implemented.
+The C++20/HIP infrastructure and isolated research kernels are present, but no
+model/runtime functionality has been implemented.
 
 ---
 
@@ -114,10 +116,9 @@ been implemented.
 
 The immediate technical objective is:
 
-> Validate the accepted zero-point-corrected Q4_0 × Q8_1 dot4 specialization
-> against the strongest external gfx906 path and isolate the remaining K/V
-> grid limitation. EXP-0005 remains the frozen scalar correctness baseline;
-> M2 is not yet passed.
+> Select the next bounded specialization experiment from the direct MMVQ
+> comparison. EXP-0005 remains the frozen scalar correctness baseline and
+> EXP-0007 remains the accepted MIInfer quantized specialization.
 
 M0 is closed under the documented gfx802-isolated configuration. The
 repository-side infrastructure, physical MI50 validation, model artifact, and
@@ -147,6 +148,7 @@ The M1/M2 kernel-laboratory deliverables currently include:
 * EXP-0006 five-run scalar-versus-packed-dot evidence
 * zero-point-corrected Q4×Q8 dot4 kernel using Q8_1 sum metadata
 * EXP-0007 five-run scalar/control/candidate evidence and size-matched memory reference
+* EXP-0008 five-run direct primitive comparison against pinned llama.cpp MMVQ
 
 The repository-side deliverables are complete. Physical MI50 execution remains
 required for the GPU-specific exit criteria.
@@ -253,10 +255,10 @@ The first benchmark families should approximately be:
 The accepted EXP-0002 baseline has been characterized in EXP-0003, and
 EXP-0004 established a K/V-specific FP16 K-split specialization with a 52%
 latency reduction on the real `M=1024, K=4096` shapes. The
-external llama.cpp kernel-share measurement remains a `RETEST` item because a
-compatible ROCm profiler is not installed, but that gap does not block
-isolated kernel experiments. It remains required before an M2 or end-to-end
-claim against the real llama.cpp decode path.
+external llama.cpp kernel-share profiling remains unavailable because a
+compatible ROCm profiler is not installed, but EXP-0008 completed the more
+important direct primitive timing for the pinned MMVQ path. The comparison does
+not yet show a material MIInfer advantage across the major Q/O and FFN regimes.
 
 Attention and MoE benchmarks should wait until representative target-model
 shapes and actual bottlenecks are frozen. EXP-0005 accepted the Q4_0 × Q8_1
@@ -288,7 +290,9 @@ EXP-0006 — gfx906 Q4_0 × Q8_1 packed-dot specialization (REJECT)
 
 EXP-0007 — zero-point-corrected Q4_0 × Q8_1 dot4 (KEEP)
 
-EXP-0008 — compose zero-point dot4 with split-K for K/V (recommended)
+EXP-0008 — direct MIInfer versus pinned gfx906 llama.cpp MMVQ (KEEP)
+
+EXP-0009 — zero-point dot4 plus split-K for K/V (recommended)
 ```
 
 The exact ordering may change based on early measurements.
@@ -299,7 +303,7 @@ The exact ordering may change based on early measurements.
 
 The first major project decision occurs at **M2 — Prove Specialization**.
 
-Before significant runtime implementation begins, MIInfer must demonstrate credible evidence that gfx906-specific specialization can improve important target-model operations.
+Before significant runtime implementation begins, MIInfer must demonstrate credible evidence that gfx906-specific specialization can improve important target-model operations against the strongest relevant gfx906 implementation. A complete MIInfer runtime is not required for the M2 gate.
 
 If M2 fails to show meaningful potential, the project should be reassessed rather than automatically continuing into a full runtime.
 
@@ -413,12 +417,11 @@ These do not help answer the current project question.
 
 The next Codex task should be:
 
-> Decide whether to proceed to M1 kernel-laboratory work or first pursue a
-> durable ROCr fix that permits the gfx802 display GPU to remain attached.
+> Test the accepted zero-point dot4 kernel with a separate split-K composition
+> for the K/V shapes, using the direct MMVQ comparison as the external control.
 
 The M0 evidence gates are complete under the documented gfx802-isolated
-configuration. Do not begin EXP-0002 or implement LLM inference until the
-project explicitly advances to M1.
+configuration. Do not begin M3/runtime work until the M2 gate is satisfied.
 
 ---
 
@@ -448,7 +451,8 @@ Only then should the project begin serious kernel specialization work.
 
 # Last Updated
 
-2026-08-29 — M0 closed with gfx802 isolated from KFD; M1 ready.
+2026-08-30 — M2 remains open after direct MMVQ comparison; EXP-0009 is the
+recommended next isolated kernel experiment.
 
 Update this document whenever:
 

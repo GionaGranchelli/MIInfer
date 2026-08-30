@@ -10,20 +10,20 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M0 — Baseline and Project Bootstrap**
+**Current phase: M2 — Prove Specialization**
 
 Immediate objective:
 
-> Establish a reproducible MI50/gfx906 development and benchmarking environment before implementing inference architecture.
+> Determine whether MIInfer's gfx906-specific kernels can materially compete
+> with the strongest reproducible gfx906 implementation before building a
+> complete inference runtime.
 
 Current work should focus on:
 
-* repository bootstrap
-* build infrastructure
-* hardware/environment capture
-* benchmark methodology
-* correctness infrastructure
-* reference baseline selection
+* accepted kernel controls
+* direct reference comparisons
+* bounded gfx906 specialization experiments
+* correctness and hardware-state evidence
 
 Do not start model serving, generic model support, speculative decoding, or multi-GPU work.
 
@@ -313,7 +313,10 @@ A tiny synthetic-kernel improvement that has no plausible model-level impact doe
 
 ### GO
 
-Continue to M3 if specialization demonstrates credible end-to-end potential.
+Continue to M3 if specialization demonstrates credible superiority against the
+strongest relevant gfx906 implementation on important target-model
+operations. An isolated, correctness-valid kernel comparison is sufficient;
+a complete MIInfer runtime is not required for the M2 gate.
 
 ### REASSESS
 
@@ -732,16 +735,14 @@ M7
 
 # Current Execution Order
 
-As of project bootstrap, work should proceed in this order:
+The project is now in M2. Work should proceed from the accepted direct
+comparison and its remaining measured gap:
 
-1. Complete M0 repository/bootstrap documentation.
-2. Establish canonical gfx906 build environment.
-3. Establish external llama.cpp/gfx906 baseline.
-4. Implement kernel benchmark harness.
-5. Create first representative matrix-vector experiment.
-6. Validate correctness.
-7. Measure baseline.
-8. Begin M2 specialization experiments.
+1. Preserve the M0 platform contract and pinned reference.
+2. Maintain the accepted FP16 and Q4/Q8 kernel controls.
+3. Compare candidate kernels with the actual pinned gfx906 reference path.
+4. Run one bounded specialization experiment at a time.
+5. Advance to M3 only after the strongest-competitor M2 gate is satisfied.
 
 Do not skip directly to M3.
 
@@ -749,15 +750,10 @@ Do not skip directly to M3.
 
 # Immediate Next Experiment
 
-The initial experiment sequence is expected to start approximately as follows:
+The current next experiment is:
 
 ```text
-EXP-0001 — gfx906 benchmark harness / baseline validation
-EXP-0002 — FP16 GEMV baseline
-EXP-0003 — quantized GEMV baseline
-EXP-0004 — gfx906-specialized quantized GEMV
-EXP-0005 — Wave64 vs logical half-wave execution
-EXP-0006 — packed weight layout experiment
+EXP-0009 — zero-point dot4 plus split-K for K/V
 ```
 
 Exact experiment ordering may change once the target model and measured shapes are frozen.

@@ -238,20 +238,18 @@ packing control.
 M2 OPEN
 ```
 
-This is a strong M2 signal, but direct MMVQ primitive timing is still
-unavailable and the candidate has not been integrated into a complete runtime.
-Those limitations prevent an M2 GO declaration.
+This is a strong M2 signal. A complete MIInfer runtime is not required for the
+M2 gate, but direct comparison with the strongest relevant gfx906 primitive was
+still missing when EXP-0007 was accepted. That comparison is now recorded in
+EXP-0008.
 
 ## 15. Next experiment
 
 Recommend exactly one:
 
 ```text
-EXP-0008 — compose zero-point dot4 with split-K for K/V
+EXP-0008 — direct MIInfer versus pinned gfx906 llama.cpp MMVQ
 ```
 
-K/V remains the only major outlier: zero-point-dot improves the scalar path but
-is still slower than the accepted EXP-0004 split-4 FP16 control. The next test
-should compose the accepted zero-point dot4 inner operation with K-split while
-keeping the composition as a separate experiment. Do not implement that
-composition in EXP-0007.
+The direct external comparison is required before choosing the next
+specialization. Do not implement that follow-up in EXP-0007.

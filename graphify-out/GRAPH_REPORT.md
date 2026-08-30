@@ -1,16 +1,16 @@
 # Graph Report - mi50  (2026-08-30)
 
 ## Corpus Check
-- 69 files · ~70,712 words
+- 70 files · ~72,213 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1225 nodes · 1404 edges · 124 communities (115 shown, 9 thin omitted)
+- 1240 nodes · 1418 edges · 128 communities (119 shown, 9 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 4 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `4842c9dd`
+- Built from commit: `54807046`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -133,10 +133,14 @@
 - 35. Historical failed execution gate — superseded by Section 37
 - DeviceInfo
 - 10. nick413-bit/gfx906-fa-vllm
+- EXP-0008 — Direct MIInfer vs gfx906 llama.cpp MMVQ
 - GemvKernelResources
 - hip_check.hpp
 - Q8_1Block
+- External gfx906 Reference Baseline
 - GemvShape
+- Current Project Status
+- Current Scope
 
 ## God Nodes (most connected - your core abstractions)
 1. `MIInfer` - 19 edges
@@ -165,7 +169,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (124 total, 9 thin omitted)
+## Communities (128 total, 9 thin omitted)
 
 ### Community 0 - "hardware.md"
 Cohesion: 0.04
@@ -192,8 +196,8 @@ Cohesion: 0.05
 Nodes (38): Architecture direction, Benchmark philosophy, Building, Contributing, Core hypothesis, Correctness before performance, Design principles, Development roadmap (+30 more)
 
 ### Community 6 - "current-state.md"
-Cohesion: 0.06
-Nodes (34): Completed, Completed in Task 3, Current Benchmark Priority, Current Build Direction, Current Correctness Policy, Current Dependency Policy, Current Experiment Queue, Current Hardware Observation Requirements (+26 more)
+Cohesion: 0.10
+Nodes (19): Current Benchmark Priority, Current Build Direction, Current Correctness Policy, Current Dependency Policy, Current Experiment Queue, Current Hardware Observation Requirements, Current Hardware Target, Current Performance Policy (+11 more)
 
 ### Community 7 - "AGENTS.md"
 Cohesion: 0.07
@@ -603,6 +607,10 @@ Nodes (33): ostream, string, uint32_t, vector, escape(), main(), median(), nonne
 Cohesion: 0.67
 Nodes (3): 10. nick413-bit/gfx906-fa-vllm, MIInfer implication, Role
 
+### Community 120 - "EXP-0008 — Direct MIInfer vs gfx906 llama.cpp MMVQ"
+Cohesion: 0.13
+Nodes (14): 10. Reference ISA and resources, 11. Architectural differences relevant to K/V, 12. M2 decision, 13. Next experiment, 1. Question, 2. Hypothesis and motivation, 3. Reference path, 4. Semantic and timing contract (+6 more)
+
 ### Community 121 - "GemvKernelResources"
 Cohesion: 0.33
 Nodes (6): GemvKernelResources, local_bytes, max_threads_per_block, registers, shared_bytes, size_t
@@ -615,12 +623,24 @@ Nodes (7): hipError_t, hip_check(), hip_check_failed(), string, main(), run_shap
 Cohesion: 0.14
 Nodes (19): __half, launch_selected_gemv(), __half, Q4_0Block, d, qs, Q8_1Block, d (+11 more)
 
+### Community 124 - "External gfx906 Reference Baseline"
+Cohesion: 0.22
+Nodes (8): Baseline status, Checkout, External gfx906 Reference Baseline, Initial baseline, MI50 build starting point, Option validation on the available host, Pin, Toolchain preflight record
+
 ### Community 125 - "GemvShape"
 Cohesion: 0.18
 Nodes (13): allocate_shape(), GemvShape, id, k, m, projection, RocblasGemmHandle, opaque (+5 more)
 
+### Community 126 - "Current Project Status"
+Cohesion: 0.50
+Nodes (4): Completed, Completed in Task 3, Current Project Status, Not implemented
+
+### Community 127 - "Current Scope"
+Cohesion: 0.67
+Nodes (3): Current Scope, In scope now, Not in scope now
+
 ## Knowledge Gaps
-- **855 isolated node(s):** `experiment`, `shape`, `implementation`, `cache_regime`, `custom_label` (+850 more)
+- **868 isolated node(s):** `experiment`, `shape`, `implementation`, `cache_regime`, `custom_label` (+863 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **9 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -632,7 +652,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **Why does `7. Neroued/ninfer` connect `7. Neroued/ninfer` to `references.md`?**
   _High betweenness centrality (0.020) - this node is a cross-community bridge._
 - **What connects `experiment`, `shape`, `implementation` to the rest of the system?**
-  _855 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _868 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `hardware.md` be split into smaller, more focused modules?**
   _Cohesion score 0.0425531914893617 - nodes in this community are weakly interconnected._
 - **Should `architecture.md` be split into smaller, more focused modules?**
