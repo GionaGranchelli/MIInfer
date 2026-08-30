@@ -60,20 +60,6 @@ std::uint16_t float_to_half_bits_rn(float value) noexcept {
         | (static_cast<std::uint32_t>(half_exponent) << 10) | rounded_mantissa);
 }
 
-std::uint16_t float_to_half_bits_trunc(float value) noexcept {
-    std::uint32_t bits = 0;
-    std::memcpy(&bits, &value, sizeof(bits));
-    const std::uint32_t sign = (bits >> 16) & 0x8000U;
-    const std::uint32_t exponent = (bits >> 23) & 0xffU;
-    const std::uint32_t mantissa = bits & 0x7fffffU;
-    if (exponent == 0xffU) return static_cast<std::uint16_t>(sign | 0x7c00U | (mantissa >> 13));
-    const int half_exponent = static_cast<int>(exponent) - 127 + 15;
-    if (half_exponent <= 0) return static_cast<std::uint16_t>(sign);
-    if (half_exponent >= 31) return static_cast<std::uint16_t>(sign | 0x7c00U);
-    return static_cast<std::uint16_t>(sign
-        | (static_cast<std::uint32_t>(half_exponent) << 10) | (mantissa >> 13));
-}
-
 std::span<const float> f32_tensor(const Qwen3TensorView& tensor, std::size_t elements) {
     if (tensor.type() != GgufTensorType::f32 || tensor.bytes() != elements * sizeof(float)) {
         throw std::runtime_error("unexpected F32 tensor size: " + tensor.name());
@@ -103,8 +89,7 @@ void rms_normalize_only(
     for (std::size_t i = 0; i < input.size(); ++i) output[i] = input[i] * inverse_rms;
 }
 
-std::vector<HostQ8Block> quantize_q8_1_float(
-    std::span<const float> input, bool reference_fp16_rounding) {
+std::vector<HostQ8Block> quantize_q8_1_float(std::span<const float> input) {
     if (input.empty() || input.size() % kQBlockSize != 0) {
         throw std::invalid_argument("Q8_1 input length must be a non-zero multiple of 32");
     }
@@ -127,14 +112,8 @@ std::vector<HostQ8Block> quantize_q8_1_float(
         // The canonical Q8_1 metadata is stored as FP16.  Reuse the public
         // host conversion only after quantizing in FP32, matching the model
         // input contract without pulling HIP headers into host builds.
-        // The normal host forward path retains its historical truncating
-        // conversion for comparison continuity.  Teacher-forced replay sets
-        // this flag to reproduce GGML's round-to-nearest FP16 scale contract.
-        destination.d_bits = reference_fp16_rounding ? float_to_half_bits_rn(scale)
-                                                     : float_to_half_bits_trunc(scale);
-        destination.s_bits = reference_fp16_rounding
-            ? float_to_half_bits_rn(static_cast<float>(sum) * scale)
-            : float_to_half_bits_trunc(static_cast<float>(sum) * scale);
+        destination.d_bits = float_to_half_bits_rn(scale);
+        destination.s_bits = float_to_half_bits_rn(static_cast<float>(sum) * scale);
     }
     return output;
 }
@@ -143,14 +122,13 @@ std::vector<float> q4_q8_matvec(
     const Qwen3TensorView& tensor,
     std::span<const float> input,
     std::size_t rows,
-    std::size_t columns,
-    bool reference_fp16_rounding = false) {
+    std::size_t columns) {
     if (tensor.type() != GgufTensorType::q4_0 || columns % kQBlockSize != 0
         || input.size() != columns
         || tensor.bytes() != rows * (columns / kQBlockSize) * kQ4BlockBytes) {
         throw std::runtime_error("invalid Q4_0 projection contract: " + tensor.name());
     }
-    const auto q8 = quantize_q8_1_float(input, reference_fp16_rounding);
+    const auto q8 = quantize_q8_1_float(input);
     const auto* weights = reinterpret_cast<const Q4_0HostBlock*>(tensor.data());
     const std::size_t blocks_per_row = columns / kQBlockSize;
     std::vector<float> output(rows, 0.0F);
@@ -251,8 +229,7 @@ Qwen3LayerTrace qwen3_layer_host_impl(
     std::span<const float> input,
     std::size_t position,
     Qwen3Layer0KvCache& cache,
-    bool use_exact_reference_projection,
-    bool reference_fp16_rounding = false) {
+    bool use_exact_reference_projection) {
     const auto& config = model.config();
     if (model.layers().empty() || layer_index >= model.layers().size()) {
         throw std::runtime_error("invalid Qwen3 layer index");
@@ -272,12 +249,12 @@ Qwen3LayerTrace qwen3_layer_host_impl(
     Qwen3LayerTrace trace;
     trace.embedding.assign(input.begin(), input.end());
     const auto& layer = model.layers()[layer_index];
-    const auto project = [use_exact_reference_projection, reference_fp16_rounding](
+    const auto project = [use_exact_reference_projection](
         const Qwen3TensorView& tensor, std::span<const float> values,
         std::size_t rows, std::size_t columns) {
         return use_exact_reference_projection
             ? q4_f32_matvec(tensor, values, rows, columns)
-            : q4_q8_matvec(tensor, values, rows, columns, reference_fp16_rounding);
+            : q4_q8_matvec(tensor, values, rows, columns);
     };
 
     const auto attn_norm_weight = f32_tensor(layer.attention_norm, hidden);
@@ -477,7 +454,7 @@ Qwen3LayerTrace execute_qwen3_layer_host_teacher_forced(
         throw std::invalid_argument("invalid teacher-forced host layer input/index");
     }
     Qwen3Layer0KvCache cache(config.kv_heads, config.head_dim, 1);
-    return qwen3_layer_host_impl(model, layer_index, input, position, cache, false, true);
+    return qwen3_layer_host_impl(model, layer_index, input, position, cache, false);
 }
 
 }  // namespace miinfer

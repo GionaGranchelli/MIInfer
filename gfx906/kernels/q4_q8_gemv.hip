@@ -50,6 +50,44 @@ __global__ void q8_1_quantize_kernel(
     output[block].qs[index] = static_cast<std::int8_t>(quantized[index]);
 }
 
+__global__ void q8_1_quantize_f32_kernel(
+    const float* input,
+    Q8_1Block* output,
+    int elements) {
+    const int block = static_cast<int>(blockIdx.x);
+    const int index = static_cast<int>(threadIdx.x);
+    if (index >= kQ8_1BlockSize || block * kQ8_1BlockSize + index >= elements) return;
+
+    __shared__ float absolute_values[kQ8_1BlockSize];
+    __shared__ int quantized[kQ8_1BlockSize];
+    __shared__ float scale;
+    absolute_values[index] = fabsf(input[block * kQ8_1BlockSize + index]);
+    __syncthreads();
+    for (int stride = kQ8_1BlockSize / 2; stride > 0; stride /= 2) {
+        if (index < stride) {
+            absolute_values[index] = fmaxf(absolute_values[index], absolute_values[index + stride]);
+        }
+        __syncthreads();
+    }
+    if (index == 0) {
+        scale = absolute_values[0] / 127.0F;
+        output[block].d = __float2half_rn(scale);
+    }
+    __syncthreads();
+    const float inverse_scale = scale != 0.0F ? 1.0F / scale : 0.0F;
+    quantized[index] = max(-127, min(127, static_cast<int>(roundf(
+        input[block * kQ8_1BlockSize + index] * inverse_scale))));
+    __syncthreads();
+    if (index == 0) {
+        int sum = 0;
+        for (int quant_index = 0; quant_index < kQ8_1BlockSize; ++quant_index) {
+            sum += quantized[quant_index];
+        }
+        output[block].s = __float2half_rn(static_cast<float>(sum) * scale);
+    }
+    output[block].qs[index] = static_cast<std::int8_t>(quantized[index]);
+}
+
 __global__ void q4_q8_gemv_kernel(
     const Q4_0Block* weights,
     const Q8_1Block* input,
@@ -105,6 +143,27 @@ void launch_q8_1_quantize(
     }
     hipLaunchKernelGGL(
         q8_1_quantize_kernel,
+        dim3(static_cast<unsigned int>(elements / kQ8_1BlockSize)),
+        dim3(kQ8_1BlockSize),
+        0,
+        stream,
+        input,
+        output,
+        elements);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_q8_1_quantize_f32(
+    const float* input,
+    Q8_1Block* output,
+    int elements,
+    hipStream_t stream) {
+    if (input == nullptr || output == nullptr || elements <= 0
+        || elements % kQ8_1BlockSize != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(
+        q8_1_quantize_f32_kernel,
         dim3(static_cast<unsigned int>(elements / kQ8_1BlockSize)),
         dim3(kQ8_1BlockSize),
         0,

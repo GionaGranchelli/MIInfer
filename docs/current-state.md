@@ -459,10 +459,10 @@ These do not help answer the current project question.
 
 The next Codex task is:
 
-> M4-B2 — localize full-depth numerical drift before changing tolerances.
-> Use teacher-forced layer replay, compare the MI50 path with the independent
-> offloaded reference where available, and keep the physical acceptance command
-> non-vacuous. Do not start token generation.
+> M4-B3 — isolate layer-6 FFN precision amplification before changing
+> tolerances. Compare projection precision boundaries, inspect Q8 blocks, and
+> use hybrid FFN probes to identify the first local error. Do not start token
+> generation.
 
 The M0 evidence gates are complete under the documented gfx802-isolated
 configuration. The M2 gate is satisfied by EXP-0009 and M3 is closed by the

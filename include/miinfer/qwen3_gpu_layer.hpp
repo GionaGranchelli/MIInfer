@@ -10,6 +10,21 @@
 
 namespace miinfer {
 
+enum class Qwen3ProjectionPrecision {
+    f16_input_q8_f16_output,
+    f32_input_q8_f16_output,
+    f16_input_q8_f32_output,
+    f32_input_q8_f32_output,
+};
+
+struct Qwen3FfnProbeTrace {
+    std::vector<float> gate;
+    std::vector<float> up;
+    std::vector<float> swiglu;
+    std::vector<float> ffn_output;
+    std::vector<float> layer_output;
+};
+
 // Layer-0 GPU KV-cache contract.  Device storage is laid out as
 // [kv_head][position][head_dim], with only [0, length) positions valid.
 // Keys are appended after RoPE; values are appended before any attention
@@ -74,5 +89,20 @@ Qwen3LayerTrace execute_qwen3_layer_gpu_teacher_forced(
     std::size_t layer_index,
     std::span<const float> input,
     std::size_t position = 0);
+
+// Correctness-only layer-6 FFN probes. Empty override spans select the real
+// GPU operation; non-empty spans inject a host reference tensor at that stage.
+// This isolates projection, nonlinear, down-projection, and residual errors
+// without changing the production executor.
+Qwen3FfnProbeTrace execute_qwen3_ffn_gpu_probe(
+    const Qwen3GpuPlan& plan,
+    std::size_t layer_index,
+    std::span<const float> ffn_input,
+    std::span<const float> ffn_norm,
+    std::span<const float> gate_override = {},
+    std::span<const float> up_override = {},
+    std::span<const float> swiglu_override = {},
+    std::span<const float> ffn_output_override = {},
+    Qwen3ProjectionPrecision precision = Qwen3ProjectionPrecision::f16_input_q8_f16_output);
 
 }  // namespace miinfer

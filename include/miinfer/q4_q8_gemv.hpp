@@ -48,6 +48,14 @@ void launch_q8_1_quantize(
     int elements,
     hipStream_t stream = nullptr);
 
+// Correctness-only diagnostic variant: quantize the supplied FP32 values
+// directly, without the production FP32-to-FP16 input boundary.
+void launch_q8_1_quantize_f32(
+    const float* input,
+    Q8_1Block* output,
+    int elements,
+    hipStream_t stream = nullptr);
+
 void launch_q4_q8_gemv(
     const Q4_0Block* weights,
     const Q8_1Block* input,

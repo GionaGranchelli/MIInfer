@@ -32,4 +32,31 @@ void launch_q4_q8_gemv_zero_point_dot_wave64(
     int columns,
     hipStream_t stream = nullptr);
 
+// Correctness-only diagnostic outputs.  These preserve the same arithmetic
+// and geometry while exposing the GEMV result as FP32, so output-rounding
+// effects can be separated from input quantization effects.
+void launch_q4_q8_gemv_zero_point_dot_f32(
+    const Q4_0Block* weights,
+    const Q8_1Block* input,
+    float* output,
+    int rows,
+    int columns,
+    hipStream_t stream = nullptr);
+
+void launch_q4_q8_gemv_zero_point_dot_128_f32(
+    const Q4_0Block* weights,
+    const Q8_1Block* input,
+    float* output,
+    int rows,
+    int columns,
+    hipStream_t stream = nullptr);
+
+void launch_q4_q8_gemv_zero_point_dot_wave64_f32(
+    const Q4_0Block* weights,
+    const Q8_1Block* input,
+    float* output,
+    int rows,
+    int columns,
+    hipStream_t stream = nullptr);
+
 }  // namespace miinfer

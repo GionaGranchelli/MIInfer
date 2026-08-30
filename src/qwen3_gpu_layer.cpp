@@ -88,6 +88,59 @@ void launch_projection(
     launch_qwen3_f16_to_f32(output_half, output, static_cast<std::uint32_t>(rows));
 }
 
+void launch_projection_probe(
+    const Qwen3GpuPlan& plan,
+    const Qwen3TensorView& weight,
+    const float* input,
+    std::uint32_t input_elements,
+    float* output,
+    int rows,
+    int columns,
+    __half* input_half,
+    Q8_1Block* input_q8,
+    __half* output_half,
+    Qwen3ProjectionPrecision precision,
+    const char* projection) {
+    const bool f16_input = precision == Qwen3ProjectionPrecision::f16_input_q8_f16_output
+        || precision == Qwen3ProjectionPrecision::f16_input_q8_f32_output;
+    const bool f16_output = precision == Qwen3ProjectionPrecision::f16_input_q8_f16_output
+        || precision == Qwen3ProjectionPrecision::f32_input_q8_f16_output;
+    if (f16_input) {
+        launch_qwen3_f32_to_f16(input, input_half, input_elements);
+        launch_q8_1_quantize(input_half, input_q8, static_cast<int>(input_elements));
+    } else {
+        launch_q8_1_quantize_f32(input, input_q8, static_cast<int>(input_elements));
+    }
+    const auto* device_weight = static_cast<const Q4_0Block*>(plan.device_tensor_data(weight.name()));
+    const auto kernel = plan.kernel_for(projection);
+    if (f16_output) {
+        switch (kernel) {
+        case Q4GemvKernel::zero_point_128:
+            launch_q4_q8_gemv_zero_point_dot_128(device_weight, input_q8, output_half, rows, columns);
+            break;
+        case Q4GemvKernel::zero_point_128_wave64:
+            launch_q4_q8_gemv_zero_point_dot_wave64(device_weight, input_q8, output_half, rows, columns);
+            break;
+        case Q4GemvKernel::zero_point_256:
+            launch_q4_q8_gemv_zero_point_dot(device_weight, input_q8, output_half, rows, columns);
+            break;
+        }
+        launch_qwen3_f16_to_f32(output_half, output, static_cast<std::uint32_t>(rows));
+    } else {
+        switch (kernel) {
+        case Q4GemvKernel::zero_point_128:
+            launch_q4_q8_gemv_zero_point_dot_128_f32(device_weight, input_q8, output, rows, columns);
+            break;
+        case Q4GemvKernel::zero_point_128_wave64:
+            launch_q4_q8_gemv_zero_point_dot_wave64_f32(device_weight, input_q8, output, rows, columns);
+            break;
+        case Q4GemvKernel::zero_point_256:
+            launch_q4_q8_gemv_zero_point_dot_f32(device_weight, input_q8, output, rows, columns);
+            break;
+        }
+    }
+}
+
 std::vector<float> capture(const float* device, std::size_t elements) {
     std::vector<float> host(elements);
     copy_to_host(device, host);
@@ -425,6 +478,83 @@ Qwen3LayerTrace execute_qwen3_layer_gpu_teacher_forced(
                                 input.size() * sizeof(float), hipMemcpyHostToDevice));
     Qwen3Layer0GpuKvCache cache(config.kv_heads, config.head_dim, 1);
     return qwen3_layer_gpu_impl(plan, layer_index, input_device.data(), position, cache, nullptr);
+}
+
+Qwen3FfnProbeTrace execute_qwen3_ffn_gpu_probe(
+    const Qwen3GpuPlan& plan,
+    std::size_t layer_index,
+    std::span<const float> ffn_input,
+    std::span<const float> ffn_norm,
+    std::span<const float> gate_override,
+    std::span<const float> up_override,
+    std::span<const float> swiglu_override,
+    std::span<const float> ffn_output_override,
+    Qwen3ProjectionPrecision precision) {
+    const auto& model = plan.model();
+    const auto& config = model.config();
+    const std::size_t hidden = config.hidden_size;
+    const std::size_t intermediate = config.intermediate_size;
+    if (layer_index >= model.layers().size() || ffn_input.size() != hidden
+        || ffn_norm.size() != hidden
+        || (!gate_override.empty() && gate_override.size() != intermediate)
+        || (!up_override.empty() && up_override.size() != intermediate)
+        || (!swiglu_override.empty() && swiglu_override.size() != intermediate)
+        || (!ffn_output_override.empty() && ffn_output_override.size() != hidden)) {
+        throw std::invalid_argument("invalid Qwen3 FFN probe dimensions");
+    }
+
+    DeviceBuffer<float> input_device(hidden), norm_device(hidden);
+    DeviceBuffer<float> gate(intermediate), up(intermediate), swiglu(intermediate);
+    DeviceBuffer<float> ffn_output(hidden), layer_output(hidden);
+    DeviceBytes input_half(12288U * sizeof(__half));
+    DeviceBytes output_half(12288U * sizeof(__half));
+    DeviceBytes input_q8((12288U / 32U) * sizeof(Q8_1Block));
+    MIINFER_HIP_CHECK(hipMemcpy(input_device.data(), ffn_input.data(), hidden * sizeof(float),
+                                hipMemcpyHostToDevice));
+    MIINFER_HIP_CHECK(hipMemcpy(norm_device.data(), ffn_norm.data(), hidden * sizeof(float),
+                                hipMemcpyHostToDevice));
+    auto* half_input = static_cast<__half*>(input_half.data());
+    auto* half_output = static_cast<__half*>(output_half.data());
+    auto* q8_input = static_cast<Q8_1Block*>(input_q8.data());
+    const auto& layer = model.layers()[layer_index];
+    if (gate_override.empty()) {
+        launch_projection_probe(plan, layer.gate, norm_device.data(), config.hidden_size,
+                                gate.data(), config.intermediate_size, config.hidden_size,
+                                half_input, q8_input, half_output, precision, "gate");
+    } else {
+        MIINFER_HIP_CHECK(hipMemcpy(gate.data(), gate_override.data(), intermediate * sizeof(float),
+                                    hipMemcpyHostToDevice));
+    }
+    if (up_override.empty()) {
+        launch_projection_probe(plan, layer.up, norm_device.data(), config.hidden_size,
+                                up.data(), config.intermediate_size, config.hidden_size,
+                                half_input, q8_input, half_output, precision, "up");
+    } else {
+        MIINFER_HIP_CHECK(hipMemcpy(up.data(), up_override.data(), intermediate * sizeof(float),
+                                    hipMemcpyHostToDevice));
+    }
+    if (swiglu_override.empty()) {
+        launch_qwen3_silu_mul(gate.data(), up.data(), swiglu.data(), config.intermediate_size);
+    } else {
+        MIINFER_HIP_CHECK(hipMemcpy(swiglu.data(), swiglu_override.data(), intermediate * sizeof(float),
+                                    hipMemcpyHostToDevice));
+    }
+    if (ffn_output_override.empty()) {
+        launch_projection_probe(plan, layer.down, swiglu.data(), config.intermediate_size,
+                                ffn_output.data(), config.hidden_size, config.intermediate_size,
+                                half_input, q8_input, half_output, precision, "down");
+    } else {
+        MIINFER_HIP_CHECK(hipMemcpy(ffn_output.data(), ffn_output_override.data(), hidden * sizeof(float),
+                                    hipMemcpyHostToDevice));
+    }
+    launch_qwen3_add(ffn_output.data(), input_device.data(), layer_output.data(), config.hidden_size);
+    Qwen3FfnProbeTrace trace;
+    trace.gate = capture(gate.data(), intermediate);
+    trace.up = capture(up.data(), intermediate);
+    trace.swiglu = capture(swiglu.data(), intermediate);
+    trace.ffn_output = capture(ffn_output.data(), hidden);
+    trace.layer_output = capture(layer_output.data(), hidden);
+    return trace;
 }
 
 }  // namespace miinfer

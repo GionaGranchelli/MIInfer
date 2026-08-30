@@ -39,10 +39,19 @@ __device__ __forceinline__ float zero_point_block_dot(
               - 8.0F * __half2float(activation.s));
 }
 
+__device__ __forceinline__ void store_result(__half* output, int index, float value) {
+    output[index] = __float2half_rn(value);
+}
+
+__device__ __forceinline__ void store_result(float* output, int index, float value) {
+    output[index] = value;
+}
+
+template <typename Output>
 __global__ void q4_q8_gemv_zero_point_dot_kernel(
     const Q4_0Block* weights,
     const Q8_1Block* input,
-    __half* output,
+    Output* output,
     int rows,
     int columns) {
     const int row = static_cast<int>(blockIdx.x);
@@ -70,13 +79,13 @@ __global__ void q4_q8_gemv_zero_point_dot_kernel(
         __syncthreads();
     }
     if (threadIdx.x == 0) {
-        output[row] = __float2half_rn(partials[0]);
+        store_result(output, row, partials[0]);
     }
 }
 
-template <unsigned int kThreads>
+template <unsigned int kThreads, typename Output>
 __global__ void q4_q8_gemv_zero_point_dot_128_kernel(
-    const Q4_0Block* weights, const Q8_1Block* input, __half* output,
+    const Q4_0Block* weights, const Q8_1Block* input, Output* output,
     int rows, int columns) {
     const int row = static_cast<int>(blockIdx.x);
     if (row >= rows) return;
@@ -94,11 +103,12 @@ __global__ void q4_q8_gemv_zero_point_dot_128_kernel(
         if (threadIdx.x < stride) partials[threadIdx.x] += partials[threadIdx.x + stride];
         __syncthreads();
     }
-    if (threadIdx.x == 0) output[row] = __float2half_rn(partials[0]);
+    if (threadIdx.x == 0) store_result(output, row, partials[0]);
 }
 
+template <typename Output>
 __global__ void q4_q8_gemv_zero_point_dot_wave64_kernel(
-    const Q4_0Block* weights, const Q8_1Block* input, __half* output,
+    const Q4_0Block* weights, const Q8_1Block* input, Output* output,
     int rows, int columns) {
     const int row = static_cast<int>(blockIdx.x);
     if (row >= rows) return;
@@ -115,7 +125,7 @@ __global__ void q4_q8_gemv_zero_point_dot_wave64_kernel(
     }
     if ((threadIdx.x & 63) == 0) wave_partials[threadIdx.x / 64] = sum;
     __syncthreads();
-    if (threadIdx.x == 0) output[row] = __float2half_rn(wave_partials[0] + wave_partials[1]);
+    if (threadIdx.x == 0) store_result(output, row, wave_partials[0] + wave_partials[1]);
 }
 
 }  // namespace
@@ -131,7 +141,7 @@ void launch_q4_q8_gemv_zero_point_dot(
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     hipLaunchKernelGGL(
-        q4_q8_gemv_zero_point_dot_kernel,
+        q4_q8_gemv_zero_point_dot_kernel<__half>,
         dim3(static_cast<unsigned int>(rows)),
         dim3(kThreadsPerBlock),
         kThreadsPerBlock * sizeof(float),
@@ -150,7 +160,7 @@ void launch_q4_q8_gemv_zero_point_dot_128(
     if (rows <= 0 || columns <= 0 || columns % kQ4_0BlockSize != 0) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
-    hipLaunchKernelGGL(q4_q8_gemv_zero_point_dot_128_kernel<128>, dim3(rows), dim3(128),
+    hipLaunchKernelGGL((q4_q8_gemv_zero_point_dot_128_kernel<128, __half>), dim3(rows), dim3(128),
                        128 * sizeof(float), stream, weights, input, output, rows, columns);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
@@ -161,7 +171,44 @@ void launch_q4_q8_gemv_zero_point_dot_wave64(
     if (rows <= 0 || columns <= 0 || columns % kQ4_0BlockSize != 0) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
-    hipLaunchKernelGGL(q4_q8_gemv_zero_point_dot_wave64_kernel, dim3(rows), dim3(128), 0,
+    hipLaunchKernelGGL(q4_q8_gemv_zero_point_dot_wave64_kernel<__half>, dim3(rows), dim3(128), 0,
+                       stream, weights, input, output, rows, columns);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_q4_q8_gemv_zero_point_dot_f32(
+    const Q4_0Block* weights, const Q8_1Block* input, float* output,
+    int rows, int columns, hipStream_t stream) {
+    if (weights == nullptr || input == nullptr || output == nullptr
+        || rows <= 0 || columns <= 0 || columns % kQ4_0BlockSize != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(q4_q8_gemv_zero_point_dot_kernel<float>, dim3(rows), dim3(kThreadsPerBlock),
+                       kThreadsPerBlock * sizeof(float), stream, weights, input, output,
+                       rows, columns);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_q4_q8_gemv_zero_point_dot_128_f32(
+    const Q4_0Block* weights, const Q8_1Block* input, float* output,
+    int rows, int columns, hipStream_t stream) {
+    if (weights == nullptr || input == nullptr || output == nullptr
+        || rows <= 0 || columns <= 0 || columns % kQ4_0BlockSize != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL((q4_q8_gemv_zero_point_dot_128_kernel<128, float>), dim3(rows), dim3(128),
+                       128 * sizeof(float), stream, weights, input, output, rows, columns);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_q4_q8_gemv_zero_point_dot_wave64_f32(
+    const Q4_0Block* weights, const Q8_1Block* input, float* output,
+    int rows, int columns, hipStream_t stream) {
+    if (weights == nullptr || input == nullptr || output == nullptr
+        || rows <= 0 || columns <= 0 || columns % kQ4_0BlockSize != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(q4_q8_gemv_zero_point_dot_wave64_kernel<float>, dim3(rows), dim3(128), 0,
                        stream, weights, input, output, rows, columns);
     MIINFER_HIP_CHECK(hipGetLastError());
 }

@@ -1,4 +1,9 @@
 #include "miinfer/qwen3_gpu_layer.hpp"
+#include "miinfer/hip_check.hpp"
+#include "miinfer/q4_q8_gemv.hpp"
+#include "miinfer/qwen3_gpu_primitives.hpp"
+
+#include <hip/hip_runtime.h>
 
 #include <algorithm>
 #include <array>
@@ -115,6 +120,108 @@ void report_gpu_host_trace(const miinfer::Qwen3LayerTrace& gpu,
     }
 }
 
+void report_ffn_result(const char* label,
+                      const miinfer::Qwen3FfnProbeTrace& actual,
+                      const miinfer::Qwen3LayerTrace& expected) {
+    const auto gate = metrics(actual.gate, expected.gate);
+    const auto up = metrics(actual.up, expected.up);
+    const auto swiglu = metrics(actual.swiglu, expected.swiglu);
+    const auto down = metrics(actual.ffn_output, expected.ffn_output);
+    const auto output = metrics(actual.layer_output, expected.layer_output);
+    std::cout << "ffn-probe " << label
+              << ": gate=" << gate.max_abs
+              << " up=" << up.max_abs
+              << " swiglu=" << swiglu.max_abs
+              << " down=" << down.max_abs
+              << " layer=" << output.max_abs << '\n';
+}
+
+void report_q8_input_difference(const std::vector<float>& input);
+
+void report_hybrid_ffn_probes(const miinfer::Qwen3GpuPlan& plan,
+                              std::size_t layer,
+                              const miinfer::Qwen3LayerTrace& reference) {
+    using Precision = miinfer::Qwen3ProjectionPrecision;
+    const std::array<std::pair<const char*, Precision>, 4> variants{
+        std::pair{"f16-q8-f16", Precision::f16_input_q8_f16_output},
+        std::pair{"f32-q8-f16", Precision::f32_input_q8_f16_output},
+        std::pair{"f16-q8-f32", Precision::f16_input_q8_f32_output},
+        std::pair{"f32-q8-f32", Precision::f32_input_q8_f32_output},
+    };
+    std::cout << "layer-6 FFN projection precision probes (GPU vs host reference):\n";
+    report_q8_input_difference(reference.ffn_norm);
+    for (const auto& variant : variants) {
+        const auto result = miinfer::execute_qwen3_ffn_gpu_probe(
+            plan, layer, reference.ffn_input, reference.ffn_norm,
+            {}, {}, {}, {}, variant.second);
+        report_ffn_result(variant.first, result, reference);
+    }
+
+    std::cout << "layer-6 FFN hybrid probes (host tensor injection):\n";
+    const auto gate_up = miinfer::execute_qwen3_ffn_gpu_probe(
+        plan, layer, reference.ffn_input, reference.ffn_norm,
+        reference.gate, reference.up);
+    report_ffn_result("reference-gate-up -> GPU-SwiGLU", gate_up, reference);
+    const auto swiglu = miinfer::execute_qwen3_ffn_gpu_probe(
+        plan, layer, reference.ffn_input, reference.ffn_norm,
+        {}, {}, reference.swiglu);
+    report_ffn_result("reference-SwiGLU -> GPU-down", swiglu, reference);
+    const auto down = miinfer::execute_qwen3_ffn_gpu_probe(
+        plan, layer, reference.ffn_input, reference.ffn_norm,
+        {}, {}, {}, reference.ffn_output);
+    report_ffn_result("reference-down -> GPU-residual", down, reference);
+}
+
+void report_q8_input_difference(const std::vector<float>& input) {
+    const auto elements = input.size();
+    const auto blocks = elements / miinfer::kQ8_1BlockSize;
+    float* device_f32 = nullptr;
+    __half* device_f16 = nullptr;
+    miinfer::Q8_1Block* device_from_f16 = nullptr;
+    miinfer::Q8_1Block* device_from_f32 = nullptr;
+    MIINFER_HIP_CHECK(hipMalloc(&device_f32, elements * sizeof(float)));
+    MIINFER_HIP_CHECK(hipMalloc(&device_f16, elements * sizeof(__half)));
+    MIINFER_HIP_CHECK(hipMalloc(&device_from_f16, blocks * sizeof(miinfer::Q8_1Block)));
+    MIINFER_HIP_CHECK(hipMalloc(&device_from_f32, blocks * sizeof(miinfer::Q8_1Block)));
+    MIINFER_HIP_CHECK(hipMemcpy(device_f32, input.data(), elements * sizeof(float),
+                                hipMemcpyHostToDevice));
+    miinfer::launch_qwen3_f32_to_f16(device_f32, device_f16,
+                                     static_cast<std::uint32_t>(elements));
+    miinfer::launch_q8_1_quantize(device_f16, device_from_f16,
+                                  static_cast<int>(elements));
+    miinfer::launch_q8_1_quantize_f32(device_f32, device_from_f32,
+                                      static_cast<int>(elements));
+    std::vector<miinfer::Q8_1Block> from_f16(blocks), from_f32(blocks);
+    MIINFER_HIP_CHECK(hipMemcpy(from_f16.data(), device_from_f16,
+                                blocks * sizeof(miinfer::Q8_1Block), hipMemcpyDeviceToHost));
+    MIINFER_HIP_CHECK(hipMemcpy(from_f32.data(), device_from_f32,
+                                blocks * sizeof(miinfer::Q8_1Block), hipMemcpyDeviceToHost));
+    std::size_t differing_blocks = 0;
+    std::size_t differing_qs = 0;
+    float max_scale_delta = 0.0F;
+    for (std::size_t block = 0; block < blocks; ++block) {
+        bool differs = __half2float(from_f16[block].d) != __half2float(from_f32[block].d)
+            || __half2float(from_f16[block].s) != __half2float(from_f32[block].s);
+        max_scale_delta = std::max(max_scale_delta,
+            std::fabs(__half2float(from_f16[block].d) - __half2float(from_f32[block].d)));
+        for (int index = 0; index < miinfer::kQ8_1BlockSize; ++index) {
+            if (from_f16[block].qs[index] != from_f32[block].qs[index]) {
+                ++differing_qs;
+                differs = true;
+            }
+        }
+        if (differs) ++differing_blocks;
+    }
+    std::cout << "layer-6 Q8 blocks (F16-input vs F32-input): differing_blocks="
+              << differing_blocks << '/' << blocks
+              << " differing_qs=" << differing_qs
+              << " max_d_delta=" << max_scale_delta << '\n';
+    MIINFER_HIP_CHECK(hipFree(device_f32));
+    MIINFER_HIP_CHECK(hipFree(device_f16));
+    MIINFER_HIP_CHECK(hipFree(device_from_f16));
+    MIINFER_HIP_CHECK(hipFree(device_from_f32));
+}
+
 std::size_t argmax(const std::vector<float>& values) {
     return static_cast<std::size_t>(std::distance(values.begin(),
         std::max_element(values.begin(), values.end())));
@@ -174,6 +281,7 @@ int run_teacher_forced(const std::filesystem::path& model_path,
         const auto host_trace = miinfer::execute_qwen3_layer_host_teacher_forced(
             model, layer, input);
         report_gpu_host_trace(gpu_trace, host_trace);
+        if (layer == 6) report_hybrid_ffn_probes(plan, layer, host_trace);
         const auto& actual = gpu_trace.layer_output;
         const auto name = std::string("teacher-layer-") + std::to_string(layer);
         passed = compare_checkpoint(name.c_str(), actual, expected, 5.0e-2F) && passed;

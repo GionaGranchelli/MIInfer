@@ -59,9 +59,8 @@ reference layer[N-1] → MIInfer layer[N] → compare reference layer[N]
 
 The initial replay set is layers 1, 2, and 6; `--teacher-forced-all` runs all
 36 layers. This separates a local layer defect from error propagated by the
-free-running stack. The host replay uses a GGML-compatible round-to-nearest
-FP16 conversion for Q8 scale metadata, while the normal host forward remains
-unchanged for accepted-result continuity.
+free-running stack. The host correctness path now uses the validated GGML-
+compatible round-to-nearest FP16 conversion for Q8 scale metadata everywhere.
 
 On the pinned CPU trace, host teacher-forced replay passes layers 1–5 and
 7–33, while layer 6 is just outside the existing absolute bound
@@ -75,6 +74,37 @@ stage diagnostics localize the layer-6 GPU difference to the nonlinear FFN
 tail: the GPU and host gate/up values are close, while SwiGLU and the
 following down projection amplify the difference. This remains a numerical
 contract investigation, not a proven semantic failure.
+
+## M4-B3 precision isolation
+
+The layer-6 probes now separate the two suspected projection boundaries while
+keeping the kernel geometry and quantized weights fixed. Relative to the
+reference-conditioned host trace, the four GPU paths produced:
+
+| Path | Gate max abs | Up max abs | SwiGLU max abs | Down max abs | Layer max abs |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| F16 input → Q8_1 → F16 output | 0.03496 | 0.02287 | 1.09277 | 11.2754 | 11.2754 |
+| F32 input → Q8_1 → F16 output | 0.02754 | 0.02287 | 3.78613 | 4.72461 | 4.72461 |
+| F16 input → Q8_1 → F32 output | 0.01273 | 0.00467 | 0.68750 | 1.87402 | 1.87402 |
+| F32 input → Q8_1 → F32 output | 0.01115 | 0.00365 | 0.45410 | 1.83203 | 1.83203 |
+
+Hybrid injection exonerates the GPU SwiGLU arithmetic: reference gate/up
+inputs produce a SwiGLU error of `5.96e-8`. Injecting reference SwiGLU into
+the GPU down projection still leaves `3.27539` max absolute error, so the
+projection result boundary and/or down-projection input quantization remains a
+real local contributor. The best diagnostic path reduces the layer error from
+`11.2754` to `1.83203`, but does not meet the frozen `0.05` acceptance bound.
+
+The Q8 block probe confirms that the pre-quantization boundary changes the
+actual quantized input: 63 of 128 blocks differ, 36 int8 lanes differ, and
+the largest stored-scale difference is `6.10352e-05` between F16-input and
+direct-F32-input quantization. These are diagnostic variants only; the
+accepted production path has not been changed.
+
+The host teacher-forced result after making round-to-nearest FP16 conversion
+canonical is: layers 0–5 and 7–33 pass, while layers 6, 34, and 35 remain
+outside the frozen bound. Therefore M4-B remains open. No tolerance widening
+or token-generation work is justified yet.
 
 The independent offloaded reference is also not numerically identical to the
 CPU trace: the current MI50 comparison begins at `0.0521` on layer 0 and
