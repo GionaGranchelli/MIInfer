@@ -756,8 +756,8 @@ from the accepted model plan and layer-state correctness evidence:
    widening numerical tolerances.
 5. Preserve the proven exact Q4_0 × Q8 zero-point correction for Down and
    isolate the remaining upstream/late-depth numerical drift.
-6. Compare the MI50 path with the independent offloaded reference before
-   changing numerical tolerances.
+6. Use the independent same-run layer-6 internal trace to separate the first
+   GPU projection mismatch from the remaining host/reference contract.
 7. Only after M4-B closes, proceed to validated token generation.
 
 Do not broaden M4 into a general-purpose runtime.
@@ -772,12 +772,12 @@ The current milestone is:
 M4-B — full-depth numerical validation
 ```
 
-M4-B5 has propagated the proven exact Q8 integer-sum metadata through the
-Q4×Q8 projection path without increasing the 36-byte activation-block
-footprint. Layer 1 and most intermediate teacher-forced layers now pass, but
-layers 6, 34, and 35 still exceed the frozen bounds. The remaining full-depth
-drift is still under investigation. Exact experiment ordering may change only
-when supported by the resulting evidence.
+M4-B6 has captured an independent same-run layer-6 internal reference trace.
+Host and MI50 first-divergence diagnostics now use the same external layer-5
+input and show a GPU projection mismatch before the amplified FFN tail, while
+the host remains close until SwiGLU. Layers 6, 34, and 35 still exceed the
+frozen full-depth bounds, so M4-B remains open. Exact experiment ordering may
+change only when supported by the resulting evidence.
 
 ---
 

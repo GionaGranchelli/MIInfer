@@ -86,6 +86,8 @@ No other GPU architecture is currently supported.
   stateful layer-0 comparisons pass
 * M4-B initial full-depth host/GPU executor scaffold and independent
   single-token 36-layer reference fixture; acceptance remains open
+* M4-B6 independent same-run external layer-6 trace and first-divergence
+  host/MI50 diagnostic comparison; full-depth acceptance remains open
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -459,10 +461,10 @@ These do not help answer the current project question.
 
 The current Codex task is:
 
-> M4-B5 exact Q8 metadata propagation is integrated: the exact integer-sum
-> correction is now the default Q4×Q8 contract with unchanged 36-byte block
-> footprint. Resolve the remaining layer-6/late-depth numerical drift without
-> widening tolerances. Do not start token generation.
+> M4-B6 external layer-6 first-divergence tracing is complete. Use the
+> independent same-run layer-6 fixture to isolate the first remaining GPU
+> projection precision mismatch and the separate host/reference numerical
+> contract without widening tolerances. Do not start token generation.
 
 The M0 evidence gates are complete under the documented gfx802-isolated
 configuration. The M2 gate is satisfied by EXP-0009 and M3 is closed by the
@@ -500,8 +502,8 @@ into a generic runtime.
 
 # Last Updated
 
-2026-08-30 — M4-B full-depth scaffold and independent 36-layer trace added;
-full-reference parity remains open after the first comparison.
+2026-08-31 — M4-B6 same-run external layer-6 trace captured and consumed;
+first host/GPU divergences localized, while full-reference parity remains open.
 
 Update this document whenever:
 

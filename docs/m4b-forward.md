@@ -178,6 +178,51 @@ CPU trace: the current MI50 comparison begins at `0.0521` on layer 0 and
 reaches about `136` absolute error by layer 6. Therefore the external GPU
 path does not yet justify replacing the CPU trace as the acceptance oracle.
 
+## M4-B6 external layer-6 first-divergence trace
+
+An independent internal trace was captured from the pinned CPU reference for
+teacher-forced layer 6. The trace uses explicit token `14990` at position zero
+and, importantly, captures `l_out-5` in the same run as the layer-6 tensors;
+this avoids mixing the layer-6 input with the older full-forward fixture,
+whose layer-5 output differs by up to `0.0786629`.
+
+The tracked fixture is
+[`tests/reference/qwen3/m4b-layer6/`](../tests/reference/qwen3/m4b-layer6/).
+It contains the layer input plus attention, projection, normalization,
+SwiGLU, Down, and final layer-output checkpoints. The temporary reference
+worktree was pinned to commit
+`6e4ef6c1a553b8f61ad77bba18e9ca05aa677295`; the model artifact is the pinned
+Qwen3-8B Q4_0 file with SHA256
+`458634762bea7dbe19f3ce0614465bafd15ee90e815229c427043afcf195d628`.
+
+The diagnostic executable compares the same external trace against both the
+host and MI50 implementations. Release and Debug produced the same results.
+The host is exact or very close through `ffn_norm`, `gate`, and `up`; its
+first strict checkpoint failure is `swiglu` at `max_abs=0.441895`. The large
+absolute value is concentrated at a large activation (`5592.71` versus
+`5592.27`), so the relative error there is about `0.008%`. Host
+`ffn_output` and `layer_output` are at most `0.03125` from this same-run
+external trace.
+
+The GPU's first strict checkpoint failure is `q_projection`, at
+`max_abs=0.0034914`; this is consistent with the known GPU projection
+precision boundary rather than a newly discovered layer-layout error. The
+GPU remains close through `ffn_norm`, `gate`, and `up`, but nonlinear
+amplification produces `swiglu max_abs=1.44971`, followed by
+`ffn_output max_abs=3.0918` and `layer_output max_abs=3.09375`. GPU and host
+therefore remain mutually close in the early layer-6 stages, but do not yet
+meet the external full-depth acceptance gate.
+
+This result does not justify widening tolerances or changing production
+semantics. It narrows the next investigation to the first GPU projection
+precision boundary and the remaining host/reference numerical contract. The
+external fixture comparator also includes a deliberate mutation discriminator
+that must turn red when an expected checkpoint is changed.
+
+M4-B6 conclusion: the independent layer-6 trace is captured and consumed
+successfully, but M4-B remains open. No token-generation or performance work
+was started.
+
 ## Physical acceptance command
 
 The default CTest entries intentionally remain artifact-free unit/regression

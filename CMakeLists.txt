@@ -214,6 +214,10 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-qwen3-forward-gpu-test PRIVATE miinfer_hip)
     target_compile_options(miinfer-qwen3-forward-gpu-test PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-qwen3-layer6-external-test tests/qwen3_layer6_external_test.cpp)
+    target_link_libraries(miinfer-qwen3-layer6-external-test PRIVATE miinfer_hip)
+    target_compile_options(miinfer-qwen3-layer6-external-test PRIVATE -Wall -Wextra -Wpedantic)
+
 endif()
 
 include(CTest)
