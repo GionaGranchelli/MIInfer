@@ -75,37 +75,11 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 118,
-      "community_name": "string",
+      "community_name": "fp16_gemv_k_split_bench.cpp",
       "file_type": "code",
       "norm_label": "options",
       "source_file": "bench/fp16_gemv_k_split_bench.cpp",
       "source_location": "L23"
-    },
-    {
-      "id": "bench_hip_smoke_bench_options",
-      "label": "Options",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "options",
-      "source_file": "bench/hip_smoke_bench.cpp",
-      "source_location": "L21"
-    },
-    {
-      "id": "include_miinfer_device_validation_deviceinfo",
-      "label": "DeviceInfo",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "deviceinfo",
-      "source_file": "include/miinfer/device_validation.hpp",
-      "source_location": "L9"
     },
     {
       "id": "include_miinfer_gguf_gguferror",
@@ -147,43 +121,30 @@
       "source_location": "L153"
     },
     {
-      "id": "include_miinfer_qwen3_gpu_layer_qwen3downprojectioncontracttrace",
-      "label": "Qwen3DownProjectionContractTrace",
+      "id": "include_miinfer_qwen3_gpu_primitives_q6kdeviceblock",
+      "label": "Q6KDeviceBlock",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 121,
       "community_name": "qwen3_forward_gpu_test.cpp",
       "file_type": "code",
-      "norm_label": "qwen3downprojectioncontracttrace",
-      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
-      "source_location": "L42"
+      "norm_label": "q6kdeviceblock",
+      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
+      "source_location": "L11"
     },
     {
-      "id": "include_miinfer_qwen3_gpu_layer_qwen3ffnprobetrace",
-      "label": "Qwen3FfnProbeTrace",
+      "id": "include_miinfer_qwen3_gpu_primitives_q8kdeviceblock",
+      "label": "Q8KDeviceBlock",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 121,
       "community_name": "qwen3_forward_gpu_test.cpp",
       "file_type": "code",
-      "norm_label": "qwen3ffnprobetrace",
-      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
-      "source_location": "L34"
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_layer_qwen3projectionprobetrace",
-      "label": "Qwen3ProjectionProbeTrace",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 121,
-      "community_name": "qwen3_forward_gpu_test.cpp",
-      "file_type": "code",
-      "norm_label": "qwen3projectionprobetrace",
-      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
-      "source_location": "L30"
+      "norm_label": "q8kdeviceblock",
+      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
+      "source_location": "L20"
     },
     {
       "id": "tests_qwen3_forward_gpu_test_metrics",
@@ -238,26 +199,13 @@
       "source_location": "L33"
     },
     {
-      "id": "bench_q4_q8_gemv_bench_deviceshapedata",
-      "label": "DeviceShapeData",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 123,
-      "community_name": "DeviceShapeData",
-      "file_type": "code",
-      "norm_label": "deviceshapedata",
-      "source_file": "bench/q4_q8_gemv_bench.cpp",
-      "source_location": "L258"
-    },
-    {
       "id": "include_miinfer_q4_q8_gemv_q4_0block",
       "label": "Q4_0Block",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 123,
-      "community_name": "DeviceShapeData",
+      "community_name": "Q8_1Block",
       "file_type": "code",
       "norm_label": "q4_0block",
       "source_file": "include/miinfer/q4_q8_gemv.hpp",
@@ -270,11 +218,24 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 123,
-      "community_name": "DeviceShapeData",
+      "community_name": "Q8_1Block",
       "file_type": "code",
       "norm_label": "q8_1block",
       "source_file": "include/miinfer/q4_q8_gemv.hpp",
       "source_location": "L23"
+    },
+    {
+      "id": "include_miinfer_q4_q8_gemv_q8exactblock",
+      "label": "Q8ExactBlock",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 123,
+      "community_name": "Q8_1Block",
+      "file_type": "code",
+      "norm_label": "q8exactblock",
+      "source_file": "include/miinfer/q4_q8_gemv.hpp",
+      "source_location": "L32"
     },
     {
       "id": "tests_qwen3_forward_test_metrics",
@@ -342,32 +303,6 @@
       "source_location": "L26"
     },
     {
-      "id": "include_miinfer_qwen3_gpu_primitives_q6kdeviceblock",
-      "label": "Q6KDeviceBlock",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 130,
-      "community_name": "Sha256",
-      "file_type": "code",
-      "norm_label": "q6kdeviceblock",
-      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
-      "source_location": "L11"
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives_q8kdeviceblock",
-      "label": "Q8KDeviceBlock",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 130,
-      "community_name": "Sha256",
-      "file_type": "code",
-      "norm_label": "q8kdeviceblock",
-      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
-      "source_location": "L20"
-    },
-    {
       "id": "src_sha256_sha256",
       "label": "Sha256",
       "_callable": true,
@@ -405,6 +340,19 @@
       "norm_label": "rocblasgemmhandle",
       "source_file": "include/miinfer/fp16_gemv.hpp",
       "source_location": "L96"
+    },
+    {
+      "id": "include_miinfer_device_validation_deviceinfo",
+      "label": "DeviceInfo",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 132,
+      "community_name": "string",
+      "file_type": "code",
+      "norm_label": "deviceinfo",
+      "source_file": "include/miinfer/device_validation.hpp",
+      "source_location": "L9"
     },
     {
       "id": "include_miinfer_qwen3_model_qwen3config",
@@ -446,16 +394,16 @@
       "source_location": "L19"
     },
     {
-      "id": "include_miinfer_fp16_gemv_fp16gemvmetrics",
-      "label": "Fp16GemvMetrics",
+      "id": "bench_hip_smoke_bench_options",
+      "label": "Options",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 136,
-      "community_name": "Fp16GemvMetrics",
+      "community_name": "hip_smoke_bench.cpp",
       "file_type": "code",
-      "norm_label": "fp16gemvmetrics",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "norm_label": "options",
+      "source_file": "bench/hip_smoke_bench.cpp",
       "source_location": "L21"
     },
     {
@@ -509,6 +457,19 @@
       "norm_label": "qwen3forwardtrace",
       "source_file": "include/miinfer/qwen3_layer.hpp",
       "source_location": "L52"
+    },
+    {
+      "id": "bench_q4_q8_gemv_bench_deviceshapedata",
+      "label": "DeviceShapeData",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 145,
+      "community_name": "DeviceShapeData",
+      "file_type": "code",
+      "norm_label": "deviceshapedata",
+      "source_file": "bench/q4_q8_gemv_bench.cpp",
+      "source_location": "L258"
     },
     {
       "id": "include_miinfer_qwen3_primitives_q4_0hostblock",
@@ -602,6 +563,19 @@
       "source_location": "L24"
     },
     {
+      "id": "include_miinfer_fp16_gemv_fp16gemvmetrics",
+      "label": "Fp16GemvMetrics",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "fp16_gemv_bench.cpp",
+      "file_type": "code",
+      "norm_label": "fp16gemvmetrics",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L21"
+    },
+    {
       "id": "bench_memory_stream_bench_options",
       "label": "Options",
       "_callable": true,
@@ -628,17 +602,30 @@
       "source_location": "L16"
     },
     {
-      "id": "include_miinfer_q4_q8_gemv_q8exactblock",
-      "label": "Q8ExactBlock",
+      "id": "include_miinfer_qwen3_gpu_layer_qwen3downprojectioncontracttrace",
+      "label": "Qwen3DownProjectionContractTrace",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 57,
       "community_name": "qwen3_gpu_layer.cpp",
       "file_type": "code",
-      "norm_label": "q8exactblock",
-      "source_file": "include/miinfer/q4_q8_gemv.hpp",
-      "source_location": "L32"
+      "norm_label": "qwen3downprojectioncontracttrace",
+      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
+      "source_location": "L42"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_layer_qwen3ffnprobetrace",
+      "label": "Qwen3FfnProbeTrace",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 57,
+      "community_name": "qwen3_gpu_layer.cpp",
+      "file_type": "code",
+      "norm_label": "qwen3ffnprobetrace",
+      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
+      "source_location": "L34"
     },
     {
       "id": "include_miinfer_qwen3_gpu_layer_qwen3layer0gpukvcache",
@@ -652,6 +639,19 @@
       "norm_label": "qwen3layer0gpukvcache",
       "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
       "source_location": "L52"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_layer_qwen3projectionprobetrace",
+      "label": "Qwen3ProjectionProbeTrace",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 57,
+      "community_name": "qwen3_gpu_layer.cpp",
+      "file_type": "code",
+      "norm_label": "qwen3projectionprobetrace",
+      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
+      "source_location": "L30"
     },
     {
       "id": "src_qwen3_gpu_layer_devicebuffer",
@@ -973,7 +973,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 118,
-      "community_name": "string",
+      "community_name": "fp16_gemv_k_split_bench.cpp",
       "file_type": "code",
       "norm_label": "escape()",
       "source_file": "bench/fp16_gemv_k_split_bench.cpp",
@@ -985,7 +985,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 118,
-      "community_name": "string",
+      "community_name": "fp16_gemv_k_split_bench.cpp",
       "file_type": "code",
       "norm_label": "main()",
       "source_file": "bench/fp16_gemv_k_split_bench.cpp",
@@ -997,7 +997,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 118,
-      "community_name": "string",
+      "community_name": "fp16_gemv_k_split_bench.cpp",
       "file_type": "code",
       "norm_label": "median()",
       "source_file": "bench/fp16_gemv_k_split_bench.cpp",
@@ -1009,7 +1009,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 118,
-      "community_name": "string",
+      "community_name": "fp16_gemv_k_split_bench.cpp",
       "file_type": "code",
       "norm_label": "nonnegative()",
       "source_file": "bench/fp16_gemv_k_split_bench.cpp",
@@ -1021,7 +1021,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 118,
-      "community_name": "string",
+      "community_name": "fp16_gemv_k_split_bench.cpp",
       "file_type": "code",
       "norm_label": "parse()",
       "source_file": "bench/fp16_gemv_k_split_bench.cpp",
@@ -1033,7 +1033,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 118,
-      "community_name": "string",
+      "community_name": "fp16_gemv_k_split_bench.cpp",
       "file_type": "code",
       "norm_label": "positive()",
       "source_file": "bench/fp16_gemv_k_split_bench.cpp",
@@ -1045,7 +1045,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 118,
-      "community_name": "string",
+      "community_name": "fp16_gemv_k_split_bench.cpp",
       "file_type": "code",
       "norm_label": "run_shape()",
       "source_file": "bench/fp16_gemv_k_split_bench.cpp",
@@ -1057,179 +1057,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 118,
-      "community_name": "string",
+      "community_name": "fp16_gemv_k_split_bench.cpp",
       "file_type": "code",
       "norm_label": "usage()",
       "source_file": "bench/fp16_gemv_k_split_bench.cpp",
       "source_location": "L33"
-    },
-    {
-      "id": "bench_hip_smoke_bench_json_escape",
-      "label": "json_escape()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "json_escape()",
-      "source_file": "bench/hip_smoke_bench.cpp",
-      "source_location": "L111"
-    },
-    {
-      "id": "bench_hip_smoke_bench_main",
-      "label": "main()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "bench/hip_smoke_bench.cpp",
-      "source_location": "L135"
-    },
-    {
-      "id": "bench_hip_smoke_bench_parse_nonnegative",
-      "label": "parse_nonnegative()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "parse_nonnegative()",
-      "source_file": "bench/hip_smoke_bench.cpp",
-      "source_location": "L48"
-    },
-    {
-      "id": "bench_hip_smoke_bench_parse_options",
-      "label": "parse_options()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "parse_options()",
-      "source_file": "bench/hip_smoke_bench.cpp",
-      "source_location": "L66"
-    },
-    {
-      "id": "bench_hip_smoke_bench_parse_positive",
-      "label": "parse_positive()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "parse_positive()",
-      "source_file": "bench/hip_smoke_bench.cpp",
-      "source_location": "L39"
-    },
-    {
-      "id": "bench_hip_smoke_bench_parse_size",
-      "label": "parse_size()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "parse_size()",
-      "source_file": "bench/hip_smoke_bench.cpp",
-      "source_location": "L57"
-    },
-    {
-      "id": "bench_hip_smoke_bench_print_usage",
-      "label": "print_usage()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "print_usage()",
-      "source_file": "bench/hip_smoke_bench.cpp",
-      "source_location": "L29"
-    },
-    {
-      "id": "src_device_validation_inspect_device",
-      "label": "inspect_device()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "inspect_device()",
-      "source_file": "src/device_validation.cpp",
-      "source_location": "L13"
-    },
-    {
-      "id": "src_device_validation_is_gfx906",
-      "label": "is_gfx906()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "is_gfx906()",
-      "source_file": "src/device_validation.cpp",
-      "source_location": "L29"
-    },
-    {
-      "id": "src_device_validation_print_device_info",
-      "label": "print_device_info()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "print_device_info()",
-      "source_file": "src/device_validation.cpp",
-      "source_location": "L87"
-    },
-    {
-      "id": "src_device_validation_validate_gfx906_device",
-      "label": "validate_gfx906_device()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "validate_gfx906_device()",
-      "source_file": "src/device_validation.cpp",
-      "source_location": "L35"
-    },
-    {
-      "id": "tests_device_info_main",
-      "label": "main()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "tests/device_info.cpp",
-      "source_location": "L8"
-    },
-    {
-      "id": "tests_hip_smoke_main",
-      "label": "main()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "tests/hip_smoke.cpp",
-      "source_location": "L8"
-    },
-    {
-      "id": "tests_host_test_main",
-      "label": "main()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "tests/host_test.cpp",
-      "source_location": "L9"
     },
     {
       "id": "src_gguf_align_up",
@@ -1801,11 +1633,83 @@
       "_callable": true,
       "_origin": "ast",
       "community": 123,
-      "community_name": "DeviceShapeData",
+      "community_name": "Q8_1Block",
       "file_type": "code",
       "norm_label": "launch_selected_gemv()",
       "source_file": "bench/q4_q8_gemv_bench.cpp",
       "source_location": "L137"
+    },
+    {
+      "id": "src_q4_q8_gemv_reference_q4_q8_cpu_reference",
+      "label": "q4_q8_cpu_reference()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 123,
+      "community_name": "Q8_1Block",
+      "file_type": "code",
+      "norm_label": "q4_q8_cpu_reference()",
+      "source_file": "src/q4_q8_gemv_reference.cpp",
+      "source_location": "L124"
+    },
+    {
+      "id": "src_q4_q8_gemv_reference_quantize_q4_0",
+      "label": "quantize_q4_0()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 123,
+      "community_name": "Q8_1Block",
+      "file_type": "code",
+      "norm_label": "quantize_q4_0()",
+      "source_file": "src/q4_q8_gemv_reference.cpp",
+      "source_location": "L20"
+    },
+    {
+      "id": "src_q4_q8_gemv_reference_quantize_q8_1",
+      "label": "quantize_q8_1()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 123,
+      "community_name": "Q8_1Block",
+      "file_type": "code",
+      "norm_label": "quantize_q8_1()",
+      "source_file": "src/q4_q8_gemv_reference.cpp",
+      "source_location": "L64"
+    },
+    {
+      "id": "src_q4_q8_gemv_reference_quantize_q8_exact",
+      "label": "quantize_q8_exact()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 123,
+      "community_name": "Q8_1Block",
+      "file_type": "code",
+      "norm_label": "quantize_q8_exact()",
+      "source_file": "src/q4_q8_gemv_reference.cpp",
+      "source_location": "L94"
+    },
+    {
+      "id": "src_q4_q8_gemv_reference_validate_block_shape",
+      "label": "validate_block_shape()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 123,
+      "community_name": "Q8_1Block",
+      "file_type": "code",
+      "norm_label": "validate_block_shape()",
+      "source_file": "src/q4_q8_gemv_reference.cpp",
+      "source_location": "L11"
+    },
+    {
+      "id": "bench_q4_q8_gemv_bench_allocate_shape",
+      "label": "allocate_shape()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 125,
+      "community_name": "q4_q8_gemv_bench.cpp",
+      "file_type": "code",
+      "norm_label": "allocate_shape()",
+      "source_file": "bench/q4_q8_gemv_bench.cpp",
+      "source_location": "L271"
     },
     {
       "id": "bench_q4_q8_gemv_bench_escape",
@@ -2468,18 +2372,6 @@
       "source_location": "L187"
     },
     {
-      "id": "bench_q4_q8_gemv_bench_allocate_shape",
-      "label": "allocate_shape()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 131,
-      "community_name": "GemvShape",
-      "file_type": "code",
-      "norm_label": "allocate_shape()",
-      "source_file": "bench/q4_q8_gemv_bench.cpp",
-      "source_location": "L271"
-    },
-    {
       "id": "tests_fp16_gemv_test_check_output",
       "label": "check_output()",
       "_callable": true,
@@ -2516,64 +2408,76 @@
       "source_location": "L30"
     },
     {
-      "id": "src_q4_q8_gemv_reference_q4_q8_cpu_reference",
-      "label": "q4_q8_cpu_reference()",
+      "id": "src_device_validation_inspect_device",
+      "label": "inspect_device()",
       "_callable": true,
       "_origin": "ast",
       "community": 132,
-      "community_name": "q4_q8_gemv_reference.cpp",
+      "community_name": "string",
       "file_type": "code",
-      "norm_label": "q4_q8_cpu_reference()",
-      "source_file": "src/q4_q8_gemv_reference.cpp",
-      "source_location": "L124"
+      "norm_label": "inspect_device()",
+      "source_file": "src/device_validation.cpp",
+      "source_location": "L13"
     },
     {
-      "id": "src_q4_q8_gemv_reference_quantize_q4_0",
-      "label": "quantize_q4_0()",
+      "id": "src_device_validation_is_gfx906",
+      "label": "is_gfx906()",
       "_callable": true,
       "_origin": "ast",
       "community": 132,
-      "community_name": "q4_q8_gemv_reference.cpp",
+      "community_name": "string",
       "file_type": "code",
-      "norm_label": "quantize_q4_0()",
-      "source_file": "src/q4_q8_gemv_reference.cpp",
-      "source_location": "L20"
+      "norm_label": "is_gfx906()",
+      "source_file": "src/device_validation.cpp",
+      "source_location": "L29"
     },
     {
-      "id": "src_q4_q8_gemv_reference_quantize_q8_1",
-      "label": "quantize_q8_1()",
+      "id": "src_device_validation_print_device_info",
+      "label": "print_device_info()",
       "_callable": true,
       "_origin": "ast",
       "community": 132,
-      "community_name": "q4_q8_gemv_reference.cpp",
+      "community_name": "string",
       "file_type": "code",
-      "norm_label": "quantize_q8_1()",
-      "source_file": "src/q4_q8_gemv_reference.cpp",
-      "source_location": "L64"
+      "norm_label": "print_device_info()",
+      "source_file": "src/device_validation.cpp",
+      "source_location": "L87"
     },
     {
-      "id": "src_q4_q8_gemv_reference_quantize_q8_exact",
-      "label": "quantize_q8_exact()",
+      "id": "src_device_validation_validate_gfx906_device",
+      "label": "validate_gfx906_device()",
       "_callable": true,
       "_origin": "ast",
       "community": 132,
-      "community_name": "q4_q8_gemv_reference.cpp",
+      "community_name": "string",
       "file_type": "code",
-      "norm_label": "quantize_q8_exact()",
-      "source_file": "src/q4_q8_gemv_reference.cpp",
-      "source_location": "L94"
+      "norm_label": "validate_gfx906_device()",
+      "source_file": "src/device_validation.cpp",
+      "source_location": "L35"
     },
     {
-      "id": "src_q4_q8_gemv_reference_validate_block_shape",
-      "label": "validate_block_shape()",
+      "id": "tests_device_info_main",
+      "label": "main()",
       "_callable": true,
       "_origin": "ast",
       "community": 132,
-      "community_name": "q4_q8_gemv_reference.cpp",
+      "community_name": "string",
       "file_type": "code",
-      "norm_label": "validate_block_shape()",
-      "source_file": "src/q4_q8_gemv_reference.cpp",
-      "source_location": "L11"
+      "norm_label": "main()",
+      "source_file": "tests/device_info.cpp",
+      "source_location": "L8"
+    },
+    {
+      "id": "tests_host_test_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 132,
+      "community_name": "string",
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "tests/host_test.cpp",
+      "source_location": "L9"
     },
     {
       "id": "include_miinfer_qwen3_layer_qwen3layer0kvcache_capacity",
@@ -2768,6 +2672,102 @@
       "source_location": "L56"
     },
     {
+      "id": "bench_hip_smoke_bench_json_escape",
+      "label": "json_escape()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 136,
+      "community_name": "hip_smoke_bench.cpp",
+      "file_type": "code",
+      "norm_label": "json_escape()",
+      "source_file": "bench/hip_smoke_bench.cpp",
+      "source_location": "L111"
+    },
+    {
+      "id": "bench_hip_smoke_bench_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 136,
+      "community_name": "hip_smoke_bench.cpp",
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "bench/hip_smoke_bench.cpp",
+      "source_location": "L135"
+    },
+    {
+      "id": "bench_hip_smoke_bench_parse_nonnegative",
+      "label": "parse_nonnegative()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 136,
+      "community_name": "hip_smoke_bench.cpp",
+      "file_type": "code",
+      "norm_label": "parse_nonnegative()",
+      "source_file": "bench/hip_smoke_bench.cpp",
+      "source_location": "L48"
+    },
+    {
+      "id": "bench_hip_smoke_bench_parse_options",
+      "label": "parse_options()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 136,
+      "community_name": "hip_smoke_bench.cpp",
+      "file_type": "code",
+      "norm_label": "parse_options()",
+      "source_file": "bench/hip_smoke_bench.cpp",
+      "source_location": "L66"
+    },
+    {
+      "id": "bench_hip_smoke_bench_parse_positive",
+      "label": "parse_positive()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 136,
+      "community_name": "hip_smoke_bench.cpp",
+      "file_type": "code",
+      "norm_label": "parse_positive()",
+      "source_file": "bench/hip_smoke_bench.cpp",
+      "source_location": "L39"
+    },
+    {
+      "id": "bench_hip_smoke_bench_parse_size",
+      "label": "parse_size()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 136,
+      "community_name": "hip_smoke_bench.cpp",
+      "file_type": "code",
+      "norm_label": "parse_size()",
+      "source_file": "bench/hip_smoke_bench.cpp",
+      "source_location": "L57"
+    },
+    {
+      "id": "bench_hip_smoke_bench_print_usage",
+      "label": "print_usage()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 136,
+      "community_name": "hip_smoke_bench.cpp",
+      "file_type": "code",
+      "norm_label": "print_usage()",
+      "source_file": "bench/hip_smoke_bench.cpp",
+      "source_location": "L29"
+    },
+    {
+      "id": "tests_hip_smoke_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 136,
+      "community_name": "hip_smoke_bench.cpp",
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "tests/hip_smoke.cpp",
+      "source_location": "L8"
+    },
+    {
       "id": "bench_fp16_gemv_reduction_diag_main",
       "label": "main()",
       "_callable": true,
@@ -2924,40 +2924,76 @@
       "source_location": "L204"
     },
     {
-      "id": "src_fp16_gemv_reference_evaluate_fp16_gemv",
-      "label": "evaluate_fp16_gemv()",
+      "id": "include_miinfer_hip_check_hip_check",
+      "label": "hip_check()",
       "_callable": true,
       "_origin": "ast",
       "community": 143,
-      "community_name": "fp16_gemv_reference.cpp",
+      "community_name": "hip_check.hpp",
       "file_type": "code",
-      "norm_label": "evaluate_fp16_gemv()",
-      "source_file": "src/fp16_gemv_reference.cpp",
-      "source_location": "L59"
+      "norm_label": "hip_check()",
+      "source_file": "include/miinfer/hip_check.hpp",
+      "source_location": "L26"
     },
     {
-      "id": "src_fp16_gemv_reference_fp16_gemv_cpu_reference",
-      "label": "fp16_gemv_cpu_reference()",
+      "id": "include_miinfer_hip_check_hip_check_failed",
+      "label": "hip_check_failed()",
       "_callable": true,
       "_origin": "ast",
       "community": 143,
-      "community_name": "fp16_gemv_reference.cpp",
+      "community_name": "hip_check.hpp",
       "file_type": "code",
-      "norm_label": "fp16_gemv_cpu_reference()",
-      "source_file": "src/fp16_gemv_reference.cpp",
-      "source_location": "L41"
+      "norm_label": "hip_check_failed()",
+      "source_file": "include/miinfer/hip_check.hpp",
+      "source_location": "L11"
     },
     {
-      "id": "src_fp16_gemv_reference_generate_fp16_gemv_data",
-      "label": "generate_fp16_gemv_data()",
+      "id": "tests_q4_q8_dot4_probe_main",
+      "label": "main()",
       "_callable": true,
       "_origin": "ast",
       "community": 143,
-      "community_name": "fp16_gemv_reference.cpp",
+      "community_name": "hip_check.hpp",
       "file_type": "code",
-      "norm_label": "generate_fp16_gemv_data()",
-      "source_file": "src/fp16_gemv_reference.cpp",
-      "source_location": "L23"
+      "norm_label": "main()",
+      "source_file": "tests/q4_q8_dot4_probe.cpp",
+      "source_location": "L11"
+    },
+    {
+      "id": "tests_q4_q8_gemv_test_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 143,
+      "community_name": "hip_check.hpp",
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "tests/q4_q8_gemv_test.cpp",
+      "source_location": "L161"
+    },
+    {
+      "id": "tests_q4_q8_gemv_test_run_shape",
+      "label": "run_shape()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 143,
+      "community_name": "hip_check.hpp",
+      "file_type": "code",
+      "norm_label": "run_shape()",
+      "source_file": "tests/q4_q8_gemv_test.cpp",
+      "source_location": "L87"
+    },
+    {
+      "id": "tests_q4_q8_gemv_test_run_zero_point_identity_tests",
+      "label": "run_zero_point_identity_tests()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 143,
+      "community_name": "hip_check.hpp",
+      "file_type": "code",
+      "norm_label": "run_zero_point_identity_tests()",
+      "source_file": "tests/q4_q8_gemv_test.cpp",
+      "source_location": "L22"
     },
     {
       "id": "src_qwen3_primitives_fp16_bits_to_float",
@@ -3404,6 +3440,42 @@
       "source_location": "L86"
     },
     {
+      "id": "src_fp16_gemv_reference_evaluate_fp16_gemv",
+      "label": "evaluate_fp16_gemv()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "fp16_gemv_bench.cpp",
+      "file_type": "code",
+      "norm_label": "evaluate_fp16_gemv()",
+      "source_file": "src/fp16_gemv_reference.cpp",
+      "source_location": "L59"
+    },
+    {
+      "id": "src_fp16_gemv_reference_fp16_gemv_cpu_reference",
+      "label": "fp16_gemv_cpu_reference()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "fp16_gemv_bench.cpp",
+      "file_type": "code",
+      "norm_label": "fp16_gemv_cpu_reference()",
+      "source_file": "src/fp16_gemv_reference.cpp",
+      "source_location": "L41"
+    },
+    {
+      "id": "src_fp16_gemv_reference_generate_fp16_gemv_data",
+      "label": "generate_fp16_gemv_data()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "fp16_gemv_bench.cpp",
+      "file_type": "code",
+      "norm_label": "generate_fp16_gemv_data()",
+      "source_file": "src/fp16_gemv_reference.cpp",
+      "source_location": "L23"
+    },
+    {
       "id": "bench_memory_stream_bench_escape",
       "label": "escape()",
       "_callable": true,
@@ -3486,30 +3558,6 @@
       "norm_label": "usage()",
       "source_file": "bench/memory_stream_bench.cpp",
       "source_location": "L45"
-    },
-    {
-      "id": "include_miinfer_hip_check_hip_check",
-      "label": "hip_check()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 57,
-      "community_name": "qwen3_gpu_layer.cpp",
-      "file_type": "code",
-      "norm_label": "hip_check()",
-      "source_file": "include/miinfer/hip_check.hpp",
-      "source_location": "L26"
-    },
-    {
-      "id": "include_miinfer_hip_check_hip_check_failed",
-      "label": "hip_check_failed()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 57,
-      "community_name": "qwen3_gpu_layer.cpp",
-      "file_type": "code",
-      "norm_label": "hip_check_failed()",
-      "source_file": "include/miinfer/hip_check.hpp",
-      "source_location": "L11"
     },
     {
       "id": "include_miinfer_qwen3_gpu_layer_qwen3layer0gpukvcache_capacity",
@@ -3605,7 +3653,7 @@
       "file_type": "code",
       "norm_label": "capture()",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L196"
+      "source_location": "L238"
     },
     {
       "id": "src_qwen3_gpu_layer_capture_qwen3_head_norm",
@@ -3617,7 +3665,7 @@
       "file_type": "code",
       "norm_label": "capture_qwen3_head_norm()",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L202"
+      "source_location": "L244"
     },
     {
       "id": "src_qwen3_gpu_layer_copy_to_host",
@@ -3689,7 +3737,7 @@
       "file_type": "code",
       "norm_label": "execute_qwen3_down_projection_contract_probe()",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L703"
+      "source_location": "L745"
     },
     {
       "id": "src_qwen3_gpu_layer_execute_qwen3_ffn_gpu_probe",
@@ -3701,7 +3749,7 @@
       "file_type": "code",
       "norm_label": "execute_qwen3_ffn_gpu_probe()",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L542"
+      "source_location": "L584"
     },
     {
       "id": "src_qwen3_gpu_layer_execute_qwen3_forward_gpu",
@@ -3713,7 +3761,7 @@
       "file_type": "code",
       "norm_label": "execute_qwen3_forward_gpu()",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L464"
+      "source_location": "L506"
     },
     {
       "id": "src_qwen3_gpu_layer_execute_qwen3_layer0_gpu",
@@ -3725,7 +3773,7 @@
       "file_type": "code",
       "norm_label": "execute_qwen3_layer0_gpu()",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L437"
+      "source_location": "L479"
     },
     {
       "id": "src_qwen3_gpu_layer_execute_qwen3_layer_gpu_teacher_forced",
@@ -3737,7 +3785,7 @@
       "file_type": "code",
       "norm_label": "execute_qwen3_layer_gpu_teacher_forced()",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L523"
+      "source_location": "L565"
     },
     {
       "id": "src_qwen3_gpu_layer_execute_qwen3_projection_gpu_probe",
@@ -3749,7 +3797,7 @@
       "file_type": "code",
       "norm_label": "execute_qwen3_projection_gpu_probe()",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L619"
+      "source_location": "L661"
     },
     {
       "id": "src_qwen3_gpu_layer_launch_projection",
@@ -3761,7 +3809,7 @@
       "file_type": "code",
       "norm_label": "launch_projection()",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L84"
+      "source_location": "L104"
     },
     {
       "id": "src_qwen3_gpu_layer_launch_projection_probe",
@@ -3773,7 +3821,19 @@
       "file_type": "code",
       "norm_label": "launch_projection_probe()",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L137"
+      "source_location": "L179"
+    },
+    {
+      "id": "src_qwen3_gpu_layer_projection_selected",
+      "label": "projection_selected()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 57,
+      "community_name": "qwen3_gpu_layer.cpp",
+      "file_type": "code",
+      "norm_label": "projection_selected()",
+      "source_file": "src/qwen3_gpu_layer.cpp",
+      "source_location": "L84"
     },
     {
       "id": "src_qwen3_gpu_layer_qwen3_layer_gpu_impl",
@@ -3785,7 +3845,7 @@
       "file_type": "code",
       "norm_label": "qwen3_layer_gpu_impl()",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L277"
+      "source_location": "L319"
     },
     {
       "id": "src_qwen3_gpu_layer_qwen3layer0gpukvcache_append",
@@ -3797,7 +3857,7 @@
       "file_type": "code",
       "norm_label": "qwen3layer0gpukvcache::append()",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L244"
+      "source_location": "L286"
     },
     {
       "id": "src_qwen3_gpu_layer_qwen3layer0gpukvcache_qwen3layer0gpukvcache",
@@ -3809,7 +3869,7 @@
       "file_type": "code",
       "norm_label": "qwen3layer0gpukvcache::qwen3layer0gpukvcache()",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L216"
+      "source_location": "L258"
     },
     {
       "id": "src_qwen3_gpu_layer_qwen3layer0gpukvcache_reset",
@@ -3821,7 +3881,7 @@
       "file_type": "code",
       "norm_label": "qwen3layer0gpukvcache::reset()",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L237"
+      "source_location": "L279"
     },
     {
       "id": "src_qwen3_gpu_layer_qwen3layer0gpukvcache_snapshot_keys",
@@ -3833,7 +3893,7 @@
       "file_type": "code",
       "norm_label": "qwen3layer0gpukvcache::snapshot_keys()",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L263"
+      "source_location": "L305"
     },
     {
       "id": "src_qwen3_gpu_layer_qwen3layer0gpukvcache_snapshot_values",
@@ -3845,7 +3905,7 @@
       "file_type": "code",
       "norm_label": "qwen3layer0gpukvcache::snapshot_values()",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L270"
+      "source_location": "L312"
     },
     {
       "id": "src_qwen3_gpu_layer_upload_f32",
@@ -3870,54 +3930,6 @@
       "norm_label": "use_exact_q8_metadata()",
       "source_file": "src/qwen3_gpu_layer.cpp",
       "source_location": "L63"
-    },
-    {
-      "id": "tests_q4_q8_dot4_probe_main",
-      "label": "main()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 57,
-      "community_name": "qwen3_gpu_layer.cpp",
-      "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "tests/q4_q8_dot4_probe.cpp",
-      "source_location": "L11"
-    },
-    {
-      "id": "tests_q4_q8_gemv_test_main",
-      "label": "main()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 57,
-      "community_name": "qwen3_gpu_layer.cpp",
-      "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "tests/q4_q8_gemv_test.cpp",
-      "source_location": "L161"
-    },
-    {
-      "id": "tests_q4_q8_gemv_test_run_shape",
-      "label": "run_shape()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 57,
-      "community_name": "qwen3_gpu_layer.cpp",
-      "file_type": "code",
-      "norm_label": "run_shape()",
-      "source_file": "tests/q4_q8_gemv_test.cpp",
-      "source_location": "L87"
-    },
-    {
-      "id": "tests_q4_q8_gemv_test_run_zero_point_identity_tests",
-      "label": "run_zero_point_identity_tests()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 57,
-      "community_name": "qwen3_gpu_layer.cpp",
-      "file_type": "code",
-      "norm_label": "run_zero_point_identity_tests()",
-      "source_file": "tests/q4_q8_gemv_test.cpp",
-      "source_location": "L22"
     },
     {
       "id": "tests_qwen3_kv_cache_gpu_test_attention_contract",
@@ -7153,7 +7165,7 @@
       "label": "fp16_gemv_k_split_bench.cpp",
       "_origin": "ast",
       "community": 118,
-      "community_name": "string",
+      "community_name": "fp16_gemv_k_split_bench.cpp",
       "file_type": "code",
       "norm_label": "fp16_gemv_k_split_bench.cpp",
       "source_file": "bench/fp16_gemv_k_split_bench.cpp",
@@ -7164,7 +7176,7 @@
       "label": "ostream",
       "_origin": "ast",
       "community": 118,
-      "community_name": "string",
+      "community_name": "fp16_gemv_k_split_bench.cpp",
       "file_type": "code",
       "norm_label": "ostream",
       "source_file": "",
@@ -7175,7 +7187,7 @@
       "label": "string",
       "_origin": "ast",
       "community": 118,
-      "community_name": "string",
+      "community_name": "fp16_gemv_k_split_bench.cpp",
       "file_type": "code",
       "norm_label": "string",
       "source_file": "",
@@ -7186,7 +7198,7 @@
       "label": "uint32_t",
       "_origin": "ast",
       "community": 118,
-      "community_name": "string",
+      "community_name": "fp16_gemv_k_split_bench.cpp",
       "file_type": "code",
       "norm_label": "uint32_t",
       "source_file": "",
@@ -7197,7 +7209,7 @@
       "label": "vector",
       "_origin": "ast",
       "community": 118,
-      "community_name": "string",
+      "community_name": "fp16_gemv_k_split_bench.cpp",
       "file_type": "code",
       "norm_label": "vector",
       "source_file": "",
@@ -7208,7 +7220,7 @@
       "label": "device",
       "_origin": "ast",
       "community": 118,
-      "community_name": "string",
+      "community_name": "fp16_gemv_k_split_bench.cpp",
       "file_type": "code",
       "norm_label": "device",
       "source_file": "bench/fp16_gemv_k_split_bench.cpp",
@@ -7219,7 +7231,7 @@
       "label": "iterations",
       "_origin": "ast",
       "community": 118,
-      "community_name": "string",
+      "community_name": "fp16_gemv_k_split_bench.cpp",
       "file_type": "code",
       "norm_label": "iterations",
       "source_file": "bench/fp16_gemv_k_split_bench.cpp",
@@ -7230,7 +7242,7 @@
       "label": "json_output",
       "_origin": "ast",
       "community": 118,
-      "community_name": "string",
+      "community_name": "fp16_gemv_k_split_bench.cpp",
       "file_type": "code",
       "norm_label": "json_output",
       "source_file": "bench/fp16_gemv_k_split_bench.cpp",
@@ -7241,7 +7253,7 @@
       "label": "seed",
       "_origin": "ast",
       "community": 118,
-      "community_name": "string",
+      "community_name": "fp16_gemv_k_split_bench.cpp",
       "file_type": "code",
       "norm_label": "seed",
       "source_file": "bench/fp16_gemv_k_split_bench.cpp",
@@ -7252,7 +7264,7 @@
       "label": "shape",
       "_origin": "ast",
       "community": 118,
-      "community_name": "string",
+      "community_name": "fp16_gemv_k_split_bench.cpp",
       "file_type": "code",
       "norm_label": "shape",
       "source_file": "bench/fp16_gemv_k_split_bench.cpp",
@@ -7263,7 +7275,7 @@
       "label": "warmup",
       "_origin": "ast",
       "community": 118,
-      "community_name": "string",
+      "community_name": "fp16_gemv_k_split_bench.cpp",
       "file_type": "code",
       "norm_label": "warmup",
       "source_file": "bench/fp16_gemv_k_split_bench.cpp",
@@ -7274,264 +7286,11 @@
       "label": "workgroups_per_row",
       "_origin": "ast",
       "community": 118,
-      "community_name": "string",
+      "community_name": "fp16_gemv_k_split_bench.cpp",
       "file_type": "code",
       "norm_label": "workgroups_per_row",
       "source_file": "bench/fp16_gemv_k_split_bench.cpp",
       "source_location": "L25"
-    },
-    {
-      "id": "bench_hip_smoke_bench",
-      "label": "hip_smoke_bench.cpp",
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "hip_smoke_bench.cpp",
-      "source_file": "bench/hip_smoke_bench.cpp",
-      "source_location": "L1"
-    },
-    {
-      "id": "bench_hip_smoke_bench_cpp_size_t",
-      "label": "size_t",
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "size_t",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "bench_hip_smoke_bench_cpp_string",
-      "label": "string",
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "string",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "bench_hip_smoke_bench_options_device",
-      "label": "device",
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "device",
-      "source_file": "bench/hip_smoke_bench.cpp",
-      "source_location": "L22"
-    },
-    {
-      "id": "bench_hip_smoke_bench_options_elements",
-      "label": "elements",
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "elements",
-      "source_file": "bench/hip_smoke_bench.cpp",
-      "source_location": "L25"
-    },
-    {
-      "id": "bench_hip_smoke_bench_options_iterations",
-      "label": "iterations",
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "iterations",
-      "source_file": "bench/hip_smoke_bench.cpp",
-      "source_location": "L24"
-    },
-    {
-      "id": "bench_hip_smoke_bench_options_json_output",
-      "label": "json_output",
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "json_output",
-      "source_file": "bench/hip_smoke_bench.cpp",
-      "source_location": "L26"
-    },
-    {
-      "id": "bench_hip_smoke_bench_options_warmup",
-      "label": "warmup",
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "warmup",
-      "source_file": "bench/hip_smoke_bench.cpp",
-      "source_location": "L23"
-    },
-    {
-      "id": "include_miinfer_device_validation",
-      "label": "device_validation.hpp",
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "device_validation.hpp",
-      "source_file": "include/miinfer/device_validation.hpp",
-      "source_location": "L1"
-    },
-    {
-      "id": "include_miinfer_device_validation_deviceinfo_architecture",
-      "label": "architecture",
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "architecture",
-      "source_file": "include/miinfer/device_validation.hpp",
-      "source_location": "L12"
-    },
-    {
-      "id": "include_miinfer_device_validation_deviceinfo_index",
-      "label": "index",
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "index",
-      "source_file": "include/miinfer/device_validation.hpp",
-      "source_location": "L10"
-    },
-    {
-      "id": "include_miinfer_device_validation_deviceinfo_name",
-      "label": "name",
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "name",
-      "source_file": "include/miinfer/device_validation.hpp",
-      "source_location": "L11"
-    },
-    {
-      "id": "include_miinfer_device_validation_deviceinfo_total_vram_bytes",
-      "label": "total_vram_bytes",
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "total_vram_bytes",
-      "source_file": "include/miinfer/device_validation.hpp",
-      "source_location": "L13"
-    },
-    {
-      "id": "include_miinfer_device_validation_hpp_size_t",
-      "label": "size_t",
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "size_t",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "include_miinfer_device_validation_hpp_string",
-      "label": "string",
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "string",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "include_miinfer_sha256",
-      "label": "sha256.hpp",
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "sha256.hpp",
-      "source_file": "include/miinfer/sha256.hpp",
-      "source_location": "L1"
-    },
-    {
-      "id": "include_miinfer_vector_add",
-      "label": "vector_add.hpp",
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "vector_add.hpp",
-      "source_file": "include/miinfer/vector_add.hpp",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_device_validation",
-      "label": "device_validation.cpp",
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "device_validation.cpp",
-      "source_file": "src/device_validation.cpp",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_device_validation_cpp_ostream",
-      "label": "ostream",
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "ostream",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "src_device_validation_cpp_string",
-      "label": "string",
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "string",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "tests_device_info",
-      "label": "device_info.cpp",
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "device_info.cpp",
-      "source_file": "tests/device_info.cpp",
-      "source_location": "L1"
-    },
-    {
-      "id": "tests_hip_smoke",
-      "label": "hip_smoke.cpp",
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "hip_smoke.cpp",
-      "source_file": "tests/hip_smoke.cpp",
-      "source_location": "L1"
-    },
-    {
-      "id": "tests_host_test",
-      "label": "host_test.cpp",
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "host_test.cpp",
-      "source_file": "tests/host_test.cpp",
-      "source_location": "L1"
     },
     {
       "id": "include_miinfer_gguf_gguffile_metadata",
@@ -8141,125 +7900,136 @@
       "source_location": "L1"
     },
     {
-      "id": "include_miinfer_qwen3_gpu_layer",
-      "label": "qwen3_gpu_layer.hpp",
+      "id": "include_miinfer_qwen3_gpu_primitives",
+      "label": "qwen3_gpu_primitives.hpp",
       "_origin": "ast",
       "community": 121,
       "community_name": "qwen3_forward_gpu_test.cpp",
       "file_type": "code",
-      "norm_label": "qwen3_gpu_layer.hpp",
-      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
+      "norm_label": "qwen3_gpu_primitives.hpp",
+      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
       "source_location": "L1"
     },
     {
-      "id": "include_miinfer_qwen3_gpu_layer_hpp_vector",
-      "label": "vector",
+      "id": "include_miinfer_qwen3_gpu_primitives_hpp_half",
+      "label": "__half",
       "_origin": "ast",
       "community": 121,
       "community_name": "qwen3_forward_gpu_test.cpp",
       "file_type": "code",
-      "norm_label": "vector",
+      "norm_label": "__half",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "include_miinfer_qwen3_gpu_layer_qwen3downprojectioncontracttrace_current_s_correction",
-      "label": "current_s_correction",
+      "id": "include_miinfer_qwen3_gpu_primitives_hpp_int16_t",
+      "label": "int16_t",
       "_origin": "ast",
       "community": 121,
       "community_name": "qwen3_forward_gpu_test.cpp",
       "file_type": "code",
-      "norm_label": "current_s_correction",
-      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
-      "source_location": "L43"
+      "norm_label": "int16_t",
+      "source_file": "",
+      "source_location": ""
     },
     {
-      "id": "include_miinfer_qwen3_gpu_layer_qwen3downprojectioncontracttrace_direct_signed_oracle",
-      "label": "direct_signed_oracle",
+      "id": "include_miinfer_qwen3_gpu_primitives_hpp_int8_t",
+      "label": "int8_t",
       "_origin": "ast",
       "community": 121,
       "community_name": "qwen3_forward_gpu_test.cpp",
       "file_type": "code",
-      "norm_label": "direct_signed_oracle",
-      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
-      "source_location": "L45"
+      "norm_label": "int8_t",
+      "source_file": "",
+      "source_location": ""
     },
     {
-      "id": "include_miinfer_qwen3_gpu_layer_qwen3downprojectioncontracttrace_exact_sum_correction",
-      "label": "exact_sum_correction",
+      "id": "include_miinfer_qwen3_gpu_primitives_hpp_uint8_t",
+      "label": "uint8_t",
       "_origin": "ast",
       "community": 121,
       "community_name": "qwen3_forward_gpu_test.cpp",
       "file_type": "code",
-      "norm_label": "exact_sum_correction",
-      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
-      "source_location": "L44"
+      "norm_label": "uint8_t",
+      "source_file": "",
+      "source_location": ""
     },
     {
-      "id": "include_miinfer_qwen3_gpu_layer_qwen3ffnprobetrace_ffn_output",
-      "label": "ffn_output",
+      "id": "include_miinfer_qwen3_gpu_primitives_q6kdeviceblock_d",
+      "label": "d",
       "_origin": "ast",
       "community": 121,
       "community_name": "qwen3_forward_gpu_test.cpp",
       "file_type": "code",
-      "norm_label": "ffn_output",
-      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
-      "source_location": "L38"
+      "norm_label": "d",
+      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
+      "source_location": "L15"
     },
     {
-      "id": "include_miinfer_qwen3_gpu_layer_qwen3ffnprobetrace_gate",
-      "label": "gate",
+      "id": "include_miinfer_qwen3_gpu_primitives_q6kdeviceblock_qh",
+      "label": "qh",
       "_origin": "ast",
       "community": 121,
       "community_name": "qwen3_forward_gpu_test.cpp",
       "file_type": "code",
-      "norm_label": "gate",
-      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
-      "source_location": "L35"
+      "norm_label": "qh",
+      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
+      "source_location": "L13"
     },
     {
-      "id": "include_miinfer_qwen3_gpu_layer_qwen3ffnprobetrace_layer_output",
-      "label": "layer_output",
+      "id": "include_miinfer_qwen3_gpu_primitives_q6kdeviceblock_ql",
+      "label": "ql",
       "_origin": "ast",
       "community": 121,
       "community_name": "qwen3_forward_gpu_test.cpp",
       "file_type": "code",
-      "norm_label": "layer_output",
-      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
-      "source_location": "L39"
+      "norm_label": "ql",
+      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
+      "source_location": "L12"
     },
     {
-      "id": "include_miinfer_qwen3_gpu_layer_qwen3ffnprobetrace_swiglu",
-      "label": "swiglu",
+      "id": "include_miinfer_qwen3_gpu_primitives_q6kdeviceblock_scales",
+      "label": "scales",
       "_origin": "ast",
       "community": 121,
       "community_name": "qwen3_forward_gpu_test.cpp",
       "file_type": "code",
-      "norm_label": "swiglu",
-      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
-      "source_location": "L37"
+      "norm_label": "scales",
+      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
+      "source_location": "L14"
     },
     {
-      "id": "include_miinfer_qwen3_gpu_layer_qwen3ffnprobetrace_up",
-      "label": "up",
+      "id": "include_miinfer_qwen3_gpu_primitives_q8kdeviceblock_bsums",
+      "label": "bsums",
       "_origin": "ast",
       "community": 121,
       "community_name": "qwen3_forward_gpu_test.cpp",
       "file_type": "code",
-      "norm_label": "up",
-      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
-      "source_location": "L36"
+      "norm_label": "bsums",
+      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
+      "source_location": "L23"
     },
     {
-      "id": "include_miinfer_qwen3_gpu_layer_qwen3projectionprobetrace_output",
-      "label": "output",
+      "id": "include_miinfer_qwen3_gpu_primitives_q8kdeviceblock_d",
+      "label": "d",
       "_origin": "ast",
       "community": 121,
       "community_name": "qwen3_forward_gpu_test.cpp",
       "file_type": "code",
-      "norm_label": "output",
-      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
-      "source_location": "L31"
+      "norm_label": "d",
+      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
+      "source_location": "L21"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_primitives_q8kdeviceblock_qs",
+      "label": "qs",
+      "_origin": "ast",
+      "community": 121,
+      "community_name": "qwen3_forward_gpu_test.cpp",
+      "file_type": "code",
+      "norm_label": "qs",
+      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
+      "source_location": "L22"
     },
     {
       "id": "tests_qwen3_forward_gpu_test",
@@ -8750,130 +8520,42 @@
       "label": "__half",
       "_origin": "ast",
       "community": 123,
-      "community_name": "DeviceShapeData",
+      "community_name": "Q8_1Block",
       "file_type": "code",
       "norm_label": "__half",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "bench_q4_q8_gemv_bench_deviceshapedata_device_input_fp16",
-      "label": "device_input_fp16",
-      "_origin": "ast",
-      "community": 123,
-      "community_name": "DeviceShapeData",
-      "file_type": "code",
-      "norm_label": "device_input_fp16",
-      "source_file": "bench/q4_q8_gemv_bench.cpp",
-      "source_location": "L267"
-    },
-    {
-      "id": "bench_q4_q8_gemv_bench_deviceshapedata_device_input_q8",
-      "label": "device_input_q8",
-      "_origin": "ast",
-      "community": 123,
-      "community_name": "DeviceShapeData",
-      "file_type": "code",
-      "norm_label": "device_input_q8",
-      "source_file": "bench/q4_q8_gemv_bench.cpp",
-      "source_location": "L266"
-    },
-    {
-      "id": "bench_q4_q8_gemv_bench_deviceshapedata_device_output",
-      "label": "device_output",
-      "_origin": "ast",
-      "community": 123,
-      "community_name": "DeviceShapeData",
-      "file_type": "code",
-      "norm_label": "device_output",
-      "source_file": "bench/q4_q8_gemv_bench.cpp",
-      "source_location": "L268"
-    },
-    {
-      "id": "bench_q4_q8_gemv_bench_deviceshapedata_device_weights",
-      "label": "device_weights",
-      "_origin": "ast",
-      "community": 123,
-      "community_name": "DeviceShapeData",
-      "file_type": "code",
-      "norm_label": "device_weights",
-      "source_file": "bench/q4_q8_gemv_bench.cpp",
-      "source_location": "L265"
-    },
-    {
-      "id": "bench_q4_q8_gemv_bench_deviceshapedata_input_fp16",
-      "label": "input_fp16",
-      "_origin": "ast",
-      "community": 123,
-      "community_name": "DeviceShapeData",
-      "file_type": "code",
-      "norm_label": "input_fp16",
-      "source_file": "bench/q4_q8_gemv_bench.cpp",
-      "source_location": "L260"
-    },
-    {
-      "id": "bench_q4_q8_gemv_bench_deviceshapedata_input_q8",
-      "label": "input_q8",
-      "_origin": "ast",
-      "community": 123,
-      "community_name": "DeviceShapeData",
-      "file_type": "code",
-      "norm_label": "input_q8",
-      "source_file": "bench/q4_q8_gemv_bench.cpp",
-      "source_location": "L262"
-    },
-    {
-      "id": "bench_q4_q8_gemv_bench_deviceshapedata_oracle_fp16",
-      "label": "oracle_fp16",
-      "_origin": "ast",
-      "community": 123,
-      "community_name": "DeviceShapeData",
-      "file_type": "code",
-      "norm_label": "oracle_fp16",
-      "source_file": "bench/q4_q8_gemv_bench.cpp",
-      "source_location": "L264"
-    },
-    {
-      "id": "bench_q4_q8_gemv_bench_deviceshapedata_oracle_q4_q8",
-      "label": "oracle_q4_q8",
-      "_origin": "ast",
-      "community": 123,
-      "community_name": "DeviceShapeData",
-      "file_type": "code",
-      "norm_label": "oracle_q4_q8",
-      "source_file": "bench/q4_q8_gemv_bench.cpp",
-      "source_location": "L263"
-    },
-    {
-      "id": "bench_q4_q8_gemv_bench_deviceshapedata_weights_fp16",
-      "label": "weights_fp16",
-      "_origin": "ast",
-      "community": 123,
-      "community_name": "DeviceShapeData",
-      "file_type": "code",
-      "norm_label": "weights_fp16",
-      "source_file": "bench/q4_q8_gemv_bench.cpp",
-      "source_location": "L259"
-    },
-    {
-      "id": "bench_q4_q8_gemv_bench_deviceshapedata_weights_q4",
-      "label": "weights_q4",
-      "_origin": "ast",
-      "community": 123,
-      "community_name": "DeviceShapeData",
-      "file_type": "code",
-      "norm_label": "weights_q4",
-      "source_file": "bench/q4_q8_gemv_bench.cpp",
-      "source_location": "L261"
-    },
-    {
       "id": "include_miinfer_q4_q8_gemv_hpp_half",
       "label": "__half",
       "_origin": "ast",
       "community": 123,
-      "community_name": "DeviceShapeData",
+      "community_name": "Q8_1Block",
       "file_type": "code",
       "norm_label": "__half",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "include_miinfer_q4_q8_gemv_hpp_int16_t",
+      "label": "int16_t",
+      "_origin": "ast",
+      "community": 123,
+      "community_name": "Q8_1Block",
+      "file_type": "code",
+      "norm_label": "int16_t",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "include_miinfer_q4_q8_gemv_hpp_int8_t",
+      "label": "int8_t",
+      "_origin": "ast",
+      "community": 123,
+      "community_name": "Q8_1Block",
+      "file_type": "code",
+      "norm_label": "int8_t",
       "source_file": "",
       "source_location": ""
     },
@@ -8882,7 +8564,7 @@
       "label": "uint8_t",
       "_origin": "ast",
       "community": 123,
-      "community_name": "DeviceShapeData",
+      "community_name": "Q8_1Block",
       "file_type": "code",
       "norm_label": "uint8_t",
       "source_file": "",
@@ -8893,7 +8575,7 @@
       "label": "d",
       "_origin": "ast",
       "community": 123,
-      "community_name": "DeviceShapeData",
+      "community_name": "Q8_1Block",
       "file_type": "code",
       "norm_label": "d",
       "source_file": "include/miinfer/q4_q8_gemv.hpp",
@@ -8904,7 +8586,7 @@
       "label": "qs",
       "_origin": "ast",
       "community": 123,
-      "community_name": "DeviceShapeData",
+      "community_name": "Q8_1Block",
       "file_type": "code",
       "norm_label": "qs",
       "source_file": "include/miinfer/q4_q8_gemv.hpp",
@@ -8915,7 +8597,7 @@
       "label": "d",
       "_origin": "ast",
       "community": 123,
-      "community_name": "DeviceShapeData",
+      "community_name": "Q8_1Block",
       "file_type": "code",
       "norm_label": "d",
       "source_file": "include/miinfer/q4_q8_gemv.hpp",
@@ -8926,7 +8608,7 @@
       "label": "qs",
       "_origin": "ast",
       "community": 123,
-      "community_name": "DeviceShapeData",
+      "community_name": "Q8_1Block",
       "file_type": "code",
       "norm_label": "qs",
       "source_file": "include/miinfer/q4_q8_gemv.hpp",
@@ -8937,11 +8619,88 @@
       "label": "s",
       "_origin": "ast",
       "community": 123,
-      "community_name": "DeviceShapeData",
+      "community_name": "Q8_1Block",
       "file_type": "code",
       "norm_label": "s",
       "source_file": "include/miinfer/q4_q8_gemv.hpp",
       "source_location": "L25"
+    },
+    {
+      "id": "include_miinfer_q4_q8_gemv_q8exactblock_d",
+      "label": "d",
+      "_origin": "ast",
+      "community": 123,
+      "community_name": "Q8_1Block",
+      "file_type": "code",
+      "norm_label": "d",
+      "source_file": "include/miinfer/q4_q8_gemv.hpp",
+      "source_location": "L33"
+    },
+    {
+      "id": "include_miinfer_q4_q8_gemv_q8exactblock_qs",
+      "label": "qs",
+      "_origin": "ast",
+      "community": 123,
+      "community_name": "Q8_1Block",
+      "file_type": "code",
+      "norm_label": "qs",
+      "source_file": "include/miinfer/q4_q8_gemv.hpp",
+      "source_location": "L35"
+    },
+    {
+      "id": "include_miinfer_q4_q8_gemv_q8exactblock_sum",
+      "label": "sum",
+      "_origin": "ast",
+      "community": 123,
+      "community_name": "Q8_1Block",
+      "file_type": "code",
+      "norm_label": "sum",
+      "source_file": "include/miinfer/q4_q8_gemv.hpp",
+      "source_location": "L34"
+    },
+    {
+      "id": "src_q4_q8_gemv_reference",
+      "label": "q4_q8_gemv_reference.cpp",
+      "_origin": "ast",
+      "community": 123,
+      "community_name": "Q8_1Block",
+      "file_type": "code",
+      "norm_label": "q4_q8_gemv_reference.cpp",
+      "source_file": "src/q4_q8_gemv_reference.cpp",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_q4_q8_gemv_reference_cpp_half",
+      "label": "__half",
+      "_origin": "ast",
+      "community": 123,
+      "community_name": "Q8_1Block",
+      "file_type": "code",
+      "norm_label": "__half",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "src_q4_q8_gemv_reference_cpp_size_t",
+      "label": "size_t",
+      "_origin": "ast",
+      "community": 123,
+      "community_name": "Q8_1Block",
+      "file_type": "code",
+      "norm_label": "size_t",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "src_q4_q8_gemv_reference_cpp_vector",
+      "label": "vector",
+      "_origin": "ast",
+      "community": 123,
+      "community_name": "Q8_1Block",
+      "file_type": "code",
+      "norm_label": "vector",
+      "source_file": "",
+      "source_location": ""
     },
     {
       "id": "docs_reference_baseline",
@@ -9978,138 +9737,6 @@
       "source_location": ""
     },
     {
-      "id": "include_miinfer_qwen3_gpu_primitives",
-      "label": "qwen3_gpu_primitives.hpp",
-      "_origin": "ast",
-      "community": 130,
-      "community_name": "Sha256",
-      "file_type": "code",
-      "norm_label": "qwen3_gpu_primitives.hpp",
-      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
-      "source_location": "L1"
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives_hpp_half",
-      "label": "__half",
-      "_origin": "ast",
-      "community": 130,
-      "community_name": "Sha256",
-      "file_type": "code",
-      "norm_label": "__half",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives_hpp_int16_t",
-      "label": "int16_t",
-      "_origin": "ast",
-      "community": 130,
-      "community_name": "Sha256",
-      "file_type": "code",
-      "norm_label": "int16_t",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives_hpp_int8_t",
-      "label": "int8_t",
-      "_origin": "ast",
-      "community": 130,
-      "community_name": "Sha256",
-      "file_type": "code",
-      "norm_label": "int8_t",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives_hpp_uint8_t",
-      "label": "uint8_t",
-      "_origin": "ast",
-      "community": 130,
-      "community_name": "Sha256",
-      "file_type": "code",
-      "norm_label": "uint8_t",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives_q6kdeviceblock_d",
-      "label": "d",
-      "_origin": "ast",
-      "community": 130,
-      "community_name": "Sha256",
-      "file_type": "code",
-      "norm_label": "d",
-      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
-      "source_location": "L15"
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives_q6kdeviceblock_qh",
-      "label": "qh",
-      "_origin": "ast",
-      "community": 130,
-      "community_name": "Sha256",
-      "file_type": "code",
-      "norm_label": "qh",
-      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
-      "source_location": "L13"
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives_q6kdeviceblock_ql",
-      "label": "ql",
-      "_origin": "ast",
-      "community": 130,
-      "community_name": "Sha256",
-      "file_type": "code",
-      "norm_label": "ql",
-      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
-      "source_location": "L12"
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives_q6kdeviceblock_scales",
-      "label": "scales",
-      "_origin": "ast",
-      "community": 130,
-      "community_name": "Sha256",
-      "file_type": "code",
-      "norm_label": "scales",
-      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
-      "source_location": "L14"
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives_q8kdeviceblock_bsums",
-      "label": "bsums",
-      "_origin": "ast",
-      "community": 130,
-      "community_name": "Sha256",
-      "file_type": "code",
-      "norm_label": "bsums",
-      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
-      "source_location": "L23"
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives_q8kdeviceblock_d",
-      "label": "d",
-      "_origin": "ast",
-      "community": 130,
-      "community_name": "Sha256",
-      "file_type": "code",
-      "norm_label": "d",
-      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
-      "source_location": "L21"
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives_q8kdeviceblock_qs",
-      "label": "qs",
-      "_origin": "ast",
-      "community": 130,
-      "community_name": "Sha256",
-      "file_type": "code",
-      "norm_label": "qs",
-      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
-      "source_location": "L22"
-    },
-    {
       "id": "src_sha256",
       "label": "sha256.cpp",
       "_origin": "ast",
@@ -10363,48 +9990,147 @@
       "source_location": ""
     },
     {
-      "id": "src_q4_q8_gemv_reference",
-      "label": "q4_q8_gemv_reference.cpp",
+      "id": "include_miinfer_device_validation",
+      "label": "device_validation.hpp",
       "_origin": "ast",
       "community": 132,
-      "community_name": "q4_q8_gemv_reference.cpp",
+      "community_name": "string",
       "file_type": "code",
-      "norm_label": "q4_q8_gemv_reference.cpp",
-      "source_file": "src/q4_q8_gemv_reference.cpp",
+      "norm_label": "device_validation.hpp",
+      "source_file": "include/miinfer/device_validation.hpp",
       "source_location": "L1"
     },
     {
-      "id": "src_q4_q8_gemv_reference_cpp_half",
-      "label": "__half",
+      "id": "include_miinfer_device_validation_deviceinfo_architecture",
+      "label": "architecture",
       "_origin": "ast",
       "community": 132,
-      "community_name": "q4_q8_gemv_reference.cpp",
+      "community_name": "string",
       "file_type": "code",
-      "norm_label": "__half",
-      "source_file": "",
-      "source_location": ""
+      "norm_label": "architecture",
+      "source_file": "include/miinfer/device_validation.hpp",
+      "source_location": "L12"
     },
     {
-      "id": "src_q4_q8_gemv_reference_cpp_size_t",
+      "id": "include_miinfer_device_validation_deviceinfo_index",
+      "label": "index",
+      "_origin": "ast",
+      "community": 132,
+      "community_name": "string",
+      "file_type": "code",
+      "norm_label": "index",
+      "source_file": "include/miinfer/device_validation.hpp",
+      "source_location": "L10"
+    },
+    {
+      "id": "include_miinfer_device_validation_deviceinfo_name",
+      "label": "name",
+      "_origin": "ast",
+      "community": 132,
+      "community_name": "string",
+      "file_type": "code",
+      "norm_label": "name",
+      "source_file": "include/miinfer/device_validation.hpp",
+      "source_location": "L11"
+    },
+    {
+      "id": "include_miinfer_device_validation_deviceinfo_total_vram_bytes",
+      "label": "total_vram_bytes",
+      "_origin": "ast",
+      "community": 132,
+      "community_name": "string",
+      "file_type": "code",
+      "norm_label": "total_vram_bytes",
+      "source_file": "include/miinfer/device_validation.hpp",
+      "source_location": "L13"
+    },
+    {
+      "id": "include_miinfer_device_validation_hpp_size_t",
       "label": "size_t",
       "_origin": "ast",
       "community": 132,
-      "community_name": "q4_q8_gemv_reference.cpp",
+      "community_name": "string",
       "file_type": "code",
       "norm_label": "size_t",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "src_q4_q8_gemv_reference_cpp_vector",
-      "label": "vector",
+      "id": "include_miinfer_device_validation_hpp_string",
+      "label": "string",
       "_origin": "ast",
       "community": 132,
-      "community_name": "q4_q8_gemv_reference.cpp",
+      "community_name": "string",
       "file_type": "code",
-      "norm_label": "vector",
+      "norm_label": "string",
       "source_file": "",
       "source_location": ""
+    },
+    {
+      "id": "include_miinfer_sha256",
+      "label": "sha256.hpp",
+      "_origin": "ast",
+      "community": 132,
+      "community_name": "string",
+      "file_type": "code",
+      "norm_label": "sha256.hpp",
+      "source_file": "include/miinfer/sha256.hpp",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_device_validation",
+      "label": "device_validation.cpp",
+      "_origin": "ast",
+      "community": 132,
+      "community_name": "string",
+      "file_type": "code",
+      "norm_label": "device_validation.cpp",
+      "source_file": "src/device_validation.cpp",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_device_validation_cpp_ostream",
+      "label": "ostream",
+      "_origin": "ast",
+      "community": 132,
+      "community_name": "string",
+      "file_type": "code",
+      "norm_label": "ostream",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "src_device_validation_cpp_string",
+      "label": "string",
+      "_origin": "ast",
+      "community": 132,
+      "community_name": "string",
+      "file_type": "code",
+      "norm_label": "string",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "tests_device_info",
+      "label": "device_info.cpp",
+      "_origin": "ast",
+      "community": 132,
+      "community_name": "string",
+      "file_type": "code",
+      "norm_label": "device_info.cpp",
+      "source_file": "tests/device_info.cpp",
+      "source_location": "L1"
+    },
+    {
+      "id": "tests_host_test",
+      "label": "host_test.cpp",
+      "_origin": "ast",
+      "community": 132,
+      "community_name": "string",
+      "file_type": "code",
+      "norm_label": "host_test.cpp",
+      "source_file": "tests/host_test.cpp",
+      "source_location": "L1"
     },
     {
       "id": "include_miinfer_qwen3_model_hpp_uint32_t",
@@ -10682,81 +10408,114 @@
       "source_location": "L21"
     },
     {
-      "id": "include_miinfer_fp16_gemv_fp16gemvmetrics_cosine_similarity",
-      "label": "cosine_similarity",
+      "id": "bench_hip_smoke_bench",
+      "label": "hip_smoke_bench.cpp",
       "_origin": "ast",
       "community": 136,
-      "community_name": "Fp16GemvMetrics",
+      "community_name": "hip_smoke_bench.cpp",
       "file_type": "code",
-      "norm_label": "cosine_similarity",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L25"
+      "norm_label": "hip_smoke_bench.cpp",
+      "source_file": "bench/hip_smoke_bench.cpp",
+      "source_location": "L1"
     },
     {
-      "id": "include_miinfer_fp16_gemv_fp16gemvmetrics_inf_detected",
-      "label": "inf_detected",
+      "id": "bench_hip_smoke_bench_cpp_size_t",
+      "label": "size_t",
       "_origin": "ast",
       "community": 136,
-      "community_name": "Fp16GemvMetrics",
+      "community_name": "hip_smoke_bench.cpp",
       "file_type": "code",
-      "norm_label": "inf_detected",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L27"
+      "norm_label": "size_t",
+      "source_file": "",
+      "source_location": ""
     },
     {
-      "id": "include_miinfer_fp16_gemv_fp16gemvmetrics_max_abs_error",
-      "label": "max_abs_error",
+      "id": "bench_hip_smoke_bench_cpp_string",
+      "label": "string",
       "_origin": "ast",
       "community": 136,
-      "community_name": "Fp16GemvMetrics",
+      "community_name": "hip_smoke_bench.cpp",
       "file_type": "code",
-      "norm_label": "max_abs_error",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "norm_label": "string",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "bench_hip_smoke_bench_options_device",
+      "label": "device",
+      "_origin": "ast",
+      "community": 136,
+      "community_name": "hip_smoke_bench.cpp",
+      "file_type": "code",
+      "norm_label": "device",
+      "source_file": "bench/hip_smoke_bench.cpp",
       "source_location": "L22"
     },
     {
-      "id": "include_miinfer_fp16_gemv_fp16gemvmetrics_max_relative_error",
-      "label": "max_relative_error",
+      "id": "bench_hip_smoke_bench_options_elements",
+      "label": "elements",
       "_origin": "ast",
       "community": 136,
-      "community_name": "Fp16GemvMetrics",
+      "community_name": "hip_smoke_bench.cpp",
       "file_type": "code",
-      "norm_label": "max_relative_error",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "norm_label": "elements",
+      "source_file": "bench/hip_smoke_bench.cpp",
+      "source_location": "L25"
+    },
+    {
+      "id": "bench_hip_smoke_bench_options_iterations",
+      "label": "iterations",
+      "_origin": "ast",
+      "community": 136,
+      "community_name": "hip_smoke_bench.cpp",
+      "file_type": "code",
+      "norm_label": "iterations",
+      "source_file": "bench/hip_smoke_bench.cpp",
       "source_location": "L24"
     },
     {
-      "id": "include_miinfer_fp16_gemv_fp16gemvmetrics_mean_abs_error",
-      "label": "mean_abs_error",
+      "id": "bench_hip_smoke_bench_options_json_output",
+      "label": "json_output",
       "_origin": "ast",
       "community": 136,
-      "community_name": "Fp16GemvMetrics",
+      "community_name": "hip_smoke_bench.cpp",
       "file_type": "code",
-      "norm_label": "mean_abs_error",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L23"
-    },
-    {
-      "id": "include_miinfer_fp16_gemv_fp16gemvmetrics_nan_detected",
-      "label": "nan_detected",
-      "_origin": "ast",
-      "community": 136,
-      "community_name": "Fp16GemvMetrics",
-      "file_type": "code",
-      "norm_label": "nan_detected",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "norm_label": "json_output",
+      "source_file": "bench/hip_smoke_bench.cpp",
       "source_location": "L26"
     },
     {
-      "id": "include_miinfer_fp16_gemv_fp16gemvmetrics_pass",
-      "label": "pass",
+      "id": "bench_hip_smoke_bench_options_warmup",
+      "label": "warmup",
       "_origin": "ast",
       "community": 136,
-      "community_name": "Fp16GemvMetrics",
+      "community_name": "hip_smoke_bench.cpp",
       "file_type": "code",
-      "norm_label": "pass",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L28"
+      "norm_label": "warmup",
+      "source_file": "bench/hip_smoke_bench.cpp",
+      "source_location": "L23"
+    },
+    {
+      "id": "include_miinfer_vector_add",
+      "label": "vector_add.hpp",
+      "_origin": "ast",
+      "community": 136,
+      "community_name": "hip_smoke_bench.cpp",
+      "file_type": "code",
+      "norm_label": "vector_add.hpp",
+      "source_file": "include/miinfer/vector_add.hpp",
+      "source_location": "L1"
+    },
+    {
+      "id": "tests_hip_smoke",
+      "label": "hip_smoke.cpp",
+      "_origin": "ast",
+      "community": 136,
+      "community_name": "hip_smoke_bench.cpp",
+      "file_type": "code",
+      "norm_label": "hip_smoke.cpp",
+      "source_file": "tests/hip_smoke.cpp",
+      "source_location": "L1"
     },
     {
       "id": "tests_reference_qwen3_m4b_layer6_readme",
@@ -11600,46 +11359,90 @@
       "source_location": ""
     },
     {
-      "id": "src_fp16_gemv_reference",
-      "label": "fp16_gemv_reference.cpp",
+      "id": "include_miinfer_hip_check",
+      "label": "hip_check.hpp",
       "_origin": "ast",
       "community": 143,
-      "community_name": "fp16_gemv_reference.cpp",
+      "community_name": "hip_check.hpp",
       "file_type": "code",
-      "norm_label": "fp16_gemv_reference.cpp",
-      "source_file": "src/fp16_gemv_reference.cpp",
+      "norm_label": "hip_check.hpp",
+      "source_file": "include/miinfer/hip_check.hpp",
       "source_location": "L1"
     },
     {
-      "id": "src_fp16_gemv_reference_cpp_half",
-      "label": "__half",
+      "id": "include_miinfer_hip_check_hpp_hiperror_t",
+      "label": "hipError_t",
       "_origin": "ast",
       "community": 143,
-      "community_name": "fp16_gemv_reference.cpp",
+      "community_name": "hip_check.hpp",
       "file_type": "code",
-      "norm_label": "__half",
+      "norm_label": "hiperror_t",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "src_fp16_gemv_reference_cpp_uint32_t",
-      "label": "uint32_t",
+      "id": "include_miinfer_q4_q8_gemv",
+      "label": "q4_q8_gemv.hpp",
       "_origin": "ast",
       "community": 143,
-      "community_name": "fp16_gemv_reference.cpp",
+      "community_name": "hip_check.hpp",
       "file_type": "code",
-      "norm_label": "uint32_t",
-      "source_file": "",
-      "source_location": ""
+      "norm_label": "q4_q8_gemv.hpp",
+      "source_file": "include/miinfer/q4_q8_gemv.hpp",
+      "source_location": "L1"
     },
     {
-      "id": "src_fp16_gemv_reference_cpp_vector",
-      "label": "vector",
+      "id": "include_miinfer_q4_q8_packed_dot",
+      "label": "q4_q8_packed_dot.hpp",
       "_origin": "ast",
       "community": 143,
-      "community_name": "fp16_gemv_reference.cpp",
+      "community_name": "hip_check.hpp",
       "file_type": "code",
-      "norm_label": "vector",
+      "norm_label": "q4_q8_packed_dot.hpp",
+      "source_file": "include/miinfer/q4_q8_packed_dot.hpp",
+      "source_location": "L1"
+    },
+    {
+      "id": "include_miinfer_q4_q8_zero_point_dot",
+      "label": "q4_q8_zero_point_dot.hpp",
+      "_origin": "ast",
+      "community": 143,
+      "community_name": "hip_check.hpp",
+      "file_type": "code",
+      "norm_label": "q4_q8_zero_point_dot.hpp",
+      "source_file": "include/miinfer/q4_q8_zero_point_dot.hpp",
+      "source_location": "L1"
+    },
+    {
+      "id": "tests_q4_q8_dot4_probe",
+      "label": "q4_q8_dot4_probe.cpp",
+      "_origin": "ast",
+      "community": 143,
+      "community_name": "hip_check.hpp",
+      "file_type": "code",
+      "norm_label": "q4_q8_dot4_probe.cpp",
+      "source_file": "tests/q4_q8_dot4_probe.cpp",
+      "source_location": "L1"
+    },
+    {
+      "id": "tests_q4_q8_gemv_test",
+      "label": "q4_q8_gemv_test.cpp",
+      "_origin": "ast",
+      "community": 143,
+      "community_name": "hip_check.hpp",
+      "file_type": "code",
+      "norm_label": "q4_q8_gemv_test.cpp",
+      "source_file": "tests/q4_q8_gemv_test.cpp",
+      "source_location": "L1"
+    },
+    {
+      "id": "tests_q4_q8_gemv_test_cpp_string",
+      "label": "string",
+      "_origin": "ast",
+      "community": 143,
+      "community_name": "hip_check.hpp",
+      "file_type": "code",
+      "norm_label": "string",
       "source_file": "",
       "source_location": ""
     },
@@ -11699,64 +11502,114 @@
       "source_location": "L56"
     },
     {
-      "id": "docs_roadmap_benchmark_before_claim",
-      "label": "Benchmark before claim",
+      "id": "bench_q4_q8_gemv_bench_deviceshapedata_device_input_fp16",
+      "label": "device_input_fp16",
       "_origin": "ast",
       "community": 145,
-      "community_name": "Roadmap Principles",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "benchmark before claim",
-      "source_file": "docs/roadmap.md",
-      "source_location": "L46"
+      "community_name": "DeviceShapeData",
+      "file_type": "code",
+      "norm_label": "device_input_fp16",
+      "source_file": "bench/q4_q8_gemv_bench.cpp",
+      "source_location": "L267"
     },
     {
-      "id": "docs_roadmap_correctness_before_speed",
-      "label": "Correctness before speed",
+      "id": "bench_q4_q8_gemv_bench_deviceshapedata_device_input_q8",
+      "label": "device_input_q8",
       "_origin": "ast",
       "community": 145,
-      "community_name": "Roadmap Principles",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "correctness before speed",
-      "source_file": "docs/roadmap.md",
-      "source_location": "L42"
+      "community_name": "DeviceShapeData",
+      "file_type": "code",
+      "norm_label": "device_input_q8",
+      "source_file": "bench/q4_q8_gemv_bench.cpp",
+      "source_location": "L266"
     },
     {
-      "id": "docs_roadmap_evidence_before_architecture",
-      "label": "Evidence before architecture",
+      "id": "bench_q4_q8_gemv_bench_deviceshapedata_device_output",
+      "label": "device_output",
       "_origin": "ast",
       "community": 145,
-      "community_name": "Roadmap Principles",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "evidence before architecture",
-      "source_file": "docs/roadmap.md",
-      "source_location": "L34"
+      "community_name": "DeviceShapeData",
+      "file_type": "code",
+      "norm_label": "device_output",
+      "source_file": "bench/q4_q8_gemv_bench.cpp",
+      "source_location": "L268"
     },
     {
-      "id": "docs_roadmap_narrow_before_broad",
-      "label": "Narrow before broad",
+      "id": "bench_q4_q8_gemv_bench_deviceshapedata_device_weights",
+      "label": "device_weights",
       "_origin": "ast",
       "community": 145,
-      "community_name": "Roadmap Principles",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "narrow before broad",
-      "source_file": "docs/roadmap.md",
-      "source_location": "L38"
+      "community_name": "DeviceShapeData",
+      "file_type": "code",
+      "norm_label": "device_weights",
+      "source_file": "bench/q4_q8_gemv_bench.cpp",
+      "source_location": "L265"
     },
     {
-      "id": "docs_roadmap_roadmap_principles",
-      "label": "Roadmap Principles",
+      "id": "bench_q4_q8_gemv_bench_deviceshapedata_input_fp16",
+      "label": "input_fp16",
       "_origin": "ast",
       "community": 145,
-      "community_name": "Roadmap Principles",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "roadmap principles",
-      "source_file": "docs/roadmap.md",
-      "source_location": "L32"
+      "community_name": "DeviceShapeData",
+      "file_type": "code",
+      "norm_label": "input_fp16",
+      "source_file": "bench/q4_q8_gemv_bench.cpp",
+      "source_location": "L260"
+    },
+    {
+      "id": "bench_q4_q8_gemv_bench_deviceshapedata_input_q8",
+      "label": "input_q8",
+      "_origin": "ast",
+      "community": 145,
+      "community_name": "DeviceShapeData",
+      "file_type": "code",
+      "norm_label": "input_q8",
+      "source_file": "bench/q4_q8_gemv_bench.cpp",
+      "source_location": "L262"
+    },
+    {
+      "id": "bench_q4_q8_gemv_bench_deviceshapedata_oracle_fp16",
+      "label": "oracle_fp16",
+      "_origin": "ast",
+      "community": 145,
+      "community_name": "DeviceShapeData",
+      "file_type": "code",
+      "norm_label": "oracle_fp16",
+      "source_file": "bench/q4_q8_gemv_bench.cpp",
+      "source_location": "L264"
+    },
+    {
+      "id": "bench_q4_q8_gemv_bench_deviceshapedata_oracle_q4_q8",
+      "label": "oracle_q4_q8",
+      "_origin": "ast",
+      "community": 145,
+      "community_name": "DeviceShapeData",
+      "file_type": "code",
+      "norm_label": "oracle_q4_q8",
+      "source_file": "bench/q4_q8_gemv_bench.cpp",
+      "source_location": "L263"
+    },
+    {
+      "id": "bench_q4_q8_gemv_bench_deviceshapedata_weights_fp16",
+      "label": "weights_fp16",
+      "_origin": "ast",
+      "community": 145,
+      "community_name": "DeviceShapeData",
+      "file_type": "code",
+      "norm_label": "weights_fp16",
+      "source_file": "bench/q4_q8_gemv_bench.cpp",
+      "source_location": "L259"
+    },
+    {
+      "id": "bench_q4_q8_gemv_bench_deviceshapedata_weights_q4",
+      "label": "weights_q4",
+      "_origin": "ast",
+      "community": 145,
+      "community_name": "DeviceShapeData",
+      "file_type": "code",
+      "norm_label": "weights_q4",
+      "source_file": "bench/q4_q8_gemv_bench.cpp",
+      "source_location": "L261"
     },
     {
       "id": "include_miinfer_qwen3_primitives",
@@ -12568,6 +12421,18 @@
       "source_location": "L226"
     },
     {
+      "id": "docs_m4b_forward_m4_b8_canonical_oracle_and_precision_policy",
+      "label": "M4-B8 canonical oracle and precision policy",
+      "_origin": "ast",
+      "community": 150,
+      "community_name": "M4-B \u2014 Full Qwen3 single-token forward",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "m4-b8 canonical oracle and precision policy",
+      "source_file": "docs/m4b-forward.md",
+      "source_location": "L300"
+    },
+    {
       "id": "docs_m4b_forward_m4_b_full_qwen3_single_token_forward",
       "label": "M4-B \u2014 Full Qwen3 single-token forward",
       "_origin": "ast",
@@ -12590,6 +12455,30 @@
       "norm_label": "physical acceptance command",
       "source_file": "docs/m4b-forward.md",
       "source_location": "L273"
+    },
+    {
+      "id": "tests_reference_qwen3_m4b_single_token_legacy_readme",
+      "label": "m4b-single-token-legacy/README.md",
+      "_origin": "ast",
+      "community": 151,
+      "community_name": "m4b-single-token-legacy/README.md",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "m4b-single-token-legacy/readme.md",
+      "source_file": "tests/reference/qwen3/m4b-single-token-legacy/README.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "tests_reference_qwen3_m4b_single_token_legacy_readme_m4_b_single_token_full_model_reference_trace",
+      "label": "M4-B single-token full-model reference trace",
+      "_origin": "ast",
+      "community": 151,
+      "community_name": "m4b-single-token-legacy/README.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "m4-b single-token full-model reference trace",
+      "source_file": "tests/reference/qwen3/m4b-single-token-legacy/README.md",
+      "source_location": "L1"
     },
     {
       "id": "tests_reference_qwen3_m4b_single_token_readme",
@@ -14338,6 +14227,30 @@
       "source_location": "L1"
     },
     {
+      "id": "docs_roadmap_benchmark_before_claim",
+      "label": "Benchmark before claim",
+      "_origin": "ast",
+      "community": 23,
+      "community_name": "roadmap.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "benchmark before claim",
+      "source_file": "docs/roadmap.md",
+      "source_location": "L46"
+    },
+    {
+      "id": "docs_roadmap_correctness_before_speed",
+      "label": "Correctness before speed",
+      "_origin": "ast",
+      "community": 23,
+      "community_name": "roadmap.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "correctness before speed",
+      "source_file": "docs/roadmap.md",
+      "source_location": "L42"
+    },
+    {
       "id": "docs_roadmap_current_execution_order",
       "label": "Current Execution Order",
       "_origin": "ast",
@@ -14374,6 +14287,18 @@
       "source_location": "L691"
     },
     {
+      "id": "docs_roadmap_evidence_before_architecture",
+      "label": "Evidence before architecture",
+      "_origin": "ast",
+      "community": 23,
+      "community_name": "roadmap.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "evidence before architecture",
+      "source_file": "docs/roadmap.md",
+      "source_location": "L34"
+    },
+    {
       "id": "docs_roadmap_immediate_next_milestone",
       "label": "Immediate Next Milestone",
       "_origin": "ast",
@@ -14383,7 +14308,7 @@
       "node_kind": "heading",
       "norm_label": "immediate next milestone",
       "source_file": "docs/roadmap.md",
-      "source_location": "L769"
+      "source_location": "L770"
     },
     {
       "id": "docs_roadmap_miinfer_roadmap",
@@ -14410,6 +14335,18 @@
       "source_location": "L716"
     },
     {
+      "id": "docs_roadmap_narrow_before_broad",
+      "label": "Narrow before broad",
+      "_origin": "ast",
+      "community": 23,
+      "community_name": "roadmap.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "narrow before broad",
+      "source_file": "docs/roadmap.md",
+      "source_location": "L38"
+    },
+    {
       "id": "docs_roadmap_roadmap_change_policy",
       "label": "Roadmap Change Policy",
       "_origin": "ast",
@@ -14419,7 +14356,19 @@
       "node_kind": "heading",
       "norm_label": "roadmap change policy",
       "source_file": "docs/roadmap.md",
-      "source_location": "L787"
+      "source_location": "L790"
+    },
+    {
+      "id": "docs_roadmap_roadmap_principles",
+      "label": "Roadmap Principles",
+      "_origin": "ast",
+      "community": 23,
+      "community_name": "roadmap.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "roadmap principles",
+      "source_file": "docs/roadmap.md",
+      "source_location": "L32"
     },
     {
       "id": "docs_roadmap_success_definition",
@@ -14431,7 +14380,7 @@
       "node_kind": "heading",
       "norm_label": "success definition",
       "source_file": "docs/roadmap.md",
-      "source_location": "L805"
+      "source_location": "L808"
     },
     {
       "id": "readme",
@@ -14979,6 +14928,127 @@
       "norm_label": "warmup",
       "source_file": "bench/fp16_gemv_bench.cpp",
       "source_location": "L33"
+    },
+    {
+      "id": "include_miinfer_fp16_gemv_fp16gemvmetrics_cosine_similarity",
+      "label": "cosine_similarity",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "fp16_gemv_bench.cpp",
+      "file_type": "code",
+      "norm_label": "cosine_similarity",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L25"
+    },
+    {
+      "id": "include_miinfer_fp16_gemv_fp16gemvmetrics_inf_detected",
+      "label": "inf_detected",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "fp16_gemv_bench.cpp",
+      "file_type": "code",
+      "norm_label": "inf_detected",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L27"
+    },
+    {
+      "id": "include_miinfer_fp16_gemv_fp16gemvmetrics_max_abs_error",
+      "label": "max_abs_error",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "fp16_gemv_bench.cpp",
+      "file_type": "code",
+      "norm_label": "max_abs_error",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L22"
+    },
+    {
+      "id": "include_miinfer_fp16_gemv_fp16gemvmetrics_max_relative_error",
+      "label": "max_relative_error",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "fp16_gemv_bench.cpp",
+      "file_type": "code",
+      "norm_label": "max_relative_error",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L24"
+    },
+    {
+      "id": "include_miinfer_fp16_gemv_fp16gemvmetrics_mean_abs_error",
+      "label": "mean_abs_error",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "fp16_gemv_bench.cpp",
+      "file_type": "code",
+      "norm_label": "mean_abs_error",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L23"
+    },
+    {
+      "id": "include_miinfer_fp16_gemv_fp16gemvmetrics_nan_detected",
+      "label": "nan_detected",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "fp16_gemv_bench.cpp",
+      "file_type": "code",
+      "norm_label": "nan_detected",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L26"
+    },
+    {
+      "id": "include_miinfer_fp16_gemv_fp16gemvmetrics_pass",
+      "label": "pass",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "fp16_gemv_bench.cpp",
+      "file_type": "code",
+      "norm_label": "pass",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L28"
+    },
+    {
+      "id": "src_fp16_gemv_reference",
+      "label": "fp16_gemv_reference.cpp",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "fp16_gemv_bench.cpp",
+      "file_type": "code",
+      "norm_label": "fp16_gemv_reference.cpp",
+      "source_file": "src/fp16_gemv_reference.cpp",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_fp16_gemv_reference_cpp_half",
+      "label": "__half",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "fp16_gemv_bench.cpp",
+      "file_type": "code",
+      "norm_label": "__half",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "src_fp16_gemv_reference_cpp_uint32_t",
+      "label": "uint32_t",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "fp16_gemv_bench.cpp",
+      "file_type": "code",
+      "norm_label": "uint32_t",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "src_fp16_gemv_reference_cpp_vector",
+      "label": "vector",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "fp16_gemv_bench.cpp",
+      "file_type": "code",
+      "norm_label": "vector",
+      "source_file": "",
+      "source_location": ""
     },
     {
       "id": "codex_skills_graphify_references_exports",
@@ -18361,113 +18431,14 @@
       "source_location": "L1"
     },
     {
-      "id": "include_miinfer_hip_check",
-      "label": "hip_check.hpp",
+      "id": "include_miinfer_qwen3_gpu_layer",
+      "label": "qwen3_gpu_layer.hpp",
       "_origin": "ast",
       "community": 57,
       "community_name": "qwen3_gpu_layer.cpp",
       "file_type": "code",
-      "norm_label": "hip_check.hpp",
-      "source_file": "include/miinfer/hip_check.hpp",
-      "source_location": "L1"
-    },
-    {
-      "id": "include_miinfer_hip_check_hpp_hiperror_t",
-      "label": "hipError_t",
-      "_origin": "ast",
-      "community": 57,
-      "community_name": "qwen3_gpu_layer.cpp",
-      "file_type": "code",
-      "norm_label": "hiperror_t",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "include_miinfer_q4_q8_gemv",
-      "label": "q4_q8_gemv.hpp",
-      "_origin": "ast",
-      "community": 57,
-      "community_name": "qwen3_gpu_layer.cpp",
-      "file_type": "code",
-      "norm_label": "q4_q8_gemv.hpp",
-      "source_file": "include/miinfer/q4_q8_gemv.hpp",
-      "source_location": "L1"
-    },
-    {
-      "id": "include_miinfer_q4_q8_gemv_hpp_int16_t",
-      "label": "int16_t",
-      "_origin": "ast",
-      "community": 57,
-      "community_name": "qwen3_gpu_layer.cpp",
-      "file_type": "code",
-      "norm_label": "int16_t",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "include_miinfer_q4_q8_gemv_hpp_int8_t",
-      "label": "int8_t",
-      "_origin": "ast",
-      "community": 57,
-      "community_name": "qwen3_gpu_layer.cpp",
-      "file_type": "code",
-      "norm_label": "int8_t",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "include_miinfer_q4_q8_gemv_q8exactblock_d",
-      "label": "d",
-      "_origin": "ast",
-      "community": 57,
-      "community_name": "qwen3_gpu_layer.cpp",
-      "file_type": "code",
-      "norm_label": "d",
-      "source_file": "include/miinfer/q4_q8_gemv.hpp",
-      "source_location": "L33"
-    },
-    {
-      "id": "include_miinfer_q4_q8_gemv_q8exactblock_qs",
-      "label": "qs",
-      "_origin": "ast",
-      "community": 57,
-      "community_name": "qwen3_gpu_layer.cpp",
-      "file_type": "code",
-      "norm_label": "qs",
-      "source_file": "include/miinfer/q4_q8_gemv.hpp",
-      "source_location": "L35"
-    },
-    {
-      "id": "include_miinfer_q4_q8_gemv_q8exactblock_sum",
-      "label": "sum",
-      "_origin": "ast",
-      "community": 57,
-      "community_name": "qwen3_gpu_layer.cpp",
-      "file_type": "code",
-      "norm_label": "sum",
-      "source_file": "include/miinfer/q4_q8_gemv.hpp",
-      "source_location": "L34"
-    },
-    {
-      "id": "include_miinfer_q4_q8_packed_dot",
-      "label": "q4_q8_packed_dot.hpp",
-      "_origin": "ast",
-      "community": 57,
-      "community_name": "qwen3_gpu_layer.cpp",
-      "file_type": "code",
-      "norm_label": "q4_q8_packed_dot.hpp",
-      "source_file": "include/miinfer/q4_q8_packed_dot.hpp",
-      "source_location": "L1"
-    },
-    {
-      "id": "include_miinfer_q4_q8_zero_point_dot",
-      "label": "q4_q8_zero_point_dot.hpp",
-      "_origin": "ast",
-      "community": 57,
-      "community_name": "qwen3_gpu_layer.cpp",
-      "file_type": "code",
-      "norm_label": "q4_q8_zero_point_dot.hpp",
-      "source_file": "include/miinfer/q4_q8_zero_point_dot.hpp",
+      "norm_label": "qwen3_gpu_layer.hpp",
+      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
       "source_location": "L1"
     },
     {
@@ -18480,6 +18451,105 @@
       "norm_label": "size_t",
       "source_file": "",
       "source_location": ""
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_layer_hpp_vector",
+      "label": "vector",
+      "_origin": "ast",
+      "community": 57,
+      "community_name": "qwen3_gpu_layer.cpp",
+      "file_type": "code",
+      "norm_label": "vector",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_layer_qwen3downprojectioncontracttrace_current_s_correction",
+      "label": "current_s_correction",
+      "_origin": "ast",
+      "community": 57,
+      "community_name": "qwen3_gpu_layer.cpp",
+      "file_type": "code",
+      "norm_label": "current_s_correction",
+      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
+      "source_location": "L43"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_layer_qwen3downprojectioncontracttrace_direct_signed_oracle",
+      "label": "direct_signed_oracle",
+      "_origin": "ast",
+      "community": 57,
+      "community_name": "qwen3_gpu_layer.cpp",
+      "file_type": "code",
+      "norm_label": "direct_signed_oracle",
+      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
+      "source_location": "L45"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_layer_qwen3downprojectioncontracttrace_exact_sum_correction",
+      "label": "exact_sum_correction",
+      "_origin": "ast",
+      "community": 57,
+      "community_name": "qwen3_gpu_layer.cpp",
+      "file_type": "code",
+      "norm_label": "exact_sum_correction",
+      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
+      "source_location": "L44"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_layer_qwen3ffnprobetrace_ffn_output",
+      "label": "ffn_output",
+      "_origin": "ast",
+      "community": 57,
+      "community_name": "qwen3_gpu_layer.cpp",
+      "file_type": "code",
+      "norm_label": "ffn_output",
+      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
+      "source_location": "L38"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_layer_qwen3ffnprobetrace_gate",
+      "label": "gate",
+      "_origin": "ast",
+      "community": 57,
+      "community_name": "qwen3_gpu_layer.cpp",
+      "file_type": "code",
+      "norm_label": "gate",
+      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
+      "source_location": "L35"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_layer_qwen3ffnprobetrace_layer_output",
+      "label": "layer_output",
+      "_origin": "ast",
+      "community": 57,
+      "community_name": "qwen3_gpu_layer.cpp",
+      "file_type": "code",
+      "norm_label": "layer_output",
+      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
+      "source_location": "L39"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_layer_qwen3ffnprobetrace_swiglu",
+      "label": "swiglu",
+      "_origin": "ast",
+      "community": 57,
+      "community_name": "qwen3_gpu_layer.cpp",
+      "file_type": "code",
+      "norm_label": "swiglu",
+      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
+      "source_location": "L37"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_layer_qwen3ffnprobetrace_up",
+      "label": "up",
+      "_origin": "ast",
+      "community": 57,
+      "community_name": "qwen3_gpu_layer.cpp",
+      "file_type": "code",
+      "norm_label": "up",
+      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
+      "source_location": "L36"
     },
     {
       "id": "include_miinfer_qwen3_gpu_layer_qwen3layer0gpukvcache_append",
@@ -18546,6 +18616,17 @@
       "norm_label": "values_",
       "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
       "source_location": "L78"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_layer_qwen3projectionprobetrace_output",
+      "label": "output",
+      "_origin": "ast",
+      "community": 57,
+      "community_name": "qwen3_gpu_layer.cpp",
+      "file_type": "code",
+      "norm_label": "output",
+      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
+      "source_location": "L31"
     },
     {
       "id": "qwen3projection",
@@ -18656,39 +18737,6 @@
       "norm_label": "bytes_",
       "source_file": "src/qwen3_gpu_layer.cpp",
       "source_location": "L42"
-    },
-    {
-      "id": "tests_q4_q8_dot4_probe",
-      "label": "q4_q8_dot4_probe.cpp",
-      "_origin": "ast",
-      "community": 57,
-      "community_name": "qwen3_gpu_layer.cpp",
-      "file_type": "code",
-      "norm_label": "q4_q8_dot4_probe.cpp",
-      "source_file": "tests/q4_q8_dot4_probe.cpp",
-      "source_location": "L1"
-    },
-    {
-      "id": "tests_q4_q8_gemv_test",
-      "label": "q4_q8_gemv_test.cpp",
-      "_origin": "ast",
-      "community": 57,
-      "community_name": "qwen3_gpu_layer.cpp",
-      "file_type": "code",
-      "norm_label": "q4_q8_gemv_test.cpp",
-      "source_file": "tests/q4_q8_gemv_test.cpp",
-      "source_location": "L1"
-    },
-    {
-      "id": "tests_q4_q8_gemv_test_cpp_string",
-      "label": "string",
-      "_origin": "ast",
-      "community": 57,
-      "community_name": "qwen3_gpu_layer.cpp",
-      "file_type": "code",
-      "norm_label": "string",
-      "source_file": "",
-      "source_location": ""
     },
     {
       "id": "tests_qwen3_kv_cache_gpu_test",
@@ -19127,7 +19175,7 @@
       "node_kind": "heading",
       "norm_label": "definition of current success",
       "source_file": "docs/current-state.md",
-      "source_location": "L482"
+      "source_location": "L481"
     },
     {
       "id": "docs_current_state_do_not_start_yet",
@@ -19199,7 +19247,7 @@
       "node_kind": "heading",
       "norm_label": "last updated",
       "source_file": "docs/current-state.md",
-      "source_location": "L508"
+      "source_location": "L507"
     },
     {
       "id": "docs_current_state_miinfer_current_state",
@@ -23743,7 +23791,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L198",
+      "source_location": "L240",
       "weight": 1.0
     },
     {
@@ -23779,7 +23827,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L722",
+      "source_location": "L764",
       "weight": 1.0
     },
     {
@@ -23791,7 +23839,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L747",
+      "source_location": "L789",
       "weight": 1.0
     },
     {
@@ -23803,7 +23851,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L571",
+      "source_location": "L613",
       "weight": 1.0
     },
     {
@@ -23815,7 +23863,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L580",
+      "source_location": "L622",
       "weight": 1.0
     },
     {
@@ -23827,7 +23875,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L611",
+      "source_location": "L653",
       "weight": 1.0
     },
     {
@@ -23839,7 +23887,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L480",
+      "source_location": "L522",
       "weight": 1.0
     },
     {
@@ -23851,7 +23899,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L483",
+      "source_location": "L525",
       "weight": 1.0
     },
     {
@@ -23863,7 +23911,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L495",
+      "source_location": "L537",
       "weight": 1.0
     },
     {
@@ -23875,34 +23923,34 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
+      "source_location": "L545",
+      "weight": 1.0
+    },
+    {
+      "source": "src_qwen3_gpu_layer_execute_qwen3_layer0_gpu",
+      "target": "src_qwen3_gpu_layer_devicebuffer_data",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/qwen3_gpu_layer.cpp",
+      "source_location": "L502",
+      "weight": 1.0
+    },
+    {
+      "source": "src_qwen3_gpu_layer_execute_qwen3_layer0_gpu",
+      "target": "src_qwen3_gpu_layer_qwen3_layer_gpu_impl",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/qwen3_gpu_layer.cpp",
       "source_location": "L503",
       "weight": 1.0
     },
     {
-      "source": "src_qwen3_gpu_layer_execute_qwen3_layer0_gpu",
-      "target": "src_qwen3_gpu_layer_devicebuffer_data",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L460",
-      "weight": 1.0
-    },
-    {
-      "source": "src_qwen3_gpu_layer_execute_qwen3_layer0_gpu",
-      "target": "src_qwen3_gpu_layer_qwen3_layer_gpu_impl",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L461",
-      "weight": 1.0
-    },
-    {
       "source": "src_qwen3_gpu_layer_execute_qwen3_layer_gpu_teacher_forced",
       "target": "src_qwen3_gpu_layer_devicebuffer_data",
       "relation": "calls",
@@ -23911,7 +23959,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L536",
+      "source_location": "L578",
       "weight": 1.0
     },
     {
@@ -23923,7 +23971,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L539",
+      "source_location": "L581",
       "weight": 1.0
     },
     {
@@ -23935,7 +23983,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L690",
+      "source_location": "L732",
       "weight": 1.0
     },
     {
@@ -23947,7 +23995,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L692",
+      "source_location": "L734",
       "weight": 1.0
     },
     {
@@ -23959,7 +24007,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L699",
+      "source_location": "L741",
       "weight": 1.0
     },
     {
@@ -23971,7 +24019,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L97",
+      "source_location": "L117",
+      "weight": 1.0
+    },
+    {
+      "source": "src_qwen3_gpu_layer_launch_projection",
+      "target": "src_qwen3_gpu_layer_projection_selected",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/qwen3_gpu_layer.cpp",
+      "source_location": "L118",
       "weight": 1.0
     },
     {
@@ -23983,7 +24043,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L316",
+      "source_location": "L358",
       "weight": 1.0
     },
     {
@@ -23995,7 +24055,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L324",
+      "source_location": "L366",
       "weight": 1.0
     },
     {
@@ -24007,7 +24067,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L326",
+      "source_location": "L368",
       "weight": 1.0
     },
     {
@@ -24019,7 +24079,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L332",
+      "source_location": "L374",
       "weight": 1.0
     },
     {
@@ -24031,7 +24091,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L338",
+      "source_location": "L380",
       "weight": 1.0
     },
     {
@@ -24043,7 +24103,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L266",
+      "source_location": "L308",
       "weight": 1.0
     },
     {
@@ -24055,7 +24115,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L273",
+      "source_location": "L315",
       "weight": 1.0
     },
     {
@@ -34015,7 +34075,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L196",
+      "source_location": "L238",
       "weight": 1.0
     },
     {
@@ -34027,7 +34087,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L202",
+      "source_location": "L244",
       "weight": 1.0
     },
     {
@@ -34075,7 +34135,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L703",
+      "source_location": "L745",
       "weight": 1.0
     },
     {
@@ -34087,7 +34147,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L703",
+      "source_location": "L745",
       "weight": 1.0
     },
     {
@@ -34099,7 +34159,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L703",
+      "source_location": "L745",
       "weight": 1.0
     },
     {
@@ -34111,7 +34171,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L542",
+      "source_location": "L584",
       "weight": 1.0
     },
     {
@@ -34123,7 +34183,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L542",
+      "source_location": "L584",
       "weight": 1.0
     },
     {
@@ -34135,7 +34195,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L542",
+      "source_location": "L584",
       "weight": 1.0
     },
     {
@@ -34147,7 +34207,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L542",
+      "source_location": "L584",
       "weight": 1.0
     },
     {
@@ -34159,7 +34219,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L464",
+      "source_location": "L506",
       "weight": 1.0
     },
     {
@@ -34171,7 +34231,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L464",
+      "source_location": "L506",
       "weight": 1.0
     },
     {
@@ -34183,7 +34243,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L464",
+      "source_location": "L506",
       "weight": 1.0
     },
     {
@@ -34195,7 +34255,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L449",
+      "source_location": "L491",
       "weight": 1.0
     },
     {
@@ -34207,7 +34267,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L449",
+      "source_location": "L491",
       "weight": 1.0
     },
     {
@@ -34219,7 +34279,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L449",
+      "source_location": "L491",
       "weight": 1.0
     },
     {
@@ -34231,7 +34291,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L449",
+      "source_location": "L491",
       "weight": 1.0
     },
     {
@@ -34243,7 +34303,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L523",
+      "source_location": "L565",
       "weight": 1.0
     },
     {
@@ -34255,7 +34315,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L523",
+      "source_location": "L565",
       "weight": 1.0
     },
     {
@@ -34267,7 +34327,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L523",
+      "source_location": "L565",
       "weight": 1.0
     },
     {
@@ -34279,7 +34339,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L619",
+      "source_location": "L661",
       "weight": 1.0
     },
     {
@@ -34291,7 +34351,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L619",
+      "source_location": "L661",
       "weight": 1.0
     },
     {
@@ -34303,7 +34363,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L619",
+      "source_location": "L661",
       "weight": 1.0
     },
     {
@@ -34315,7 +34375,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L619",
+      "source_location": "L661",
       "weight": 1.0
     },
     {
@@ -34327,7 +34387,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L619",
+      "source_location": "L661",
       "weight": 1.0
     },
     {
@@ -34339,7 +34399,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L84",
+      "source_location": "L104",
       "weight": 1.0
     },
     {
@@ -34351,7 +34411,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L84",
+      "source_location": "L104",
       "weight": 1.0
     },
     {
@@ -34363,7 +34423,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L84",
+      "source_location": "L104",
       "weight": 1.0
     },
     {
@@ -34375,7 +34435,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L84",
+      "source_location": "L104",
       "weight": 1.0
     },
     {
@@ -34387,7 +34447,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L84",
+      "source_location": "L104",
       "weight": 1.0
     },
     {
@@ -34399,7 +34459,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L84",
+      "source_location": "L104",
       "weight": 1.0
     },
     {
@@ -34411,7 +34471,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L137",
+      "source_location": "L179",
       "weight": 1.0
     },
     {
@@ -34423,7 +34483,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L137",
+      "source_location": "L179",
       "weight": 1.0
     },
     {
@@ -34435,7 +34495,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L137",
+      "source_location": "L179",
       "weight": 1.0
     },
     {
@@ -34447,7 +34507,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L137",
+      "source_location": "L179",
       "weight": 1.0
     },
     {
@@ -34459,7 +34519,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L137",
+      "source_location": "L179",
       "weight": 1.0
     },
     {
@@ -34471,7 +34531,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L137",
+      "source_location": "L179",
       "weight": 1.0
     },
     {
@@ -34483,7 +34543,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L277",
+      "source_location": "L319",
       "weight": 1.0
     },
     {
@@ -34495,7 +34555,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L277",
+      "source_location": "L319",
       "weight": 1.0
     },
     {
@@ -34507,7 +34567,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L277",
+      "source_location": "L319",
       "weight": 1.0
     },
     {
@@ -34519,7 +34579,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L244",
+      "source_location": "L286",
       "weight": 1.0
     },
     {
@@ -34531,7 +34591,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L216",
+      "source_location": "L258",
       "weight": 1.0
     },
     {
@@ -36955,7 +37015,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L196",
+      "source_location": "L238",
       "weight": 1.0
     },
     {
@@ -36979,7 +37039,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L703",
+      "source_location": "L745",
       "weight": 1.0
     },
     {
@@ -36991,7 +37051,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L542",
+      "source_location": "L584",
       "weight": 1.0
     },
     {
@@ -37003,7 +37063,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L464",
+      "source_location": "L506",
       "weight": 1.0
     },
     {
@@ -37015,7 +37075,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L449",
+      "source_location": "L491",
       "weight": 1.0
     },
     {
@@ -37027,7 +37087,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L523",
+      "source_location": "L565",
       "weight": 1.0
     },
     {
@@ -37039,7 +37099,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L619",
+      "source_location": "L661",
       "weight": 1.0
     },
     {
@@ -37051,7 +37111,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L277",
+      "source_location": "L319",
       "weight": 1.0
     },
     {
@@ -37063,7 +37123,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L263",
+      "source_location": "L305",
       "weight": 1.0
     },
     {
@@ -37075,7 +37135,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L270",
+      "source_location": "L312",
       "weight": 1.0
     },
     {
@@ -41142,7 +41202,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L482",
+      "source_location": "L481",
       "weight": 1.0
     },
     {
@@ -41153,7 +41213,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L508",
+      "source_location": "L507",
       "weight": 1.0
     },
     {
@@ -43182,6 +43242,17 @@
     },
     {
       "source": "docs_m4b_forward_m4_b_full_qwen3_single_token_forward",
+      "target": "docs_m4b_forward_m4_b8_canonical_oracle_and_precision_policy",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/m4b-forward.md",
+      "source_location": "L300",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_m4b_forward_m4_b_full_qwen3_single_token_forward",
       "target": "docs_m4b_forward_current_evidence",
       "relation": "contains",
       "_origin": "ast",
@@ -45058,7 +45129,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L769",
+      "source_location": "L770",
       "weight": 1.0
     },
     {
@@ -45069,7 +45140,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L787",
+      "source_location": "L790",
       "weight": 1.0
     },
     {
@@ -45080,7 +45151,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L805",
+      "source_location": "L808",
       "weight": 1.0
     },
     {
@@ -49958,13 +50029,24 @@
     },
     {
       "source": "src_qwen3_gpu_layer",
+      "target": "src_qwen3_gpu_layer_launch_projection",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/qwen3_gpu_layer.cpp",
+      "source_location": "L104",
+      "weight": 1.0
+    },
+    {
+      "source": "src_qwen3_gpu_layer",
       "target": "src_qwen3_gpu_layer_launch_projection_probe",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L137",
+      "source_location": "L179",
       "weight": 1.0
     },
     {
@@ -49975,45 +50057,12 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L196",
+      "source_location": "L238",
       "weight": 1.0
     },
     {
       "source": "src_qwen3_gpu_layer",
       "target": "src_qwen3_gpu_layer_capture_qwen3_head_norm",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L202",
-      "weight": 1.0
-    },
-    {
-      "source": "src_qwen3_gpu_layer",
-      "target": "src_qwen3_gpu_layer_qwen3layer0gpukvcache_qwen3layer0gpukvcache",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L232",
-      "weight": 1.0
-    },
-    {
-      "source": "src_qwen3_gpu_layer",
-      "target": "src_qwen3_gpu_layer_qwen3layer0gpukvcache_reset",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L237",
-      "weight": 1.0
-    },
-    {
-      "source": "src_qwen3_gpu_layer",
-      "target": "src_qwen3_gpu_layer_qwen3layer0gpukvcache_append",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -50035,13 +50084,46 @@
     },
     {
       "source": "src_qwen3_gpu_layer",
+      "target": "src_qwen3_gpu_layer_qwen3layer0gpukvcache_qwen3layer0gpukvcache",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/qwen3_gpu_layer.cpp",
+      "source_location": "L274",
+      "weight": 1.0
+    },
+    {
+      "source": "src_qwen3_gpu_layer",
+      "target": "src_qwen3_gpu_layer_qwen3layer0gpukvcache_reset",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/qwen3_gpu_layer.cpp",
+      "source_location": "L279",
+      "weight": 1.0
+    },
+    {
+      "source": "src_qwen3_gpu_layer",
+      "target": "src_qwen3_gpu_layer_qwen3layer0gpukvcache_append",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/qwen3_gpu_layer.cpp",
+      "source_location": "L286",
+      "weight": 1.0
+    },
+    {
+      "source": "src_qwen3_gpu_layer",
       "target": "src_qwen3_gpu_layer_qwen3layer0gpukvcache_snapshot_keys",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L263",
+      "source_location": "L305",
       "weight": 1.0
     },
     {
@@ -50052,7 +50134,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L270",
+      "source_location": "L312",
       "weight": 1.0
     },
     {
@@ -50063,18 +50145,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L277",
-      "weight": 1.0
-    },
-    {
-      "source": "src_qwen3_gpu_layer",
-      "target": "src_qwen3_gpu_layer_execute_qwen3_layer0_gpu",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L449",
+      "source_location": "L319",
       "weight": 1.0
     },
     {
@@ -50090,13 +50161,24 @@
     },
     {
       "source": "src_qwen3_gpu_layer",
+      "target": "src_qwen3_gpu_layer_execute_qwen3_layer0_gpu",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/qwen3_gpu_layer.cpp",
+      "source_location": "L491",
+      "weight": 1.0
+    },
+    {
+      "source": "src_qwen3_gpu_layer",
       "target": "src_qwen3_gpu_layer_execute_qwen3_forward_gpu",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L464",
+      "source_location": "L506",
       "weight": 1.0
     },
     {
@@ -50112,28 +50194,6 @@
     },
     {
       "source": "src_qwen3_gpu_layer",
-      "target": "src_qwen3_gpu_layer_execute_qwen3_layer_gpu_teacher_forced",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L523",
-      "weight": 1.0
-    },
-    {
-      "source": "src_qwen3_gpu_layer",
-      "target": "src_qwen3_gpu_layer_execute_qwen3_ffn_gpu_probe",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L542",
-      "weight": 1.0
-    },
-    {
-      "source": "src_qwen3_gpu_layer",
       "target": "src_qwen3_gpu_layer_upload_f32",
       "relation": "contains",
       "_origin": "ast",
@@ -50145,13 +50205,24 @@
     },
     {
       "source": "src_qwen3_gpu_layer",
-      "target": "src_qwen3_gpu_layer_execute_qwen3_projection_gpu_probe",
+      "target": "src_qwen3_gpu_layer_execute_qwen3_layer_gpu_teacher_forced",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L619",
+      "source_location": "L565",
+      "weight": 1.0
+    },
+    {
+      "source": "src_qwen3_gpu_layer",
+      "target": "src_qwen3_gpu_layer_execute_qwen3_ffn_gpu_probe",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/qwen3_gpu_layer.cpp",
+      "source_location": "L584",
       "weight": 1.0
     },
     {
@@ -50167,18 +50238,29 @@
     },
     {
       "source": "src_qwen3_gpu_layer",
+      "target": "src_qwen3_gpu_layer_execute_qwen3_projection_gpu_probe",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/qwen3_gpu_layer.cpp",
+      "source_location": "L661",
+      "weight": 1.0
+    },
+    {
+      "source": "src_qwen3_gpu_layer",
       "target": "src_qwen3_gpu_layer_execute_qwen3_down_projection_contract_probe",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L703",
+      "source_location": "L745",
       "weight": 1.0
     },
     {
       "source": "src_qwen3_gpu_layer",
-      "target": "src_qwen3_gpu_layer_launch_projection",
+      "target": "src_qwen3_gpu_layer_projection_selected",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -51750,6 +51832,17 @@
       "weight": 1.0
     },
     {
+      "source": "tests_reference_qwen3_m4b_single_token_legacy_readme",
+      "target": "tests_reference_qwen3_m4b_single_token_legacy_readme_m4_b_single_token_full_model_reference_trace",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/reference/qwen3/m4b-single-token-legacy/README.md",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
       "source": "tests_reference_qwen3_m4b_single_token_readme",
       "target": "tests_reference_qwen3_m4b_single_token_readme_m4_b_single_token_full_model_reference_trace",
       "relation": "contains",
@@ -52308,7 +52401,7 @@
       "confidence_score": 0.8,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L297",
+      "source_location": "L339",
       "weight": 1.0
     },
     {
@@ -52320,7 +52413,7 @@
       "confidence_score": 0.8,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L297",
+      "source_location": "L339",
       "weight": 1.0
     },
     {
@@ -52332,7 +52425,7 @@
       "confidence_score": 0.8,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L298",
+      "source_location": "L340",
       "weight": 1.0
     },
     {
@@ -52344,7 +52437,7 @@
       "confidence_score": 0.8,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L298",
+      "source_location": "L340",
       "weight": 1.0
     },
     {
@@ -52356,7 +52449,7 @@
       "confidence_score": 0.8,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L374",
+      "source_location": "L416",
       "weight": 1.0
     },
     {
@@ -52368,7 +52461,7 @@
       "confidence_score": 0.8,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L384",
+      "source_location": "L426",
       "weight": 1.0
     },
     {
@@ -52380,7 +52473,7 @@
       "confidence_score": 0.8,
       "context": "call",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L385",
+      "source_location": "L427",
       "weight": 1.0
     },
     {
@@ -53321,5 +53414,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "d10ac531732034c80826876fb4d43b9a295faee7"
+  "built_at_commit": "314ed635c925edebd5b5c98d50639f1ecfad31f7"
 }

@@ -759,8 +759,9 @@ from the accepted model plan and layer-state correctness evidence:
 6. Establish external layer-6 trace repeatability and use exact-Q8
    F16/F32 projection probes to separate GPU precision boundaries from the
    remaining host/reference contract.
-7. Validate the minimum causal-path precision correction, then rerun the
-   complete full-depth gates before proceeding to token generation.
+7. Canonicalize the full-depth external CPU fixture, verify host replay, and
+   validate the minimum causal-path precision correction before proceeding
+   to token generation.
 
 Do not broaden M4 into a general-purpose runtime.
 
@@ -774,13 +775,15 @@ The current milestone is:
 M4-B — full-depth numerical validation
 ```
 
-M4-B7 has established bitwise repeatability across three identical external
-layer-6 CPU captures and corrected the precision probe to use Q8ExactBlock.
-The F32-input/F32-output diagnostic is nearly exact for Q/V/Gate/Up/Down,
-while the current production boundary still produces a GPU layer-6 output
-error of about `3.09`. Layers 6, 34, and 35 still exceed the frozen full-depth
-bounds, so M4-B remains open. Exact experiment ordering may change only when
-supported by the resulting evidence.
+M4-B8 established a canonical full-depth CPU fixture from two byte-identical
+runs of the pinned reference with explicit `-t 24 -tb 24` settings. The old
+fixture is preserved as historical evidence because it was captured under
+different conditions. Host teacher-forced replay passes layers 0–34 and
+fails layer 35 (`max_abs=1.18066`); GPU F32-boundary policy probes make layers
+6 and 34 pass in teacher-forced mode, while layer 35 remains a shared
+host/reference blocker. Production precision remains unchanged and M4-B is
+still open. Exact experiment ordering may change only when supported by the
+resulting evidence.
 
 ---
 

@@ -296,3 +296,52 @@ independent reference ↔ host ↔ MI50 Debug ↔ MI50 Release
 for embedding, every layer output, final norm, and full logits, with explicit
 layer-localized diagnostics. M4-B remains open until the numerical contract
 and final-logit/argmax comparison are resolved.
+
+## M4-B8 canonical oracle and precision policy
+
+The full-depth fixture was recaptured from the pinned CPU reference in one
+canonical configuration (`-ngl 0 -t 24 -tb 24`) using one explicit token
+(`14990`). Two independent captures from the same build and settings were
+byte-identical across all 39 F32 files. The previous fixture is preserved in
+[`tests/reference/qwen3/m4b-single-token-legacy/`](../tests/reference/qwen3/m4b-single-token-legacy/)
+because it was captured under different conditions; it is historical evidence
+and is not the acceptance oracle.
+
+Against the canonical fixture, host teacher-forced replay passes layers 0–34
+and fails only layer 35 (`max_abs=1.18066`). This is the first remaining
+host/reference blocker, so no GPU precision policy is accepted yet and no
+tolerance was widened.
+
+M4-B8 added diagnostic controls for testing projection boundaries without
+changing the default production path:
+
+```text
+MIINFER_F32_INPUT_PROJECTIONS=v,o,gate,up,down
+MIINFER_F32_OUTPUT_PROJECTIONS=v,o,gate,up,down
+```
+
+Each variable accepts a comma-separated projection list. The default remains
+F32 → F16 → Q8Exact → GEMV → F16 → F32. A listed input uses direct F32 to
+Q8Exact quantization; a listed output retains the GEMV result in F32. These
+controls use the exact integer-sum Q8 metadata and are diagnostic only.
+
+MI50 Release full-forward policy results against the canonical fixture were:
+
+| Policy | Layer 6 | Layer 34 | Layer 35 | Final norm |
+| --- | ---: | ---: | ---: | ---: |
+| P0 current | 20.9287 | 16.8477 | 14.9043 | 0.06872 |
+| P1 Down F32/F32 | 24.8223 | 24.7480 | 23.5283 | 0.09709 |
+| P2 Gate/Up + Down | 10.3682 | 14.8184 | 18.2261 | 0.08081 |
+| P3 V/O + FFN | 2.86621 | 5.84570 | 7.10254 | 0.04451 |
+| P4 V/O/Gate/Up/Down | 1.50586 | 1.84180 | 2.19873 | 0.04395 |
+
+Teacher-forced replay is the causal diagnostic: P3 reduces layer-6 error to
+`0.0332451`, and P4 makes layers 6 and 34 pass at `0.03125` and `0.0198808`.
+Layer 35 remains at `1.22998` with P4, consistent with the independent host
+failure. The probes therefore show that F32 boundaries are decisive for the
+GPU causal path, but they do not yet justify a production change or close
+M4-B.
+
+**M4-B8 status: OPEN.** The external oracle is canonical and repeatable; the
+remaining layer-35 host/reference divergence must be localized before the
+GPU precision policy is accepted.

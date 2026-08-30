@@ -81,6 +81,26 @@ bool use_exact_q8_metadata(const char* projection) {
     return false;
 }
 
+bool projection_selected(const char* variable, const char* projection) {
+    // M4-B8 diagnostic controls. The default remains the accepted
+    // F16-input/F16-output production contract; comma-separated projection
+    // names opt individual operations into a correctness-only F32 boundary.
+    const char* configured = std::getenv(variable);
+    if (configured == nullptr || *configured == '\0') return false;
+    const std::string_view list(configured);
+    const std::string_view name(projection);
+    std::size_t begin = 0;
+    while (begin < list.size()) {
+        const auto end = list.find(',', begin);
+        const auto token = list.substr(begin, end == std::string_view::npos
+                                                 ? list.size() - begin : end - begin);
+        if (token == name) return true;
+        if (end == std::string_view::npos) break;
+        begin = end + 1;
+    }
+    return false;
+}
+
 void launch_projection(
     const Qwen3GpuPlan& plan,
     const Qwen3TensorView& weight,
@@ -95,16 +115,30 @@ void launch_projection(
     __half* output_half,
     const char* projection) {
     const bool exact_metadata = use_exact_q8_metadata(projection);
-    launch_qwen3_f32_to_f16(input, input_half, input_elements);
-    if (exact_metadata) {
-        launch_q8_exact_quantize(input_half, input_q8_exact, static_cast<int>(input_elements));
+    const bool f32_input = projection_selected("MIINFER_F32_INPUT_PROJECTIONS", projection);
+    const bool f32_output = projection_selected("MIINFER_F32_OUTPUT_PROJECTIONS", projection);
+    if (f32_output && !exact_metadata) {
+        throw std::invalid_argument("F32 projection output requires Q8Exact metadata");
+    }
+    if (!exact_metadata && f32_input) {
+        launch_q8_1_quantize_f32(input, input_q8, static_cast<int>(input_elements));
+    } else if (f32_input) {
+        launch_q8_exact_quantize_f32(input, input_q8_exact, static_cast<int>(input_elements));
     } else {
-        launch_q8_1_quantize(input_half, input_q8, static_cast<int>(input_elements));
+        launch_qwen3_f32_to_f16(input, input_half, input_elements);
+        if (exact_metadata) {
+            launch_q8_exact_quantize(input_half, input_q8_exact, static_cast<int>(input_elements));
+        } else {
+            launch_q8_1_quantize(input_half, input_q8, static_cast<int>(input_elements));
+        }
     }
     const auto* device_weight = static_cast<const Q4_0Block*>(plan.device_tensor_data(weight.name()));
     switch (plan.kernel_for(projection)) {
     case Q4GemvKernel::zero_point_128:
-        if (exact_metadata) {
+        if (f32_output) {
+            launch_q4_q8_gemv_zero_point_dot_128_exact_metadata_f32(
+                device_weight, input_q8_exact, output, rows, columns);
+        } else if (exact_metadata) {
             launch_q4_q8_gemv_zero_point_dot_128_exact_metadata(
                 device_weight, input_q8_exact, output_half, rows, columns);
         } else {
@@ -113,7 +147,10 @@ void launch_projection(
         }
         break;
     case Q4GemvKernel::zero_point_128_wave64:
-        if (exact_metadata) {
+        if (f32_output) {
+            launch_q4_q8_gemv_zero_point_dot_wave64_exact_metadata_f32(
+                device_weight, input_q8_exact, output, rows, columns);
+        } else if (exact_metadata) {
             launch_q4_q8_gemv_zero_point_dot_wave64_exact_metadata(
                 device_weight, input_q8_exact, output_half, rows, columns);
         } else {
@@ -122,7 +159,10 @@ void launch_projection(
         }
         break;
     case Q4GemvKernel::zero_point_256:
-        if (exact_metadata) {
+        if (f32_output) {
+            launch_q4_q8_gemv_zero_point_dot_exact_metadata_f32(
+                device_weight, input_q8_exact, output, rows, columns);
+        } else if (exact_metadata) {
             launch_q4_q8_gemv_zero_point_dot_exact_metadata(
                 device_weight, input_q8_exact, output_half, rows, columns);
         } else {
@@ -131,7 +171,9 @@ void launch_projection(
         }
         break;
     }
-    launch_qwen3_f16_to_f32(output_half, output, static_cast<std::uint32_t>(rows));
+    if (!f32_output) {
+        launch_qwen3_f16_to_f32(output_half, output, static_cast<std::uint32_t>(rows));
+    }
 }
 
 void launch_projection_probe(
