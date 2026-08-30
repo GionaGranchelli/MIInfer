@@ -159,11 +159,16 @@ The M1/M2 kernel-laboratory deliverables currently include:
   weight residency, and static kernel/buffer plan
 * M4-A correctness foundation for Qwen3 host oracles and initial gfx906 GPU
   probes (RMSNorm, Q4_0 embedding lookup, and Q6_K GEMV)
+* M4-A2 complete host-side layer-0 composition for the pinned single-token
+  fixture, automatic comparison of all 28 reference checkpoints, and a
+  comparator mutation test
 
 The repository-side specialization and M3 runtime-scaffold deliverables are
-complete. M4-A has primitive probes and an external reference trace, but the
-one-layer MIInfer-vs-reference gate remains open. Physical MI50 execution
-remains required for all future GPU-specific runtime validation.
+complete. The host layer-0 composition matches the retained reference trace
+within frozen, stage-specific tolerances. M4-A remains open because the
+composition is not yet executed as a complete MI50 GPU path and does not yet
+support a multi-position KV cache. Physical MI50 execution remains required
+for the GPU composition gate.
 
 ---
 

@@ -82,6 +82,7 @@ add_library(miinfer_model STATIC
     src/gguf.cpp
     src/qwen3_model.cpp
     src/qwen3_primitives.cpp
+    src/qwen3_layer.cpp
     src/sha256.cpp
 )
 target_include_directories(miinfer_model
@@ -130,6 +131,10 @@ target_compile_options(miinfer-model-loader-test PRIVATE -Wall -Wextra -Wpedanti
 add_executable(miinfer-qwen3-primitives-host-test tests/qwen3_primitives_host_test.cpp)
 target_link_libraries(miinfer-qwen3-primitives-host-test PRIVATE miinfer_model)
 target_compile_options(miinfer-qwen3-primitives-host-test PRIVATE -Wall -Wextra -Wpedantic)
+
+add_executable(miinfer-qwen3-layer0-test tests/qwen3_layer0_test.cpp)
+target_link_libraries(miinfer-qwen3-layer0-test PRIVATE miinfer_model)
+target_compile_options(miinfer-qwen3-layer0-test PRIVATE -Wall -Wextra -Wpedantic)
 
 if(MIINFER_ENABLE_HIP)
     add_executable(miinfer-device-info tests/device_info.cpp)
@@ -198,6 +203,11 @@ if(BUILD_TESTING)
     set_tests_properties(model-loader-host PROPERTIES LABELS "host-only")
     add_test(NAME qwen3-primitives-host COMMAND miinfer-qwen3-primitives-host-test)
     set_tests_properties(qwen3-primitives-host PROPERTIES LABELS "host-only")
+    add_test(NAME qwen3-layer0-host COMMAND miinfer-qwen3-layer0-test)
+    set_tests_properties(qwen3-layer0-host PROPERTIES LABELS "host-only")
+    add_test(NAME qwen3-layer0-comparator-mutation
+             COMMAND miinfer-qwen3-layer0-test --self-test-mutation)
+    set_tests_properties(qwen3-layer0-comparator-mutation PROPERTIES LABELS "host-only")
     if(MIINFER_ENABLE_HIP)
         add_test(NAME hip-smoke COMMAND miinfer-hip-smoke)
         set_tests_properties(hip-smoke PROPERTIES LABELS "gpu-required")
@@ -214,7 +224,7 @@ if(BUILD_TESTING)
     endif()
 endif()
 
-install(TARGETS miinfer-host-test miinfer-qwen3-primitives-host-test)
+install(TARGETS miinfer-host-test miinfer-qwen3-primitives-host-test miinfer-qwen3-layer0-test)
 if(MIINFER_ENABLE_HIP)
     install(TARGETS miinfer-device-info miinfer-hip-smoke miinfer-bench
                     miinfer-fp16-gemv-test miinfer-fp16-gemv-bench)
