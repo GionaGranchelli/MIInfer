@@ -74,15 +74,34 @@ void launch_projection(
     launch_qwen3_f32_to_f16(input, input_half, input_elements);
     launch_q8_1_quantize(input_half, input_q8, static_cast<int>(input_elements));
     const auto* device_weight = static_cast<const Q4_0Block*>(plan.device_tensor_data(weight.name()));
+    const bool exact_zero_point = std::strcmp(projection, "down") == 0;
     switch (plan.kernel_for(projection)) {
     case Q4GemvKernel::zero_point_128:
-        launch_q4_q8_gemv_zero_point_dot_128(device_weight, input_q8, output_half, rows, columns);
+        if (exact_zero_point) {
+            launch_q4_q8_gemv_zero_point_dot_128_exact_sum(
+                device_weight, input_q8, output_half, rows, columns);
+        } else {
+            launch_q4_q8_gemv_zero_point_dot_128(device_weight, input_q8, output_half,
+                                                 rows, columns);
+        }
         break;
     case Q4GemvKernel::zero_point_128_wave64:
-        launch_q4_q8_gemv_zero_point_dot_wave64(device_weight, input_q8, output_half, rows, columns);
+        if (exact_zero_point) {
+            launch_q4_q8_gemv_zero_point_dot_wave64_exact_sum(
+                device_weight, input_q8, output_half, rows, columns);
+        } else {
+            launch_q4_q8_gemv_zero_point_dot_wave64(device_weight, input_q8, output_half,
+                                                     rows, columns);
+        }
         break;
     case Q4GemvKernel::zero_point_256:
-        launch_q4_q8_gemv_zero_point_dot(device_weight, input_q8, output_half, rows, columns);
+        if (exact_zero_point) {
+            launch_q4_q8_gemv_zero_point_dot_exact_sum(
+                device_weight, input_q8, output_half, rows, columns);
+        } else {
+            launch_q4_q8_gemv_zero_point_dot(device_weight, input_q8, output_half,
+                                              rows, columns);
+        }
         break;
     }
     launch_qwen3_f16_to_f32(output_half, output, static_cast<std::uint32_t>(rows));
@@ -554,6 +573,56 @@ Qwen3FfnProbeTrace execute_qwen3_ffn_gpu_probe(
     trace.swiglu = capture(swiglu.data(), intermediate);
     trace.ffn_output = capture(ffn_output.data(), hidden);
     trace.layer_output = capture(layer_output.data(), hidden);
+    return trace;
+}
+
+Qwen3DownProjectionContractTrace execute_qwen3_down_projection_contract_probe(
+    const Qwen3GpuPlan& plan,
+    std::size_t layer_index,
+    std::span<const float> swiglu,
+    bool direct_f32_input) {
+    const auto& model = plan.model();
+    const auto& config = model.config();
+    if (layer_index >= model.layers().size()
+        || swiglu.size() != config.intermediate_size) {
+        throw std::invalid_argument("invalid Qwen3 down-projection probe dimensions");
+    }
+
+    const auto& layer = model.layers()[layer_index];
+    DeviceBuffer<float> input(config.intermediate_size);
+    DeviceBuffer<float> current(config.hidden_size);
+    DeviceBuffer<float> exact_sum(config.hidden_size);
+    DeviceBuffer<float> direct_signed(config.hidden_size);
+    DeviceBytes input_half(config.intermediate_size * sizeof(__half));
+    DeviceBytes input_q8((config.intermediate_size / kQ8_1BlockSize) * sizeof(Q8_1Block));
+    MIINFER_HIP_CHECK(hipMemcpy(input.data(), swiglu.data(),
+                                swiglu.size() * sizeof(float), hipMemcpyHostToDevice));
+    if (direct_f32_input) {
+        launch_q8_1_quantize_f32(input.data(), static_cast<Q8_1Block*>(input_q8.data()),
+                                 config.intermediate_size);
+    } else {
+        launch_qwen3_f32_to_f16(input.data(), static_cast<__half*>(input_half.data()),
+                                config.intermediate_size);
+        launch_q8_1_quantize(static_cast<const __half*>(input_half.data()),
+                             static_cast<Q8_1Block*>(input_q8.data()), config.intermediate_size);
+    }
+    const auto* device_weight = static_cast<const Q4_0Block*>(
+        plan.device_tensor_data(layer.down.name()));
+    const auto* device_input = static_cast<const Q8_1Block*>(input_q8.data());
+    launch_q4_q8_gemv_zero_point_dot_f32(
+        device_weight, device_input, current.data(), config.hidden_size,
+        config.intermediate_size);
+    launch_q4_q8_gemv_zero_point_dot_exact_sum_f32(
+        device_weight, device_input, exact_sum.data(), config.hidden_size,
+        config.intermediate_size);
+    launch_q4_q8_gemv_direct_signed_f32(
+        device_weight, device_input, direct_signed.data(), config.hidden_size,
+        config.intermediate_size);
+
+    Qwen3DownProjectionContractTrace trace;
+    trace.current_s_correction = capture(current.data(), config.hidden_size);
+    trace.exact_sum_correction = capture(exact_sum.data(), config.hidden_size);
+    trace.direct_signed_oracle = capture(direct_signed.data(), config.hidden_size);
     return trace;
 }
 

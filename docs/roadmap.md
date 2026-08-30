@@ -754,9 +754,11 @@ from the accepted model plan and layer-state correctness evidence:
 3. Localize M4-B full-depth numerical drift with teacher-forced replay.
 4. Resolve the layer-6 FFN projection precision discontinuity without
    widening numerical tolerances.
-5. Compare the MI50 path with the independent offloaded reference before
+5. Preserve the proven exact Q4_0 × Q8 zero-point correction for Down and
+   isolate the remaining upstream/late-depth numerical drift.
+6. Compare the MI50 path with the independent offloaded reference before
    changing numerical tolerances.
-6. Only after M4-B closes, proceed to validated token generation.
+7. Only after M4-B closes, proceed to validated token generation.
 
 Do not broaden M4 into a general-purpose runtime.
 
@@ -770,9 +772,12 @@ The current milestone is:
 M4-B — full-depth numerical validation
 ```
 
-The immediate task is M4-B3: distinguish the layer-6 FFN projection precision
-contract from a local computation defect. Exact experiment ordering may change
-only when supported by the resulting evidence.
+M4-B4 has established that the FP16-scaled Q8 zero-point correction is the
+local Down-projection defect: exact integer-sum dot4 and direct signed-Q4 GPU
+arithmetic agree, while the old FP16-scaled correction does not. The exact
+correction is integrated for Down only; the remaining full-depth layer-6 and
+late-layer drift is still under investigation. Exact experiment ordering may
+change only when supported by the resulting evidence.
 
 ---
 

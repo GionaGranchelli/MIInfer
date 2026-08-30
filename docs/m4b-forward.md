@@ -106,6 +106,47 @@ canonical is: layers 0–5 and 7–33 pass, while layers 6, 34, and 35 remain
 outside the frozen bound. Therefore M4-B remains open. No tolerance widening
 or token-generation work is justified yet.
 
+## M4-B4 exact down-projection contract
+
+The diagnostic comparison used the pinned layer-6 SwiGLU vector as input to
+the down projection and emitted F32 results. With the production F16-input Q8
+blocks, the current FP16 `s` correction has `max_abs=0.461914`, while both the
+exact integer-sum dot4 path and the direct signed-Q4 GPU oracle have
+`max_abs=0.03125`, `mean_abs=0.00062987`, and `RMSE=0.000964196` against the
+reference-conditioned host down output. The exact dot4 and direct signed
+oracles are identical in this comparison (`max_abs=0`).
+
+Using direct-F32-input Q8 quantization reduces the exact/direct error further
+to `max_abs=0.0117188`, but the current FP16-`s` path remains about `0.464844`.
+This separates the dominant error: the packed dot arithmetic is correct, and
+the lossy FP16-scaled sum used for zero-point correction is the local defect.
+
+For the worst row (`2276`), the block analysis reports total absolute
+correction error `1.93343` and signed accumulated correction error `0.43165`.
+The largest individual examples include block 266 (`q8_sum=-126`, stored
+`s=-1312`, exact `d*sum=-1311.19`) and block 13 (`q8_sum=127`, stored
+`s=1082`, exact `d*sum=1082.48`).
+
+The exact/direct probe currently uses the host layer trace's pinned
+reference-conditioned SwiGLU and down output; the retained external offloaded
+trace contains layer outputs rather than internal layer-6 FFN tensors. The
+minimum production correction is now integrated only for the Down projection:
+it uses exact integer Q8 lane sums while retaining the canonical Q8_1 storage
+and FP16 GEMV output. Q/K/V/O/gate/up continue to use the accepted FP16-`s`
+control. The old FP16-`s` path remains available as a diagnostic control.
+The isolated Down contract meets the frozen layer-local bound, but applying it
+to the full layer does not close the model-level layer-6 failure: upstream
+gate/up precision differences still enter SwiGLU and are amplified by Down.
+No tolerance has been widened and M4-B remains open.
+
+The post-integration Release replay confirms the scope of that result. The
+Down-only correction does not alter the earlier gate/up path: the layer-0 run
+still reports a gate-vs-host mismatch even though its external-reference
+comparison remains within the layer-0 gate. The external-reference comparison
+passes layer 1 before later depth drift, while the full GPU replay still fails
+the layer-6 and later layer-output gates. The isolated Down-contract
+improvement must therefore not be described as a complete model-level fix.
+
 The independent offloaded reference is also not numerically identical to the
 CPU trace: the current MI50 comparison begins at `0.0521` on layer 0 and
 reaches about `136` absolute error by layer 6. Therefore the external GPU

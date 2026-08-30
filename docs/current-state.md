@@ -457,12 +457,13 @@ These do not help answer the current project question.
 
 # Next Implementation Task
 
-The next Codex task is:
+The current Codex task is:
 
-> M4-B3 — isolate layer-6 FFN precision amplification before changing
-> tolerances. Compare projection precision boundaries, inspect Q8 blocks, and
-> use hybrid FFN probes to identify the first local error. Do not start token
-> generation.
+> M4-B4 diagnostics are complete: the FP16-scaled Q8 zero-point correction
+> is proven to be a local Down-projection defect, and an exact integer-sum
+> correction is integrated for Down only. Next, resolve the remaining
+> layer-6/late-depth numerical drift without widening tolerances. Do not
+> start token generation.
 
 The M0 evidence gates are complete under the documented gfx802-isolated
 configuration. The M2 gate is satisfied by EXP-0009 and M3 is closed by the

@@ -25,6 +25,12 @@ struct Qwen3FfnProbeTrace {
     std::vector<float> layer_output;
 };
 
+struct Qwen3DownProjectionContractTrace {
+    std::vector<float> current_s_correction;
+    std::vector<float> exact_sum_correction;
+    std::vector<float> direct_signed_oracle;
+};
+
 // Layer-0 GPU KV-cache contract.  Device storage is laid out as
 // [kv_head][position][head_dim], with only [0, length) positions valid.
 // Keys are appended after RoPE; values are appended before any attention
@@ -104,5 +110,15 @@ Qwen3FfnProbeTrace execute_qwen3_ffn_gpu_probe(
     std::span<const float> swiglu_override = {},
     std::span<const float> ffn_output_override = {},
     Qwen3ProjectionPrecision precision = Qwen3ProjectionPrecision::f16_input_q8_f16_output);
+
+// Correctness-only layer-6 down-projection contract probe.  The supplied
+// activation is quantized using the same F16-input Q8_1 path as production;
+// all returned outputs are F32.  The arithmetic contracts differ only in how
+// the Q4 zero point is corrected.
+Qwen3DownProjectionContractTrace execute_qwen3_down_projection_contract_probe(
+    const Qwen3GpuPlan& plan,
+    std::size_t layer_index,
+    std::span<const float> swiglu,
+    bool direct_f32_input = false);
 
 }  // namespace miinfer

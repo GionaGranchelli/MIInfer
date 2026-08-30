@@ -2,6 +2,7 @@
 #include "miinfer/hip_check.hpp"
 #include "miinfer/q4_q8_gemv.hpp"
 #include "miinfer/qwen3_gpu_primitives.hpp"
+#include "miinfer/qwen3_primitives.hpp"
 
 #include <hip/hip_runtime.h>
 
@@ -38,6 +39,8 @@ std::vector<float> read_f32(const std::filesystem::path& path) {
 
 struct Metrics {
     float max_abs = 0.0F;
+    float mean_abs = 0.0F;
+    float rmse = 0.0F;
     float max_rel = 0.0F;
     std::size_t max_index = 0;
     float actual_at_max = 0.0F;
@@ -47,12 +50,16 @@ struct Metrics {
 Metrics metrics(const std::vector<float>& actual, const std::vector<float>& expected) {
     if (actual.size() != expected.size()) return Metrics{INFINITY};
     Metrics result;
+    double sum_abs = 0.0;
+    double sum_squared = 0.0;
     for (std::size_t index = 0; index < actual.size(); ++index) {
         if (!std::isfinite(actual[index]) || !std::isfinite(expected[index])) {
             result.max_abs = INFINITY;
             return result;
         }
         const float error = std::fabs(actual[index] - expected[index]);
+        sum_abs += error;
+        sum_squared += static_cast<double>(error) * error;
         if (error > result.max_abs) {
             result.max_abs = error;
             result.max_index = index;
@@ -61,6 +68,10 @@ Metrics metrics(const std::vector<float>& actual, const std::vector<float>& expe
         }
         result.max_rel = std::max(result.max_rel,
                                   error / std::max(1.0F, std::fabs(expected[index])));
+    }
+    if (!actual.empty()) {
+        result.mean_abs = static_cast<float>(sum_abs / actual.size());
+        result.rmse = static_cast<float>(std::sqrt(sum_squared / actual.size()));
     }
     return result;
 }
@@ -136,43 +147,8 @@ void report_ffn_result(const char* label,
               << " layer=" << output.max_abs << '\n';
 }
 
-void report_q8_input_difference(const std::vector<float>& input);
-
-void report_hybrid_ffn_probes(const miinfer::Qwen3GpuPlan& plan,
-                              std::size_t layer,
-                              const miinfer::Qwen3LayerTrace& reference) {
-    using Precision = miinfer::Qwen3ProjectionPrecision;
-    const std::array<std::pair<const char*, Precision>, 4> variants{
-        std::pair{"f16-q8-f16", Precision::f16_input_q8_f16_output},
-        std::pair{"f32-q8-f16", Precision::f32_input_q8_f16_output},
-        std::pair{"f16-q8-f32", Precision::f16_input_q8_f32_output},
-        std::pair{"f32-q8-f32", Precision::f32_input_q8_f32_output},
-    };
-    std::cout << "layer-6 FFN projection precision probes (GPU vs host reference):\n";
-    report_q8_input_difference(reference.ffn_norm);
-    for (const auto& variant : variants) {
-        const auto result = miinfer::execute_qwen3_ffn_gpu_probe(
-            plan, layer, reference.ffn_input, reference.ffn_norm,
-            {}, {}, {}, {}, variant.second);
-        report_ffn_result(variant.first, result, reference);
-    }
-
-    std::cout << "layer-6 FFN hybrid probes (host tensor injection):\n";
-    const auto gate_up = miinfer::execute_qwen3_ffn_gpu_probe(
-        plan, layer, reference.ffn_input, reference.ffn_norm,
-        reference.gate, reference.up);
-    report_ffn_result("reference-gate-up -> GPU-SwiGLU", gate_up, reference);
-    const auto swiglu = miinfer::execute_qwen3_ffn_gpu_probe(
-        plan, layer, reference.ffn_input, reference.ffn_norm,
-        {}, {}, reference.swiglu);
-    report_ffn_result("reference-SwiGLU -> GPU-down", swiglu, reference);
-    const auto down = miinfer::execute_qwen3_ffn_gpu_probe(
-        plan, layer, reference.ffn_input, reference.ffn_norm,
-        {}, {}, {}, reference.ffn_output);
-    report_ffn_result("reference-down -> GPU-residual", down, reference);
-}
-
-void report_q8_input_difference(const std::vector<float>& input) {
+std::vector<miinfer::Q8_1Block> capture_q8_input(
+    const std::vector<float>& input, const char* label) {
     const auto elements = input.size();
     const auto blocks = elements / miinfer::kQ8_1BlockSize;
     float* device_f32 = nullptr;
@@ -212,7 +188,7 @@ void report_q8_input_difference(const std::vector<float>& input) {
         }
         if (differs) ++differing_blocks;
     }
-    std::cout << "layer-6 Q8 blocks (F16-input vs F32-input): differing_blocks="
+    std::cout << label << " Q8 blocks (F16-input vs F32-input): differing_blocks="
               << differing_blocks << '/' << blocks
               << " differing_qs=" << differing_qs
               << " max_d_delta=" << max_scale_delta << '\n';
@@ -220,6 +196,150 @@ void report_q8_input_difference(const std::vector<float>& input) {
     MIINFER_HIP_CHECK(hipFree(device_f16));
     MIINFER_HIP_CHECK(hipFree(device_from_f16));
     MIINFER_HIP_CHECK(hipFree(device_from_f32));
+    return from_f16;
+}
+
+void report_down_contract_blocks(
+    const miinfer::Qwen3GpuPlan& plan,
+    std::size_t layer,
+    const std::vector<miinfer::Q8_1Block>& input,
+    const std::vector<float>& expected,
+    const std::vector<float>& current) {
+    const auto current_metrics = metrics(current, expected);
+    const auto& config = plan.model().config();
+    const int blocks_per_row = static_cast<int>(config.intermediate_size / 32U);
+    const auto* weights = reinterpret_cast<const miinfer::Q4_0HostBlock*>(
+        plan.model().layers()[layer].down.data());
+    struct BlockReport {
+        int block = 0;
+        int q8_sum = 0;
+        float activation_d = 0.0F;
+        float stored_s = 0.0F;
+        float exact_sum_scaled = 0.0F;
+        float correction_delta = 0.0F;
+        float current = 0.0F;
+        float exact = 0.0F;
+    };
+    std::vector<BlockReport> reports;
+    reports.reserve(blocks_per_row);
+    const auto row = static_cast<int>(current_metrics.max_index);
+    float absolute_correction_error = 0.0F;
+    float signed_correction_error = 0.0F;
+    for (int block = 0; block < blocks_per_row; ++block) {
+        const auto& weight = weights[static_cast<std::size_t>(row) * blocks_per_row + block];
+        const auto& activation = input[static_cast<std::size_t>(block)];
+        const float weight_d = miinfer::fp16_bits_to_float(weight.d_bits);
+        const float activation_d = __half2float(activation.d);
+        const float stored_s = __half2float(activation.s);
+        int q8_sum = 0;
+        int raw_dot = 0;
+        for (int index = 0; index < 32; ++index) {
+            const auto packed = weight.qs[index < 16 ? index : index - 16];
+            const int nibble = index < 16 ? (packed & 0x0F) : ((packed >> 4) & 0x0F);
+            const int q8 = static_cast<int>(activation.qs[index]);
+            q8_sum += q8;
+            raw_dot += nibble * q8;
+        }
+        const float exact_sum_scaled = activation_d * static_cast<float>(q8_sum);
+        const float correction_delta = stored_s - exact_sum_scaled;
+        const float current_value = weight_d * (activation_d * static_cast<float>(raw_dot)
+                                                - 8.0F * stored_s);
+        const float exact_value = weight_d * activation_d
+                                  * static_cast<float>(raw_dot - 8 * q8_sum);
+        absolute_correction_error += std::fabs(weight_d * 8.0F * correction_delta);
+        signed_correction_error += weight_d * -8.0F * correction_delta;
+        reports.push_back({block, q8_sum, activation_d, stored_s, exact_sum_scaled,
+                           correction_delta, current_value, exact_value});
+    }
+    std::sort(reports.begin(), reports.end(), [](const auto& lhs, const auto& rhs) {
+        return std::fabs(lhs.current - lhs.exact) > std::fabs(rhs.current - rhs.exact);
+    });
+    std::cout << "down-contract row=" << row
+              << " expected=" << expected[row]
+              << " current=" << current[row]
+              << " absolute_correction_error=" << absolute_correction_error
+              << " signed_correction_error=" << signed_correction_error << '\n';
+    const auto count = std::min<std::size_t>(reports.size(), 8);
+    for (std::size_t index = 0; index < count; ++index) {
+        const auto& report = reports[index];
+        std::cout << "  block=" << report.block
+                  << " q8_sum=" << report.q8_sum
+                  << " d=" << report.activation_d
+                  << " stored_s=" << report.stored_s
+                  << " exact_d_sum=" << report.exact_sum_scaled
+                  << " correction_delta=" << report.correction_delta
+                  << " current=" << report.current
+                  << " exact=" << report.exact << '\n';
+    }
+}
+
+void report_hybrid_ffn_probes(const miinfer::Qwen3GpuPlan& plan,
+                              std::size_t layer,
+                              const miinfer::Qwen3LayerTrace& reference) {
+    using Precision = miinfer::Qwen3ProjectionPrecision;
+    const std::array<std::pair<const char*, Precision>, 4> variants{
+        std::pair{"f16-q8-f16", Precision::f16_input_q8_f16_output},
+        std::pair{"f32-q8-f16", Precision::f32_input_q8_f16_output},
+        std::pair{"f16-q8-f32", Precision::f16_input_q8_f32_output},
+        std::pair{"f32-q8-f32", Precision::f32_input_q8_f32_output},
+    };
+    std::cout << "layer-6 FFN projection precision probes (GPU vs host reference):\n";
+    (void)capture_q8_input(reference.ffn_norm, "layer-6 gate/up");
+    const auto down_input = capture_q8_input(reference.swiglu, "layer-6 down");
+    for (const auto& variant : variants) {
+        const auto result = miinfer::execute_qwen3_ffn_gpu_probe(
+            plan, layer, reference.ffn_input, reference.ffn_norm,
+            {}, {}, {}, {}, variant.second);
+        report_ffn_result(variant.first, result, reference);
+    }
+
+    std::cout << "layer-6 FFN hybrid probes (host tensor injection):\n";
+    const auto gate_up = miinfer::execute_qwen3_ffn_gpu_probe(
+        plan, layer, reference.ffn_input, reference.ffn_norm,
+        reference.gate, reference.up);
+    report_ffn_result("reference-gate-up -> GPU-SwiGLU", gate_up, reference);
+    const auto swiglu = miinfer::execute_qwen3_ffn_gpu_probe(
+        plan, layer, reference.ffn_input, reference.ffn_norm,
+        {}, {}, reference.swiglu);
+    report_ffn_result("reference-SwiGLU -> GPU-down", swiglu, reference);
+    const auto down = miinfer::execute_qwen3_ffn_gpu_probe(
+        plan, layer, reference.ffn_input, reference.ffn_norm,
+        {}, {}, {}, reference.ffn_output);
+    report_ffn_result("reference-down -> GPU-residual", down, reference);
+
+    const auto report_contract = [](const char* name, const Metrics& result) {
+        std::cout << "down-contract " << name
+                  << ": max_abs=" << result.max_abs
+                  << " mean_abs=" << result.mean_abs
+                  << " rmse=" << result.rmse
+                  << " max_rel=" << result.max_rel
+                  << " max_index=" << result.max_index
+                  << " actual_at_max=" << result.actual_at_max
+                  << " expected_at_max=" << result.expected_at_max << '\n';
+    };
+    const auto report_contract_set = [&](const char* input_label,
+                                         const miinfer::Qwen3DownProjectionContractTrace& contract) {
+        const auto current = metrics(contract.current_s_correction, reference.ffn_output);
+        const auto exact = metrics(contract.exact_sum_correction, reference.ffn_output);
+        const auto direct = metrics(contract.direct_signed_oracle, reference.ffn_output);
+        const auto exact_vs_direct = metrics(contract.exact_sum_correction,
+                                             contract.direct_signed_oracle);
+        std::cout << "layer-6 down-projection contracts (F32 output, "
+                   << input_label << " Q8):\n";
+        report_contract("current-fp16-s", current);
+        report_contract("exact-integer-sum", exact);
+        report_contract("direct-signed-oracle", direct);
+        report_contract("exact-vs-direct", exact_vs_direct);
+        return current;
+    };
+    const auto contract = miinfer::execute_qwen3_down_projection_contract_probe(
+        plan, layer, reference.swiglu, false);
+    (void)report_contract_set("F16-input", contract);
+    const auto f32_contract = miinfer::execute_qwen3_down_projection_contract_probe(
+        plan, layer, reference.swiglu, true);
+    (void)report_contract_set("F32-input", f32_contract);
+    report_down_contract_blocks(plan, layer, down_input, reference.ffn_output,
+                                contract.current_s_correction);
 }
 
 std::size_t argmax(const std::vector<float>& values) {

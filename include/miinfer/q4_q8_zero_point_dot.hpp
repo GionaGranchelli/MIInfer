@@ -32,6 +32,32 @@ void launch_q4_q8_gemv_zero_point_dot_wave64(
     int columns,
     hipStream_t stream = nullptr);
 
+// Production Qwen3 path: same geometry as the corresponding controls, but
+// uses the exact integer sum of Q8 lanes for Q4 zero-point correction.
+void launch_q4_q8_gemv_zero_point_dot_exact_sum(
+    const Q4_0Block* weights,
+    const Q8_1Block* input,
+    __half* output,
+    int rows,
+    int columns,
+    hipStream_t stream = nullptr);
+
+void launch_q4_q8_gemv_zero_point_dot_128_exact_sum(
+    const Q4_0Block* weights,
+    const Q8_1Block* input,
+    __half* output,
+    int rows,
+    int columns,
+    hipStream_t stream = nullptr);
+
+void launch_q4_q8_gemv_zero_point_dot_wave64_exact_sum(
+    const Q4_0Block* weights,
+    const Q8_1Block* input,
+    __half* output,
+    int rows,
+    int columns,
+    hipStream_t stream = nullptr);
+
 // Correctness-only diagnostic outputs.  These preserve the same arithmetic
 // and geometry while exposing the GEMV result as FP32, so output-rounding
 // effects can be separated from input quantization effects.
@@ -52,6 +78,42 @@ void launch_q4_q8_gemv_zero_point_dot_128_f32(
     hipStream_t stream = nullptr);
 
 void launch_q4_q8_gemv_zero_point_dot_wave64_f32(
+    const Q4_0Block* weights,
+    const Q8_1Block* input,
+    float* output,
+    int rows,
+    int columns,
+    hipStream_t stream = nullptr);
+
+// Correctness-only contract probes.  Both consume the canonical Q8_1 blocks
+// used by production, but avoid the lossy FP16 `s` field for zero-point
+// correction.  The direct variant is a scalar signed-Q4 oracle; neither is a
+// production kernel.
+void launch_q4_q8_gemv_zero_point_dot_exact_sum_f32(
+    const Q4_0Block* weights,
+    const Q8_1Block* input,
+    float* output,
+    int rows,
+    int columns,
+    hipStream_t stream = nullptr);
+
+void launch_q4_q8_gemv_zero_point_dot_128_exact_sum_f32(
+    const Q4_0Block* weights,
+    const Q8_1Block* input,
+    float* output,
+    int rows,
+    int columns,
+    hipStream_t stream = nullptr);
+
+void launch_q4_q8_gemv_zero_point_dot_wave64_exact_sum_f32(
+    const Q4_0Block* weights,
+    const Q8_1Block* input,
+    float* output,
+    int rows,
+    int columns,
+    hipStream_t stream = nullptr);
+
+void launch_q4_q8_gemv_direct_signed_f32(
     const Q4_0Block* weights,
     const Q8_1Block* input,
     float* output,
