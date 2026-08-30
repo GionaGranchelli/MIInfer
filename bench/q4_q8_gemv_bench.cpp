@@ -4,6 +4,7 @@
 #include "miinfer/hip_check.hpp"
 #include "miinfer/q4_q8_packed_dot.hpp"
 #include "miinfer/q4_q8_gemv.hpp"
+#include "miinfer/q4_q8_zero_point_dot.hpp"
 
 #include <hip/hip_runtime.h>
 
@@ -36,7 +37,7 @@ struct Options {
 void usage() {
     std::cerr << "usage: miinfer-q4-q8-gemv-bench [options]\n"
               << "  --mode gemv|one|quantize|fanout-attention|fanout-ffn\n"
-              << "  --implementation scalar|packed-dot (default: scalar)\n"
+              << "  --implementation scalar|packed-dot|zero-point-dot (default: scalar)\n"
               << "  --shape q|k|v|o|gate|up|down|all (gemv/one; default: all)\n"
               << "  --length N             activation length for quantize (default: 4096)\n"
               << "  --warmup N             warm-up operations (default: 5)\n"
@@ -112,7 +113,8 @@ bool parse(int argc, char** argv, Options& options) {
                             || options.mode == "fanout-attention"
                             || options.mode == "fanout-ffn";
     const bool valid_implementation = options.implementation == "scalar"
-                                       || options.implementation == "packed-dot";
+                                       || options.implementation == "packed-dot"
+                                       || options.implementation == "zero-point-dot";
     const bool valid_shape = options.shape == "q" || options.shape == "k"
                              || options.shape == "v" || options.shape == "o"
                              || options.shape == "gate" || options.shape == "up"
@@ -139,6 +141,8 @@ void launch_selected_gemv(
     int columns) {
     if (options.implementation == "packed-dot") {
         miinfer::launch_q4_q8_gemv_packed_dot(weights, input, output, rows, columns);
+    } else if (options.implementation == "zero-point-dot") {
+        miinfer::launch_q4_q8_gemv_zero_point_dot(weights, input, output, rows, columns);
     } else {
         miinfer::launch_q4_q8_gemv(weights, input, output, rows, columns);
     }
@@ -338,7 +342,7 @@ bool run_shape(
                                  + static_cast<double>(data.input_q8.size() * sizeof(miinfer::Q8_1Block))
                                  + static_cast<double>(shape.m * sizeof(__half));
     const double med = median(samples);
-    output << "{\"experiment\":\"EXP-0006\",\"mode\":" << escape(options.mode)
+    output << "{\"experiment\":\"EXP-0007\",\"mode\":" << escape(options.mode)
            << ",\"implementation\":" << escape(options.implementation)
            << ",\"shape\":\"" << shape.id << "\",\"m\":" << shape.m
            << ",\"k\":" << shape.k << ",\"input_dtype\":\"q8_1\""
@@ -530,6 +534,11 @@ bool run_fanout(
                     device_weights[shape_index][static_cast<std::size_t>(index) % 3],
                     device_input_q8, device_outputs[shape_index], shapes[shape_index].m,
                     shapes[shape_index].k);
+            } else if (options.implementation == "zero-point-dot") {
+                miinfer::launch_q4_q8_gemv_zero_point_dot(
+                    device_weights[shape_index][static_cast<std::size_t>(index) % 3],
+                    device_input_q8, device_outputs[shape_index], shapes[shape_index].m,
+                    shapes[shape_index].k);
             } else {
                 miinfer::launch_q4_q8_gemv(
                 device_weights[shape_index][static_cast<std::size_t>(index) % 3],
@@ -546,7 +555,7 @@ bool run_fanout(
                                     actual.size() * sizeof(__half), hipMemcpyDeviceToHost));
         pass = miinfer::evaluate_fp16_gemv(actual, oracles[shape_index]).pass && pass;
     }
-    output << "{\"experiment\":\"EXP-0006\",\"mode\":" << escape(options.mode)
+    output << "{\"experiment\":\"EXP-0007\",\"mode\":" << escape(options.mode)
            << ",\"implementation\":" << escape(options.implementation)
            << ",\"fanout\":\"" << (attention ? "Q/K/V" : "gate/up") << "\""
            << ",\"activation_length\":" << shapes.front().k

@@ -87,6 +87,7 @@ if(MIINFER_ENABLE_HIP)
         gfx906/kernels/fp16_gemv.hip
         gfx906/kernels/q4_q8_gemv.hip
         gfx906/kernels/q4_q8_packed_dot.hip
+        gfx906/kernels/q4_q8_zero_point_dot.hip
         gfx906/kernels/memory_stream.hip
     )
     target_include_directories(miinfer_hip
