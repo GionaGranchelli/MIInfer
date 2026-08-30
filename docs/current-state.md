@@ -15,13 +15,13 @@ For long-term direction, see:
 
 # Current Phase
 
-**M1 — Kernel Laboratory**
+**M2 — Prove Specialization**
 
 MIInfer is not yet an inference runtime.
 
-M0 is closed. The baseline infrastructure and external reference are
-established, and the active phase is kernel-level research. MIInfer is not yet
-an inference runtime.
+M0 is closed and M1 established the kernel laboratory. M2 is the active
+go/no-go phase for gfx906-specific specialization. MIInfer is not yet an
+inference runtime.
 
 ---
 
@@ -74,6 +74,7 @@ No other GPU architecture is currently supported.
 * EXP-0002 FP16 GEMV baseline implementation and five-run MI50 measurement
 * EXP-0004 FP16 K-split K/V specialization, accepted after five-run measurement
 * EXP-0005 Q4_0 × Q8_1 quantized GEMV baseline, accepted after five-run measurement
+* EXP-0006 packed-dot ISA proof, correctness validation, and five-run comparison
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -112,10 +113,10 @@ been implemented.
 
 The immediate technical objective is:
 
-> Use the accepted Q4_0 × Q8_1 baseline to select and measure the first
-> gfx906-specific quantized specialization, beginning with packed integer dot
-> execution. EXP-0005 freezes the correctness and quantization contract; it
-> does not yet implement that specialization.
+> Use measured evidence to select the next gfx906-specific quantized
+> specialization after EXP-0006 rejected the current register-unpack
+> packed-dot implementation. EXP-0005 remains the frozen correctness and
+> performance baseline; M2 is not yet passed.
 
 M0 is closed under the documented gfx802-isolated configuration. The
 repository-side infrastructure, physical MI50 validation, model artifact, and
@@ -126,7 +127,7 @@ documented platform prerequisite for M1 GPU execution.
 
 # Immediate Deliverables
 
-The M1 kernel-laboratory deliverables currently include:
+The M1/M2 kernel-laboratory deliverables currently include:
 
 * root CMake project
 * canonical gfx906 build preset
@@ -141,6 +142,8 @@ The M1 kernel-laboratory deliverables currently include:
 * deterministic Q4_0/Q8_1 host quantization and CPU oracle
 * project-owned Q4_0 × Q8_1 HIP baseline
 * activation-quantization and fan-out measurements
+* gfx906 `v_dot4_i32_i8` probe and Q4×Q8 packed-dot candidate
+* EXP-0006 five-run scalar-versus-packed-dot evidence
 
 The repository-side deliverables are complete. Physical MI50 execution remains
 required for the GPU-specific exit criteria.
@@ -249,15 +252,16 @@ EXP-0004 established a K/V-specific FP16 K-split specialization with a 52%
 latency reduction on the real `M=1024, K=4096` shapes. The
 external llama.cpp kernel-share measurement remains a `RETEST` item because a
 compatible ROCm profiler is not installed, but that gap does not block
-isolated M1 kernel experiments. It remains required before an M2 or end-to-end
+isolated kernel experiments. It remains required before an M2 or end-to-end
 claim against the real llama.cpp decode path.
 
 Attention and MoE benchmarks should wait until representative target-model
 shapes and actual bottlenecks are frozen. EXP-0005 accepted the Q4_0 × Q8_1
-baseline on all seven real Qwen3-8B projection shapes. The baseline is
-correctness-valid but slower than the pinned external Q4_0 MMVQ path, leaving
-a clear target for packed-dot specialization. The accepted K-split
-implementation is currently limited to the K/V shape family; Q/O continues
+baseline on all seven real Qwen3-8B projection shapes. EXP-0006 proved that
+the compiler emits `v_dot4_i32_i8` and the candidate is numerically correct,
+but the current register unpack/pack implementation regresses Q/O and FFN
+latency. The accepted K-split implementation is currently limited to the K/V
+shape family; Q/O continues
 to use the EXP-0002 baseline configuration.
 
 ---
@@ -277,7 +281,9 @@ EXP-0004 — FP16 K-split parallelism for K/V (KEEP)
 
 EXP-0005 — quantized GEMV baseline (KEEP)
 
-EXP-0006 — gfx906 Q4_0 × Q8_1 packed-dot specialization
+EXP-0006 — gfx906 Q4_0 × Q8_1 packed-dot specialization (REJECT)
+
+EXP-0007 — reduce Q4 register-unpack/pack overhead (recommended)
 ```
 
 The exact ordering may change based on early measurements.
