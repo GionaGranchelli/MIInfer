@@ -75,6 +75,7 @@ No other GPU architecture is currently supported.
 * EXP-0004 FP16 K-split K/V specialization, accepted after five-run measurement
 * EXP-0005 Q4_0 × Q8_1 quantized GEMV baseline, accepted after five-run measurement
 * EXP-0006 packed-dot ISA proof, correctness validation, and five-run comparison
+* EXP-0007 zero-point-corrected Q4_0 × Q8_1 dot4 specialization, accepted after five-run measurement
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -113,10 +114,10 @@ been implemented.
 
 The immediate technical objective is:
 
-> Use measured evidence to select the next gfx906-specific quantized
-> specialization after EXP-0006 rejected the current register-unpack
-> packed-dot implementation. EXP-0005 remains the frozen correctness and
-> performance baseline; M2 is not yet passed.
+> Validate the accepted zero-point-corrected Q4_0 × Q8_1 dot4 specialization
+> against the strongest external gfx906 path and isolate the remaining K/V
+> grid limitation. EXP-0005 remains the frozen scalar correctness baseline;
+> M2 is not yet passed.
 
 M0 is closed under the documented gfx802-isolated configuration. The
 repository-side infrastructure, physical MI50 validation, model artifact, and
@@ -144,6 +145,8 @@ The M1/M2 kernel-laboratory deliverables currently include:
 * activation-quantization and fan-out measurements
 * gfx906 `v_dot4_i32_i8` probe and Q4×Q8 packed-dot candidate
 * EXP-0006 five-run scalar-versus-packed-dot evidence
+* zero-point-corrected Q4×Q8 dot4 kernel using Q8_1 sum metadata
+* EXP-0007 five-run scalar/control/candidate evidence and size-matched memory reference
 
 The repository-side deliverables are complete. Physical MI50 execution remains
 required for the GPU-specific exit criteria.
@@ -283,7 +286,9 @@ EXP-0005 — quantized GEMV baseline (KEEP)
 
 EXP-0006 — gfx906 Q4_0 × Q8_1 packed-dot specialization (REJECT)
 
-EXP-0007 — reduce Q4 register-unpack/pack overhead (recommended)
+EXP-0007 — zero-point-corrected Q4_0 × Q8_1 dot4 (KEEP)
+
+EXP-0008 — compose zero-point dot4 with split-K for K/V (recommended)
 ```
 
 The exact ordering may change based on early measurements.
