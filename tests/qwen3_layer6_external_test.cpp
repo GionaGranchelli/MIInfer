@@ -135,6 +135,72 @@ void compare_host_gpu(const miinfer::Qwen3LayerTrace& host,
     }
 }
 
+void report_projection_precision(
+    const miinfer::Qwen3GpuPlan& plan,
+    const miinfer::Qwen3LayerTrace& host,
+    const std::vector<float>& layer_input,
+    const std::vector<std::vector<float>>& external) {
+    using Precision = miinfer::Qwen3ProjectionPrecision;
+    using Projection = miinfer::Qwen3Projection;
+    const std::array<std::pair<const char*, Precision>, 4> variants{
+        std::pair{"F16->Q8Exact->F16", Precision::f16_input_q8_f16_output},
+        std::pair{"F32->Q8Exact->F16", Precision::f32_input_q8_f16_output},
+        std::pair{"F16->Q8Exact->F32", Precision::f16_input_q8_f32_output},
+        std::pair{"F32->Q8Exact->F32", Precision::f32_input_q8_f32_output},
+    };
+
+    std::vector<float> o_external(external[12].size());
+    for (std::size_t index = 0; index < o_external.size(); ++index) {
+        o_external[index] = external[12][index] - layer_input[index];
+    }
+    std::vector<float> o_host(host.ffn_input.size());
+    for (std::size_t index = 0; index < o_host.size(); ++index) {
+        o_host[index] = host.ffn_input[index] - layer_input[index];
+    }
+    const auto o_host_external = metrics(o_host, o_external);
+    std::cout << "  O derived checkpoint host-vs-external: max_abs="
+              << o_host_external.max_abs
+              << " mean_abs=" << o_host_external.mean_abs
+              << " rmse=" << o_host_external.rmse << '\n';
+
+    struct Case {
+        const char* name;
+        Projection projection;
+        const std::vector<float>* input;
+        const std::vector<float>* expected;
+        const std::vector<float>* host;
+    };
+    const std::array cases{
+        Case{"Q", Projection::q, &external[0], &external[1], &host.q_projection},
+        Case{"K", Projection::k, &external[0], &external[7], &host.k_projection},
+        Case{"V", Projection::v, &external[0], &external[5], &host.v_projection},
+        Case{"O", Projection::o, &external[11], &o_external, &o_host},
+        Case{"Gate", Projection::gate, &external[13], &external[14], &host.gate},
+        Case{"Up", Projection::up, &external[13], &external[15], &host.up},
+        Case{"Down", Projection::down, &external[16], &external[17], &host.ffn_output},
+    };
+
+    std::cout << "M4-B7 exact-Q8 projection precision matrix (MI50 vs external):\n";
+    for (const auto& item : cases) {
+        std::cout << "  " << item.name;
+        for (const auto& variant : variants) {
+            const auto result = miinfer::execute_qwen3_projection_gpu_probe(
+                plan, 6, item.projection, *item.input, variant.second);
+            const auto comparison = metrics(result.output, *item.expected);
+            std::cout << "\n    " << variant.first
+                      << ": max_abs=" << comparison.max_abs
+                      << " mean_abs=" << comparison.mean_abs
+                      << " rmse=" << comparison.rmse
+                      << " max_rel=" << comparison.max_rel;
+            if (item.host != nullptr) {
+                const auto host_comparison = metrics(result.output, *item.host);
+                std::cout << " host_max_abs=" << host_comparison.max_abs;
+            }
+        }
+        std::cout << '\n';
+    }
+}
+
 int run(const std::filesystem::path& model_path,
         const std::filesystem::path& trace_path) {
     std::vector<std::vector<float>> external;
@@ -153,6 +219,7 @@ int run(const std::filesystem::path& model_path,
     compare_authority("HOST", host, external, passed);
     compare_authority("MI50 GPU", gpu, external, passed);
     compare_host_gpu(host, gpu);
+    report_projection_precision(plan, host, input, external);
 
     // Prove that this test consumes the external fixture rather than merely
     // checking internal host/GPU agreement.  A deliberate mutation must fail
@@ -170,7 +237,7 @@ int run(const std::filesystem::path& model_path,
               << " max_abs=" << mutation_result.max_abs << '\n';
     passed = passed && mutation_detected;
 
-    std::cout << "M4-B6 external layer-6 comparison: "
+    std::cout << "M4-B7 external layer-6 comparison: "
               << (passed ? "PASS" : "FAIL") << '\n';
     return passed ? 0 : 1;
 }

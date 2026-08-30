@@ -88,6 +88,9 @@ No other GPU architecture is currently supported.
   single-token 36-layer reference fixture; acceptance remains open
 * M4-B6 independent same-run external layer-6 trace and first-divergence
   host/MI50 diagnostic comparison; full-depth acceptance remains open
+* M4-B7 external reference repeatability and exact-Q8 projection precision
+  matrix; production precision remains unchanged; full-depth acceptance
+  remains open
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -461,10 +464,12 @@ These do not help answer the current project question.
 
 The current Codex task is:
 
-> M4-B6 external layer-6 first-divergence tracing is complete. Use the
-> independent same-run layer-6 fixture to isolate the first remaining GPU
-> projection precision mismatch and the separate host/reference numerical
-> contract without widening tolerances. Do not start token generation.
+> M4-B7 has established external layer-6 trace repeatability and corrected
+> the precision probe to use Q8ExactBlock. The exact-Q8 F32-output variants
+> are nearly exact for the causal V/O/FFN projections, but production
+> precision remains unchanged. Select and validate the minimum production
+> correction against the external trace without widening tolerances. Do not
+> start token generation.
 
 The M0 evidence gates are complete under the documented gfx802-isolated
 configuration. The M2 gate is satisfied by EXP-0009 and M3 is closed by the

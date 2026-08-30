@@ -357,6 +357,48 @@ void launch_q4_q8_gemv_zero_point_dot_wave64_exact_metadata(
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
+void launch_q4_q8_gemv_zero_point_dot_exact_metadata_f32(
+    const Q4_0Block* weights, const Q8ExactBlock* input, float* output,
+    int rows, int columns, hipStream_t stream) {
+    if (weights == nullptr || input == nullptr || output == nullptr
+        || rows <= 0 || columns <= 0 || columns % kQ4_0BlockSize != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(
+        (q4_q8_gemv_zero_point_dot_kernel<Q8ExactBlock, float, true>),
+        dim3(static_cast<unsigned int>(rows)), dim3(kThreadsPerBlock),
+        kThreadsPerBlock * sizeof(float), stream, weights, input, output, rows, columns);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_q4_q8_gemv_zero_point_dot_128_exact_metadata_f32(
+    const Q4_0Block* weights, const Q8ExactBlock* input, float* output,
+    int rows, int columns, hipStream_t stream) {
+    if (weights == nullptr || input == nullptr || output == nullptr
+        || rows <= 0 || columns <= 0 || columns % kQ4_0BlockSize != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(
+        (q4_q8_gemv_zero_point_dot_128_kernel<128, Q8ExactBlock, float, true>),
+        dim3(static_cast<unsigned int>(rows)), dim3(128), 128 * sizeof(float),
+        stream, weights, input, output, rows, columns);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_q4_q8_gemv_zero_point_dot_wave64_exact_metadata_f32(
+    const Q4_0Block* weights, const Q8ExactBlock* input, float* output,
+    int rows, int columns, hipStream_t stream) {
+    if (weights == nullptr || input == nullptr || output == nullptr
+        || rows <= 0 || columns <= 0 || columns % kQ4_0BlockSize != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(
+        (q4_q8_gemv_zero_point_dot_wave64_kernel<Q8ExactBlock, float, true>),
+        dim3(static_cast<unsigned int>(rows)), dim3(128), 0, stream,
+        weights, input, output, rows, columns);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
 void launch_q4_q8_gemv_zero_point_dot_f32(
     const Q4_0Block* weights, const Q8_1Block* input, float* output,
     int rows, int columns, hipStream_t stream) {

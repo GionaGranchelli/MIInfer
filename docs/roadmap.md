@@ -756,9 +756,11 @@ from the accepted model plan and layer-state correctness evidence:
    widening numerical tolerances.
 5. Preserve the proven exact Q4_0 × Q8 zero-point correction for Down and
    isolate the remaining upstream/late-depth numerical drift.
-6. Use the independent same-run layer-6 internal trace to separate the first
-   GPU projection mismatch from the remaining host/reference contract.
-7. Only after M4-B closes, proceed to validated token generation.
+6. Establish external layer-6 trace repeatability and use exact-Q8
+   F16/F32 projection probes to separate GPU precision boundaries from the
+   remaining host/reference contract.
+7. Validate the minimum causal-path precision correction, then rerun the
+   complete full-depth gates before proceeding to token generation.
 
 Do not broaden M4 into a general-purpose runtime.
 
@@ -772,12 +774,13 @@ The current milestone is:
 M4-B — full-depth numerical validation
 ```
 
-M4-B6 has captured an independent same-run layer-6 internal reference trace.
-Host and MI50 first-divergence diagnostics now use the same external layer-5
-input and show a GPU projection mismatch before the amplified FFN tail, while
-the host remains close until SwiGLU. Layers 6, 34, and 35 still exceed the
-frozen full-depth bounds, so M4-B remains open. Exact experiment ordering may
-change only when supported by the resulting evidence.
+M4-B7 has established bitwise repeatability across three identical external
+layer-6 CPU captures and corrected the precision probe to use Q8ExactBlock.
+The F32-input/F32-output diagnostic is nearly exact for Q/V/Gate/Up/Down,
+while the current production boundary still produces a GPU layer-6 output
+error of about `3.09`. Layers 6, 34, and 35 still exceed the frozen full-depth
+bounds, so M4-B remains open. Exact experiment ordering may change only when
+supported by the resulting evidence.
 
 ---
 

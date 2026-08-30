@@ -43,4 +43,11 @@ Each file is little-endian F32 in the reference's logical tensor order:
 
 The capture was made in a temporary reference worktree.  The pinned
 reference checkout itself remains unchanged.  This fixture is diagnostic
-evidence for M4-B6, not a performance result.
+evidence for M4-B6/M4-B7, not a performance result.
+
+Three identical captures were performed with the same pinned CPU build,
+model, token, and environment.  The shared layer-6 checkpoints were
+bitwise-identical across those captures.  The older full-forward fixture's
+`layer-5.f32` is therefore a cross-fixture mismatch, not observed CPU
+run-to-run instability; use this same-run `layer-input.f32` for M4-B7
+teacher-forced probes.

@@ -17,6 +17,20 @@ enum class Qwen3ProjectionPrecision {
     f32_input_q8_f32_output,
 };
 
+enum class Qwen3Projection {
+    q,
+    k,
+    v,
+    o,
+    gate,
+    up,
+    down,
+};
+
+struct Qwen3ProjectionProbeTrace {
+    std::vector<float> output;
+};
+
 struct Qwen3FfnProbeTrace {
     std::vector<float> gate;
     std::vector<float> up;
@@ -110,6 +124,17 @@ Qwen3FfnProbeTrace execute_qwen3_ffn_gpu_probe(
     std::span<const float> swiglu_override = {},
     std::span<const float> ffn_output_override = {},
     Qwen3ProjectionPrecision precision = Qwen3ProjectionPrecision::f16_input_q8_f16_output);
+
+// Correctness-only probe for one real Qwen3 projection. It always consumes
+// Q8ExactBlock metadata; precision selects only the input/output FP16
+// boundaries. The projection name is resolved once by this diagnostic API,
+// not by the execution hot path.
+Qwen3ProjectionProbeTrace execute_qwen3_projection_gpu_probe(
+    const Qwen3GpuPlan& plan,
+    std::size_t layer_index,
+    Qwen3Projection projection,
+    std::span<const float> input,
+    Qwen3ProjectionPrecision precision);
 
 // Correctness-only layer-6 down-projection contract probe.  The supplied
 // activation is quantized using the same F16-input Q8_1 path as production;

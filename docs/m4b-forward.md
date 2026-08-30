@@ -223,6 +223,53 @@ M4-B6 conclusion: the independent layer-6 trace is captured and consumed
 successfully, but M4-B remains open. No token-generation or performance work
 was started.
 
+## M4-B7 reference stability and exact-Q8 projection precision
+
+The external capture method was repeated three times with identical pinned
+CPU build, model, token `14990`, position, and environment. The shared
+layer-6 checkpoints were bitwise-identical across runs. The earlier
+`0.0786629` difference is therefore attributable to comparing different
+fixture/capture inputs, not observed repeatability noise. The same-run
+`layer-input.f32` remains the canonical teacher-forced input.
+
+The precision probe was corrected to use `Q8ExactBlock` for all four input /
+output combinations; it no longer exercises the retired FP16-`s` path. The
+Release MI50 probe reported the following maximum absolute errors against the
+external layer-6 projection checkpoints:
+
+| Projection | F16 in/F16 out | F32 in/F16 out | F16 in/F32 out | F32 in/F32 out |
+| --- | ---: | ---: | ---: | ---: |
+| Q | 0.0034914 | 0.0034914 | 0.00121975 | 0.000002384 |
+| K | 0.0008390 | 0.0008247 | 0.0007962 | 0.000000715 |
+| V | 0.0008160 | 0.0002193 | 0.0008423 | 0.000000358 |
+| Gate | 0.0095673 | 0.0095673 | 0.0053716 | 0.000011444 |
+| Up | 0.0141068 | 0.0141068 | 0.0029894 | 0.000030518 |
+| Down | 3.0918 | 3.0918 | 1.42871 | 0.0019531 |
+
+The position-zero layer-6 fixture has one visible key/value entry, so its
+attention probabilities are one. Q and K are therefore useful precision
+canaries but cannot cause the final layer-output error in this fixture. The
+causal path is V → attention output → O → residual → FFN. The existing
+full-layer GPU result remains `layer_output max_abs=3.09375`.
+
+The Q/V/Gate/Up/Down results show that retaining the GEMV result in F32 is the
+strongest isolated correction: F32-input/F32-output is nearly exact for those
+operations, while changing only the input boundary is generally ineffective.
+The O row is now also derived correctly as `ffn_input - layer_input`: the host
+derived O vector is only `0.00155926` from that external value, while MI50 is
+`0.00305176` with F16 output and `0.00000190735` with F32 output. This makes
+the O comparison usable for this position-zero diagnostic. The result is still
+diagnostic evidence only; production precision has not been changed.
+
+M4-B7 status: reference stability is established and the exact-Q8 precision
+matrix is implemented. Q/K are precision canaries rather than causal sources
+of the position-zero layer-output error because the attention prefix has one
+entry. V, O, Gate, Up, and Down all become close to the external projection
+trace with F32 output; Down changes from `3.0918` to `0.00195312`. This points
+to output-F16 rounding as the minimum promising GPU correction, but no
+production change is accepted yet. M4-B remains open; generation and
+performance work remain out of scope.
+
 ## Physical acceptance command
 
 The default CTest entries intentionally remain artifact-free unit/regression
