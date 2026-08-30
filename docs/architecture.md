@@ -97,6 +97,12 @@ contiguous GPU weight arena, and an immutable static projection-kernel plan.
 The plan is validation and ownership infrastructure only; transformer
 execution remains a later milestone.
 
+M4-A adds correctness-first primitive ownership below that boundary. Host
+oracles define the Qwen3 math contract, while gfx906 probes own embedding
+lookup, RMSNorm, and the Q6_K output-projection arithmetic. These probes are
+not yet a complete transformer executor; the first layer remains gated by
+comparison with the pinned reference trace.
+
 ---
 
 # 4. Architectural Non-Goal: Generic Graph Runtime

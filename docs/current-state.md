@@ -120,8 +120,9 @@ model/runtime functionality has been implemented.
 
 The immediate technical objective is:
 
-> Begin M4 by executing the minimum correct Qwen3-8B path on the pinned MI50,
-> starting with deterministic model-side validation and one-token generation.
+> Complete M4-A by wiring the correctness-first Qwen3 primitives into a
+> one-layer executor and matching its layer-0 checkpoints against the pinned
+> reference trace, then proceed to first token generation.
 > Do not broaden support beyond the pinned model contract.
 
 M0 is closed under the documented gfx802-isolated configuration. The
@@ -156,10 +157,13 @@ The M1/M2 kernel-laboratory deliverables currently include:
 * EXP-0009 five-run 128-thread and Wave64 geometry comparison against MMVQ
 * M3 pinned Qwen3-8B model recognition, 399-tensor validation, 4.77 GB GPU
   weight residency, and static kernel/buffer plan
+* M4-A correctness foundation for Qwen3 host oracles and initial gfx906 GPU
+  probes (RMSNorm, Q4_0 embedding lookup, and Q6_K GEMV)
 
 The repository-side specialization and M3 runtime-scaffold deliverables are
-complete. Physical MI50 execution remains required for all future
-GPU-specific runtime validation.
+complete. M4-A has primitive probes and an external reference trace, but the
+one-layer MIInfer-vs-reference gate remains open. Physical MI50 execution
+remains required for all future GPU-specific runtime validation.
 
 ---
 

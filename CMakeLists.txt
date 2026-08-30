@@ -81,6 +81,7 @@ target_compile_options(miinfer_build_info PRIVATE
 add_library(miinfer_model STATIC
     src/gguf.cpp
     src/qwen3_model.cpp
+    src/qwen3_primitives.cpp
     src/sha256.cpp
 )
 target_include_directories(miinfer_model
@@ -101,6 +102,7 @@ if(MIINFER_ENABLE_HIP)
         gfx906/kernels/q4_q8_gemv.hip
         gfx906/kernels/q4_q8_packed_dot.hip
         gfx906/kernels/q4_q8_zero_point_dot.hip
+        gfx906/kernels/qwen3_primitives.hip
         gfx906/kernels/memory_stream.hip
     )
     target_include_directories(miinfer_hip
@@ -124,6 +126,10 @@ target_compile_options(miinfer-host-test PRIVATE -Wall -Wextra -Wpedantic)
 add_executable(miinfer-model-loader-test tests/model_loader_test.cpp)
 target_link_libraries(miinfer-model-loader-test PRIVATE miinfer_model)
 target_compile_options(miinfer-model-loader-test PRIVATE -Wall -Wextra -Wpedantic)
+
+add_executable(miinfer-qwen3-primitives-host-test tests/qwen3_primitives_host_test.cpp)
+target_link_libraries(miinfer-qwen3-primitives-host-test PRIVATE miinfer_model)
+target_compile_options(miinfer-qwen3-primitives-host-test PRIVATE -Wall -Wextra -Wpedantic)
 
 if(MIINFER_ENABLE_HIP)
     add_executable(miinfer-device-info tests/device_info.cpp)
@@ -178,6 +184,10 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-model-gpu-test PRIVATE miinfer_hip)
     target_compile_options(miinfer-model-gpu-test PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-qwen3-primitives-test tests/qwen3_primitives_test.cpp)
+    target_link_libraries(miinfer-qwen3-primitives-test PRIVATE miinfer_hip)
+    target_compile_options(miinfer-qwen3-primitives-test PRIVATE -Wall -Wextra -Wpedantic)
+
 endif()
 
 include(CTest)
@@ -186,6 +196,8 @@ if(BUILD_TESTING)
     set_tests_properties(host-only PROPERTIES LABELS "host-only")
     add_test(NAME model-loader-host COMMAND miinfer-model-loader-test)
     set_tests_properties(model-loader-host PROPERTIES LABELS "host-only")
+    add_test(NAME qwen3-primitives-host COMMAND miinfer-qwen3-primitives-host-test)
+    set_tests_properties(qwen3-primitives-host PROPERTIES LABELS "host-only")
     if(MIINFER_ENABLE_HIP)
         add_test(NAME hip-smoke COMMAND miinfer-hip-smoke)
         set_tests_properties(hip-smoke PROPERTIES LABELS "gpu-required")
@@ -197,10 +209,12 @@ if(BUILD_TESTING)
         set_tests_properties(q4-q8-dot4-probe PROPERTIES LABELS "gpu-required")
         add_test(NAME model-gpu-arena COMMAND miinfer-model-gpu-test)
         set_tests_properties(model-gpu-arena PROPERTIES LABELS "gpu-required")
+        add_test(NAME qwen3-primitives-gpu COMMAND miinfer-qwen3-primitives-test)
+        set_tests_properties(qwen3-primitives-gpu PROPERTIES LABELS "gpu-required")
     endif()
 endif()
 
-install(TARGETS miinfer-host-test)
+install(TARGETS miinfer-host-test miinfer-qwen3-primitives-host-test)
 if(MIINFER_ENABLE_HIP)
     install(TARGETS miinfer-device-info miinfer-hip-smoke miinfer-bench
                     miinfer-fp16-gemv-test miinfer-fp16-gemv-bench)
@@ -210,5 +224,5 @@ if(MIINFER_ENABLE_HIP)
     install(TARGETS miinfer-fp16-gemv-reduction-diag)
     install(TARGETS miinfer-fp16-gemv-k-split-bench)
     install(TARGETS miinfer-q4-q8-gemv-bench)
-    install(TARGETS miinfer-model-info miinfer-model-gpu-test)
+    install(TARGETS miinfer-model-info miinfer-model-gpu-test miinfer-qwen3-primitives-test)
 endif()

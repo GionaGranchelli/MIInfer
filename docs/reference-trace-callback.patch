@@ -1,0 +1,45 @@
+diff --git a/common/debug.cpp b/common/debug.cpp
+--- a/common/debug.cpp
++++ b/common/debug.cpp
+@@
+ #include <cmath>
++#include <cstdlib>
++#include <fstream>
+ #include <regex>
+@@
+     std::vector<std::regex> tensor_filters;
+     bool                    abort_on_nan{false};
++    std::string             trace_dir;
++    std::size_t             trace_index{0};
++    bool                    trace_finished{false};
+@@
+-common_debug_cb_user_data::common_debug_cb_user_data() : pimpl(std::make_unique<impl>()) {}
++common_debug_cb_user_data::common_debug_cb_user_data() : pimpl(std::make_unique<impl>()) {
++    if (const char * dir = std::getenv("MIINFER_TRACE_DIR")) {
++        pimpl->trace_dir = dir;
++    }
++}
+@@
+     if (!is_host) {
+         auto n_bytes = ggml_nbytes(t);
+         pimpl->data.resize(n_bytes);
+         ggml_backend_tensor_get(t, pimpl->data.data(), 0, n_bytes);
+     }
++
++    if (!pimpl->trace_dir.empty() && !pimpl->trace_finished && t->type == GGML_TYPE_F32) {
++        const bool is_layer0 = std::string(t->name).find("-0") != std::string::npos
++                               || std::string(t->name) == "embd";
++        if (is_layer0) {
++            const uint8_t * data = is_host ? (const uint8_t *) t->data : pimpl->data.data();
++            const auto path = pimpl->trace_dir + "/" + std::to_string(pimpl->trace_index++)
++                               + "-" + t->name + ".f32";
++            std::ofstream output(path, std::ios::binary);
++            output.write(reinterpret_cast<const char *>(data), static_cast<std::streamsize>(ggml_nbytes(t)));
++            LOG_INF("MIINFER_TRACE file=%s op=%s bytes=%zu ne0=%lld ne1=%lld\n",
++                    path.c_str(), ggml_op_name(t->op), ggml_nbytes(t),
++                    static_cast<long long>(t->ne[0]), static_cast<long long>(t->ne[1]));
++        }
++        if (std::string(t->name) == "l_out-0") {
++            pimpl->trace_finished = true;
++        }
++    }

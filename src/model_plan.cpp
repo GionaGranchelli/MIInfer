@@ -177,4 +177,8 @@ bool Qwen3GpuPlan::verify_tensor_sample(const std::string& name, std::size_t sam
     return true;
 }
 
+const void* Qwen3GpuPlan::device_tensor_data(const std::string& name) const {
+    return static_cast<const std::byte*>(weights_.data()) + find_planned_tensor(tensors_, name).offset;
+}
+
 }  // namespace miinfer

@@ -73,6 +73,7 @@ public:
     [[nodiscard]] bool verify_tensor_sample(
         const std::string& name,
         std::size_t sample_bytes = 4096) const;
+    [[nodiscard]] const void* device_tensor_data(const std::string& name) const;
     [[nodiscard]] Q4GemvKernel kernel_for(const std::string& projection) const;
     [[nodiscard]] const DeviceInfo& device() const noexcept { return device_; }
 
