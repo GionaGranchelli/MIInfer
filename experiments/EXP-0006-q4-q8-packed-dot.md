@@ -201,9 +201,13 @@ INT8 weight expansion were observed.
 
 Profiler-based hardware counters were not available in the validated ROCm
 environment, so exact VALU/cache/HBM counters are `UNAVAILABLE`. Telemetry was
-present in every accepted run; MI50 samples showed the validated gfx906 device
-at the expected active SCLK/MCLK regime, with no competing Ollama or
-llama-server process observed.
+present in every accepted run: 1,839 records showed SCLK values including
+1725 MHz and MCLK values including 1000 MHz, with junction temperature
+32–92 C and reported socket power 19–237 W. The 237 W value is a transient
+reported by the telemetry source above the 225 W cap and is retained rather
+than hidden. No run was marked contaminated, no competing Ollama or
+llama-server process was observed, and the large candidate regressions do not
+depend on claiming a small timing win.
 
 ## 13. External MMVQ comparison
 

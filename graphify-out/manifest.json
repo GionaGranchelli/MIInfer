@@ -420,9 +420,9 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0006-q4-q8-packed-dot.md": {
-    "mtime": 1788070609.544994,
-    "seen": 1788070629.602721,
-    "ast_hash": "dd88c3145b0f0bdfdf79f10fb43db863",
+    "mtime": 1788070687.165598,
+    "seen": 1788070692.5885673,
+    "ast_hash": "04097cce5a26b637ed7bd7ad7314ba75",
     "semantic_hash": ""
   }
 }

@@ -13713,7 +13713,7 @@
       "node_kind": "heading",
       "norm_label": "13. external mmvq comparison",
       "source_file": "experiments/EXP-0006-q4-q8-packed-dot.md",
-      "source_location": "L208"
+      "source_location": "L212"
     },
     {
       "id": "experiments_exp_0006_q4_q8_packed_dot_14_projection_only_sanity_check",
@@ -13725,7 +13725,7 @@
       "node_kind": "heading",
       "norm_label": "14. projection-only sanity check",
       "source_file": "experiments/EXP-0006-q4-q8-packed-dot.md",
-      "source_location": "L224"
+      "source_location": "L228"
     },
     {
       "id": "experiments_exp_0006_q4_q8_packed_dot_15_bottleneck_interpretation",
@@ -13737,7 +13737,7 @@
       "node_kind": "heading",
       "norm_label": "15. bottleneck interpretation",
       "source_file": "experiments/EXP-0006-q4-q8-packed-dot.md",
-      "source_location": "L242"
+      "source_location": "L246"
     },
     {
       "id": "experiments_exp_0006_q4_q8_packed_dot_16_decision",
@@ -13749,7 +13749,7 @@
       "node_kind": "heading",
       "norm_label": "16. decision",
       "source_file": "experiments/EXP-0006-q4-q8-packed-dot.md",
-      "source_location": "L251"
+      "source_location": "L255"
     },
     {
       "id": "experiments_exp_0006_q4_q8_packed_dot_17_next_experiment",
@@ -13761,7 +13761,7 @@
       "node_kind": "heading",
       "norm_label": "17. next experiment",
       "source_file": "experiments/EXP-0006-q4-q8-packed-dot.md",
-      "source_location": "L266"
+      "source_location": "L270"
     },
     {
       "id": "experiments_exp_0006_q4_q8_packed_dot_1_question",
@@ -27847,7 +27847,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0006-q4-q8-packed-dot.md",
-      "source_location": "L208",
+      "source_location": "L212",
       "weight": 1.0
     },
     {
@@ -27869,7 +27869,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0006-q4-q8-packed-dot.md",
-      "source_location": "L224",
+      "source_location": "L228",
       "weight": 1.0
     },
     {
@@ -27880,7 +27880,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0006-q4-q8-packed-dot.md",
-      "source_location": "L242",
+      "source_location": "L246",
       "weight": 1.0
     },
     {
@@ -27891,7 +27891,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0006-q4-q8-packed-dot.md",
-      "source_location": "L251",
+      "source_location": "L255",
       "weight": 1.0
     },
     {
@@ -27902,7 +27902,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0006-q4-q8-packed-dot.md",
-      "source_location": "L266",
+      "source_location": "L270",
       "weight": 1.0
     },
     {
@@ -29946,5 +29946,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "0543dd4ec71412e521cf9964985a0fcee57cb254"
+  "built_at_commit": "b5e7a0719e171bf30bf6fc6bf3b143e14f4f2da7"
 }
