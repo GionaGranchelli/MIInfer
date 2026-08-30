@@ -25,15 +25,41 @@ std::int8_t signed_q6(const Q6KHostBlock& block, std::size_t index) noexcept {
     const std::size_t lane = index % 128;
     const std::size_t quarter = lane / 32;
     const std::size_t in_quarter = lane % 32;
-    const std::size_t low_index = in_quarter + (quarter >= 2 ? 32 : 0);
-    const std::size_t high_index = in_quarter;
-    const std::uint8_t low = quarter % 2 == 0
+    const std::size_t low_index = group * 64 + in_quarter
+                                  + (quarter == 1 || quarter == 3 ? 32 : 0);
+    const std::size_t high_index = group * 32 + in_quarter;
+    const std::uint8_t low = quarter < 2
                                  ? block.ql[low_index] & 0x0fU
                                  : block.ql[low_index] >> 4U;
     const std::uint8_t high = static_cast<std::uint8_t>(
         (block.qh[high_index] >> (2U * static_cast<unsigned>(quarter))) & 0x03U);
     (void) group;
     return static_cast<std::int8_t>(static_cast<int>(low | (high << 4U)) - 32);
+}
+
+std::vector<Q8KHostBlock> quantize_q8_k(std::span<const float> input) {
+    require_size(!input.empty() && input.size() % 256 == 0,
+                 "Q8_K input length must be a non-zero multiple of 256");
+    std::vector<Q8KHostBlock> result(input.size() / 256);
+    for (std::size_t block = 0; block < result.size(); ++block) {
+        auto& destination = result[block];
+        const auto source = input.subspan(block * 256, 256);
+        float maximum = 0.0F;
+        for (const float value : source) maximum = std::max(maximum, std::fabs(value));
+        if (maximum == 0.0F) continue;
+        const float inverse = 127.0F / maximum;
+        destination.d = maximum / 127.0F;
+        for (std::size_t index = 0; index < source.size(); ++index) {
+            destination.qs[index] = static_cast<std::int8_t>(std::clamp(
+                static_cast<int>(std::nearbyint(source[index] * inverse)), -127, 127));
+        }
+        for (std::size_t group = 0; group < 16; ++group) {
+            for (std::size_t index = 0; index < 16; ++index) {
+                destination.bsums[group] += destination.qs[group * 16 + index];
+            }
+        }
+    }
+    return result;
 }
 
 }  // namespace
@@ -172,6 +198,45 @@ void q6_k_gemv_reference(
             for (std::size_t index = 0; index < values.size(); ++index) {
                 sum += values[index] * input[block * values.size() + index];
             }
+        }
+        output[row] = sum;
+    }
+}
+
+void q6_k_q8_k_gemv_reference(
+    std::span<const std::byte> weights,
+    std::span<const float> input,
+    std::span<float> output,
+    std::size_t rows,
+    std::size_t columns) {
+    require_size(rows > 0 && columns > 0 && columns % 256 == 0
+                     && input.size() == columns && output.size() == rows
+                     && weights.size() == rows * (columns / 256) * sizeof(Q6KHostBlock),
+                 "invalid Q6_K x Q8_K GEMV dimensions");
+    const auto q8 = quantize_q8_k(input);
+    for (std::size_t row = 0; row < rows; ++row) {
+        const auto* blocks = reinterpret_cast<const Q6KHostBlock*>(weights.data())
+                             + row * (columns / 256);
+        float sum = 0.0F;
+        for (std::size_t block = 0; block < columns / 256; ++block) {
+            std::array<std::int8_t, 256> unpacked{};
+            for (std::size_t index = 0; index < unpacked.size(); ++index) {
+                unpacked[index] = signed_q6(blocks[block], index);
+            }
+            std::array<std::int32_t, 8> partials{};
+            for (std::size_t group = 0; group < 16; ++group) {
+                const int scale = blocks[block].scales[group];
+                for (std::size_t half = 0; half < 2; ++half) {
+                    for (std::size_t index = 0; index < 8; ++index) {
+                        const std::size_t offset = group * 16 + half * 8 + index;
+                        partials[index] += scale
+                            * static_cast<int>(unpacked[offset])
+                            * static_cast<int>(q8[block].qs[offset]);
+                    }
+                }
+            }
+            const float block_scale = fp16_bits_to_float(blocks[block].d_bits) * q8[block].d;
+            for (const auto partial : partials) sum += block_scale * static_cast<float>(partial);
         }
         output[row] = sum;
     }

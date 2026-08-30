@@ -56,4 +56,12 @@ Qwen3LayerTrace execute_qwen3_layer0_gpu(
     std::size_t position,
     Qwen3Layer0GpuKvCache& cache);
 
+// Correctness-first single-token full-model GPU execution.  The returned
+// trace intentionally copies layer outputs and logits back to the host;
+// M4-B uses this for depth-composition validation, not serving performance.
+Qwen3ForwardTrace execute_qwen3_forward_gpu(
+    const Qwen3GpuPlan& plan,
+    std::uint32_t token,
+    std::size_t position = 0);
+
 }  // namespace miinfer

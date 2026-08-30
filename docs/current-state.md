@@ -84,6 +84,8 @@ No other GPU architecture is currently supported.
   after pinned physical-MI50 acceptance
 * M4-A5 independent four-position reference trace; host and MI50 Debug/Release
   stateful layer-0 comparisons pass
+* M4-B initial full-depth host/GPU executor scaffold and independent
+  single-token 36-layer reference fixture; acceptance remains open
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -105,16 +107,17 @@ all work. The gfx802 isolation remains an operational platform prerequisite.
 * production execution planner
 * general-purpose memory planner
 * tokenizer
-* full multi-layer model execution and token generation
+* accepted full multi-layer model execution
+* token generation
 * sampling
 * MoE execution
 * HIP graph capture
 * CLI
 * HTTP server
 
-The C++20/HIP infrastructure, model loader/planner, and layer-0 correctness
-runtime are present. Full-model execution and token generation remain outside
-the implemented scope.
+The C++20/HIP infrastructure, model loader/planner, layer-0 correctness
+runtime, and an unaccepted full-depth execution scaffold are present. Full
+model correctness and token generation remain outside the accepted scope.
 
 ---
 
@@ -122,8 +125,9 @@ the implemented scope.
 
 The immediate technical objective is:
 
-> Begin M4-B: execute all 36 Qwen3-8B layers for one deterministic token
-> position and compare final hidden state/logits against a pinned reference.
+> Close M4-B by resolving the first depth-localized numerical divergence
+> between the 36-layer host/MI50 executors and the independent pinned
+> reference, then passing the full layer-output, final-norm, and logits gates.
 > Do not broaden support beyond the pinned model contract.
 
 M0 is closed under the documented gfx802-isolated configuration. The
@@ -492,8 +496,8 @@ into a generic runtime.
 
 # Last Updated
 
-2026-08-30 — M3 CLOSED after pinned Qwen3-8B model-plan acceptance. The next
-milestone is M4 first correct token generation.
+2026-08-30 — M4-B full-depth scaffold and independent 36-layer trace added;
+full-reference parity remains open after the first comparison.
 
 Update this document whenever:
 

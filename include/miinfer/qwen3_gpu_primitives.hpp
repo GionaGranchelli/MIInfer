@@ -17,6 +17,14 @@ struct Q6KDeviceBlock {
 
 static_assert(sizeof(Q6KDeviceBlock) == 210);
 
+struct Q8KDeviceBlock {
+    float d;
+    std::int8_t qs[256];
+    std::int16_t bsums[16];
+};
+
+static_assert(sizeof(Q8KDeviceBlock) == 292);
+
 void launch_qwen3_q4_embedding(
     const std::byte* weights,
     std::uint32_t token,
@@ -129,6 +137,20 @@ void launch_qwen3_f16_to_f32(
 void launch_qwen3_q6_k_gemv(
     const Q6KDeviceBlock* weights,
     const float* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    hipStream_t stream = nullptr);
+
+void launch_qwen3_q8_k_quantize(
+    const float* input,
+    Q8KDeviceBlock* output,
+    std::uint32_t elements,
+    hipStream_t stream = nullptr);
+
+void launch_qwen3_q6_k_q8_k_gemv(
+    const Q6KDeviceBlock* weights,
+    const Q8KDeviceBlock* input,
     float* output,
     std::uint32_t rows,
     std::uint32_t columns,

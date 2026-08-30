@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788108329.6986015,
-    "seen": 1788108825.606574,
-    "ast_hash": "99ab0a0beed4de4c176ef15787f8531f",
+    "mtime": 1788113805.956605,
+    "seen": 1788114327.776962,
+    "ast_hash": "79ae98c0b1f27cc4e4f8dd5968ee14c8",
     "semantic_hash": ""
   },
   "README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788110831.1320913,
-    "seen": 1788111095.5186002,
-    "ast_hash": "2d91b2c7b69b900ba5423acc7592d861",
+    "mtime": 1788116554.0322387,
+    "seen": 1788116689.002705,
+    "ast_hash": "67e47c4d3fb4e26e15c591a74aac1d1e",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -522,27 +522,27 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1788108023.7839508,
-    "seen": 1788108825.6064968,
-    "ast_hash": "e88557dfefa3060d24208dfba38e27ca",
+    "mtime": 1788115509.1758988,
+    "seen": 1788116689.0026157,
+    "ast_hash": "3770dcc58a7dc8b719f0c6a91e612945",
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_primitives.hpp": {
-    "mtime": 1788110826.0261128,
-    "seen": 1788111095.5185132,
-    "ast_hash": "03d5e1cc47fe09166edf16ec39d0134a",
+    "mtime": 1788115509.0728993,
+    "seen": 1788116689.0026217,
+    "ast_hash": "2a28d35b2c4c81ff11b36caa78639234",
     "semantic_hash": ""
   },
   "src/qwen3_primitives.cpp": {
-    "mtime": 1788110600.9521277,
-    "seen": 1788111095.5185452,
-    "ast_hash": "22ea72f0820a5e4843c91739d5f269ca",
+    "mtime": 1788116291.772402,
+    "seen": 1788116689.0026462,
+    "ast_hash": "27896eea65d4d85d5fb7fab6e5bb1d94",
     "semantic_hash": ""
   },
   "tests/qwen3_primitives_test.cpp": {
-    "mtime": 1788110864.4999511,
-    "seen": 1788111095.5185697,
-    "ast_hash": "c8d4fa176f7f532b3c02426b9db43ede",
+    "mtime": 1788116428.630795,
+    "seen": 1788116689.0026743,
+    "ast_hash": "6ef190de5e7faef47603f514ae5b2dc6",
     "semantic_hash": ""
   },
   "tests/qwen3_primitives_host_test.cpp": {
@@ -558,15 +558,15 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_layer.hpp": {
-    "mtime": 1788110826.0271127,
-    "seen": 1788111095.5185103,
-    "ast_hash": "1a9d799b8bc4a80292c73e7bb8b58599",
+    "mtime": 1788112807.8020525,
+    "seen": 1788114327.7768905,
+    "ast_hash": "e00574a8862d068618c887e136e3516e",
     "semantic_hash": ""
   },
   "src/qwen3_layer.cpp": {
-    "mtime": 1788108503.0488367,
-    "seen": 1788108825.6065311,
-    "ast_hash": "6363d10fe053931e692d5f0db7695744",
+    "mtime": 1788115543.9637425,
+    "seen": 1788116689.002643,
+    "ast_hash": "988581f2f76dced58e28476d3d9afee3",
     "semantic_hash": ""
   },
   "tests/qwen3_layer0_test.cpp": {
@@ -576,15 +576,15 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_layer.hpp": {
-    "mtime": 1788108036.5158947,
-    "seen": 1788108825.6064951,
-    "ast_hash": "3424dd4f59ec66ac474a85d40630d824",
+    "mtime": 1788113736.789916,
+    "seen": 1788114327.776887,
+    "ast_hash": "e9193ab5a9f3b6bfdfa77e4867a0e8a2",
     "semantic_hash": ""
   },
   "src/qwen3_gpu_layer.cpp": {
-    "mtime": 1788108198.5491798,
-    "seen": 1788108825.6065297,
-    "ast_hash": "0608626e713ba51fa1a7f7700abf5527",
+    "mtime": 1788115587.5865467,
+    "seen": 1788116689.0026417,
+    "ast_hash": "c0e1bc6e957754d3a596a27836734fed",
     "semantic_hash": ""
   },
   "tests/qwen3_layer0_gpu_test.cpp": {
@@ -609,6 +609,30 @@
     "mtime": 1788110855.3809893,
     "seen": 1788111095.5186355,
     "ast_hash": "a468f055f0aedb9edad4ed5fd1a2a476",
+    "semantic_hash": ""
+  },
+  "tests/qwen3_forward_gpu_test.cpp": {
+    "mtime": 1788116758.605331,
+    "seen": 1788116770.1430542,
+    "ast_hash": "b0a5f344916745ca4daac0f8c9523641",
+    "semantic_hash": ""
+  },
+  "tests/qwen3_forward_test.cpp": {
+    "mtime": 1788116758.4923315,
+    "seen": 1788116770.1430562,
+    "ast_hash": "4eff21267b487e19a3d88d78df87ca7c",
+    "semantic_hash": ""
+  },
+  "docs/m4b-forward.md": {
+    "mtime": 1788116553.9212391,
+    "seen": 1788116689.0027113,
+    "ast_hash": "c6ecdcc16c008b02a0e471f402454019",
+    "semantic_hash": ""
+  },
+  "tests/reference/qwen3/m4b-single-token/README.md": {
+    "mtime": 1788114310.6393156,
+    "seen": 1788114327.7770147,
+    "ast_hash": "9490145bec9a78cf8ca0896fd63ded1c",
     "semantic_hash": ""
   }
 }

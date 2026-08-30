@@ -21,8 +21,15 @@ struct Q6KHostBlock {
     std::uint16_t d_bits = 0;
 };
 
+struct Q8KHostBlock {
+    float d = 0.0F;
+    std::int8_t qs[256]{};
+    std::int16_t bsums[16]{};
+};
+
 static_assert(sizeof(Q4_0HostBlock) == 18);
 static_assert(sizeof(Q6KHostBlock) == 210);
+static_assert(sizeof(Q8KHostBlock) == 292);
 
 [[nodiscard]] float fp16_bits_to_float(std::uint16_t bits) noexcept;
 
@@ -58,6 +65,13 @@ void q6_k_dequantize(
     std::span<float, 256> output);
 
 void q6_k_gemv_reference(
+    std::span<const std::byte> weights,
+    std::span<const float> input,
+    std::span<float> output,
+    std::size_t rows,
+    std::size_t columns);
+
+void q6_k_q8_k_gemv_reference(
     std::span<const std::byte> weights,
     std::span<const float> input,
     std::span<float> output,

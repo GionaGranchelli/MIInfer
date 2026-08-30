@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <cstring>
 #include <cstdlib>
+#include <memory>
 #include <stdexcept>
 #include <vector>
 
@@ -167,27 +168,17 @@ std::vector<float> Qwen3Layer0GpuKvCache::snapshot_values() const {
     return result;
 }
 
-Qwen3LayerTrace execute_qwen3_layer0_gpu(
+Qwen3LayerTrace qwen3_layer_gpu_impl(
     const Qwen3GpuPlan& plan,
-    std::uint32_t token,
-    std::size_t position) {
-    if (position != 0) {
-        throw std::invalid_argument("standalone GPU layer-0 execution only supports position zero");
-    }
-    const auto& config = plan.model().config();
-    Qwen3Layer0GpuKvCache cache(config.kv_heads, config.head_dim, 1);
-    return execute_qwen3_layer0_gpu(plan, token, position, cache);
-}
-
-Qwen3LayerTrace execute_qwen3_layer0_gpu(
-    const Qwen3GpuPlan& plan,
-    std::uint32_t token,
+    std::size_t layer_index,
+    const float* input_device,
     std::size_t position,
-    Qwen3Layer0GpuKvCache& cache) {
+    Qwen3Layer0GpuKvCache& cache,
+    float* output_device) {
     const auto& model = plan.model();
     const auto& config = model.config();
-    if (token >= config.vocab_size || model.layers().empty()) {
-        throw std::invalid_argument("invalid layer-0 token/model");
+    if (input_device == nullptr || model.layers().empty() || layer_index >= model.layers().size()) {
+        throw std::invalid_argument("invalid Qwen3 GPU layer input/index");
     }
     constexpr std::size_t kMaxVector = 12288;
     constexpr std::size_t kMaxQ8Bytes = (kMaxVector / 32) * sizeof(Q8_1Block);
@@ -196,7 +187,7 @@ Qwen3LayerTrace execute_qwen3_layer0_gpu(
     const auto heads = static_cast<std::size_t>(config.attention_heads);
     const auto kv_heads = static_cast<std::size_t>(config.kv_heads);
     const auto head_dim = static_cast<std::size_t>(config.head_dim);
-    const auto& layer = model.layers().front();
+    const auto& layer = model.layers()[layer_index];
     if (cache.kv_heads() != kv_heads || cache.head_dim() != head_dim
         || position != cache.length() || position >= cache.capacity()) {
         throw std::invalid_argument("GPU KV-cache does not match layer geometry or sequence position");
@@ -220,9 +211,8 @@ Qwen3LayerTrace execute_qwen3_layer0_gpu(
     auto* q8_input = static_cast<Q8_1Block*>(input_q8.data());
 
     Qwen3LayerTrace trace;
-    launch_qwen3_q4_embedding(
-        static_cast<const std::byte*>(plan.device_tensor_data(model.token_embeddings().name())),
-        token, config.vocab_size, config.hidden_size, embedding.data());
+    MIINFER_HIP_CHECK(hipMemcpy(embedding.data(), input_device, hidden * sizeof(float),
+                                hipMemcpyDeviceToDevice));
     trace.embedding = capture(embedding.data(), hidden);
 
     upload_f32(layer.attention_norm, norm_weights.data(), hidden);
@@ -319,11 +309,102 @@ Qwen3LayerTrace execute_qwen3_layer0_gpu(
     launch_qwen3_add(ffn_output.data(), ffn_input.data(), layer_output.data(), config.hidden_size);
     trace.layer_output = capture(layer_output.data(), hidden);
 
+    if (output_device != nullptr) {
+        MIINFER_HIP_CHECK(hipMemcpy(output_device, layer_output.data(), hidden * sizeof(float),
+                                    hipMemcpyDeviceToDevice));
+    }
+
     // These are not present in the 28-file reference fixture, but retaining
     // them in the trace is useful for GPU↔host triangulation of attention.
     trace.attention_scores = capture(scores.data(), heads * cache.length());
     trace.attention_probabilities = capture(probabilities.data(), heads * cache.length());
     return trace;
+}
+
+Qwen3LayerTrace execute_qwen3_layer0_gpu(
+    const Qwen3GpuPlan& plan,
+    std::uint32_t token,
+    std::size_t position) {
+    if (position != 0) {
+        throw std::invalid_argument("standalone GPU layer-0 execution only supports position zero");
+    }
+    const auto& config = plan.model().config();
+    Qwen3Layer0GpuKvCache cache(config.kv_heads, config.head_dim, 1);
+    return execute_qwen3_layer0_gpu(plan, token, position, cache);
+}
+
+Qwen3LayerTrace execute_qwen3_layer0_gpu(
+    const Qwen3GpuPlan& plan,
+    std::uint32_t token,
+    std::size_t position,
+    Qwen3Layer0GpuKvCache& cache) {
+    const auto& model = plan.model();
+    const auto& config = model.config();
+    if (token >= config.vocab_size) throw std::invalid_argument("token ID is outside the vocabulary");
+    DeviceBuffer<float> input(config.hidden_size);
+    launch_qwen3_q4_embedding(
+        static_cast<const std::byte*>(plan.device_tensor_data(model.token_embeddings().name())),
+        token, config.vocab_size, config.hidden_size, input.data());
+    return qwen3_layer_gpu_impl(plan, 0, input.data(), position, cache, nullptr);
+}
+
+Qwen3ForwardTrace execute_qwen3_forward_gpu(
+    const Qwen3GpuPlan& plan,
+    std::uint32_t token,
+    std::size_t position) {
+    const auto& model = plan.model();
+    const auto& config = model.config();
+    if (position != 0) {
+        throw std::invalid_argument("full GPU forward currently supports position zero only");
+    }
+    if (token >= config.vocab_size || model.layers().size() != config.layer_count) {
+        throw std::invalid_argument("invalid Qwen3 full-forward token/model");
+    }
+
+    DeviceBuffer<float> input(config.hidden_size), output(config.hidden_size);
+    launch_qwen3_q4_embedding(
+        static_cast<const std::byte*>(plan.device_tensor_data(model.token_embeddings().name())),
+        token, config.vocab_size, config.hidden_size, input.data());
+
+    Qwen3ForwardTrace forward;
+    forward.embedding = capture(input.data(), config.hidden_size);
+    std::vector<std::unique_ptr<Qwen3Layer0GpuKvCache>> caches;
+    caches.reserve(model.layers().size());
+    for (std::size_t layer = 0; layer < model.layers().size(); ++layer) {
+        caches.push_back(std::make_unique<Qwen3Layer0GpuKvCache>(
+            config.kv_heads, config.head_dim, 1));
+    }
+
+    forward.layer_outputs.reserve(model.layers().size());
+    auto* current = input.data();
+    auto* next = output.data();
+    for (std::size_t layer = 0; layer < model.layers().size(); ++layer) {
+        const auto trace = qwen3_layer_gpu_impl(
+            plan, layer, current, position, *caches[layer], next);
+        forward.layer_outputs.push_back(trace.layer_output);
+        std::swap(current, next);
+    }
+
+    DeviceBuffer<float> final_norm(config.hidden_size);
+    DeviceBuffer<float> norm_weights(config.hidden_size);
+    upload_f32(model.final_norm(), norm_weights.data(), config.hidden_size);
+    launch_qwen3_rms_norm(current, norm_weights.data(), final_norm.data(),
+                          config.hidden_size, config.rms_epsilon);
+    forward.final_norm = capture(final_norm.data(), config.hidden_size);
+
+    DeviceBuffer<float> logits(config.vocab_size);
+    DeviceBuffer<Q8KDeviceBlock> quantized_final_norm(config.hidden_size / 256);
+    const auto* output_weight = static_cast<const Q6KDeviceBlock*>(
+        plan.device_tensor_data(model.output().name()));
+    // The pinned reference CPU path quantizes the final activation to Q8_K
+    // before its Q6_K output projection.  Keep that contract explicit for
+    // full-forward correctness; the older F32-input probe remains available
+    // for isolated primitive tests.
+    launch_qwen3_q8_k_quantize(final_norm.data(), quantized_final_norm.data(), config.hidden_size);
+    launch_qwen3_q6_k_q8_k_gemv(output_weight, quantized_final_norm.data(), logits.data(),
+                                config.vocab_size, config.hidden_size);
+    forward.logits = capture(logits.data(), config.vocab_size);
+    return forward;
 }
 
 }  // namespace miinfer

@@ -116,15 +116,49 @@ std::vector<float> q4_q8_matvec(
     for (std::size_t row = 0; row < rows; ++row) {
         float sum = 0.0F;
         for (std::size_t block = 0; block < blocks_per_row; ++block) {
-            const auto& weight = weights[row * blocks_per_row + block];
-            const auto& activation = q8[block];
-            const float wd = fp16_bits_to_float(weight.d_bits);
-            const float ad = fp16_bits_to_float(activation.d_bits);
+        const auto& weight = weights[row * blocks_per_row + block];
+        const auto& activation = q8[block];
+        const float wd = fp16_bits_to_float(weight.d_bits);
+        const float ad = fp16_bits_to_float(activation.d_bits);
+            int block_dot = 0;
             for (int i = 0; i < static_cast<int>(kQBlockSize); ++i) {
                 const auto packed = weight.qs[i < 16 ? i : i - 16];
                 const int q4 = i < 16 ? packed & 0x0f : (packed >> 4) & 0x0f;
-                sum += static_cast<float>(q4 - 8) * wd
-                       * static_cast<float>(activation.qs[i]) * ad;
+                block_dot += (q4 - 8) * static_cast<int>(activation.qs[i]);
+            }
+            // Match the pinned reference CPU Q4_0 x Q8_0 path: integer
+            // accumulation is completed for the block before the stored
+            // FP16 scales are applied.
+            sum += static_cast<float>(block_dot) * wd * ad;
+        }
+        output[row] = sum;
+    }
+    return output;
+}
+
+std::vector<float> q4_f32_matvec(
+    const Qwen3TensorView& tensor,
+    std::span<const float> input,
+    std::size_t rows,
+    std::size_t columns) {
+    if (tensor.type() != GgufTensorType::q4_0 || columns % kQBlockSize != 0
+        || input.size() != columns
+        || tensor.bytes() != rows * (columns / kQBlockSize) * kQ4BlockBytes) {
+        throw std::runtime_error("invalid Q4_0 reference projection contract: " + tensor.name());
+    }
+    const auto* weights = reinterpret_cast<const Q4_0HostBlock*>(tensor.data());
+    const std::size_t blocks_per_row = columns / kQBlockSize;
+    std::vector<float> output(rows, 0.0F);
+    for (std::size_t row = 0; row < rows; ++row) {
+        float sum = 0.0F;
+        for (std::size_t block = 0; block < blocks_per_row; ++block) {
+            const auto& weight = weights[row * blocks_per_row + block];
+            const float scale = fp16_bits_to_float(weight.d_bits);
+            for (std::size_t index = 0; index < kQBlockSize; ++index) {
+                const auto packed = weight.qs[index < 16 ? index : index - 16];
+                const int nibble = index < 16 ? packed & 0x0f : (packed >> 4) & 0x0f;
+                sum += scale * static_cast<float>(nibble - 8)
+                       * input[block * kQBlockSize + index];
             }
         }
         output[row] = sum;
@@ -170,43 +204,39 @@ void Qwen3Layer0KvCache::append(
     ++length_;
 }
 
-Qwen3LayerTrace execute_qwen3_layer0_host(
+Qwen3LayerTrace qwen3_layer_host_impl(
     const Qwen3Model& model,
-    std::uint32_t token,
-    std::size_t position) {
-    if (position != 0) {
-        throw std::invalid_argument("standalone layer-0 execution only supports position zero");
-    }
-    const auto& config = model.config();
-    Qwen3Layer0KvCache cache(config.kv_heads, config.head_dim, 1);
-    return execute_qwen3_layer0_host(model, token, position, cache);
-}
-
-Qwen3LayerTrace execute_qwen3_layer0_host(
-    const Qwen3Model& model,
-    std::uint32_t token,
+    std::size_t layer_index,
+    std::span<const float> input,
     std::size_t position,
-    Qwen3Layer0KvCache& cache) {
+    Qwen3Layer0KvCache& cache,
+    bool use_exact_reference_projection) {
     const auto& config = model.config();
-    if (token >= config.vocab_size) throw std::invalid_argument("token ID is outside the vocabulary");
-    if (model.layers().empty()) throw std::runtime_error("model has no layers");
-    const auto& layer = model.layers().front();
+    if (model.layers().empty() || layer_index >= model.layers().size()) {
+        throw std::runtime_error("invalid Qwen3 layer index");
+    }
     const auto hidden = static_cast<std::size_t>(config.hidden_size);
     const auto intermediate = static_cast<std::size_t>(config.intermediate_size);
     const auto heads = static_cast<std::size_t>(config.attention_heads);
     const auto kv_heads = static_cast<std::size_t>(config.kv_heads);
     const auto head_dim = static_cast<std::size_t>(config.head_dim);
     if (heads * head_dim != hidden || kv_heads * head_dim != 1024 || heads % kv_heads != 0
+        || input.size() != hidden
         || cache.kv_heads() != kv_heads || cache.head_dim() != head_dim
         || position != cache.length() || position >= cache.capacity()) {
         throw std::runtime_error("unsupported Qwen3 head geometry");
     }
 
     Qwen3LayerTrace trace;
-    trace.embedding.resize(hidden);
-    q4_0_embedding_reference(
-        {model.token_embeddings().data(), model.token_embeddings().bytes()},
-        config.vocab_size, hidden, token, trace.embedding);
+    trace.embedding.assign(input.begin(), input.end());
+    const auto& layer = model.layers()[layer_index];
+    const auto project = [use_exact_reference_projection](
+        const Qwen3TensorView& tensor, std::span<const float> values,
+        std::size_t rows, std::size_t columns) {
+        return use_exact_reference_projection
+            ? q4_f32_matvec(tensor, values, rows, columns)
+            : q4_q8_matvec(tensor, values, rows, columns);
+    };
 
     const auto attn_norm_weight = f32_tensor(layer.attention_norm, hidden);
     std::vector<float> attn_rms(hidden);
@@ -214,7 +244,7 @@ Qwen3LayerTrace execute_qwen3_layer0_host(
     trace.attn_rms = attn_rms;
     trace.attn_norm = multiply_weight(attn_rms, attn_norm_weight);
 
-    trace.q_projection = q4_q8_matvec(layer.q, trace.attn_norm, hidden, hidden);
+    trace.q_projection = project(layer.q, trace.attn_norm, hidden, hidden);
     trace.q_reshape = trace.q_projection;
     std::vector<float> q_rms(trace.q_projection.size());
     const auto q_norm_weight = f32_tensor(layer.q_norm, head_dim);
@@ -234,9 +264,9 @@ Qwen3LayerTrace execute_qwen3_layer0_host(
     trace.q_rope.resize(hidden);
     rope_qwen3_reference(trace.q_normed, trace.q_rope, heads, head_dim, position, config.rope_theta);
 
-    trace.v_projection = q4_q8_matvec(layer.v, trace.attn_norm, kv_heads * head_dim, hidden);
+    trace.v_projection = project(layer.v, trace.attn_norm, kv_heads * head_dim, hidden);
     trace.v_reshape = trace.v_projection;
-    trace.k_projection = q4_q8_matvec(layer.k, trace.attn_norm, kv_heads * head_dim, hidden);
+    trace.k_projection = project(layer.k, trace.attn_norm, kv_heads * head_dim, hidden);
     trace.k_reshape = trace.k_projection;
     std::vector<float> k_rms(trace.k_projection.size());
     const auto k_norm_weight = f32_tensor(layer.k_norm, head_dim);
@@ -295,7 +325,7 @@ Qwen3LayerTrace execute_qwen3_layer0_host(
             trace.attention_output[q_base + i] = value;
         }
     }
-    const auto attention_projected = q4_q8_matvec(layer.output, trace.attention_output, hidden, hidden);
+    const auto attention_projected = project(layer.output, trace.attention_output, hidden, hidden);
     trace.ffn_input = attention_projected;
     add_in_place(trace.ffn_input, trace.embedding);
 
@@ -303,14 +333,93 @@ Qwen3LayerTrace execute_qwen3_layer0_host(
     trace.ffn_rms.resize(hidden);
     rms_normalize_only(trace.ffn_input, trace.ffn_rms, config.rms_epsilon);
     trace.ffn_norm = multiply_weight(trace.ffn_rms, ffn_norm_weight);
-    trace.gate = q4_q8_matvec(layer.gate, trace.ffn_norm, intermediate, hidden);
-    trace.up = q4_q8_matvec(layer.up, trace.ffn_norm, intermediate, hidden);
+    trace.gate = project(layer.gate, trace.ffn_norm, intermediate, hidden);
+    trace.up = project(layer.up, trace.ffn_norm, intermediate, hidden);
     trace.swiglu.resize(intermediate);
     silu_mul_reference(trace.gate, trace.up, trace.swiglu);
-    trace.ffn_output = q4_q8_matvec(layer.down, trace.swiglu, hidden, intermediate);
+    trace.ffn_output = project(layer.down, trace.swiglu, hidden, intermediate);
     trace.layer_output = trace.ffn_input;
     add_in_place(trace.layer_output, trace.ffn_output);
     return trace;
+}
+
+Qwen3LayerTrace execute_qwen3_layer0_host(
+    const Qwen3Model& model,
+    std::uint32_t token,
+    std::size_t position) {
+    if (position != 0) {
+        throw std::invalid_argument("standalone layer-0 execution only supports position zero");
+    }
+    const auto& config = model.config();
+    Qwen3Layer0KvCache cache(config.kv_heads, config.head_dim, 1);
+    return execute_qwen3_layer0_host(model, token, position, cache);
+}
+
+Qwen3LayerTrace execute_qwen3_layer0_host(
+    const Qwen3Model& model,
+    std::uint32_t token,
+    std::size_t position,
+    Qwen3Layer0KvCache& cache) {
+    const auto& config = model.config();
+    if (token >= config.vocab_size) throw std::invalid_argument("token ID is outside the vocabulary");
+    std::vector<float> embedding(config.hidden_size);
+    q4_0_embedding_reference(
+        {model.token_embeddings().data(), model.token_embeddings().bytes()},
+        config.vocab_size, config.hidden_size, token, embedding);
+    return qwen3_layer_host_impl(model, 0, embedding, position, cache, false);
+}
+
+Qwen3ForwardTrace execute_qwen3_forward_host(
+    const Qwen3Model& model,
+    std::uint32_t token,
+    std::size_t position) {
+    const auto& config = model.config();
+    if (position != 0) {
+        throw std::invalid_argument("full host forward currently supports position zero only");
+    }
+    if (token >= config.vocab_size) {
+        throw std::invalid_argument("token ID is outside the vocabulary");
+    }
+    if (model.layers().size() != config.layer_count) {
+        throw std::runtime_error("model layer inventory does not match configuration");
+    }
+
+    Qwen3ForwardTrace forward;
+    forward.embedding.resize(config.hidden_size);
+    q4_0_embedding_reference(
+        {model.token_embeddings().data(), model.token_embeddings().bytes()},
+        config.vocab_size, config.hidden_size, token, forward.embedding);
+
+    std::vector<Qwen3Layer0KvCache> caches;
+    caches.reserve(model.layers().size());
+    for (std::size_t layer = 0; layer < model.layers().size(); ++layer) {
+        caches.emplace_back(config.kv_heads, config.head_dim, 1);
+    }
+
+    std::vector<float> hidden = forward.embedding;
+    forward.layer_outputs.reserve(model.layers().size());
+    for (std::size_t layer = 0; layer < model.layers().size(); ++layer) {
+        // The pinned CPU reference selects the Q4_0 x Q8_0 quantized dot
+        // path for these projections.  q4_q8_matvec mirrors that arithmetic
+        // (including integer block accumulation) while retaining the same
+        // Q8 block values used by the production GPU contract.
+        const auto layer_trace = qwen3_layer_host_impl(
+            model, layer, hidden, position, caches[layer], false);
+        hidden = layer_trace.layer_output;
+        forward.layer_outputs.push_back(hidden);
+    }
+
+    const auto final_norm_weight = f32_tensor(model.final_norm(), config.hidden_size);
+    forward.final_norm.resize(config.hidden_size);
+    rms_norm_reference(hidden, final_norm_weight, forward.final_norm, config.rms_epsilon);
+    forward.logits.resize(config.vocab_size);
+    q6_k_q8_k_gemv_reference(
+        {model.output().data(), model.output().bytes()},
+        forward.final_norm,
+        forward.logits,
+        config.vocab_size,
+        config.hidden_size);
+    return forward;
 }
 
 }  // namespace miinfer

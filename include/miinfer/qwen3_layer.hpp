@@ -45,6 +45,17 @@ struct Qwen3LayerTrace {
     std::vector<float> layer_output;
 };
 
+// Correctness-first single-token full-model trace.  Layer outputs are retained
+// so depth-composition failures can be localized without re-running a full
+// 36-layer forward pass by hand.  This is not the eventual hot-path runtime
+// representation.
+struct Qwen3ForwardTrace {
+    std::vector<float> embedding;
+    std::vector<std::vector<float>> layer_outputs;
+    std::vector<float> final_norm;
+    std::vector<float> logits;
+};
+
 // Layer-0 incremental-state contract used by M4-A4. Q/K RoPE uses Qwen3's
 // NeoX first-half/second-half pairing. Keys are stored after RoPE in
 // [kv_head][position][head_dim] order; values use the same layout.
@@ -86,5 +97,14 @@ Qwen3LayerTrace execute_qwen3_layer0_host(
     std::uint32_t token,
     std::size_t position,
     Qwen3Layer0KvCache& cache);
+
+// Executes one explicit token at position zero through all supported Qwen3
+// layers, final RMSNorm, and the Q6_K vocabulary projection.  The model is
+// intentionally single-token/single-sequence here; incremental multi-position
+// state remains covered by the layer-0 M4-A contract.
+Qwen3ForwardTrace execute_qwen3_forward_host(
+    const Qwen3Model& model,
+    std::uint32_t token,
+    std::size_t position = 0);
 
 }  // namespace miinfer

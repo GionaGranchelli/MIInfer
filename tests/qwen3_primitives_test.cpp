@@ -90,10 +90,18 @@ bool host_tests() {
     std::fill(std::begin(q6.scales), std::end(q6.scales), 1);
     std::fill(std::begin(q6.ql), std::end(q6.ql), 0x00U);
     std::fill(std::begin(q6.qh), std::end(q6.qh), 0x00U);
+    q6.ql[64] = 0x01U;
     std::array<float, 256> q6_values{};
     miinfer::q6_k_dequantize(q6, q6_values);
-    passed = std::all_of(q6_values.begin(), q6_values.end(), [](float value) { return value == -32.0F; }) && passed;
-    std::cout << "q6 dequant host=" << (passed ? "PASS" : "FAIL") << '\n';
+    passed = q6_values[128] == -31.0F
+             && std::all_of(q6_values.begin(), q6_values.begin() + 128,
+                            [](float value) { return value == -32.0F; })
+             && std::all_of(q6_values.begin() + 129, q6_values.end(),
+                            [](float value) { return value == -32.0F; }) && passed;
+    std::cout << "q6 dequant host=" << (passed ? "PASS" : "FAIL")
+              << " values=" << q6_values[0] << ',' << q6_values[64]
+              << ',' << q6_values[127] << ',' << q6_values[128]
+              << ',' << q6_values[159] << ',' << q6_values[160] << '\n';
     return passed;
 }
 
@@ -149,6 +157,7 @@ bool gpu_tests() {
         std::fill(std::begin(block.ql), std::end(block.ql), 0);
         std::fill(std::begin(block.qh), std::end(block.qh), 0);
         std::fill(std::begin(block.scales), std::end(block.scales), 1);
+        block.ql[64] = 1;
     }
     auto* device_q6 = device_copy(q6_blocks);
     std::vector<float> q6_input(256, 1.0F);
@@ -159,7 +168,7 @@ bool gpu_tests() {
     MIINFER_HIP_CHECK(hipDeviceSynchronize());
     std::array<float, 2> q6_output{};
     MIINFER_HIP_CHECK(hipMemcpy(q6_output.data(), device_q6_output, sizeof(q6_output), hipMemcpyDeviceToHost));
-    passed = close_enough(q6_output[0], -8192.0F) && close_enough(q6_output[1], -8192.0F) && passed;
+    passed = close_enough(q6_output[0], -8191.0F) && close_enough(q6_output[1], -8191.0F) && passed;
     std::cout << "q6 gemv gpu=" << (passed ? "PASS" : "FAIL")
               << " values=" << q6_output[0] << ',' << q6_output[1] << '\n';
 
