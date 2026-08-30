@@ -15,13 +15,13 @@ For long-term direction, see:
 
 # Current Phase
 
-**M2 — Prove Specialization**
+**M3 — Minimal Runtime**
 
 MIInfer is not yet an inference runtime.
 
-M0 is closed and M1 established the kernel laboratory. M2 is the active
-go/no-go phase for gfx906-specific specialization. MIInfer is not yet an
-inference runtime.
+M0 is closed, M1 established the kernel laboratory, and M2 passed its
+gfx906-specific specialization gate with EXP-0009. MIInfer is not yet an
+inference runtime; M3 now begins the minimal model/runtime scaffold.
 
 ---
 
@@ -77,7 +77,9 @@ No other GPU architecture is currently supported.
 * EXP-0006 packed-dot ISA proof, correctness validation, and five-run comparison
 * EXP-0007 zero-point-corrected Q4_0 × Q8_1 dot4 specialization, accepted after five-run measurement
 * EXP-0008 direct comparison with the pinned gfx906 llama.cpp MMVQ path; the
-  reference primitive is now measured, but M2 remains open
+  reference primitive is now measured
+* EXP-0009 128-thread K/V geometry and Wave64 reduction comparison; accepted
+  with `KEEP`, with M2 marked `GO`
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -116,9 +118,9 @@ model/runtime functionality has been implemented.
 
 The immediate technical objective is:
 
-> Select the next bounded specialization experiment from the direct MMVQ
-> comparison. EXP-0005 remains the frozen scalar correctness baseline and
-> EXP-0007 remains the accepted MIInfer quantized specialization.
+> Begin M3 by scaffolding a minimal static Qwen3-8B runtime around the accepted
+> shape-specialized Q4_0 × Q8_1 kernels. EXP-0005 remains the frozen scalar
+> correctness baseline and EXP-0009 records the accepted geometry selection.
 
 M0 is closed under the documented gfx802-isolated configuration. The
 repository-side infrastructure, physical MI50 validation, model artifact, and
@@ -149,9 +151,10 @@ The M1/M2 kernel-laboratory deliverables currently include:
 * zero-point-corrected Q4×Q8 dot4 kernel using Q8_1 sum metadata
 * EXP-0007 five-run scalar/control/candidate evidence and size-matched memory reference
 * EXP-0008 five-run direct primitive comparison against pinned llama.cpp MMVQ
+* EXP-0009 five-run 128-thread and Wave64 geometry comparison against MMVQ
 
-The repository-side deliverables are complete. Physical MI50 execution remains
-required for the GPU-specific exit criteria.
+The repository-side specialization deliverables are complete. Physical MI50
+execution remains required for all future GPU-specific runtime validation.
 
 ---
 
@@ -203,7 +206,8 @@ Small test or utility dependencies may be considered if they reduce complexity w
 
 # Current Runtime Policy
 
-There is currently **no runtime architecture to implement beyond what is required by M0/M1 infrastructure**.
+There is currently **no production runtime**. M3 may now implement only the
+minimal model-facing scaffold required for the selected Qwen3-8B target.
 
 Do not prematurely create:
 
@@ -257,8 +261,13 @@ EXP-0004 established a K/V-specific FP16 K-split specialization with a 52%
 latency reduction on the real `M=1024, K=4096` shapes. The
 external llama.cpp kernel-share profiling remains unavailable because a
 compatible ROCm profiler is not installed, but EXP-0008 completed the more
-important direct primitive timing for the pinned MMVQ path. The comparison does
-not yet show a material MIInfer advantage across the major Q/O and FFN regimes.
+important direct primitive timing for the pinned MMVQ path. At that stage it
+did not yet show a material MIInfer advantage across the major Q/O and FFN
+regimes; EXP-0009 subsequently corrected the measured geometry gap.
+
+The accepted EXP-0009 result produced a shape-specialized MIInfer family
+competitive with or faster than the pinned MMVQ path on all seven projection
+shapes.
 
 Attention and MoE benchmarks should wait until representative target-model
 shapes and actual bottlenecks are frozen. EXP-0005 accepted the Q4_0 × Q8_1
@@ -292,7 +301,9 @@ EXP-0007 — zero-point-corrected Q4_0 × Q8_1 dot4 (KEEP)
 
 EXP-0008 — direct MIInfer versus pinned gfx906 llama.cpp MMVQ (KEEP)
 
-EXP-0009 — zero-point dot4 plus split-K for K/V (recommended)
+EXP-0009 — K/V workgroup and Wave64 reduction geometry (KEEP)
+
+M3 — minimal Qwen3-8B runtime scaffold (next milestone)
 ```
 
 The exact ordering may change based on early measurements.
@@ -417,11 +428,13 @@ These do not help answer the current project question.
 
 The next Codex task should be:
 
-> Test the accepted zero-point dot4 kernel with a separate split-K composition
-> for the K/V shapes, using the direct MMVQ comparison as the external control.
+> Begin the M3 minimal Qwen3-8B runtime scaffold around the accepted
+> shape-specialized kernel family. Do not begin another optimization experiment
+> until the runtime can load and validate the selected model configuration.
 
 The M0 evidence gates are complete under the documented gfx802-isolated
-configuration. Do not begin M3/runtime work until the M2 gate is satisfied.
+configuration. The M2 gate is satisfied by EXP-0009; M3/runtime work may now
+begin, but no runtime implementation is present yet.
 
 ---
 
@@ -445,14 +458,16 @@ capture hardware state
 produce reproducible benchmark output
 ```
 
-Only then should the project begin serious kernel specialization work.
+This M2 validation chain is complete. M3 success additionally requires the
+selected Qwen3-8B configuration to load, validate its tensors, and construct a
+static execution plan without broadening the project into a generic runtime.
 
 ---
 
 # Last Updated
 
-2026-08-30 — M2 remains open after direct MMVQ comparison; EXP-0009 is the
-recommended next isolated kernel experiment.
+2026-08-30 — EXP-0009 KEEP; M2 GO. The next milestone is M3 minimal runtime
+scaffolding around the accepted shape-specialized kernels.
 
 Update this document whenever:
 

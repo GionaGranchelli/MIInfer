@@ -1,16 +1,16 @@
 # Graph Report - mi50  (2026-08-30)
 
 ## Corpus Check
-- 70 files · ~72,213 words
+- 71 files · ~73,872 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1240 nodes · 1418 edges · 128 communities (119 shown, 9 thin omitted)
+- 1255 nodes · 1432 edges · 123 communities (114 shown, 9 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 4 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `54807046`
+- Built from commit: `1e423c77`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -73,7 +73,7 @@
 - 3. Fundamental engineering rules
 - EXP-0004 — FP16 GEMV K-Split Parallelism
 - hip_smoke_bench.cpp
-- q4_q8_gemv_bench.cpp
+- EXP-0009-kv-geometry.md
 - graphify reference: add a URL and watch a folder
 - graphify reference: commit hook and native CLAUDE.md integration
 - graphify reference: incremental update and cluster-only
@@ -107,7 +107,7 @@
 - run-bench.sh
 - 2. Core hypothesis
 - EXP-0006 — gfx906 Q4_0 × Q8_1 Packed-Dot Specialization
-- fp16_gemv_reduction_diag.cpp
+- string
 - graphify reference: GitHub clone and cross-repo merge
 - graphify reference: transcribe video and audio
 - D010 — No Silent CPU or Generic Fallback
@@ -124,21 +124,16 @@
 - AGENTS.md
 - bench/README.md
 - EXP-0007 — gfx906 Zero-Point-Corrected Q4_0 × Q8_1 Dot4
-- DeviceShapeData
-- Options
+- DeviceInfo
 - extraction-spec.md
 - diagnose-gfx802-isolation.sh
 - tests/README.md
 - 6. Baseline
 - 35. Historical failed execution gate — superseded by Section 37
-- DeviceInfo
-- 10. nick413-bit/gfx906-fa-vllm
+- fp16_gemv_k_split_bench.cpp
 - EXP-0008 — Direct MIInfer vs gfx906 llama.cpp MMVQ
-- GemvKernelResources
-- hip_check.hpp
-- Q8_1Block
+- q4_q8_gemv_bench.cpp
 - External gfx906 Reference Baseline
-- GemvShape
 - Current Project Status
 - Current Scope
 
@@ -155,21 +150,21 @@
 10. `EXP-0003 — FP16 GEMV Bottleneck Characterization` - 15 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `run_quantize()` --references--> `Q8_1Block`  [INFERRED]
-  bench/q4_q8_gemv_bench.cpp → include/miinfer/q4_q8_gemv.hpp
-- `run_fanout()` --references--> `GemvShape`  [INFERRED]
-  bench/q4_q8_gemv_bench.cpp → include/miinfer/fp16_gemv.hpp
-- `run_fanout()` --references--> `Q4_0Block`  [INFERRED]
-  bench/q4_q8_gemv_bench.cpp → include/miinfer/q4_q8_gemv.hpp
-- `run_fanout()` --references--> `Q8_1Block`  [INFERRED]
-  bench/q4_q8_gemv_bench.cpp → include/miinfer/q4_q8_gemv.hpp
 - `selected_shapes()` --references--> `GemvShape`  [EXTRACTED]
   bench/fp16_gemv_bench.cpp → include/miinfer/fp16_gemv.hpp
+- `metrics_json()` --references--> `Fp16GemvMetrics`  [EXTRACTED]
+  bench/fp16_gemv_bench.cpp → include/miinfer/fp16_gemv.hpp
+- `run_one()` --references--> `DeviceInfo`  [EXTRACTED]
+  bench/fp16_gemv_bench.cpp → include/miinfer/device_validation.hpp
+- `run_one()` --references--> `GemvShape`  [EXTRACTED]
+  bench/fp16_gemv_bench.cpp → include/miinfer/fp16_gemv.hpp
+- `run_shape()` --references--> `DeviceInfo`  [EXTRACTED]
+  bench/fp16_gemv_k_split_bench.cpp → include/miinfer/device_validation.hpp
 
 ## Import Cycles
 - None detected.
 
-## Communities (128 total, 9 thin omitted)
+## Communities (123 total, 9 thin omitted)
 
 ### Community 0 - "hardware.md"
 Cohesion: 0.04
@@ -244,8 +239,8 @@ Cohesion: 0.13
 Nodes (14): Baseline, Benchmark, Candidate, Correctness, Decision, Environment, EXP-NNNN — Title, Follow-up (+6 more)
 
 ### Community 18 - "references.md"
-Cohesion: 0.12
-Nodes (15): 12. AMD gfx906 ISA Documentation, 13. AMD HIP / ROCm Documentation, 14. rocBLAS / hipBLAS, 16. Current Research Synthesis, 18. Research Intake Checklist, 19. External Code Policy, 20. Research Notes vs Decisions, 21. Updating This Document (+7 more)
+Cohesion: 0.11
+Nodes (18): 10. nick413-bit/gfx906-fa-vllm, 12. AMD gfx906 ISA Documentation, 13. AMD HIP / ROCm Documentation, 14. rocBLAS / hipBLAS, 16. Current Research Synthesis, 18. Research Intake Checklist, 19. External Code Policy, 20. Research Notes vs Decisions (+10 more)
 
 ### Community 19 - "decisions.md"
 Cohesion: 0.15
@@ -265,7 +260,7 @@ Nodes (10): 4. mxxm-t/mx-llama.cpp, Activation reuse, MIInfer implication, MIInf
 
 ### Community 23 - "roadmap.md"
 Cohesion: 0.20
-Nodes (8): Current Execution Order, Current Status, Deferred / Explicitly Out of Scope, Immediate Next Experiment, MIInfer Roadmap, Milestone Dependencies, Roadmap Change Policy, Success Definition
+Nodes (8): Current Execution Order, Current Status, Deferred / Explicitly Out of Scope, Immediate Next Milestone, MIInfer Roadmap, Milestone Dependencies, Roadmap Change Policy, Success Definition
 
 ### Community 24 - "Candidate work"
 Cohesion: 0.20
@@ -400,12 +395,12 @@ Cohesion: 0.11
 Nodes (18): 10. Test Matrix, 11. Correctness Method, 12. Benchmark, 13. Acceptance, 14. Explicit Exclusions, 15. Results, 16. Decision, 17. Follow-up (+10 more)
 
 ### Community 57 - "hip_smoke_bench.cpp"
-Cohesion: 0.20
+Cohesion: 0.16
 Nodes (15): size_t, string, json_escape(), main(), Options, device, elements, iterations (+7 more)
 
-### Community 58 - "q4_q8_gemv_bench.cpp"
-Cohesion: 0.29
-Nodes (18): ostream, string, vector, escape(), free_shape(), main(), median(), nonnegative() (+10 more)
+### Community 58 - "EXP-0009-kv-geometry.md"
+Cohesion: 0.14
+Nodes (13): 10. Comparison with MMVQ, 11. Decision, 12. Next experiment, 1. Question, 2. Hypothesis, 3. Prior evidence, 4. Candidates, 5. Environment and method (+5 more)
 
 ### Community 59 - "graphify reference: add a URL and watch a folder"
 Cohesion: 0.50
@@ -539,9 +534,9 @@ Nodes (3): 2. Core hypothesis, H0, H1
 Cohesion: 0.11
 Nodes (18): 10. FP16 control comparison, 11. Quantization-inclusive views, 12. Kernel resources and ISA observations, 13. External MMVQ comparison, 14. Projection-only sanity check, 15. Bottleneck interpretation, 16. Decision, 17. Next experiment (+10 more)
 
-### Community 92 - "fp16_gemv_reduction_diag.cpp"
-Cohesion: 0.18
-Nodes (17): __half, string, vector, main(), median(), nonnegative(), Options, device (+9 more)
+### Community 92 - "string"
+Cohesion: 0.06
+Nodes (38): __half, string, vector, main(), median(), nonnegative(), Options, device (+30 more)
 
 ### Community 95 - "D010 — No Silent CPU or Generic Fallback"
 Cohesion: 0.67
@@ -579,13 +574,9 @@ Nodes (3): 8. Hardware, GPU, Runtime state
 Cohesion: 0.12
 Nodes (16): 10. Hardware validity, 11. External MMVQ comparison, 12. Projection-only sanity check, 13. Decision, 14. M2 status, 15. Next experiment, 1. Question, 2. Hypothesis and motivation (+8 more)
 
-### Community 109 - "DeviceShapeData"
-Cohesion: 0.18
-Nodes (11): DeviceShapeData, device_input_fp16, device_input_q8, device_output, device_weights, input_fp16, input_q8, oracle_fp16 (+3 more)
-
-### Community 110 - "Options"
-Cohesion: 0.22
-Nodes (9): Options, device, implementation, iterations, json_output, length, mode, shape (+1 more)
+### Community 109 - "DeviceInfo"
+Cohesion: 0.24
+Nodes (12): DeviceInfo, architecture, index, name, total_vram_bytes, size_t, ostream, string (+4 more)
 
 ### Community 112 - "diagnose-gfx802-isolation.sh"
 Cohesion: 0.54
@@ -599,37 +590,21 @@ Nodes (4): 6. Baseline, Implementation, Kernel, Relevant configuration
 Cohesion: 0.67
 Nodes (3): 35. Historical failed execution gate — superseded by Section 37, 36. Task 3 Platform-Recovery Pilot, 37. Accepted MI50 execution
 
-### Community 118 - "DeviceInfo"
-Cohesion: 0.07
-Nodes (33): ostream, string, uint32_t, vector, escape(), main(), median(), nonnegative() (+25 more)
-
-### Community 119 - "10. nick413-bit/gfx906-fa-vllm"
-Cohesion: 0.67
-Nodes (3): 10. nick413-bit/gfx906-fa-vllm, MIInfer implication, Role
+### Community 118 - "fp16_gemv_k_split_bench.cpp"
+Cohesion: 0.15
+Nodes (20): ostream, string, uint32_t, vector, escape(), main(), median(), nonnegative() (+12 more)
 
 ### Community 120 - "EXP-0008 — Direct MIInfer vs gfx906 llama.cpp MMVQ"
-Cohesion: 0.13
-Nodes (14): 10. Reference ISA and resources, 11. Architectural differences relevant to K/V, 12. M2 decision, 13. Next experiment, 1. Question, 2. Hypothesis and motivation, 3. Reference path, 4. Semantic and timing contract (+6 more)
+Cohesion: 0.12
+Nodes (15): 10. Reference ISA and resources, 11. Architectural differences relevant to K/V, 12. M2 decision, 13.1 Re-evaluation after EXP-0009, 13. Next experiment, 1. Question, 2. Hypothesis and motivation, 3. Reference path (+7 more)
 
-### Community 121 - "GemvKernelResources"
-Cohesion: 0.33
-Nodes (6): GemvKernelResources, local_bytes, max_threads_per_block, registers, shared_bytes, size_t
-
-### Community 122 - "hip_check.hpp"
-Cohesion: 0.22
-Nodes (7): hipError_t, hip_check(), hip_check_failed(), string, main(), run_shape(), run_zero_point_identity_tests()
-
-### Community 123 - "Q8_1Block"
-Cohesion: 0.14
-Nodes (19): __half, launch_selected_gemv(), __half, Q4_0Block, d, qs, Q8_1Block, d (+11 more)
+### Community 123 - "q4_q8_gemv_bench.cpp"
+Cohesion: 0.06
+Nodes (63): allocate_shape(), __half, ostream, string, vector, DeviceShapeData, device_input_fp16, device_input_q8 (+55 more)
 
 ### Community 124 - "External gfx906 Reference Baseline"
 Cohesion: 0.22
 Nodes (8): Baseline status, Checkout, External gfx906 Reference Baseline, Initial baseline, MI50 build starting point, Option validation on the available host, Pin, Toolchain preflight record
-
-### Community 125 - "GemvShape"
-Cohesion: 0.18
-Nodes (13): allocate_shape(), GemvShape, id, k, m, projection, RocblasGemmHandle, opaque (+5 more)
 
 ### Community 126 - "Current Project Status"
 Cohesion: 0.50
@@ -640,7 +615,7 @@ Cohesion: 0.67
 Nodes (3): Current Scope, In scope now, Not in scope now
 
 ## Knowledge Gaps
-- **868 isolated node(s):** `experiment`, `shape`, `implementation`, `cache_regime`, `custom_label` (+863 more)
+- **882 isolated node(s):** `experiment`, `shape`, `implementation`, `cache_regime`, `custom_label` (+877 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **9 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -652,7 +627,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **Why does `7. Neroued/ninfer` connect `7. Neroued/ninfer` to `references.md`?**
   _High betweenness centrality (0.020) - this node is a cross-community bridge._
 - **What connects `experiment`, `shape`, `implementation` to the rest of the system?**
-  _868 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _882 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `hardware.md` be split into smaller, more focused modules?**
   _Cohesion score 0.0425531914893617 - nodes in this community are weakly interconnected._
 - **Should `architecture.md` be split into smaller, more focused modules?**

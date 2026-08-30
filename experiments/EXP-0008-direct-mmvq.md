@@ -258,3 +258,16 @@ The target is the observed K/V gap. Keep the EXP-0007 inner dot unchanged and
 measure the complete split-K operation, including partial-result reduction,
 against both the current MIInfer control and the reference MMVQ result. Do
 not begin that composition in EXP-0008.
+
+## 13.1 Re-evaluation after EXP-0009
+
+The `M2 OPEN` decision above is historical for the geometry available when
+EXP-0008 was run. EXP-0009 subsequently tested the measured MMVQ difference:
+128 threads per row removed the idle-thread/reduction mismatch and brought
+K/V below MMVQ latency while preserving or improving the other major shapes.
+The later decision is recorded in EXP-0009 as:
+
+```text
+EXP-0009 KEEP
+M2 GO
+```

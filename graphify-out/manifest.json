@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788083436.3956957,
-    "seen": 1788083466.0861685,
-    "ast_hash": "85dc9246bf9a6535f5f2818d3fac7656",
+    "mtime": 1788088485.1510198,
+    "seen": 1788088493.157976,
+    "ast_hash": "3267627d33ac8094695468f558cae587",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788083436.3966956,
-    "seen": 1788083466.0861788,
-    "ast_hash": "7e03e65acd2112d6e2a86ece5ec9e0f7",
+    "mtime": 1788088466.7441134,
+    "seen": 1788088493.1579866,
+    "ast_hash": "bcedb776b7da2224b94a3e20ec4551d5",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -378,9 +378,9 @@
     "semantic_hash": ""
   },
   "bench/q4_q8_gemv_bench.cpp": {
-    "mtime": 1788078951.0452027,
-    "seen": 1788080249.548793,
-    "ast_hash": "5bc75b0ef9a0c37654ab31da981fbfdb",
+    "mtime": 1788087411.843477,
+    "seen": 1788088493.1579094,
+    "ast_hash": "389034ff4f0e640b2eb46d7c85e3aabc",
     "semantic_hash": ""
   },
   "include/miinfer/q4_q8_gemv.hpp": {
@@ -396,9 +396,9 @@
     "semantic_hash": ""
   },
   "tests/q4_q8_gemv_test.cpp": {
-    "mtime": 1788079060.1666415,
-    "seen": 1788080249.5488281,
-    "ast_hash": "bb3948f41339e62f6e374be86a3a5ca8",
+    "mtime": 1788087411.8444772,
+    "seen": 1788088493.1579452,
+    "ast_hash": "94592f16ff0d1d61b503e8d5e9c8b9ca",
     "semantic_hash": ""
   },
   "experiments/EXP-0005-q4-q8-gemv-baseline.md": {
@@ -426,9 +426,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/q4_q8_zero_point_dot.hpp": {
-    "mtime": 1788078951.0432026,
-    "seen": 1788080249.5488055,
-    "ast_hash": "f53d8a8dd4da76002dc35bf8dc72d391",
+    "mtime": 1788087391.1725821,
+    "seen": 1788088493.1579223,
+    "ast_hash": "d61b56d4a3aca33147d290ff8506d364",
     "semantic_hash": ""
   },
   "experiments/EXP-0007-q4-q8-zero-point-dot.md": {
@@ -438,9 +438,15 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0008-direct-mmvq.md": {
-    "mtime": 1788083496.5903883,
-    "seen": 1788083500.587914,
-    "ast_hash": "42450fc06e8c9931df402a0727c3f093",
+    "mtime": 1788088455.999168,
+    "seen": 1788088493.1579988,
+    "ast_hash": "61c62b6aadc60d6365da4eabfcd4c8e6",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0009-kv-geometry.md": {
+    "mtime": 1788088305.0969348,
+    "seen": 1788088493.1580005,
+    "ast_hash": "cdca1ffa2609660da51bb824fccea60c",
     "semantic_hash": ""
   }
 }

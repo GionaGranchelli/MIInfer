@@ -10,20 +10,20 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M2 — Prove Specialization**
+**Current phase: M3 — Minimal Runtime**
 
 Immediate objective:
 
-> Determine whether MIInfer's gfx906-specific kernels can materially compete
-> with the strongest reproducible gfx906 implementation before building a
-> complete inference runtime.
+> Build the smallest static Qwen3-8B runtime scaffold around the accepted
+> gfx906-specialized kernel family.
 
 Current work should focus on:
 
-* accepted kernel controls
-* direct reference comparisons
-* bounded gfx906 specialization experiments
-* correctness and hardware-state evidence
+* model metadata and tensor loading
+* supported-configuration validation
+* GPU weight allocation
+* static execution-plan construction
+* preserving the accepted kernel and benchmark controls
 
 Do not start model serving, generic model support, speculative decoding, or multi-GPU work.
 
@@ -328,6 +328,11 @@ Pause runtime work if:
 * implementation complexity substantially exceeds realistic benefit
 
 A reassessment is a valid project result.
+
+EXP-0009 passed this gate: the accepted shape-specialized MIInfer geometry is
+competitive with or faster than the pinned gfx906 MMVQ path across the seven
+core projection shapes, with D retaining the already-accepted EXP-0007
+geometry. M2 is therefore `GO`, and the project has advanced to M3.
 
 ---
 
@@ -735,25 +740,26 @@ M7
 
 # Current Execution Order
 
-The project is now in M2. Work should proceed from the accepted direct
-comparison and its remaining measured gap:
+The project has passed M2 and is entering M3. Work should proceed from the
+accepted direct comparison and shape-specialized kernels:
 
 1. Preserve the M0 platform contract and pinned reference.
 2. Maintain the accepted FP16 and Q4/Q8 kernel controls.
 3. Compare candidate kernels with the actual pinned gfx906 reference path.
-4. Run one bounded specialization experiment at a time.
-5. Advance to M3 only after the strongest-competitor M2 gate is satisfied.
+4. Begin the minimal model/runtime scaffold with explicit supported-config
+   validation and static planning.
+5. Preserve the kernel controls and benchmark evidence while implementing M3.
 
-Do not skip directly to M3.
+Do not broaden M3 into a general-purpose runtime.
 
 ---
 
-# Immediate Next Experiment
+# Immediate Next Milestone
 
-The current next experiment is:
+The current next milestone is:
 
 ```text
-EXP-0009 — zero-point dot4 plus split-K for K/V
+M3 — minimal Qwen3-8B runtime scaffold
 ```
 
 Exact experiment ordering may change once the target model and measured shapes are frozen.
