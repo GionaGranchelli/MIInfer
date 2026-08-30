@@ -22,6 +22,23 @@ __device__ __forceinline__ int dot4_i8(int lhs, int rhs, int accumulator) {
     return __builtin_amdgcn_sdot4(lhs, rhs, accumulator, false);
 }
 
+__device__ __forceinline__ float zero_point_block_dot(
+    const Q4_0Block& weight, const Q8_1Block& activation) {
+    int raw_integer_dot = 0;
+    for (int group = 0; group < kQ4_0BlockSize / 2; group += 4) {
+        const auto q4_word = *reinterpret_cast<const std::uint32_t*>(weight.qs + group);
+        const int q4_low = static_cast<int>(q4_word & kNibbleMask);
+        const int q4_high = static_cast<int>((q4_word >> 4) & kNibbleMask);
+        const int q8_low = *reinterpret_cast<const int*>(activation.qs + group);
+        const int q8_high = *reinterpret_cast<const int*>(activation.qs + group + 16);
+        raw_integer_dot = dot4_i8(q4_low, q8_low, raw_integer_dot);
+        raw_integer_dot = dot4_i8(q4_high, q8_high, raw_integer_dot);
+    }
+    return __half2float(weight.d)
+           * (__half2float(activation.d) * static_cast<float>(raw_integer_dot)
+              - 8.0F * __half2float(activation.s));
+}
+
 __global__ void q4_q8_gemv_zero_point_dot_kernel(
     const Q4_0Block* weights,
     const Q8_1Block* input,
@@ -41,25 +58,8 @@ __global__ void q4_q8_gemv_zero_point_dot_kernel(
          block += static_cast<int>(blockDim.x)) {
         const auto& weight = weights[row_offset + static_cast<std::size_t>(block)];
         const auto& activation = input[static_cast<std::size_t>(block)];
-        int raw_integer_dot = 0;
-        for (int group = 0; group < kQ4_0BlockSize / 2; group += 4) {
-            // Q4_0 stores four low nibbles and four high nibbles in each
-            // four-byte word. Keep both sets in the unsigned [0, 15] range;
-            // the Q4 zero point is corrected once per complete block below.
-            const auto q4_word = *reinterpret_cast<const std::uint32_t*>(
-                weight.qs + group);
-            const int q4_low = static_cast<int>(q4_word & kNibbleMask);
-            const int q4_high = static_cast<int>((q4_word >> 4) & kNibbleMask);
-            const int q8_low = *reinterpret_cast<const int*>(activation.qs + group);
-            const int q8_high = *reinterpret_cast<const int*>(activation.qs + group + 16);
-            raw_integer_dot = dot4_i8(q4_low, q8_low, raw_integer_dot);
-            raw_integer_dot = dot4_i8(q4_high, q8_high, raw_integer_dot);
-        }
-        const float weight_scale = __half2float(weight.d);
-        const float activation_scale = __half2float(activation.d);
-        const float activation_scaled_sum = __half2float(activation.s);
-        sum += weight_scale * (activation_scale * static_cast<float>(raw_integer_dot)
-                               - 8.0F * activation_scaled_sum);
+        // Q4 nibbles remain unsigned; Q8_1.s supplies the zero-point correction.
+        sum += zero_point_block_dot(weight, activation);
     }
     partials[threadIdx.x] = sum;
     __syncthreads();
@@ -72,6 +72,50 @@ __global__ void q4_q8_gemv_zero_point_dot_kernel(
     if (threadIdx.x == 0) {
         output[row] = __float2half_rn(partials[0]);
     }
+}
+
+template <unsigned int kThreads>
+__global__ void q4_q8_gemv_zero_point_dot_128_kernel(
+    const Q4_0Block* weights, const Q8_1Block* input, __half* output,
+    int rows, int columns) {
+    const int row = static_cast<int>(blockIdx.x);
+    if (row >= rows) return;
+    __shared__ float partials[kThreads];
+    const int blocks_per_row = columns / kQ4_0BlockSize;
+    float sum = 0.0F;
+    for (int block = static_cast<int>(threadIdx.x); block < blocks_per_row;
+         block += static_cast<int>(kThreads)) {
+        sum += zero_point_block_dot(
+            weights[static_cast<std::size_t>(row) * blocks_per_row + block], input[block]);
+    }
+    partials[threadIdx.x] = sum;
+    __syncthreads();
+    for (unsigned int stride = kThreads / 2; stride > 0; stride /= 2) {
+        if (threadIdx.x < stride) partials[threadIdx.x] += partials[threadIdx.x + stride];
+        __syncthreads();
+    }
+    if (threadIdx.x == 0) output[row] = __float2half_rn(partials[0]);
+}
+
+__global__ void q4_q8_gemv_zero_point_dot_wave64_kernel(
+    const Q4_0Block* weights, const Q8_1Block* input, __half* output,
+    int rows, int columns) {
+    const int row = static_cast<int>(blockIdx.x);
+    if (row >= rows) return;
+    __shared__ float wave_partials[2];
+    const int blocks_per_row = columns / kQ4_0BlockSize;
+    float sum = 0.0F;
+    for (int block = static_cast<int>(threadIdx.x); block < blocks_per_row;
+         block += 128) {
+        sum += zero_point_block_dot(
+            weights[static_cast<std::size_t>(row) * blocks_per_row + block], input[block]);
+    }
+    for (int offset = 32; offset > 0; offset /= 2) {
+        sum += __shfl_down(sum, offset, 64);
+    }
+    if ((threadIdx.x & 63) == 0) wave_partials[threadIdx.x / 64] = sum;
+    __syncthreads();
+    if (threadIdx.x == 0) output[row] = __float2half_rn(wave_partials[0] + wave_partials[1]);
 }
 
 }  // namespace
@@ -97,6 +141,28 @@ void launch_q4_q8_gemv_zero_point_dot(
         output,
         rows,
         columns);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_q4_q8_gemv_zero_point_dot_128(
+    const Q4_0Block* weights, const Q8_1Block* input, __half* output,
+    int rows, int columns, hipStream_t stream) {
+    if (rows <= 0 || columns <= 0 || columns % kQ4_0BlockSize != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(q4_q8_gemv_zero_point_dot_128_kernel<128>, dim3(rows), dim3(128),
+                       128 * sizeof(float), stream, weights, input, output, rows, columns);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_q4_q8_gemv_zero_point_dot_wave64(
+    const Q4_0Block* weights, const Q8_1Block* input, __half* output,
+    int rows, int columns, hipStream_t stream) {
+    if (rows <= 0 || columns <= 0 || columns % kQ4_0BlockSize != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(q4_q8_gemv_zero_point_dot_wave64_kernel, dim3(rows), dim3(128), 0,
+                       stream, weights, input, output, rows, columns);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

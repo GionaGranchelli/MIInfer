@@ -113,6 +113,12 @@ bool run_shape(const miinfer::GemvShape& shape, const std::string& implementatio
     } else if (implementation == "zero-point-dot") {
         miinfer::launch_q4_q8_gemv_zero_point_dot(
             device_weights, device_input, device_output, shape.m, shape.k);
+    } else if (implementation == "zero-point-128") {
+        miinfer::launch_q4_q8_gemv_zero_point_dot_128(
+            device_weights, device_input, device_output, shape.m, shape.k);
+    } else if (implementation == "zero-point-wave64") {
+        miinfer::launch_q4_q8_gemv_zero_point_dot_wave64(
+            device_weights, device_input, device_output, shape.m, shape.k);
     } else {
         miinfer::launch_q4_q8_gemv(device_weights, device_input, device_output, shape.m, shape.k);
     }
@@ -143,7 +149,8 @@ int main() {
     }
     bool passed = true;
     passed = run_zero_point_identity_tests() && passed;
-    const std::vector<std::string> implementations = {"scalar", "packed-dot", "zero-point-dot"};
+    const std::vector<std::string> implementations = {
+        "scalar", "packed-dot", "zero-point-dot", "zero-point-128", "zero-point-wave64"};
     const std::vector<miinfer::GemvShape> small_shapes = {
         {"small", "small Q4/Q8 indexing", 7, 32},
         {"tail", "small Q4/Q8 row tail", 257, 64},
