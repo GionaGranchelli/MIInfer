@@ -1,16 +1,16 @@
 # Graph Report - mi50  (2026-08-30)
 
 ## Corpus Check
-- 97 files · ~90,348 words
+- 98 files · ~91,743 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1729 nodes · 2368 edges · 147 communities (138 shown, 9 thin omitted)
-- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 78 edges (avg confidence: 0.81)
+- 1740 nodes · 2401 edges · 149 communities (139 shown, 10 thin omitted)
+- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 81 edges (avg confidence: 0.81)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `2e8c34a4`
+- Built from commit: `8dfd33b1`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -140,7 +140,7 @@
 - External gfx906 Reference Baseline
 - q4_q8_gemv_bench.cpp
 - Current Project Status
-- Metrics
+- path_
 - Qwen3LayerWeights
 - Qwen3Model
 - require_tensor
@@ -159,19 +159,21 @@
 - GgufTensor
 - vector
 - q4_q8_gemv_reference.cpp
-- Qwen3TensorView
+- qwen3_primitives.cpp
+- model_loader_test.cpp
+- m4a4-four-position/README.md
 
 ## God Nodes (most connected - your core abstractions)
-1. `Qwen3LayerTrace` - 38 edges
+1. `Qwen3LayerTrace` - 39 edges
 2. `GgufFile` - 28 edges
 3. `Qwen3Model` - 26 edges
 4. `Qwen3GpuPlan` - 25 edges
 5. `execute_qwen3_layer0_host()` - 22 edges
-6. `fail()` - 19 edges
-7. `MIInfer` - 19 edges
-8. `Options` - 18 edges
-9. `execute_qwen3_layer0_gpu()` - 18 edges
-10. `EXP-0004 — FP16 GEMV K-Split Parallelism` - 18 edges
+6. `run_sequence()` - 20 edges
+7. `fail()` - 19 edges
+8. `MIInfer` - 19 edges
+9. `Options` - 18 edges
+10. `execute_qwen3_layer0_gpu()` - 18 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `reset_test()` --calls--> `reset`  [INFERRED]
@@ -188,7 +190,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (147 total, 9 thin omitted)
+## Communities (149 total, 10 thin omitted)
 
 ### Community 0 - "hardware.md"
 Cohesion: 0.04
@@ -654,13 +656,13 @@ Nodes (19): allocate_shape(), ostream, string, vector, escape(), free_shape(), m
 Cohesion: 0.50
 Nodes (4): Completed, Completed in Task 3, Current Project Status, Not implemented
 
-### Community 127 - "Metrics"
-Cohesion: 0.07
-Nodes (54): path_, append_string(), append_u32(), append_u64(), string, uint32_t, uint64_t, uint8_t (+46 more)
+### Community 127 - "path_"
+Cohesion: 0.09
+Nodes (43): path_, abs_tolerance(), checkpoints(), compare(), size_t, string, vector, main() (+35 more)
 
 ### Community 128 - "Qwen3LayerWeights"
-Cohesion: 0.17
-Nodes (12): Qwen3LayerWeights, attention_norm, down, ffn_norm, gate, k, k_norm, output (+4 more)
+Cohesion: 0.11
+Nodes (16): byte, GgufTensorType, Qwen3LayerWeights, attention_norm, down, ffn_norm, gate, k (+8 more)
 
 ### Community 129 - "Qwen3Model"
 Cohesion: 0.14
@@ -683,11 +685,11 @@ Cohesion: 0.17
 Nodes (12): uint32_t, Qwen3Config, attention_heads, context_length, head_dim, hidden_size, intermediate_size, kv_heads (+4 more)
 
 ### Community 134 - "execute_qwen3_layer0_host"
-Cohesion: 0.06
-Nodes (58): size_t, span, Qwen3Layer0KvCache, append, reset, int8_t, uint16_t, uint8_t (+50 more)
+Cohesion: 0.10
+Nodes (37): size_t, span, Qwen3Layer0KvCache, append, reset, add_in_place(), int8_t, size_t (+29 more)
 
 ### Community 135 - "execute_qwen3_layer0_gpu"
-Cohesion: 0.17
+Cohesion: 0.16
 Nodes (13): size_t, Qwen3Layer0GpuKvCache, append, keys_, reset, snapshot_keys, snapshot_values, values_ (+5 more)
 
 ### Community 136 - "hip_smoke_bench.cpp"
@@ -716,40 +718,44 @@ Nodes (17): __half, string, vector, main(), median(), nonnegative(), Options, de
 
 ### Community 142 - "run_sequence"
 Cohesion: 0.28
-Nodes (16): attention_contract(), cache_corruption_test(), cache_slots_preserved(), checkpoints(), compare_trace(), size_t, span, string (+8 more)
+Nodes (17): attention_contract(), cache_corruption_test(), cache_slots_preserved(), checkpoints(), compare_trace(), size_t, span, string (+9 more)
 
 ### Community 143 - "GgufTensor"
 Cohesion: 0.18
 Nodes (11): GgufTensor, byte_size, data, dimensions, name, offset, type, byte (+3 more)
 
 ### Community 144 - "vector"
-Cohesion: 0.28
+Cohesion: 0.38
 Nodes (6): GgufValue, value, GgufScalar, vector, unordered_map, variant
 
 ### Community 145 - "q4_q8_gemv_reference.cpp"
 Cohesion: 0.39
 Nodes (7): __half, size_t, vector, q4_q8_cpu_reference(), quantize_q4_0(), quantize_q8_1(), validate_block_shape()
 
-### Community 146 - "Qwen3TensorView"
-Cohesion: 0.33
-Nodes (4): byte, GgufTensorType, Qwen3TensorView, source
+### Community 146 - "qwen3_primitives.cpp"
+Cohesion: 0.13
+Nodes (29): int8_t, uint16_t, uint8_t, Q4_0HostBlock, d_bits, qs, Q6KHostBlock, d_bits (+21 more)
+
+### Community 147 - "model_loader_test.cpp"
+Cohesion: 0.35
+Nodes (11): append_string(), append_u32(), append_u64(), string, uint32_t, uint64_t, uint8_t, vector (+3 more)
 
 ## Knowledge Gaps
-- **1022 isolated node(s):** `experiment`, `shape`, `implementation`, `cache_regime`, `custom_label` (+1017 more)
+- **1023 isolated node(s):** `experiment`, `shape`, `implementation`, `cache_regime`, `custom_label` (+1018 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **9 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **10 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `GgufFile` connect `GgufFile` to `Qwen3Model`, `require_tensor`, `GgufTensor`, `vector`, `gguf.cpp`, `Metrics`?**
-  _High betweenness centrality (0.034) - this node is a cross-community bridge._
-- **Why does `Qwen3Model` connect `Qwen3Model` to `Qwen3LayerWeights`, `require_tensor`, `Qwen3Config`, `execute_qwen3_layer0_host`, `Qwen3GpuPlan`, `vector`, `Qwen3TensorView`, `GgufFile`?**
-  _High betweenness centrality (0.020) - this node is a cross-community bridge._
+- **Why does `GgufFile` connect `GgufFile` to `Qwen3Model`, `require_tensor`, `GgufTensor`, `vector`, `gguf.cpp`, `path_`?**
+  _High betweenness centrality (0.035) - this node is a cross-community bridge._
+- **Why does `Qwen3Model` connect `Qwen3Model` to `Qwen3LayerWeights`, `require_tensor`, `Qwen3Config`, `execute_qwen3_layer0_host`, `Qwen3GpuPlan`, `GgufFile`?**
+  _High betweenness centrality (0.019) - this node is a cross-community bridge._
 - **Why does `MIInfer` connect `MIInfer` to `roadmap.md`?**
   _High betweenness centrality (0.018) - this node is a cross-community bridge._
 - **What connects `experiment`, `shape`, `implementation` to the rest of the system?**
-  _1022 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _1023 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `hardware.md` be split into smaller, more focused modules?**
   _Cohesion score 0.0425531914893617 - nodes in this community are weakly interconnected._
 - **Should `architecture.md` be split into smaller, more focused modules?**

@@ -136,17 +136,20 @@ __global__ void qwen3_rope_kernel(
     const std::uint32_t index = blockIdx.x * blockDim.x + threadIdx.x;
     if (index >= heads * head_dim) return;
     const std::uint32_t local_index = index % head_dim;
-    const std::uint32_t pair = local_index / 2;
-    const std::uint32_t offset = local_index - (local_index % 2);
+    const std::uint32_t half_dim = head_dim / 2;
+    const std::uint32_t pair = local_index < half_dim ? local_index : local_index - half_dim;
     const std::uint32_t head_base = (index / head_dim) * head_dim;
     const float frequency = powf(theta, -2.0F * static_cast<float>(pair) / static_cast<float>(head_dim));
     const float angle = static_cast<float>(position) * frequency;
     const float c = cosf(angle);
     const float s = sinf(angle);
-    const float x0 = input[head_base + offset];
-    const float x1 = input[head_base + offset + 1];
-    output[head_base + offset] = x0 * c - x1 * s;
-    output[head_base + offset + 1] = x0 * s + x1 * c;
+    const float x0 = input[head_base + pair];
+    const float x1 = input[head_base + half_dim + pair];
+    if (local_index < half_dim) {
+        output[head_base + pair] = x0 * c - x1 * s;
+    } else {
+        output[head_base + half_dim + pair] = x0 * s + x1 * c;
+    }
 }
 
 __global__ void qwen3_single_token_attention_kernel(

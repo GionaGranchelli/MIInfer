@@ -7,7 +7,10 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdlib>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
+#include <limits>
 #include <span>
 #include <stdexcept>
 #include <string>
@@ -53,6 +56,21 @@ float max_abs(std::span<const float> actual, std::span<const float> expected) {
     return result;
 }
 
+std::vector<float> read_f32(const std::filesystem::path& path) {
+    std::ifstream file(path, std::ios::binary);
+    if (!file) throw std::runtime_error("cannot open external trace: " + path.string());
+    file.seekg(0, std::ios::end);
+    const auto size = file.tellg();
+    if (size < 0 || size % static_cast<std::streamoff>(sizeof(float)) != 0) {
+        throw std::runtime_error("invalid external trace tensor: " + path.string());
+    }
+    file.seekg(0, std::ios::beg);
+    std::vector<float> values(static_cast<std::size_t>(size) / sizeof(float));
+    file.read(reinterpret_cast<char*>(values.data()), size);
+    if (!file) throw std::runtime_error("short external trace tensor: " + path.string());
+    return values;
+}
+
 bool compare_trace(const miinfer::Qwen3LayerTrace& gpu, const miinfer::Qwen3LayerTrace& host,
                    std::size_t* first_bad = nullptr) {
     const auto gpu_points = checkpoints(gpu);
@@ -94,7 +112,8 @@ bool attention_contract(const miinfer::Qwen3LayerTrace& trace, std::size_t heads
     return true;
 }
 
-bool run_sequence(const std::string& model_path, bool mutation_test) {
+bool run_sequence(const std::string& model_path, const std::filesystem::path* external_path,
+                  bool mutation_test) {
     const auto model = miinfer::Qwen3Model::load(model_path);
     const auto& config = model.config();
     const auto plan = miinfer::Qwen3GpuPlan::build(model);
@@ -152,6 +171,50 @@ bool run_sequence(const std::string& model_path, bool mutation_test) {
         passed = passed && max_abs(
             std::span<const float>(current_gpu_values),
             std::span<const float>(previous_host_values)) <= 1.0e-1F;
+
+        if (external_path != nullptr) {
+            const auto gpu_points = checkpoints(gpu);
+            const auto host_points = checkpoints(host);
+            bool external_pass = true;
+            for (std::size_t checkpoint = 0; checkpoint < kCheckpointCount; ++checkpoint) {
+                const auto expected = read_f32(
+                    *external_path / ("pos-" + std::to_string(position) + "-" +
+                                      std::to_string(checkpoint) + ".f32"));
+                const float host_error = max_abs(*host_points[checkpoint], expected);
+                const float gpu_error = max_abs(*gpu_points[checkpoint], expected);
+                const bool host_ok = host_error <= tolerance(checkpoint);
+                const bool gpu_ok = gpu_error <= tolerance(checkpoint);
+                if (!host_ok || !gpu_ok) {
+                    std::cout << "external position " << position << " checkpoint " << checkpoint
+                              << " host=" << (host_ok ? "PASS" : "FAIL")
+                              << " gpu=" << (gpu_ok ? "PASS" : "FAIL")
+                              << " host_max_abs=" << std::scientific << host_error
+                              << " gpu_max_abs=" << gpu_error << '\n';
+                }
+                external_pass = external_pass && host_ok && gpu_ok;
+            }
+
+            const auto expected_keys = read_f32(
+                *external_path / ("pos-" + std::to_string(position) + "-cache-k.f32"));
+            const auto expected_values = read_f32(
+                *external_path / ("pos-" + std::to_string(position) + "-cache-v.f32"));
+            std::vector<float> gpu_current_keys(config.kv_heads * config.head_dim);
+            std::vector<float> gpu_current_values(config.kv_heads * config.head_dim);
+            for (std::size_t head = 0; head < config.kv_heads; ++head) {
+                const auto cache_offset = (head * gpu_cache.capacity() + position) * config.head_dim;
+                std::copy_n(current_gpu_keys.begin() + cache_offset, config.head_dim,
+                            gpu_current_keys.begin() + head * config.head_dim);
+                std::copy_n(current_gpu_values.begin() + cache_offset, config.head_dim,
+                            gpu_current_values.begin() + head * config.head_dim);
+            }
+            const float gpu_key_error = max_abs(gpu_current_keys, expected_keys);
+            const float gpu_value_error = max_abs(gpu_current_values, expected_values);
+            external_pass = external_pass && gpu_key_error <= 1.0e-1F && gpu_value_error <= 1.0e-1F;
+            std::cout << "GPU external position " << position << " cache K/V: "
+                      << (gpu_key_error <= 1.0e-1F && gpu_value_error <= 1.0e-1F ? "PASS" : "FAIL")
+                      << " key_max_abs=" << gpu_key_error << " value_max_abs=" << gpu_value_error << '\n';
+            passed = passed && external_pass;
+        }
         if (!trace_pass && mutation_test) {
             std::cout << "first divergent checkpoint: "
                       << (first_bad < kCheckpointCount ? std::to_string(first_bad) : "unknown") << '\n';
@@ -186,7 +249,7 @@ bool reset_test(const std::string& model_path) {
 
 bool mutation_test(const std::string& model_path, const char* mutation) {
     setenv("MIINFER_GPU_KV_MUTATE", mutation, 1);
-    const bool detected = !run_sequence(model_path, true);
+    const bool detected = !run_sequence(model_path, nullptr, true);
     unsetenv("MIINFER_GPU_KV_MUTATE");
     return detected;
 }
@@ -231,10 +294,11 @@ int main(int argc, char** argv) {
         std::cout << "qwen3 KV-cache GPU test: SKIP (model path not supplied)\n";
         return 0;
     }
-    if (argc != 2) return 1;
+    if (argc < 2 || argc > 3) return 1;
     try {
         const std::string model_path = argv[1];
-        const bool sequence = run_sequence(model_path, false);
+        const std::filesystem::path external = argc == 3 ? argv[2] : "";
+        const bool sequence = run_sequence(model_path, argc == 3 ? &external : nullptr, false);
         const bool reset = reset_test(model_path);
         const bool wrong_rope = mutation_test(model_path, "wrong-rope-position");
         const bool ignore_cache = mutation_test(model_path, "ignore-earlier-cache");

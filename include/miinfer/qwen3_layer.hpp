@@ -45,8 +45,9 @@ struct Qwen3LayerTrace {
     std::vector<float> layer_output;
 };
 
-// Layer-0 incremental-state contract used by M4-A4.  Keys are stored after
-// RoPE in [kv_head][position][head_dim] order; values use the same layout.
+// Layer-0 incremental-state contract used by M4-A4. Q/K RoPE uses Qwen3's
+// NeoX first-half/second-half pairing. Keys are stored after RoPE in
+// [kv_head][position][head_dim] order; values use the same layout.
 // The cache owns only layer-0 state and is reset explicitly between sequences.
 class Qwen3Layer0KvCache {
 public:

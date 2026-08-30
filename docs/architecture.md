@@ -98,10 +98,11 @@ The plan is validation and ownership infrastructure only; transformer
 execution remains a later milestone.
 
 M4-A adds correctness-first primitive ownership below that boundary. Host
-oracles define the Qwen3 math contract, while gfx906 probes own embedding
-lookup, RMSNorm, and the Q6_K output-projection arithmetic. These probes are
-not yet a complete transformer executor; the first layer remains gated by
-comparison with the pinned reference trace.
+oracles define the Qwen3 math contract, while gfx906 code owns embedding
+lookup, RMSNorm, Q6_K output-projection arithmetic, and the layer-0
+composition path. The layer-0 executor and its four-position KV-cache state
+are validated against an independent pinned reference trace; full 36-layer
+execution remains an M4-B concern.
 
 ---
 

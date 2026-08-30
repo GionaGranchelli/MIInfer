@@ -32,6 +32,7 @@ void rms_norm_reference(
     std::span<float> output,
     float epsilon);
 
+// Qwen3 uses NeoX pairing: each pair is input[pair] with input[head_dim/2 + pair].
 void rope_qwen3_reference(
     std::span<const float> input,
     std::span<float> output,

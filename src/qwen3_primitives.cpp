@@ -92,17 +92,18 @@ void rope_qwen3_reference(
                      && output.size() == input.size() && theta > 0.0F,
                  "invalid RoPE dimensions");
     for (std::size_t head = 0; head < head_count; ++head) {
+        const std::size_t half_dim = head_dim / 2;
         for (std::size_t pair = 0; pair < head_dim / 2; ++pair) {
             const float frequency = std::pow(theta, -static_cast<float>(2 * pair)
                                                        / static_cast<float>(head_dim));
             const float angle = static_cast<float>(position) * frequency;
             const float cosine = std::cos(angle);
             const float sine = std::sin(angle);
-            const std::size_t offset = head * head_dim + 2 * pair;
-            const float x0 = input[offset];
-            const float x1 = input[offset + 1];
-            output[offset] = x0 * cosine - x1 * sine;
-            output[offset + 1] = x0 * sine + x1 * cosine;
+            const std::size_t head_base = head * head_dim;
+            const float x0 = input[head_base + pair];
+            const float x1 = input[head_base + half_dim + pair];
+            output[head_base + pair] = x0 * cosine - x1 * sine;
+            output[head_base + half_dim + pair] = x0 * sine + x1 * cosine;
         }
     }
 }

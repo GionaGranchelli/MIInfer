@@ -82,6 +82,8 @@ No other GPU architecture is currently supported.
   with `KEEP`, with M2 marked `GO`
 * M3 minimal Qwen3-8B GGUF loader, GPU weight arena, and static plan; closed
   after pinned physical-MI50 acceptance
+* M4-A5 independent four-position reference trace; host and MI50 Debug/Release
+  stateful layer-0 comparisons pass
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -96,23 +98,23 @@ all work. The gfx802 isolation remains an operational platform prerequisite.
 
 ## Not implemented
 
-* production C++ runtime
-* production inference runtime and model-facing kernel integration
+* full production inference runtime and model-facing integration
 * model loading outside the pinned Qwen3-8B contract
 * general GGUF parsing
 * custom tensor packing
 * production execution planner
 * general-purpose memory planner
 * tokenizer
-* multi-position attention and KV-cache execution
+* full multi-layer model execution and token generation
 * sampling
 * MoE execution
 * HIP graph capture
 * CLI
 * HTTP server
 
-The C++20/HIP infrastructure and isolated research kernels are present, but no
-model/runtime functionality has been implemented.
+The C++20/HIP infrastructure, model loader/planner, and layer-0 correctness
+runtime are present. Full-model execution and token generation remain outside
+the implemented scope.
 
 ---
 
@@ -120,9 +122,8 @@ model/runtime functionality has been implemented.
 
 The immediate technical objective is:
 
-> Complete M4-A by extending the validated position-zero MI50 layer executor
-> to deterministic multi-position execution with a correct KV cache, then
-> proceed to first token generation.
+> Begin M4-B: execute all 36 Qwen3-8B layers for one deterministic token
+> position and compare final hidden state/logits against a pinned reference.
 > Do not broaden support beyond the pinned model contract.
 
 M0 is closed under the documented gfx802-isolated configuration. The
@@ -168,16 +169,17 @@ The M1/M2 kernel-laboratory deliverables currently include:
 * M4-A4 deterministic four-position host and MI50 layer-0 execution with an
   explicit post-RoPE KV-cache contract, reset/append/preservation checks,
   causal-prefix validation, and cache mutation discriminators
+* M4-A5 independent external four-position reference trace, including
+  post-RoPE K/V cache-write vectors, with Host/MI50 Debug/Release parity
 
 The repository-side specialization and M3 runtime-scaffold deliverables are
-complete. The host and MI50 GPU layer-0 compositions match the retained
-reference trace within frozen, stage-specific tolerances. The four-position
-stateful tests now prove append, preservation, reset, causal extent, and
-host/GPU cache parity for the deterministic layer-0 fixture. M4-A remains
-open because the retained external reference trace is still position-zero
-only; the four-position external callback trace must be captured before the
-stateful gate is closed. No token-generation or end-to-end performance claim
-is made here.
+complete. M4-A is complete: the host and MI50 layer-0 compositions match an
+independent four-position trace from the pinned reference within the frozen
+stage-specific tolerances in Debug and Release. The external trace also
+directly pins post-RoPE K and unmodified V as the cache-write representation.
+The four-position tests prove append, preservation, reset, causal extent,
+host/GPU cache parity, and external-trace comparator mutation detection. No
+token-generation or end-to-end performance claim is made here.
 
 ---
 

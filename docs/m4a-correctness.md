@@ -1,10 +1,9 @@
 # M4-A — Qwen3 execution correctness foundation
 
-Status: `M4-A OPEN`
+Status: `M4-A COMPLETE`
 
-M4-A is being implemented as a correctness gate.  The current repository
-contains the first primitive foundation, but it does not yet claim a complete
-Qwen3 layer match.
+M4-A is a correctness gate for one Qwen3 layer and its incremental state.  It
+does not claim full-model execution or token generation.
 
 ## Pinned reference fixture
 
@@ -63,7 +62,7 @@ oracles for:
 
 * FP16 conversion
 * RMSNorm with FP32 accumulation
-* adjacent-pair Qwen3 RoPE
+* NeoX-style Qwen3 RoPE (first-half/second-half pairing)
 * stabilized softmax
 * SiLU/SwiGLU
 * canonical Q4_0 dequantization and embedding lookup
@@ -180,10 +179,39 @@ physical Release and Debug runs pass these checks.  Test-only mutations for
 wrong RoPE position, ignoring earlier cache entries, and corrupting a prior
 cache entry are all detected; out-of-order append is rejected.
 
-The stateful GPU test currently uses the validated host executor as its
-position `1..3` numerical authority.  The retained pinned external trace is
-still position-zero-only, so a four-step external callback trace remains the
-last evidence item before M4-A can close.
+The stateful tests additionally compare every canonical checkpoint at all four
+positions against the independent external fixture at:
+
+```text
+tests/reference/qwen3/m4a4-four-position/
+```
+
+The fixture was captured from the pinned reference using the exact sequence
+`[14990, 42, 31415, 2718]`.  It retains 28 canonical layer-0 F32 checkpoints
+per position and the external cache-write vectors.  The cache-write K vector
+is post-RoPE and V is unmodified.  Host and MI50 Debug/Release all pass the
+external comparisons; the external fixture mutation discriminator also
+passes.  During this independent check, a latent adjacent-pair RoPE bug was
+found at position 1 and corrected to Qwen3's NeoX first-half/second-half
+pairing.  Position zero could not expose that error.
+
+The acceptance commands are:
+
+```bash
+./build/mi50-debug/miinfer-qwen3-kv-cache-test \
+  /path/to/Qwen3-8B-q4_0-b968826d.gguf \
+  tests/reference/qwen3/m4a4-four-position
+
+./build/mi50-debug/miinfer-qwen3-kv-cache-gpu-test \
+  /path/to/Qwen3-8B-q4_0-b968826d.gguf \
+  tests/reference/qwen3/m4a4-four-position
+
+# Repeat both commands with build/mi50-release/.
+```
+
+M4-A is now complete.  M4-B owns full 36-layer single-token execution and
+final-logit comparison; no token-generation or end-to-end performance claim
+is made by this gate.
 
 ## Host layer-0 acceptance run
 

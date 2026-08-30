@@ -48,6 +48,16 @@ bool host_tests() {
     passed = std::all_of(rope_output.begin(), rope_output.end(), [](float value) {
         return std::isfinite(value);
     }) && passed;
+    std::vector<float> neox_input{1.0F, 2.0F, 3.0F, 4.0F, 5.0F, 6.0F, 7.0F, 8.0F};
+    std::vector<float> neox_output(neox_input.size());
+    miinfer::rope_qwen3_reference(neox_input, neox_output, 1, 8, 1, 1.0F);
+    const float c = std::cos(1.0F);
+    const float s = std::sin(1.0F);
+    passed = close_enough(neox_output[0], 1.0F * c - 5.0F * s)
+             && close_enough(neox_output[4], 1.0F * s + 5.0F * c)
+             && close_enough(neox_output[3], 4.0F * c - 8.0F * s)
+             && close_enough(neox_output[7], 4.0F * s + 8.0F * c)
+             && passed;
     std::cout << "rope host=" << (passed ? "PASS" : "FAIL") << '\n';
 
     const std::array<float, 4> softmax_input{-1.0F, 0.0F, 1.0F, 2.0F};
