@@ -790,3 +790,52 @@ even the combined diagnostic policy does not close full-model parity.
 runtime precision or tolerance change was made. The next investigation should
 define an evidence-backed backend-equivalence contract or compare against an
 independent external GPU execution, rather than add more global F32 casts.
+
+## M4-B22 independent GPU-reference comparison
+
+M4-B22 added the host-only `miinfer-qwen3-trace-compare` utility. It compares
+the 39 F32 checkpoints in two trace directories without imposing an acceptance
+threshold, and reports per-layer error, final-logit top-5 IDs, argmax, and the
+top-1 margin. This keeps backend characterization separate from the strict
+MIInfer acceptance tests.
+
+The existing pinned external traces were then compared:
+
+```bash
+build/mi50-release/miinfer-qwen3-trace-compare \
+  ../mi50-artifacts/m4b-reference-trace-cpu \
+  ../mi50-artifacts/m4b-reference-trace
+```
+
+The first directory is the pinned CPU capture and the second is the pinned
+offloaded gfx906 capture from the independent reference implementation. Their
+differences are already large at depth:
+
+| Checkpoint | External CPU vs external MI50 GPU |
+| --- | ---: |
+| layer 0 | `0.0490310` |
+| layer 1 | `0.184601` |
+| layer 2 | `0.179123` |
+| layer 6 | `155.286` |
+| layer 34 | `134.147` |
+| layer 35 | `121.013` |
+| final norm | `0.811852` |
+| logits | `0.488072` |
+
+Both external executions select argmax `8`. Their top-5 lists overlap in
+four of five entries (`8, 11, 340, 692`), and their top-1 margins are
+`0.743142` and `0.693634`.
+
+MIInfer GPU compared with that independent offloaded trace reports
+`121.072` at layer 35, `0.806026` at final norm, and `0.485222` at logits,
+with argmax `8`. Against the canonical CPU trace, the same MIInfer run
+reports `14.9043`, `0.0687237`, and `0.111926`, respectively. Thus the
+independent MI50 GPU reference confirms substantial backend-specific
+full-depth variance, but MIInfer does not closely follow that external GPU
+trajectory either. This is evidence against further speculative casts, not
+yet proof that the MIInfer GPU path is fully correct.
+
+**M4-B22 status: COMPLETE DIAGNOSTIC SLICE; M4-B remains OPEN.** The strict
+semantic checks remain authoritative; full-depth backend equivalence now needs
+an evidence-backed envelope and additional behavioral checks before closure.
+No production precision or tolerance change was made.

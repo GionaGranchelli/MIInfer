@@ -145,6 +145,9 @@ add_executable(miinfer-qwen3-forward-test tests/qwen3_forward_test.cpp)
 target_link_libraries(miinfer-qwen3-forward-test PRIVATE miinfer_model)
 target_compile_options(miinfer-qwen3-forward-test PRIVATE -Wall -Wextra -Wpedantic)
 
+add_executable(miinfer-qwen3-trace-compare tests/qwen3_trace_compare.cpp)
+target_compile_options(miinfer-qwen3-trace-compare PRIVATE -Wall -Wextra -Wpedantic)
+
 if(MIINFER_ENABLE_HIP)
     add_executable(miinfer-device-info tests/device_info.cpp)
     target_link_libraries(miinfer-device-info PRIVATE miinfer_hip)
@@ -264,7 +267,7 @@ if(BUILD_TESTING)
 endif()
 
 install(TARGETS miinfer-host-test miinfer-qwen3-primitives-host-test miinfer-qwen3-layer0-test
-                miinfer-qwen3-forward-test)
+                miinfer-qwen3-forward-test miinfer-qwen3-trace-compare)
 if(MIINFER_ENABLE_HIP)
     install(TARGETS miinfer-device-info miinfer-hip-smoke miinfer-bench
                     miinfer-fp16-gemv-test miinfer-fp16-gemv-bench)

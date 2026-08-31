@@ -131,6 +131,10 @@ No other GPU architecture is currently supported.
 * M4-B21 full-model F32-output policy trial; output-only F32 fails through
   depth (`21.8325` at layer 35), while the combined diagnostic policy still
   reaches `12.5605` at layer 35 and `0.131546` logits error; no policy accepted
+* M4-B22 independent CPU/offloaded-gfx906 trace comparison; external backends
+  differ by `121.013` at layer 35 while both select argmax `8`; MIInfer remains
+  closer to the CPU trace than the external GPU trace, so no new precision
+  policy is accepted
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -504,11 +508,10 @@ These do not help answer the current project question.
 
 The current Codex task is:
 
-> M4-B21 rejects output-only F32 as a complete full-model policy. The combined
-> input/output diagnostic policy still misses strict layer/logit gates, so
-> establish an evidence-backed backend-equivalence contract or external GPU
-> comparison before further precision changes; do not widen tolerances or
-> start generation.
+> M4-B22 shows large full-depth variance between the pinned external CPU and
+> offloaded gfx906 traces. Use the new trace comparator to characterize an
+> evidence-backed backend-equivalence envelope and behavioral agreement before
+> further precision changes; do not widen tolerances or start generation.
 
 The M0 evidence gates are complete under the documented gfx802-isolated
 configuration. The M2 gate is satisfied by EXP-0009 and M3 is closed by the
@@ -546,10 +549,10 @@ into a generic runtime.
 
 # Last Updated
 
-2026-08-31 — M4-B21 full-model F32-output policy trial completed. Output-only
-F32 is rejected; the combined diagnostic policy still reaches `12.5605` at
-layer 35 and `0.131546` logits error. M4-B remains open without tolerance
-widening or production changes.
+2026-08-31 — M4-B22 compared the pinned external CPU and offloaded gfx906
+traces. They differ by `121.013` at layer 35 while both select argmax `8`;
+MIInfer remains closer to the CPU trace than the external GPU trace. M4-B
+remains open without tolerance widening or production changes.
 
 Update this document whenever:
 

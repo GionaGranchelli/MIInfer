@@ -788,6 +788,9 @@ from the accepted model plan and layer-state correctness evidence:
     metadata before defining a full-layer backend-equivalence policy (M4-B20).
 18. Test the minimum full-model F32-output policy and compare it with the
     combined F32 input/output diagnostic policy (M4-B21).
+19. Compare the canonical external CPU trace with the independent offloaded
+    gfx906 trace, and characterize backend-specific full-depth variance before
+    changing precision or acceptance thresholds (M4-B22).
 
 Do not broaden M4 into a general-purpose runtime.
 
@@ -847,6 +850,12 @@ M4-B21 then rejected output-only F32 as a complete policy: it reaches
 `21.8325` layer-35 error, while the combined diagnostic policy reaches
 `12.5605` and `0.131546` logits error. No production precision change is
 accepted.
+M4-B22 then added a threshold-free trace comparator and compared the pinned
+external CPU and offloaded gfx906 traces. They differ by `121.013` at layer 35,
+`0.811852` at final norm, and `0.488072` at logits while both select argmax
+`8`. MIInfer remains closer to the CPU trace than to the external GPU trace,
+so the result establishes backend variance but does not yet close M4-B or
+justify another precision policy.
 
 ---
 
