@@ -322,7 +322,8 @@ Qwen3LayerTrace qwen3_layer_gpu_impl(
     const float* input_device,
     std::size_t position,
     Qwen3Layer0GpuKvCache& cache,
-    float* output_device) {
+    float* output_device,
+    std::span<const float> attention_output_override = {}) {
     const auto& model = plan.model();
     const auto& config = model.config();
     if (input_device == nullptr || model.layers().empty() || layer_index >= model.layers().size()) {
@@ -433,6 +434,13 @@ Qwen3LayerTrace qwen3_layer_gpu_impl(
     // projection through the existing F32 interface.
     launch_qwen3_f32_to_f16(attention.data(), half_output, hidden);
     launch_qwen3_f16_to_f32(half_output, attention.data(), hidden);
+    if (!attention_output_override.empty()) {
+        if (attention_output_override.size() != hidden) {
+            throw std::invalid_argument("attention-output override size mismatch");
+        }
+        MIINFER_HIP_CHECK(hipMemcpy(attention.data(), attention_output_override.data(),
+                                    hidden * sizeof(float), hipMemcpyHostToDevice));
+    }
     trace.attention_output = capture(attention.data(), hidden);
     launch_projection(plan, layer.output, attention.data(), config.hidden_size, attention_projected.data(),
                       config.hidden_size, config.hidden_size, half_input, q8_input, q8_exact_input,
@@ -584,6 +592,26 @@ Qwen3LayerTrace execute_qwen3_layer_gpu_teacher_forced(
                                 input.size() * sizeof(float), hipMemcpyHostToDevice));
     Qwen3Layer0GpuKvCache cache(config.kv_heads, config.head_dim, 1);
     return qwen3_layer_gpu_impl(plan, layer_index, input_device.data(), position, cache, nullptr);
+}
+
+Qwen3LayerTrace execute_qwen3_layer_gpu_attention_override(
+    const Qwen3GpuPlan& plan,
+    std::size_t layer_index,
+    std::span<const float> input,
+    std::span<const float> attention_output,
+    std::size_t position) {
+    const auto& config = plan.model().config();
+    if (position != 0 || input.size() != config.hidden_size
+        || attention_output.size() != config.hidden_size
+        || layer_index >= plan.model().layers().size()) {
+        throw std::invalid_argument("invalid GPU attention-output override");
+    }
+    DeviceBuffer<float> input_device(config.hidden_size);
+    MIINFER_HIP_CHECK(hipMemcpy(input_device.data(), input.data(),
+                                input.size() * sizeof(float), hipMemcpyHostToDevice));
+    Qwen3Layer0GpuKvCache cache(config.kv_heads, config.head_dim, 1);
+    return qwen3_layer_gpu_impl(plan, layer_index, input_device.data(), position, cache, nullptr,
+                                attention_output);
 }
 
 Qwen3FfnProbeTrace execute_qwen3_ffn_gpu_probe(

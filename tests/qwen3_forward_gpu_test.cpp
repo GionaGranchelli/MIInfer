@@ -108,6 +108,18 @@ static constexpr std::array kCompositionFields{
     TraceField{"layer_output", &miinfer::Qwen3LayerTrace::layer_output},
 };
 
+static constexpr std::array kCausalFields{
+    TraceField{"attention_output", &miinfer::Qwen3LayerTrace::attention_output},
+    TraceField{"ffn_input", &miinfer::Qwen3LayerTrace::ffn_input},
+    TraceField{"ffn_rms", &miinfer::Qwen3LayerTrace::ffn_rms},
+    TraceField{"ffn_norm", &miinfer::Qwen3LayerTrace::ffn_norm},
+    TraceField{"gate", &miinfer::Qwen3LayerTrace::gate},
+    TraceField{"up", &miinfer::Qwen3LayerTrace::up},
+    TraceField{"swiglu", &miinfer::Qwen3LayerTrace::swiglu},
+    TraceField{"ffn_output", &miinfer::Qwen3LayerTrace::ffn_output},
+    TraceField{"layer_output", &miinfer::Qwen3LayerTrace::layer_output},
+};
+
 void print_composition_delta(const char* prefix, const Metrics& result) {
     std::cout << prefix << " max_abs=" << result.max_abs
               << " mean_abs=" << result.mean_abs
@@ -220,6 +232,36 @@ int run_composition_diagnostic(const std::filesystem::path& model_path,
               << (passed && full_matches_reconstructed ? "layer-output gates PASS" : "layer-output gates FAIL")
               << "; first nonzero divergences are reported above\n";
     return passed && full_matches_reconstructed ? 0 : 1;
+}
+
+int run_layer0_causal_diagnostic(const std::filesystem::path& model_path,
+                                 const std::filesystem::path& trace_path) {
+    if (trace_path.empty()) {
+        throw std::invalid_argument("layer-0 causal diagnostic requires a trace path");
+    }
+    const auto model = miinfer::Qwen3Model::load(model_path.string());
+    const auto plan = miinfer::Qwen3GpuPlan::build(model);
+    const auto read_checkpoint = [&](std::size_t index) {
+        return read_f32(trace_path / (std::string("pos-0-")
+                                      + std::to_string(index) + ".f32"));
+    };
+    const auto input = read_checkpoint(0);
+    const auto reference_attention = read_checkpoint(19);
+    const auto normal = miinfer::execute_qwen3_layer_gpu_teacher_forced(plan, 0, input);
+    const auto injected = miinfer::execute_qwen3_layer_gpu_attention_override(
+        plan, 0, input, reference_attention);
+    std::cout << "M4-B17 MI50 layer-0 causal replay (external attention -> O/FFN):\n";
+    for (std::size_t offset = 0; offset < kCausalFields.size(); ++offset) {
+        const auto& field = kCausalFields[offset];
+        const auto expected = read_checkpoint(19 + offset);
+        const auto normal_metrics = metrics(normal.*(field.second), expected);
+        const auto injected_metrics = metrics(injected.*(field.second), expected);
+        print_composition_delta((std::string("  normal ") + field.first).c_str(), normal_metrics);
+        print_composition_delta((std::string("  injected ") + field.first).c_str(), injected_metrics);
+    }
+    std::cout << "  position-zero identity: external attention output is the GQA-expanded V\n";
+    std::cout << "  note: this is diagnostic-only; no production behavior changed\n";
+    return 0;
 }
 
 void report_gpu_host_trace(const miinfer::Qwen3LayerTrace& gpu,
@@ -546,7 +588,7 @@ int run_teacher_forced(const std::filesystem::path& model_path,
 }  // namespace
 
 int main(int argc, char** argv) {
-    if (argc < 2 || argc > 4) {
+    if (argc < 2 || argc > 5) {
         std::cout << "qwen3 full-forward GPU test: SKIP (model path not supplied)\n";
         return 0;
     }
@@ -558,6 +600,9 @@ int main(int argc, char** argv) {
         }
         if (argc == 4 && std::string(argv[3]) == "--composition-diagnostic") {
             return run_composition_diagnostic(argv[1], argv[2]);
+        }
+        if (argc == 5 && std::string(argv[3]) == "--layer0-causal-diagnostic") {
+            return run_layer0_causal_diagnostic(argv[1], argv[4]);
         }
         return run(argv[1], argc == 3 ? std::filesystem::path(argv[2])
                                       : std::filesystem::path{});

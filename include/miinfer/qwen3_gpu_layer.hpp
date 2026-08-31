@@ -110,6 +110,16 @@ Qwen3LayerTrace execute_qwen3_layer_gpu_teacher_forced(
     std::span<const float> input,
     std::size_t position = 0);
 
+// Correctness-only causal replay.  The supplied position-zero attention
+// output replaces the computed attention output before O projection.  The
+// normal production path is unchanged.
+Qwen3LayerTrace execute_qwen3_layer_gpu_attention_override(
+    const Qwen3GpuPlan& plan,
+    std::size_t layer_index,
+    std::span<const float> input,
+    std::span<const float> attention_output,
+    std::size_t position = 0);
+
 // Correctness-only layer-6 FFN probes. Empty override spans select the real
 // GPU operation; non-empty spans inject a host reference tensor at that stage.
 // This isolates projection, nonlinear, down-projection, and residual errors

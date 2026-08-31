@@ -631,3 +631,42 @@ No production semantics or tolerance changed.
 layer-output FP16 hypothesis is rejected. The next investigation should
 follow the causal V/FFN precision path inside layer 0 rather than add a
 global inter-layer cast.
+
+## M4-B17 layer-0 causal attention-output replay
+
+M4-B17 added a correctness-only attention-output override to the host and
+MI50 layer probes. At position zero, where the sole attention probability is
+one, the external attention output is the GQA-expanded V. Replacing the
+computed attention output with that external tensor isolates the downstream
+O/residual/FFN path without changing production execution.
+
+The host result was decisive:
+
+| Layer-0 path | Max abs vs external layer output |
+| --- | ---: |
+| Normal attention output | `0.00548154` |
+| External attention injected | `1.90735e-06` |
+
+The host injected tail is effectively exact: its `ffn_input` error is
+`3.57628e-07`, `ffn_norm` is `1.49e-07`, and the final residual is
+`1.90735e-06`. This exonerates O, residual, FFN normalization, Gate/Up,
+SwiGLU, and Down as independent sources of the layer-0 drift. The normal
+path's causal input is the small V/attention-output difference identified in
+M4-B16.
+
+The MI50 result shows the same causality, with a smaller but nonzero GPU tail:
+
+| Layer-0 path | Max abs vs external layer output |
+| --- | ---: |
+| Normal attention output | `0.00704432` |
+| External attention injected | `0.00282186` |
+
+Thus the attention/V perturbation accounts for most of the MI50 layer-0
+error, while the remaining `~0.0028` is GPU downstream numerical variance.
+The override is diagnostic-only; no production arithmetic, tolerance, or
+runtime policy changed.
+
+Release probes built and ran successfully. **M4-B17 status: COMPLETE
+DIAGNOSTIC SLICE; M4-B remains OPEN.** The next investigation should decide
+whether the remaining causal V projection difference is a missing reference
+precision boundary or acceptable cross-backend projection variance.

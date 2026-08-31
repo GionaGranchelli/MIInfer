@@ -114,6 +114,9 @@ No other GPU architecture is currently supported.
 * M4-B16 layer-0 28-checkpoint precision diagnostic; first mismatch is a
   small Q projection delta, the causal V/FFN drift is gradual, and an extra
   layer-output FP16 round-trip is rejected
+* M4-B17 causal attention-output replay; external attention injection reduces
+  host layer-0 error to `1.90735e-06` and MI50 error to `0.00282186`, proving
+  the V/attention perturbation dominates while downstream GPU variance remains
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -487,9 +490,10 @@ These do not help answer the current project question.
 
 The current Codex task is:
 
-> M4-B16 localizes the remaining layer-0 precision drift. Follow the causal
-> V/FFN path from the independent 28-checkpoint layer-0 trace; do not add an
-> extra layer-output FP16 boundary or widen tolerances without evidence.
+> M4-B17 has localized layer-0 drift to the causal V/attention output path.
+> Determine whether the remaining V projection difference is a missing
+> precision contract or acceptable cross-backend variance; do not widen
+> tolerances or start generation.
 
 The M0 evidence gates are complete under the documented gfx802-isolated
 configuration. The M2 gate is satisfied by EXP-0009 and M3 is closed by the
@@ -527,10 +531,10 @@ into a generic runtime.
 
 # Last Updated
 
-2026-08-31 — M4-B16 layer-0 precision diagnostic completed. The first
-overall mismatch is a small Q projection delta, the causal V/FFN path drifts
-gradually, and an extra layer-output FP16 round-trip worsens the result.
-M4-B remains open without tolerance widening or production changes.
+2026-08-31 — M4-B17 causal attention-output replay completed. External
+attention injection reduces host layer-0 error to `1.90735e-06` and MI50
+error to `0.00282186`; M4-B remains open without tolerance widening or
+production changes.
 
 Update this document whenever:
 

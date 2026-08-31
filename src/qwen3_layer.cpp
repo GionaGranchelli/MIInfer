@@ -236,7 +236,8 @@ Qwen3LayerTrace qwen3_layer_host_impl(
     std::span<const float> input,
     std::size_t position,
     Qwen3Layer0KvCache& cache,
-    bool use_exact_reference_projection) {
+    bool use_exact_reference_projection,
+    std::span<const float> attention_output_override = {}) {
     const auto& config = model.config();
     if (model.layers().empty() || layer_index >= model.layers().size()) {
         throw std::runtime_error("invalid Qwen3 layer index");
@@ -355,6 +356,13 @@ Qwen3LayerTrace qwen3_layer_host_impl(
     // projection.  Preserve that model-level precision contract while
     // keeping the surrounding correctness-first representation in F32.
     materialize_fp16(trace.attention_output);
+    if (!attention_output_override.empty()) {
+        if (attention_output_override.size() != hidden) {
+            throw std::invalid_argument("attention-output override size mismatch");
+        }
+        trace.attention_output.assign(attention_output_override.begin(),
+                                      attention_output_override.end());
+    }
     const auto attention_projected = project(layer.output, trace.attention_output, hidden, hidden);
     trace.ffn_input = attention_projected;
     add_in_place(trace.ffn_input, trace.embedding);
@@ -466,6 +474,23 @@ Qwen3LayerTrace execute_qwen3_layer_host_teacher_forced(
     }
     Qwen3Layer0KvCache cache(config.kv_heads, config.head_dim, 1);
     return qwen3_layer_host_impl(model, layer_index, input, position, cache, false);
+}
+
+Qwen3LayerTrace execute_qwen3_layer_host_attention_override(
+    const Qwen3Model& model,
+    std::size_t layer_index,
+    std::span<const float> input,
+    std::span<const float> attention_output,
+    std::size_t position) {
+    const auto& config = model.config();
+    if (position != 0 || input.size() != config.hidden_size
+        || attention_output.size() != config.hidden_size
+        || layer_index >= model.layers().size()) {
+        throw std::invalid_argument("invalid host attention-output override");
+    }
+    Qwen3Layer0KvCache cache(config.kv_heads, config.head_dim, 1);
+    return qwen3_layer_host_impl(model, layer_index, input, position, cache, false,
+                                 attention_output);
 }
 
 }  // namespace miinfer

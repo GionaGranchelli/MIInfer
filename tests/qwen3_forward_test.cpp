@@ -286,6 +286,35 @@ int run_layer0_precision_diagnostic(const std::filesystem::path& model_path,
     return 0;
 }
 
+int run_layer0_causal_diagnostic(const std::filesystem::path& model_path,
+                                 const std::filesystem::path& trace_path) {
+    if (trace_path.empty()) {
+        throw std::invalid_argument("layer-0 causal diagnostic requires a trace path");
+    }
+    const auto model = miinfer::Qwen3Model::load(model_path.string());
+    const auto read_checkpoint = [&](std::size_t index) {
+        return read_f32(trace_path / (std::string("pos-0-")
+                                      + std::to_string(index) + ".f32"));
+    };
+    const auto input = read_checkpoint(0);
+    const auto reference_attention = read_checkpoint(19);
+    const auto normal = miinfer::execute_qwen3_layer_host_teacher_forced(model, 0, input);
+    const auto injected = miinfer::execute_qwen3_layer_host_attention_override(
+        model, 0, input, reference_attention);
+    std::cout << "M4-B17 host layer-0 causal replay (external attention -> O/FFN):\n";
+    for (std::size_t index = 19; index < kLayer0ReferenceFields.size(); ++index) {
+        const auto& field = kLayer0ReferenceFields[index];
+        const auto expected = read_checkpoint(index);
+        const auto normal_metrics = compare(normal.*(field.second), expected);
+        const auto injected_metrics = compare(injected.*(field.second), expected);
+        print_composition_delta((std::string("  normal ") + field.first).c_str(), normal_metrics);
+        print_composition_delta((std::string("  injected ") + field.first).c_str(), injected_metrics);
+    }
+    std::cout << "  position-zero identity: external attention output is the GQA-expanded V\n";
+    std::cout << "  note: this is diagnostic-only; no production behavior changed\n";
+    return 0;
+}
+
 int run(const std::filesystem::path& model_path, const std::filesystem::path& trace_path,
         bool write_trace) {
     const auto model = miinfer::Qwen3Model::load(model_path.string());
@@ -393,6 +422,9 @@ int main(int argc, char** argv) {
         }
         if (argc == 5 && std::string(argv[3]) == "--layer0-precision-diagnostic") {
             return run_layer0_precision_diagnostic(argv[1], argv[4]);
+        }
+        if (argc == 5 && std::string(argv[3]) == "--layer0-causal-diagnostic") {
+            return run_layer0_causal_diagnostic(argv[1], argv[4]);
         }
         const bool write_trace = argc == 4 && std::string(argv[3]) == "--write-trace";
         return run(argv[1], trace_path, write_trace);

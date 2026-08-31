@@ -778,6 +778,8 @@ from the accepted model plan and layer-state correctness evidence:
     orchestration divergence (M4-B15).
 13. Trace layer-0 against the independent 28-checkpoint fixture and reject
     an unsupported extra layer-output FP16 materialization (M4-B16).
+14. Use external attention-output injection to separate the causal V/attention
+    perturbation from downstream O/FFN variance (M4-B17).
 
 Do not broaden M4 into a general-purpose runtime.
 
@@ -820,6 +822,9 @@ experiment ordering may change only when supported by the resulting evidence.
 M4-B16 then found the first layer-0 mismatch at `q_projection`, while the
 position-zero causal V/FFN path drifted gradually; an additional layer-output
 FP16 round-trip worsened the error and was not accepted.
+M4-B17 then showed that external attention injection reduces host layer-0
+error from `0.00548154` to `1.90735e-06` and MI50 error from `0.00704432` to
+`0.00282186`, proving the causal V/attention perturbation dominates.
 
 ---
 

@@ -118,4 +118,14 @@ Qwen3LayerTrace execute_qwen3_layer_host_teacher_forced(
     std::span<const float> input,
     std::size_t position = 0);
 
+// Correctness-only causal replay.  The supplied position-zero attention
+// output replaces the layer's computed attention output before O projection,
+// residual, and FFN execution.  The normal production path is unchanged.
+Qwen3LayerTrace execute_qwen3_layer_host_attention_override(
+    const Qwen3Model& model,
+    std::size_t layer_index,
+    std::span<const float> input,
+    std::span<const float> attention_output,
+    std::size_t position = 0);
+
 }  // namespace miinfer
