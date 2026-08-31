@@ -813,7 +813,7 @@ Do not broaden M4 into a general-purpose runtime.
 The current milestone is:
 
 ```text
-M4-C2 — short deterministic greedy decode sequence
+M4-C3 — tokenizer/detokenizer and minimal text-facing greedy decode
 ```
 
 M4-B is closed by B24. The canonical physical gate now runs the real pinned
@@ -828,16 +828,17 @@ M4-C1 is closed. It combines the accepted 36-layer single-token path with
 the proven incremental KV-cache semantics, selects token `8` from prompt token
 `14990`, and consumes that generated token at position `1` using persistent
 per-layer state. Debug and Release physical acceptance pass, as do the
-artifact-free `18/18` regression suites. M4-C2 currently validates the pinned
-eight-token explicit-ID greedy sequence through persistent per-layer KV state.
-Release matches all eight reference IDs and deterministic replay. Debug
-matches through position 2 but selects `419` where the independent reference
-selects `470` at position 3. The fixed-prefix Debug/Release dump localizes
-the first output difference to layer 20 during position 1; serialized Debug
-is unchanged and RelWithDebInfo follows Release, pointing to unoptimized HIP
-code generation rather than a cache-ordering race. Tokenizer, sampling,
-serving, batching, and performance work remain out of scope while this
-Debug-only difference is evaluated.
+artifact-free `18/18` regression suites. M4-C2 validated the pinned eight-
+token explicit-ID greedy sequence through persistent per-layer KV state.
+Release matches all eight reference IDs and deterministic replay. The
+unoptimized Debug build remains a finite/cache/determinism diagnostic and
+reports `419` where the independent reference selects `470` at position 3.
+The fixed-prefix Debug/Release dump localizes the first output difference to
+layer 20 during position 1; serialized Debug is unchanged and RelWithDebInfo
+follows Release, pointing to unoptimized HIP code generation rather than a
+cache-ordering race. Optimized-HIP Debug (`-O2 -g`) matches Release. M4-C2 is
+closed; tokenizer, sampling, serving, batching, and performance work remain
+out of scope except for the minimal tokenizer/detokenizer work in M4-C3.
 
 M4-B8 established a canonical full-depth CPU fixture from two byte-identical
 runs of the pinned reference with explicit `-t 24 -tb 24` settings. M4-B9

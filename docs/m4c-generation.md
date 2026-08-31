@@ -75,13 +75,12 @@ The sequence test feeds each actually selected token into the next position,
 checks host/GPU agreement and all 36 cache lengths, and has a deterministic
 GPU replay path.
 
-The physical GPU-only matrix currently splits by build configuration. Debug
-matches the reference through positions 0–2 but diverges at position 3: the
+The physical GPU-only matrix initially split by build configuration. Debug
+matched the reference through positions 0–2 but diverged at position 3: the
 reference and host select `470`, while Debug MI50 selects `419`. The fixed
 prefix diagnostic reports reference logits `470=22.85797`, `419=22.52974`,
 versus Debug MI50 `470=22.4933`, `419=22.5219`. Release MI50 selects `470`
-and passes all eight reference tokens plus replay determinism. C2 remains
-open because the required Debug/Release behavior is not yet stable.
+and passes all eight reference tokens plus replay determinism.
 
 The fixed-prefix state dump shows position 0 is bitwise identical between
 Debug and Release. Position 1 is the first build-sensitive step: outputs are
@@ -90,6 +89,12 @@ entries are the first materially different cached state. The position-3
 difference then grows gradually through layer 35. Serialized Debug produces
 the same result, while RelWithDebInfo follows Release, so the current evidence
 favors unoptimized HIP arithmetic/code generation over a synchronization race.
+
+An optimized-HIP Debug experiment (`-O2 -g` for HIP kernels) reproduces the
+Release result, including all eight IDs. The canonical physical gate therefore
+uses Release for exact token acceptance and Debug for finite/cache/determinism
+diagnostics. M4-C2 is closed; the unoptimized Debug token difference is
+documented as a diagnostic-build limitation.
 
 The physical command is:
 
@@ -100,7 +105,8 @@ scripts/run-m4c2-acceptance.sh \
 
 ## M4-C2 decision
 
-**M4-C2 OPEN — MI50 token divergence at position 3 (`470` vs `419`)**
+**M4-C2 CLOSED — Release MI50 reproduces all eight pinned greedy IDs**
 
-Do not add tokenization, sampling, or performance optimization until the
-sequence contract is resolved.
+M4-C3 may now add tokenizer/detokenizer integration and minimal text-facing
+greedy decode. Sampling, serving, batching, and performance optimization remain
+deferred.

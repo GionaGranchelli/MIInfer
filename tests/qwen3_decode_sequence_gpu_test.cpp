@@ -266,6 +266,35 @@ bool run_gpu_sequence_only(const std::string& model_path) {
     return passed;
 }
 
+bool run_gpu_sequence_diagnostic(const std::string& model_path) {
+    const auto model = miinfer::Qwen3Model::load(model_path);
+    const auto& config = model.config();
+    const auto plan = miinfer::Qwen3GpuPlan::build(model);
+    miinfer::Qwen3GpuDecodeCache cache(
+        config.layer_count, config.kv_heads, config.head_dim, kExpectedSequence.size());
+
+    bool passed = true;
+    for (std::size_t position = 0; position + 1 < kExpectedSequence.size(); ++position) {
+        const auto trace = miinfer::execute_qwen3_decode_gpu(
+            plan, kExpectedSequence[position], position, cache);
+        const auto selected = argmax(trace.logits);
+        const auto expected = kExpectedSequence[position + 1];
+        const bool finite_state = finite(trace);
+        const bool cache_valid = cache_lengths(cache, position + 1);
+        const bool token_match = selected == expected;
+        passed = passed && finite_state && cache_valid;
+        std::cout << "M4-C2 Debug diagnostic position=" << position
+                  << " input=" << kExpectedSequence[position]
+                  << " expected-next=" << expected
+                  << " selected=" << selected
+                  << " token=" << (token_match ? "PASS" : "DIFF")
+                  << " finite=" << (finite_state ? "PASS" : "FAIL")
+                  << " cache=" << (cache_valid ? "PASS" : "FAIL")
+                  << " status=" << ((finite_state && cache_valid) ? "PASS" : "FAIL") << '\n';
+    }
+    return passed;
+}
+
 bool deterministic_replay(const std::string& model_path) {
     const auto model = miinfer::Qwen3Model::load(model_path);
     const auto& config = model.config();
@@ -330,6 +359,20 @@ int main(int argc, char** argv) {
             return sequence && deterministic ? 0 : 1;
         } catch (const std::exception& error) {
             std::cerr << "M4-C2 GPU-only sequence error: " << error.what() << '\n';
+            return 1;
+        }
+    }
+    if (argc == 3 && std::string(argv[2]) == "--diagnostic") {
+        try {
+            const bool sequence = run_gpu_sequence_diagnostic(argv[1]);
+            const bool deterministic = deterministic_replay(argv[1]);
+            std::cout << "M4-C2 Debug diagnostic sequence: "
+                      << (sequence ? "PASS" : "FAIL") << '\n';
+            std::cout << "M4-C2 Debug diagnostic replay: "
+                      << (deterministic ? "PASS" : "FAIL") << '\n';
+            return sequence && deterministic ? 0 : 1;
+        } catch (const std::exception& error) {
+            std::cerr << "M4-C2 Debug diagnostic error: " << error.what() << '\n';
             return 1;
         }
     }

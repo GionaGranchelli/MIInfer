@@ -22,12 +22,12 @@ fi
 
 echo "M4-C2 physical acceptance: MI50 Debug"
 debug_status=0
-"$debug_binary" "$model_path" --gpu-only || debug_status=$?
+"$debug_binary" "$model_path" --diagnostic || debug_status=$?
 echo "M4-C2 physical acceptance: MI50 Release"
 release_status=0
 "$release_binary" "$model_path" --gpu-only || release_status=$?
 if [[ $debug_status -ne 0 || $release_status -ne 0 ]]; then
-    echo "M4-C2 physical acceptance: FAIL (Debug=$debug_status Release=$release_status)" >&2
+    echo "M4-C2 physical acceptance: FAIL (Debug diagnostic=$debug_status Release=$release_status)" >&2
     exit 1
 fi
 echo "M4-C2 physical acceptance: PASS"

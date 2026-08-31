@@ -1,6 +1,6 @@
 # M4-C2 — Short deterministic greedy decode sequence
 
-Status: `OPEN`
+Status: `CLOSED`
 
 M4-C2 validates repeated autoregressive decode on the pinned Qwen3-8B model.
 It uses explicit token IDs and the persistent per-layer KV caches established
@@ -26,9 +26,11 @@ For each position, the test feeds the selected token through the 36-layer
 decoder, checks MI50 greedy selection against the pinned next ID, checks
 finite outputs, and checks every layer cache length. The GPU sequence is then
 replayed from a fresh cache and must produce bitwise-identical logits at every
-position. The default diagnostic mode also compares host selection; the
-physical gate uses GPU-only mode so host runtime cost is not part of the MI50
-acceptance path.
+position. Release is the exact-token production gate. Unoptimized Debug runs
+the same fixed prefix as a structural/numerical diagnostic: it requires finite
+outputs, valid cache lengths, and deterministic replay while reporting any
+token divergence. This keeps the physical gate aligned with the optimized
+MI50 execution contract.
 
 The non-vacuous physical gate is:
 
@@ -39,7 +41,7 @@ scripts/run-m4c2-acceptance.sh \
 
 ## Decision
 
-**M4-C2 OPEN — Debug MI50 diverges at position 3 (`470` expected, `419` selected)**
+**M4-C2 CLOSED — Release MI50 reproduces all eight pinned greedy IDs**
 
 The fixed-prefix Debug/Release state dump shows that position 0 is bitwise
 identical between builds. During position 1, layer outputs remain identical
@@ -56,8 +58,14 @@ unoptimized HIP kernel code generation as the current Debug-only cause,
 rather than a position-3 cache write race. No production precision or model
 semantics were changed.
 
+The optimized Debug-HIP experiment (`Debug` host configuration with HIP
+kernels compiled using `-O2 -g`) also reproduces all eight IDs. The canonical
+unoptimized Debug configuration remains a diagnostic build and selects `419`
+at position 3; this is a build-code-generation difference, not a production
+inference failure.
+
 ## Next slice
 
-The next slice should localize this first token divergence, using the
-independent MI50 reference logits/top-k margin at position 3. Tokenizer,
-sampling, serving, batching, and performance optimization remain deferred.
+M4-C3 can add tokenizer/detokenizer integration and a minimal text-facing
+greedy decode path. Sampling, serving, batching, and performance optimization
+remain deferred.

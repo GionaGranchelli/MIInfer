@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788198442.0564673,
-    "seen": 1788198448.521122,
-    "ast_hash": "ae76ab14838bd3d178b7fa96fbfee8f5",
+    "mtime": 1788199517.1462688,
+    "seen": 1788199543.3085718,
+    "ast_hash": "a6edc3db10e610fcfdff994530c98807",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788198894.73328,
-    "seen": 1788198899.9683664,
-    "ast_hash": "53fbfa36a3057fdcb18e2a707dd0f5ef",
+    "mtime": 1788199532.1281965,
+    "seen": 1788199543.3085904,
+    "ast_hash": "bff67dcee90681e50c676925f2072323",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -690,27 +690,27 @@
     "semantic_hash": ""
   },
   "docs/m4c-generation.md": {
-    "mtime": 1788198894.73228,
-    "seen": 1788198899.968356,
-    "ast_hash": "e8e860b2cf011b1c6165bf8226d6c3d5",
+    "mtime": 1788199477.9784584,
+    "seen": 1788199543.30858,
+    "ast_hash": "ab1b6af0101633802e633af8795ebda6",
     "semantic_hash": ""
   },
   "scripts/run-m4c2-acceptance.sh": {
-    "mtime": 1788189170.324552,
-    "seen": 1788189201.056087,
-    "ast_hash": "bd031926c7b3537b0f4641978f263144",
+    "mtime": 1788199136.2691119,
+    "seen": 1788199543.3084774,
+    "ast_hash": "f1d38a9bcec019ad2e4015b9e3c5b398",
     "semantic_hash": ""
   },
   "tests/qwen3_decode_sequence_gpu_test.cpp": {
-    "mtime": 1788198395.9096904,
-    "seen": 1788198448.521073,
-    "ast_hash": "3c137e108e94f1e4762bd060d7ae20ff",
+    "mtime": 1788199136.2691119,
+    "seen": 1788199543.3085136,
+    "ast_hash": "f88019f4e6e3a40b5d485fbde5bff144",
     "semantic_hash": ""
   },
   "docs/m4c2-greedy.md": {
-    "mtime": 1788198395.9106903,
-    "seen": 1788198448.5211315,
-    "ast_hash": "8bc446a5da1f6f48487f7f11d9385f6e",
+    "mtime": 1788199451.8945847,
+    "seen": 1788199543.3085814,
+    "ast_hash": "9b50e9bfba9f20befad9a014aa6d92aa",
     "semantic_hash": ""
   },
   "tests/reference/qwen3/m4c2-greedy/README.md": {
