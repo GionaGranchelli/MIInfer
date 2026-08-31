@@ -784,6 +784,8 @@ from the accepted model plan and layer-state correctness evidence:
     GQA, attention materialization, and the causal O/FFN tail (M4-B18).
 16. Compare attention materialization, Q8 codes, dequantized values, and an
     external-attention GPU control before changing V precision (M4-B19).
+17. Characterize O/FFN GPU arithmetic with identical external inputs and Q8
+    metadata before defining a full-layer backend-equivalence policy (M4-B20).
 
 Do not broaden M4 into a general-purpose runtime.
 
@@ -836,6 +838,9 @@ precision change is accepted yet.
 M4-B19 then showed that external attention quantizes bitwise-identically to the
 host Q8 contract and that the external-attention GPU control itself retains
 `0.204956` layer-35 error, identifying a downstream GPU arithmetic floor.
+M4-B20 then showed that identical-input F32-output GPU projections remain
+within `0.000244141` of the external CPU outputs, while F16-output controls
+produce materially larger direct errors; full-layer parity remains open.
 
 ---
 

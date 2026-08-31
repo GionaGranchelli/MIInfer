@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788174411.1339636,
-    "seen": 1788174417.8889658,
-    "ast_hash": "f350dded919ff0de83a8ef1f6c51dea1",
+    "mtime": 1788174849.712677,
+    "seen": 1788174878.025539,
+    "ast_hash": "08a2d587f84377a7143283b0223615e5",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788174411.1359634,
-    "seen": 1788174417.8889802,
-    "ast_hash": "a15a44250c339b0dcd81e17bdad0288e",
+    "mtime": 1788174849.713677,
+    "seen": 1788174878.0255544,
+    "ast_hash": "85999a4a3e89319bf28b0fe03b1f55eb",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -624,9 +624,9 @@
     "semantic_hash": ""
   },
   "docs/m4b-forward.md": {
-    "mtime": 1788174391.5580657,
-    "seen": 1788174417.8889716,
-    "ast_hash": "e2e3944330ec96c340f5151857fb1be6",
+    "mtime": 1788174849.711677,
+    "seen": 1788174878.0255451,
+    "ast_hash": "d982bc904a5fce314591f892a0fc881f",
     "semantic_hash": ""
   },
   "tests/reference/qwen3/m4b-single-token/README.md": {
@@ -660,9 +660,9 @@
     "semantic_hash": ""
   },
   "tests/qwen3_layer35_external_test.cpp": {
-    "mtime": 1788174289.1555996,
-    "seen": 1788174417.8889308,
-    "ast_hash": "4eb37836938144245f8611b6c336453c",
+    "mtime": 1788174769.582095,
+    "seen": 1788174878.025493,
+    "ast_hash": "06ac4ba4493a691b3fd652338cc21dee",
     "semantic_hash": ""
   },
   "tests/reference/qwen3/m4b-layer35/README.md": {

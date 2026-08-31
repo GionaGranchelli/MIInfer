@@ -124,6 +124,10 @@ No other GPU architecture is currently supported.
   bitwise-identically to the host contract, while the external-attention GPU
   control itself retains `0.204956` layer-35 error, identifying a downstream
   GPU arithmetic floor rather than a V-induced Q8 threshold change
+* M4-B20 identical-input arithmetic characterization; exact-Q8 metadata
+  matches for O/Gate/Up/Down, and F32-output GPU projections remain within
+  `0.000244141` while F16-output controls reach `1.79517` on Down; full-layer
+  parity remains open
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -497,11 +501,10 @@ These do not help answer the current project question.
 
 The current Codex task is:
 
-> M4-B19 shows that external attention and F32/F32 V produce identical Q8
-> codes, while the same `0.204956` error remains with external attention
-> injected. Decide whether this layer-35 GPU downstream floor is acceptable
-> backend variance or needs a bounded O/FFN arithmetic investigation; do not
-> widen tolerances or start generation.
+> M4-B20 shows identical-input GPU arithmetic is close with F32 outputs, while
+> F16 output materialization creates direct projection error. Establish the
+> minimum full-layer backend-equivalence policy before changing production
+> precision; do not widen tolerances or start generation.
 
 The M0 evidence gates are complete under the documented gfx802-isolated
 configuration. The M2 gate is satisfied by EXP-0009 and M3 is closed by the
@@ -539,10 +542,10 @@ into a generic runtime.
 
 # Last Updated
 
-2026-08-31 — M4-B19 attention-to-Q8 boundary replay completed. External
-attention quantizes bitwise-identically to the host Q8 contract, and the
-external-attention GPU control retains `0.204956` layer-35 error; M4-B remains
-open without tolerance widening or production changes.
+2026-08-31 — M4-B20 identical-input downstream arithmetic characterization
+completed. Exact-Q8 metadata matches for selected projections; F32-output GPU
+errors remain at or below `0.000244141`, while F16-output Down reaches
+`1.79517`; M4-B remains open without tolerance widening or production changes.
 
 Update this document whenever:
 

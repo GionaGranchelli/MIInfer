@@ -795,6 +795,70 @@ void report_v_attention_q8_boundary(
     }
 }
 
+void report_identical_input_gpu_arithmetic(
+    const miinfer::Qwen3Model& model,
+    const miinfer::Qwen3GpuPlan& plan,
+    const std::vector<float>& layer_input,
+    const std::vector<std::vector<float>>& external) {
+    using Projection = miinfer::Qwen3Projection;
+    using Precision = miinfer::Qwen3ProjectionPrecision;
+    const auto& config = model.config();
+    const auto& layer = model.layers().at(35);
+    std::vector<float> external_o(external[11].size());
+    for (std::size_t index = 0; index < external_o.size(); ++index) {
+        external_o[index] = external[11][index] - layer_input[index];
+    }
+    struct Case {
+        const char* name;
+        Projection projection;
+        const miinfer::Qwen3TensorView* weight;
+        const std::vector<float>* input;
+        const std::vector<float>* expected;
+        std::size_t rows;
+        std::size_t columns;
+    };
+    const std::array cases{
+        Case{"O", Projection::o, &layer.output, &external[10], &external_o,
+             config.hidden_size, config.hidden_size},
+        Case{"Gate", Projection::gate, &layer.gate, &external[12], &external[13],
+             config.intermediate_size, config.hidden_size},
+        Case{"Up", Projection::up, &layer.up, &external[12], &external[14],
+             config.intermediate_size, config.hidden_size},
+        Case{"Down", Projection::down, &layer.down, &external[15], &external[16],
+             config.hidden_size, config.intermediate_size},
+    };
+    std::cout << "M4-B20 identical-input downstream GPU arithmetic:\n";
+    for (const auto& item : cases) {
+        const auto host_q8 = replay_q8_contract(*item.input, false);
+        const auto host_output = replay_projection(
+            *item.weight, host_q8, item.rows, item.columns,
+            AccumulationContract::miinfer);
+        const auto host_error = metrics(host_output, *item.expected);
+        const auto gpu_q8 = quantize_gpu_q8_exact(*item.input, false);
+        const auto q8_diff = compare_q8_blocks(gpu_q8, host_q8);
+        const auto gpu_f32 = miinfer::execute_qwen3_projection_gpu_probe(
+            plan, 35, item.projection, *item.input,
+            Precision::f32_input_q8_f32_output).output;
+        const auto gpu_f32_error = metrics(gpu_f32, *item.expected);
+        const auto gpu_f16 = miinfer::execute_qwen3_projection_gpu_probe(
+            plan, 35, item.projection, *item.input,
+            Precision::f16_input_q8_f16_output).output;
+        const auto gpu_f16_error = metrics(gpu_f16, *item.expected);
+        std::cout << "  " << item.name
+                  << ": host_max_abs=" << host_error.max_abs
+                  << " host_mean_abs=" << host_error.mean_abs
+                  << " gpu_F32F32_max_abs=" << gpu_f32_error.max_abs
+                  << " gpu_F32F32_mean_abs=" << gpu_f32_error.mean_abs
+                  << " gpu_F32F32_rmse=" << gpu_f32_error.rmse
+                  << " gpu_F16F16_max_abs=" << gpu_f16_error.max_abs
+                  << " q8_scale_blocks=" << q8_diff.different_scale_blocks
+                  << " q8_sum_blocks=" << q8_diff.different_sum_blocks
+                  << " q8_lanes=" << q8_diff.different_lane_values
+                  << " q8_max_scale_bits_delta=" << q8_diff.max_scale_bits_delta
+                  << " q8_max_sum_delta=" << q8_diff.max_sum_delta << '\n';
+    }
+}
+
 void report_host_projection_contracts(
     const miinfer::Qwen3Model& model,
     const std::vector<float>& ffn_norm,
@@ -1003,6 +1067,7 @@ int run(const std::filesystem::path& model_path,
     report_attention_v_contract(model, input, external, host);
     report_v_precision_contract(model, plan, input, external);
     report_v_attention_q8_boundary(model, plan, input, external);
+    report_identical_input_gpu_arithmetic(model, plan, input, external);
     report_q8_contract_replay(external[12]);
     report_host_projection_contracts(model, external[12], external, host);
 
@@ -1074,7 +1139,7 @@ int run(const std::filesystem::path& model_path,
               << "  GPU residual (external Down): max_abs=" << residual_hybrid.max_abs
               << " mean_abs=" << residual_hybrid.mean_abs
               << " max_rel=" << residual_hybrid.max_rel << '\n';
-    std::cout << "M4-B19 external layer-35 comparison: "
+    std::cout << "M4-B20 external layer-35 comparison: "
               << (passed ? "PASS" : "FAIL") << '\n';
     return passed ? 0 : 1;
 }
@@ -1089,7 +1154,7 @@ int main(int argc, char** argv) {
     try {
         return run(argv[1], argv[2]);
     } catch (const std::exception& error) {
-        std::cerr << "M4-B19 external layer-35 test error: " << error.what() << '\n';
+        std::cerr << "M4-B20 external layer-35 test error: " << error.what() << '\n';
         return 1;
     }
 }

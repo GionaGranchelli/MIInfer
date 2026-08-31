@@ -732,3 +732,38 @@ does affect sensitivity, but changing it is not a complete correctness fix.
 **M4-B19 status: COMPLETE DIAGNOSTIC SLICE; M4-B remains OPEN.** The Q8
 quantizer is not the remaining mismatch source. No production precision or
 tolerance change was made.
+
+## M4-B20 identical-input downstream arithmetic
+
+M4-B20 compared the pinned layer-35 O, Gate, Up, and Down projections with
+the same external F32 inputs and exact-Q8 metadata on host and MI50. The GPU
+quantized blocks matched the host contract for every selected projection:
+
+```text
+different scale blocks = 0
+different sum blocks   = 0
+different Q8 lanes     = 0
+```
+
+With F32 projection output, the direct GPU arithmetic remained close to the
+external CPU result:
+
+| Projection | Host max abs | GPU F32-in/F32-out max abs | Current F16-in/F16-out max abs |
+| --- | ---: | ---: | ---: |
+| O | `9.15527e-05` | `9.15527e-05` | `0.0234375` |
+| Gate | `7.62939e-06` | `6.10352e-05` | `0.0310669` |
+| Up | `1.52588e-05` | `6.10352e-05` | `0.0449371` |
+| Down | `0.000244141` | `0.000244141` | `1.79517` |
+
+This establishes that, for identical inputs, the MI50 integer-dot and F32
+accumulation are not materially different from the host arithmetic. The
+current F16 output materialization is a real direct-projection error source,
+especially for Down. However, this isolated result does not by itself close
+full-layer parity: small attention/V differences can still be amplified by
+later normalization and nonlinear composition. No production precision or
+tolerance change was made.
+
+**M4-B20 status: COMPLETE DIAGNOSTIC SLICE; M4-B remains OPEN.** The next
+decision should use the identical-input evidence to define the minimum
+full-layer backend-equivalence policy, rather than infer it from isolated
+projection outputs alone.
