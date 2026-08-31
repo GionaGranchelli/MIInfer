@@ -45,9 +45,11 @@ All outputs were finite and all per-layer KV-cache lengths were validated.
 ```text
 GPU: gfx906 MI50-class device
 total VRAM: 34342961152 bytes
+observed peak VRAM used: 4977790976 bytes (4.636 GiB)
 model weights: 4768792576 bytes
 planned weights: 4768792576 bytes
 planned workspace: 63488 bytes
+active telemetry clocks: 1725 MHz SCLK / 1000 MHz MCLK
 ```
 
 The complete machine state is retained by the benchmark runner in the result
