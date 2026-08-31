@@ -93,6 +93,9 @@ No other GPU architecture is currently supported.
 * M4-B9 terminal layer-35 external internal trace and first-divergence
   comparison; shared host/GPU FFN-tail numeric contract remains open;
   production precision remains unchanged
+* M4-B10 host Gate/Up hybrid SwiGLU attribution; both projection errors are
+  causal, with Gate the larger single-source contributor, while host SwiGLU
+  arithmetic is exonerated
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -466,10 +469,11 @@ These do not help answer the current project question.
 
 The current Codex task is:
 
-> M4-B9 has localized the shared terminal layer-35 divergence with an
-> independent internal external-reference trace. Host first fails at SwiGLU
-> after close Gate/Up projections; diagnostic P4 GPU shows the same shared
-> tail. Resolve that numeric contract before changing production precision.
+> M4-B10 has shown that small host Gate and Up projection differences are
+> amplified by terminal-layer SwiGLU. Host SwiGLU, GPU SwiGLU, Down, and
+> residual arithmetic are exonerated with external-input hybrids. Compare the
+> pinned Q8 quantization and projection accumulation contracts before changing
+> production precision.
 > Do not widen tolerances or start token generation.
 
 The M0 evidence gates are complete under the documented gfx802-isolated
@@ -508,8 +512,8 @@ into a generic runtime.
 
 # Last Updated
 
-2026-08-31 — M4-B9 terminal layer-35 external trace captured and consumed;
-the shared host/GPU FFN-tail divergence is localized while full-reference
+2026-08-31 — M4-B10 host Gate/Up hybrid attribution completed; both small
+projection differences are amplified by layer-35 SwiGLU while full-reference
 parity remains open.
 
 Update this document whenever:

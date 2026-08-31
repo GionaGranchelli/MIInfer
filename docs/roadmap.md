@@ -765,6 +765,9 @@ from the accepted model plan and layer-state correctness evidence:
 8. Use the M4-B9 terminal layer-35 internal trace to resolve the shared
    host/reference FFN-tail numerical contract before changing production
    precision.
+9. Use M4-B10 host Gate/Up hybrid SwiGLU attribution to identify which
+   projection contract feeds the remaining terminal-layer discrepancy, then
+   compare pinned Q8 quantization and accumulation semantics.
 
 Do not broaden M4 into a general-purpose runtime.
 
@@ -782,10 +785,10 @@ M4-B8 established a canonical full-depth CPU fixture from two byte-identical
 runs of the pinned reference with explicit `-t 24 -tb 24` settings. M4-B9
 added a terminal layer-35 internal trace from the same independent reference
 and proved the external layer-output tensor is identical to the input of
-final RMSNorm. Host teacher-forced replay first fails at layer 35 SwiGLU
-(`0.105103`) and ends at `1.18066`; MI50 P4 shows the same shared tail and
-ends at `1.22998`. Hybrid injection exonerates GPU SwiGLU, Down, and residual
-arithmetic. Production precision remains unchanged and M4-B is still open.
+final RMSNorm. M4-B10 added host Gate/Up hybrid attribution: external Gate
+plus Up is within `7.62939e-06`, while replacing either input with the host
+projection reproduces most of the `0.105103` discrepancy. Production
+precision remains unchanged and M4-B is still open.
 Exact experiment ordering may change only when supported by the resulting
 evidence.
 

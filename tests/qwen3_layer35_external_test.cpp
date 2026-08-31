@@ -1,4 +1,5 @@
 #include "miinfer/qwen3_gpu_layer.hpp"
+#include "miinfer/qwen3_primitives.hpp"
 
 #include <algorithm>
 #include <array>
@@ -9,6 +10,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <span>
 #include <utility>
 #include <vector>
 
@@ -68,6 +70,17 @@ Metrics metrics(const std::vector<float>& actual, const std::vector<float>& expe
         result.rmse = static_cast<float>(std::sqrt(sum_squared / actual.size()));
     }
     return result;
+}
+
+std::vector<float> host_swiglu(
+    const std::vector<float>& gate,
+    const std::vector<float>& up) {
+    if (gate.size() != up.size()) {
+        throw std::runtime_error("layer-35 Gate/Up size mismatch");
+    }
+    std::vector<float> output(gate.size());
+    miinfer::silu_mul_reference(gate, up, output);
+    return output;
 }
 
 struct Checkpoint {
@@ -162,6 +175,43 @@ int run(const std::filesystem::path& model_path,
     passed = report("MI50 GPU", gpu, external) && passed;
     report_pair("GPU vs host", gpu, host);
 
+    // Gate and Up each pass the standalone 0.05 diagnostic bound, but their
+    // small independent errors can be amplified by the multiplicative
+    // SwiGLU.  Keep the external vectors fixed and substitute one host
+    // projection at a time to identify the causal contributor.
+    const auto host_gate_external_up = host_swiglu(host.gate, external[14]);
+    const auto external_gate_host_up = host_swiglu(external[13], host.up);
+    const auto host_gate_host_up = host_swiglu(host.gate, host.up);
+    const auto external_gate_external_up = host_swiglu(external[13], external[14]);
+    const std::array hybrids{
+        std::pair{"external Gate + external Up", &external_gate_external_up},
+        std::pair{"host Gate + external Up", &host_gate_external_up},
+        std::pair{"external Gate + host Up", &external_gate_host_up},
+        std::pair{"host Gate + host Up", &host_gate_host_up},
+    };
+    const auto host_swiglu_error = metrics(host.swiglu, external[15]);
+    std::cout << "host hybrid SwiGLU attribution (layer 35):\n";
+    for (const auto& [label, values] : hybrids) {
+        const auto result = metrics(*values, external[15]);
+        std::cout << "  " << label
+                  << ": max_abs=" << result.max_abs
+                  << " mean_abs=" << result.mean_abs
+                  << " rmse=" << result.rmse
+                  << " max_rel=" << result.max_rel
+                  << " max_index=" << result.max_index
+                  << " actual=" << result.actual_at_max
+                  << " external=" << result.expected_at_max << '\n';
+    }
+    const auto swiglu_index = host_swiglu_error.max_index;
+    std::cout << "host Gate/Up errors at host-vs-external SwiGLU worst index "
+              << swiglu_index << ":\n"
+              << "  Gate: abs=" << std::fabs(host.gate[swiglu_index] - external[13][swiglu_index])
+              << " host=" << host.gate[swiglu_index]
+              << " external=" << external[13][swiglu_index] << '\n'
+              << "  Up: abs=" << std::fabs(host.up[swiglu_index] - external[14][swiglu_index])
+              << " host=" << host.up[swiglu_index]
+              << " external=" << external[14][swiglu_index] << '\n';
+
     // Hybrid injections make the terminal-layer diagnosis causal.  The
     // inputs are independent external checkpoints; only the named GPU stage
     // is allowed to compute a new value.
@@ -188,7 +238,7 @@ int run(const std::filesystem::path& model_path,
               << "  GPU residual (external Down): max_abs=" << residual_hybrid.max_abs
               << " mean_abs=" << residual_hybrid.mean_abs
               << " max_rel=" << residual_hybrid.max_rel << '\n';
-    std::cout << "M4-B9 external layer-35 comparison: "
+    std::cout << "M4-B10 external layer-35 comparison: "
               << (passed ? "PASS" : "FAIL") << '\n';
     return passed ? 0 : 1;
 }
@@ -203,7 +253,7 @@ int main(int argc, char** argv) {
     try {
         return run(argv[1], argv[2]);
     } catch (const std::exception& error) {
-        std::cerr << "M4-B9 external layer-35 test error: " << error.what() << '\n';
+        std::cerr << "M4-B10 external layer-35 test error: " << error.what() << '\n';
         return 1;
     }
 }

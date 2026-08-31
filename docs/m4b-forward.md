@@ -391,3 +391,36 @@ production precision change was made.
 **M4-B9 status: COMPLETE DIAGNOSTIC SLICE; M4-B remains OPEN.** The next
 correction should address the shared host/reference numerical contract before
 another GPU precision policy change.
+
+## M4-B10 layer-35 Gate/Up projection isolation
+
+M4-B10 added host-side hybrid SwiGLU diagnostics to separate the small Gate
+and Up projection errors that are amplified by the multiplicative FFN
+operation. The external layer-35 Gate and Up vectors produce a host SwiGLU
+maximum error of `7.62939e-06`, so the host SiLU/multiply implementation is
+not the source of the failure.
+
+The pinned external layer-35 SwiGLU comparison was:
+
+| Gate input | Up input | Max abs vs external |
+| --- | --- | ---: |
+| external | external | `7.62939e-06` |
+| host | external | `0.104843` |
+| external | host | `0.0908432` |
+| host | host | `0.105103` |
+
+Both host projections contribute to the discrepancy, with Gate the larger
+single-source contribution for this fixture. At the worst host SwiGLU error
+index (`5607`), the Gate difference is `0.000995636` and the Up difference is
+`0.0000991821`; the large SwiGLU absolute error is therefore nonlinear
+amplification of small projection differences. GPU hybrid injection continues
+to show that GPU SwiGLU, Down, and residual arithmetic are independently
+accurate when supplied with external inputs.
+
+This does not yet identify whether the shared Gate/Up projection difference is
+activation quantization or CPU accumulation order. The next diagnostic should
+compare the pinned Q8 quantization contract and then instrument the implicated
+projection's block accumulation. No production precision or tolerance change
+was made.
+
+**M4-B10 status: COMPLETE DIAGNOSTIC SLICE; M4-B remains OPEN.**
