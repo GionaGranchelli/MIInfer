@@ -5,7 +5,10 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -50,6 +53,145 @@ bool cache_lengths(const miinfer::Qwen3GpuDecodeCache& cache, std::size_t expect
         if (cache.layer(layer).length() != expected) return false;
     }
     return true;
+}
+
+void write_f32(const std::filesystem::path& path, std::span<const float> values) {
+    std::ofstream file(path, std::ios::binary);
+    if (!file) throw std::runtime_error("cannot create diagnostic dump: " + path.string());
+    file.write(reinterpret_cast<const char*>(values.data()),
+               static_cast<std::streamsize>(values.size_bytes()));
+    if (!file) throw std::runtime_error("cannot write diagnostic dump: " + path.string());
+}
+
+std::vector<float> read_f32(const std::filesystem::path& path) {
+    std::ifstream file(path, std::ios::binary);
+    if (!file) throw std::runtime_error("cannot open diagnostic dump: " + path.string());
+    file.seekg(0, std::ios::end);
+    const auto size = file.tellg();
+    if (size < 0 || size % static_cast<std::streamoff>(sizeof(float)) != 0) {
+        throw std::runtime_error("invalid diagnostic dump: " + path.string());
+    }
+    file.seekg(0, std::ios::beg);
+    std::vector<float> values(static_cast<std::size_t>(size) / sizeof(float));
+    file.read(reinterpret_cast<char*>(values.data()), size);
+    if (!file) throw std::runtime_error("short diagnostic dump: " + path.string());
+    return values;
+}
+
+float max_abs(std::span<const float> lhs, std::span<const float> rhs) {
+    if (lhs.size() != rhs.size()) return INFINITY;
+    float result = 0.0F;
+    for (std::size_t i = 0; i < lhs.size(); ++i) {
+        if (!std::isfinite(lhs[i]) || !std::isfinite(rhs[i])) return INFINITY;
+        result = std::max(result, std::fabs(lhs[i] - rhs[i]));
+    }
+    return result;
+}
+
+std::vector<float> snapshot_keys(const miinfer::Qwen3GpuDecodeCache& cache) {
+    std::vector<float> result;
+    for (std::size_t layer = 0; layer < cache.layers(); ++layer) {
+        const auto values = cache.layer(layer).snapshot_keys();
+        result.insert(result.end(), values.begin(), values.end());
+    }
+    return result;
+}
+
+std::vector<float> snapshot_values(const miinfer::Qwen3GpuDecodeCache& cache) {
+    std::vector<float> result;
+    for (std::size_t layer = 0; layer < cache.layers(); ++layer) {
+        const auto values = cache.layer(layer).snapshot_values();
+        result.insert(result.end(), values.begin(), values.end());
+    }
+    return result;
+}
+
+void write_layer_outputs(const std::filesystem::path& directory,
+                         std::size_t position,
+                         const miinfer::Qwen3ForwardTrace& trace) {
+    for (std::size_t layer = 0; layer < trace.layer_outputs.size(); ++layer) {
+        write_f32(directory / ("pos" + std::to_string(position) + "-layer-"
+                               + std::to_string(layer) + "-output.f32"),
+                  trace.layer_outputs[layer]);
+    }
+}
+
+void dump_position3(const std::string& model_path, const std::filesystem::path& directory) {
+    constexpr std::array<std::uint32_t, 4> kPrefix{14990U, 8U, 341U, 286U};
+    const auto model = miinfer::Qwen3Model::load(model_path);
+    const auto& config = model.config();
+    const auto plan = miinfer::Qwen3GpuPlan::build(model);
+    miinfer::Qwen3GpuDecodeCache cache(
+        config.layer_count, config.kv_heads, config.head_dim, kPrefix.size());
+    std::filesystem::create_directories(directory);
+    for (std::size_t position = 0; position < kPrefix.size(); ++position) {
+        const auto trace = miinfer::execute_qwen3_decode_gpu(plan, kPrefix[position], position, cache);
+        if (position < kPrefix.size() - 1) {
+            const auto keys = snapshot_keys(cache);
+            const auto values = snapshot_values(cache);
+            write_f32(directory / ("cache-k-after-pos" + std::to_string(position) + ".f32"), keys);
+            write_f32(directory / ("cache-v-after-pos" + std::to_string(position) + ".f32"), values);
+            write_layer_outputs(directory, position, trace);
+        }
+        if (position == kPrefix.size() - 2) {
+            const auto keys = snapshot_keys(cache);
+            const auto values = snapshot_values(cache);
+            write_f32(directory / "cache-k-before-pos3.f32", keys);
+            write_f32(directory / "cache-v-before-pos3.f32", values);
+        }
+        if (position == kPrefix.size() - 1) {
+            for (std::size_t layer = 0; layer < trace.layer_outputs.size(); ++layer) {
+                write_f32(directory / ("layer-" + std::to_string(layer) + "-output.f32"),
+                          trace.layer_outputs[layer]);
+            }
+            write_f32(directory / "final-norm.f32", trace.final_norm);
+            write_f32(directory / "logits.f32", trace.logits);
+        }
+    }
+}
+
+bool compare_dumps(const std::filesystem::path& lhs, const std::filesystem::path& rhs) {
+    bool valid = true;
+    const auto compare = [&](const std::string& name) {
+        const auto left = read_f32(lhs / name);
+        const auto right = read_f32(rhs / name);
+        const float error = max_abs(left, right);
+        std::cout << "M4-C2 Debug/Release " << name << " max_abs=" << error << '\n';
+        valid = valid && std::isfinite(error);
+    };
+    const auto compare_cache = [&](const std::string& name) {
+        const auto left = read_f32(lhs / name);
+        const auto right = read_f32(rhs / name);
+        const float error = max_abs(left, right);
+        std::cout << "M4-C2 Debug/Release " << name << " max_abs=" << error << '\n';
+        valid = valid && std::isfinite(error);
+        if (left.size() != right.size() || left.size() % 36 != 0) return;
+        const auto layer_elements = left.size() / 36;
+        for (std::size_t layer = 0; layer < 36; ++layer) {
+            const auto begin = layer * layer_elements;
+            const auto layer_error = max_abs(
+                std::span<const float>(left).subspan(begin, layer_elements),
+                std::span<const float>(right).subspan(begin, layer_elements));
+            std::cout << "M4-C2 Debug/Release " << name
+                      << " layer=" << layer << " max_abs=" << layer_error << '\n';
+        }
+    };
+    compare_cache("cache-k-before-pos3.f32");
+    compare_cache("cache-v-before-pos3.f32");
+    for (std::size_t position = 0; position < 3; ++position) {
+        compare_cache("cache-k-after-pos" + std::to_string(position) + ".f32");
+        compare_cache("cache-v-after-pos" + std::to_string(position) + ".f32");
+        for (std::size_t layer = 0; layer < 36; ++layer) {
+            compare("pos" + std::to_string(position) + "-layer-"
+                    + std::to_string(layer) + "-output.f32");
+        }
+    }
+    for (std::size_t layer = 0; layer < 36; ++layer) {
+        compare("layer-" + std::to_string(layer) + "-output.f32");
+    }
+    compare("final-norm.f32");
+    compare("logits.f32");
+    return valid;
 }
 
 bool run_sequence(const std::string& model_path, bool report) {
@@ -196,6 +338,23 @@ int main(int argc, char** argv) {
             return position3_diagnostic(argv[1]) ? 0 : 1;
         } catch (const std::exception& error) {
             std::cerr << "M4-C2 position-3 diagnostic error: " << error.what() << '\n';
+            return 1;
+        }
+    }
+    if (argc == 4 && std::string(argv[1]) == "--compare-dumps") {
+        try {
+            return compare_dumps(argv[2], argv[3]) ? 0 : 1;
+        } catch (const std::exception& error) {
+            std::cerr << "M4-C2 dump comparison error: " << error.what() << '\n';
+            return 1;
+        }
+    }
+    if (argc == 4 && std::string(argv[2]) == "--dump-position-3") {
+        try {
+            dump_position3(argv[1], argv[3]);
+            return 0;
+        } catch (const std::exception& error) {
+            std::cerr << "M4-C2 dump error: " << error.what() << '\n';
             return 1;
         }
     }

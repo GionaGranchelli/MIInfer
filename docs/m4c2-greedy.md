@@ -41,6 +41,21 @@ scripts/run-m4c2-acceptance.sh \
 
 **M4-C2 OPEN — Debug MI50 diverges at position 3 (`470` expected, `419` selected)**
 
+The fixed-prefix Debug/Release state dump shows that position 0 is bitwise
+identical between builds. During position 1, layer outputs remain identical
+through layer 19 and first differ at layer 20 (`0.0117188` max abs); the
+corresponding layer-21 K/V cache entries are the first materially different
+cached state. The difference then grows through the remaining layers. At
+position 3, layers 0–20 are identical, layer 21 differs by `0.0219116`, and
+layer 35 by `1.117`; final-norm and logits differ by `0.346703` and `0.405018`.
+
+Serialized Debug (`AMD_SERIALIZE_KERNEL=3`, `AMD_SERIALIZE_COPY=3`) still
+selects `419`. A `RelWithDebInfo` build (`-O2 -g -DNDEBUG`) selects `470`,
+matching Release (`-O3 -DNDEBUG`). The evidence therefore points to
+unoptimized HIP kernel code generation as the current Debug-only cause,
+rather than a position-3 cache write race. No production precision or model
+semantics were changed.
+
 ## Next slice
 
 The next slice should localize this first token divergence, using the

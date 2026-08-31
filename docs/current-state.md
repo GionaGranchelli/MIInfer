@@ -190,8 +190,12 @@ The immediate technical objective is:
 
 The initial eight-token fixture matches the independent MI50 reference through
 position 2. Release passes the complete fixture, but Debug selects `419`
-instead of reference/host token `470` at position 3; M4-C2 remains open
-pending localization of the Debug/Release numerical difference.
+instead of reference/host token `470` at position 3; M4-C2 remains open.
+The fixed-prefix diagnostic localizes the first build-sensitive state to
+position 1, where outputs first differ at layer 20; position-3 outputs first
+differ at layer 21 and then grow gradually. Serialized Debug is unchanged,
+while RelWithDebInfo follows Release, pointing to unoptimized HIP code
+generation rather than a cache-ordering race.
 
 M0 is closed under the documented gfx802-isolated configuration. The
 repository-side infrastructure, physical MI50 validation, model artifact, and

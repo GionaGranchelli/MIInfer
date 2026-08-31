@@ -54,13 +54,13 @@ re-running a stateless position-zero forward.
 The non-vacuous physical command is:
 
 ```bash
-scripts/run-m4c1-acceptance.sh \
+scripts/run-m4c2-acceptance.sh \
   /path/to/Qwen3-8B-q4_0-b968826d.gguf
 ```
 
 The artifact-free CTest entry remains a smoke/skip entry when no model path
 is supplied; the physical command is the acceptance gate for the real model.
-The full Debug and Release suites pass `17/17`, including the existing M4-A
+The full Debug and Release suites pass `18/18`, including the existing M4-A
 four-position KV-cache tests.
 
 ## M4-C1 decision
@@ -82,6 +82,14 @@ prefix diagnostic reports reference logits `470=22.85797`, `419=22.52974`,
 versus Debug MI50 `470=22.4933`, `419=22.5219`. Release MI50 selects `470`
 and passes all eight reference tokens plus replay determinism. C2 remains
 open because the required Debug/Release behavior is not yet stable.
+
+The fixed-prefix state dump shows position 0 is bitwise identical between
+Debug and Release. Position 1 is the first build-sensitive step: outputs are
+identical through layer 19, first differ at layer 20, and layer-21 K/V cache
+entries are the first materially different cached state. The position-3
+difference then grows gradually through layer 35. Serialized Debug produces
+the same result, while RelWithDebInfo follows Release, so the current evidence
+favors unoptimized HIP arithmetic/code generation over a synchronization race.
 
 The physical command is:
 
