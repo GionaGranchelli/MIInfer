@@ -177,6 +177,16 @@ Qwen3ForwardTrace execute_qwen3_decode_gpu(
     Qwen3GpuDecodeCache& cache,
     Qwen3GpuProfile* profile);
 
+// Trace-free decode path for performance measurement and eventual serving.
+// It preserves the production layer/cache computation but only copies the
+// final vocabulary logits needed by host-side greedy selection.
+void execute_qwen3_decode_gpu_fast(
+    const Qwen3GpuPlan& plan,
+    std::uint32_t token,
+    std::size_t position,
+    Qwen3GpuDecodeCache& cache,
+    std::span<float> logits);
+
 // Correctness-only teacher-forced replay of one selected layer.  The input
 // hidden state is copied to the device and the complete diagnostic trace is
 // copied back, allowing local GPU-vs-reference comparison without conflating

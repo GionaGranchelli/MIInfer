@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788205177.3822963,
-    "seen": 1788205338.3712206,
-    "ast_hash": "dbe36047bfa6b668bff5d6302b339b4a",
+    "mtime": 1788206170.388538,
+    "seen": 1788206186.39854,
+    "ast_hash": "4233a3fbb04025f055b8b6dff99f2cd2",
     "semantic_hash": ""
   },
   "README.md": {
@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "bench/README.md": {
-    "mtime": 1788205331.4235582,
-    "seen": 1788205338.3712234,
-    "ast_hash": "a0b8eb9aa4e3fd43e83780fa7abff472",
+    "mtime": 1788206327.4947813,
+    "seen": 1788206336.907188,
+    "ast_hash": "52bca10fe4b9d01e12a799956e0654ac",
     "semantic_hash": ""
   },
   "context.md": {
@@ -576,15 +576,15 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_layer.hpp": {
-    "mtime": 1788205083.588748,
-    "seen": 1788205338.3711202,
-    "ast_hash": "73c76c90d6bf579cb246607f66ef9294",
+    "mtime": 1788206037.0861766,
+    "seen": 1788206186.398429,
+    "ast_hash": "09de42bbc92cd2dadf42b8766810609d",
     "semantic_hash": ""
   },
   "src/qwen3_gpu_layer.cpp": {
-    "mtime": 1788205101.4416618,
-    "seen": 1788205338.3711586,
-    "ast_hash": "a22579420cc19f9f6da15561d3f4a628",
+    "mtime": 1788206054.5790927,
+    "seen": 1788206186.3984683,
+    "ast_hash": "0ced3aeb17d4102c0dd29c55b94e3e5f",
     "semantic_hash": ""
   },
   "tests/qwen3_layer0_gpu_test.cpp": {
@@ -792,9 +792,27 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0010-qwen3-decode-profile.md": {
-    "mtime": 1788205331.4235582,
-    "seen": 1788205338.3712726,
-    "ast_hash": "8235448fe0a0dc525b751b508ca1ef3e",
+    "mtime": 1788205531.9345973,
+    "seen": 1788206186.3985896,
+    "ast_hash": "b47c982cdb8dfd30be5203ed447d8d4e",
+    "semantic_hash": ""
+  },
+  "bench/qwen3_fast_decode_bench.cpp": {
+    "mtime": 1788206224.8242764,
+    "seen": 1788206336.9070692,
+    "ast_hash": "8da4a3bf085a248628c2d31cfdcaa89f",
+    "semantic_hash": ""
+  },
+  "scripts/run-m5c0-fast-decode.sh": {
+    "mtime": 1788206327.4947813,
+    "seen": 1788206336.9071138,
+    "ast_hash": "dc3988414a302dcc4eceef88188140fb",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0011-qwen3-trace-free-decode.md": {
+    "mtime": 1788206327.4947813,
+    "seen": 1788206336.907237,
+    "ast_hash": "206bf0642930bba0176b2f5167fda1a0",
     "semantic_hash": ""
   }
 }

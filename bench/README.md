@@ -96,3 +96,25 @@ scripts/run-m5b-profile.sh /path/to/Qwen3-8B-q4_0-b968826d.gguf
 The retained `result.json` includes the model identity, build metadata,
 per-category GPU/copy times, total dispatches, and unaccounted wall time.
 `bench/results/<run-id>/` also retains the machine state and GPU telemetry.
+
+## M5-C0 trace-free decode benchmark
+
+`miinfer-qwen3-fast-decode-bench` measures the existing decode computation
+without constructing or copying per-layer diagnostic traces. It retains the
+same cache transitions and projection/precision policy, but copies only final
+vocabulary logits to the host because greedy selection currently runs on the
+CPU. The default workload uses token `14990`, warms eight generated tokens,
+then measures 64 steady-state decode forward calls over five runs.
+
+Run it through the same environment and telemetry runner:
+
+```bash
+cmake --preset mi50-release
+cmake --build --preset mi50-release --target miinfer-qwen3-fast-decode-bench
+scripts/run-m5c0-fast-decode.sh /path/to/Qwen3-8B-q4_0-b968826d.gguf
+```
+
+The JSON reports prefill, TTFT, decode, and total wall-time samples, the
+complete generated ID sequence for the first run, model/build identity, and
+whether trace copies were disabled. This is the A/B control for the first
+optimization; it is not itself an optimization.
