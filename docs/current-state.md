@@ -99,6 +99,9 @@ No other GPU architecture is currently supported.
 * M4-B11 Q8 contract and Gate/Up accumulation replay; Q8 lanes/scales and
   external-conditioned Gate/Up projection arithmetic match the pinned
   contract, shifting the remaining failure upstream to `ffn_norm`
+* M4-B12 external-conditioned O/residual and RMSNorm replay; O/residual and
+  all tested RMSNorm reductions are close to or exact with external inputs,
+  shifting the remaining normal-path difference upstream to attention output
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -514,9 +517,9 @@ into a generic runtime.
 
 # Last Updated
 
-2026-08-31 — M4-B11 Q8 identity and external-conditioned Gate/Up replay
-completed; the remaining terminal-layer discrepancy enters before `ffn_norm`
-while full-reference parity remains open.
+2026-08-31 — M4-B12 external-conditioned O/residual and RMSNorm replay
+completed; the remaining terminal-layer discrepancy enters upstream of the
+external-conditioned O path while full-reference parity remains open.
 
 Update this document whenever:
 

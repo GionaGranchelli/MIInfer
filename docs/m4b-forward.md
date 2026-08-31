@@ -468,3 +468,38 @@ persisted. No production behavior or tolerance changed.
 investigation should locate the earlier FFN-input/attention-output numeric
 contract that produces the differing `ffn_norm`, beginning with the external
 conditioned O projection and residual path.
+
+## M4-B12 pre-FFN residual and RMSNorm isolation
+
+M4-B12 replayed the layer-35 pre-FFN path with the external attention output
+and external layer input. The host O projection replay was close to the
+derived external O tensor (`max_abs=9.15527e-05`), and adding external O to
+the external layer input reproduced the external `ffn_input` exactly. Using
+the replayed O plus the external layer input produced only `3.05176e-05`
+maximum error. This makes the residual add exact and leaves only the earlier
+attention-output-to-O path as a possible source of the normal-path
+`ffn_input` difference.
+
+Four RMSNorm reductions were evaluated from the exact external `ffn_input`:
+float sequential, MIInfer's double-product accumulation, the pinned ggml
+contract (float product widened into a double accumulator), and four float
+accumulators. The pinned CPU implementation was inspected directly; its
+`ggml_float` is `double`, but its source expression computes `x[i] * x[i]`
+before widening. All candidates drove the existing Gate/Up → SwiGLU → Down →
+residual tail to the same small result:
+
+```text
+layer-output max_abs: 0.000488281
+layer-output mean_abs: 4.7646e-06
+layer-output RMSE: 1.07066e-05
+```
+
+The double and pinned-ggml variants produced an exact external `ffn_norm`
+vector for this fixture. RMSNorm reduction order is therefore not the shared
+layer-35 blocker. The remaining normal-path difference enters before the
+external-conditioned O replay, in the attention-output path that feeds O.
+No production behavior, precision policy, or tolerance changed.
+
+**M4-B12 status: COMPLETE DIAGNOSTIC SLICE; M4-B remains OPEN.** The next
+investigation should isolate the attention-output-to-O input contract rather
+than changing RMSNorm or the FFN tail.

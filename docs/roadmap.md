@@ -794,7 +794,11 @@ projection reproduces most of the `0.105103` discrepancy. M4-B11 then
 replayed the pinned x86 AVX Q8 contract and Gate/Up accumulation with
 external `ffn_norm`; all Q8 blocks matched and Gate/Up were within
 `7.62939e-06`/`1.52588e-05`. The remaining failure therefore enters before
-`ffn_norm`, and M4-B is still open.
+`ffn_norm`, and M4-B is still open. M4-B12 then showed that externally
+conditioned O and residual replay are within `9.15527e-05`/`3.05176e-05`,
+while all tested RMSNorm reductions produce a layer-35 tail within
+`0.000488281`. The remaining normal-path difference therefore enters
+upstream in the attention output that feeds O.
 Exact experiment ordering may change only when supported by the resulting
 evidence.
 

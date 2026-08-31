@@ -195,6 +195,184 @@ std::vector<float> replay_projection(
     return output;
 }
 
+std::span<const float> f32_tensor(
+    const miinfer::Qwen3TensorView& tensor,
+    std::size_t elements) {
+    if (tensor.type() != miinfer::GgufTensorType::f32
+        || tensor.bytes() != elements * sizeof(float)) {
+        throw std::runtime_error("unexpected F32 tensor: " + tensor.name());
+    }
+    return {reinterpret_cast<const float*>(tensor.data()), elements};
+}
+
+enum class RmsReduction {
+    float_sequential,
+    double_sequential,
+    pinned_ggml,
+    four_float,
+};
+
+struct RmsVariant {
+    std::vector<float> rms;
+    std::vector<float> norm;
+    double sum = 0.0;
+    float mean = 0.0F;
+    float root = 0.0F;
+    float inverse = 0.0F;
+};
+
+std::vector<float> host_swiglu(
+    const std::vector<float>& gate,
+    const std::vector<float>& up);
+
+RmsVariant replay_rms_norm(
+    const std::vector<float>& input,
+    std::span<const float> weights,
+    float epsilon,
+    RmsReduction reduction) {
+    if (input.empty() || input.size() != weights.size()) {
+        throw std::runtime_error("RMSNorm replay size mismatch");
+    }
+    RmsVariant result;
+    result.rms.resize(input.size());
+    result.norm.resize(input.size());
+    if (reduction == RmsReduction::float_sequential) {
+        float sum = 0.0F;
+        for (const float value : input) sum += value * value;
+        result.sum = sum;
+    } else if (reduction == RmsReduction::four_float) {
+        std::array<float, 4> sums{};
+        for (std::size_t index = 0; index < input.size(); ++index) {
+            sums[index % sums.size()] += input[index] * input[index];
+        }
+        result.sum = (sums[0] + sums[1]) + (sums[2] + sums[3]);
+    } else {
+        double sum = 0.0;
+        for (const float value : input) {
+            // ggml's pinned CPU path uses: (ggml_float)(x[i] * x[i]).
+            // Keep the product in float for the pinned variant; the current
+            // MIInfer path widens before multiplication.
+            const double product = reduction == RmsReduction::pinned_ggml
+                ? static_cast<double>(value * value)
+                : static_cast<double>(value) * value;
+            sum += product;
+        }
+        result.sum = sum;
+    }
+    result.mean = static_cast<float>(result.sum / input.size());
+    result.root = std::sqrt(result.mean + epsilon);
+    result.inverse = 1.0F / result.root;
+    for (std::size_t index = 0; index < input.size(); ++index) {
+        result.rms[index] = input[index] * result.inverse;
+        result.norm[index] = result.rms[index] * weights[index];
+    }
+    return result;
+}
+
+struct FfnTailReplay {
+    std::vector<float> gate;
+    std::vector<float> up;
+    std::vector<float> swiglu;
+    std::vector<float> down;
+    std::vector<float> layer_output;
+};
+
+FfnTailReplay replay_ffn_tail(
+    const miinfer::Qwen3Model& model,
+    const std::vector<float>& ffn_input,
+    const std::vector<float>& ffn_norm,
+    const std::vector<float>& expected_layer_input) {
+    const auto& layer = model.layers().at(35);
+    const auto q8 = replay_q8_contract(ffn_norm, false);
+    FfnTailReplay result{
+        replay_projection(layer.gate, q8, ffn_norm.size() * 3, ffn_norm.size(),
+                          AccumulationContract::miinfer),
+        replay_projection(layer.up, q8, ffn_norm.size() * 3, ffn_norm.size(),
+                          AccumulationContract::miinfer),
+        {},
+        {},
+        {},
+    };
+    result.swiglu = host_swiglu(result.gate, result.up);
+    const auto down_q8 = replay_q8_contract(result.swiglu, false);
+    result.down = replay_projection(layer.down, down_q8, ffn_input.size(),
+                                    result.swiglu.size(), AccumulationContract::miinfer);
+    result.layer_output.resize(ffn_input.size());
+    for (std::size_t index = 0; index < result.layer_output.size(); ++index) {
+        result.layer_output[index] = expected_layer_input[index] + result.down[index];
+    }
+    return result;
+}
+
+void report_pre_ffn_contract(
+    const miinfer::Qwen3Model& model,
+    const std::vector<float>& input,
+    const std::vector<std::vector<float>>& external) {
+    const auto& layer = model.layers().at(35);
+    const auto external_o = [&] {
+        std::vector<float> result(external[11].size());
+        for (std::size_t index = 0; index < result.size(); ++index) {
+            result[index] = external[11][index] - input[index];
+        }
+        return result;
+    }();
+    const auto attention_q8 = replay_q8_contract(external[10], false);
+    const auto replayed_o = replay_projection(
+        layer.output, attention_q8, external_o.size(), external[10].size(),
+        AccumulationContract::miinfer);
+    const auto o_error = metrics(replayed_o, external_o);
+    std::vector<float> residual_from_external_o(input.size());
+    std::vector<float> residual_from_host_o(input.size());
+    for (std::size_t index = 0; index < input.size(); ++index) {
+        residual_from_external_o[index] = external_o[index] + input[index];
+        residual_from_host_o[index] = replayed_o[index] + input[index];
+    }
+    const auto residual_external = metrics(residual_from_external_o, external[11]);
+    const auto residual_host = metrics(residual_from_host_o, external[11]);
+    std::cout << "layer-35 external-conditioned O/residual replay:\n"
+              << "  O replay vs derived external O: max_abs=" << o_error.max_abs
+              << " mean_abs=" << o_error.mean_abs
+              << " rmse=" << o_error.rmse
+              << " max_rel=" << o_error.max_rel << '\n'
+              << "  external O + external input vs external ffn_input: max_abs="
+              << residual_external.max_abs << " mean_abs=" << residual_external.mean_abs
+              << "\n"
+              << "  replayed O + external input vs external ffn_input: max_abs="
+              << residual_host.max_abs << " mean_abs=" << residual_host.mean_abs << '\n';
+
+    const auto ffn_weights = f32_tensor(layer.ffn_norm, input.size());
+    const std::array reductions{
+        std::pair{"float-sequential", RmsReduction::float_sequential},
+        std::pair{"double-sequential", RmsReduction::double_sequential},
+        std::pair{"pinned-ggml", RmsReduction::pinned_ggml},
+        std::pair{"four-float", RmsReduction::four_float},
+    };
+    std::cout << "layer-35 pre-FFN RMSNorm candidates (external ffn_input):\n";
+    for (const auto& [name, reduction] : reductions) {
+        const auto rms = replay_rms_norm(external[11], ffn_weights, 1.0e-6F, reduction);
+        const auto norm_error = metrics(rms.norm, external[12]);
+        const auto tail = replay_ffn_tail(model, external[11], rms.norm, external[11]);
+        const auto gate_error = metrics(tail.gate, external[13]);
+        const auto up_error = metrics(tail.up, external[14]);
+        const auto swiglu_error = metrics(tail.swiglu, external[15]);
+        const auto down_error = metrics(tail.down, external[16]);
+        const auto layer_error = metrics(tail.layer_output, external[17]);
+        std::cout << "  " << name
+                  << ": sum=" << rms.sum
+                  << " mean=" << rms.mean
+                  << " root=" << rms.root
+                  << " inverse=" << rms.inverse
+                  << " norm_max_abs=" << norm_error.max_abs
+                  << " gate_max_abs=" << gate_error.max_abs
+                  << " up_max_abs=" << up_error.max_abs
+                  << " swiglu_max_abs=" << swiglu_error.max_abs
+                  << " down_max_abs=" << down_error.max_abs
+                  << " layer_max_abs=" << layer_error.max_abs
+                  << " layer_mean_abs=" << layer_error.mean_abs
+                  << " layer_rmse=" << layer_error.rmse << '\n';
+    }
+}
+
 void report_host_projection_contracts(
     const miinfer::Qwen3Model& model,
     const std::vector<float>& ffn_norm,
@@ -399,6 +577,7 @@ int run(const std::filesystem::path& model_path,
     const auto plan = miinfer::Qwen3GpuPlan::build(model);
     const auto host = miinfer::execute_qwen3_layer_host_teacher_forced(model, 35, input);
     const auto gpu = miinfer::execute_qwen3_layer_gpu_teacher_forced(plan, 35, input);
+    report_pre_ffn_contract(model, input, external);
     report_q8_contract_replay(external[12]);
     report_host_projection_contracts(model, external[12], external, host);
 
@@ -470,7 +649,7 @@ int run(const std::filesystem::path& model_path,
               << "  GPU residual (external Down): max_abs=" << residual_hybrid.max_abs
               << " mean_abs=" << residual_hybrid.mean_abs
               << " max_rel=" << residual_hybrid.max_rel << '\n';
-    std::cout << "M4-B11 external layer-35 comparison: "
+    std::cout << "M4-B12 external layer-35 comparison: "
               << (passed ? "PASS" : "FAIL") << '\n';
     return passed ? 0 : 1;
 }
@@ -485,7 +664,7 @@ int main(int argc, char** argv) {
     try {
         return run(argv[1], argv[2]);
     } catch (const std::exception& error) {
-        std::cerr << "M4-B11 external layer-35 test error: " << error.what() << '\n';
+        std::cerr << "M4-B12 external layer-35 test error: " << error.what() << '\n';
         return 1;
     }
 }
