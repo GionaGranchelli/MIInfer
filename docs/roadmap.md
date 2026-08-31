@@ -786,6 +786,8 @@ from the accepted model plan and layer-state correctness evidence:
     external-attention GPU control before changing V precision (M4-B19).
 17. Characterize O/FFN GPU arithmetic with identical external inputs and Q8
     metadata before defining a full-layer backend-equivalence policy (M4-B20).
+18. Test the minimum full-model F32-output policy and compare it with the
+    combined F32 input/output diagnostic policy (M4-B21).
 
 Do not broaden M4 into a general-purpose runtime.
 
@@ -841,6 +843,10 @@ host Q8 contract and that the external-attention GPU control itself retains
 M4-B20 then showed that identical-input F32-output GPU projections remain
 within `0.000244141` of the external CPU outputs, while F16-output controls
 produce materially larger direct errors; full-layer parity remains open.
+M4-B21 then rejected output-only F32 as a complete policy: it reaches
+`21.8325` layer-35 error, while the combined diagnostic policy reaches
+`12.5605` and `0.131546` logits error. No production precision change is
+accepted.
 
 ---
 

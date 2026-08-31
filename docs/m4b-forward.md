@@ -767,3 +767,26 @@ tolerance change was made.
 decision should use the identical-input evidence to define the minimum
 full-layer backend-equivalence policy, rather than infer it from isolated
 projection outputs alone.
+
+## M4-B21 full-model F32 projection-output policy
+
+M4-B21 tested the smallest full-forward policy suggested by B20: retain the
+established attention FP16 boundary, but keep O, Gate, Up, and Down projection
+outputs in F32. The policy was compared with the current path and the
+diagnostic all-input/all-output F32 policy on the canonical 36-layer fixture.
+
+| Policy | Layer 0 | Layer 1 | Layer 2 | Layer 6 | Layer 34 | Layer 35 | Final norm | Logits |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Current | `0.00701725` | `0.0641098` | `0.0660133` | `20.9287` | `16.8477` | `14.9043` | `0.0687237` | `0.111926` |
+| F32 outputs O/Gate/Up/Down | `0.00675881` | `0.0585098` | `0.0701561` | `17.5459` | `20.4297` | `21.8325` | `0.087574` | `0.137213` |
+| F32 input/output V/O/Gate/Up/Down | `0.00549388` | `0.0140953` | `0.0986137` | `10.1348` | `10.29` | `12.5605` | `0.0505695` | `0.131546` |
+
+Every policy produced argmax token `8`, but none satisfies the strict
+per-layer and logits gates. Output-only F32 is therefore not an accepted
+production policy; the F32 input boundaries are material for early drift, but
+even the combined diagnostic policy does not close full-model parity.
+
+**M4-B21 status: REJECT for production integration; M4-B remains OPEN.** No
+runtime precision or tolerance change was made. The next investigation should
+define an evidence-backed backend-equivalence contract or compare against an
+independent external GPU execution, rather than add more global F32 casts.
