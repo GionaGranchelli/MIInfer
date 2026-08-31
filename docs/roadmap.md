@@ -802,7 +802,10 @@ upstream in the attention output that feeds O. M4-B13 then showed that V and
 GQA replay are exact or near-exact, while the external attention output is
 exactly `FP16(expanded V)`; applying that boundary reduces the layer-35 tail
 to `0.000488281`. The remaining precision hypothesis is the attention-output
-materialization before O, and M4-B remains open.
+materialization before O, and M4-B remains open. M4-B14 applied that boundary
+to production host and MI50 execution. Focused layer-35 host parity and the
+full MI50 GPU gate pass, but host full-forward parity first fails at layer 2
+(`max_abs=0.117966`); M4-B remains open without any tolerance widening.
 Exact experiment ordering may change only when supported by the resulting
 evidence.
 

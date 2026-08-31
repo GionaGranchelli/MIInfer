@@ -76,6 +76,13 @@ std::vector<float> multiply_weight(
     return output;
 }
 
+void materialize_fp16(
+    std::span<float> values) {
+    for (float& value : values) {
+        value = fp16_bits_to_float(float_to_half_bits_rn(value));
+    }
+}
+
 void rms_normalize_only(
     std::span<const float> input,
     std::span<float> output,
@@ -344,6 +351,10 @@ Qwen3LayerTrace qwen3_layer_host_impl(
             trace.attention_output[q_base + i] = value;
         }
     }
+    // The pinned Qwen3 execution materializes kqv_out as FP16 before the O
+    // projection.  Preserve that model-level precision contract while
+    // keeping the surrounding correctness-first representation in F32.
+    materialize_fp16(trace.attention_output);
     const auto attention_projected = project(layer.output, trace.attention_output, hidden, hidden);
     trace.ffn_input = attention_projected;
     add_in_place(trace.ffn_input, trace.embedding);

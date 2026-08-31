@@ -428,6 +428,11 @@ Qwen3LayerTrace qwen3_layer_gpu_impl(
         static_cast<std::uint32_t>(attention_length), static_cast<std::uint32_t>(cache.capacity()),
         attention.data(), scores.data(), probabilities.data(), config.attention_heads,
         config.kv_heads, config.head_dim, 1.0F / std::sqrt(static_cast<float>(config.head_dim)));
+    // Match the pinned reference's kqv_out representation: attention is
+    // accumulated in F32, materialized as FP16, then presented to the O
+    // projection through the existing F32 interface.
+    launch_qwen3_f32_to_f16(attention.data(), half_output, hidden);
+    launch_qwen3_f16_to_f32(half_output, attention.data(), hidden);
     trace.attention_output = capture(attention.data(), hidden);
     launch_projection(plan, layer.output, attention.data(), config.hidden_size, attention_projected.data(),
                       config.hidden_size, config.hidden_size, half_input, q8_input, q8_exact_input,

@@ -530,3 +530,27 @@ precision policy, or tolerance changed.
 **M4-B13 status: COMPLETE DIAGNOSTIC SLICE; M4-B remains OPEN.** The next
 investigation should test the minimum production policy for the attention
 output FP16 boundary before O projection.
+
+## M4-B14 production attention-output FP16 boundary
+
+M4-B14 applied the B13 precision contract to production host and MI50 layer
+execution: attention is accumulated in F32, materialized through round-to-
+nearest FP16, then returned to the existing F32 interface before O
+projection. No other projection precision boundary or tolerance changed.
+
+The focused external layer-35 host comparison now passes through the terminal
+layer output with `max_abs=0.000488281`. The full MI50 Release forward also
+passes its layer/logit gate and retains `argmax=8`. The real acceptance still
+fails overall because the host full-forward path has earlier depth drift; its
+first strict failure is layer 2 (`max_abs=0.117966`), while final host logits
+remain outside the current gate (`max_abs=0.11144`). This is not evidence to
+widen tolerances. The production boundary is retained because it fixes the
+identified layer-35 contract and improves earlier host layers, but M4-B is
+not closed.
+
+Both Debug and Release builds succeeded and both standard CTest suites passed
+16/16. No generation or performance work was introduced.
+
+**M4-B14 status: KEEP; M4-B remains OPEN.** The next investigation should
+localize the remaining host full-forward depth drift beginning at layer 2,
+while preserving the accepted attention-output FP16 boundary.

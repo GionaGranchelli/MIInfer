@@ -105,6 +105,9 @@ No other GPU architecture is currently supported.
 * M4-B13 attention RMSNorm/V/GQA replay; V and GQA are exonerated, while the
   external attention-output FP16 materialization reproduces the remaining
   layer-35 tail result
+* M4-B14 production attention-output FP16 boundary; focused layer-35 host and
+  full MI50 GPU gates pass, while host full-forward parity still first fails
+  at layer 2
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -520,9 +523,9 @@ into a generic runtime.
 
 # Last Updated
 
-2026-08-31 — M4-B13 attention RMSNorm/V/GQA replay completed; V and GQA are
-exonerated and the external attention-output FP16 boundary is the remaining
-layer-35 precision hypothesis while full-reference parity remains open.
+2026-08-31 — M4-B14 production attention-output FP16 boundary completed;
+focused layer-35 host and full MI50 GPU gates pass, while host full-forward
+parity still first fails at layer 2.
 
 Update this document whenever:
 
