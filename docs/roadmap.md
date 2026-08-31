@@ -798,7 +798,11 @@ external `ffn_norm`; all Q8 blocks matched and Gate/Up were within
 conditioned O and residual replay are within `9.15527e-05`/`3.05176e-05`,
 while all tested RMSNorm reductions produce a layer-35 tail within
 `0.000488281`. The remaining normal-path difference therefore enters
-upstream in the attention output that feeds O.
+upstream in the attention output that feeds O. M4-B13 then showed that V and
+GQA replay are exact or near-exact, while the external attention output is
+exactly `FP16(expanded V)`; applying that boundary reduces the layer-35 tail
+to `0.000488281`. The remaining precision hypothesis is the attention-output
+materialization before O, and M4-B remains open.
 Exact experiment ordering may change only when supported by the resulting
 evidence.
 

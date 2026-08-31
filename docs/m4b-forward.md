@@ -503,3 +503,30 @@ No production behavior, precision policy, or tolerance changed.
 **M4-B12 status: COMPLETE DIAGNOSTIC SLICE; M4-B remains OPEN.** The next
 investigation should isolate the attention-output-to-O input contract rather
 than changing RMSNorm or the FFN tail.
+
+## M4-B13 attention RMSNorm, V, and position-zero GQA isolation
+
+M4-B13 used the position-zero identity to remove generic attention mechanics
+from the layer-35 investigation. Host expanded V matched host attention output
+exactly, and replaying V from either the external or host `attn_norm` matched
+the external V projection to `4.76837e-07`. The V projection and GQA mapping
+are therefore not the source of the large normal-path error.
+
+The external trace exposed the remaining boundary: external attention output
+matches `FP16(expanded V)` exactly, while the host retains the expanded value
+in F32. The unrounded replay produced the known layer-35 error of `1.18066`;
+materializing the replayed attention output through FP16 reduced the complete
+V → GQA → O → residual → FFN tail to `0.000488281` maximum error. This is a
+reference representation/precision contract, not a Q/K/score/softmax issue
+for the single visible KV entry at position zero.
+
+Float, current double, literal pinned-ggml, and four-float attention RMSNorm
+reductions were also replayed from the external layer input. The double and
+pinned-ggml variants matched external `attn_norm` exactly, but all unrounded
+variants retained the same layer error; with FP16 attention-output
+materialization they all reduced it to `0.000488281`. No production behavior,
+precision policy, or tolerance changed.
+
+**M4-B13 status: COMPLETE DIAGNOSTIC SLICE; M4-B remains OPEN.** The next
+investigation should test the minimum production policy for the attention
+output FP16 boundary before O projection.

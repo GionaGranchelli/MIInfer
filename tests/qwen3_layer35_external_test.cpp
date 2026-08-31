@@ -373,6 +373,172 @@ void report_pre_ffn_contract(
     }
 }
 
+std::vector<float> expand_gqa(
+    const std::vector<float>& values,
+    std::size_t query_heads,
+    std::size_t kv_heads,
+    std::size_t head_dim) {
+    if (values.size() != kv_heads * head_dim || query_heads % kv_heads != 0) {
+        throw std::runtime_error("invalid GQA expansion dimensions");
+    }
+    std::vector<float> expanded(query_heads * head_dim);
+    const std::size_t groups = query_heads / kv_heads;
+    for (std::size_t query_head = 0; query_head < query_heads; ++query_head) {
+        const std::size_t kv_head = query_head / groups;
+        std::copy_n(values.data() + kv_head * head_dim, head_dim,
+                    expanded.data() + query_head * head_dim);
+    }
+    return expanded;
+}
+
+std::vector<float> fp16_roundtrip(const std::vector<float>& values) {
+    std::vector<float> result(values.size());
+    for (std::size_t index = 0; index < values.size(); ++index) {
+        result[index] = miinfer::fp16_bits_to_float(half_bits(values[index]));
+    }
+    return result;
+}
+
+struct AttentionPathReplay {
+    std::vector<float> v;
+    std::vector<float> attention_output;
+    std::vector<float> ffn_input;
+    std::vector<float> ffn_norm;
+    std::vector<float> layer_output;
+};
+
+AttentionPathReplay replay_attention_path(
+    const miinfer::Qwen3Model& model,
+    const std::vector<float>& layer_input,
+    const std::vector<float>& attn_norm,
+    bool materialize_attention_f16 = false) {
+    const auto& config = model.config();
+    const auto& layer = model.layers().at(35);
+    const auto v_q8 = replay_q8_contract(attn_norm, false);
+    AttentionPathReplay result;
+    result.v = replay_projection(layer.v, v_q8,
+                                  config.kv_heads * config.head_dim,
+                                  config.hidden_size, AccumulationContract::miinfer);
+    result.attention_output = expand_gqa(
+        result.v, config.attention_heads, config.kv_heads, config.head_dim);
+    if (materialize_attention_f16) {
+        result.attention_output = fp16_roundtrip(result.attention_output);
+    }
+    const auto o_q8 = replay_q8_contract(result.attention_output, false);
+    const auto o = replay_projection(layer.output, o_q8, config.hidden_size,
+                                     config.hidden_size, AccumulationContract::miinfer);
+    result.ffn_input.resize(layer_input.size());
+    for (std::size_t index = 0; index < layer_input.size(); ++index) {
+        result.ffn_input[index] = layer_input[index] + o[index];
+    }
+    const auto ffn_weights = f32_tensor(layer.ffn_norm, layer_input.size());
+    result.ffn_norm = replay_rms_norm(
+        result.ffn_input, ffn_weights, 1.0e-6F, RmsReduction::double_sequential).norm;
+    const auto tail = replay_ffn_tail(model, result.ffn_input, result.ffn_norm,
+                                      result.ffn_input);
+    result.layer_output = tail.layer_output;
+    return result;
+}
+
+void report_attention_v_contract(
+    const miinfer::Qwen3Model& model,
+    const std::vector<float>& input,
+    const std::vector<std::vector<float>>& external,
+    const miinfer::Qwen3LayerTrace& host) {
+    const auto& config = model.config();
+    const auto external_expanded_v = expand_gqa(
+        external[5], config.attention_heads, config.kv_heads, config.head_dim);
+    const auto external_expanded_v_f16 = fp16_roundtrip(external_expanded_v);
+    const auto host_expanded_v = expand_gqa(
+        host.v_projection, config.attention_heads, config.kv_heads, config.head_dim);
+    const auto external_identity = metrics(external_expanded_v, external[10]);
+    const auto external_f16_identity = metrics(external_expanded_v_f16, external[10]);
+    const auto host_identity = metrics(host_expanded_v, host.attention_output);
+    std::cout << "layer-35 position-zero GQA attention identity:\n"
+              << "  external expanded V vs external attention_output: max_abs="
+              << external_identity.max_abs << " mean_abs=" << external_identity.mean_abs
+              << " rmse=" << external_identity.rmse << '\n'
+              << "  FP16(external expanded V) vs external attention_output: max_abs="
+              << external_f16_identity.max_abs << " mean_abs=" << external_f16_identity.mean_abs
+              << " rmse=" << external_f16_identity.rmse << '\n'
+              << "  host expanded V vs host attention_output: max_abs="
+              << host_identity.max_abs << " mean_abs=" << host_identity.mean_abs
+              << " rmse=" << host_identity.rmse << '\n';
+
+    const auto& layer = model.layers().at(35);
+    const auto external_v_q8 = replay_q8_contract(external[0], false);
+    const auto replay_external_v = replay_projection(
+        layer.v, external_v_q8, config.kv_heads * config.head_dim,
+        config.hidden_size, AccumulationContract::miinfer);
+    const auto replay_external_expanded = expand_gqa(
+        replay_external_v, config.attention_heads, config.kv_heads, config.head_dim);
+    const auto external_v_error = metrics(replay_external_v, external[5]);
+    const auto external_attention_error = metrics(replay_external_expanded, external[10]);
+
+    const auto host_v_q8 = replay_q8_contract(host.attn_norm, false);
+    const auto replay_host_v = replay_projection(
+        layer.v, host_v_q8, config.kv_heads * config.head_dim,
+        config.hidden_size, AccumulationContract::miinfer);
+    const auto replay_host_expanded = expand_gqa(
+        replay_host_v, config.attention_heads, config.kv_heads, config.head_dim);
+    const auto host_v_error = metrics(replay_host_v, external[5]);
+    const auto host_attention_error = metrics(replay_host_expanded, external[10]);
+    const auto replay_external_expanded_f16 = fp16_roundtrip(replay_external_expanded);
+    const auto external_replay_f16_attention_error = metrics(
+        replay_external_expanded_f16, external[10]);
+    std::cout << "layer-35 V replay and GQA expansion:\n"
+              << "  external attn_norm -> host V: V_max_abs=" << external_v_error.max_abs
+              << " V_mean_abs=" << external_v_error.mean_abs
+              << " expanded_attention_max_abs=" << external_attention_error.max_abs
+              << " expanded_attention_mean_abs=" << external_attention_error.mean_abs
+              << " f16_expanded_attention_max_abs=" << external_replay_f16_attention_error.max_abs
+              << " f16_expanded_attention_mean_abs=" << external_replay_f16_attention_error.mean_abs
+              << '\n'
+              << "  host attn_norm -> host V: V_max_abs=" << host_v_error.max_abs
+              << " V_mean_abs=" << host_v_error.mean_abs
+              << " expanded_attention_max_abs=" << host_attention_error.max_abs
+              << " expanded_attention_mean_abs=" << host_attention_error.mean_abs << '\n';
+
+    const auto attn_weights = f32_tensor(layer.attention_norm, input.size());
+    const std::array reductions{
+        std::pair{"float-sequential", RmsReduction::float_sequential},
+        std::pair{"double-sequential", RmsReduction::double_sequential},
+        std::pair{"pinned-ggml", RmsReduction::pinned_ggml},
+        std::pair{"four-float", RmsReduction::four_float},
+    };
+    std::cout << "layer-35 attention RMSNorm candidates (external layer input):\n";
+    for (const auto& [name, reduction] : reductions) {
+        const auto rms = replay_rms_norm(input, attn_weights, 1.0e-6F, reduction);
+        const auto norm_error = metrics(rms.norm, external[0]);
+        const auto path = replay_attention_path(model, input, rms.norm);
+        const auto path_f16 = replay_attention_path(model, input, rms.norm, true);
+        const auto v_error = metrics(path.v, external[5]);
+        const auto attention_error = metrics(path.attention_output, external[10]);
+        const auto attention_f16_error = metrics(path_f16.attention_output, external[10]);
+        const auto ffn_input_error = metrics(path.ffn_input, external[11]);
+        const auto ffn_norm_error = metrics(path.ffn_norm, external[12]);
+        const auto layer_error = metrics(path.layer_output, external[17]);
+        const auto ffn_input_f16_error = metrics(path_f16.ffn_input, external[11]);
+        const auto layer_f16_error = metrics(path_f16.layer_output, external[17]);
+        std::cout << "  " << name
+                  << ": sum=" << rms.sum
+                  << " mean=" << rms.mean
+                  << " root=" << rms.root
+                  << " inverse=" << rms.inverse
+                  << " attn_norm_max_abs=" << norm_error.max_abs
+                  << " V_max_abs=" << v_error.max_abs
+                  << " attention_output_max_abs=" << attention_error.max_abs
+                  << " attention_output_f16_max_abs=" << attention_f16_error.max_abs
+                  << " ffn_input_max_abs=" << ffn_input_error.max_abs
+                  << " ffn_input_f16_max_abs=" << ffn_input_f16_error.max_abs
+                  << " ffn_norm_max_abs=" << ffn_norm_error.max_abs
+                  << " layer_max_abs=" << layer_error.max_abs
+                  << " layer_f16_max_abs=" << layer_f16_error.max_abs
+                  << " layer_mean_abs=" << layer_error.mean_abs
+                  << " layer_rmse=" << layer_error.rmse << '\n';
+    }
+}
+
 void report_host_projection_contracts(
     const miinfer::Qwen3Model& model,
     const std::vector<float>& ffn_norm,
@@ -578,6 +744,7 @@ int run(const std::filesystem::path& model_path,
     const auto host = miinfer::execute_qwen3_layer_host_teacher_forced(model, 35, input);
     const auto gpu = miinfer::execute_qwen3_layer_gpu_teacher_forced(plan, 35, input);
     report_pre_ffn_contract(model, input, external);
+    report_attention_v_contract(model, input, external, host);
     report_q8_contract_replay(external[12]);
     report_host_projection_contracts(model, external[12], external, host);
 
@@ -649,7 +816,7 @@ int run(const std::filesystem::path& model_path,
               << "  GPU residual (external Down): max_abs=" << residual_hybrid.max_abs
               << " mean_abs=" << residual_hybrid.mean_abs
               << " max_rel=" << residual_hybrid.max_rel << '\n';
-    std::cout << "M4-B12 external layer-35 comparison: "
+    std::cout << "M4-B13 external layer-35 comparison: "
               << (passed ? "PASS" : "FAIL") << '\n';
     return passed ? 0 : 1;
 }
@@ -664,7 +831,7 @@ int main(int argc, char** argv) {
     try {
         return run(argv[1], argv[2]);
     } catch (const std::exception& error) {
-        std::cerr << "M4-B12 external layer-35 test error: " << error.what() << '\n';
+        std::cerr << "M4-B13 external layer-35 test error: " << error.what() << '\n';
         return 1;
     }
 }

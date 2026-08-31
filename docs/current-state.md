@@ -102,6 +102,9 @@ No other GPU architecture is currently supported.
 * M4-B12 external-conditioned O/residual and RMSNorm replay; O/residual and
   all tested RMSNorm reductions are close to or exact with external inputs,
   shifting the remaining normal-path difference upstream to attention output
+* M4-B13 attention RMSNorm/V/GQA replay; V and GQA are exonerated, while the
+  external attention-output FP16 materialization reproduces the remaining
+  layer-35 tail result
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -517,9 +520,9 @@ into a generic runtime.
 
 # Last Updated
 
-2026-08-31 — M4-B12 external-conditioned O/residual and RMSNorm replay
-completed; the remaining terminal-layer discrepancy enters upstream of the
-external-conditioned O path while full-reference parity remains open.
+2026-08-31 — M4-B13 attention RMSNorm/V/GQA replay completed; V and GQA are
+exonerated and the external attention-output FP16 boundary is the remaining
+layer-35 precision hypothesis while full-reference parity remains open.
 
 Update this document whenever:
 
