@@ -670,3 +670,37 @@ Release probes built and ran successfully. **M4-B17 status: COMPLETE
 DIAGNOSTIC SLICE; M4-B remains OPEN.** The next investigation should decide
 whether the remaining causal V projection difference is a missing reference
 precision boundary or acceptable cross-backend projection variance.
+
+## M4-B18 V precision and causal replay
+
+M4-B18 reused the canonical layer-35 external trace and tested the four
+exact-Q8 V projection policies. The host projection, conditioned on the
+external attention-normalized input, remained effectively exact:
+
+```text
+max_abs=4.76837e-07
+```
+
+The MI50 local V results were:
+
+| Policy | V max abs vs external |
+| --- | ---: |
+| F16 -> Q8Exact -> F16 | `0.00290415` |
+| F32 -> Q8Exact -> F16 | `0.00161266` |
+| F16 -> Q8Exact -> F32 | `0.00287484` |
+| F32 -> Q8Exact -> F32 | `1.90735e-06` |
+
+F32 input and output therefore produce the closest isolated V result.
+However, replaying each variant through GQA, the established FP16 attention
+boundary, and the real GPU O/FFN tail does not close the full layer: even the
+best local V policy leaves approximately `0.204956` layer-output error. A
+`0.000244141` attention difference after materialization is sufficient to
+alter the downstream quantized O projection materially. V local parity and
+end-to-end causal parity are distinct contracts.
+
+The external-attention injection remains the downstream control and produces
+`0.00282186` GPU layer-output error. B18 therefore does not justify a
+production precision change; it narrows the next investigation to the
+V-to-attention materialization/quantization boundary. No tolerance changed.
+
+**M4-B18 status: COMPLETE DIAGNOSTIC SLICE; M4-B remains OPEN.**

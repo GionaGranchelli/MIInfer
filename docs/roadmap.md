@@ -780,6 +780,8 @@ from the accepted model plan and layer-state correctness evidence:
     an unsupported extra layer-output FP16 materialization (M4-B16).
 14. Use external attention-output injection to separate the causal V/attention
     perturbation from downstream O/FFN variance (M4-B17).
+15. Test exact-Q8 V input/output precision policies and replay each through
+    GQA, attention materialization, and the causal O/FFN tail (M4-B18).
 
 Do not broaden M4 into a general-purpose runtime.
 
@@ -825,6 +827,10 @@ FP16 round-trip worsened the error and was not accepted.
 M4-B17 then showed that external attention injection reduces host layer-0
 error from `0.00548154` to `1.90735e-06` and MI50 error from `0.00704432` to
 `0.00282186`, proving the causal V/attention perturbation dominates.
+M4-B18 then showed that F32->Q8Exact->F32 gives near-exact local V parity
+(`1.90735e-06`), but downstream materialization and quantized O sensitivity
+still leave approximately `0.204956` layer-output error; no production
+precision change is accepted yet.
 
 ---
 

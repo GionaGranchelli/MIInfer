@@ -539,6 +539,59 @@ void report_attention_v_contract(
     }
 }
 
+void report_v_precision_contract(
+    const miinfer::Qwen3Model& model,
+    const miinfer::Qwen3GpuPlan& plan,
+    const std::vector<float>& layer_input,
+    const std::vector<std::vector<float>>& external) {
+    using Precision = miinfer::Qwen3ProjectionPrecision;
+    const auto& config = model.config();
+    const std::array<std::pair<const char*, Precision>, 4> variants{
+        std::pair{"F16->Q8Exact->F16", Precision::f16_input_q8_f16_output},
+        std::pair{"F32->Q8Exact->F16", Precision::f32_input_q8_f16_output},
+        std::pair{"F16->Q8Exact->F32", Precision::f16_input_q8_f32_output},
+        std::pair{"F32->Q8Exact->F32", Precision::f32_input_q8_f32_output},
+    };
+
+    const auto& layer = model.layers().at(35);
+    const auto external_q8 = replay_q8_contract(external[0], false);
+    const auto host_external_v = replay_projection(
+        layer.v, external_q8, config.kv_heads * config.head_dim,
+        config.hidden_size, AccumulationContract::miinfer);
+    const auto host_v_error = metrics(host_external_v, external[5]);
+    std::cout << "M4-B18 layer-35 V precision/cause replay (external attn_norm input):\n"
+              << "  host external-conditioned V: max_abs=" << host_v_error.max_abs
+              << " mean_abs=" << host_v_error.mean_abs
+              << " rmse=" << host_v_error.rmse
+              << " max_rel=" << host_v_error.max_rel << '\n';
+
+    std::cout << "  GPU V policy matrix (all policies use Q8Exact metadata):\n";
+    for (const auto& [name, precision] : variants) {
+        const auto v = miinfer::execute_qwen3_projection_gpu_probe(
+            plan, 35, miinfer::Qwen3Projection::v, external[0], precision).output;
+        const auto v_error = metrics(v, external[5]);
+        const auto expanded = expand_gqa(
+            v, config.attention_heads, config.kv_heads, config.head_dim);
+        // The external position-zero attention checkpoint is exactly the
+        // FP16-materialized expanded V.  Apply that same boundary before the
+        // existing GPU downstream replay so this probe changes only V policy.
+        const auto attention = fp16_roundtrip(expanded);
+        const auto downstream = miinfer::execute_qwen3_layer_gpu_attention_override(
+            plan, 35, layer_input, attention, 0);
+        const auto attention_error = metrics(downstream.attention_output, external[10]);
+        const auto layer_error = metrics(downstream.layer_output, external[17]);
+        std::cout << "    " << name
+                  << ": V_max_abs=" << v_error.max_abs
+                  << " V_mean_abs=" << v_error.mean_abs
+                  << " V_rmse=" << v_error.rmse
+                  << " V_max_rel=" << v_error.max_rel
+                  << " attention_max_abs=" << attention_error.max_abs
+                  << " layer_max_abs=" << layer_error.max_abs
+                  << " layer_mean_abs=" << layer_error.mean_abs
+                  << " layer_rmse=" << layer_error.rmse << '\n';
+    }
+}
+
 void report_host_projection_contracts(
     const miinfer::Qwen3Model& model,
     const std::vector<float>& ffn_norm,
@@ -745,6 +798,7 @@ int run(const std::filesystem::path& model_path,
     const auto gpu = miinfer::execute_qwen3_layer_gpu_teacher_forced(plan, 35, input);
     report_pre_ffn_contract(model, input, external);
     report_attention_v_contract(model, input, external, host);
+    report_v_precision_contract(model, plan, input, external);
     report_q8_contract_replay(external[12]);
     report_host_projection_contracts(model, external[12], external, host);
 
@@ -816,7 +870,7 @@ int run(const std::filesystem::path& model_path,
               << "  GPU residual (external Down): max_abs=" << residual_hybrid.max_abs
               << " mean_abs=" << residual_hybrid.mean_abs
               << " max_rel=" << residual_hybrid.max_rel << '\n';
-    std::cout << "M4-B13 external layer-35 comparison: "
+    std::cout << "M4-B18 external layer-35 comparison: "
               << (passed ? "PASS" : "FAIL") << '\n';
     return passed ? 0 : 1;
 }

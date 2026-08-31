@@ -117,6 +117,9 @@ No other GPU architecture is currently supported.
 * M4-B17 causal attention-output replay; external attention injection reduces
   host layer-0 error to `1.90735e-06` and MI50 error to `0.00282186`, proving
   the V/attention perturbation dominates while downstream GPU variance remains
+* M4-B18 V precision/cause replay; F32->Q8Exact->F32 gives MI50 local V error
+  `1.90735e-06`, but downstream materialization/quantization still leaves about
+  `0.204956` layer-output error, so no production precision change is accepted
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -490,10 +493,10 @@ These do not help answer the current project question.
 
 The current Codex task is:
 
-> M4-B17 has localized layer-0 drift to the causal V/attention output path.
-> Determine whether the remaining V projection difference is a missing
-> precision contract or acceptable cross-backend variance; do not widen
-> tolerances or start generation.
+> M4-B18 shows that F32 input/output gives near-exact local V parity, but the
+> downstream quantized O path remains sensitive to the materialized result.
+> Isolate that V-to-attention boundary before changing production precision;
+> do not widen tolerances or start generation.
 
 The M0 evidence gates are complete under the documented gfx802-isolated
 configuration. The M2 gate is satisfied by EXP-0009 and M3 is closed by the
@@ -531,10 +534,10 @@ into a generic runtime.
 
 # Last Updated
 
-2026-08-31 — M4-B17 causal attention-output replay completed. External
-attention injection reduces host layer-0 error to `1.90735e-06` and MI50
-error to `0.00282186`; M4-B remains open without tolerance widening or
-production changes.
+2026-08-31 — M4-B18 V precision/cause replay completed. F32->Q8Exact->F32
+produces MI50 local V error `1.90735e-06`, but the downstream layer remains
+approximately `0.204956` away because materialization affects the quantized O
+projection; M4-B remains open without tolerance widening or production changes.
 
 Update this document whenever:
 
