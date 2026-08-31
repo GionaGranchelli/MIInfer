@@ -4,17 +4,17 @@
   "graph": {},
   "nodes": [
     {
-      "id": "bench_hip_smoke_bench_options",
-      "label": "Options",
+      "id": "tests_qwen3_layer35_external_test_q8boundarydiff",
+      "label": "Q8BoundaryDiff",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 109,
-      "community_name": "hip_smoke_bench.cpp",
+      "community_name": "Q8BoundaryDiff",
       "file_type": "code",
-      "norm_label": "options",
-      "source_file": "bench/hip_smoke_bench.cpp",
-      "source_location": "L21"
+      "norm_label": "q8boundarydiff",
+      "source_file": "tests/qwen3_layer35_external_test.cpp",
+      "source_location": "L447"
     },
     {
       "id": "bench_fp16_gemv_k_split_bench_options",
@@ -28,6 +28,19 @@
       "norm_label": "options",
       "source_file": "bench/fp16_gemv_k_split_bench.cpp",
       "source_location": "L23"
+    },
+    {
+      "id": "bench_hip_smoke_bench_options",
+      "label": "Options",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "options",
+      "source_file": "bench/hip_smoke_bench.cpp",
+      "source_location": "L21"
     },
     {
       "id": "include_miinfer_gguf_gguferror",
@@ -67,6 +80,32 @@
       "norm_label": "typelayout",
       "source_file": "src/gguf.cpp",
       "source_location": "L153"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_primitives_q6kdeviceblock",
+      "label": "Q6KDeviceBlock",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 121,
+      "community_name": "path_",
+      "file_type": "code",
+      "norm_label": "q6kdeviceblock",
+      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
+      "source_location": "L11"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_primitives_q8kdeviceblock",
+      "label": "Q8KDeviceBlock",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 121,
+      "community_name": "path_",
+      "file_type": "code",
+      "norm_label": "q8kdeviceblock",
+      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
+      "source_location": "L20"
     },
     {
       "id": "tests_qwen3_forward_gpu_test_metrics",
@@ -132,6 +171,19 @@
       "norm_label": "q8_1block",
       "source_file": "include/miinfer/q4_q8_gemv.hpp",
       "source_location": "L23"
+    },
+    {
+      "id": "include_miinfer_q4_q8_gemv_q8exactblock",
+      "label": "Q8ExactBlock",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 123,
+      "community_name": "Q8_1Block",
+      "file_type": "code",
+      "norm_label": "q8exactblock",
+      "source_file": "include/miinfer/q4_q8_gemv.hpp",
+      "source_location": "L32"
     },
     {
       "id": "bench_q4_q8_gemv_bench_options",
@@ -223,6 +275,19 @@
       "norm_label": "gemvshape",
       "source_file": "include/miinfer/fp16_gemv.hpp",
       "source_location": "L12"
+    },
+    {
+      "id": "include_miinfer_fp16_gemv_rocblasgemmhandle",
+      "label": "RocblasGemmHandle",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 131,
+      "community_name": "GemvShape",
+      "file_type": "code",
+      "norm_label": "rocblasgemmhandle",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L96"
     },
     {
       "id": "include_miinfer_qwen3_layer_qwen3layer0kvcache",
@@ -381,32 +446,6 @@
       "source_location": "L16"
     },
     {
-      "id": "include_miinfer_fp16_gemv_gemvkernelresources",
-      "label": "GemvKernelResources",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 143,
-      "community_name": "fp16_gemv.hpp",
-      "file_type": "code",
-      "norm_label": "gemvkernelresources",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L87"
-    },
-    {
-      "id": "include_miinfer_fp16_gemv_rocblasgemmhandle",
-      "label": "RocblasGemmHandle",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 143,
-      "community_name": "fp16_gemv.hpp",
-      "file_type": "code",
-      "norm_label": "rocblasgemmhandle",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L96"
-    },
-    {
       "id": "include_miinfer_qwen3_model_qwen3model",
       "label": "Qwen3Model",
       "_callable": true,
@@ -418,19 +457,6 @@
       "norm_label": "qwen3model",
       "source_file": "include/miinfer/qwen3_model.hpp",
       "source_location": "L50"
-    },
-    {
-      "id": "include_miinfer_qwen3_model_qwen3tensorview",
-      "label": "Qwen3TensorView",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 144,
-      "community_name": "Qwen3Model",
-      "file_type": "code",
-      "norm_label": "qwen3tensorview",
-      "source_file": "include/miinfer/qwen3_model.hpp",
-      "source_location": "L26"
     },
     {
       "id": "bench_q4_q8_gemv_bench_deviceshapedata",
@@ -530,11 +556,24 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 154,
-      "community_name": "Qwen3LayerWeights",
+      "community_name": "Qwen3TensorView",
       "file_type": "code",
       "norm_label": "qwen3layerweights",
       "source_file": "include/miinfer/qwen3_model.hpp",
       "source_location": "L36"
+    },
+    {
+      "id": "include_miinfer_qwen3_model_qwen3tensorview",
+      "label": "Qwen3TensorView",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 154,
+      "community_name": "Qwen3TensorView",
+      "file_type": "code",
+      "norm_label": "qwen3tensorview",
+      "source_file": "include/miinfer/qwen3_model.hpp",
+      "source_location": "L26"
     },
     {
       "id": "include_miinfer_model_plan_gpuweightarena",
@@ -563,43 +602,17 @@
       "source_location": "L220"
     },
     {
-      "id": "include_miinfer_qwen3_gpu_primitives_q6kdeviceblock",
-      "label": "Q6KDeviceBlock",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 160,
-      "community_name": "qwen3_primitives_test.cpp",
-      "file_type": "code",
-      "norm_label": "q6kdeviceblock",
-      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
-      "source_location": "L11"
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives_q8kdeviceblock",
-      "label": "Q8KDeviceBlock",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 160,
-      "community_name": "qwen3_primitives_test.cpp",
-      "file_type": "code",
-      "norm_label": "q8kdeviceblock",
-      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
-      "source_location": "L20"
-    },
-    {
-      "id": "include_miinfer_q4_q8_gemv_q8exactblock",
-      "label": "Q8ExactBlock",
+      "id": "include_miinfer_fp16_gemv_gemvkernelresources",
+      "label": "GemvKernelResources",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 161,
-      "community_name": "Q8ExactBlock",
+      "community_name": "GemvKernelResources",
       "file_type": "code",
-      "norm_label": "q8exactblock",
-      "source_file": "include/miinfer/q4_q8_gemv.hpp",
-      "source_location": "L32"
+      "norm_label": "gemvkernelresources",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L87"
     },
     {
       "id": "tests_qwen3_layer6_external_test_checkpoint",
@@ -665,19 +678,6 @@
       "norm_label": "ffntailreplay",
       "source_file": "tests/qwen3_layer35_external_test.cpp",
       "source_location": "L277"
-    },
-    {
-      "id": "tests_qwen3_layer35_external_test_q8boundarydiff",
-      "label": "Q8BoundaryDiff",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 167,
-      "community_name": "replay_projection",
-      "file_type": "code",
-      "norm_label": "q8boundarydiff",
-      "source_file": "tests/qwen3_layer35_external_test.cpp",
-      "source_location": "L447"
     },
     {
       "id": "tests_qwen3_layer35_external_test_q8replayblock",
@@ -764,7 +764,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 50,
-      "community_name": "DeviceInfo",
+      "community_name": "string",
       "file_type": "code",
       "norm_label": "deviceinfo",
       "source_file": "include/miinfer/device_validation.hpp",
@@ -796,100 +796,16 @@
       "source_location": "L9"
     },
     {
-      "id": "bench_hip_smoke_bench_json_escape",
-      "label": "json_escape()",
+      "id": "tests_qwen3_layer35_external_test_half_bits",
+      "label": "half_bits()",
       "_callable": true,
       "_origin": "ast",
       "community": 109,
-      "community_name": "hip_smoke_bench.cpp",
+      "community_name": "Q8BoundaryDiff",
       "file_type": "code",
-      "norm_label": "json_escape()",
-      "source_file": "bench/hip_smoke_bench.cpp",
-      "source_location": "L111"
-    },
-    {
-      "id": "bench_hip_smoke_bench_main",
-      "label": "main()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 109,
-      "community_name": "hip_smoke_bench.cpp",
-      "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "bench/hip_smoke_bench.cpp",
-      "source_location": "L135"
-    },
-    {
-      "id": "bench_hip_smoke_bench_parse_nonnegative",
-      "label": "parse_nonnegative()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 109,
-      "community_name": "hip_smoke_bench.cpp",
-      "file_type": "code",
-      "norm_label": "parse_nonnegative()",
-      "source_file": "bench/hip_smoke_bench.cpp",
-      "source_location": "L48"
-    },
-    {
-      "id": "bench_hip_smoke_bench_parse_options",
-      "label": "parse_options()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 109,
-      "community_name": "hip_smoke_bench.cpp",
-      "file_type": "code",
-      "norm_label": "parse_options()",
-      "source_file": "bench/hip_smoke_bench.cpp",
-      "source_location": "L66"
-    },
-    {
-      "id": "bench_hip_smoke_bench_parse_positive",
-      "label": "parse_positive()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 109,
-      "community_name": "hip_smoke_bench.cpp",
-      "file_type": "code",
-      "norm_label": "parse_positive()",
-      "source_file": "bench/hip_smoke_bench.cpp",
-      "source_location": "L39"
-    },
-    {
-      "id": "bench_hip_smoke_bench_parse_size",
-      "label": "parse_size()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 109,
-      "community_name": "hip_smoke_bench.cpp",
-      "file_type": "code",
-      "norm_label": "parse_size()",
-      "source_file": "bench/hip_smoke_bench.cpp",
-      "source_location": "L57"
-    },
-    {
-      "id": "bench_hip_smoke_bench_print_usage",
-      "label": "print_usage()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 109,
-      "community_name": "hip_smoke_bench.cpp",
-      "file_type": "code",
-      "norm_label": "print_usage()",
-      "source_file": "bench/hip_smoke_bench.cpp",
-      "source_location": "L29"
-    },
-    {
-      "id": "tests_hip_smoke_main",
-      "label": "main()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 109,
-      "community_name": "hip_smoke_bench.cpp",
-      "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "tests/hip_smoke.cpp",
-      "source_location": "L8"
+      "norm_label": "half_bits()",
+      "source_file": "tests/qwen3_layer35_external_test.cpp",
+      "source_location": "L44"
     },
     {
       "id": "src_model_plan_align_up",
@@ -1118,6 +1034,102 @@
       "norm_label": "usage()",
       "source_file": "bench/fp16_gemv_k_split_bench.cpp",
       "source_location": "L33"
+    },
+    {
+      "id": "bench_hip_smoke_bench_json_escape",
+      "label": "json_escape()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "json_escape()",
+      "source_file": "bench/hip_smoke_bench.cpp",
+      "source_location": "L111"
+    },
+    {
+      "id": "bench_hip_smoke_bench_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "bench/hip_smoke_bench.cpp",
+      "source_location": "L135"
+    },
+    {
+      "id": "bench_hip_smoke_bench_parse_nonnegative",
+      "label": "parse_nonnegative()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "parse_nonnegative()",
+      "source_file": "bench/hip_smoke_bench.cpp",
+      "source_location": "L48"
+    },
+    {
+      "id": "bench_hip_smoke_bench_parse_options",
+      "label": "parse_options()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "parse_options()",
+      "source_file": "bench/hip_smoke_bench.cpp",
+      "source_location": "L66"
+    },
+    {
+      "id": "bench_hip_smoke_bench_parse_positive",
+      "label": "parse_positive()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "parse_positive()",
+      "source_file": "bench/hip_smoke_bench.cpp",
+      "source_location": "L39"
+    },
+    {
+      "id": "bench_hip_smoke_bench_parse_size",
+      "label": "parse_size()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "parse_size()",
+      "source_file": "bench/hip_smoke_bench.cpp",
+      "source_location": "L57"
+    },
+    {
+      "id": "bench_hip_smoke_bench_print_usage",
+      "label": "print_usage()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "print_usage()",
+      "source_file": "bench/hip_smoke_bench.cpp",
+      "source_location": "L29"
+    },
+    {
+      "id": "tests_hip_smoke_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "tests/hip_smoke.cpp",
+      "source_location": "L8"
     },
     {
       "id": "src_gguf_align_up",
@@ -1994,18 +2006,6 @@
       "norm_label": "tolerance()",
       "source_file": "tests/qwen3_kv_cache_gpu_test.cpp",
       "source_location": "L37"
-    },
-    {
-      "id": "bench_q4_q8_gemv_bench_launch_selected_gemv",
-      "label": "launch_selected_gemv()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 123,
-      "community_name": "Q8_1Block",
-      "file_type": "code",
-      "norm_label": "launch_selected_gemv()",
-      "source_file": "bench/q4_q8_gemv_bench.cpp",
-      "source_location": "L137"
     },
     {
       "id": "src_q4_q8_gemv_reference_q4_q8_cpu_reference",
@@ -3520,12 +3520,48 @@
       "source_location": "L68"
     },
     {
+      "id": "include_miinfer_hip_check_hip_check",
+      "label": "hip_check()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 143,
+      "community_name": "hip_check.hpp",
+      "file_type": "code",
+      "norm_label": "hip_check()",
+      "source_file": "include/miinfer/hip_check.hpp",
+      "source_location": "L26"
+    },
+    {
+      "id": "include_miinfer_hip_check_hip_check_failed",
+      "label": "hip_check_failed()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 143,
+      "community_name": "hip_check.hpp",
+      "file_type": "code",
+      "norm_label": "hip_check_failed()",
+      "source_file": "include/miinfer/hip_check.hpp",
+      "source_location": "L11"
+    },
+    {
+      "id": "tests_q4_q8_dot4_probe_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 143,
+      "community_name": "hip_check.hpp",
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "tests/q4_q8_dot4_probe.cpp",
+      "source_location": "L11"
+    },
+    {
       "id": "tests_q4_q8_gemv_test_main",
       "label": "main()",
       "_callable": true,
       "_origin": "ast",
       "community": 143,
-      "community_name": "fp16_gemv.hpp",
+      "community_name": "hip_check.hpp",
       "file_type": "code",
       "norm_label": "main()",
       "source_file": "tests/q4_q8_gemv_test.cpp",
@@ -3537,7 +3573,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 143,
-      "community_name": "fp16_gemv.hpp",
+      "community_name": "hip_check.hpp",
       "file_type": "code",
       "norm_label": "run_shape()",
       "source_file": "tests/q4_q8_gemv_test.cpp",
@@ -3549,7 +3585,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 143,
-      "community_name": "fp16_gemv.hpp",
+      "community_name": "hip_check.hpp",
       "file_type": "code",
       "norm_label": "run_zero_point_identity_tests()",
       "source_file": "tests/q4_q8_gemv_test.cpp",
@@ -3592,28 +3628,16 @@
       "source_location": "L32"
     },
     {
-      "id": "include_miinfer_qwen3_model_qwen3tensorview_data",
-      "label": ".data()",
+      "id": "bench_q4_q8_gemv_bench_launch_selected_gemv",
+      "label": "launch_selected_gemv()",
       "_callable": true,
       "_origin": "ast",
-      "community": 144,
-      "community_name": "Qwen3Model",
+      "community": 145,
+      "community_name": "DeviceShapeData",
       "file_type": "code",
-      "norm_label": ".data()",
-      "source_file": "include/miinfer/qwen3_model.hpp",
-      "source_location": "L33"
-    },
-    {
-      "id": "include_miinfer_qwen3_model_qwen3tensorview_type",
-      "label": ".type()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 144,
-      "community_name": "Qwen3Model",
-      "file_type": "code",
-      "norm_label": ".type()",
-      "source_file": "include/miinfer/qwen3_model.hpp",
-      "source_location": "L30"
+      "norm_label": "launch_selected_gemv()",
+      "source_file": "bench/q4_q8_gemv_bench.cpp",
+      "source_location": "L137"
     },
     {
       "id": "tests_qwen3_trace_compare_argmax",
@@ -3784,66 +3808,6 @@
       "source_location": "L86"
     },
     {
-      "id": "include_miinfer_hip_check_hip_check",
-      "label": "hip_check()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 149,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "hip_check()",
-      "source_file": "include/miinfer/hip_check.hpp",
-      "source_location": "L26"
-    },
-    {
-      "id": "include_miinfer_hip_check_hip_check_failed",
-      "label": "hip_check_failed()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 149,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "hip_check_failed()",
-      "source_file": "include/miinfer/hip_check.hpp",
-      "source_location": "L11"
-    },
-    {
-      "id": "tests_device_info_main",
-      "label": "main()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 149,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "tests/device_info.cpp",
-      "source_location": "L8"
-    },
-    {
-      "id": "tests_host_test_main",
-      "label": "main()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 149,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "tests/host_test.cpp",
-      "source_location": "L9"
-    },
-    {
-      "id": "tests_q4_q8_dot4_probe_main",
-      "label": "main()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 149,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "tests/q4_q8_dot4_probe.cpp",
-      "source_location": "L11"
-    },
-    {
       "id": "include_miinfer_gguf_gguffile_data_offset",
       "label": ".data_offset()",
       "_callable": true,
@@ -3962,6 +3926,30 @@
       "norm_label": "unsupported()",
       "source_file": "src/qwen3_model.cpp",
       "source_location": "L23"
+    },
+    {
+      "id": "include_miinfer_qwen3_model_qwen3tensorview_data",
+      "label": ".data()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 154,
+      "community_name": "Qwen3TensorView",
+      "file_type": "code",
+      "norm_label": ".data()",
+      "source_file": "include/miinfer/qwen3_model.hpp",
+      "source_location": "L33"
+    },
+    {
+      "id": "include_miinfer_qwen3_model_qwen3tensorview_type",
+      "label": ".type()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 154,
+      "community_name": "Qwen3TensorView",
+      "file_type": "code",
+      "norm_label": ".type()",
+      "source_file": "include/miinfer/qwen3_model.hpp",
+      "source_location": "L30"
     },
     {
       "id": "include_miinfer_model_plan_gpuweightarena_data",
@@ -4485,7 +4473,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 50,
-      "community_name": "DeviceInfo",
+      "community_name": "string",
       "file_type": "code",
       "norm_label": "inspect_device()",
       "source_file": "src/device_validation.cpp",
@@ -4497,7 +4485,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 50,
-      "community_name": "DeviceInfo",
+      "community_name": "string",
       "file_type": "code",
       "norm_label": "is_gfx906()",
       "source_file": "src/device_validation.cpp",
@@ -4509,7 +4497,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 50,
-      "community_name": "DeviceInfo",
+      "community_name": "string",
       "file_type": "code",
       "norm_label": "print_device_info()",
       "source_file": "src/device_validation.cpp",
@@ -4521,11 +4509,35 @@
       "_callable": true,
       "_origin": "ast",
       "community": 50,
-      "community_name": "DeviceInfo",
+      "community_name": "string",
       "file_type": "code",
       "norm_label": "validate_gfx906_device()",
       "source_file": "src/device_validation.cpp",
       "source_location": "L35"
+    },
+    {
+      "id": "tests_device_info_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 50,
+      "community_name": "string",
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "tests/device_info.cpp",
+      "source_location": "L8"
+    },
+    {
+      "id": "tests_host_test_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 50,
+      "community_name": "string",
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "tests/host_test.cpp",
+      "source_location": "L9"
     },
     {
       "id": "tests_qwen3_layer35_external_test_compare_q8_blocks",
@@ -4586,18 +4598,6 @@
       "norm_label": "fp16_roundtrip()",
       "source_file": "tests/qwen3_layer35_external_test.cpp",
       "source_location": "L399"
-    },
-    {
-      "id": "tests_qwen3_layer35_external_test_half_bits",
-      "label": "half_bits()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 57,
-      "community_name": "qwen3_layer35_external_test.cpp",
-      "file_type": "code",
-      "norm_label": "half_bits()",
-      "source_file": "tests/qwen3_layer35_external_test.cpp",
-      "source_location": "L44"
     },
     {
       "id": "tests_qwen3_layer35_external_test_host_swiglu",
@@ -5524,18 +5524,6 @@
       "source_location": "L468"
     },
     {
-      "id": "docs_architecture_13_prefill_vs_decode",
-      "label": "13. Prefill vs Decode",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "architecture.md",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "13. prefill vs decode",
-      "source_file": "docs/architecture.md",
-      "source_location": "L493"
-    },
-    {
       "id": "docs_architecture_14_context_length_sensitivity",
       "label": "14. Context-Length Sensitivity",
       "_origin": "ast",
@@ -5836,90 +5824,6 @@
       "source_location": "L109"
     },
     {
-      "id": "docs_architecture_5_1_model_layer",
-      "label": "5.1 Model Layer",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "architecture.md",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "5.1 model layer",
-      "source_file": "docs/architecture.md",
-      "source_location": "L151"
-    },
-    {
-      "id": "docs_architecture_5_2_packing_representation_layer",
-      "label": "5.2 Packing / Representation Layer",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "architecture.md",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "5.2 packing / representation layer",
-      "source_file": "docs/architecture.md",
-      "source_location": "L168"
-    },
-    {
-      "id": "docs_architecture_5_3_memory_planner",
-      "label": "5.3 Memory Planner",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "architecture.md",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "5.3 memory planner",
-      "source_file": "docs/architecture.md",
-      "source_location": "L197"
-    },
-    {
-      "id": "docs_architecture_5_4_kernel_planner",
-      "label": "5.4 Kernel Planner",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "architecture.md",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "5.4 kernel planner",
-      "source_file": "docs/architecture.md",
-      "source_location": "L222"
-    },
-    {
-      "id": "docs_architecture_5_5_execution_plan",
-      "label": "5.5 Execution Plan",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "architecture.md",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "5.5 execution plan",
-      "source_file": "docs/architecture.md",
-      "source_location": "L246"
-    },
-    {
-      "id": "docs_architecture_5_6_kernel_layer",
-      "label": "5.6 Kernel Layer",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "architecture.md",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "5.6 kernel layer",
-      "source_file": "docs/architecture.md",
-      "source_location": "L279"
-    },
-    {
-      "id": "docs_architecture_5_runtime_layers",
-      "label": "5. Runtime Layers",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "architecture.md",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "5. runtime layers",
-      "source_file": "docs/architecture.md",
-      "source_location": "L143"
-    },
-    {
       "id": "docs_architecture_6_gfx906_primitive_layer",
       "label": "6. gfx906 Primitive Layer",
       "_origin": "ast",
@@ -5968,18 +5872,6 @@
       "source_location": "L405"
     },
     {
-      "id": "docs_architecture_decode",
-      "label": "Decode",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "architecture.md",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "decode",
-      "source_file": "docs/architecture.md",
-      "source_location": "L508"
-    },
-    {
       "id": "docs_architecture_miinfer_architecture",
       "label": "MIInfer Architecture",
       "_origin": "ast",
@@ -5990,18 +5882,6 @@
       "norm_label": "miinfer architecture",
       "source_file": "docs/architecture.md",
       "source_location": "L1"
-    },
-    {
-      "id": "docs_architecture_prefill",
-      "label": "Prefill",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "architecture.md",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "prefill",
-      "source_file": "docs/architecture.md",
-      "source_location": "L501"
     },
     {
       "id": "codex_skills_graphify_skill",
@@ -6759,114 +6639,92 @@
       "source_location": "L1"
     },
     {
-      "id": "bench_hip_smoke_bench",
-      "label": "hip_smoke_bench.cpp",
+      "id": "tests_qwen3_layer35_external_test_cpp_uint16_t",
+      "label": "uint16_t",
       "_origin": "ast",
       "community": 109,
-      "community_name": "hip_smoke_bench.cpp",
+      "community_name": "Q8BoundaryDiff",
       "file_type": "code",
-      "norm_label": "hip_smoke_bench.cpp",
-      "source_file": "bench/hip_smoke_bench.cpp",
-      "source_location": "L1"
-    },
-    {
-      "id": "bench_hip_smoke_bench_cpp_size_t",
-      "label": "size_t",
-      "_origin": "ast",
-      "community": 109,
-      "community_name": "hip_smoke_bench.cpp",
-      "file_type": "code",
-      "norm_label": "size_t",
+      "norm_label": "uint16_t",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "bench_hip_smoke_bench_cpp_string",
-      "label": "string",
+      "id": "tests_qwen3_layer35_external_test_q8boundarydiff_different_lane_values",
+      "label": "different_lane_values",
       "_origin": "ast",
       "community": 109,
-      "community_name": "hip_smoke_bench.cpp",
+      "community_name": "Q8BoundaryDiff",
       "file_type": "code",
-      "norm_label": "string",
-      "source_file": "",
-      "source_location": ""
+      "norm_label": "different_lane_values",
+      "source_file": "tests/qwen3_layer35_external_test.cpp",
+      "source_location": "L450"
     },
     {
-      "id": "bench_hip_smoke_bench_options_device",
-      "label": "device",
+      "id": "tests_qwen3_layer35_external_test_q8boundarydiff_different_scale_blocks",
+      "label": "different_scale_blocks",
       "_origin": "ast",
       "community": 109,
-      "community_name": "hip_smoke_bench.cpp",
+      "community_name": "Q8BoundaryDiff",
       "file_type": "code",
-      "norm_label": "device",
-      "source_file": "bench/hip_smoke_bench.cpp",
-      "source_location": "L22"
+      "norm_label": "different_scale_blocks",
+      "source_file": "tests/qwen3_layer35_external_test.cpp",
+      "source_location": "L448"
     },
     {
-      "id": "bench_hip_smoke_bench_options_elements",
-      "label": "elements",
+      "id": "tests_qwen3_layer35_external_test_q8boundarydiff_different_sum_blocks",
+      "label": "different_sum_blocks",
       "_origin": "ast",
       "community": 109,
-      "community_name": "hip_smoke_bench.cpp",
+      "community_name": "Q8BoundaryDiff",
       "file_type": "code",
-      "norm_label": "elements",
-      "source_file": "bench/hip_smoke_bench.cpp",
-      "source_location": "L25"
+      "norm_label": "different_sum_blocks",
+      "source_file": "tests/qwen3_layer35_external_test.cpp",
+      "source_location": "L449"
     },
     {
-      "id": "bench_hip_smoke_bench_options_iterations",
-      "label": "iterations",
+      "id": "tests_qwen3_layer35_external_test_q8boundarydiff_first_block",
+      "label": "first_block",
       "_origin": "ast",
       "community": 109,
-      "community_name": "hip_smoke_bench.cpp",
+      "community_name": "Q8BoundaryDiff",
       "file_type": "code",
-      "norm_label": "iterations",
-      "source_file": "bench/hip_smoke_bench.cpp",
-      "source_location": "L24"
+      "norm_label": "first_block",
+      "source_file": "tests/qwen3_layer35_external_test.cpp",
+      "source_location": "L451"
     },
     {
-      "id": "bench_hip_smoke_bench_options_json_output",
-      "label": "json_output",
+      "id": "tests_qwen3_layer35_external_test_q8boundarydiff_first_lane",
+      "label": "first_lane",
       "_origin": "ast",
       "community": 109,
-      "community_name": "hip_smoke_bench.cpp",
+      "community_name": "Q8BoundaryDiff",
       "file_type": "code",
-      "norm_label": "json_output",
-      "source_file": "bench/hip_smoke_bench.cpp",
-      "source_location": "L26"
+      "norm_label": "first_lane",
+      "source_file": "tests/qwen3_layer35_external_test.cpp",
+      "source_location": "L452"
     },
     {
-      "id": "bench_hip_smoke_bench_options_warmup",
-      "label": "warmup",
+      "id": "tests_qwen3_layer35_external_test_q8boundarydiff_max_scale_bits_delta",
+      "label": "max_scale_bits_delta",
       "_origin": "ast",
       "community": 109,
-      "community_name": "hip_smoke_bench.cpp",
+      "community_name": "Q8BoundaryDiff",
       "file_type": "code",
-      "norm_label": "warmup",
-      "source_file": "bench/hip_smoke_bench.cpp",
-      "source_location": "L23"
+      "norm_label": "max_scale_bits_delta",
+      "source_file": "tests/qwen3_layer35_external_test.cpp",
+      "source_location": "L453"
     },
     {
-      "id": "include_miinfer_vector_add",
-      "label": "vector_add.hpp",
+      "id": "tests_qwen3_layer35_external_test_q8boundarydiff_max_sum_delta",
+      "label": "max_sum_delta",
       "_origin": "ast",
       "community": 109,
-      "community_name": "hip_smoke_bench.cpp",
+      "community_name": "Q8BoundaryDiff",
       "file_type": "code",
-      "norm_label": "vector_add.hpp",
-      "source_file": "include/miinfer/vector_add.hpp",
-      "source_location": "L1"
-    },
-    {
-      "id": "tests_hip_smoke",
-      "label": "hip_smoke.cpp",
-      "_origin": "ast",
-      "community": 109,
-      "community_name": "hip_smoke_bench.cpp",
-      "file_type": "code",
-      "norm_label": "hip_smoke.cpp",
-      "source_file": "tests/hip_smoke.cpp",
-      "source_location": "L1"
+      "norm_label": "max_sum_delta",
+      "source_file": "tests/qwen3_layer35_external_test.cpp",
+      "source_location": "L454"
     },
     {
       "id": "context",
@@ -7618,6 +7476,116 @@
       "source_location": "L25"
     },
     {
+      "id": "bench_hip_smoke_bench",
+      "label": "hip_smoke_bench.cpp",
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "hip_smoke_bench.cpp",
+      "source_file": "bench/hip_smoke_bench.cpp",
+      "source_location": "L1"
+    },
+    {
+      "id": "bench_hip_smoke_bench_cpp_size_t",
+      "label": "size_t",
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "size_t",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "bench_hip_smoke_bench_cpp_string",
+      "label": "string",
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "string",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "bench_hip_smoke_bench_options_device",
+      "label": "device",
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "device",
+      "source_file": "bench/hip_smoke_bench.cpp",
+      "source_location": "L22"
+    },
+    {
+      "id": "bench_hip_smoke_bench_options_elements",
+      "label": "elements",
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "elements",
+      "source_file": "bench/hip_smoke_bench.cpp",
+      "source_location": "L25"
+    },
+    {
+      "id": "bench_hip_smoke_bench_options_iterations",
+      "label": "iterations",
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "iterations",
+      "source_file": "bench/hip_smoke_bench.cpp",
+      "source_location": "L24"
+    },
+    {
+      "id": "bench_hip_smoke_bench_options_json_output",
+      "label": "json_output",
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "json_output",
+      "source_file": "bench/hip_smoke_bench.cpp",
+      "source_location": "L26"
+    },
+    {
+      "id": "bench_hip_smoke_bench_options_warmup",
+      "label": "warmup",
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "warmup",
+      "source_file": "bench/hip_smoke_bench.cpp",
+      "source_location": "L23"
+    },
+    {
+      "id": "include_miinfer_vector_add",
+      "label": "vector_add.hpp",
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "vector_add.hpp",
+      "source_file": "include/miinfer/vector_add.hpp",
+      "source_location": "L1"
+    },
+    {
+      "id": "tests_hip_smoke",
+      "label": "hip_smoke.cpp",
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "fp16_gemv_k_split_bench.cpp",
+      "file_type": "code",
+      "norm_label": "hip_smoke.cpp",
+      "source_file": "tests/hip_smoke.cpp",
+      "source_location": "L1"
+    },
+    {
       "id": "include_miinfer_gguf_gguffile_metadata",
       "label": "metadata",
       "_origin": "ast",
@@ -8236,6 +8204,138 @@
       "source_location": "L74"
     },
     {
+      "id": "include_miinfer_qwen3_gpu_primitives",
+      "label": "qwen3_gpu_primitives.hpp",
+      "_origin": "ast",
+      "community": 121,
+      "community_name": "path_",
+      "file_type": "code",
+      "norm_label": "qwen3_gpu_primitives.hpp",
+      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
+      "source_location": "L1"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_primitives_hpp_half",
+      "label": "__half",
+      "_origin": "ast",
+      "community": 121,
+      "community_name": "path_",
+      "file_type": "code",
+      "norm_label": "__half",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_primitives_hpp_int16_t",
+      "label": "int16_t",
+      "_origin": "ast",
+      "community": 121,
+      "community_name": "path_",
+      "file_type": "code",
+      "norm_label": "int16_t",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_primitives_hpp_int8_t",
+      "label": "int8_t",
+      "_origin": "ast",
+      "community": 121,
+      "community_name": "path_",
+      "file_type": "code",
+      "norm_label": "int8_t",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_primitives_hpp_uint8_t",
+      "label": "uint8_t",
+      "_origin": "ast",
+      "community": 121,
+      "community_name": "path_",
+      "file_type": "code",
+      "norm_label": "uint8_t",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_primitives_q6kdeviceblock_d",
+      "label": "d",
+      "_origin": "ast",
+      "community": 121,
+      "community_name": "path_",
+      "file_type": "code",
+      "norm_label": "d",
+      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
+      "source_location": "L15"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_primitives_q6kdeviceblock_qh",
+      "label": "qh",
+      "_origin": "ast",
+      "community": 121,
+      "community_name": "path_",
+      "file_type": "code",
+      "norm_label": "qh",
+      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
+      "source_location": "L13"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_primitives_q6kdeviceblock_ql",
+      "label": "ql",
+      "_origin": "ast",
+      "community": 121,
+      "community_name": "path_",
+      "file_type": "code",
+      "norm_label": "ql",
+      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
+      "source_location": "L12"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_primitives_q6kdeviceblock_scales",
+      "label": "scales",
+      "_origin": "ast",
+      "community": 121,
+      "community_name": "path_",
+      "file_type": "code",
+      "norm_label": "scales",
+      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
+      "source_location": "L14"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_primitives_q8kdeviceblock_bsums",
+      "label": "bsums",
+      "_origin": "ast",
+      "community": 121,
+      "community_name": "path_",
+      "file_type": "code",
+      "norm_label": "bsums",
+      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
+      "source_location": "L23"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_primitives_q8kdeviceblock_d",
+      "label": "d",
+      "_origin": "ast",
+      "community": 121,
+      "community_name": "path_",
+      "file_type": "code",
+      "norm_label": "d",
+      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
+      "source_location": "L21"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_primitives_q8kdeviceblock_qs",
+      "label": "qs",
+      "_origin": "ast",
+      "community": 121,
+      "community_name": "path_",
+      "file_type": "code",
+      "norm_label": "qs",
+      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
+      "source_location": "L22"
+    },
+    {
       "id": "tests_qwen3_forward_gpu_test",
       "label": "qwen3_forward_gpu_test.cpp",
       "_origin": "ast",
@@ -8610,7 +8710,18 @@
       "source_location": ""
     },
     {
-      "id": "bench_q4_q8_gemv_bench_cpp_half",
+      "id": "include_miinfer_q4_q8_gemv",
+      "label": "q4_q8_gemv.hpp",
+      "_origin": "ast",
+      "community": 123,
+      "community_name": "Q8_1Block",
+      "file_type": "code",
+      "norm_label": "q4_q8_gemv.hpp",
+      "source_file": "include/miinfer/q4_q8_gemv.hpp",
+      "source_location": "L1"
+    },
+    {
+      "id": "include_miinfer_q4_q8_gemv_hpp_half",
       "label": "__half",
       "_origin": "ast",
       "community": 123,
@@ -8621,13 +8732,24 @@
       "source_location": ""
     },
     {
-      "id": "include_miinfer_q4_q8_gemv_hpp_half",
-      "label": "__half",
+      "id": "include_miinfer_q4_q8_gemv_hpp_int16_t",
+      "label": "int16_t",
       "_origin": "ast",
       "community": 123,
       "community_name": "Q8_1Block",
       "file_type": "code",
-      "norm_label": "__half",
+      "norm_label": "int16_t",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "include_miinfer_q4_q8_gemv_hpp_int8_t",
+      "label": "int8_t",
+      "_origin": "ast",
+      "community": 123,
+      "community_name": "Q8_1Block",
+      "file_type": "code",
+      "norm_label": "int8_t",
       "source_file": "",
       "source_location": ""
     },
@@ -8696,6 +8818,50 @@
       "norm_label": "s",
       "source_file": "include/miinfer/q4_q8_gemv.hpp",
       "source_location": "L25"
+    },
+    {
+      "id": "include_miinfer_q4_q8_gemv_q8exactblock_d",
+      "label": "d",
+      "_origin": "ast",
+      "community": 123,
+      "community_name": "Q8_1Block",
+      "file_type": "code",
+      "norm_label": "d",
+      "source_file": "include/miinfer/q4_q8_gemv.hpp",
+      "source_location": "L33"
+    },
+    {
+      "id": "include_miinfer_q4_q8_gemv_q8exactblock_qs",
+      "label": "qs",
+      "_origin": "ast",
+      "community": 123,
+      "community_name": "Q8_1Block",
+      "file_type": "code",
+      "norm_label": "qs",
+      "source_file": "include/miinfer/q4_q8_gemv.hpp",
+      "source_location": "L35"
+    },
+    {
+      "id": "include_miinfer_q4_q8_gemv_q8exactblock_sum",
+      "label": "sum",
+      "_origin": "ast",
+      "community": 123,
+      "community_name": "Q8_1Block",
+      "file_type": "code",
+      "norm_label": "sum",
+      "source_file": "include/miinfer/q4_q8_gemv.hpp",
+      "source_location": "L34"
+    },
+    {
+      "id": "include_miinfer_q4_q8_zero_point_dot",
+      "label": "q4_q8_zero_point_dot.hpp",
+      "_origin": "ast",
+      "community": 123,
+      "community_name": "Q8_1Block",
+      "file_type": "code",
+      "norm_label": "q4_q8_zero_point_dot.hpp",
+      "source_file": "include/miinfer/q4_q8_zero_point_dot.hpp",
+      "source_location": "L1"
     },
     {
       "id": "src_q4_q8_gemv_reference",
@@ -9027,7 +9193,7 @@
       "node_kind": "heading",
       "norm_label": "not implemented",
       "source_file": "docs/current-state.md",
-      "source_location": "L150"
+      "source_location": "L154"
     },
     {
       "id": "tests_qwen3_layer0_gpu_test",
@@ -9809,6 +9975,17 @@
       "source_location": "L1"
     },
     {
+      "id": "include_miinfer_fp16_gemv",
+      "label": "fp16_gemv.hpp",
+      "_origin": "ast",
+      "community": 131,
+      "community_name": "GemvShape",
+      "file_type": "code",
+      "norm_label": "fp16_gemv.hpp",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L1"
+    },
+    {
       "id": "include_miinfer_fp16_gemv_gemvshape_id",
       "label": "id",
       "_origin": "ast",
@@ -9851,6 +10028,17 @@
       "norm_label": "projection",
       "source_file": "include/miinfer/fp16_gemv.hpp",
       "source_location": "L14"
+    },
+    {
+      "id": "include_miinfer_fp16_gemv_rocblasgemmhandle_opaque",
+      "label": "opaque",
+      "_origin": "ast",
+      "community": 131,
+      "community_name": "GemvShape",
+      "file_type": "code",
+      "norm_label": "opaque",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L97"
     },
     {
       "id": "tests_fp16_gemv_test",
@@ -11365,113 +11553,47 @@
       "source_location": "L19"
     },
     {
-      "id": "include_miinfer_fp16_gemv",
-      "label": "fp16_gemv.hpp",
+      "id": "include_miinfer_hip_check",
+      "label": "hip_check.hpp",
       "_origin": "ast",
       "community": 143,
-      "community_name": "fp16_gemv.hpp",
+      "community_name": "hip_check.hpp",
       "file_type": "code",
-      "norm_label": "fp16_gemv.hpp",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "norm_label": "hip_check.hpp",
+      "source_file": "include/miinfer/hip_check.hpp",
       "source_location": "L1"
     },
     {
-      "id": "include_miinfer_fp16_gemv_gemvkernelresources_local_bytes",
-      "label": "local_bytes",
+      "id": "include_miinfer_hip_check_hpp_hiperror_t",
+      "label": "hipError_t",
       "_origin": "ast",
       "community": 143,
-      "community_name": "fp16_gemv.hpp",
+      "community_name": "hip_check.hpp",
       "file_type": "code",
-      "norm_label": "local_bytes",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L90"
-    },
-    {
-      "id": "include_miinfer_fp16_gemv_gemvkernelresources_max_threads_per_block",
-      "label": "max_threads_per_block",
-      "_origin": "ast",
-      "community": 143,
-      "community_name": "fp16_gemv.hpp",
-      "file_type": "code",
-      "norm_label": "max_threads_per_block",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L91"
-    },
-    {
-      "id": "include_miinfer_fp16_gemv_gemvkernelresources_registers",
-      "label": "registers",
-      "_origin": "ast",
-      "community": 143,
-      "community_name": "fp16_gemv.hpp",
-      "file_type": "code",
-      "norm_label": "registers",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L88"
-    },
-    {
-      "id": "include_miinfer_fp16_gemv_gemvkernelresources_shared_bytes",
-      "label": "shared_bytes",
-      "_origin": "ast",
-      "community": 143,
-      "community_name": "fp16_gemv.hpp",
-      "file_type": "code",
-      "norm_label": "shared_bytes",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L89"
-    },
-    {
-      "id": "include_miinfer_fp16_gemv_hpp_size_t",
-      "label": "size_t",
-      "_origin": "ast",
-      "community": 143,
-      "community_name": "fp16_gemv.hpp",
-      "file_type": "code",
-      "norm_label": "size_t",
+      "norm_label": "hiperror_t",
       "source_file": "",
       "source_location": ""
-    },
-    {
-      "id": "include_miinfer_fp16_gemv_rocblasgemmhandle_opaque",
-      "label": "opaque",
-      "_origin": "ast",
-      "community": 143,
-      "community_name": "fp16_gemv.hpp",
-      "file_type": "code",
-      "norm_label": "opaque",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L97"
-    },
-    {
-      "id": "include_miinfer_q4_q8_gemv",
-      "label": "q4_q8_gemv.hpp",
-      "_origin": "ast",
-      "community": 143,
-      "community_name": "fp16_gemv.hpp",
-      "file_type": "code",
-      "norm_label": "q4_q8_gemv.hpp",
-      "source_file": "include/miinfer/q4_q8_gemv.hpp",
-      "source_location": "L1"
     },
     {
       "id": "include_miinfer_q4_q8_packed_dot",
       "label": "q4_q8_packed_dot.hpp",
       "_origin": "ast",
       "community": 143,
-      "community_name": "fp16_gemv.hpp",
+      "community_name": "hip_check.hpp",
       "file_type": "code",
       "norm_label": "q4_q8_packed_dot.hpp",
       "source_file": "include/miinfer/q4_q8_packed_dot.hpp",
       "source_location": "L1"
     },
     {
-      "id": "include_miinfer_q4_q8_zero_point_dot",
-      "label": "q4_q8_zero_point_dot.hpp",
+      "id": "tests_q4_q8_dot4_probe",
+      "label": "q4_q8_dot4_probe.cpp",
       "_origin": "ast",
       "community": 143,
-      "community_name": "fp16_gemv.hpp",
+      "community_name": "hip_check.hpp",
       "file_type": "code",
-      "norm_label": "q4_q8_zero_point_dot.hpp",
-      "source_file": "include/miinfer/q4_q8_zero_point_dot.hpp",
+      "norm_label": "q4_q8_dot4_probe.cpp",
+      "source_file": "tests/q4_q8_dot4_probe.cpp",
       "source_location": "L1"
     },
     {
@@ -11479,7 +11601,7 @@
       "label": "q4_q8_gemv_test.cpp",
       "_origin": "ast",
       "community": 143,
-      "community_name": "fp16_gemv.hpp",
+      "community_name": "hip_check.hpp",
       "file_type": "code",
       "norm_label": "q4_q8_gemv_test.cpp",
       "source_file": "tests/q4_q8_gemv_test.cpp",
@@ -11490,42 +11612,9 @@
       "label": "string",
       "_origin": "ast",
       "community": 143,
-      "community_name": "fp16_gemv.hpp",
+      "community_name": "hip_check.hpp",
       "file_type": "code",
       "norm_label": "string",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "include_miinfer_qwen3_model",
-      "label": "qwen3_model.hpp",
-      "_origin": "ast",
-      "community": 144,
-      "community_name": "Qwen3Model",
-      "file_type": "code",
-      "norm_label": "qwen3_model.hpp",
-      "source_file": "include/miinfer/qwen3_model.hpp",
-      "source_location": "L1"
-    },
-    {
-      "id": "include_miinfer_qwen3_model_hpp_byte",
-      "label": "byte",
-      "_origin": "ast",
-      "community": 144,
-      "community_name": "Qwen3Model",
-      "file_type": "code",
-      "norm_label": "byte",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "include_miinfer_qwen3_model_hpp_gguftensortype",
-      "label": "GgufTensorType",
-      "_origin": "ast",
-      "community": 144,
-      "community_name": "Qwen3Model",
-      "file_type": "code",
-      "norm_label": "gguftensortype",
       "source_file": "",
       "source_location": ""
     },
@@ -11662,15 +11751,15 @@
       "source_location": "L71"
     },
     {
-      "id": "include_miinfer_qwen3_model_qwen3tensorview_source",
-      "label": "source",
+      "id": "bench_q4_q8_gemv_bench_cpp_half",
+      "label": "__half",
       "_origin": "ast",
-      "community": 144,
-      "community_name": "Qwen3Model",
+      "community": 145,
+      "community_name": "DeviceShapeData",
       "file_type": "code",
-      "norm_label": "source",
-      "source_file": "include/miinfer/qwen3_model.hpp",
-      "source_location": "L27"
+      "norm_label": "__half",
+      "source_file": "",
+      "source_location": ""
     },
     {
       "id": "bench_q4_q8_gemv_bench_deviceshapedata_device_input_fp16",
@@ -12115,92 +12204,88 @@
       "source_location": "L1"
     },
     {
-      "id": "include_miinfer_device_validation",
-      "label": "device_validation.hpp",
+      "id": "docs_architecture_5_1_model_layer",
+      "label": "5.1 Model Layer",
       "_origin": "ast",
       "community": 149,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "device_validation.hpp",
-      "source_file": "include/miinfer/device_validation.hpp",
-      "source_location": "L1"
+      "community_name": "5. Runtime Layers",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "5.1 model layer",
+      "source_file": "docs/architecture.md",
+      "source_location": "L151"
     },
     {
-      "id": "include_miinfer_device_validation_hpp_string",
-      "label": "string",
+      "id": "docs_architecture_5_2_packing_representation_layer",
+      "label": "5.2 Packing / Representation Layer",
       "_origin": "ast",
       "community": 149,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "string",
-      "source_file": "",
-      "source_location": ""
+      "community_name": "5. Runtime Layers",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "5.2 packing / representation layer",
+      "source_file": "docs/architecture.md",
+      "source_location": "L168"
     },
     {
-      "id": "include_miinfer_hip_check",
-      "label": "hip_check.hpp",
+      "id": "docs_architecture_5_3_memory_planner",
+      "label": "5.3 Memory Planner",
       "_origin": "ast",
       "community": 149,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "hip_check.hpp",
-      "source_file": "include/miinfer/hip_check.hpp",
-      "source_location": "L1"
+      "community_name": "5. Runtime Layers",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "5.3 memory planner",
+      "source_file": "docs/architecture.md",
+      "source_location": "L197"
     },
     {
-      "id": "include_miinfer_hip_check_hpp_hiperror_t",
-      "label": "hipError_t",
+      "id": "docs_architecture_5_4_kernel_planner",
+      "label": "5.4 Kernel Planner",
       "_origin": "ast",
       "community": 149,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "hiperror_t",
-      "source_file": "",
-      "source_location": ""
+      "community_name": "5. Runtime Layers",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "5.4 kernel planner",
+      "source_file": "docs/architecture.md",
+      "source_location": "L222"
     },
     {
-      "id": "include_miinfer_sha256",
-      "label": "sha256.hpp",
+      "id": "docs_architecture_5_5_execution_plan",
+      "label": "5.5 Execution Plan",
       "_origin": "ast",
       "community": 149,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "sha256.hpp",
-      "source_file": "include/miinfer/sha256.hpp",
-      "source_location": "L1"
+      "community_name": "5. Runtime Layers",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "5.5 execution plan",
+      "source_file": "docs/architecture.md",
+      "source_location": "L246"
     },
     {
-      "id": "tests_device_info",
-      "label": "device_info.cpp",
+      "id": "docs_architecture_5_6_kernel_layer",
+      "label": "5.6 Kernel Layer",
       "_origin": "ast",
       "community": 149,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "device_info.cpp",
-      "source_file": "tests/device_info.cpp",
-      "source_location": "L1"
+      "community_name": "5. Runtime Layers",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "5.6 kernel layer",
+      "source_file": "docs/architecture.md",
+      "source_location": "L279"
     },
     {
-      "id": "tests_host_test",
-      "label": "host_test.cpp",
+      "id": "docs_architecture_5_runtime_layers",
+      "label": "5. Runtime Layers",
       "_origin": "ast",
       "community": 149,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "host_test.cpp",
-      "source_file": "tests/host_test.cpp",
-      "source_location": "L1"
-    },
-    {
-      "id": "tests_q4_q8_dot4_probe",
-      "label": "q4_q8_dot4_probe.cpp",
-      "_origin": "ast",
-      "community": 149,
-      "community_name": "string",
-      "file_type": "code",
-      "norm_label": "q4_q8_dot4_probe.cpp",
-      "source_file": "tests/q4_q8_dot4_probe.cpp",
-      "source_location": "L1"
+      "community_name": "5. Runtime Layers",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "5. runtime layers",
+      "source_file": "docs/architecture.md",
+      "source_location": "L143"
     },
     {
       "id": "docs_references_2_milpster_gfx906_llama_cpp",
@@ -12597,6 +12682,18 @@
       "norm_label": "m4-b22 independent gpu-reference comparison",
       "source_file": "docs/m4b-forward.md",
       "source_location": "L794"
+    },
+    {
+      "id": "docs_m4b_forward_m4_b23_external_backend_contract_characterization",
+      "label": "M4-B23 external backend contract characterization",
+      "_origin": "ast",
+      "community": 150,
+      "community_name": "M4-B \u2014 Full Qwen3 single-token forward",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "m4-b23 external backend contract characterization",
+      "source_file": "docs/m4b-forward.md",
+      "source_location": "L843"
     },
     {
       "id": "docs_m4b_forward_m4_b2_depth_drift_diagnostics",
@@ -13141,11 +13238,44 @@
       "source_location": "L1"
     },
     {
+      "id": "include_miinfer_qwen3_model",
+      "label": "qwen3_model.hpp",
+      "_origin": "ast",
+      "community": 154,
+      "community_name": "Qwen3TensorView",
+      "file_type": "code",
+      "norm_label": "qwen3_model.hpp",
+      "source_file": "include/miinfer/qwen3_model.hpp",
+      "source_location": "L1"
+    },
+    {
+      "id": "include_miinfer_qwen3_model_hpp_byte",
+      "label": "byte",
+      "_origin": "ast",
+      "community": 154,
+      "community_name": "Qwen3TensorView",
+      "file_type": "code",
+      "norm_label": "byte",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "include_miinfer_qwen3_model_hpp_gguftensortype",
+      "label": "GgufTensorType",
+      "_origin": "ast",
+      "community": 154,
+      "community_name": "Qwen3TensorView",
+      "file_type": "code",
+      "norm_label": "gguftensortype",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
       "id": "include_miinfer_qwen3_model_qwen3layerweights_attention_norm",
       "label": "attention_norm",
       "_origin": "ast",
       "community": 154,
-      "community_name": "Qwen3LayerWeights",
+      "community_name": "Qwen3TensorView",
       "file_type": "code",
       "norm_label": "attention_norm",
       "source_file": "include/miinfer/qwen3_model.hpp",
@@ -13156,7 +13286,7 @@
       "label": "down",
       "_origin": "ast",
       "community": 154,
-      "community_name": "Qwen3LayerWeights",
+      "community_name": "Qwen3TensorView",
       "file_type": "code",
       "norm_label": "down",
       "source_file": "include/miinfer/qwen3_model.hpp",
@@ -13167,7 +13297,7 @@
       "label": "ffn_norm",
       "_origin": "ast",
       "community": 154,
-      "community_name": "Qwen3LayerWeights",
+      "community_name": "Qwen3TensorView",
       "file_type": "code",
       "norm_label": "ffn_norm",
       "source_file": "include/miinfer/qwen3_model.hpp",
@@ -13178,7 +13308,7 @@
       "label": "gate",
       "_origin": "ast",
       "community": 154,
-      "community_name": "Qwen3LayerWeights",
+      "community_name": "Qwen3TensorView",
       "file_type": "code",
       "norm_label": "gate",
       "source_file": "include/miinfer/qwen3_model.hpp",
@@ -13189,7 +13319,7 @@
       "label": "k",
       "_origin": "ast",
       "community": 154,
-      "community_name": "Qwen3LayerWeights",
+      "community_name": "Qwen3TensorView",
       "file_type": "code",
       "norm_label": "k",
       "source_file": "include/miinfer/qwen3_model.hpp",
@@ -13200,7 +13330,7 @@
       "label": "k_norm",
       "_origin": "ast",
       "community": 154,
-      "community_name": "Qwen3LayerWeights",
+      "community_name": "Qwen3TensorView",
       "file_type": "code",
       "norm_label": "k_norm",
       "source_file": "include/miinfer/qwen3_model.hpp",
@@ -13211,7 +13341,7 @@
       "label": "output",
       "_origin": "ast",
       "community": 154,
-      "community_name": "Qwen3LayerWeights",
+      "community_name": "Qwen3TensorView",
       "file_type": "code",
       "norm_label": "output",
       "source_file": "include/miinfer/qwen3_model.hpp",
@@ -13222,7 +13352,7 @@
       "label": "q",
       "_origin": "ast",
       "community": 154,
-      "community_name": "Qwen3LayerWeights",
+      "community_name": "Qwen3TensorView",
       "file_type": "code",
       "norm_label": "q",
       "source_file": "include/miinfer/qwen3_model.hpp",
@@ -13233,7 +13363,7 @@
       "label": "q_norm",
       "_origin": "ast",
       "community": 154,
-      "community_name": "Qwen3LayerWeights",
+      "community_name": "Qwen3TensorView",
       "file_type": "code",
       "norm_label": "q_norm",
       "source_file": "include/miinfer/qwen3_model.hpp",
@@ -13244,7 +13374,7 @@
       "label": "up",
       "_origin": "ast",
       "community": 154,
-      "community_name": "Qwen3LayerWeights",
+      "community_name": "Qwen3TensorView",
       "file_type": "code",
       "norm_label": "up",
       "source_file": "include/miinfer/qwen3_model.hpp",
@@ -13255,11 +13385,22 @@
       "label": "v",
       "_origin": "ast",
       "community": 154,
-      "community_name": "Qwen3LayerWeights",
+      "community_name": "Qwen3TensorView",
       "file_type": "code",
       "norm_label": "v",
       "source_file": "include/miinfer/qwen3_model.hpp",
       "source_location": "L40"
+    },
+    {
+      "id": "include_miinfer_qwen3_model_qwen3tensorview_source",
+      "label": "source",
+      "_origin": "ast",
+      "community": 154,
+      "community_name": "Qwen3TensorView",
+      "file_type": "code",
+      "norm_label": "source",
+      "source_file": "include/miinfer/qwen3_model.hpp",
+      "source_location": "L27"
     },
     {
       "id": "include_miinfer_model_plan_gpuweightarena_allocate",
@@ -13457,7 +13598,7 @@
       "node_kind": "heading",
       "norm_label": "candidate research areas",
       "source_file": "docs/roadmap.md",
-      "source_location": "L222"
+      "source_location": "L228"
     },
     {
       "id": "docs_roadmap_core_question",
@@ -13469,7 +13610,7 @@
       "node_kind": "heading",
       "norm_label": "core question",
       "source_file": "docs/roadmap.md",
-      "source_location": "L218"
+      "source_location": "L224"
     },
     {
       "id": "docs_roadmap_gfx906_primitives",
@@ -13481,7 +13622,7 @@
       "node_kind": "heading",
       "norm_label": "gfx906 primitives",
       "source_file": "docs/roadmap.md",
-      "source_location": "L232"
+      "source_location": "L238"
     },
     {
       "id": "docs_roadmap_go",
@@ -13493,7 +13634,7 @@
       "node_kind": "heading",
       "norm_label": "go",
       "source_file": "docs/roadmap.md",
-      "source_location": "L314"
+      "source_location": "L320"
     },
     {
       "id": "docs_roadmap_go_no_go_decision",
@@ -13505,10 +13646,10 @@
       "node_kind": "heading",
       "norm_label": "go / no-go decision",
       "source_file": "docs/roadmap.md",
-      "source_location": "L312"
+      "source_location": "L318"
     },
     {
-      "id": "docs_roadmap_goal_212",
+      "id": "docs_roadmap_goal_218",
       "label": "Goal",
       "_origin": "ast",
       "community": 16,
@@ -13517,7 +13658,7 @@
       "node_kind": "heading",
       "norm_label": "goal",
       "source_file": "docs/roadmap.md",
-      "source_location": "L212"
+      "source_location": "L218"
     },
     {
       "id": "docs_roadmap_kernel_configuration",
@@ -13529,7 +13670,7 @@
       "node_kind": "heading",
       "norm_label": "kernel configuration",
       "source_file": "docs/roadmap.md",
-      "source_location": "L273"
+      "source_location": "L279"
     },
     {
       "id": "docs_roadmap_m2_prove_specialization",
@@ -13541,7 +13682,7 @@
       "node_kind": "heading",
       "norm_label": "m2 \u2014 prove specialization",
       "source_file": "docs/roadmap.md",
-      "source_location": "L210"
+      "source_location": "L216"
     },
     {
       "id": "docs_roadmap_memory_behavior",
@@ -13553,7 +13694,7 @@
       "node_kind": "heading",
       "norm_label": "memory behavior",
       "source_file": "docs/roadmap.md",
-      "source_location": "L261"
+      "source_location": "L267"
     },
     {
       "id": "docs_roadmap_quantized_execution",
@@ -13565,7 +13706,7 @@
       "node_kind": "heading",
       "norm_label": "quantized execution",
       "source_file": "docs/roadmap.md",
-      "source_location": "L242"
+      "source_location": "L248"
     },
     {
       "id": "docs_roadmap_reassess",
@@ -13577,7 +13718,7 @@
       "node_kind": "heading",
       "norm_label": "reassess",
       "source_file": "docs/roadmap.md",
-      "source_location": "L321"
+      "source_location": "L327"
     },
     {
       "id": "docs_roadmap_required_experimental_discipline",
@@ -13589,7 +13730,7 @@
       "node_kind": "heading",
       "norm_label": "required experimental discipline",
       "source_file": "docs/roadmap.md",
-      "source_location": "L284"
+      "source_location": "L290"
     },
     {
       "id": "docs_roadmap_success_criteria",
@@ -13601,7 +13742,7 @@
       "node_kind": "heading",
       "norm_label": "success criteria",
       "source_file": "docs/roadmap.md",
-      "source_location": "L297"
+      "source_location": "L303"
     },
     {
       "id": "docs_roadmap_wave_execution",
@@ -13613,7 +13754,7 @@
       "node_kind": "heading",
       "norm_label": "wave execution",
       "source_file": "docs/roadmap.md",
-      "source_location": "L224"
+      "source_location": "L230"
     },
     {
       "id": "docs_roadmap_weight_layout",
@@ -13625,139 +13766,7 @@
       "node_kind": "heading",
       "norm_label": "weight layout",
       "source_file": "docs/roadmap.md",
-      "source_location": "L252"
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives",
-      "label": "qwen3_gpu_primitives.hpp",
-      "_origin": "ast",
-      "community": 160,
-      "community_name": "qwen3_primitives_test.cpp",
-      "file_type": "code",
-      "norm_label": "qwen3_gpu_primitives.hpp",
-      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
-      "source_location": "L1"
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives_hpp_half",
-      "label": "__half",
-      "_origin": "ast",
-      "community": 160,
-      "community_name": "qwen3_primitives_test.cpp",
-      "file_type": "code",
-      "norm_label": "__half",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives_hpp_int16_t",
-      "label": "int16_t",
-      "_origin": "ast",
-      "community": 160,
-      "community_name": "qwen3_primitives_test.cpp",
-      "file_type": "code",
-      "norm_label": "int16_t",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives_hpp_int8_t",
-      "label": "int8_t",
-      "_origin": "ast",
-      "community": 160,
-      "community_name": "qwen3_primitives_test.cpp",
-      "file_type": "code",
-      "norm_label": "int8_t",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives_hpp_uint8_t",
-      "label": "uint8_t",
-      "_origin": "ast",
-      "community": 160,
-      "community_name": "qwen3_primitives_test.cpp",
-      "file_type": "code",
-      "norm_label": "uint8_t",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives_q6kdeviceblock_d",
-      "label": "d",
-      "_origin": "ast",
-      "community": 160,
-      "community_name": "qwen3_primitives_test.cpp",
-      "file_type": "code",
-      "norm_label": "d",
-      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
-      "source_location": "L15"
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives_q6kdeviceblock_qh",
-      "label": "qh",
-      "_origin": "ast",
-      "community": 160,
-      "community_name": "qwen3_primitives_test.cpp",
-      "file_type": "code",
-      "norm_label": "qh",
-      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
-      "source_location": "L13"
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives_q6kdeviceblock_ql",
-      "label": "ql",
-      "_origin": "ast",
-      "community": 160,
-      "community_name": "qwen3_primitives_test.cpp",
-      "file_type": "code",
-      "norm_label": "ql",
-      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
-      "source_location": "L12"
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives_q6kdeviceblock_scales",
-      "label": "scales",
-      "_origin": "ast",
-      "community": 160,
-      "community_name": "qwen3_primitives_test.cpp",
-      "file_type": "code",
-      "norm_label": "scales",
-      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
-      "source_location": "L14"
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives_q8kdeviceblock_bsums",
-      "label": "bsums",
-      "_origin": "ast",
-      "community": 160,
-      "community_name": "qwen3_primitives_test.cpp",
-      "file_type": "code",
-      "norm_label": "bsums",
-      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
-      "source_location": "L23"
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives_q8kdeviceblock_d",
-      "label": "d",
-      "_origin": "ast",
-      "community": 160,
-      "community_name": "qwen3_primitives_test.cpp",
-      "file_type": "code",
-      "norm_label": "d",
-      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
-      "source_location": "L21"
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives_q8kdeviceblock_qs",
-      "label": "qs",
-      "_origin": "ast",
-      "community": 160,
-      "community_name": "qwen3_primitives_test.cpp",
-      "file_type": "code",
-      "norm_label": "qs",
-      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
-      "source_location": "L22"
+      "source_location": "L258"
     },
     {
       "id": "tests_qwen3_primitives_test",
@@ -13793,59 +13802,59 @@
       "source_location": ""
     },
     {
-      "id": "include_miinfer_q4_q8_gemv_hpp_int16_t",
-      "label": "int16_t",
+      "id": "include_miinfer_fp16_gemv_gemvkernelresources_local_bytes",
+      "label": "local_bytes",
       "_origin": "ast",
       "community": 161,
-      "community_name": "Q8ExactBlock",
+      "community_name": "GemvKernelResources",
       "file_type": "code",
-      "norm_label": "int16_t",
+      "norm_label": "local_bytes",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L90"
+    },
+    {
+      "id": "include_miinfer_fp16_gemv_gemvkernelresources_max_threads_per_block",
+      "label": "max_threads_per_block",
+      "_origin": "ast",
+      "community": 161,
+      "community_name": "GemvKernelResources",
+      "file_type": "code",
+      "norm_label": "max_threads_per_block",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L91"
+    },
+    {
+      "id": "include_miinfer_fp16_gemv_gemvkernelresources_registers",
+      "label": "registers",
+      "_origin": "ast",
+      "community": 161,
+      "community_name": "GemvKernelResources",
+      "file_type": "code",
+      "norm_label": "registers",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L88"
+    },
+    {
+      "id": "include_miinfer_fp16_gemv_gemvkernelresources_shared_bytes",
+      "label": "shared_bytes",
+      "_origin": "ast",
+      "community": 161,
+      "community_name": "GemvKernelResources",
+      "file_type": "code",
+      "norm_label": "shared_bytes",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L89"
+    },
+    {
+      "id": "include_miinfer_fp16_gemv_hpp_size_t",
+      "label": "size_t",
+      "_origin": "ast",
+      "community": 161,
+      "community_name": "GemvKernelResources",
+      "file_type": "code",
+      "norm_label": "size_t",
       "source_file": "",
       "source_location": ""
-    },
-    {
-      "id": "include_miinfer_q4_q8_gemv_hpp_int8_t",
-      "label": "int8_t",
-      "_origin": "ast",
-      "community": 161,
-      "community_name": "Q8ExactBlock",
-      "file_type": "code",
-      "norm_label": "int8_t",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "include_miinfer_q4_q8_gemv_q8exactblock_d",
-      "label": "d",
-      "_origin": "ast",
-      "community": 161,
-      "community_name": "Q8ExactBlock",
-      "file_type": "code",
-      "norm_label": "d",
-      "source_file": "include/miinfer/q4_q8_gemv.hpp",
-      "source_location": "L33"
-    },
-    {
-      "id": "include_miinfer_q4_q8_gemv_q8exactblock_qs",
-      "label": "qs",
-      "_origin": "ast",
-      "community": 161,
-      "community_name": "Q8ExactBlock",
-      "file_type": "code",
-      "norm_label": "qs",
-      "source_file": "include/miinfer/q4_q8_gemv.hpp",
-      "source_location": "L35"
-    },
-    {
-      "id": "include_miinfer_q4_q8_gemv_q8exactblock_sum",
-      "label": "sum",
-      "_origin": "ast",
-      "community": 161,
-      "community_name": "Q8ExactBlock",
-      "file_type": "code",
-      "norm_label": "sum",
-      "source_file": "include/miinfer/q4_q8_gemv.hpp",
-      "source_location": "L34"
     },
     {
       "id": "tests_qwen3_layer6_external_test_checkpoint_file",
@@ -14189,94 +14198,6 @@
       "source_location": ""
     },
     {
-      "id": "tests_qwen3_layer35_external_test_cpp_uint16_t",
-      "label": "uint16_t",
-      "_origin": "ast",
-      "community": 167,
-      "community_name": "replay_projection",
-      "file_type": "code",
-      "norm_label": "uint16_t",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "tests_qwen3_layer35_external_test_q8boundarydiff_different_lane_values",
-      "label": "different_lane_values",
-      "_origin": "ast",
-      "community": 167,
-      "community_name": "replay_projection",
-      "file_type": "code",
-      "norm_label": "different_lane_values",
-      "source_file": "tests/qwen3_layer35_external_test.cpp",
-      "source_location": "L450"
-    },
-    {
-      "id": "tests_qwen3_layer35_external_test_q8boundarydiff_different_scale_blocks",
-      "label": "different_scale_blocks",
-      "_origin": "ast",
-      "community": 167,
-      "community_name": "replay_projection",
-      "file_type": "code",
-      "norm_label": "different_scale_blocks",
-      "source_file": "tests/qwen3_layer35_external_test.cpp",
-      "source_location": "L448"
-    },
-    {
-      "id": "tests_qwen3_layer35_external_test_q8boundarydiff_different_sum_blocks",
-      "label": "different_sum_blocks",
-      "_origin": "ast",
-      "community": 167,
-      "community_name": "replay_projection",
-      "file_type": "code",
-      "norm_label": "different_sum_blocks",
-      "source_file": "tests/qwen3_layer35_external_test.cpp",
-      "source_location": "L449"
-    },
-    {
-      "id": "tests_qwen3_layer35_external_test_q8boundarydiff_first_block",
-      "label": "first_block",
-      "_origin": "ast",
-      "community": 167,
-      "community_name": "replay_projection",
-      "file_type": "code",
-      "norm_label": "first_block",
-      "source_file": "tests/qwen3_layer35_external_test.cpp",
-      "source_location": "L451"
-    },
-    {
-      "id": "tests_qwen3_layer35_external_test_q8boundarydiff_first_lane",
-      "label": "first_lane",
-      "_origin": "ast",
-      "community": 167,
-      "community_name": "replay_projection",
-      "file_type": "code",
-      "norm_label": "first_lane",
-      "source_file": "tests/qwen3_layer35_external_test.cpp",
-      "source_location": "L452"
-    },
-    {
-      "id": "tests_qwen3_layer35_external_test_q8boundarydiff_max_scale_bits_delta",
-      "label": "max_scale_bits_delta",
-      "_origin": "ast",
-      "community": 167,
-      "community_name": "replay_projection",
-      "file_type": "code",
-      "norm_label": "max_scale_bits_delta",
-      "source_file": "tests/qwen3_layer35_external_test.cpp",
-      "source_location": "L453"
-    },
-    {
-      "id": "tests_qwen3_layer35_external_test_q8boundarydiff_max_sum_delta",
-      "label": "max_sum_delta",
-      "_origin": "ast",
-      "community": 167,
-      "community_name": "replay_projection",
-      "file_type": "code",
-      "norm_label": "max_sum_delta",
-      "source_file": "tests/qwen3_layer35_external_test.cpp",
-      "source_location": "L454"
-    },
-    {
       "id": "tests_qwen3_layer35_external_test_q8replayblock_d_bits",
       "label": "d_bits",
       "_origin": "ast",
@@ -14587,6 +14508,42 @@
       "norm_label": "results",
       "source_file": "rules.md",
       "source_location": "L698"
+    },
+    {
+      "id": "docs_architecture_13_prefill_vs_decode",
+      "label": "13. Prefill vs Decode",
+      "_origin": "ast",
+      "community": 170,
+      "community_name": "13. Prefill vs Decode",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "13. prefill vs decode",
+      "source_file": "docs/architecture.md",
+      "source_location": "L493"
+    },
+    {
+      "id": "docs_architecture_decode",
+      "label": "Decode",
+      "_origin": "ast",
+      "community": 170,
+      "community_name": "13. Prefill vs Decode",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "decode",
+      "source_file": "docs/architecture.md",
+      "source_location": "L508"
+    },
+    {
+      "id": "docs_architecture_prefill",
+      "label": "Prefill",
+      "_origin": "ast",
+      "community": 170,
+      "community_name": "13. Prefill vs Decode",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "prefill",
+      "source_file": "docs/architecture.md",
+      "source_location": "L501"
     },
     {
       "id": "docs_references",
@@ -15654,7 +15611,7 @@
       "node_kind": "heading",
       "norm_label": "comparison dimensions",
       "source_file": "docs/roadmap.md",
-      "source_location": "L478"
+      "source_location": "L484"
     },
     {
       "id": "docs_roadmap_comparison_rules",
@@ -15666,7 +15623,7 @@
       "node_kind": "heading",
       "norm_label": "comparison rules",
       "source_file": "docs/roadmap.md",
-      "source_location": "L513"
+      "source_location": "L519"
     },
     {
       "id": "docs_roadmap_context_regimes",
@@ -15678,7 +15635,7 @@
       "node_kind": "heading",
       "norm_label": "context regimes",
       "source_file": "docs/roadmap.md",
-      "source_location": "L494"
+      "source_location": "L500"
     },
     {
       "id": "docs_roadmap_decode",
@@ -15690,10 +15647,10 @@
       "node_kind": "heading",
       "norm_label": "decode",
       "source_file": "docs/roadmap.md",
-      "source_location": "L488"
+      "source_location": "L494"
     },
     {
-      "id": "docs_roadmap_exit_criteria_526",
+      "id": "docs_roadmap_exit_criteria_532",
       "label": "Exit criteria",
       "_origin": "ast",
       "community": 21,
@@ -15702,10 +15659,10 @@
       "node_kind": "heading",
       "norm_label": "exit criteria",
       "source_file": "docs/roadmap.md",
-      "source_location": "L526"
+      "source_location": "L532"
     },
     {
-      "id": "docs_roadmap_goal_472",
+      "id": "docs_roadmap_goal_478",
       "label": "Goal",
       "_origin": "ast",
       "community": 21,
@@ -15714,7 +15671,7 @@
       "node_kind": "heading",
       "norm_label": "goal",
       "source_file": "docs/roadmap.md",
-      "source_location": "L472"
+      "source_location": "L478"
     },
     {
       "id": "docs_roadmap_h0_supported",
@@ -15726,7 +15683,7 @@
       "node_kind": "heading",
       "norm_label": "h0 supported",
       "source_file": "docs/roadmap.md",
-      "source_location": "L550"
+      "source_location": "L556"
     },
     {
       "id": "docs_roadmap_h1_supported",
@@ -15738,7 +15695,7 @@
       "node_kind": "heading",
       "norm_label": "h1 supported",
       "source_file": "docs/roadmap.md",
-      "source_location": "L538"
+      "source_location": "L544"
     },
     {
       "id": "docs_roadmap_m5_beat_the_reference",
@@ -15750,7 +15707,7 @@
       "node_kind": "heading",
       "norm_label": "m5 \u2014 beat the reference",
       "source_file": "docs/roadmap.md",
-      "source_location": "L470"
+      "source_location": "L476"
     },
     {
       "id": "docs_roadmap_mixed_result",
@@ -15762,7 +15719,7 @@
       "node_kind": "heading",
       "norm_label": "mixed result",
       "source_file": "docs/roadmap.md",
-      "source_location": "L544"
+      "source_location": "L550"
     },
     {
       "id": "docs_roadmap_prompt_processing",
@@ -15774,7 +15731,7 @@
       "node_kind": "heading",
       "norm_label": "prompt processing",
       "source_file": "docs/roadmap.md",
-      "source_location": "L482"
+      "source_location": "L488"
     },
     {
       "id": "docs_roadmap_system_metrics",
@@ -15786,7 +15743,7 @@
       "node_kind": "heading",
       "norm_label": "system metrics",
       "source_file": "docs/roadmap.md",
-      "source_location": "L502"
+      "source_location": "L508"
     },
     {
       "id": "docs_references_4_mxxm_t_mx_llama_cpp",
@@ -15930,7 +15887,7 @@
       "node_kind": "heading",
       "norm_label": "benchmark before claim",
       "source_file": "docs/roadmap.md",
-      "source_location": "L46"
+      "source_location": "L52"
     },
     {
       "id": "docs_roadmap_correctness_before_speed",
@@ -15942,7 +15899,7 @@
       "node_kind": "heading",
       "norm_label": "correctness before speed",
       "source_file": "docs/roadmap.md",
-      "source_location": "L42"
+      "source_location": "L48"
     },
     {
       "id": "docs_roadmap_current_execution_order",
@@ -15954,7 +15911,7 @@
       "node_kind": "heading",
       "norm_label": "current execution order",
       "source_file": "docs/roadmap.md",
-      "source_location": "L747"
+      "source_location": "L753"
     },
     {
       "id": "docs_roadmap_current_status",
@@ -15978,7 +15935,7 @@
       "node_kind": "heading",
       "norm_label": "deferred / explicitly out of scope",
       "source_file": "docs/roadmap.md",
-      "source_location": "L691"
+      "source_location": "L697"
     },
     {
       "id": "docs_roadmap_evidence_before_architecture",
@@ -15990,7 +15947,7 @@
       "node_kind": "heading",
       "norm_label": "evidence before architecture",
       "source_file": "docs/roadmap.md",
-      "source_location": "L34"
+      "source_location": "L40"
     },
     {
       "id": "docs_roadmap_immediate_next_milestone",
@@ -16002,7 +15959,7 @@
       "node_kind": "heading",
       "norm_label": "immediate next milestone",
       "source_file": "docs/roadmap.md",
-      "source_location": "L799"
+      "source_location": "L805"
     },
     {
       "id": "docs_roadmap_miinfer_roadmap",
@@ -16026,7 +15983,7 @@
       "node_kind": "heading",
       "norm_label": "milestone dependencies",
       "source_file": "docs/roadmap.md",
-      "source_location": "L716"
+      "source_location": "L722"
     },
     {
       "id": "docs_roadmap_narrow_before_broad",
@@ -16038,7 +15995,7 @@
       "node_kind": "heading",
       "norm_label": "narrow before broad",
       "source_file": "docs/roadmap.md",
-      "source_location": "L38"
+      "source_location": "L44"
     },
     {
       "id": "docs_roadmap_roadmap_change_policy",
@@ -16050,7 +16007,7 @@
       "node_kind": "heading",
       "norm_label": "roadmap change policy",
       "source_file": "docs/roadmap.md",
-      "source_location": "L862"
+      "source_location": "L868"
     },
     {
       "id": "docs_roadmap_roadmap_principles",
@@ -16062,7 +16019,7 @@
       "node_kind": "heading",
       "norm_label": "roadmap principles",
       "source_file": "docs/roadmap.md",
-      "source_location": "L32"
+      "source_location": "L38"
     },
     {
       "id": "docs_roadmap_success_definition",
@@ -16074,7 +16031,7 @@
       "node_kind": "heading",
       "norm_label": "success definition",
       "source_file": "docs/roadmap.md",
-      "source_location": "L880"
+      "source_location": "L886"
     },
     {
       "id": "readme",
@@ -16098,7 +16055,7 @@
       "node_kind": "heading",
       "norm_label": "activation reuse",
       "source_file": "docs/roadmap.md",
-      "source_location": "L579"
+      "source_location": "L585"
     },
     {
       "id": "docs_roadmap_candidate_work",
@@ -16110,10 +16067,10 @@
       "node_kind": "heading",
       "norm_label": "candidate work",
       "source_file": "docs/roadmap.md",
-      "source_location": "L566"
+      "source_location": "L572"
     },
     {
-      "id": "docs_roadmap_exit_criteria_613",
+      "id": "docs_roadmap_exit_criteria_619",
       "label": "Exit criteria",
       "_origin": "ast",
       "community": 24,
@@ -16122,10 +16079,10 @@
       "node_kind": "heading",
       "norm_label": "exit criteria",
       "source_file": "docs/roadmap.md",
-      "source_location": "L613"
+      "source_location": "L619"
     },
     {
-      "id": "docs_roadmap_goal_562",
+      "id": "docs_roadmap_goal_568",
       "label": "Goal",
       "_origin": "ast",
       "community": 24,
@@ -16134,7 +16091,7 @@
       "node_kind": "heading",
       "norm_label": "goal",
       "source_file": "docs/roadmap.md",
-      "source_location": "L562"
+      "source_location": "L568"
     },
     {
       "id": "docs_roadmap_hip_graph_capture",
@@ -16146,7 +16103,7 @@
       "node_kind": "heading",
       "norm_label": "hip graph capture",
       "source_file": "docs/roadmap.md",
-      "source_location": "L597"
+      "source_location": "L603"
     },
     {
       "id": "docs_roadmap_kernel_specialization",
@@ -16158,7 +16115,7 @@
       "node_kind": "heading",
       "norm_label": "kernel specialization",
       "source_file": "docs/roadmap.md",
-      "source_location": "L609"
+      "source_location": "L615"
     },
     {
       "id": "docs_roadmap_m6_runtime_specialization",
@@ -16170,7 +16127,7 @@
       "node_kind": "heading",
       "norm_label": "m6 \u2014 runtime specialization",
       "source_file": "docs/roadmap.md",
-      "source_location": "L560"
+      "source_location": "L566"
     },
     {
       "id": "docs_roadmap_native_weight_packing",
@@ -16182,7 +16139,7 @@
       "node_kind": "heading",
       "norm_label": "native weight packing",
       "source_file": "docs/roadmap.md",
-      "source_location": "L568"
+      "source_location": "L574"
     },
     {
       "id": "docs_roadmap_operation_fusion",
@@ -16194,7 +16151,7 @@
       "node_kind": "heading",
       "norm_label": "operation fusion",
       "source_file": "docs/roadmap.md",
-      "source_location": "L587"
+      "source_location": "L593"
     },
     {
       "id": "docs_roadmap_static_memory_plan",
@@ -16206,7 +16163,7 @@
       "node_kind": "heading",
       "norm_label": "static memory plan",
       "source_file": "docs/roadmap.md",
-      "source_location": "L583"
+      "source_location": "L589"
     },
     {
       "id": "docs_roadmap_benchmark_protocol",
@@ -16218,7 +16175,7 @@
       "node_kind": "heading",
       "norm_label": "benchmark protocol",
       "source_file": "docs/roadmap.md",
-      "source_location": "L114"
+      "source_location": "L120"
     },
     {
       "id": "docs_roadmap_deliverables",
@@ -16230,7 +16187,7 @@
       "node_kind": "heading",
       "norm_label": "deliverables",
       "source_file": "docs/roadmap.md",
-      "source_location": "L72"
+      "source_location": "L78"
     },
     {
       "id": "docs_roadmap_exit_criteria",
@@ -16242,7 +16199,7 @@
       "node_kind": "heading",
       "norm_label": "exit criteria",
       "source_file": "docs/roadmap.md",
-      "source_location": "L126"
+      "source_location": "L132"
     },
     {
       "id": "docs_roadmap_goal",
@@ -16254,7 +16211,7 @@
       "node_kind": "heading",
       "norm_label": "goal",
       "source_file": "docs/roadmap.md",
-      "source_location": "L56"
+      "source_location": "L62"
     },
     {
       "id": "docs_roadmap_hardware_environment",
@@ -16266,7 +16223,7 @@
       "node_kind": "heading",
       "norm_label": "hardware environment",
       "source_file": "docs/roadmap.md",
-      "source_location": "L87"
+      "source_location": "L93"
     },
     {
       "id": "docs_roadmap_m0_baseline_and_project_bootstrap",
@@ -16278,7 +16235,7 @@
       "node_kind": "heading",
       "norm_label": "m0 \u2014 baseline and project bootstrap",
       "source_file": "docs/roadmap.md",
-      "source_location": "L54"
+      "source_location": "L60"
     },
     {
       "id": "docs_roadmap_non_goals",
@@ -16290,7 +16247,7 @@
       "node_kind": "heading",
       "norm_label": "non-goals",
       "source_file": "docs/roadmap.md",
-      "source_location": "L138"
+      "source_location": "L144"
     },
     {
       "id": "docs_roadmap_questions",
@@ -16302,7 +16259,7 @@
       "node_kind": "heading",
       "norm_label": "questions",
       "source_file": "docs/roadmap.md",
-      "source_location": "L62"
+      "source_location": "L68"
     },
     {
       "id": "docs_roadmap_reference_runtime",
@@ -16314,7 +16271,7 @@
       "node_kind": "heading",
       "norm_label": "reference runtime",
       "source_file": "docs/roadmap.md",
-      "source_location": "L103"
+      "source_location": "L109"
     },
     {
       "id": "docs_roadmap_repository",
@@ -16326,7 +16283,7 @@
       "node_kind": "heading",
       "norm_label": "repository",
       "source_file": "docs/roadmap.md",
-      "source_location": "L74"
+      "source_location": "L80"
     },
     {
       "id": "agents_29_development_sequence",
@@ -17354,7 +17311,7 @@
       "node_kind": "heading",
       "norm_label": "additional quantization",
       "source_file": "docs/roadmap.md",
-      "source_location": "L633"
+      "source_location": "L639"
     },
     {
       "id": "docs_roadmap_long_context_specialization",
@@ -17366,7 +17323,7 @@
       "node_kind": "heading",
       "norm_label": "long-context specialization",
       "source_file": "docs/roadmap.md",
-      "source_location": "L656"
+      "source_location": "L662"
     },
     {
       "id": "docs_roadmap_m7_expansion",
@@ -17378,7 +17335,7 @@
       "node_kind": "heading",
       "norm_label": "m7 \u2014 expansion",
       "source_file": "docs/roadmap.md",
-      "source_location": "L625"
+      "source_location": "L631"
     },
     {
       "id": "docs_roadmap_potential_areas",
@@ -17390,7 +17347,7 @@
       "node_kind": "heading",
       "norm_label": "potential areas",
       "source_file": "docs/roadmap.md",
-      "source_location": "L631"
+      "source_location": "L637"
     },
     {
       "id": "docs_roadmap_second_model",
@@ -17402,7 +17359,7 @@
       "node_kind": "heading",
       "norm_label": "second model",
       "source_file": "docs/roadmap.md",
-      "source_location": "L644"
+      "source_location": "L650"
     },
     {
       "id": "docs_roadmap_serving",
@@ -17414,7 +17371,7 @@
       "node_kind": "heading",
       "norm_label": "serving",
       "source_file": "docs/roadmap.md",
-      "source_location": "L679"
+      "source_location": "L685"
     },
     {
       "id": "docs_roadmap_speculative_decoding_mtp",
@@ -17426,7 +17383,7 @@
       "node_kind": "heading",
       "norm_label": "speculative decoding / mtp",
       "source_file": "docs/roadmap.md",
-      "source_location": "L667"
+      "source_location": "L673"
     },
     {
       "id": "docs_roadmap_architectural_rule",
@@ -17438,7 +17395,7 @@
       "node_kind": "heading",
       "norm_label": "architectural rule",
       "source_file": "docs/roadmap.md",
-      "source_location": "L361"
+      "source_location": "L367"
     },
     {
       "id": "docs_roadmap_core_runtime_responsibilities",
@@ -17450,10 +17407,10 @@
       "node_kind": "heading",
       "norm_label": "core runtime responsibilities",
       "source_file": "docs/roadmap.md",
-      "source_location": "L347"
+      "source_location": "L353"
     },
     {
-      "id": "docs_roadmap_exit_criteria_389",
+      "id": "docs_roadmap_exit_criteria_395",
       "label": "Exit criteria",
       "_origin": "ast",
       "community": 33,
@@ -17462,10 +17419,10 @@
       "node_kind": "heading",
       "norm_label": "exit criteria",
       "source_file": "docs/roadmap.md",
-      "source_location": "L389"
+      "source_location": "L395"
     },
     {
-      "id": "docs_roadmap_goal_341",
+      "id": "docs_roadmap_goal_347",
       "label": "Goal",
       "_origin": "ast",
       "community": 33,
@@ -17474,7 +17431,7 @@
       "node_kind": "heading",
       "norm_label": "goal",
       "source_file": "docs/roadmap.md",
-      "source_location": "L341"
+      "source_location": "L347"
     },
     {
       "id": "docs_roadmap_m3_minimal_runtime",
@@ -17486,7 +17443,7 @@
       "node_kind": "heading",
       "norm_label": "m3 \u2014 minimal runtime",
       "source_file": "docs/roadmap.md",
-      "source_location": "L339"
+      "source_location": "L345"
     },
     {
       "id": "docs_roadmap_model_scope",
@@ -17498,7 +17455,7 @@
       "node_kind": "heading",
       "norm_label": "model scope",
       "source_file": "docs/roadmap.md",
-      "source_location": "L375"
+      "source_location": "L381"
     },
     {
       "id": "docs_roadmap_quantization_scope",
@@ -17510,7 +17467,7 @@
       "node_kind": "heading",
       "norm_label": "quantization scope",
       "source_file": "docs/roadmap.md",
-      "source_location": "L383"
+      "source_location": "L389"
     },
     {
       "id": "docs_roadmap_benchmark_harness",
@@ -17522,10 +17479,10 @@
       "node_kind": "heading",
       "norm_label": "benchmark harness",
       "source_file": "docs/roadmap.md",
-      "source_location": "L179"
+      "source_location": "L185"
     },
     {
-      "id": "docs_roadmap_exit_criteria_198",
+      "id": "docs_roadmap_exit_criteria_204",
       "label": "Exit criteria",
       "_origin": "ast",
       "community": 34,
@@ -17534,10 +17491,10 @@
       "node_kind": "heading",
       "norm_label": "exit criteria",
       "source_file": "docs/roadmap.md",
-      "source_location": "L198"
+      "source_location": "L204"
     },
     {
-      "id": "docs_roadmap_goal_154",
+      "id": "docs_roadmap_goal_160",
       "label": "Goal",
       "_origin": "ast",
       "community": 34,
@@ -17546,7 +17503,7 @@
       "node_kind": "heading",
       "norm_label": "goal",
       "source_file": "docs/roadmap.md",
-      "source_location": "L154"
+      "source_location": "L160"
     },
     {
       "id": "docs_roadmap_initial_kernel_areas",
@@ -17558,7 +17515,7 @@
       "node_kind": "heading",
       "norm_label": "initial kernel areas",
       "source_file": "docs/roadmap.md",
-      "source_location": "L167"
+      "source_location": "L173"
     },
     {
       "id": "docs_roadmap_initial_representative_shapes",
@@ -17570,7 +17527,7 @@
       "node_kind": "heading",
       "norm_label": "initial representative shapes",
       "source_file": "docs/roadmap.md",
-      "source_location": "L192"
+      "source_location": "L198"
     },
     {
       "id": "docs_roadmap_m1_kernel_laboratory",
@@ -17582,10 +17539,10 @@
       "node_kind": "heading",
       "norm_label": "m1 \u2014 kernel laboratory",
       "source_file": "docs/roadmap.md",
-      "source_location": "L152"
+      "source_location": "L158"
     },
     {
-      "id": "docs_roadmap_questions_158",
+      "id": "docs_roadmap_questions_164",
       "label": "Questions",
       "_origin": "ast",
       "community": 34,
@@ -17594,7 +17551,7 @@
       "node_kind": "heading",
       "norm_label": "questions",
       "source_file": "docs/roadmap.md",
-      "source_location": "L158"
+      "source_location": "L164"
     },
     {
       "id": "agents_32_codex_task_behavior",
@@ -18496,10 +18453,10 @@
       "node_kind": "heading",
       "norm_label": "correctness validation",
       "source_file": "docs/roadmap.md",
-      "source_location": "L446"
+      "source_location": "L452"
     },
     {
-      "id": "docs_roadmap_exit_criteria_458",
+      "id": "docs_roadmap_exit_criteria_464",
       "label": "Exit criteria",
       "_origin": "ast",
       "community": 41,
@@ -18508,10 +18465,10 @@
       "node_kind": "heading",
       "norm_label": "exit criteria",
       "source_file": "docs/roadmap.md",
-      "source_location": "L458"
+      "source_location": "L464"
     },
     {
-      "id": "docs_roadmap_goal_412",
+      "id": "docs_roadmap_goal_418",
       "label": "Goal",
       "_origin": "ast",
       "community": 41,
@@ -18520,7 +18477,7 @@
       "node_kind": "heading",
       "norm_label": "goal",
       "source_file": "docs/roadmap.md",
-      "source_location": "L412"
+      "source_location": "L418"
     },
     {
       "id": "docs_roadmap_initial_inference_mode",
@@ -18532,7 +18489,7 @@
       "node_kind": "heading",
       "norm_label": "initial inference mode",
       "source_file": "docs/roadmap.md",
-      "source_location": "L434"
+      "source_location": "L440"
     },
     {
       "id": "docs_roadmap_m4_first_correct_end_to_end_generation",
@@ -18544,7 +18501,7 @@
       "node_kind": "heading",
       "norm_label": "m4 \u2014 first correct end-to-end generation",
       "source_file": "docs/roadmap.md",
-      "source_location": "L410"
+      "source_location": "L416"
     },
     {
       "id": "docs_roadmap_required_execution_pieces",
@@ -18556,7 +18513,7 @@
       "node_kind": "heading",
       "norm_label": "required execution pieces",
       "source_file": "docs/roadmap.md",
-      "source_location": "L418"
+      "source_location": "L424"
     },
     {
       "id": "experiments_template_15_benchmark_protocol",
@@ -19507,11 +19464,22 @@
       "source_location": "L55"
     },
     {
+      "id": "include_miinfer_device_validation",
+      "label": "device_validation.hpp",
+      "_origin": "ast",
+      "community": 50,
+      "community_name": "string",
+      "file_type": "code",
+      "norm_label": "device_validation.hpp",
+      "source_file": "include/miinfer/device_validation.hpp",
+      "source_location": "L1"
+    },
+    {
       "id": "include_miinfer_device_validation_deviceinfo_architecture",
       "label": "architecture",
       "_origin": "ast",
       "community": 50,
-      "community_name": "DeviceInfo",
+      "community_name": "string",
       "file_type": "code",
       "norm_label": "architecture",
       "source_file": "include/miinfer/device_validation.hpp",
@@ -19522,7 +19490,7 @@
       "label": "index",
       "_origin": "ast",
       "community": 50,
-      "community_name": "DeviceInfo",
+      "community_name": "string",
       "file_type": "code",
       "norm_label": "index",
       "source_file": "include/miinfer/device_validation.hpp",
@@ -19533,7 +19501,7 @@
       "label": "name",
       "_origin": "ast",
       "community": 50,
-      "community_name": "DeviceInfo",
+      "community_name": "string",
       "file_type": "code",
       "norm_label": "name",
       "source_file": "include/miinfer/device_validation.hpp",
@@ -19544,7 +19512,7 @@
       "label": "total_vram_bytes",
       "_origin": "ast",
       "community": 50,
-      "community_name": "DeviceInfo",
+      "community_name": "string",
       "file_type": "code",
       "norm_label": "total_vram_bytes",
       "source_file": "include/miinfer/device_validation.hpp",
@@ -19555,18 +19523,40 @@
       "label": "size_t",
       "_origin": "ast",
       "community": 50,
-      "community_name": "DeviceInfo",
+      "community_name": "string",
       "file_type": "code",
       "norm_label": "size_t",
       "source_file": "",
       "source_location": ""
     },
     {
+      "id": "include_miinfer_device_validation_hpp_string",
+      "label": "string",
+      "_origin": "ast",
+      "community": 50,
+      "community_name": "string",
+      "file_type": "code",
+      "norm_label": "string",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "include_miinfer_sha256",
+      "label": "sha256.hpp",
+      "_origin": "ast",
+      "community": 50,
+      "community_name": "string",
+      "file_type": "code",
+      "norm_label": "sha256.hpp",
+      "source_file": "include/miinfer/sha256.hpp",
+      "source_location": "L1"
+    },
+    {
       "id": "src_device_validation",
       "label": "device_validation.cpp",
       "_origin": "ast",
       "community": 50,
-      "community_name": "DeviceInfo",
+      "community_name": "string",
       "file_type": "code",
       "norm_label": "device_validation.cpp",
       "source_file": "src/device_validation.cpp",
@@ -19577,7 +19567,7 @@
       "label": "ostream",
       "_origin": "ast",
       "community": 50,
-      "community_name": "DeviceInfo",
+      "community_name": "string",
       "file_type": "code",
       "norm_label": "ostream",
       "source_file": "",
@@ -19588,11 +19578,33 @@
       "label": "string",
       "_origin": "ast",
       "community": 50,
-      "community_name": "DeviceInfo",
+      "community_name": "string",
       "file_type": "code",
       "norm_label": "string",
       "source_file": "",
       "source_location": ""
+    },
+    {
+      "id": "tests_device_info",
+      "label": "device_info.cpp",
+      "_origin": "ast",
+      "community": 50,
+      "community_name": "string",
+      "file_type": "code",
+      "norm_label": "device_info.cpp",
+      "source_file": "tests/device_info.cpp",
+      "source_location": "L1"
+    },
+    {
+      "id": "tests_host_test",
+      "label": "host_test.cpp",
+      "_origin": "ast",
+      "community": 50,
+      "community_name": "string",
+      "file_type": "code",
+      "norm_label": "host_test.cpp",
+      "source_file": "tests/host_test.cpp",
+      "source_location": "L1"
     },
     {
       "id": "experiments_template_29_decision",
@@ -20395,7 +20407,7 @@
       "node_kind": "heading",
       "norm_label": "current benchmark priority",
       "source_file": "docs/current-state.md",
-      "source_location": "L323"
+      "source_location": "L327"
     },
     {
       "id": "docs_current_state_current_build_direction",
@@ -20407,7 +20419,7 @@
       "node_kind": "heading",
       "norm_label": "current build direction",
       "source_file": "docs/current-state.md",
-      "source_location": "L239"
+      "source_location": "L243"
     },
     {
       "id": "docs_current_state_current_correctness_policy",
@@ -20419,7 +20431,7 @@
       "node_kind": "heading",
       "norm_label": "current correctness policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L403"
+      "source_location": "L407"
     },
     {
       "id": "docs_current_state_current_dependency_policy",
@@ -20431,7 +20443,7 @@
       "node_kind": "heading",
       "norm_label": "current dependency policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L265"
+      "source_location": "L269"
     },
     {
       "id": "docs_current_state_current_experiment_queue",
@@ -20443,7 +20455,7 @@
       "node_kind": "heading",
       "norm_label": "current experiment queue",
       "source_file": "docs/current-state.md",
-      "source_location": "L361"
+      "source_location": "L365"
     },
     {
       "id": "docs_current_state_current_hardware_observation_requirements",
@@ -20455,7 +20467,7 @@
       "node_kind": "heading",
       "norm_label": "current hardware observation requirements",
       "source_file": "docs/current-state.md",
-      "source_location": "L434"
+      "source_location": "L438"
     },
     {
       "id": "docs_current_state_current_hardware_target",
@@ -20479,7 +20491,7 @@
       "node_kind": "heading",
       "norm_label": "current performance policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L419"
+      "source_location": "L423"
     },
     {
       "id": "docs_current_state_current_phase",
@@ -20503,7 +20515,7 @@
       "node_kind": "heading",
       "norm_label": "current reference strategy",
       "source_file": "docs/current-state.md",
-      "source_location": "L303"
+      "source_location": "L307"
     },
     {
       "id": "docs_current_state_current_runtime_policy",
@@ -20515,7 +20527,7 @@
       "node_kind": "heading",
       "norm_label": "current runtime policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L285"
+      "source_location": "L289"
     },
     {
       "id": "docs_current_state_current_scope",
@@ -20527,7 +20539,7 @@
       "node_kind": "heading",
       "norm_label": "current scope",
       "source_file": "docs/current-state.md",
-      "source_location": "L454"
+      "source_location": "L458"
     },
     {
       "id": "docs_current_state_definition_of_current_success",
@@ -20539,7 +20551,7 @@
       "node_kind": "heading",
       "norm_label": "definition of current success",
       "source_file": "docs/current-state.md",
-      "source_location": "L524"
+      "source_location": "L528"
     },
     {
       "id": "docs_current_state_do_not_start_yet",
@@ -20551,7 +20563,7 @@
       "node_kind": "heading",
       "norm_label": "do not start yet",
       "source_file": "docs/current-state.md",
-      "source_location": "L486"
+      "source_location": "L490"
     },
     {
       "id": "docs_current_state_first_major_gate",
@@ -20563,7 +20575,7 @@
       "node_kind": "heading",
       "norm_label": "first major gate",
       "source_file": "docs/current-state.md",
-      "source_location": "L393"
+      "source_location": "L397"
     },
     {
       "id": "docs_current_state_immediate_deliverables",
@@ -20575,7 +20587,7 @@
       "node_kind": "heading",
       "norm_label": "immediate deliverables",
       "source_file": "docs/current-state.md",
-      "source_location": "L189"
+      "source_location": "L193"
     },
     {
       "id": "docs_current_state_immediate_objective",
@@ -20587,7 +20599,7 @@
       "node_kind": "heading",
       "norm_label": "immediate objective",
       "source_file": "docs/current-state.md",
-      "source_location": "L173"
+      "source_location": "L177"
     },
     {
       "id": "docs_current_state_in_scope_now",
@@ -20599,7 +20611,7 @@
       "node_kind": "heading",
       "norm_label": "in scope now",
       "source_file": "docs/current-state.md",
-      "source_location": "L456"
+      "source_location": "L460"
     },
     {
       "id": "docs_current_state_last_updated",
@@ -20611,7 +20623,7 @@
       "node_kind": "heading",
       "norm_label": "last updated",
       "source_file": "docs/current-state.md",
-      "source_location": "L550"
+      "source_location": "L554"
     },
     {
       "id": "docs_current_state_miinfer_current_state",
@@ -20635,7 +20647,7 @@
       "node_kind": "heading",
       "norm_label": "next implementation task",
       "source_file": "docs/current-state.md",
-      "source_location": "L507"
+      "source_location": "L511"
     },
     {
       "id": "docs_current_state_not_in_scope_now",
@@ -20647,7 +20659,7 @@
       "node_kind": "heading",
       "norm_label": "not in scope now",
       "source_file": "docs/current-state.md",
-      "source_location": "L467"
+      "source_location": "L471"
     },
     {
       "id": "codex_skills_graphify_references_hooks",
@@ -45430,7 +45442,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L173",
+      "source_location": "L177",
       "weight": 1.0
     },
     {
@@ -45441,7 +45453,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L189",
+      "source_location": "L193",
       "weight": 1.0
     },
     {
@@ -45452,7 +45464,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L239",
+      "source_location": "L243",
       "weight": 1.0
     },
     {
@@ -45463,7 +45475,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L265",
+      "source_location": "L269",
       "weight": 1.0
     },
     {
@@ -45485,7 +45497,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L285",
+      "source_location": "L289",
       "weight": 1.0
     },
     {
@@ -45496,7 +45508,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L303",
+      "source_location": "L307",
       "weight": 1.0
     },
     {
@@ -45507,7 +45519,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L323",
+      "source_location": "L327",
       "weight": 1.0
     },
     {
@@ -45518,7 +45530,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L361",
+      "source_location": "L365",
       "weight": 1.0
     },
     {
@@ -45529,7 +45541,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L393",
+      "source_location": "L397",
       "weight": 1.0
     },
     {
@@ -45540,7 +45552,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L403",
+      "source_location": "L407",
       "weight": 1.0
     },
     {
@@ -45562,7 +45574,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L419",
+      "source_location": "L423",
       "weight": 1.0
     },
     {
@@ -45573,7 +45585,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L434",
+      "source_location": "L438",
       "weight": 1.0
     },
     {
@@ -45584,7 +45596,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L454",
+      "source_location": "L458",
       "weight": 1.0
     },
     {
@@ -45595,7 +45607,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L486",
+      "source_location": "L490",
       "weight": 1.0
     },
     {
@@ -45606,7 +45618,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L507",
+      "source_location": "L511",
       "weight": 1.0
     },
     {
@@ -45617,7 +45629,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L524",
+      "source_location": "L528",
       "weight": 1.0
     },
     {
@@ -45628,7 +45640,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L550",
+      "source_location": "L554",
       "weight": 1.0
     },
     {
@@ -45639,7 +45651,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L150",
+      "source_location": "L154",
       "weight": 1.0
     },
     {
@@ -45672,7 +45684,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L456",
+      "source_location": "L460",
       "weight": 1.0
     },
     {
@@ -45683,7 +45695,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L467",
+      "source_location": "L471",
       "weight": 1.0
     },
     {
@@ -47855,6 +47867,17 @@
     },
     {
       "source": "docs_m4b_forward_m4_b_full_qwen3_single_token_forward",
+      "target": "docs_m4b_forward_m4_b23_external_backend_contract_characterization",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/m4b-forward.md",
+      "source_location": "L843",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_m4b_forward_m4_b_full_qwen3_single_token_forward",
       "target": "docs_m4b_forward_independent_reference",
       "relation": "contains",
       "_origin": "ast",
@@ -49566,7 +49589,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L152",
+      "source_location": "L158",
       "weight": 1.0
     },
     {
@@ -49577,18 +49600,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L210",
-      "weight": 1.0
-    },
-    {
-      "source": "docs_roadmap",
-      "target": "docs_roadmap_roadmap_principles",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/roadmap.md",
-      "source_location": "L32",
+      "source_location": "L216",
       "weight": 1.0
     },
     {
@@ -49599,7 +49611,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L339",
+      "source_location": "L345",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_roadmap",
+      "target": "docs_roadmap_roadmap_principles",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/roadmap.md",
+      "source_location": "L38",
       "weight": 1.0
     },
     {
@@ -49610,7 +49633,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L410",
+      "source_location": "L416",
       "weight": 1.0
     },
     {
@@ -49621,18 +49644,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L470",
-      "weight": 1.0
-    },
-    {
-      "source": "docs_roadmap",
-      "target": "docs_roadmap_m0_baseline_and_project_bootstrap",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/roadmap.md",
-      "source_location": "L54",
+      "source_location": "L476",
       "weight": 1.0
     },
     {
@@ -49643,7 +49655,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L560",
+      "source_location": "L566",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_roadmap",
+      "target": "docs_roadmap_m0_baseline_and_project_bootstrap",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/roadmap.md",
+      "source_location": "L60",
       "weight": 1.0
     },
     {
@@ -49654,7 +49677,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L625",
+      "source_location": "L631",
       "weight": 1.0
     },
     {
@@ -49665,7 +49688,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L691",
+      "source_location": "L697",
       "weight": 1.0
     },
     {
@@ -49676,7 +49699,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L716",
+      "source_location": "L722",
       "weight": 1.0
     },
     {
@@ -49687,7 +49710,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L747",
+      "source_location": "L753",
       "weight": 1.0
     },
     {
@@ -49698,7 +49721,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L799",
+      "source_location": "L805",
       "weight": 1.0
     },
     {
@@ -49709,7 +49732,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L862",
+      "source_location": "L868",
       "weight": 1.0
     },
     {
@@ -49720,7 +49743,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L880",
+      "source_location": "L886",
       "weight": 1.0
     },
     {
@@ -49731,7 +49754,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L224",
+      "source_location": "L230",
       "weight": 1.0
     },
     {
@@ -49742,7 +49765,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L232",
+      "source_location": "L238",
       "weight": 1.0
     },
     {
@@ -49753,7 +49776,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L242",
+      "source_location": "L248",
       "weight": 1.0
     },
     {
@@ -49764,7 +49787,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L252",
+      "source_location": "L258",
       "weight": 1.0
     },
     {
@@ -49775,7 +49798,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L261",
+      "source_location": "L267",
       "weight": 1.0
     },
     {
@@ -49786,7 +49809,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L273",
+      "source_location": "L279",
       "weight": 1.0
     },
     {
@@ -49797,7 +49820,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L568",
+      "source_location": "L574",
       "weight": 1.0
     },
     {
@@ -49808,7 +49831,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L579",
+      "source_location": "L585",
       "weight": 1.0
     },
     {
@@ -49819,7 +49842,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L583",
+      "source_location": "L589",
       "weight": 1.0
     },
     {
@@ -49830,7 +49853,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L587",
+      "source_location": "L593",
       "weight": 1.0
     },
     {
@@ -49841,7 +49864,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L597",
+      "source_location": "L603",
       "weight": 1.0
     },
     {
@@ -49852,7 +49875,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L609",
+      "source_location": "L615",
       "weight": 1.0
     },
     {
@@ -49863,7 +49886,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L482",
+      "source_location": "L488",
       "weight": 1.0
     },
     {
@@ -49874,7 +49897,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L488",
+      "source_location": "L494",
       "weight": 1.0
     },
     {
@@ -49885,7 +49908,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L494",
+      "source_location": "L500",
       "weight": 1.0
     },
     {
@@ -49896,7 +49919,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L502",
+      "source_location": "L508",
       "weight": 1.0
     },
     {
@@ -49907,7 +49930,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L103",
+      "source_location": "L109",
       "weight": 1.0
     },
     {
@@ -49918,7 +49941,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L114",
+      "source_location": "L120",
       "weight": 1.0
     },
     {
@@ -49929,7 +49952,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L74",
+      "source_location": "L80",
       "weight": 1.0
     },
     {
@@ -49940,23 +49963,12 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L87",
+      "source_location": "L93",
       "weight": 1.0
     },
     {
-      "source": "docs_roadmap_exit_criteria_526",
+      "source": "docs_roadmap_exit_criteria_532",
       "target": "docs_roadmap_h1_supported",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/roadmap.md",
-      "source_location": "L538",
-      "weight": 1.0
-    },
-    {
-      "source": "docs_roadmap_exit_criteria_526",
-      "target": "docs_roadmap_mixed_result",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -49966,14 +49978,25 @@
       "weight": 1.0
     },
     {
-      "source": "docs_roadmap_exit_criteria_526",
-      "target": "docs_roadmap_h0_supported",
+      "source": "docs_roadmap_exit_criteria_532",
+      "target": "docs_roadmap_mixed_result",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
       "source_location": "L550",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_roadmap_exit_criteria_532",
+      "target": "docs_roadmap_h0_supported",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/roadmap.md",
+      "source_location": "L556",
       "weight": 1.0
     },
     {
@@ -49984,7 +50007,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L314",
+      "source_location": "L320",
       "weight": 1.0
     },
     {
@@ -49995,7 +50018,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L321",
+      "source_location": "L327",
       "weight": 1.0
     },
     {
@@ -50006,7 +50029,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L126",
+      "source_location": "L132",
       "weight": 1.0
     },
     {
@@ -50017,7 +50040,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L138",
+      "source_location": "L144",
       "weight": 1.0
     },
     {
@@ -50028,7 +50051,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L56",
+      "source_location": "L62",
       "weight": 1.0
     },
     {
@@ -50039,7 +50062,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L62",
+      "source_location": "L68",
       "weight": 1.0
     },
     {
@@ -50050,29 +50073,29 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L72",
+      "source_location": "L78",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m1_kernel_laboratory",
-      "target": "docs_roadmap_goal_154",
+      "target": "docs_roadmap_goal_160",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L154",
+      "source_location": "L160",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m1_kernel_laboratory",
-      "target": "docs_roadmap_questions_158",
+      "target": "docs_roadmap_questions_164",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L158",
+      "source_location": "L164",
       "weight": 1.0
     },
     {
@@ -50083,7 +50106,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L167",
+      "source_location": "L173",
       "weight": 1.0
     },
     {
@@ -50094,7 +50117,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L179",
+      "source_location": "L185",
       "weight": 1.0
     },
     {
@@ -50105,34 +50128,23 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L192",
-      "weight": 1.0
-    },
-    {
-      "source": "docs_roadmap_m1_kernel_laboratory",
-      "target": "docs_roadmap_exit_criteria_198",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/roadmap.md",
       "source_location": "L198",
       "weight": 1.0
     },
     {
-      "source": "docs_roadmap_m2_prove_specialization",
-      "target": "docs_roadmap_goal_212",
+      "source": "docs_roadmap_m1_kernel_laboratory",
+      "target": "docs_roadmap_exit_criteria_204",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L212",
+      "source_location": "L204",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m2_prove_specialization",
-      "target": "docs_roadmap_core_question",
+      "target": "docs_roadmap_goal_218",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -50143,13 +50155,24 @@
     },
     {
       "source": "docs_roadmap_m2_prove_specialization",
+      "target": "docs_roadmap_core_question",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/roadmap.md",
+      "source_location": "L224",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_roadmap_m2_prove_specialization",
       "target": "docs_roadmap_candidate_research_areas",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L222",
+      "source_location": "L228",
       "weight": 1.0
     },
     {
@@ -50160,7 +50183,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L284",
+      "source_location": "L290",
       "weight": 1.0
     },
     {
@@ -50171,7 +50194,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L297",
+      "source_location": "L303",
       "weight": 1.0
     },
     {
@@ -50182,23 +50205,12 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L312",
+      "source_location": "L318",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m3_minimal_runtime",
-      "target": "docs_roadmap_goal_341",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/roadmap.md",
-      "source_location": "L341",
-      "weight": 1.0
-    },
-    {
-      "source": "docs_roadmap_m3_minimal_runtime",
-      "target": "docs_roadmap_core_runtime_responsibilities",
+      "target": "docs_roadmap_goal_347",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -50209,13 +50221,24 @@
     },
     {
       "source": "docs_roadmap_m3_minimal_runtime",
+      "target": "docs_roadmap_core_runtime_responsibilities",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/roadmap.md",
+      "source_location": "L353",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_roadmap_m3_minimal_runtime",
       "target": "docs_roadmap_architectural_rule",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L361",
+      "source_location": "L367",
       "weight": 1.0
     },
     {
@@ -50226,7 +50249,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L375",
+      "source_location": "L381",
       "weight": 1.0
     },
     {
@@ -50237,34 +50260,23 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L383",
-      "weight": 1.0
-    },
-    {
-      "source": "docs_roadmap_m3_minimal_runtime",
-      "target": "docs_roadmap_exit_criteria_389",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/roadmap.md",
       "source_location": "L389",
       "weight": 1.0
     },
     {
-      "source": "docs_roadmap_m4_first_correct_end_to_end_generation",
-      "target": "docs_roadmap_goal_412",
+      "source": "docs_roadmap_m3_minimal_runtime",
+      "target": "docs_roadmap_exit_criteria_395",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L412",
+      "source_location": "L395",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m4_first_correct_end_to_end_generation",
-      "target": "docs_roadmap_required_execution_pieces",
+      "target": "docs_roadmap_goal_418",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -50275,13 +50287,24 @@
     },
     {
       "source": "docs_roadmap_m4_first_correct_end_to_end_generation",
+      "target": "docs_roadmap_required_execution_pieces",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/roadmap.md",
+      "source_location": "L424",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_roadmap_m4_first_correct_end_to_end_generation",
       "target": "docs_roadmap_initial_inference_mode",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L434",
+      "source_location": "L440",
       "weight": 1.0
     },
     {
@@ -50292,34 +50315,23 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L446",
+      "source_location": "L452",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m4_first_correct_end_to_end_generation",
-      "target": "docs_roadmap_exit_criteria_458",
+      "target": "docs_roadmap_exit_criteria_464",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L458",
+      "source_location": "L464",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m5_beat_the_reference",
-      "target": "docs_roadmap_goal_472",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/roadmap.md",
-      "source_location": "L472",
-      "weight": 1.0
-    },
-    {
-      "source": "docs_roadmap_m5_beat_the_reference",
-      "target": "docs_roadmap_comparison_dimensions",
+      "target": "docs_roadmap_goal_478",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -50330,35 +50342,46 @@
     },
     {
       "source": "docs_roadmap_m5_beat_the_reference",
+      "target": "docs_roadmap_comparison_dimensions",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/roadmap.md",
+      "source_location": "L484",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_roadmap_m5_beat_the_reference",
       "target": "docs_roadmap_comparison_rules",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L513",
+      "source_location": "L519",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m5_beat_the_reference",
-      "target": "docs_roadmap_exit_criteria_526",
+      "target": "docs_roadmap_exit_criteria_532",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L526",
+      "source_location": "L532",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m6_runtime_specialization",
-      "target": "docs_roadmap_goal_562",
+      "target": "docs_roadmap_goal_568",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L562",
+      "source_location": "L568",
       "weight": 1.0
     },
     {
@@ -50369,18 +50392,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L566",
+      "source_location": "L572",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m6_runtime_specialization",
-      "target": "docs_roadmap_exit_criteria_613",
+      "target": "docs_roadmap_exit_criteria_619",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L613",
+      "source_location": "L619",
       "weight": 1.0
     },
     {
@@ -50391,7 +50414,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L631",
+      "source_location": "L637",
       "weight": 1.0
     },
     {
@@ -50402,7 +50425,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L633",
+      "source_location": "L639",
       "weight": 1.0
     },
     {
@@ -50413,7 +50436,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L644",
+      "source_location": "L650",
       "weight": 1.0
     },
     {
@@ -50424,7 +50447,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L656",
+      "source_location": "L662",
       "weight": 1.0
     },
     {
@@ -50435,7 +50458,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L667",
+      "source_location": "L673",
       "weight": 1.0
     },
     {
@@ -50446,7 +50469,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L679",
+      "source_location": "L685",
       "weight": 1.0
     },
     {
@@ -50457,7 +50480,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L34",
+      "source_location": "L40",
       "weight": 1.0
     },
     {
@@ -50468,7 +50491,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L38",
+      "source_location": "L44",
       "weight": 1.0
     },
     {
@@ -50479,7 +50502,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L42",
+      "source_location": "L48",
       "weight": 1.0
     },
     {
@@ -50490,7 +50513,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L46",
+      "source_location": "L52",
       "weight": 1.0
     },
     {
@@ -57431,7 +57454,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L143",
+      "source_location": "L147",
       "weight": 1.0
     },
     {
@@ -57442,7 +57465,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L317",
+      "source_location": "L321",
       "weight": 1.0
     },
     {
@@ -58625,5 +58648,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "c6e2921eab42ab3fbd57c4276728faea7af4bfd8"
+  "built_at_commit": "09728221a58ead7586b62cedbc386648138fa4b7"
 }

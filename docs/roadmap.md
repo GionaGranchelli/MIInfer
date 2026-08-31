@@ -14,16 +14,22 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 Immediate objective:
 
-> Execute the minimum correct Qwen3-8B path using the closed M3 loader and
-> static plan, then validate deterministic first-token generation.
+> Establish the MI50 full-forward numerical/behavioral acceptance contract
+> against independent CPU and gfx906 reference executions before authorizing
+> deterministic first-token generation.
 
 Current work should focus on:
 
 * embedding and normalization execution
 * Q/K/V projection integration
 * deterministic attention and residual execution
-* first-token correctness against the pinned reference
 * preserving the accepted kernel and benchmark controls
+
+Do not treat CPU hidden-state identity through all 36 layers as a universal
+GPU requirement. The pinned external implementation itself uses distinct
+CPU Q4_0×Q8_0 and single-token gfx906 Q8_1/MMVQ execution contracts. Strict
+semantic invariants remain mandatory; any full-depth numerical envelope must
+be measured and documented before M4-B closes.
 
 Do not start model serving, generic model support, speculative decoding, or multi-GPU work.
 

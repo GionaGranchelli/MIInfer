@@ -839,3 +839,64 @@ yet proof that the MIInfer GPU path is fully correct.
 semantic checks remain authoritative; full-depth backend equivalence now needs
 an evidence-backed envelope and additional behavioral checks before closure.
 No production precision or tolerance change was made.
+
+## M4-B23 external backend contract characterization
+
+M4-B23 inspected the pinned external reference at commit
+`6e4ef6c1a553b8f61ad77bba18e9ca05aa677295` and compared its actual CPU and
+offloaded gfx906 execution paths. The large CPU-versus-offloaded trace split
+is explained by distinct backend contracts, not by a repeatability failure.
+
+The external CPU type table maps Q4_0 projections to Q8_0 activations and
+`ggml_vec_dot_q4_0_q8_0`. On the pinned x86 build, the AVX2 implementation
+dequantizes each Q4_0/Q8_0 block pair with FP16 scales, accumulates eight
+float lanes with FMA, and horizontally reduces the vector accumulator. Its
+quantized activation contract is therefore Q8_0, with the signed Q4 zero
+point applied inside the integer dot.
+
+The external CUDA/ROCm path has a different contract. Its matrix operation
+requires an F32 activation input and F32 destination, quantizes the activation
+to `block_q8_1`, and dispatches the single-token (`ne11 <= 8`) quantized
+projection through MMVQ before the MMQ branch. The gfx906/GCN MMVQ table uses
+two physical Wave64 warps for one-to-four output columns. Its Q4_0 dot path
+uses `dp4a`, applies the Q8_1 `half2` scale/sum metadata, and writes an F32
+result. The quantizer computes `amax`, `d = amax / 127`, `roundf` integer
+lanes, and stores scale/sum metadata as FP16. `GGML_CUDA_FORCE_MMQ=1` is
+present in the captured build, but does not bypass the earlier MMVQ choice
+for this single-token path.
+
+The external callback traces show matching embedding, normalization, and
+attention-normalization previews before the first visible operation-level
+split at the layer-0 Q/V projection outputs. The machine-readable 39-file
+comparison independently records the first layer-level split at layer 0 and
+the subsequent depth growth:
+
+| Checkpoint | External CPU vs external MI50 |
+| --- | ---: |
+| layer 0 | `0.0490310` |
+| layer 1 | `0.184601` |
+| layer 2 | `0.179123` |
+| layer 6 | `155.286` |
+| layer 34 | `134.147` |
+| layer 35 | `121.013` |
+| final norm | `0.811852` |
+| logits | `0.488072` |
+
+Both external executions select argmax `8`; their top-5 lists overlap in
+four of five entries and their top-1 margins are `0.743142` and `0.693634`.
+MIInfer's GPU trace also selects `8` and is closer to the external CPU trace
+than the external offloaded trace at the final hidden/logit checkpoints, but
+it does not closely reproduce the external offloaded trajectory either.
+
+This establishes that the pinned CPU trace is not a strict hidden-state
+golden reference for every GPU backend. It does not, by itself, prove that
+MIInfer's GPU path is correct. Strict semantic invariants remain required:
+model identity, tensor mapping, RoPE/GQA behavior, cache state, quantization
+metadata, and isolated primitive correctness. Full-depth GPU acceptance now
+also needs an evidence-backed numerical/behavioral envelope, including final
+norm and logit behavior, top-k diagnostics, margin reporting, and eventually
+greedy-token agreement across deterministic inputs.
+
+**M4-B23 status: COMPLETE DIAGNOSTIC SLICE; M4-B remains OPEN.** No MIInfer
+production precision change, tolerance widening, generation work, or
+reference-checkout modification was made.
