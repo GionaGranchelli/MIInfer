@@ -82,11 +82,44 @@ bool run_sequence(const std::string& model_path, bool report) {
                       << " expected-next=" << expected
                       << " host-next=" << host_next
                       << " gpu-next=" << gpu_next
+                      << " gpu-logit470=" << gpu.logits[470]
+                      << " gpu-logit419=" << gpu.logits[419]
                       << " cache=" << (cache_lengths(gpu_cache, position + 1) ? "PASS" : "FAIL")
                       << " status=" << (step_pass ? "PASS" : "FAIL") << '\n';
         }
         if (!step_pass) break;
         input_token = gpu_next;
+    }
+    return passed;
+}
+
+bool run_gpu_sequence_only(const std::string& model_path) {
+    const auto model = miinfer::Qwen3Model::load(model_path);
+    const auto& config = model.config();
+    const auto plan = miinfer::Qwen3GpuPlan::build(model);
+    miinfer::Qwen3GpuDecodeCache cache(
+        config.layer_count, config.kv_heads, config.head_dim, kExpectedSequence.size());
+
+    bool passed = true;
+    std::uint32_t input_token = kExpectedSequence.front();
+    for (std::size_t position = 0; position + 1 < kExpectedSequence.size(); ++position) {
+        const auto trace = miinfer::execute_qwen3_decode_gpu(
+            plan, input_token, position, cache);
+        const auto selected = argmax(trace.logits);
+        const auto expected = kExpectedSequence[position + 1];
+        const bool step_pass = selected == expected && finite(trace)
+            && cache_lengths(cache, position + 1);
+        std::cout << "M4-C2 GPU position=" << position
+                  << " input=" << input_token
+                  << " expected-next=" << expected
+                  << " selected=" << selected
+                  << " logit470=" << trace.logits[470]
+                  << " logit419=" << trace.logits[419]
+                  << " cache=" << (cache_lengths(cache, position + 1) ? "PASS" : "FAIL")
+                  << " status=" << (step_pass ? "PASS" : "FAIL") << '\n';
+        passed = passed && step_pass;
+        if (!step_pass) break;
+        input_token = selected;
     }
     return passed;
 }
@@ -117,12 +150,54 @@ bool deterministic_replay(const std::string& model_path) {
     return passed;
 }
 
+bool position3_diagnostic(const std::string& model_path) {
+    constexpr std::array<std::uint32_t, 4> kPrefix{14990U, 8U, 341U, 286U};
+    const auto model = miinfer::Qwen3Model::load(model_path);
+    const auto& config = model.config();
+    const auto plan = miinfer::Qwen3GpuPlan::build(model);
+    miinfer::Qwen3GpuDecodeCache cache(
+        config.layer_count, config.kv_heads, config.head_dim, kPrefix.size());
+    miinfer::Qwen3ForwardTrace trace;
+    for (std::size_t position = 0; position < kPrefix.size(); ++position) {
+        trace = miinfer::execute_qwen3_decode_gpu(plan, kPrefix[position], position, cache);
+    }
+    const auto best = argmax(trace.logits);
+    std::cout << "M4-C2 position-3 GPU diagnostic: argmax=" << best
+              << " logit[470]=" << trace.logits[470]
+              << " logit[419]=" << trace.logits[419]
+              << " margin419-470=" << (trace.logits[419] - trace.logits[470])
+              << " cache=" << (cache_lengths(cache, kPrefix.size()) ? "PASS" : "FAIL") << '\n';
+    return finite(trace) && cache_lengths(cache, kPrefix.size());
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
     if (argc == 1) {
         std::cout << "qwen3 decode sequence GPU test: SKIP (model path not supplied)\n";
         return 0;
+    }
+    if (argc == 3 && std::string(argv[2]) == "--gpu-only") {
+        try {
+            const bool sequence = run_gpu_sequence_only(argv[1]);
+            const bool deterministic = deterministic_replay(argv[1]);
+            std::cout << "M4-C2 GPU-only greedy sequence: "
+                      << (sequence ? "PASS" : "FAIL") << '\n';
+            std::cout << "M4-C2 GPU replay determinism: "
+                      << (deterministic ? "PASS" : "FAIL") << '\n';
+            return sequence && deterministic ? 0 : 1;
+        } catch (const std::exception& error) {
+            std::cerr << "M4-C2 GPU-only sequence error: " << error.what() << '\n';
+            return 1;
+        }
+    }
+    if (argc == 3 && std::string(argv[2]) == "--position-3-diagnostic") {
+        try {
+            return position3_diagnostic(argv[1]) ? 0 : 1;
+        } catch (const std::exception& error) {
+            std::cerr << "M4-C2 position-3 diagnostic error: " << error.what() << '\n';
+            return 1;
+        }
     }
     if (argc != 2) return 1;
     try {

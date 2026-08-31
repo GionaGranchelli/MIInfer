@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788184838.4371,
-    "seen": 1788184889.7067866,
-    "ast_hash": "8d29a99f793f84474b5a28bad2ba1d49",
+    "mtime": 1788189185.9274733,
+    "seen": 1788189201.0561724,
+    "ast_hash": "0d9667a1e720c66b7f61712bf7799a19",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -690,27 +690,27 @@
     "semantic_hash": ""
   },
   "docs/m4c-generation.md": {
-    "mtime": 1788184612.7732725,
-    "seen": 1788184660.4759495,
-    "ast_hash": "5a27feddceff14658349d78266659e9d",
+    "mtime": 1788189177.5705156,
+    "seen": 1788189201.05618,
+    "ast_hash": "ebb3fd48fe42f2bc4ecdf9adf3f70734",
     "semantic_hash": ""
   },
   "scripts/run-m4c2-acceptance.sh": {
-    "mtime": 1788183790.2245493,
-    "seen": 1788184660.4758573,
-    "ast_hash": "e280eb018f9200647e95b4facbeff26f",
+    "mtime": 1788189170.324552,
+    "seen": 1788189201.056087,
+    "ast_hash": "bd031926c7b3537b0f4641978f263144",
     "semantic_hash": ""
   },
   "tests/qwen3_decode_sequence_gpu_test.cpp": {
-    "mtime": 1788184612.7712724,
-    "seen": 1788184660.475893,
-    "ast_hash": "9f3eaae25ca6d0926e94c78bc9fb899c",
+    "mtime": 1788188883.3730001,
+    "seen": 1788188900.188712,
+    "ast_hash": "bd39be80b2eb61dc9be3ce7b031f0750",
     "semantic_hash": ""
   },
   "docs/m4c2-greedy.md": {
-    "mtime": 1788184612.7732725,
-    "seen": 1788184660.475951,
-    "ast_hash": "9f35566936341665821bb9d8f016c028",
+    "mtime": 1788189189.7284544,
+    "seen": 1788189201.0561814,
+    "ast_hash": "0af057b140f08f0afc30510d21f20ccc",
     "semantic_hash": ""
   },
   "tests/reference/qwen3/m4c2-greedy/README.md": {

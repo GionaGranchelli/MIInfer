@@ -75,10 +75,13 @@ The sequence test feeds each actually selected token into the next position,
 checks host/GPU agreement and all 36 cache lengths, and has a deterministic
 GPU replay path.
 
-The first physical Debug run matches the reference through positions 0–2 but
-currently diverges at position 3: the reference selects `470`, host selects
-`470`, and MI50 selects `419`. M4-C2 therefore remains open; later steps are
-not treated as evidence after the first token divergence.
+The physical GPU-only matrix currently splits by build configuration. Debug
+matches the reference through positions 0–2 but diverges at position 3: the
+reference and host select `470`, while Debug MI50 selects `419`. The fixed
+prefix diagnostic reports reference logits `470=22.85797`, `419=22.52974`,
+versus Debug MI50 `470=22.4933`, `419=22.5219`. Release MI50 selects `470`
+and passes all eight reference tokens plus replay determinism. C2 remains
+open because the required Debug/Release behavior is not yet stable.
 
 The physical command is:
 

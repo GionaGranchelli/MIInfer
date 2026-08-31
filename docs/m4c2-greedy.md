@@ -23,10 +23,12 @@ Qwen3-8B Q4_0 artifact.
 ## Acceptance
 
 For each position, the test feeds the selected token through the 36-layer
-decoder, checks host and MI50 greedy selection against the pinned next ID,
-checks finite outputs, and checks every layer cache length. The GPU sequence is
-then replayed from a fresh cache and must produce bitwise-identical logits at
-every position.
+decoder, checks MI50 greedy selection against the pinned next ID, checks
+finite outputs, and checks every layer cache length. The GPU sequence is then
+replayed from a fresh cache and must produce bitwise-identical logits at every
+position. The default diagnostic mode also compares host selection; the
+physical gate uses GPU-only mode so host runtime cost is not part of the MI50
+acceptance path.
 
 The non-vacuous physical gate is:
 
@@ -37,7 +39,7 @@ scripts/run-m4c2-acceptance.sh \
 
 ## Decision
 
-**M4-C2 OPEN — MI50 diverges at position 3 (`470` expected, `419` selected)**
+**M4-C2 OPEN — Debug MI50 diverges at position 3 (`470` expected, `419` selected)**
 
 ## Next slice
 
