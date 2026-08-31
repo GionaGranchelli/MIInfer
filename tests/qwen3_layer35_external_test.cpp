@@ -5,12 +5,15 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <string>
 #include <span>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -26,6 +29,233 @@ struct Metrics {
     float expected_at_max = 0.0F;
     bool finite = true;
 };
+
+Metrics metrics(const std::vector<float>& actual, const std::vector<float>& expected);
+
+struct Q8ReplayBlock {
+    std::uint16_t d_bits = 0;
+    std::int8_t qs[32]{};
+};
+
+std::uint16_t half_bits(float value) {
+    const _Float16 half = static_cast<_Float16>(value);
+    std::uint16_t bits = 0;
+    static_assert(sizeof(half) == sizeof(bits));
+    std::memcpy(&bits, &half, sizeof(bits));
+    return bits;
+}
+
+float round_to_nearest_even(float value) {
+    const float lower = std::floor(value);
+    const float fraction = value - lower;
+    if (fraction < 0.5F) return lower;
+    if (fraction > 0.5F) return lower + 1.0F;
+    const auto lower_integer = static_cast<long long>(lower);
+    return (lower_integer % 2 == 0) ? lower : lower + 1.0F;
+}
+
+std::vector<Q8ReplayBlock> replay_q8_contract(
+    const std::vector<float>& input,
+    bool pinned_avx_contract) {
+    if (input.empty() || input.size() % 32 != 0) {
+        throw std::runtime_error("invalid layer-35 Q8 replay input");
+    }
+    std::vector<Q8ReplayBlock> output(input.size() / 32);
+    for (std::size_t block = 0; block < output.size(); ++block) {
+        const std::size_t base = block * 32;
+        float amax = 0.0F;
+        for (int index = 0; index < 32; ++index) {
+            amax = std::max(amax, std::fabs(input[base + index]));
+        }
+        const float scale = amax / 127.0F;
+        const float inverse = pinned_avx_contract
+            ? (amax == 0.0F ? 0.0F : 127.0F / amax)
+            : (scale == 0.0F ? 0.0F : 1.0F / scale);
+        output[block].d_bits = half_bits(scale);
+        for (int index = 0; index < 32; ++index) {
+            const float scaled = input[base + index] * inverse;
+            const float rounded = pinned_avx_contract
+                ? round_to_nearest_even(scaled)
+                : std::round(scaled);
+            const int quantized = std::clamp(static_cast<int>(rounded), -127, 127);
+            output[block].qs[index] = static_cast<std::int8_t>(quantized);
+        }
+    }
+    return output;
+}
+
+void report_q8_contract_replay(const std::vector<float>& input) {
+    const auto miinfer = replay_q8_contract(input, false);
+    const auto pinned = replay_q8_contract(input, true);
+    std::size_t different_blocks = 0;
+    std::size_t different_lanes = 0;
+    std::size_t first_block = 0;
+    int first_lane = 0;
+    bool found_first = false;
+    std::uint16_t max_scale_delta = 0;
+    for (std::size_t block = 0; block < miinfer.size(); ++block) {
+        const auto scale_delta = static_cast<std::uint16_t>(
+            std::abs(static_cast<int>(miinfer[block].d_bits)
+                     - static_cast<int>(pinned[block].d_bits)));
+        max_scale_delta = std::max(max_scale_delta, scale_delta);
+        bool block_differs = false;
+        for (int lane = 0; lane < 32; ++lane) {
+            if (miinfer[block].qs[lane] != pinned[block].qs[lane]) {
+                ++different_lanes;
+                block_differs = true;
+                if (!found_first) {
+                    first_block = block;
+                    first_lane = lane;
+                    found_first = true;
+                }
+            }
+        }
+        if (block_differs) ++different_blocks;
+    }
+    std::cout << "layer-35 ffn_norm Q8 contract replay (MIInfer vs pinned x86 AVX):\n"
+              << "  blocks=" << miinfer.size()
+              << " different_blocks=" << different_blocks
+              << " different_lanes=" << different_lanes
+              << " max_scale_bits_delta=" << max_scale_delta;
+    if (found_first) {
+        std::cout << " first_difference=block " << first_block
+                  << " lane " << first_lane
+                  << " miinfer_q=" << static_cast<int>(miinfer[first_block].qs[first_lane])
+                  << " pinned_q=" << static_cast<int>(pinned[first_block].qs[first_lane]);
+    }
+    std::cout << '\n';
+}
+
+enum class AccumulationContract {
+    miinfer,
+    combined_scale,
+    double_precision,
+    four_float_accumulators,
+};
+
+float replay_projection_row(
+    const miinfer::Qwen3TensorView& tensor,
+    const std::vector<Q8ReplayBlock>& q8,
+    std::size_t row,
+    std::size_t columns,
+    AccumulationContract contract) {
+    const auto* weights = reinterpret_cast<const miinfer::Q4_0HostBlock*>(tensor.data());
+    const std::size_t blocks_per_row = columns / 32;
+    const auto block_value = [&](std::size_t block) {
+        const auto& weight = weights[row * blocks_per_row + block];
+        const auto& activation = q8[block];
+        int dot = 0;
+        for (int index = 0; index < 32; ++index) {
+            const auto packed = weight.qs[index < 16 ? index : index - 16];
+            const int nibble = index < 16 ? packed & 0x0f : (packed >> 4) & 0x0f;
+            dot += (nibble - 8) * static_cast<int>(activation.qs[index]);
+        }
+        const float weight_scale = miinfer::fp16_bits_to_float(weight.d_bits);
+        const float activation_scale = miinfer::fp16_bits_to_float(activation.d_bits);
+        return std::pair{dot, std::pair{weight_scale, activation_scale}};
+    };
+    if (contract == AccumulationContract::double_precision) {
+        double sum = 0.0;
+        for (std::size_t block = 0; block < blocks_per_row; ++block) {
+            const auto [dot, scales] = block_value(block);
+            sum += static_cast<double>(dot) * scales.first * scales.second;
+        }
+        return static_cast<float>(sum);
+    }
+    if (contract == AccumulationContract::four_float_accumulators) {
+        std::array<float, 4> sums{};
+        for (std::size_t block = 0; block < blocks_per_row; ++block) {
+            const auto [dot, scales] = block_value(block);
+            sums[block % sums.size()] += static_cast<float>(dot) * scales.first * scales.second;
+        }
+        return ((sums[0] + sums[1]) + (sums[2] + sums[3]));
+    }
+    float sum = 0.0F;
+    for (std::size_t block = 0; block < blocks_per_row; ++block) {
+        const auto [dot, scales] = block_value(block);
+        if (contract == AccumulationContract::combined_scale) {
+            sum += static_cast<float>(dot) * (scales.first * scales.second);
+        } else {
+            sum += static_cast<float>(dot) * scales.first * scales.second;
+        }
+    }
+    return sum;
+}
+
+std::vector<float> replay_projection(
+    const miinfer::Qwen3TensorView& tensor,
+    const std::vector<Q8ReplayBlock>& q8,
+    std::size_t rows,
+    std::size_t columns,
+    AccumulationContract contract) {
+    std::vector<float> output(rows);
+    for (std::size_t row = 0; row < rows; ++row) {
+        output[row] = replay_projection_row(tensor, q8, row, columns, contract);
+    }
+    return output;
+}
+
+void report_host_projection_contracts(
+    const miinfer::Qwen3Model& model,
+    const std::vector<float>& ffn_norm,
+    const std::vector<std::vector<float>>& external,
+    const miinfer::Qwen3LayerTrace& host) {
+    const auto current_q8 = replay_q8_contract(ffn_norm, false);
+    const auto pinned_q8 = replay_q8_contract(ffn_norm, true);
+    const auto gate_error = metrics(host.gate, external[13]);
+    const auto up_error = metrics(host.up, external[14]);
+    const std::array rows{std::size_t{5607}, gate_error.max_index, up_error.max_index};
+    const auto& layer = model.layers().at(35);
+    const std::array cases{
+        std::pair{"Gate", &layer.gate},
+        std::pair{"Up", &layer.up},
+    };
+    const std::array contracts{
+        std::pair{"current-sequential", AccumulationContract::miinfer},
+        std::pair{"combined-scale", AccumulationContract::combined_scale},
+        std::pair{"double-sequential", AccumulationContract::double_precision},
+        std::pair{"four-float", AccumulationContract::four_float_accumulators},
+    };
+    std::cout << "layer-35 Gate/Up projections with exact external ffn_norm input:\n";
+    for (const auto& [name, tensor] : cases) {
+        const auto& expected = name == std::string_view{"Gate"} ? external[13] : external[14];
+        const auto current = replay_projection(
+            *tensor, current_q8, expected.size(), 4096, AccumulationContract::miinfer);
+        const auto pinned = replay_projection(
+            *tensor, pinned_q8, expected.size(), 4096, AccumulationContract::miinfer);
+        const auto current_result = metrics(current, expected);
+        const auto pinned_result = metrics(pinned, expected);
+        std::cout << "  " << name
+                  << ": current_q8 max_abs=" << current_result.max_abs
+                  << " mean_abs=" << current_result.mean_abs
+                  << " rmse=" << current_result.rmse
+                  << " pinned_q8 max_abs=" << pinned_result.max_abs
+                  << " mean_abs=" << pinned_result.mean_abs
+                  << " rmse=" << pinned_result.rmse << '\n';
+    }
+    std::cout << "layer-35 Gate/Up critical-row accumulation replay:\n";
+    for (const auto& [name, tensor] : cases) {
+        const auto& expected = name == std::string_view{"Gate"} ? external[13] : external[14];
+        std::cout << "  " << name << ":\n";
+        for (const auto row : rows) {
+            std::cout << "    row=" << row << " external=" << expected[row];
+            for (const auto& [contract_name, contract] : contracts) {
+                const float current = replay_projection_row(
+                    *tensor, current_q8, row, 4096, contract);
+                const float pinned = replay_projection_row(
+                    *tensor, pinned_q8, row, 4096, contract);
+                std::cout << " " << contract_name
+                          << "_value=" << current
+                          << "_err=" << std::fabs(current - expected[row])
+                          << " host_err=" << std::fabs((host.*(name == std::string_view{"Gate"}
+                              ? &miinfer::Qwen3LayerTrace::gate
+                              : &miinfer::Qwen3LayerTrace::up))[row] - expected[row])
+                          << " pinned_q8_err=" << std::fabs(pinned - expected[row]);
+            }
+            std::cout << '\n';
+        }
+    }
+}
 
 std::vector<float> read_f32(const std::filesystem::path& path) {
     std::ifstream file(path, std::ios::binary);
@@ -169,6 +399,8 @@ int run(const std::filesystem::path& model_path,
     const auto plan = miinfer::Qwen3GpuPlan::build(model);
     const auto host = miinfer::execute_qwen3_layer_host_teacher_forced(model, 35, input);
     const auto gpu = miinfer::execute_qwen3_layer_gpu_teacher_forced(plan, 35, input);
+    report_q8_contract_replay(external[12]);
+    report_host_projection_contracts(model, external[12], external, host);
 
     bool passed = terminal_boundary_pass;
     passed = report("HOST", host, external) && passed;
@@ -238,7 +470,7 @@ int run(const std::filesystem::path& model_path,
               << "  GPU residual (external Down): max_abs=" << residual_hybrid.max_abs
               << " mean_abs=" << residual_hybrid.mean_abs
               << " max_rel=" << residual_hybrid.max_rel << '\n';
-    std::cout << "M4-B10 external layer-35 comparison: "
+    std::cout << "M4-B11 external layer-35 comparison: "
               << (passed ? "PASS" : "FAIL") << '\n';
     return passed ? 0 : 1;
 }
@@ -253,7 +485,7 @@ int main(int argc, char** argv) {
     try {
         return run(argv[1], argv[2]);
     } catch (const std::exception& error) {
-        std::cerr << "M4-B10 external layer-35 test error: " << error.what() << '\n';
+        std::cerr << "M4-B11 external layer-35 test error: " << error.what() << '\n';
         return 1;
     }
 }

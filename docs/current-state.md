@@ -96,6 +96,9 @@ No other GPU architecture is currently supported.
 * M4-B10 host Gate/Up hybrid SwiGLU attribution; both projection errors are
   causal, with Gate the larger single-source contributor, while host SwiGLU
   arithmetic is exonerated
+* M4-B11 Q8 contract and Gate/Up accumulation replay; Q8 lanes/scales and
+  external-conditioned Gate/Up projection arithmetic match the pinned
+  contract, shifting the remaining failure upstream to `ffn_norm`
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -469,11 +472,10 @@ These do not help answer the current project question.
 
 The current Codex task is:
 
-> M4-B10 has shown that small host Gate and Up projection differences are
-> amplified by terminal-layer SwiGLU. Host SwiGLU, GPU SwiGLU, Down, and
-> residual arithmetic are exonerated with external-input hybrids. Compare the
-> pinned Q8 quantization and projection accumulation contracts before changing
-> production precision.
+> M4-B11 has shown that the pinned Q8 contract and Gate/Up accumulation are
+> not the source: with external `ffn_norm`, Gate/Up replay matches external
+> outputs to `7.6e-6`/`1.5e-5`. Locate the earlier FFN-input/attention-output
+> numeric contract before changing production precision.
 > Do not widen tolerances or start token generation.
 
 The M0 evidence gates are complete under the documented gfx802-isolated
@@ -512,9 +514,9 @@ into a generic runtime.
 
 # Last Updated
 
-2026-08-31 — M4-B10 host Gate/Up hybrid attribution completed; both small
-projection differences are amplified by layer-35 SwiGLU while full-reference
-parity remains open.
+2026-08-31 — M4-B11 Q8 identity and external-conditioned Gate/Up replay
+completed; the remaining terminal-layer discrepancy enters before `ffn_norm`
+while full-reference parity remains open.
 
 Update this document whenever:
 

@@ -768,6 +768,9 @@ from the accepted model plan and layer-state correctness evidence:
 9. Use M4-B10 host Gate/Up hybrid SwiGLU attribution to identify which
    projection contract feeds the remaining terminal-layer discrepancy, then
    compare pinned Q8 quantization and accumulation semantics.
+10. Use M4-B11 Q8 identity and external-conditioned projection replay to
+    locate the earlier FFN-input/attention-output contract that produces the
+    differing terminal-layer `ffn_norm`.
 
 Do not broaden M4 into a general-purpose runtime.
 
@@ -787,8 +790,11 @@ added a terminal layer-35 internal trace from the same independent reference
 and proved the external layer-output tensor is identical to the input of
 final RMSNorm. M4-B10 added host Gate/Up hybrid attribution: external Gate
 plus Up is within `7.62939e-06`, while replacing either input with the host
-projection reproduces most of the `0.105103` discrepancy. Production
-precision remains unchanged and M4-B is still open.
+projection reproduces most of the `0.105103` discrepancy. M4-B11 then
+replayed the pinned x86 AVX Q8 contract and Gate/Up accumulation with
+external `ffn_norm`; all Q8 blocks matched and Gate/Up were within
+`7.62939e-06`/`1.52588e-05`. The remaining failure therefore enters before
+`ffn_norm`, and M4-B is still open.
 Exact experiment ordering may change only when supported by the resulting
 evidence.
 

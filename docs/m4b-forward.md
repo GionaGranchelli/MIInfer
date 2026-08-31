@@ -424,3 +424,47 @@ projection's block accumulation. No production precision or tolerance change
 was made.
 
 **M4-B10 status: COMPLETE DIAGNOSTIC SLICE; M4-B remains OPEN.**
+
+## M4-B11 Q8 identity and CPU accumulation contract
+
+M4-B11 tested whether the layer-35 Gate/Up discrepancy was introduced by Q8
+activation quantization or by the host Q4×Q8 row accumulation. The test
+replays both MIInfer's current formula and the pinned x86 AVX contract on the
+exact external layer-35 `ffn_norm` vector. The pinned implementation computes
+the quantizer inverse as `127 / amax` and rounds to nearest-even; MIInfer
+computes `1 / (amax / 127)` and uses `std::round`.
+
+For all 128 activation blocks these contracts produced identical stored FP16
+scales and identical int8 lanes:
+
+```text
+different blocks: 0
+different lanes:  0
+scale-bit delta:  0
+```
+
+Using the exact external `ffn_norm` as input, the current MIInfer sequential
+Q4×Q8 replay matched the external projection checkpoints:
+
+| Projection | Max abs | Mean abs | RMSE |
+| --- | ---: | ---: | ---: |
+| Gate | `7.62939e-06` | `1.22185e-07` | `3.48546e-07` |
+| Up | `1.52588e-05` | `1.27735e-07` | `6.08251e-07` |
+
+Critical-row double and four-accumulator variants did not improve these
+already-small errors. This rules out a production Q8 metadata change or a
+general Gate/Up accumulation-order correction as the next fix. The original
+host Gate/Up differences arise because the normal host layer path consumes
+its own slightly different `ffn_norm`; at the host-vs-external SwiGLU worst
+index, Gate differs by `0.000995636` and Up by `0.0000991821`.
+
+The Q8 comparison is a source-compatible replay of the pinned x86 AVX
+quantizer rather than a new multi-gigabyte runtime-block artifact. It is
+therefore recorded as contract evidence, not as a claim that the external
+temporary checkout was modified or that its private transient blocks were
+persisted. No production behavior or tolerance changed.
+
+**M4-B11 status: COMPLETE DIAGNOSTIC SLICE; M4-B remains OPEN.** The next
+investigation should locate the earlier FFN-input/attention-output numeric
+contract that produces the differing `ffn_norm`, beginning with the external
+conditioned O projection and residual path.
