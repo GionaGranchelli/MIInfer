@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <span>
 #include <vector>
 
@@ -78,6 +79,28 @@ private:
     void* values_ = nullptr;
 };
 
+// Minimal model-level MI50 decode state.  One layer-scoped cache is retained
+// for each Qwen3 layer; allocation and layer ownership happen before decode.
+class Qwen3GpuDecodeCache {
+public:
+    Qwen3GpuDecodeCache(std::size_t layers, std::size_t kv_heads,
+                        std::size_t head_dim, std::size_t capacity);
+    Qwen3GpuDecodeCache(const Qwen3GpuDecodeCache&) = delete;
+    Qwen3GpuDecodeCache& operator=(const Qwen3GpuDecodeCache&) = delete;
+    ~Qwen3GpuDecodeCache() = default;
+
+    void reset();
+    [[nodiscard]] std::size_t layers() const noexcept { return caches_.size(); }
+    [[nodiscard]] std::size_t length() const noexcept;
+    [[nodiscard]] std::size_t capacity() const noexcept { return capacity_; }
+    Qwen3Layer0GpuKvCache& layer(std::size_t layer_index);
+    const Qwen3Layer0GpuKvCache& layer(std::size_t layer_index) const;
+
+private:
+    std::size_t capacity_;
+    std::vector<std::unique_ptr<Qwen3Layer0GpuKvCache>> caches_;
+};
+
 // Correctness-first MI50 execution of the same one-token, position-zero
 // layer-0 fixture used by execute_qwen3_layer0_host().  Checkpoint vectors are
 // copied back deliberately so the comparator can inspect every stage.
@@ -99,6 +122,15 @@ Qwen3ForwardTrace execute_qwen3_forward_gpu(
     const Qwen3GpuPlan& plan,
     std::uint32_t token,
     std::size_t position = 0);
+
+// Executes one explicit token through all Qwen3 layers using persistent
+// per-layer KV state.  This is the correctness-first MI50 decode boundary;
+// it intentionally returns a diagnostic trace until M4-C is complete.
+Qwen3ForwardTrace execute_qwen3_decode_gpu(
+    const Qwen3GpuPlan& plan,
+    std::uint32_t token,
+    std::size_t position,
+    Qwen3GpuDecodeCache& cache);
 
 // Correctness-only teacher-forced replay of one selected layer.  The input
 // hidden state is copied to the device and the complete diagnostic trace is

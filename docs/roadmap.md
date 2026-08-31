@@ -23,7 +23,7 @@ Current work should focus on:
 * Q/K/V projection integration
 * deterministic attention and residual execution
 * preserving the accepted kernel and benchmark controls
-* explicit-token incremental decode and first-token correctness
+* explicit-token incremental decode and short-sequence correctness
 
 Do not treat CPU hidden-state identity through all 36 layers as a universal
 GPU requirement. B23 characterized the pinned external implementation's
@@ -799,8 +799,10 @@ from the accepted model plan and layer-state correctness evidence:
     changing precision or acceptance thresholds (M4-B22).
 20. Define the measured MI50 final-output/behavioral envelope and run the
     non-vacuous Debug/Release physical acceptance gate (M4-B24).
-21. Begin M4-C: execute the accepted 36-layer path incrementally with the
-    proven KV semantics and produce the first deterministic generated token.
+21. M4-C1: execute the accepted 36-layer path incrementally with persistent
+    per-layer KV state and produce the first deterministic generated token.
+22. M4-C2: validate four to sixteen deterministic greedy decode steps before
+    adding tokenizer or sampling behavior.
 
 Do not broaden M4 into a general-purpose runtime.
 
@@ -811,7 +813,7 @@ Do not broaden M4 into a general-purpose runtime.
 The current milestone is:
 
 ```text
-M4-C — first deterministic generated token
+M4-C2 — short deterministic greedy decode sequence
 ```
 
 M4-B is closed by B24. The canonical physical gate now runs the real pinned
@@ -822,10 +824,13 @@ baseline top-5 overlap. M4-A's strict four-position layer-0/KV-cache gates
 remain prerequisite evidence. The detailed B8–B24 record is preserved in
 [`m4b-forward.md`](m4b-forward.md).
 
-M4-C combines the accepted 36-layer single-token path with the proven
-incremental KV-cache semantics and produces the first deterministic
-generated token. Keep the input as explicit token IDs; tokenizer, sampling,
-serving, batching, and performance work remain out of scope for this slice.
+M4-C1 is closed. It combines the accepted 36-layer single-token path with
+the proven incremental KV-cache semantics, selects token `8` from prompt token
+`14990`, and consumes that generated token at position `1` using persistent
+per-layer state. Debug and Release physical acceptance pass, as do the
+artifact-free `17/17` regression suites. M4-C2 now validates a short
+four-to-sixteen-token explicit-ID greedy sequence. Tokenizer, sampling,
+serving, batching, and performance work remain out of scope.
 
 M4-B8 established a canonical full-depth CPU fixture from two byte-identical
 runs of the pinned reference with explicit `-t 24 -tb 24` settings. M4-B9

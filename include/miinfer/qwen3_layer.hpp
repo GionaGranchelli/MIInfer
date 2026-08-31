@@ -83,6 +83,26 @@ private:
     std::vector<float> values_;
 };
 
+// Minimal model-level decode state.  It owns one explicit layer-0 cache
+// representation per Qwen3 layer; the representation remains deliberately
+// specialized rather than becoming a generic graph/runtime cache.
+class Qwen3DecodeCache {
+public:
+    Qwen3DecodeCache(std::size_t layers, std::size_t kv_heads,
+                     std::size_t head_dim, std::size_t capacity);
+
+    void reset() noexcept;
+    [[nodiscard]] std::size_t layers() const noexcept { return caches_.size(); }
+    [[nodiscard]] std::size_t length() const noexcept;
+    [[nodiscard]] std::size_t capacity() const noexcept { return capacity_; }
+    Qwen3Layer0KvCache& layer(std::size_t layer_index);
+    const Qwen3Layer0KvCache& layer(std::size_t layer_index) const;
+
+private:
+    std::size_t capacity_;
+    std::vector<Qwen3Layer0KvCache> caches_;
+};
+
 // Executes only the deterministic one-token, position-zero layer-0 fixture.
 // The implementation is intentionally host-side and correctness-first.  It
 // uses the canonical model tensors and Q4_0 x Q8_1 reference arithmetic; it
@@ -106,6 +126,15 @@ Qwen3ForwardTrace execute_qwen3_forward_host(
     const Qwen3Model& model,
     std::uint32_t token,
     std::size_t position = 0);
+
+// Executes one explicit token through all Qwen3 layers using persistent
+// per-layer KV state.  This is the first model-level autoregressive boundary;
+// tokenization and sampling remain outside this API.
+Qwen3ForwardTrace execute_qwen3_decode_host(
+    const Qwen3Model& model,
+    std::uint32_t token,
+    std::size_t position,
+    Qwen3DecodeCache& cache);
 
 // Correctness-only teacher-forced replay.  The supplied hidden state is the
 // independent reference output of the preceding layer (or the embedding for

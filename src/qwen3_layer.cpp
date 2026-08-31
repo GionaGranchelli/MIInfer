@@ -230,6 +230,36 @@ void Qwen3Layer0KvCache::append(
     ++length_;
 }
 
+Qwen3DecodeCache::Qwen3DecodeCache(
+    std::size_t layers, std::size_t kv_heads, std::size_t head_dim, std::size_t capacity)
+    : capacity_(capacity) {
+    if (layers == 0 || kv_heads == 0 || head_dim == 0 || capacity == 0) {
+        throw std::invalid_argument("invalid Qwen3 decode-cache dimensions");
+    }
+    caches_.reserve(layers);
+    for (std::size_t layer = 0; layer < layers; ++layer) {
+        caches_.emplace_back(kv_heads, head_dim, capacity);
+    }
+}
+
+void Qwen3DecodeCache::reset() noexcept {
+    for (auto& cache : caches_) cache.reset();
+}
+
+std::size_t Qwen3DecodeCache::length() const noexcept {
+    return caches_.empty() ? 0 : caches_.front().length();
+}
+
+Qwen3Layer0KvCache& Qwen3DecodeCache::layer(std::size_t layer_index) {
+    if (layer_index >= caches_.size()) throw std::out_of_range("Qwen3 decode-cache layer index");
+    return caches_[layer_index];
+}
+
+const Qwen3Layer0KvCache& Qwen3DecodeCache::layer(std::size_t layer_index) const {
+    if (layer_index >= caches_.size()) throw std::out_of_range("Qwen3 decode-cache layer index");
+    return caches_[layer_index];
+}
+
 Qwen3LayerTrace qwen3_layer_host_impl(
     const Qwen3Model& model,
     std::size_t layer_index,
@@ -415,11 +445,22 @@ Qwen3ForwardTrace execute_qwen3_forward_host(
     if (position != 0) {
         throw std::invalid_argument("full host forward currently supports position zero only");
     }
+    Qwen3DecodeCache cache(config.layer_count, config.kv_heads, config.head_dim, 1);
+    return execute_qwen3_decode_host(model, token, position, cache);
+}
+
+Qwen3ForwardTrace execute_qwen3_decode_host(
+    const Qwen3Model& model,
+    std::uint32_t token,
+    std::size_t position,
+    Qwen3DecodeCache& cache) {
+    const auto& config = model.config();
     if (token >= config.vocab_size) {
         throw std::invalid_argument("token ID is outside the vocabulary");
     }
-    if (model.layers().size() != config.layer_count) {
-        throw std::runtime_error("model layer inventory does not match configuration");
+    if (model.layers().size() != config.layer_count || cache.layers() != config.layer_count
+        || cache.capacity() == 0 || position != cache.length() || position >= cache.capacity()) {
+        throw std::invalid_argument("invalid Qwen3 host decode state");
     }
 
     Qwen3ForwardTrace forward;
@@ -428,21 +469,11 @@ Qwen3ForwardTrace execute_qwen3_forward_host(
         {model.token_embeddings().data(), model.token_embeddings().bytes()},
         config.vocab_size, config.hidden_size, token, forward.embedding);
 
-    std::vector<Qwen3Layer0KvCache> caches;
-    caches.reserve(model.layers().size());
-    for (std::size_t layer = 0; layer < model.layers().size(); ++layer) {
-        caches.emplace_back(config.kv_heads, config.head_dim, 1);
-    }
-
     std::vector<float> hidden = forward.embedding;
     forward.layer_outputs.reserve(model.layers().size());
     for (std::size_t layer = 0; layer < model.layers().size(); ++layer) {
-        // The pinned CPU reference selects the Q4_0 x Q8_0 quantized dot
-        // path for these projections.  q4_q8_matvec mirrors that arithmetic
-        // (including integer block accumulation) while retaining the same
-        // Q8 block values used by the production GPU contract.
         const auto layer_trace = qwen3_layer_host_impl(
-            model, layer, hidden, position, caches[layer], false);
+            model, layer, hidden, position, cache.layer(layer), false);
         hidden = layer_trace.layer_output;
         forward.layer_outputs.push_back(hidden);
     }

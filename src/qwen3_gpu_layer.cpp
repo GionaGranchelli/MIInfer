@@ -316,6 +316,41 @@ std::vector<float> Qwen3Layer0GpuKvCache::snapshot_values() const {
     return result;
 }
 
+Qwen3GpuDecodeCache::Qwen3GpuDecodeCache(
+    std::size_t layers, std::size_t kv_heads, std::size_t head_dim, std::size_t capacity)
+    : capacity_(capacity) {
+    if (layers == 0 || kv_heads == 0 || head_dim == 0 || capacity == 0) {
+        throw std::invalid_argument("invalid GPU Qwen3 decode-cache dimensions");
+    }
+    caches_.reserve(layers);
+    for (std::size_t layer = 0; layer < layers; ++layer) {
+        caches_.push_back(std::make_unique<Qwen3Layer0GpuKvCache>(
+            kv_heads, head_dim, capacity));
+    }
+}
+
+void Qwen3GpuDecodeCache::reset() {
+    for (auto& cache : caches_) cache->reset();
+}
+
+std::size_t Qwen3GpuDecodeCache::length() const noexcept {
+    return caches_.empty() ? 0 : caches_.front()->length();
+}
+
+Qwen3Layer0GpuKvCache& Qwen3GpuDecodeCache::layer(std::size_t layer_index) {
+    if (layer_index >= caches_.size()) {
+        throw std::out_of_range("GPU Qwen3 decode-cache layer index");
+    }
+    return *caches_[layer_index];
+}
+
+const Qwen3Layer0GpuKvCache& Qwen3GpuDecodeCache::layer(std::size_t layer_index) const {
+    if (layer_index >= caches_.size()) {
+        throw std::out_of_range("GPU Qwen3 decode-cache layer index");
+    }
+    return *caches_[layer_index];
+}
+
 Qwen3LayerTrace qwen3_layer_gpu_impl(
     const Qwen3GpuPlan& plan,
     std::size_t layer_index,
@@ -525,8 +560,21 @@ Qwen3ForwardTrace execute_qwen3_forward_gpu(
     if (position != 0) {
         throw std::invalid_argument("full GPU forward currently supports position zero only");
     }
-    if (token >= config.vocab_size || model.layers().size() != config.layer_count) {
-        throw std::invalid_argument("invalid Qwen3 full-forward token/model");
+    Qwen3GpuDecodeCache cache(config.layer_count, config.kv_heads, config.head_dim, 1);
+    return execute_qwen3_decode_gpu(plan, token, position, cache);
+}
+
+Qwen3ForwardTrace execute_qwen3_decode_gpu(
+    const Qwen3GpuPlan& plan,
+    std::uint32_t token,
+    std::size_t position,
+    Qwen3GpuDecodeCache& cache) {
+    const auto& model = plan.model();
+    const auto& config = model.config();
+    if (token >= config.vocab_size || model.layers().size() != config.layer_count
+        || cache.layers() != config.layer_count || cache.capacity() == 0
+        || position != cache.length() || position >= cache.capacity()) {
+        throw std::invalid_argument("invalid Qwen3 GPU decode state");
     }
 
     DeviceBuffer<float> input(config.hidden_size), output(config.hidden_size);
@@ -536,19 +584,12 @@ Qwen3ForwardTrace execute_qwen3_forward_gpu(
 
     Qwen3ForwardTrace forward;
     forward.embedding = capture(input.data(), config.hidden_size);
-    std::vector<std::unique_ptr<Qwen3Layer0GpuKvCache>> caches;
-    caches.reserve(model.layers().size());
-    for (std::size_t layer = 0; layer < model.layers().size(); ++layer) {
-        caches.push_back(std::make_unique<Qwen3Layer0GpuKvCache>(
-            config.kv_heads, config.head_dim, 1));
-    }
-
     forward.layer_outputs.reserve(model.layers().size());
     auto* current = input.data();
     auto* next = output.data();
     for (std::size_t layer = 0; layer < model.layers().size(); ++layer) {
         const auto trace = qwen3_layer_gpu_impl(
-            plan, layer, current, position, *caches[layer], next);
+            plan, layer, current, position, cache.layer(layer), next);
         forward.layer_outputs.push_back(trace.layer_output);
         std::swap(current, next);
     }
@@ -564,10 +605,6 @@ Qwen3ForwardTrace execute_qwen3_forward_gpu(
     DeviceBuffer<Q8KDeviceBlock> quantized_final_norm(config.hidden_size / 256);
     const auto* output_weight = static_cast<const Q6KDeviceBlock*>(
         plan.device_tensor_data(model.output().name()));
-    // The pinned reference CPU path quantizes the final activation to Q8_K
-    // before its Q6_K output projection.  Keep that contract explicit for
-    // full-forward correctness; the older F32-input probe remains available
-    // for isolated primitive tests.
     launch_qwen3_q8_k_quantize(final_norm.data(), quantized_final_norm.data(), config.hidden_size);
     launch_qwen3_q6_k_q8_k_gemv(output_weight, quantized_final_norm.data(), logits.data(),
                                 config.vocab_size, config.hidden_size);

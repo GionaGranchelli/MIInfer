@@ -142,6 +142,9 @@ No other GPU architecture is currently supported.
 * M4-B24 MI50 correctness envelope; Debug and Release are deterministic and
   satisfy the independently measured external CPU↔gfx906 final-norm/logit
   envelope with matching argmax and top-5 behavior; M4-B is closed
+* M4-C1 explicit-token stateful decode; persistent per-layer KV state produces
+  first token `8`, consumes it at position 1, and passes Debug/Release physical
+  acceptance with reset determinism
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -163,16 +166,17 @@ all work. The gfx802 isolation remains an operational platform prerequisite.
 * production execution planner
 * general-purpose memory planner
 * tokenizer
-* token generation
+* multi-token generation beyond the M4-C1 two-position fixture
 * sampling
 * MoE execution
 * HIP graph capture
 * CLI
 * HTTP server
 
-The C++20/HIP infrastructure, model loader/planner, layer-0 correctness
-runtime, and accepted single-token full-model MI50 execution are present.
-Autoregressive token generation remains outside the accepted scope.
+The C++20/HIP infrastructure, model loader/planner, accepted single-token
+full-model MI50 execution, and the first explicit-token stateful decode are
+present. Longer generation, tokenizer integration, and sampling remain
+outside the accepted scope.
 
 ---
 
@@ -180,9 +184,9 @@ Autoregressive token generation remains outside the accepted scope.
 
 The immediate technical objective is:
 
-> Begin M4-C: combine the accepted 36-layer single-token forward with the
-> proven incremental layer-0/KV semantics to produce the first deterministic
-> generated token. Do not broaden support beyond the pinned model contract.
+> Begin M4-C2: validate four to sixteen deterministic greedy decode steps
+> using the accepted full-model path and persistent per-layer KV state. Do not
+> broaden support beyond the pinned model contract.
 
 M0 is closed under the documented gfx802-isolated configuration. The
 repository-side infrastructure, physical MI50 validation, model artifact, and
@@ -388,7 +392,7 @@ EXP-0009 — K/V workgroup and Wave64 reduction geometry (KEEP)
 
 M3 — minimal Qwen3-8B runtime scaffold (CLOSED)
 
-M4 — first correct Qwen3-8B token generation (next milestone)
+M4-C2 — short deterministic greedy decode sequence (next milestone)
 ```
 
 The exact ordering may change based on early measurements.
@@ -513,15 +517,15 @@ These do not help answer the current project question.
 
 The current Codex task is:
 
-> M4-C combines the accepted full-model MI50 forward with the proven
-> incremental KV-cache path and produces the first deterministic generated
-> token. Keep tokenization and sampling out of scope until the explicit-token
-> decode path is correct.
+> M4-C2 validates a short deterministic greedy sequence over the accepted
+> explicit-token incremental decode path. Tokenization and sampling remain
+> out of scope until the sequence is correct.
 
 The M0 evidence gates are complete under the documented gfx802-isolated
 configuration. The M2 gate is satisfied by EXP-0009, M3 is closed by the
 pinned real-model acceptance, M4-A is closed, and M4-B is closed under the
-documented MI50 backend envelope. No accepted autoregressive token-generation
+documented MI50 backend envelope. M4-C1 now proves the first explicit-token
+stateful decode; no accepted multi-token generation, tokenizer, or sampling
 path has been implemented yet.
 
 ---
@@ -554,11 +558,10 @@ into a generic runtime.
 
 # Last Updated
 
-2026-08-31 — M4-B24 closed full-depth single-token MI50 acceptance under the
-measured external CPU↔gfx906 backend envelope. Debug and Release are finite
-and deterministic, final norm/logits stay within the measured envelope, and
-all executions select argmax `8`; next objective is M4-C first generated
-token.
+2026-08-31 — M4-C1 closed explicit-token stateful decode. A persistent
+36-layer KV state processes prompt token `14990`, selects first token `8`,
+consumes it at position 1, and passes physical Debug/Release acceptance plus
+reset determinism. Next objective is M4-C2 short greedy sequence validation.
 
 Update this document whenever:
 
