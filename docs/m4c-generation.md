@@ -67,8 +67,29 @@ four-position KV-cache tests.
 
 **M4-C1 CLOSED**
 
-## Next slice
+## M4-C2 implementation
 
-Recommend M4-C2: four to sixteen deterministic greedy decode steps using the
-same explicit-token and persistent-cache contract. Do not add tokenization,
-sampling, or performance optimization until that sequence is validated.
+The short explicit-ID fixture and its independent reference provenance are
+documented in [`tests/reference/qwen3/m4c2-greedy/README.md`](../tests/reference/qwen3/m4c2-greedy/README.md).
+The sequence test feeds each actually selected token into the next position,
+checks host/GPU agreement and all 36 cache lengths, and has a deterministic
+GPU replay path.
+
+The first physical Debug run matches the reference through positions 0–2 but
+currently diverges at position 3: the reference selects `470`, host selects
+`470`, and MI50 selects `419`. M4-C2 therefore remains open; later steps are
+not treated as evidence after the first token divergence.
+
+The physical command is:
+
+```bash
+scripts/run-m4c2-acceptance.sh \
+  /path/to/Qwen3-8B-q4_0-b968826d.gguf
+```
+
+## M4-C2 decision
+
+**M4-C2 OPEN — MI50 token divergence at position 3 (`470` vs `419`)**
+
+Do not add tokenization, sampling, or performance optimization until the
+sequence contract is resolved.

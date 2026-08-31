@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788181986.6168842,
-    "seen": 1788182048.6347735,
-    "ast_hash": "d5619830060d8dff92469cdbe826c22f",
+    "mtime": 1788183790.2225494,
+    "seen": 1788184660.4759276,
+    "ast_hash": "972d0e5403b4973dd97bda7f9bc4cd21",
     "semantic_hash": ""
   },
   "README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788182040.618604,
-    "seen": 1788182048.6347873,
-    "ast_hash": "84df6d7883d6d647a8032440ab90d0eb",
+    "mtime": 1788184838.4371,
+    "seen": 1788184889.7067866,
+    "ast_hash": "8d29a99f793f84474b5a28bad2ba1d49",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788182035.3206315,
-    "seen": 1788182048.6348045,
-    "ast_hash": "9187eb900de331844d37e084b412fddb",
+    "mtime": 1788184623.2752178,
+    "seen": 1788184660.4759598,
+    "ast_hash": "4c63bc1f9306154a2133ee919cf5761d",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -690,9 +690,33 @@
     "semantic_hash": ""
   },
   "docs/m4c-generation.md": {
-    "mtime": 1788181986.6168842,
-    "seen": 1788182048.6347952,
-    "ast_hash": "bd1332830379782dae66f4aa30b44c6c",
+    "mtime": 1788184612.7732725,
+    "seen": 1788184660.4759495,
+    "ast_hash": "5a27feddceff14658349d78266659e9d",
+    "semantic_hash": ""
+  },
+  "scripts/run-m4c2-acceptance.sh": {
+    "mtime": 1788183790.2245493,
+    "seen": 1788184660.4758573,
+    "ast_hash": "e280eb018f9200647e95b4facbeff26f",
+    "semantic_hash": ""
+  },
+  "tests/qwen3_decode_sequence_gpu_test.cpp": {
+    "mtime": 1788184612.7712724,
+    "seen": 1788184660.475893,
+    "ast_hash": "9f3eaae25ca6d0926e94c78bc9fb899c",
+    "semantic_hash": ""
+  },
+  "docs/m4c2-greedy.md": {
+    "mtime": 1788184612.7732725,
+    "seen": 1788184660.475951,
+    "ast_hash": "9f35566936341665821bb9d8f016c028",
+    "semantic_hash": ""
+  },
+  "tests/reference/qwen3/m4c2-greedy/README.md": {
+    "mtime": 1788183790.2245493,
+    "seen": 1788184660.4759884,
+    "ast_hash": "fa9659b2f61968e78637757f811ea22a",
     "semantic_hash": ""
   }
 }

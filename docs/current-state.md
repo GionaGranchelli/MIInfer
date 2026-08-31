@@ -188,6 +188,11 @@ The immediate technical objective is:
 > using the accepted full-model path and persistent per-layer KV state. Do not
 > broaden support beyond the pinned model contract.
 
+The initial eight-token fixture matches the independent MI50 reference through
+position 2. At position 3 the reference and host select `470`, while MI50
+selects `419`; M4-C2 remains open pending localization of that first token
+divergence.
+
 M0 is closed under the documented gfx802-isolated configuration. The
 repository-side infrastructure, physical MI50 validation, model artifact, and
 reference baseline are recorded. The gfx802-isolation requirement remains a
@@ -519,7 +524,8 @@ The current Codex task is:
 
 > M4-C2 validates a short deterministic greedy sequence over the accepted
 > explicit-token incremental decode path. Tokenization and sampling remain
-> out of scope until the sequence is correct.
+> out of scope until the sequence is correct. The current first blocker is
+> MI50 token divergence at position 3 (`470` expected, `419` selected).
 
 The M0 evidence gates are complete under the documented gfx802-isolated
 configuration. The M2 gate is satisfied by EXP-0009, M3 is closed by the
@@ -558,10 +564,12 @@ into a generic runtime.
 
 # Last Updated
 
-2026-08-31 — M4-C1 closed explicit-token stateful decode. A persistent
+2026-08-31 — M4-C2 sequence gate added. The pinned MI50 continuation matches
+through position 2 but diverges at position 3 (`470` vs `419`); C2 remains
+open. M4-C1 previously closed explicit-token stateful decode. A persistent
 36-layer KV state processes prompt token `14990`, selects first token `8`,
 consumes it at position 1, and passes physical Debug/Release acceptance plus
-reset determinism. Next objective is M4-C2 short greedy sequence validation.
+reset determinism.
 
 Update this document whenever:
 
