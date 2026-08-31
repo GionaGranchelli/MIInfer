@@ -704,3 +704,31 @@ production precision change; it narrows the next investigation to the
 V-to-attention materialization/quantization boundary. No tolerance changed.
 
 **M4-B18 status: COMPLETE DIAGNOSTIC SLICE; M4-B remains OPEN.**
+
+## M4-B19 attention materialization and Q8 boundary
+
+M4-B19 instrumented the layer-35 boundary from attention output through
+Q8Exact quantization and the O projection. Quantizing the external FP16
+attention tensor on MI50 matched the host/reference Q8 contract exactly:
+
+```text
+different scale blocks = 0
+different sum blocks   = 0
+different Q8 lanes     = 0
+```
+
+The F32-input/F32-output V policies also produced the same Q8 metadata and
+lanes as the external attention tensor, even though their pre-quantization
+attention difference was `0.000244141`. Therefore the `0.204956` layer error
+was not caused by a V perturbation crossing a Q8 code threshold. The direct
+external-attention GPU control itself produced the same `0.204956` layer
+error, establishing that value as the layer-35 GPU-versus-CPU downstream
+arithmetic floor for this comparison.
+
+The F16-input V policies changed the Q8 representation (`408` lanes across
+`64` blocks) and raised the layer error to `0.306641`, so the input boundary
+does affect sensitivity, but changing it is not a complete correctness fix.
+
+**M4-B19 status: COMPLETE DIAGNOSTIC SLICE; M4-B remains OPEN.** The Q8
+quantizer is not the remaining mismatch source. No production precision or
+tolerance change was made.

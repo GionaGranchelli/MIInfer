@@ -1,5 +1,8 @@
 #include "miinfer/qwen3_gpu_layer.hpp"
+#include "miinfer/q4_q8_gemv.hpp"
 #include "miinfer/qwen3_primitives.hpp"
+#include "miinfer/qwen3_gpu_primitives.hpp"
+#include "miinfer/hip_check.hpp"
 
 #include <algorithm>
 #include <array>
@@ -34,6 +37,7 @@ Metrics metrics(const std::vector<float>& actual, const std::vector<float>& expe
 
 struct Q8ReplayBlock {
     std::uint16_t d_bits = 0;
+    std::int16_t sum = 0;
     std::int8_t qs[32]{};
 };
 
@@ -79,6 +83,7 @@ std::vector<Q8ReplayBlock> replay_q8_contract(
                 : std::round(scaled);
             const int quantized = std::clamp(static_cast<int>(rounded), -127, 127);
             output[block].qs[index] = static_cast<std::int8_t>(quantized);
+            output[block].sum = static_cast<std::int16_t>(output[block].sum + quantized);
         }
     }
     return output;
@@ -399,6 +404,112 @@ std::vector<float> fp16_roundtrip(const std::vector<float>& values) {
     return result;
 }
 
+std::vector<miinfer::Q8ExactBlock> quantize_gpu_q8_exact(
+    std::span<const float> input,
+    bool f16_input) {
+    if (input.empty() || input.size() % miinfer::kQ8_1BlockSize != 0) {
+        throw std::runtime_error("invalid GPU Q8 boundary input");
+    }
+    void* input_device = nullptr;
+    void* input_half = nullptr;
+    void* output_device = nullptr;
+    const auto bytes = input.size() * sizeof(float);
+    const auto block_count = input.size() / miinfer::kQ8_1BlockSize;
+    MIINFER_HIP_CHECK(hipMalloc(&input_device, bytes));
+    MIINFER_HIP_CHECK(hipMalloc(&output_device,
+                                block_count * sizeof(miinfer::Q8ExactBlock)));
+    MIINFER_HIP_CHECK(hipMemcpy(input_device, input.data(), bytes, hipMemcpyHostToDevice));
+    if (f16_input) {
+        MIINFER_HIP_CHECK(hipMalloc(&input_half, input.size() * sizeof(__half)));
+        miinfer::launch_qwen3_f32_to_f16(
+            static_cast<const float*>(input_device), static_cast<__half*>(input_half),
+            static_cast<std::uint32_t>(input.size()));
+        miinfer::launch_q8_exact_quantize(
+            static_cast<const __half*>(input_half),
+            static_cast<miinfer::Q8ExactBlock*>(output_device),
+            static_cast<int>(input.size()));
+    } else {
+        miinfer::launch_q8_exact_quantize_f32(
+            static_cast<const float*>(input_device),
+            static_cast<miinfer::Q8ExactBlock*>(output_device),
+            static_cast<int>(input.size()));
+    }
+    std::vector<miinfer::Q8ExactBlock> result(block_count);
+    MIINFER_HIP_CHECK(hipMemcpy(result.data(), output_device,
+                                result.size() * sizeof(miinfer::Q8ExactBlock),
+                                hipMemcpyDeviceToHost));
+    if (input_half != nullptr) MIINFER_HIP_CHECK(hipFree(input_half));
+    MIINFER_HIP_CHECK(hipFree(output_device));
+    MIINFER_HIP_CHECK(hipFree(input_device));
+    return result;
+}
+
+struct Q8BoundaryDiff {
+    std::size_t different_scale_blocks = 0;
+    std::size_t different_sum_blocks = 0;
+    std::size_t different_lane_values = 0;
+    std::size_t first_block = 0;
+    int first_lane = -1;
+    std::uint16_t max_scale_bits_delta = 0;
+    int max_sum_delta = 0;
+};
+
+Q8BoundaryDiff compare_q8_blocks(
+    const std::vector<miinfer::Q8ExactBlock>& actual,
+    const std::vector<Q8ReplayBlock>& expected) {
+    if (actual.size() != expected.size()) {
+        throw std::runtime_error("Q8 boundary block count mismatch");
+    }
+    Q8BoundaryDiff result;
+    bool found_first = false;
+    for (std::size_t block = 0; block < actual.size(); ++block) {
+        std::uint16_t actual_d_bits = 0;
+        std::memcpy(&actual_d_bits, &actual[block].d, sizeof(actual_d_bits));
+        const auto scale_delta = static_cast<std::uint16_t>(
+            std::abs(static_cast<int>(actual_d_bits)
+                     - static_cast<int>(expected[block].d_bits)));
+        result.max_scale_bits_delta = std::max(result.max_scale_bits_delta, scale_delta);
+        if (actual_d_bits != expected[block].d_bits) ++result.different_scale_blocks;
+        const int sum_delta = static_cast<int>(actual[block].sum)
+            - static_cast<int>(expected[block].sum);
+        result.max_sum_delta = std::max(result.max_sum_delta, std::abs(sum_delta));
+        if (sum_delta != 0) ++result.different_sum_blocks;
+        bool block_differs = actual_d_bits != expected[block].d_bits
+            || sum_delta != 0;
+        for (int lane = 0; lane < miinfer::kQ8_1BlockSize; ++lane) {
+            if (actual[block].qs[lane] != expected[block].qs[lane]) {
+                ++result.different_lane_values;
+                block_differs = true;
+                if (!found_first) {
+                    result.first_block = block;
+                    result.first_lane = lane;
+                    found_first = true;
+                }
+            }
+        }
+        if (block_differs && !found_first) {
+            result.first_block = block;
+            found_first = true;
+        }
+    }
+    return result;
+}
+
+std::vector<float> dequantize_q8_exact(
+    const std::vector<miinfer::Q8ExactBlock>& blocks) {
+    std::vector<float> result(blocks.size() * miinfer::kQ8_1BlockSize);
+    for (std::size_t block = 0; block < blocks.size(); ++block) {
+        std::uint16_t d_bits = 0;
+        std::memcpy(&d_bits, &blocks[block].d, sizeof(d_bits));
+        const float scale = miinfer::fp16_bits_to_float(d_bits);
+        for (int lane = 0; lane < miinfer::kQ8_1BlockSize; ++lane) {
+            result[block * miinfer::kQ8_1BlockSize + lane] =
+                scale * static_cast<float>(blocks[block].qs[lane]);
+        }
+    }
+    return result;
+}
+
 struct AttentionPathReplay {
     std::vector<float> v;
     std::vector<float> attention_output;
@@ -589,6 +700,98 @@ void report_v_precision_contract(
                   << " layer_max_abs=" << layer_error.max_abs
                   << " layer_mean_abs=" << layer_error.mean_abs
                   << " layer_rmse=" << layer_error.rmse << '\n';
+    }
+}
+
+void report_v_attention_q8_boundary(
+    const miinfer::Qwen3Model& model,
+    const miinfer::Qwen3GpuPlan& plan,
+    const std::vector<float>& layer_input,
+    const std::vector<std::vector<float>>& external) {
+    using Precision = miinfer::Qwen3ProjectionPrecision;
+    const auto& config = model.config();
+    const std::array<std::pair<const char*, Precision>, 4> variants{
+        std::pair{"F16->Q8Exact->F16", Precision::f16_input_q8_f16_output},
+        std::pair{"F32->Q8Exact->F16", Precision::f32_input_q8_f16_output},
+        std::pair{"F16->Q8Exact->F32", Precision::f16_input_q8_f32_output},
+        std::pair{"F32->Q8Exact->F32", Precision::f32_input_q8_f32_output},
+    };
+
+    const auto reference_q8 = replay_q8_contract(external[10], false);
+    const auto gpu_reference_q8 = quantize_gpu_q8_exact(external[10], true);
+    const auto reference_q8_diff = compare_q8_blocks(gpu_reference_q8, reference_q8);
+    const auto reference_dequant = dequantize_q8_exact(gpu_reference_q8);
+    const auto reference_dequant_error = metrics(reference_dequant, external[10]);
+    std::cout << "M4-B19 layer-35 attention FP16->Q8Exact->O boundary:\n"
+              << "  GPU quantization of external attention vs host Q8 contract:"
+              << " different_scale_blocks=" << reference_q8_diff.different_scale_blocks
+              << " different_sum_blocks=" << reference_q8_diff.different_sum_blocks
+              << " different_lane_values=" << reference_q8_diff.different_lane_values
+              << " max_scale_bits_delta=" << reference_q8_diff.max_scale_bits_delta
+              << " max_sum_delta=" << reference_q8_diff.max_sum_delta << '\n'
+              << "  external attention dequantized from GPU Q8: max_abs="
+              << reference_dequant_error.max_abs
+              << " mean_abs=" << reference_dequant_error.mean_abs
+              << " rmse=" << reference_dequant_error.rmse << '\n';
+
+    std::vector<float> external_o(external[11].size());
+    for (std::size_t index = 0; index < external_o.size(); ++index) {
+        external_o[index] = external[11][index] - layer_input[index];
+    }
+
+    const auto external_control = miinfer::execute_qwen3_layer_gpu_attention_override(
+        plan, 35, layer_input, external[10], 0);
+    std::vector<float> external_control_o(external_control.ffn_input.size());
+    for (std::size_t index = 0; index < external_control_o.size(); ++index) {
+        external_control_o[index] = external_control.ffn_input[index] - layer_input[index];
+    }
+    const auto control_o_error = metrics(external_control_o, external_o);
+    const auto control_layer_error = metrics(external_control.layer_output, external[17]);
+    std::cout << "  external attention GPU control: O_max_abs=" << control_o_error.max_abs
+              << " layer_max_abs=" << control_layer_error.max_abs
+              << " layer_mean_abs=" << control_layer_error.mean_abs
+              << " layer_rmse=" << control_layer_error.rmse << '\n';
+
+    std::cout << "  candidate attention/Q8/O boundary (against external attention/Q8):\n";
+    for (const auto& [name, precision] : variants) {
+        const auto v = miinfer::execute_qwen3_projection_gpu_probe(
+            plan, 35, miinfer::Qwen3Projection::v, external[0], precision).output;
+        const auto attention = fp16_roundtrip(expand_gqa(
+            v, config.attention_heads, config.kv_heads, config.head_dim));
+        const auto attention_error = metrics(attention, external[10]);
+        const auto q8 = quantize_gpu_q8_exact(attention, true);
+        const auto q8_diff = compare_q8_blocks(q8, reference_q8);
+        const auto dequantized = dequantize_q8_exact(q8);
+        const auto dequant_error = metrics(dequantized, external[10]);
+        const auto downstream = miinfer::execute_qwen3_layer_gpu_attention_override(
+            plan, 35, layer_input, attention, 0);
+        std::vector<float> candidate_o(downstream.ffn_input.size());
+        for (std::size_t index = 0; index < candidate_o.size(); ++index) {
+            candidate_o[index] = downstream.ffn_input[index] - layer_input[index];
+        }
+        const auto o_error = metrics(candidate_o, external_o);
+        const auto layer_error = metrics(downstream.layer_output, external[17]);
+        std::cout << "    " << name
+                  << ": attention_max_abs=" << attention_error.max_abs
+                  << " q8_scale_blocks=" << q8_diff.different_scale_blocks
+                  << " q8_sum_blocks=" << q8_diff.different_sum_blocks
+                  << " q8_lanes=" << q8_diff.different_lane_values
+                  << " q8_max_scale_bits_delta=" << q8_diff.max_scale_bits_delta
+                  << " q8_max_sum_delta=" << q8_diff.max_sum_delta
+                  << " dequant_max_abs=" << dequant_error.max_abs
+                  << " O_max_abs=" << o_error.max_abs
+                  << " layer_max_abs=" << layer_error.max_abs
+                  << " layer_mean_abs=" << layer_error.mean_abs
+                  << " layer_rmse=" << layer_error.rmse;
+        if (q8_diff.first_lane >= 0) {
+            std::cout << " first_q8_difference=block " << q8_diff.first_block
+                      << " lane " << q8_diff.first_lane;
+        } else if (q8_diff.different_scale_blocks != 0
+                   || q8_diff.different_sum_blocks != 0) {
+            std::cout << " first_q8_difference=block " << q8_diff.first_block
+                      << " metadata";
+        }
+        std::cout << '\n';
     }
 }
 
@@ -799,6 +1002,7 @@ int run(const std::filesystem::path& model_path,
     report_pre_ffn_contract(model, input, external);
     report_attention_v_contract(model, input, external, host);
     report_v_precision_contract(model, plan, input, external);
+    report_v_attention_q8_boundary(model, plan, input, external);
     report_q8_contract_replay(external[12]);
     report_host_projection_contracts(model, external[12], external, host);
 
@@ -870,7 +1074,7 @@ int run(const std::filesystem::path& model_path,
               << "  GPU residual (external Down): max_abs=" << residual_hybrid.max_abs
               << " mean_abs=" << residual_hybrid.mean_abs
               << " max_rel=" << residual_hybrid.max_rel << '\n';
-    std::cout << "M4-B18 external layer-35 comparison: "
+    std::cout << "M4-B19 external layer-35 comparison: "
               << (passed ? "PASS" : "FAIL") << '\n';
     return passed ? 0 : 1;
 }
@@ -885,7 +1089,7 @@ int main(int argc, char** argv) {
     try {
         return run(argv[1], argv[2]);
     } catch (const std::exception& error) {
-        std::cerr << "M4-B13 external layer-35 test error: " << error.what() << '\n';
+        std::cerr << "M4-B19 external layer-35 test error: " << error.what() << '\n';
         return 1;
     }
 }

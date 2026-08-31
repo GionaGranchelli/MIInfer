@@ -782,6 +782,8 @@ from the accepted model plan and layer-state correctness evidence:
     perturbation from downstream O/FFN variance (M4-B17).
 15. Test exact-Q8 V input/output precision policies and replay each through
     GQA, attention materialization, and the causal O/FFN tail (M4-B18).
+16. Compare attention materialization, Q8 codes, dequantized values, and an
+    external-attention GPU control before changing V precision (M4-B19).
 
 Do not broaden M4 into a general-purpose runtime.
 
@@ -831,6 +833,9 @@ M4-B18 then showed that F32->Q8Exact->F32 gives near-exact local V parity
 (`1.90735e-06`), but downstream materialization and quantized O sensitivity
 still leave approximately `0.204956` layer-output error; no production
 precision change is accepted yet.
+M4-B19 then showed that external attention quantizes bitwise-identically to the
+host Q8 contract and that the external-attention GPU control itself retains
+`0.204956` layer-35 error, identifying a downstream GPU arithmetic floor.
 
 ---
 
