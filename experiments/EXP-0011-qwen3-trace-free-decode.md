@@ -54,13 +54,31 @@ default prompt `[14990]`, the first eight generated IDs must remain
 
 ## Results
 
-To be filled from the first clean-commit capture.
+The code is frozen at clean commit `dd275325cfb9`; both captures report
+`git_dirty=false` and the pinned model SHA256
+`458634762bea7dbe19f3ce0614465bafd15ee90e815229c427043afcf195d628`.
+
+The apples-to-apples control is
+`bench/results/20260831T200125Z-337651/`: one prompt token, no generated
+warmup forwards, and seven measured forwards—the same seven post-first-token
+forwards used by M5-A.
 
 | Metric | Mean | Median | Throughput |
 |---|---:|---:|---:|
-| Sequential prompt ingestion | — | — | — |
-| TTFT | — | — | — |
-| Measured decode (64 forward calls) | — | — | — |
+| Sequential prompt ingestion | 29.368 ms | 28.771 ms | 34.051 tok/s |
+| TTFT | 29.642 ms | 29.044 ms | — |
+| Measured decode (7 forward calls) | 222.163 ms | 222.082 ms | **31.508 tok/s** |
+
+Relative to M5-A's `22.658 tok/s`, this is a `1.391×` throughput increase,
+or `28.09%` lower measured decode-forward time. The generated IDs remain
+`[8,341,286,470,330,9707,11,330]`.
+
+The longer steady-state capture is
+`bench/results/20260831T200016Z-336367/`: eight warmup generated tokens and
+64 measured forwards. It reports `5030.041 ms` mean decode time, or
+`12.724 tok/s`, as context grows from 8 to 72 tokens. Its result is not an
+apples-to-apples replacement for the short M5-A baseline, but it is useful for
+future context-scaling comparisons.
 
 ## Interpretation
 
@@ -72,7 +90,10 @@ changes to the serving path.
 
 ## Decision
 
-`PENDING` — capture clean results before selecting M5-C1.
+`KEEP` — the trace-free control is deterministic, preserves the pinned
+sequence, and removes diagnostic trace copies from the measured path. It is
+the correct control for the first optimization A/B; M5-A remains unchanged as
+the historical correctness-first baseline.
 
 ## Follow-up
 
