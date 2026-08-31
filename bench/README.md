@@ -73,3 +73,26 @@ active GPU telemetry; peak VRAM and clocks must be read from those artifacts.
 This is a baseline for the correctness-first C3 implementation. It includes
 the current diagnostic trace copies and per-token allocations in the decode
 API, so it is not yet an optimized-runtime performance claim.
+
+## M5-B steady-state decode profile
+
+`miinfer-qwen3-decode-profile` profiles one warmed position-1 decode for the
+fixed token pair `14990` at position 0 followed by `8` at position 1. It uses
+opt-in HIP events around operation launches and synchronous timing around
+device copies. The profile reports operation-family GPU time, copy time, and
+dispatch counts, plus an end-to-end wall-clock value. Because profiling
+synchronizes each scoped operation and the correctness-first decode API copies
+diagnostic traces, its wall time is not comparable to the M5-A throughput
+baseline.
+
+Run the reproducible profile through the environment/telemetry runner:
+
+```bash
+cmake --preset mi50-release
+cmake --build --preset mi50-release --target miinfer-qwen3-decode-profile
+scripts/run-m5b-profile.sh /path/to/Qwen3-8B-q4_0-b968826d.gguf
+```
+
+The retained `result.json` includes the model identity, build metadata,
+per-category GPU/copy times, total dispatches, and unaccounted wall time.
+`bench/results/<run-id>/` also retains the machine state and GPU telemetry.

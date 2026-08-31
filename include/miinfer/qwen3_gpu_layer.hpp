@@ -5,11 +5,46 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <array>
 #include <memory>
 #include <span>
 #include <vector>
 
 namespace miinfer {
+
+enum class Qwen3ProfileCategory {
+    embedding,
+    normalization,
+    quantization,
+    qkv_projection,
+    o_projection,
+    ffn_projection,
+    rope,
+    attention,
+    activation,
+    residual,
+    conversion,
+    lm_head,
+    copies,
+    count,
+};
+
+constexpr std::size_t qwen3_profile_category_count =
+    static_cast<std::size_t>(Qwen3ProfileCategory::count);
+
+struct Qwen3GpuProfile {
+    std::array<double, qwen3_profile_category_count> gpu_ms{};
+    std::array<double, qwen3_profile_category_count> copy_ms{};
+    std::array<std::size_t, qwen3_profile_category_count> dispatches{};
+
+    void reset() noexcept {
+        gpu_ms.fill(0.0);
+        copy_ms.fill(0.0);
+        dispatches.fill(0);
+    }
+};
+
+[[nodiscard]] const char* qwen3_profile_category_name(Qwen3ProfileCategory category) noexcept;
 
 enum class Qwen3ProjectionPrecision {
     f16_input_q8_f16_output,
@@ -58,7 +93,8 @@ public:
     ~Qwen3Layer0GpuKvCache();
 
     void reset();
-    void append(std::size_t position, const float* keys, const float* values);
+    void append(std::size_t position, const float* keys, const float* values,
+                Qwen3GpuProfile* profile = nullptr);
 
     [[nodiscard]] std::size_t kv_heads() const noexcept { return kv_heads_; }
     [[nodiscard]] std::size_t head_dim() const noexcept { return head_dim_; }
@@ -131,6 +167,15 @@ Qwen3ForwardTrace execute_qwen3_decode_gpu(
     std::uint32_t token,
     std::size_t position,
     Qwen3GpuDecodeCache& cache);
+
+// Opt-in profiling variant. It preserves the decode computation and adds HIP
+// event timing around individual operation launches and device copies.
+Qwen3ForwardTrace execute_qwen3_decode_gpu(
+    const Qwen3GpuPlan& plan,
+    std::uint32_t token,
+    std::size_t position,
+    Qwen3GpuDecodeCache& cache,
+    Qwen3GpuProfile* profile);
 
 // Correctness-only teacher-forced replay of one selected layer.  The input
 // hidden state is copied to the device and the complete diagnostic trace is
