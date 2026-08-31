@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788204157.182214,
-    "seen": 1788204165.786345,
-    "ast_hash": "4f3c127360d02b00b91a9b094e19628d",
+    "mtime": 1788207984.7097757,
+    "seen": 1788207999.670226,
+    "ast_hash": "934d00f0ba3c27d428a38617293bcdbb",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -810,9 +810,15 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0011-qwen3-trace-free-decode.md": {
-    "mtime": 1788206327.4947813,
-    "seen": 1788206336.907237,
-    "ast_hash": "206bf0642930bba0176b2f5167fda1a0",
+    "mtime": 1788206562.5276482,
+    "seen": 1788207999.6702676,
+    "ast_hash": "04f92739969c28529499d0abbcf4665d",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0012-llama-qwen3-comparison.md": {
+    "mtime": 1788207906.7081532,
+    "seen": 1788207999.67027,
+    "ast_hash": "e0bcf040e87be8e41e6819b6b7cc0629",
     "semantic_hash": ""
   }
 }

@@ -15,9 +15,10 @@ For long-term direction, see:
 
 # Current Phase
 
-**M4 — First Correct Qwen3-8B Generation**
+**M5 — Beat the gfx906 reference**
 
-MIInfer now has a minimal text-facing inference path for the pinned model.
+MIInfer now has a minimal text-facing inference path for the pinned model and
+has entered reproducible MI50 performance characterization.
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The
@@ -152,6 +153,13 @@ No other GPU architecture is currently supported.
   acceptance with exact IDs and generated text
 * M5-A reproducible end-to-end MI50 baseline; the current C3 path measures
   sequential prompt ingestion, TTFT, and post-first-token decode separately
+* M5-B decode profile; FFN projections are the largest named GPU event family,
+  but the profile also records 1,588 dispatches and substantial instrumentation
+  copy overhead
+* M5-C0 trace-free decode control; short decode reaches 31.508 tok/s and the
+  64-forward growing-context control reaches 12.724 tok/s
+* EXP-0012 same-card pinned llama.cpp comparison; standard Q4_0 TG is about
+  91 tok/s, while the raw `hello` controls expose a large context-scaling gap
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -179,9 +187,10 @@ all work. The gfx802 isolation remains an operational platform prerequisite.
 
 The C++20/HIP infrastructure, model loader/planner, accepted single-token
 full-model MI50 execution, persistent multi-token decode, text-facing Qwen3
-tokenizer/generator, and the first M5-A baseline are present. Sampling,
-serving, profiling, and optimization remain outside the accepted scope until
-the baseline is preserved.
+tokenizer/generator, M5-A baseline, M5-B profile, and M5-C0 trace-free control
+are present. Sampling, serving, and generic runtime expansion remain outside
+scope. The immediate performance question is context scaling and execution
+overhead relative to the pinned gfx906 llama.cpp control.
 
 ---
 
@@ -189,8 +198,9 @@ the baseline is preserved.
 
 The immediate technical objective is:
 
-> Profile the recorded M5-A MI50 inference baseline, then test one measured
-> performance hypothesis at a time without weakening the C3 correctness gate.
+> Characterize the trace-free decode path's context scaling and dispatch/
+> materialization overhead, then test one measured performance hypothesis at a
+> time without weakening the C3 correctness gate.
 
 The initial eight-token fixture matches the independent MI50 reference through
 position 2. Release passes the complete fixture and Debug remains a
@@ -414,7 +424,7 @@ EXP-0009 — K/V workgroup and Wave64 reduction geometry (KEEP)
 
 M3 — minimal Qwen3-8B runtime scaffold (CLOSED)
 
-M4-C3 — tokenizer/detokenizer and minimal text-facing greedy decode (next milestone)
+M5-C1 — trace-free dispatch/materialization and context-scaling characterization (next milestone)
 ```
 
 The exact ordering may change based on early measurements.
@@ -538,9 +548,12 @@ These do not help answer the current project question.
 
 The current Codex task is:
 
-> Profile the recorded M5-A workload, then evaluate one measured performance
-> hypothesis at a time. Keep prompt ingestion and decode separate; sampling,
-> serving, batching, and unrelated runtime expansion remain out of scope.
+> Characterize the trace-free decode path against the retained llama.cpp
+> comparison, with particular attention to context-dependent attention/KV
+> cost, dispatch count, and materialization/copy overhead. Then evaluate one
+> measured performance hypothesis at a time. Keep prompt ingestion and decode
+> separate; sampling, serving, batching, and unrelated runtime expansion
+> remain out of scope.
 
 The M0 evidence gates are complete under the documented gfx802-isolated
 configuration. The M2 gate is satisfied by EXP-0009, M3 is closed by the
@@ -571,22 +584,27 @@ capture hardware state
 produce reproducible benchmark output
 ```
 
-The M2 validation chain and M3 model-plan acceptance are complete. M4 success
-requires correct deterministic token generation without broadening the project
-into a generic runtime.
+The M2 validation chain and M3 model-plan acceptance are complete. M4-C3
+provides the correct deterministic text path; M5 now requires reproducible
+MI50 performance evidence and measured improvements against the retained
+gfx906 reference without broadening the project into a generic runtime.
 
 ---
 
 # Last Updated
 
-2026-08-31 — M4-C3 closed. The model-backed tokenizer encodes
-`hello` as `14990`, and the Release text CLI reproduces the pinned eight-token
-continuation and generated text. The physical C3 gate passes. The next task is
-the first reproducible MI50 performance baseline. M4-C2 closed. Release passes
-the pinned eight-token MI50
-continuation; unoptimized Debug is a finite/cache/determinism diagnostic and
-diverges at position 3 (`470` vs `419`). Optimized HIP Debug and RelWithDebInfo
-match Release. M4-C1 previously closed explicit-token stateful decode. A persistent
+2026-08-31 — M5-C0 and EXP-0012 recorded. The trace-free MI50 control reaches
+31.508 tok/s on the short workload and 12.724 tok/s over 64 growing-context
+forwards. The pinned Q4_0 llama.cpp control reaches about 91 tok/s at TG128/
+TG256; raw `hello` continuation controls report 50.35 tok/s for eight tokens
+and 81.43 tok/s for 64 tokens. The next task is M5-C1 dispatch/materialization
+and context-scaling characterization. M4-C3 closed. The model-backed tokenizer
+encodes `hello` as `14990`, and the Release text CLI reproduces the pinned
+eight-token continuation and generated text. The physical C3 gate passes.
+M4-C2 closed. Release passes the pinned eight-token MI50 continuation;
+unoptimized Debug is a finite/cache/determinism diagnostic and diverges at
+position 3 (`470` vs `419`). Optimized HIP Debug and RelWithDebInfo match
+Release. M4-C1 previously closed explicit-token stateful decode. A persistent
 36-layer KV state processes prompt token `14990`, selects first token `8`,
 consumes it at position 1, and passes physical Debug/Release acceptance plus
 reset determinism.
