@@ -776,6 +776,8 @@ from the accepted model plan and layer-state correctness evidence:
 12. Localize remaining full-forward host drift with sequential-versus-isolated
     layer traces and verify the full-forward entry point has no independent
     orchestration divergence (M4-B15).
+13. Trace layer-0 against the independent 28-checkpoint fixture and reject
+    an unsupported extra layer-output FP16 materialization (M4-B16).
 
 Do not broaden M4 into a general-purpose runtime.
 
@@ -815,6 +817,9 @@ bitwise identical to a reconstructed sequential chain: the first inherited
 sequential difference is layer 1 input, and layer 2 is the first strict
 threshold crossing. M4-B remains open without any tolerance widening. Exact
 experiment ordering may change only when supported by the resulting evidence.
+M4-B16 then found the first layer-0 mismatch at `q_projection`, while the
+position-zero causal V/FFN path drifted gradually; an additional layer-output
+FP16 round-trip worsened the error and was not accepted.
 
 ---
 

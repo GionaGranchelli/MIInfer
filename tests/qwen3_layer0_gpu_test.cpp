@@ -42,9 +42,16 @@ Metrics compare(const std::vector<float>& actual, const std::vector<float>& expe
 }
 
 std::string trace_filename(const std::filesystem::path& directory, std::size_t index) {
-    const auto prefix = std::to_string(index) + '-';
-    for (const auto& entry : std::filesystem::directory_iterator(directory)) {
-        if (entry.path().filename().string().rfind(prefix, 0) == 0) return entry.path().string();
+    const std::array prefixes{
+        std::to_string(index) + '-',
+        std::string("pos-0-") + std::to_string(index) + ".",
+    };
+    for (const auto& prefix : prefixes) {
+        for (const auto& entry : std::filesystem::directory_iterator(directory)) {
+            if (entry.path().filename().string().rfind(prefix, 0) == 0) {
+                return entry.path().string();
+            }
+        }
     }
     throw std::runtime_error("missing reference checkpoint " + std::to_string(index));
 }

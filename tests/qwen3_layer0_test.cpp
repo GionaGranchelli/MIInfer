@@ -1,6 +1,7 @@
 #include "miinfer/qwen3_layer.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <filesystem>
@@ -83,11 +84,15 @@ bool passes(const Metrics& metrics, const Checkpoint& checkpoint) {
 }
 
 std::string trace_filename(const std::filesystem::path& directory, std::size_t index) {
-    std::ostringstream prefix;
-    prefix << index << '-';
-    for (const auto& entry : std::filesystem::directory_iterator(directory)) {
-        const auto filename = entry.path().filename().string();
-        if (filename.rfind(prefix.str(), 0) == 0) return entry.path().string();
+    const std::array prefixes{
+        std::to_string(index) + '-',
+        std::string("pos-0-") + std::to_string(index) + ".",
+    };
+    for (const auto& prefix : prefixes) {
+        for (const auto& entry : std::filesystem::directory_iterator(directory)) {
+            const auto filename = entry.path().filename().string();
+            if (filename.rfind(prefix, 0) == 0) return entry.path().string();
+        }
     }
     throw std::runtime_error("missing checkpoint " + std::to_string(index));
 }

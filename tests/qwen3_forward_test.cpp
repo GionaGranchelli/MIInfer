@@ -5,6 +5,7 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -122,6 +123,37 @@ static constexpr std::array kCompositionFields{
     TraceField{"layer_output", &miinfer::Qwen3LayerTrace::layer_output},
 };
 
+static constexpr std::array kLayer0ReferenceFields{
+    TraceField{"embedding", &miinfer::Qwen3LayerTrace::embedding},
+    TraceField{"attn_rms", &miinfer::Qwen3LayerTrace::attn_rms},
+    TraceField{"attn_norm", &miinfer::Qwen3LayerTrace::attn_norm},
+    TraceField{"q_projection", &miinfer::Qwen3LayerTrace::q_projection},
+    TraceField{"q_reshape", &miinfer::Qwen3LayerTrace::q_reshape},
+    TraceField{"q_rms", &miinfer::Qwen3LayerTrace::q_rms},
+    TraceField{"q_normed", &miinfer::Qwen3LayerTrace::q_normed},
+    TraceField{"q_rope", &miinfer::Qwen3LayerTrace::q_rope},
+    TraceField{"v_projection", &miinfer::Qwen3LayerTrace::v_projection},
+    TraceField{"v_reshape", &miinfer::Qwen3LayerTrace::v_reshape},
+    TraceField{"k_projection", &miinfer::Qwen3LayerTrace::k_projection},
+    TraceField{"k_reshape", &miinfer::Qwen3LayerTrace::k_reshape},
+    TraceField{"k_rms", &miinfer::Qwen3LayerTrace::k_rms},
+    TraceField{"k_normed", &miinfer::Qwen3LayerTrace::k_normed},
+    TraceField{"k_rope", &miinfer::Qwen3LayerTrace::k_rope},
+    TraceField{"k_view", &miinfer::Qwen3LayerTrace::k_view},
+    TraceField{"v_view", &miinfer::Qwen3LayerTrace::v_view},
+    TraceField{"q_view", &miinfer::Qwen3LayerTrace::q_view},
+    TraceField{"q_permuted", &miinfer::Qwen3LayerTrace::q_permuted},
+    TraceField{"attention_output", &miinfer::Qwen3LayerTrace::attention_output},
+    TraceField{"ffn_input", &miinfer::Qwen3LayerTrace::ffn_input},
+    TraceField{"ffn_rms", &miinfer::Qwen3LayerTrace::ffn_rms},
+    TraceField{"ffn_norm", &miinfer::Qwen3LayerTrace::ffn_norm},
+    TraceField{"gate", &miinfer::Qwen3LayerTrace::gate},
+    TraceField{"up", &miinfer::Qwen3LayerTrace::up},
+    TraceField{"swiglu", &miinfer::Qwen3LayerTrace::swiglu},
+    TraceField{"ffn_output", &miinfer::Qwen3LayerTrace::ffn_output},
+    TraceField{"layer_output", &miinfer::Qwen3LayerTrace::layer_output},
+};
+
 void print_composition_delta(const char* prefix, const Metrics& result) {
     std::cout << prefix << " max_abs=" << result.max_abs
               << " mean_abs=" << result.mean_abs
@@ -195,6 +227,63 @@ int run_composition_diagnostic(const std::filesystem::path& model_path,
     }
     return isolated_matches_reference && sequential_matches_reference
         && full_matches_reconstructed ? 0 : 1;
+}
+
+std::vector<float> fp16_round_trip(const std::vector<float>& values) {
+    const auto half_bits = [](float value) {
+        const _Float16 half = static_cast<_Float16>(value);
+        std::uint16_t bits = 0;
+        static_assert(sizeof(half) == sizeof(bits));
+        std::memcpy(&bits, &half, sizeof(bits));
+        return bits;
+    };
+    std::vector<float> result;
+    result.reserve(values.size());
+    for (const float value : values) {
+        result.push_back(miinfer::fp16_bits_to_float(half_bits(value)));
+    }
+    return result;
+}
+
+int run_layer0_precision_diagnostic(const std::filesystem::path& model_path,
+                                   const std::filesystem::path& trace_path) {
+    if (trace_path.empty()) {
+        throw std::invalid_argument("layer-0 precision diagnostic requires a trace path");
+    }
+    const auto model = miinfer::Qwen3Model::load(model_path.string());
+    const auto read_checkpoint = [&](std::size_t index) {
+        return read_f32(trace_path / (std::string("pos-0-")
+                                      + std::to_string(index) + ".f32"));
+    };
+    const auto embedding = read_checkpoint(0);
+    const auto actual = miinfer::execute_qwen3_layer_host_teacher_forced(
+        model, 0, embedding);
+    std::cout << "M4-B16 host layer-0 precision diagnostic:\n";
+    std::size_t first_nonzero = kLayer0ReferenceFields.size();
+    for (std::size_t index = 0; index < kLayer0ReferenceFields.size(); ++index) {
+        const auto& field = kLayer0ReferenceFields[index];
+        const auto expected = read_checkpoint(index);
+        const auto result = compare(actual.*(field.second), expected);
+        print_composition_delta((std::string("  ") + field.first).c_str(), result);
+        if (first_nonzero == kLayer0ReferenceFields.size() && result.max_abs != 0.0F) {
+            first_nonzero = index;
+        }
+    }
+    const auto external_layer_output = read_checkpoint(27);
+    const auto rounded = fp16_round_trip(actual.layer_output);
+    const auto current = compare(actual.layer_output, external_layer_output);
+    const auto rounded_metrics = compare(rounded, external_layer_output);
+    std::cout << "  layer-output FP16 round-trip:\n";
+    print_composition_delta("    current F32", current);
+    print_composition_delta("    round-tripped F16", rounded_metrics);
+    if (first_nonzero == kLayer0ReferenceFields.size()) {
+        std::cout << "  first nonzero checkpoint: none\n";
+    } else {
+        std::cout << "  first nonzero checkpoint: "
+                  << kLayer0ReferenceFields[first_nonzero].first << '\n';
+    }
+    std::cout << "  note: this is diagnostic-only; no production precision changed\n";
+    return 0;
 }
 
 int run(const std::filesystem::path& model_path, const std::filesystem::path& trace_path,
@@ -288,7 +377,7 @@ int run_teacher_forced(const std::filesystem::path& model_path,
 }  // namespace
 
 int main(int argc, char** argv) {
-    if (argc < 2 || argc > 4) {
+    if (argc < 2 || argc > 5) {
         std::cout << "qwen3 full-forward host test: SKIP (model path not supplied)\n";
         return 0;
     }
@@ -301,6 +390,9 @@ int main(int argc, char** argv) {
         }
         if (argc == 4 && std::string(argv[3]) == "--composition-diagnostic") {
             return run_composition_diagnostic(argv[1], trace_path);
+        }
+        if (argc == 5 && std::string(argv[3]) == "--layer0-precision-diagnostic") {
+            return run_layer0_precision_diagnostic(argv[1], argv[4]);
         }
         const bool write_trace = argc == 4 && std::string(argv[3]) == "--write-trace";
         return run(argv[1], trace_path, write_trace);

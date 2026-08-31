@@ -592,3 +592,42 @@ miinfer-qwen3-forward-gpu-test MODEL TRACE --composition-diagnostic
 
 **M4-B15 status: COMPLETE DIAGNOSTIC SLICE; M4-B remains OPEN.** The evidence
 does not support changing layer-2 arithmetic or adding a host buffer fix.
+
+## M4-B16 layer-0 first-divergence and materialization probe
+
+M4-B16 reused the independent M4-A5 position-zero fixture
+(`m4a4-four-position/pos-0-*.f32`) to compare all 28 host layer-0
+checkpoints. The first nonzero mismatch is `q_projection`:
+
+```text
+max_abs=4.75142e-05
+```
+
+For the position-zero causal path, Q/K cannot affect the result because the
+single visible key produces a softmax weight of one. The first causal
+projection difference is therefore the small V mismatch (`3.50252e-05`),
+followed by attention output (`1.22070e-04`) and final layer output
+(`5.48154e-03`). The layer-0 output error is gradual; there is no material
+single operation jump or evidence of a layer-0 state-management defect.
+
+The cheap proposed output-boundary discriminator was negative:
+
+| Layer-0 output representation | Max abs vs external |
+| --- | ---: |
+| Current F32 result | `0.00548154` |
+| Additional FP16 round-trip | `0.00606418` |
+
+An extra FP16 round-trip at the layer output would therefore make this
+fixture slightly worse and is not a production correction. The existing
+layer-0 host/GPU comparator was also extended to consume the `pos-0-*`
+fixture. It reports host layer output `0.00548154`; the GPU run remains
+within its established stage bounds except the stricter `ffn_rms` diagnostic
+threshold (`gpu-vs-reference max_abs=0.0498233`).
+
+Release and Debug builds pass, and both standard CTest suites remain `16/16`.
+No production semantics or tolerance changed.
+
+**M4-B16 status: COMPLETE DIAGNOSTIC SLICE; M4-B remains OPEN.** The final
+layer-output FP16 hypothesis is rejected. The next investigation should
+follow the causal V/FFN precision path inside layer 0 rather than add a
+global inter-layer cast.

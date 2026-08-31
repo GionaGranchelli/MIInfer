@@ -111,6 +111,9 @@ No other GPU architecture is currently supported.
 * M4-B15 sequential-composition diagnostic; full host forward is bitwise
   identical to its reconstructed layer chain, with the first inherited
   sequential divergence at layer 1 input and first strict failure at layer 2
+* M4-B16 layer-0 28-checkpoint precision diagnostic; first mismatch is a
+  small Q projection delta, the causal V/FFN drift is gradual, and an extra
+  layer-output FP16 round-trip is rejected
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -484,10 +487,9 @@ These do not help answer the current project question.
 
 The current Codex task is:
 
-> M4-B15 localizes the remaining host full-forward depth drift. Compare
-> sequential and reference-conditioned layer traces for layers 0–2, verify
-> parity with the full-forward entry points, and do not change arithmetic or
-> tolerances until the inherited first divergence is understood.
+> M4-B16 localizes the remaining layer-0 precision drift. Follow the causal
+> V/FFN path from the independent 28-checkpoint layer-0 trace; do not add an
+> extra layer-output FP16 boundary or widen tolerances without evidence.
 
 The M0 evidence gates are complete under the documented gfx802-isolated
 configuration. The M2 gate is satisfied by EXP-0009 and M3 is closed by the
@@ -525,10 +527,10 @@ into a generic runtime.
 
 # Last Updated
 
-2026-08-31 — M4-B15 composition diagnostic completed. Host full-forward is
-bitwise identical to its reconstructed sequential chain; the first inherited
-sequential divergence is layer 1 input and the first strict external failure
-is layer 2. MI50 and host entry points both match their reconstructed chains.
+2026-08-31 — M4-B16 layer-0 precision diagnostic completed. The first
+overall mismatch is a small Q projection delta, the causal V/FFN path drifts
+gradually, and an extra layer-output FP16 round-trip worsens the result.
+M4-B remains open without tolerance widening or production changes.
 
 Update this document whenever:
 
