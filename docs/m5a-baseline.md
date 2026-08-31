@@ -67,6 +67,14 @@ bench/results/20260831T192052Z-327301/
 It reports `git_dirty=false` and should be used for future comparisons. The
 earlier dirty-worktree capture remains retained as development evidence only.
 
+Additional clean-commit prompt-length runs used the same `hello` token
+(`14990`) repeated to 16 and 64 prompt tokens:
+
+```text
+bench/results/20260831T192328Z-328269/
+bench/results/20260831T192410Z-329121/
+```
+
 ## Result
 
 | Metric | Mean | Median | Throughput |
@@ -79,6 +87,18 @@ The raw per-run values, min/max, standard deviation, and exact median are in
 `result.json`; no timing samples were discarded. The three measured samples
 were 40.374/37.364/37.976 ms for prompt ingestion and
 312.310/305.925/308.597 ms for decode.
+
+The prompt-length sweep was:
+
+| Prompt tokens | Prefill mean | Prefill tok/s | TTFT mean | Decode mean (7 calls) | Decode tok/s |
+|---:|---:|---:|---:|---:|---:|
+| 1 | 38.571 ms | 25.926 | 39.061 ms | 308.944 ms | 22.658 |
+| 16 | 773.751 ms | 20.678 | 774.259 ms | 448.658 ms | 15.602 |
+| 64 | 5010.291 ms | 12.774 | 5010.804 ms | 958.529 ms | 7.303 |
+
+The 16- and 64-token prompts are controlled repeated-token workloads, not
+natural-language quality tests. Their generated sequences were deterministic
+within each workload and all runs remained finite.
 
 ## Interpretation
 
