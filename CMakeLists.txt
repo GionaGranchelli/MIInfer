@@ -218,6 +218,10 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-qwen3-layer6-external-test PRIVATE miinfer_hip)
     target_compile_options(miinfer-qwen3-layer6-external-test PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-qwen3-layer35-external-test tests/qwen3_layer35_external_test.cpp)
+    target_link_libraries(miinfer-qwen3-layer35-external-test PRIVATE miinfer_hip)
+    target_compile_options(miinfer-qwen3-layer35-external-test PRIVATE -Wall -Wextra -Wpedantic)
+
 endif()
 
 include(CTest)

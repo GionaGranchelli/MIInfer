@@ -762,6 +762,9 @@ from the accepted model plan and layer-state correctness evidence:
 7. Canonicalize the full-depth external CPU fixture, verify host replay, and
    validate the minimum causal-path precision correction before proceeding
    to token generation.
+8. Use the M4-B9 terminal layer-35 internal trace to resolve the shared
+   host/reference FFN-tail numerical contract before changing production
+   precision.
 
 Do not broaden M4 into a general-purpose runtime.
 
@@ -776,14 +779,15 @@ M4-B — full-depth numerical validation
 ```
 
 M4-B8 established a canonical full-depth CPU fixture from two byte-identical
-runs of the pinned reference with explicit `-t 24 -tb 24` settings. The old
-fixture is preserved as historical evidence because it was captured under
-different conditions. Host teacher-forced replay passes layers 0–34 and
-fails layer 35 (`max_abs=1.18066`); GPU F32-boundary policy probes make layers
-6 and 34 pass in teacher-forced mode, while layer 35 remains a shared
-host/reference blocker. Production precision remains unchanged and M4-B is
-still open. Exact experiment ordering may change only when supported by the
-resulting evidence.
+runs of the pinned reference with explicit `-t 24 -tb 24` settings. M4-B9
+added a terminal layer-35 internal trace from the same independent reference
+and proved the external layer-output tensor is identical to the input of
+final RMSNorm. Host teacher-forced replay first fails at layer 35 SwiGLU
+(`0.105103`) and ends at `1.18066`; MI50 P4 shows the same shared tail and
+ends at `1.22998`. Hybrid injection exonerates GPU SwiGLU, Down, and residual
+arithmetic. Production precision remains unchanged and M4-B is still open.
+Exact experiment ordering may change only when supported by the resulting
+evidence.
 
 ---
 

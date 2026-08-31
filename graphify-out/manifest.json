@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788127149.2784605,
-    "seen": 1788127557.7021224,
-    "ast_hash": "92a4c73c265cd0c6389f3d2e77f8ab56",
+    "mtime": 1788157555.9168537,
+    "seen": 1788158066.428143,
+    "ast_hash": "8fd4089741da8949a45f78218fc0dad9",
     "semantic_hash": ""
   },
   "README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788130509.783828,
-    "seen": 1788130782.0609074,
-    "ast_hash": "dce5877b53b1781b24be49ae0710b411",
+    "mtime": 1788157788.913628,
+    "seen": 1788158066.4281566,
+    "ast_hash": "9971166dc9c7aa824312339582b33ef4",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788130522.4057665,
-    "seen": 1788130782.0609221,
-    "ast_hash": "770bc87ef1207499c1724cc00a9dbb73",
+    "mtime": 1788157813.840497,
+    "seen": 1788158066.4281723,
+    "ast_hash": "1c270dd8c44ca7da6bbc270c11c4dffd",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -624,9 +624,9 @@
     "semantic_hash": ""
   },
   "docs/m4b-forward.md": {
-    "mtime": 1788130539.4176834,
-    "seen": 1788130782.0609128,
-    "ast_hash": "dc1633d216f2411ce72000ec65c1d5cf",
+    "mtime": 1788157759.7037818,
+    "seen": 1788158066.428163,
+    "ast_hash": "f70550bd7c1f660c7be013c7f121587a",
     "semantic_hash": ""
   },
   "tests/reference/qwen3/m4b-single-token/README.md": {
@@ -654,9 +654,21 @@
     "semantic_hash": ""
   },
   "tests/reference/qwen3/m4b-single-token-legacy/README.md": {
-    "mtime": 1788114310.6393156,
-    "seen": 1788130782.0609477,
-    "ast_hash": "9490145bec9a78cf8ca0896fd63ded1c",
+    "mtime": 1788131145.090727,
+    "seen": 1788158066.4281998,
+    "ast_hash": "12081c99f52a4b10bbb97957569a44eb",
+    "semantic_hash": ""
+  },
+  "tests/qwen3_layer35_external_test.cpp": {
+    "mtime": 1788157648.3823674,
+    "seen": 1788158066.4281206,
+    "ast_hash": "9ca011d18c06b418140518485715aa84",
+    "semantic_hash": ""
+  },
+  "tests/reference/qwen3/m4b-layer35/README.md": {
+    "mtime": 1788157489.0832052,
+    "seen": 1788158066.4281964,
+    "ast_hash": "f073335a553126f0e105ec8d5acb2e03",
     "semantic_hash": ""
   }
 }

@@ -89,8 +89,10 @@ No other GPU architecture is currently supported.
 * M4-B6 independent same-run external layer-6 trace and first-divergence
   host/MI50 diagnostic comparison; full-depth acceptance remains open
 * M4-B8 canonical full-depth external oracle and exact-Q8 F16/F32 precision
-  policy diagnostics; host layer-35 parity remains open; production
-  precision remains unchanged
+  policy diagnostics
+* M4-B9 terminal layer-35 external internal trace and first-divergence
+  comparison; shared host/GPU FFN-tail numeric contract remains open;
+  production precision remains unchanged
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -464,11 +466,11 @@ These do not help answer the current project question.
 
 The current Codex task is:
 
-> M4-B8 is canonicalizing the full-depth external CPU oracle and testing the
-> minimum per-projection F16/F32 precision policy. The canonical fixture is
-> repeatable, but host teacher-forced layer 35 still fails; GPU policy results
-> remain diagnostic until that host/reference blocker is resolved. Do not
-> widen tolerances or start token generation.
+> M4-B9 has localized the shared terminal layer-35 divergence with an
+> independent internal external-reference trace. Host first fails at SwiGLU
+> after close Gate/Up projections; diagnostic P4 GPU shows the same shared
+> tail. Resolve that numeric contract before changing production precision.
+> Do not widen tolerances or start token generation.
 
 The M0 evidence gates are complete under the documented gfx802-isolated
 configuration. The M2 gate is satisfied by EXP-0009 and M3 is closed by the
@@ -506,8 +508,9 @@ into a generic runtime.
 
 # Last Updated
 
-2026-08-31 — M4-B6 same-run external layer-6 trace captured and consumed;
-first host/GPU divergences localized, while full-reference parity remains open.
+2026-08-31 — M4-B9 terminal layer-35 external trace captured and consumed;
+the shared host/GPU FFN-tail divergence is localized while full-reference
+parity remains open.
 
 Update this document whenever:
 

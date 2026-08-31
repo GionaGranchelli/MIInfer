@@ -345,3 +345,49 @@ M4-B.
 **M4-B8 status: OPEN.** The external oracle is canonical and repeatable; the
 remaining layer-35 host/reference divergence must be localized before the
 GPU precision policy is accepted.
+
+## M4-B9 terminal layer-35 first-divergence trace
+
+M4-B9 added an independent internal trace for terminal layer 35 using the
+same pinned model, token (`14990`), CPU reference, and `-t 24 -tb 24`
+configuration as M4-B8. The fixture is
+[`tests/reference/qwen3/m4b-layer35/`](../tests/reference/qwen3/m4b-layer35/)
+with F32 manifest hash
+`af32ab6aabdb65b872fa129be8ef0e4c12173e6cd758703924f909f25f00a68b`.
+
+Two independent captures using the same temporary reference instrumentation
+were byte-identical for the selected internal tensors. The terminal boundary
+was captured explicitly: `layer-output.f32` and `final-norm-input.f32` are
+identical (`max_abs=0`). The external layer output is therefore exactly the
+reference input to final RMSNorm.
+
+The focused comparator reports external ↔ host, external ↔ MI50, and GPU ↔
+host metrics, including max/mean absolute error, RMSE, relative error, worst
+index/value, and first checkpoint outside the diagnostic `0.05` bound. Host
+passes through `up`; its first strict failure is `swiglu` (`max_abs=0.105103`,
+`max_rel=0.01077`), followed by `ffn_output=1.19824` and
+`layer_output=1.18066`. The large absolute error is a small relative
+nonlinear amplification, not evidence of an incorrect SiLU formula.
+
+The unchanged MI50 path first fails at `ffn_input` (`0.101562`) and ends at
+`layer_output=0.306641`. With diagnostic P4 F32 input/output boundaries,
+`ffn_input` is `0.0166016`, while the shared tail remains
+`swiglu=0.0950165`, `ffn_output=1.24683`, and `layer_output=1.22998`.
+Debug and Release agree.
+
+Hybrid external injection is causal evidence:
+
+| Injected external values | GPU checkpoint | Max abs error |
+| --- | --- | ---: |
+| external gate + up | SwiGLU | `7.62939e-06` |
+| external SwiGLU | Down projection | `0.000244141` |
+| external Down output | residual | `0` |
+
+Thus the terminal residual and GPU SwiGLU/down arithmetic are not the shared
+blocker. The remaining issue is the reference-vs-host projection/nonlinear
+numeric contract, amplified by SwiGLU. No tolerance was widened and no
+production precision change was made.
+
+**M4-B9 status: COMPLETE DIAGNOSTIC SLICE; M4-B remains OPEN.** The next
+correction should address the shared host/reference numerical contract before
+another GPU precision policy change.
