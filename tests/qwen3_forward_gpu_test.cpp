@@ -89,6 +89,139 @@ bool compare_checkpoint(const char* name, const std::vector<float>& actual,
     return pass;
 }
 
+using TraceField = std::pair<const char*, std::vector<float> miinfer::Qwen3LayerTrace::*>;
+
+static constexpr std::array kCompositionFields{
+    TraceField{"input", &miinfer::Qwen3LayerTrace::embedding},
+    TraceField{"attn_rms", &miinfer::Qwen3LayerTrace::attn_rms},
+    TraceField{"attn_norm", &miinfer::Qwen3LayerTrace::attn_norm},
+    TraceField{"q_projection", &miinfer::Qwen3LayerTrace::q_projection},
+    TraceField{"k_projection", &miinfer::Qwen3LayerTrace::k_projection},
+    TraceField{"v_projection", &miinfer::Qwen3LayerTrace::v_projection},
+    TraceField{"attention_output", &miinfer::Qwen3LayerTrace::attention_output},
+    TraceField{"ffn_input", &miinfer::Qwen3LayerTrace::ffn_input},
+    TraceField{"ffn_norm", &miinfer::Qwen3LayerTrace::ffn_norm},
+    TraceField{"gate", &miinfer::Qwen3LayerTrace::gate},
+    TraceField{"up", &miinfer::Qwen3LayerTrace::up},
+    TraceField{"swiglu", &miinfer::Qwen3LayerTrace::swiglu},
+    TraceField{"ffn_output", &miinfer::Qwen3LayerTrace::ffn_output},
+    TraceField{"layer_output", &miinfer::Qwen3LayerTrace::layer_output},
+};
+
+void print_composition_delta(const char* prefix, const Metrics& result) {
+    std::cout << prefix << " max_abs=" << result.max_abs
+              << " mean_abs=" << result.mean_abs
+              << " rmse=" << result.rmse
+              << " max_rel=" << result.max_rel
+              << " max_index=" << result.max_index
+              << " actual=" << result.actual_at_max
+              << " expected=" << result.expected_at_max << '\n';
+}
+
+int run_composition_diagnostic(const std::filesystem::path& model_path,
+                              const std::filesystem::path& trace_path) {
+    if (trace_path.empty()) {
+        throw std::invalid_argument("composition diagnostic requires a trace path");
+    }
+    const auto model = miinfer::Qwen3Model::load(model_path.string());
+    const auto plan = miinfer::Qwen3GpuPlan::build(model);
+    const auto embedding = read_f32(trace_path / "embedding.f32");
+    const auto host_full = miinfer::execute_qwen3_forward_host(model, kToken);
+    const auto gpu_full = miinfer::execute_qwen3_forward_gpu(plan, kToken);
+    std::vector<float> host_sequential_input = embedding;
+    std::vector<float> gpu_sequential_input = embedding;
+    bool reported_first_host_nonzero = false;
+    bool reported_first_gpu_nonzero = false;
+    bool passed = true;
+    bool full_matches_reconstructed = true;
+
+    std::cout << "M4-B15 MI50 sequential composition diagnostic (layers 0..2):\n";
+    for (std::size_t layer = 0; layer < 3; ++layer) {
+        const auto expected_input = layer == 0
+            ? embedding
+            : read_f32(trace_path / (std::string("layer-")
+                                    + std::to_string(layer - 1) + ".f32"));
+        const auto expected_output = read_f32(trace_path / (std::string("layer-")
+                                                           + std::to_string(layer) + ".f32"));
+        const auto host_isolated = miinfer::execute_qwen3_layer_host_teacher_forced(
+            model, layer, expected_input);
+        const auto host_sequential = miinfer::execute_qwen3_layer_host_teacher_forced(
+            model, layer, host_sequential_input);
+        const auto gpu_isolated = miinfer::execute_qwen3_layer_gpu_teacher_forced(
+            plan, layer, expected_input);
+        const auto gpu_sequential = miinfer::execute_qwen3_layer_gpu_teacher_forced(
+            plan, layer, gpu_sequential_input);
+
+        std::cout << "layer " << layer << ":\n";
+        const auto host_iso_error = metrics(host_isolated.layer_output, expected_output);
+        const auto host_seq_error = metrics(host_sequential.layer_output, expected_output);
+        const auto gpu_iso_error = metrics(gpu_isolated.layer_output, expected_output);
+        const auto gpu_seq_error = metrics(gpu_sequential.layer_output, expected_output);
+        const auto host_gpu_seq_error = metrics(host_sequential.layer_output,
+                                                gpu_sequential.layer_output);
+        const auto full_host_error = metrics(host_full.layer_outputs[layer],
+                                             host_sequential.layer_output);
+        const auto full_gpu_error = metrics(gpu_full.layer_outputs[layer],
+                                            gpu_sequential.layer_output);
+        compare_checkpoint((std::string("  host-isolated vs external layer-")
+                            + std::to_string(layer)).c_str(),
+                           host_isolated.layer_output, expected_output, 5.0e-2F);
+        compare_checkpoint((std::string("  host-sequential vs external layer-")
+                            + std::to_string(layer)).c_str(),
+                           host_sequential.layer_output, expected_output, 5.0e-2F);
+        compare_checkpoint((std::string("  gpu-isolated vs external layer-")
+                            + std::to_string(layer)).c_str(),
+                           gpu_isolated.layer_output, expected_output, 5.0e-2F);
+        compare_checkpoint((std::string("  gpu-sequential vs external layer-")
+                            + std::to_string(layer)).c_str(),
+                           gpu_sequential.layer_output, expected_output, 5.0e-2F);
+        print_composition_delta("  sequential GPU-vs-host", host_gpu_seq_error);
+        print_composition_delta("  execute_forward_host vs reconstructed-sequential",
+                                full_host_error);
+        print_composition_delta("  execute_forward_gpu vs reconstructed-sequential",
+                                full_gpu_error);
+        full_matches_reconstructed = full_matches_reconstructed
+            && full_host_error.max_abs == 0.0F
+            && full_gpu_error.max_abs == 0.0F;
+        passed = passed && host_iso_error.max_abs <= 5.0e-2F
+            && host_seq_error.max_abs <= 5.0e-2F
+            && gpu_iso_error.max_abs <= 5.0e-2F
+            && gpu_seq_error.max_abs <= 5.0e-2F;
+
+        for (const auto& field : kCompositionFields) {
+            const auto host_delta = metrics(host_sequential.*(field.second),
+                                            host_isolated.*(field.second));
+            const auto gpu_delta = metrics(gpu_sequential.*(field.second),
+                                           gpu_isolated.*(field.second));
+            print_composition_delta((std::string("  host sequential-vs-isolated ")
+                                     + field.first).c_str(), host_delta);
+            print_composition_delta((std::string("  gpu sequential-vs-isolated ")
+                                     + field.first).c_str(), gpu_delta);
+            if (!reported_first_host_nonzero && host_delta.max_abs != 0.0F) {
+                std::cout << "  FIRST NONZERO HOST DIVERGENCE: layer=" << layer
+                          << " stage=" << field.first << '\n';
+                reported_first_host_nonzero = true;
+            }
+            if (!reported_first_gpu_nonzero && gpu_delta.max_abs != 0.0F) {
+                std::cout << "  FIRST NONZERO GPU DIVERGENCE: layer=" << layer
+                          << " stage=" << field.first << '\n';
+                reported_first_gpu_nonzero = true;
+            }
+        }
+
+        host_sequential_input = host_sequential.layer_output;
+        gpu_sequential_input = gpu_sequential.layer_output;
+    }
+
+    std::cout << "M4-B15 full-forward controls: host layers=" << host_full.layer_outputs.size()
+              << " gpu layers=" << gpu_full.layer_outputs.size()
+              << " reconstructed parity=" << (full_matches_reconstructed ? "PASS" : "FAIL") << '\n';
+    std::cout << "M4-B15 MI50 summary: "
+              << (passed && full_matches_reconstructed ? "layer-output gates PASS" : "layer-output gates FAIL")
+              << "; first nonzero divergences are reported above\n";
+    return passed && full_matches_reconstructed ? 0 : 1;
+}
+
 void report_gpu_host_trace(const miinfer::Qwen3LayerTrace& gpu,
                            const miinfer::Qwen3LayerTrace& host) {
     using Field = std::pair<const char*, std::vector<float> miinfer::Qwen3LayerTrace::*>;
@@ -422,6 +555,9 @@ int main(int argc, char** argv) {
                           || std::string(argv[3]) == "--teacher-forced-all")) {
             return run_teacher_forced(argv[1], argv[2],
                                       std::string(argv[3]) == "--teacher-forced-all");
+        }
+        if (argc == 4 && std::string(argv[3]) == "--composition-diagnostic") {
+            return run_composition_diagnostic(argv[1], argv[2]);
         }
         return run(argv[1], argc == 3 ? std::filesystem::path(argv[2])
                                       : std::filesystem::path{});

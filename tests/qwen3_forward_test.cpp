@@ -11,6 +11,7 @@
 #include <limits>
 #include <string>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -100,6 +101,100 @@ bool compare_checkpoint(const char* name, const std::vector<float>& actual,
               << " max_rel=" << metrics.max_rel
               << " max_rel_index=" << metrics.max_rel_index << '\n';
     return pass;
+}
+
+using TraceField = std::pair<const char*, std::vector<float> miinfer::Qwen3LayerTrace::*>;
+
+static constexpr std::array kCompositionFields{
+    TraceField{"input", &miinfer::Qwen3LayerTrace::embedding},
+    TraceField{"attn_rms", &miinfer::Qwen3LayerTrace::attn_rms},
+    TraceField{"attn_norm", &miinfer::Qwen3LayerTrace::attn_norm},
+    TraceField{"q_projection", &miinfer::Qwen3LayerTrace::q_projection},
+    TraceField{"k_projection", &miinfer::Qwen3LayerTrace::k_projection},
+    TraceField{"v_projection", &miinfer::Qwen3LayerTrace::v_projection},
+    TraceField{"attention_output", &miinfer::Qwen3LayerTrace::attention_output},
+    TraceField{"ffn_input", &miinfer::Qwen3LayerTrace::ffn_input},
+    TraceField{"ffn_norm", &miinfer::Qwen3LayerTrace::ffn_norm},
+    TraceField{"gate", &miinfer::Qwen3LayerTrace::gate},
+    TraceField{"up", &miinfer::Qwen3LayerTrace::up},
+    TraceField{"swiglu", &miinfer::Qwen3LayerTrace::swiglu},
+    TraceField{"ffn_output", &miinfer::Qwen3LayerTrace::ffn_output},
+    TraceField{"layer_output", &miinfer::Qwen3LayerTrace::layer_output},
+};
+
+void print_composition_delta(const char* prefix, const Metrics& result) {
+    std::cout << prefix << " max_abs=" << result.max_abs
+              << " mean_abs=" << result.mean_abs
+              << " rmse=" << result.rmse
+              << " max_rel=" << result.max_rel
+              << " max_index=" << result.max_index
+              << " actual=" << result.actual_at_max
+              << " expected=" << result.expected_at_max << '\n';
+}
+
+int run_composition_diagnostic(const std::filesystem::path& model_path,
+                              const std::filesystem::path& trace_path) {
+    if (trace_path.empty()) {
+        throw std::invalid_argument("composition diagnostic requires a trace path");
+    }
+    const auto model = miinfer::Qwen3Model::load(model_path.string());
+    const auto embedding = read_f32(trace_path / "embedding.f32");
+    const auto full = miinfer::execute_qwen3_forward_host(model, kToken);
+    std::vector<float> sequential_input = embedding;
+    bool full_matches_reconstructed = true;
+    bool isolated_matches_reference = true;
+    bool sequential_matches_reference = true;
+    bool reported_first_nonzero = false;
+
+    std::cout << "M4-B15 host sequential composition diagnostic (layers 0..2):\n";
+    for (std::size_t layer = 0; layer < 3; ++layer) {
+        const auto expected_input = layer == 0
+            ? embedding
+            : read_f32(trace_path / (std::string("layer-")
+                                    + std::to_string(layer - 1) + ".f32"));
+        const auto expected_output = read_f32(trace_path / (std::string("layer-")
+                                                           + std::to_string(layer) + ".f32"));
+        const auto isolated = miinfer::execute_qwen3_layer_host_teacher_forced(
+            model, layer, expected_input);
+        const auto sequential = miinfer::execute_qwen3_layer_host_teacher_forced(
+            model, layer, sequential_input);
+
+        std::cout << "layer " << layer << ":\n";
+        const auto input_error = compare(sequential.embedding, expected_input);
+        print_composition_delta("  sequential-input vs external-input", input_error);
+        const auto isolated_error = compare(isolated.layer_output, expected_output);
+        const auto sequential_error = compare(sequential.layer_output, expected_output);
+        print_composition_delta("  isolated-output vs external-output", isolated_error);
+        print_composition_delta("  sequential-output vs external-output", sequential_error);
+        isolated_matches_reference = isolated_matches_reference && isolated_error.max_abs <= 5.0e-2F;
+        sequential_matches_reference = sequential_matches_reference && sequential_error.max_abs <= 5.0e-2F;
+
+        for (const auto& field : kCompositionFields) {
+            const auto delta = compare(sequential.*(field.second), isolated.*(field.second));
+            print_composition_delta((std::string("  sequential-vs-isolated ") + field.first).c_str(), delta);
+            if (!reported_first_nonzero && delta.max_abs != 0.0F) {
+                std::cout << "  FIRST NONZERO DIVERGENCE: layer=" << layer
+                          << " stage=" << field.first << '\n';
+                reported_first_nonzero = true;
+            }
+        }
+
+        const auto full_error = compare(full.layer_outputs[layer], sequential.layer_output);
+        print_composition_delta("  execute_forward_host vs reconstructed-sequential", full_error);
+        full_matches_reconstructed = full_matches_reconstructed && full_error.max_abs == 0.0F;
+        sequential_input = sequential.layer_output;
+    }
+
+    std::cout << "M4-B15 host summary:"
+              << " isolated_vs_external=" << (isolated_matches_reference ? "PASS" : "FAIL")
+              << " sequential_vs_external=" << (sequential_matches_reference ? "PASS" : "FAIL")
+              << " full_vs_reconstructed=" << (full_matches_reconstructed ? "PASS" : "FAIL")
+              << "\n";
+    if (!reported_first_nonzero) {
+        std::cout << "  no nonzero sequential-vs-isolated divergence in layers 0..2\n";
+    }
+    return isolated_matches_reference && sequential_matches_reference
+        && full_matches_reconstructed ? 0 : 1;
 }
 
 int run(const std::filesystem::path& model_path, const std::filesystem::path& trace_path,
@@ -203,6 +298,9 @@ int main(int argc, char** argv) {
                           || std::string(argv[3]) == "--teacher-forced-all")) {
             return run_teacher_forced(argv[1], trace_path,
                                       std::string(argv[3]) == "--teacher-forced-all");
+        }
+        if (argc == 4 && std::string(argv[3]) == "--composition-diagnostic") {
+            return run_composition_diagnostic(argv[1], trace_path);
         }
         const bool write_trace = argc == 4 && std::string(argv[3]) == "--write-trace";
         return run(argv[1], trace_path, write_trace);

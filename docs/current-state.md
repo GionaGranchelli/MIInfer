@@ -108,6 +108,9 @@ No other GPU architecture is currently supported.
 * M4-B14 production attention-output FP16 boundary; focused layer-35 host and
   full MI50 GPU gates pass, while host full-forward parity still first fails
   at layer 2
+* M4-B15 sequential-composition diagnostic; full host forward is bitwise
+  identical to its reconstructed layer chain, with the first inherited
+  sequential divergence at layer 1 input and first strict failure at layer 2
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -481,11 +484,10 @@ These do not help answer the current project question.
 
 The current Codex task is:
 
-> M4-B11 has shown that the pinned Q8 contract and Gate/Up accumulation are
-> not the source: with external `ffn_norm`, Gate/Up replay matches external
-> outputs to `7.6e-6`/`1.5e-5`. Locate the earlier FFN-input/attention-output
-> numeric contract before changing production precision.
-> Do not widen tolerances or start token generation.
+> M4-B15 localizes the remaining host full-forward depth drift. Compare
+> sequential and reference-conditioned layer traces for layers 0–2, verify
+> parity with the full-forward entry points, and do not change arithmetic or
+> tolerances until the inherited first divergence is understood.
 
 The M0 evidence gates are complete under the documented gfx802-isolated
 configuration. The M2 gate is satisfied by EXP-0009 and M3 is closed by the
@@ -523,9 +525,10 @@ into a generic runtime.
 
 # Last Updated
 
-2026-08-31 — M4-B14 production attention-output FP16 boundary completed;
-focused layer-35 host and full MI50 GPU gates pass, while host full-forward
-parity still first fails at layer 2.
+2026-08-31 — M4-B15 composition diagnostic completed. Host full-forward is
+bitwise identical to its reconstructed sequential chain; the first inherited
+sequential divergence is layer 1 input and the first strict external failure
+is layer 2. MI50 and host entry points both match their reconstructed chains.
 
 Update this document whenever:
 

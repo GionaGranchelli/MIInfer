@@ -33,14 +33,13 @@ Both paths complete all 36 layers without NaN/Inf on the real artifact.
 
 ## Current evidence
 
-The host and GPU executors are not yet accepted against the full-depth oracle.
-Layer 0 remains close, but depth-dependent differences accumulate beyond the
-currently frozen per-layer bounds. The Q6_K decoder required corrected
-128-value-half and nibble-selection indexing; after those fixes, host and
-MI50 select the reference argmax (`8`), and host full logits pass the current
-0.1 absolute bound. MI50 logits remain just outside that bound (`0.161`),
-while several intermediate layer outputs also fail. This remains an open
-correctness blocker, not a reason to broaden tolerances.
+The host and GPU executors remain under full-depth acceptance. The Q6_K
+decoder required corrected 128-value-half and nibble-selection indexing;
+after those fixes, both paths select the reference argmax (`8`). The MI50
+full-forward path passes its canonical layer/logit gate under the accepted
+precision policy. Host full-forward still has a depth-composition failure,
+with the first strict failure at layer 2 (`max_abs=0.117966`); this remains an
+open correctness blocker, not a reason to broaden tolerances.
 
 The remaining distinction to resolve is the numerical projection contract:
 the layer-0 runtime path uses Q8_1 activation quantization before Q4_0 GEMV,
@@ -554,3 +553,42 @@ Both Debug and Release builds succeeded and both standard CTest suites passed
 **M4-B14 status: KEEP; M4-B remains OPEN.** The next investigation should
 localize the remaining host full-forward depth drift beginning at layer 2,
 while preserving the accepted attention-output FP16 boundary.
+
+## M4-B15 host sequential-composition localization
+
+M4-B15 added a test-only composition diagnostic to both forward executables.
+It reconstructs layers 0–2 by chaining the existing complete
+teacher-forced-layer API, then compares each chain against a
+reference-conditioned isolated replay and the canonical external per-layer
+outputs. It also compares the reconstructed chain with the existing
+full-forward entry points, distinguishing orchestration defects from ordinary
+state propagation.
+
+On the pinned artifact, the host results were:
+
+| Layer | Isolated vs external | Sequential vs external |
+| ---: | ---: | ---: |
+| 0 | `0.00549483` | `0.00549483` |
+| 1 | `0.000249505` | `0.0110674` |
+| 2 | `3.8147e-06` | `0.117966` |
+
+The first nonzero sequential-vs-isolated difference is layer 1 input, exactly
+the layer-0 output difference. The full host forward is bitwise identical to
+the reconstructed sequential chain through layer 2. Therefore layer 2 is
+the first threshold crossing, not evidence of a layer-2-only orchestration
+bug; host drift is inherited through sequential composition. The MI50 probe
+showed the same first inherited divergence at layer 1 input, while its
+reference-conditioned layer outputs stayed within the current bound through
+layer 2. Both full-forward entry points were bitwise identical to their
+reconstructed chains.
+
+The diagnostic does not change production behavior or tolerances. It is
+invoked explicitly with:
+
+```text
+miinfer-qwen3-forward-test MODEL TRACE --composition-diagnostic
+miinfer-qwen3-forward-gpu-test MODEL TRACE --composition-diagnostic
+```
+
+**M4-B15 status: COMPLETE DIAGNOSTIC SLICE; M4-B remains OPEN.** The evidence
+does not support changing layer-2 arithmetic or adding a host buffer fix.

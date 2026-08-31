@@ -771,6 +771,11 @@ from the accepted model plan and layer-state correctness evidence:
 10. Use M4-B11 Q8 identity and external-conditioned projection replay to
     locate the earlier FFN-input/attention-output contract that produces the
     differing terminal-layer `ffn_norm`.
+11. Apply the proven attention-output FP16 boundary to production host and
+    MI50 execution, then preserve it as the accepted M4-B14 contract.
+12. Localize remaining full-forward host drift with sequential-versus-isolated
+    layer traces and verify the full-forward entry point has no independent
+    orchestration divergence (M4-B15).
 
 Do not broaden M4 into a general-purpose runtime.
 
@@ -805,9 +810,11 @@ to `0.000488281`. The remaining precision hypothesis is the attention-output
 materialization before O, and M4-B remains open. M4-B14 applied that boundary
 to production host and MI50 execution. Focused layer-35 host parity and the
 full MI50 GPU gate pass, but host full-forward parity first fails at layer 2
-(`max_abs=0.117966`); M4-B remains open without any tolerance widening.
-Exact experiment ordering may change only when supported by the resulting
-evidence.
+(`max_abs=0.117966`). M4-B15 shows the host full-forward entry point is
+bitwise identical to a reconstructed sequential chain: the first inherited
+sequential difference is layer 1 input, and layer 2 is the first strict
+threshold crossing. M4-B remains open without any tolerance widening. Exact
+experiment ordering may change only when supported by the resulting evidence.
 
 ---
 
