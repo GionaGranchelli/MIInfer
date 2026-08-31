@@ -118,3 +118,29 @@ The JSON reports prefill, TTFT, decode, and total wall-time samples, the
 complete generated ID sequence for the first run, model/build identity, and
 whether trace copies were disabled. This is the A/B control for the first
 optimization; it is not itself an optimization.
+
+## M5-C1 position-scaled execution audit
+
+`miinfer-qwen3-position-audit` characterizes the real trace-free decode path
+at positions 1, 8, 16, 32, and 64. It reports clean production-path wall time
+from a separate pass, plus deferred HIP-event timings for attention,
+quantization, FFN projections, and all operation families. It also reports
+dispatches, copy bytes, cache-write copy time, synchronization call sites, and
+temporary allocations. Deferred timing avoids synchronizing every operation;
+the audit pass still records events and must not be used as a throughput
+benchmark.
+
+Run it directly against the pinned model:
+
+```bash
+cmake --preset mi50-release
+cmake --build --preset mi50-release --target miinfer-qwen3-position-audit
+build/mi50-release/miinfer-qwen3-position-audit \
+  /path/to/Qwen3-8B-q4_0-b968826d.gguf \
+  --json-output /tmp/m5c1-position-audit.json
+```
+
+The retained M5-C1 result is documented in
+`experiments/EXP-0013-qwen3-position-scaled-audit.md`. The first audit found
+flat dispatch/copy/quantization/FFN costs and a strong position-dependent
+cached-attention cost, making attention the next measured optimization target.

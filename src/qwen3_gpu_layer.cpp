@@ -17,6 +17,7 @@
 #include <stdexcept>
 #include <span>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace miinfer {
@@ -35,6 +36,7 @@ const char* qwen3_profile_category_name(Qwen3ProfileCategory category) noexcept 
     case Qwen3ProfileCategory::residual: return "residual";
     case Qwen3ProfileCategory::conversion: return "conversion";
     case Qwen3ProfileCategory::lm_head: return "lm_head";
+    case Qwen3ProfileCategory::kv_cache: return "kv_cache";
     case Qwen3ProfileCategory::copies: return "copies";
     case Qwen3ProfileCategory::count: break;
     }
@@ -84,6 +86,14 @@ public:
     void finish() {
         if (profile_ == nullptr || finished_) return;
         MIINFER_HIP_CHECK(hipEventRecord(stop_));
+        if (profile_->deferred_timing) {
+            profile_->pending_events.push_back({
+                start_, stop_, category_, dispatches_, 0, copy_});
+            start_ = nullptr;
+            stop_ = nullptr;
+            finished_ = true;
+            return;
+        }
         MIINFER_HIP_CHECK(hipEventSynchronize(stop_));
         float milliseconds = 0.0F;
         MIINFER_HIP_CHECK(hipEventElapsedTime(&milliseconds, start_, stop_));
@@ -120,14 +130,22 @@ void profile_gpu_call(Qwen3GpuProfile* profile, Qwen3ProfileCategory category,
 }
 
 template <typename Function>
-void profile_copy_call(Qwen3GpuProfile* profile, Function&& function) {
+void profile_copy_call(Qwen3GpuProfile* profile, Qwen3ProfileCategory category,
+                       std::size_t bytes, Function&& function) {
     if (profile == nullptr) {
         function();
         return;
     }
-    ProfileScope scope(profile, Qwen3ProfileCategory::copies, 0, true);
+    ProfileScope scope(profile, category, 0, true);
     function();
+    profile->record_copy(category, bytes);
     scope.finish();
+}
+
+template <typename Function>
+void profile_copy_call(Qwen3GpuProfile* profile, std::size_t bytes, Function&& function) {
+    profile_copy_call(profile, Qwen3ProfileCategory::copies, bytes,
+                      std::forward<Function>(function));
 }
 
 template <typename T>
@@ -146,7 +164,7 @@ void upload_f32(const Qwen3TensorView& tensor, float* device, std::size_t elemen
     if (tensor.type() != GgufTensorType::f32 || tensor.bytes() != elements * sizeof(float)) {
         throw std::runtime_error("unexpected F32 layer tensor: " + tensor.name());
     }
-    profile_copy_call(profile, [&] {
+    profile_copy_call(profile, tensor.bytes(), [&] {
         MIINFER_HIP_CHECK(hipMemcpy(device, tensor.data(), tensor.bytes(), hipMemcpyHostToDevice));
     });
 }
@@ -354,7 +372,7 @@ void launch_projection_probe(
 std::vector<float> capture(const float* device, std::size_t elements,
                            Qwen3GpuProfile* profile = nullptr) {
     std::vector<float> host(elements);
-    profile_copy_call(profile, [&] { copy_to_host(device, host); });
+    profile_copy_call(profile, host.size() * sizeof(float), [&] { copy_to_host(device, host); });
     return host;
 }
 
@@ -376,6 +394,33 @@ void capture_qwen3_head_norm(
 }
 
 }  // namespace
+
+Qwen3GpuProfile::~Qwen3GpuProfile() noexcept {
+    for (const auto& event : pending_events) {
+        if (event.start != nullptr) (void)hipEventDestroy(event.start);
+        if (event.stop != nullptr) (void)hipEventDestroy(event.stop);
+    }
+}
+
+void Qwen3GpuProfile::finalize() {
+    if (pending_events.empty()) return;
+    MIINFER_HIP_CHECK(hipDeviceSynchronize());
+    finalization_synchronizations += 1;
+    for (const auto& event : pending_events) {
+        float milliseconds = 0.0F;
+        MIINFER_HIP_CHECK(hipEventElapsedTime(&milliseconds, event.start, event.stop));
+        const auto index = static_cast<std::size_t>(event.category);
+        if (event.copy) {
+            copy_ms[index] += milliseconds;
+        } else {
+            gpu_ms[index] += milliseconds;
+            dispatches[index] += event.dispatches;
+        }
+        (void)hipEventDestroy(event.start);
+        (void)hipEventDestroy(event.stop);
+    }
+    pending_events.clear();
+}
 
 Qwen3Layer0GpuKvCache::Qwen3Layer0GpuKvCache(
     std::size_t kv_heads, std::size_t head_dim, std::size_t capacity)
@@ -415,12 +460,12 @@ void Qwen3Layer0GpuKvCache::append(
     const auto bytes = head_dim_ * sizeof(float);
     for (std::size_t head = 0; head < kv_heads_; ++head) {
         const auto offset = (head * capacity_ + position) * head_dim_;
-        profile_copy_call(profile, [&] {
+        profile_copy_call(profile, Qwen3ProfileCategory::kv_cache, bytes, [&] {
             MIINFER_HIP_CHECK(hipMemcpy(
                 static_cast<float*>(keys_) + offset, keys + head * head_dim_, bytes,
                 hipMemcpyDeviceToDevice));
         });
-        profile_copy_call(profile, [&] {
+        profile_copy_call(profile, Qwen3ProfileCategory::kv_cache, bytes, [&] {
             MIINFER_HIP_CHECK(hipMemcpy(
                 static_cast<float*>(values_) + offset, values + head * head_dim_, bytes,
                 hipMemcpyDeviceToDevice));
@@ -520,6 +565,7 @@ Qwen3LayerTrace qwen3_layer_gpu_impl(
     DeviceBytes output_half(kMaxVector * sizeof(__half));
     DeviceBytes input_q8(kMaxQ8Bytes);
     DeviceBytes input_q8_exact(kMaxQ8Bytes);
+    if (profile != nullptr) profile->temporary_allocations += 30;
     auto* half_input = static_cast<__half*>(input_half.data());
     auto* half_output = static_cast<__half*>(output_half.data());
     auto* q8_input = static_cast<Q8_1Block*>(input_q8.data());
@@ -531,7 +577,7 @@ Qwen3LayerTrace qwen3_layer_gpu_impl(
     };
 
     Qwen3LayerTrace trace;
-    profile_copy_call(profile, [&] {
+    profile_copy_call(profile, hidden * sizeof(float), [&] {
         MIINFER_HIP_CHECK(hipMemcpy(embedding.data(), input_device, hidden * sizeof(float),
                                     hipMemcpyDeviceToDevice));
     });
@@ -625,7 +671,7 @@ Qwen3LayerTrace qwen3_layer_gpu_impl(
         if (attention_output_override.size() != hidden) {
             throw std::invalid_argument("attention-output override size mismatch");
         }
-        profile_copy_call(profile, [&] {
+        profile_copy_call(profile, hidden * sizeof(float), [&] {
             MIINFER_HIP_CHECK(hipMemcpy(attention.data(), attention_output_override.data(),
                                         hidden * sizeof(float), hipMemcpyHostToDevice));
         });
@@ -681,7 +727,7 @@ Qwen3LayerTrace qwen3_layer_gpu_impl(
     trace.layer_output = capture_optional(layer_output.data(), hidden);
 
     if (output_device != nullptr) {
-        profile_copy_call(profile, [&] {
+        profile_copy_call(profile, hidden * sizeof(float), [&] {
             MIINFER_HIP_CHECK(hipMemcpy(output_device, layer_output.data(), hidden * sizeof(float),
                                         hipMemcpyDeviceToDevice));
         });
@@ -757,6 +803,7 @@ Qwen3ForwardTrace execute_qwen3_decode_gpu(
     }
 
     DeviceBuffer<float> input(config.hidden_size), output(config.hidden_size);
+    if (profile != nullptr) profile->temporary_allocations += 2;
     profile_gpu_call(profile, Qwen3ProfileCategory::embedding, 1, [&] {
         launch_qwen3_q4_embedding(
             static_cast<const std::byte*>(plan.device_tensor_data(model.token_embeddings().name())),
@@ -777,6 +824,7 @@ Qwen3ForwardTrace execute_qwen3_decode_gpu(
 
     DeviceBuffer<float> final_norm(config.hidden_size);
     DeviceBuffer<float> norm_weights(config.hidden_size);
+    if (profile != nullptr) profile->temporary_allocations += 2;
     upload_f32(model.final_norm(), norm_weights.data(), config.hidden_size, profile);
     profile_gpu_call(profile, Qwen3ProfileCategory::normalization, 1, [&] {
         launch_qwen3_rms_norm(current, norm_weights.data(), final_norm.data(),
@@ -786,6 +834,7 @@ Qwen3ForwardTrace execute_qwen3_decode_gpu(
 
     DeviceBuffer<float> logits(config.vocab_size);
     DeviceBuffer<Q8KDeviceBlock> quantized_final_norm(config.hidden_size / 256);
+    if (profile != nullptr) profile->temporary_allocations += 2;
     const auto* output_weight = static_cast<const Q6KDeviceBlock*>(
         plan.device_tensor_data(model.output().name()));
     profile_gpu_call(profile, Qwen3ProfileCategory::quantization, 1, [&] {
@@ -796,6 +845,7 @@ Qwen3ForwardTrace execute_qwen3_decode_gpu(
                                     config.vocab_size, config.hidden_size);
     });
     forward.logits = capture(logits.data(), config.vocab_size, profile);
+    if (profile != nullptr) profile->finalize();
     return forward;
 }
 
@@ -805,6 +855,16 @@ void execute_qwen3_decode_gpu_fast(
     std::size_t position,
     Qwen3GpuDecodeCache& cache,
     std::span<float> logits_host) {
+    execute_qwen3_decode_gpu_fast(plan, token, position, cache, logits_host, nullptr);
+}
+
+void execute_qwen3_decode_gpu_fast(
+    const Qwen3GpuPlan& plan,
+    std::uint32_t token,
+    std::size_t position,
+    Qwen3GpuDecodeCache& cache,
+    std::span<float> logits_host,
+    Qwen3GpuProfile* profile) {
     const auto& model = plan.model();
     const auto& config = model.config();
     if (token >= config.vocab_size || logits_host.size() != config.vocab_size
@@ -815,33 +875,47 @@ void execute_qwen3_decode_gpu_fast(
     }
 
     DeviceBuffer<float> input(config.hidden_size), output(config.hidden_size);
-    launch_qwen3_q4_embedding(
-        static_cast<const std::byte*>(plan.device_tensor_data(model.token_embeddings().name())),
-        token, config.vocab_size, config.hidden_size, input.data());
+    if (profile != nullptr) profile->temporary_allocations += 2;
+    profile_gpu_call(profile, Qwen3ProfileCategory::embedding, 1, [&] {
+        launch_qwen3_q4_embedding(
+            static_cast<const std::byte*>(plan.device_tensor_data(model.token_embeddings().name())),
+            token, config.vocab_size, config.hidden_size, input.data());
+    });
 
     auto* current = input.data();
     auto* next = output.data();
     for (std::size_t layer = 0; layer < model.layers().size(); ++layer) {
         (void)qwen3_layer_gpu_impl(
-            plan, layer, current, position, cache.layer(layer), next, {}, nullptr, false);
+            plan, layer, current, position, cache.layer(layer), next, {}, profile, false);
         std::swap(current, next);
     }
 
     DeviceBuffer<float> final_norm(config.hidden_size);
     DeviceBuffer<float> norm_weights(config.hidden_size);
-    upload_f32(model.final_norm(), norm_weights.data(), config.hidden_size);
-    launch_qwen3_rms_norm(current, norm_weights.data(), final_norm.data(),
-                          config.hidden_size, config.rms_epsilon);
+    if (profile != nullptr) profile->temporary_allocations += 2;
+    upload_f32(model.final_norm(), norm_weights.data(), config.hidden_size, profile);
+    profile_gpu_call(profile, Qwen3ProfileCategory::normalization, 1, [&] {
+        launch_qwen3_rms_norm(current, norm_weights.data(), final_norm.data(),
+                              config.hidden_size, config.rms_epsilon);
+    });
 
     DeviceBuffer<float> logits(config.vocab_size);
     DeviceBuffer<Q8KDeviceBlock> quantized_final_norm(config.hidden_size / 256);
+    if (profile != nullptr) profile->temporary_allocations += 2;
     const auto* output_weight = static_cast<const Q6KDeviceBlock*>(
         plan.device_tensor_data(model.output().name()));
-    launch_qwen3_q8_k_quantize(final_norm.data(), quantized_final_norm.data(), config.hidden_size);
-    launch_qwen3_q6_k_q8_k_gemv(output_weight, quantized_final_norm.data(), logits.data(),
-                                config.vocab_size, config.hidden_size);
-    MIINFER_HIP_CHECK(hipMemcpy(logits_host.data(), logits.data(),
-                                config.vocab_size * sizeof(float), hipMemcpyDeviceToHost));
+    profile_gpu_call(profile, Qwen3ProfileCategory::quantization, 1, [&] {
+        launch_qwen3_q8_k_quantize(final_norm.data(), quantized_final_norm.data(), config.hidden_size);
+    });
+    profile_gpu_call(profile, Qwen3ProfileCategory::lm_head, 1, [&] {
+        launch_qwen3_q6_k_q8_k_gemv(output_weight, quantized_final_norm.data(), logits.data(),
+                                    config.vocab_size, config.hidden_size);
+    });
+    profile_copy_call(profile, logits_host.size() * sizeof(float), [&] {
+        MIINFER_HIP_CHECK(hipMemcpy(logits_host.data(), logits.data(),
+                                    config.vocab_size * sizeof(float), hipMemcpyDeviceToHost));
+    });
+    if (profile != nullptr) profile->finalize();
 }
 
 Qwen3LayerTrace execute_qwen3_layer_gpu_teacher_forced(

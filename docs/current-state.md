@@ -160,6 +160,10 @@ No other GPU architecture is currently supported.
   64-forward growing-context control reaches 12.724 tok/s
 * EXP-0012 same-card pinned llama.cpp comparison; standard Q4_0 TG is about
   91 tok/s, while the raw `hello` controls expose a large context-scaling gap
+* M5-C1 position-scaled execution audit; dispatches, copied bytes, temporary
+  allocations, quantization, FFN, and KV-write copy cost remain flat from
+  positions 1–64, while cached attention grows from 3.401 ms to 95.998 ms;
+  the next optimization target is cached-attention parallelism
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -187,7 +191,8 @@ all work. The gfx802 isolation remains an operational platform prerequisite.
 
 The C++20/HIP infrastructure, model loader/planner, accepted single-token
 full-model MI50 execution, persistent multi-token decode, text-facing Qwen3
-tokenizer/generator, M5-A baseline, M5-B profile, and M5-C0 trace-free control
+tokenizer/generator, M5-A baseline, M5-B profile, M5-C0 trace-free control,
+and M5-C1 position-scaled audit
 are present. Sampling, serving, and generic runtime expansion remain outside
 scope. The immediate performance question is context scaling and execution
 overhead relative to the pinned gfx906 llama.cpp control.
@@ -198,9 +203,8 @@ overhead relative to the pinned gfx906 llama.cpp control.
 
 The immediate technical objective is:
 
-> Characterize the trace-free decode path's context scaling and dispatch/
-> materialization overhead, then test one measured performance hypothesis at a
-> time without weakening the C3 correctness gate.
+> Improve the cached-attention path identified by M5-C1, then test one measured
+> performance hypothesis at a time without weakening the C3 correctness gate.
 
 The initial eight-token fixture matches the independent MI50 reference through
 position 2. Release passes the complete fixture and Debug remains a
@@ -424,7 +428,9 @@ EXP-0009 — K/V workgroup and Wave64 reduction geometry (KEEP)
 
 M3 — minimal Qwen3-8B runtime scaffold (CLOSED)
 
-M5-C1 — trace-free dispatch/materialization and context-scaling characterization (next milestone)
+M5-C1 — trace-free dispatch/materialization and context-scaling characterization (CLOSED)
+
+M5-C2 — cached-attention scaling optimization (next milestone)
 ```
 
 The exact ordering may change based on early measurements.
@@ -593,7 +599,11 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-08-31 — M5-C0 and EXP-0012 recorded. The trace-free MI50 control reaches
+2026-08-31 — M5-C1, M5-C0, and EXP-0012 recorded. The position-scaled audit
+shows flat dispatch/copy/quantization/FFN/KV-write costs and cached attention
+growing from 3.401 ms at cache length 1 to 95.998 ms at cache length 64. The
+next task is M5-C2 cached-attention scaling optimization. The trace-free MI50
+control reaches
 31.508 tok/s on the short workload and 12.724 tok/s over 64 growing-context
 forwards. The pinned Q4_0 llama.cpp control reaches about 91 tok/s at TG128/
 TG256; raw `hello` continuation controls report 50.35 tok/s for eight tokens

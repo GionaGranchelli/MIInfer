@@ -3,6 +3,8 @@
 #include "miinfer/model_plan.hpp"
 #include "miinfer/qwen3_layer.hpp"
 
+#include <hip/hip_runtime_api.h>
+
 #include <cstddef>
 #include <cstdint>
 #include <array>
@@ -25,6 +27,7 @@ enum class Qwen3ProfileCategory {
     residual,
     conversion,
     lm_head,
+    kv_cache,
     copies,
     count,
 };
@@ -32,15 +35,59 @@ enum class Qwen3ProfileCategory {
 constexpr std::size_t qwen3_profile_category_count =
     static_cast<std::size_t>(Qwen3ProfileCategory::count);
 
+struct Qwen3GpuProfileEvent {
+    hipEvent_t start = nullptr;
+    hipEvent_t stop = nullptr;
+    Qwen3ProfileCategory category = Qwen3ProfileCategory::count;
+    std::size_t dispatches = 0;
+    std::size_t bytes = 0;
+    bool copy = false;
+};
+
 struct Qwen3GpuProfile {
     std::array<double, qwen3_profile_category_count> gpu_ms{};
     std::array<double, qwen3_profile_category_count> copy_ms{};
     std::array<std::size_t, qwen3_profile_category_count> dispatches{};
+    std::array<std::size_t, qwen3_profile_category_count> copy_bytes{};
+    std::array<std::size_t, qwen3_profile_category_count> synchronizations{};
+    std::size_t temporary_allocations = 0;
+    std::size_t finalization_synchronizations = 0;
+    bool deferred_timing = false;
+    std::vector<Qwen3GpuProfileEvent> pending_events;
+
+    Qwen3GpuProfile() = default;
+    Qwen3GpuProfile(const Qwen3GpuProfile&) = delete;
+    Qwen3GpuProfile& operator=(const Qwen3GpuProfile&) = delete;
+    Qwen3GpuProfile(Qwen3GpuProfile&&) noexcept = default;
+    Qwen3GpuProfile& operator=(Qwen3GpuProfile&&) noexcept = default;
+    ~Qwen3GpuProfile() noexcept;
 
     void reset() noexcept {
+        for (const auto& event : pending_events) {
+            if (event.start != nullptr) (void)hipEventDestroy(event.start);
+            if (event.stop != nullptr) (void)hipEventDestroy(event.stop);
+        }
+        pending_events.clear();
         gpu_ms.fill(0.0);
         copy_ms.fill(0.0);
         dispatches.fill(0);
+        copy_bytes.fill(0);
+        synchronizations.fill(0);
+        temporary_allocations = 0;
+        finalization_synchronizations = 0;
+        deferred_timing = false;
+    }
+
+    void enable_deferred_timing() noexcept {
+        deferred_timing = true;
+    }
+
+    void finalize();
+
+    void record_copy(Qwen3ProfileCategory category, std::size_t bytes) noexcept {
+        const auto index = static_cast<std::size_t>(category);
+        copy_bytes[index] += bytes;
+        synchronizations[index] += 1;
     }
 };
 
@@ -186,6 +233,17 @@ void execute_qwen3_decode_gpu_fast(
     std::size_t position,
     Qwen3GpuDecodeCache& cache,
     std::span<float> logits);
+
+// Trace-free decode with optional deferred profiling. When profile has
+// deferred timing enabled, operation events are recorded without synchronizing
+// each operation and resolved once after this token completes.
+void execute_qwen3_decode_gpu_fast(
+    const Qwen3GpuPlan& plan,
+    std::uint32_t token,
+    std::size_t position,
+    Qwen3GpuDecodeCache& cache,
+    std::span<float> logits,
+    Qwen3GpuProfile* profile);
 
 // Correctness-only teacher-forced replay of one selected layer.  The input
 // hidden state is copied to the device and the complete diagnostic trace is
