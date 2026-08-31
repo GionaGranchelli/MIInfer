@@ -150,21 +150,21 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788201921.876846,
-    "seen": 1788202067.196922,
-    "ast_hash": "0c03039f89f1ffd321925ab42522ac96",
+    "mtime": 1788203835.554745,
+    "seen": 1788204002.0798712,
+    "ast_hash": "bbed414cc5475354d330b44ac9d13d8d",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788202057.3532054,
-    "seen": 1788202067.1969235,
-    "ast_hash": "4707a249bbe99fa8d6c22f97f6b34d5c",
+    "mtime": 1788203980.7930548,
+    "seen": 1788204002.0798728,
+    "ast_hash": "9690291a047e05daa4751a006b5f2d5e",
     "semantic_hash": ""
   },
   "bench/README.md": {
-    "mtime": 1788002217.6462145,
-    "seen": 1788003634.2733305,
-    "ast_hash": "324cfb07687b32c3205191f9f0115bf3",
+    "mtime": 1788203844.9847002,
+    "seen": 1788204002.0798743,
+    "ast_hash": "44dd6da3a0db0bf6d167405552c3da99",
     "semantic_hash": ""
   },
   "context.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788202531.423948,
-    "seen": 1788202541.9015546,
-    "ast_hash": "56efa4becdb9ad916308940a65329585",
+    "mtime": 1788203980.7960546,
+    "seen": 1788204002.0798867,
+    "ast_hash": "4b4040933d9a21fbf6ab20eacf557402",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788202531.424948,
-    "seen": 1788202541.9015749,
-    "ast_hash": "8a3b5e8db6a82545a2feaefbc34cf779",
+    "mtime": 1788203980.7950547,
+    "seen": 1788204002.079909,
+    "ast_hash": "3b2a141347fd390554b0b454b6419589",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -759,6 +759,24 @@
     "mtime": 1788202490.5311427,
     "seen": 1788202499.9670482,
     "ast_hash": "56efcdedc29685a465d3ffb341770766",
+    "semantic_hash": ""
+  },
+  "bench/qwen3_inference_bench.cpp": {
+    "mtime": 1788203869.7275825,
+    "seen": 1788204002.079751,
+    "ast_hash": "22e7ac42ea013162929c8f1feb86a468",
+    "semantic_hash": ""
+  },
+  "scripts/run-m5a-baseline.sh": {
+    "mtime": 1788203980.7920547,
+    "seen": 1788204002.0797937,
+    "ast_hash": "efa0b49d00bfea0550e55d6323a37c6c",
+    "semantic_hash": ""
+  },
+  "docs/m5a-baseline.md": {
+    "mtime": 1788203980.7920547,
+    "seen": 1788204002.079899,
+    "ast_hash": "9f89f6226953ac844f93ef27c251a0a0",
     "semantic_hash": ""
   }
 }

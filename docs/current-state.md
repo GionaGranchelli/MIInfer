@@ -150,6 +150,8 @@ No other GPU architecture is currently supported.
 * M4-C3 model-backed Qwen2 byte-level BPE tokenizer and text-facing greedy
   Release CLI; prompt `hello` and the pinned continuation pass physical
   acceptance with exact IDs and generated text
+* M5-A reproducible end-to-end MI50 baseline; the current C3 path measures
+  sequential prompt ingestion, TTFT, and post-first-token decode separately
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -176,9 +178,10 @@ all work. The gfx802 isolation remains an operational platform prerequisite.
 * HTTP server
 
 The C++20/HIP infrastructure, model loader/planner, accepted single-token
-full-model MI50 execution, persistent multi-token decode, and the initial
-text-facing Qwen3 tokenizer/generator are present. Sampling, serving, and
-performance work remain outside the accepted scope.
+full-model MI50 execution, persistent multi-token decode, text-facing Qwen3
+tokenizer/generator, and the first M5-A baseline are present. Sampling,
+serving, profiling, and optimization remain outside the accepted scope until
+the baseline is preserved.
 
 ---
 
@@ -535,9 +538,9 @@ These do not help answer the current project question.
 
 The current Codex task is:
 
-> Record the first real MI50 baseline for the closed M4-C3 text path. Keep the
-> benchmark reproducible and separate prefill from decode; sampling, serving,
-> batching, and optimization remain out of scope until the baseline exists.
+> Profile the recorded M5-A workload, then evaluate one measured performance
+> hypothesis at a time. Keep prompt ingestion and decode separate; sampling,
+> serving, batching, and unrelated runtime expansion remain out of scope.
 
 The M0 evidence gates are complete under the documented gfx802-isolated
 configuration. The M2 gate is satisfied by EXP-0009, M3 is closed by the

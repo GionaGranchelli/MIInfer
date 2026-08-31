@@ -14,19 +14,20 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M4-C3 — Text-facing greedy generation**
+**Current phase: M5-A — Reproducible MI50 inference baseline**
 
 The project currently has:
 
 * a reproducible MI50/gfx906 development environment
 * trusted correctness references
-* reproducible performance benchmarks
+* reproducible performance benchmarks, including the first end-to-end M5-A baseline
 * kernel-level profiling infrastructure
 * a strong llama.cpp/gfx906 comparison baseline
 * a pinned Qwen3-8B MI50 execution path with persistent KV-cache decode
 * a model-backed tokenizer and minimal text-facing greedy CLI
 
-Sampling, serving, and performance optimization are not implemented yet.
+Sampling, serving, profiling, and performance optimization remain out of scope
+until the baseline is established.
 
 The first technical objective is to determine whether dedicated gfx906 kernels can materially outperform the strongest reproducible existing gfx906 inference paths.
 

@@ -10,20 +10,20 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M4 — First Correct Generation**
+**Current phase: M5 — Beat the reference**
 
 Immediate objective:
 
-> Produce the first deterministic generated token by combining the accepted
-> MI50 full-forward path with the proven incremental KV-cache execution.
+> Establish and preserve a reproducible end-to-end MI50 baseline for the
+> closed M4-C3 text path before changing performance-sensitive code.
 
 Current work should focus on:
 
-* embedding and normalization execution
-* Q/K/V projection integration
-* deterministic attention and residual execution
-* preserving the accepted kernel and benchmark controls
-* explicit-token incremental decode and short-sequence correctness
+* sequential prompt-ingestion timing
+* decode tok/s and time to first token
+* hardware-state and VRAM accounting
+* preserving the C3 correctness control
+* profiling only after the baseline is recorded
 
 Do not treat CPU hidden-state identity through all 36 layers as a universal
 GPU requirement. B23 characterized the pinned external implementation's

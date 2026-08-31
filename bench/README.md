@@ -45,3 +45,31 @@ The environment script records `UNAVAILABLE` when a command or metric is not
 exposed by the local ROCm/Linux installation. The initial benchmark must not be
 used to claim inference performance or to substitute for representative
 model-shape experiments.
+
+## End-to-end M5-A baseline
+
+`miinfer-qwen3-inference-bench` measures the current model-backed MI50 path
+without including model loading or plan construction. It reports reset time,
+sequential batch-1 prompt ingestion (the current implementation has no batched
+prefill API), time to first token, and decode forward time after the first
+greedy token. The benchmark keeps raw per-run samples in its JSON result and
+requires every measured run to produce the same finite token sequence.
+
+The canonical short baseline uses the closed C3 `hello` workload:
+
+```bash
+scripts/run-bench.sh ./build/mi50-release/miinfer-qwen3-inference-bench \
+  /path/to/Qwen3-8B-q4_0-b968826d.gguf \
+  --prompt hello --generated-tokens 8 --warmup 1 --iterations 3
+```
+
+Use `--prompt-repeat N` to measure a longer sequential prompt made from the
+same encoded prompt, or `--prompt-ids CSV` for a fully explicit token workload.
+The output records the model SHA256, build metadata, planned weight/workspace
+bytes, total device VRAM, timing definitions, generated IDs, and all timing
+samples. The runner additionally captures before/after environment state and
+active GPU telemetry; peak VRAM and clocks must be read from those artifacts.
+
+This is a baseline for the correctness-first C3 implementation. It includes
+the current diagnostic trace copies and per-token allocations in the decode
+API, so it is not yet an optimized-runtime performance claim.
