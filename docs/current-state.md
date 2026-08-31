@@ -139,6 +139,9 @@ No other GPU architecture is currently supported.
   Q4_0×Q8_0 AVX2/FMA accumulation while the single-token gfx906 path uses
   Q8_1/MMVQ/dp4a with F32 output, explaining the independent GPU trajectory
   without changing MIInfer production behavior
+* M4-B24 MI50 correctness envelope; Debug and Release are deterministic and
+  satisfy the independently measured external CPU↔gfx906 final-norm/logit
+  envelope with matching argmax and top-5 behavior; M4-B is closed
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -160,7 +163,6 @@ all work. The gfx802 isolation remains an operational platform prerequisite.
 * production execution planner
 * general-purpose memory planner
 * tokenizer
-* accepted full multi-layer model execution
 * token generation
 * sampling
 * MoE execution
@@ -169,8 +171,8 @@ all work. The gfx802 isolation remains an operational platform prerequisite.
 * HTTP server
 
 The C++20/HIP infrastructure, model loader/planner, layer-0 correctness
-runtime, and an unaccepted full-depth execution scaffold are present. Full
-model correctness and token generation remain outside the accepted scope.
+runtime, and accepted single-token full-model MI50 execution are present.
+Autoregressive token generation remains outside the accepted scope.
 
 ---
 
@@ -178,10 +180,9 @@ model correctness and token generation remain outside the accepted scope.
 
 The immediate technical objective is:
 
-> Close M4-B by resolving the first depth-localized numerical divergence
-> between the 36-layer host/MI50 executors and the independent pinned
-> reference, then passing the full layer-output, final-norm, and logits gates.
-> Do not broaden support beyond the pinned model contract.
+> Begin M4-C: combine the accepted 36-layer single-token forward with the
+> proven incremental layer-0/KV semantics to produce the first deterministic
+> generated token. Do not broaden support beyond the pinned model contract.
 
 M0 is closed under the documented gfx802-isolated configuration. The
 repository-side infrastructure, physical MI50 validation, model artifact, and
@@ -512,16 +513,16 @@ These do not help answer the current project question.
 
 The current Codex task is:
 
-> M4-B23 characterizes the distinct CPU and single-token gfx906 backend
-> contracts in the pinned external implementation. Define the evidence-backed
-> numerical/behavioral acceptance envelope for MI50 before further precision
-> changes; do not widen tolerances or start generation.
+> M4-C combines the accepted full-model MI50 forward with the proven
+> incremental KV-cache path and produces the first deterministic generated
+> token. Keep tokenization and sampling out of scope until the explicit-token
+> decode path is correct.
 
 The M0 evidence gates are complete under the documented gfx802-isolated
-configuration. The M2 gate is satisfied by EXP-0009 and M3 is closed by the
-pinned real-model acceptance. M4-A is closed, while M4-B full-depth numeric
-parity remains open. A full-forward scaffold exists, but no accepted token
-generation path has been implemented yet.
+configuration. The M2 gate is satisfied by EXP-0009, M3 is closed by the
+pinned real-model acceptance, M4-A is closed, and M4-B is closed under the
+documented MI50 backend envelope. No accepted autoregressive token-generation
+path has been implemented yet.
 
 ---
 
@@ -553,10 +554,11 @@ into a generic runtime.
 
 # Last Updated
 
-2026-08-31 — M4-B23 characterized the pinned external CPU Q4_0×Q8_0 AVX2
-path versus its single-token gfx906 Q8_1/MMVQ/dp4a path. Their layer-35
-hidden states differ by `121.013`, while both select argmax `8`; MIInfer
-production behavior remains unchanged and M4-B remains open.
+2026-08-31 — M4-B24 closed full-depth single-token MI50 acceptance under the
+measured external CPU↔gfx906 backend envelope. Debug and Release are finite
+and deterministic, final norm/logits stay within the measured envelope, and
+all executions select argmax `8`; next objective is M4-C first generated
+token.
 
 Update this document whenever:
 

@@ -13,6 +13,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <numeric>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -522,6 +523,116 @@ std::size_t argmax(const std::vector<float>& values) {
         std::max_element(values.begin(), values.end())));
 }
 
+std::vector<std::size_t> top_indices(const std::vector<float>& values, std::size_t count) {
+    std::vector<std::size_t> indices(values.size());
+    std::iota(indices.begin(), indices.end(), 0);
+    count = std::min(count, indices.size());
+    std::partial_sort(indices.begin(), indices.begin() + count, indices.end(),
+                      [&values](std::size_t lhs, std::size_t rhs) {
+                          if (values[lhs] != values[rhs]) return values[lhs] > values[rhs];
+                          return lhs < rhs;
+                      });
+    indices.resize(count);
+    return indices;
+}
+
+std::size_t overlap_count(const std::vector<std::size_t>& lhs,
+                          const std::vector<std::size_t>& rhs) {
+    std::size_t result = 0;
+    for (const auto index : lhs) {
+        if (std::find(rhs.begin(), rhs.end(), index) != rhs.end()) ++result;
+    }
+    return result;
+}
+
+float top1_margin(const std::vector<float>& values) {
+    const auto top = top_indices(values, 2);
+    return top.size() < 2 ? 0.0F : values[top[0]] - values[top[1]];
+}
+
+bool exact_equal(const std::vector<float>& lhs, const std::vector<float>& rhs) {
+    return lhs.size() == rhs.size()
+        && std::equal(lhs.begin(), lhs.end(), rhs.begin());
+}
+
+int run_backend_envelope(const std::filesystem::path& model_path,
+                         const std::filesystem::path& cpu_trace_path,
+                         const std::filesystem::path& gpu_trace_path) {
+    if (cpu_trace_path.empty() || gpu_trace_path.empty()) {
+        throw std::invalid_argument(
+            "backend envelope requires CPU and external GPU trace paths");
+    }
+
+    const auto model = miinfer::Qwen3Model::load(model_path.string());
+    const auto plan = miinfer::Qwen3GpuPlan::build(model);
+    const auto external_cpu_final = read_f32(cpu_trace_path / "final-norm.f32");
+    const auto external_cpu_logits = read_f32(cpu_trace_path / "logits.f32");
+    const auto external_gpu_final = read_f32(gpu_trace_path / "final-norm.f32");
+    const auto external_gpu_logits = read_f32(gpu_trace_path / "logits.f32");
+    const auto first = miinfer::execute_qwen3_forward_gpu(plan, kToken);
+    const auto second = miinfer::execute_qwen3_forward_gpu(plan, kToken);
+
+    const auto external_final_delta = metrics(external_gpu_final, external_cpu_final);
+    const auto external_logit_delta = metrics(external_gpu_logits, external_cpu_logits);
+    const auto final_delta = metrics(first.final_norm, external_gpu_final);
+    const auto logit_delta = metrics(first.logits, external_gpu_logits);
+    const auto cpu_top5 = top_indices(external_cpu_logits, 5);
+    const auto external_gpu_top5 = top_indices(external_gpu_logits, 5);
+    const auto miinfer_top5 = top_indices(first.logits, 5);
+    const auto external_overlap = overlap_count(cpu_top5, external_gpu_top5);
+    const auto miinfer_overlap = overlap_count(miinfer_top5, external_gpu_top5);
+    const auto cpu_argmax = argmax(external_cpu_logits);
+    const auto external_gpu_argmax = argmax(external_gpu_logits);
+    const auto miinfer_argmax = argmax(first.logits);
+
+    // The independent external CPU↔MI50 result is the measured envelope for
+    // this pinned deterministic fixture. No new absolute tolerance is
+    // invented here: MIInfer must be no farther from the external MI50 result
+    // than that independently demonstrated backend split.
+    const bool finite = std::all_of(first.final_norm.begin(), first.final_norm.end(),
+                                    [](float value) { return std::isfinite(value); })
+        && std::all_of(first.logits.begin(), first.logits.end(),
+                       [](float value) { return std::isfinite(value); });
+    const bool deterministic = exact_equal(first.final_norm, second.final_norm)
+        && exact_equal(first.logits, second.logits);
+    const bool structure = first.layer_outputs.size() == model.config().layer_count;
+    const bool final_within_envelope = final_delta.max_abs <= external_final_delta.max_abs;
+    const bool logits_within_envelope = logit_delta.max_abs <= external_logit_delta.max_abs;
+    const bool ranking = cpu_argmax == external_gpu_argmax
+        && miinfer_argmax == external_gpu_argmax
+        && miinfer_overlap >= external_overlap
+        && top1_margin(first.logits) > 0.0F;
+    const bool passed = finite && deterministic && structure
+        && final_within_envelope && logits_within_envelope && ranking;
+
+    std::cout << "M4-B24 MI50 backend envelope (external CPU -> external MI50):\n"
+              << "  external final-norm max_abs=" << external_final_delta.max_abs << '\n'
+              << "  MIInfer vs external MI50 final-norm max_abs=" << final_delta.max_abs
+              << "\n  external logits max_abs=" << external_logit_delta.max_abs << '\n'
+              << "  MIInfer vs external MI50 logits max_abs=" << logit_delta.max_abs << '\n'
+              << "  CPU top5=";
+    for (const auto index : cpu_top5) std::cout << index << ' ';
+    std::cout << "\n  external MI50 top5=";
+    for (const auto index : external_gpu_top5) std::cout << index << ' ';
+    std::cout << "\n  MIInfer top5=";
+    for (const auto index : miinfer_top5) std::cout << index << ' ';
+    std::cout << "\n  top5 overlap external=" << external_overlap
+              << " MIInfer=" << miinfer_overlap
+              << "\n  argmax CPU=" << cpu_argmax
+              << " external MI50=" << external_gpu_argmax
+              << " MIInfer=" << miinfer_argmax
+              << "\n  top1 margin external MI50=" << top1_margin(external_gpu_logits)
+              << " MIInfer=" << top1_margin(first.logits)
+              << "\n  finite=" << (finite ? "PASS" : "FAIL")
+              << " deterministic=" << (deterministic ? "PASS" : "FAIL")
+              << " layer-count=" << (structure ? "PASS" : "FAIL")
+              << " final-norm-envelope=" << (final_within_envelope ? "PASS" : "FAIL")
+              << " logits-envelope=" << (logits_within_envelope ? "PASS" : "FAIL")
+              << " ranking=" << (ranking ? "PASS" : "FAIL") << '\n'
+              << "M4-B24 MI50 backend envelope: " << (passed ? "PASS" : "FAIL") << '\n';
+    return passed ? 0 : 1;
+}
+
 int run(const std::filesystem::path& model_path, const std::filesystem::path& trace_path) {
     const auto model = miinfer::Qwen3Model::load(model_path.string());
     const auto plan = miinfer::Qwen3GpuPlan::build(model);
@@ -593,6 +704,9 @@ int main(int argc, char** argv) {
         return 0;
     }
     try {
+        if (argc == 5 && std::string(argv[2]) == "--backend-envelope") {
+            return run_backend_envelope(argv[1], argv[3], argv[4]);
+        }
         if (argc == 4 && (std::string(argv[3]) == "--teacher-forced"
                           || std::string(argv[3]) == "--teacher-forced-all")) {
             return run_teacher_forced(argv[1], argv[2],

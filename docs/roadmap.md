@@ -14,9 +14,8 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 Immediate objective:
 
-> Establish the MI50 full-forward numerical/behavioral acceptance contract
-> against independent CPU and gfx906 reference executions before authorizing
-> deterministic first-token generation.
+> Produce the first deterministic generated token by combining the accepted
+> MI50 full-forward path with the proven incremental KV-cache execution.
 
 Current work should focus on:
 
@@ -24,12 +23,13 @@ Current work should focus on:
 * Q/K/V projection integration
 * deterministic attention and residual execution
 * preserving the accepted kernel and benchmark controls
+* explicit-token incremental decode and first-token correctness
 
 Do not treat CPU hidden-state identity through all 36 layers as a universal
-GPU requirement. The pinned external implementation itself uses distinct
-CPU Q4_0×Q8_0 and single-token gfx906 Q8_1/MMVQ execution contracts. Strict
-semantic invariants remain mandatory; any full-depth numerical envelope must
-be measured and documented before M4-B closes.
+GPU requirement. B23 characterized the pinned external implementation's
+distinct CPU Q4_0×Q8_0 and single-token gfx906 Q8_1/MMVQ execution contracts;
+B24 closed M4-B using a measured final-output and behavioral envelope while
+retaining strict semantic invariants.
 
 Do not start model serving, generic model support, speculative decoding, or multi-GPU work.
 
@@ -797,6 +797,10 @@ from the accepted model plan and layer-state correctness evidence:
 19. Compare the canonical external CPU trace with the independent offloaded
     gfx906 trace, and characterize backend-specific full-depth variance before
     changing precision or acceptance thresholds (M4-B22).
+20. Define the measured MI50 final-output/behavioral envelope and run the
+    non-vacuous Debug/Release physical acceptance gate (M4-B24).
+21. Begin M4-C: execute the accepted 36-layer path incrementally with the
+    proven KV semantics and produce the first deterministic generated token.
 
 Do not broaden M4 into a general-purpose runtime.
 
@@ -807,8 +811,21 @@ Do not broaden M4 into a general-purpose runtime.
 The current milestone is:
 
 ```text
-M4-B — full-depth numerical validation
+M4-C — first deterministic generated token
 ```
+
+M4-B is closed by B24. The canonical physical gate now runs the real pinned
+model through MI50 Debug and Release, compares final norm and logits against
+the independently measured external CPU↔gfx906 envelope, verifies finite and
+bitwise-deterministic repeated output, and requires matching argmax and
+baseline top-5 overlap. M4-A's strict four-position layer-0/KV-cache gates
+remain prerequisite evidence. The detailed B8–B24 record is preserved in
+[`m4b-forward.md`](m4b-forward.md).
+
+M4-C combines the accepted 36-layer single-token path with the proven
+incremental KV-cache semantics and produces the first deterministic
+generated token. Keep the input as explicit token IDs; tokenizer, sampling,
+serving, batching, and performance work remain out of scope for this slice.
 
 M4-B8 established a canonical full-depth CPU fixture from two byte-identical
 runs of the pinned reference with explicit `-t 24 -tb 24` settings. M4-B9
@@ -820,7 +837,7 @@ projection reproduces most of the `0.105103` discrepancy. M4-B11 then
 replayed the pinned x86 AVX Q8 contract and Gate/Up accumulation with
 external `ffn_norm`; all Q8 blocks matched and Gate/Up were within
 `7.62939e-06`/`1.52588e-05`. The remaining failure therefore enters before
-`ffn_norm`, and M4-B is still open. M4-B12 then showed that externally
+`ffn_norm`, and M4-B was still open at that point. M4-B12 then showed that externally
 conditioned O and residual replay are within `9.15527e-05`/`3.05176e-05`,
 while all tested RMSNorm reductions produce a layer-35 tail within
 `0.000488281`. The remaining normal-path difference therefore enters
@@ -828,13 +845,15 @@ upstream in the attention output that feeds O. M4-B13 then showed that V and
 GQA replay are exact or near-exact, while the external attention output is
 exactly `FP16(expanded V)`; applying that boundary reduces the layer-35 tail
 to `0.000488281`. The remaining precision hypothesis is the attention-output
-materialization before O, and M4-B remains open. M4-B14 applied that boundary
+materialization before O, and M4-B remained open at that point. M4-B14
+applied that boundary
 to production host and MI50 execution. Focused layer-35 host parity and the
 full MI50 GPU gate pass, but host full-forward parity first fails at layer 2
 (`max_abs=0.117966`). M4-B15 shows the host full-forward entry point is
 bitwise identical to a reconstructed sequential chain: the first inherited
 sequential difference is layer 1 input, and layer 2 is the first strict
-threshold crossing. M4-B remains open without any tolerance widening. Exact
+threshold crossing. M4-B remained open without any tolerance widening at
+that point. Exact
 experiment ordering may change only when supported by the resulting evidence.
 M4-B16 then found the first layer-0 mismatch at `q_projection`, while the
 position-zero causal V/FFN path drifted gradually; an additional layer-output
@@ -859,9 +878,11 @@ accepted.
 M4-B22 then added a threshold-free trace comparator and compared the pinned
 external CPU and offloaded gfx906 traces. They differ by `121.013` at layer 35,
 `0.811852` at final norm, and `0.488072` at logits while both select argmax
-`8`. MIInfer remains closer to the CPU trace than to the external GPU trace,
-so the result establishes backend variance but does not yet close M4-B or
-justify another precision policy.
+`8`. M4-B23 explained that split as distinct backend contracts. M4-B24 then
+made the measured final-output/behavioral envelope the MI50 acceptance gate:
+Debug and Release are finite and deterministic, MIInfer stays within the
+external final-norm/logit split, top-5 overlap is at least the measured
+baseline, and argmax remains `8`. M4-B is closed; M4-C is next.
 
 ---
 
