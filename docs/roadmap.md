@@ -840,6 +840,14 @@ cache-ordering race. Optimized-HIP Debug (`-O2 -g`) matches Release. M4-C2 is
 closed; tokenizer, sampling, serving, batching, and performance work remain
 out of scope except for the minimal tokenizer/detokenizer work in M4-C3.
 
+M4-C3 is closed as a narrow text-facing layer. `Qwen3Tokenizer` consumes
+the pinned GGUF `gpt2`/`qwen2` vocabulary and merges, while
+`miinfer-qwen3-generate` runs prompt tokenization, persistent MI50 greedy
+decode, EOS handling, and detokenization. Its real-model Release acceptance
+uses prompt `hello` and the pinned eight-token continuation. Sampling,
+streaming, and batching remain deferred. The next task is to establish the
+first reproducible MI50 prefill/decode baseline before optimization.
+
 M4-B8 established a canonical full-depth CPU fixture from two byte-identical
 runs of the pinned reference with explicit `-t 24 -tb 24` settings. M4-B9
 added a terminal layer-35 internal trace from the same independent reference

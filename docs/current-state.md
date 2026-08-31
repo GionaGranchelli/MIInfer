@@ -17,7 +17,7 @@ For long-term direction, see:
 
 **M4 — First Correct Qwen3-8B Generation**
 
-MIInfer is not yet an inference runtime.
+MIInfer now has a minimal text-facing inference path for the pinned model.
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The
@@ -145,6 +145,11 @@ No other GPU architecture is currently supported.
 * M4-C1 explicit-token stateful decode; persistent per-layer KV state produces
   first token `8`, consumes it at position 1, and passes Debug/Release physical
   acceptance with reset determinism
+* M4-C2 short explicit-ID greedy decode; Release reproduces all eight pinned
+  continuation IDs and unoptimized Debug remains a deterministic diagnostic
+* M4-C3 model-backed Qwen2 byte-level BPE tokenizer and text-facing greedy
+  Release CLI; prompt `hello` and the pinned continuation pass physical
+  acceptance with exact IDs and generated text
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -165,18 +170,15 @@ all work. The gfx802 isolation remains an operational platform prerequisite.
 * custom tensor packing
 * production execution planner
 * general-purpose memory planner
-* tokenizer
-* multi-token generation beyond the M4-C1 two-position fixture
 * sampling
 * MoE execution
 * HIP graph capture
-* CLI
 * HTTP server
 
 The C++20/HIP infrastructure, model loader/planner, accepted single-token
-full-model MI50 execution, and the first explicit-token stateful decode are
-present. Longer generation, tokenizer integration, and sampling remain
-outside the accepted scope.
+full-model MI50 execution, persistent multi-token decode, and the initial
+text-facing Qwen3 tokenizer/generator are present. Sampling, serving, and
+performance work remain outside the accepted scope.
 
 ---
 
@@ -184,9 +186,9 @@ outside the accepted scope.
 
 The immediate technical objective is:
 
-> Begin M4-C3: add tokenizer/detokenizer integration and a minimal text-facing
-> greedy decode path on the accepted incremental runtime. Do not broaden
-> support beyond the pinned model contract.
+> Establish the first reproducible MI50 inference baseline for the now-closed
+> M4-C3 text path. Measure prompt processing, token generation, TTFT, VRAM,
+> and hardware state before making performance changes.
 
 The initial eight-token fixture matches the independent MI50 reference through
 position 2. Release passes the complete fixture and Debug remains a
@@ -202,6 +204,13 @@ M0 is closed under the documented gfx802-isolated configuration. The
 repository-side infrastructure, physical MI50 validation, model artifact, and
 reference baseline are recorded. The gfx802-isolation requirement remains a
 documented platform prerequisite for M1 GPU execution.
+
+The current C3 implementation owns a model-backed Qwen2 byte-level BPE
+tokenizer for the embedded `gpt2`/`qwen2` GGUF contract. The Release CLI
+acceptance uses prompt `hello`, which encodes to `14990`, runs the existing
+persistent 36-layer MI50 decode for eight greedy steps, and detokenizes the
+pinned IDs to `) {\n        return "Hello, "`. Sampling, chat templates, streaming,
+and performance benchmarking is the next activity.
 
 ---
 
@@ -507,7 +516,6 @@ Unavailable metrics should be reported as unavailable, not guessed.
 Until the roadmap explicitly advances, do not spend implementation effort on:
 
 ```text id="eofjf1"
-tokenizer
 HTTP server
 OpenAI-compatible API
 generic GGUF support
@@ -527,18 +535,16 @@ These do not help answer the current project question.
 
 The current Codex task is:
 
-> M4-C2 validated a short deterministic greedy sequence over the accepted
-> explicit-token incremental decode path. Release passes all eight pinned IDs;
-> unoptimized Debug is retained as a finite/cache/determinism diagnostic and
-> reports its known position-3 token difference. M4-C3 adds tokenizer and
-> detokenizer integration; sampling remains out of scope initially.
+> Record the first real MI50 baseline for the closed M4-C3 text path. Keep the
+> benchmark reproducible and separate prefill from decode; sampling, serving,
+> batching, and optimization remain out of scope until the baseline exists.
 
 The M0 evidence gates are complete under the documented gfx802-isolated
 configuration. The M2 gate is satisfied by EXP-0009, M3 is closed by the
 pinned real-model acceptance, M4-A is closed, and M4-B is closed under the
-documented MI50 backend envelope. M4-C1 now proves the first explicit-token
-stateful decode; no accepted multi-token generation, tokenizer, or sampling
-path has been implemented yet.
+documented MI50 backend envelope. M4-C1 and M4-C2 prove persistent stateful
+decode; M4-C3 now adds the model-backed tokenizer/detokenizer and text-facing
+greedy CLI. Sampling remains out of scope initially.
 
 ---
 
@@ -570,7 +576,11 @@ into a generic runtime.
 
 # Last Updated
 
-2026-08-31 — M4-C2 closed. Release passes the pinned eight-token MI50
+2026-08-31 — M4-C3 closed. The model-backed tokenizer encodes
+`hello` as `14990`, and the Release text CLI reproduces the pinned eight-token
+continuation and generated text. The physical C3 gate passes. The next task is
+the first reproducible MI50 performance baseline. M4-C2 closed. Release passes
+the pinned eight-token MI50
 continuation; unoptimized Debug is a finite/cache/determinism diagnostic and
 diverges at position 3 (`470` vs `419`). Optimized HIP Debug and RelWithDebInfo
 match Release. M4-C1 previously closed explicit-token stateful decode. A persistent

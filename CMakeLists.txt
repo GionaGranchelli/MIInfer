@@ -83,6 +83,7 @@ add_library(miinfer_model STATIC
     src/qwen3_model.cpp
     src/qwen3_primitives.cpp
     src/qwen3_layer.cpp
+    src/qwen3_tokenizer.cpp
     src/sha256.cpp
 )
 target_include_directories(miinfer_model
@@ -147,6 +148,10 @@ target_compile_options(miinfer-qwen3-forward-test PRIVATE -Wall -Wextra -Wpedant
 
 add_executable(miinfer-qwen3-trace-compare tests/qwen3_trace_compare.cpp)
 target_compile_options(miinfer-qwen3-trace-compare PRIVATE -Wall -Wextra -Wpedantic)
+
+add_executable(miinfer-qwen3-tokenizer-test tests/qwen3_tokenizer_test.cpp)
+target_link_libraries(miinfer-qwen3-tokenizer-test PRIVATE miinfer_model)
+target_compile_options(miinfer-qwen3-tokenizer-test PRIVATE -Wall -Wextra -Wpedantic)
 
 if(MIINFER_ENABLE_HIP)
     add_executable(miinfer-device-info tests/device_info.cpp)
@@ -226,6 +231,10 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-qwen3-decode-sequence-gpu-test PRIVATE miinfer_hip)
     target_compile_options(miinfer-qwen3-decode-sequence-gpu-test PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-qwen3-generate tests/qwen3_generate.cpp)
+    target_link_libraries(miinfer-qwen3-generate PRIVATE miinfer_hip)
+    target_compile_options(miinfer-qwen3-generate PRIVATE -Wall -Wextra -Wpedantic)
+
     add_executable(miinfer-qwen3-layer6-external-test tests/qwen3_layer6_external_test.cpp)
     target_link_libraries(miinfer-qwen3-layer6-external-test PRIVATE miinfer_hip)
     target_compile_options(miinfer-qwen3-layer6-external-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -250,6 +259,8 @@ if(BUILD_TESTING)
     set_tests_properties(qwen3-kv-cache-host PROPERTIES LABELS "host-only")
     add_test(NAME qwen3-forward-host COMMAND miinfer-qwen3-forward-test)
     set_tests_properties(qwen3-forward-host PROPERTIES LABELS "host-only")
+    add_test(NAME qwen3-tokenizer-host COMMAND miinfer-qwen3-tokenizer-test)
+    set_tests_properties(qwen3-tokenizer-host PROPERTIES LABELS "host-only")
     add_test(NAME qwen3-layer0-comparator-mutation
              COMMAND miinfer-qwen3-layer0-test --self-test-mutation)
     set_tests_properties(qwen3-layer0-comparator-mutation PROPERTIES LABELS "host-only")
@@ -281,7 +292,8 @@ if(BUILD_TESTING)
 endif()
 
 install(TARGETS miinfer-host-test miinfer-qwen3-primitives-host-test miinfer-qwen3-layer0-test
-                miinfer-qwen3-forward-test miinfer-qwen3-trace-compare)
+                miinfer-qwen3-forward-test miinfer-qwen3-trace-compare
+                miinfer-qwen3-tokenizer-test)
 if(MIINFER_ENABLE_HIP)
     install(TARGETS miinfer-device-info miinfer-hip-smoke miinfer-bench
                     miinfer-fp16-gemv-test miinfer-fp16-gemv-bench)
@@ -294,6 +306,7 @@ if(MIINFER_ENABLE_HIP)
     install(TARGETS miinfer-model-info miinfer-model-gpu-test miinfer-qwen3-primitives-test)
     install(TARGETS miinfer-qwen3-decode-gpu-test)
     install(TARGETS miinfer-qwen3-decode-sequence-gpu-test)
+    install(TARGETS miinfer-qwen3-generate)
     install(TARGETS miinfer-qwen3-layer0-gpu-test)
     install(TARGETS miinfer-qwen3-kv-cache-gpu-test)
     install(TARGETS miinfer-qwen3-forward-gpu-test)
