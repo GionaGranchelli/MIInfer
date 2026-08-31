@@ -14,8 +14,8 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 Immediate objective:
 
-> Establish and preserve a reproducible end-to-end MI50 baseline for the
-> closed M4-C3 text path before changing performance-sensitive code.
+> Profile and improve the reproducible end-to-end MI50 baseline for the closed
+> M4-C3 text path, one measured performance hypothesis at a time.
 
 Current work should focus on:
 
@@ -23,7 +23,7 @@ Current work should focus on:
 * decode tok/s and time to first token
 * hardware-state and VRAM accounting
 * preserving the C3 correctness control
-* profiling only after the baseline is recorded
+* profiling the recorded baseline before changing kernels
 
 Do not treat CPU hidden-state identity through all 36 layers as a universal
 GPU requirement. B23 characterized the pinned external implementation's

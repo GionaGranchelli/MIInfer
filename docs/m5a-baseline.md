@@ -2,6 +2,7 @@
 
 **Status:** COMPLETE for the current correctness-first C3 path  
 **Date:** 2026-08-31  
+**Baseline commit:** `2db70cb24f54`  
 **Build:** MI50 Release  
 **Model:** Qwen3-8B Q4_0  
 
@@ -57,19 +58,27 @@ telemetry. The benchmark result was captured at:
 bench/results/20260831T191803Z-326236/
 ```
 
-That first capture was made while the M5-A benchmark changes were uncommitted;
-the canonical rerun after the M5-A commit should be used for future comparisons.
+The canonical clean-commit rerun is:
+
+```text
+bench/results/20260831T192052Z-327301/
+```
+
+It reports `git_dirty=false` and should be used for future comparisons. The
+earlier dirty-worktree capture remains retained as development evidence only.
 
 ## Result
 
 | Metric | Mean | Median | Throughput |
 |---|---:|---:|---:|
-| Sequential prompt ingestion | 37.376 ms | 37.415 ms | 26.755 tok/s |
-| TTFT, including reset | 37.860 ms | 37.910 ms | — |
-| Post-first-token decode (7 forward calls) | 298.415 ms | see JSON | 23.457 tok/s |
+| Sequential prompt ingestion | 38.571 ms | 37.976 ms | 25.926 tok/s |
+| TTFT, including reset | 39.061 ms | 38.459 ms | — |
+| Post-first-token decode (7 forward calls) | 308.944 ms | 308.597 ms | 22.658 tok/s |
 
 The raw per-run values, min/max, standard deviation, and exact median are in
-`result.json`; no timing samples were discarded.
+`result.json`; no timing samples were discarded. The three measured samples
+were 40.374/37.364/37.976 ms for prompt ingestion and
+312.310/305.925/308.597 ms for decode.
 
 ## Interpretation
 

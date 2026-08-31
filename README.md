@@ -26,10 +26,11 @@ The project currently has:
 * a pinned Qwen3-8B MI50 execution path with persistent KV-cache decode
 * a model-backed tokenizer and minimal text-facing greedy CLI
 
-Sampling, serving, profiling, and performance optimization remain out of scope
-until the baseline is established.
+Sampling and serving remain out of scope. The M5-A baseline is now recorded;
+the next activity is profiling before any performance optimization.
 
-The first technical objective is to determine whether dedicated gfx906 kernels can materially outperform the strongest reproducible existing gfx906 inference paths.
+The next technical objective is to determine where the closed inference path
+spends time, then test measured gfx906 optimizations against the baseline.
 
 ---
 

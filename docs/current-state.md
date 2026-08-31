@@ -189,9 +189,8 @@ the baseline is preserved.
 
 The immediate technical objective is:
 
-> Establish the first reproducible MI50 inference baseline for the now-closed
-> M4-C3 text path. Measure prompt processing, token generation, TTFT, VRAM,
-> and hardware state before making performance changes.
+> Profile the recorded M5-A MI50 inference baseline, then test one measured
+> performance hypothesis at a time without weakening the C3 correctness gate.
 
 The initial eight-token fixture matches the independent MI50 reference through
 position 2. Release passes the complete fixture and Debug remains a
@@ -213,7 +212,8 @@ tokenizer for the embedded `gpt2`/`qwen2` GGUF contract. The Release CLI
 acceptance uses prompt `hello`, which encodes to `14990`, runs the existing
 persistent 36-layer MI50 decode for eight greedy steps, and detokenizes the
 pinned IDs to `) {\n        return "Hello, "`. Sampling, chat templates, streaming,
-and performance benchmarking is the next activity.
+and performance benchmarking is now recorded by M5-A; profiling is the next
+activity.
 
 ---
 
