@@ -197,6 +197,9 @@ No other GPU architecture is currently supported.
 * M5-C6d GPU-side greedy argmax; final logits transfer falls from 607,744 to 4
   bytes with first-index tie semantics, identical IDs, and a measured 0.37%
   interleaved 64-token gain
+* M5-C7 post-copy-cleanup profile; lightweight whole-token GPU timing tracks
+  clean wall time closely, so the next target is FFN kernel efficiency rather
+  than HIP graphs
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -485,7 +488,9 @@ M5-C6c — coalesced KV-cache writes (CLOSED; structural KEEP, +5.5% A/B)
 
 M5-C6d — GPU-side greedy argmax (CLOSED; structural KEEP, +0.37% A/B)
 
-M5-C6e — fresh post-copy-cleanup profile (next)
+M5-C7 — post-copy-cleanup bottleneck profile (CLOSED; KERNEL recommendation)
+
+M5-C8 — FFN projection kernel experiment (next)
 ```
 
 The exact ordering may change based on early measurements.
@@ -654,14 +659,18 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-01 — M5-C6d and EXP-0022 recorded. GPU-side greedy argmax now keeps
+2026-09-01 — M5-C7 and EXP-0023 recorded. The post-copy-cleanup profile now
+uses lightweight whole-token HIP events: clean wall versus device time is
+15.313/15.475 ms at P1 and 19.780/19.928 ms at P64. The detailed profile
+shows 1,625 flat dispatches, with FFN projections the largest individual
+family at about 7.0 ms at P64. The next target is a measured FFN kernel
+experiment, not HIP graph capture. Earlier M5-C6d and EXP-0022 recorded.
+GPU-side greedy argmax now keeps
 the vocabulary logits resident through a deterministic first-index reduction,
 reducing final-result transfer from 607,744 to 4 bytes and preserving the
 pinned generated IDs. The metadata-clean balanced 64-forward A/B measured
 54.7099 versus 54.9812 tok/s at the observed 930/350 MHz clocks; Release CTest remains
-19/19. The next step is a fresh profile of the post-copy-cleanup path before
-choosing dispatch/fusion, graph, or kernel optimization. Earlier M5-C2 and
-EXP-0014 recorded. The cooperative cached-attention
+19/19. Earlier M5-C2 and EXP-0014 recorded the cooperative cached-attention
 candidate passes the pinned greedy sequence and improves the 64-forward
 trace-free control from 14.430 to 38.754 tok/s. The position-scaled audit
 shows flat dispatch/copy/quantization/FFN/KV-write costs and cached attention

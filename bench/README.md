@@ -330,3 +330,21 @@ The GPU-argmax position audit is under
 falling from 607,744 to 4 bytes, total copied bytes falling from 1,197,568 to
 589,828, and dispatches rising from 1,624 to 1,625. Temporary allocations
 remain zero and synchronization sites remain 38.
+
+## M5-C7 post-copy-cleanup profile
+
+The C6d position audit now also records a lightweight whole-token HIP event
+around an otherwise trace-free decode. This is separate from the detailed
+per-operation deferred profile, whose event-recording overhead makes its
+summed GPU times unsuitable for direct comparison with clean wall time.
+
+The P1/P64 profile is retained under
+`bench/results/20260901T094450Z-386101/` and documented in
+`experiments/EXP-0023-m5c7-post-copy-cleanup-profile.md`. Clean wall versus
+whole-token GPU time was 15.313/15.475 ms at P1 and 19.780/19.928 ms at P64.
+The path remains at 1,625 dispatches, 589,828 copied bytes, 38
+synchronization sites, and zero temporary allocations per token. Detailed
+timing identifies FFN projection as the largest individual family at about
+7.0 ms at P64; quantization, normalization, and conversion account for 1,118
+of the dispatches. The resulting next target is a measured FFN kernel
+experiment, not HIP graph capture.

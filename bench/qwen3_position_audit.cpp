@@ -48,6 +48,7 @@ struct Options {
 struct PositionResult {
     std::size_t position = 0;
     double production_wall_ms = 0.0;
+    double production_gpu_ms = 0.0;
     double wall_ms = 0.0;
     miinfer::Qwen3GpuProfile profile;
 };
@@ -207,6 +208,7 @@ int main(int argc, char** argv) {
             config.layer_count, config.kv_heads, config.head_dim, options.positions.back() + 1);
         std::vector<float> logits(config.vocab_size);
         std::vector<double> production_wall_ms(options.positions.size(), 0.0);
+        std::vector<double> production_gpu_ms(options.positions.size(), 0.0);
         std::vector<std::uint32_t> production_tokens;
         production_tokens.reserve(options.positions.back() + 1);
         auto token = options.prompt_token;
@@ -243,6 +245,37 @@ int main(int argc, char** argv) {
             token = next;
         }
 
+        // Measure the trace-free device timeline separately from the clean
+        // wall pass and the per-operation deferred profile. The decode API's
+        // result copy completes the default stream before the stop event is
+        // recorded, so this adds only two events per selected token and avoids the
+        // thousands of event records used by the detailed audit profile.
+        cache.reset();
+        token = options.prompt_token;
+        selected_index = 0;
+        for (std::size_t position = 0; position <= options.positions.back(); ++position) {
+            const bool selected = selected_index < options.positions.size()
+                && options.positions[selected_index] == position;
+            if (!selected) {
+                token = decode_next(token, position);
+                continue;
+            }
+            hipEvent_t start = nullptr;
+            hipEvent_t stop = nullptr;
+            MIINFER_HIP_CHECK(hipEventCreate(&start));
+            MIINFER_HIP_CHECK(hipEventCreate(&stop));
+            MIINFER_HIP_CHECK(hipEventRecord(start));
+            const auto next = decode_next(token, position);
+            MIINFER_HIP_CHECK(hipEventRecord(stop));
+            MIINFER_HIP_CHECK(hipEventSynchronize(stop));
+            float milliseconds = 0.0F;
+            MIINFER_HIP_CHECK(hipEventElapsedTime(&milliseconds, start, stop));
+            production_gpu_ms[selected_index++] = milliseconds;
+            (void)hipEventDestroy(start);
+            (void)hipEventDestroy(stop);
+            token = next;
+        }
+
         std::vector<PositionResult> results;
         results.reserve(options.positions.size());
         std::vector<std::uint32_t> selected_tokens;
@@ -258,6 +291,7 @@ int main(int argc, char** argv) {
                 PositionResult result;
                 result.position = position;
                 result.production_wall_ms = production_wall_ms[selected_index++];
+                result.production_gpu_ms = production_gpu_ms[results.size()];
                 result.profile.reset();
                 result.profile.enable_deferred_timing();
                 const auto start = now();
@@ -298,7 +332,7 @@ int main(int argc, char** argv) {
             if (index != 0) json << ',';
             json << options.positions[index];
         }
-        json << "],\n  \"timing_method\":\"CLOCK_MONOTONIC_RAW wall time plus deferred HIP events; audit adds event recording overhead\",\n"
+        json << "],\n  \"timing_method\":\"clean CLOCK_MONOTONIC_RAW wall time; lightweight whole-token HIP events; deferred per-operation HIP events\",\n"
              << "  \"selected_tokens\":[";
         for (std::size_t index = 0; index < selected_tokens.size(); ++index) {
             if (index != 0) json << ',';
@@ -311,6 +345,7 @@ int main(int argc, char** argv) {
             json << "    {\"position\":" << result.position
                  << ",\"cache_length_before\":" << result.position
                  << ",\"production_wall_ms\":" << result.production_wall_ms
+                 << ",\"production_gpu_ms\":" << result.production_gpu_ms
                  << ",\"audit_wall_ms\":" << result.wall_ms << ",\"profile\":";
             write_profile_json(json, result.profile);
             json << '}';
@@ -331,14 +366,15 @@ int main(int argc, char** argv) {
             : "M5-C1 Qwen3 position-scaled decode audit\n")
                   << "model: " << model.model_name() << "\n"
                   << "prompt token: " << options.prompt_token << "\n"
-                  << "timing: deferred HIP events; wall time includes audit event recording\n"
-                  << "position cache_before production_wall_ms audit_wall_ms gpu_ms attention_ms kv_cache_ms quant_ms "
+                  << "timing: clean wall plus lightweight whole-token HIP events and deferred per-operation events\n"
+                  << "position cache_before production_wall_ms production_gpu_ms audit_wall_ms gpu_ms attention_ms kv_cache_ms quant_ms "
                      "ffn_ms copy_ms copy_bytes dispatches syncs temporary_allocations\n";
         for (const auto& result : results) {
             const auto& profile = result.profile;
             std::cout << std::fixed << std::setprecision(3)
                       << result.position << ' ' << result.position << ' '
-                      << result.production_wall_ms << ' ' << result.wall_ms << ' '
+                      << result.production_wall_ms << ' ' << result.production_gpu_ms << ' '
+                      << result.wall_ms << ' '
                       << total(profile.gpu_ms) << ' '
                       << profile.gpu_ms[index_of(miinfer::Qwen3ProfileCategory::attention)] << ' '
                       << profile.copy_ms[index_of(miinfer::Qwen3ProfileCategory::kv_cache)] << ' '
