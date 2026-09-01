@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "bench/README.md": {
-    "mtime": 1788264308.8478146,
-    "seen": 1788264335.060234,
-    "ast_hash": "1adf49aeceff12933f03a2ec01279f4f",
+    "mtime": 1788265076.5589693,
+    "seen": 1788265095.966934,
+    "ast_hash": "75ab47cc49e2d849382e12b8ef1ecb1f",
     "semantic_hash": ""
   },
   "context.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788264369.9845052,
-    "seen": 1788264982.1348042,
-    "ast_hash": "653a5c1588e2a84b1ecf4a32956af138",
+    "mtime": 1788265076.5599692,
+    "seen": 1788265095.9669447,
+    "ast_hash": "52dbecb5673b24ade0e7de87ae8ab33f",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -927,6 +927,12 @@
     "mtime": 1788264320.029758,
     "seen": 1788264335.0603054,
     "ast_hash": "8469839ca050d5e885f5c5f5a27b5740",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0025-m5c8b-down-four-wave64.md": {
+    "mtime": 1788265076.557969,
+    "seen": 1788265095.9670076,
+    "ast_hash": "99f28274ef5a0f3e0336f23484b5d261",
     "semantic_hash": ""
   }
 }

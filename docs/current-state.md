@@ -204,6 +204,9 @@ No other GPU architecture is currently supported.
   Q4_0 × Q8_1 controls measure about 50.24 µs Gate, 50.24 µs Up, and 57.28 µs
   Down with repeated oracle passes, while existing Wave64/alternate controls
   do not justify a production promotion
+* M5-C8b Down four-Wave64 candidate; the expanded Q4/Q8 correctness matrix
+  passes, but Down regresses from 57.28 µs to 83.36–84.80 µs and Gate/Up also
+  regress, so the geometry family is rejected without production selection
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -493,7 +496,7 @@ M5-C6d — GPU-side greedy argmax (CLOSED; structural KEEP, +0.37% A/B)
 
 M5-C7 — post-copy-cleanup bottleneck profile (CLOSED; KERNEL recommendation)
 
-M5-C8 — FFN projection kernel experiment (C8a CLOSED; C8b next)
+M5-C8 — FFN projection kernel experiment (C8a CLOSED; C8b REJECTED; C8c next)
 ```
 
 The exact ordering may change based on early measurements.
@@ -662,10 +665,13 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-01 — M5-C8a and EXP-0024 recorded after M5-C7 and EXP-0023. The
+2026-09-01 — M5-C8b and EXP-0025 recorded after M5-C8a and EXP-0024. The
+four-independent-Wave64 Down candidate passes the expanded primitive oracle
+but regresses Down by approximately 46%, so it is rejected and not
+production-selected. C8a and EXP-0024 recorded the prior shape baseline. The
 Q4_0 × Q8_1 FFN shape baseline measures approximately 50.24 µs Gate, 50.24 µs
 Up, and 57.28 µs Down at the observed low clocks; existing geometry controls
-do not justify promotion, so C8b is the next isolated candidate. The
+do not justify promotion, so C8c is the next isolated candidate. The
 post-copy-cleanup profile now
 uses lightweight whole-token HIP events: clean wall versus device time is
 15.313/15.475 ms at P1 and 19.780/19.928 ms at P64. The detailed profile

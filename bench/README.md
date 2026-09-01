@@ -360,3 +360,13 @@ runs pass the quantized oracle. The existing Wave64 control is only marginally
 faster for Gate/Up and the available alternate Down geometry is slower, so no
 production selection changed. C8b remains a new, measured FFN geometry
 candidate rather than a speculative promotion.
+
+## M5-C8b Down four-Wave64 candidate
+
+The candidate experiment is recorded in
+`experiments/EXP-0025-m5c8b-down-four-wave64.md`, with raw artifacts under
+`bench/results/20260901T104000Z-391000/`. Four independent Wave64 reductions
+per 256-thread workgroup passed the Q4_0 × Q8_1 oracle but regressed the
+long-K Down shape from 57.28 µs to 83.36–84.80 µs. Gate and Up also regressed
+about 1.9%. The candidate is retained as an opt-in diagnostic and is not
+production-selected; this geometry family is rejected for C8c.
