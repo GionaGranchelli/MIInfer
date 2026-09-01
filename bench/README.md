@@ -379,6 +379,24 @@ at P64 across 108 dispatches, making it a bounded candidate for a separate
 fused experiment. Gate and Up also independently quantize the same normalized
 input; that reuse opportunity remains separate from C9b.
 
+The existing interleaved A/B harness can compare the separate and fused
+SwiGLU paths on the same warmed growing-context workload:
+
+```bash
+build/mi50-release/miinfer-qwen3-attention-ab-bench \
+  /path/to/Qwen3-8B-q4_0-b968826d.gguf \
+  --mode swiglu-fusion --warmup 8 --generated-tokens 64 --pairs 3
+```
+
+The fused path is selected only by `MIINFER_SWIGLU_Q8_FUSION=fused` inside
+that A/B mode; the default production path remains `separate`.
+
+EXP-0028 rejected the candidate for production selection: its standalone
+Q8Exact payload test passed and the local chain was 33.8% faster, but the
+full fixed-prefix decode diverged at position 38. The separate path remains
+the production default. See
+`experiments/EXP-0028-m5c9b-swiglu-q8-fusion.md`.
+
 ## M5-C8a FFN projection shape characterization
 
 The kernel-only `miinfer-q4-q8-gemv-bench` characterization is recorded in

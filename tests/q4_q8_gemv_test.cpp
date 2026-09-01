@@ -4,6 +4,7 @@
 #include "miinfer/q4_q8_packed_dot.hpp"
 #include "miinfer/q4_q8_gemv.hpp"
 #include "miinfer/q4_q8_zero_point_dot.hpp"
+#include "miinfer/qwen3_gpu_primitives.hpp"
 
 #include <hip/hip_runtime.h>
 
@@ -81,6 +82,66 @@ bool run_zero_point_identity_tests() {
               << " max_stored_s_error=" << maximum_stored_sum_error
               << " result=" << (passed ? "PASS" : "FAIL")
               << '\n';
+    return passed;
+}
+
+bool run_silu_q8_fusion_identity_test() {
+    constexpr int elements = 12288;
+    std::vector<float> gate(static_cast<std::size_t>(elements));
+    std::vector<float> up(static_cast<std::size_t>(elements));
+    std::mt19937 generator(0xC9B5U);
+    std::uniform_real_distribution<float> distribution(-1000.0F, 1000.0F);
+    for (int index = 0; index < elements; ++index) {
+        gate[static_cast<std::size_t>(index)] = distribution(generator);
+        up[static_cast<std::size_t>(index)] = distribution(generator);
+    }
+
+    float* device_gate = nullptr;
+    float* device_up = nullptr;
+    float* device_swiglu = nullptr;
+    __half* device_swiglu_half = nullptr;
+    miinfer::Q8ExactBlock* device_separate = nullptr;
+    miinfer::Q8ExactBlock* device_fused = nullptr;
+    const auto blocks = static_cast<std::size_t>(elements / miinfer::kQ8_1BlockSize);
+    MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&device_gate), gate.size() * sizeof(float)));
+    MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&device_up), up.size() * sizeof(float)));
+    MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&device_swiglu), gate.size() * sizeof(float)));
+    MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&device_swiglu_half),
+                                gate.size() * sizeof(__half)));
+    MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&device_separate),
+                                blocks * sizeof(miinfer::Q8ExactBlock)));
+    MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&device_fused),
+                                blocks * sizeof(miinfer::Q8ExactBlock)));
+    MIINFER_HIP_CHECK(hipMemcpy(device_gate, gate.data(), gate.size() * sizeof(float),
+                                hipMemcpyHostToDevice));
+    MIINFER_HIP_CHECK(hipMemcpy(device_up, up.data(), up.size() * sizeof(float),
+                                hipMemcpyHostToDevice));
+
+    miinfer::launch_qwen3_silu_mul(device_gate, device_up, device_swiglu, elements);
+    miinfer::launch_qwen3_f32_to_f16(device_swiglu, device_swiglu_half, elements);
+    miinfer::launch_q8_exact_quantize(device_swiglu_half, device_separate, elements);
+    miinfer::launch_silu_mul_q8_exact(device_gate, device_up, device_fused, elements);
+    MIINFER_HIP_CHECK(hipDeviceSynchronize());
+
+    std::vector<miinfer::Q8ExactBlock> separate(blocks);
+    std::vector<miinfer::Q8ExactBlock> fused(blocks);
+    MIINFER_HIP_CHECK(hipMemcpy(separate.data(), device_separate,
+                                separate.size() * sizeof(miinfer::Q8ExactBlock),
+                                hipMemcpyDeviceToHost));
+    MIINFER_HIP_CHECK(hipMemcpy(fused.data(), device_fused,
+                                fused.size() * sizeof(miinfer::Q8ExactBlock),
+                                hipMemcpyDeviceToHost));
+    const bool passed = std::memcmp(separate.data(), fused.data(),
+                                    separate.size() * sizeof(miinfer::Q8ExactBlock)) == 0;
+    std::cout << "silu+q8 exact fusion byte_identity=" << (passed ? "PASS" : "FAIL")
+              << " blocks=" << blocks << '\n';
+
+    MIINFER_HIP_CHECK(hipFree(device_fused));
+    MIINFER_HIP_CHECK(hipFree(device_separate));
+    MIINFER_HIP_CHECK(hipFree(device_swiglu_half));
+    MIINFER_HIP_CHECK(hipFree(device_swiglu));
+    MIINFER_HIP_CHECK(hipFree(device_up));
+    MIINFER_HIP_CHECK(hipFree(device_gate));
     return passed;
 }
 
@@ -173,6 +234,7 @@ int main() {
     }
     bool passed = true;
     passed = run_zero_point_identity_tests() && passed;
+    passed = run_silu_q8_fusion_identity_test() && passed;
     const std::vector<std::string> implementations = {
         "scalar", "packed-dot", "zero-point-dot", "zero-point-128", "zero-point-wave64",
         "zero-point-four-wave64", "zero-point-four-wave64-exact-metadata",

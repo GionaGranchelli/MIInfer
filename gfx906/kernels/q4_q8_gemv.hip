@@ -164,6 +164,51 @@ __global__ void q8_exact_quantize_f32_kernel(
     output[block].qs[index] = static_cast<std::int8_t>(quantized[index]);
 }
 
+__global__ void silu_mul_q8_exact_kernel(
+    const float* gate,
+    const float* up,
+    Q8ExactBlock* output,
+    int elements) {
+    const int block = static_cast<int>(blockIdx.x);
+    const int index = static_cast<int>(threadIdx.x);
+    if (index >= kQ8_1BlockSize || block * kQ8_1BlockSize + index >= elements) return;
+
+    __shared__ __half activated[kQ8_1BlockSize];
+    __shared__ float absolute_values[kQ8_1BlockSize];
+    __shared__ int quantized[kQ8_1BlockSize];
+    __shared__ float scale;
+
+    const int element = block * kQ8_1BlockSize + index;
+    const float gate_value = gate[element];
+    const float activated_value = (gate_value / (1.0F + expf(-gate_value))) * up[element];
+    activated[index] = __float2half_rn(activated_value);
+    absolute_values[index] = fabsf(__half2float(activated[index]));
+    __syncthreads();
+    for (int stride = kQ8_1BlockSize / 2; stride > 0; stride /= 2) {
+        if (index < stride) {
+            absolute_values[index] = fmaxf(absolute_values[index], absolute_values[index + stride]);
+        }
+        __syncthreads();
+    }
+    if (index == 0) {
+        scale = absolute_values[0] / 127.0F;
+        output[block].d = __float2half_rn(scale);
+    }
+    __syncthreads();
+    const float value = __half2float(activated[index]);
+    const float inverse_scale = scale != 0.0F ? 1.0F / scale : 0.0F;
+    quantized[index] = max(-127, min(127, static_cast<int>(roundf(value * inverse_scale))));
+    __syncthreads();
+    if (index == 0) {
+        int sum = 0;
+        for (int quant_index = 0; quant_index < kQ8_1BlockSize; ++quant_index) {
+            sum += quantized[quant_index];
+        }
+        output[block].sum = static_cast<std::int16_t>(sum);
+    }
+    output[block].qs[index] = static_cast<std::int8_t>(quantized[index]);
+}
+
 __global__ void q4_q8_gemv_kernel(
     const Q4_0Block* weights,
     const Q8_1Block* input,
@@ -279,6 +324,23 @@ void launch_q8_exact_quantize_f32(
         q8_exact_quantize_f32_kernel,
         dim3(static_cast<unsigned int>(elements / kQ8_1BlockSize)),
         dim3(kQ8_1BlockSize), 0, stream, input, output, elements);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_silu_mul_q8_exact(
+    const float* gate,
+    const float* up,
+    Q8ExactBlock* output,
+    int elements,
+    hipStream_t stream) {
+    if (gate == nullptr || up == nullptr || output == nullptr || elements <= 0
+        || elements % kQ8_1BlockSize != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(
+        silu_mul_q8_exact_kernel,
+        dim3(static_cast<unsigned int>(elements / kQ8_1BlockSize)),
+        dim3(kQ8_1BlockSize), 0, stream, gate, up, output, elements);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

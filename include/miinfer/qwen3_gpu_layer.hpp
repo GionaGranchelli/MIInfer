@@ -42,6 +42,7 @@ enum class Qwen3FfnProfileStage {
     up_input_quantization,
     up_projection,
     swiglu,
+    swiglu_down_input_quantization,
     down_input_quantization,
     down_projection,
     residual,

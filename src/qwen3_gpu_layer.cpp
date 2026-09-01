@@ -52,6 +52,8 @@ const char* qwen3_ffn_profile_stage_name(Qwen3FfnProfileStage stage) noexcept {
     case Qwen3FfnProfileStage::up_input_quantization: return "up_input_quantization";
     case Qwen3FfnProfileStage::up_projection: return "up_projection";
     case Qwen3FfnProfileStage::swiglu: return "swiglu";
+    case Qwen3FfnProfileStage::swiglu_down_input_quantization:
+        return "swiglu_down_input_quantization";
     case Qwen3FfnProfileStage::down_input_quantization: return "down_input_quantization";
     case Qwen3FfnProfileStage::down_projection: return "down_projection";
     case Qwen3FfnProfileStage::residual: return "ffn_residual";
@@ -264,6 +266,14 @@ bool use_coalesced_kv_cache_store() {
         "MIINFER_KV_CACHE_WRITE must be 'store' or 'copy'");
 }
 
+bool use_fused_swiglu_q8() {
+    const char* configured = std::getenv("MIINFER_SWIGLU_Q8_FUSION");
+    if (configured == nullptr || std::strcmp(configured, "separate") == 0) return false;
+    if (std::strcmp(configured, "fused") == 0) return true;
+    throw std::invalid_argument(
+        "MIINFER_SWIGLU_Q8_FUSION must be 'separate' or 'fused'");
+}
+
 Qwen3ProfileCategory projection_profile_category(const char* projection) {
     if (std::strcmp(projection, "q") == 0 || std::strcmp(projection, "k") == 0
         || std::strcmp(projection, "v") == 0) {
@@ -306,17 +316,24 @@ void launch_projection(
     Q8ExactBlock* input_q8_exact,
     __half* output_half,
     const char* projection,
-    Qwen3GpuProfile* profile = nullptr) {
+    Qwen3GpuProfile* profile = nullptr,
+    bool input_prequantized = false) {
     const auto projection_category = projection_profile_category(projection);
     const auto ffn_quantization_stage = projection_ffn_quantization_stage(projection);
     const auto ffn_projection_stage = projection_ffn_stage(projection);
     const bool exact_metadata = use_exact_q8_metadata(projection);
     const bool f32_input = projection_selected("MIINFER_F32_INPUT_PROJECTIONS", projection);
     const bool f32_output = projection_selected("MIINFER_F32_OUTPUT_PROJECTIONS", projection);
+    if (input_prequantized && !exact_metadata) {
+        throw std::invalid_argument("prequantized input requires exact Q8 metadata");
+    }
     if (f32_output && !exact_metadata) {
         throw std::invalid_argument("F32 projection output requires Q8Exact metadata");
     }
-    if (!exact_metadata && f32_input) {
+    if (input_prequantized) {
+        // The caller has already produced the exact Q8 block stream. This is
+        // used only by the opt-in SwiGLU fusion candidate.
+    } else if (!exact_metadata && f32_input) {
         profile_gpu_call(profile, Qwen3ProfileCategory::quantization, 1, [&] {
             launch_q8_1_quantize_f32(input, input_q8, static_cast<int>(input_elements));
         }, ffn_quantization_stage);
@@ -912,8 +929,14 @@ Qwen3LayerTrace qwen3_layer_gpu_impl(
                       config.intermediate_size, config.hidden_size, half_input, q8_input, q8_exact_input,
                       half_output, "up", profile);
     trace.up = capture_optional(up.data(), intermediate);
+    const bool fused_swiglu = !capture_trace && use_fused_swiglu_q8();
     const char* mutation = std::getenv("MIINFER_GPU_LAYER_MUTATE");
-    if (mutation != nullptr && std::strcmp(mutation, "swap-gate-up") == 0) {
+    if (fused_swiglu) {
+        profile_gpu_call(profile, Qwen3ProfileCategory::quantization, 1, [&] {
+            launch_silu_mul_q8_exact(gate.data(), up.data(), q8_exact_input,
+                                     static_cast<int>(config.intermediate_size));
+        }, Qwen3FfnProfileStage::swiglu_down_input_quantization);
+    } else if (mutation != nullptr && std::strcmp(mutation, "swap-gate-up") == 0) {
         // Test-only discriminator.  It is opt-in through an environment
         // variable and never participates in normal execution.
         profile_gpu_call(profile, Qwen3ProfileCategory::activation, 1, [&] {
@@ -927,7 +950,7 @@ Qwen3LayerTrace qwen3_layer_gpu_impl(
     trace.swiglu = capture_optional(swiglu.data(), intermediate);
     launch_projection(plan, layer.down, swiglu.data(), config.intermediate_size, ffn_output.data(),
                       config.hidden_size, config.intermediate_size, half_input, q8_input, q8_exact_input,
-                      half_output, "down", profile);
+                      half_output, "down", profile, fused_swiglu);
     trace.ffn_output = capture_optional(ffn_output.data(), hidden);
     profile_gpu_call(profile, Qwen3ProfileCategory::residual, 1, [&] {
         launch_qwen3_add(ffn_output.data(), ffn_input.data(), layer_output_target,

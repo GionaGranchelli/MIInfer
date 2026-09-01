@@ -506,6 +506,9 @@ CLOSED — no split-K promotion)
 
 M5-C9a — production FFN/end-to-end attribution (CLOSED; measurement-only;
 SwiGLU-to-Down-input quantization retained as isolated C9b candidate)
+
+M5-C9b — fused SwiGLU-to-Down-input Q8 candidate (CLOSED; REJECTED for
+production selection; long decode diverged at position 38)
 ```
 
 The exact ordering may change based on early measurements.
@@ -674,17 +677,16 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-01 — M5-C9a and EXP-0027 recorded after M5-C8c and EXP-0026. The
-measurement-only production position audit now attributes the FFN at P1/P64
-to 9.880/9.979 ms across 468 stage dispatches, while the full deferred
-profile reports 23.430/27.991 ms across 1,625 dispatches. Clean production
-wall time is 15.366/19.858 ms. SwiGLU plus Down-input Q8 quantization costs
-0.795 ms at P64 and spans 108 dispatches, so it is retained as the isolated
-C9b fusion candidate. Gate and Up independently quantize the same normalized
-input and remain a separate later reuse candidate. No production behavior,
-precision policy, kernel selection, or correctness tolerance changed; all 19
-Release tests pass. Absolute rates remain qualified by the observed
-930/350 MHz clocks.
+2026-09-01 — M5-C9b and EXP-0028 recorded after M5-C9a and EXP-0027. The
+SwiGLU-to-Q8Exact fused kernel is byte-identical to the separate path on a
+wide synthetic fixture and reduces the local chain from three launches to
+one, but the full fixed-prefix decode first diverges at position 38 (9370
+versus 104796). Its local microbenchmark is 33.8% faster, while the valid
+short eight-token A/B gain is only 1.17%; the candidate is therefore rejected
+for production selection. The separate production path remains unchanged and
+passes all 19 Release tests. Gate/Up quantization reuse remains a separate
+future candidate. Absolute rates remain qualified by the observed 930/350 MHz
+clocks.
 
 Update this document whenever:
 

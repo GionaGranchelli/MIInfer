@@ -83,6 +83,16 @@ void launch_q8_exact_quantize_f32(
     int elements,
     hipStream_t stream = nullptr);
 
+// Candidate decode primitive: reproduce the production FP32 -> FP16
+// SwiGLU boundary and write the resulting exact Q8 metadata directly,
+// avoiding global materialization of the intermediate activation.
+void launch_silu_mul_q8_exact(
+    const float* gate,
+    const float* up,
+    Q8ExactBlock* output,
+    int elements,
+    hipStream_t stream = nullptr);
+
 void launch_q4_q8_gemv(
     const Q4_0Block* weights,
     const Q8_1Block* input,
