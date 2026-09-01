@@ -21,7 +21,7 @@ bytes. The audit ran the trace-free MI50 path at positions 1, 8, 16, 32, and
 precision policy, scheduling policy, or buffer lifetime was changed.
 
 The raw result and environment captures are retained under
-bench/results/20260901T-c10b-boundary/. The observed hardware state was
+bench/results/20260901T-c10b-boundary-clean/. The observed hardware state was
 approximately 930/350 MHz SCLK/MCLK, so absolute rates remain low-clock
 qualified. Deferred stage totals are attribution evidence, not additive wall
 time: they overlap because events are recorded on the active stream.
@@ -30,9 +30,9 @@ time: they overlap because events are recorded on the active stream.
 
 | Metric | P64 |
 |---|---:|
-| Clean production wall | 19.800 ms |
-| Whole-token GPU event | 19.735 ms |
-| Deferred attributed GPU time | 27.287 ms |
+| Clean production wall | 19.602 ms |
+| Whole-token GPU event | 19.733 ms |
+| Deferred attributed GPU time | 27.277 ms |
 | Dispatches | 1553 |
 | Synchronization sites | 38 |
 | Temporary allocations | 0 |
@@ -42,11 +42,11 @@ The broad post-C9c categories remain:
 
 | Category | GPU ms | Dispatches |
 |---|---:|---:|
-| FFN projection | 6.790 | 108 |
-| Attention | 4.943 | 36 |
-| Normalization | 2.978 | 289 |
-| Quantization | 3.238 | 324 |
-| Conversion | 2.278 | 324 |
+| FFN projection | 6.815 | 108 |
+| Attention | 4.925 | 36 |
+| Normalization | 2.876 | 289 |
+| Quantization | 3.253 | 433 |
+| Conversion | 2.211 | 324 |
 
 ## 4. Boundary map
 
@@ -73,19 +73,19 @@ many remaining boundaries are small, repeated 36-times-per-layer operations.
 
 Representative exact P64 stages include:
 
-    ffn_rms_normalize       0.634720 ms / 36 / 589824 bytes
-    ffn_norm_scale          0.252800 ms / 36 / 589824 bytes
-    q_head_rms_normalize    0.291679 ms / 36 / 589824 bytes
-    q_head_scale            0.249920 ms / 36 / 589824 bytes
-    attention_f32_to_f16    0.242720 ms / 36 / 294912 bytes
-    attention_f16_to_f32    0.244800 ms / 36 / 589824 bytes
-    gate_input_f32_to_f16  0.249600 ms / 36 / 294912 bytes
-    gate_input_q8           0.288640 ms / 36 / 165888 bytes
-    down_input_f32_to_f16  0.243840 ms / 36 / 884736 bytes
-    down_input_q8           0.303840 ms / 36 / 497664 bytes
+    ffn_rms_normalize       0.632960 ms / 36 / 589824 bytes
+    ffn_norm_scale           0.252000 ms / 36 / 589824 bytes
+    q_head_rms_normalize     0.292480 ms / 36 / 589824 bytes
+    q_head_scale             0.250880 ms / 36 / 589824 bytes
+    attention_f32_to_f16     0.243840 ms / 36 / 294912 bytes
+    attention_f16_to_f32     0.243360 ms / 36 / 589824 bytes
+    gate_input_f32_to_f16   0.248320 ms / 36 / 294912 bytes
+    gate_input_q8            0.288960 ms / 36 / 165888 bytes
+    down_input_f32_to_f16   0.248640 ms / 36 / 884736 bytes
+    down_input_q8            0.303520 ms / 36 / 497664 bytes
 
 All named stages and all positions are retained in
-bench/results/20260901T-c10b-boundary/result.json.
+bench/results/20260901T-c10b-boundary-clean/result.json.
 
 ## 5. Interpretation
 

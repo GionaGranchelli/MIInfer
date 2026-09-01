@@ -221,8 +221,8 @@ No other GPU architecture is currently supported.
   remaining ranking is FFN projection 6.963 ms, attention 4.935 ms,
   normalization 2.978 ms, LM head 2.876 ms, and conversion 2.278 ms
 * M5-C10b added real-model normalization/conversion boundary attribution at
-  positions 1/8/16/32/64; P64 is 19.800/19.735 ms clean wall/GPU event with
-  27.287 ms deferred attribution, 1553 dispatches, 38 sync sites, zero
+  positions 1/8/16/32/64; clean-commit P64 is 19.602/19.733 ms clean wall/GPU
+  event with 27.277 ms deferred attribution, 1553 dispatches, 38 sync sites, zero
   allocations, and zero new copy pathology. The selected next experiment is
   one bounded FFN RMSNorm + norm-scale + F32→F16 + shared-Q8 candidate with
   strict byte-identical Q8 and trajectory gates
@@ -702,16 +702,13 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-01 — M5-C9b and EXP-0028 recorded after M5-C9a and EXP-0027. The
-SwiGLU-to-Q8Exact fused kernel is byte-identical to the separate path on a
-wide synthetic fixture and reduces the local chain from three launches to
-one, but the full fixed-prefix decode first diverges at position 38 (9370
-versus 104796). Its local microbenchmark is 33.8% faster, while the valid
-short eight-token A/B gain is only 1.17%; the candidate is therefore rejected
-for production selection. The separate production path remains unchanged and
-passes all 19 Release tests. Gate/Up quantization reuse remains a separate
-future candidate. Absolute rates remain qualified by the observed 930/350 MHz
-clocks.
+2026-09-01 — M5-C10b and EXP-0031 recorded after the C9c production KEEP and
+the C10a refreshed profile. The real-model boundary audit now records named
+normalization, conversion, and Q8 stages at positions 1/8/16/32/64. The
+clean-commit P64 result is 19.602 ms wall, 19.733 ms whole-token GPU event,
+and 27.277 ms deferred attribution at the observed 930/350 MHz clocks. The
+next bounded candidate is FFN RMSNorm + norm-scale + F32→F16 + shared-Q8;
+strict Q8 and 64-token trajectory gates remain mandatory.
 
 Update this document whenever:
 
