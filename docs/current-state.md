@@ -207,6 +207,11 @@ No other GPU architecture is currently supported.
 * M5-C8b Down four-Wave64 candidate; the expanded Q4/Q8 correctness matrix
   passes, but Down regresses from 57.28 µs to 83.36–84.80 µs and Gate/Up also
   regress, so the geometry family is rejected without production selection
+* M5-C8c Down long-K attribution; the existing two-Wave64-per-row path is a
+  direct split-K-style diagnostic but regresses Down from 57.28 to 73.12 µs
+  (27.7%) with the same oracle result. Static code-object data shows equal
+  45-VGPR use and no spills for Gate/Down, while hardware-counter profilers
+  are unavailable; no split-K or new Down geometry is justified
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -496,7 +501,8 @@ M5-C6d — GPU-side greedy argmax (CLOSED; structural KEEP, +0.37% A/B)
 
 M5-C7 — post-copy-cleanup bottleneck profile (CLOSED; KERNEL recommendation)
 
-M5-C8 — FFN projection kernel experiment (C8a CLOSED; C8b REJECTED; C8c next)
+M5-C8 — FFN projection kernel experiment (C8a CLOSED; C8b REJECTED; C8c
+CLOSED — no split-K promotion)
 ```
 
 The exact ordering may change based on early measurements.
@@ -665,55 +671,19 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-01 — M5-C8b and EXP-0025 recorded after M5-C8a and EXP-0024. The
-four-independent-Wave64 Down candidate passes the expanded primitive oracle
-but regresses Down by approximately 46%, so it is rejected and not
-production-selected. C8a and EXP-0024 recorded the prior shape baseline. The
-Q4_0 × Q8_1 FFN shape baseline measures approximately 50.24 µs Gate, 50.24 µs
-Up, and 57.28 µs Down at the observed low clocks; existing geometry controls
-do not justify promotion, so C8c is the next isolated candidate. The
-post-copy-cleanup profile now
-uses lightweight whole-token HIP events: clean wall versus device time is
-15.313/15.475 ms at P1 and 19.780/19.928 ms at P64. The detailed profile
-shows 1,625 flat dispatches, with FFN projections the largest individual
-family at about 7.0 ms at P64. The next target is a measured FFN kernel
-experiment, not HIP graph capture. Earlier M5-C6d and EXP-0022 recorded.
-GPU-side greedy argmax now keeps
-the vocabulary logits resident through a deterministic first-index reduction,
-reducing final-result transfer from 607,744 to 4 bytes and preserving the
-pinned generated IDs. The metadata-clean balanced 64-forward A/B measured
-54.7099 versus 54.9812 tok/s at the observed 930/350 MHz clocks; Release CTest remains
-19/19. Earlier M5-C2 and EXP-0014 recorded the cooperative cached-attention
-candidate passes the pinned greedy sequence and improves the 64-forward
-trace-free control from 14.430 to 38.754 tok/s. The position-scaled audit
-shows flat dispatch/copy/quantization/FFN/KV-write costs and cached attention
-growing from 3.401 ms at cache length 1 to 95.998 ms at cache length 64. The
-M5-C3 repeated interleaved A/B characterization and profiling of the new
-attention baseline is complete. M5-C4 extends the cooperative audit through
-cache length 1024, but its absolute rates are qualified because the MI50
-reported 925–930/350 MHz auto-mode clocks; privileged clock control was
-unavailable. M5-C5a removed steady-state decode workspace allocation churn,
-with zero temporary allocations in the position audit and a qualified
-26.9–32.3% end-to-end gain. M5-C5b now keeps immutable normalization weights
-resident, reducing copy bytes by 37.2% and adding a qualified roughly 9%
-end-to-end gain. M5-C6a attributes the remaining copy/synchronization costs.
-M5-C6b now keeps direct fast-path layer-output ownership after removing 36
-redundant copies exactly; its interleaved timing result is neutral at the
-observed low clocks. M5-C6c now keeps coalesced KV-cache writes after reducing
-576 KV memcpy calls to 36 store launches, cutting synchronization sites from
-614 to 38 and improving the balanced workload by approximately 5.5% at the
-observed low clocks. Earlier M5-C0 and
-EXP-0012 results remain recorded
-below for historical comparison. M4-C3 closed. The model-backed tokenizer
-encodes `hello` as `14990`, and the Release text CLI reproduces the pinned
-eight-token continuation and generated text. The physical C3 gate passes.
-M4-C2 closed. Release passes the pinned eight-token MI50 continuation;
-unoptimized Debug is a finite/cache/determinism diagnostic and diverges at
-position 3 (`470` vs `419`). Optimized HIP Debug and RelWithDebInfo match
-Release. M4-C1 previously closed explicit-token stateful decode. A persistent
-36-layer KV state processes prompt token `14990`, selects first token `8`,
-consumes it at position 1, and passes physical Debug/Release acceptance plus
-reset determinism.
+2026-09-01 — M5-C8c and EXP-0026 recorded after M5-C8b and EXP-0025. The
+existing two-Wave64-per-row Down path was measured as a direct split-K-style
+diagnostic: it passes the quantized oracle but regresses from 57.28 to 73.12
+µs. Static extracted gfx906 metadata shows equal 45-VGPR use and no spills for
+Gate and Down; rocprof, rocprof-compute, and omniperf are unavailable, so
+dynamic bottleneck classification remains unproven. No split-K or new Down
+geometry is promoted, and further standalone Down work is deferred pending a
+concrete profiling or layout hypothesis. C8b's four-independent-Wave64
+candidate remains rejected at approximately 46% Down regression. The current
+production path and all 19 Release tests remain unchanged. Earlier M5-C7
+profiled 1,625 flat dispatches and approximately 7.0 ms of P64 FFN projection
+work; the next optimization should be selected above standalone Down GEMV
+using a fresh end-to-end profile.
 
 Update this document whenever:
 
