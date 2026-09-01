@@ -240,3 +240,18 @@ reports 2,082,304 copied bytes/token and 650 synchronization sites, down from
 remain zero. These absolute rates remain hardware-state qualified until the
 validated 1725/1000 MHz clock state can be restored. The full result is
 documented in `experiments/EXP-0018-m5c5b-resident-norm-weights.md`.
+
+## M5-C6a execution-overhead attribution
+
+The C5b position audit provides the current copy and synchronization
+breakdown without changing the production path. Per decode token it reports
+576 KV-cache writes (`294,912` bytes), 72 layer input/output D2D copies
+(`1,179,648` bytes), and one final logits D2H copy (`607,744` bytes). The
+copy-call subtotal is 649 synchronization sites; the deferred profile adds
+one finalization synchronization, for 650 measured synchronization events.
+Dispatch topology remains 1,588/token. The audit and decision are recorded in
+`experiments/EXP-0019-m5c6a-execution-overhead-audit.md`.
+
+The next isolated candidate is direct fast-path layer-output ownership, which
+would remove the 36 layer-output D2D copies without changing the trace path or
+any numerical precision boundary.
