@@ -320,12 +320,13 @@ scripts/run-m5c6d-argmax-ab.sh /path/to/Qwen3-8B-q4_0-b968826d.gguf
 ```
 
 The clean result is retained under
-`bench/results/20260901T093127Z-381071/` and documented in
-`experiments/EXP-0022-m5c6d-gpu-argmax.md`. The balanced 64-forward run
-measured 54.7928 tok/s for the full-logit control and 54.9945 tok/s for
-GPU-argmax at the observed 930/350 MHz clocks, with identical generated IDs.
+`bench/results/20260901T093604Z-383152/` and documented in
+`experiments/EXP-0022-m5c6d-gpu-argmax.md`. The metadata-clean balanced
+64-forward run measured 54.7099 tok/s for the full-logit control and 54.9812
+tok/s for GPU-argmax at the observed 930/350 MHz clocks, with identical
+generated IDs.
 The GPU-argmax position audit is under
-`bench/results/20260901T093211Z-381976/`; it reports final result traffic
+`bench/results/20260901T093647Z-384099/`; it reports final result traffic
 falling from 607,744 to 4 bytes, total copied bytes falling from 1,197,568 to
 589,828, and dispatches rising from 1,624 to 1,625. Temporary allocations
 remain zero and synchronization sites remain 38.

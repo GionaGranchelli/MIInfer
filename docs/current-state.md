@@ -657,8 +657,8 @@ gfx906 reference without broadening the project into a generic runtime.
 2026-09-01 — M5-C6d and EXP-0022 recorded. GPU-side greedy argmax now keeps
 the vocabulary logits resident through a deterministic first-index reduction,
 reducing final-result transfer from 607,744 to 4 bytes and preserving the
-pinned generated IDs. The clean balanced 64-forward A/B measured 54.7928
-versus 54.9945 tok/s at the observed 930/350 MHz clocks; Release CTest remains
+pinned generated IDs. The metadata-clean balanced 64-forward A/B measured
+54.7099 versus 54.9812 tok/s at the observed 930/350 MHz clocks; Release CTest remains
 19/19. The next step is a fresh profile of the post-copy-cleanup path before
 choosing dispatch/fusion, graph, or kernel optimization. Earlier M5-C2 and
 EXP-0014 recorded. The cooperative cached-attention

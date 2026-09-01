@@ -75,6 +75,17 @@ balanced interleaved run. The gain is intentionally reported as small; the
 large transfer is only one operation per token and the workload is dominated
 by remaining compute and dispatch topology.
 
+## Reproducibility rerun
+
+After refreshing the Release configure/build metadata, a clean-tree rerun was
+recorded under `bench/results/20260901T093604Z-383152/` with embedded commit
+`ba5d0d3d2680`. It measured 54.7099 tok/s for full-logit control and 54.9812
+tok/s for GPU-argmax, or `1.00496x`, with identical IDs. The corresponding
+metadata-clean position audit is under
+`bench/results/20260901T093647Z-384099/`; it repeats 589,828 copied bytes,
+1,625 dispatches, 38 synchronization sites, and zero temporary allocations
+at positions 1, 8, 16, 32, and 64.
+
 ## Decision
 
 ```text
