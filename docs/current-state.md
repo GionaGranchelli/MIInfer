@@ -233,6 +233,18 @@ No other GPU architecture is currently supported.
   P64 dispatches 1553→1445 but regressed throughput 54.125905→51.302002 tok/s
   (-5.217%), so it is rejected for production selection and the separate path
   remains the default
+* M5-C11a refreshed the accepted shared-reuse production baseline at 55.0778
+  tok/s over three serial 64-forward runs, with identical deterministic IDs and
+  Release CTest 19/19. The P64 profile reports 19.797/19.924 ms clean
+  wall/whole-token GPU event, 27.778 ms deferred attribution, 1553 dispatches,
+  38 sync sites, and zero allocations; FFN projection is the largest family at
+  6.956 ms, followed by attention at 4.937 ms
+* M5-C11a also refreshed the pinned gfx906 llama.cpp control: PP512 984.552,
+  TG128 91.875, and TG256 91.692 tok/s. The external run reached approximately
+  1725/1000 MHz while MIInfer's measured phase was approximately 925/350 MHz,
+  so the 1.67x standard-TG differential is directional, not clock-matched.
+  The next bounded experiment is an exact-shape FFN GEMV differential against
+  the available gfx906 MMVQ path
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -272,11 +284,13 @@ overhead relative to the pinned gfx906 llama.cpp control.
 
 The immediate technical objective is:
 
-> Classify the M5-C10c FFN normalization-to-shared-Q8 candidate and choose the
-> next optimization from a refreshed production profile. C10c preserved the
-> existing F32 arithmetic, F32→F16 rounding, Q8_1 bytes, and downstream
-> Q4_0×Q8_1 contract but was rejected for production after a repeatable 5.217%
-> end-to-end regression; the separate path remains the default.
+> Characterize the exact-shape FFN Q4_0×Q8_1 differential against the strongest
+> available gfx906 MMVQ path and select one mechanism-specific C11b candidate.
+> M5-C11a refreshed the shared-reuse production path at 55.0778 tok/s and found
+> FFN projection to be the largest measured family at P64. The fresh external
+> standard control measured 91.875 TG128 and 91.692 TG256 tok/s, but its measured
+> clock state was higher than MIInfer's, so that differential is directional.
+> C10c remains rejected and its separate path remains the production default.
 
 The initial eight-token fixture matches the independent MI50 reference through
 position 2. Release passes the complete fixture and Debug remains a
@@ -544,6 +558,11 @@ measurement-only; C10c FFN normalization-to-shared-Q8 candidate selected)
 
 M5-C10c — FFN normalization-to-shared-Q8 fusion (CLOSED; correctness PASS;
 production REJECTED; 5.217% slower in clean serial A/B)
+
+M5-C11a — production and llama.cpp differential baseline (CLOSED;
+measurement-only; 55.0778 tok/s MIInfer shared-reuse baseline; fresh external
+TG128/TG256 control 91.875/91.692 tok/s with clock-state qualification;
+next target exact-shape FFN GEMV differential)
 ```
 
 The exact ordering may change based on early measurements.
@@ -712,11 +731,12 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-01 — M5-C10b, EXP-0031, and C10c/EXP-0032 were recorded after the C9c
-production KEEP and the C10a refreshed profile. C10c passed 180/180 real-model
-FP16 and Q8 checks, 19/19 Release tests, and three identical 64-token A/B
-trajectories, but its one-workgroup fused path regressed clean decode by
-5.217%; the separate FFN normalization/Q8 path remains the production default.
+2026-09-01 — M5-C10b through M5-C11a were recorded after the C9c production
+KEEP. C10c passed its strict real-model correctness gates but its one-workgroup
+fused path regressed clean decode by 5.217%; the separate FFN normalization/Q8
+path remains the production default. C11a refreshed the production baseline and
+the external gfx906 control, with clock-state qualification, and selected an
+exact-shape FFN GEMV differential as the next bounded experiment.
 
 Update this document whenever:
 

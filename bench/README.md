@@ -501,3 +501,37 @@ per 256-thread workgroup passed the Q4_0 × Q8_1 oracle but regressed the
 long-K Down shape from 57.28 µs to 83.36–84.80 µs. Gate and Up also regressed
 about 1.9%. The candidate is retained as an opt-in diagnostic and is not
 production-selected; this geometry family is rejected for C8c.
+
+## M5-C11a production and llama.cpp differential baseline
+
+C11a refreshes the accepted production path after C10c: shared Gate/Up Q8
+reuse is enabled, while the rejected normalization/Q8 and SwiGLU/Q8 fusions
+are disabled. The fast decode benchmark uses prompt ID `14990`, eight warmup
+tokens, 64 measured forwards, five iterations, and three strictly serial
+runs. The retained artifacts are under
+`bench/results/20260901T-c11a-minfer/`; the P1/P64 production audit is under
+`bench/results/20260901T-c11a-position-audit/20260901T193605Z-415258/`.
+
+The three MIInfer runs are deterministic and average 55.0778 tok/s (1161.996
+ms for 64 forwards), with the same 64-token sequence and Release CTest 19/19.
+At P64 the clean wall/whole-token GPU event is 19.797/19.924 ms; deferred
+attribution is 27.778 ms. The largest category is FFN projection at 6.956 ms,
+followed by attention at 4.937 ms, quantization at 3.340 ms, normalization at
+2.947 ms, LM head at 2.876 ms, and conversion at 2.270 ms. The path remains
+at 1,553 dispatches, 38 synchronization sites, zero temporary allocations,
+and 589,828 bytes of residual copy accounting.
+
+The fresh pinned gfx906 llama.cpp `llama-bench` control is retained outside the
+repository under
+`/home/fedora-workstation/Development/mi50-artifacts/qwen3-8b-llama-c11a-20260901/`.
+It measures 984.552 PP512 tok/s, 91.875 TG128 tok/s, and 91.692 TG256 tok/s
+over five samples. Its telemetry reached approximately 1725/1000 MHz during
+measurement, while MIInfer's measured phase remained approximately 925/350
+MHz, so the fresh 1.67x TG differential is directional rather than a fair
+clock-matched claim. The prior exact raw-token 64-forward control remains in
+EXP-0012 at 81.43 tok/s.
+
+C11a is measurement-only. The next bounded experiment is an exact-shape
+FFN GEMV differential against the strongest available gfx906 MMVQ path; no
+new fusion, geometry sweep, or graph capture is selected without direct
+evidence.
