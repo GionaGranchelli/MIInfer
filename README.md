@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M5 CLOSED — architectural decision gate**
+**Current phase: M6-A0 CLOSED — Qwen3.8-27B architecture audit**
 
 The project currently has:
 
@@ -25,14 +25,16 @@ The project currently has:
 * a strong llama.cpp/gfx906 comparison baseline
 * a pinned Qwen3-8B MI50 execution path with persistent KV-cache decode
 * a model-backed tokenizer and minimal text-facing greedy CLI
+* a completed Qwen3.8-27B GGUF/architecture audit; see
+  `experiments/EXP-0042-m6a0-qwen38-27b-gguf-audit.md`
 
 Sampling and serving remain out of scope. M5 is closed as a measured local
-optimization campaign. The next phase depends on the architectural decision
-recorded in `EXP-0041`: preserve the current execution contract, or begin
-reference-correct execution-contract exploration in M6-A.
+optimization campaign. M6-A has been selected for reference-correct
+Qwen3.8-27B bring-up; the next step is the external tensor-reference fixture.
 
-The current production path is approximately 55 tok/s at stable peak. No new
-kernel experiment is selected until the Path A/Path B decision is made.
+The current production path is approximately 55 tok/s at stable peak for the
+previous Qwen3-8B target. Qwen3.8-27B is not yet supported by the production
+runtime.
 
 ---
 

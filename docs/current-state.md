@@ -15,16 +15,17 @@ For long-term direction, see:
 
 # Current Phase
 
-**M5 CLOSED — architectural decision gate**
+**M6-A0 CLOSED — Qwen3.8-27B architecture audit**
 
-MIInfer now has a minimal text-facing inference path for the pinned model and
-has entered reproducible MI50 performance characterization.
+MIInfer now has a completed M6-A0 audit for the selected
+`Qwen3.8-27B-Q4_K_M.gguf` artifact. The next task is to create the pinned
+external tensor-reference fixture before implementing the qwen35 hybrid path.
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The
 minimal model/runtime scaffold is present; M4-C is complete and M5's measured
-local optimization campaign is closed. The next phase depends on the Path A /
-Path B gate in EXP-0041.
+local optimization campaign is closed. M6-A has now been selected as the
+reference-correct Qwen3.8-27B bring-up and performance phase.
 
 ---
 
@@ -313,11 +314,10 @@ overhead relative to the pinned gfx906 llama.cpp control.
 
 The immediate technical objective is:
 
-> Choose Path A or Path B at the M5-C15 architectural gate. M5-C13a measured
-> a stable approximately 14.7 ms/token non-attention floor; C13b–C14a found no
-> uncleared same-contract external differential or proven llama.cpp-only work
-> elimination. No further implementation experiment is selected until the
-> project chooses whether current MIInfer trajectory identity remains mandatory.
+> M6-A1: create a reproducible external tensor-reference fixture for the
+> selected Qwen3.8-27B Q4_K_M GGUF and the pinned local llama.cpp qwen35
+> implementation. No DeltaNet or production-kernel implementation is selected
+> until that reference contract exists.
 
 The initial eight-token fixture matches the independent MI50 reference through
 position 2. Release passes the complete fixture and Debug remains a
