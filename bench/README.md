@@ -557,3 +557,25 @@ telemetry at 1725/1000 MHz; the pinned llama.cpp control measured 90.566
 TG128 and 90.389 TG256 tok/s under the same peak state. C11b therefore stops
 blind FFN/MMVQ porting and publishes a controlled end-to-end differential. See
 `experiments/EXP-0034-m5c11b-exact-shape-ffn-differential.md`.
+
+## M5-C12a stable-peak non-FFN profile
+
+C12a refreshed the accepted shared-reuse production path at stable peak after
+C11b. The current Release build measured 55.419 tok/s over 64 decode forwards.
+The P64 position audit measured 19.579 ms clean wall time and 19.605 ms for the
+whole-token GPU event, with 27.179 ms of deferred category attribution. The
+path remained at 1553 dispatches, 38 synchronization sites, zero temporary
+allocations, and 589,828 residual copy bytes.
+
+At P64, the largest non-FFN categories were attention (4.928 ms), quantization
+(3.184 ms), normalization (2.835 ms), conversion (2.147 ms), and Q/K/V
+preparation (1.642 ms). Attention was the only category that grew with
+position: it increased from 0.451 ms at P1 to 4.928 ms at P64, closely matching
+the 4.455 ms clean-wall increase. The pinned llama.cpp shape control measured
+90.817 tok/s for PP1/TG64 at the same stable-peak clocks. This is a shape
+control, not a token-identical comparison. See
+`experiments/EXP-0035-m5c12a-stable-peak-non-ffn-profile.md`.
+
+C12a selects one bounded C12b target: differential profiling of cooperative
+cached attention at P64 and longer contexts. No FFN GEMV, clock, generic
+fusion, or dispatch-count experiment is selected from this profile alone.

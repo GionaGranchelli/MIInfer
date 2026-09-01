@@ -245,6 +245,12 @@ No other GPU architecture is currently supported.
   so the 1.67x standard-TG differential is directional, not clock-matched.
   The next bounded experiment is an exact-shape FFN GEMV differential against
   the available gfx906 MMVQ path
+* M5-C12a refreshed the accepted shared-reuse path at stable peak: the current
+  Release build measured 55.419 tok/s, while P64 measured 19.579 ms clean wall
+  time and 19.605 ms whole-token GPU event. Dispatches, syncs, allocations,
+  and residual copy bytes stayed flat through P64; attention alone grew with
+  context from 0.451 ms at P1 to 4.928 ms at P64. The next target is bounded
+  cooperative cached-attention differential profiling
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -284,7 +290,8 @@ overhead relative to the pinned gfx906 llama.cpp control.
 
 The immediate technical objective is:
 
-> Differential-profile the next non-FFN bottleneck at a controlled peak clock.
+> Differential-profile cooperative cached attention at a controlled peak clock
+> and longer contexts.
 > M5-C11b found no justified FFN/MMVQ port: direct Gate/Up/Down evidence was
 > approximately tied or favored MIInfer, while the historical K/V gap was
 > already closed by EXP-0009. The controlled peak comparison measured 55.356
@@ -569,6 +576,11 @@ selected; MIInfer approximately tied/faster on Gate, Up, and Down under the
 retained direct protocol; K/V advantage already addressed by EXP-0009;
 clock-controlled end-to-end A/B complete: MIInfer 55.356 tok/s versus llama.cpp
 90.566 TG128 / 90.389 TG256 under stable_peak)
+
+M5-C12a — stable-peak non-FFN profile (CLOSED; current production 55.419 tok/s;
+P64 19.579 ms clean wall and 19.605 ms whole-token GPU event; attention is the
+only demonstrated context-growing family through P64; C12b selected for bounded
+cooperative cached-attention differential/scaling)
 ```
 
 The exact ordering may change based on early measurements.
@@ -737,7 +749,7 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-01 — M5-C10b through M5-C11b were recorded after the C9c production
+2026-09-01 — M5-C10b through M5-C12a were recorded after the C9c production
 KEEP. C10c passed its strict real-model correctness gates but its one-workgroup
 fused path regressed clean decode by 5.217%; the separate FFN normalization/Q8
 path remains the production default. C11a refreshed the production baseline and
@@ -747,7 +759,9 @@ new FFN/MMVQ candidate: MIInfer was approximately tied or faster on Gate, Up,
 and Down in the retained direct comparison, while the historical K/V gap was
 already closed by EXP-0009. The subsequent stable_peak run resolved the clock
 qualification and measured 55.356 tok/s for MIInfer versus 90.566/90.389 tok/s
-for llama.cpp TG128/TG256.
+for llama.cpp TG128/TG256. C12a then measured the current production path at
+stable_peak and selected cooperative cached-attention differential/scaling as
+the next bounded target.
 
 Update this document whenever:
 
