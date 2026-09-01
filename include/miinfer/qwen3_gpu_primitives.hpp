@@ -126,6 +126,19 @@ void launch_qwen3_cached_attention_parallel(
     float scale,
     hipStream_t stream = nullptr);
 
+// Store one token's contiguous K/V vectors in the persistent
+// [kv_head][position][head_dim] cache layout with one device launch.
+void launch_qwen3_kv_cache_store(
+    const float* keys,
+    const float* values,
+    float* key_cache,
+    float* value_cache,
+    std::uint32_t position,
+    std::uint32_t cache_capacity,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    hipStream_t stream = nullptr);
+
 void launch_qwen3_silu_mul(
     const float* gate,
     const float* up,

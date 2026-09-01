@@ -228,6 +228,16 @@ bool use_direct_layer_output_handoff() {
         "MIINFER_LAYER_OUTPUT_HANDOFF must be 'direct' or 'copy'");
 }
 
+bool use_coalesced_kv_cache_store() {
+    const char* configured = std::getenv("MIINFER_KV_CACHE_WRITE");
+    // The one-launch device store is the production default.  The per-head
+    // memcpy path remains available as an isolated structural control.
+    if (configured == nullptr || std::strcmp(configured, "store") == 0) return true;
+    if (std::strcmp(configured, "copy") == 0) return false;
+    throw std::invalid_argument(
+        "MIINFER_KV_CACHE_WRITE must be 'store' or 'copy'");
+}
+
 Qwen3ProfileCategory projection_profile_category(const char* projection) {
     if (std::strcmp(projection, "q") == 0 || std::strcmp(projection, "k") == 0
         || std::strcmp(projection, "v") == 0) {
@@ -536,6 +546,16 @@ void Qwen3Layer0GpuKvCache::append(
     if (keys == nullptr || values == nullptr || position != length_
         || position >= capacity_) {
         throw std::invalid_argument("invalid GPU KV-cache append");
+    }
+    if (use_coalesced_kv_cache_store()) {
+        profile_gpu_call(profile, Qwen3ProfileCategory::kv_cache, 1, [&] {
+            launch_qwen3_kv_cache_store(
+                keys, values, static_cast<float*>(keys_), static_cast<float*>(values_),
+                static_cast<std::uint32_t>(position), static_cast<std::uint32_t>(capacity_),
+                static_cast<std::uint32_t>(kv_heads_), static_cast<std::uint32_t>(head_dim_));
+        });
+        ++length_;
+        return;
     }
     const auto bytes = head_dim_ * sizeof(float);
     for (std::size_t head = 0; head < kv_heads_; ++head) {

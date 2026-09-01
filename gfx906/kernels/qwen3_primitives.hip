@@ -291,6 +291,21 @@ __global__ void qwen3_cached_attention_parallel_kernel(
     }
 }
 
+__global__ void qwen3_kv_cache_store_kernel(
+    const float* keys, const float* values, float* key_cache, float* value_cache,
+    std::uint32_t position, std::uint32_t cache_capacity,
+    std::uint32_t kv_heads, std::uint32_t head_dim) {
+    const std::uint32_t index = blockIdx.x * blockDim.x + threadIdx.x;
+    const std::uint32_t elements = kv_heads * head_dim;
+    if (index >= elements || cache_capacity == 0 || position >= cache_capacity) return;
+    const std::uint32_t head = index / head_dim;
+    const std::uint32_t dimension = index % head_dim;
+    const std::size_t cache_base =
+        (static_cast<std::size_t>(head) * cache_capacity + position) * head_dim;
+    key_cache[cache_base + dimension] = keys[index];
+    value_cache[cache_base + dimension] = values[index];
+}
+
 __global__ void qwen3_silu_mul_kernel(
     const float* gate, const float* up, float* output, std::uint32_t elements) {
     const std::uint32_t index = blockIdx.x * blockDim.x + threadIdx.x;
@@ -545,6 +560,22 @@ void launch_qwen3_cached_attention_parallel(
                        dim3(query_heads), dim3(256), 0, stream,
                        q, key_cache, value_cache, cache_length, cache_capacity, output,
                        scores, probabilities, query_heads, kv_heads, head_dim, scale);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen3_kv_cache_store(
+    const float* keys, const float* values, float* key_cache, float* value_cache,
+    std::uint32_t position, std::uint32_t cache_capacity,
+    std::uint32_t kv_heads, std::uint32_t head_dim, hipStream_t stream) {
+    if (keys == nullptr || values == nullptr || key_cache == nullptr || value_cache == nullptr
+        || cache_capacity == 0 || position >= cache_capacity || kv_heads == 0 || head_dim == 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    const auto elements = kv_heads * head_dim;
+    hipLaunchKernelGGL(qwen3_kv_cache_store_kernel,
+                       dim3((elements + 255) / 256), dim3(256), 0, stream,
+                       keys, values, key_cache, value_cache, position, cache_capacity,
+                       kv_heads, head_dim);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

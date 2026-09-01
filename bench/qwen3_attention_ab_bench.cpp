@@ -72,7 +72,7 @@ struct PolicySamples {
 void usage() {
     std::cerr
         << "usage: miinfer-qwen3-attention-ab-bench MODEL.gguf [options]\n"
-        << "  --mode MODE            attention or layer-output (default: attention)\n"
+        << "  --mode MODE            attention, layer-output, or kv-cache (default: attention)\n"
         << "  --prompt-ids CSV       explicit prompt IDs (default: 14990)\n"
         << "  --warmup N             generated tokens before measurement (default: 8)\n"
         << "  --generated-tokens N   measured decode forward calls (default: 64)\n"
@@ -140,8 +140,10 @@ bool parse_options(int argc, char** argv, Options& options) {
             options.prompt_ids = argv[++index];
         } else if (argument == "--mode") {
             options.ab_mode = argv[++index];
-            if (options.ab_mode != "attention" && options.ab_mode != "layer-output") {
-                throw std::invalid_argument("--mode must be 'attention' or 'layer-output'");
+            if (options.ab_mode != "attention" && options.ab_mode != "layer-output"
+                && options.ab_mode != "kv-cache") {
+                throw std::invalid_argument(
+                    "--mode must be 'attention', 'layer-output', or 'kv-cache'");
             }
         } else if (argument == "--warmup") {
             options.warmup_tokens = parse_size(argv[++index], "--warmup", true);
@@ -223,10 +225,18 @@ Measurement run_once(
     bool layer_output_mode) {
     if (layer_output_mode) {
         if (::setenv("MIINFER_ATTENTION_KERNEL", "parallel", 1) != 0
+            || ::setenv("MIINFER_KV_CACHE_WRITE", "store", 1) != 0
             || ::setenv("MIINFER_LAYER_OUTPUT_HANDOFF", policy, 1) != 0) {
             throw std::runtime_error("setenv(layer-output A/B policy) failed");
         }
+    } else if (options.ab_mode == "kv-cache") {
+        if (::setenv("MIINFER_ATTENTION_KERNEL", "parallel", 1) != 0
+            || ::setenv("MIINFER_KV_CACHE_WRITE", policy, 1) != 0
+            || ::setenv("MIINFER_LAYER_OUTPUT_HANDOFF", "direct", 1) != 0) {
+            throw std::runtime_error("setenv(KV-cache A/B policy) failed");
+        }
     } else if (::setenv("MIINFER_ATTENTION_KERNEL", policy, 1) != 0
+               || ::setenv("MIINFER_KV_CACHE_WRITE", "store", 1) != 0
                || ::setenv("MIINFER_LAYER_OUTPUT_HANDOFF", "direct", 1) != 0) {
         throw std::runtime_error("setenv(attention A/B policy) failed");
     }
@@ -316,8 +326,10 @@ int main(int argc, char** argv) {
             model.config().layer_count, model.config().kv_heads, model.config().head_dim,
             prompt_ids.size() + options.warmup_tokens + options.decode_tokens + 1);
         const bool layer_output_mode = options.ab_mode == "layer-output";
-        const char* first_policy = layer_output_mode ? "copy" : "serial";
-        const char* second_policy = layer_output_mode ? "direct" : "parallel";
+        const bool kv_cache_mode = options.ab_mode == "kv-cache";
+        const char* first_policy = layer_output_mode || kv_cache_mode ? "copy" : "serial";
+        const char* second_policy = layer_output_mode ? "direct"
+            : kv_cache_mode ? "store" : "parallel";
         PolicySamples first{first_policy, {}};
         PolicySamples second{second_policy, {}};
         first.measurements.reserve(options.pairs);
@@ -377,9 +389,12 @@ int main(int argc, char** argv) {
         json << std::fixed << std::setprecision(6)
              << "{\n"
              << "  \"benchmark\":\""
-             << (layer_output_mode ? "m5c6b_qwen3_layer_output_ab" : "m5c3_qwen3_attention_ab")
+             << (layer_output_mode ? "m5c6b_qwen3_layer_output_ab"
+                 : kv_cache_mode ? "m5c6c_qwen3_kv_cache_ab" : "m5c3_qwen3_attention_ab")
              << "\",\n"
-             << "  \"experiment\":\"" << (layer_output_mode ? "M5-C6b" : "M5-C3") << "\",\n"
+             << "  \"experiment\":\""
+             << (layer_output_mode ? "M5-C6b" : kv_cache_mode ? "M5-C6c" : "M5-C3")
+             << "\",\n"
              << "  \"ab_mode\":\"" << options.ab_mode << "\",\n"
              << "  \"git_commit\":\"" << MIINFER_GIT_COMMIT << "\",\n"
              << "  \"git_dirty\":\"" << MIINFER_GIT_DIRTY << "\",\n"
@@ -460,6 +475,8 @@ int main(int argc, char** argv) {
         };
         std::cout << (layer_output_mode
                           ? "M5-C6b interleaved Qwen3 layer-output A/B benchmark\n"
+                          : kv_cache_mode
+                          ? "M5-C6c interleaved Qwen3 KV-cache A/B benchmark\n"
                           : "M5-C3 interleaved Qwen3 attention A/B benchmark\n")
                   << "model: " << model.model_name() << "\n"
                   << "pairs: " << options.pairs << "\n"

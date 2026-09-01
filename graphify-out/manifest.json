@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "bench/README.md": {
-    "mtime": 1788252513.7102628,
-    "seen": 1788253047.0707297,
-    "ast_hash": "a801f92ac061a7f99b27d45b109ca473",
+    "mtime": 1788253286.9430377,
+    "seen": 1788253696.637824,
+    "ast_hash": "41e7156acbf575d6df81eafc98276eea",
     "semantic_hash": ""
   },
   "context.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788252492.7173796,
-    "seen": 1788253047.0707402,
-    "ast_hash": "2d4ecc11f68f64c1f8e66630800c9e92",
+    "mtime": 1788253335.1267745,
+    "seen": 1788253696.6378348,
+    "ast_hash": "1ed3445496d2016e8f68339cef5247d1",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1788240666.4937835,
-    "seen": 1788240739.3452926,
-    "ast_hash": "c6491a387bd21444210812a167cd38d3",
+    "mtime": 1788253668.920952,
+    "seen": 1788253696.6377177,
+    "ast_hash": "ee524111ffedd937baaf450b84b9ba65",
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_primitives.hpp": {
@@ -582,9 +582,9 @@
     "semantic_hash": ""
   },
   "src/qwen3_gpu_layer.cpp": {
-    "mtime": 1788252939.1779368,
-    "seen": 1788253047.0706658,
-    "ast_hash": "b74d64b920d0ef0d9c3a37326b0e8c17",
+    "mtime": 1788253668.923952,
+    "seen": 1788253696.6377585,
+    "ast_hash": "9348e749b708cfe37be8ee35693abd4a",
     "semantic_hash": ""
   },
   "tests/qwen3_layer0_gpu_test.cpp": {
@@ -840,9 +840,9 @@
     "semantic_hash": ""
   },
   "bench/qwen3_attention_ab_bench.cpp": {
-    "mtime": 1788253138.4608486,
-    "seen": 1788253145.687903,
-    "ast_hash": "bf87597af4649b352d0173ed54b6ffdc",
+    "mtime": 1788253794.3282676,
+    "seen": 1788253815.0752807,
+    "ast_hash": "91af3ed57e25241d992a148845eefa38",
     "semantic_hash": ""
   },
   "scripts/run-m5c3-attention-ab.sh": {
@@ -885,6 +885,18 @@
     "mtime": 1788253138.4618485,
     "seen": 1788253145.687974,
     "ast_hash": "04ab9461b775b53f486b80a085ad2ce7",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0020-m5c6b-direct-layer-output-handoff.md": {
+    "mtime": 1788253277.4440897,
+    "seen": 1788253696.6378872,
+    "ast_hash": "f56e5239adf49c012f3a278f64f56d84",
+    "semantic_hash": ""
+  },
+  "scripts/run-m5c6c-kv-cache-ab.sh": {
+    "mtime": 1788253804.475212,
+    "seen": 1788253815.075338,
+    "ast_hash": "2d0ea0ecc427c7ea1956a1bde5102739",
     "semantic_hash": ""
   }
 }
