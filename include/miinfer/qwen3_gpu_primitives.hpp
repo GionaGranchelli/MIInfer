@@ -126,6 +126,23 @@ void launch_qwen3_cached_attention_parallel(
     float scale,
     hipStream_t stream = nullptr);
 
+// C12b diagnostic path: four Wave64 partitions cooperate over KV history
+// while preserving the persistent [head][position][dimension] cache layout.
+void launch_qwen3_cached_attention_history_parallel(
+    const float* q,
+    const float* key_cache,
+    const float* value_cache,
+    std::uint32_t cache_length,
+    std::uint32_t cache_capacity,
+    float* output,
+    float* scores,
+    float* probabilities,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float scale,
+    hipStream_t stream = nullptr);
+
 // Store one token's contiguous K/V vectors in the persistent
 // [kv_head][position][head_dim] cache layout with one device launch.
 void launch_qwen3_kv_cache_store(

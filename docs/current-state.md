@@ -251,6 +251,11 @@ No other GPU architecture is currently supported.
   and residual copy bytes stayed flat through P64; attention alone grew with
   context from 0.451 ms at P1 to 4.928 ms at P64. The next target is bounded
   cooperative cached-attention differential profiling
+* M5-C12b extended the cooperative attention scaling audit through P1024;
+  attention measured 4.932/9.491/18.607/36.775/74.071 ms at P64/P128/P256/
+  P512/P1024 with flat structural counters and no second collapse. Its
+  four-Wave64 history-partition candidate changed the first token from 8 to
+  8673 and was rejected; production attention remains unchanged
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -290,8 +295,9 @@ overhead relative to the pinned gfx906 llama.cpp control.
 
 The immediate technical objective is:
 
-> Differential-profile cooperative cached attention at a controlled peak clock
-> and longer contexts.
+> Find a numerically faithful way to reduce the remaining cooperative
+> cached-attention history cost. No C12c implementation is preselected after
+> the C12b history-partition candidate failed the autoregressive contract.
 > M5-C11b found no justified FFN/MMVQ port: direct Gate/Up/Down evidence was
 > approximately tied or favored MIInfer, while the historical K/V gap was
 > already closed by EXP-0009. The controlled peak comparison measured 55.356
@@ -749,7 +755,7 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-01 — M5-C10b through M5-C12a were recorded after the C9c production
+2026-09-01 — M5-C10b through M5-C12b were recorded after the C9c production
 KEEP. C10c passed its strict real-model correctness gates but its one-workgroup
 fused path regressed clean decode by 5.217%; the separate FFN normalization/Q8
 path remains the production default. C11a refreshed the production baseline and
@@ -761,7 +767,9 @@ already closed by EXP-0009. The subsequent stable_peak run resolved the clock
 qualification and measured 55.356 tok/s for MIInfer versus 90.566/90.389 tok/s
 for llama.cpp TG128/TG256. C12a then measured the current production path at
 stable_peak and selected cooperative cached-attention differential/scaling as
-the next bounded target.
+the next bounded target. C12b found linear production scaling through P1024,
+but rejected its history-partition candidate because it changed the first
+generated token.
 
 Update this document whenever:
 

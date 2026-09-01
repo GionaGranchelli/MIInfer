@@ -291,14 +291,25 @@ bool projection_selected(const char* variable, const char* projection) {
     return false;
 }
 
-bool use_parallel_attention() {
+enum class AttentionKernel {
+    serial,
+    parallel,
+    history_parallel,
+};
+
+AttentionKernel selected_attention_kernel() {
     const char* configured = std::getenv("MIINFER_ATTENTION_KERNEL");
     // M5-C2 KEEP: the cooperative kernel is the production default. The
-    // serial kernel remains available as an explicit A/B control.
-    if (configured == nullptr || std::strcmp(configured, "parallel") == 0) return true;
-    if (std::strcmp(configured, "serial") == 0) return false;
+    // serial kernel remains available as an explicit A/B control. C12b's
+    // history-partitioned candidate is diagnostic-only until it passes the
+    // stateful generation contract.
+    if (configured == nullptr || std::strcmp(configured, "parallel") == 0) {
+        return AttentionKernel::parallel;
+    }
+    if (std::strcmp(configured, "serial") == 0) return AttentionKernel::serial;
+    if (std::strcmp(configured, "history") == 0) return AttentionKernel::history_parallel;
     throw std::invalid_argument(
-        "MIINFER_ATTENTION_KERNEL must be 'parallel' or 'serial'");
+        "MIINFER_ATTENTION_KERNEL must be 'parallel', 'serial', or 'history'");
 }
 
 bool use_direct_layer_output_handoff() {
@@ -1106,7 +1117,16 @@ Qwen3LayerTrace qwen3_layer_gpu_impl(
                                     heads * cache.length() * sizeof(float)));
     }
     profile_gpu_call(profile, Qwen3ProfileCategory::attention, 1, [&] {
-        if (use_parallel_attention()) {
+        const auto attention_kernel = selected_attention_kernel();
+        if (attention_kernel == AttentionKernel::history_parallel) {
+            launch_qwen3_cached_attention_history_parallel(
+                q_rope.data(), static_cast<const float*>(cache.device_keys()),
+                static_cast<const float*>(cache.device_values()),
+                static_cast<std::uint32_t>(attention_length),
+                static_cast<std::uint32_t>(cache.capacity()), attention.data(), scores.data(),
+                probabilities.data(), config.attention_heads, config.kv_heads, config.head_dim,
+                1.0F / std::sqrt(static_cast<float>(config.head_dim)));
+        } else if (attention_kernel == AttentionKernel::parallel) {
             launch_qwen3_cached_attention_parallel(
                 q_rope.data(), static_cast<const float*>(cache.device_keys()),
                 static_cast<const float*>(cache.device_values()),

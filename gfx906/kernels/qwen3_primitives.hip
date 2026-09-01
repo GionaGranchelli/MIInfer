@@ -291,6 +291,107 @@ __global__ void qwen3_cached_attention_parallel_kernel(
     }
 }
 
+__device__ __forceinline__ float qwen3_wave_sum(float value) {
+    for (std::uint32_t offset = 32; offset > 0; offset >>= 1) {
+        value += __shfl_down(value, offset, 64);
+    }
+    return value;
+}
+
+// C12b diagnostic candidate. Four Wave64s partition the history dimension;
+// each wave computes scores and value partials for positions wave, wave+4,
+// ... . This deliberately changes reduction order and is therefore not a
+// production path until the full autoregressive contract is demonstrated.
+__global__ void qwen3_cached_attention_history_parallel_kernel(
+    const float* q, const float* key_cache, const float* value_cache,
+    std::uint32_t cache_length, std::uint32_t cache_capacity, float* output,
+    float* scores, float* probabilities, std::uint32_t query_heads,
+    std::uint32_t kv_heads, std::uint32_t head_dim, float scale) {
+    const std::uint32_t head = blockIdx.x;
+    const std::uint32_t lane = threadIdx.x;
+    const std::uint32_t wave = lane / 64;
+    const std::uint32_t wave_lane = lane % 64;
+    if (head >= query_heads || kv_heads == 0 || query_heads % kv_heads != 0
+        || cache_length == 0 || head_dim == 0 || head_dim > 256 || wave >= 4) return;
+
+    __shared__ float local_maxima[4];
+    __shared__ float local_denominators[4];
+    __shared__ float value_partials[4 * 256];
+    const std::uint32_t q_base = head * head_dim;
+    const std::uint32_t kv_head = head / (query_heads / kv_heads);
+    const std::uint32_t score_base = head * cache_length;
+
+    float local_maximum = -INFINITY;
+    for (std::uint32_t position = wave; position < cache_length; position += 4) {
+        const std::size_t cache_base =
+            (static_cast<std::size_t>(kv_head) * cache_capacity + position) * head_dim;
+        float score = 0.0F;
+        for (std::uint32_t index = wave_lane; index < head_dim; index += 64) {
+            score += q[q_base + index] * key_cache[cache_base + index];
+        }
+        score = qwen3_wave_sum(score) * scale;
+        if (wave_lane == 0) {
+            scores[score_base + position] = score;
+            local_maximum = fmaxf(local_maximum, score);
+        }
+    }
+    if (wave_lane == 0) local_maxima[wave] = local_maximum;
+    __syncthreads();
+    if (lane == 0) {
+        float maximum = local_maxima[0];
+        for (std::uint32_t index = 1; index < 4; ++index) {
+            maximum = fmaxf(maximum, local_maxima[index]);
+        }
+        local_maxima[0] = maximum;
+    }
+    __syncthreads();
+    const float maximum = local_maxima[0];
+
+    float local_denominator = 0.0F;
+    for (std::uint32_t position = wave; position < cache_length; position += 4) {
+        const float probability = expf(scores[score_base + position] - maximum);
+        probabilities[score_base + position] = probability;
+        local_denominator += probability;
+    }
+    local_denominator = qwen3_wave_sum(local_denominator);
+    if (wave_lane == 0) local_denominators[wave] = local_denominator;
+    __syncthreads();
+    if (lane == 0) {
+        float denominator = local_denominators[0];
+        for (std::uint32_t index = 1; index < 4; ++index) {
+            denominator += local_denominators[index];
+        }
+        local_denominators[0] = denominator;
+    }
+    __syncthreads();
+    const float denominator = local_denominators[0];
+
+    for (std::uint32_t index = wave_lane; index < head_dim; index += 64) {
+        float value = 0.0F;
+        for (std::uint32_t position = wave; position < cache_length; position += 4) {
+            const std::size_t cache_base =
+                (static_cast<std::size_t>(kv_head) * cache_capacity + position) * head_dim;
+            value += (probabilities[score_base + position] / denominator)
+                     * value_cache[cache_base + index];
+        }
+        value_partials[wave * 256 + index] = value;
+    }
+    __syncthreads();
+    const std::uint32_t output_waves = (head_dim + 63) / 64;
+    if (wave < output_waves) {
+        for (std::uint32_t index = wave_lane; index < head_dim; index += 64) {
+            float value = 0.0F;
+            for (std::uint32_t partial = 0; partial < 4; ++partial) {
+                value += value_partials[partial * 256 + index];
+            }
+            output[q_base + index] = value;
+        }
+    }
+    for (std::uint32_t position = wave; position < cache_length; position += 4) {
+        probabilities[score_base + position] /= denominator;
+    }
+}
+
 __global__ void qwen3_kv_cache_store_kernel(
     const float* keys, const float* values, float* key_cache, float* value_cache,
     std::uint32_t position, std::uint32_t cache_capacity,
@@ -594,6 +695,25 @@ void launch_qwen3_cached_attention_parallel(
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     hipLaunchKernelGGL(qwen3_cached_attention_parallel_kernel,
+                       dim3(query_heads), dim3(256), 0, stream,
+                       q, key_cache, value_cache, cache_length, cache_capacity, output,
+                       scores, probabilities, query_heads, kv_heads, head_dim, scale);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen3_cached_attention_history_parallel(
+    const float* q, const float* key_cache, const float* value_cache,
+    std::uint32_t cache_length, std::uint32_t cache_capacity, float* output,
+    float* scores, float* probabilities, std::uint32_t query_heads,
+    std::uint32_t kv_heads, std::uint32_t head_dim, float scale, hipStream_t stream) {
+    if (q == nullptr || key_cache == nullptr || value_cache == nullptr || output == nullptr
+        || scores == nullptr || probabilities == nullptr || cache_length == 0
+        || cache_length > cache_capacity || query_heads == 0 || kv_heads == 0
+        || head_dim == 0 || head_dim > 256 || query_heads % kv_heads != 0
+        || !std::isfinite(scale)) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen3_cached_attention_history_parallel_kernel,
                        dim3(query_heads), dim3(256), 0, stream,
                        q, key_cache, value_cache, cache_length, cache_capacity, output,
                        scores, probabilities, query_heads, kv_heads, head_dim, scale);

@@ -579,3 +579,19 @@ control, not a token-identical comparison. See
 C12a selects one bounded C12b target: differential profiling of cooperative
 cached attention at P64 and longer contexts. No FFN GEMV, clock, generic
 fusion, or dispatch-count experiment is selected from this profile alone.
+
+## M5-C12b cooperative attention scaling
+
+C12b extended the accepted cooperative attention path to P64, P128, P256,
+P512, and P1024 at stable-peak clocks. Attention measured 4.932, 9.491,
+18.607, 36.775, and 74.071 ms respectively. The production wall increased
+19.665 to 88.678 ms over the same range, while dispatches stayed at 1553,
+syncs at 38, allocations at 0, and residual copy accounting at 589,828 bytes.
+The scaling is linear and shows no second context-collapse defect.
+
+One opt-in four-Wave64 history-partitioned candidate was implemented under
+`MIINFER_ATTENTION_KERNEL=history`. It changed the first generated token from
+`8` to `8673`, so it failed the autoregressive correctness gate and was
+rejected without production selection. The candidate changed reduction order;
+the existing parallel attention path remains the default. See
+`experiments/EXP-0036-m5c12b-cooperative-attention-scaling.md`.
