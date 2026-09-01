@@ -83,6 +83,19 @@ void launch_q8_exact_quantize_f32(
     int elements,
     hipStream_t stream = nullptr);
 
+// Opt-in C10c candidate: reproduce the FFN RMSNorm -> norm-weight scale ->
+// FP16 materialization -> exact Q8 stream in one gfx906 dispatch.  The
+// optional materialized_output is diagnostic-only and receives the exact
+// FP16 values that the separate production path would have stored.
+void launch_qwen3_ffn_norm_to_q8_exact(
+    const float* input,
+    const float* weights,
+    Q8ExactBlock* output,
+    int elements,
+    float epsilon,
+    __half* materialized_output = nullptr,
+    hipStream_t stream = nullptr);
+
 // Candidate decode primitive: reproduce the production FP32 -> FP16
 // SwiGLU boundary and write the resulting exact Q8 metadata directly,
 // avoiding global materialization of the intermediate activation.

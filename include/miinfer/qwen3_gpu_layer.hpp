@@ -75,6 +75,7 @@ enum class Qwen3BoundaryProfileStage {
     o_output_f16_to_f32,
     ffn_rms_normalize,
     ffn_norm_scale,
+    ffn_norm_to_shared_q8,
     gate_input_f32_to_f16,
     gate_input_q8,
     gate_output_f16_to_f32,
@@ -122,6 +123,10 @@ struct Qwen3GpuProfile {
     std::size_t finalization_synchronizations = 0;
     std::size_t gate_up_q8_reuse_checks = 0;
     std::size_t gate_up_q8_reuse_mismatches = 0;
+    std::size_t ffn_norm_q8_fusion_f16_checks = 0;
+    std::size_t ffn_norm_q8_fusion_f16_mismatches = 0;
+    std::size_t ffn_norm_q8_fusion_q8_checks = 0;
+    std::size_t ffn_norm_q8_fusion_q8_mismatches = 0;
     bool deferred_timing = false;
     std::vector<Qwen3GpuProfileEvent> pending_events;
 
@@ -152,6 +157,10 @@ struct Qwen3GpuProfile {
         finalization_synchronizations = 0;
         gate_up_q8_reuse_checks = 0;
         gate_up_q8_reuse_mismatches = 0;
+        ffn_norm_q8_fusion_f16_checks = 0;
+        ffn_norm_q8_fusion_f16_mismatches = 0;
+        ffn_norm_q8_fusion_q8_checks = 0;
+        ffn_norm_q8_fusion_q8_mismatches = 0;
         deferred_timing = false;
     }
 

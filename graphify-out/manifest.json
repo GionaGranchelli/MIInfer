@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "bench/README.md": {
-    "mtime": 1788272372.2738247,
-    "seen": 1788272459.485765,
-    "ast_hash": "6b1c7bf49892cf2015b45ae4d385b44e",
+    "mtime": 1788272632.9489408,
+    "seen": 1788273274.3603787,
+    "ast_hash": "799618c1767bfa2feb0bc54b73a82c74",
     "semantic_hash": ""
   },
   "context.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788272372.2748246,
-    "seen": 1788272459.4857762,
-    "ast_hash": "cd5efacc2d01282f9b1a0c7b0b7a0ad7",
+    "mtime": 1788272649.2588856,
+    "seen": 1788273274.3603895,
+    "ast_hash": "5c7aa949606c33bd3e46f6deb64a9829",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -384,9 +384,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/q4_q8_gemv.hpp": {
-    "mtime": 1788267529.0658107,
-    "seen": 1788268478.8194826,
-    "ast_hash": "4568a7da44fe9cb19e629825efdb1357",
+    "mtime": 1788273185.0240686,
+    "seen": 1788273274.360258,
+    "ast_hash": "ceece4358023b29b99c6783bb7dea9c6",
     "semantic_hash": ""
   },
   "src/q4_q8_gemv_reference.cpp": {
@@ -576,15 +576,15 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_layer.hpp": {
-    "mtime": 1788271952.5644276,
-    "seen": 1788272459.485649,
-    "ast_hash": "b0cfc68ecd557f45e1057d61702d2ac3",
+    "mtime": 1788273185.0260687,
+    "seen": 1788273274.360263,
+    "ast_hash": "30c53a6c55835e9108c4fcb05ed83667",
     "semantic_hash": ""
   },
   "src/qwen3_gpu_layer.cpp": {
-    "mtime": 1788272071.7439191,
-    "seen": 1788272459.485697,
-    "ast_hash": "7abd33a54bb28f99248b4fdb1b55fd86",
+    "mtime": 1788273393.5313191,
+    "seen": 1788273399.639563,
+    "ast_hash": "e3cd521995b0dc8333abb66d190954e9",
     "semantic_hash": ""
   },
   "tests/qwen3_layer0_gpu_test.cpp": {
@@ -822,9 +822,9 @@
     "semantic_hash": ""
   },
   "bench/qwen3_position_audit.cpp": {
-    "mtime": 1788272117.8187227,
-    "seen": 1788272459.4856298,
-    "ast_hash": "fe165d9398f4e703af31d8731cd67f6b",
+    "mtime": 1788273264.529783,
+    "seen": 1788273274.360243,
+    "ast_hash": "494512c29b1e9f65b7fc1e0118cf3beb",
     "semantic_hash": ""
   },
   "experiments/EXP-0013-qwen3-position-scaled-audit.md": {
@@ -978,9 +978,9 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0031-m5c10b-normalization-conversion-attribution.md": {
-    "mtime": 1788272391.0207613,
-    "seen": 1788272459.4858491,
-    "ast_hash": "0b25939f1337a568717a84bcfc911d41",
+    "mtime": 1788272632.9479408,
+    "seen": 1788273274.360459,
+    "ast_hash": "6bee2f6149558fad7144e685aa8a0832",
     "semantic_hash": ""
   }
 }

@@ -176,6 +176,14 @@ void write_profile_json(std::ostream& output, const miinfer::Qwen3GpuProfile& pr
            << ",\"temporary_allocations\":" << profile.temporary_allocations
            << ",\"gate_up_q8_reuse_checks\":" << profile.gate_up_q8_reuse_checks
            << ",\"gate_up_q8_reuse_mismatches\":" << profile.gate_up_q8_reuse_mismatches
+           << ",\"ffn_norm_q8_fusion_f16_checks\":"
+           << profile.ffn_norm_q8_fusion_f16_checks
+           << ",\"ffn_norm_q8_fusion_f16_mismatches\":"
+           << profile.ffn_norm_q8_fusion_f16_mismatches
+           << ",\"ffn_norm_q8_fusion_q8_checks\":"
+           << profile.ffn_norm_q8_fusion_q8_checks
+           << ",\"ffn_norm_q8_fusion_q8_mismatches\":"
+           << profile.ffn_norm_q8_fusion_q8_mismatches
            << ",\"categories\":[";
     for (std::size_t index = 0; index < miinfer::qwen3_profile_category_count; ++index) {
         if (index != 0) output << ',';
@@ -396,7 +404,8 @@ int main(int argc, char** argv) {
                   << "prompt token: " << options.prompt_token << "\n"
                   << "timing: clean wall plus lightweight whole-token HIP events and deferred per-operation events\n"
                   << "position cache_before production_wall_ms production_gpu_ms audit_wall_ms gpu_ms attention_ms kv_cache_ms quant_ms "
-                     "ffn_ms copy_ms copy_bytes dispatches syncs temporary_allocations reuse_checks reuse_mismatches\n";
+                     "ffn_ms copy_ms copy_bytes dispatches syncs temporary_allocations reuse_checks reuse_mismatches "
+                     "fusion_f16_checks fusion_f16_mismatches fusion_q8_checks fusion_q8_mismatches\n";
         for (const auto& result : results) {
             const auto& profile = result.profile;
             std::cout << std::fixed << std::setprecision(3)
@@ -413,7 +422,11 @@ int main(int argc, char** argv) {
                       << (total(profile.synchronizations) + profile.finalization_synchronizations) << ' '
                       << profile.temporary_allocations << ' '
                       << profile.gate_up_q8_reuse_checks << ' '
-                      << profile.gate_up_q8_reuse_mismatches << '\n';
+                      << profile.gate_up_q8_reuse_mismatches << ' '
+                      << profile.ffn_norm_q8_fusion_f16_checks << ' '
+                      << profile.ffn_norm_q8_fusion_f16_mismatches << ' '
+                      << profile.ffn_norm_q8_fusion_q8_checks << ' '
+                      << profile.ffn_norm_q8_fusion_q8_mismatches << '\n';
             std::cout << "  FFN stage GPU ms / dispatches:\n";
             for (std::size_t stage = 0; stage < miinfer::qwen3_ffn_profile_stage_count; ++stage) {
                 std::cout << "    "

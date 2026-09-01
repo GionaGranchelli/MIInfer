@@ -16,6 +16,7 @@
 #include <memory>
 #include <stdexcept>
 #include <span>
+#include <sstream>
 #include <string_view>
 #include <utility>
 #include <vector>
@@ -86,6 +87,8 @@ const char* qwen3_boundary_profile_stage_name(Qwen3BoundaryProfileStage stage) n
     case Qwen3BoundaryProfileStage::o_output_f16_to_f32: return "o_output_f16_to_f32";
     case Qwen3BoundaryProfileStage::ffn_rms_normalize: return "ffn_rms_normalize";
     case Qwen3BoundaryProfileStage::ffn_norm_scale: return "ffn_norm_scale";
+    case Qwen3BoundaryProfileStage::ffn_norm_to_shared_q8:
+        return "ffn_norm_to_shared_q8";
     case Qwen3BoundaryProfileStage::gate_input_f32_to_f16: return "gate_input_f32_to_f16";
     case Qwen3BoundaryProfileStage::gate_input_q8: return "gate_input_q8";
     case Qwen3BoundaryProfileStage::gate_output_f16_to_f32: return "gate_output_f16_to_f32";
@@ -336,6 +339,23 @@ bool use_shared_gate_up_q8() {
         "MIINFER_FFN_Q8_REUSE must be 'separate' or 'shared'");
 }
 
+bool use_fused_ffn_norm_q8() {
+    const char* configured = std::getenv("MIINFER_FFN_NORM_Q8_FUSION");
+    if (configured == nullptr || std::strcmp(configured, "separate") == 0) return false;
+    if (std::strcmp(configured, "fused") == 0) return true;
+    throw std::invalid_argument(
+        "MIINFER_FFN_NORM_Q8_FUSION must be 'separate' or 'fused'");
+}
+
+bool verify_fused_ffn_norm_q8() {
+    const char* configured = std::getenv("MIINFER_VERIFY_FFN_NORM_Q8_FUSION");
+    if (configured == nullptr || std::strcmp(configured, "0") == 0
+        || std::strcmp(configured, "false") == 0) return false;
+    if (std::strcmp(configured, "1") == 0 || std::strcmp(configured, "true") == 0) return true;
+    throw std::invalid_argument(
+        "MIINFER_VERIFY_FFN_NORM_Q8_FUSION must be '0', '1', 'false', or 'true'");
+}
+
 bool verify_shared_gate_up_q8() {
     const char* configured = std::getenv("MIINFER_VERIFY_FFN_Q8_REUSE");
     if (configured == nullptr || std::strcmp(configured, "0") == 0
@@ -460,6 +480,65 @@ void verify_q8_reuse_buffers(
     if (std::memcmp(first_host.data(), second_host.data(), bytes) != 0) {
         if (profile != nullptr) ++profile->gate_up_q8_reuse_mismatches;
         throw std::runtime_error("Gate and Up Q8 activation buffers differ");
+    }
+}
+
+void verify_fused_ffn_norm_buffers(
+    const void* fused_f16,
+    const void* separate_f16,
+    const void* fused_q8,
+    const void* separate_q8,
+    std::size_t f16_bytes,
+    std::size_t q8_bytes,
+    Qwen3GpuProfile* profile) {
+    std::vector<std::byte> fused_f16_host(f16_bytes);
+    std::vector<std::byte> separate_f16_host(f16_bytes);
+    std::vector<std::byte> fused_q8_host(q8_bytes);
+    std::vector<std::byte> separate_q8_host(q8_bytes);
+    MIINFER_HIP_CHECK(hipMemcpy(fused_f16_host.data(), fused_f16, f16_bytes,
+                                hipMemcpyDeviceToHost));
+    MIINFER_HIP_CHECK(hipMemcpy(separate_f16_host.data(), separate_f16, f16_bytes,
+                                hipMemcpyDeviceToHost));
+    MIINFER_HIP_CHECK(hipMemcpy(fused_q8_host.data(), fused_q8, q8_bytes,
+                                hipMemcpyDeviceToHost));
+    MIINFER_HIP_CHECK(hipMemcpy(separate_q8_host.data(), separate_q8, q8_bytes,
+                                hipMemcpyDeviceToHost));
+    if (profile != nullptr) {
+        ++profile->ffn_norm_q8_fusion_f16_checks;
+        ++profile->ffn_norm_q8_fusion_q8_checks;
+    }
+    if (std::memcmp(fused_f16_host.data(), separate_f16_host.data(), f16_bytes) != 0) {
+        if (profile != nullptr) ++profile->ffn_norm_q8_fusion_f16_mismatches;
+        std::size_t first_byte = 0;
+        while (first_byte < f16_bytes
+               && fused_f16_host[first_byte] == separate_f16_host[first_byte]) {
+            ++first_byte;
+        }
+        const std::size_t element = first_byte / sizeof(__half);
+        std::uint16_t fused_bits = 0;
+        std::uint16_t separate_bits = 0;
+        if (element < f16_bytes / sizeof(__half)) {
+            std::memcpy(&fused_bits, fused_f16_host.data() + element * sizeof(__half),
+                        sizeof(fused_bits));
+            std::memcpy(&separate_bits, separate_f16_host.data() + element * sizeof(__half),
+                        sizeof(separate_bits));
+        }
+        std::ostringstream message;
+        message << "fused FFN norm FP16 materialization differs at element " << element
+                << " (fused=0x" << std::hex << fused_bits
+                << ", separate=0x" << separate_bits << ')';
+        throw std::runtime_error(message.str());
+    }
+    if (std::memcmp(fused_q8_host.data(), separate_q8_host.data(), q8_bytes) != 0) {
+        if (profile != nullptr) ++profile->ffn_norm_q8_fusion_q8_mismatches;
+        std::size_t first_byte = 0;
+        while (first_byte < q8_bytes
+               && fused_q8_host[first_byte] == separate_q8_host[first_byte]) {
+            ++first_byte;
+        }
+        std::ostringstream message;
+        message << "fused FFN norm Q8 activation differs at byte " << first_byte;
+        throw std::runtime_error(message.str());
     }
 }
 
@@ -651,7 +730,8 @@ public:
           input_half(kMaxVector * sizeof(__half)),
           output_half(kMaxVector * sizeof(__half)),
           input_q8(kMaxQ8Bytes), input_q8_exact(kMaxQ8Bytes),
-          gate_up_q8_verify(kMaxQ8Bytes),
+          gate_up_q8_verify(kMaxQ8Bytes), ffn_norm_f16_verify(kMaxVector * sizeof(__half)),
+          ffn_norm_q8_verify(kMaxQ8Bytes),
           final_norm(hidden), logits(vocab),
           quantized_final_norm(hidden / 256), argmax_token(1) {}
 
@@ -692,6 +772,8 @@ public:
     // Only used by the opt-in C9c verifier; the production shared path uses
     // input_q8 or input_q8_exact directly and never copies these bytes.
     DeviceBytes gate_up_q8_verify;
+    DeviceBytes ffn_norm_f16_verify;
+    DeviceBytes ffn_norm_q8_verify;
     DeviceBuffer<float> final_norm;
     DeviceBuffer<float> logits;
     DeviceBuffer<Q8KDeviceBlock> quantized_final_norm;
@@ -1072,19 +1154,63 @@ Qwen3LayerTrace qwen3_layer_gpu_impl(
     trace.ffn_input = capture_optional(ffn_input.data(), hidden);
 
     const auto* ffn_norm_weights = device_f32_tensor(plan, layer.ffn_norm, hidden);
-    profile_gpu_call(profile, Qwen3ProfileCategory::normalization, 1, [&] {
-        launch_qwen3_rms_normalize(ffn_input.data(), ffn_rms.data(), config.hidden_size,
-                                   config.rms_epsilon);
-    }, Qwen3FfnProfileStage::normalization,
-       Qwen3BoundaryProfileStage::ffn_rms_normalize, hidden * sizeof(float));
-    trace.ffn_rms = capture_optional(ffn_rms.data(), hidden);
-    profile_gpu_call(profile, Qwen3ProfileCategory::normalization, 1, [&] {
-        launch_qwen3_elementwise_mul(ffn_rms.data(), ffn_norm_weights, ffn_norm.data(),
-                                     config.hidden_size);
-    }, Qwen3FfnProfileStage::normalization,
-       Qwen3BoundaryProfileStage::ffn_norm_scale, hidden * sizeof(float));
-    trace.ffn_norm = capture_optional(ffn_norm.data(), hidden);
     const bool shared_gate_up_q8 = !capture_trace && use_shared_gate_up_q8();
+    const bool fused_ffn_norm_q8 = shared_gate_up_q8 && use_fused_ffn_norm_q8();
+    if (fused_ffn_norm_q8) {
+        const bool gate_exact_metadata = use_exact_q8_metadata("gate");
+        const bool up_exact_metadata = use_exact_q8_metadata("up");
+        const bool gate_f32_input = projection_selected("MIINFER_F32_INPUT_PROJECTIONS", "gate");
+        const bool up_f32_input = projection_selected("MIINFER_F32_INPUT_PROJECTIONS", "up");
+        if (!gate_exact_metadata || !up_exact_metadata || gate_f32_input || up_f32_input) {
+            throw std::invalid_argument(
+                "FFN norm/Q8 fusion requires exact Q8 metadata and FP16-input projections");
+        }
+        const bool verify = verify_fused_ffn_norm_q8();
+        const auto q8_bytes = static_cast<std::size_t>(config.hidden_size)
+            / kQ8_1BlockSize * sizeof(Q8ExactBlock);
+        profile_gpu_call(profile, Qwen3ProfileCategory::normalization, 1, [&] {
+            launch_qwen3_ffn_norm_to_q8_exact(
+                ffn_input.data(), ffn_norm_weights,
+                static_cast<Q8ExactBlock*>(buffers.input_q8_exact.data()),
+                static_cast<int>(config.hidden_size), config.rms_epsilon,
+                verify ? static_cast<__half*>(buffers.ffn_norm_f16_verify.data()) : nullptr);
+        }, Qwen3FfnProfileStage::normalization,
+           Qwen3BoundaryProfileStage::ffn_norm_to_shared_q8, q8_bytes);
+        if (verify || verify_shared_gate_up_q8()) {
+            // Recreate the old producer chain into verifier-only workspace.
+            // This path is intentionally host-visible and is never part of
+            // production execution when verification is disabled.
+            launch_qwen3_rms_normalize(ffn_input.data(), ffn_rms.data(), config.hidden_size,
+                                       config.rms_epsilon);
+            launch_qwen3_elementwise_mul(ffn_rms.data(), ffn_norm_weights, ffn_norm.data(),
+                                         config.hidden_size);
+            launch_qwen3_f32_to_f16(
+                ffn_norm.data(), half_input, config.hidden_size);
+            launch_q8_exact_quantize(
+                half_input,
+                static_cast<Q8ExactBlock*>(buffers.ffn_norm_q8_verify.data()),
+                config.hidden_size);
+            if (verify) {
+                verify_fused_ffn_norm_buffers(
+                    buffers.ffn_norm_f16_verify.data(), half_input,
+                    buffers.input_q8_exact.data(), buffers.ffn_norm_q8_verify.data(),
+                    config.hidden_size * sizeof(__half), q8_bytes, profile);
+            }
+        }
+    } else {
+        profile_gpu_call(profile, Qwen3ProfileCategory::normalization, 1, [&] {
+            launch_qwen3_rms_normalize(ffn_input.data(), ffn_rms.data(), config.hidden_size,
+                                       config.rms_epsilon);
+        }, Qwen3FfnProfileStage::normalization,
+           Qwen3BoundaryProfileStage::ffn_rms_normalize, hidden * sizeof(float));
+        trace.ffn_rms = capture_optional(ffn_rms.data(), hidden);
+        profile_gpu_call(profile, Qwen3ProfileCategory::normalization, 1, [&] {
+            launch_qwen3_elementwise_mul(ffn_rms.data(), ffn_norm_weights, ffn_norm.data(),
+                                         config.hidden_size);
+        }, Qwen3FfnProfileStage::normalization,
+           Qwen3BoundaryProfileStage::ffn_norm_scale, hidden * sizeof(float));
+        trace.ffn_norm = capture_optional(ffn_norm.data(), hidden);
+    }
     if (shared_gate_up_q8) {
         const bool gate_exact_metadata = use_exact_q8_metadata("gate");
         const bool up_exact_metadata = use_exact_q8_metadata("up");
@@ -1094,8 +1220,10 @@ Qwen3LayerTrace qwen3_layer_gpu_impl(
             throw std::invalid_argument(
                 "Gate/Up Q8 reuse requires identical quantization contracts");
         }
-        quantize_projection_input(ffn_norm.data(), config.hidden_size, half_input, q8_input,
-                                  q8_exact_input, "gate", profile);
+        if (!fused_ffn_norm_q8) {
+            quantize_projection_input(ffn_norm.data(), config.hidden_size, half_input, q8_input,
+                                      q8_exact_input, "gate", profile);
+        }
         if (verify_shared_gate_up_q8()) {
             // Recreate the old two-call dataflow into a separate persistent
             // buffer.  The comparison is intentionally host-visible and only
@@ -1112,11 +1240,13 @@ Qwen3LayerTrace qwen3_layer_gpu_impl(
             verify_q8_reuse_buffers(shared_buffer, buffers.gate_up_q8_verify.data(), q8_bytes,
                                     profile);
         }
-        launch_projection(plan, layer.gate, ffn_norm.data(), config.hidden_size, gate.data(),
+        launch_projection(plan, layer.gate, fused_ffn_norm_q8 ? ffn_input.data() : ffn_norm.data(),
+                          config.hidden_size, gate.data(),
                           config.intermediate_size, config.hidden_size, half_input, q8_input,
                           q8_exact_input, half_output, "gate", profile, true);
         trace.gate = capture_optional(gate.data(), intermediate);
-        launch_projection(plan, layer.up, ffn_norm.data(), config.hidden_size, up.data(),
+        launch_projection(plan, layer.up, fused_ffn_norm_q8 ? ffn_input.data() : ffn_norm.data(),
+                          config.hidden_size, up.data(),
                           config.intermediate_size, config.hidden_size, half_input, q8_input,
                           q8_exact_input, half_output, "up", profile, true);
         trace.up = capture_optional(up.data(), intermediate);
