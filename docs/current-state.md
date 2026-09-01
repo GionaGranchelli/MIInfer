@@ -284,13 +284,13 @@ overhead relative to the pinned gfx906 llama.cpp control.
 
 The immediate technical objective is:
 
-> Characterize the exact-shape FFN Q4_0×Q8_1 differential against the strongest
-> available gfx906 MMVQ path and select one mechanism-specific C11b candidate.
-> M5-C11a refreshed the shared-reuse production path at 55.0778 tok/s and found
-> FFN projection to be the largest measured family at P64. The fresh external
-> standard control measured 91.875 TG128 and 91.692 TG256 tok/s, but its measured
-> clock state was higher than MIInfer's, so that differential is directional.
-> C10c remains rejected and its separate path remains the production default.
+> Establish a clock-controlled production baseline and differential-profile the
+> next non-FFN bottleneck. M5-C11b found no justified FFN/MMVQ port: direct
+> Gate/Up/Down evidence was approximately tied or favored MIInfer, while the
+> historical K/V gap was already closed by EXP-0009. C11a's 91.875 TG128 and
+> 91.692 TG256 external rates remain directionally qualified because llama.cpp
+> reached a higher observed DPM state. C10c remains rejected and its separate
+> path remains the production default.
 
 The initial eight-token fixture matches the independent MI50 reference through
 position 2. Release passes the complete fixture and Debug remains a
@@ -563,6 +563,11 @@ M5-C11a — production and llama.cpp differential baseline (CLOSED;
 measurement-only; 55.0778 tok/s MIInfer shared-reuse baseline; fresh external
 TG128/TG256 control 91.875/91.692 tok/s with clock-state qualification;
 next target exact-shape FFN GEMV differential)
+
+M5-C11b — exact-shape FFN GEMV differential (CLOSED; no FFN/MMVQ port
+selected; MIInfer approximately tied/faster on Gate, Up, and Down under the
+retained direct protocol; K/V advantage already addressed by EXP-0009;
+clock-matched rerun deferred because privileged DPM control was unavailable)
 ```
 
 The exact ordering may change based on early measurements.
@@ -731,12 +736,16 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-01 — M5-C10b through M5-C11a were recorded after the C9c production
+2026-09-01 — M5-C10b through M5-C11b were recorded after the C9c production
 KEEP. C10c passed its strict real-model correctness gates but its one-workgroup
 fused path regressed clean decode by 5.217%; the separate FFN normalization/Q8
 path remains the production default. C11a refreshed the production baseline and
 the external gfx906 control, with clock-state qualification, and selected an
-exact-shape FFN GEMV differential as the next bounded experiment.
+exact-shape FFN GEMV differential as the next bounded experiment. C11b found no
+new FFN/MMVQ candidate: MIInfer was approximately tied or faster on Gate, Up,
+and Down in the retained direct comparison, while the historical K/V gap was
+already closed by EXP-0009. A fixed-clock rerun remains a prerequisite for a
+fair end-to-end rate claim because privileged DPM control was unavailable.
 
 Update this document whenever:
 

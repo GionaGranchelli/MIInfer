@@ -535,3 +535,25 @@ C11a is measurement-only. The next bounded experiment is an exact-shape
 FFN GEMV differential against the strongest available gfx906 MMVQ path; no
 new fusion, geometry sweep, or graph capture is selected without direct
 evidence.
+
+## M5-C11b exact-shape FFN GEMV differential
+
+C11b closed the exact-shape FFN differential without selecting a new kernel.
+The retained direct comparison in `experiments/EXP-0008-direct-mmvq.md` found
+MIInfer approximately tied or faster than the pinned gfx906 MMVQ path for
+Gate, Up, and Down: -2.08%, -2.08%, and -11.29%, respectively. MMVQ's clear
+historical advantage was K/V, which was already addressed by the accepted
+EXP-0009 128-thread K/V geometry.
+
+The current-tree sequential sanity runs measured 52.48 µs for Gate and 52.80
+µs for Up, with the quantized oracle passing. A concurrent sanity run was
+discarded as contaminated. The current benchmark's synthetic Down mode does
+not select the production Down path, so it was not used as a production Down
+result.
+
+The MI50 clock state remains a qualification: auto DPM exposed 925/930 MHz +
+350 MHz between bursts and brief 1725/1000 MHz active samples. A privileged
+fixed-clock rerun was unavailable because `sudo` required an interactive
+password. C11b therefore stops blind FFN/MMVQ porting, but does not publish a
+clock-matched end-to-end speed ratio. See
+`experiments/EXP-0034-m5c11b-exact-shape-ffn-differential.md`.
