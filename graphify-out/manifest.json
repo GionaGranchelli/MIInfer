@@ -156,15 +156,15 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788204157.1812139,
-    "seen": 1788204165.786332,
-    "ast_hash": "132372972a7ad452b4800103c4d4b85a",
+    "mtime": 1788303012.1667871,
+    "seen": 1788303079.034793,
+    "ast_hash": "3caf78b3031525a67cd5fbbb3c7ade6d",
     "semantic_hash": ""
   },
   "bench/README.md": {
-    "mtime": 1788302623.0644672,
-    "seen": 1788302632.605703,
-    "ast_hash": "bd47530473805f2b38d3db27c4189a58",
+    "mtime": 1788303043.4176521,
+    "seen": 1788303079.0347946,
+    "ast_hash": "158f40b082dd172ba2d8e7de99506f6a",
     "semantic_hash": ""
   },
   "context.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788302623.0634673,
-    "seen": 1788302632.6057138,
-    "ast_hash": "61f6573115ec0a1aebc5e783522ad707",
+    "mtime": 1788303069.2805405,
+    "seen": 1788303079.0348053,
+    "ast_hash": "64bccf9010e3faff38405a4ca91d8233",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788204157.183214,
-    "seen": 1788204165.7863667,
-    "ast_hash": "2eb4252b77e9113e08f3ce081264bc6e",
+    "mtime": 1788303069.2795405,
+    "seen": 1788303079.0348265,
+    "ast_hash": "06c81fb2cad124b79ed05cd7bf7462da",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -1035,6 +1035,12 @@
     "mtime": 1788302601.9565585,
     "seen": 1788302632.6057932,
     "ast_hash": "27f7a7057c8ba925082cd9051c627ea7",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0041-m5c15-optimization-closure-parity-gate.md": {
+    "mtime": 1788302993.3738682,
+    "seen": 1788303079.034889,
+    "ast_hash": "0d27e754cb166fc0839c692ad1be2661",
     "semantic_hash": ""
   }
 }

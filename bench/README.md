@@ -682,3 +682,27 @@ therefore identifies no defensible number of milliseconds that llama.cpp
 avoids. No production code or next implementation experiment was selected.
 Full details are in
 `experiments/EXP-0040-m5c14a-fixed-floor-execution-map.md`.
+
+## M5-C15 optimization closure and parity decision gate
+
+M5-C15 closes the local optimization campaign. The accepted stable-peak
+production path is approximately 55.419 tok/s, with 19.579 ms P64 clean wall
+time, predictable attention growth through P1024, zero allocations, and flat
+dispatch/synchronization counts. The retained llama.cpp control is about
+90.4–90.8 tok/s under the qualified comparable workloads.
+
+M5 eliminated the major measured scaffolding and context-collapse causes, and
+the remaining families lack a complete same-contract external differential.
+No further kernel experiment is selected under the current contract.
+
+The architectural gate is:
+
+* **Path A:** preserve current representations and deterministic trajectory;
+  move to robustness, usability, longer-context, model-support, and release
+  work.
+* **Path B:** begin M6-A reference-correct execution-contract exploration;
+  evaluate alternate representations and precision boundaries against a pinned
+  external Qwen3 correctness envelope, not current MIInfer bytes.
+
+Full details are in
+`experiments/EXP-0041-m5c15-optimization-closure-parity-gate.md`.

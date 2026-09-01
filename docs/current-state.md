@@ -15,15 +15,16 @@ For long-term direction, see:
 
 # Current Phase
 
-**M5 — Beat the gfx906 reference**
+**M5 CLOSED — architectural decision gate**
 
 MIInfer now has a minimal text-facing inference path for the pinned model and
 has entered reproducible MI50 performance characterization.
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The
-minimal model/runtime scaffold is present; M4-C is complete and M5 now owns
-reproducible MI50 performance characterization.
+minimal model/runtime scaffold is present; M4-C is complete and M5's measured
+local optimization campaign is closed. The next phase depends on the Path A /
+Path B gate in EXP-0041.
 
 ---
 
@@ -312,17 +313,11 @@ overhead relative to the pinned gfx906 llama.cpp control.
 
 The immediate technical objective is:
 
-> Select the next fixed-floor optimization only from a valid same-contract
-> measurement. M5-C13a measured a stable approximately 14.7 ms/token
-> non-attention floor at P1/P2/P4/P8, with whole-token GPU events tracking wall
-> time and no growth in dispatches, synchronizations, allocations, or residual
-> copies. C13b found that the pinned llama.cpp gfx906 Q6_K MMVQ path consumes
-> Q8_1, whereas MIInfer's LM head consumes Q8_K, so the proposed direct
-> differential is invalid as stated. C13c then mapped the fixed-floor
-> contracts and found no uncleared same-contract external differential. C14a
-> extended that into a layer/token execution map and found no proven
-> llama.cpp-only work elimination. No Q8_1 compatibility path, production
-> kernel change, or generic fusion is selected yet.
+> Choose Path A or Path B at the M5-C15 architectural gate. M5-C13a measured
+> a stable approximately 14.7 ms/token non-attention floor; C13b–C14a found no
+> uncleared same-contract external differential or proven llama.cpp-only work
+> elimination. No further implementation experiment is selected until the
+> project chooses whether current MIInfer trajectory identity remains mandatory.
 
 The initial eight-token fixture matches the independent MI50 reference through
 position 2. Release passes the complete fixture and Debug remains a
@@ -626,6 +621,10 @@ implementation selected)
 M5-C14a — fixed-floor execution map (CLOSED; measurement-only; complete
 layer/token representation and work map recorded; no uncleared same-contract
 differential or implementation selected)
+
+M5-C15 — optimization closure and parity decision gate (CLOSED; accepted and
+rejected M5 record complete; current production path retained; Path A/Path B
+architectural choice pending)
 ```
 
 The exact ordering may change based on early measurements.
@@ -794,7 +793,7 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-02 — M5-C10b through M5-C14a were recorded after the C9c production
+2026-09-02 — M5-C10b through M5-C15 were recorded after the C9c production
 KEEP. C10c passed its strict real-model correctness gates but its one-workgroup
 fused path regressed clean decode by 5.217%; the separate FFN normalization/Q8
 path remains the production default. C11a refreshed the production baseline and
@@ -820,6 +819,12 @@ classified known differences as implementation, representation,
 work-elimination, or scheduling/fusion; no new valid differential or
 implementation target was selected. See
 experiments/EXP-0040-m5c14a-fixed-floor-execution-map.md.
+M5-C15 then closed the local optimization campaign: the stable-peak
+ production path is approximately 55.419 tok/s, P64/P1024 attention scaling is
+ predictable, and no further same-contract target is evidence-backed. The
+ explicit next decision is Path A (preserve the current trajectory) or Path B
+ (begin M6-A reference-correct execution-contract exploration). See
+ experiments/EXP-0041-m5c15-optimization-closure-parity-gate.md.
 
 Update this document whenever:
 

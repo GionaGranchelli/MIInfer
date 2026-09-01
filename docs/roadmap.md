@@ -10,12 +10,16 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M5 — Beat the reference**
+**Current phase: M5 CLOSED — architectural decision gate**
 
 Immediate objective:
 
-> Profile and improve the reproducible end-to-end MI50 baseline for the closed
-> M4-C3 text path, one measured performance hypothesis at a time.
+> Preserve the accepted MI50 production path unless the project explicitly
+> selects M6-A reference-correct execution-contract exploration.
+
+M5 closed with a reproducible local optimization result, but whole-runtime
+parity with the strongest gfx906 llama.cpp control was not demonstrated. See
+`experiments/EXP-0041-m5c15-optimization-closure-parity-gate.md`.
 
 Current work should focus on:
 
@@ -23,7 +27,8 @@ Current work should focus on:
 * decode tok/s and time to first token
 * hardware-state and VRAM accounting
 * preserving the C3 correctness control
-* profiling the recorded baseline before changing kernels
+* preserving the current production correctness contract
+* choosing Path A or Path B before new optimization work
 
 Do not treat CPU hidden-state identity through all 36 layers as a universal
 GPU requirement. B23 characterized the pinned external implementation's
@@ -560,6 +565,51 @@ The specialized runtime provides no meaningful benefit.
 Do not hide this result.
 
 Reassess project continuation.
+
+## M5-C15 — Optimization closure and parity decision gate
+
+M5-C15 closes the optimization campaign and records the accepted/rejected
+experiments, current throughput/context behavior, eliminated causes, and
+remaining contract limitations. It explicitly gates the next phase:
+
+* **Path A:** preserve the current trajectory and move to robustness,
+  usability, longer-context, model-support, and release work.
+* **Path B:** begin M6-A reference-correct execution-contract exploration,
+  where alternate representations and precision boundaries are judged against
+  a pinned external Qwen3 correctness envelope.
+
+Do not start M6-A experiments until Path B is explicitly selected.
+
+---
+
+# M6-A — Reference-correct execution-contract exploration
+
+M6-A is entered only if Path B is selected at M5-C15.
+
+## Goal
+
+Determine whether alternate execution contracts can improve MIInfer toward
+llama.cpp-class performance while remaining correct for the pinned Qwen3 model.
+
+## Contract
+
+Candidates are no longer required to reproduce current MIInfer bytes or its
+exact deterministic trajectory. They must instead satisfy a pinned external
+Qwen3 correctness envelope, model semantics, and behavioral generation tests.
+llama.cpp arithmetic is a comparison/reference implementation, not a new
+golden tensor contract.
+
+## Candidate areas
+
+* Q6_K × Q8_1 LM-head input representation
+* alternate activation representations
+* precision and materialization boundaries
+* reference-validated fusion
+* alternate attention reduction structure
+* graph-level representation planning
+
+Each candidate still requires an isolated correctness result, reproducible
+benchmark, VRAM/latency accounting, and an explicit KEEP/REJECT decision.
 
 ---
 

@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M5-A — Reproducible MI50 inference baseline**
+**Current phase: M5 CLOSED — architectural decision gate**
 
 The project currently has:
 
@@ -26,11 +26,13 @@ The project currently has:
 * a pinned Qwen3-8B MI50 execution path with persistent KV-cache decode
 * a model-backed tokenizer and minimal text-facing greedy CLI
 
-Sampling and serving remain out of scope. The M5-A baseline is now recorded;
-the next activity is profiling before any performance optimization.
+Sampling and serving remain out of scope. M5 is closed as a measured local
+optimization campaign. The next phase depends on the architectural decision
+recorded in `EXP-0041`: preserve the current execution contract, or begin
+reference-correct execution-contract exploration in M6-A.
 
-The next technical objective is to determine where the closed inference path
-spends time, then test measured gfx906 optimizations against the baseline.
+The current production path is approximately 55 tok/s at stable peak. No new
+kernel experiment is selected until the Path A/Path B decision is made.
 
 ---
 
