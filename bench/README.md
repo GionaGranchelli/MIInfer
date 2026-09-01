@@ -255,3 +255,29 @@ Dispatch topology remains 1,588/token. The audit and decision are recorded in
 The next isolated candidate is direct fast-path layer-output ownership, which
 would remove the 36 layer-output D2D copies without changing the trace path or
 any numerical precision boundary.
+
+## M5-C6b direct layer-output handoff
+
+The trace-free fast path now writes the final FFN residual directly into the
+next ping-pong buffer. Trace-producing execution retains the scratch buffer and
+copy behavior. The explicit control is selected with
+`MIINFER_LAYER_OUTPUT_HANDOFF=copy`; `direct` is the production default.
+
+Run the balanced A/B benchmark with:
+
+```bash
+cmake --preset mi50-release
+cmake --build --preset mi50-release --target miinfer-qwen3-attention-ab-bench
+scripts/run-m5c6b-layer-output-ab.sh /path/to/Qwen3-8B-q4_0-b968826d.gguf
+```
+
+The benchmark uses the existing interleaved harness in `--mode layer-output`.
+The clean C6b result is retained under
+`bench/results/20260901T085927Z-374528/` and is documented in
+`experiments/EXP-0020-m5c6b-direct-layer-output-handoff.md`. It reports
+`copy,direct,direct,copy,copy,direct` ordering, identical deterministic IDs,
+and 50.896937 versus 50.896418 tok/s at the observed 930/350 MHz clocks.
+The position audit reports the exact structural reduction from 72 to 36 layer
+I/O copies, from 2,082,304 to 1,492,480 copied bytes/token, and from 650 to
+614 synchronization sites including finalization. The neutral timing result
+is retained as such; the cleanup is kept for its simpler ownership contract.

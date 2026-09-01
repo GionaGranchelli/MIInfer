@@ -186,8 +186,11 @@ No other GPU architecture is currently supported.
   2,082,304 and improving the low-clock short/growing controls by 9.9%/9.2%
 * M5-C6a execution-overhead attribution; the remaining copy calls are 576 KV
   writes, 72 layer handoff copies, and one final logits copy, with dispatch
-  topology unchanged at 1,588/token; the direct layer-output handoff is the
-  next isolated candidate
+  topology unchanged at 1,588/token
+* M5-C6b direct fast-path layer-output handoff; layer I/O copies fall from 72
+  to 36 and copied bytes from 2,082,304 to 1,492,480 per token, with zero
+  allocations and unchanged deterministic IDs; the interleaved timing result
+  is neutral at the observed low clocks
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -227,9 +230,10 @@ overhead relative to the pinned gfx906 llama.cpp control.
 
 The immediate technical objective is:
 
-> Remove the next measured fixed cost from the persistent-workspace,
-> resident-weight cooperative path one hypothesis at a time without weakening
-> the C3 correctness gate.
+> Attribute and remove the next measured fixed cost from the
+> persistent-workspace, resident-weight cooperative path one hypothesis at a
+> time without weakening the C3 correctness gate. M5-C6c now targets direct or
+> coarsened KV-cache writes or GPU-side greedy argmax.
 
 The initial eight-token fixture matches the independent MI50 reference through
 position 2. Release passes the complete fixture and Debug remains a
@@ -468,7 +472,9 @@ M5-C5b — resident normalization weights (CLOSED)
 
 M5-C6a — execution-overhead attribution (CLOSED)
 
-M5-C6b — direct layer-output handoff (next milestone)
+M5-C6b — direct layer-output handoff (CLOSED; structural KEEP, neutral timing)
+
+M5-C6c — direct/coarsened KV-cache writes or GPU-side greedy argmax (next)
 ```
 
 The exact ordering may change based on early measurements.
@@ -650,8 +656,10 @@ unavailable. M5-C5a removed steady-state decode workspace allocation churn,
 with zero temporary allocations in the position audit and a qualified
 26.9–32.3% end-to-end gain. M5-C5b now keeps immutable normalization weights
 resident, reducing copy bytes by 37.2% and adding a qualified roughly 9%
-end-to-end gain. M5-C6a attributes the remaining copy/synchronization costs;
-direct layer-output handoff is the next isolated candidate. Earlier M5-C0 and
+end-to-end gain. M5-C6a attributes the remaining copy/synchronization costs.
+M5-C6b now keeps direct fast-path layer-output ownership after removing 36
+redundant copies exactly; its interleaved timing result is neutral at the
+observed low clocks. Earlier M5-C0 and
 EXP-0012 results remain recorded
 below for historical comparison. M4-C3 closed. The model-backed tokenizer
 encodes `hello` as `14990`, and the Release text CLI reproduces the pinned
