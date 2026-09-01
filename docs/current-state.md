@@ -216,6 +216,10 @@ No other GPU architecture is currently supported.
   Gate/Up block-stream checks across positions 1, 8, 16, 32, and 64 found zero
   mismatches, the 64-token trajectory stayed identical, and shared reuse
   improved the balanced low-clock A/B from 54.5501 to 55.1724 tok/s (+1.14%)
+* M5-C10a refreshed the shared-reuse P64 profile; clean wall/whole-token GPU
+  time is 20.213/20.121 ms, deferred attribution is 27.828 ms, and the
+  remaining ranking is FFN projection 6.963 ms, attention 4.935 ms,
+  normalization 2.978 ms, LM head 2.876 ms, and conversion 2.278 ms
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -516,6 +520,9 @@ production selection; long decode diverged at position 38)
 
 M5-C9c — Gate/Up activation-Q8 reuse (CLOSED; KEEP; production-selected,
 +1.14% balanced A/B)
+
+M5-C10a — refreshed P64 production attribution (CLOSED; measurement-only;
+next target not preselected)
 ```
 
 The exact ordering may change based on early measurements.

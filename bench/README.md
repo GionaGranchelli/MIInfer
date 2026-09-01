@@ -433,6 +433,21 @@ measured 54.5501 tok/s separate versus 55.1724 tok/s shared (+1.14%). C9c is
 therefore production-selected; see
 `experiments/EXP-0029-m5c9c-gate-up-q8-reuse.md`.
 
+## M5-C10a refreshed P64 production profile
+
+The C10a measurement-only profile reruns the position audit after C9c with
+shared Gate/Up Q8 reuse enabled. The P64 result is retained under
+`bench/results/20260901T134000Z-m5c10a/` and documented in
+`experiments/EXP-0030-m5c10a-refreshed-profile.md`.
+
+At the observed approximately 930/350 MHz clocks, P64 measured 20.213 ms
+clean wall, 20.121 ms whole-token GPU time, and 27.828 ms deferred attribution.
+The path reports 1553 dispatches, 38 synchronization sites, zero temporary
+allocations, and 589,828 bytes of residual copy accounting. The largest
+families are FFN projection (6.963 ms), attention (4.935 ms), normalization
+(2.978 ms), LM head (2.876 ms), and conversion (2.278 ms). C10a changes no
+production behavior; it only refreshes the ranking for the next experiment.
+
 ## M5-C8a FFN projection shape characterization
 
 The kernel-only `miinfer-q4-q8-gemv-bench` characterization is recorded in
