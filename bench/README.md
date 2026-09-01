@@ -157,3 +157,24 @@ measured trace-free controls improved from 31.006 to 40.267 tok/s on the short
 workload and from 14.430 to 38.754 tok/s over 64 growing-context forwards.
 The complete A/B record is in
 `experiments/EXP-0014-cached-attention-parallel.md`.
+
+## M5-C3 interleaved attention A/B benchmark
+
+`miinfer-qwen3-attention-ab-bench` loads the model and execution plan once,
+then alternates serial and cooperative cached-attention runs in balanced order
+(`serial,parallel`, `parallel,serial`, ...). Each run resets the persistent KV
+cache and measures the same trace-free prompt/warmup/decode workload. It
+requires both policies to produce identical deterministic token IDs.
+
+Run it with hardware-state capture:
+
+```bash
+cmake --preset mi50-release
+cmake --build --preset mi50-release --target miinfer-qwen3-attention-ab-bench
+scripts/run-m5c3-attention-ab.sh /path/to/Qwen3-8B-q4_0-b968826d.gguf
+```
+
+The clean M5-C3 run used three balanced pairs and 64 measured growing-context
+decode forwards. Its raw result is retained under
+`bench/results/20260901T061300Z-353809/`; the companion cooperative position
+audit is under `bench/results/20260901T-m5c3-position-audit/`.

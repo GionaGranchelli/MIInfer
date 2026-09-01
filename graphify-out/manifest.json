@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788211144.4034257,
-    "seen": 1788211490.314322,
-    "ast_hash": "700934eb778e34764c63b453a6239d12",
+    "mtime": 1788243021.0447762,
+    "seen": 1788243350.600474,
+    "ast_hash": "5944786869081b0449ceb7ae89b54d72",
     "semantic_hash": ""
   },
   "README.md": {
@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "bench/README.md": {
-    "mtime": 1788240731.3974319,
-    "seen": 1788240739.345395,
-    "ast_hash": "d7a2e32e5d7940ec08b87a37f52bd3cd",
+    "mtime": 1788243311.8791661,
+    "seen": 1788243350.6004772,
+    "ast_hash": "5a14f8aafa4f21d4bcfa44444da6a8a1",
     "semantic_hash": ""
   },
   "context.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788240884.3466034,
-    "seen": 1788240891.453968,
-    "ast_hash": "e0727ef3b91acdff25ef4c40b7b1dd64",
+    "mtime": 1788243303.391214,
+    "seen": 1788243350.600488,
+    "ast_hash": "6e5f7c93433fc51b900fcb377fe33b54",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -837,6 +837,24 @@
     "mtime": 1788240731.3974319,
     "seen": 1788240739.345448,
     "ast_hash": "c3c00668c98e897093161681699702eb",
+    "semantic_hash": ""
+  },
+  "bench/qwen3_attention_ab_bench.cpp": {
+    "mtime": 1788243014.4138126,
+    "seen": 1788243350.6003447,
+    "ast_hash": "984caa1f5eeebb8d3f33310a6c24ab67",
+    "semantic_hash": ""
+  },
+  "scripts/run-m5c3-attention-ab.sh": {
+    "mtime": 1788243028.4187355,
+    "seen": 1788243350.6003978,
+    "ast_hash": "3833b98715d323ae2631ac7a35374ecb",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0015-m5c3-interleaved-attention-ab.md": {
+    "mtime": 1788243342.0389962,
+    "seen": 1788243350.6005447,
+    "ast_hash": "e193ca898f0ee00334903a779b3c9b5c",
     "semantic_hash": ""
   }
 }
