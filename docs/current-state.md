@@ -177,6 +177,10 @@ No other GPU architecture is currently supported.
   cache length 1024, reaching 75.489 ms in the intrusive audit while dispatches
   and copied bytes remain flat; absolute throughput awaits a validated clock
   state
+* M5-C5a persistent decode workspace; full decode reuses one session-owned
+  workspace across layers and tokens, reducing steady-state temporary
+  allocations from 1,086 to zero and improving the low-clock short/growing
+  controls by 32.3%/26.9%; static norm-weight residency remains separate
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -216,9 +220,9 @@ overhead relative to the pinned gfx906 llama.cpp control.
 
 The immediate technical objective is:
 
-> Establish the cooperative cached-attention path as the new reproducible
-> baseline, then test one measured performance hypothesis at a time without
-> weakening the C3 correctness gate.
+> Establish the persistent-workspace cooperative path as the new reproducible
+> baseline, then remove the next measured fixed cost one hypothesis at a time
+> without weakening the C3 correctness gate.
 
 The initial eight-token fixture matches the independent MI50 reference through
 position 2. Release passes the complete fixture and Debug remains a
@@ -240,8 +244,9 @@ tokenizer for the embedded `gpt2`/`qwen2` GGUF contract. The Release CLI
 acceptance uses prompt `hello`, which encodes to `14990`, runs the existing
 persistent 36-layer MI50 decode for eight greedy steps, and detokenizes the
 pinned IDs to `) {\n        return "Hello, "`. Sampling, chat templates, streaming,
-and performance benchmarking is now recorded by M5-A; profiling is the next
-activity.
+and performance benchmarking is now recorded by M5-A; the cooperative
+attention and persistent-workspace performance slices are recorded by M5-C,
+with static-weight residency and dispatch/materialization work next.
 
 ---
 
@@ -450,8 +455,11 @@ M5-C3 — repeat interleaved attention A/B and profile the new baseline (CLOSED)
 
 M5-C4 — canonical post-attention baseline (RETEST: validated clock state unavailable)
 
-M5-C5 — select the next measured optimization target from the cooperative
-baseline (next milestone)
+M5-C5a — persistent decode workspace (CLOSED: static norm-weight residency
+remains a separate experiment)
+
+M5-C5 — select the next measured optimization target from the persistent
+workspace baseline (next milestone)
 ```
 
 The exact ordering may change based on early measurements.
@@ -629,7 +637,10 @@ M5-C3 repeated interleaved A/B characterization and profiling of the new
 attention baseline is complete. M5-C4 extends the cooperative audit through
 cache length 1024, but its absolute rates are qualified because the MI50
 reported 925–930/350 MHz auto-mode clocks; privileged clock control was
-unavailable. M5-C5 is the next optimization-selection slice. Earlier M5-C0 and
+unavailable. M5-C5a now removes steady-state decode workspace allocation
+churn, with zero temporary allocations in the position audit and a qualified
+26.9–32.3% end-to-end gain. Static norm-weight residency is the next
+optimization-selection slice. Earlier M5-C0 and
 EXP-0012 results remain recorded
 below for historical comparison. M4-C3 closed. The model-backed tokenizer
 encodes `hello` as `14990`, and the Release text CLI reproduces the pinned

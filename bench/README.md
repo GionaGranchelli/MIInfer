@@ -193,3 +193,27 @@ was in auto mode and telemetry observed approximately 925–930 MHz SCLK and
 350 MHz MCLK, so these runs are not canonical replacements for the validated
 1725/1000 MHz baseline. Use the interleaved M5-C3 harness for relative policy
 comparisons and repeat M5-C4 after valid clock control is available.
+
+## M5-C5a persistent decode workspace
+
+The full decode path now allocates one `Qwen3GpuDecodeWorkspace` per decode
+cache and reuses it across all layers and tokens. This removes per-token and
+per-layer device-buffer allocation from the steady-state path while retaining
+the existing kernels, launch topology, and precision policy. Static norm
+weights are still uploaded during execution and are reserved for a separate
+experiment.
+
+The M5-C5a candidate results are retained under:
+
+```text
+bench/results/20260901T080644Z-365787/  short
+bench/results/20260901T080718Z-366543/  64-token growing decode
+bench/results/20260901T080500Z-364888/  position audit
+```
+
+At the observed 930/350 MHz auto-mode clocks, short decode improved from
+40.528 to 53.625 tok/s and the 64-token growing workload improved from
+38.094 to 48.334 tok/s. The position audit reports zero temporary allocations
+at positions 1, 8, 16, 32, and 64; dispatches and copied bytes are unchanged.
+These absolute rates remain hardware-state qualified until the validated
+1725/1000 MHz clock state can be restored.
