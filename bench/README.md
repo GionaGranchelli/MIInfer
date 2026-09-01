@@ -217,3 +217,26 @@ At the observed 930/350 MHz auto-mode clocks, short decode improved from
 at positions 1, 8, 16, 32, and 64; dispatches and copied bytes are unchanged.
 These absolute rates remain hardware-state qualified until the validated
 1725/1000 MHz clock state can be restored.
+
+## M5-C5b resident normalization weights
+
+The full decode path now reads immutable attention, Q/K, FFN, and final
+normalization weights directly from the GPU plan's persistent weight arena.
+This removes their redundant per-token host-to-device uploads while retaining
+the C5a workspace, existing kernels, launch topology, and precision policy.
+
+The clean C5b artifacts are retained under:
+
+```text
+bench/results/20260901T083234Z-371025/  short
+bench/results/20260901T083307Z-371777/  64-token growing decode
+bench/results/20260901T083350Z-372617/  position audit
+```
+
+At the observed 930/350 MHz auto-mode clocks, short decode reached 58.917
+tok/s and the 64-token growing workload reached 52.791 tok/s. The audit
+reports 2,082,304 copied bytes/token and 650 synchronization sites, down from
+3,315,200 and 795 in C5a; dispatches remain 1,588 and temporary allocations
+remain zero. These absolute rates remain hardware-state qualified until the
+validated 1725/1000 MHz clock state can be restored. The full result is
+documented in `experiments/EXP-0018-m5c5b-resident-norm-weights.md`.
