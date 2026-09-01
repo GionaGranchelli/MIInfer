@@ -108,6 +108,24 @@ void launch_qwen3_cached_attention(
     float scale,
     hipStream_t stream = nullptr);
 
+// M5-C2 cooperative path: one 256-thread workgroup cooperates on each query
+// head while reading the same persistent [head][position][dimension] cache
+// layout as launch_qwen3_cached_attention().
+void launch_qwen3_cached_attention_parallel(
+    const float* q,
+    const float* key_cache,
+    const float* value_cache,
+    std::uint32_t cache_length,
+    std::uint32_t cache_capacity,
+    float* output,
+    float* scores,
+    float* probabilities,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float scale,
+    hipStream_t stream = nullptr);
+
 void launch_qwen3_silu_mul(
     const float* gate,
     const float* up,

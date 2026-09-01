@@ -144,3 +144,16 @@ The retained M5-C1 result is documented in
 `experiments/EXP-0013-qwen3-position-scaled-audit.md`. The first audit found
 flat dispatch/copy/quantization/FFN costs and a strong position-dependent
 cached-attention cost, making attention the next measured optimization target.
+
+## M5-C2 cooperative cached attention
+
+The production default now uses the M5-C2 cooperative cached-attention kernel:
+one 256-thread workgroup per query head cooperates on score reductions,
+softmax, and value accumulation. The existing serial implementation remains
+available as the A/B control with `MIINFER_ATTENTION_KERNEL=serial`.
+
+The candidate preserves the validated KV layout and greedy sequence. Its
+measured trace-free controls improved from 31.006 to 40.267 tok/s on the short
+workload and from 14.430 to 38.754 tok/s over 64 growing-context forwards.
+The complete A/B record is in
+`experiments/EXP-0014-cached-attention-parallel.md`.

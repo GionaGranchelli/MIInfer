@@ -210,6 +210,16 @@ bool projection_selected(const char* variable, const char* projection) {
     return false;
 }
 
+bool use_parallel_attention() {
+    const char* configured = std::getenv("MIINFER_ATTENTION_KERNEL");
+    // M5-C2 KEEP: the cooperative kernel is the production default. The
+    // serial kernel remains available as an explicit A/B control.
+    if (configured == nullptr || std::strcmp(configured, "parallel") == 0) return true;
+    if (std::strcmp(configured, "serial") == 0) return false;
+    throw std::invalid_argument(
+        "MIINFER_ATTENTION_KERNEL must be 'parallel' or 'serial'");
+}
+
 Qwen3ProfileCategory projection_profile_category(const char* projection) {
     if (std::strcmp(projection, "q") == 0 || std::strcmp(projection, "k") == 0
         || std::strcmp(projection, "v") == 0) {
@@ -651,12 +661,23 @@ Qwen3LayerTrace qwen3_layer_gpu_impl(
                                     heads * cache.length() * sizeof(float)));
     }
     profile_gpu_call(profile, Qwen3ProfileCategory::attention, 1, [&] {
-        launch_qwen3_cached_attention(
-            q_rope.data(), static_cast<const float*>(cache.device_keys()),
-            static_cast<const float*>(cache.device_values()),
-            static_cast<std::uint32_t>(attention_length), static_cast<std::uint32_t>(cache.capacity()),
-            attention.data(), scores.data(), probabilities.data(), config.attention_heads,
-            config.kv_heads, config.head_dim, 1.0F / std::sqrt(static_cast<float>(config.head_dim)));
+        if (use_parallel_attention()) {
+            launch_qwen3_cached_attention_parallel(
+                q_rope.data(), static_cast<const float*>(cache.device_keys()),
+                static_cast<const float*>(cache.device_values()),
+                static_cast<std::uint32_t>(attention_length),
+                static_cast<std::uint32_t>(cache.capacity()), attention.data(), scores.data(),
+                probabilities.data(), config.attention_heads, config.kv_heads, config.head_dim,
+                1.0F / std::sqrt(static_cast<float>(config.head_dim)));
+        } else {
+            launch_qwen3_cached_attention(
+                q_rope.data(), static_cast<const float*>(cache.device_keys()),
+                static_cast<const float*>(cache.device_values()),
+                static_cast<std::uint32_t>(attention_length),
+                static_cast<std::uint32_t>(cache.capacity()), attention.data(), scores.data(),
+                probabilities.data(), config.attention_heads, config.kv_heads, config.head_dim,
+                1.0F / std::sqrt(static_cast<float>(config.head_dim)));
+        }
     });
     // Match the pinned reference's kqv_out representation: attention is
     // accumulated in F32, materialized as FP16, then presented to the O

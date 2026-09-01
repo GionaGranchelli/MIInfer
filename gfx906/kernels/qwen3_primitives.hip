@@ -221,6 +221,76 @@ __global__ void qwen3_cached_attention_kernel(
     }
 }
 
+__global__ void qwen3_cached_attention_parallel_kernel(
+    const float* q, const float* key_cache, const float* value_cache,
+    std::uint32_t cache_length, std::uint32_t cache_capacity, float* output,
+    float* scores, float* probabilities, std::uint32_t query_heads,
+    std::uint32_t kv_heads, std::uint32_t head_dim, float scale) {
+    const std::uint32_t head = blockIdx.x;
+    const std::uint32_t lane = threadIdx.x;
+    if (head >= query_heads || kv_heads == 0 || query_heads % kv_heads != 0
+        || cache_length == 0 || head_dim == 0) return;
+
+    __shared__ float partials[256];
+    __shared__ float maximum;
+    __shared__ float denominator;
+    const std::uint32_t q_base = head * head_dim;
+    const std::uint32_t kv_head = head / (query_heads / kv_heads);
+    const std::uint32_t score_base = head * cache_length;
+
+    if (lane == 0) maximum = -INFINITY;
+    __syncthreads();
+    for (std::uint32_t position = 0; position < cache_length; ++position) {
+        const std::size_t cache_base =
+            (static_cast<std::size_t>(kv_head) * cache_capacity + position) * head_dim;
+        float sum = 0.0F;
+        for (std::uint32_t index = lane; index < head_dim; index += blockDim.x) {
+            sum += q[q_base + index] * key_cache[cache_base + index];
+        }
+        partials[lane] = sum;
+        __syncthreads();
+        for (std::uint32_t stride = blockDim.x / 2; stride > 0; stride /= 2) {
+            if (lane < stride) partials[lane] += partials[lane + stride];
+            __syncthreads();
+        }
+        if (lane == 0) {
+            const float score = partials[0] * scale;
+            scores[score_base + position] = score;
+            maximum = fmaxf(maximum, score);
+        }
+        __syncthreads();
+    }
+
+    float exp_sum = 0.0F;
+    for (std::uint32_t position = lane; position < cache_length; position += blockDim.x) {
+        const float probability = expf(scores[score_base + position] - maximum);
+        probabilities[score_base + position] = probability;
+        exp_sum += probability;
+    }
+    partials[lane] = exp_sum;
+    __syncthreads();
+    for (std::uint32_t stride = blockDim.x / 2; stride > 0; stride /= 2) {
+        if (lane < stride) partials[lane] += partials[lane + stride];
+        __syncthreads();
+    }
+    if (lane == 0) denominator = partials[0];
+    __syncthreads();
+
+    for (std::uint32_t index = lane; index < head_dim; index += blockDim.x) {
+        float value = 0.0F;
+        for (std::uint32_t position = 0; position < cache_length; ++position) {
+            const std::size_t cache_base =
+                (static_cast<std::size_t>(kv_head) * cache_capacity + position) * head_dim;
+            value += (probabilities[score_base + position] / denominator)
+                     * value_cache[cache_base + index];
+        }
+        output[q_base + index] = value;
+    }
+    for (std::uint32_t position = lane; position < cache_length; position += blockDim.x) {
+        probabilities[score_base + position] /= denominator;
+    }
+}
+
 __global__ void qwen3_silu_mul_kernel(
     const float* gate, const float* up, float* output, std::uint32_t elements) {
     const std::uint32_t index = blockIdx.x * blockDim.x + threadIdx.x;
@@ -454,6 +524,25 @@ void launch_qwen3_cached_attention(
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     hipLaunchKernelGGL(qwen3_cached_attention_kernel, dim3(query_heads), dim3(1), 0, stream,
+                       q, key_cache, value_cache, cache_length, cache_capacity, output,
+                       scores, probabilities, query_heads, kv_heads, head_dim, scale);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen3_cached_attention_parallel(
+    const float* q, const float* key_cache, const float* value_cache,
+    std::uint32_t cache_length, std::uint32_t cache_capacity, float* output,
+    float* scores, float* probabilities, std::uint32_t query_heads,
+    std::uint32_t kv_heads, std::uint32_t head_dim, float scale, hipStream_t stream) {
+    if (q == nullptr || key_cache == nullptr || value_cache == nullptr || output == nullptr
+        || scores == nullptr || probabilities == nullptr || cache_length == 0
+        || cache_length > cache_capacity || query_heads == 0 || kv_heads == 0
+        || head_dim == 0 || head_dim > 256 || query_heads % kv_heads != 0
+        || !std::isfinite(scale)) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen3_cached_attention_parallel_kernel,
+                       dim3(query_heads), dim3(256), 0, stream,
                        q, key_cache, value_cache, cache_length, cache_capacity, output,
                        scores, probabilities, query_heads, kv_heads, head_dim, scale);
     MIINFER_HIP_CHECK(hipGetLastError());

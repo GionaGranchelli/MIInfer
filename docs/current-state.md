@@ -22,7 +22,8 @@ has entered reproducible MI50 performance characterization.
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The
-minimal model/runtime scaffold is present; M4 now owns first token generation.
+minimal model/runtime scaffold is present; M4-C is complete and M5 now owns
+reproducible MI50 performance characterization.
 
 ---
 
@@ -163,7 +164,11 @@ No other GPU architecture is currently supported.
 * M5-C1 position-scaled execution audit; dispatches, copied bytes, temporary
   allocations, quantization, FFN, and KV-write copy cost remain flat from
   positions 1–64, while cached attention grows from 3.401 ms to 95.998 ms;
-  the next optimization target is cached-attention parallelism
+  cached-attention parallelism is the measured M5-C2 target
+* M5-C2 cooperative cached attention; the 256-thread/head candidate passes
+  the pinned greedy sequence and improves trace-free throughput from 14.430 to
+  38.754 tok/s over 64 growing-context forwards; serial remains an explicit
+  A/B control
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -203,8 +208,9 @@ overhead relative to the pinned gfx906 llama.cpp control.
 
 The immediate technical objective is:
 
-> Improve the cached-attention path identified by M5-C1, then test one measured
-> performance hypothesis at a time without weakening the C3 correctness gate.
+> Establish the cooperative cached-attention path as the new reproducible
+> baseline, then test one measured performance hypothesis at a time without
+> weakening the C3 correctness gate.
 
 The initial eight-token fixture matches the independent MI50 reference through
 position 2. Release passes the complete fixture and Debug remains a
@@ -430,7 +436,9 @@ M3 — minimal Qwen3-8B runtime scaffold (CLOSED)
 
 M5-C1 — trace-free dispatch/materialization and context-scaling characterization (CLOSED)
 
-M5-C2 — cached-attention scaling optimization (next milestone)
+M5-C2 — cached-attention scaling optimization (CLOSED)
+
+M5-C3 — repeat interleaved attention A/B and profile the new baseline (next milestone)
 ```
 
 The exact ordering may change based on early measurements.
@@ -599,16 +607,14 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-08-31 — M5-C1, M5-C0, and EXP-0012 recorded. The position-scaled audit
+2026-09-01 — M5-C2 and EXP-0014 recorded. The cooperative cached-attention
+candidate passes the pinned greedy sequence and improves the 64-forward
+trace-free control from 14.430 to 38.754 tok/s. The position-scaled audit
 shows flat dispatch/copy/quantization/FFN/KV-write costs and cached attention
 growing from 3.401 ms at cache length 1 to 95.998 ms at cache length 64. The
-next task is M5-C2 cached-attention scaling optimization. The trace-free MI50
-control reaches
-31.508 tok/s on the short workload and 12.724 tok/s over 64 growing-context
-forwards. The pinned Q4_0 llama.cpp control reaches about 91 tok/s at TG128/
-TG256; raw `hello` continuation controls report 50.35 tok/s for eight tokens
-and 81.43 tok/s for 64 tokens. The next task is M5-C1 dispatch/materialization
-and context-scaling characterization. M4-C3 closed. The model-backed tokenizer
+next task is M5-C3 repeated interleaved A/B characterization and profiling of
+the new attention baseline. Earlier M5-C0 and EXP-0012 results remain recorded
+below for historical comparison. M4-C3 closed. The model-backed tokenizer
 encodes `hello` as `14990`, and the Release text CLI reproduces the pinned
 eight-token continuation and generated text. The physical C3 gate passes.
 M4-C2 closed. Release passes the pinned eight-token MI50 continuation;
