@@ -191,6 +191,9 @@ No other GPU architecture is currently supported.
   to 36 and copied bytes from 2,082,304 to 1,492,480 per token, with zero
   allocations and unchanged deterministic IDs; the interleaved timing result
   is neutral at the observed low clocks
+* M5-C6c coalesced KV-cache writes; 576 tiny K/V memcpy operations become 36
+  device-store launches, reducing synchronization sites from 614 to 38 and
+  improving the interleaved 64-token control by 5.5% with identical IDs
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -232,8 +235,8 @@ The immediate technical objective is:
 
 > Attribute and remove the next measured fixed cost from the
 > persistent-workspace, resident-weight cooperative path one hypothesis at a
-> time without weakening the C3 correctness gate. M5-C6c now targets direct or
-> coarsened KV-cache writes or GPU-side greedy argmax.
+> time without weakening the C3 correctness gate. M5-C6c coalesced the
+> persistent KV writes; M5-C6d now targets GPU-side greedy argmax.
 
 The initial eight-token fixture matches the independent MI50 reference through
 position 2. Release passes the complete fixture and Debug remains a
@@ -474,7 +477,9 @@ M5-C6a — execution-overhead attribution (CLOSED)
 
 M5-C6b — direct layer-output handoff (CLOSED; structural KEEP, neutral timing)
 
-M5-C6c — direct/coarsened KV-cache writes or GPU-side greedy argmax (next)
+M5-C6c — coalesced KV-cache writes (CLOSED; structural KEEP, +5.5% A/B)
+
+M5-C6d — GPU-side greedy argmax (next)
 ```
 
 The exact ordering may change based on early measurements.
@@ -659,6 +664,9 @@ resident, reducing copy bytes by 37.2% and adding a qualified roughly 9%
 end-to-end gain. M5-C6a attributes the remaining copy/synchronization costs.
 M5-C6b now keeps direct fast-path layer-output ownership after removing 36
 redundant copies exactly; its interleaved timing result is neutral at the
+observed low clocks. M5-C6c now keeps coalesced KV-cache writes after reducing
+576 KV memcpy calls to 36 store launches, cutting synchronization sites from
+614 to 38 and improving the balanced workload by approximately 5.5% at the
 observed low clocks. Earlier M5-C0 and
 EXP-0012 results remain recorded
 below for historical comparison. M4-C3 closed. The model-backed tokenizer

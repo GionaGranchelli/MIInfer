@@ -252,9 +252,8 @@ one finalization synchronization, for 650 measured synchronization events.
 Dispatch topology remains 1,588/token. The audit and decision are recorded in
 `experiments/EXP-0019-m5c6a-execution-overhead-audit.md`.
 
-The next isolated candidate is direct fast-path layer-output ownership, which
-would remove the 36 layer-output D2D copies without changing the trace path or
-any numerical precision boundary.
+The C6b direct handoff result is recorded below. The next isolated candidate
+after C6b is coalesced KV-cache writing.
 
 ## M5-C6b direct layer-output handoff
 
@@ -281,3 +280,28 @@ The position audit reports the exact structural reduction from 72 to 36 layer
 I/O copies, from 2,082,304 to 1,492,480 copied bytes/token, and from 650 to
 614 synchronization sites including finalization. The neutral timing result
 is retained as such; the cleanup is kept for its simpler ownership contract.
+
+## M5-C6c coalesced KV-cache writes
+
+The production path now appends one token's K/V vectors with one device-side
+store launch per layer, preserving the validated FP32 cache layout and append
+ordering. The per-head memcpy control is selected with
+`MIINFER_KV_CACHE_WRITE=copy`; the coalesced `store` path is the default.
+
+Run the balanced A/B benchmark with:
+
+```bash
+cmake --preset mi50-release
+cmake --build --preset mi50-release --target miinfer-qwen3-attention-ab-bench
+scripts/run-m5c6c-kv-cache-ab.sh /path/to/Qwen3-8B-q4_0-b968826d.gguf
+```
+
+The clean result is retained under
+`bench/results/20260901T091213Z-377343/` and documented in
+`experiments/EXP-0021-m5c6c-coalesced-kv-cache-writes.md`. With balanced
+`copy,store,store,copy,copy,store` ordering, throughput improved from
+51.758283 to 54.600468 tok/s, while the pinned 64-forward IDs remained
+identical. The candidate position audit reports KV memcpy calls and bytes
+falling from 576/294,912 to 0/0, synchronization sites falling from 614 to 38,
+and dispatches rising from 1,588 to 1,624. Rates are qualified by the observed
+930/350 MHz auto-mode clocks.
