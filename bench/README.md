@@ -305,3 +305,27 @@ identical. The candidate position audit reports KV memcpy calls and bytes
 falling from 576/294,912 to 0/0, synchronization sites falling from 614 to 38,
 and dispatches rising from 1,588 to 1,624. Rates are qualified by the observed
 930/350 MHz auto-mode clocks.
+
+## M5-C6d GPU-side greedy argmax
+
+The trace-free greedy API keeps vocabulary logits on the GPU, runs a
+deterministic first-index argmax reduction, and copies only the selected
+`uint32_t` token ID. The existing full-logit API remains available for
+diagnostics. The A/B harness compares both paths in balanced order:
+
+```bash
+cmake --preset mi50-release
+cmake --build --preset mi50-release --target miinfer-qwen3-attention-ab-bench
+scripts/run-m5c6d-argmax-ab.sh /path/to/Qwen3-8B-q4_0-b968826d.gguf
+```
+
+The clean result is retained under
+`bench/results/20260901T093127Z-381071/` and documented in
+`experiments/EXP-0022-m5c6d-gpu-argmax.md`. The balanced 64-forward run
+measured 54.7928 tok/s for the full-logit control and 54.9945 tok/s for
+GPU-argmax at the observed 930/350 MHz clocks, with identical generated IDs.
+The GPU-argmax position audit is under
+`bench/results/20260901T093211Z-381976/`; it reports final result traffic
+falling from 607,744 to 4 bytes, total copied bytes falling from 1,197,568 to
+589,828, and dispatches rising from 1,624 to 1,625. Temporary allocations
+remain zero and synchronization sites remain 38.

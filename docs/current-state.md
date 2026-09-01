@@ -194,6 +194,9 @@ No other GPU architecture is currently supported.
 * M5-C6c coalesced KV-cache writes; 576 tiny K/V memcpy operations become 36
   device-store launches, reducing synchronization sites from 614 to 38 and
   improving the interleaved 64-token control by 5.5% with identical IDs
+* M5-C6d GPU-side greedy argmax; final logits transfer falls from 607,744 to 4
+  bytes with first-index tie semantics, identical IDs, and a measured 0.37%
+  interleaved 64-token gain
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -233,10 +236,11 @@ overhead relative to the pinned gfx906 llama.cpp control.
 
 The immediate technical objective is:
 
-> Attribute and remove the next measured fixed cost from the
-> persistent-workspace, resident-weight cooperative path one hypothesis at a
-> time without weakening the C3 correctness gate. M5-C6c coalesced the
-> persistent KV writes; M5-C6d now targets GPU-side greedy argmax.
+> Reprofile the persistent-workspace, resident-weight, cooperative, coalesced
+> KV, GPU-argmax path and select the next measured bottleneck one hypothesis at
+> a time without weakening the C3 correctness gate. The copy/materialization
+> cleanup through M5-C6d is complete; no new fusion, graph, or kernel change
+> should be selected until the fresh profile is recorded.
 
 The initial eight-token fixture matches the independent MI50 reference through
 position 2. Release passes the complete fixture and Debug remains a
@@ -479,7 +483,9 @@ M5-C6b — direct layer-output handoff (CLOSED; structural KEEP, neutral timing)
 
 M5-C6c — coalesced KV-cache writes (CLOSED; structural KEEP, +5.5% A/B)
 
-M5-C6d — GPU-side greedy argmax (next)
+M5-C6d — GPU-side greedy argmax (CLOSED; structural KEEP, +0.37% A/B)
+
+M5-C6e — fresh post-copy-cleanup profile (next)
 ```
 
 The exact ordering may change based on early measurements.
@@ -648,7 +654,14 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-01 — M5-C2 and EXP-0014 recorded. The cooperative cached-attention
+2026-09-01 — M5-C6d and EXP-0022 recorded. GPU-side greedy argmax now keeps
+the vocabulary logits resident through a deterministic first-index reduction,
+reducing final-result transfer from 607,744 to 4 bytes and preserving the
+pinned generated IDs. The clean balanced 64-forward A/B measured 54.7928
+versus 54.9945 tok/s at the observed 930/350 MHz clocks; Release CTest remains
+19/19. The next step is a fresh profile of the post-copy-cleanup path before
+choosing dispatch/fusion, graph, or kernel optimization. Earlier M5-C2 and
+EXP-0014 recorded. The cooperative cached-attention
 candidate passes the pinned greedy sequence and improves the 64-forward
 trace-free control from 14.430 to 38.754 tok/s. The position-scaled audit
 shows flat dispatch/copy/quantization/FFN/KV-write costs and cached attention
