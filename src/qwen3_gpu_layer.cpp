@@ -36,6 +36,7 @@ const char* qwen3_profile_category_name(Qwen3ProfileCategory category) noexcept 
     case Qwen3ProfileCategory::residual: return "residual";
     case Qwen3ProfileCategory::conversion: return "conversion";
     case Qwen3ProfileCategory::lm_head: return "lm_head";
+    case Qwen3ProfileCategory::argmax: return "argmax";
     case Qwen3ProfileCategory::kv_cache: return "kv_cache";
     case Qwen3ProfileCategory::copies: return "copies";
     case Qwen3ProfileCategory::count: break;
@@ -444,7 +445,7 @@ public:
           output_half(kMaxVector * sizeof(__half)),
           input_q8(kMaxQ8Bytes), input_q8_exact(kMaxQ8Bytes),
           final_norm(hidden), logits(vocab),
-          quantized_final_norm(hidden / 256) {}
+          quantized_final_norm(hidden / 256), argmax_token(1) {}
 
     static constexpr std::size_t kMaxVector = 12288;
     static constexpr std::size_t kMaxQ8Bytes =
@@ -483,6 +484,7 @@ public:
     DeviceBuffer<float> final_norm;
     DeviceBuffer<float> logits;
     DeviceBuffer<Q8KDeviceBlock> quantized_final_norm;
+    DeviceBuffer<std::uint32_t> argmax_token;
 };
 
 Qwen3GpuProfile::~Qwen3GpuProfile() noexcept {
@@ -1001,25 +1003,19 @@ Qwen3ForwardTrace execute_qwen3_decode_gpu(
     return forward;
 }
 
-void execute_qwen3_decode_gpu_fast(
-    const Qwen3GpuPlan& plan,
-    std::uint32_t token,
-    std::size_t position,
-    Qwen3GpuDecodeCache& cache,
-    std::span<float> logits_host) {
-    execute_qwen3_decode_gpu_fast(plan, token, position, cache, logits_host, nullptr);
-}
-
-void execute_qwen3_decode_gpu_fast(
+void execute_qwen3_decode_gpu_fast_impl(
     const Qwen3GpuPlan& plan,
     std::uint32_t token,
     std::size_t position,
     Qwen3GpuDecodeCache& cache,
     std::span<float> logits_host,
+    std::uint32_t* token_host,
     Qwen3GpuProfile* profile) {
     const auto& model = plan.model();
     const auto& config = model.config();
-    if (token >= config.vocab_size || logits_host.size() != config.vocab_size
+    const bool greedy = token_host != nullptr;
+    if (token >= config.vocab_size
+        || (greedy ? !logits_host.empty() : logits_host.size() != config.vocab_size)
         || model.layers().size() != config.layer_count
         || cache.layers() != config.layer_count || cache.capacity() == 0
         || position != cache.length() || position >= cache.capacity()) {
@@ -1060,11 +1056,60 @@ void execute_qwen3_decode_gpu_fast(
                                     workspace.logits.data(),
                                     config.vocab_size, config.hidden_size);
     });
-    profile_copy_call(profile, logits_host.size() * sizeof(float), [&] {
-        MIINFER_HIP_CHECK(hipMemcpy(logits_host.data(), workspace.logits.data(),
-                                    config.vocab_size * sizeof(float), hipMemcpyDeviceToHost));
-    });
+    if (greedy) {
+        profile_gpu_call(profile, Qwen3ProfileCategory::argmax, 1, [&] {
+            launch_qwen3_argmax(workspace.logits.data(), workspace.argmax_token.data(),
+                                config.vocab_size);
+        });
+        profile_copy_call(profile, sizeof(std::uint32_t), [&] {
+            MIINFER_HIP_CHECK(hipMemcpy(token_host, workspace.argmax_token.data(),
+                                        sizeof(std::uint32_t), hipMemcpyDeviceToHost));
+        });
+    } else {
+        profile_copy_call(profile, logits_host.size() * sizeof(float), [&] {
+            MIINFER_HIP_CHECK(hipMemcpy(logits_host.data(), workspace.logits.data(),
+                                        config.vocab_size * sizeof(float), hipMemcpyDeviceToHost));
+        });
+    }
     if (profile != nullptr) profile->finalize();
+}
+
+void execute_qwen3_decode_gpu_fast(
+    const Qwen3GpuPlan& plan,
+    std::uint32_t token,
+    std::size_t position,
+    Qwen3GpuDecodeCache& cache,
+    std::span<float> logits_host) {
+    execute_qwen3_decode_gpu_fast_impl(plan, token, position, cache, logits_host, nullptr, nullptr);
+}
+
+void execute_qwen3_decode_gpu_fast(
+    const Qwen3GpuPlan& plan,
+    std::uint32_t token,
+    std::size_t position,
+    Qwen3GpuDecodeCache& cache,
+    std::span<float> logits_host,
+    Qwen3GpuProfile* profile) {
+    execute_qwen3_decode_gpu_fast_impl(plan, token, position, cache, logits_host, nullptr, profile);
+}
+
+std::uint32_t execute_qwen3_decode_gpu_greedy(
+    const Qwen3GpuPlan& plan,
+    std::uint32_t token,
+    std::size_t position,
+    Qwen3GpuDecodeCache& cache) {
+    return execute_qwen3_decode_gpu_greedy(plan, token, position, cache, nullptr);
+}
+
+std::uint32_t execute_qwen3_decode_gpu_greedy(
+    const Qwen3GpuPlan& plan,
+    std::uint32_t token,
+    std::size_t position,
+    Qwen3GpuDecodeCache& cache,
+    Qwen3GpuProfile* profile) {
+    std::uint32_t result = 0;
+    execute_qwen3_decode_gpu_fast_impl(plan, token, position, cache, {}, &result, profile);
+    return result;
 }
 
 Qwen3LayerTrace execute_qwen3_layer_gpu_teacher_forced(

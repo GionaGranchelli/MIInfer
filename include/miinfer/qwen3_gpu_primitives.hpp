@@ -187,4 +187,12 @@ void launch_qwen3_q6_k_q8_k_gemv(
     std::uint32_t columns,
     hipStream_t stream = nullptr);
 
+// Reduce finite logits using first-index tie breaking, matching
+// std::max_element, and write the selected vocabulary index to the device.
+void launch_qwen3_argmax(
+    const float* input,
+    std::uint32_t* output,
+    std::uint32_t elements,
+    hipStream_t stream = nullptr);
+
 }  // namespace miinfer

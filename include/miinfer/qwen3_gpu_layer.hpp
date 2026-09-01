@@ -27,6 +27,7 @@ enum class Qwen3ProfileCategory {
     residual,
     conversion,
     lm_head,
+    argmax,
     kv_cache,
     copies,
     count,
@@ -249,6 +250,22 @@ void execute_qwen3_decode_gpu_fast(
     std::size_t position,
     Qwen3GpuDecodeCache& cache,
     std::span<float> logits,
+    Qwen3GpuProfile* profile);
+
+// Trace-free greedy decode. The logits remain device-resident and only the
+// selected token ID is copied to the host. Inputs are required to produce
+// finite logits, matching the existing full-logit greedy contract.
+std::uint32_t execute_qwen3_decode_gpu_greedy(
+    const Qwen3GpuPlan& plan,
+    std::uint32_t token,
+    std::size_t position,
+    Qwen3GpuDecodeCache& cache);
+
+std::uint32_t execute_qwen3_decode_gpu_greedy(
+    const Qwen3GpuPlan& plan,
+    std::uint32_t token,
+    std::size_t position,
+    Qwen3GpuDecodeCache& cache,
     Qwen3GpuProfile* profile);
 
 // Correctness-only teacher-forced replay of one selected layer.  The input

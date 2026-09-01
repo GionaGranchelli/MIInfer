@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -72,7 +73,7 @@ struct PolicySamples {
 void usage() {
     std::cerr
         << "usage: miinfer-qwen3-attention-ab-bench MODEL.gguf [options]\n"
-        << "  --mode MODE            attention, layer-output, or kv-cache (default: attention)\n"
+        << "  --mode MODE            attention, layer-output, kv-cache, or argmax (default: attention)\n"
         << "  --prompt-ids CSV       explicit prompt IDs (default: 14990)\n"
         << "  --warmup N             generated tokens before measurement (default: 8)\n"
         << "  --generated-tokens N   measured decode forward calls (default: 64)\n"
@@ -141,9 +142,9 @@ bool parse_options(int argc, char** argv, Options& options) {
         } else if (argument == "--mode") {
             options.ab_mode = argv[++index];
             if (options.ab_mode != "attention" && options.ab_mode != "layer-output"
-                && options.ab_mode != "kv-cache") {
+                && options.ab_mode != "kv-cache" && options.ab_mode != "argmax") {
                 throw std::invalid_argument(
-                    "--mode must be 'attention', 'layer-output', or 'kv-cache'");
+                    "--mode must be 'attention', 'layer-output', 'kv-cache', or 'argmax'");
             }
         } else if (argument == "--warmup") {
             options.warmup_tokens = parse_size(argv[++index], "--warmup", true);
@@ -222,18 +223,27 @@ Measurement run_once(
     const std::vector<std::uint32_t>& prompt_ids,
     miinfer::Qwen3GpuDecodeCache& cache,
     const char* policy,
-    bool layer_output_mode) {
+    const std::string& ab_mode) {
+    const bool layer_output_mode = ab_mode == "layer-output";
+    const bool kv_cache_mode = ab_mode == "kv-cache";
+    const bool argmax_mode = ab_mode == "argmax";
     if (layer_output_mode) {
         if (::setenv("MIINFER_ATTENTION_KERNEL", "parallel", 1) != 0
             || ::setenv("MIINFER_KV_CACHE_WRITE", "store", 1) != 0
             || ::setenv("MIINFER_LAYER_OUTPUT_HANDOFF", policy, 1) != 0) {
             throw std::runtime_error("setenv(layer-output A/B policy) failed");
         }
-    } else if (options.ab_mode == "kv-cache") {
+    } else if (kv_cache_mode) {
         if (::setenv("MIINFER_ATTENTION_KERNEL", "parallel", 1) != 0
             || ::setenv("MIINFER_KV_CACHE_WRITE", policy, 1) != 0
             || ::setenv("MIINFER_LAYER_OUTPUT_HANDOFF", "direct", 1) != 0) {
             throw std::runtime_error("setenv(KV-cache A/B policy) failed");
+        }
+    } else if (argmax_mode) {
+        if (::setenv("MIINFER_ATTENTION_KERNEL", "parallel", 1) != 0
+            || ::setenv("MIINFER_KV_CACHE_WRITE", "store", 1) != 0
+            || ::setenv("MIINFER_LAYER_OUTPUT_HANDOFF", "direct", 1) != 0) {
+            throw std::runtime_error("setenv(argmax A/B policy) failed");
         }
     } else if (::setenv("MIINFER_ATTENTION_KERNEL", policy, 1) != 0
                || ::setenv("MIINFER_KV_CACHE_WRITE", "store", 1) != 0
@@ -245,26 +255,31 @@ Measurement run_once(
     std::vector<float> logits(plan.model().config().vocab_size);
     const auto total_start = now();
     const auto prefill_start = total_start;
-    for (std::size_t position = 0; position < prompt_ids.size(); ++position) {
+    const bool use_gpu_argmax = argmax_mode && std::strcmp(policy, "gpu-argmax") == 0;
+    const auto decode_next = [&](std::uint32_t input, std::size_t position) {
+        if (use_gpu_argmax) {
+            return miinfer::execute_qwen3_decode_gpu_greedy(plan, input, position, cache);
+        }
         miinfer::execute_qwen3_decode_gpu_fast(
-            plan, prompt_ids[position], position, cache, std::span<float>(logits));
+            plan, input, position, cache, std::span<float>(logits));
+        return argmax(logits);
+    };
+    std::uint32_t next = 0;
+    for (std::size_t position = 0; position < prompt_ids.size(); ++position) {
+        next = decode_next(prompt_ids[position], position);
     }
     const auto prefill_end = now();
-    auto generated = std::vector<std::uint32_t>{argmax(logits)};
+    auto generated = std::vector<std::uint32_t>{next};
     const auto ttft_end = now();
 
     generated.reserve(1 + options.warmup_tokens + options.decode_tokens);
     for (std::size_t index = 1; index < options.warmup_tokens; ++index) {
-        miinfer::execute_qwen3_decode_gpu_fast(
-            plan, generated.back(), cache.length(), cache, std::span<float>(logits));
-        generated.push_back(argmax(logits));
+        generated.push_back(decode_next(generated.back(), cache.length()));
     }
 
     const auto decode_start = now();
     for (std::size_t index = 0; index < options.decode_tokens; ++index) {
-        miinfer::execute_qwen3_decode_gpu_fast(
-            plan, generated.back(), cache.length(), cache, std::span<float>(logits));
-        generated.push_back(argmax(logits));
+        generated.push_back(decode_next(generated.back(), cache.length()));
     }
     const auto decode_end = now();
 
@@ -327,9 +342,11 @@ int main(int argc, char** argv) {
             prompt_ids.size() + options.warmup_tokens + options.decode_tokens + 1);
         const bool layer_output_mode = options.ab_mode == "layer-output";
         const bool kv_cache_mode = options.ab_mode == "kv-cache";
-        const char* first_policy = layer_output_mode || kv_cache_mode ? "copy" : "serial";
+        const bool argmax_mode = options.ab_mode == "argmax";
+        const char* first_policy = layer_output_mode || kv_cache_mode ? "copy"
+            : argmax_mode ? "full-logits" : "serial";
         const char* second_policy = layer_output_mode ? "direct"
-            : kv_cache_mode ? "store" : "parallel";
+            : kv_cache_mode ? "store" : argmax_mode ? "gpu-argmax" : "parallel";
         PolicySamples first{first_policy, {}};
         PolicySamples second{second_policy, {}};
         first.measurements.reserve(options.pairs);
@@ -341,7 +358,7 @@ int main(int argc, char** argv) {
             const bool first_policy_first = pair % 2 == 0;
             const auto run = [&](PolicySamples& samples, const char* policy) {
                 samples.measurements.push_back(
-                    run_once(options, plan, prompt_ids, cache, policy, layer_output_mode));
+                    run_once(options, plan, prompt_ids, cache, policy, options.ab_mode));
                 order.emplace_back(policy);
             };
             if (first_policy_first) {
@@ -390,10 +407,12 @@ int main(int argc, char** argv) {
              << "{\n"
              << "  \"benchmark\":\""
              << (layer_output_mode ? "m5c6b_qwen3_layer_output_ab"
-                 : kv_cache_mode ? "m5c6c_qwen3_kv_cache_ab" : "m5c3_qwen3_attention_ab")
+                 : kv_cache_mode ? "m5c6c_qwen3_kv_cache_ab"
+                 : argmax_mode ? "m5c6d_qwen3_argmax_ab" : "m5c3_qwen3_attention_ab")
              << "\",\n"
              << "  \"experiment\":\""
-             << (layer_output_mode ? "M5-C6b" : kv_cache_mode ? "M5-C6c" : "M5-C3")
+             << (layer_output_mode ? "M5-C6b"
+                 : kv_cache_mode ? "M5-C6c" : argmax_mode ? "M5-C6d" : "M5-C3")
              << "\",\n"
              << "  \"ab_mode\":\"" << options.ab_mode << "\",\n"
              << "  \"git_commit\":\"" << MIINFER_GIT_COMMIT << "\",\n"
@@ -477,6 +496,8 @@ int main(int argc, char** argv) {
                           ? "M5-C6b interleaved Qwen3 layer-output A/B benchmark\n"
                           : kv_cache_mode
                           ? "M5-C6c interleaved Qwen3 KV-cache A/B benchmark\n"
+                          : argmax_mode
+                          ? "M5-C6d interleaved Qwen3 greedy argmax A/B benchmark\n"
                           : "M5-C3 interleaved Qwen3 attention A/B benchmark\n")
                   << "model: " << model.model_name() << "\n"
                   << "pairs: " << options.pairs << "\n"

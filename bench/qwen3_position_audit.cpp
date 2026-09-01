@@ -42,6 +42,7 @@ struct Options {
     std::uint32_t prompt_token = 14990;
     std::vector<std::size_t> positions{1, 8, 16, 32, 64};
     std::string json_output;
+    bool gpu_argmax = false;
 };
 
 struct PositionResult {
@@ -56,6 +57,7 @@ void usage() {
         << "usage: miinfer-qwen3-position-audit MODEL.gguf [options]\n"
         << "  --prompt-token N        initial token (default: 14990)\n"
         << "  --positions CSV         decode positions to audit (default: 1,8,16,32,64)\n"
+        << "  --gpu-argmax            keep logits on device and copy only the selected ID\n"
         << "  --json-output PATH      write machine-readable result\n";
 }
 
@@ -115,6 +117,10 @@ bool parse_options(int argc, char** argv, Options& options) {
         if (argument == "--help") {
             usage();
             return false;
+        }
+        if (argument == "--gpu-argmax") {
+            options.gpu_argmax = true;
+            continue;
         }
         if (index + 1 >= argc) throw std::invalid_argument("missing value for " + argument);
         if (argument == "--prompt-token") {
@@ -205,6 +211,21 @@ int main(int argc, char** argv) {
         production_tokens.reserve(options.positions.back() + 1);
         auto token = options.prompt_token;
 
+        const auto decode_next = [&](std::uint32_t input, std::size_t position,
+                                     miinfer::Qwen3GpuProfile* profile = nullptr) {
+            if (options.gpu_argmax) {
+                return miinfer::execute_qwen3_decode_gpu_greedy(
+                    plan, input, position, cache, profile);
+            }
+            miinfer::execute_qwen3_decode_gpu_fast(
+                plan, input, position, cache, std::span<float>(logits), profile);
+            for (const float value : logits) {
+                if (!std::isfinite(value)) throw std::runtime_error("non-finite audit logits");
+            }
+            return static_cast<std::uint32_t>(std::distance(
+                logits.begin(), std::max_element(logits.begin(), logits.end())));
+        };
+
         // Collect clean wall times separately from the event-instrumented
         // pass. Event recording is intentionally excluded from these values.
         cache.reset();
@@ -213,14 +234,11 @@ int main(int argc, char** argv) {
             const bool selected = selected_index < options.positions.size()
                 && options.positions[selected_index] == position;
             const auto start = selected ? now() : TimePoint{};
-            miinfer::execute_qwen3_decode_gpu_fast(
-                plan, token, position, cache, std::span<float>(logits));
+            const auto next = decode_next(token, position);
             if (selected) {
                 production_wall_ms[selected_index] = elapsed_ms(start, now());
                 ++selected_index;
             }
-            const auto next = static_cast<std::uint32_t>(std::distance(
-                logits.begin(), std::max_element(logits.begin(), logits.end())));
             production_tokens.push_back(next);
             token = next;
         }
@@ -243,21 +261,16 @@ int main(int argc, char** argv) {
                 result.profile.reset();
                 result.profile.enable_deferred_timing();
                 const auto start = now();
-                miinfer::execute_qwen3_decode_gpu_fast(
-                    plan, token, position, cache, std::span<float>(logits), &result.profile);
+                const auto next = decode_next(token, position, &result.profile);
                 result.wall_ms = elapsed_ms(start, now());
                 results.push_back(std::move(result));
+                selected_tokens.push_back(next);
+                token = next;
             } else {
-                miinfer::execute_qwen3_decode_gpu_fast(
-                    plan, token, position, cache, std::span<float>(logits));
+                const auto next = decode_next(token, position);
+                selected_tokens.push_back(next);
+                token = next;
             }
-            for (const float value : logits) {
-                if (!std::isfinite(value)) throw std::runtime_error("non-finite audit logits");
-            }
-            const auto next = static_cast<std::uint32_t>(std::distance(
-                logits.begin(), std::max_element(logits.begin(), logits.end())));
-            selected_tokens.push_back(next);
-            token = next;
         }
 
         if (production_tokens != selected_tokens) {
@@ -267,8 +280,11 @@ int main(int argc, char** argv) {
         std::ostringstream json;
         json << std::fixed << std::setprecision(6)
              << "{\n"
-             << "  \"benchmark\":\"m5c1_qwen3_position_audit\",\n"
-             << "  \"experiment\":\"M5-C1\",\n"
+             << "  \"benchmark\":\"" << (options.gpu_argmax
+                 ? "m5c6d_qwen3_argmax_position_audit"
+                 : "m5c1_qwen3_position_audit") << "\",\n"
+             << "  \"experiment\":\"" << (options.gpu_argmax ? "M5-C6d" : "M5-C1") << "\",\n"
+             << "  \"gpu_argmax\":" << (options.gpu_argmax ? "true" : "false") << ",\n"
              << "  \"git_commit\":\"" << MIINFER_GIT_COMMIT << "\",\n"
              << "  \"git_dirty\":\"" << MIINFER_GIT_DIRTY << "\",\n"
              << "  \"build_type\":\"" << MIINFER_BUILD_TYPE << "\",\n"
@@ -310,7 +326,9 @@ int main(int argc, char** argv) {
         const auto index_of = [](miinfer::Qwen3ProfileCategory category) {
             return category_index(category);
         };
-        std::cout << "M5-C1 Qwen3 position-scaled decode audit\n"
+        std::cout << (options.gpu_argmax
+            ? "M5-C6d Qwen3 GPU-argmax position audit\n"
+            : "M5-C1 Qwen3 position-scaled decode audit\n")
                   << "model: " << model.model_name() << "\n"
                   << "prompt token: " << options.prompt_token << "\n"
                   << "timing: deferred HIP events; wall time includes audit event recording\n"

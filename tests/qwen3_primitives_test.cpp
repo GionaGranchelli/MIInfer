@@ -151,6 +151,23 @@ bool gpu_tests() {
     std::cout << "rms_norm gpu=" << (passed ? "PASS" : "FAIL")
               << " values=" << norm_output[0] << ',' << norm_output[127] << '\n';
 
+    const std::vector<float> argmax_input{1.0F, 5.0F, 5.0F, -2.0F, 4.0F};
+    auto* device_argmax_input = device_copy(argmax_input);
+    std::uint32_t* device_argmax_output = nullptr;
+    MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&device_argmax_output), sizeof(std::uint32_t)));
+    miinfer::launch_qwen3_argmax(
+        device_argmax_input, device_argmax_output,
+        static_cast<std::uint32_t>(argmax_input.size()));
+    MIINFER_HIP_CHECK(hipDeviceSynchronize());
+    std::uint32_t argmax_output = 0;
+    MIINFER_HIP_CHECK(hipMemcpy(&argmax_output, device_argmax_output, sizeof(argmax_output),
+                                hipMemcpyDeviceToHost));
+    passed = argmax_output == 1 && passed;
+    std::cout << "argmax gpu=" << (argmax_output == 1 ? "PASS" : "FAIL")
+              << " selected=" << argmax_output << " (first tie)\n";
+    MIINFER_HIP_CHECK(hipFree(device_argmax_output));
+    MIINFER_HIP_CHECK(hipFree(device_argmax_input));
+
     std::vector<miinfer::Q6KDeviceBlock> q6_blocks(2);
     for (auto& block : q6_blocks) {
         block.d = __float2half(1.0F);

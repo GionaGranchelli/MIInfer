@@ -421,6 +421,43 @@ __global__ void qwen3_q6_k_q8_k_gemv_kernel(
     if (lane == 0) output[row] = partials[0];
 }
 
+__device__ __forceinline__ bool qwen3_argmax_wins(
+    float candidate_value, std::uint32_t candidate_index,
+    float best_value, std::uint32_t best_index) {
+    return candidate_value > best_value
+        || (candidate_value == best_value && candidate_index < best_index);
+}
+
+__global__ void qwen3_argmax_kernel(
+    const float* input, std::uint32_t* output, std::uint32_t elements) {
+    __shared__ float values[256];
+    __shared__ std::uint32_t indices[256];
+
+    float best_value = -INFINITY;
+    std::uint32_t best_index = elements;
+    for (std::uint32_t index = threadIdx.x; index < elements; index += blockDim.x) {
+        const float value = input[index];
+        if (qwen3_argmax_wins(value, index, best_value, best_index)) {
+            best_value = value;
+            best_index = index;
+        }
+    }
+    values[threadIdx.x] = best_value;
+    indices[threadIdx.x] = best_index;
+    __syncthreads();
+
+    for (std::uint32_t stride = blockDim.x / 2; stride > 0; stride /= 2) {
+        if (threadIdx.x < stride
+            && qwen3_argmax_wins(values[threadIdx.x + stride], indices[threadIdx.x + stride],
+                                 values[threadIdx.x], indices[threadIdx.x])) {
+            values[threadIdx.x] = values[threadIdx.x + stride];
+            indices[threadIdx.x] = indices[threadIdx.x + stride];
+        }
+        __syncthreads();
+    }
+    if (threadIdx.x == 0) output[0] = indices[0];
+}
+
 }  // namespace
 
 void launch_qwen3_q4_embedding(
@@ -661,6 +698,16 @@ void launch_qwen3_q6_k_q8_k_gemv(
     }
     hipLaunchKernelGGL(qwen3_q6_k_q8_k_gemv_kernel, dim3(rows), dim3(256), 0, stream,
                        weights, input, output, rows, columns);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen3_argmax(
+    const float* input, std::uint32_t* output, std::uint32_t elements, hipStream_t stream) {
+    if (input == nullptr || output == nullptr || elements == 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen3_argmax_kernel, dim3(1), dim3(256), 0, stream,
+                       input, output, elements);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
