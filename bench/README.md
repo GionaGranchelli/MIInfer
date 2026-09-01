@@ -595,3 +595,31 @@ One opt-in four-Wave64 history-partitioned candidate was implemented under
 rejected without production selection. The candidate changed reduction order;
 the existing parallel attention path remains the default. See
 `experiments/EXP-0036-m5c12b-cooperative-attention-scaling.md`.
+
+## M5-C13a fixed-cost floor profile
+
+C13a re-profiled the accepted shared Gate/Up Q8 reuse production path at
+stable-peak clocks and short positions `1,2,4,8`. The raw audit is retained at
+`bench/results/20260901T-c13a-floor/position-audit.json` and the decision is
+documented in `experiments/EXP-0037-m5c13a-fixed-floor-profile.md`.
+
+| Position | Wall ms | Whole-token GPU ms | Attention ms | Wall minus attention ms |
+|---:|---:|---:|---:|---:|
+| 1 | 15.032 | 15.071 | 0.450 | 14.582 |
+| 2 | 15.342 | 15.186 | 0.522 | 14.820 |
+| 4 | 15.431 | 15.425 | 0.663 | 14.768 |
+| 8 | 15.712 | 15.656 | 0.949 | 14.763 |
+
+The fixed wall-minus-attention component is therefore approximately 14.7
+ms/token, consistent with the C12b P64/P1024 endpoints. Whole-token GPU event
+time tracks clean wall time closely, while dispatches remain 1553/token,
+synchronizations 38/token, allocations zero, and residual copy accounting
+589,828 bytes/token. At P1 the largest named categories are FFN projection
+(6.969 ms), quantization (3.179 ms), LM head (2.943 ms), normalization
+(2.856 ms), and conversion (2.168 ms). Category timings are deferred event
+attribution and overlap; they are not additive wall-clock components.
+
+C13a changes no production behavior. FFN projection was not selected because
+C11b already cleared the exact Gate/Up/Down shapes against the pinned gfx906
+MMVQ path. The next bounded experiment is C13b exact-shape LM-head Q6_K×Q8_K
+differential profiling before any production implementation change.

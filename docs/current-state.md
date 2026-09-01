@@ -256,6 +256,10 @@ No other GPU architecture is currently supported.
   P512/P1024 with flat structural counters and no second collapse. Its
   four-Wave64 history-partition candidate changed the first token from 8 to
   8673 and was rejected; production attention remains unchanged
+* M5-C13a measured the short-context fixed floor at P1/P2/P4/P8. Clean wall
+  minus attention stayed near 14.7 ms/token, whole-token GPU events tracked
+  wall time closely, and dispatches, syncs, allocations, and residual copies
+  stayed flat. The next bounded target is an exact-shape LM-head differential
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -295,15 +299,15 @@ overhead relative to the pinned gfx906 llama.cpp control.
 
 The immediate technical objective is:
 
-> Find a numerically faithful way to reduce the remaining cooperative
-> cached-attention history cost. No C12c implementation is preselected after
-> the C12b history-partition candidate failed the autoregressive contract.
-> M5-C11b found no justified FFN/MMVQ port: direct Gate/Up/Down evidence was
-> approximately tied or favored MIInfer, while the historical K/V gap was
-> already closed by EXP-0009. The controlled peak comparison measured 55.356
-> MIInfer tok/s versus 90.566 TG128 and 90.389 TG256 for the pinned llama.cpp
-> control. C10c remains rejected and its separate path remains the production
-> default.
+> Establish whether the isolated Qwen3 LM-head Q6_K×Q8_K GEMV is a real
+> fixed-cost differential against the strongest reproducible gfx906 reference.
+> M5-C13a measured a stable approximately 14.7 ms/token non-attention floor at
+> P1/P2/P4/P8, with whole-token GPU events tracking wall time and no growth in
+> dispatches, synchronizations, allocations, or residual copies. The next
+> bounded experiment is C13b exact-shape LM-head differential profiling. No
+> production kernel change, quantization change, or generic fusion is selected
+> yet. C12b's history-partition candidate remains rejected, and C10c's
+> separate normalization/Q8 path remains the production default.
 
 The initial eight-token fixture matches the independent MI50 reference through
 position 2. Release passes the complete fixture and Debug remains a
@@ -587,6 +591,14 @@ M5-C12a — stable-peak non-FFN profile (CLOSED; current production 55.419 tok/s
 P64 19.579 ms clean wall and 19.605 ms whole-token GPU event; attention is the
 only demonstrated context-growing family through P64; C12b selected for bounded
 cooperative cached-attention differential/scaling)
+
+M5-C12b — cooperative attention scaling (CLOSED; production cooperative path
+KEEP; history-partition candidate REJECTED; linear P64-P1024 scaling recorded;
+no C12c implementation preselected)
+
+M5-C13a — fixed-cost floor profile (CLOSED; measurement-only; approximately
+14.7 ms/token fixed wall-minus-attention floor at P1/P2/P4/P8; no idle or
+structural-counter growth; C13b exact-shape LM-head differential selected)
 ```
 
 The exact ordering may change based on early measurements.
@@ -755,7 +767,7 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-01 — M5-C10b through M5-C12b were recorded after the C9c production
+2026-09-01 — M5-C10b through M5-C13a were recorded after the C9c production
 KEEP. C10c passed its strict real-model correctness gates but its one-workgroup
 fused path regressed clean decode by 5.217%; the separate FFN normalization/Q8
 path remains the production default. C11a refreshed the production baseline and
@@ -769,7 +781,10 @@ for llama.cpp TG128/TG256. C12a then measured the current production path at
 stable_peak and selected cooperative cached-attention differential/scaling as
 the next bounded target. C12b found linear production scaling through P1024,
 but rejected its history-partition candidate because it changed the first
-generated token.
+generated token. C13a then measured the P1/P2/P4/P8 fixed-cost floor at
+approximately 14.7 ms/token, with whole-token GPU events tracking wall time
+and no structural-counter growth. C13b is now the bounded exact-shape LM-head
+differential target.
 
 Update this document whenever:
 
