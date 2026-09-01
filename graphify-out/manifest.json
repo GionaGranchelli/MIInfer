@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "bench/README.md": {
-    "mtime": 1788243311.8791661,
-    "seen": 1788243350.6004772,
-    "ast_hash": "5a14f8aafa4f21d4bcfa44444da6a8a1",
+    "mtime": 1788243977.6344154,
+    "seen": 1788244017.194095,
+    "ast_hash": "f8f0eb75ce3b55ee07f10243845b3b66",
     "semantic_hash": ""
   },
   "context.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788243303.391214,
-    "seen": 1788243350.600488,
-    "ast_hash": "6e5f7c93433fc51b900fcb377fe33b54",
+    "mtime": 1788243977.6364155,
+    "seen": 1788244017.1941068,
+    "ast_hash": "31262c5d83365ac07334abff70e066af",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -855,6 +855,12 @@
     "mtime": 1788243342.0389962,
     "seen": 1788243350.6005447,
     "ast_hash": "e193ca898f0ee00334903a779b3c9b5c",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0016-m5c4-post-attention-baseline.md": {
+    "mtime": 1788244008.3382423,
+    "seen": 1788244017.1941557,
+    "ast_hash": "9db3e78554a3fbf3ac369ffba4855e6a",
     "semantic_hash": ""
   }
 }

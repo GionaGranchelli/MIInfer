@@ -173,6 +173,10 @@ No other GPU architecture is currently supported.
   64-token greedy IDs and measure a 3.073x cooperative-over-serial speedup;
   absolute rates are hardware-state-qualified because telemetry observed
   930/350 MHz auto-mode snapshots
+* M5-C4 post-attention baseline; cooperative attention remains bounded through
+  cache length 1024, reaching 75.489 ms in the intrusive audit while dispatches
+  and copied bytes remain flat; absolute throughput awaits a validated clock
+  state
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -444,7 +448,9 @@ M5-C2 — cached-attention scaling optimization (CLOSED)
 
 M5-C3 — repeat interleaved attention A/B and profile the new baseline (CLOSED)
 
-M5-C4 — select the next measured optimization target from the cooperative
+M5-C4 — canonical post-attention baseline (RETEST: validated clock state unavailable)
+
+M5-C5 — select the next measured optimization target from the cooperative
 baseline (next milestone)
 ```
 
@@ -620,7 +626,11 @@ trace-free control from 14.430 to 38.754 tok/s. The position-scaled audit
 shows flat dispatch/copy/quantization/FFN/KV-write costs and cached attention
 growing from 3.401 ms at cache length 1 to 95.998 ms at cache length 64. The
 M5-C3 repeated interleaved A/B characterization and profiling of the new
-attention baseline is complete. Earlier M5-C0 and EXP-0012 results remain recorded
+attention baseline is complete. M5-C4 extends the cooperative audit through
+cache length 1024, but its absolute rates are qualified because the MI50
+reported 925–930/350 MHz auto-mode clocks; privileged clock control was
+unavailable. M5-C5 is the next optimization-selection slice. Earlier M5-C0 and
+EXP-0012 results remain recorded
 below for historical comparison. M4-C3 closed. The model-backed tokenizer
 encodes `hello` as `14990`, and the Release text CLI reproduces the pinned
 eight-token continuation and generated text. The physical C3 gate passes.

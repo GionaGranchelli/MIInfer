@@ -178,3 +178,18 @@ The clean M5-C3 run used three balanced pairs and 64 measured growing-context
 decode forwards. Its raw result is retained under
 `bench/results/20260901T061300Z-353809/`; the companion cooperative position
 audit is under `bench/results/20260901T-m5c3-position-audit/`.
+
+## M5-C4 post-attention baseline
+
+M5-C4 reruns the trace-free cooperative path at the current clean commit and
+extends the position audit through cache length 1024. The production benchmark
+results are retained under `bench/results/20260901T062048Z-356125/` (short) and
+`bench/results/20260901T062124Z-356897/` (64-token growing context). The
+position audits are under `bench/results/20260901T0622-m5c4-position-audit/`
+and `bench/results/20260901T0623-m5c4-long-audit/`.
+
+The benchmark must be interpreted with the captured hardware state. The MI50
+was in auto mode and telemetry observed approximately 925–930 MHz SCLK and
+350 MHz MCLK, so these runs are not canonical replacements for the validated
+1725/1000 MHz baseline. Use the interleaved M5-C3 harness for relative policy
+comparisons and repeat M5-C4 after valid clock control is available.
