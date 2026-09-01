@@ -274,6 +274,23 @@ bool use_fused_swiglu_q8() {
         "MIINFER_SWIGLU_Q8_FUSION must be 'separate' or 'fused'");
 }
 
+bool use_shared_gate_up_q8() {
+    const char* configured = std::getenv("MIINFER_FFN_Q8_REUSE");
+    if (configured == nullptr || std::strcmp(configured, "separate") == 0) return false;
+    if (std::strcmp(configured, "shared") == 0) return true;
+    throw std::invalid_argument(
+        "MIINFER_FFN_Q8_REUSE must be 'separate' or 'shared'");
+}
+
+bool verify_shared_gate_up_q8() {
+    const char* configured = std::getenv("MIINFER_VERIFY_FFN_Q8_REUSE");
+    if (configured == nullptr || std::strcmp(configured, "0") == 0
+        || std::strcmp(configured, "false") == 0) return false;
+    if (std::strcmp(configured, "1") == 0 || std::strcmp(configured, "true") == 0) return true;
+    throw std::invalid_argument(
+        "MIINFER_VERIFY_FFN_Q8_REUSE must be '0', '1', 'false', or 'true'");
+}
+
 Qwen3ProfileCategory projection_profile_category(const char* projection) {
     if (std::strcmp(projection, "q") == 0 || std::strcmp(projection, "k") == 0
         || std::strcmp(projection, "v") == 0) {
@@ -303,37 +320,18 @@ Qwen3FfnProfileStage projection_ffn_stage(const char* projection) {
     return Qwen3FfnProfileStage::count;
 }
 
-void launch_projection(
-    const Qwen3GpuPlan& plan,
-    const Qwen3TensorView& weight,
+void quantize_projection_input(
     const float* input,
     std::uint32_t input_elements,
-    float* output,
-    int rows,
-    int columns,
     __half* input_half,
     Q8_1Block* input_q8,
     Q8ExactBlock* input_q8_exact,
-    __half* output_half,
     const char* projection,
-    Qwen3GpuProfile* profile = nullptr,
-    bool input_prequantized = false) {
-    const auto projection_category = projection_profile_category(projection);
+    Qwen3GpuProfile* profile = nullptr) {
     const auto ffn_quantization_stage = projection_ffn_quantization_stage(projection);
-    const auto ffn_projection_stage = projection_ffn_stage(projection);
     const bool exact_metadata = use_exact_q8_metadata(projection);
     const bool f32_input = projection_selected("MIINFER_F32_INPUT_PROJECTIONS", projection);
-    const bool f32_output = projection_selected("MIINFER_F32_OUTPUT_PROJECTIONS", projection);
-    if (input_prequantized && !exact_metadata) {
-        throw std::invalid_argument("prequantized input requires exact Q8 metadata");
-    }
-    if (f32_output && !exact_metadata) {
-        throw std::invalid_argument("F32 projection output requires Q8Exact metadata");
-    }
-    if (input_prequantized) {
-        // The caller has already produced the exact Q8 block stream. This is
-        // used only by the opt-in SwiGLU fusion candidate.
-    } else if (!exact_metadata && f32_input) {
+    if (!exact_metadata && f32_input) {
         profile_gpu_call(profile, Qwen3ProfileCategory::quantization, 1, [&] {
             launch_q8_1_quantize_f32(input, input_q8, static_cast<int>(input_elements));
         }, ffn_quantization_stage);
@@ -354,6 +352,53 @@ void launch_projection(
                 launch_q8_1_quantize(input_half, input_q8, static_cast<int>(input_elements));
             }, ffn_quantization_stage);
         }
+    }
+}
+
+void verify_q8_reuse_buffers(
+    const void* first,
+    const void* second,
+    std::size_t bytes,
+    Qwen3GpuProfile* profile) {
+    std::vector<std::byte> first_host(bytes);
+    std::vector<std::byte> second_host(bytes);
+    MIINFER_HIP_CHECK(hipMemcpy(first_host.data(), first, bytes, hipMemcpyDeviceToHost));
+    MIINFER_HIP_CHECK(hipMemcpy(second_host.data(), second, bytes, hipMemcpyDeviceToHost));
+    if (profile != nullptr) ++profile->gate_up_q8_reuse_checks;
+    if (std::memcmp(first_host.data(), second_host.data(), bytes) != 0) {
+        if (profile != nullptr) ++profile->gate_up_q8_reuse_mismatches;
+        throw std::runtime_error("Gate and Up Q8 activation buffers differ");
+    }
+}
+
+void launch_projection(
+    const Qwen3GpuPlan& plan,
+    const Qwen3TensorView& weight,
+    const float* input,
+    std::uint32_t input_elements,
+    float* output,
+    int rows,
+    int columns,
+    __half* input_half,
+    Q8_1Block* input_q8,
+    Q8ExactBlock* input_q8_exact,
+    __half* output_half,
+    const char* projection,
+    Qwen3GpuProfile* profile = nullptr,
+    bool input_prequantized = false) {
+    const auto projection_category = projection_profile_category(projection);
+    const auto ffn_projection_stage = projection_ffn_stage(projection);
+    const bool exact_metadata = use_exact_q8_metadata(projection);
+    const bool f32_output = projection_selected("MIINFER_F32_OUTPUT_PROJECTIONS", projection);
+    if (f32_output && !exact_metadata) {
+        throw std::invalid_argument("F32 projection output requires Q8Exact metadata");
+    }
+    if (input_prequantized) {
+        // The caller has already produced the exact Q8 block stream. This is
+        // used only by the opt-in SwiGLU fusion candidate.
+    } else {
+        quantize_projection_input(input, input_elements, input_half, input_q8, input_q8_exact,
+                                  projection, profile);
     }
     const auto* device_weight = static_cast<const Q4_0Block*>(plan.device_tensor_data(weight.name()));
     profile_gpu_call(profile, projection_category, 1, [&] {
@@ -508,6 +553,7 @@ public:
           input_half(kMaxVector * sizeof(__half)),
           output_half(kMaxVector * sizeof(__half)),
           input_q8(kMaxQ8Bytes), input_q8_exact(kMaxQ8Bytes),
+          gate_up_q8_verify(kMaxQ8Bytes),
           final_norm(hidden), logits(vocab),
           quantized_final_norm(hidden / 256), argmax_token(1) {}
 
@@ -545,6 +591,9 @@ public:
     DeviceBytes output_half;
     DeviceBytes input_q8;
     DeviceBytes input_q8_exact;
+    // Only used by the opt-in C9c verifier; the production shared path uses
+    // input_q8 or input_q8_exact directly and never copies these bytes.
+    DeviceBytes gate_up_q8_verify;
     DeviceBuffer<float> final_norm;
     DeviceBuffer<float> logits;
     DeviceBuffer<Q8KDeviceBlock> quantized_final_norm;
@@ -921,14 +970,52 @@ Qwen3LayerTrace qwen3_layer_gpu_impl(
                                      config.hidden_size);
     }, Qwen3FfnProfileStage::normalization);
     trace.ffn_norm = capture_optional(ffn_norm.data(), hidden);
-    launch_projection(plan, layer.gate, ffn_norm.data(), config.hidden_size, gate.data(),
-                      config.intermediate_size, config.hidden_size, half_input, q8_input, q8_exact_input,
-                      half_output, "gate", profile);
-    trace.gate = capture_optional(gate.data(), intermediate);
-    launch_projection(plan, layer.up, ffn_norm.data(), config.hidden_size, up.data(),
-                      config.intermediate_size, config.hidden_size, half_input, q8_input, q8_exact_input,
-                      half_output, "up", profile);
-    trace.up = capture_optional(up.data(), intermediate);
+    const bool shared_gate_up_q8 = !capture_trace && use_shared_gate_up_q8();
+    if (shared_gate_up_q8) {
+        const bool gate_exact_metadata = use_exact_q8_metadata("gate");
+        const bool up_exact_metadata = use_exact_q8_metadata("up");
+        const bool gate_f32_input = projection_selected("MIINFER_F32_INPUT_PROJECTIONS", "gate");
+        const bool up_f32_input = projection_selected("MIINFER_F32_INPUT_PROJECTIONS", "up");
+        if (gate_exact_metadata != up_exact_metadata || gate_f32_input != up_f32_input) {
+            throw std::invalid_argument(
+                "Gate/Up Q8 reuse requires identical quantization contracts");
+        }
+        quantize_projection_input(ffn_norm.data(), config.hidden_size, half_input, q8_input,
+                                  q8_exact_input, "gate", profile);
+        if (verify_shared_gate_up_q8()) {
+            // Recreate the old two-call dataflow into a separate persistent
+            // buffer.  The comparison is intentionally host-visible and only
+            // enabled for the C9c diagnostic; production reuse never reads it.
+            quantize_projection_input(
+                ffn_norm.data(), config.hidden_size, half_input,
+                static_cast<Q8_1Block*>(buffers.gate_up_q8_verify.data()),
+                static_cast<Q8ExactBlock*>(buffers.gate_up_q8_verify.data()), "up", nullptr);
+            const auto q8_bytes = static_cast<std::size_t>(config.hidden_size)
+                / kQ8_1BlockSize * sizeof(Q8ExactBlock);
+            const void* shared_buffer = gate_exact_metadata
+                ? static_cast<const void*>(q8_exact_input)
+                : static_cast<const void*>(q8_input);
+            verify_q8_reuse_buffers(shared_buffer, buffers.gate_up_q8_verify.data(), q8_bytes,
+                                    profile);
+        }
+        launch_projection(plan, layer.gate, ffn_norm.data(), config.hidden_size, gate.data(),
+                          config.intermediate_size, config.hidden_size, half_input, q8_input,
+                          q8_exact_input, half_output, "gate", profile, true);
+        trace.gate = capture_optional(gate.data(), intermediate);
+        launch_projection(plan, layer.up, ffn_norm.data(), config.hidden_size, up.data(),
+                          config.intermediate_size, config.hidden_size, half_input, q8_input,
+                          q8_exact_input, half_output, "up", profile, true);
+        trace.up = capture_optional(up.data(), intermediate);
+    } else {
+        launch_projection(plan, layer.gate, ffn_norm.data(), config.hidden_size, gate.data(),
+                          config.intermediate_size, config.hidden_size, half_input, q8_input,
+                          q8_exact_input, half_output, "gate", profile);
+        trace.gate = capture_optional(gate.data(), intermediate);
+        launch_projection(plan, layer.up, ffn_norm.data(), config.hidden_size, up.data(),
+                          config.intermediate_size, config.hidden_size, half_input, q8_input,
+                          q8_exact_input, half_output, "up", profile);
+        trace.up = capture_optional(up.data(), intermediate);
+    }
     const bool fused_swiglu = !capture_trace && use_fused_swiglu_q8();
     const char* mutation = std::getenv("MIINFER_GPU_LAYER_MUTATE");
     if (fused_swiglu) {

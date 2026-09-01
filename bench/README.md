@@ -397,6 +397,39 @@ full fixed-prefix decode diverged at position 38. The separate path remains
 the production default. See
 `experiments/EXP-0028-m5c9b-swiglu-q8-fusion.md`.
 
+## M5-C9c Gate/Up activation-Q8 reuse
+
+The C9c candidate checks whether Gate and Up independently quantize the same
+FFN-normalized input, then reuses one unchanged Q8 buffer for both GEMVs. The
+candidate is selected only in the fast path with
+`MIINFER_FFN_Q8_REUSE=shared`; the default is `separate`.
+
+The interleaved A/B harness is:
+
+```bash
+scripts/run-m5c9c-gate-up-q8-ab.sh \
+  /path/to/Qwen3-8B-q4_0-b968826d.gguf
+```
+
+For real-model byte-level verification, run the position audit with the
+candidate and verifier enabled:
+
+```bash
+MIINFER_FFN_Q8_REUSE=shared \
+MIINFER_VERIFY_FFN_Q8_REUSE=1 \
+build/mi50-release/miinfer-qwen3-position-audit \
+  /path/to/Qwen3-8B-q4_0-b968826d.gguf \
+  --positions 1,8,16,32,64 --gpu-argmax \
+  --json-output /tmp/m5c9c-position-audit.json
+```
+
+The verifier recreates the old separate Gate/Up quantization into a second
+persistent buffer and compares payload plus metadata byte-for-byte. It is
+diagnostic-only and adds host-visible copies; it must not be used for timing.
+The candidate remains pending the real-model verification, 64-token
+trajectory, and interleaved performance gates recorded in
+`experiments/EXP-0029-m5c9c-gate-up-q8-reuse.md`.
+
 ## M5-C8a FFN projection shape characterization
 
 The kernel-only `miinfer-q4-q8-gemv-bench` characterization is recorded in

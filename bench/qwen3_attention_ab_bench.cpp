@@ -73,7 +73,7 @@ struct PolicySamples {
 void usage() {
     std::cerr
         << "usage: miinfer-qwen3-attention-ab-bench MODEL.gguf [options]\n"
-        << "  --mode MODE            attention, layer-output, kv-cache, argmax, or swiglu-fusion (default: attention)\n"
+        << "  --mode MODE            attention, layer-output, kv-cache, argmax, swiglu-fusion, or gate-up-q8-reuse (default: attention)\n"
         << "  --prompt-ids CSV       explicit prompt IDs (default: 14990)\n"
         << "  --warmup N             generated tokens before measurement (default: 8)\n"
         << "  --generated-tokens N   measured decode forward calls (default: 64)\n"
@@ -143,9 +143,10 @@ bool parse_options(int argc, char** argv, Options& options) {
             options.ab_mode = argv[++index];
             if (options.ab_mode != "attention" && options.ab_mode != "layer-output"
                 && options.ab_mode != "kv-cache" && options.ab_mode != "argmax"
-                && options.ab_mode != "swiglu-fusion") {
+                && options.ab_mode != "swiglu-fusion"
+                && options.ab_mode != "gate-up-q8-reuse") {
                 throw std::invalid_argument(
-                    "--mode must be 'attention', 'layer-output', 'kv-cache', 'argmax', or 'swiglu-fusion'");
+                    "--mode must be 'attention', 'layer-output', 'kv-cache', 'argmax', 'swiglu-fusion', or 'gate-up-q8-reuse'");
             }
         } else if (argument == "--warmup") {
             options.warmup_tokens = parse_size(argv[++index], "--warmup", true);
@@ -229,6 +230,7 @@ Measurement run_once(
     const bool kv_cache_mode = ab_mode == "kv-cache";
     const bool argmax_mode = ab_mode == "argmax";
     const bool swiglu_fusion_mode = ab_mode == "swiglu-fusion";
+    const bool gate_up_q8_reuse_mode = ab_mode == "gate-up-q8-reuse";
     if (layer_output_mode) {
         if (::setenv("MIINFER_ATTENTION_KERNEL", "parallel", 1) != 0
             || ::setenv("MIINFER_KV_CACHE_WRITE", "store", 1) != 0
@@ -253,6 +255,15 @@ Measurement run_once(
             || ::setenv("MIINFER_LAYER_OUTPUT_HANDOFF", "direct", 1) != 0
             || ::setenv("MIINFER_SWIGLU_Q8_FUSION", policy, 1) != 0) {
             throw std::runtime_error("setenv(SwiGLU fusion A/B policy) failed");
+        }
+    } else if (gate_up_q8_reuse_mode) {
+        if (::setenv("MIINFER_ATTENTION_KERNEL", "parallel", 1) != 0
+            || ::setenv("MIINFER_KV_CACHE_WRITE", "store", 1) != 0
+            || ::setenv("MIINFER_LAYER_OUTPUT_HANDOFF", "direct", 1) != 0
+            || ::setenv("MIINFER_FFN_Q8_REUSE", policy, 1) != 0
+            || ::setenv("MIINFER_SWIGLU_Q8_FUSION", "separate", 1) != 0
+            || ::unsetenv("MIINFER_VERIFY_FFN_Q8_REUSE") != 0) {
+            throw std::runtime_error("setenv(Gate/Up Q8 reuse A/B policy) failed");
         }
     } else if (::setenv("MIINFER_ATTENTION_KERNEL", policy, 1) != 0
                || ::setenv("MIINFER_KV_CACHE_WRITE", "store", 1) != 0
@@ -351,13 +362,17 @@ int main(int argc, char** argv) {
             prompt_ids.size() + options.warmup_tokens + options.decode_tokens + 1);
         const bool layer_output_mode = options.ab_mode == "layer-output";
         const bool kv_cache_mode = options.ab_mode == "kv-cache";
-        const bool argmax_mode = options.ab_mode == "argmax";
-        const bool swiglu_fusion_mode = options.ab_mode == "swiglu-fusion";
+    const bool argmax_mode = options.ab_mode == "argmax";
+    const bool swiglu_fusion_mode = options.ab_mode == "swiglu-fusion";
+    const bool gate_up_q8_reuse_mode = options.ab_mode == "gate-up-q8-reuse";
         const char* first_policy = layer_output_mode || kv_cache_mode ? "copy"
-            : argmax_mode ? "full-logits" : swiglu_fusion_mode ? "separate" : "serial";
+            : argmax_mode ? "full-logits"
+            : swiglu_fusion_mode ? "separate"
+            : gate_up_q8_reuse_mode ? "separate" : "serial";
         const char* second_policy = layer_output_mode ? "direct"
             : kv_cache_mode ? "store" : argmax_mode ? "gpu-argmax"
-            : swiglu_fusion_mode ? "fused" : "parallel";
+            : swiglu_fusion_mode ? "fused"
+            : gate_up_q8_reuse_mode ? "shared" : "parallel";
         PolicySamples first{first_policy, {}};
         PolicySamples second{second_policy, {}};
         first.measurements.reserve(options.pairs);
@@ -421,12 +436,14 @@ int main(int argc, char** argv) {
                  : kv_cache_mode ? "m5c6c_qwen3_kv_cache_ab"
                  : argmax_mode ? "m5c6d_qwen3_argmax_ab"
                  : swiglu_fusion_mode ? "m5c9b_qwen3_swiglu_fusion_ab"
+                 : gate_up_q8_reuse_mode ? "m5c9c_qwen3_gate_up_q8_reuse_ab"
                  : "m5c3_qwen3_attention_ab")
              << "\",\n"
              << "  \"experiment\":\""
              << (layer_output_mode ? "M5-C6b"
                  : kv_cache_mode ? "M5-C6c" : argmax_mode ? "M5-C6d"
-                 : swiglu_fusion_mode ? "M5-C9b" : "M5-C3")
+                 : swiglu_fusion_mode ? "M5-C9b"
+                 : gate_up_q8_reuse_mode ? "M5-C9c" : "M5-C3")
              << "\",\n"
              << "  \"ab_mode\":\"" << options.ab_mode << "\",\n"
              << "  \"git_commit\":\"" << MIINFER_GIT_COMMIT << "\",\n"

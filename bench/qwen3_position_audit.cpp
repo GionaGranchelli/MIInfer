@@ -9,6 +9,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -173,6 +174,8 @@ void write_profile_json(std::ostream& output, const miinfer::Qwen3GpuProfile& pr
            << ",\"synchronizations\":"
            << (total(profile.synchronizations) + profile.finalization_synchronizations)
            << ",\"temporary_allocations\":" << profile.temporary_allocations
+           << ",\"gate_up_q8_reuse_checks\":" << profile.gate_up_q8_reuse_checks
+           << ",\"gate_up_q8_reuse_mismatches\":" << profile.gate_up_q8_reuse_mismatches
            << ",\"categories\":[";
     for (std::size_t index = 0; index < miinfer::qwen3_profile_category_count; ++index) {
         if (index != 0) output << ',';
@@ -213,6 +216,9 @@ int main(int argc, char** argv) {
         }
 
         const auto plan = miinfer::Qwen3GpuPlan::build(model);
+        const char* reuse_policy = std::getenv("MIINFER_FFN_Q8_REUSE");
+        const bool shared_gate_up_q8 = reuse_policy != nullptr
+            && std::string(reuse_policy) == "shared";
         miinfer::Qwen3GpuDecodeCache cache(
             config.layer_count, config.kv_heads, config.head_dim, options.positions.back() + 1);
         std::vector<float> logits(config.vocab_size);
@@ -328,6 +334,7 @@ int main(int argc, char** argv) {
                  : "m5c1_qwen3_position_audit") << "\",\n"
              << "  \"experiment\":\"" << (options.gpu_argmax ? "M5-C6d" : "M5-C1") << "\",\n"
              << "  \"gpu_argmax\":" << (options.gpu_argmax ? "true" : "false") << ",\n"
+             << "  \"ffn_q8_reuse\":\"" << (shared_gate_up_q8 ? "shared" : "separate") << "\",\n"
              << "  \"git_commit\":\"" << MIINFER_GIT_COMMIT << "\",\n"
              << "  \"git_dirty\":\"" << MIINFER_GIT_DIRTY << "\",\n"
              << "  \"build_type\":\"" << MIINFER_BUILD_TYPE << "\",\n"
@@ -373,11 +380,13 @@ int main(int argc, char** argv) {
         std::cout << (options.gpu_argmax
             ? "M5-C6d Qwen3 GPU-argmax position audit\n"
             : "M5-C1 Qwen3 position-scaled decode audit\n")
+                  << "FFN Gate/Up Q8 input policy: "
+                  << (shared_gate_up_q8 ? "shared" : "separate") << "\n"
                   << "model: " << model.model_name() << "\n"
                   << "prompt token: " << options.prompt_token << "\n"
                   << "timing: clean wall plus lightweight whole-token HIP events and deferred per-operation events\n"
                   << "position cache_before production_wall_ms production_gpu_ms audit_wall_ms gpu_ms attention_ms kv_cache_ms quant_ms "
-                     "ffn_ms copy_ms copy_bytes dispatches syncs temporary_allocations\n";
+                     "ffn_ms copy_ms copy_bytes dispatches syncs temporary_allocations reuse_checks reuse_mismatches\n";
         for (const auto& result : results) {
             const auto& profile = result.profile;
             std::cout << std::fixed << std::setprecision(3)
@@ -392,7 +401,9 @@ int main(int argc, char** argv) {
                       << total(profile.copy_ms) << ' ' << total(profile.copy_bytes) << ' '
                       << total(profile.dispatches) << ' '
                       << (total(profile.synchronizations) + profile.finalization_synchronizations) << ' '
-                      << profile.temporary_allocations << '\n';
+                      << profile.temporary_allocations << ' '
+                      << profile.gate_up_q8_reuse_checks << ' '
+                      << profile.gate_up_q8_reuse_mismatches << '\n';
             std::cout << "  FFN stage GPU ms / dispatches:\n";
             for (std::size_t stage = 0; stage < miinfer::qwen3_ffn_profile_stage_count; ++stage) {
                 std::cout << "    "

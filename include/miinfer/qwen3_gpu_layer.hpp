@@ -74,6 +74,8 @@ struct Qwen3GpuProfile {
     std::array<std::size_t, qwen3_ffn_profile_stage_count> ffn_dispatches{};
     std::size_t temporary_allocations = 0;
     std::size_t finalization_synchronizations = 0;
+    std::size_t gate_up_q8_reuse_checks = 0;
+    std::size_t gate_up_q8_reuse_mismatches = 0;
     bool deferred_timing = false;
     std::vector<Qwen3GpuProfileEvent> pending_events;
 
@@ -99,6 +101,8 @@ struct Qwen3GpuProfile {
         ffn_dispatches.fill(0);
         temporary_allocations = 0;
         finalization_synchronizations = 0;
+        gate_up_q8_reuse_checks = 0;
+        gate_up_q8_reuse_mismatches = 0;
         deferred_timing = false;
     }
 
