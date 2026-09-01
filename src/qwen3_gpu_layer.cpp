@@ -218,6 +218,16 @@ bool use_parallel_attention() {
         "MIINFER_ATTENTION_KERNEL must be 'parallel' or 'serial'");
 }
 
+bool use_direct_layer_output_handoff() {
+    const char* configured = std::getenv("MIINFER_LAYER_OUTPUT_HANDOFF");
+    // The direct handoff is the production fast-path default.  The copy
+    // variant remains available for isolated performance A/B measurements.
+    if (configured == nullptr || std::strcmp(configured, "direct") == 0) return true;
+    if (std::strcmp(configured, "copy") == 0) return false;
+    throw std::invalid_argument(
+        "MIINFER_LAYER_OUTPUT_HANDOFF must be 'direct' or 'copy'");
+}
+
 Qwen3ProfileCategory projection_profile_category(const char* projection) {
     if (std::strcmp(projection, "q") == 0 || std::strcmp(projection, "k") == 0
         || std::strcmp(projection, "v") == 0) {
@@ -633,6 +643,9 @@ Qwen3LayerTrace qwen3_layer_gpu_impl(
     if (input_device == nullptr || model.layers().empty() || layer_index >= model.layers().size()) {
         throw std::invalid_argument("invalid Qwen3 GPU layer input/index");
     }
+    if (output_device != nullptr && output_device == input_device) {
+        throw std::invalid_argument("Qwen3 GPU layer input and output buffers must differ");
+    }
     const auto hidden = static_cast<std::size_t>(config.hidden_size);
     const auto intermediate = static_cast<std::size_t>(config.intermediate_size);
     const auto heads = static_cast<std::size_t>(config.attention_heads);
@@ -677,6 +690,9 @@ Qwen3LayerTrace qwen3_layer_gpu_impl(
     auto* half_output = static_cast<__half*>(buffers.output_half.data());
     auto* q8_input = static_cast<Q8_1Block*>(buffers.input_q8.data());
     auto* q8_exact_input = static_cast<Q8ExactBlock*>(buffers.input_q8_exact.data());
+    const bool direct_output = output_device != nullptr && !capture_trace
+        && use_direct_layer_output_handoff();
+    float* layer_output_target = direct_output ? output_device : layer_output.data();
 
     const auto capture_optional = [profile, capture_trace](const float* device,
                                                             std::size_t elements) {
@@ -840,11 +856,12 @@ Qwen3LayerTrace qwen3_layer_gpu_impl(
                       half_output, "down", profile);
     trace.ffn_output = capture_optional(ffn_output.data(), hidden);
     profile_gpu_call(profile, Qwen3ProfileCategory::residual, 1, [&] {
-        launch_qwen3_add(ffn_output.data(), ffn_input.data(), layer_output.data(), config.hidden_size);
+        launch_qwen3_add(ffn_output.data(), ffn_input.data(), layer_output_target,
+                         config.hidden_size);
     });
-    trace.layer_output = capture_optional(layer_output.data(), hidden);
+    trace.layer_output = capture_optional(layer_output_target, hidden);
 
-    if (output_device != nullptr) {
+    if (output_device != nullptr && !direct_output) {
         profile_copy_call(profile, hidden * sizeof(float), [&] {
             MIINFER_HIP_CHECK(hipMemcpy(output_device, layer_output.data(), hidden * sizeof(float),
                                         hipMemcpyDeviceToDevice));

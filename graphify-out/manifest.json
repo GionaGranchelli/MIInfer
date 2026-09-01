@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "bench/README.md": {
-    "mtime": 1788250196.050031,
-    "seen": 1788251486.1513937,
-    "ast_hash": "cf208259a507ee8a63f122ff9b4b778b",
+    "mtime": 1788252513.7102628,
+    "seen": 1788253047.0707297,
+    "ast_hash": "a801f92ac061a7f99b27d45b109ca473",
     "semantic_hash": ""
   },
   "context.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788250171.4901648,
-    "seen": 1788251486.1514034,
-    "ast_hash": "79d619e9947c5631bfc63bc672d746e4",
+    "mtime": 1788252492.7173796,
+    "seen": 1788253047.0707402,
+    "ast_hash": "2d4ecc11f68f64c1f8e66630800c9e92",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -582,9 +582,9 @@
     "semantic_hash": ""
   },
   "src/qwen3_gpu_layer.cpp": {
-    "mtime": 1788251357.1326764,
-    "seen": 1788251486.1513278,
-    "ast_hash": "56af5144c6aaf7c67bb459cecc929cba",
+    "mtime": 1788252939.1779368,
+    "seen": 1788253047.0706658,
+    "ast_hash": "b74d64b920d0ef0d9c3a37326b0e8c17",
     "semantic_hash": ""
   },
   "tests/qwen3_layer0_gpu_test.cpp": {
@@ -840,9 +840,9 @@
     "semantic_hash": ""
   },
   "bench/qwen3_attention_ab_bench.cpp": {
-    "mtime": 1788243014.4138126,
-    "seen": 1788243350.6003447,
-    "ast_hash": "984caa1f5eeebb8d3f33310a6c24ab67",
+    "mtime": 1788253138.4608486,
+    "seen": 1788253145.687903,
+    "ast_hash": "bf87597af4649b352d0173ed54b6ffdc",
     "semantic_hash": ""
   },
   "scripts/run-m5c3-attention-ab.sh": {
@@ -867,6 +867,24 @@
     "mtime": 1788250126.5714097,
     "seen": 1788251486.1514552,
     "ast_hash": "456997080a769c51af15d1205047cfef",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0018-m5c5b-resident-norm-weights.md": {
+    "mtime": 1788251775.1913652,
+    "seen": 1788253047.0707898,
+    "ast_hash": "5191d60374945ab63744756548e4a67f",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0019-m5c6a-execution-overhead-audit.md": {
+    "mtime": 1788252478.4594586,
+    "seen": 1788253047.0707917,
+    "ast_hash": "e45d59ec4036cb6be2ab23dc068186c4",
+    "semantic_hash": ""
+  },
+  "scripts/run-m5c6b-layer-output-ab.sh": {
+    "mtime": 1788253138.4618485,
+    "seen": 1788253145.687974,
+    "ast_hash": "04ab9461b775b53f486b80a085ad2ce7",
     "semantic_hash": ""
   }
 }

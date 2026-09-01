@@ -40,6 +40,7 @@ double elapsed_ms(TimePoint start, TimePoint end) {
 
 struct Options {
     std::string model_path;
+    std::string ab_mode = "attention";
     std::string prompt_ids = "14990";
     std::size_t warmup_tokens = 8;
     std::size_t decode_tokens = 64;
@@ -71,6 +72,7 @@ struct PolicySamples {
 void usage() {
     std::cerr
         << "usage: miinfer-qwen3-attention-ab-bench MODEL.gguf [options]\n"
+        << "  --mode MODE            attention or layer-output (default: attention)\n"
         << "  --prompt-ids CSV       explicit prompt IDs (default: 14990)\n"
         << "  --warmup N             generated tokens before measurement (default: 8)\n"
         << "  --generated-tokens N   measured decode forward calls (default: 64)\n"
@@ -136,6 +138,11 @@ bool parse_options(int argc, char** argv, Options& options) {
         if (index + 1 >= argc) throw std::invalid_argument("missing value for " + argument);
         if (argument == "--prompt-ids") {
             options.prompt_ids = argv[++index];
+        } else if (argument == "--mode") {
+            options.ab_mode = argv[++index];
+            if (options.ab_mode != "attention" && options.ab_mode != "layer-output") {
+                throw std::invalid_argument("--mode must be 'attention' or 'layer-output'");
+            }
         } else if (argument == "--warmup") {
             options.warmup_tokens = parse_size(argv[++index], "--warmup", true);
         } else if (argument == "--generated-tokens") {
@@ -212,9 +219,16 @@ Measurement run_once(
     const miinfer::Qwen3GpuPlan& plan,
     const std::vector<std::uint32_t>& prompt_ids,
     miinfer::Qwen3GpuDecodeCache& cache,
-    const char* attention_kernel) {
-    if (::setenv("MIINFER_ATTENTION_KERNEL", attention_kernel, 1) != 0) {
-        throw std::runtime_error("setenv(MIINFER_ATTENTION_KERNEL) failed");
+    const char* policy,
+    bool layer_output_mode) {
+    if (layer_output_mode) {
+        if (::setenv("MIINFER_ATTENTION_KERNEL", "parallel", 1) != 0
+            || ::setenv("MIINFER_LAYER_OUTPUT_HANDOFF", policy, 1) != 0) {
+            throw std::runtime_error("setenv(layer-output A/B policy) failed");
+        }
+    } else if (::setenv("MIINFER_ATTENTION_KERNEL", policy, 1) != 0
+               || ::setenv("MIINFER_LAYER_OUTPUT_HANDOFF", "direct", 1) != 0) {
+        throw std::runtime_error("setenv(attention A/B policy) failed");
     }
     cache.reset();
     MIINFER_HIP_CHECK(hipDeviceSynchronize());
@@ -301,26 +315,29 @@ int main(int argc, char** argv) {
         miinfer::Qwen3GpuDecodeCache cache(
             model.config().layer_count, model.config().kv_heads, model.config().head_dim,
             prompt_ids.size() + options.warmup_tokens + options.decode_tokens + 1);
-        PolicySamples serial{"serial", {}};
-        PolicySamples parallel{"parallel", {}};
-        serial.measurements.reserve(options.pairs);
-        parallel.measurements.reserve(options.pairs);
+        const bool layer_output_mode = options.ab_mode == "layer-output";
+        const char* first_policy = layer_output_mode ? "copy" : "serial";
+        const char* second_policy = layer_output_mode ? "direct" : "parallel";
+        PolicySamples first{first_policy, {}};
+        PolicySamples second{second_policy, {}};
+        first.measurements.reserve(options.pairs);
+        second.measurements.reserve(options.pairs);
         std::vector<std::string> order;
         order.reserve(options.pairs * 2);
 
         for (std::size_t pair = 0; pair < options.pairs; ++pair) {
-            const bool serial_first = pair % 2 == 0;
-            const auto run = [&](PolicySamples& samples, const char* kernel) {
+            const bool first_policy_first = pair % 2 == 0;
+            const auto run = [&](PolicySamples& samples, const char* policy) {
                 samples.measurements.push_back(
-                    run_once(options, plan, prompt_ids, cache, kernel));
-                order.emplace_back(kernel);
+                    run_once(options, plan, prompt_ids, cache, policy, layer_output_mode));
+                order.emplace_back(policy);
             };
-            if (serial_first) {
-                run(serial, "serial");
-                run(parallel, "parallel");
+            if (first_policy_first) {
+                run(first, first_policy);
+                run(second, second_policy);
             } else {
-                run(parallel, "parallel");
-                run(serial, "serial");
+                run(second, second_policy);
+                run(first, first_policy);
             }
         }
 
@@ -338,29 +355,32 @@ int main(int argc, char** argv) {
                 }
             }
         };
-        validate(serial);
-        validate(parallel);
-        if (serial.measurements.front().generated_ids
-            != parallel.measurements.front().generated_ids) {
-            throw std::runtime_error("serial and parallel generated sequences differ");
+        validate(first);
+        validate(second);
+        if (first.measurements.front().generated_ids
+            != second.measurements.front().generated_ids) {
+            throw std::runtime_error("A/B generated sequences differ");
         }
 
-        const auto serial_prefill = field_samples(serial.measurements, &Measurement::prefill_ms);
-        const auto serial_ttft = field_samples(serial.measurements, &Measurement::ttft_ms);
-        const auto serial_decode = field_samples(serial.measurements, &Measurement::decode_ms);
-        const auto serial_total = field_samples(serial.measurements, &Measurement::total_ms);
-        const auto parallel_prefill = field_samples(parallel.measurements, &Measurement::prefill_ms);
-        const auto parallel_ttft = field_samples(parallel.measurements, &Measurement::ttft_ms);
-        const auto parallel_decode = field_samples(parallel.measurements, &Measurement::decode_ms);
-        const auto parallel_total = field_samples(parallel.measurements, &Measurement::total_ms);
-        const auto serial_decode_stats = summarize(serial_decode);
-        const auto parallel_decode_stats = summarize(parallel_decode);
+        const auto first_prefill = field_samples(first.measurements, &Measurement::prefill_ms);
+        const auto first_ttft = field_samples(first.measurements, &Measurement::ttft_ms);
+        const auto first_decode = field_samples(first.measurements, &Measurement::decode_ms);
+        const auto first_total = field_samples(first.measurements, &Measurement::total_ms);
+        const auto second_prefill = field_samples(second.measurements, &Measurement::prefill_ms);
+        const auto second_ttft = field_samples(second.measurements, &Measurement::ttft_ms);
+        const auto second_decode = field_samples(second.measurements, &Measurement::decode_ms);
+        const auto second_total = field_samples(second.measurements, &Measurement::total_ms);
+        const auto first_decode_stats = summarize(first_decode);
+        const auto second_decode_stats = summarize(second_decode);
 
         std::ostringstream json;
         json << std::fixed << std::setprecision(6)
              << "{\n"
-             << "  \"benchmark\":\"m5c3_qwen3_attention_ab\",\n"
-             << "  \"experiment\":\"M5-C3\",\n"
+             << "  \"benchmark\":\""
+             << (layer_output_mode ? "m5c6b_qwen3_layer_output_ab" : "m5c3_qwen3_attention_ab")
+             << "\",\n"
+             << "  \"experiment\":\"" << (layer_output_mode ? "M5-C6b" : "M5-C3") << "\",\n"
+             << "  \"ab_mode\":\"" << options.ab_mode << "\",\n"
              << "  \"git_commit\":\"" << MIINFER_GIT_COMMIT << "\",\n"
              << "  \"git_dirty\":\"" << MIINFER_GIT_DIRTY << "\",\n"
              << "  \"build_type\":\"" << MIINFER_BUILD_TYPE << "\",\n"
@@ -378,51 +398,51 @@ int main(int argc, char** argv) {
             json << json_escape(order[index]);
         }
         json << "],\n"
-             << "  \"generated_ids\":" << ids_json(serial.measurements.front().generated_ids) << ",\n"
-             << "  \"serial_decode\":";
-        write_stats_json(json, serial_decode_stats, options.decode_tokens);
-        json << ",\n  \"parallel_decode\":";
-        write_stats_json(json, parallel_decode_stats, options.decode_tokens);
+             << "  \"generated_ids\":" << ids_json(first.measurements.front().generated_ids) << ",\n"
+             << "  \"" << first.name << "_decode\":";
+        write_stats_json(json, first_decode_stats, options.decode_tokens);
+        json << ",\n  \"" << second.name << "_decode\":";
+        write_stats_json(json, second_decode_stats, options.decode_tokens);
         json << ",\n  \"samples_ms\":{\n"
-             << "    \"serial_prefill\":[";
-        for (std::size_t index = 0; index < serial_prefill.size(); ++index) {
+             << "    \"" << first.name << "_prefill\":[";
+        for (std::size_t index = 0; index < first_prefill.size(); ++index) {
             if (index != 0) json << ',';
-            json << serial_prefill[index];
+            json << first_prefill[index];
         }
-        json << "],\n    \"serial_ttft\":[";
-        for (std::size_t index = 0; index < serial_ttft.size(); ++index) {
+        json << "],\n    \"" << first.name << "_ttft\":[";
+        for (std::size_t index = 0; index < first_ttft.size(); ++index) {
             if (index != 0) json << ',';
-            json << serial_ttft[index];
+            json << first_ttft[index];
         }
-        json << "],\n    \"serial_decode\":[";
-        for (std::size_t index = 0; index < serial_decode.size(); ++index) {
+        json << "],\n    \"" << first.name << "_decode\":[";
+        for (std::size_t index = 0; index < first_decode.size(); ++index) {
             if (index != 0) json << ',';
-            json << serial_decode[index];
+            json << first_decode[index];
         }
-        json << "],\n    \"serial_total\":[";
-        for (std::size_t index = 0; index < serial_total.size(); ++index) {
+        json << "],\n    \"" << first.name << "_total\":[";
+        for (std::size_t index = 0; index < first_total.size(); ++index) {
             if (index != 0) json << ',';
-            json << serial_total[index];
+            json << first_total[index];
         }
-        json << "],\n    \"parallel_prefill\":[";
-        for (std::size_t index = 0; index < parallel_prefill.size(); ++index) {
+        json << "],\n    \"" << second.name << "_prefill\":[";
+        for (std::size_t index = 0; index < second_prefill.size(); ++index) {
             if (index != 0) json << ',';
-            json << parallel_prefill[index];
+            json << second_prefill[index];
         }
-        json << "],\n    \"parallel_ttft\":[";
-        for (std::size_t index = 0; index < parallel_ttft.size(); ++index) {
+        json << "],\n    \"" << second.name << "_ttft\":[";
+        for (std::size_t index = 0; index < second_ttft.size(); ++index) {
             if (index != 0) json << ',';
-            json << parallel_ttft[index];
+            json << second_ttft[index];
         }
-        json << "],\n    \"parallel_decode\":[";
-        for (std::size_t index = 0; index < parallel_decode.size(); ++index) {
+        json << "],\n    \"" << second.name << "_decode\":[";
+        for (std::size_t index = 0; index < second_decode.size(); ++index) {
             if (index != 0) json << ',';
-            json << parallel_decode[index];
+            json << second_decode[index];
         }
-        json << "],\n    \"parallel_total\":[";
-        for (std::size_t index = 0; index < parallel_total.size(); ++index) {
+        json << "],\n    \"" << second.name << "_total\":[";
+        for (std::size_t index = 0; index < second_total.size(); ++index) {
             if (index != 0) json << ',';
-            json << parallel_total[index];
+            json << second_total[index];
         }
         json << "]\n  }\n}\n";
 
@@ -432,13 +452,15 @@ int main(int argc, char** argv) {
             output << json.str();
         }
 
-        const auto print = [&](const char* name, const std::vector<Measurement>& measurements) {
+        const auto print = [&](const std::string& name, const std::vector<Measurement>& measurements) {
             const auto decode = summarize(field_samples(measurements, &Measurement::decode_ms));
             std::cout << name << " decode: " << decode.mean_ms << " ms ("
                       << throughput(decode, options.decode_tokens) << " tok/s), samples="
                       << measurements.size() << '\n';
         };
-        std::cout << "M5-C3 interleaved Qwen3 attention A/B benchmark\n"
+        std::cout << (layer_output_mode
+                          ? "M5-C6b interleaved Qwen3 layer-output A/B benchmark\n"
+                          : "M5-C3 interleaved Qwen3 attention A/B benchmark\n")
                   << "model: " << model.model_name() << "\n"
                   << "pairs: " << options.pairs << "\n"
                   << "measured_decode_tokens: " << options.decode_tokens << "\n"
@@ -448,12 +470,12 @@ int main(int argc, char** argv) {
             std::cout << order[index];
         }
         std::cout << '\n';
-        print("serial", serial.measurements);
-        print("parallel", parallel.measurements);
-        const double serial_throughput = throughput(serial_decode_stats, options.decode_tokens);
-        const double parallel_throughput = throughput(parallel_decode_stats, options.decode_tokens);
-        const double speedup = serial_throughput > 0.0
-            ? parallel_throughput / serial_throughput : 0.0;
+        print(first.name, first.measurements);
+        print(second.name, second.measurements);
+        const double first_throughput = throughput(first_decode_stats, options.decode_tokens);
+        const double second_throughput = throughput(second_decode_stats, options.decode_tokens);
+        const double speedup = first_throughput > 0.0
+            ? second_throughput / first_throughput : 0.0;
         std::cout << "speedup: " << speedup << "x\n"
                   << "correctness: deterministic, finite, identical generated IDs\n";
         return 0;
