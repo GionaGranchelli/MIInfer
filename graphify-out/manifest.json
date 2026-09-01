@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788264308.8498147,
-    "seen": 1788264335.060245,
-    "ast_hash": "8989b09c75285b24f575936f8a0a8259",
+    "mtime": 1788264369.9845052,
+    "seen": 1788264982.1348042,
+    "ast_hash": "653a5c1588e2a84b1ecf4a32956af138",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -378,9 +378,9 @@
     "semantic_hash": ""
   },
   "bench/q4_q8_gemv_bench.cpp": {
-    "mtime": 1788087411.843477,
-    "seen": 1788088493.1579094,
-    "ast_hash": "389034ff4f0e640b2eb46d7c85e3aabc",
+    "mtime": 1788264584.889418,
+    "seen": 1788264982.1346562,
+    "ast_hash": "1b9019f9ecd770bdc88e3cabddcda571",
     "semantic_hash": ""
   },
   "include/miinfer/q4_q8_gemv.hpp": {
@@ -396,9 +396,9 @@
     "semantic_hash": ""
   },
   "tests/q4_q8_gemv_test.cpp": {
-    "mtime": 1788125738.928211,
-    "seen": 1788126189.3173053,
-    "ast_hash": "76cd4188dea5c5a25eb3375d25fa852f",
+    "mtime": 1788264917.1497366,
+    "seen": 1788264982.1347497,
+    "ast_hash": "5350c2f4a813f755abf59d4b26b1db46",
     "semantic_hash": ""
   },
   "experiments/EXP-0005-q4-q8-gemv-baseline.md": {
@@ -426,9 +426,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/q4_q8_zero_point_dot.hpp": {
-    "mtime": 1788128113.1268911,
-    "seen": 1788128520.7398367,
-    "ast_hash": "dc347dc7877ed2f954e5cb76f02048dc",
+    "mtime": 1788264584.8874178,
+    "seen": 1788264982.1346803,
+    "ast_hash": "2525c130ad7dfabc8563d1e0f72ebb1d",
     "semantic_hash": ""
   },
   "experiments/EXP-0007-q4-q8-zero-point-dot.md": {

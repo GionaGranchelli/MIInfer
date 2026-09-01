@@ -126,6 +126,12 @@ bool run_shape(const miinfer::GemvShape& shape, const std::string& implementatio
     } else if (implementation == "zero-point-wave64") {
         miinfer::launch_q4_q8_gemv_zero_point_dot_wave64(
             device_weights, device_input, device_output, shape.m, shape.k);
+    } else if (implementation == "zero-point-four-wave64") {
+        miinfer::launch_q4_q8_gemv_zero_point_dot_four_wave64(
+            device_weights, device_input, device_output, shape.m, shape.k);
+    } else if (implementation == "zero-point-four-wave64-exact-metadata") {
+        miinfer::launch_q4_q8_gemv_zero_point_dot_four_wave64_exact_metadata(
+            device_weights, device_input_exact, device_output, shape.m, shape.k);
     } else if (implementation == "zero-point-exact-metadata") {
         const bool use_wave64 = std::strcmp(shape.id, "k") == 0
                              || std::strcmp(shape.id, "v") == 0;
@@ -169,6 +175,7 @@ int main() {
     passed = run_zero_point_identity_tests() && passed;
     const std::vector<std::string> implementations = {
         "scalar", "packed-dot", "zero-point-dot", "zero-point-128", "zero-point-wave64",
+        "zero-point-four-wave64", "zero-point-four-wave64-exact-metadata",
         "zero-point-exact-metadata"};
     const std::vector<miinfer::GemvShape> small_shapes = {
         {"small", "small Q4/Q8 indexing", 7, 32},

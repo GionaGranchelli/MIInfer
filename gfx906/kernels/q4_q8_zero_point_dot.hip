@@ -227,6 +227,32 @@ __global__ void q4_q8_gemv_zero_point_dot_wave64_kernel(
     if (threadIdx.x == 0) store_result(output, row, wave_partials[0] + wave_partials[1]);
 }
 
+template <typename Input, typename Output, bool ExactSum>
+__global__ void q4_q8_gemv_zero_point_dot_four_wave64_kernel(
+    const Q4_0Block* weights, const Input* input, Output* output,
+    int rows, int columns) {
+    const int wave = static_cast<int>(threadIdx.x) / 64;
+    const int lane = static_cast<int>(threadIdx.x) & 63;
+    const int row = static_cast<int>(blockIdx.x) * 4 + wave;
+    if (row >= rows) return;
+
+    const int blocks_per_row = columns / kQ4_0BlockSize;
+    const std::size_t row_offset = static_cast<std::size_t>(row) * blocks_per_row;
+    float sum = 0.0F;
+    for (int block = lane; block < blocks_per_row; block += 64) {
+        const auto& weight = weights[row_offset + static_cast<std::size_t>(block)];
+        if constexpr (ExactSum) {
+            sum += exact_sum_block_dot(weight, input[block]);
+        } else {
+            sum += zero_point_block_dot(weight, input[block]);
+        }
+    }
+    for (int offset = 32; offset > 0; offset /= 2) {
+        sum += __shfl_down(sum, offset, 64);
+    }
+    if (lane == 0) store_result(output, row, sum);
+}
+
 }  // namespace
 
 void launch_q4_q8_gemv_zero_point_dot(
@@ -272,6 +298,19 @@ void launch_q4_q8_gemv_zero_point_dot_wave64(
     }
     hipLaunchKernelGGL((q4_q8_gemv_zero_point_dot_wave64_kernel<Q8_1Block, __half, false>), dim3(rows), dim3(128), 0,
                        stream, weights, input, output, rows, columns);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_q4_q8_gemv_zero_point_dot_four_wave64(
+    const Q4_0Block* weights, const Q8_1Block* input, __half* output,
+    int rows, int columns, hipStream_t stream) {
+    if (rows <= 0 || columns <= 0 || columns % kQ4_0BlockSize != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(
+        (q4_q8_gemv_zero_point_dot_four_wave64_kernel<Q8_1Block, __half, false>),
+        dim3(static_cast<unsigned int>((rows + 3) / 4)), dim3(256), 0, stream,
+        weights, input, output, rows, columns);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
@@ -357,6 +396,20 @@ void launch_q4_q8_gemv_zero_point_dot_wave64_exact_metadata(
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
+void launch_q4_q8_gemv_zero_point_dot_four_wave64_exact_metadata(
+    const Q4_0Block* weights, const Q8ExactBlock* input, __half* output,
+    int rows, int columns, hipStream_t stream) {
+    if (weights == nullptr || input == nullptr || output == nullptr
+        || rows <= 0 || columns <= 0 || columns % kQ4_0BlockSize != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(
+        (q4_q8_gemv_zero_point_dot_four_wave64_kernel<Q8ExactBlock, __half, true>),
+        dim3(static_cast<unsigned int>((rows + 3) / 4)), dim3(256), 0, stream,
+        weights, input, output, rows, columns);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
 void launch_q4_q8_gemv_zero_point_dot_exact_metadata_f32(
     const Q4_0Block* weights, const Q8ExactBlock* input, float* output,
     int rows, int columns, hipStream_t stream) {
@@ -395,6 +448,20 @@ void launch_q4_q8_gemv_zero_point_dot_wave64_exact_metadata_f32(
     hipLaunchKernelGGL(
         (q4_q8_gemv_zero_point_dot_wave64_kernel<Q8ExactBlock, float, true>),
         dim3(static_cast<unsigned int>(rows)), dim3(128), 0, stream,
+        weights, input, output, rows, columns);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_q4_q8_gemv_zero_point_dot_four_wave64_exact_metadata_f32(
+    const Q4_0Block* weights, const Q8ExactBlock* input, float* output,
+    int rows, int columns, hipStream_t stream) {
+    if (weights == nullptr || input == nullptr || output == nullptr
+        || rows <= 0 || columns <= 0 || columns % kQ4_0BlockSize != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(
+        (q4_q8_gemv_zero_point_dot_four_wave64_kernel<Q8ExactBlock, float, true>),
+        dim3(static_cast<unsigned int>((rows + 3) / 4)), dim3(256), 0, stream,
         weights, input, output, rows, columns);
     MIINFER_HIP_CHECK(hipGetLastError());
 }

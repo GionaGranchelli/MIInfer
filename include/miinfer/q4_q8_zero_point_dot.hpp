@@ -32,6 +32,17 @@ void launch_q4_q8_gemv_zero_point_dot_wave64(
     int columns,
     hipStream_t stream = nullptr);
 
+// M5-C8b diagnostic candidate: four independent Wave64 row reductions in
+// one 256-thread workgroup. There is no cross-wave reduction; each wave owns
+// one output row. The candidate is intentionally not production-selected.
+void launch_q4_q8_gemv_zero_point_dot_four_wave64(
+    const Q4_0Block* weights,
+    const Q8_1Block* input,
+    __half* output,
+    int rows,
+    int columns,
+    hipStream_t stream = nullptr);
+
 // Production Qwen3 path: same geometry as the corresponding controls, but
 // uses the exact integer sum of Q8 lanes for Q4 zero-point correction.
 void launch_q4_q8_gemv_zero_point_dot_exact_sum(
@@ -84,6 +95,15 @@ void launch_q4_q8_gemv_zero_point_dot_wave64_exact_metadata(
     int columns,
     hipStream_t stream = nullptr);
 
+// M5-C8b exact-metadata counterpart for later full-model A/B validation.
+void launch_q4_q8_gemv_zero_point_dot_four_wave64_exact_metadata(
+    const Q4_0Block* weights,
+    const Q8ExactBlock* input,
+    __half* output,
+    int rows,
+    int columns,
+    hipStream_t stream = nullptr);
+
 // Correctness-only exact-metadata variants exposing the GEMV result as F32.
 // These are used to isolate output-rounding effects without reintroducing the
 // legacy FP16-scaled Q8_1 sum correction.
@@ -104,6 +124,14 @@ void launch_q4_q8_gemv_zero_point_dot_128_exact_metadata_f32(
     hipStream_t stream = nullptr);
 
 void launch_q4_q8_gemv_zero_point_dot_wave64_exact_metadata_f32(
+    const Q4_0Block* weights,
+    const Q8ExactBlock* input,
+    float* output,
+    int rows,
+    int columns,
+    hipStream_t stream = nullptr);
+
+void launch_q4_q8_gemv_zero_point_dot_four_wave64_exact_metadata_f32(
     const Q4_0Block* weights,
     const Q8ExactBlock* input,
     float* output,

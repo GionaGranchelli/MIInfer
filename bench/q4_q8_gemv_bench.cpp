@@ -37,7 +37,7 @@ struct Options {
 void usage() {
     std::cerr << "usage: miinfer-q4-q8-gemv-bench [options]\n"
               << "  --mode gemv|one|quantize|fanout-attention|fanout-ffn\n"
-              << "  --implementation scalar|packed-dot|zero-point-dot|zero-point-128|zero-point-wave64 (default: scalar)\n"
+              << "  --implementation scalar|packed-dot|zero-point-dot|zero-point-128|zero-point-wave64|zero-point-four-wave64 (default: scalar)\n"
               << "  --shape q|k|v|o|gate|up|down|all (gemv/one; default: all)\n"
               << "  --length N             activation length for quantize (default: 4096)\n"
               << "  --warmup N             warm-up operations (default: 5)\n"
@@ -116,7 +116,8 @@ bool parse(int argc, char** argv, Options& options) {
                                        || options.implementation == "packed-dot"
                                        || options.implementation == "zero-point-dot"
                                        || options.implementation == "zero-point-128"
-                                       || options.implementation == "zero-point-wave64";
+                                       || options.implementation == "zero-point-wave64"
+                                       || options.implementation == "zero-point-four-wave64";
     const bool valid_shape = options.shape == "q" || options.shape == "k"
                              || options.shape == "v" || options.shape == "o"
                              || options.shape == "gate" || options.shape == "up"
@@ -149,6 +150,8 @@ void launch_selected_gemv(
         miinfer::launch_q4_q8_gemv_zero_point_dot_128(weights, input, output, rows, columns);
     } else if (options.implementation == "zero-point-wave64") {
         miinfer::launch_q4_q8_gemv_zero_point_dot_wave64(weights, input, output, rows, columns);
+    } else if (options.implementation == "zero-point-four-wave64") {
+        miinfer::launch_q4_q8_gemv_zero_point_dot_four_wave64(weights, input, output, rows, columns);
     } else {
         miinfer::launch_q4_q8_gemv(weights, input, output, rows, columns);
     }
