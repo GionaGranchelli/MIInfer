@@ -71,6 +71,15 @@ same approximately 930/350 MHz auto-mode state, so the comparison is valid
 as a relative optimization result but is not a canonical 1725/1000 MHz
 absolute benchmark.
 
+## Post-change profile
+
+The warmed position-1 profile reported `23.026 ms` of GPU event time,
+`16.813 ms` of copy time, and `1,588` dispatches. The position audit measured
+`650` synchronization sites and `2,082,304` copied bytes for each token.
+The remaining dispatch topology is unchanged, so the next experiment should
+address dispatch/materialization or the largest remaining kernel families
+independently rather than adding another weight-lifetime change.
+
 ## Interpretation
 
 Resident normalization weights remove approximately 37.2% of the measured
@@ -87,7 +96,6 @@ KEEP — resident normalization weights
 
 ## Follow-up
 
-1. Reprofile the C5b steady-state path without changing it further.
-2. Re-establish validated clocks for canonical absolute measurements.
-3. Select the next slice from the remaining dispatch, conversion, quantization,
+1. Re-establish validated clocks for canonical absolute measurements.
+2. Select the next slice from the remaining dispatch, conversion, quantization,
    FFN, and LM-head costs.
