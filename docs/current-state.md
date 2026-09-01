@@ -263,7 +263,12 @@ No other GPU architecture is currently supported.
 * M5-C13b audited that proposed LM-head differential and found the pinned
   llama.cpp gfx906 Q6_K path consumes Q8_1, while MIInfer's LM head consumes
   Q8_K. The contracts are not directly comparable; no LM-head replacement or
-  Q8_1 compatibility path was added, and no C13c target is preselected
+  Q8_1 compatibility path was added
+* M5-C13c mapped the remaining fixed-floor contracts. Only the already-cleared
+  Q4_0×Q8_1 projection rows have an evidence-backed direct llama.cpp
+  comparison; LM head, norm, conversion, broad quantization, RoPE/KV, and
+  attention remain non-comparable under the retained contracts. C13c made no
+  production change and selected no implementation experiment
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -309,8 +314,10 @@ The immediate technical objective is:
 > time and no growth in dispatches, synchronizations, allocations, or residual
 > copies. C13b found that the pinned llama.cpp gfx906 Q6_K MMVQ path consumes
 > Q8_1, whereas MIInfer's LM head consumes Q8_K, so the proposed direct
-> differential is invalid as stated. No Q8_1 compatibility path, production
-> kernel change, or generic fusion is selected yet.
+> differential is invalid as stated. C13c then mapped the fixed-floor
+> contracts and found no uncleared same-contract external differential. No
+> Q8_1 compatibility path, production kernel change, or generic fusion is
+> selected yet.
 
 The initial eight-token fixture matches the independent MI50 reference through
 position 2. Release passes the complete fixture and Debug remains a
@@ -605,7 +612,11 @@ structural-counter growth; C13b contract audit followed)
 
 M5-C13b — LM-head contract audit (CLOSED; pinned external Q6_K path is
 Q8_1, MIInfer path is Q8_K; no valid direct differential; no production change;
-no C13c target preselected)
+no production target selected)
+
+M5-C13c — fixed-floor contract map (CLOSED; measurement-only; only the already
+cleared Q4_0×Q8_1 projection rows have a valid direct differential; no
+implementation selected)
 ```
 
 The exact ordering may change based on early measurements.
@@ -774,7 +785,7 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-01 — M5-C10b through M5-C13b were recorded after the C9c production
+2026-09-02 — M5-C10b through M5-C13c were recorded after the C9c production
 KEEP. C10c passed its strict real-model correctness gates but its one-workgroup
 fused path regressed clean decode by 5.217%; the separate FFN normalization/Q8
 path remains the production default. C11a refreshed the production baseline and
@@ -792,8 +803,10 @@ generated token. C13a then measured the P1/P2/P4/P8 fixed-cost floor at
 approximately 14.7 ms/token, with whole-token GPU events tracking wall time
 and no structural-counter growth. C13b then audited the proposed LM-head
 differential and found an input-contract mismatch: the pinned external Q6_K
-MMVQ path consumes Q8_1, while MIInfer consumes Q8_K. No valid direct
-differential or production LM-head change was selected.
+MMVQ path consumes Q8_1, while MIInfer consumes Q8_K. C13c then mapped the
+fixed-floor contracts and found no uncleared same-contract external
+differential. No valid direct differential or production LM-head change was
+selected.
 
 Update this document whenever:
 

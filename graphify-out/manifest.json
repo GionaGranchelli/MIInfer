@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "bench/README.md": {
-    "mtime": 1788299658.4987493,
-    "seen": 1788299666.8755627,
-    "ast_hash": "5528ed4258fbcdf35a4f8d96a6f70b72",
+    "mtime": 1788300158.1045673,
+    "seen": 1788300178.5056376,
+    "ast_hash": "980f3574194e704925810c13f72ccfed",
     "semantic_hash": ""
   },
   "context.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788299658.3977497,
-    "seen": 1788299666.8755744,
-    "ast_hash": "a92e63cdd16b11b62ced2417ff59f96b",
+    "mtime": 1788300158.1025674,
+    "seen": 1788300178.5056486,
+    "ast_hash": "842b59504a491fd24564adb457cca4de",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -1023,6 +1023,12 @@
     "mtime": 1788299658.600749,
     "seen": 1788299666.8756547,
     "ast_hash": "d53badccc1194a7f5f127f4ee65f5cd4",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0039-m5c13c-fixed-floor-contract-map.md": {
+    "mtime": 1788300094.0148582,
+    "seen": 1788300178.5057278,
+    "ast_hash": "3a72cdb86b67ed029eb3059e06bc2f59",
     "semantic_hash": ""
   }
 }

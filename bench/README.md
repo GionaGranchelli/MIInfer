@@ -638,3 +638,27 @@ whole-token PP1/TG64 context control measured 90.446 tok/s over three samples,
 but it is not used to attribute LM-head time. No Q8_1 compatibility path,
 production kernel change, or C13c target was selected. See
 `experiments/EXP-0038-m5c13b-lm-head-contract-audit.md`.
+
+## M5-C13c fixed-floor contract map
+
+C13c mapped the fixed-floor families using the accepted C13a P1 costs and the
+retained direct-comparison evidence. Only the Q4_0×Q8_1 projection rows have
+an established same-shape, same-representation llama.cpp differential; those
+Gate, Up, Down, Q, K, V, and O rows are already cleared by C11b and EXP-0009.
+
+| Family | MIInfer contract | External contract | Comparable? | MIInfer P1 cost |
+|---|---|---|:---:|---:|
+| FFN Gate/Up/Down | Q4_0×Q8_1 | Q4_0×Q8_1 MMVQ | Yes* | 6.969 ms |
+| Q/K/V/O | Q4_0×Q8_1 | Q4_0×Q8_1 MMVQ | Yes* | 2.467 ms |
+| LM head | Q6_K×Q8_K | Q6_K×Q8_1 | No | 2.943 ms |
+| RMSNorm | FP32 reduction/scale plus explicit boundaries | not established | No | 2.856 ms |
+| Quantization | Q8_1 projections, Q8_K LM head | mixed / not whole-family comparable | Partial | 3.179 ms |
+| Conversion | explicit F32↔F16 boundaries | backend-specific | No | 2.168 ms |
+| RoPE/KV | validated Qwen3/GQA/cache contract | not established | No | 0.790 ms |
+| Attention | cooperative cached attention | different backend contract | No | 0.450 ms at P1 |
+
+\* The direct primitive records a historical output-boundary difference, but
+the accepted Q4_0×Q8_1 input/weight comparison cleared these projection paths.
+No uncleared same-contract row remains, so C13c made no production change and
+selected no C13d implementation. Full details are in
+`experiments/EXP-0039-m5c13c-fixed-floor-contract-map.md`.
