@@ -212,10 +212,10 @@ No other GPU architecture is currently supported.
   (27.7%) with the same oracle result. Static code-object data shows equal
   45-VGPR use and no spills for Gate/Down, while hardware-counter profilers
   are unavailable; no split-K or new Down geometry is justified
-* M5-C9c Gate/Up Q8 activation reuse is implemented as an opt-in candidate;
-  the shared path reuses one unchanged Q8 buffer for both projections, while
-  an opt-in verifier compares separate Gate/Up quantizations byte-for-byte on
-  real decode positions before any production-selection decision
+* M5-C9c Gate/Up Q8 activation reuse is a production KEEP; 180 real-model
+  Gate/Up block-stream checks across positions 1, 8, 16, 32, and 64 found zero
+  mismatches, the 64-token trajectory stayed identical, and shared reuse
+  improved the balanced low-clock A/B from 54.5501 to 55.1724 tok/s (+1.14%)
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -514,8 +514,8 @@ SwiGLU-to-Down-input quantization retained as isolated C9b candidate)
 M5-C9b — fused SwiGLU-to-Down-input Q8 candidate (CLOSED; REJECTED for
 production selection; long decode diverged at position 38)
 
-M5-C9c — Gate/Up activation-Q8 reuse (IMPLEMENTED; opt-in candidate; pending
- real-model verification, 64-token trajectory, and A/B performance result)
+M5-C9c — Gate/Up activation-Q8 reuse (CLOSED; KEEP; production-selected,
++1.14% balanced A/B)
 ```
 
 The exact ordering may change based on early measurements.

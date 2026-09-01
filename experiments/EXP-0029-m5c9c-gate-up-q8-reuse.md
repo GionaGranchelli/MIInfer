@@ -1,10 +1,12 @@
 # EXP-0029 — M5-C9c Gate/Up activation-Q8 reuse
 
-**Status:** IMPLEMENTED — OPT-IN CANDIDATE; REAL-MODEL VALIDATION PENDING
+**Status:** CLOSED — KEEP; PRODUCTION-SELECTED
 **Milestone:** M5
 **Date:** 2026-09-01
 **Baseline commit:** `c1a35db`
-**Candidate:** `MIINFER_FFN_Q8_REUSE=shared`
+**Candidate:** production default `MIINFER_FFN_Q8_REUSE=shared`; control
+`MIINFER_FFN_Q8_REUSE=separate`
+**Result commit:** `1159a89`
 
 ## 1. Question
 
@@ -34,7 +36,7 @@ measurements because it adds synchronous host-visible copies.
 
 ## 4. Acceptance gates
 
-Pending execution on the pinned real model:
+The pinned real-model gates passed:
 
 * Gate/Up Q8 streams byte-identical across representative positions;
 * Release CTest 19/19;
@@ -43,8 +45,13 @@ Pending execution on the pinned real model:
 * repeatable P64 interleaved A/B performance result;
 * no allocation, cache, or precision-contract regression.
 
-The existing production default remains the separate path until all gates
-pass.
+The verifier tested positions 1, 8, 16, 32, and 64. Each position performed
+36 complete Gate/Up block-stream comparisons, for 180 checks total, with zero
+mismatches. The position-audit output is retained at
+`bench/results/20260901T133416Z-397585/verification-position-audit.json`.
+
+The production default was switched to shared reuse only after these gates
+passed; the separate path remains available as an explicit control.
 
 ## 5. Benchmark commands
 
@@ -64,15 +71,33 @@ build/mi50-release/miinfer-qwen3-position-audit \
   --json-output /tmp/m5c9c-position-audit.json
 ```
 
-## 6. Decision
+## 6. Performance results
+
+The balanced three-pair real-model A/B used 64 measured growing-context
+decode tokens. Both paths produced the same 64-token trajectory:
+
+| Path | Mean decode | Throughput |
+|---|---:|---:|
+| Separate | 1173.233789 ms | 54.550083 tok/s |
+| Shared | 1159.999257 ms | 55.172449 tok/s |
+
+The shared path improved throughput by **1.14%**. Structural accounting shows
+the Gate/Up input quantization is reduced from two launches per layer to one;
+the shared run reports 1553 dispatches/token. Hardware telemetry observed
+approximately 930 MHz SCLK and 350 MHz MCLK, so the result is a same-state A/B
+comparison rather than a canonical-clock absolute benchmark.
+
+## 7. Decision
 
 ```text
-PENDING — candidate implemented; hardware verification and A/B results not yet run
+KEEP — production-select shared Gate/Up Q8 activation reuse
 ```
 
-## 7. Follow-up
+The default fast decode policy now uses the shared buffer. The separate path
+remains available as `MIINFER_FFN_Q8_REUSE=separate` for regression A/B tests.
 
-If the verifier and 64-token trajectory pass, compare the fresh P64 profile
-against C9a/C9b and select the candidate only for a repeatable end-to-end
-gain. If either byte identity or trajectory fails, retain the separate path
-and investigate the specific contract or lifetime mismatch.
+## 8. Follow-up
+
+Refresh the production P64 attribution with shared reuse enabled and choose the
+next optimization from the updated FFN/token profile. Retain the long
+trajectory gate for future arithmetic or materialization changes.

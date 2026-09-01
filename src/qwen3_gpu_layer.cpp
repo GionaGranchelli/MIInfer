@@ -276,8 +276,10 @@ bool use_fused_swiglu_q8() {
 
 bool use_shared_gate_up_q8() {
     const char* configured = std::getenv("MIINFER_FFN_Q8_REUSE");
-    if (configured == nullptr || std::strcmp(configured, "separate") == 0) return false;
-    if (std::strcmp(configured, "shared") == 0) return true;
+    // C9c KEEP: one exact Q8 activation is the production default. The
+    // separate path remains an explicit regression/A-B control.
+    if (configured == nullptr || std::strcmp(configured, "shared") == 0) return true;
+    if (std::strcmp(configured, "separate") == 0) return false;
     throw std::invalid_argument(
         "MIINFER_FFN_Q8_REUSE must be 'separate' or 'shared'");
 }

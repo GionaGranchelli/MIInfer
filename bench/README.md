@@ -402,7 +402,8 @@ the production default. See
 The C9c candidate checks whether Gate and Up independently quantize the same
 FFN-normalized input, then reuses one unchanged Q8 buffer for both GEMVs. The
 candidate is selected only in the fast path with
-`MIINFER_FFN_Q8_REUSE=shared`; the default is `separate`.
+`MIINFER_FFN_Q8_REUSE=shared`; the production default is `shared`, and
+`separate` remains an explicit regression/A/B control.
 
 The interleaved A/B harness is:
 
@@ -424,10 +425,12 @@ build/mi50-release/miinfer-qwen3-position-audit \
 ```
 
 The verifier recreates the old separate Gate/Up quantization into a second
-persistent buffer and compares payload plus metadata byte-for-byte. It is
+persistent buffer and compares payload plus metadata byte-for-byte. It passed
+180 checks across positions 1, 8, 16, 32, and 64 with zero mismatches. It is
 diagnostic-only and adds host-visible copies; it must not be used for timing.
-The candidate remains pending the real-model verification, 64-token
-trajectory, and interleaved performance gates recorded in
+The balanced three-pair A/B produced identical 64-token trajectories and
+measured 54.5501 tok/s separate versus 55.1724 tok/s shared (+1.14%). C9c is
+therefore production-selected; see
 `experiments/EXP-0029-m5c9c-gate-up-q8-reuse.md`.
 
 ## M5-C8a FFN projection shape characterization
