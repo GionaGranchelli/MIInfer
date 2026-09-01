@@ -349,6 +349,36 @@ timing identifies FFN projection as the largest individual family at about
 of the dispatches. The resulting next target is a measured FFN kernel
 experiment, not HIP graph capture.
 
+## M5-C9a production FFN attribution
+
+The position audit now includes measurement-only FFN stage counters while
+retaining the production trace-free execution path. It reports separate GPU
+event totals and dispatch counts for FFN normalization, Gate/Up/Down input
+quantization, Gate/Up/Down projection, SwiGLU, and the final FFN residual.
+The aggregate profile continues to report full-token categories, copies,
+synchronizations, and allocations. Deferred event timing is attribution data;
+use the separate production wall measurement for throughput.
+
+Run the P1/P64 attribution used by EXP-0027 with:
+
+```bash
+cmake --preset mi50-release
+cmake --build --preset mi50-release --target miinfer-qwen3-position-audit
+build/mi50-release/miinfer-qwen3-position-audit \
+  /path/to/Qwen3-8B-q4_0-b968826d.gguf \
+  --positions 1,64 \
+  --gpu-argmax \
+  --json-output /tmp/m5c9a-position-audit.json
+```
+
+The measurement-only result is recorded in
+`experiments/EXP-0027-m5c9a-ffn-attribution.md`. At the observed 930/350 MHz
+auto-mode clocks, FFN totals were 9.880 ms at P1 and 9.979 ms at P64 in the
+deferred profile. The SwiGLU plus Down-input quantization chain was 0.795 ms
+at P64 across 108 dispatches, making it a bounded candidate for a separate
+fused experiment. Gate and Up also independently quantize the same normalized
+input; that reuse opportunity remains separate from C9b.
+
 ## M5-C8a FFN projection shape characterization
 
 The kernel-only `miinfer-q4-q8-gemv-bench` characterization is recorded in

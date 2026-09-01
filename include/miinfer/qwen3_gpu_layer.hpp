@@ -33,13 +33,31 @@ enum class Qwen3ProfileCategory {
     count,
 };
 
+// Fine-grained FFN attribution used by the measurement-only M5-C9a profile.
+// These counters do not select kernels or alter the production execution path.
+enum class Qwen3FfnProfileStage {
+    normalization,
+    gate_input_quantization,
+    gate_projection,
+    up_input_quantization,
+    up_projection,
+    swiglu,
+    down_input_quantization,
+    down_projection,
+    residual,
+    count,
+};
+
 constexpr std::size_t qwen3_profile_category_count =
     static_cast<std::size_t>(Qwen3ProfileCategory::count);
+constexpr std::size_t qwen3_ffn_profile_stage_count =
+    static_cast<std::size_t>(Qwen3FfnProfileStage::count);
 
 struct Qwen3GpuProfileEvent {
     hipEvent_t start = nullptr;
     hipEvent_t stop = nullptr;
     Qwen3ProfileCategory category = Qwen3ProfileCategory::count;
+    Qwen3FfnProfileStage ffn_stage = Qwen3FfnProfileStage::count;
     std::size_t dispatches = 0;
     std::size_t bytes = 0;
     bool copy = false;
@@ -51,6 +69,8 @@ struct Qwen3GpuProfile {
     std::array<std::size_t, qwen3_profile_category_count> dispatches{};
     std::array<std::size_t, qwen3_profile_category_count> copy_bytes{};
     std::array<std::size_t, qwen3_profile_category_count> synchronizations{};
+    std::array<double, qwen3_ffn_profile_stage_count> ffn_gpu_ms{};
+    std::array<std::size_t, qwen3_ffn_profile_stage_count> ffn_dispatches{};
     std::size_t temporary_allocations = 0;
     std::size_t finalization_synchronizations = 0;
     bool deferred_timing = false;
@@ -74,6 +94,8 @@ struct Qwen3GpuProfile {
         dispatches.fill(0);
         copy_bytes.fill(0);
         synchronizations.fill(0);
+        ffn_gpu_ms.fill(0.0);
+        ffn_dispatches.fill(0);
         temporary_allocations = 0;
         finalization_synchronizations = 0;
         deferred_timing = false;
@@ -93,6 +115,7 @@ struct Qwen3GpuProfile {
 };
 
 [[nodiscard]] const char* qwen3_profile_category_name(Qwen3ProfileCategory category) noexcept;
+[[nodiscard]] const char* qwen3_ffn_profile_stage_name(Qwen3FfnProfileStage stage) noexcept;
 
 enum class Qwen3ProjectionPrecision {
     f16_input_q8_f16_output,

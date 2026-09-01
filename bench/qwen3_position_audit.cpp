@@ -185,6 +185,15 @@ void write_profile_json(std::ostream& output, const miinfer::Qwen3GpuProfile& pr
                << ",\"copy_bytes\":" << profile.copy_bytes[index]
                << ",\"synchronizations\":" << profile.synchronizations[index] << '}';
     }
+    output << "],\"ffn_stages\":[";
+    for (std::size_t index = 0; index < miinfer::qwen3_ffn_profile_stage_count; ++index) {
+        if (index != 0) output << ',';
+        output << "{\"name\":\""
+               << miinfer::qwen3_ffn_profile_stage_name(
+                      static_cast<miinfer::Qwen3FfnProfileStage>(index))
+               << "\",\"gpu_ms\":" << profile.ffn_gpu_ms[index]
+               << ",\"dispatches\":" << profile.ffn_dispatches[index] << '}';
+    }
     output << "]}";
 }
 
@@ -384,6 +393,14 @@ int main(int argc, char** argv) {
                       << total(profile.dispatches) << ' '
                       << (total(profile.synchronizations) + profile.finalization_synchronizations) << ' '
                       << profile.temporary_allocations << '\n';
+            std::cout << "  FFN stage GPU ms / dispatches:\n";
+            for (std::size_t stage = 0; stage < miinfer::qwen3_ffn_profile_stage_count; ++stage) {
+                std::cout << "    "
+                          << miinfer::qwen3_ffn_profile_stage_name(
+                                 static_cast<miinfer::Qwen3FfnProfileStage>(stage))
+                          << ": " << profile.ffn_gpu_ms[stage] << " ms / "
+                          << profile.ffn_dispatches[stage] << '\n';
+            }
         }
         std::cout << "selected next-token IDs through audited range: [";
         for (std::size_t index = 0; index < selected_tokens.size(); ++index) {
