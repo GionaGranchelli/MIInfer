@@ -162,26 +162,32 @@ private:
     void* values_ = nullptr;
 };
 
+class Qwen3GpuDecodeWorkspace;
+
 // Minimal model-level MI50 decode state.  One layer-scoped cache is retained
-// for each Qwen3 layer; allocation and layer ownership happen before decode.
+// for each Qwen3 layer.  The decode workspace is allocated lazily on the first
+// full decode and then retained for the lifetime of this cache.
 class Qwen3GpuDecodeCache {
 public:
     Qwen3GpuDecodeCache(std::size_t layers, std::size_t kv_heads,
                         std::size_t head_dim, std::size_t capacity);
     Qwen3GpuDecodeCache(const Qwen3GpuDecodeCache&) = delete;
     Qwen3GpuDecodeCache& operator=(const Qwen3GpuDecodeCache&) = delete;
-    ~Qwen3GpuDecodeCache() = default;
+    ~Qwen3GpuDecodeCache();
 
     void reset();
+    void prepare(const Qwen3GpuPlan& plan);
     [[nodiscard]] std::size_t layers() const noexcept { return caches_.size(); }
     [[nodiscard]] std::size_t length() const noexcept;
     [[nodiscard]] std::size_t capacity() const noexcept { return capacity_; }
     Qwen3Layer0GpuKvCache& layer(std::size_t layer_index);
     const Qwen3Layer0GpuKvCache& layer(std::size_t layer_index) const;
+    Qwen3GpuDecodeWorkspace& workspace();
 
 private:
     std::size_t capacity_;
     std::vector<std::unique_ptr<Qwen3Layer0GpuKvCache>> caches_;
+    std::unique_ptr<Qwen3GpuDecodeWorkspace> workspace_;
 };
 
 // Correctness-first MI50 execution of the same one-token, position-zero

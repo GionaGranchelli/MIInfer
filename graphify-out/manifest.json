@@ -576,15 +576,15 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_layer.hpp": {
-    "mtime": 1788211138.6824534,
-    "seen": 1788211490.3142085,
-    "ast_hash": "3839b218508300213bff52ffac08977c",
+    "mtime": 1788249296.5889444,
+    "seen": 1788249855.0047383,
+    "ast_hash": "3ec0e1be7ede9af10a988da3afe15928",
     "semantic_hash": ""
   },
   "src/qwen3_gpu_layer.cpp": {
-    "mtime": 1788240666.4937835,
-    "seen": 1788240739.3453305,
-    "ast_hash": "66abfe718e4f54a875e14aa373016fa2",
+    "mtime": 1788249500.3918247,
+    "seen": 1788249855.0047789,
+    "ast_hash": "a472d14f76b7931c5580cfb3af00c859",
     "semantic_hash": ""
   },
   "tests/qwen3_layer0_gpu_test.cpp": {
