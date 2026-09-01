@@ -621,5 +621,20 @@ attribution and overlap; they are not additive wall-clock components.
 
 C13a changes no production behavior. FFN projection was not selected because
 C11b already cleared the exact Gate/Up/Down shapes against the pinned gfx906
-MMVQ path. The next bounded experiment is C13b exact-shape LM-head Q6_K×Q8_K
-differential profiling before any production implementation change.
+MMVQ path. C13b then audited the proposed exact-shape LM-head Q6_K×Q8_K
+differential before any production implementation change.
+
+## M5-C13b LM-head contract audit
+
+C13b audited the proposed exact-shape LM-head differential and found that the
+pinned llama.cpp gfx906 MMVQ implementation maps Q6_K to `vec_dot_q6_K_q8_1`,
+not Q8_K. MIInfer's production LM head uses Q6_K×Q8_K. The two paths therefore
+do not share an exact activation representation or dot-product contract, so a
+direct kernel-latency comparison would be invalid.
+
+The live MIInfer stable-peak P1 recheck measured 2.936 ms for its LM-head
+stage; C13a's retained value is 2.943 ms with one dispatch. The external
+whole-token PP1/TG64 context control measured 90.446 tok/s over three samples,
+but it is not used to attribute LM-head time. No Q8_1 compatibility path,
+production kernel change, or C13c target was selected. See
+`experiments/EXP-0038-m5c13b-lm-head-contract-audit.md`.

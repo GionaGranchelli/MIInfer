@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "bench/README.md": {
-    "mtime": 1788298717.3428838,
-    "seen": 1788298732.5900238,
-    "ast_hash": "bff3ce1872dd5963bf2dec05a33e3467",
+    "mtime": 1788299658.4987493,
+    "seen": 1788299666.8755627,
+    "ast_hash": "5528ed4258fbcdf35a4f8d96a6f70b72",
     "semantic_hash": ""
   },
   "context.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788298717.341884,
-    "seen": 1788298732.5900347,
-    "ast_hash": "53c1c0605fb10387db618469b9eba01f",
+    "mtime": 1788299658.3977497,
+    "seen": 1788299666.8755744,
+    "ast_hash": "a92e63cdd16b11b62ced2417ff59f96b",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -1017,6 +1017,12 @@
     "mtime": 1788298717.3398838,
     "seen": 1788298732.5901139,
     "ast_hash": "440d53a770a954eea0e56ce02ab295fe",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0038-m5c13b-lm-head-contract-audit.md": {
+    "mtime": 1788299658.600749,
+    "seen": 1788299666.8756547,
+    "ast_hash": "d53badccc1194a7f5f127f4ee65f5cd4",
     "semantic_hash": ""
   }
 }
