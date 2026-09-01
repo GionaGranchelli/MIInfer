@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "bench/README.md": {
-    "mtime": 1788295362.181205,
-    "seen": 1788295400.7111812,
-    "ast_hash": "4d3e20954b64f2c04763189bd0eeeb8c",
+    "mtime": 1788296480.9931624,
+    "seen": 1788296494.5603042,
+    "ast_hash": "161121c787ff9d3fd4eeb8dfaa88792d",
     "semantic_hash": ""
   },
   "context.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788295387.3850887,
-    "seen": 1788295400.711193,
-    "ast_hash": "572932366ea5dda40cf9a72fecbd46a7",
+    "mtime": 1788296480.9951622,
+    "seen": 1788296494.5603156,
+    "ast_hash": "bf9e1efbd8eac71f76d1ef17f2c571e1",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -996,9 +996,9 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0034-m5c11b-exact-shape-ffn-differential.md": {
-    "mtime": 1788295319.537402,
-    "seen": 1788295400.7112699,
-    "ast_hash": "3182496c9792d909ee0f56cdf29eeb70",
+    "mtime": 1788296480.9921622,
+    "seen": 1788296494.5603893,
+    "ast_hash": "51be736c327cc4c85e5115717e2b623e",
     "semantic_hash": ""
   }
 }

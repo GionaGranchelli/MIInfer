@@ -1,6 +1,6 @@
 # EXP-0034 — M5-C11b exact-shape FFN GEMV differential
 
-**Status:** CLOSED — no FFN port selected; clock-matched rerun deferred  
+**Status:** CLOSED — no FFN port selected; clock-controlled end-to-end A/B complete  
 **Milestone:** M5  
 **Date:** 2026-09-01  
 **Model:** Qwen3-8B Q4_0 (`Qwen3-8B-q4_0-b968826d.gguf`)
@@ -25,12 +25,11 @@ SCLK: 925, 930, 1032, 1143, 1282, 1386, 1485, 1606, 1725 MHz
 MCLK: 350, 800, 1000 MHz
 ```
 
-The card was in `auto` performance mode. MIInfer telemetry sampled both the
-925/930 MHz + 350 MHz low state and brief 1725 MHz + 1000 MHz active states,
-then returned to the low state between bursts. A privileged `high` or
-`profile_peak` control could not be run because the available `sudo` path
-requires an interactive password. This is therefore not a clock-matched
-MIInfer-versus-MMVQ claim.
+The initial comparison used `auto` performance mode, where MIInfer sampled
+both the 925/930 MHz + 350 MHz low state and brief 1725 MHz + 1000 MHz active
+states. The user then enabled the stock `profile_peak` mode, which reported
+`stable_peak` and held 1725 MHz SCLK / 1000 MHz MCLK for the active benchmark
+samples. This enabled a controlled end-to-end MIInfer/llama.cpp comparison.
 
 The current-tree sequential Gate/Up sanity runs used 200 warmups and 10,000
 HIP-event iterations:
@@ -44,6 +43,21 @@ A concurrent three-process sanity run was discarded as contaminated. The
 current benchmark's legacy synthetic Down mode uses the 128-thread path, not
 the selected production 256-thread Down path, so it was not used as a
 production Down result.
+
+The controlled MIInfer production run used the same one-token prompt, eight
+warmups, 64 measured decode forwards, and five internal timing iterations. It
+produced the expected deterministic sequence and measured 1156.143 ms total
+decode time, or **55.356 tok/s**. Its raw artifact is retained under
+`bench/results/20260901T-c11b-minfer-peak/20260901T205816Z-426956/`; active
+telemetry was 1725/1000 MHz, with only brief 1606 MHz samples.
+
+The pinned llama.cpp control, run under the same `stable_peak` setting with
+the same Qwen3-8B Q4_0 model, measured **90.566 tok/s** for TG128 and
+**90.389 tok/s** for TG256 over five samples. Thus the controlled standard-TG
+differential is approximately 1.63x, with MIInfer at approximately 61% of
+the llama.cpp throughput. This is a valid operating-point comparison, though
+the standard llama-bench workload is not identical to MIInfer's raw-token
+64-forward harness.
 
 ## 3. Exact-shape direct comparison
 
@@ -92,15 +106,14 @@ retained direct protocol, and the only historical MMVQ advantage (K/V) was
 already addressed by EXP-0009. C11b therefore produces no C11c FFN-kernel
 implementation.
 
-This conclusion is qualified by the absence of a fixed-clock rerun. It is
-strong enough to stop blind FFN geometry work, but not to claim that MIInfer
-and llama.cpp have identical hardware operating points or end-to-end rates.
+The clock-control qualification is now resolved for the end-to-end comparison:
+both runs were performed under `stable_peak` with the stock 1725/1000 MHz DPM
+state. The direct primitive table remains the stronger FFN-specific evidence;
+the end-to-end comparison shows that MIInfer's remaining gap is not explained
+by the earlier 925/350 MHz operating point alone.
 
 ## 6. Follow-up
 
-Obtain a privileged fixed-clock A/B if possible and rerun the production
-micro/end-to-end controls before publishing a direct whole-runtime speed
-ratio. If that is unavailable, move to a differential profile of non-FFN
-families at the observed operating point. Do not port MMVQ or start another
-Down geometry sweep without a new clock-controlled or hardware-counter-based
-hypothesis.
+Move to a differential profile of non-FFN families at the controlled peak
+operating point. Do not port MMVQ or start another Down geometry sweep without
+a new hardware-counter-based or layout-specific hypothesis.

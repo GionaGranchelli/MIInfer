@@ -11479,7 +11479,7 @@
       "node_kind": "heading",
       "norm_label": "3. exact-shape direct comparison",
       "source_file": "experiments/EXP-0034-m5c11b-exact-shape-ffn-differential.md",
-      "source_location": "L48"
+      "source_location": "L62"
     },
     {
       "id": "experiments_exp_0034_m5c11b_exact_shape_ffn_differential_4_kernel_structure_findings",
@@ -11491,7 +11491,7 @@
       "node_kind": "heading",
       "norm_label": "4. kernel-structure findings",
       "source_file": "experiments/EXP-0034-m5c11b-exact-shape-ffn-differential.md",
-      "source_location": "L70"
+      "source_location": "L84"
     },
     {
       "id": "experiments_exp_0034_m5c11b_exact_shape_ffn_differential_5_decision",
@@ -11503,7 +11503,7 @@
       "node_kind": "heading",
       "norm_label": "5. decision",
       "source_file": "experiments/EXP-0034-m5c11b-exact-shape-ffn-differential.md",
-      "source_location": "L83"
+      "source_location": "L97"
     },
     {
       "id": "experiments_exp_0034_m5c11b_exact_shape_ffn_differential_6_follow_up",
@@ -11515,7 +11515,7 @@
       "node_kind": "heading",
       "norm_label": "6. follow-up",
       "source_file": "experiments/EXP-0034-m5c11b-exact-shape-ffn-differential.md",
-      "source_location": "L99"
+      "source_location": "L115"
     },
     {
       "id": "experiments_exp_0034_m5c11b_exact_shape_ffn_differential_exp_0034_m5_c11b_exact_shape_ffn_gemv_differential",
@@ -29847,7 +29847,7 @@
       "node_kind": "heading",
       "norm_label": "current correctness policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L587"
+      "source_location": "L588"
     },
     {
       "id": "docs_current_state_current_dependency_policy",
@@ -29883,7 +29883,7 @@
       "node_kind": "heading",
       "norm_label": "current hardware observation requirements",
       "source_file": "docs/current-state.md",
-      "source_location": "L618"
+      "source_location": "L619"
     },
     {
       "id": "docs_current_state_current_hardware_target",
@@ -29907,7 +29907,7 @@
       "node_kind": "heading",
       "norm_label": "current performance policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L603"
+      "source_location": "L604"
     },
     {
       "id": "docs_current_state_current_phase",
@@ -29967,7 +29967,7 @@
       "node_kind": "heading",
       "norm_label": "current scope",
       "source_file": "docs/current-state.md",
-      "source_location": "L638"
+      "source_location": "L639"
     },
     {
       "id": "docs_current_state_definition_of_current_success",
@@ -29979,7 +29979,7 @@
       "node_kind": "heading",
       "norm_label": "definition of current success",
       "source_file": "docs/current-state.md",
-      "source_location": "L710"
+      "source_location": "L711"
     },
     {
       "id": "docs_current_state_do_not_start_yet",
@@ -29991,7 +29991,7 @@
       "node_kind": "heading",
       "norm_label": "do not start yet",
       "source_file": "docs/current-state.md",
-      "source_location": "L670"
+      "source_location": "L671"
     },
     {
       "id": "docs_current_state_first_major_gate",
@@ -30003,7 +30003,7 @@
       "node_kind": "heading",
       "norm_label": "first major gate",
       "source_file": "docs/current-state.md",
-      "source_location": "L577"
+      "source_location": "L578"
     },
     {
       "id": "docs_current_state_immediate_deliverables",
@@ -30039,7 +30039,7 @@
       "node_kind": "heading",
       "norm_label": "in scope now",
       "source_file": "docs/current-state.md",
-      "source_location": "L640"
+      "source_location": "L641"
     },
     {
       "id": "docs_current_state_last_updated",
@@ -30051,7 +30051,7 @@
       "node_kind": "heading",
       "norm_label": "last updated",
       "source_file": "docs/current-state.md",
-      "source_location": "L737"
+      "source_location": "L738"
     },
     {
       "id": "docs_current_state_miinfer_current_state",
@@ -30075,7 +30075,7 @@
       "node_kind": "heading",
       "norm_label": "next implementation task",
       "source_file": "docs/current-state.md",
-      "source_location": "L690"
+      "source_location": "L691"
     },
     {
       "id": "docs_current_state_not_implemented",
@@ -30099,7 +30099,7 @@
       "node_kind": "heading",
       "norm_label": "not in scope now",
       "source_file": "docs/current-state.md",
-      "source_location": "L651"
+      "source_location": "L652"
     },
     {
       "id": "codex_skills_graphify_references_hooks",
@@ -65631,7 +65631,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L577",
+      "source_location": "L578",
       "weight": 1.0
     },
     {
@@ -65642,7 +65642,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L587",
+      "source_location": "L588",
       "weight": 1.0
     },
     {
@@ -65653,7 +65653,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L603",
+      "source_location": "L604",
       "weight": 1.0
     },
     {
@@ -65664,7 +65664,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L618",
+      "source_location": "L619",
       "weight": 1.0
     },
     {
@@ -65675,7 +65675,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L638",
+      "source_location": "L639",
       "weight": 1.0
     },
     {
@@ -65686,7 +65686,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L670",
+      "source_location": "L671",
       "weight": 1.0
     },
     {
@@ -65697,7 +65697,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L690",
+      "source_location": "L691",
       "weight": 1.0
     },
     {
@@ -65708,7 +65708,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L710",
+      "source_location": "L711",
       "weight": 1.0
     },
     {
@@ -65719,7 +65719,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L737",
+      "source_location": "L738",
       "weight": 1.0
     },
     {
@@ -65763,7 +65763,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L640",
+      "source_location": "L641",
       "weight": 1.0
     },
     {
@@ -65774,7 +65774,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L651",
+      "source_location": "L652",
       "weight": 1.0
     },
     {
@@ -75283,6 +75283,17 @@
     },
     {
       "source": "experiments_exp_0034_m5c11b_exact_shape_ffn_differential_exp_0034_m5_c11b_exact_shape_ffn_gemv_differential",
+      "target": "experiments_exp_0034_m5c11b_exact_shape_ffn_differential_6_follow_up",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0034-m5c11b-exact-shape-ffn-differential.md",
+      "source_location": "L115",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0034_m5c11b_exact_shape_ffn_differential_exp_0034_m5_c11b_exact_shape_ffn_gemv_differential",
       "target": "experiments_exp_0034_m5c11b_exact_shape_ffn_differential_2_method_and_clock_qualification",
       "relation": "contains",
       "_origin": "ast",
@@ -75300,18 +75311,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0034-m5c11b-exact-shape-ffn-differential.md",
-      "source_location": "L48",
-      "weight": 1.0
-    },
-    {
-      "source": "experiments_exp_0034_m5c11b_exact_shape_ffn_differential_exp_0034_m5_c11b_exact_shape_ffn_gemv_differential",
-      "target": "experiments_exp_0034_m5c11b_exact_shape_ffn_differential_4_kernel_structure_findings",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "experiments/EXP-0034-m5c11b-exact-shape-ffn-differential.md",
-      "source_location": "L70",
+      "source_location": "L62",
       "weight": 1.0
     },
     {
@@ -75327,24 +75327,24 @@
     },
     {
       "source": "experiments_exp_0034_m5c11b_exact_shape_ffn_differential_exp_0034_m5_c11b_exact_shape_ffn_gemv_differential",
+      "target": "experiments_exp_0034_m5c11b_exact_shape_ffn_differential_4_kernel_structure_findings",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0034-m5c11b-exact-shape-ffn-differential.md",
+      "source_location": "L84",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0034_m5c11b_exact_shape_ffn_differential_exp_0034_m5_c11b_exact_shape_ffn_gemv_differential",
       "target": "experiments_exp_0034_m5c11b_exact_shape_ffn_differential_5_decision",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0034-m5c11b-exact-shape-ffn-differential.md",
-      "source_location": "L83",
-      "weight": 1.0
-    },
-    {
-      "source": "experiments_exp_0034_m5c11b_exact_shape_ffn_differential_exp_0034_m5_c11b_exact_shape_ffn_gemv_differential",
-      "target": "experiments_exp_0034_m5c11b_exact_shape_ffn_differential_6_follow_up",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "experiments/EXP-0034-m5c11b-exact-shape-ffn-differential.md",
-      "source_location": "L99",
+      "source_location": "L97",
       "weight": 1.0
     },
     {
@@ -83330,5 +83330,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "17e999320237a1f8b77dcca193801ec23682cc67"
+  "built_at_commit": "fbc28afca59d45e9dbf2409ef5e7421de4daa409"
 }

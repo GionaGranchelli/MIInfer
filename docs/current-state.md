@@ -284,13 +284,13 @@ overhead relative to the pinned gfx906 llama.cpp control.
 
 The immediate technical objective is:
 
-> Establish a clock-controlled production baseline and differential-profile the
-> next non-FFN bottleneck. M5-C11b found no justified FFN/MMVQ port: direct
-> Gate/Up/Down evidence was approximately tied or favored MIInfer, while the
-> historical K/V gap was already closed by EXP-0009. C11a's 91.875 TG128 and
-> 91.692 TG256 external rates remain directionally qualified because llama.cpp
-> reached a higher observed DPM state. C10c remains rejected and its separate
-> path remains the production default.
+> Differential-profile the next non-FFN bottleneck at a controlled peak clock.
+> M5-C11b found no justified FFN/MMVQ port: direct Gate/Up/Down evidence was
+> approximately tied or favored MIInfer, while the historical K/V gap was
+> already closed by EXP-0009. The controlled peak comparison measured 55.356
+> MIInfer tok/s versus 90.566 TG128 and 90.389 TG256 for the pinned llama.cpp
+> control. C10c remains rejected and its separate path remains the production
+> default.
 
 The initial eight-token fixture matches the independent MI50 reference through
 position 2. Release passes the complete fixture and Debug remains a
@@ -567,7 +567,8 @@ next target exact-shape FFN GEMV differential)
 M5-C11b — exact-shape FFN GEMV differential (CLOSED; no FFN/MMVQ port
 selected; MIInfer approximately tied/faster on Gate, Up, and Down under the
 retained direct protocol; K/V advantage already addressed by EXP-0009;
-clock-matched rerun deferred because privileged DPM control was unavailable)
+clock-controlled end-to-end A/B complete: MIInfer 55.356 tok/s versus llama.cpp
+90.566 TG128 / 90.389 TG256 under stable_peak)
 ```
 
 The exact ordering may change based on early measurements.
@@ -744,8 +745,9 @@ the external gfx906 control, with clock-state qualification, and selected an
 exact-shape FFN GEMV differential as the next bounded experiment. C11b found no
 new FFN/MMVQ candidate: MIInfer was approximately tied or faster on Gate, Up,
 and Down in the retained direct comparison, while the historical K/V gap was
-already closed by EXP-0009. A fixed-clock rerun remains a prerequisite for a
-fair end-to-end rate claim because privileged DPM control was unavailable.
+already closed by EXP-0009. The subsequent stable_peak run resolved the clock
+qualification and measured 55.356 tok/s for MIInfer versus 90.566/90.389 tok/s
+for llama.cpp TG128/TG256.
 
 Update this document whenever:
 

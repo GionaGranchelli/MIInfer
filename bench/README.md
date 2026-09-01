@@ -551,9 +551,9 @@ discarded as contaminated. The current benchmark's synthetic Down mode does
 not select the production Down path, so it was not used as a production Down
 result.
 
-The MI50 clock state remains a qualification: auto DPM exposed 925/930 MHz +
-350 MHz between bursts and brief 1725/1000 MHz active samples. A privileged
-fixed-clock rerun was unavailable because `sudo` required an interactive
-password. C11b therefore stops blind FFN/MMVQ porting, but does not publish a
-clock-matched end-to-end speed ratio. See
+The clock qualification was subsequently resolved with the stock
+`profile_peak`/`stable_peak` mode. MIInfer measured 55.356 tok/s with active
+telemetry at 1725/1000 MHz; the pinned llama.cpp control measured 90.566
+TG128 and 90.389 TG256 tok/s under the same peak state. C11b therefore stops
+blind FFN/MMVQ porting and publishes a controlled end-to-end differential. See
 `experiments/EXP-0034-m5c11b-exact-shape-ffn-differential.md`.
