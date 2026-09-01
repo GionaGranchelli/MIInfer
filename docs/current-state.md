@@ -226,6 +226,13 @@ No other GPU architecture is currently supported.
   allocations, and zero new copy pathology. The selected next experiment is
   one bounded FFN RMSNorm + norm-scale + F32→F16 + shared-Q8 candidate with
   strict byte-identical Q8 and trajectory gates
+* M5-C10c fused FFN RMSNorm + norm-scale + exact F32→F16 + shared-Q8 in one
+  opt-in gfx906 dispatch. The real-model verifier passed 180/180 FP16 and Q8
+  checks with zero mismatches, Release CTest remained 19/19, and all three
+  serial 64-token A/B pairs were trajectory-identical. The candidate reduced
+  P64 dispatches 1553→1445 but regressed throughput 54.125905→51.302002 tok/s
+  (-5.217%), so it is rejected for production selection and the separate path
+  remains the default
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -265,11 +272,11 @@ overhead relative to the pinned gfx906 llama.cpp control.
 
 The immediate technical objective is:
 
-> Implement one measured M5-C10c FFN normalization-to-shared-Q8 candidate
-> from the C10b boundary map, preserving the existing F32 arithmetic,
-> F32→F16 rounding, Q8_1 bytes, and downstream Q4_0×Q8_1 contract. Keep the
-> change isolated, require byte-identical Q8 and full-model trajectory
-> correctness, then perform an interleaved end-to-end A/B before promotion.
+> Classify the M5-C10c FFN normalization-to-shared-Q8 candidate and choose the
+> next optimization from a refreshed production profile. C10c preserved the
+> existing F32 arithmetic, F32→F16 rounding, Q8_1 bytes, and downstream
+> Q4_0×Q8_1 contract but was rejected for production after a repeatable 5.217%
+> end-to-end regression; the separate path remains the default.
 
 The initial eight-token fixture matches the independent MI50 reference through
 position 2. Release passes the complete fixture and Debug remains a
@@ -534,6 +541,9 @@ next target not preselected)
 
 M5-C10b — normalization/conversion boundary attribution (CLOSED;
 measurement-only; C10c FFN normalization-to-shared-Q8 candidate selected)
+
+M5-C10c — FFN normalization-to-shared-Q8 fusion (CLOSED; correctness PASS;
+production REJECTED; 5.217% slower in clean serial A/B)
 ```
 
 The exact ordering may change based on early measurements.
@@ -702,13 +712,11 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-01 — M5-C10b and EXP-0031 recorded after the C9c production KEEP and
-the C10a refreshed profile. The real-model boundary audit now records named
-normalization, conversion, and Q8 stages at positions 1/8/16/32/64. The
-clean-commit P64 result is 19.602 ms wall, 19.733 ms whole-token GPU event,
-and 27.277 ms deferred attribution at the observed 930/350 MHz clocks. The
-next bounded candidate is FFN RMSNorm + norm-scale + F32→F16 + shared-Q8;
-strict Q8 and 64-token trajectory gates remain mandatory.
+2026-09-01 — M5-C10b, EXP-0031, and C10c/EXP-0032 were recorded after the C9c
+production KEEP and the C10a refreshed profile. C10c passed 180/180 real-model
+FP16 and Q8 checks, 19/19 Release tests, and three identical 64-token A/B
+trajectories, but its one-workgroup fused path regressed clean decode by
+5.217%; the separate FFN normalization/Q8 path remains the production default.
 
 Update this document whenever:
 

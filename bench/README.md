@@ -467,6 +467,19 @@ attention F32→F16→F32 boundary remains semantically required; C10b therefore
 selects one bounded FFN RMSNorm + norm-scale + F32→F16 + shared-Q8 experiment
 for the next slice, with byte-identical Q8 and full trajectory gates.
 
+## M5-C10c FFN normalization-to-shared-Q8 fusion
+
+C10c implemented an opt-in one-dispatch FFN RMSNorm + norm-scale + exact
+F32→F16 + shared Q8 candidate. The clean real-model verifier recorded 180/180
+FP16 and 180/180 Q8 checks with zero mismatches, and Release CTest remained
+19/19. The three serial five-iteration A/B pairs are retained under
+`bench/results/20260901T-c10c-ab-clean/`: control averaged 54.125905 tok/s and
+the fused candidate 51.302002 tok/s, a 5.217% regression. The candidate reduced
+P64 total dispatches 1553→1445 and FFN normalization/Q8 dispatches 144→36,
+but its one-workgroup processing took about 2.182 ms versus 1.423 ms for the
+separate stages. It is therefore rejected for production selection; the
+separate path remains the default and the candidate remains diagnostic-only.
+
 ## M5-C8a FFN projection shape characterization
 
 The kernel-only `miinfer-q4-q8-gemv-bench` characterization is recorded in

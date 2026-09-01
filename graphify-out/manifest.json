@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "bench/README.md": {
-    "mtime": 1788272632.9489408,
-    "seen": 1788273274.3603787,
-    "ast_hash": "799618c1767bfa2feb0bc54b73a82c74",
+    "mtime": 1788274243.1512654,
+    "seen": 1788274272.4102826,
+    "ast_hash": "77fa4c0039e1b21af4559843fc601ed8",
     "semantic_hash": ""
   },
   "context.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788272649.2588856,
-    "seen": 1788273274.3603895,
-    "ast_hash": "5c7aa949606c33bd3e46f6deb64a9829",
+    "mtime": 1788274260.9142017,
+    "seen": 1788274272.410293,
+    "ast_hash": "0ef9fd8f3dd90bf572736972d0a058a8",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -981,6 +981,12 @@
     "mtime": 1788272632.9479408,
     "seen": 1788273274.360459,
     "ast_hash": "6bee2f6149558fad7144e685aa8a0832",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0032-m5c10c-ffn-norm-q8-fusion.md": {
+    "mtime": 1788274235.2322938,
+    "seen": 1788274272.4103653,
+    "ast_hash": "a5d1df5323350526aacc3ce4d41d2837",
     "semantic_hash": ""
   }
 }
