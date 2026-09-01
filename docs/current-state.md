@@ -269,6 +269,10 @@ No other GPU architecture is currently supported.
   comparison; LM head, norm, conversion, broad quantization, RoPE/KV, and
   attention remain non-comparable under the retained contracts. C13c made no
   production change and selected no implementation experiment
+* M5-C14a mapped the complete layer/token execution path, including
+  representations, materializations, quantizations, dispatches, and known
+  llama.cpp differences. No uncleared same-contract differential or proven
+  llama.cpp-only work elimination was identified; production is unchanged
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -315,9 +319,10 @@ The immediate technical objective is:
 > copies. C13b found that the pinned llama.cpp gfx906 Q6_K MMVQ path consumes
 > Q8_1, whereas MIInfer's LM head consumes Q8_K, so the proposed direct
 > differential is invalid as stated. C13c then mapped the fixed-floor
-> contracts and found no uncleared same-contract external differential. No
-> Q8_1 compatibility path, production kernel change, or generic fusion is
-> selected yet.
+> contracts and found no uncleared same-contract external differential. C14a
+> extended that into a layer/token execution map and found no proven
+> llama.cpp-only work elimination. No Q8_1 compatibility path, production
+> kernel change, or generic fusion is selected yet.
 
 The initial eight-token fixture matches the independent MI50 reference through
 position 2. Release passes the complete fixture and Debug remains a
@@ -617,6 +622,10 @@ no production target selected)
 M5-C13c — fixed-floor contract map (CLOSED; measurement-only; only the already
 cleared Q4_0×Q8_1 projection rows have a valid direct differential; no
 implementation selected)
+
+M5-C14a — fixed-floor execution map (CLOSED; measurement-only; complete
+layer/token representation and work map recorded; no uncleared same-contract
+differential or implementation selected)
 ```
 
 The exact ordering may change based on early measurements.
@@ -785,7 +794,7 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-02 — M5-C10b through M5-C13c were recorded after the C9c production
+2026-09-02 — M5-C10b through M5-C14a were recorded after the C9c production
 KEEP. C10c passed its strict real-model correctness gates but its one-workgroup
 fused path regressed clean decode by 5.217%; the separate FFN normalization/Q8
 path remains the production default. C11a refreshed the production baseline and
@@ -806,7 +815,11 @@ differential and found an input-contract mismatch: the pinned external Q6_K
 MMVQ path consumes Q8_1, while MIInfer consumes Q8_K. C13c then mapped the
 fixed-floor contracts and found no uncleared same-contract external
 differential. No valid direct differential or production LM-head change was
-selected.
+selected. C14a then mapped the complete layer/token execution path and
+classified known differences as implementation, representation,
+work-elimination, or scheduling/fusion; no new valid differential or
+implementation target was selected. See
+experiments/EXP-0040-m5c14a-fixed-floor-execution-map.md.
 
 Update this document whenever:
 

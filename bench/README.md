@@ -662,3 +662,23 @@ the accepted Q4_0×Q8_1 input/weight comparison cleared these projection paths.
 No uncleared same-contract row remains, so C13c made no production change and
 selected no C13d implementation. Full details are in
 `experiments/EXP-0039-m5c13c-fixed-floor-contract-map.md`.
+
+## M5-C14a fixed-floor execution map
+
+C14a mapped the complete MIInfer layer/token path against the retained
+llama.cpp evidence. The map records representation boundaries, quantizations,
+intermediate materializations, bytes, dispatches, and whether external work
+elimination or fusion is actually established.
+
+The valid same-contract rows remain the Q4_0×Q8_1 projection primitives. They
+are already cleared by C11b and EXP-0009. The LM head remains incomparable:
+MIInfer uses Q6_K×Q8_K while the pinned external path uses Q6_K×Q8_1. Norm,
+conversion, RoPE/KV, attention, and argmax have no retained exact external
+stage contract.
+
+The fixed wall-minus-attention floor remains approximately 14.7 ms/token, but
+deferred category timings overlap and are not an additive parity budget. C14a
+therefore identifies no defensible number of milliseconds that llama.cpp
+avoids. No production code or next implementation experiment was selected.
+Full details are in
+`experiments/EXP-0040-m5c14a-fixed-floor-execution-map.md`.
