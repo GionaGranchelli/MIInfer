@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "bench/README.md": {
-    "mtime": 1788255474.3931034,
-    "seen": 1788255875.1387167,
-    "ast_hash": "cd61cee74f7dd7976561b5dc7dade756",
+    "mtime": 1788264308.8478146,
+    "seen": 1788264335.060234,
+    "ast_hash": "1adf49aeceff12933f03a2ec01279f4f",
     "semantic_hash": ""
   },
   "context.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788255474.3951032,
-    "seen": 1788255875.138728,
-    "ast_hash": "7aaf806963f931ae814338877af1af73",
+    "mtime": 1788264308.8498147,
+    "seen": 1788264335.060245,
+    "ast_hash": "8989b09c75285b24f575936f8a0a8259",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -915,6 +915,18 @@
     "mtime": 1788255474.3911033,
     "seen": 1788255875.1387906,
     "ast_hash": "0a24475d421056664a78dc761b6b3dcc",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0023-m5c7-post-copy-cleanup-profile.md": {
+    "mtime": 1788256001.336237,
+    "seen": 1788264335.0603037,
+    "ast_hash": "e1ce203f428645c457d274041bf4269f",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0024-m5c8a-ffn-shape-characterization.md": {
+    "mtime": 1788264320.029758,
+    "seen": 1788264335.0603054,
+    "ast_hash": "8469839ca050d5e885f5c5f5a27b5740",
     "semantic_hash": ""
   }
 }

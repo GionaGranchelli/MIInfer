@@ -200,6 +200,10 @@ No other GPU architecture is currently supported.
 * M5-C7 post-copy-cleanup profile; lightweight whole-token GPU timing tracks
   clean wall time closely, so the next target is FFN kernel efficiency rather
   than HIP graphs
+* M5-C8a FFN projection shape characterization; current production-like
+  Q4_0 × Q8_1 controls measure about 50.24 µs Gate, 50.24 µs Up, and 57.28 µs
+  Down with repeated oracle passes, while existing Wave64/alternate controls
+  do not justify a production promotion
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -239,11 +243,10 @@ overhead relative to the pinned gfx906 llama.cpp control.
 
 The immediate technical objective is:
 
-> Reprofile the persistent-workspace, resident-weight, cooperative, coalesced
-> KV, GPU-argmax path and select the next measured bottleneck one hypothesis at
-> a time without weakening the C3 correctness gate. The copy/materialization
-> cleanup through M5-C6d is complete; no new fusion, graph, or kernel change
-> should be selected until the fresh profile is recorded.
+> Implement one measured M5-C8b gfx906 FFN GEMV geometry candidate from the
+> C8a shape baseline, preserving the existing Q4_0/Q8 activation and output
+> contracts. Keep the change isolated, run primitive and full-model
+> correctness, then perform an interleaved end-to-end A/B before promotion.
 
 The initial eight-token fixture matches the independent MI50 reference through
 position 2. Release passes the complete fixture and Debug remains a
@@ -266,8 +269,8 @@ acceptance uses prompt `hello`, which encodes to `14990`, runs the existing
 persistent 36-layer MI50 decode for eight greedy steps, and detokenizes the
 pinned IDs to `) {\n        return "Hello, "`. Sampling, chat templates, streaming,
 and performance benchmarking is now recorded by M5-A; the cooperative
-attention and persistent-workspace performance slices are recorded by M5-C,
-with static-weight residency and dispatch/materialization work next.
+attention, workspace, residency, copy-cleanup, and FFN characterization slices
+are recorded by M5-C, with the isolated C8b FFN kernel candidate next.
 
 ---
 
@@ -490,7 +493,7 @@ M5-C6d — GPU-side greedy argmax (CLOSED; structural KEEP, +0.37% A/B)
 
 M5-C7 — post-copy-cleanup bottleneck profile (CLOSED; KERNEL recommendation)
 
-M5-C8 — FFN projection kernel experiment (next)
+M5-C8 — FFN projection kernel experiment (C8a CLOSED; C8b next)
 ```
 
 The exact ordering may change based on early measurements.
@@ -659,7 +662,11 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-01 — M5-C7 and EXP-0023 recorded. The post-copy-cleanup profile now
+2026-09-01 — M5-C8a and EXP-0024 recorded after M5-C7 and EXP-0023. The
+Q4_0 × Q8_1 FFN shape baseline measures approximately 50.24 µs Gate, 50.24 µs
+Up, and 57.28 µs Down at the observed low clocks; existing geometry controls
+do not justify promotion, so C8b is the next isolated candidate. The
+post-copy-cleanup profile now
 uses lightweight whole-token HIP events: clean wall versus device time is
 15.313/15.475 ms at P1 and 19.780/19.928 ms at P64. The detailed profile
 shows 1,625 flat dispatches, with FFN projections the largest individual

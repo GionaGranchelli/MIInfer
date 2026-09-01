@@ -348,3 +348,15 @@ timing identifies FFN projection as the largest individual family at about
 7.0 ms at P64; quantization, normalization, and conversion account for 1,118
 of the dispatches. The resulting next target is a measured FFN kernel
 experiment, not HIP graph capture.
+
+## M5-C8a FFN projection shape characterization
+
+The kernel-only `miinfer-q4-q8-gemv-bench` characterization is recorded in
+`experiments/EXP-0024-m5c8a-ffn-shape-characterization.md`, with raw artifacts
+under `bench/results/20260901T102000Z-389000/`. At the observed approximately
+930/350 MHz clocks, the current production-like Q4_0 × Q8_1 controls measure
+about 50.24 µs for Gate, 50.24 µs for Up, and 57.28 µs for Down; all repeated
+runs pass the quantized oracle. The existing Wave64 control is only marginally
+faster for Gate/Up and the available alternate Down geometry is slower, so no
+production selection changed. C8b remains a new, measured FFN geometry
+candidate rather than a speculative promotion.
