@@ -62,6 +62,46 @@ const char* qwen3_ffn_profile_stage_name(Qwen3FfnProfileStage stage) noexcept {
     return "unknown";
 }
 
+const char* qwen3_boundary_profile_stage_name(Qwen3BoundaryProfileStage stage) noexcept {
+    switch (stage) {
+    case Qwen3BoundaryProfileStage::attn_rms_normalize: return "attn_rms_normalize";
+    case Qwen3BoundaryProfileStage::attn_norm_scale: return "attn_norm_scale";
+    case Qwen3BoundaryProfileStage::q_input_f32_to_f16: return "q_input_f32_to_f16";
+    case Qwen3BoundaryProfileStage::q_input_q8: return "q_input_q8";
+    case Qwen3BoundaryProfileStage::q_output_f16_to_f32: return "q_output_f16_to_f32";
+    case Qwen3BoundaryProfileStage::q_head_rms_normalize: return "q_head_rms_normalize";
+    case Qwen3BoundaryProfileStage::q_head_scale: return "q_head_scale";
+    case Qwen3BoundaryProfileStage::k_input_f32_to_f16: return "k_input_f32_to_f16";
+    case Qwen3BoundaryProfileStage::k_input_q8: return "k_input_q8";
+    case Qwen3BoundaryProfileStage::k_output_f16_to_f32: return "k_output_f16_to_f32";
+    case Qwen3BoundaryProfileStage::k_head_rms_normalize: return "k_head_rms_normalize";
+    case Qwen3BoundaryProfileStage::k_head_scale: return "k_head_scale";
+    case Qwen3BoundaryProfileStage::v_input_f32_to_f16: return "v_input_f32_to_f16";
+    case Qwen3BoundaryProfileStage::v_input_q8: return "v_input_q8";
+    case Qwen3BoundaryProfileStage::v_output_f16_to_f32: return "v_output_f16_to_f32";
+    case Qwen3BoundaryProfileStage::attention_f32_to_f16: return "attention_f32_to_f16";
+    case Qwen3BoundaryProfileStage::attention_f16_to_f32: return "attention_f16_to_f32";
+    case Qwen3BoundaryProfileStage::o_input_f32_to_f16: return "o_input_f32_to_f16";
+    case Qwen3BoundaryProfileStage::o_input_q8: return "o_input_q8";
+    case Qwen3BoundaryProfileStage::o_output_f16_to_f32: return "o_output_f16_to_f32";
+    case Qwen3BoundaryProfileStage::ffn_rms_normalize: return "ffn_rms_normalize";
+    case Qwen3BoundaryProfileStage::ffn_norm_scale: return "ffn_norm_scale";
+    case Qwen3BoundaryProfileStage::gate_input_f32_to_f16: return "gate_input_f32_to_f16";
+    case Qwen3BoundaryProfileStage::gate_input_q8: return "gate_input_q8";
+    case Qwen3BoundaryProfileStage::gate_output_f16_to_f32: return "gate_output_f16_to_f32";
+    case Qwen3BoundaryProfileStage::up_input_f32_to_f16: return "up_input_f32_to_f16";
+    case Qwen3BoundaryProfileStage::up_input_q8: return "up_input_q8";
+    case Qwen3BoundaryProfileStage::up_output_f16_to_f32: return "up_output_f16_to_f32";
+    case Qwen3BoundaryProfileStage::down_input_f32_to_f16: return "down_input_f32_to_f16";
+    case Qwen3BoundaryProfileStage::down_input_q8: return "down_input_q8";
+    case Qwen3BoundaryProfileStage::down_output_f16_to_f32: return "down_output_f16_to_f32";
+    case Qwen3BoundaryProfileStage::final_rms_norm: return "final_rms_norm";
+    case Qwen3BoundaryProfileStage::final_norm_to_q8k: return "final_norm_to_q8k";
+    case Qwen3BoundaryProfileStage::count: break;
+    }
+    return "unknown";
+}
+
 namespace {
 
 class DeviceBytes {
@@ -87,9 +127,11 @@ class ProfileScope {
 public:
     ProfileScope(Qwen3GpuProfile* profile, Qwen3ProfileCategory category,
                  std::size_t dispatches, bool copy,
-                 Qwen3FfnProfileStage ffn_stage = Qwen3FfnProfileStage::count)
+                 Qwen3FfnProfileStage ffn_stage = Qwen3FfnProfileStage::count,
+                 Qwen3BoundaryProfileStage boundary_stage = Qwen3BoundaryProfileStage::count,
+                 std::size_t bytes = 0)
         : profile_(profile), category_(category), ffn_stage_(ffn_stage),
-          dispatches_(dispatches), copy_(copy) {
+          boundary_stage_(boundary_stage), dispatches_(dispatches), bytes_(bytes), copy_(copy) {
         if (profile_ == nullptr) return;
         MIINFER_HIP_CHECK(hipEventCreate(&start_));
         MIINFER_HIP_CHECK(hipEventCreate(&stop_));
@@ -109,7 +151,7 @@ public:
         MIINFER_HIP_CHECK(hipEventRecord(stop_));
         if (profile_->deferred_timing) {
             profile_->pending_events.push_back({
-                start_, stop_, category_, ffn_stage_, dispatches_, 0, copy_});
+                start_, stop_, category_, ffn_stage_, boundary_stage_, dispatches_, bytes_, copy_});
             start_ = nullptr;
             stop_ = nullptr;
             finished_ = true;
@@ -130,6 +172,12 @@ public:
             profile_->ffn_gpu_ms[ffn_index] += milliseconds;
             profile_->ffn_dispatches[ffn_index] += dispatches_;
         }
+        if (!copy_ && boundary_stage_ != Qwen3BoundaryProfileStage::count) {
+            const auto boundary_index = static_cast<std::size_t>(boundary_stage_);
+            profile_->boundary_gpu_ms[boundary_index] += milliseconds;
+            profile_->boundary_dispatches[boundary_index] += dispatches_;
+            profile_->boundary_bytes[boundary_index] += bytes_;
+        }
         finished_ = true;
     }
 
@@ -137,7 +185,9 @@ private:
     Qwen3GpuProfile* profile_ = nullptr;
     Qwen3ProfileCategory category_ = Qwen3ProfileCategory::count;
     Qwen3FfnProfileStage ffn_stage_ = Qwen3FfnProfileStage::count;
+    Qwen3BoundaryProfileStage boundary_stage_ = Qwen3BoundaryProfileStage::count;
     std::size_t dispatches_ = 0;
+    std::size_t bytes_ = 0;
     bool copy_ = false;
     bool finished_ = false;
     hipEvent_t start_ = nullptr;
@@ -147,12 +197,14 @@ private:
 template <typename Function>
 void profile_gpu_call(Qwen3GpuProfile* profile, Qwen3ProfileCategory category,
                       std::size_t dispatches, Function&& function,
-                      Qwen3FfnProfileStage ffn_stage = Qwen3FfnProfileStage::count) {
+                      Qwen3FfnProfileStage ffn_stage = Qwen3FfnProfileStage::count,
+                      Qwen3BoundaryProfileStage boundary_stage = Qwen3BoundaryProfileStage::count,
+                      std::size_t bytes = 0) {
     if (profile == nullptr) {
         function();
         return;
     }
-    ProfileScope scope(profile, category, dispatches, false, ffn_stage);
+    ProfileScope scope(profile, category, dispatches, false, ffn_stage, boundary_stage, bytes);
     function();
     scope.finish();
 }
@@ -322,6 +374,39 @@ Qwen3FfnProfileStage projection_ffn_stage(const char* projection) {
     return Qwen3FfnProfileStage::count;
 }
 
+Qwen3BoundaryProfileStage projection_input_f16_stage(const char* projection) {
+    if (std::strcmp(projection, "q") == 0) return Qwen3BoundaryProfileStage::q_input_f32_to_f16;
+    if (std::strcmp(projection, "k") == 0) return Qwen3BoundaryProfileStage::k_input_f32_to_f16;
+    if (std::strcmp(projection, "v") == 0) return Qwen3BoundaryProfileStage::v_input_f32_to_f16;
+    if (std::strcmp(projection, "o") == 0) return Qwen3BoundaryProfileStage::o_input_f32_to_f16;
+    if (std::strcmp(projection, "gate") == 0) return Qwen3BoundaryProfileStage::gate_input_f32_to_f16;
+    if (std::strcmp(projection, "up") == 0) return Qwen3BoundaryProfileStage::up_input_f32_to_f16;
+    if (std::strcmp(projection, "down") == 0) return Qwen3BoundaryProfileStage::down_input_f32_to_f16;
+    return Qwen3BoundaryProfileStage::count;
+}
+
+Qwen3BoundaryProfileStage projection_input_q8_stage(const char* projection) {
+    if (std::strcmp(projection, "q") == 0) return Qwen3BoundaryProfileStage::q_input_q8;
+    if (std::strcmp(projection, "k") == 0) return Qwen3BoundaryProfileStage::k_input_q8;
+    if (std::strcmp(projection, "v") == 0) return Qwen3BoundaryProfileStage::v_input_q8;
+    if (std::strcmp(projection, "o") == 0) return Qwen3BoundaryProfileStage::o_input_q8;
+    if (std::strcmp(projection, "gate") == 0) return Qwen3BoundaryProfileStage::gate_input_q8;
+    if (std::strcmp(projection, "up") == 0) return Qwen3BoundaryProfileStage::up_input_q8;
+    if (std::strcmp(projection, "down") == 0) return Qwen3BoundaryProfileStage::down_input_q8;
+    return Qwen3BoundaryProfileStage::count;
+}
+
+Qwen3BoundaryProfileStage projection_output_f32_stage(const char* projection) {
+    if (std::strcmp(projection, "q") == 0) return Qwen3BoundaryProfileStage::q_output_f16_to_f32;
+    if (std::strcmp(projection, "k") == 0) return Qwen3BoundaryProfileStage::k_output_f16_to_f32;
+    if (std::strcmp(projection, "v") == 0) return Qwen3BoundaryProfileStage::v_output_f16_to_f32;
+    if (std::strcmp(projection, "o") == 0) return Qwen3BoundaryProfileStage::o_output_f16_to_f32;
+    if (std::strcmp(projection, "gate") == 0) return Qwen3BoundaryProfileStage::gate_output_f16_to_f32;
+    if (std::strcmp(projection, "up") == 0) return Qwen3BoundaryProfileStage::up_output_f16_to_f32;
+    if (std::strcmp(projection, "down") == 0) return Qwen3BoundaryProfileStage::down_output_f16_to_f32;
+    return Qwen3BoundaryProfileStage::count;
+}
+
 void quantize_projection_input(
     const float* input,
     std::uint32_t input_elements,
@@ -331,28 +416,33 @@ void quantize_projection_input(
     const char* projection,
     Qwen3GpuProfile* profile = nullptr) {
     const auto ffn_quantization_stage = projection_ffn_quantization_stage(projection);
+    const auto input_f16_stage = projection_input_f16_stage(projection);
+    const auto input_q8_stage = projection_input_q8_stage(projection);
+    const auto q8_bytes = static_cast<std::size_t>(input_elements) / kQ8_1BlockSize
+        * sizeof(Q8ExactBlock);
     const bool exact_metadata = use_exact_q8_metadata(projection);
     const bool f32_input = projection_selected("MIINFER_F32_INPUT_PROJECTIONS", projection);
     if (!exact_metadata && f32_input) {
         profile_gpu_call(profile, Qwen3ProfileCategory::quantization, 1, [&] {
             launch_q8_1_quantize_f32(input, input_q8, static_cast<int>(input_elements));
-        }, ffn_quantization_stage);
+        }, ffn_quantization_stage, input_q8_stage, q8_bytes);
     } else if (f32_input) {
         profile_gpu_call(profile, Qwen3ProfileCategory::quantization, 1, [&] {
             launch_q8_exact_quantize_f32(input, input_q8_exact, static_cast<int>(input_elements));
-        }, ffn_quantization_stage);
+        }, ffn_quantization_stage, input_q8_stage, q8_bytes);
     } else {
         profile_gpu_call(profile, Qwen3ProfileCategory::quantization, 1, [&] {
             launch_qwen3_f32_to_f16(input, input_half, input_elements);
-        }, ffn_quantization_stage);
+        }, ffn_quantization_stage, input_f16_stage,
+           static_cast<std::size_t>(input_elements) * sizeof(__half));
         if (exact_metadata) {
             profile_gpu_call(profile, Qwen3ProfileCategory::quantization, 1, [&] {
                 launch_q8_exact_quantize(input_half, input_q8_exact, static_cast<int>(input_elements));
-            }, ffn_quantization_stage);
+            }, ffn_quantization_stage, input_q8_stage, q8_bytes);
         } else {
             profile_gpu_call(profile, Qwen3ProfileCategory::quantization, 1, [&] {
                 launch_q8_1_quantize(input_half, input_q8, static_cast<int>(input_elements));
-            }, ffn_quantization_stage);
+            }, ffn_quantization_stage, input_q8_stage, q8_bytes);
         }
     }
 }
@@ -390,6 +480,7 @@ void launch_projection(
     bool input_prequantized = false) {
     const auto projection_category = projection_profile_category(projection);
     const auto ffn_projection_stage = projection_ffn_stage(projection);
+    const auto output_f32_stage = projection_output_f32_stage(projection);
     const bool exact_metadata = use_exact_q8_metadata(projection);
     const bool f32_output = projection_selected("MIINFER_F32_OUTPUT_PROJECTIONS", projection);
     if (f32_output && !exact_metadata) {
@@ -446,7 +537,8 @@ void launch_projection(
     if (!f32_output) {
         profile_gpu_call(profile, Qwen3ProfileCategory::conversion, 1, [&] {
             launch_qwen3_f16_to_f32(output_half, output, static_cast<std::uint32_t>(rows));
-        });
+        }, Qwen3FfnProfileStage::count, output_f32_stage,
+           static_cast<std::size_t>(rows) * sizeof(float));
     }
 }
 
@@ -524,13 +616,17 @@ void capture_qwen3_head_norm(
     std::uint32_t heads,
     std::uint32_t head_dim,
     float epsilon,
-    Qwen3GpuProfile* profile) {
+    Qwen3GpuProfile* profile,
+    Qwen3BoundaryProfileStage normalize_stage,
+    Qwen3BoundaryProfileStage scale_stage) {
     profile_gpu_call(profile, Qwen3ProfileCategory::normalization, 1, [&] {
         launch_qwen3_head_rms_normalize(input, rms, heads, head_dim, epsilon);
-    });
+    }, Qwen3FfnProfileStage::count, normalize_stage,
+       static_cast<std::size_t>(heads) * head_dim * sizeof(float));
     profile_gpu_call(profile, Qwen3ProfileCategory::normalization, 1, [&] {
         launch_qwen3_head_mul(rms, weights, weighted, heads, head_dim);
-    });
+    }, Qwen3FfnProfileStage::count, scale_stage,
+       static_cast<std::size_t>(heads) * head_dim * sizeof(float));
 }
 
 }  // namespace
@@ -627,6 +723,12 @@ void Qwen3GpuProfile::finalize() {
             const auto ffn_index = static_cast<std::size_t>(event.ffn_stage);
             ffn_gpu_ms[ffn_index] += milliseconds;
             ffn_dispatches[ffn_index] += event.dispatches;
+        }
+        if (!event.copy && event.boundary_stage != Qwen3BoundaryProfileStage::count) {
+            const auto boundary_index = static_cast<std::size_t>(event.boundary_stage);
+            boundary_gpu_ms[boundary_index] += milliseconds;
+            boundary_dispatches[boundary_index] += event.dispatches;
+            boundary_bytes[boundary_index] += event.bytes;
         }
         (void)hipEventDestroy(event.start);
         (void)hipEventDestroy(event.stop);
@@ -852,12 +954,14 @@ Qwen3LayerTrace qwen3_layer_gpu_impl(
     profile_gpu_call(profile, Qwen3ProfileCategory::normalization, 1, [&] {
         launch_qwen3_rms_normalize(buffers.embedding.data(), buffers.attn_rms.data(), config.hidden_size,
                                    config.rms_epsilon);
-    });
+    }, Qwen3FfnProfileStage::count, Qwen3BoundaryProfileStage::attn_rms_normalize,
+       hidden * sizeof(float));
     trace.attn_rms = capture_optional(buffers.attn_rms.data(), hidden);
     profile_gpu_call(profile, Qwen3ProfileCategory::normalization, 1, [&] {
         launch_qwen3_elementwise_mul(buffers.attn_rms.data(), attention_norm_weights, buffers.attn_norm.data(),
                                      config.hidden_size);
-    });
+    }, Qwen3FfnProfileStage::count, Qwen3BoundaryProfileStage::attn_norm_scale,
+       hidden * sizeof(float));
     trace.attn_norm = capture_optional(buffers.attn_norm.data(), hidden);
 
     launch_projection(plan, layer.q, buffers.attn_norm.data(), config.hidden_size, buffers.q.data(),
@@ -867,7 +971,9 @@ Qwen3LayerTrace qwen3_layer_gpu_impl(
     trace.q_reshape = trace.q_projection;
     const auto* q_norm_weights = device_f32_tensor(plan, layer.q_norm, head_dim);
     capture_qwen3_head_norm(buffers.q.data(), buffers.q_rms.data(), buffers.q_normed.data(), q_norm_weights,
-                            config.attention_heads, config.head_dim, config.rms_epsilon, profile);
+                            config.attention_heads, config.head_dim, config.rms_epsilon, profile,
+                            Qwen3BoundaryProfileStage::q_head_rms_normalize,
+                            Qwen3BoundaryProfileStage::q_head_scale);
     trace.q_rms = capture_optional(buffers.q_rms.data(), hidden);
     trace.q_normed = capture_optional(buffers.q_normed.data(), hidden);
     const char* kv_mutation = std::getenv("MIINFER_GPU_KV_MUTATE");
@@ -893,7 +999,9 @@ Qwen3LayerTrace qwen3_layer_gpu_impl(
     trace.k_reshape = trace.k_projection;
     const auto* k_norm_weights = device_f32_tensor(plan, layer.k_norm, head_dim);
     capture_qwen3_head_norm(k.data(), k_rms.data(), k_normed.data(), k_norm_weights,
-                            config.kv_heads, config.head_dim, config.rms_epsilon, profile);
+                            config.kv_heads, config.head_dim, config.rms_epsilon, profile,
+                            Qwen3BoundaryProfileStage::k_head_rms_normalize,
+                            Qwen3BoundaryProfileStage::k_head_scale);
     trace.k_rms = capture_optional(k_rms.data(), kv_heads * head_dim);
     trace.k_normed = capture_optional(k_normed.data(), kv_heads * head_dim);
     profile_gpu_call(profile, Qwen3ProfileCategory::rope, 1, [&] {
@@ -939,10 +1047,12 @@ Qwen3LayerTrace qwen3_layer_gpu_impl(
     // projection through the existing F32 interface.
     profile_gpu_call(profile, Qwen3ProfileCategory::conversion, 1, [&] {
         launch_qwen3_f32_to_f16(attention.data(), half_output, hidden);
-    });
+    }, Qwen3FfnProfileStage::count, Qwen3BoundaryProfileStage::attention_f32_to_f16,
+       hidden * sizeof(__half));
     profile_gpu_call(profile, Qwen3ProfileCategory::conversion, 1, [&] {
         launch_qwen3_f16_to_f32(half_output, attention.data(), hidden);
-    });
+    }, Qwen3FfnProfileStage::count, Qwen3BoundaryProfileStage::attention_f16_to_f32,
+       hidden * sizeof(float));
     if (!attention_output_override.empty()) {
         if (attention_output_override.size() != hidden) {
             throw std::invalid_argument("attention-output override size mismatch");
@@ -965,12 +1075,14 @@ Qwen3LayerTrace qwen3_layer_gpu_impl(
     profile_gpu_call(profile, Qwen3ProfileCategory::normalization, 1, [&] {
         launch_qwen3_rms_normalize(ffn_input.data(), ffn_rms.data(), config.hidden_size,
                                    config.rms_epsilon);
-    }, Qwen3FfnProfileStage::normalization);
+    }, Qwen3FfnProfileStage::normalization,
+       Qwen3BoundaryProfileStage::ffn_rms_normalize, hidden * sizeof(float));
     trace.ffn_rms = capture_optional(ffn_rms.data(), hidden);
     profile_gpu_call(profile, Qwen3ProfileCategory::normalization, 1, [&] {
         launch_qwen3_elementwise_mul(ffn_rms.data(), ffn_norm_weights, ffn_norm.data(),
                                      config.hidden_size);
-    }, Qwen3FfnProfileStage::normalization);
+    }, Qwen3FfnProfileStage::normalization,
+       Qwen3BoundaryProfileStage::ffn_norm_scale, hidden * sizeof(float));
     trace.ffn_norm = capture_optional(ffn_norm.data(), hidden);
     const bool shared_gate_up_q8 = !capture_trace && use_shared_gate_up_q8();
     if (shared_gate_up_q8) {
@@ -1148,7 +1260,8 @@ Qwen3ForwardTrace execute_qwen3_decode_gpu(
     profile_gpu_call(profile, Qwen3ProfileCategory::normalization, 1, [&] {
         launch_qwen3_rms_norm(current, final_norm_weights, workspace.final_norm.data(),
                               config.hidden_size, config.rms_epsilon);
-    });
+    }, Qwen3FfnProfileStage::count, Qwen3BoundaryProfileStage::final_rms_norm,
+       static_cast<std::size_t>(config.hidden_size) * sizeof(float));
     forward.final_norm = capture(workspace.final_norm.data(), config.hidden_size, profile);
 
     const auto* output_weight = static_cast<const Q6KDeviceBlock*>(
@@ -1156,7 +1269,8 @@ Qwen3ForwardTrace execute_qwen3_decode_gpu(
     profile_gpu_call(profile, Qwen3ProfileCategory::quantization, 1, [&] {
         launch_qwen3_q8_k_quantize(workspace.final_norm.data(), workspace.quantized_final_norm.data(),
                                    config.hidden_size);
-    });
+    }, Qwen3FfnProfileStage::count, Qwen3BoundaryProfileStage::final_norm_to_q8k,
+       static_cast<std::size_t>(config.hidden_size) / 256 * sizeof(Q8KDeviceBlock));
     profile_gpu_call(profile, Qwen3ProfileCategory::lm_head, 1, [&] {
         launch_qwen3_q6_k_q8_k_gemv(output_weight, workspace.quantized_final_norm.data(),
                                     workspace.logits.data(),
@@ -1207,14 +1321,16 @@ void execute_qwen3_decode_gpu_fast_impl(
     profile_gpu_call(profile, Qwen3ProfileCategory::normalization, 1, [&] {
         launch_qwen3_rms_norm(current, final_norm_weights, workspace.final_norm.data(),
                               config.hidden_size, config.rms_epsilon);
-    });
+    }, Qwen3FfnProfileStage::count, Qwen3BoundaryProfileStage::final_rms_norm,
+       static_cast<std::size_t>(config.hidden_size) * sizeof(float));
 
     const auto* output_weight = static_cast<const Q6KDeviceBlock*>(
         plan.device_tensor_data(model.output().name()));
     profile_gpu_call(profile, Qwen3ProfileCategory::quantization, 1, [&] {
         launch_qwen3_q8_k_quantize(workspace.final_norm.data(), workspace.quantized_final_norm.data(),
                                    config.hidden_size);
-    });
+    }, Qwen3FfnProfileStage::count, Qwen3BoundaryProfileStage::final_norm_to_q8k,
+       static_cast<std::size_t>(config.hidden_size) / 256 * sizeof(Q8KDeviceBlock));
     profile_gpu_call(profile, Qwen3ProfileCategory::lm_head, 1, [&] {
         launch_qwen3_q6_k_q8_k_gemv(output_weight, workspace.quantized_final_norm.data(),
                                     workspace.logits.data(),

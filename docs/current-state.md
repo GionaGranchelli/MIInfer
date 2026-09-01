@@ -220,6 +220,12 @@ No other GPU architecture is currently supported.
   time is 20.213/20.121 ms, deferred attribution is 27.828 ms, and the
   remaining ranking is FFN projection 6.963 ms, attention 4.935 ms,
   normalization 2.978 ms, LM head 2.876 ms, and conversion 2.278 ms
+* M5-C10b added real-model normalization/conversion boundary attribution at
+  positions 1/8/16/32/64; P64 is 19.800/19.735 ms clean wall/GPU event with
+  27.287 ms deferred attribution, 1553 dispatches, 38 sync sites, zero
+  allocations, and zero new copy pathology. The selected next experiment is
+  one bounded FFN RMSNorm + norm-scale + F32→F16 + shared-Q8 candidate with
+  strict byte-identical Q8 and trajectory gates
 
 EXP-0002 is accepted as `KEEP`. The seven real Qwen3-8B projection shapes are
 correctness-valid for both the project-owned HIP baseline and the strongest
@@ -259,9 +265,10 @@ overhead relative to the pinned gfx906 llama.cpp control.
 
 The immediate technical objective is:
 
-> Implement one measured M5-C8b gfx906 FFN GEMV geometry candidate from the
-> C8a shape baseline, preserving the existing Q4_0/Q8 activation and output
-> contracts. Keep the change isolated, run primitive and full-model
+> Implement one measured M5-C10c FFN normalization-to-shared-Q8 candidate
+> from the C10b boundary map, preserving the existing F32 arithmetic,
+> F32→F16 rounding, Q8_1 bytes, and downstream Q4_0×Q8_1 contract. Keep the
+> change isolated, require byte-identical Q8 and full-model trajectory
 > correctness, then perform an interleaved end-to-end A/B before promotion.
 
 The initial eight-token fixture matches the independent MI50 reference through
@@ -285,8 +292,9 @@ acceptance uses prompt `hello`, which encodes to `14990`, runs the existing
 persistent 36-layer MI50 decode for eight greedy steps, and detokenizes the
 pinned IDs to `) {\n        return "Hello, "`. Sampling, chat templates, streaming,
 and performance benchmarking is now recorded by M5-A; the cooperative
-attention, workspace, residency, copy-cleanup, and FFN characterization slices
-are recorded by M5-C, with the isolated C8b FFN kernel candidate next.
+attention, workspace, residency, copy-cleanup, FFN characterization, and
+normalization/conversion attribution slices are recorded by M5-C, with the
+isolated C10c FFN normalization-to-shared-Q8 candidate next.
 
 ---
 
@@ -523,6 +531,9 @@ M5-C9c — Gate/Up activation-Q8 reuse (CLOSED; KEEP; production-selected,
 
 M5-C10a — refreshed P64 production attribution (CLOSED; measurement-only;
 next target not preselected)
+
+M5-C10b — normalization/conversion boundary attribution (CLOSED;
+measurement-only; C10c FFN normalization-to-shared-Q8 candidate selected)
 ```
 
 The exact ordering may change based on early measurements.

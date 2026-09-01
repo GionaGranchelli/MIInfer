@@ -448,6 +448,25 @@ families are FFN projection (6.963 ms), attention (4.935 ms), normalization
 (2.978 ms), LM head (2.876 ms), and conversion (2.278 ms). C10a changes no
 production behavior; it only refreshes the ranking for the next experiment.
 
+## M5-C10b normalization/conversion boundary attribution
+
+The C10b measurement-only audit adds named deferred HIP-event stages for
+normalization, F32/F16 conversion, projection-input Q8 quantization, and the
+final norm-to-Q8_K boundary. It runs the real trace-free path at positions
+1/8/16/32/64 with shared Gate/Up Q8 reuse and does not change production
+behavior. The P64 result is retained under
+bench/results/20260901T-c10b-boundary/ and documented in
+experiments/EXP-0031-m5c10b-normalization-conversion-attribution.md.
+
+At P64 the clean wall/whole-token GPU event was 19.800/19.735 ms, deferred
+attribution was 27.287 ms, and the path reported 1553 dispatches, 38
+synchronization sites, zero allocations, and 589,828 bytes of copy
+accounting. The named boundary map shows repeated small normalization and
+materialization stages rather than a new copy or allocation pathology. The
+attention F32→F16→F32 boundary remains semantically required; C10b therefore
+selects one bounded FFN RMSNorm + norm-scale + F32→F16 + shared-Q8 experiment
+for the next slice, with byte-identical Q8 and full trajectory gates.
+
 ## M5-C8a FFN projection shape characterization
 
 The kernel-only `miinfer-q4-q8-gemv-bench` characterization is recorded in

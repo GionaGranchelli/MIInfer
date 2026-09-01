@@ -49,16 +49,59 @@ enum class Qwen3FfnProfileStage {
     count,
 };
 
+// Measurement-only attribution for normalization, conversion, and
+// quantization boundaries.  These labels describe the existing producer /
+// representation / consumer path; they do not select kernels or alter it.
+enum class Qwen3BoundaryProfileStage {
+    attn_rms_normalize,
+    attn_norm_scale,
+    q_input_f32_to_f16,
+    q_input_q8,
+    q_output_f16_to_f32,
+    q_head_rms_normalize,
+    q_head_scale,
+    k_input_f32_to_f16,
+    k_input_q8,
+    k_output_f16_to_f32,
+    k_head_rms_normalize,
+    k_head_scale,
+    v_input_f32_to_f16,
+    v_input_q8,
+    v_output_f16_to_f32,
+    attention_f32_to_f16,
+    attention_f16_to_f32,
+    o_input_f32_to_f16,
+    o_input_q8,
+    o_output_f16_to_f32,
+    ffn_rms_normalize,
+    ffn_norm_scale,
+    gate_input_f32_to_f16,
+    gate_input_q8,
+    gate_output_f16_to_f32,
+    up_input_f32_to_f16,
+    up_input_q8,
+    up_output_f16_to_f32,
+    down_input_f32_to_f16,
+    down_input_q8,
+    down_output_f16_to_f32,
+    final_rms_norm,
+    final_norm_to_q8k,
+    count,
+};
+
 constexpr std::size_t qwen3_profile_category_count =
     static_cast<std::size_t>(Qwen3ProfileCategory::count);
 constexpr std::size_t qwen3_ffn_profile_stage_count =
     static_cast<std::size_t>(Qwen3FfnProfileStage::count);
+constexpr std::size_t qwen3_boundary_profile_stage_count =
+    static_cast<std::size_t>(Qwen3BoundaryProfileStage::count);
 
 struct Qwen3GpuProfileEvent {
     hipEvent_t start = nullptr;
     hipEvent_t stop = nullptr;
     Qwen3ProfileCategory category = Qwen3ProfileCategory::count;
     Qwen3FfnProfileStage ffn_stage = Qwen3FfnProfileStage::count;
+    Qwen3BoundaryProfileStage boundary_stage = Qwen3BoundaryProfileStage::count;
     std::size_t dispatches = 0;
     std::size_t bytes = 0;
     bool copy = false;
@@ -72,6 +115,9 @@ struct Qwen3GpuProfile {
     std::array<std::size_t, qwen3_profile_category_count> synchronizations{};
     std::array<double, qwen3_ffn_profile_stage_count> ffn_gpu_ms{};
     std::array<std::size_t, qwen3_ffn_profile_stage_count> ffn_dispatches{};
+    std::array<double, qwen3_boundary_profile_stage_count> boundary_gpu_ms{};
+    std::array<std::size_t, qwen3_boundary_profile_stage_count> boundary_dispatches{};
+    std::array<std::size_t, qwen3_boundary_profile_stage_count> boundary_bytes{};
     std::size_t temporary_allocations = 0;
     std::size_t finalization_synchronizations = 0;
     std::size_t gate_up_q8_reuse_checks = 0;
@@ -99,6 +145,9 @@ struct Qwen3GpuProfile {
         synchronizations.fill(0);
         ffn_gpu_ms.fill(0.0);
         ffn_dispatches.fill(0);
+        boundary_gpu_ms.fill(0.0);
+        boundary_dispatches.fill(0);
+        boundary_bytes.fill(0);
         temporary_allocations = 0;
         finalization_synchronizations = 0;
         gate_up_q8_reuse_checks = 0;
@@ -121,6 +170,8 @@ struct Qwen3GpuProfile {
 
 [[nodiscard]] const char* qwen3_profile_category_name(Qwen3ProfileCategory category) noexcept;
 [[nodiscard]] const char* qwen3_ffn_profile_stage_name(Qwen3FfnProfileStage stage) noexcept;
+[[nodiscard]] const char* qwen3_boundary_profile_stage_name(
+    Qwen3BoundaryProfileStage stage) noexcept;
 
 enum class Qwen3ProjectionPrecision {
     f16_input_q8_f16_output,

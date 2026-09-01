@@ -197,6 +197,16 @@ void write_profile_json(std::ostream& output, const miinfer::Qwen3GpuProfile& pr
                << "\",\"gpu_ms\":" << profile.ffn_gpu_ms[index]
                << ",\"dispatches\":" << profile.ffn_dispatches[index] << '}';
     }
+    output << "],\"boundaries\":[";
+    for (std::size_t index = 0; index < miinfer::qwen3_boundary_profile_stage_count; ++index) {
+        if (index != 0) output << ',';
+        output << "{\"name\":\""
+               << miinfer::qwen3_boundary_profile_stage_name(
+                      static_cast<miinfer::Qwen3BoundaryProfileStage>(index))
+               << "\",\"gpu_ms\":" << profile.boundary_gpu_ms[index]
+               << ",\"dispatches\":" << profile.boundary_dispatches[index]
+               << ",\"bytes\":" << profile.boundary_bytes[index] << '}';
+    }
     output << "]}";
 }
 
@@ -411,6 +421,15 @@ int main(int argc, char** argv) {
                                  static_cast<miinfer::Qwen3FfnProfileStage>(stage))
                           << ": " << profile.ffn_gpu_ms[stage] << " ms / "
                           << profile.ffn_dispatches[stage] << '\n';
+            }
+            std::cout << "  Normalization/conversion/quantization boundary GPU ms / dispatches / bytes:\n";
+            for (std::size_t stage = 0; stage < miinfer::qwen3_boundary_profile_stage_count; ++stage) {
+                const auto boundary = static_cast<miinfer::Qwen3BoundaryProfileStage>(stage);
+                if (profile.boundary_dispatches[stage] == 0) continue;
+                std::cout << "    " << miinfer::qwen3_boundary_profile_stage_name(boundary)
+                          << ": " << profile.boundary_gpu_ms[stage] << " ms / "
+                          << profile.boundary_dispatches[stage] << " / "
+                          << profile.boundary_bytes[stage] << " bytes\n";
             }
         }
         std::cout << "selected next-token IDs through audited range: [";
