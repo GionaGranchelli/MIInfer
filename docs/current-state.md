@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-A11 CLOSED — Qwen3.8-27B composed GPU prefix; M6-B1 deferred**
+**M6-A12 CLOSED — Qwen3.8-27B full-attention projection path; M6-B1 deferred**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -29,7 +29,8 @@ path is host-only; the old HIP executor rejects `general.architecture=qwen35`.
 M6-A8 provides a dedicated qwen35 model boundary and a real layer-0 RMSNorm
 GPU fixture on gfx906. M6-A9 validates the real Q6_K output head through the
 existing Q6_K×Q8_K GPU primitive, M6-A10 validates a real Q4_K×Q8_K attention
-projection, and M6-A11 composes RMSNorm, Q8_K quantization, and that projection
+projection, M6-A11 composes RMSNorm, Q8_K quantization, and that projection,
+and M6-A12 extends the path through real Q/K/V projections and K normalization
 against layer-3 external checkpoints. Full qwen35 GPU inference is still
 absent, so M6-B1 remains deferred.
 
@@ -156,6 +157,8 @@ No other GPU architecture is currently supported.
   `2.86102e-06`
 * M6-A11 qwen35 layer-3 RMSNorm→Q8_K→Q4_K×Q8_K attention prefix; norm error
   `0` and projection error `2.86102e-06`
+* M6-A12 qwen35 layer-3 Q/K/V projections with K normalization; Q error
+  `2.86102e-06`, K error `9.53674e-07`, and V error `1.90735e-06`
 * M4-B19 attention-to-Q8 boundary replay; external attention quantizes
   bitwise-identically to the host contract, while the external-attention GPU
   control itself retains `0.204956` layer-35 error, identifying a downstream
@@ -665,8 +668,8 @@ stable_peak policy; actual SCLK varied during capture)
 
 M6-B1 — MIInfer Qwen3.8 GPU profile (DEFERRED; no qwen35 HIP executor yet;
 see `experiments/EXP-0051-m6b1-qwen38-miinfer-gpu-readiness.md`). M6-A8 through
-M6-A11 establish qwen35 GPU RMSNorm, quantized projections, and one composed
-layer prefix; a complete qwen35 GPU layer executor remains the prerequisite.
+M6-A12 establish qwen35 GPU RMSNorm, quantized Q/K/V projections, and K
+normalization; a complete qwen35 GPU layer executor remains the prerequisite.
 ```
 
 The exact ordering may change based on early measurements.

@@ -195,6 +195,10 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-m6a11-qwen35-attention-prefix PRIVATE miinfer_hip)
     target_compile_options(miinfer-m6a11-qwen35-attention-prefix PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-m6a12-qwen35-attention-projections tools/m6a12_qwen35_attention_projections.cpp)
+    target_link_libraries(miinfer-m6a12-qwen35-attention-projections PRIVATE miinfer_hip)
+    target_compile_options(miinfer-m6a12-qwen35-attention-projections PRIVATE -Wall -Wextra -Wpedantic)
+
     add_executable(miinfer-device-info tests/device_info.cpp)
     target_link_libraries(miinfer-device-info PRIVATE miinfer_hip)
     target_compile_options(miinfer-device-info PRIVATE -Wall -Wextra -Wpedantic)

@@ -10,12 +10,12 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-A11 CLOSED — qwen35 composed GPU prefix; M6-B1 deferred**
+**Current phase: M6-A12 CLOSED — qwen35 full-attention projection path; M6-B1 deferred**
 
 Immediate objective:
 
-> Extend the externally checked qwen35 layer-3 GPU prefix through the remaining
-> full-attention operations.
+> Extend the externally checked qwen35 layer-3 GPU path through RoPE and KV
+> cache append.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
