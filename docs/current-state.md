@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-B0 CLOSED — Qwen3.8-27B upstream llama.cpp MI50 baseline**
+**M6-B1 DEFERRED — Qwen3.8-27B MIInfer GPU path not yet implemented**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -23,8 +23,10 @@ and a complete 64-layer host forward for the selected
 `Qwen3.8-27B-Q4_K_M.gguf` artifact. The stateful host harness now advances
 the complete recurrent state and full-attention KV histories through positions
 0–64, with external final-norm/logit checkpoints and greedy-token checks at
-positions 0, 1, 2, 4, 8, 16, 32, and 64. M6-B0 now establishes the external
-MI50 performance baseline; M6-B1 is the corresponding MIInfer GPU profile.
+positions 0, 1, 2, 4, 8, 16, 32, and 64. M6-B0 establishes the external MI50
+performance baseline. M6-B1 readiness was audited, but the current Qwen3.8
+path is host-only; the old HIP executor rejects `general.architecture=qwen35`.
+M6-A8, a qwen35 MI50 GPU execution foundation, is the prerequisite.
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The
@@ -139,6 +141,8 @@ No other GPU architecture is currently supported.
 * M6-A7 stateful 0–64 host generation/replay with recurrent-state and
   full-attention KV-history validation
 * M6-B0 upstream llama.cpp Qwen3.8-27B Q4_K_M MI50 PP/TG and context baseline
+* M6-B1 readiness audit; no MIInfer GPU profile claimed because the current
+  HIP executor supports only the prior qwen3 model contract
 * M4-B19 attention-to-Q8 boundary replay; external attention quantizes
   bitwise-identically to the host contract, while the external-attention GPU
   control itself retains `0.204956` layer-35 error, identifying a downstream
@@ -644,8 +648,11 @@ M6-A0 through M6-A7 — Qwen3.8-27B architecture, reference, hybrid bring-up,
 full forward, and stateful host validation (CLOSED)
 
 M6-B0 — upstream llama.cpp Qwen3.8-27B Q4_K_M MI50 baseline (CLOSED;
-stable_peak policy; actual SCLK varied during capture; M6-B1 MIInfer GPU
-profile next)
+stable_peak policy; actual SCLK varied during capture)
+
+M6-B1 — MIInfer Qwen3.8 GPU profile (DEFERRED; no qwen35 HIP executor yet;
+see `experiments/EXP-0051-m6b1-qwen38-miinfer-gpu-readiness.md`). M6-A8
+qwen35 GPU execution foundation is the immediate prerequisite.
 ```
 
 The exact ordering may change based on early measurements.

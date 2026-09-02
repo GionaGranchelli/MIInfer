@@ -10,12 +10,12 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-A2 CLOSED — projection compatibility audit**
+**Current phase: M6-B1 DEFERRED — qwen35 GPU execution prerequisite**
 
 Immediate objective:
 
-> Implement and externally validate one stateful Gated DeltaNet layer from the
-> selected Qwen3.8-27B hybrid model.
+> Implement the smallest qwen35 MI50 GPU execution foundation needed before
+> the MIInfer Qwen3.8 performance profile can begin.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
@@ -27,12 +27,11 @@ and M6-A2 maps the reusable and missing projection contracts. See
 
 Current work should focus on:
 
-* sequential prompt-ingestion timing
-* decode tok/s and time to first token
-* hardware-state and VRAM accounting
-* preserving the C3 correctness control
-* preserving the current production correctness contract
-* completing the M6-A3 single-layer DeltaNet reference path
+* qwen35-specific model/configuration and GPU-plan boundaries
+* one externally validated qwen35 GPU operation or layer
+* hardware-state and VRAM accounting once GPU execution exists
+* preserving the M6-A1 external correctness authority
+* keeping the old qwen3 production path unchanged
 
 Do not treat CPU hidden-state identity through all 36 layers as a universal
 GPU requirement. B23 characterized the pinned external implementation's
@@ -40,7 +39,9 @@ distinct CPU Q4_0×Q8_0 and single-token gfx906 Q8_1/MMVQ execution contracts;
 B24 closed M4-B using a measured final-output and behavioral envelope while
 retaining strict semantic invariants.
 
-Do not start model serving, generic model support, speculative decoding, or multi-GPU work.
+Do not start model serving, generic model support, speculative decoding, or
+multi-GPU work. Do not report M6-B1 performance until a real qwen35 HIP path
+exists; see `experiments/EXP-0051-m6b1-qwen38-miinfer-gpu-readiness.md`.
 
 ---
 
