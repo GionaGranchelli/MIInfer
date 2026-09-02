@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-A7 CLOSED — Qwen3.8-27B stateful multi-position generation bring-up**
+**M6-B0 CLOSED — Qwen3.8-27B upstream llama.cpp MI50 baseline**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -23,8 +23,8 @@ and a complete 64-layer host forward for the selected
 `Qwen3.8-27B-Q4_K_M.gguf` artifact. The stateful host harness now advances
 the complete recurrent state and full-attention KV histories through positions
 0–64, with external final-norm/logit checkpoints and greedy-token checks at
-positions 0, 1, 2, 4, 8, 16, 32, and 64. The next task is the M6 performance
-baseline.
+positions 0, 1, 2, 4, 8, 16, 32, and 64. M6-B0 now establishes the external
+MI50 performance baseline; M6-B1 is the corresponding MIInfer GPU profile.
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The
@@ -138,6 +138,7 @@ No other GPU architecture is currently supported.
 * M6-A6 complete 64-layer host forward, final norm, and logits bring-up
 * M6-A7 stateful 0–64 host generation/replay with recurrent-state and
   full-attention KV-history validation
+* M6-B0 upstream llama.cpp Qwen3.8-27B Q4_K_M MI50 PP/TG and context baseline
 * M4-B19 attention-to-Q8 boundary replay; external attention quantizes
   bitwise-identically to the host contract, while the external-attention GPU
   control itself retains `0.204956` layer-35 error, identifying a downstream
@@ -638,6 +639,13 @@ differential or implementation selected)
 M5-C15 — optimization closure and parity decision gate (CLOSED; accepted and
 rejected M5 record complete; current production path retained; Path A/Path B
 architectural choice pending)
+
+M6-A0 through M6-A7 — Qwen3.8-27B architecture, reference, hybrid bring-up,
+full forward, and stateful host validation (CLOSED)
+
+M6-B0 — upstream llama.cpp Qwen3.8-27B Q4_K_M MI50 baseline (CLOSED;
+stable_peak policy; actual SCLK varied during capture; M6-B1 MIInfer GPU
+profile next)
 ```
 
 The exact ordering may change based on early measurements.
@@ -806,7 +814,14 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-02 — M5-C10b through M5-C15 were recorded after the C9c production
+2026-09-02 — M6-B0 was recorded after completing M6-A7. The upstream
+Qwen3.8-27B Q4_K_M baseline is captured at stable_peak with PP512 median
+196.585 tok/s, isolated TG64/TG128/TG256 medians 22.4888/22.2873/21.9009
+tok/s, and combined P1+TG64/P1+TG256/P1+TG1024 medians
+21.8576/21.9405/21.9107 tok/s. Actual telemetry observed 1000 MHz MCLK and
+1282–1725 MHz SCLK, so the result is policy-controlled but clock-state
+qualified. M6-B1 should profile the functioning MIInfer GPU path against this
+external control. M5-C10b through M5-C15 were recorded after the C9c production
 KEEP. C10c passed its strict real-model correctness gates but its one-workgroup
 fused path regressed clean decode by 5.217%; the separate FFN normalization/Q8
 path remains the production default. C11a refreshed the production baseline and
