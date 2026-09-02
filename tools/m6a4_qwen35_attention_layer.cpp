@@ -176,6 +176,7 @@ void validate_position(const GgufFile& model, const std::filesystem::path& fixtu
 
 }  // namespace
 
+#ifndef MIINFER_M6A4_HELPERS_ONLY
 int main(int argc, char** argv) {
     if (argc != 3) {
         std::cerr << "usage: miinfer-m6a4-qwen35-attention-layer MODEL.gguf FIXTURE_DIR\n";
@@ -197,3 +198,4 @@ int main(int argc, char** argv) {
         return 1;
     }
 }
+#endif

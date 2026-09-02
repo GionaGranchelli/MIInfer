@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788339904.5218632,
-    "seen": 1788340642.069051,
-    "ast_hash": "94980586c388797f0b9652877f4bcff1",
+    "mtime": 1788340862.203307,
+    "seen": 1788341606.2218301,
+    "ast_hash": "454370747a6fd037fa90d4db5c587073",
     "semantic_hash": ""
   },
   "README.md": {
@@ -1098,15 +1098,27 @@
     "semantic_hash": ""
   },
   "tools/m6a4_qwen35_attention_layer.cpp": {
-    "mtime": 1788340350.7507415,
-    "seen": 1788340642.069034,
-    "ast_hash": "90649d7696a3cb5218d80c8571267661",
+    "mtime": 1788340771.021741,
+    "seen": 1788341606.221811,
+    "ast_hash": "1f5ba0f0679198d7b85e90638bcfb5bc",
     "semantic_hash": ""
   },
   "experiments/EXP-0046-m6a4-qwen35-full-attention-layer.md": {
     "mtime": 1788340468.334182,
     "seen": 1788340642.069156,
     "ast_hash": "ec1b8ca76251a4626fc5e8908e2ce1a7",
+    "semantic_hash": ""
+  },
+  "tools/m6a5_qwen35_hybrid_block.cpp": {
+    "mtime": 1788341119.1860833,
+    "seen": 1788341606.2218127,
+    "ast_hash": "527700cc884da13021a230cad6dfd2c9",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0047-m6a5-qwen35-hybrid-block.md": {
+    "mtime": 1788341542.0030742,
+    "seen": 1788341606.2219405,
+    "ast_hash": "4291c5cd62d8a77b16d7369a56d63b0d",
     "semantic_hash": ""
   }
 }
