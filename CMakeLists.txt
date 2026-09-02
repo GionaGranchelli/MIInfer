@@ -187,6 +187,10 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-m6a9-qwen35-lm-head PRIVATE miinfer_hip)
     target_compile_options(miinfer-m6a9-qwen35-lm-head PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-m6a10-qwen35-q4k-projection tools/m6a10_qwen35_q4k_projection.cpp)
+    target_link_libraries(miinfer-m6a10-qwen35-q4k-projection PRIVATE miinfer_hip)
+    target_compile_options(miinfer-m6a10-qwen35-q4k-projection PRIVATE -Wall -Wextra -Wpedantic)
+
     add_executable(miinfer-device-info tests/device_info.cpp)
     target_link_libraries(miinfer-device-info PRIVATE miinfer_hip)
     target_compile_options(miinfer-device-info PRIVATE -Wall -Wextra -Wpedantic)

@@ -150,15 +150,15 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788373466.2516348,
-    "seen": 1788373745.0069094,
-    "ast_hash": "ac8d94dbae7705b1d082be3f152cf3ab",
+    "mtime": 1788381391.371105,
+    "seen": 1788381503.0118778,
+    "ast_hash": "adafcf316b929d9e38d6c1077bf29d74",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788373634.7749298,
-    "seen": 1788373745.0069108,
-    "ast_hash": "eed745787a85b3255280c7cb72be41da",
+    "mtime": 1788381459.4358206,
+    "seen": 1788381503.0118792,
+    "ast_hash": "cfb9a2cc3473f4eb0f285b086c1d786f",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788373634.77293,
-    "seen": 1788373745.006923,
-    "ast_hash": "f17ebd9e8c9bd68b4ee65fcdb60fab70",
+    "mtime": 1788381459.4338205,
+    "seen": 1788381503.0118916,
+    "ast_hash": "f5f8b8a0e20cbf6552a350876bfad248",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788373634.7739298,
-    "seen": 1788373745.0069447,
-    "ast_hash": "22f28099b2d8b6495bfabbb15f60a7c6",
+    "mtime": 1788381459.4358206,
+    "seen": 1788381503.0119133,
+    "ast_hash": "35d487d71d4b55a5956e50323ced2b38",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1788297980.3202324,
-    "seen": 1788298239.5120094,
-    "ast_hash": "343e7ad70641c79e66c0d24042d99310",
+    "mtime": 1788381391.368105,
+    "seen": 1788381503.0117424,
+    "ast_hash": "fe5355e833db28088c60dce75d2f0b0e",
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_primitives.hpp": {
@@ -1197,6 +1197,18 @@
     "mtime": 1788373667.814789,
     "seen": 1788373745.0070279,
     "ast_hash": "4953bf57936a3362244c1c12ecbcec3a",
+    "semantic_hash": ""
+  },
+  "tools/m6a10_qwen35_q4k_projection.cpp": {
+    "mtime": 1788381391.3701048,
+    "seen": 1788381503.011845,
+    "ast_hash": "496e62ef69a945549c0eff49c21053a9",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0054-m6a10-qwen35-q4k-projection.md": {
+    "mtime": 1788381459.4328206,
+    "seen": 1788381503.0119998,
+    "ast_hash": "8a7a586e24c9864a32a3e8628d6d0bec",
     "semantic_hash": ""
   }
 }

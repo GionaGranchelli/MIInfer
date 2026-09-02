@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-A9 CLOSED — Qwen3.8-27B GPU projection bring-up; M6-B1 deferred**
+**Current phase: M6-A10 CLOSED — Qwen3.8-27B Q4_K projection bring-up; M6-B1 deferred**
 
 The project currently has:
 
@@ -39,6 +39,8 @@ The project currently has:
   `experiments/EXP-0052-m6a8-qwen35-gpu-foundation.md`
 * a qwen35 Q6_K×Q8_K LM-head projection validated against external logits; see
   `experiments/EXP-0053-m6a9-qwen35-lm-head.md`
+* a qwen35 Q4_K×Q8_K attention projection validated against an external
+  checkpoint; see `experiments/EXP-0054-m6a10-qwen35-q4k-projection.md`
 
 Sampling and serving remain out of scope. M5 is closed as a measured local
 optimization campaign. M6-A host bring-up and qwen35 GPU operation bring-up

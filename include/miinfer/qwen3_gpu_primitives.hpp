@@ -25,6 +25,15 @@ struct Q8KDeviceBlock {
 
 static_assert(sizeof(Q8KDeviceBlock) == 292);
 
+struct Q4KDeviceBlock {
+    __half d;
+    __half dmin;
+    std::uint8_t scales[12];
+    std::uint8_t qs[128];
+};
+
+static_assert(sizeof(Q4KDeviceBlock) == 144);
+
 void launch_qwen3_q4_embedding(
     const std::byte* weights,
     std::uint32_t token,
@@ -198,6 +207,15 @@ void launch_qwen3_q8_k_quantize(
 
 void launch_qwen3_q6_k_q8_k_gemv(
     const Q6KDeviceBlock* weights,
+    const Q8KDeviceBlock* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    hipStream_t stream = nullptr);
+
+// M6-A10 diagnostic primitive: canonical GGUF Q4_K weights with Q8_K input.
+void launch_qwen3_q4_k_q8_k_gemv(
+    const Q4KDeviceBlock* weights,
     const Q8KDeviceBlock* input,
     float* output,
     std::uint32_t rows,
