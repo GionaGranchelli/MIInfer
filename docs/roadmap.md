@@ -10,16 +10,18 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M5 CLOSED — architectural decision gate**
+**Current phase: M6-A1 CLOSED — external reference fixture**
 
 Immediate objective:
 
-> Preserve the accepted MI50 production path unless the project explicitly
-> selects M6-A reference-correct execution-contract exploration.
+> Build the M6-A2 read-only projection/kernel compatibility map for the
+> selected Qwen3.8-27B hybrid model.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
-`experiments/EXP-0041-m5c15-optimization-closure-parity-gate.md`.
+`experiments/EXP-0041-m5c15-optimization-closure-parity-gate.md`. M6-A0 audited
+the Qwen3.8-27B artifact and M6-A1 now provides a pinned llama.cpp reference
+fixture. See `experiments/EXP-0043-m6a1-qwen38-reference-fixture.md`.
 
 Current work should focus on:
 
@@ -28,7 +30,7 @@ Current work should focus on:
 * hardware-state and VRAM accounting
 * preserving the C3 correctness control
 * preserving the current production correctness contract
-* choosing Path A or Path B before new optimization work
+* completing the M6-A2 projection/kernel compatibility audit
 
 Do not treat CPU hidden-state identity through all 36 layers as a universal
 GPU requirement. B23 characterized the pinned external implementation's

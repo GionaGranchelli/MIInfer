@@ -1048,5 +1048,23 @@
     "seen": 1788304623.9562328,
     "ast_hash": "344cad9b33b59eb0e819f804fc2bc688",
     "semantic_hash": ""
+  },
+  "scripts/check-m6a1-fixture.py": {
+    "mtime": 1788329694.892857,
+    "seen": 1788329849.4121218,
+    "ast_hash": "679355c5721e02f9e8b35e1a0c841698",
+    "semantic_hash": ""
+  },
+  "scripts/run-m6a1-reference-fixture.sh": {
+    "mtime": 1788329070.1418307,
+    "seen": 1788329849.4121444,
+    "ast_hash": "b5668f6cfcaf2ac4fd90c6c7cc2352dc",
+    "semantic_hash": ""
+  },
+  "tools/m6a1_reference_fixture.cpp": {
+    "mtime": 1788329688.785886,
+    "seen": 1788329849.412202,
+    "ast_hash": "78379c57ba636a6783de0ff0790b7ec3",
+    "semantic_hash": ""
   }
 }

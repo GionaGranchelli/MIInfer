@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-A0 CLOSED — Qwen3.8-27B architecture audit**
+**Current phase: M6-A1 CLOSED — Qwen3.8-27B external reference fixture**
 
 The project currently has:
 
@@ -27,10 +27,13 @@ The project currently has:
 * a model-backed tokenizer and minimal text-facing greedy CLI
 * a completed Qwen3.8-27B GGUF/architecture audit; see
   `experiments/EXP-0042-m6a0-qwen38-27b-gguf-audit.md`
+* a reproducible llama.cpp-backed Qwen3.8-27B hybrid tensor/state fixture; see
+  `experiments/EXP-0043-m6a1-qwen38-reference-fixture.md`
 
 Sampling and serving remain out of scope. M5 is closed as a measured local
 optimization campaign. M6-A has been selected for reference-correct
-Qwen3.8-27B bring-up; the next step is the external tensor-reference fixture.
+Qwen3.8-27B bring-up; the next step is the projection/kernel compatibility
+audit.
 
 The current production path is approximately 55 tok/s at stable peak for the
 previous Qwen3-8B target. Qwen3.8-27B is not yet supported by the production
