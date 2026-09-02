@@ -146,6 +146,10 @@ add_executable(miinfer-m6a5-qwen35-hybrid-block tools/m6a5_qwen35_hybrid_block.c
 target_link_libraries(miinfer-m6a5-qwen35-hybrid-block PRIVATE miinfer_model)
 target_compile_options(miinfer-m6a5-qwen35-hybrid-block PRIVATE -Wall -Wextra -Wpedantic)
 
+add_executable(miinfer-m6a6-qwen35-full-forward tools/m6a6_qwen35_full_forward.cpp)
+target_link_libraries(miinfer-m6a6-qwen35-full-forward PRIVATE miinfer_model)
+target_compile_options(miinfer-m6a6-qwen35-full-forward PRIVATE -Wall -Wextra -Wpedantic)
+
 add_executable(miinfer-qwen3-primitives-host-test tests/qwen3_primitives_host_test.cpp)
 target_link_libraries(miinfer-qwen3-primitives-host-test PRIVATE miinfer_model)
 target_compile_options(miinfer-qwen3-primitives-host-test PRIVATE -Wall -Wextra -Wpedantic)
