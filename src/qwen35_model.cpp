@@ -97,7 +97,13 @@ Qwen35Model Qwen35Model::load(const std::string& path) {
     require_f32_vector(*model.file_, "blk.0.attn_norm.weight", model.config_.hidden_size);
     require_f32_vector(*model.file_, "output_norm.weight", model.config_.hidden_size);
     (void)find_tensor(*model.file_, "token_embd.weight");
-    (void)find_tensor(*model.file_, "output.weight");
+    const std::string output_name = "output.weight";
+    const auto& output = find_tensor(*model.file_, output_name);
+    if (output.type != GgufTensorType::q6_k
+        || output.dimensions != std::vector<std::uint64_t>{model.config_.hidden_size,
+                                                            model.config_.vocab_size}) {
+        unsupported("output.weight must be Q6_K[5120,248320]");
+    }
     return model;
 }
 

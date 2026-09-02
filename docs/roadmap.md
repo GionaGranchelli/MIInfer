@@ -10,12 +10,11 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-A8 CLOSED — qwen35 GPU foundation; M6-B1 deferred**
+**Current phase: M6-A9 CLOSED — qwen35 GPU projection bring-up; M6-B1 deferred**
 
 Immediate objective:
 
-> Extend the qwen35 MI50 GPU foundation from one validated operation toward a
-> first externally validated recurrent or full-attention layer.
+> Add and externally validate the first qwen35 Q4_K GPU projection primitive.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
@@ -28,7 +27,7 @@ and M6-A2 maps the reusable and missing projection contracts. See
 Current work should focus on:
 
 * qwen35-specific model/configuration and GPU-plan boundaries
-* one externally validated qwen35 GPU layer
+* one externally validated qwen35 Q4_K GPU projection
 * hardware-state and VRAM accounting once GPU execution exists
 * preserving the M6-A1 external correctness authority
 * keeping the old qwen3 production path unchanged

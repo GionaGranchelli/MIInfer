@@ -183,6 +183,10 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-m6a8-qwen35-gpu-foundation PRIVATE miinfer_hip)
     target_compile_options(miinfer-m6a8-qwen35-gpu-foundation PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-m6a9-qwen35-lm-head tools/m6a9_qwen35_lm_head.cpp)
+    target_link_libraries(miinfer-m6a9-qwen35-lm-head PRIVATE miinfer_hip)
+    target_compile_options(miinfer-m6a9-qwen35-lm-head PRIVATE -Wall -Wextra -Wpedantic)
+
     add_executable(miinfer-device-info tests/device_info.cpp)
     target_link_libraries(miinfer-device-info PRIVATE miinfer_hip)
     target_compile_options(miinfer-device-info PRIVATE -Wall -Wextra -Wpedantic)
