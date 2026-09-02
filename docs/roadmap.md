@@ -10,12 +10,12 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-A14 CLOSED — qwen35 state audit; M6-B1 deferred**
+**Current phase: M6-A15 CLOSED — qwen35 layers 0–3 hybrid audit; M6-B1 deferred**
 
 Immediate objective:
 
-> Compose the externally checked qwen35 layers 0–3 hybrid block, using the
-> A14 state fingerprints and reset/replay contract.
+> Validate the independent qwen35 layers 4–7 hybrid block using the A14/A15
+> state fingerprints and reset/replay contract.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
@@ -27,8 +27,9 @@ and M6-A2 maps the reusable and missing projection contracts. See
 
 Current work should focus on:
 
-* layers 0–3 stateful hybrid-block composition at positions 0, 1, 2, 4, 8, 16
-* second hybrid block validation for layers 4–7
+* layers 0–3 stateful hybrid-block composition through position 16; see
+  `experiments/EXP-0059-m6a15-qwen35-hybrid-block-audit.md`
+* second independent hybrid block validation for layers 4–7
 * zero steady-state allocations and GPU-resident state in the composed path
 * per-layer telemetry and the evolving VRAM ledger
 * preserving the M6-A1 external correctness authority
