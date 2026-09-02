@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-A12 CLOSED — Qwen3.8-27B full-attention projection path; M6-B1 deferred**
+**Current phase: M6-A13 CLOSED — Qwen3.8-27B full-attention layer; M6-B1 deferred**
 
 The project currently has:
 
@@ -45,11 +45,15 @@ The project currently has:
   `experiments/EXP-0055-m6a11-qwen35-attention-prefix.md`
 * qwen35 layer-3 Q/K/V projections with K normalization validated on MI50; see
   `experiments/EXP-0056-m6a12-qwen35-attention-projections.md`
+* a complete qwen35 layer-3 full-attention path through FFN and residual,
+  checked at positions 0–8; see
+  `experiments/EXP-0057-m6a13-qwen35-full-attention-layer.md`
 
 Sampling and serving remain out of scope. M5 is closed as a measured local
 optimization campaign. M6-A host bring-up and qwen35 GPU operation bring-up
 are progressing. The full Qwen3.8 GPU path is not yet implemented, so M6-B1
-performance measurement remains deferred.
+performance measurement remains deferred. The next bring-up gate is state
+fingerprinting/reset-replay, followed by layers 0–3 hybrid composition.
 
 The current production path is approximately 55 tok/s at stable peak for the
 previous Qwen3-8B target. Qwen3.8-27B is not yet supported by the production

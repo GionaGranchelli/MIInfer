@@ -150,15 +150,15 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788382593.7739851,
-    "seen": 1788382700.9615693,
-    "ast_hash": "806ecb87aa86d60f6917dc2be10de5f7",
+    "mtime": 1788383043.713996,
+    "seen": 1788383405.5874016,
+    "ast_hash": "486b159a5166a4cfd7193e58008149be",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788382686.3005872,
-    "seen": 1788382700.9615705,
-    "ast_hash": "9af3f08615f51d5b6b0dd2bc7406a7f0",
+    "mtime": 1788383371.4105034,
+    "seen": 1788383405.5874033,
+    "ast_hash": "2722b5e5ea7b0a8c613a637b678b8902",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788382686.2985873,
-    "seen": 1788382700.9615831,
-    "ast_hash": "acf5a55c7c21a38e5ad60d6c335933b9",
+    "mtime": 1788383389.0184233,
+    "seen": 1788383405.5874155,
+    "ast_hash": "25282ce10b577abe965cbe817288d4ed",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788382686.2995872,
-    "seen": 1788382700.9616058,
-    "ast_hash": "6d877768cb5d1b9cda2b184acf1dd636",
+    "mtime": 1788383381.2104588,
+    "seen": 1788383405.5874379,
+    "ast_hash": "f6423dbf49074448dd8e07b29b44ad98",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1788381391.368105,
-    "seen": 1788381503.0117424,
-    "ast_hash": "fe5355e833db28088c60dce75d2f0b0e",
+    "mtime": 1788383043.710996,
+    "seen": 1788383405.587262,
+    "ast_hash": "82aa1b233ac85751bbc3589df178d882",
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_primitives.hpp": {
@@ -1233,6 +1233,18 @@
     "mtime": 1788382686.2965872,
     "seen": 1788382700.9616928,
     "ast_hash": "5e2bdadae60b51e5813d947f891280d7",
+    "semantic_hash": ""
+  },
+  "tools/m6a13_qwen35_full_attention_layer.cpp": {
+    "mtime": 1788383096.7297544,
+    "seen": 1788383405.5873687,
+    "ast_hash": "83d8afd585a23c4870a7cebde4ee8049",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0057-m6a13-qwen35-full-attention-layer.md": {
+    "mtime": 1788383371.4095035,
+    "seen": 1788383405.5875382,
+    "ast_hash": "4cf40a40f597c7492bd95c889239fc63",
     "semantic_hash": ""
   }
 }

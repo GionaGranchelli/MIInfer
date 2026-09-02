@@ -158,6 +158,72 @@ __global__ void qwen3_head_mul_kernel(
     output[index] = input[index] * weights[index % head_dim];
 }
 
+__global__ void qwen35_split_q_gate_kernel(
+    const float* input, float* query, float* gate,
+    std::uint32_t heads, std::uint32_t head_dim) {
+    const std::uint32_t index = blockIdx.x * blockDim.x + threadIdx.x;
+    const std::uint32_t elements = heads * head_dim;
+    if (index >= elements) return;
+    const std::uint32_t head = index / head_dim;
+    const std::uint32_t local = index % head_dim;
+    const std::uint32_t source = head * (2 * head_dim) + local;
+    query[index] = input[source];
+    gate[index] = input[source + head_dim];
+}
+
+__global__ void qwen35_rope_sections_kernel(
+    const float* input, float* output, std::uint32_t heads,
+    std::uint32_t head_dim, std::uint32_t position, float theta) {
+    const std::uint32_t index = blockIdx.x * blockDim.x + threadIdx.x;
+    const std::uint32_t elements = heads * head_dim;
+    if (index >= elements) return;
+    const std::uint32_t local = index % head_dim;
+    const std::uint32_t base = (index / head_dim) * head_dim;
+    if (local >= 64) {
+        output[index] = input[index];
+        return;
+    }
+    if (local >= 32) return;
+
+    float theta_t = static_cast<float>(position);
+    float theta_h = static_cast<float>(position);
+    float theta_w = static_cast<float>(position);
+    constexpr float theta_e = 0.0F;
+    constexpr int sections[] = {11, 11, 10, 0};
+    constexpr int section_count = 32;
+    const float theta_scale = powf(theta, -2.0F / 64.0F);
+    for (std::uint32_t pair = 0; pair < local; ++pair) {
+        const int sector = static_cast<int>(pair % section_count);
+        float angle = theta_t;
+        if (sector % 3 == 1 && sector < 3 * sections[1]) angle = theta_h;
+        else if (sector % 3 == 2 && sector < 3 * sections[2]) angle = theta_w;
+        else if (sector % 3 == 0 && sector < 3 * sections[0]) angle = theta_t;
+        else angle = theta_e;
+        (void) angle;
+        theta_t *= theta_scale;
+        theta_h *= theta_scale;
+        theta_w *= theta_scale;
+    }
+    const int sector = static_cast<int>(local % section_count);
+    float angle = theta_t;
+    if (sector % 3 == 1 && sector < 3 * sections[1]) angle = theta_h;
+    else if (sector % 3 == 2 && sector < 3 * sections[2]) angle = theta_w;
+    else if (sector % 3 == 0 && sector < 3 * sections[0]) angle = theta_t;
+    else angle = theta_e;
+    const float cosine = cosf(angle);
+    const float sine = sinf(angle);
+    const float x0 = input[base + local];
+    const float x1 = input[base + local + 32];
+    output[base + local] = x0 * cosine - x1 * sine;
+    output[base + local + 32] = x0 * sine + x1 * cosine;
+}
+
+__global__ void qwen35_sigmoid_mul_kernel(
+    const float* input, const float* gate, float* output, std::uint32_t elements) {
+    const std::uint32_t index = blockIdx.x * blockDim.x + threadIdx.x;
+    if (index < elements) output[index] = input[index] / (1.0F + expf(-gate[index]));
+}
+
 __global__ void qwen3_rope_kernel(
     const float* input, float* output, std::uint32_t heads,
     std::uint32_t head_dim, std::uint32_t position, float theta) {
@@ -689,6 +755,43 @@ void launch_qwen3_head_mul(
     hipLaunchKernelGGL(qwen3_head_mul_kernel,
                        dim3((heads * head_dim + 255) / 256), dim3(256), 0, stream,
                        input, weights, output, heads, head_dim);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_split_q_gate(
+    const float* input, float* query, float* gate,
+    std::uint32_t heads, std::uint32_t head_dim, hipStream_t stream) {
+    if (input == nullptr || query == nullptr || gate == nullptr || heads == 0 || head_dim == 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen35_split_q_gate_kernel,
+                       dim3((heads * head_dim + 255) / 256), dim3(256), 0, stream,
+                       input, query, gate, heads, head_dim);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_rope_sections(
+    const float* input, float* output, std::uint32_t heads,
+    std::uint32_t head_dim, std::uint32_t position, float theta, hipStream_t stream) {
+    if (input == nullptr || output == nullptr || heads == 0 || head_dim < 64
+        || theta <= 0.0F) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen35_rope_sections_kernel,
+                       dim3((heads * head_dim + 255) / 256), dim3(256), 0, stream,
+                       input, output, heads, head_dim, position, theta);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_sigmoid_mul(
+    const float* input, const float* gate, float* output,
+    std::uint32_t elements, hipStream_t stream) {
+    if (input == nullptr || gate == nullptr || output == nullptr || elements == 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen35_sigmoid_mul_kernel,
+                       dim3((elements + 255) / 256), dim3(256), 0, stream,
+                       input, gate, output, elements);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

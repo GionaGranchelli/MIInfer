@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-A12 CLOSED — Qwen3.8-27B full-attention projection path; M6-B1 deferred**
+**M6-A13 CLOSED — Qwen3.8-27B full-attention layer; M6-B1 deferred**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -30,9 +30,11 @@ M6-A8 provides a dedicated qwen35 model boundary and a real layer-0 RMSNorm
 GPU fixture on gfx906. M6-A9 validates the real Q6_K output head through the
 existing Q6_K×Q8_K GPU primitive, M6-A10 validates a real Q4_K×Q8_K attention
 projection, M6-A11 composes RMSNorm, Q8_K quantization, and that projection,
-and M6-A12 extends the path through real Q/K/V projections and K normalization
-against layer-3 external checkpoints. Full qwen35 GPU inference is still
-absent, so M6-B1 remains deferred.
+and M6-A12 extends the path through real Q/K/V projections and K normalization,
+and M6-A13 completes layer 3 through RoPE, persistent KV state, cached
+attention, output projection, FFN, and residual output against external
+checkpoints at positions 0–8. Full qwen35 GPU inference is still absent, so
+M6-B1 remains deferred.
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The
@@ -159,6 +161,9 @@ No other GPU architecture is currently supported.
   `0` and projection error `2.86102e-06`
 * M6-A12 qwen35 layer-3 Q/K/V projections with K normalization; Q error
   `2.86102e-06`, K error `9.53674e-07`, and V error `1.90735e-06`
+* M6-A13 qwen35 layer-3 complete full-attention vertical slice through FFN
+  and residual; positions 0–8 pass with max attention error `0.00292516`, max
+  FFN error `0.00455475`, and max layer error `0.00516891`
 * M4-B19 attention-to-Q8 boundary replay; external attention quantizes
   bitwise-identically to the host contract, while the external-attention GPU
   control itself retains `0.204956` layer-35 error, identifying a downstream
@@ -666,10 +671,11 @@ full forward, and stateful host validation (CLOSED)
 M6-B0 — upstream llama.cpp Qwen3.8-27B Q4_K_M MI50 baseline (CLOSED;
 stable_peak policy; actual SCLK varied during capture)
 
-M6-B1 — MIInfer Qwen3.8 GPU profile (DEFERRED; no qwen35 HIP executor yet;
+M6-B1 — MIInfer Qwen3.8 GPU profile (DEFERRED; no full qwen35 executor yet;
 see `experiments/EXP-0051-m6b1-qwen38-miinfer-gpu-readiness.md`). M6-A8 through
-M6-A12 establish qwen35 GPU RMSNorm, quantized Q/K/V projections, and K
-normalization; a complete qwen35 GPU layer executor remains the prerequisite.
+M6-A13 establish qwen35 GPU RMSNorm, quantized Q/K/V projections, K
+normalization, and a complete diagnostic layer-3 full-attention path; state
+fingerprints and layers-0–3 composition remain the prerequisite.
 ```
 
 The exact ordering may change based on early measurements.

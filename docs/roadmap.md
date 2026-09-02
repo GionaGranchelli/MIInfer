@@ -10,12 +10,12 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-A12 CLOSED — qwen35 full-attention projection path; M6-B1 deferred**
+**Current phase: M6-A13 CLOSED — qwen35 full-attention layer; M6-B1 deferred**
 
 Immediate objective:
 
-> Extend the externally checked qwen35 layer-3 GPU path through RoPE and KV
-> cache append.
+> Add state fingerprints and poisoned-state reset/replay checks, then compose
+> the externally checked qwen35 layers 0–3 hybrid block.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
@@ -27,9 +27,10 @@ and M6-A2 maps the reusable and missing projection contracts. See
 
 Current work should focus on:
 
-* qwen35-specific model/configuration and GPU-plan boundaries
-* one externally validated qwen35 full-attention GPU layer
-* hardware-state and VRAM accounting once GPU execution exists
+* qwen35 recurrent/KV state fingerprints and reset/replay validation
+* layers 0–3 stateful hybrid-block composition at positions 1, 2, 4, 8, 16
+* zero steady-state allocations and GPU-resident state in the composed path
+* per-layer telemetry and the evolving VRAM ledger
 * preserving the M6-A1 external correctness authority
 * keeping the old qwen3 production path unchanged
 

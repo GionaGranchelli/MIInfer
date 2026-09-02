@@ -80,6 +80,32 @@ void launch_qwen3_head_mul(
     std::uint32_t head_dim,
     hipStream_t stream = nullptr);
 
+// Qwen35 full-attention helpers. These preserve the model's interleaved
+// Q+gate projection and sectioned 64-dimension RoPE contract.
+void launch_qwen35_split_q_gate(
+    const float* input,
+    float* query,
+    float* gate,
+    std::uint32_t heads,
+    std::uint32_t head_dim,
+    hipStream_t stream = nullptr);
+
+void launch_qwen35_rope_sections(
+    const float* input,
+    float* output,
+    std::uint32_t heads,
+    std::uint32_t head_dim,
+    std::uint32_t position,
+    float theta,
+    hipStream_t stream = nullptr);
+
+void launch_qwen35_sigmoid_mul(
+    const float* input,
+    const float* gate,
+    float* output,
+    std::uint32_t elements,
+    hipStream_t stream = nullptr);
+
 void launch_qwen3_rope(
     const float* input,
     float* output,
