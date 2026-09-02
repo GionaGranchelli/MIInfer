@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788346562.0357528,
-    "seen": 1788348102.027972,
-    "ast_hash": "69a1e87c4e49f935b01e0d52d57ef2f7",
+    "mtime": 1788348446.5631557,
+    "seen": 1788351558.5558832,
+    "ast_hash": "91941c3ca1f96ce57b8fef75ac57c2d3",
     "semantic_hash": ""
   },
   "README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788347986.6402695,
-    "seen": 1788348102.0279856,
-    "ast_hash": "d97f48cddae63740c86f7d994ab36056",
+    "mtime": 1788351504.0694783,
+    "seen": 1788351558.5558984,
+    "ast_hash": "ef6940e7bbbf11d9e70235547af93912",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -1110,9 +1110,9 @@
     "semantic_hash": ""
   },
   "tools/m6a5_qwen35_hybrid_block.cpp": {
-    "mtime": 1788348136.7435796,
-    "seen": 1788348206.4559586,
-    "ast_hash": "6150337836fd4a24b2102542a2b932da",
+    "mtime": 1788348557.228647,
+    "seen": 1788351558.5558589,
+    "ast_hash": "27836108542bfe49f647bf67353c1c6d",
     "semantic_hash": ""
   },
   "experiments/EXP-0047-m6a5-qwen35-hybrid-block.md": {
@@ -1131,6 +1131,18 @@
     "mtime": 1788347986.6382694,
     "seen": 1788348102.0280838,
     "ast_hash": "84b9e34eb9e8de8fa2cab3227dea5d74",
+    "semantic_hash": ""
+  },
+  "tools/m6a7_qwen35_stateful_generation.cpp": {
+    "mtime": 1788348557.228647,
+    "seen": 1788351558.5558631,
+    "ast_hash": "aaa0a5ee08eb94414f35f48490ce72cb",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0049-m6a7-qwen35-stateful-generation.md": {
+    "mtime": 1788351504.0704782,
+    "seen": 1788351558.5560055,
+    "ast_hash": "75ed9e89ce0fc75b5403aa713f0dd638",
     "semantic_hash": ""
   }
 }

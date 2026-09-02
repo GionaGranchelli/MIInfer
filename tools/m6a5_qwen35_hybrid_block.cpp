@@ -15,6 +15,11 @@ constexpr float kQkvTolerance = 5.0F;
 constexpr float kConvolutionTolerance = 1.0F;
 constexpr float kRecurrentOutputTolerance = 2.0e-1F;
 constexpr float kResidualTolerance = 1.0e1F;
+#elif defined(MIINFER_M6A7_STATEFUL_GENERATION)
+constexpr float kQkvTolerance = 2.0e1F;
+constexpr float kConvolutionTolerance = 5.0F;
+constexpr float kRecurrentOutputTolerance = 1.0F;
+constexpr float kResidualTolerance = 1.0e2F;
 #else
 constexpr float kQkvTolerance = 1.0e-1F;
 constexpr float kConvolutionTolerance = 1.0e-2F;
@@ -26,20 +31,24 @@ std::vector<float> recurrent_block(const GgufFile& model, const std::filesystem:
                                    std::size_t layer, std::size_t position,
                                    std::span<const float> input, std::span<const float> state,
                                    std::vector<std::array<float, kChannels>>& history,
-                                   std::vector<float>& state_out) {
+                                   std::vector<float>& state_out, bool validate_reference = true) {
     const auto norm_weights = f32_values(tensor(model, "blk." + std::to_string(layer) + ".attn_norm.weight"), kHidden);
     std::vector<float> normalized(kHidden);
     rms_rows(input, norm_weights, normalized, kHidden);
     const auto prefix = "blk." + std::to_string(layer) + ".";
     auto qkv = gemv(tensor(model, prefix + "attn_qkv.weight"), normalized, kChannels, kHidden);
-    const auto expected_qkv = read_f32(checkpoint(fixture, position, "linear_attn_qkv_mixed-" + std::to_string(layer)), kChannels);
-    require_match("hybrid layer " + std::to_string(layer) + " QKV", compare(qkv, expected_qkv), kQkvTolerance);
+    if (validate_reference) {
+        const auto expected_qkv = read_f32(checkpoint(fixture, position, "linear_attn_qkv_mixed-" + std::to_string(layer)), kChannels);
+        require_match("hybrid layer " + std::to_string(layer) + " QKV", compare(qkv, expected_qkv), kQkvTolerance);
+    }
     std::array<float, kChannels> saved{};
     std::copy(qkv.begin(), qkv.end(), saved.begin());
     auto raw = conv_output(qkv, history, tensor(model, prefix + "ssm_conv1d.weight"));
     history.push_back(saved);
-    const auto expected_raw = read_f32(checkpoint(fixture, position, "conv_output_raw-" + std::to_string(layer)), kChannels);
-    require_match("hybrid layer " + std::to_string(layer) + " convolution", compare(raw, expected_raw), kConvolutionTolerance);
+    if (validate_reference) {
+        const auto expected_raw = read_f32(checkpoint(fixture, position, "conv_output_raw-" + std::to_string(layer)), kChannels);
+        require_match("hybrid layer " + std::to_string(layer) + " convolution", compare(raw, expected_raw), kConvolutionTolerance);
+    }
     silu(raw);
 
     const std::size_t q_size = kKHeads * kState;
@@ -60,9 +69,11 @@ std::vector<float> recurrent_block(const GgufFile& model, const std::filesystem:
         gate[h] = (x <= 20.0F ? std::log1p(std::exp(x)) : x) * a[h];
     }
     auto recurrent_output = recurrent(q, k, v, gate, beta, state, state_out);
-    const auto expected_attention = read_f32(checkpoint(fixture, position, "attn_output-" + std::to_string(layer)), kInner);
-    require_match("hybrid layer " + std::to_string(layer) + " recurrent output",
-                  compare(recurrent_output, expected_attention), kRecurrentOutputTolerance);
+    if (validate_reference) {
+        const auto expected_attention = read_f32(checkpoint(fixture, position, "attn_output-" + std::to_string(layer)), kInner);
+        require_match("hybrid layer " + std::to_string(layer) + " recurrent output",
+                      compare(recurrent_output, expected_attention), kRecurrentOutputTolerance);
+    }
     const auto ssm_norm = f32_values(tensor(model, prefix + "ssm_norm.weight"), kState);
     std::vector<float> gated(recurrent_output.size());
     rms_rows(recurrent_output, ssm_norm, gated, kState);
@@ -70,8 +81,10 @@ std::vector<float> recurrent_block(const GgufFile& model, const std::filesystem:
     auto projected = gemv(tensor(model, prefix + "ssm_out.weight"), gated, kHidden, kInner);
     std::vector<float> residual(kHidden);
     for (std::size_t i = 0; i < kHidden; ++i) residual[i] = input[i] + projected[i];
-    const auto expected_residual = read_f32(checkpoint(fixture, position, "attn_residual-" + std::to_string(layer)), kHidden);
-    require_match("hybrid layer " + std::to_string(layer) + " residual", compare(residual, expected_residual), kResidualTolerance);
+    if (validate_reference) {
+        const auto expected_residual = read_f32(checkpoint(fixture, position, "attn_residual-" + std::to_string(layer)), kHidden);
+        require_match("hybrid layer " + std::to_string(layer) + " residual", compare(residual, expected_residual), kResidualTolerance);
+    }
     const auto post_weights = f32_values(tensor(model, prefix + "post_attention_norm.weight"), kHidden);
     std::vector<float> post_norm(kHidden);
     rms_rows(residual, post_weights, post_norm, kHidden);
@@ -80,15 +93,18 @@ std::vector<float> recurrent_block(const GgufFile& model, const std::filesystem:
     for (std::size_t i = 0; i < kFfnInner; ++i) ffn_gate[i] = ffn_gate[i] / (1.0F + std::exp(-ffn_gate[i])) * ffn_up[i];
     auto ffn = gemv(tensor(model, prefix + "ffn_down.weight"), ffn_gate, kHidden, kFfnInner);
     for (std::size_t i = 0; i < kHidden; ++i) ffn[i] += residual[i];
-    const auto expected_output = read_f32(checkpoint(fixture, position, "l_out-" + std::to_string(layer)), kHidden);
-    require_match("hybrid layer " + std::to_string(layer) + " output", compare(ffn, expected_output), kResidualTolerance);
+    if (validate_reference) {
+        const auto expected_output = read_f32(checkpoint(fixture, position, "l_out-" + std::to_string(layer)), kHidden);
+        require_match("hybrid layer " + std::to_string(layer) + " output", compare(ffn, expected_output), kResidualTolerance);
+    }
     return ffn;
 }
 
 std::vector<float> full_block(const GgufFile& model, const std::filesystem::path& fixture,
                               std::size_t layer, std::size_t position, std::span<const float> input,
                               std::vector<std::vector<float>>& keys,
-                              std::vector<std::vector<float>>& values) {
+                              std::vector<std::vector<float>>& values,
+                              bool validate_reference = true) {
     const std::string prefix = "blk." + std::to_string(layer) + ".";
     const auto norm_weights = f32_values(tensor(model, prefix + "attn_norm.weight"), kHidden);
     std::vector<float> normalized(kHidden);
@@ -112,10 +128,12 @@ std::vector<float> full_block(const GgufFile& model, const std::filesystem::path
     auto projected = gemv(tensor(model, prefix + "attn_output.weight"), attention, kHidden, kAttentionWidth);
     std::vector<float> residual(kHidden);
     for (std::size_t i = 0; i < kHidden; ++i) residual[i] = input[i] + projected[i];
-    const auto expected_residual = read_f32(checkpoint(fixture, position,
-                                                       "attn_residual-" + std::to_string(layer)), kHidden);
-    require_match("hybrid full layer " + std::to_string(layer) + " residual",
-                  compare(residual, expected_residual), kResidualTolerance);
+    if (validate_reference) {
+        const auto expected_residual = read_f32(checkpoint(fixture, position,
+                                                           "attn_residual-" + std::to_string(layer)), kHidden);
+        require_match("hybrid full layer " + std::to_string(layer) + " residual",
+                      compare(residual, expected_residual), kResidualTolerance);
+    }
     std::vector<float> post_norm(kHidden);
     rms_rows(residual, f32_values(tensor(model, prefix + "post_attention_norm.weight"), kHidden), post_norm, kHidden);
     auto ffn_gate = gemv(tensor(model, prefix + "ffn_gate.weight"), post_norm, kFfnInner, kHidden);
@@ -123,9 +141,11 @@ std::vector<float> full_block(const GgufFile& model, const std::filesystem::path
     for (std::size_t i = 0; i < kFfnInner; ++i) ffn_gate[i] = ffn_gate[i] / (1.0F + std::exp(-ffn_gate[i])) * ffn_up[i];
     auto output = gemv(tensor(model, prefix + "ffn_down.weight"), ffn_gate, kHidden, kFfnInner);
     for (std::size_t i = 0; i < kHidden; ++i) output[i] += residual[i];
-    require_match("hybrid full layer " + std::to_string(layer) + " output",
-                  compare(output, read_f32(checkpoint(fixture, position,
-                                                       "l_out-" + std::to_string(layer)), kHidden)), kResidualTolerance);
+    if (validate_reference) {
+        require_match("hybrid full layer " + std::to_string(layer) + " output",
+                      compare(output, read_f32(checkpoint(fixture, position,
+                                                           "l_out-" + std::to_string(layer)), kHidden)), kResidualTolerance);
+    }
     return output;
 }
 

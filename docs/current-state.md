@@ -15,15 +15,16 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-A6 CLOSED — Qwen3.8-27B host full-forward bring-up**
+**M6-A7 CLOSED — Qwen3.8-27B stateful multi-position generation bring-up**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
 and a complete 64-layer host forward for the selected
-`Qwen3.8-27B-Q4_K_M.gguf` artifact. The position-zero full forward reaches
-final normalization and vocabulary logits with the external top-1 token
-matching the pinned llama.cpp reference. The next task is stateful
-multi-position generation.
+`Qwen3.8-27B-Q4_K_M.gguf` artifact. The stateful host harness now advances
+the complete recurrent state and full-attention KV histories through positions
+0–64, with external final-norm/logit checkpoints and greedy-token checks at
+positions 0, 1, 2, 4, 8, 16, 32, and 64. The next task is the M6 performance
+baseline.
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The
@@ -135,6 +136,8 @@ No other GPU architecture is currently supported.
 * M6-A4 single full-attention layer bring-up
 * M6-A5 recurrent/full-attention four-layer hybrid block composition
 * M6-A6 complete 64-layer host forward, final norm, and logits bring-up
+* M6-A7 stateful 0–64 host generation/replay with recurrent-state and
+  full-attention KV-history validation
 * M4-B19 attention-to-Q8 boundary replay; external attention quantizes
   bitwise-identically to the host contract, while the external-attention GPU
   control itself retains `0.204956` layer-35 error, identifying a downstream
