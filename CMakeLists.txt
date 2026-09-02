@@ -163,6 +163,10 @@ add_executable(miinfer-m6a15-qwen35-hybrid-block-audit tools/m6a15_qwen35_hybrid
 target_link_libraries(miinfer-m6a15-qwen35-hybrid-block-audit PRIVATE miinfer_model)
 target_compile_options(miinfer-m6a15-qwen35-hybrid-block-audit PRIVATE -Wall -Wextra -Wpedantic)
 
+add_executable(miinfer-m6a16-qwen35-hybrid-block-4-7-audit tools/m6a16_qwen35_hybrid_block_4_7_audit.cpp)
+target_link_libraries(miinfer-m6a16-qwen35-hybrid-block-4-7-audit PRIVATE miinfer_model)
+target_compile_options(miinfer-m6a16-qwen35-hybrid-block-4-7-audit PRIVATE -Wall -Wextra -Wpedantic)
+
 add_executable(miinfer-qwen3-primitives-host-test tests/qwen3_primitives_host_test.cpp)
 target_link_libraries(miinfer-qwen3-primitives-host-test PRIVATE miinfer_model)
 target_compile_options(miinfer-qwen3-primitives-host-test PRIVATE -Wall -Wextra -Wpedantic)

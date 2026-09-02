@@ -103,7 +103,7 @@ recurrent HIP executor is still absent.
 
 ## Follow-up
 
-M6-A16 should validate the independent layers 4–7 hybrid block through the
-same generic state/fingerprint contract. After two blocks pass, compose the
-model in a doubling ladder before completing qwen35 GPU recurrent execution
-and starting M6-B1 performance measurement.
+M6-A16 validates the independent layers 4–7 hybrid block through the same
+generic state/fingerprint contract. After that gate, compose the model in a
+doubling ladder before completing qwen35 GPU recurrent execution and starting
+M6-B1 performance measurement.

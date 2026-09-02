@@ -12,6 +12,7 @@
 #include <iostream>
 #include <initializer_list>
 #include <numeric>
+#include <optional>
 #include <span>
 #include <sstream>
 #include <stdexcept>
@@ -22,7 +23,6 @@
 namespace {
 
 constexpr std::size_t kA15RecurrentLayers = 3;
-constexpr std::size_t kA15FullLayer = 3;
 constexpr std::size_t kA15MaxPosition = 16;
 
 using State = std::array<std::vector<float>, kA15RecurrentLayers>;
@@ -67,18 +67,18 @@ std::vector<float> flatten(const std::vector<std::vector<float>>& values) {
     return result;
 }
 
-std::string cache_fingerprint(std::string_view type, std::size_t position,
+std::string cache_fingerprint(std::string_view type, std::size_t layer, std::size_t position,
                               const std::vector<std::vector<float>>& cache) {
     const auto flat = flatten(cache);
-    return fingerprint(type, kA15FullLayer, position,
+    return fingerprint(type, layer, position,
                        dimensions({cache.size(), kKvHeads, kHeadDim}), flat);
 }
 
-State initial_states(const std::filesystem::path& fixture) {
+State initial_states(const std::filesystem::path& fixture, std::size_t first_layer) {
     State result;
     for (std::size_t layer = 0; layer < kA15RecurrentLayers; ++layer) {
         result[layer] = read_f32(
-            checkpoint(fixture, 0, "state_predelta-" + std::to_string(layer)),
+            checkpoint(fixture, 0, "state_predelta-" + std::to_string(first_layer + layer)),
             kVHeads * kState * kState);
     }
     return result;
@@ -103,56 +103,61 @@ void report_timing(std::size_t layer, bool full, double milliseconds) {
 
 void run_block(const GgufFile& model, const std::filesystem::path& fixture,
                RuntimeState& runtime, const std::vector<std::uint32_t>& generated,
-               std::uint32_t prompt_token) {
+               std::uint32_t prompt_token, std::size_t first_layer,
+               std::size_t full_layer, std::optional<std::size_t> input_layer) {
     if (generated.size() <= kA15MaxPosition) {
         throw std::runtime_error("fixture lacks tokens through position 16");
     }
     for (std::size_t position = 0; position <= kA15MaxPosition; ++position) {
         const bool check = is_checkpoint_position(position);
         const auto token = position == 0 ? prompt_token : generated[position - 1];
-        auto current = embedding(tensor(model, "token_embd.weight"), token);
-        if (check) {
+        auto current = input_layer.has_value()
+            ? read_f32(checkpoint(fixture, position,
+                                  "l_out-" + std::to_string(*input_layer)), kHidden)
+            : embedding(tensor(model, "token_embd.weight"), token);
+        if (check && !input_layer.has_value()) {
             require_match("block embedding", compare(
                 current, read_f32(checkpoint(fixture, position, "model_input_embed"), kHidden)),
                 1.0e-6F);
         }
         const auto block_start = std::chrono::steady_clock::now();
-        for (std::size_t layer = 0; layer < kA15RecurrentLayers; ++layer) {
+        for (std::size_t offset = 0; offset < kA15RecurrentLayers; ++offset) {
+            const auto layer = first_layer + offset;
             std::cout << fingerprint("recurrent_before", layer, position,
-                                      dimensions({kVHeads, kState, kState}), runtime.recurrent[layer])
+                                      dimensions({kVHeads, kState, kState}), runtime.recurrent[offset])
                       << '\n';
             if (check) {
                 require_match("recurrent state input", compare(
-                    runtime.recurrent[layer], read_f32(
+                    runtime.recurrent[offset], read_f32(
                         checkpoint(fixture, position,
                                    "state_predelta-" + std::to_string(layer)),
                         kVHeads * kState * kState)), 2.0e1F);
             }
             const auto start = std::chrono::steady_clock::now();
-            auto state_input = runtime.recurrent[layer];
+            auto state_input = runtime.recurrent[offset];
             current = recurrent_block(model, fixture, layer, position, current, state_input,
-                                      runtime.convolution[layer], runtime.recurrent[layer], check);
+                                      runtime.convolution[offset], runtime.recurrent[offset], check);
             const auto elapsed = std::chrono::duration<double, std::milli>(
                 std::chrono::steady_clock::now() - start).count();
             report_timing(layer, false, elapsed);
             std::cout << fingerprint("recurrent_after", layer, position,
-                                      dimensions({kVHeads, kState, kState}), runtime.recurrent[layer])
+                                      dimensions({kVHeads, kState, kState}), runtime.recurrent[offset])
                       << '\n';
             std::cout << fingerprint("hidden_after", layer, position,
                                       dimensions({kHidden}), current) << '\n';
         }
 
-        std::cout << cache_fingerprint("kv_k_before", position, runtime.keys) << '\n';
-        std::cout << cache_fingerprint("kv_v_before", position, runtime.values) << '\n';
+        std::cout << cache_fingerprint("kv_k_before", full_layer, position, runtime.keys) << '\n';
+        std::cout << cache_fingerprint("kv_v_before", full_layer, position, runtime.values) << '\n';
         const auto start = std::chrono::steady_clock::now();
-        current = full_block(model, fixture, kA15FullLayer, position, current,
+        current = full_block(model, fixture, full_layer, position, current,
                              runtime.keys, runtime.values, check);
         const auto elapsed = std::chrono::duration<double, std::milli>(
             std::chrono::steady_clock::now() - start).count();
-        report_timing(kA15FullLayer, true, elapsed);
-        std::cout << cache_fingerprint("kv_k_after", position, runtime.keys) << '\n';
-        std::cout << cache_fingerprint("kv_v_after", position, runtime.values) << '\n';
-        std::cout << fingerprint("hidden_after", kA15FullLayer, position,
+        report_timing(full_layer, true, elapsed);
+        std::cout << cache_fingerprint("kv_k_after", full_layer, position, runtime.keys) << '\n';
+        std::cout << cache_fingerprint("kv_v_after", full_layer, position, runtime.values) << '\n';
+        std::cout << fingerprint("hidden_after", full_layer, position,
                                   dimensions({kHidden}), current) << '\n';
         const auto block_elapsed = std::chrono::duration<double, std::milli>(
             std::chrono::steady_clock::now() - block_start).count();
@@ -163,6 +168,7 @@ void run_block(const GgufFile& model, const std::filesystem::path& fixture,
 
 }  // namespace
 
+#ifndef MIINFER_M6A15_HELPERS_ONLY
 int main(int argc, char** argv) {
     if (argc != 3) {
         std::cerr << "usage: miinfer-m6a15-qwen35-hybrid-block-audit MODEL.gguf FIXTURE_DIR\n";
@@ -176,11 +182,13 @@ int main(int argc, char** argv) {
         if (prompt_tokens.empty()) throw std::runtime_error("fixture has no prompt token");
 
         RuntimeState runtime;
-        reset(runtime, initial_states(fixture));
-        run_block(*model, fixture, runtime, generated_tokens, prompt_tokens.front());
+        reset(runtime, initial_states(fixture, 0));
+        run_block(*model, fixture, runtime, generated_tokens, prompt_tokens.front(), 0, 3,
+                  std::nullopt);
         std::cout << "M6-A15 qwen35 layers-0-3 hybrid block audit PASS\n";
     } catch (const std::exception& error) {
         std::cerr << "M6-A15 failed: " << error.what() << '\n';
         return 1;
     }
 }
+#endif

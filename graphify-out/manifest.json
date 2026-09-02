@@ -150,15 +150,15 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788386633.4215856,
-    "seen": 1788387554.3292067,
-    "ast_hash": "7bb33beba4a5e44722faa64eeed19bc3",
+    "mtime": 1788387906.4639664,
+    "seen": 1788390071.6910264,
+    "ast_hash": "8ea3ecbbd58e6a0ecde1c012e8c5ad47",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788387542.3355987,
-    "seen": 1788387554.3292084,
-    "ast_hash": "567f30d3183c1f0374c832981d814cec",
+    "mtime": 1788390060.6756372,
+    "seen": 1788390071.6910279,
+    "ast_hash": "cb23a252404021fa293006dba960e3c2",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788387542.3375988,
-    "seen": 1788387554.3292203,
-    "ast_hash": "f73a7bc3911f39551020dd970253f881",
+    "mtime": 1788390060.6776373,
+    "seen": 1788390071.6910412,
+    "ast_hash": "d6bb1aa0a2af3f1aa88d25fefb3e263e",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788387542.3395987,
-    "seen": 1788387554.3292415,
-    "ast_hash": "d2d4efa6937bdfafb381241f81870005",
+    "mtime": 1788390060.6796374,
+    "seen": 1788390071.6910644,
+    "ast_hash": "3105cddf3548ca28e8648a74b695bec4",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -1260,15 +1260,27 @@
     "semantic_hash": ""
   },
   "tools/m6a15_qwen35_hybrid_block_audit.cpp": {
-    "mtime": 1788386641.7775502,
-    "seen": 1788387554.3291748,
-    "ast_hash": "fe69fcce97c0fd468e997668677d838b",
+    "mtime": 1788388044.8613536,
+    "seen": 1788390071.6909907,
+    "ast_hash": "9c6e8a815a48bba991b6c596ec54f96c",
     "semantic_hash": ""
   },
   "experiments/EXP-0059-m6a15-qwen35-hybrid-block-audit.md": {
-    "mtime": 1788387495.427809,
-    "seen": 1788387554.329331,
-    "ast_hash": "4b8182f9c6099ca7ad7fc05609fb983f",
+    "mtime": 1788390033.5057554,
+    "seen": 1788390071.6911592,
+    "ast_hash": "430e1062f05733883e3bc33e79791c4b",
+    "semantic_hash": ""
+  },
+  "tools/m6a16_qwen35_hybrid_block_4_7_audit.cpp": {
+    "mtime": 1788388555.6031551,
+    "seen": 1788390071.6909924,
+    "ast_hash": "4912de7f3f5772050c2868ad374e738f",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0060-m6a16-qwen35-hybrid-block-4-7-audit.md": {
+    "mtime": 1788390033.5047553,
+    "seen": 1788390071.6911607,
+    "ast_hash": "fed01b0fb8d0f4772c15fc9d2e180867",
     "semantic_hash": ""
   }
 }
