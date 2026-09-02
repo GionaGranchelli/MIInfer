@@ -10,18 +10,20 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-A1 CLOSED — external reference fixture**
+**Current phase: M6-A2 CLOSED — projection compatibility audit**
 
 Immediate objective:
 
-> Build the M6-A2 read-only projection/kernel compatibility map for the
+> Implement and externally validate one stateful Gated DeltaNet layer from the
 > selected Qwen3.8-27B hybrid model.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
 `experiments/EXP-0041-m5c15-optimization-closure-parity-gate.md`. M6-A0 audited
-the Qwen3.8-27B artifact and M6-A1 now provides a pinned llama.cpp reference
-fixture. See `experiments/EXP-0043-m6a1-qwen38-reference-fixture.md`.
+the Qwen3.8-27B artifact, M6-A1 provides a pinned llama.cpp reference fixture,
+and M6-A2 maps the reusable and missing projection contracts. See
+`experiments/EXP-0043-m6a1-qwen38-reference-fixture.md` and
+`experiments/EXP-0044-m6a2-qwen38-projection-compatibility.md`.
 
 Current work should focus on:
 
@@ -30,7 +32,7 @@ Current work should focus on:
 * hardware-state and VRAM accounting
 * preserving the C3 correctness control
 * preserving the current production correctness contract
-* completing the M6-A2 projection/kernel compatibility audit
+* completing the M6-A3 single-layer DeltaNet reference path
 
 Do not treat CPU hidden-state identity through all 36 layers as a universal
 GPU requirement. B23 characterized the pinned external implementation's

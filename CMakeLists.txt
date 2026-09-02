@@ -130,6 +130,10 @@ add_executable(miinfer-model-loader-test tests/model_loader_test.cpp)
 target_link_libraries(miinfer-model-loader-test PRIVATE miinfer_model)
 target_compile_options(miinfer-model-loader-test PRIVATE -Wall -Wextra -Wpedantic)
 
+add_executable(miinfer-m6a2-compatibility-audit tools/m6a2_compatibility_audit.cpp)
+target_link_libraries(miinfer-m6a2-compatibility-audit PRIVATE miinfer_model)
+target_compile_options(miinfer-m6a2-compatibility-audit PRIVATE -Wall -Wextra -Wpedantic)
+
 add_executable(miinfer-qwen3-primitives-host-test tests/qwen3_primitives_host_test.cpp)
 target_link_libraries(miinfer-qwen3-primitives-host-test PRIVATE miinfer_model)
 target_compile_options(miinfer-qwen3-primitives-host-test PRIVATE -Wall -Wextra -Wpedantic)

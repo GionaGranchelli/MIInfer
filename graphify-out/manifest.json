@@ -150,15 +150,15 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788267790.68646,
-    "seen": 1788268478.819606,
-    "ast_hash": "59e4e91fdaabd9e1bad63826633cf06e",
+    "mtime": 1788336064.0232193,
+    "seen": 1788336207.3555684,
+    "ast_hash": "cca5404505ed80440e1484f2c7418041",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788304613.9077594,
-    "seen": 1788304623.9561343,
-    "ast_hash": "67bfdec64886324575498e5f8e95f996",
+    "mtime": 1788336196.6655786,
+    "seen": 1788336207.3555696,
+    "ast_hash": "c7b7c7847a19ed74d503eecb5e893861",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788304613.9067593,
-    "seen": 1788304623.9561472,
-    "ast_hash": "7d4e016615c039be8d96e552d93d697b",
+    "mtime": 1788336196.6665785,
+    "seen": 1788336207.3555818,
+    "ast_hash": "38c03e747fb8016d2c43522f50138df9",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788303069.2795405,
-    "seen": 1788303079.0348265,
-    "ast_hash": "06c81fb2cad124b79ed05cd7bf7462da",
+    "mtime": 1788336196.6685784,
+    "seen": 1788336207.3556037,
+    "ast_hash": "d3e12fb0ac58a61dc976efb2e3a04447",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -1065,6 +1065,24 @@
     "mtime": 1788329688.785886,
     "seen": 1788329849.412202,
     "ast_hash": "78379c57ba636a6783de0ff0790b7ec3",
+    "semantic_hash": ""
+  },
+  "tools/m6a2_compatibility_audit.cpp": {
+    "mtime": 1788336110.2539961,
+    "seen": 1788336207.3555508,
+    "ast_hash": "846ebb99877750b318ecadba80d7a32d",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0043-m6a1-qwen38-reference-fixture.md": {
+    "mtime": 1788329929.8207388,
+    "seen": 1788336207.3556683,
+    "ast_hash": "ef86b8325f3de0a5b57fedc69ea70af4",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0044-m6a2-qwen38-projection-compatibility.md": {
+    "mtime": 1788336173.0906925,
+    "seen": 1788336207.3556695,
+    "ast_hash": "ed8a14562f55c6d45fe1f73b58845546",
     "semantic_hash": ""
   }
 }
