@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-A13 CLOSED — Qwen3.8-27B full-attention layer; M6-B1 deferred**
+**Current phase: M6-A14 CLOSED — Qwen3.8-27B state audit; M6-B1 deferred**
 
 The project currently has:
 
@@ -48,6 +48,9 @@ The project currently has:
 * a complete qwen35 layer-3 full-attention path through FFN and residual,
   checked at positions 0–8; see
   `experiments/EXP-0057-m6a13-qwen35-full-attention-layer.md`
+* qwen35 state fingerprints, poisoned reset, and replay checks for the
+  recurrent layers and layer-3 KV cache; see
+  `experiments/EXP-0058-m6a14-qwen35-state-audit.md`
 
 Sampling and serving remain out of scope. M5 is closed as a measured local
 optimization campaign. M6-A host bring-up and qwen35 GPU operation bring-up

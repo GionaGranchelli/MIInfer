@@ -144,4 +144,10 @@ std::string sha256_file(const std::string& path) {
     return hash.finish();
 }
 
+std::string sha256_bytes(std::span<const std::byte> bytes) {
+    Sha256 hash;
+    hash.update(bytes.data(), bytes.size());
+    return hash.finish();
+}
+
 }  // namespace miinfer

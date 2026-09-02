@@ -150,15 +150,15 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788383043.713996,
-    "seen": 1788383405.5874016,
-    "ast_hash": "486b159a5166a4cfd7193e58008149be",
+    "mtime": 1788383868.4112358,
+    "seen": 1788386439.2520478,
+    "ast_hash": "4f3eaba2860f5f93217f188b3d10f742",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788383371.4105034,
-    "seen": 1788383405.5874033,
-    "ast_hash": "2722b5e5ea7b0a8c613a637b678b8902",
+    "mtime": 1788386427.7894535,
+    "seen": 1788386439.2520494,
+    "ast_hash": "09a763f6d6c4e7305ac87b08b751f3c6",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788383389.0184233,
-    "seen": 1788383405.5874155,
-    "ast_hash": "25282ce10b577abe965cbe817288d4ed",
+    "mtime": 1788386427.7904534,
+    "seen": 1788386439.252061,
+    "ast_hash": "6fe89f76a49e7f0066123f59b33186d1",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788383381.2104588,
-    "seen": 1788383405.5874379,
-    "ast_hash": "f6423dbf49074448dd8e07b29b44ad98",
+    "mtime": 1788386427.7914534,
+    "seen": 1788386439.2520862,
+    "ast_hash": "bfeacff1b8bee23aab4c2a01196396a1",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -468,9 +468,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/sha256.hpp": {
-    "mtime": 1788089698.282873,
-    "seen": 1788090760.6794863,
-    "ast_hash": "f7f999b898facc6965ad0180c2961489",
+    "mtime": 1788383764.0007153,
+    "seen": 1788386439.2519188,
+    "ast_hash": "f31a776e0bda879932f02f85f54cb93a",
     "semantic_hash": ""
   },
   "src/gguf.cpp": {
@@ -492,9 +492,9 @@
     "semantic_hash": ""
   },
   "src/sha256.cpp": {
-    "mtime": 1788089936.3996696,
-    "seen": 1788090760.6795046,
-    "ast_hash": "97a3343030083925ab68f34ddbe717d7",
+    "mtime": 1788383704.8819845,
+    "seen": 1788386439.2519705,
+    "ast_hash": "59bea3cca45e3cb8758d7cde820b3ef7",
     "semantic_hash": ""
   },
   "tests/model_gpu_test.cpp": {
@@ -1245,6 +1245,18 @@
     "mtime": 1788383371.4095035,
     "seen": 1788383405.5875382,
     "ast_hash": "4cf40a40f597c7492bd95c889239fc63",
+    "semantic_hash": ""
+  },
+  "tools/m6a14_qwen35_state_audit.cpp": {
+    "mtime": 1788385829.9619815,
+    "seen": 1788386439.2520163,
+    "ast_hash": "724e1a6da6d6aad1b1d7a62aaf5cd98c",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0058-m6a14-qwen35-state-audit.md": {
+    "mtime": 1788386427.7884536,
+    "seen": 1788386439.2521753,
+    "ast_hash": "152cede5a30d03764fd953b2d16e8a16",
     "semantic_hash": ""
   }
 }

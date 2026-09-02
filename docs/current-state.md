@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-A13 CLOSED — Qwen3.8-27B full-attention layer; M6-B1 deferred**
+**M6-A14 CLOSED — Qwen3.8-27B state audit; M6-B1 deferred**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -33,8 +33,9 @@ projection, M6-A11 composes RMSNorm, Q8_K quantization, and that projection,
 and M6-A12 extends the path through real Q/K/V projections and K normalization,
 and M6-A13 completes layer 3 through RoPE, persistent KV state, cached
 attention, output projection, FFN, and residual output against external
-checkpoints at positions 0–8. Full qwen35 GPU inference is still absent, so
-M6-B1 remains deferred.
+checkpoints at positions 0–8. M6-A14 adds logical-byte fingerprints for L0–L2
+recurrent state, L3 K/V state, and hidden outputs, plus poisoned reset/replay
+checks. Full qwen35 GPU inference is still absent, so M6-B1 remains deferred.
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The
@@ -164,6 +165,9 @@ No other GPU architecture is currently supported.
 * M6-A13 qwen35 layer-3 complete full-attention vertical slice through FFN
   and residual; positions 0–8 pass with max attention error `0.00292516`, max
   FFN error `0.00455475`, and max layer error `0.00516891`
+* M6-A14 qwen35 state fingerprint/reset audit; 42 logical state records,
+  clean/full/partial-poison/cross-sequence replay all pass exactly, with a
+  diagnostic state plan of `9,830,400` bytes
 * M4-B19 attention-to-Q8 boundary replay; external attention quantizes
   bitwise-identically to the host contract, while the external-attention GPU
   control itself retains `0.204956` layer-35 error, identifying a downstream

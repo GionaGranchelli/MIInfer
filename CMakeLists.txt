@@ -155,6 +155,10 @@ target_compile_options(miinfer-m6a6-qwen35-full-forward PRIVATE -Wall -Wextra -W
     target_link_libraries(miinfer-m6a7-qwen35-stateful-generation PRIVATE miinfer_model)
     target_compile_options(miinfer-m6a7-qwen35-stateful-generation PRIVATE -Wall -Wextra -Wpedantic)
 
+add_executable(miinfer-m6a14-qwen35-state-audit tools/m6a14_qwen35_state_audit.cpp)
+target_link_libraries(miinfer-m6a14-qwen35-state-audit PRIVATE miinfer_model)
+target_compile_options(miinfer-m6a14-qwen35-state-audit PRIVATE -Wall -Wextra -Wpedantic)
+
 add_executable(miinfer-qwen3-primitives-host-test tests/qwen3_primitives_host_test.cpp)
 target_link_libraries(miinfer-qwen3-primitives-host-test PRIVATE miinfer_model)
 target_compile_options(miinfer-qwen3-primitives-host-test PRIVATE -Wall -Wextra -Wpedantic)
