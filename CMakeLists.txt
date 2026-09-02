@@ -81,6 +81,7 @@ target_compile_options(miinfer_build_info PRIVATE
 add_library(miinfer_model STATIC
     src/gguf.cpp
     src/qwen3_model.cpp
+    src/qwen35_model.cpp
     src/qwen3_primitives.cpp
     src/qwen3_layer.cpp
     src/qwen3_tokenizer.cpp
@@ -150,9 +151,9 @@ add_executable(miinfer-m6a6-qwen35-full-forward tools/m6a6_qwen35_full_forward.c
 target_link_libraries(miinfer-m6a6-qwen35-full-forward PRIVATE miinfer_model)
 target_compile_options(miinfer-m6a6-qwen35-full-forward PRIVATE -Wall -Wextra -Wpedantic)
 
-add_executable(miinfer-m6a7-qwen35-stateful-generation tools/m6a7_qwen35_stateful_generation.cpp)
-target_link_libraries(miinfer-m6a7-qwen35-stateful-generation PRIVATE miinfer_model)
-target_compile_options(miinfer-m6a7-qwen35-stateful-generation PRIVATE -Wall -Wextra -Wpedantic)
+    add_executable(miinfer-m6a7-qwen35-stateful-generation tools/m6a7_qwen35_stateful_generation.cpp)
+    target_link_libraries(miinfer-m6a7-qwen35-stateful-generation PRIVATE miinfer_model)
+    target_compile_options(miinfer-m6a7-qwen35-stateful-generation PRIVATE -Wall -Wextra -Wpedantic)
 
 add_executable(miinfer-qwen3-primitives-host-test tests/qwen3_primitives_host_test.cpp)
 target_link_libraries(miinfer-qwen3-primitives-host-test PRIVATE miinfer_model)
@@ -178,6 +179,10 @@ target_link_libraries(miinfer-qwen3-tokenizer-test PRIVATE miinfer_model)
 target_compile_options(miinfer-qwen3-tokenizer-test PRIVATE -Wall -Wextra -Wpedantic)
 
 if(MIINFER_ENABLE_HIP)
+    add_executable(miinfer-m6a8-qwen35-gpu-foundation tools/m6a8_qwen35_gpu_foundation.cpp)
+    target_link_libraries(miinfer-m6a8-qwen35-gpu-foundation PRIVATE miinfer_hip)
+    target_compile_options(miinfer-m6a8-qwen35-gpu-foundation PRIVATE -Wall -Wextra -Wpedantic)
+
     add_executable(miinfer-device-info tests/device_info.cpp)
     target_link_libraries(miinfer-device-info PRIVATE miinfer_hip)
     target_compile_options(miinfer-device-info PRIVATE -Wall -Wextra -Wpedantic)
@@ -363,4 +368,5 @@ if(MIINFER_ENABLE_HIP)
     install(TARGETS miinfer-qwen3-layer0-gpu-test)
     install(TARGETS miinfer-qwen3-kv-cache-gpu-test)
     install(TARGETS miinfer-qwen3-forward-gpu-test)
+    install(TARGETS miinfer-m6a8-qwen35-gpu-foundation)
 endif()

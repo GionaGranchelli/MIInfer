@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-B1 DEFERRED — Qwen3.8-27B MIInfer GPU path not yet implemented**
+**Current phase: M6-A8 CLOSED — Qwen3.8-27B GPU foundation; M6-B1 deferred**
 
 The project currently has:
 
@@ -35,10 +35,13 @@ The project currently has:
   cannot profile qwen35; see
   `experiments/EXP-0051-m6b1-qwen38-miinfer-gpu-readiness.md`
 
+* a qwen35 model boundary and real MI50 RMSNorm fixture; see
+  `experiments/EXP-0052-m6a8-qwen35-gpu-foundation.md`
+
 Sampling and serving remain out of scope. M5 is closed as a measured local
-optimization campaign. M6-A host bring-up is complete. The Qwen3.8 GPU path is
-not yet implemented, so M6-B1 performance measurement is deferred until the
-qwen35 GPU foundation is in place.
+optimization campaign. M6-A host bring-up and the first qwen35 GPU foundation
+operation are complete. The full Qwen3.8 GPU path is
+not yet implemented, so M6-B1 performance measurement remains deferred.
 
 The current production path is approximately 55 tok/s at stable peak for the
 previous Qwen3-8B target. Qwen3.8-27B is not yet supported by the production
