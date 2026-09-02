@@ -41,7 +41,7 @@ struct Capture {
     bool wanted(const char * raw_name) const {
         const std::string_view name(raw_name == nullptr ? "" : raw_name);
         constexpr std::string_view needles[] = {
-            "model.input_embed", "attn_norm-", "attn_residual-", "attn_post_norm-",
+            "model.input_embed", "attn_norm-", "linear_attn_qkv_mixed-", "attn_residual-", "attn_post_norm-",
             "ffn_out-", "post_ffn-", "l_out-", "state_predelta-", "conv_output_raw-",
             "final_output-", "attn_q-", "attn_k-", "attn_v-", "attn_output-", "result_norm"
         };

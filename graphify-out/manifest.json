@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788336064.0232193,
-    "seen": 1788336207.3555684,
-    "ast_hash": "cca5404505ed80440e1484f2c7418041",
+    "mtime": 1788337545.3891063,
+    "seen": 1788339123.3200138,
+    "ast_hash": "7967e00b3542145f9a8dab18d2b0b9f6",
     "semantic_hash": ""
   },
   "README.md": {
@@ -1062,9 +1062,9 @@
     "semantic_hash": ""
   },
   "tools/m6a1_reference_fixture.cpp": {
-    "mtime": 1788329688.785886,
-    "seen": 1788329849.412202,
-    "ast_hash": "78379c57ba636a6783de0ff0790b7ec3",
+    "mtime": 1788338559.4902701,
+    "seen": 1788339123.319994,
+    "ast_hash": "eafba6ec3d6cec20e1e3b0ee62b0ecb6",
     "semantic_hash": ""
   },
   "tools/m6a2_compatibility_audit.cpp": {
@@ -1083,6 +1083,18 @@
     "mtime": 1788336173.0906925,
     "seen": 1788336207.3556695,
     "ast_hash": "ed8a14562f55c6d45fe1f73b58845546",
+    "semantic_hash": ""
+  },
+  "tools/m6a3_qwen35_layer.cpp": {
+    "mtime": 1788339000.9321651,
+    "seen": 1788339123.319997,
+    "ast_hash": "c6b0d2b371ba44a3199f3322acd6f32b",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0045-m6a3-qwen35-deltanet-layer.md": {
+    "mtime": 1788339077.706799,
+    "seen": 1788339123.3201168,
+    "ast_hash": "42902e74e93ecf014e9ab7fc8d5e6a8d",
     "semantic_hash": ""
   }
 }

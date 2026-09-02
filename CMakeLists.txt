@@ -134,6 +134,10 @@ add_executable(miinfer-m6a2-compatibility-audit tools/m6a2_compatibility_audit.c
 target_link_libraries(miinfer-m6a2-compatibility-audit PRIVATE miinfer_model)
 target_compile_options(miinfer-m6a2-compatibility-audit PRIVATE -Wall -Wextra -Wpedantic)
 
+add_executable(miinfer-m6a3-qwen35-layer tools/m6a3_qwen35_layer.cpp)
+target_link_libraries(miinfer-m6a3-qwen35-layer PRIVATE miinfer_model)
+target_compile_options(miinfer-m6a3-qwen35-layer PRIVATE -Wall -Wextra -Wpedantic)
+
 add_executable(miinfer-qwen3-primitives-host-test tests/qwen3_primitives_host_test.cpp)
 target_link_libraries(miinfer-qwen3-primitives-host-test PRIVATE miinfer_model)
 target_compile_options(miinfer-qwen3-primitives-host-test PRIVATE -Wall -Wextra -Wpedantic)
