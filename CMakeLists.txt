@@ -138,6 +138,10 @@ add_executable(miinfer-m6a3-qwen35-layer tools/m6a3_qwen35_layer.cpp)
 target_link_libraries(miinfer-m6a3-qwen35-layer PRIVATE miinfer_model)
 target_compile_options(miinfer-m6a3-qwen35-layer PRIVATE -Wall -Wextra -Wpedantic)
 
+add_executable(miinfer-m6a4-qwen35-attention-layer tools/m6a4_qwen35_attention_layer.cpp)
+target_link_libraries(miinfer-m6a4-qwen35-attention-layer PRIVATE miinfer_model)
+target_compile_options(miinfer-m6a4-qwen35-attention-layer PRIVATE -Wall -Wextra -Wpedantic)
+
 add_executable(miinfer-qwen3-primitives-host-test tests/qwen3_primitives_host_test.cpp)
 target_link_libraries(miinfer-qwen3-primitives-host-test PRIVATE miinfer_model)
 target_compile_options(miinfer-qwen3-primitives-host-test PRIVATE -Wall -Wextra -Wpedantic)

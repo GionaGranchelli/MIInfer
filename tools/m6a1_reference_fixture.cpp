@@ -43,7 +43,9 @@ struct Capture {
         constexpr std::string_view needles[] = {
             "model.input_embed", "attn_norm-", "linear_attn_qkv_mixed-", "attn_residual-", "attn_post_norm-",
             "ffn_out-", "post_ffn-", "l_out-", "state_predelta-", "conv_output_raw-",
-            "final_output-", "attn_q-", "attn_k-", "attn_v-", "attn_output-", "result_norm"
+            "final_output-", "attn_q-", "attn_k-", "attn_v-", "attn_output-", "result_norm",
+            "Qcur_full-", "Qcur_reshaped-", "Qcur_normed-", "Kcur-", "Kcur_normed-", "Vcur-",
+            "gate_reshaped-", "Qcur-", "attn_pregate-", "gate_sigmoid-", "attn_gated-"
         };
         return std::any_of(std::begin(needles), std::end(needles),
                            [name](const auto needle) { return name.find(needle) != std::string_view::npos; });
@@ -82,6 +84,7 @@ bool callback(ggml_tensor * tensor, bool ask, void * userdata) {
     auto & capture = *static_cast<Capture *>(userdata);
     if (!capture.selected_position()) return false;
     if (!capture.wanted(tensor->name)) return false;
+    if (!ggml_is_contiguous(tensor)) return false;
     if (ask) return true;
 
     if (tensor->type != GGML_TYPE_F32) {
@@ -265,7 +268,7 @@ int run(const fs::path & model_path, const fs::path & output_root, const std::st
         context_params.n_threads_batch = 0;
         context_params.no_perf = true;
 
-        const std::vector<int> positions{0, 1, 2, 4, 8, 16, 32, 64};
+        const std::vector<int> positions{0, 1, 2, 3, 4, 5, 6, 7, 8, 16, 32, 64};
         Capture capture{output_root};
         capture.positions = positions;
         context_params.cb_eval = callback;

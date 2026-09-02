@@ -507,6 +507,7 @@ std::vector<float> layer_path(const GgufFile& model, const std::filesystem::path
 
 }  // namespace
 
+#ifndef MIINFER_M6A3_HELPERS_ONLY
 int main(int argc, char** argv) {
     if (argc != 3) {
         std::cerr << "usage: miinfer-m6a3-qwen35-layer MODEL.gguf FIXTURE_DIR\n";
@@ -577,3 +578,4 @@ int main(int argc, char** argv) {
         return 1;
     }
 }
+#endif
