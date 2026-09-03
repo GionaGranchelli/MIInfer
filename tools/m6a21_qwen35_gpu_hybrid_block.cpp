@@ -17,6 +17,7 @@
 #include <initializer_list>
 #include <iostream>
 #include <memory>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -518,11 +519,10 @@ struct GpuLayerRef {
     }
 };
 
-void run_prefix(const std::array<GpuLayerRef, 8>& layers, std::size_t count,
-                const float* input, std::uint32_t position,
-                const std::array<float*, 8>& outputs) {
+void run_prefix(std::span<const GpuLayerRef> layers, std::span<float* const> outputs,
+                const float* input, std::uint32_t position) {
     const float* current = input;
-    for (std::size_t layer = 0; layer < count; ++layer) {
+    for (std::size_t layer = 0; layer < layers.size(); ++layer) {
         layers[layer].run(current, position, outputs[layer]);
         current = outputs[layer];
     }
@@ -533,13 +533,14 @@ void run_prefix(const std::array<GpuLayerRef, 8>& layers, std::size_t count,
 int main(int argc, char** argv) {
     if (argc != 3 && argc != 4) {
         std::cerr << "usage: miinfer-m6a21-qwen35-gpu-hybrid-block MODEL.gguf FIXTURE_DIR "
-                     "[--deep|--block4-7|--prefix8]\n";
+                     "[--deep|--block4-7|--prefix8|--prefix16]\n";
         return 2;
     }
     const std::string mode = argc == 4 ? argv[3] : "";
     const bool prefix8 = mode == "--prefix8";
-    const bool deep = mode == "--deep" || mode == "--block4-7" || prefix8;
-    const bool second_block = mode == "--block4-7" || prefix8;
+    const bool prefix16 = mode == "--prefix16";
+    const bool deep = mode == "--deep" || mode == "--block4-7" || prefix8 || prefix16;
+    const bool second_block = mode == "--block4-7" || prefix8 || prefix16;
     if (argc == 4 && !deep) {
         std::cerr << "unknown option: " << mode << '\n';
         return 2;
@@ -555,22 +556,45 @@ int main(int argc, char** argv) {
         std::unique_ptr<RecurrentLayer> recurrent5;
         std::unique_ptr<RecurrentLayer> recurrent6;
         std::unique_ptr<FullAttentionLayer> attention7;
+        std::unique_ptr<RecurrentLayer> recurrent8;
+        std::unique_ptr<RecurrentLayer> recurrent9;
+        std::unique_ptr<RecurrentLayer> recurrent10;
+        std::unique_ptr<FullAttentionLayer> attention11;
+        std::unique_ptr<RecurrentLayer> recurrent12;
+        std::unique_ptr<RecurrentLayer> recurrent13;
+        std::unique_ptr<RecurrentLayer> recurrent14;
+        std::unique_ptr<FullAttentionLayer> attention15;
         if (second_block) {
             recurrent4 = std::make_unique<RecurrentLayer>(model, 4, fixture);
             recurrent5 = std::make_unique<RecurrentLayer>(model, 5, fixture);
             recurrent6 = std::make_unique<RecurrentLayer>(model, 6, fixture);
             attention7 = std::make_unique<FullAttentionLayer>(model, 7);
         }
+        if (prefix16) {
+            recurrent8 = std::make_unique<RecurrentLayer>(model, 8, fixture);
+            recurrent9 = std::make_unique<RecurrentLayer>(model, 9, fixture);
+            recurrent10 = std::make_unique<RecurrentLayer>(model, 10, fixture);
+            attention11 = std::make_unique<FullAttentionLayer>(model, 11);
+            recurrent12 = std::make_unique<RecurrentLayer>(model, 12, fixture);
+            recurrent13 = std::make_unique<RecurrentLayer>(model, 13, fixture);
+            recurrent14 = std::make_unique<RecurrentLayer>(model, 14, fixture);
+            attention15 = std::make_unique<FullAttentionLayer>(model, 15);
+        }
 
-        if (prefix8) {
-            const std::array<GpuLayerRef, 8> layers{{
+        if (prefix8 || prefix16) {
+            const std::size_t layer_count = prefix16 ? 16 : 8;
+            const std::array<GpuLayerRef, 16> layers{{
                 {&recurrent0, nullptr}, {&recurrent1, nullptr}, {&recurrent2, nullptr},
                 {nullptr, &attention3}, {recurrent4.get(), nullptr},
                 {recurrent5.get(), nullptr}, {recurrent6.get(), nullptr},
-                {nullptr, attention7.get()}}};
-            std::array<Buffer, 8> outputs{};
-            std::array<float*, 8> output_pointers{};
-            for (std::size_t layer = 0; layer < layers.size(); ++layer) {
+                {nullptr, attention7.get()}, {recurrent8.get(), nullptr},
+                {recurrent9.get(), nullptr}, {recurrent10.get(), nullptr},
+                {nullptr, attention11.get()}, {recurrent12.get(), nullptr},
+                {recurrent13.get(), nullptr}, {recurrent14.get(), nullptr},
+                {nullptr, attention15.get()}}};
+            std::array<Buffer, 16> outputs{};
+            std::array<float*, 16> output_pointers{};
+            for (std::size_t layer = 0; layer < layer_count; ++layer) {
                 outputs[layer] = allocate(kHidden * sizeof(float));
                 output_pointers[layer] = static_cast<float*>(outputs[layer]->get());
             }
@@ -585,6 +609,16 @@ int main(int argc, char** argv) {
             const auto active_fingerprint = [](const void* device, std::size_t bytes) {
                 return bytes == 0 ? 1469598103934665603ULL : fingerprint(device, bytes);
             };
+            const auto record_caches = [&](std::size_t position, bool before,
+                                           const auto& record) {
+                const std::size_t bytes = 4 * (position + (before ? 0 : 1))
+                    * 256 * sizeof(float);
+                for (std::size_t layer = 0; layer < layer_count; ++layer) {
+                    if (layers[layer].attention == nullptr) continue;
+                    record(active_fingerprint(layers[layer].attention->key_cache->get(), bytes));
+                    record(active_fingerprint(layers[layer].attention->value_cache->get(), bytes));
+                }
+            };
             std::vector<std::uint64_t> replay_fingerprints;
             const auto record = [&replay_fingerprints](std::uint64_t value) {
                 replay_fingerprints.push_back(value);
@@ -592,7 +626,7 @@ int main(int argc, char** argv) {
             const auto allocations_before_decode = g_device_allocations;
             double prefix_cpu_ms = 0.0;
             std::cout << "position";
-            for (std::size_t layer = 0; layer < layers.size(); ++layer) {
+            for (std::size_t layer = 0; layer < layer_count; ++layer) {
                 std::cout << " l" << layer << "_max l" << layer << "_rms l" << layer << "_rel";
             }
             std::cout << " state_correct\n";
@@ -604,7 +638,7 @@ int main(int argc, char** argv) {
                 upload(host_input.data(), input->get(), host_input.size() * sizeof(float));
                 bool state_correct = true;
                 if (is_checkpoint_position(position)) {
-                    for (std::size_t layer = 0; layer < layers.size(); ++layer) {
+                    for (std::size_t layer = 0; layer < layer_count; ++layer) {
                         if (layers[layer].recurrent == nullptr) continue;
                         const auto error = detailed_device_error(
                             static_cast<const float*>(layers[layer].recurrent->state->get()),
@@ -613,81 +647,75 @@ int main(int argc, char** argv) {
                                        "state_predelta-" + std::to_string(layer)));
                         state_correct = state_correct && error.max_abs <= 5.0e-2F;
                     }
-                    for (std::size_t layer = 0; layer < layers.size(); ++layer) {
+                    for (std::size_t layer = 0; layer < layer_count; ++layer) {
                         if (layers[layer].recurrent != nullptr) {
                             record(fingerprint(layers[layer].recurrent->state->get(), state_bytes));
                         }
                     }
-                    const std::size_t before_bytes = 4 * position * 256 * sizeof(float);
-                    record(active_fingerprint(attention3.key_cache->get(), before_bytes));
-                    record(active_fingerprint(attention3.value_cache->get(), before_bytes));
-                    record(active_fingerprint(attention7->key_cache->get(), before_bytes));
-                    record(active_fingerprint(attention7->value_cache->get(), before_bytes));
+                    record_caches(position, true, record);
                 }
                 const auto run_start = std::clock();
-                run_prefix(layers, layers.size(), static_cast<const float*>(input->get()),
-                           position, output_pointers);
+                run_prefix(std::span<const GpuLayerRef>(layers).first(layer_count),
+                           std::span<float* const>(output_pointers).first(layer_count),
+                           static_cast<const float*>(input->get()), position);
                 MIINFER_HIP_CHECK(hipDeviceSynchronize());
                 prefix_cpu_ms += 1000.0 * static_cast<double>(std::clock() - run_start)
                     / static_cast<double>(CLOCKS_PER_SEC);
                 if (!is_checkpoint_position(position)) continue;
-                std::array<DetailedError, 8> errors{};
-                for (std::size_t layer = 0; layer < layers.size(); ++layer) {
+                std::array<DetailedError, 16> errors{};
+                for (std::size_t layer = 0; layer < layer_count; ++layer) {
                     errors[layer] = detailed_device_error(
                         static_cast<const float*>(outputs[layer]->get()), kHidden,
                         checkpoint(fixture, position, "l_out-" + std::to_string(layer)));
-                    require_match("eight-layer prefix output",
+                    require_match("prefix output",
                                   Metrics{errors[layer].max_abs, errors[layer].rms, 0}, 2.0F);
                     maximum = std::max(maximum, errors[layer].max_abs);
                 }
                 if (!state_correct) throw std::runtime_error("eight-layer recurrent state mismatch");
                 std::cout << position;
-                for (const auto& error : errors) {
+                for (std::size_t layer = 0; layer < layer_count; ++layer) {
+                    const auto& error = errors[layer];
                     std::cout << ' ' << error.max_abs << ' ' << error.rms
                               << ' ' << error.relative_rms;
                 }
                 std::cout << " PASS\n  fingerprints hidden3="
                           << fingerprint(outputs[3]->get(), kHidden * sizeof(float))
                           << " hidden7=" << fingerprint(outputs[7]->get(), kHidden * sizeof(float));
-                for (std::size_t layer = 0; layer < layers.size(); ++layer) {
+                for (std::size_t layer = 0; layer < layer_count; ++layer) {
                     if (layers[layer].recurrent != nullptr) {
                         std::cout << " state" << layer << '='
                                   << fingerprint(layers[layer].recurrent->state->get(), state_bytes);
                     }
                 }
-                std::cout << " K3=" << fingerprint(attention3.key_cache->get(),
-                    4 * (position + 1) * 256 * sizeof(float))
-                          << " V3=" << fingerprint(attention3.value_cache->get(),
-                    4 * (position + 1) * 256 * sizeof(float))
-                          << " K7=" << fingerprint(attention7->key_cache->get(),
-                    4 * (position + 1) * 256 * sizeof(float))
-                          << " V7=" << fingerprint(attention7->value_cache->get(),
-                    4 * (position + 1) * 256 * sizeof(float)) << '\n';
-                for (const auto& output : outputs) record(fingerprint(output->get(), kHidden * sizeof(float)));
-                for (std::size_t layer = 0; layer < layers.size(); ++layer) {
+                for (std::size_t layer = 0; layer < layer_count; ++layer) {
+                    if (layers[layer].attention == nullptr) continue;
+                    std::cout << " K" << layer << '=' << fingerprint(
+                        layers[layer].attention->key_cache->get(),
+                        4 * (position + 1) * 256 * sizeof(float))
+                              << " V" << layer << '=' << fingerprint(
+                        layers[layer].attention->value_cache->get(),
+                        4 * (position + 1) * 256 * sizeof(float));
+                }
+                std::cout << '\n';
+                for (std::size_t layer = 0; layer < layer_count; ++layer) {
+                    record(fingerprint(outputs[layer]->get(), kHidden * sizeof(float)));
+                }
+                for (std::size_t layer = 0; layer < layer_count; ++layer) {
                     if (layers[layer].recurrent != nullptr) {
                         record(fingerprint(layers[layer].recurrent->state->get(), state_bytes));
                     }
                 }
-                const std::size_t after_bytes = 4 * (position + 1) * 256 * sizeof(float);
-                record(active_fingerprint(attention3.key_cache->get(), after_bytes));
-                record(active_fingerprint(attention3.value_cache->get(), after_bytes));
-                record(active_fingerprint(attention7->key_cache->get(), after_bytes));
-                record(active_fingerprint(attention7->value_cache->get(), after_bytes));
+                record_caches(position, false, record);
             }
-            for (RecurrentLayer* layer : {&recurrent0, &recurrent1, &recurrent2,
-                                          recurrent4.get(), recurrent5.get(), recurrent6.get()}) {
-                layer->poison();
+            for (std::size_t layer = 0; layer < layer_count; ++layer) {
+                if (layers[layer].recurrent != nullptr) layers[layer].recurrent->poison();
+                if (layers[layer].attention != nullptr) layers[layer].attention->poison();
             }
-            attention3.poison();
-            attention7->poison();
             MIINFER_HIP_CHECK(hipDeviceSynchronize());
-            for (RecurrentLayer* layer : {&recurrent0, &recurrent1, &recurrent2,
-                                          recurrent4.get(), recurrent5.get(), recurrent6.get()}) {
-                layer->reset(fixture);
+            for (std::size_t layer = 0; layer < layer_count; ++layer) {
+                if (layers[layer].recurrent != nullptr) layers[layer].recurrent->reset(fixture);
+                if (layers[layer].attention != nullptr) layers[layer].attention->reset();
             }
-            attention3.reset();
-            attention7->reset();
             MIINFER_HIP_CHECK(hipDeviceSynchronize());
             std::size_t replay_index = 0;
             const auto expect_replay = [&](std::uint64_t actual, const char* label) {
@@ -703,35 +731,32 @@ int main(int argc, char** argv) {
                     : read_f32(checkpoint(fixture, position, "model_input_embed"), kHidden);
                 upload(host_input.data(), input->get(), host_input.size() * sizeof(float));
                 if (is_checkpoint_position(position)) {
-                    for (std::size_t layer = 0; layer < layers.size(); ++layer) {
+                    for (std::size_t layer = 0; layer < layer_count; ++layer) {
                         if (layers[layer].recurrent != nullptr) {
                             expect_replay(fingerprint(layers[layer].recurrent->state->get(), state_bytes),
                                           "recurrent entry");
                         }
                     }
-                    const std::size_t before_bytes = 4 * position * 256 * sizeof(float);
-                    expect_replay(active_fingerprint(attention3.key_cache->get(), before_bytes), "K3 entry");
-                    expect_replay(active_fingerprint(attention3.value_cache->get(), before_bytes), "V3 entry");
-                    expect_replay(active_fingerprint(attention7->key_cache->get(), before_bytes), "K7 entry");
-                    expect_replay(active_fingerprint(attention7->value_cache->get(), before_bytes), "V7 entry");
+                    record_caches(position, true, [&](std::uint64_t value) {
+                        expect_replay(value, "attention cache entry");
+                    });
                 }
-                run_prefix(layers, layers.size(), static_cast<const float*>(input->get()),
-                           position, output_pointers);
+                run_prefix(std::span<const GpuLayerRef>(layers).first(layer_count),
+                           std::span<float* const>(output_pointers).first(layer_count),
+                           static_cast<const float*>(input->get()), position);
                 MIINFER_HIP_CHECK(hipDeviceSynchronize());
                 if (!is_checkpoint_position(position)) continue;
-                for (const auto& output : outputs) expect_replay(
-                    fingerprint(output->get(), kHidden * sizeof(float)), "layer output");
-                for (std::size_t layer = 0; layer < layers.size(); ++layer) {
+                for (std::size_t layer = 0; layer < layer_count; ++layer) expect_replay(
+                    fingerprint(outputs[layer]->get(), kHidden * sizeof(float)), "layer output");
+                for (std::size_t layer = 0; layer < layer_count; ++layer) {
                     if (layers[layer].recurrent != nullptr) {
                         expect_replay(fingerprint(layers[layer].recurrent->state->get(), state_bytes),
                                       "recurrent exit");
                     }
                 }
-                const std::size_t after_bytes = 4 * (position + 1) * 256 * sizeof(float);
-                expect_replay(active_fingerprint(attention3.key_cache->get(), after_bytes), "K3 exit");
-                expect_replay(active_fingerprint(attention3.value_cache->get(), after_bytes), "V3 exit");
-                expect_replay(active_fingerprint(attention7->key_cache->get(), after_bytes), "K7 exit");
-                expect_replay(active_fingerprint(attention7->value_cache->get(), after_bytes), "V7 exit");
+                record_caches(position, false, [&](std::uint64_t value) {
+                    expect_replay(value, "attention cache exit");
+                });
             }
             if (replay_index != replay_fingerprints.size()) {
                 throw std::runtime_error("poisoned reset replay fingerprint count mismatch");
@@ -745,7 +770,8 @@ int main(int argc, char** argv) {
                       << " peak_device_bytes=" << g_peak_device_bytes
                       << " dispatches=not-instrumented copies=not-instrumented\n"
                       << "poisoned_reset_replay=PASS\n"
-                      << "M6-A24 qwen35 eight-layer GPU prefix PASS\n";
+                      << (prefix16 ? "M6-A25 qwen35 sixteen-layer GPU prefix PASS\n"
+                                    : "M6-A24 qwen35 eight-layer GPU prefix PASS\n");
             return 0;
         }
 
