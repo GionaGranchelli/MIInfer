@@ -59,17 +59,18 @@ determinism coverage. M6-A25 extends the same executor through layers 0–15,
 including full-attention layers 11 and 15, through P64 with later recurrent and
 K/V state validation and zero decode-loop allocations.
 M6-A26 extends the same executor through layers 0–31 and eight full-attention
-KV caches through P64. All layer outputs pass, but L30/P64 has a bounded
-recurrent-state max-absolute error of `0.0523846` against the current `0.05`
-state gate, so A26 remains in retest rather than being marked closed.
-EXP-0071 localizes this discrepancy: the sampled L30 state error is bounded
-and non-monotonic, adjacent L28/L29 P64 state entries are below `0.01`, and
-the same L30 error is already present after P63. The strict gate remains
-unchanged.
+KV caches through P64. All layer outputs pass, but L30 recurrent-state
+checkpoints remain in retest: the full P1–P64 scan reaches `0.110666` at P20
+(index `86796`) and P64 reaches `0.0523846` at index `86909`, against the
+current `0.05` state gate. A26 remains in retest rather than being marked
+closed. EXP-0071 localizes the discrepancy as non-monotonic and already
+present after P63; the strict gate remains unchanged.
 EXP-0072 traces index `86909` through the recurrent update and shows the GPU
 candidate equals the stored value at every sampled transition; the P63→P64
-GPU value is `-0.300347` versus the external `-0.352732`. A26 remains in
-retest pending an explicit external state-contract decision.
+GPU value is `-0.300347` versus the external `-0.352732`. The moving maximum
+is not a permanently corrupted cell, but the P20 outlier means the state
+distribution is not cleared by the `0.05` gate. A26 remains in retest pending
+an explicit external state-contract decision.
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The

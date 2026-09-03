@@ -43,12 +43,63 @@ build/mi50-release/miinfer-m6a21-qwen35-gpu-hybrid-block \
 | -------: | ---------------: | --------------: | -------------: |
 | P1  | 86816 | 0.00884902 | 0.00202797 |
 | P2  | 86900 | 0.0259392  | 0.00240872 |
+| P3  | 86848 | 0.0336006  | 0.0148033 |
 | P4  | 86900 | 0.0473679  | 0.00138479 |
+| P5  | 86841 | 0.0452656  | 0.00564539 |
+| P6  | 86891 | 0.0307440  | 0.00145477 |
+| P7  | 86909 | 0.0432683  | 0.0432683 |
 | P8  | 86908 | 0.0308862  | 0.0112366 |
+| P9  | 86909 | 0.0306841  | 0.0306841 |
+| P10 | 86816 | 0.0257390  | 0.00201802 |
+| P11 | 86816 | 0.0281659  | 0.000535235 |
+| P12 | 86806 | 0.0314478  | 0.00998905 |
+| P13 | 86848 | 0.0308221  | 0.00925422 |
+| P14 | 86908 | 0.0276558  | 0.0112588 |
+| P15 | 86900 | 0.0414867  | 0.0107320 |
 | P16 | 86796 | 0.0342968  | 0.0187410 |
+| P17 | 86839 | 0.0303763  | 0.00431244 |
+| P18 | 86908 | 0.0190966  | 0.00459433 |
+| P19 | 86894 | 0.0524756  | 0.0365377 |
+| P20 | 86796 | 0.110666   | 0.0201883 |
+| P21 | 86830 | 0.0368600  | 0.00976811 |
+| P22 | 86886 | 0.0303240  | 0.00345447 |
+| P23 | 86827 | 0.0319843  | 0.00251175 |
+| P24 | 86827 | 0.0252826  | 0.00335819 |
+| P25 | 86800 | 0.0427408  | 0.00837243 |
+| P26 | 86839 | 0.0530387  | 0.000719309 |
+| P27 | 86861 | 0.0576879  | 0.00607301 |
+| P28 | 86803 | 0.0580811  | 0.0169882 |
+| P29 | 86830 | 0.0501156  | 0.00713657 |
+| P30 | 86830 | 0.0488652  | 0.00353801 |
+| P31 | 86802 | 0.0227770  | 0.00319970 |
 | P32 | 86796 | 0.0183711  | 0.00409675 |
+| P33 | 86796 | 0.0293306  | 0.0240124 |
+| P34 | 86806 | 0.0319973  | 0.000447690 |
+| P35 | 86796 | 0.0351763  | 0.00116125 |
+| P36 | 86884 | 0.0305303  | 0.0130147 |
+| P37 | 86796 | 0.0301481  | 0.00679611 |
+| P38 | 86843 | 0.0268479  | 0.0124055 |
+| P39 | 86909 | 0.0315555  | 0.0315555 |
+| P40 | 86796 | 0.0273076  | 0.00334573 |
+| P41 | 86843 | 0.0485338  | 0.0241293 |
+| P42 | 86827 | 0.0189880  | 0.0152509 |
+| P43 | 86830 | 0.0427718  | 0.00335640 |
+| P44 | 86811 | 0.0256489  | 0.0220695 |
+| P45 | 86884 | 0.0374337  | 0.000804625 |
+| P46 | 86884 | 0.0388538  | 0.0123097 |
+| P47 | 86816 | 0.0371115  | 0.0172507 |
 | P48 | 86886 | 0.0296446  | 0.0246794 |
+| P49 | 86843 | 0.0498800  | 0.00381558 |
+| P50 | 86909 | 0.0338128  | 0.0338128 |
+| P51 | 86796 | 0.0369210  | 0.00288773 |
+| P52 | 86796 | 0.0268602  | 0.00659683 |
+| P53 | 86886 | 0.0361774  | 0.0265415 |
+| P54 | 86796 | 0.0476248  | 0.0180393 |
+| P55 | 86861 | 0.0227220  | 0.00474143 |
 | P56 | 86866 | 0.0249020  | 0.00434986 |
+| P57 | 86894 | 0.0206592  | 0.0127777 |
+| P58 | 86884 | 0.0358265  | 0.0254314 |
+| P59 | 86871 | 0.0536357  | 0.0205887 |
 | P60 | 86796 | 0.0400108  | 0.00251323 |
 | P61 | 86811 | 0.0255043  | 0.0231740 |
 | P62 | 86900 | 0.0306257  | 0.00327560 |
@@ -56,7 +107,9 @@ build/mi50-release/miinfer-m6a21-qwen35-gpu-hybrid-block \
 | P64 | 86909 | 0.0523846  | 0.0523846 |
 
 The global maximum index moves. Index `86909` is not permanently dominant,
-but becomes the maximum at P64.
+but becomes the maximum at P64. The largest global sampled error is
+`0.110666` at P20, index `86796`; the earlier sparse A26.1 sample did not
+include P20.
 
 ## Tracked update provenance
 
@@ -85,8 +138,9 @@ This is not a state-write race, cache-layout corruption, or a mismatch between
 the GPU kernel's update formula and its stored result. The decisive error is a
 difference between the external reference next state and the GPU recurrence
 evaluated from its current inputs. The moving maximum and non-monotonic global
-curve argue against one permanently corrupted state cell, although the
-P63→P64 transition is a real local jump for index `86909`.
+curve argue against one permanently corrupted state cell. However, the full
+scan found a larger P20 outlier than the earlier sparse sample, and the
+P63→P64 transition remains a real local jump for index `86909`.
 
 The evidence does not yet distinguish a GPU/reference input-contract
 difference from expected arithmetic sensitivity, because this fixture does

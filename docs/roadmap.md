@@ -27,10 +27,11 @@ and M6-A2 maps the reusable and missing projection contracts. See
 
 Current work should focus on:
 
-* resolving the bounded L30 recurrent-state discrepancy through the A26.1
+* resolving the L30 recurrent-state discrepancy through the A26.1
   diagnostic before composing the full qwen35 GPU trunk
-* using the A26.2 provenance result to make the explicit external state
-  contract decision before composing the full qwen35 GPU trunk
+* using the A26.2 provenance result, including the full-scan P20 outlier, to
+  make the explicit external state contract decision before composing the full
+  qwen35 GPU trunk
 * preserving GPU-resident recurrent/KV state and zero steady-state allocations
 * state fingerprints, reset/replay checks, and external checkpoints through P64
 * per-layer telemetry and the evolving VRAM ledger

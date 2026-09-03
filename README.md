@@ -85,18 +85,19 @@ The project currently has:
   later recurrent/KV state validation; see
   `experiments/EXP-0069-m6a25-qwen35-sixteen-layer-gpu-prefix.md`
 * qwen35 GPU layers 0–31 composed through P64; all layer outputs pass, while
-  one L30 recurrent-state checkpoint remains in retest; see
+  L30 recurrent-state checkpoints remain in retest; see
   `experiments/EXP-0070-m6a26-qwen35-thirty-two-layer-gpu-prefix.md` and
   `experiments/EXP-0071-m6a261-qwen35-l30-state-localization.md`
 * L30 recurrent-update provenance localizes the tracked P63→P64 discrepancy
-  to the external-versus-GPU recurrence result; see
+  to the external-versus-GPU recurrence result; a full P1–P64 scan also finds
+  a larger P20 outlier; see
   `experiments/EXP-0072-m6a262-qwen35-l30-update-provenance.md`
 
 Sampling and serving remain out of scope. M5 is closed as a measured local
 optimization campaign. M6-A host bring-up and qwen35 GPU operation bring-up
 are progressing. The full Qwen3.8 GPU path is not yet implemented, so M6-B1
 performance measurement remains deferred. The next bring-up gate is resolving
-the bounded L30 recurrent-state envelope before full qwen35 GPU composition.
+the L30 recurrent-state envelope before full qwen35 GPU composition.
 
 The current production path is approximately 55 tok/s at stable peak for the
 previous Qwen3-8B target. Qwen3.8-27B is not yet supported by the production

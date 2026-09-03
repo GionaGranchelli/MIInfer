@@ -20546,7 +20546,7 @@
       "node_kind": "heading",
       "norm_label": "candidate research areas",
       "source_file": "docs/roadmap.md",
-      "source_location": "L242"
+      "source_location": "L243"
     },
     {
       "id": "docs_roadmap_core_question",
@@ -20558,7 +20558,7 @@
       "node_kind": "heading",
       "norm_label": "core question",
       "source_file": "docs/roadmap.md",
-      "source_location": "L238"
+      "source_location": "L239"
     },
     {
       "id": "docs_roadmap_gfx906_primitives",
@@ -20570,7 +20570,7 @@
       "node_kind": "heading",
       "norm_label": "gfx906 primitives",
       "source_file": "docs/roadmap.md",
-      "source_location": "L252"
+      "source_location": "L253"
     },
     {
       "id": "docs_roadmap_go",
@@ -20582,7 +20582,7 @@
       "node_kind": "heading",
       "norm_label": "go",
       "source_file": "docs/roadmap.md",
-      "source_location": "L334"
+      "source_location": "L335"
     },
     {
       "id": "docs_roadmap_go_no_go_decision",
@@ -20594,10 +20594,10 @@
       "node_kind": "heading",
       "norm_label": "go / no-go decision",
       "source_file": "docs/roadmap.md",
-      "source_location": "L332"
+      "source_location": "L333"
     },
     {
-      "id": "docs_roadmap_goal_232",
+      "id": "docs_roadmap_goal_233",
       "label": "Goal",
       "_origin": "ast",
       "community": 16,
@@ -20606,7 +20606,7 @@
       "node_kind": "heading",
       "norm_label": "goal",
       "source_file": "docs/roadmap.md",
-      "source_location": "L232"
+      "source_location": "L233"
     },
     {
       "id": "docs_roadmap_kernel_configuration",
@@ -20618,7 +20618,7 @@
       "node_kind": "heading",
       "norm_label": "kernel configuration",
       "source_file": "docs/roadmap.md",
-      "source_location": "L293"
+      "source_location": "L294"
     },
     {
       "id": "docs_roadmap_m2_prove_specialization",
@@ -20630,7 +20630,7 @@
       "node_kind": "heading",
       "norm_label": "m2 \u2014 prove specialization",
       "source_file": "docs/roadmap.md",
-      "source_location": "L230"
+      "source_location": "L231"
     },
     {
       "id": "docs_roadmap_memory_behavior",
@@ -20642,7 +20642,7 @@
       "node_kind": "heading",
       "norm_label": "memory behavior",
       "source_file": "docs/roadmap.md",
-      "source_location": "L281"
+      "source_location": "L282"
     },
     {
       "id": "docs_roadmap_quantized_execution",
@@ -20654,7 +20654,7 @@
       "node_kind": "heading",
       "norm_label": "quantized execution",
       "source_file": "docs/roadmap.md",
-      "source_location": "L262"
+      "source_location": "L263"
     },
     {
       "id": "docs_roadmap_reassess",
@@ -20666,7 +20666,7 @@
       "node_kind": "heading",
       "norm_label": "reassess",
       "source_file": "docs/roadmap.md",
-      "source_location": "L341"
+      "source_location": "L342"
     },
     {
       "id": "docs_roadmap_required_experimental_discipline",
@@ -20678,7 +20678,7 @@
       "node_kind": "heading",
       "norm_label": "required experimental discipline",
       "source_file": "docs/roadmap.md",
-      "source_location": "L304"
+      "source_location": "L305"
     },
     {
       "id": "docs_roadmap_success_criteria",
@@ -20690,7 +20690,7 @@
       "node_kind": "heading",
       "norm_label": "success criteria",
       "source_file": "docs/roadmap.md",
-      "source_location": "L317"
+      "source_location": "L318"
     },
     {
       "id": "docs_roadmap_wave_execution",
@@ -20702,7 +20702,7 @@
       "node_kind": "heading",
       "norm_label": "wave execution",
       "source_file": "docs/roadmap.md",
-      "source_location": "L244"
+      "source_location": "L245"
     },
     {
       "id": "docs_roadmap_weight_layout",
@@ -20714,7 +20714,7 @@
       "node_kind": "heading",
       "norm_label": "weight layout",
       "source_file": "docs/roadmap.md",
-      "source_location": "L272"
+      "source_location": "L273"
     },
     {
       "id": "experiments_exp_0046_m6a4_qwen35_full_attention_layer",
@@ -28004,7 +28004,7 @@
       "node_kind": "heading",
       "norm_label": "comparison dimensions",
       "source_file": "docs/roadmap.md",
-      "source_location": "L498"
+      "source_location": "L499"
     },
     {
       "id": "docs_roadmap_comparison_rules",
@@ -28016,7 +28016,7 @@
       "node_kind": "heading",
       "norm_label": "comparison rules",
       "source_file": "docs/roadmap.md",
-      "source_location": "L533"
+      "source_location": "L534"
     },
     {
       "id": "docs_roadmap_context_regimes",
@@ -28028,7 +28028,7 @@
       "node_kind": "heading",
       "norm_label": "context regimes",
       "source_file": "docs/roadmap.md",
-      "source_location": "L514"
+      "source_location": "L515"
     },
     {
       "id": "docs_roadmap_decode",
@@ -28040,10 +28040,10 @@
       "node_kind": "heading",
       "norm_label": "decode",
       "source_file": "docs/roadmap.md",
-      "source_location": "L508"
+      "source_location": "L509"
     },
     {
-      "id": "docs_roadmap_exit_criteria_546",
+      "id": "docs_roadmap_exit_criteria_547",
       "label": "Exit criteria",
       "_origin": "ast",
       "community": 21,
@@ -28052,10 +28052,10 @@
       "node_kind": "heading",
       "norm_label": "exit criteria",
       "source_file": "docs/roadmap.md",
-      "source_location": "L546"
+      "source_location": "L547"
     },
     {
-      "id": "docs_roadmap_goal_492",
+      "id": "docs_roadmap_goal_493",
       "label": "Goal",
       "_origin": "ast",
       "community": 21,
@@ -28064,7 +28064,7 @@
       "node_kind": "heading",
       "norm_label": "goal",
       "source_file": "docs/roadmap.md",
-      "source_location": "L492"
+      "source_location": "L493"
     },
     {
       "id": "docs_roadmap_h0_supported",
@@ -28076,7 +28076,7 @@
       "node_kind": "heading",
       "norm_label": "h0 supported",
       "source_file": "docs/roadmap.md",
-      "source_location": "L570"
+      "source_location": "L571"
     },
     {
       "id": "docs_roadmap_h1_supported",
@@ -28088,7 +28088,7 @@
       "node_kind": "heading",
       "norm_label": "h1 supported",
       "source_file": "docs/roadmap.md",
-      "source_location": "L558"
+      "source_location": "L559"
     },
     {
       "id": "docs_roadmap_m5_beat_the_reference",
@@ -28100,7 +28100,7 @@
       "node_kind": "heading",
       "norm_label": "m5 \u2014 beat the reference",
       "source_file": "docs/roadmap.md",
-      "source_location": "L490"
+      "source_location": "L491"
     },
     {
       "id": "docs_roadmap_m5_c15_optimization_closure_and_parity_decision_gate",
@@ -28112,7 +28112,7 @@
       "node_kind": "heading",
       "norm_label": "m5-c15 \u2014 optimization closure and parity decision gate",
       "source_file": "docs/roadmap.md",
-      "source_location": "L578"
+      "source_location": "L579"
     },
     {
       "id": "docs_roadmap_mixed_result",
@@ -28124,7 +28124,7 @@
       "node_kind": "heading",
       "norm_label": "mixed result",
       "source_file": "docs/roadmap.md",
-      "source_location": "L564"
+      "source_location": "L565"
     },
     {
       "id": "docs_roadmap_prompt_processing",
@@ -28136,7 +28136,7 @@
       "node_kind": "heading",
       "norm_label": "prompt processing",
       "source_file": "docs/roadmap.md",
-      "source_location": "L502"
+      "source_location": "L503"
     },
     {
       "id": "docs_roadmap_system_metrics",
@@ -28148,7 +28148,7 @@
       "node_kind": "heading",
       "norm_label": "system metrics",
       "source_file": "docs/roadmap.md",
-      "source_location": "L522"
+      "source_location": "L523"
     },
     {
       "id": "experiments_exp_0028_m5c9b_swiglu_q8_fusion",
@@ -30326,7 +30326,7 @@
       "node_kind": "heading",
       "norm_label": "candidate areas",
       "source_file": "docs/roadmap.md",
-      "source_location": "L611"
+      "source_location": "L612"
     },
     {
       "id": "docs_roadmap_contract",
@@ -30338,7 +30338,7 @@
       "node_kind": "heading",
       "norm_label": "contract",
       "source_file": "docs/roadmap.md",
-      "source_location": "L603"
+      "source_location": "L604"
     },
     {
       "id": "docs_roadmap_current_execution_order",
@@ -30350,7 +30350,7 @@
       "node_kind": "heading",
       "norm_label": "current execution order",
       "source_file": "docs/roadmap.md",
-      "source_location": "L812"
+      "source_location": "L813"
     },
     {
       "id": "docs_roadmap_current_status",
@@ -30374,10 +30374,10 @@
       "node_kind": "heading",
       "norm_label": "deferred / explicitly out of scope",
       "source_file": "docs/roadmap.md",
-      "source_location": "L756"
+      "source_location": "L757"
     },
     {
-      "id": "docs_roadmap_goal_598",
+      "id": "docs_roadmap_goal_599",
       "label": "Goal",
       "_origin": "ast",
       "community": 23,
@@ -30386,7 +30386,7 @@
       "node_kind": "heading",
       "norm_label": "goal",
       "source_file": "docs/roadmap.md",
-      "source_location": "L598"
+      "source_location": "L599"
     },
     {
       "id": "docs_roadmap_immediate_next_milestone",
@@ -30398,7 +30398,7 @@
       "node_kind": "heading",
       "norm_label": "immediate next milestone",
       "source_file": "docs/roadmap.md",
-      "source_location": "L870"
+      "source_location": "L871"
     },
     {
       "id": "docs_roadmap_m6_a_reference_correct_execution_contract_exploration",
@@ -30410,7 +30410,7 @@
       "node_kind": "heading",
       "norm_label": "m6-a \u2014 reference-correct execution-contract exploration",
       "source_file": "docs/roadmap.md",
-      "source_location": "L594"
+      "source_location": "L595"
     },
     {
       "id": "docs_roadmap_miinfer_roadmap",
@@ -30434,7 +30434,7 @@
       "node_kind": "heading",
       "norm_label": "milestone dependencies",
       "source_file": "docs/roadmap.md",
-      "source_location": "L781"
+      "source_location": "L782"
     },
     {
       "id": "docs_roadmap_roadmap_change_policy",
@@ -30446,7 +30446,7 @@
       "node_kind": "heading",
       "norm_label": "roadmap change policy",
       "source_file": "docs/roadmap.md",
-      "source_location": "L969"
+      "source_location": "L970"
     },
     {
       "id": "docs_roadmap_success_definition",
@@ -30458,7 +30458,7 @@
       "node_kind": "heading",
       "norm_label": "success definition",
       "source_file": "docs/roadmap.md",
-      "source_location": "L987"
+      "source_location": "L988"
     },
     {
       "id": "experiments_exp_0054_m6a10_qwen35_q4k_projection",
@@ -31424,7 +31424,7 @@
       "node_kind": "heading",
       "norm_label": "activation reuse",
       "source_file": "docs/roadmap.md",
-      "source_location": "L644"
+      "source_location": "L645"
     },
     {
       "id": "docs_roadmap_candidate_work",
@@ -31436,10 +31436,10 @@
       "node_kind": "heading",
       "norm_label": "candidate work",
       "source_file": "docs/roadmap.md",
-      "source_location": "L631"
+      "source_location": "L632"
     },
     {
-      "id": "docs_roadmap_exit_criteria_678",
+      "id": "docs_roadmap_exit_criteria_679",
       "label": "Exit criteria",
       "_origin": "ast",
       "community": 24,
@@ -31448,10 +31448,10 @@
       "node_kind": "heading",
       "norm_label": "exit criteria",
       "source_file": "docs/roadmap.md",
-      "source_location": "L678"
+      "source_location": "L679"
     },
     {
-      "id": "docs_roadmap_goal_627",
+      "id": "docs_roadmap_goal_628",
       "label": "Goal",
       "_origin": "ast",
       "community": 24,
@@ -31460,7 +31460,7 @@
       "node_kind": "heading",
       "norm_label": "goal",
       "source_file": "docs/roadmap.md",
-      "source_location": "L627"
+      "source_location": "L628"
     },
     {
       "id": "docs_roadmap_hip_graph_capture",
@@ -31472,7 +31472,7 @@
       "node_kind": "heading",
       "norm_label": "hip graph capture",
       "source_file": "docs/roadmap.md",
-      "source_location": "L662"
+      "source_location": "L663"
     },
     {
       "id": "docs_roadmap_kernel_specialization",
@@ -31484,7 +31484,7 @@
       "node_kind": "heading",
       "norm_label": "kernel specialization",
       "source_file": "docs/roadmap.md",
-      "source_location": "L674"
+      "source_location": "L675"
     },
     {
       "id": "docs_roadmap_m6_runtime_specialization",
@@ -31496,7 +31496,7 @@
       "node_kind": "heading",
       "norm_label": "m6 \u2014 runtime specialization",
       "source_file": "docs/roadmap.md",
-      "source_location": "L625"
+      "source_location": "L626"
     },
     {
       "id": "docs_roadmap_native_weight_packing",
@@ -31508,7 +31508,7 @@
       "node_kind": "heading",
       "norm_label": "native weight packing",
       "source_file": "docs/roadmap.md",
-      "source_location": "L633"
+      "source_location": "L634"
     },
     {
       "id": "docs_roadmap_operation_fusion",
@@ -31520,7 +31520,7 @@
       "node_kind": "heading",
       "norm_label": "operation fusion",
       "source_file": "docs/roadmap.md",
-      "source_location": "L652"
+      "source_location": "L653"
     },
     {
       "id": "docs_roadmap_static_memory_plan",
@@ -31532,7 +31532,7 @@
       "node_kind": "heading",
       "norm_label": "static memory plan",
       "source_file": "docs/roadmap.md",
-      "source_location": "L648"
+      "source_location": "L649"
     },
     {
       "id": "tools_m6a21_qwen35_gpu_hybrid_block_updateprovenance_beta",
@@ -32949,7 +32949,7 @@
       "node_kind": "heading",
       "norm_label": "benchmark protocol",
       "source_file": "docs/roadmap.md",
-      "source_location": "L134"
+      "source_location": "L135"
     },
     {
       "id": "docs_roadmap_deliverables",
@@ -32961,7 +32961,7 @@
       "node_kind": "heading",
       "norm_label": "deliverables",
       "source_file": "docs/roadmap.md",
-      "source_location": "L92"
+      "source_location": "L93"
     },
     {
       "id": "docs_roadmap_exit_criteria",
@@ -32973,7 +32973,7 @@
       "node_kind": "heading",
       "norm_label": "exit criteria",
       "source_file": "docs/roadmap.md",
-      "source_location": "L146"
+      "source_location": "L147"
     },
     {
       "id": "docs_roadmap_goal",
@@ -32985,7 +32985,7 @@
       "node_kind": "heading",
       "norm_label": "goal",
       "source_file": "docs/roadmap.md",
-      "source_location": "L76"
+      "source_location": "L77"
     },
     {
       "id": "docs_roadmap_hardware_environment",
@@ -32997,7 +32997,7 @@
       "node_kind": "heading",
       "norm_label": "hardware environment",
       "source_file": "docs/roadmap.md",
-      "source_location": "L107"
+      "source_location": "L108"
     },
     {
       "id": "docs_roadmap_m0_baseline_and_project_bootstrap",
@@ -33009,7 +33009,7 @@
       "node_kind": "heading",
       "norm_label": "m0 \u2014 baseline and project bootstrap",
       "source_file": "docs/roadmap.md",
-      "source_location": "L74"
+      "source_location": "L75"
     },
     {
       "id": "docs_roadmap_non_goals",
@@ -33021,7 +33021,7 @@
       "node_kind": "heading",
       "norm_label": "non-goals",
       "source_file": "docs/roadmap.md",
-      "source_location": "L158"
+      "source_location": "L159"
     },
     {
       "id": "docs_roadmap_questions",
@@ -33033,7 +33033,7 @@
       "node_kind": "heading",
       "norm_label": "questions",
       "source_file": "docs/roadmap.md",
-      "source_location": "L82"
+      "source_location": "L83"
     },
     {
       "id": "docs_roadmap_reference_runtime",
@@ -33045,7 +33045,7 @@
       "node_kind": "heading",
       "norm_label": "reference runtime",
       "source_file": "docs/roadmap.md",
-      "source_location": "L123"
+      "source_location": "L124"
     },
     {
       "id": "docs_roadmap_repository",
@@ -33057,7 +33057,7 @@
       "node_kind": "heading",
       "norm_label": "repository",
       "source_file": "docs/roadmap.md",
-      "source_location": "L94"
+      "source_location": "L95"
     },
     {
       "id": "tests_qwen3_layer35_external_test_metrics_actual_at_max",
@@ -36242,7 +36242,7 @@
       "node_kind": "heading",
       "norm_label": "decision",
       "source_file": "experiments/EXP-0072-m6a262-qwen35-l30-update-provenance.md",
-      "source_location": "L96"
+      "source_location": "L150"
     },
     {
       "id": "experiments_exp_0072_m6a262_qwen35_l30_update_provenance_diagnostic",
@@ -36290,7 +36290,7 @@
       "node_kind": "heading",
       "norm_label": "follow-up",
       "source_file": "experiments/EXP-0072-m6a262-qwen35-l30-update-provenance.md",
-      "source_location": "L102"
+      "source_location": "L156"
     },
     {
       "id": "experiments_exp_0072_m6a262_qwen35_l30_update_provenance_interpretation",
@@ -36302,7 +36302,7 @@
       "node_kind": "heading",
       "norm_label": "interpretation",
       "source_file": "experiments/EXP-0072-m6a262-qwen35-l30-update-provenance.md",
-      "source_location": "L82"
+      "source_location": "L135"
     },
     {
       "id": "experiments_exp_0072_m6a262_qwen35_l30_update_provenance_moving_maximum_and_tracked_index_results",
@@ -36350,7 +36350,7 @@
       "node_kind": "heading",
       "norm_label": "tracked update provenance",
       "source_file": "experiments/EXP-0072-m6a262-qwen35-l30-update-provenance.md",
-      "source_location": "L61"
+      "source_location": "L114"
     },
     {
       "id": "tools_m6a9_qwen35_lm_head",
@@ -37412,7 +37412,7 @@
       "node_kind": "heading",
       "norm_label": "benchmark before claim",
       "source_file": "docs/roadmap.md",
-      "source_location": "L66"
+      "source_location": "L67"
     },
     {
       "id": "docs_roadmap_correctness_before_speed",
@@ -37424,7 +37424,7 @@
       "node_kind": "heading",
       "norm_label": "correctness before speed",
       "source_file": "docs/roadmap.md",
-      "source_location": "L62"
+      "source_location": "L63"
     },
     {
       "id": "docs_roadmap_evidence_before_architecture",
@@ -37436,7 +37436,7 @@
       "node_kind": "heading",
       "norm_label": "evidence before architecture",
       "source_file": "docs/roadmap.md",
-      "source_location": "L54"
+      "source_location": "L55"
     },
     {
       "id": "docs_roadmap_narrow_before_broad",
@@ -37448,7 +37448,7 @@
       "node_kind": "heading",
       "norm_label": "narrow before broad",
       "source_file": "docs/roadmap.md",
-      "source_location": "L58"
+      "source_location": "L59"
     },
     {
       "id": "docs_roadmap_roadmap_principles",
@@ -37460,7 +37460,7 @@
       "node_kind": "heading",
       "norm_label": "roadmap principles",
       "source_file": "docs/roadmap.md",
-      "source_location": "L52"
+      "source_location": "L53"
     },
     {
       "id": "docs_current_state_completed",
@@ -37472,7 +37472,7 @@
       "node_kind": "heading",
       "norm_label": "completed",
       "source_file": "docs/current-state.md",
-      "source_location": "L97"
+      "source_location": "L98"
     },
     {
       "id": "docs_current_state_completed_in_task_3",
@@ -37484,7 +37484,7 @@
       "node_kind": "heading",
       "norm_label": "completed in task 3",
       "source_file": "docs/current-state.md",
-      "source_location": "L120"
+      "source_location": "L121"
     },
     {
       "id": "docs_current_state_current_project_status",
@@ -37496,7 +37496,7 @@
       "node_kind": "heading",
       "norm_label": "current project status",
       "source_file": "docs/current-state.md",
-      "source_location": "L95"
+      "source_location": "L96"
     },
     {
       "id": "docs_current_state_not_implemented",
@@ -37508,7 +37508,7 @@
       "node_kind": "heading",
       "norm_label": "not implemented",
       "source_file": "docs/current-state.md",
-      "source_location": "L401"
+      "source_location": "L402"
     },
     {
       "id": "docs_architecture_13_prefill_vs_decode",
@@ -37556,7 +37556,7 @@
       "node_kind": "heading",
       "norm_label": "current scope",
       "source_file": "docs/current-state.md",
-      "source_location": "L817"
+      "source_location": "L818"
     },
     {
       "id": "docs_current_state_in_scope_now",
@@ -37568,7 +37568,7 @@
       "node_kind": "heading",
       "norm_label": "in scope now",
       "source_file": "docs/current-state.md",
-      "source_location": "L819"
+      "source_location": "L820"
     },
     {
       "id": "docs_current_state_not_in_scope_now",
@@ -37580,7 +37580,7 @@
       "node_kind": "heading",
       "norm_label": "not in scope now",
       "source_file": "docs/current-state.md",
-      "source_location": "L830"
+      "source_location": "L831"
     },
     {
       "id": "tools_m6a21_qwen35_gpu_hybrid_block_cpp_size_t",
@@ -38087,7 +38087,7 @@
       "node_kind": "heading",
       "norm_label": "additional quantization",
       "source_file": "docs/roadmap.md",
-      "source_location": "L698"
+      "source_location": "L699"
     },
     {
       "id": "docs_roadmap_long_context_specialization",
@@ -38099,7 +38099,7 @@
       "node_kind": "heading",
       "norm_label": "long-context specialization",
       "source_file": "docs/roadmap.md",
-      "source_location": "L721"
+      "source_location": "L722"
     },
     {
       "id": "docs_roadmap_m7_expansion",
@@ -38111,7 +38111,7 @@
       "node_kind": "heading",
       "norm_label": "m7 \u2014 expansion",
       "source_file": "docs/roadmap.md",
-      "source_location": "L690"
+      "source_location": "L691"
     },
     {
       "id": "docs_roadmap_potential_areas",
@@ -38123,7 +38123,7 @@
       "node_kind": "heading",
       "norm_label": "potential areas",
       "source_file": "docs/roadmap.md",
-      "source_location": "L696"
+      "source_location": "L697"
     },
     {
       "id": "docs_roadmap_second_model",
@@ -38135,7 +38135,7 @@
       "node_kind": "heading",
       "norm_label": "second model",
       "source_file": "docs/roadmap.md",
-      "source_location": "L709"
+      "source_location": "L710"
     },
     {
       "id": "docs_roadmap_serving",
@@ -38147,7 +38147,7 @@
       "node_kind": "heading",
       "norm_label": "serving",
       "source_file": "docs/roadmap.md",
-      "source_location": "L744"
+      "source_location": "L745"
     },
     {
       "id": "docs_roadmap_speculative_decoding_mtp",
@@ -38159,7 +38159,7 @@
       "node_kind": "heading",
       "norm_label": "speculative decoding / mtp",
       "source_file": "docs/roadmap.md",
-      "source_location": "L732"
+      "source_location": "L733"
     },
     {
       "id": "docs_roadmap_architectural_rule",
@@ -38171,7 +38171,7 @@
       "node_kind": "heading",
       "norm_label": "architectural rule",
       "source_file": "docs/roadmap.md",
-      "source_location": "L381"
+      "source_location": "L382"
     },
     {
       "id": "docs_roadmap_core_runtime_responsibilities",
@@ -38183,10 +38183,10 @@
       "node_kind": "heading",
       "norm_label": "core runtime responsibilities",
       "source_file": "docs/roadmap.md",
-      "source_location": "L367"
+      "source_location": "L368"
     },
     {
-      "id": "docs_roadmap_exit_criteria_409",
+      "id": "docs_roadmap_exit_criteria_410",
       "label": "Exit criteria",
       "_origin": "ast",
       "community": 33,
@@ -38195,10 +38195,10 @@
       "node_kind": "heading",
       "norm_label": "exit criteria",
       "source_file": "docs/roadmap.md",
-      "source_location": "L409"
+      "source_location": "L410"
     },
     {
-      "id": "docs_roadmap_goal_361",
+      "id": "docs_roadmap_goal_362",
       "label": "Goal",
       "_origin": "ast",
       "community": 33,
@@ -38207,7 +38207,7 @@
       "node_kind": "heading",
       "norm_label": "goal",
       "source_file": "docs/roadmap.md",
-      "source_location": "L361"
+      "source_location": "L362"
     },
     {
       "id": "docs_roadmap_m3_minimal_runtime",
@@ -38219,7 +38219,7 @@
       "node_kind": "heading",
       "norm_label": "m3 \u2014 minimal runtime",
       "source_file": "docs/roadmap.md",
-      "source_location": "L359"
+      "source_location": "L360"
     },
     {
       "id": "docs_roadmap_model_scope",
@@ -38231,7 +38231,7 @@
       "node_kind": "heading",
       "norm_label": "model scope",
       "source_file": "docs/roadmap.md",
-      "source_location": "L395"
+      "source_location": "L396"
     },
     {
       "id": "docs_roadmap_quantization_scope",
@@ -38243,7 +38243,7 @@
       "node_kind": "heading",
       "norm_label": "quantization scope",
       "source_file": "docs/roadmap.md",
-      "source_location": "L403"
+      "source_location": "L404"
     },
     {
       "id": "docs_roadmap_benchmark_harness",
@@ -38255,10 +38255,10 @@
       "node_kind": "heading",
       "norm_label": "benchmark harness",
       "source_file": "docs/roadmap.md",
-      "source_location": "L199"
+      "source_location": "L200"
     },
     {
-      "id": "docs_roadmap_exit_criteria_218",
+      "id": "docs_roadmap_exit_criteria_219",
       "label": "Exit criteria",
       "_origin": "ast",
       "community": 34,
@@ -38267,10 +38267,10 @@
       "node_kind": "heading",
       "norm_label": "exit criteria",
       "source_file": "docs/roadmap.md",
-      "source_location": "L218"
+      "source_location": "L219"
     },
     {
-      "id": "docs_roadmap_goal_174",
+      "id": "docs_roadmap_goal_175",
       "label": "Goal",
       "_origin": "ast",
       "community": 34,
@@ -38279,7 +38279,7 @@
       "node_kind": "heading",
       "norm_label": "goal",
       "source_file": "docs/roadmap.md",
-      "source_location": "L174"
+      "source_location": "L175"
     },
     {
       "id": "docs_roadmap_initial_kernel_areas",
@@ -38291,7 +38291,7 @@
       "node_kind": "heading",
       "norm_label": "initial kernel areas",
       "source_file": "docs/roadmap.md",
-      "source_location": "L187"
+      "source_location": "L188"
     },
     {
       "id": "docs_roadmap_initial_representative_shapes",
@@ -38303,7 +38303,7 @@
       "node_kind": "heading",
       "norm_label": "initial representative shapes",
       "source_file": "docs/roadmap.md",
-      "source_location": "L212"
+      "source_location": "L213"
     },
     {
       "id": "docs_roadmap_m1_kernel_laboratory",
@@ -38315,10 +38315,10 @@
       "node_kind": "heading",
       "norm_label": "m1 \u2014 kernel laboratory",
       "source_file": "docs/roadmap.md",
-      "source_location": "L172"
+      "source_location": "L173"
     },
     {
-      "id": "docs_roadmap_questions_178",
+      "id": "docs_roadmap_questions_179",
       "label": "Questions",
       "_origin": "ast",
       "community": 34,
@@ -38327,7 +38327,7 @@
       "node_kind": "heading",
       "norm_label": "questions",
       "source_file": "docs/roadmap.md",
-      "source_location": "L178"
+      "source_location": "L179"
     },
     {
       "id": "agents_32_codex_task_behavior",
@@ -39240,10 +39240,10 @@
       "node_kind": "heading",
       "norm_label": "correctness validation",
       "source_file": "docs/roadmap.md",
-      "source_location": "L466"
+      "source_location": "L467"
     },
     {
-      "id": "docs_roadmap_exit_criteria_478",
+      "id": "docs_roadmap_exit_criteria_479",
       "label": "Exit criteria",
       "_origin": "ast",
       "community": 41,
@@ -39252,10 +39252,10 @@
       "node_kind": "heading",
       "norm_label": "exit criteria",
       "source_file": "docs/roadmap.md",
-      "source_location": "L478"
+      "source_location": "L479"
     },
     {
-      "id": "docs_roadmap_goal_432",
+      "id": "docs_roadmap_goal_433",
       "label": "Goal",
       "_origin": "ast",
       "community": 41,
@@ -39264,7 +39264,7 @@
       "node_kind": "heading",
       "norm_label": "goal",
       "source_file": "docs/roadmap.md",
-      "source_location": "L432"
+      "source_location": "L433"
     },
     {
       "id": "docs_roadmap_initial_inference_mode",
@@ -39276,7 +39276,7 @@
       "node_kind": "heading",
       "norm_label": "initial inference mode",
       "source_file": "docs/roadmap.md",
-      "source_location": "L454"
+      "source_location": "L455"
     },
     {
       "id": "docs_roadmap_m4_first_correct_end_to_end_generation",
@@ -39288,7 +39288,7 @@
       "node_kind": "heading",
       "norm_label": "m4 \u2014 first correct end-to-end generation",
       "source_file": "docs/roadmap.md",
-      "source_location": "L430"
+      "source_location": "L431"
     },
     {
       "id": "docs_roadmap_required_execution_pieces",
@@ -39300,7 +39300,7 @@
       "node_kind": "heading",
       "norm_label": "required execution pieces",
       "source_file": "docs/roadmap.md",
-      "source_location": "L438"
+      "source_location": "L439"
     },
     {
       "id": "experiments_template_15_benchmark_protocol",
@@ -39804,7 +39804,7 @@
       "node_kind": "heading",
       "norm_label": "architecture direction",
       "source_file": "README.md",
-      "source_location": "L315"
+      "source_location": "L316"
     },
     {
       "id": "readme_benchmark_philosophy",
@@ -39816,7 +39816,7 @@
       "node_kind": "heading",
       "norm_label": "benchmark philosophy",
       "source_file": "README.md",
-      "source_location": "L496"
+      "source_location": "L497"
     },
     {
       "id": "readme_building",
@@ -39828,7 +39828,7 @@
       "node_kind": "heading",
       "norm_label": "building",
       "source_file": "README.md",
-      "source_location": "L567"
+      "source_location": "L568"
     },
     {
       "id": "readme_contributing",
@@ -39840,7 +39840,7 @@
       "node_kind": "heading",
       "norm_label": "contributing",
       "source_file": "README.md",
-      "source_location": "L668"
+      "source_location": "L669"
     },
     {
       "id": "readme_core_hypothesis",
@@ -39852,7 +39852,7 @@
       "node_kind": "heading",
       "norm_label": "core hypothesis",
       "source_file": "README.md",
-      "source_location": "L156"
+      "source_location": "L157"
     },
     {
       "id": "readme_correctness_before_performance",
@@ -39864,7 +39864,7 @@
       "node_kind": "heading",
       "norm_label": "correctness before performance",
       "source_file": "README.md",
-      "source_location": "L206"
+      "source_location": "L207"
     },
     {
       "id": "readme_design_principles",
@@ -39876,7 +39876,7 @@
       "node_kind": "heading",
       "norm_label": "design principles",
       "source_file": "README.md",
-      "source_location": "L174"
+      "source_location": "L175"
     },
     {
       "id": "readme_development_roadmap",
@@ -39888,7 +39888,7 @@
       "node_kind": "heading",
       "norm_label": "development roadmap",
       "source_file": "README.md",
-      "source_location": "L408"
+      "source_location": "L409"
     },
     {
       "id": "readme_experiments",
@@ -39900,7 +39900,7 @@
       "node_kind": "heading",
       "norm_label": "experiments",
       "source_file": "README.md",
-      "source_location": "L532"
+      "source_location": "L533"
     },
     {
       "id": "readme_gfx906_llama_cpp_forks",
@@ -39912,7 +39912,7 @@
       "node_kind": "heading",
       "norm_label": "gfx906 llama.cpp forks",
       "source_file": "README.md",
-      "source_location": "L369"
+      "source_location": "L370"
     },
     {
       "id": "readme_gfx906_vllm_work",
@@ -39924,7 +39924,7 @@
       "node_kind": "heading",
       "norm_label": "gfx906 vllm work",
       "source_file": "README.md",
-      "source_location": "L393"
+      "source_location": "L394"
     },
     {
       "id": "readme_guiding_principle",
@@ -39936,7 +39936,7 @@
       "node_kind": "heading",
       "norm_label": "guiding principle",
       "source_file": "README.md",
-      "source_location": "L702"
+      "source_location": "L703"
     },
     {
       "id": "readme_h0",
@@ -39948,7 +39948,7 @@
       "node_kind": "heading",
       "norm_label": "h0",
       "source_file": "README.md",
-      "source_location": "L160"
+      "source_location": "L161"
     },
     {
       "id": "readme_h1",
@@ -39960,7 +39960,7 @@
       "node_kind": "heading",
       "norm_label": "h1",
       "source_file": "README.md",
-      "source_location": "L164"
+      "source_location": "L165"
     },
     {
       "id": "readme_hardware_requirements",
@@ -39972,7 +39972,7 @@
       "node_kind": "heading",
       "norm_label": "hardware requirements",
       "source_file": "README.md",
-      "source_location": "L608"
+      "source_location": "L609"
     },
     {
       "id": "readme_hot_paths_should_be_static",
@@ -39984,7 +39984,7 @@
       "node_kind": "heading",
       "norm_label": "hot paths should be static",
       "source_file": "README.md",
-      "source_location": "L229"
+      "source_location": "L230"
     },
     {
       "id": "readme_initial_target",
@@ -39996,7 +39996,7 @@
       "node_kind": "heading",
       "norm_label": "initial target",
       "source_file": "README.md",
-      "source_location": "L107"
+      "source_location": "L108"
     },
     {
       "id": "readme_license",
@@ -40008,7 +40008,7 @@
       "node_kind": "heading",
       "norm_label": "license",
       "source_file": "README.md",
-      "source_location": "L692"
+      "source_location": "L693"
     },
     {
       "id": "readme_llama_cpp",
@@ -40020,7 +40020,7 @@
       "node_kind": "heading",
       "norm_label": "llama.cpp",
       "source_file": "README.md",
-      "source_location": "L358"
+      "source_location": "L359"
     },
     {
       "id": "readme_m0_baseline",
@@ -40032,7 +40032,7 @@
       "node_kind": "heading",
       "norm_label": "m0 \u2014 baseline",
       "source_file": "README.md",
-      "source_location": "L410"
+      "source_location": "L411"
     },
     {
       "id": "readme_m1_kernel_laboratory",
@@ -40044,7 +40044,7 @@
       "node_kind": "heading",
       "norm_label": "m1 \u2014 kernel laboratory",
       "source_file": "README.md",
-      "source_location": "L421"
+      "source_location": "L422"
     },
     {
       "id": "readme_m2_prove_specialization",
@@ -40056,7 +40056,7 @@
       "node_kind": "heading",
       "norm_label": "m2 \u2014 prove specialization",
       "source_file": "README.md",
-      "source_location": "L430"
+      "source_location": "L431"
     },
     {
       "id": "readme_m3_minimal_runtime",
@@ -40068,7 +40068,7 @@
       "node_kind": "heading",
       "norm_label": "m3 \u2014 minimal runtime",
       "source_file": "README.md",
-      "source_location": "L443"
+      "source_location": "L444"
     },
     {
       "id": "readme_m4_first_correct_generation",
@@ -40080,7 +40080,7 @@
       "node_kind": "heading",
       "norm_label": "m4 \u2014 first correct generation",
       "source_file": "README.md",
-      "source_location": "L453"
+      "source_location": "L454"
     },
     {
       "id": "readme_m5_beat_the_reference",
@@ -40092,7 +40092,7 @@
       "node_kind": "heading",
       "norm_label": "m5 \u2014 beat the reference",
       "source_file": "README.md",
-      "source_location": "L457"
+      "source_location": "L458"
     },
     {
       "id": "readme_m6_runtime_specialization",
@@ -40104,7 +40104,7 @@
       "node_kind": "heading",
       "norm_label": "m6 \u2014 runtime specialization",
       "source_file": "README.md",
-      "source_location": "L471"
+      "source_location": "L472"
     },
     {
       "id": "readme_m7_expansion",
@@ -40116,7 +40116,7 @@
       "node_kind": "heading",
       "norm_label": "m7 \u2014 expansion",
       "source_file": "README.md",
-      "source_location": "L482"
+      "source_location": "L483"
     },
     {
       "id": "readme_measure_before_optimizing",
@@ -40128,7 +40128,7 @@
       "node_kind": "heading",
       "norm_label": "measure before optimizing",
       "source_file": "README.md",
-      "source_location": "L191"
+      "source_location": "L192"
     },
     {
       "id": "readme_miinfer",
@@ -40152,7 +40152,7 @@
       "node_kind": "heading",
       "norm_label": "negative results are retained",
       "source_file": "README.md",
-      "source_location": "L219"
+      "source_location": "L220"
     },
     {
       "id": "readme_ninfer",
@@ -40164,7 +40164,7 @@
       "node_kind": "heading",
       "norm_label": "ninfer",
       "source_file": "README.md",
-      "source_location": "L385"
+      "source_location": "L386"
     },
     {
       "id": "readme_repository_structure",
@@ -40176,7 +40176,7 @@
       "node_kind": "heading",
       "norm_label": "repository structure",
       "source_file": "README.md",
-      "source_location": "L629"
+      "source_location": "L630"
     },
     {
       "id": "readme_research_influences",
@@ -40188,7 +40188,7 @@
       "node_kind": "heading",
       "norm_label": "research influences",
       "source_file": "README.md",
-      "source_location": "L354"
+      "source_location": "L355"
     },
     {
       "id": "readme_specialization_is_intentional",
@@ -40200,7 +40200,7 @@
       "node_kind": "heading",
       "norm_label": "specialization is intentional",
       "source_file": "README.md",
-      "source_location": "L176"
+      "source_location": "L177"
     },
     {
       "id": "readme_status",
@@ -40224,7 +40224,7 @@
       "node_kind": "heading",
       "norm_label": "what miinfer does not initially aim to build",
       "source_file": "README.md",
-      "source_location": "L288"
+      "source_location": "L289"
     },
     {
       "id": "readme_what_miinfer_intends_to_own",
@@ -40236,7 +40236,7 @@
       "node_kind": "heading",
       "norm_label": "what miinfer intends to own",
       "source_file": "README.md",
-      "source_location": "L267"
+      "source_location": "L268"
     },
     {
       "id": "readme_why_miinfer",
@@ -40248,7 +40248,7 @@
       "node_kind": "heading",
       "norm_label": "why miinfer?",
       "source_file": "README.md",
-      "source_location": "L129"
+      "source_location": "L130"
     },
     {
       "id": "include_miinfer_device_validation",
@@ -41158,7 +41158,7 @@
       "node_kind": "heading",
       "norm_label": "current benchmark priority",
       "source_file": "docs/current-state.md",
-      "source_location": "L593"
+      "source_location": "L594"
     },
     {
       "id": "docs_current_state_current_build_direction",
@@ -41170,7 +41170,7 @@
       "node_kind": "heading",
       "norm_label": "current build direction",
       "source_file": "docs/current-state.md",
-      "source_location": "L509"
+      "source_location": "L510"
     },
     {
       "id": "docs_current_state_current_correctness_policy",
@@ -41182,7 +41182,7 @@
       "node_kind": "heading",
       "norm_label": "current correctness policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L766"
+      "source_location": "L767"
     },
     {
       "id": "docs_current_state_current_dependency_policy",
@@ -41194,7 +41194,7 @@
       "node_kind": "heading",
       "norm_label": "current dependency policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L535"
+      "source_location": "L536"
     },
     {
       "id": "docs_current_state_current_experiment_queue",
@@ -41206,7 +41206,7 @@
       "node_kind": "heading",
       "norm_label": "current experiment queue",
       "source_file": "docs/current-state.md",
-      "source_location": "L631"
+      "source_location": "L632"
     },
     {
       "id": "docs_current_state_current_hardware_observation_requirements",
@@ -41218,7 +41218,7 @@
       "node_kind": "heading",
       "norm_label": "current hardware observation requirements",
       "source_file": "docs/current-state.md",
-      "source_location": "L797"
+      "source_location": "L798"
     },
     {
       "id": "docs_current_state_current_hardware_target",
@@ -41230,7 +41230,7 @@
       "node_kind": "heading",
       "norm_label": "current hardware target",
       "source_file": "docs/current-state.md",
-      "source_location": "L82"
+      "source_location": "L83"
     },
     {
       "id": "docs_current_state_current_performance_policy",
@@ -41242,7 +41242,7 @@
       "node_kind": "heading",
       "norm_label": "current performance policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L782"
+      "source_location": "L783"
     },
     {
       "id": "docs_current_state_current_phase",
@@ -41266,7 +41266,7 @@
       "node_kind": "heading",
       "norm_label": "current reference strategy",
       "source_file": "docs/current-state.md",
-      "source_location": "L573"
+      "source_location": "L574"
     },
     {
       "id": "docs_current_state_current_runtime_policy",
@@ -41278,7 +41278,7 @@
       "node_kind": "heading",
       "norm_label": "current runtime policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L555"
+      "source_location": "L556"
     },
     {
       "id": "docs_current_state_definition_of_current_success",
@@ -41290,7 +41290,7 @@
       "node_kind": "heading",
       "norm_label": "definition of current success",
       "source_file": "docs/current-state.md",
-      "source_location": "L889"
+      "source_location": "L890"
     },
     {
       "id": "docs_current_state_do_not_start_yet",
@@ -41302,7 +41302,7 @@
       "node_kind": "heading",
       "norm_label": "do not start yet",
       "source_file": "docs/current-state.md",
-      "source_location": "L849"
+      "source_location": "L850"
     },
     {
       "id": "docs_current_state_first_major_gate",
@@ -41314,7 +41314,7 @@
       "node_kind": "heading",
       "norm_label": "first major gate",
       "source_file": "docs/current-state.md",
-      "source_location": "L756"
+      "source_location": "L757"
     },
     {
       "id": "docs_current_state_immediate_deliverables",
@@ -41326,7 +41326,7 @@
       "node_kind": "heading",
       "norm_label": "immediate deliverables",
       "source_file": "docs/current-state.md",
-      "source_location": "L459"
+      "source_location": "L460"
     },
     {
       "id": "docs_current_state_immediate_objective",
@@ -41338,7 +41338,7 @@
       "node_kind": "heading",
       "norm_label": "immediate objective",
       "source_file": "docs/current-state.md",
-      "source_location": "L424"
+      "source_location": "L425"
     },
     {
       "id": "docs_current_state_last_updated",
@@ -41350,7 +41350,7 @@
       "node_kind": "heading",
       "norm_label": "last updated",
       "source_file": "docs/current-state.md",
-      "source_location": "L916"
+      "source_location": "L917"
     },
     {
       "id": "docs_current_state_miinfer_current_state",
@@ -41374,7 +41374,7 @@
       "node_kind": "heading",
       "norm_label": "next implementation task",
       "source_file": "docs/current-state.md",
-      "source_location": "L869"
+      "source_location": "L870"
     },
     {
       "id": "codex_skills_graphify_references_hooks",
@@ -87545,7 +87545,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L424",
+      "source_location": "L425",
       "weight": 1.0
     },
     {
@@ -87556,7 +87556,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L459",
+      "source_location": "L460",
       "weight": 1.0
     },
     {
@@ -87567,7 +87567,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L509",
+      "source_location": "L510",
       "weight": 1.0
     },
     {
@@ -87578,7 +87578,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L535",
+      "source_location": "L536",
       "weight": 1.0
     },
     {
@@ -87589,7 +87589,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L555",
+      "source_location": "L556",
       "weight": 1.0
     },
     {
@@ -87600,7 +87600,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L573",
+      "source_location": "L574",
       "weight": 1.0
     },
     {
@@ -87611,7 +87611,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L593",
+      "source_location": "L594",
       "weight": 1.0
     },
     {
@@ -87622,7 +87622,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L631",
+      "source_location": "L632",
       "weight": 1.0
     },
     {
@@ -87633,7 +87633,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L756",
+      "source_location": "L757",
       "weight": 1.0
     },
     {
@@ -87644,7 +87644,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L766",
+      "source_location": "L767",
       "weight": 1.0
     },
     {
@@ -87655,7 +87655,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L782",
+      "source_location": "L783",
       "weight": 1.0
     },
     {
@@ -87666,7 +87666,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L797",
+      "source_location": "L798",
       "weight": 1.0
     },
     {
@@ -87677,7 +87677,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L817",
+      "source_location": "L818",
       "weight": 1.0
     },
     {
@@ -87688,7 +87688,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L82",
+      "source_location": "L83",
       "weight": 1.0
     },
     {
@@ -87699,7 +87699,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L849",
+      "source_location": "L850",
       "weight": 1.0
     },
     {
@@ -87710,7 +87710,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L869",
+      "source_location": "L870",
       "weight": 1.0
     },
     {
@@ -87721,7 +87721,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L889",
+      "source_location": "L890",
       "weight": 1.0
     },
     {
@@ -87732,7 +87732,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L916",
+      "source_location": "L917",
       "weight": 1.0
     },
     {
@@ -87743,7 +87743,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L95",
+      "source_location": "L96",
       "weight": 1.0
     },
     {
@@ -87754,7 +87754,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L120",
+      "source_location": "L121",
       "weight": 1.0
     },
     {
@@ -87765,7 +87765,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L401",
+      "source_location": "L402",
       "weight": 1.0
     },
     {
@@ -87776,7 +87776,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L97",
+      "source_location": "L98",
       "weight": 1.0
     },
     {
@@ -87787,7 +87787,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L819",
+      "source_location": "L820",
       "weight": 1.0
     },
     {
@@ -87798,7 +87798,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L830",
+      "source_location": "L831",
       "weight": 1.0
     },
     {
@@ -91989,7 +91989,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L172",
+      "source_location": "L173",
       "weight": 1.0
     },
     {
@@ -92000,7 +92000,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L230",
+      "source_location": "L231",
       "weight": 1.0
     },
     {
@@ -92011,7 +92011,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L359",
+      "source_location": "L360",
       "weight": 1.0
     },
     {
@@ -92022,7 +92022,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L430",
+      "source_location": "L431",
       "weight": 1.0
     },
     {
@@ -92033,7 +92033,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L490",
+      "source_location": "L491",
       "weight": 1.0
     },
     {
@@ -92044,7 +92044,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L52",
+      "source_location": "L53",
       "weight": 1.0
     },
     {
@@ -92055,7 +92055,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L594",
+      "source_location": "L595",
       "weight": 1.0
     },
     {
@@ -92066,7 +92066,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L625",
+      "source_location": "L626",
       "weight": 1.0
     },
     {
@@ -92077,7 +92077,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L690",
+      "source_location": "L691",
       "weight": 1.0
     },
     {
@@ -92088,7 +92088,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L74",
+      "source_location": "L75",
       "weight": 1.0
     },
     {
@@ -92099,7 +92099,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L756",
+      "source_location": "L757",
       "weight": 1.0
     },
     {
@@ -92110,7 +92110,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L781",
+      "source_location": "L782",
       "weight": 1.0
     },
     {
@@ -92121,7 +92121,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L812",
+      "source_location": "L813",
       "weight": 1.0
     },
     {
@@ -92132,7 +92132,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L870",
+      "source_location": "L871",
       "weight": 1.0
     },
     {
@@ -92143,7 +92143,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L969",
+      "source_location": "L970",
       "weight": 1.0
     },
     {
@@ -92154,7 +92154,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L987",
+      "source_location": "L988",
       "weight": 1.0
     },
     {
@@ -92165,7 +92165,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L244",
+      "source_location": "L245",
       "weight": 1.0
     },
     {
@@ -92176,7 +92176,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L252",
+      "source_location": "L253",
       "weight": 1.0
     },
     {
@@ -92187,7 +92187,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L262",
+      "source_location": "L263",
       "weight": 1.0
     },
     {
@@ -92198,7 +92198,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L272",
+      "source_location": "L273",
       "weight": 1.0
     },
     {
@@ -92209,7 +92209,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L281",
+      "source_location": "L282",
       "weight": 1.0
     },
     {
@@ -92220,7 +92220,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L293",
+      "source_location": "L294",
       "weight": 1.0
     },
     {
@@ -92231,7 +92231,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L633",
+      "source_location": "L634",
       "weight": 1.0
     },
     {
@@ -92242,7 +92242,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L644",
+      "source_location": "L645",
       "weight": 1.0
     },
     {
@@ -92253,7 +92253,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L648",
+      "source_location": "L649",
       "weight": 1.0
     },
     {
@@ -92264,7 +92264,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L652",
+      "source_location": "L653",
       "weight": 1.0
     },
     {
@@ -92275,7 +92275,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L662",
+      "source_location": "L663",
       "weight": 1.0
     },
     {
@@ -92286,7 +92286,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L674",
+      "source_location": "L675",
       "weight": 1.0
     },
     {
@@ -92297,7 +92297,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L502",
+      "source_location": "L503",
       "weight": 1.0
     },
     {
@@ -92308,7 +92308,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L508",
+      "source_location": "L509",
       "weight": 1.0
     },
     {
@@ -92319,7 +92319,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L514",
+      "source_location": "L515",
       "weight": 1.0
     },
     {
@@ -92330,7 +92330,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L522",
+      "source_location": "L523",
       "weight": 1.0
     },
     {
@@ -92341,7 +92341,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L107",
+      "source_location": "L108",
       "weight": 1.0
     },
     {
@@ -92352,7 +92352,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L123",
+      "source_location": "L124",
       "weight": 1.0
     },
     {
@@ -92363,7 +92363,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L134",
+      "source_location": "L135",
       "weight": 1.0
     },
     {
@@ -92374,40 +92374,40 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L94",
+      "source_location": "L95",
       "weight": 1.0
     },
     {
-      "source": "docs_roadmap_exit_criteria_546",
+      "source": "docs_roadmap_exit_criteria_547",
       "target": "docs_roadmap_h1_supported",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L558",
+      "source_location": "L559",
       "weight": 1.0
     },
     {
-      "source": "docs_roadmap_exit_criteria_546",
+      "source": "docs_roadmap_exit_criteria_547",
       "target": "docs_roadmap_mixed_result",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L564",
+      "source_location": "L565",
       "weight": 1.0
     },
     {
-      "source": "docs_roadmap_exit_criteria_546",
+      "source": "docs_roadmap_exit_criteria_547",
       "target": "docs_roadmap_h0_supported",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L570",
+      "source_location": "L571",
       "weight": 1.0
     },
     {
@@ -92418,7 +92418,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L334",
+      "source_location": "L335",
       "weight": 1.0
     },
     {
@@ -92429,7 +92429,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L341",
+      "source_location": "L342",
       "weight": 1.0
     },
     {
@@ -92440,7 +92440,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L146",
+      "source_location": "L147",
       "weight": 1.0
     },
     {
@@ -92451,7 +92451,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L158",
+      "source_location": "L159",
       "weight": 1.0
     },
     {
@@ -92462,7 +92462,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L76",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -92473,7 +92473,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L82",
+      "source_location": "L83",
       "weight": 1.0
     },
     {
@@ -92484,29 +92484,29 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L92",
+      "source_location": "L93",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m1_kernel_laboratory",
-      "target": "docs_roadmap_goal_174",
+      "target": "docs_roadmap_goal_175",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L174",
+      "source_location": "L175",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m1_kernel_laboratory",
-      "target": "docs_roadmap_questions_178",
+      "target": "docs_roadmap_questions_179",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L178",
+      "source_location": "L179",
       "weight": 1.0
     },
     {
@@ -92517,7 +92517,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L187",
+      "source_location": "L188",
       "weight": 1.0
     },
     {
@@ -92528,7 +92528,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L199",
+      "source_location": "L200",
       "weight": 1.0
     },
     {
@@ -92539,29 +92539,29 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L212",
+      "source_location": "L213",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m1_kernel_laboratory",
-      "target": "docs_roadmap_exit_criteria_218",
+      "target": "docs_roadmap_exit_criteria_219",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L218",
+      "source_location": "L219",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m2_prove_specialization",
-      "target": "docs_roadmap_goal_232",
+      "target": "docs_roadmap_goal_233",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L232",
+      "source_location": "L233",
       "weight": 1.0
     },
     {
@@ -92572,7 +92572,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L238",
+      "source_location": "L239",
       "weight": 1.0
     },
     {
@@ -92583,7 +92583,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L242",
+      "source_location": "L243",
       "weight": 1.0
     },
     {
@@ -92594,7 +92594,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L304",
+      "source_location": "L305",
       "weight": 1.0
     },
     {
@@ -92605,7 +92605,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L317",
+      "source_location": "L318",
       "weight": 1.0
     },
     {
@@ -92616,18 +92616,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L332",
+      "source_location": "L333",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m3_minimal_runtime",
-      "target": "docs_roadmap_goal_361",
+      "target": "docs_roadmap_goal_362",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L361",
+      "source_location": "L362",
       "weight": 1.0
     },
     {
@@ -92638,7 +92638,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L367",
+      "source_location": "L368",
       "weight": 1.0
     },
     {
@@ -92649,7 +92649,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L381",
+      "source_location": "L382",
       "weight": 1.0
     },
     {
@@ -92660,7 +92660,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L395",
+      "source_location": "L396",
       "weight": 1.0
     },
     {
@@ -92671,29 +92671,29 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L403",
+      "source_location": "L404",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m3_minimal_runtime",
-      "target": "docs_roadmap_exit_criteria_409",
+      "target": "docs_roadmap_exit_criteria_410",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L409",
+      "source_location": "L410",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m4_first_correct_end_to_end_generation",
-      "target": "docs_roadmap_goal_432",
+      "target": "docs_roadmap_goal_433",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L432",
+      "source_location": "L433",
       "weight": 1.0
     },
     {
@@ -92704,7 +92704,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L438",
+      "source_location": "L439",
       "weight": 1.0
     },
     {
@@ -92715,7 +92715,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L454",
+      "source_location": "L455",
       "weight": 1.0
     },
     {
@@ -92726,29 +92726,29 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L466",
+      "source_location": "L467",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m4_first_correct_end_to_end_generation",
-      "target": "docs_roadmap_exit_criteria_478",
+      "target": "docs_roadmap_exit_criteria_479",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L478",
+      "source_location": "L479",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m5_beat_the_reference",
-      "target": "docs_roadmap_goal_492",
+      "target": "docs_roadmap_goal_493",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L492",
+      "source_location": "L493",
       "weight": 1.0
     },
     {
@@ -92759,7 +92759,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L498",
+      "source_location": "L499",
       "weight": 1.0
     },
     {
@@ -92770,18 +92770,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L533",
+      "source_location": "L534",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m5_beat_the_reference",
-      "target": "docs_roadmap_exit_criteria_546",
+      "target": "docs_roadmap_exit_criteria_547",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L546",
+      "source_location": "L547",
       "weight": 1.0
     },
     {
@@ -92792,18 +92792,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L578",
+      "source_location": "L579",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m6_a_reference_correct_execution_contract_exploration",
-      "target": "docs_roadmap_goal_598",
+      "target": "docs_roadmap_goal_599",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L598",
+      "source_location": "L599",
       "weight": 1.0
     },
     {
@@ -92814,7 +92814,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L603",
+      "source_location": "L604",
       "weight": 1.0
     },
     {
@@ -92825,18 +92825,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L611",
+      "source_location": "L612",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m6_runtime_specialization",
-      "target": "docs_roadmap_goal_627",
+      "target": "docs_roadmap_goal_628",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L627",
+      "source_location": "L628",
       "weight": 1.0
     },
     {
@@ -92847,18 +92847,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L631",
+      "source_location": "L632",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m6_runtime_specialization",
-      "target": "docs_roadmap_exit_criteria_678",
+      "target": "docs_roadmap_exit_criteria_679",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L678",
+      "source_location": "L679",
       "weight": 1.0
     },
     {
@@ -92869,7 +92869,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L696",
+      "source_location": "L697",
       "weight": 1.0
     },
     {
@@ -92880,7 +92880,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L698",
+      "source_location": "L699",
       "weight": 1.0
     },
     {
@@ -92891,7 +92891,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L709",
+      "source_location": "L710",
       "weight": 1.0
     },
     {
@@ -92902,7 +92902,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L721",
+      "source_location": "L722",
       "weight": 1.0
     },
     {
@@ -92913,7 +92913,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L732",
+      "source_location": "L733",
       "weight": 1.0
     },
     {
@@ -92924,7 +92924,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L744",
+      "source_location": "L745",
       "weight": 1.0
     },
     {
@@ -92935,7 +92935,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L54",
+      "source_location": "L55",
       "weight": 1.0
     },
     {
@@ -92946,7 +92946,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L58",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -92957,7 +92957,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L62",
+      "source_location": "L63",
       "weight": 1.0
     },
     {
@@ -92968,7 +92968,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L66",
+      "source_location": "L67",
       "weight": 1.0
     },
     {
@@ -101421,13 +101421,24 @@
     },
     {
       "source": "experiments_exp_0072_m6a262_qwen35_l30_update_provenance_exp_0072_m6_a26_2_qwen3_8_l30_update_provenance",
-      "target": "experiments_exp_0072_m6a262_qwen35_l30_update_provenance_follow_up",
+      "target": "experiments_exp_0072_m6a262_qwen35_l30_update_provenance_tracked_update_provenance",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0072-m6a262-qwen35-l30-update-provenance.md",
-      "source_location": "L102",
+      "source_location": "L114",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0072_m6a262_qwen35_l30_update_provenance_exp_0072_m6_a26_2_qwen3_8_l30_update_provenance",
+      "target": "experiments_exp_0072_m6a262_qwen35_l30_update_provenance_interpretation",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0072-m6a262-qwen35-l30-update-provenance.md",
+      "source_location": "L135",
       "weight": 1.0
     },
     {
@@ -101439,6 +101450,28 @@
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0072-m6a262-qwen35-l30-update-provenance.md",
       "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0072_m6a262_qwen35_l30_update_provenance_exp_0072_m6_a26_2_qwen3_8_l30_update_provenance",
+      "target": "experiments_exp_0072_m6a262_qwen35_l30_update_provenance_decision",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0072-m6a262-qwen35-l30-update-provenance.md",
+      "source_location": "L150",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0072_m6a262_qwen35_l30_update_provenance_exp_0072_m6_a26_2_qwen3_8_l30_update_provenance",
+      "target": "experiments_exp_0072_m6a262_qwen35_l30_update_provenance_follow_up",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0072-m6a262-qwen35-l30-update-provenance.md",
+      "source_location": "L156",
       "weight": 1.0
     },
     {
@@ -101476,17 +101509,6 @@
     },
     {
       "source": "experiments_exp_0072_m6a262_qwen35_l30_update_provenance_exp_0072_m6_a26_2_qwen3_8_l30_update_provenance",
-      "target": "experiments_exp_0072_m6a262_qwen35_l30_update_provenance_tracked_update_provenance",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "experiments/EXP-0072-m6a262-qwen35-l30-update-provenance.md",
-      "source_location": "L61",
-      "weight": 1.0
-    },
-    {
-      "source": "experiments_exp_0072_m6a262_qwen35_l30_update_provenance_exp_0072_m6_a26_2_qwen3_8_l30_update_provenance",
       "target": "experiments_exp_0072_m6a262_qwen35_l30_update_provenance_question",
       "relation": "contains",
       "_origin": "ast",
@@ -101494,28 +101516,6 @@
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0072-m6a262-qwen35-l30-update-provenance.md",
       "source_location": "L8",
-      "weight": 1.0
-    },
-    {
-      "source": "experiments_exp_0072_m6a262_qwen35_l30_update_provenance_exp_0072_m6_a26_2_qwen3_8_l30_update_provenance",
-      "target": "experiments_exp_0072_m6a262_qwen35_l30_update_provenance_interpretation",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "experiments/EXP-0072-m6a262-qwen35-l30-update-provenance.md",
-      "source_location": "L82",
-      "weight": 1.0
-    },
-    {
-      "source": "experiments_exp_0072_m6a262_qwen35_l30_update_provenance_exp_0072_m6_a26_2_qwen3_8_l30_update_provenance",
-      "target": "experiments_exp_0072_m6a262_qwen35_l30_update_provenance_decision",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "experiments/EXP-0072-m6a262-qwen35-l30-update-provenance.md",
-      "source_location": "L96",
       "weight": 1.0
     },
     {
@@ -102725,7 +102725,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L160",
+      "source_location": "L161",
       "weight": 1.0
     },
     {
@@ -102736,7 +102736,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L164",
+      "source_location": "L165",
       "weight": 1.0
     },
     {
@@ -102747,7 +102747,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L176",
+      "source_location": "L177",
       "weight": 1.0
     },
     {
@@ -102758,7 +102758,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L191",
+      "source_location": "L192",
       "weight": 1.0
     },
     {
@@ -102769,7 +102769,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L206",
+      "source_location": "L207",
       "weight": 1.0
     },
     {
@@ -102780,7 +102780,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L219",
+      "source_location": "L220",
       "weight": 1.0
     },
     {
@@ -102791,7 +102791,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L229",
+      "source_location": "L230",
       "weight": 1.0
     },
     {
@@ -102802,7 +102802,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L410",
+      "source_location": "L411",
       "weight": 1.0
     },
     {
@@ -102813,7 +102813,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L421",
+      "source_location": "L422",
       "weight": 1.0
     },
     {
@@ -102824,7 +102824,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L430",
+      "source_location": "L431",
       "weight": 1.0
     },
     {
@@ -102835,7 +102835,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L443",
+      "source_location": "L444",
       "weight": 1.0
     },
     {
@@ -102846,7 +102846,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L453",
+      "source_location": "L454",
       "weight": 1.0
     },
     {
@@ -102857,7 +102857,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L457",
+      "source_location": "L458",
       "weight": 1.0
     },
     {
@@ -102868,7 +102868,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L471",
+      "source_location": "L472",
       "weight": 1.0
     },
     {
@@ -102879,7 +102879,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L482",
+      "source_location": "L483",
       "weight": 1.0
     },
     {
@@ -102890,7 +102890,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L107",
+      "source_location": "L108",
       "weight": 1.0
     },
     {
@@ -102901,7 +102901,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L129",
+      "source_location": "L130",
       "weight": 1.0
     },
     {
@@ -102923,7 +102923,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L156",
+      "source_location": "L157",
       "weight": 1.0
     },
     {
@@ -102934,7 +102934,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L174",
+      "source_location": "L175",
       "weight": 1.0
     },
     {
@@ -102945,7 +102945,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L267",
+      "source_location": "L268",
       "weight": 1.0
     },
     {
@@ -102956,7 +102956,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L288",
+      "source_location": "L289",
       "weight": 1.0
     },
     {
@@ -102967,7 +102967,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L315",
+      "source_location": "L316",
       "weight": 1.0
     },
     {
@@ -102978,7 +102978,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L354",
+      "source_location": "L355",
       "weight": 1.0
     },
     {
@@ -102989,7 +102989,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L408",
+      "source_location": "L409",
       "weight": 1.0
     },
     {
@@ -103000,7 +103000,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L496",
+      "source_location": "L497",
       "weight": 1.0
     },
     {
@@ -103011,7 +103011,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L532",
+      "source_location": "L533",
       "weight": 1.0
     },
     {
@@ -103022,7 +103022,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L567",
+      "source_location": "L568",
       "weight": 1.0
     },
     {
@@ -103033,7 +103033,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L608",
+      "source_location": "L609",
       "weight": 1.0
     },
     {
@@ -103044,7 +103044,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L629",
+      "source_location": "L630",
       "weight": 1.0
     },
     {
@@ -103055,7 +103055,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L668",
+      "source_location": "L669",
       "weight": 1.0
     },
     {
@@ -103066,7 +103066,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L692",
+      "source_location": "L693",
       "weight": 1.0
     },
     {
@@ -103077,7 +103077,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L702",
+      "source_location": "L703",
       "weight": 1.0
     },
     {
@@ -103088,7 +103088,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L358",
+      "source_location": "L359",
       "weight": 1.0
     },
     {
@@ -103099,7 +103099,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L369",
+      "source_location": "L370",
       "weight": 1.0
     },
     {
@@ -103110,7 +103110,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L385",
+      "source_location": "L386",
       "weight": 1.0
     },
     {
@@ -103121,7 +103121,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L393",
+      "source_location": "L394",
       "weight": 1.0
     },
     {
@@ -110337,7 +110337,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L394",
+      "source_location": "L395",
       "weight": 1.0
     },
     {
@@ -110348,7 +110348,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L587",
+      "source_location": "L588",
       "weight": 1.0
     },
     {
@@ -110392,7 +110392,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L884",
+      "source_location": "L885",
       "weight": 1.0
     },
     {
@@ -110502,7 +110502,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L404",
+      "source_location": "L405",
       "weight": 1.0
     },
     {
@@ -110513,7 +110513,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L492",
+      "source_location": "L493",
       "weight": 1.0
     },
     {
@@ -110524,7 +110524,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L528",
+      "source_location": "L529",
       "weight": 1.0
     },
     {
@@ -110535,7 +110535,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L623",
+      "source_location": "L624",
       "weight": 1.0
     },
     {
@@ -110546,7 +110546,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L674",
+      "source_location": "L675",
       "weight": 1.0
     },
     {
@@ -110557,7 +110557,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L675",
+      "source_location": "L676",
       "weight": 1.0
     },
     {
@@ -110568,7 +110568,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L677",
+      "source_location": "L678",
       "weight": 1.0
     },
     {
@@ -110579,7 +110579,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L678",
+      "source_location": "L679",
       "weight": 1.0
     },
     {
@@ -113512,5 +113512,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "66fd0ca9d565a8302f87ece5c5e8534e48d3b1b6"
+  "built_at_commit": "311b60aa5d3a87fd87f6f6119cca301951c5eefd"
 }
