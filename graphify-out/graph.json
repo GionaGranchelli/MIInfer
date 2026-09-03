@@ -42016,7 +42016,7 @@
       "node_kind": "heading",
       "norm_label": "checks",
       "source_file": "experiments/EXP-0067-m6a23-qwen35-gpu-hybrid-block-4-7.md",
-      "source_location": "L74"
+      "source_location": "L84"
     },
     {
       "id": "experiments_exp_0067_m6a23_qwen35_gpu_hybrid_block_4_7_command",
@@ -42040,7 +42040,7 @@
       "node_kind": "heading",
       "norm_label": "decision",
       "source_file": "experiments/EXP-0067-m6a23-qwen35-gpu-hybrid-block-4-7.md",
-      "source_location": "L96"
+      "source_location": "L113"
     },
     {
       "id": "experiments_exp_0067_m6a23_qwen35_gpu_hybrid_block_4_7_exp_0067_m6_a23_qwen3_8_27b_gpu_hybrid_block_4_7",
@@ -42064,7 +42064,7 @@
       "node_kind": "heading",
       "norm_label": "follow-up",
       "source_file": "experiments/EXP-0067-m6a23-qwen35-gpu-hybrid-block-4-7.md",
-      "source_location": "L100"
+      "source_location": "L117"
     },
     {
       "id": "experiments_exp_0067_m6a23_qwen35_gpu_hybrid_block_4_7_interpretation",
@@ -42076,7 +42076,7 @@
       "node_kind": "heading",
       "norm_label": "interpretation",
       "source_file": "experiments/EXP-0067-m6a23-qwen35-gpu-hybrid-block-4-7.md",
-      "source_location": "L85"
+      "source_location": "L96"
     },
     {
       "id": "experiments_exp_0067_m6a23_qwen35_gpu_hybrid_block_4_7_question",
@@ -51748,7 +51748,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
-      "source_location": "L603",
+      "source_location": "L604",
       "weight": 1.0
     },
     {
@@ -98403,13 +98403,24 @@
     },
     {
       "source": "experiments_exp_0067_m6a23_qwen35_gpu_hybrid_block_4_7_exp_0067_m6_a23_qwen3_8_27b_gpu_hybrid_block_4_7",
+      "target": "experiments_exp_0067_m6a23_qwen35_gpu_hybrid_block_4_7_decision",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0067-m6a23-qwen35-gpu-hybrid-block-4-7.md",
+      "source_location": "L113",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0067_m6a23_qwen35_gpu_hybrid_block_4_7_exp_0067_m6_a23_qwen3_8_27b_gpu_hybrid_block_4_7",
       "target": "experiments_exp_0067_m6a23_qwen35_gpu_hybrid_block_4_7_follow_up",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0067-m6a23-qwen35-gpu-hybrid-block-4-7.md",
-      "source_location": "L100",
+      "source_location": "L117",
       "weight": 1.0
     },
     {
@@ -98480,17 +98491,6 @@
     },
     {
       "source": "experiments_exp_0067_m6a23_qwen35_gpu_hybrid_block_4_7_exp_0067_m6_a23_qwen3_8_27b_gpu_hybrid_block_4_7",
-      "target": "experiments_exp_0067_m6a23_qwen35_gpu_hybrid_block_4_7_checks",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "experiments/EXP-0067-m6a23-qwen35-gpu-hybrid-block-4-7.md",
-      "source_location": "L74",
-      "weight": 1.0
-    },
-    {
-      "source": "experiments_exp_0067_m6a23_qwen35_gpu_hybrid_block_4_7_exp_0067_m6_a23_qwen3_8_27b_gpu_hybrid_block_4_7",
       "target": "experiments_exp_0067_m6a23_qwen35_gpu_hybrid_block_4_7_question",
       "relation": "contains",
       "_origin": "ast",
@@ -98502,18 +98502,18 @@
     },
     {
       "source": "experiments_exp_0067_m6a23_qwen35_gpu_hybrid_block_4_7_exp_0067_m6_a23_qwen3_8_27b_gpu_hybrid_block_4_7",
-      "target": "experiments_exp_0067_m6a23_qwen35_gpu_hybrid_block_4_7_interpretation",
+      "target": "experiments_exp_0067_m6a23_qwen35_gpu_hybrid_block_4_7_checks",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0067-m6a23-qwen35-gpu-hybrid-block-4-7.md",
-      "source_location": "L85",
+      "source_location": "L84",
       "weight": 1.0
     },
     {
       "source": "experiments_exp_0067_m6a23_qwen35_gpu_hybrid_block_4_7_exp_0067_m6_a23_qwen3_8_27b_gpu_hybrid_block_4_7",
-      "target": "experiments_exp_0067_m6a23_qwen35_gpu_hybrid_block_4_7_decision",
+      "target": "experiments_exp_0067_m6a23_qwen35_gpu_hybrid_block_4_7_interpretation",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -110023,5 +110023,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "e674890aafc0af33f78c384bc6025ef2790bf0c1"
+  "built_at_commit": "65c52290c791f628fdd542c8231673ecafd95aac"
 }

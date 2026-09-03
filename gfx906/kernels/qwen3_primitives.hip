@@ -486,6 +486,7 @@ __global__ void qwen3_cached_attention_parallel_kernel(
         }
         output[q_base + index] = value;
     }
+    __syncthreads();
     for (std::uint32_t position = lane; position < cache_length; position += blockDim.x) {
         probabilities[score_base + position] /= denominator;
     }

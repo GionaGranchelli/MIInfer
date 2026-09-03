@@ -600,6 +600,8 @@ int main(int argc, char** argv) {
                                   << ' ' << errors[layer].relative_rms;
                     }
                     std::cout << ' ' << (state_correct ? "PASS" : "FAIL") << '\n';
+                    std::cout << "  first_block_output="
+                              << fingerprint(output3->get(), kHidden * sizeof(float)) << '\n';
                     std::cout << "  fingerprints state0=" << fingerprint(recurrent0.state->get(), state_bytes)
                               << " state1=" << fingerprint(recurrent1.state->get(), state_bytes)
                               << " state2=" << fingerprint(recurrent2.state->get(), state_bytes)
