@@ -150,15 +150,15 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788439305.2111993,
-    "seen": 1788439314.8321846,
-    "ast_hash": "e25a9969ceb14997a07c1acdca6bedb9",
+    "mtime": 1788440220.5341146,
+    "seen": 1788440644.6242044,
+    "ast_hash": "7a7f8047f615678fbb10887832eb4712",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788439371.7289035,
-    "seen": 1788439383.710361,
-    "ast_hash": "c0a54dda55a38a1a2aaab2535116cdcd",
+    "mtime": 1788440471.4789906,
+    "seen": 1788440644.6242058,
+    "ast_hash": "2383eb2b6b719b077c15f4138b44923f",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788439371.7319036,
-    "seen": 1788439383.7103734,
-    "ast_hash": "a1de5fb09770f45d12ab0b6c3e494713",
+    "mtime": 1788440666.8811152,
+    "seen": 1788440678.1869028,
+    "ast_hash": "53201e0f84376c1e5b850432145b629b",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788439371.7299035,
-    "seen": 1788439383.7103949,
-    "ast_hash": "954d57d8df43c4ea683564b3982c49d7",
+    "mtime": 1788440586.6834745,
+    "seen": 1788440644.624238,
+    "ast_hash": "2a19ca3df3068c58fa558cb6a78ceb44",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1788439305.2091994,
-    "seen": 1788439314.8320396,
-    "ast_hash": "9ab59bfd153bf0c162708ebd39ba31fd",
+    "mtime": 1788440067.9997978,
+    "seen": 1788440644.6240635,
+    "ast_hash": "1109b2fcd75aa9193cba7737ea7cdbe6",
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_primitives.hpp": {
@@ -1317,6 +1317,18 @@
     "mtime": 1788439371.7289035,
     "seen": 1788439383.7104897,
     "ast_hash": "1254eaabdabf7fd3b5d57c3ab4ab9fd5",
+    "semantic_hash": ""
+  },
+  "tools/m6a20_qwen35_recurrent_layer_gpu.cpp": {
+    "mtime": 1788440327.376636,
+    "seen": 1788440644.6241758,
+    "ast_hash": "0d853a7e9dd541ce2461d0b41bb8fe11",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0064-m6a20-qwen35-recurrent-layer-gpu.md": {
+    "mtime": 1788440461.6750343,
+    "seen": 1788440644.624332,
+    "ast_hash": "e392848e70a2746f9b77d345877fdd26",
     "semantic_hash": ""
   }
 }

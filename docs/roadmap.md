@@ -10,12 +10,12 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-A19 CLOSED — qwen35 recurrent GPU convolution path; M6-B1 deferred**
+**Current phase: M6-A20 CLOSED — complete qwen35 recurrent GPU layer; M6-B1 deferred**
 
 Immediate objective:
 
-> Implement qwen35 recurrent HIP execution and the persistent GPU state/workspace
-> plan required for M6-B1 profiling.
+> Compose the validated qwen35 recurrent GPU layer with the existing full-attention
+> GPU layer into the first stateful hybrid-block audit.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
@@ -27,16 +27,9 @@ and M6-A2 maps the reusable and missing projection contracts. See
 
 Current work should focus on:
 
-* layers 0–3 stateful hybrid-block composition through position 16; see
-  `experiments/EXP-0059-m6a15-qwen35-hybrid-block-audit.md`
-* second independent hybrid block validation for layers 4–7; see
-  `experiments/EXP-0060-m6a16-qwen35-hybrid-block-4-7-audit.md`
-* composition ladder through 8, 16, 32, and 64 layers
-* qwen35 recurrent HIP execution and GPU-resident state/workspace planning;
-  the persistent state-update core is validated by
-  `experiments/EXP-0062-m6a18-qwen35-deltanet-state-gpu.md` and the recurrent
-  convolution path by `experiments/EXP-0063-m6a19-qwen35-conv-gpu.md`
-* zero steady-state allocations and GPU-resident state in the composed path
+* composing qwen35 recurrent and full-attention GPU layers 0–3
+* preserving GPU-resident recurrent/KV state and zero steady-state allocations
+* state fingerprints, reset/replay checks, and external checkpoints
 * per-layer telemetry and the evolving VRAM ledger
 * preserving the M6-A1 external correctness authority
 * keeping the old qwen3 production path unchanged

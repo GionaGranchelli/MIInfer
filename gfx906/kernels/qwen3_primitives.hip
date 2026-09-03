@@ -65,6 +65,32 @@ __device__ __forceinline__ float q4_k_value(const Q4KDeviceBlock& block, int ind
            - half_to_float(block.dmin) * static_cast<float>(minimum);
 }
 
+__device__ __forceinline__ void q5_k_scale_min(
+    const Q5KDeviceBlock& block, int group, int& scale, int& minimum) {
+    if (group < 4) {
+        scale = block.scales[group] & 63;
+        minimum = block.scales[group + 4] & 63;
+    } else {
+        scale = (block.scales[group + 4] & 0x0f)
+                | ((block.scales[group - 4] >> 6) << 4);
+        minimum = (block.scales[group + 4] >> 4)
+                  | ((block.scales[group] >> 6) << 4);
+    }
+}
+
+__device__ __forceinline__ float q5_k_value(const Q5KDeviceBlock& block, int index) {
+    const int group = index / 32;
+    const int q_index = (index / 64) * 32 + index % 32;
+    const std::uint8_t packed = block.ql[q_index];
+    const int low = (group & 1) == 0 ? packed & 0x0f : packed >> 4;
+    const int high = (block.qh[index % 32] >> (2 * (group / 2) + (group & 1))) & 1;
+    int scale = 0;
+    int minimum = 0;
+    q5_k_scale_min(block, group, scale, minimum);
+    return half_to_float(block.d) * static_cast<float>(scale * (low + (high << 4)))
+           - half_to_float(block.dmin) * static_cast<float>(minimum);
+}
+
 __global__ void qwen3_q4_embedding_kernel(
     const std::byte* weights,
     std::uint32_t token,
@@ -640,6 +666,63 @@ __global__ void qwen3_q6_k_gemv_kernel(
     if (threadIdx.x == 0) output[row] = partials[0];
 }
 
+__global__ void qwen3_q5_k_q8_k_gemv_kernel(
+    const Q5KDeviceBlock* weights, const Q8KDeviceBlock* input,
+    float* output, std::uint32_t rows, std::uint32_t columns) {
+    const std::uint32_t row = blockIdx.x;
+    if (row >= rows) return;
+    __shared__ float partials[256];
+    float sum = 0.0F;
+    const std::uint32_t blocks_per_row = columns / 256;
+    const auto* row_weights = weights + static_cast<std::size_t>(row) * blocks_per_row;
+    for (std::uint32_t block = threadIdx.x; block < blocks_per_row; block += blockDim.x) {
+        const auto& quant = row_weights[block];
+        const auto& activation = input[block];
+        float dot = 0.0F;
+        for (int index = 0; index < 256; ++index) {
+            dot += q5_k_value(quant, index) * static_cast<float>(activation.qs[index]);
+        }
+        sum += dot * half_to_float(activation.d);
+    }
+    partials[threadIdx.x] = sum;
+    __syncthreads();
+    for (std::uint32_t stride = blockDim.x / 2; stride > 0; stride /= 2) {
+        if (threadIdx.x < stride) partials[threadIdx.x] += partials[threadIdx.x + stride];
+        __syncthreads();
+    }
+    if (threadIdx.x == 0) output[row] = partials[0];
+}
+
+__global__ void qwen35_f32_gemv_kernel(
+    const float* weights, const float* input, float* output,
+    std::uint32_t rows, std::uint32_t columns) {
+    const std::uint32_t row = blockIdx.x;
+    if (row >= rows) return;
+    __shared__ float partials[256];
+    float sum = 0.0F;
+    for (std::uint32_t column = threadIdx.x; column < columns; column += blockDim.x) {
+        sum += weights[static_cast<std::size_t>(row) * columns + column] * input[column];
+    }
+    partials[threadIdx.x] = sum;
+    __syncthreads();
+    for (std::uint32_t stride = blockDim.x / 2; stride > 0; stride /= 2) {
+        if (threadIdx.x < stride) partials[threadIdx.x] += partials[threadIdx.x + stride];
+        __syncthreads();
+    }
+    if (threadIdx.x == 0) output[row] = partials[0];
+}
+
+__global__ void qwen35_prepare_beta_decay_kernel(
+    const float* beta_raw, const float* alpha_raw, const float* dt,
+    const float* a, float* beta, float* decay, std::uint32_t elements) {
+    const std::uint32_t index = blockIdx.x * blockDim.x + threadIdx.x;
+    if (index >= elements) return;
+    beta[index] = 1.0F / (1.0F + expf(-beta_raw[index]));
+    const float x = alpha_raw[index] + dt[index];
+    const float softplus = x <= 20.0F ? log1pf(expf(x)) : x;
+    decay[index] = expf(softplus * a[index]);
+}
+
 __global__ void qwen3_q8_k_quantize_kernel(
     const float* input, Q8KDeviceBlock* output, std::uint32_t elements) {
     const std::uint32_t block = blockIdx.x;
@@ -1121,6 +1204,40 @@ void launch_qwen3_q4_k_q8_k_gemv(
     }
     hipLaunchKernelGGL(qwen3_q4_k_q8_k_gemv_kernel, dim3(rows), dim3(256), 0, stream,
                        weights, input, output, rows, columns);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen3_q5_k_q8_k_gemv(
+    const Q5KDeviceBlock* weights, const Q8KDeviceBlock* input,
+    float* output, std::uint32_t rows, std::uint32_t columns, hipStream_t stream) {
+    if (weights == nullptr || input == nullptr || output == nullptr || rows == 0
+        || columns == 0 || columns % 256 != 0) MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    hipLaunchKernelGGL(qwen3_q5_k_q8_k_gemv_kernel, dim3(rows), dim3(256), 0, stream,
+                       weights, input, output, rows, columns);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_f32_gemv(
+    const float* weights, const float* input, float* output,
+    std::uint32_t rows, std::uint32_t columns, hipStream_t stream) {
+    if (weights == nullptr || input == nullptr || output == nullptr || rows == 0 || columns == 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen35_f32_gemv_kernel, dim3(rows), dim3(256), 0, stream,
+                       weights, input, output, rows, columns);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_prepare_beta_decay(
+    const float* beta_raw, const float* alpha_raw, const float* dt, const float* a,
+    float* beta, float* decay, std::uint32_t elements, hipStream_t stream) {
+    if (beta_raw == nullptr || alpha_raw == nullptr || dt == nullptr || a == nullptr
+        || beta == nullptr || decay == nullptr || elements == 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen35_prepare_beta_decay_kernel,
+                       dim3((elements + 255) / 256), dim3(256), 0, stream,
+                       beta_raw, alpha_raw, dt, a, beta, decay, elements);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

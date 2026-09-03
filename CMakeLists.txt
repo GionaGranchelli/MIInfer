@@ -179,6 +179,10 @@ target_compile_options(miinfer-m6a16-qwen35-hybrid-block-4-7-audit PRIVATE -Wall
     target_link_libraries(miinfer-m6a19-qwen35-conv-gpu PRIVATE miinfer_hip)
     target_compile_options(miinfer-m6a19-qwen35-conv-gpu PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-m6a20-qwen35-recurrent-layer-gpu tools/m6a20_qwen35_recurrent_layer_gpu.cpp)
+    target_link_libraries(miinfer-m6a20-qwen35-recurrent-layer-gpu PRIVATE miinfer_hip)
+    target_compile_options(miinfer-m6a20-qwen35-recurrent-layer-gpu PRIVATE -Wall -Wextra -Wpedantic)
+
 add_executable(miinfer-qwen3-primitives-host-test tests/qwen3_primitives_host_test.cpp)
 target_link_libraries(miinfer-qwen3-primitives-host-test PRIVATE miinfer_model)
 target_compile_options(miinfer-qwen3-primitives-host-test PRIVATE -Wall -Wextra -Wpedantic)

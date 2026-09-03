@@ -34,6 +34,16 @@ struct Q4KDeviceBlock {
 
 static_assert(sizeof(Q4KDeviceBlock) == 144);
 
+struct Q5KDeviceBlock {
+    __half d;
+    __half dmin;
+    std::uint8_t scales[12];
+    std::uint8_t qh[32];
+    std::uint8_t ql[128];
+};
+
+static_assert(sizeof(Q5KDeviceBlock) == 176);
+
 void launch_qwen3_q4_embedding(
     const std::byte* weights,
     std::uint32_t token,
@@ -283,6 +293,32 @@ void launch_qwen3_q4_k_q8_k_gemv(
     float* output,
     std::uint32_t rows,
     std::uint32_t columns,
+    hipStream_t stream = nullptr);
+
+void launch_qwen3_q5_k_q8_k_gemv(
+    const Q5KDeviceBlock* weights,
+    const Q8KDeviceBlock* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    hipStream_t stream = nullptr);
+
+void launch_qwen35_f32_gemv(
+    const float* weights,
+    const float* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    hipStream_t stream = nullptr);
+
+void launch_qwen35_prepare_beta_decay(
+    const float* beta_raw,
+    const float* alpha_raw,
+    const float* dt,
+    const float* a,
+    float* beta,
+    float* decay,
+    std::uint32_t elements,
     hipStream_t stream = nullptr);
 
 // Reduce finite logits using first-index tie breaking, matching
