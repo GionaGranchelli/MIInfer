@@ -88,6 +88,9 @@ The project currently has:
   one L30 recurrent-state checkpoint remains in retest; see
   `experiments/EXP-0070-m6a26-qwen35-thirty-two-layer-gpu-prefix.md` and
   `experiments/EXP-0071-m6a261-qwen35-l30-state-localization.md`
+* L30 recurrent-update provenance localizes the tracked P63→P64 discrepancy
+  to the external-versus-GPU recurrence result; see
+  `experiments/EXP-0072-m6a262-qwen35-l30-update-provenance.md`
 
 Sampling and serving remain out of scope. M5 is closed as a measured local
 optimization campaign. M6-A host bring-up and qwen35 GPU operation bring-up

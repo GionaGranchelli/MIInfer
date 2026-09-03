@@ -66,6 +66,10 @@ EXP-0071 localizes this discrepancy: the sampled L30 state error is bounded
 and non-monotonic, adjacent L28/L29 P64 state entries are below `0.01`, and
 the same L30 error is already present after P63. The strict gate remains
 unchanged.
+EXP-0072 traces index `86909` through the recurrent update and shows the GPU
+candidate equals the stored value at every sampled transition; the P63→P64
+GPU value is `-0.300347` versus the external `-0.352732`. A26 remains in
+retest pending an explicit external state-contract decision.
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The

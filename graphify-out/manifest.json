@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788467060.6365917,
-    "seen": 1788467080.9235833,
-    "ast_hash": "07cd92a319a157e004144be04fef2386",
+    "mtime": 1788470375.0457695,
+    "seen": 1788470386.3296955,
+    "ast_hash": "1b140979d110d5744cc8f52631a59030",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788466809.986632,
-    "seen": 1788466835.4655538,
-    "ast_hash": "0fa79a73f093921ef7f76829265ce55a",
+    "mtime": 1788470375.0437694,
+    "seen": 1788470386.3297114,
+    "ast_hash": "bbde0f7d2fbd66cd37285fda79ff95b3",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788467060.6385918,
-    "seen": 1788467080.9236176,
-    "ast_hash": "96899a384ed04c6c48bcd9e5c7dc425c",
+    "mtime": 1788470375.0457695,
+    "seen": 1788470386.3297396,
+    "ast_hash": "47ba4bbb2f0d9a42d156173c66dc31d0",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -1062,8 +1062,8 @@
     "semantic_hash": ""
   },
   "tools/m6a1_reference_fixture.cpp": {
-    "mtime": 1788466582.3815768,
-    "seen": 1788466835.4654942,
+    "mtime": 1788470103.0709062,
+    "seen": 1788470386.3296478,
     "ast_hash": "72ebbad943054afb9db77dbb3bbb46b3",
     "semantic_hash": ""
   },
@@ -1332,9 +1332,9 @@
     "semantic_hash": ""
   },
   "tools/m6a21_qwen35_gpu_hybrid_block.cpp": {
-    "mtime": 1788467072.140544,
-    "seen": 1788467080.9235528,
-    "ast_hash": "4419bd482617a282b6ebcd91c379e388",
+    "mtime": 1788470197.3485122,
+    "seen": 1788470386.3296525,
+    "ast_hash": "58adbcdd068c9c21a1929140be28397d",
     "semantic_hash": ""
   },
   "experiments/EXP-0065-m6a21-qwen35-gpu-hybrid-block.md": {
@@ -1383,6 +1383,12 @@
     "mtime": 1788466809.984632,
     "seen": 1788466835.4656863,
     "ast_hash": "0fcc7687e94eec1ceaf45722e44c1f43",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0072-m6a262-qwen35-l30-update-provenance.md": {
+    "mtime": 1788470364.7928123,
+    "seen": 1788470386.3298836,
+    "ast_hash": "7e08e5ee5904d4323d42e033f1654d0e",
     "semantic_hash": ""
   }
 }

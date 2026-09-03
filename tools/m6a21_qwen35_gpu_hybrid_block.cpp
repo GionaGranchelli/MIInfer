@@ -159,6 +159,23 @@ struct RecurrentTrace {
     }
 };
 
+struct UpdateProvenance {
+    std::size_t head = 0;
+    std::size_t row = 0;
+    std::size_t column = 0;
+    float previous = 0.0F;
+    float decay = 0.0F;
+    float beta = 0.0F;
+    float value = 0.0F;
+    float key = 0.0F;
+    float query = 0.0F;
+    float key_dot = 0.0F;
+    float decayed = 0.0F;
+    float delta = 0.0F;
+    float candidate = 0.0F;
+    float query_dot = 0.0F;
+};
+
 std::uint64_t fingerprint(const void* device, std::size_t bytes) {
     std::vector<std::byte> host(bytes);
     MIINFER_HIP_CHECK(hipMemcpy(host.data(), device, bytes, hipMemcpyDeviceToHost));
@@ -228,6 +245,9 @@ struct RecurrentLayer {
     Buffer head_norm, gated, projected, residual, post_normalized;
     Buffer ffn_gate, ffn_up, ffn_activation, layer_output, q8;
     RecurrentTrace* trace = nullptr;
+    UpdateProvenance* provenance = nullptr;
+    std::uint32_t provenance_position = 0;
+    std::size_t provenance_index = 0;
 
     RecurrentLayer(const miinfer::Qwen35Model& model_value, std::size_t layer,
                    const std::filesystem::path& fixture)
@@ -339,6 +359,63 @@ struct RecurrentLayer {
         }
     }
 
+    UpdateProvenance sample_update(std::size_t flat_index) const {
+        constexpr std::size_t state_size = kState;
+        UpdateProvenance result;
+        result.head = flat_index / (state_size * state_size);
+        result.row = (flat_index / state_size) % state_size;
+        result.column = flat_index % state_size;
+        const std::size_t state_base =
+            (result.head * state_size + result.row) * state_size;
+        const std::size_t key_base = (result.head % kKHeads) * state_size;
+        std::array<float, state_size> previous{};
+        std::array<float, state_size> key_values{};
+        std::array<float, state_size> query_values{};
+        MIINFER_HIP_CHECK(hipMemcpy(previous.data(),
+                                    static_cast<const float*>(state->get()) + state_base,
+                                    sizeof(previous), hipMemcpyDeviceToHost));
+        MIINFER_HIP_CHECK(hipMemcpy(key_values.data(),
+                                    static_cast<const float*>(key_norm->get()) + key_base,
+                                    sizeof(key_values), hipMemcpyDeviceToHost));
+        MIINFER_HIP_CHECK(hipMemcpy(query_values.data(),
+                                    static_cast<const float*>(query_norm->get()) + key_base,
+                                    sizeof(query_values), hipMemcpyDeviceToHost));
+        MIINFER_HIP_CHECK(hipMemcpy(&result.decay,
+                                    static_cast<const float*>(decay->get()) + result.head,
+                                    sizeof(float), hipMemcpyDeviceToHost));
+        MIINFER_HIP_CHECK(hipMemcpy(&result.beta,
+                                    static_cast<const float*>(beta->get()) + result.head,
+                                    sizeof(float), hipMemcpyDeviceToHost));
+        MIINFER_HIP_CHECK(hipMemcpy(&result.value,
+                                    static_cast<const float*>(value->get())
+                                        + result.head * state_size + result.row,
+                                    sizeof(float), hipMemcpyDeviceToHost));
+        result.previous = previous[result.column];
+        result.key = key_values[result.column];
+        result.query = query_values[result.column];
+        for (std::size_t column = 0; column < state_size; ++column) {
+            const float decayed = previous[column] * result.decay;
+            result.key_dot += decayed * key_values[column];
+        }
+        result.decayed = result.previous * result.decay;
+        result.delta = (result.value - result.key_dot) * result.beta;
+        result.candidate = result.decayed + result.delta * result.key;
+        for (std::size_t column = 0; column < state_size; ++column) {
+            result.query_dot +=
+                (previous[column] * result.decay + result.delta * key_values[column])
+                * query_values[column];
+        }
+        return result;
+    }
+
+    float state_value(std::size_t flat_index) const {
+        float result = 0.0F;
+        MIINFER_HIP_CHECK(hipMemcpy(
+            &result, static_cast<const float*>(state->get()) + flat_index,
+            sizeof(float), hipMemcpyDeviceToHost));
+        return result;
+    }
+
     void run(const float* input, std::uint32_t position, float* output) {
         miinfer::launch_qwen3_rms_norm(
             input, static_cast<const float*>(d_attn_norm->get()),
@@ -374,6 +451,9 @@ struct RecurrentLayer {
         miinfer::launch_qwen35_head_l2_normalize(
             static_cast<const float*>(key->get()), static_cast<float*>(key_norm->get()),
             kKHeads, kState);
+        if (provenance != nullptr && provenance_position == position) {
+            *provenance = sample_update(provenance_index);
+        }
         miinfer::launch_qwen35_deltanet_state_update(
             static_cast<const float*>(query_norm->get()), static_cast<const float*>(key_norm->get()),
             static_cast<const float*>(value->get()), static_cast<const float*>(beta->get()),
@@ -615,14 +695,15 @@ void run_prefix(std::span<const GpuLayerRef> layers, std::span<float* const> out
 int main(int argc, char** argv) {
     if (argc != 3 && argc != 4) {
         std::cerr << "usage: miinfer-m6a21-qwen35-gpu-hybrid-block MODEL.gguf FIXTURE_DIR "
-                     "[--deep|--block4-7|--prefix8|--prefix16|--prefix32|--prefix32-locate]\n";
+                     "[--deep|--block4-7|--prefix8|--prefix16|--prefix32|--prefix32-locate|--prefix32-provenance]\n";
         return 2;
     }
     const std::string mode = argc == 4 ? argv[3] : "";
     const bool prefix8 = mode == "--prefix8";
     const bool prefix16 = mode == "--prefix16";
     const bool locate32 = mode == "--prefix32-locate";
-    const bool prefix32 = mode == "--prefix32" || locate32;
+    const bool provenance32 = mode == "--prefix32-provenance";
+    const bool prefix32 = mode == "--prefix32" || locate32 || provenance32;
     const bool deep = mode == "--deep" || mode == "--block4-7" || prefix8 || prefix16 || prefix32;
     const bool second_block = mode == "--block4-7" || prefix8 || prefix16 || prefix32;
     if (argc == 4 && !deep) {
@@ -699,7 +780,7 @@ int main(int argc, char** argv) {
             attention31 = std::make_unique<FullAttentionLayer>(model, 31);
         }
 
-        if (locate32) {
+        if (locate32 || provenance32) {
             const std::array<std::size_t, 13> positions{{
                 1, 2, 4, 8, 16, 32, 48, 56, 60, 61, 62, 63, 64}};
             const auto is_position = [&positions](std::size_t position) {
@@ -732,9 +813,75 @@ int main(int argc, char** argv) {
             const auto generated = read_tokens(fixture / "generated_tokens.txt");
             if (generated.size() < 64) throw std::runtime_error("fixture has fewer than 64 tokens");
             RecurrentTrace l30_trace{fixture, 30, 64};
-            recurrent30->trace = &l30_trace;
+            recurrent30->trace = locate32 ? &l30_trace : nullptr;
             const auto allocations_before_decode = g_device_allocations;
             const std::size_t state_bytes = kVHeads * kState * kState * sizeof(float);
+            if (provenance32) {
+                constexpr std::size_t tracked_index = 86909;
+                const std::array<std::size_t, 7> transitions{{3, 7, 31, 59, 60, 62, 63}};
+                std::cout << "tracked_state_index=" << tracked_index
+                          << " head=5 row=38 column=125\n"
+                          << "position max_index max_abs fixed_reference fixed_gpu fixed_abs\n";
+                for (std::size_t position = 0; position <= 64; ++position) {
+                    const auto host_input = position > 1
+                        ? embedding(tensor(*model.file(), "token_embd.weight"), generated[position - 1])
+                        : read_f32(checkpoint(fixture, position, "model_input_embed"), kHidden);
+                    upload(host_input.data(), input->get(), host_input.size() * sizeof(float));
+                    UpdateProvenance provenance;
+                    const bool report_transition =
+                        std::find(transitions.begin(), transitions.end(), position) != transitions.end();
+                    const float* current = static_cast<const float*>(input->get());
+                    for (std::size_t layer = 0; layer < 30; ++layer) {
+                        layers[layer].run(current, position, output_pointers[layer]);
+                        current = output_pointers[layer];
+                    }
+                    recurrent30->provenance = &provenance;
+                    recurrent30->provenance_position = static_cast<std::uint32_t>(position);
+                    recurrent30->provenance_index = tracked_index;
+                    layers[30].run(current, position, output_pointers[30]);
+                    layers[31].run(output_pointers[30], position, output_pointers[31]);
+                    MIINFER_HIP_CHECK(hipDeviceSynchronize());
+                    if (position == 64) continue;
+                    const std::size_t next_position = position + 1;
+                    const auto state = located_device_error(
+                        static_cast<const float*>(recurrent30->state->get()),
+                        kVHeads * kState * kState,
+                        checkpoint(fixture, next_position, "state_predelta-30"));
+                    const auto expected = read_f32(
+                        checkpoint(fixture, next_position, "state_predelta-30"),
+                        kVHeads * kState * kState);
+                    const auto fixed_gpu = recurrent30->state_value(tracked_index);
+                    const auto fixed_reference = expected[tracked_index];
+                    std::cout << next_position << ' ' << state.index << ' '
+                              << state.metrics.max_abs << ' ' << fixed_reference << ' '
+                              << fixed_gpu << ' ' << std::fabs(fixed_gpu - fixed_reference) << '\n';
+                    if (report_transition) {
+                        const auto stored = recurrent30->state_value(tracked_index);
+                        const auto expected_next = expected[tracked_index];
+                        std::cout << "transition=" << position << "->" << next_position
+                                  << " previous=" << provenance.previous
+                                  << " decay=" << provenance.decay
+                                  << " beta=" << provenance.beta
+                                  << " value=" << provenance.value
+                                  << " key=" << provenance.key
+                                  << " query=" << provenance.query
+                                  << " key_dot=" << provenance.key_dot
+                                  << " decayed=" << provenance.decayed
+                                  << " delta=" << provenance.delta
+                                  << " candidate=" << provenance.candidate
+                                  << " stored=" << stored
+                                  << " reference_next=" << expected_next
+                                  << " abs_error=" << std::fabs(stored - expected_next)
+                                  << " query_dot=" << provenance.query_dot << '\n';
+                    }
+                }
+                std::cout << "allocations_during_decode="
+                          << (g_device_allocations - allocations_before_decode)
+                          << " device_bytes_after_setup=" << g_device_bytes
+                          << " peak_device_bytes=" << g_peak_device_bytes << '\n'
+                          << "M6-A26.2 qwen35 L30 recurrent-update provenance COMPLETE\n";
+                return 0;
+            }
             std::cout << "position l30_state_max l30_state_mean l30_state_rms l30_state_rel l30_index "
                          "l30_reference l30_gpu\n";
             for (std::size_t position = 0; position <= 64; ++position) {
