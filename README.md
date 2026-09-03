@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-A25 CLOSED — qwen35 sixteen-layer GPU prefix; M6-B1 deferred**
+**Current phase: M6-A26 RETEST — qwen35 thirty-two-layer GPU prefix; M6-B1 deferred**
 
 The project currently has:
 
@@ -84,13 +84,16 @@ The project currently has:
 * qwen35 GPU layers 0–15 composed through the same executor through P64 with
   later recurrent/KV state validation; see
   `experiments/EXP-0069-m6a25-qwen35-sixteen-layer-gpu-prefix.md`
+* qwen35 GPU layers 0–31 composed through P64; all layer outputs pass, while
+  one L30 recurrent-state checkpoint remains in retest; see
+  `experiments/EXP-0070-m6a26-qwen35-thirty-two-layer-gpu-prefix.md` and
+  `experiments/EXP-0071-m6a261-qwen35-l30-state-localization.md`
 
 Sampling and serving remain out of scope. M5 is closed as a measured local
 optimization campaign. M6-A host bring-up and qwen35 GPU operation bring-up
 are progressing. The full Qwen3.8 GPU path is not yet implemented, so M6-B1
-performance measurement remains deferred. The host composition ladder is
-complete; the next bring-up gate is 32-layer GPU composition and then the full
-qwen35 GPU trunk.
+performance measurement remains deferred. The next bring-up gate is resolving
+the bounded L30 recurrent-state envelope before full qwen35 GPU composition.
 
 The current production path is approximately 55 tok/s at stable peak for the
 previous Qwen3-8B target. Qwen3.8-27B is not yet supported by the production

@@ -10,12 +10,12 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-A25 CLOSED — qwen35 sixteen-layer GPU prefix; M6-B1 deferred**
+**Current phase: M6-A26 RETEST — qwen35 thirty-two-layer GPU prefix; M6-B1 deferred**
 
 Immediate objective:
 
-> Compose the next 32 qwen35 GPU layers through the same stateful executor,
-> then climb the full GPU composition ladder.
+> Localize and resolve the bounded L30 recurrent-state discrepancy before
+> climbing the full GPU composition ladder.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
@@ -27,8 +27,8 @@ and M6-A2 maps the reusable and missing projection contracts. See
 
 Current work should focus on:
 
-* composing the next 32 qwen35 recurrent and full-attention GPU layers
-  through the same generic executor
+* resolving the bounded L30 recurrent-state discrepancy through the A26.1
+  diagnostic before composing the full qwen35 GPU trunk
 * preserving GPU-resident recurrent/KV state and zero steady-state allocations
 * state fingerprints, reset/replay checks, and external checkpoints through P64
 * per-layer telemetry and the evolving VRAM ledger

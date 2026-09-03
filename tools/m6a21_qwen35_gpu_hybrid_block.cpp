@@ -107,6 +107,58 @@ DetailedError detailed_device_error(const float* device, std::size_t elements,
     return detailed_compare(actual, read_f32(expected_path, elements));
 }
 
+struct LocatedError {
+    DetailedError metrics;
+    std::size_t index = 0;
+    float actual = 0.0F;
+    float expected = 0.0F;
+};
+
+LocatedError located_device_error(const float* device, std::size_t elements,
+                                  const std::filesystem::path& expected_path) {
+    std::vector<float> actual(elements);
+    MIINFER_HIP_CHECK(hipMemcpy(actual.data(), device, elements * sizeof(float),
+                                hipMemcpyDeviceToHost));
+    const auto expected = read_f32(expected_path, elements);
+    LocatedError result;
+    result.metrics = detailed_compare(actual, expected);
+    for (std::size_t i = 0; i < elements; ++i) {
+        if (std::fabs(actual[i] - expected[i]) >
+            std::fabs(result.actual - result.expected)) {
+            result.index = i;
+            result.actual = actual[i];
+            result.expected = expected[i];
+        }
+    }
+    return result;
+}
+
+struct RecurrentTrace {
+    const std::filesystem::path& fixture;
+    std::size_t layer;
+    std::uint32_t position;
+
+    void report_at(std::uint32_t checkpoint_position, const char* label,
+                   const float* device, std::size_t elements,
+                   const std::string& reference_name) const {
+        const auto error = located_device_error(
+            device, elements, checkpoint(fixture, checkpoint_position, reference_name));
+        std::cout << "trace label=" << label
+                  << " max_abs=" << error.metrics.max_abs
+                  << " mean_abs=" << error.metrics.mean_abs
+                  << " rms=" << error.metrics.rms
+                  << " relative_rms=" << error.metrics.relative_rms
+                  << " max_index=" << error.index
+                  << " reference=" << error.expected
+                  << " gpu=" << error.actual << '\n';
+    }
+
+    void report(const char* label, const float* device, std::size_t elements,
+                const std::string& reference_name) const {
+        report_at(position, label, device, elements, reference_name);
+    }
+};
+
 std::uint64_t fingerprint(const void* device, std::size_t bytes) {
     std::vector<std::byte> host(bytes);
     MIINFER_HIP_CHECK(hipMemcpy(host.data(), device, bytes, hipMemcpyDeviceToHost));
@@ -175,6 +227,7 @@ struct RecurrentLayer {
     Buffer query, key, value, query_norm, key_norm, state, recurrent_output;
     Buffer head_norm, gated, projected, residual, post_normalized;
     Buffer ffn_gate, ffn_up, ffn_activation, layer_output, q8;
+    RecurrentTrace* trace = nullptr;
 
     RecurrentLayer(const miinfer::Qwen35Model& model_value, std::size_t layer,
                    const std::filesystem::path& fixture)
@@ -279,13 +332,24 @@ struct RecurrentLayer {
         upload(initial.data(), state->get(), initial.size() * sizeof(float));
     }
 
+    void trace_tensor(std::uint32_t position, const char* label, const float* device,
+                      std::size_t elements, const std::string& reference_name) const {
+        if (trace != nullptr && trace->layer == index && trace->position == position) {
+            trace->report(label, device, elements, reference_name);
+        }
+    }
+
     void run(const float* input, std::uint32_t position, float* output) {
         miinfer::launch_qwen3_rms_norm(
             input, static_cast<const float*>(d_attn_norm->get()),
             static_cast<float*>(normalized->get()), kHidden, model.config().rms_epsilon);
+        trace_tensor(position, "attn_norm", static_cast<const float*>(normalized->get()),
+                     kHidden, "attn_norm-" + std::to_string(index));
         project(qkv_weight, d_qkv, static_cast<const float*>(normalized->get()),
                 static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
                 static_cast<float*>(qkv->get()), kChannels, kHidden);
+        trace_tensor(position, "qkv", static_cast<const float*>(qkv->get()), kChannels,
+                     "linear_attn_qkv_mixed-" + std::to_string(index));
         project(gate_weight, d_gate, static_cast<const float*>(normalized->get()),
                 static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
                 static_cast<float*>(gate->get()), kInner, kHidden);
@@ -315,6 +379,14 @@ struct RecurrentLayer {
             static_cast<const float*>(value->get()), static_cast<const float*>(beta->get()),
             static_cast<const float*>(decay->get()), static_cast<float*>(state->get()),
             static_cast<float*>(recurrent_output->get()), kKHeads, kVHeads, kState);
+        if (trace != nullptr && trace->layer == index && position + 1 == trace->position) {
+            trace->report_at(position + 1, "state_after", static_cast<const float*>(state->get()),
+                             kVHeads * kState * kState,
+                             "state_predelta-" + std::to_string(index));
+        }
+        trace_tensor(position, "recurrent_output",
+                     static_cast<const float*>(recurrent_output->get()), kVHeads * kState,
+                     "attn_output-" + std::to_string(index));
         miinfer::launch_qwen3_head_rms_normalize(
             static_cast<const float*>(recurrent_output->get()), static_cast<float*>(head_norm->get()),
             kVHeads, kState, model.config().rms_epsilon);
@@ -324,15 +396,22 @@ struct RecurrentLayer {
         miinfer::launch_qwen3_silu_mul(
             static_cast<const float*>(gate->get()), static_cast<const float*>(gated->get()),
             static_cast<float*>(gated->get()), kVHeads * kState);
+        trace_tensor(position, "gated", static_cast<const float*>(gated->get()), kVHeads * kState,
+                     "final_output-" + std::to_string(index));
         project(ssm_out_weight, d_ssm_out, static_cast<const float*>(gated->get()),
                 static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
                 static_cast<float*>(projected->get()), kHidden, kInner);
         miinfer::launch_qwen3_add(
             input, static_cast<const float*>(projected->get()),
             static_cast<float*>(residual->get()), kHidden);
+        trace_tensor(position, "attention_residual", static_cast<const float*>(residual->get()),
+                     kHidden, "attn_residual-" + std::to_string(index));
         miinfer::launch_qwen3_rms_norm(
             static_cast<const float*>(residual->get()), static_cast<const float*>(d_post_norm->get()),
             static_cast<float*>(post_normalized->get()), kHidden, model.config().rms_epsilon);
+        trace_tensor(position, "post_attention_norm",
+                     static_cast<const float*>(post_normalized->get()), kHidden,
+                     "attn_post_norm-" + std::to_string(index));
         project(ffn_gate_weight, d_ffn_gate, static_cast<const float*>(post_normalized->get()),
                 static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
                 static_cast<float*>(ffn_gate->get()), kFfnInner, kHidden);
@@ -345,10 +424,13 @@ struct RecurrentLayer {
         project(ffn_down_weight, d_ffn_down, static_cast<const float*>(ffn_activation->get()),
                 static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
                 static_cast<float*>(projected->get()), kHidden, kFfnInner);
+        trace_tensor(position, "ffn_out", static_cast<const float*>(projected->get()), kHidden,
+                     "ffn_out-" + std::to_string(index));
         miinfer::launch_qwen3_add(
             static_cast<const float*>(residual->get()), static_cast<const float*>(projected->get()),
             static_cast<float*>(layer_output->get()), kHidden);
-        (void)position;
+        trace_tensor(position, "layer_output", static_cast<const float*>(layer_output->get()),
+                     kHidden, "l_out-" + std::to_string(index));
         MIINFER_HIP_CHECK(hipMemcpy(output, layer_output->get(), kHidden * sizeof(float),
                                     hipMemcpyDeviceToDevice));
     }
@@ -533,13 +615,14 @@ void run_prefix(std::span<const GpuLayerRef> layers, std::span<float* const> out
 int main(int argc, char** argv) {
     if (argc != 3 && argc != 4) {
         std::cerr << "usage: miinfer-m6a21-qwen35-gpu-hybrid-block MODEL.gguf FIXTURE_DIR "
-                     "[--deep|--block4-7|--prefix8|--prefix16|--prefix32]\n";
+                     "[--deep|--block4-7|--prefix8|--prefix16|--prefix32|--prefix32-locate]\n";
         return 2;
     }
     const std::string mode = argc == 4 ? argv[3] : "";
     const bool prefix8 = mode == "--prefix8";
     const bool prefix16 = mode == "--prefix16";
-    const bool prefix32 = mode == "--prefix32";
+    const bool locate32 = mode == "--prefix32-locate";
+    const bool prefix32 = mode == "--prefix32" || locate32;
     const bool deep = mode == "--deep" || mode == "--block4-7" || prefix8 || prefix16 || prefix32;
     const bool second_block = mode == "--block4-7" || prefix8 || prefix16 || prefix32;
     if (argc == 4 && !deep) {
@@ -614,6 +697,110 @@ int main(int argc, char** argv) {
             recurrent29 = std::make_unique<RecurrentLayer>(model, 29, fixture);
             recurrent30 = std::make_unique<RecurrentLayer>(model, 30, fixture);
             attention31 = std::make_unique<FullAttentionLayer>(model, 31);
+        }
+
+        if (locate32) {
+            const std::array<std::size_t, 13> positions{{
+                1, 2, 4, 8, 16, 32, 48, 56, 60, 61, 62, 63, 64}};
+            const auto is_position = [&positions](std::size_t position) {
+                return std::find(positions.begin(), positions.end(), position) != positions.end();
+            };
+            const std::array<GpuLayerRef, 32> layers{{
+                {&recurrent0, nullptr}, {&recurrent1, nullptr}, {&recurrent2, nullptr},
+                {nullptr, &attention3}, {recurrent4.get(), nullptr},
+                {recurrent5.get(), nullptr}, {recurrent6.get(), nullptr},
+                {nullptr, attention7.get()}, {recurrent8.get(), nullptr},
+                {recurrent9.get(), nullptr}, {recurrent10.get(), nullptr},
+                {nullptr, attention11.get()}, {recurrent12.get(), nullptr},
+                {recurrent13.get(), nullptr}, {recurrent14.get(), nullptr},
+                {nullptr, attention15.get()}, {recurrent16.get(), nullptr},
+                {recurrent17.get(), nullptr}, {recurrent18.get(), nullptr},
+                {nullptr, attention19.get()}, {recurrent20.get(), nullptr},
+                {recurrent21.get(), nullptr}, {recurrent22.get(), nullptr},
+                {nullptr, attention23.get()}, {recurrent24.get(), nullptr},
+                {recurrent25.get(), nullptr}, {recurrent26.get(), nullptr},
+                {nullptr, attention27.get()}, {recurrent28.get(), nullptr},
+                {recurrent29.get(), nullptr}, {recurrent30.get(), nullptr},
+                {nullptr, attention31.get()}}};
+            std::array<Buffer, 32> outputs{};
+            std::array<float*, 32> output_pointers{};
+            for (std::size_t layer = 0; layer < layers.size(); ++layer) {
+                outputs[layer] = allocate(kHidden * sizeof(float));
+                output_pointers[layer] = static_cast<float*>(outputs[layer]->get());
+            }
+            Buffer input = allocate(kHidden * sizeof(float));
+            const auto generated = read_tokens(fixture / "generated_tokens.txt");
+            if (generated.size() < 64) throw std::runtime_error("fixture has fewer than 64 tokens");
+            RecurrentTrace l30_trace{fixture, 30, 64};
+            recurrent30->trace = &l30_trace;
+            const auto allocations_before_decode = g_device_allocations;
+            const std::size_t state_bytes = kVHeads * kState * kState * sizeof(float);
+            std::cout << "position l30_state_max l30_state_mean l30_state_rms l30_state_rel l30_index "
+                         "l30_reference l30_gpu\n";
+            for (std::size_t position = 0; position <= 64; ++position) {
+                const auto host_input = position > 1
+                    ? embedding(tensor(*model.file(), "token_embd.weight"), generated[position - 1])
+                    : read_f32(checkpoint(fixture, position, "model_input_embed"), kHidden);
+                upload(host_input.data(), input->get(), host_input.size() * sizeof(float));
+                if (is_position(position)) {
+                    const auto state = located_device_error(
+                        static_cast<const float*>(recurrent30->state->get()),
+                        kVHeads * kState * kState,
+                        checkpoint(fixture, position, "state_predelta-30"));
+                    std::cout << position << ' ' << state.metrics.max_abs << ' '
+                              << state.metrics.mean_abs << ' '
+                              << state.metrics.rms << ' ' << state.metrics.relative_rms << ' '
+                              << state.index << ' ' << state.expected << ' ' << state.actual << '\n';
+                    if (position == 64) {
+                        for (std::size_t layer = 28; layer < 31; ++layer) {
+                            const auto adjacent = located_device_error(
+                                static_cast<const float*>(layers[layer].recurrent->state->get()),
+                                kVHeads * kState * kState,
+                                checkpoint(fixture, position,
+                                           "state_predelta-" + std::to_string(layer)));
+                            std::cout << "entry_state_layer=" << layer
+                                      << " max_abs=" << adjacent.metrics.max_abs
+                                      << " mean_abs=" << adjacent.metrics.mean_abs
+                                      << " rms=" << adjacent.metrics.rms
+                                      << " relative_rms=" << adjacent.metrics.relative_rms
+                                      << " max_index=" << adjacent.index
+                                      << " reference=" << adjacent.expected
+                                      << " gpu=" << adjacent.actual << '\n';
+                        }
+                    }
+                }
+                run_prefix(std::span<const GpuLayerRef>(layers),
+                           std::span<float* const>(output_pointers),
+                           static_cast<const float*>(input->get()), position);
+                MIINFER_HIP_CHECK(hipDeviceSynchronize());
+                if (position != 64) continue;
+                std::cout << "p64_layers\n";
+                for (std::size_t layer = 28; layer < 32; ++layer) {
+                    const auto error = located_device_error(
+                        static_cast<const float*>(outputs[layer]->get()), kHidden,
+                        checkpoint(fixture, position, "l_out-" + std::to_string(layer)));
+                    std::cout << "layer=" << layer << " max_abs=" << error.metrics.max_abs
+                              << " rms=" << error.metrics.rms
+                              << " relative_rms=" << error.metrics.relative_rms
+                              << " max_index=" << error.index
+                              << " reference=" << error.expected
+                              << " gpu=" << error.actual << '\n';
+                }
+                std::cout << "p64_fingerprints"
+                          << " state28=" << fingerprint(recurrent28->state->get(), state_bytes)
+                          << " state29=" << fingerprint(recurrent29->state->get(), state_bytes)
+                          << " state30=" << fingerprint(recurrent30->state->get(), state_bytes)
+                          << " K27=" << fingerprint(attention27->key_cache->get(),
+                              4 * (position + 1) * 256 * sizeof(float))
+                          << " V27=" << fingerprint(attention27->value_cache->get(),
+                              4 * (position + 1) * 256 * sizeof(float)) << '\n';
+            }
+            std::cout << "allocations_during_decode="
+                      << (g_device_allocations - allocations_before_decode)
+                      << " device_bytes_after_setup=" << g_device_bytes
+                      << " peak_device_bytes=" << g_peak_device_bytes << '\n'
+                      << "M6-A26.1 qwen35 L30 state localization COMPLETE\n";
+            return 0;
         }
 
         if (prefix8 || prefix16 || prefix32) {

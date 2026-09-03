@@ -79,6 +79,6 @@ state-error envelope before A26 can close.
 
 ## Follow-up
 
-Investigate L30/P64 state error and report the state error curve/index before
-either correcting the numerical path or approving a justified external
-reference tolerance. Do not weaken the gate silently.
+See EXP-0071 for the L30/P64 state error curve, adjacent-layer comparison,
+and operation-boundary localization. The strict state gate remains unchanged;
+do not weaken it silently.

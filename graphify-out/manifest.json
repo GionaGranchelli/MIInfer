@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788446226.090187,
-    "seen": 1788446236.7510786,
-    "ast_hash": "b8dbadc6cbfacf61a1f778e65794614c",
+    "mtime": 1788467060.6365917,
+    "seen": 1788467080.9235833,
+    "ast_hash": "07cd92a319a157e004144be04fef2386",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788465206.6082857,
-    "seen": 1788465270.8010833,
-    "ast_hash": "bc9e11f43a1215800039569886def2d8",
+    "mtime": 1788466809.986632,
+    "seen": 1788466835.4655538,
+    "ast_hash": "0fa79a73f093921ef7f76829265ce55a",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788446226.091187,
-    "seen": 1788446236.7511137,
-    "ast_hash": "8b6c3c2c05c94547d29b9a4a17a6dac1",
+    "mtime": 1788467060.6385918,
+    "seen": 1788467080.9236176,
+    "ast_hash": "96899a384ed04c6c48bcd9e5c7dc425c",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -1062,8 +1062,8 @@
     "semantic_hash": ""
   },
   "tools/m6a1_reference_fixture.cpp": {
-    "mtime": 1788339749.7405992,
-    "seen": 1788340642.0690284,
+    "mtime": 1788466582.3815768,
+    "seen": 1788466835.4654942,
     "ast_hash": "72ebbad943054afb9db77dbb3bbb46b3",
     "semantic_hash": ""
   },
@@ -1332,9 +1332,9 @@
     "semantic_hash": ""
   },
   "tools/m6a21_qwen35_gpu_hybrid_block.cpp": {
-    "mtime": 1788465134.1255863,
-    "seen": 1788465270.8010387,
-    "ast_hash": "95c4b177641a1000496d7df3d3f85ded",
+    "mtime": 1788467072.140544,
+    "seen": 1788467080.9235528,
+    "ast_hash": "4419bd482617a282b6ebcd91c379e388",
     "semantic_hash": ""
   },
   "experiments/EXP-0065-m6a21-qwen35-gpu-hybrid-block.md": {
@@ -1374,9 +1374,15 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0070-m6a26-qwen35-thirty-two-layer-gpu-prefix.md": {
-    "mtime": 1788465206.6072855,
-    "seen": 1788465270.8012207,
-    "ast_hash": "672ca3aeed3e4666a8d1d6baac2ebb0d",
+    "mtime": 1788466809.984632,
+    "seen": 1788466835.4656847,
+    "ast_hash": "ad4f6cf302a6118eaed1712ae6213c44",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0071-m6a261-qwen35-l30-state-localization.md": {
+    "mtime": 1788466809.984632,
+    "seen": 1788466835.4656863,
+    "ast_hash": "0fcc7687e94eec1ceaf45722e44c1f43",
     "semantic_hash": ""
   }
 }
