@@ -32,6 +32,8 @@ Current work should focus on:
 * using the A26.2 provenance result, including the full-scan P20 outlier, to
   make the explicit external state contract decision before composing the full
   qwen35 GPU trunk
+* use the A26.3 external-input replay to avoid further recurrence/storage
+  debugging unless an input-boundary discrepancy is demonstrated
 * preserving GPU-resident recurrent/KV state and zero steady-state allocations
 * state fingerprints, reset/replay checks, and external checkpoints through P64
 * per-layer telemetry and the evolving VRAM ledger

@@ -92,6 +92,9 @@ The project currently has:
   to the external-versus-GPU recurrence result; a full P1–P64 scan also finds
   a larger P20 outlier; see
   `experiments/EXP-0072-m6a262-qwen35-l30-update-provenance.md`
+* external-input replay clears the MIInfer L30 recurrence itself at the
+  P19→P20 worst-case transition; A26 still awaits an explicit state contract;
+  see `experiments/EXP-0073-m6a263-qwen35-recurrent-contract-adjudication.md`
 
 Sampling and serving remain out of scope. M5 is closed as a measured local
 optimization campaign. M6-A host bring-up and qwen35 GPU operation bring-up

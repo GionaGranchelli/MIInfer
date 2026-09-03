@@ -150,15 +150,15 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788445403.3585467,
-    "seen": 1788445511.076231,
-    "ast_hash": "8dd4c34321f168041e40543844be0a96",
+    "mtime": 1788472492.4589176,
+    "seen": 1788472548.715029,
+    "ast_hash": "33e09f3b1960e7ef89fd617dd09ce0f4",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788470681.5314882,
-    "seen": 1788470696.4051664,
-    "ast_hash": "120232c6858ad836777079737eb08845",
+    "mtime": 1788472583.4290462,
+    "seen": 1788472714.1202505,
+    "ast_hash": "bca5f2c864e6e383856fc0950ee452c6",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788470681.5324883,
-    "seen": 1788470696.405179,
-    "ast_hash": "f52a0c18b42a10af6832ac41cf76cbd9",
+    "mtime": 1788472583.4299312,
+    "seen": 1788472714.1202621,
+    "ast_hash": "54783b87e4360181ce6aaafd10ba9615",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788470681.5344882,
-    "seen": 1788470696.4052022,
-    "ast_hash": "2bac3198d2e7c4b9a27a2b2b53a673f5",
+    "mtime": 1788472583.430538,
+    "seen": 1788472714.1202834,
+    "ast_hash": "8664b4a7da66adf274fa917da1f82eeb",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -1063,7 +1063,7 @@
   },
   "tools/m6a1_reference_fixture.cpp": {
     "mtime": 1788470103.0709062,
-    "seen": 1788470386.3296478,
+    "seen": 1788472746.2572768,
     "ast_hash": "72ebbad943054afb9db77dbb3bbb46b3",
     "semantic_hash": ""
   },
@@ -1389,6 +1389,18 @@
     "mtime": 1788470522.9501512,
     "seen": 1788470696.405313,
     "ast_hash": "5f1110a5e238c160048811df778711ad",
+    "semantic_hash": ""
+  },
+  "tools/m6a263_qwen35_recurrent_contract.cpp": {
+    "mtime": 1788472583.4265378,
+    "seen": 1788472714.1202185,
+    "ast_hash": "e11a62feb9ce53a4f5c30292075890db",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0073-m6a263-qwen35-recurrent-contract-adjudication.md": {
+    "mtime": 1788472583.4265378,
+    "seen": 1788472714.1203978,
+    "ast_hash": "83eea531a27ef6efca55d765757dbc1a",
     "semantic_hash": ""
   }
 }

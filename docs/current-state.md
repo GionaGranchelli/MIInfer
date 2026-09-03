@@ -71,6 +71,12 @@ GPU value is `-0.300347` versus the external `-0.352732`. The moving maximum
 is not a permanently corrupted cell, but the P20 outlier means the state
 distribution is not cleared by the `0.05` gate. A26 remains in retest pending
 an explicit external state-contract decision.
+EXP-0073 replays the worst-case L30 P19→P20 update with external operands:
+the external formula reaches max error `2.98e-8`, and the MIInfer GPU
+recurrence reaches `5.96e-8` against the external P20 state. The recurrence
+itself is therefore cleared; the remaining question is the upstream input or
+checkpoint representation contract. Stop GPU state-mechanics debugging and
+keep A26 in retest.
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The
