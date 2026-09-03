@@ -10,12 +10,12 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-A16 CLOSED — qwen35 layers 4–7 hybrid audit; M6-B1 deferred**
+**Current phase: M6-A17 CLOSED — qwen35 composition ladder; M6-B1 deferred**
 
 Immediate objective:
 
-> Compose the validated qwen35 hybrid blocks through 8, 16, 32, and 64
-> layers using the A14–A16 state fingerprints and reset/replay contract.
+> Implement qwen35 recurrent HIP execution and the persistent GPU state/workspace
+> plan required for M6-B1 profiling.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
@@ -32,6 +32,7 @@ Current work should focus on:
 * second independent hybrid block validation for layers 4–7; see
   `experiments/EXP-0060-m6a16-qwen35-hybrid-block-4-7-audit.md`
 * composition ladder through 8, 16, 32, and 64 layers
+* qwen35 recurrent HIP execution and GPU-resident state/workspace planning
 * zero steady-state allocations and GPU-resident state in the composed path
 * per-layer telemetry and the evolving VRAM ledger
 * preserving the M6-A1 external correctness authority

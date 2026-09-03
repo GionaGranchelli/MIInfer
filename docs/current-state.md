@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-A16 CLOSED — Qwen3.8-27B layers 4–7 hybrid audit; M6-B1 deferred**
+**M6-A17 CLOSED — Qwen3.8-27B composition ladder; M6-B1 deferred**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -44,6 +44,10 @@ M6-A16 validates a second independent hybrid block: L4–L6 recurrent layers
 and L7 full attention consume the actual L0–L3 output in one stateful host
 run through positions 0–16, with external checks at positions 0, 1, 2, 4, 8,
 and 16 and entry/exit fingerprints for the second block's recurrent/KV state.
+M6-A17 composes the full 64-layer host trunk at position 0, validates the
+8/16/32/64-layer boundaries and final logits, and measures near-linear prefix
+scaling. The qwen35 recurrent HIP path is still absent, so M6-B1 remains
+deferred.
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The
@@ -183,6 +187,9 @@ No other GPU architecture is currently supported.
 * M6-A16 qwen35 layers 4–7 hybrid-block audit; the second block consumes the
   actual L0–L3 output and passes stateful positions 0–16 with recurrent/KV
   fingerprints; host-only, no GPU tok/s claim
+* M6-A17 qwen35 composition ladder; 8/16/32/64-layer boundaries and final
+  logits pass with approximately linear one-token host scaling; host-only, no
+  GPU tok/s claim
 * M4-B19 attention-to-Q8 boundary replay; external attention quantizes
   bitwise-identically to the host contract, while the external-attention GPU
   control itself retains `0.204956` layer-35 error, identifying a downstream
