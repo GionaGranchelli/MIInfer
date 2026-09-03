@@ -453,27 +453,58 @@ struct FullAttentionLayer {
     }
 };
 
+void run_hybrid_block(RecurrentLayer& recurrent0, RecurrentLayer& recurrent1,
+                      RecurrentLayer& recurrent2, FullAttentionLayer& attention,
+                      const float* input, std::uint32_t position,
+                      float* state1, float* state2, float* state3, float* output) {
+    recurrent0.run(input, position, state1);
+    recurrent1.run(state1, position, state2);
+    recurrent2.run(state2, position, state3);
+    attention.run(state3, position, output);
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
     if (argc != 3 && argc != 4) {
-        std::cerr << "usage: miinfer-m6a21-qwen35-gpu-hybrid-block MODEL.gguf FIXTURE_DIR [--deep]\n";
+        std::cerr << "usage: miinfer-m6a21-qwen35-gpu-hybrid-block MODEL.gguf FIXTURE_DIR "
+                     "[--deep|--block4-7]\n";
+        return 2;
+    }
+    const std::string mode = argc == 4 ? argv[3] : "";
+    const bool deep = mode == "--deep" || mode == "--block4-7";
+    const bool second_block = mode == "--block4-7";
+    if (argc == 4 && !deep) {
+        std::cerr << "unknown option: " << mode << '\n';
         return 2;
     }
     try {
         const auto model = miinfer::Qwen35Model::load(argv[1]);
         const auto fixture = std::filesystem::path(argv[2]);
-        const bool deep = argc == 4 && std::string(argv[3]) == "--deep";
-        if (argc == 4 && !deep) throw std::runtime_error("unknown option");
         RecurrentLayer recurrent0(model, 0, fixture);
         RecurrentLayer recurrent1(model, 1, fixture);
         RecurrentLayer recurrent2(model, 2, fixture);
-        FullAttentionLayer attention(model, 3);
+        FullAttentionLayer attention3(model, 3);
+        std::unique_ptr<RecurrentLayer> recurrent4;
+        std::unique_ptr<RecurrentLayer> recurrent5;
+        std::unique_ptr<RecurrentLayer> recurrent6;
+        std::unique_ptr<FullAttentionLayer> attention7;
+        if (second_block) {
+            recurrent4 = std::make_unique<RecurrentLayer>(model, 4, fixture);
+            recurrent5 = std::make_unique<RecurrentLayer>(model, 5, fixture);
+            recurrent6 = std::make_unique<RecurrentLayer>(model, 6, fixture);
+            attention7 = std::make_unique<FullAttentionLayer>(model, 7);
+        }
+
         Buffer input = allocate(kHidden * sizeof(float));
         Buffer state1 = allocate(kHidden * sizeof(float));
         Buffer state2 = allocate(kHidden * sizeof(float));
         Buffer state3 = allocate(kHidden * sizeof(float));
-        Buffer output = allocate(kHidden * sizeof(float));
+        Buffer output3 = allocate(kHidden * sizeof(float));
+        Buffer state5 = second_block ? allocate(kHidden * sizeof(float)) : nullptr;
+        Buffer state6 = second_block ? allocate(kHidden * sizeof(float)) : nullptr;
+        Buffer state7 = second_block ? allocate(kHidden * sizeof(float)) : nullptr;
+        Buffer output7 = second_block ? allocate(kHidden * sizeof(float)) : nullptr;
         float maximum = 0.0F;
         const auto generated = deep ? read_tokens(fixture / "generated_tokens.txt")
                                     : std::vector<std::uint32_t>{};
@@ -482,12 +513,16 @@ int main(int argc, char** argv) {
             return position == 0 || position == 1 || position == 2 || position == 4
                 || position == 8 || position == 16 || position == 32 || position == 64;
         };
-        if (deep) {
+        if (second_block) {
+            std::cout << "position l4_max l4_rms l4_rel l5_max l5_rms l5_rel "
+                         "l6_max l6_rms l6_rel l7_max l7_rms l7_rel state_correct\n";
+        } else if (deep) {
             std::cout << "position l0_max l0_rms l0_rel l1_max l1_rms l1_rel "
                          "l2_max l2_rms l2_rel l3_max l3_rms l3_rel state_correct\n";
         }
 
         const std::size_t last_position = deep ? 64 : 1;
+        const std::size_t state_bytes = kVHeads * kState * kState * sizeof(float);
         for (std::size_t position = 0; position <= last_position; ++position) {
             const auto host_input = deep && position > 1
                 ? embedding(tensor(*model.file(), "token_embd.weight"), generated[position - 1])
@@ -495,56 +530,104 @@ int main(int argc, char** argv) {
             upload(host_input.data(), input->get(), host_input.size() * sizeof(float));
             bool state_correct = true;
             if (deep && is_checkpoint_position(position)) {
-                for (std::size_t layer = 0; layer < 3; ++layer) {
-                    const auto& state_buffer = layer == 0 ? recurrent0.state
-                        : layer == 1 ? recurrent1.state : recurrent2.state;
+                const std::array<const RecurrentLayer*, 3> first_layers{
+                    &recurrent0, &recurrent1, &recurrent2};
+                for (std::size_t layer = 0; layer < first_layers.size(); ++layer) {
                     const auto state_error = detailed_device_error(
-                        static_cast<const float*>(state_buffer->get()),
+                        static_cast<const float*>(first_layers[layer]->state->get()),
                         kVHeads * kState * kState,
                         checkpoint(fixture, position, "state_predelta-" + std::to_string(layer)));
                     state_correct = state_correct && state_error.max_abs <= 5.0e-2F;
                 }
+                if (second_block) {
+                    const std::array<const RecurrentLayer*, 3> second_layers{
+                        recurrent4.get(), recurrent5.get(), recurrent6.get()};
+                    for (std::size_t offset = 0; offset < second_layers.size(); ++offset) {
+                        const auto state_error = detailed_device_error(
+                            static_cast<const float*>(second_layers[offset]->state->get()),
+                            kVHeads * kState * kState,
+                            checkpoint(fixture, position,
+                                       "state_predelta-" + std::to_string(4 + offset)));
+                        state_correct = state_correct && state_error.max_abs <= 5.0e-2F;
+                    }
+                }
             }
-            recurrent0.run(static_cast<const float*>(input->get()), position,
-                           static_cast<float*>(state1->get()));
-            recurrent1.run(static_cast<const float*>(state1->get()), position,
-                           static_cast<float*>(state2->get()));
-            recurrent2.run(static_cast<const float*>(state2->get()), position,
-                           static_cast<float*>(state3->get()));
-            attention.run(static_cast<const float*>(state3->get()), position,
-                          static_cast<float*>(output->get()));
+
+            run_hybrid_block(recurrent0, recurrent1, recurrent2, attention3,
+                             static_cast<const float*>(input->get()), position,
+                             static_cast<float*>(state1->get()), static_cast<float*>(state2->get()),
+                             static_cast<float*>(state3->get()), static_cast<float*>(output3->get()));
+            if (second_block) {
+                run_hybrid_block(*recurrent4, *recurrent5, *recurrent6, *attention7,
+                                 static_cast<const float*>(output3->get()), position,
+                                 static_cast<float*>(state5->get()), static_cast<float*>(state6->get()),
+                                 static_cast<float*>(state7->get()), static_cast<float*>(output7->get()));
+            }
             MIINFER_HIP_CHECK(hipDeviceSynchronize());
             if (!deep || is_checkpoint_position(position)) {
-                std::array<DetailedError, 4> errors{};
-                for (std::size_t layer = 0; layer < 4; ++layer) {
-                    const auto* layer_output = static_cast<const float*>(layer == 0 ? state1->get() :
-                        layer == 1 ? state2->get() : layer == 2 ? state3->get() : output->get());
+                std::array<DetailedError, 8> errors{};
+                const std::array<const float*, 8> outputs{
+                    static_cast<const float*>(state1->get()), static_cast<const float*>(state2->get()),
+                    static_cast<const float*>(state3->get()), static_cast<const float*>(output3->get()),
+                    second_block ? static_cast<const float*>(state5->get()) : nullptr,
+                    second_block ? static_cast<const float*>(state6->get()) : nullptr,
+                    second_block ? static_cast<const float*>(state7->get()) : nullptr,
+                    second_block ? static_cast<const float*>(output7->get()) : nullptr};
+                const std::size_t first_layer = second_block ? 4 : 0;
+                for (std::size_t offset = 0; offset < 4; ++offset) {
+                    const std::size_t layer = first_layer + offset;
                     errors[layer] = detailed_device_error(
-                        layer_output, kHidden,
+                        outputs[layer], kHidden,
                         checkpoint(fixture, position, "l_out-" + std::to_string(layer)));
                     require_match("hybrid layer output", Metrics{errors[layer].max_abs,
                                                                   errors[layer].rms, 0}, 2.0F);
                     maximum = std::max(maximum, errors[layer].max_abs);
                 }
-                if (deep && !state_correct) {
-                    throw std::runtime_error("hybrid recurrent state mismatch");
+                if (second_block) {
+                    for (std::size_t layer = 0; layer < 4; ++layer) {
+                        const auto error = detailed_device_error(
+                            outputs[layer], kHidden,
+                            checkpoint(fixture, position, "l_out-" + std::to_string(layer)));
+                        require_match("first hybrid layer output", Metrics{error.max_abs, error.rms, 0}, 2.0F);
+                        maximum = std::max(maximum, error.max_abs);
+                    }
                 }
-                if (deep) {
+                if (deep && !state_correct) throw std::runtime_error("hybrid recurrent state mismatch");
+                if (second_block) {
                     std::cout << position;
-                    for (const auto& error : errors) {
-                        std::cout << ' ' << error.max_abs << ' ' << error.rms
-                                  << ' ' << error.relative_rms;
+                    for (std::size_t layer = 4; layer < 8; ++layer) {
+                        std::cout << ' ' << errors[layer].max_abs << ' ' << errors[layer].rms
+                                  << ' ' << errors[layer].relative_rms;
+                    }
+                    std::cout << ' ' << (state_correct ? "PASS" : "FAIL") << '\n';
+                    std::cout << "  fingerprints state0=" << fingerprint(recurrent0.state->get(), state_bytes)
+                              << " state1=" << fingerprint(recurrent1.state->get(), state_bytes)
+                              << " state2=" << fingerprint(recurrent2.state->get(), state_bytes)
+                              << " state4=" << fingerprint(recurrent4->state->get(), state_bytes)
+                              << " state5=" << fingerprint(recurrent5->state->get(), state_bytes)
+                              << " state6=" << fingerprint(recurrent6->state->get(), state_bytes)
+                              << " K3=" << fingerprint(attention3.key_cache->get(),
+                                  4 * (position + 1) * 256 * sizeof(float))
+                              << " V3=" << fingerprint(attention3.value_cache->get(),
+                                  4 * (position + 1) * 256 * sizeof(float))
+                              << " K7=" << fingerprint(attention7->key_cache->get(),
+                                  4 * (position + 1) * 256 * sizeof(float))
+                              << " V7=" << fingerprint(attention7->value_cache->get(),
+                                  4 * (position + 1) * 256 * sizeof(float)) << '\n';
+                } else if (deep) {
+                    std::cout << position;
+                    for (std::size_t layer = 0; layer < 4; ++layer) {
+                        std::cout << ' ' << errors[layer].max_abs << ' ' << errors[layer].rms
+                                  << ' ' << errors[layer].relative_rms;
                     }
                     std::cout << ' ' << (state_correct ? "PASS" : "FAIL") << '\n';
                     std::cout << "  fingerprints state0="
-                              << fingerprint(recurrent0.state->get(), kVHeads * kState * kState * sizeof(float))
-                              << " state1="
-                              << fingerprint(recurrent1.state->get(), kVHeads * kState * kState * sizeof(float))
-                              << " state2="
-                              << fingerprint(recurrent2.state->get(), kVHeads * kState * kState * sizeof(float))
-                              << " K=" << fingerprint(attention.key_cache->get(),
+                              << fingerprint(recurrent0.state->get(), state_bytes)
+                              << " state1=" << fingerprint(recurrent1.state->get(), state_bytes)
+                              << " state2=" << fingerprint(recurrent2.state->get(), state_bytes)
+                              << " K=" << fingerprint(attention3.key_cache->get(),
                                   4 * (position + 1) * 256 * sizeof(float))
-                              << " V=" << fingerprint(attention.value_cache->get(),
+                              << " V=" << fingerprint(attention3.value_cache->get(),
                                   4 * (position + 1) * 256 * sizeof(float)) << '\n';
                 } else {
                     for (std::size_t layer = 0; layer < 4; ++layer) {
@@ -556,10 +639,11 @@ int main(int argc, char** argv) {
             }
         }
         std::cout << "max_error=" << maximum << '\n'
-                  << (deep ? "M6-A22" : "M6-A21")
+                  << (second_block ? "M6-A23" : deep ? "M6-A22" : "M6-A21")
                   << " qwen35 GPU hybrid block PASS\n";
     } catch (const std::exception& error) {
-        std::cerr << "M6-A21 failed: " << error.what() << '\n';
+        std::cerr << (second_block ? "M6-A23" : deep ? "M6-A22" : "M6-A21")
+                  << " failed: " << error.what() << '\n';
         return 1;
     }
 }

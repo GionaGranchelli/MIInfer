@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-A22 CLOSED — qwen35 hybrid position audit; M6-B1 deferred**
+**M6-A23 CLOSED — qwen35 second hybrid block; M6-B1 deferred**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -49,7 +49,9 @@ M6-A21 composes recurrent GPU layers 0–2 with full-attention GPU layer 3.
 M6-A22 extends the same GPU executor through positions 0, 1, 2, 4, 8, 16,
 32, and 64, with bounded layer-output error, recurrent state-entry checks,
 and logical recurrent/KV fingerprints at every checkpoint. The full qwen35 GPU
-path remains absent, so M6-B1 remains deferred.
+path remains absent, so M6-B1 remains deferred. M6-A23 composes layers 4–7
+from the actual L0–L3 GPU output through P64 with independent recurrent state,
+an independent L7 KV cache, and 48/48 recurrent state-entry checks.
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The
@@ -206,6 +208,9 @@ No other GPU architecture is currently supported.
 * M6-A22 qwen35 GPU layers 0–3 remain externally bounded through P64 with
   recurrent state-entry checks and logical state/KV fingerprints; see
   `experiments/EXP-0066-m6a22-qwen35-gpu-hybrid-position-audit.md`
+* M6-A23 qwen35 GPU layers 4–7 compose through the same executor from the
+  actual L0–L3 output through P64; see
+  `experiments/EXP-0067-m6a23-qwen35-gpu-hybrid-block-4-7.md`
 * M4-B19 attention-to-Q8 boundary replay; external attention quantizes
   bitwise-identically to the host contract, while the external-attention GPU
   control itself retains `0.204956` layer-35 error, identifying a downstream
