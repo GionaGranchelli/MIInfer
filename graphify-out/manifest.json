@@ -150,15 +150,15 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788441225.9806514,
-    "seen": 1788441436.216096,
-    "ast_hash": "209a7e0f54ae64c0fe2a5de621bd1163",
+    "mtime": 1788445403.3585467,
+    "seen": 1788445511.076231,
+    "ast_hash": "8dd4c34321f168041e40543844be0a96",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788443543.5085905,
-    "seen": 1788443553.8024213,
-    "ast_hash": "b17f3b4b6cec845e29db07c8ad537e05",
+    "mtime": 1788445622.9106648,
+    "seen": 1788445776.920315,
+    "ast_hash": "6f4923e439a68fcb0a79443042c091bb",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788443543.5095904,
-    "seen": 1788443553.8024333,
-    "ast_hash": "28349046157985996e496fec003ebdf9",
+    "mtime": 1788445622.9116647,
+    "seen": 1788445776.920328,
+    "ast_hash": "dbe8d22066b07f79468b794a2535823e",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788443543.5115905,
-    "seen": 1788443553.8024561,
-    "ast_hash": "7f58ec2bc43286691b7af1c0fc54b036",
+    "mtime": 1788445593.1257844,
+    "seen": 1788445776.9203494,
+    "ast_hash": "7df30cbfbeabc7efd743bf18baaf9c0a",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -1332,9 +1332,9 @@
     "semantic_hash": ""
   },
   "tools/m6a21_qwen35_gpu_hybrid_block.cpp": {
-    "mtime": 1788443746.5516827,
-    "seen": 1788443987.4263473,
-    "ast_hash": "67bd3c09e08f1e701d21229d224ca676",
+    "mtime": 1788445766.7990866,
+    "seen": 1788445776.9202828,
+    "ast_hash": "5595415424be96ad9803c4e3b511d5b2",
     "semantic_hash": ""
   },
   "experiments/EXP-0065-m6a21-qwen35-gpu-hybrid-block.md": {
@@ -1353,6 +1353,18 @@
     "mtime": 1788443972.677676,
     "seen": 1788443987.4265265,
     "ast_hash": "263ac1833df89a2d3f091af4be41ccaa",
+    "semantic_hash": ""
+  },
+  "tests/qwen3_cached_attention_determinism_gpu_test.cpp": {
+    "mtime": 1788445403.3585467,
+    "seen": 1788445511.0761523,
+    "ast_hash": "0da03f1bcfc43df5d2ef0ca2eaba2925",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0068-m6a24-qwen35-eight-layer-gpu-prefix.md": {
+    "mtime": 1788445556.9249299,
+    "seen": 1788445776.920455,
+    "ast_hash": "b696358dfeca8a2201712aaaad177663",
     "semantic_hash": ""
   }
 }

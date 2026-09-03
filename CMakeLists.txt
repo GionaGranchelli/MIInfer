@@ -299,6 +299,12 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-qwen3-kv-cache-gpu-test PRIVATE miinfer_hip)
     target_compile_options(miinfer-qwen3-kv-cache-gpu-test PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-qwen3-cached-attention-determinism-gpu-test
+                   tests/qwen3_cached_attention_determinism_gpu_test.cpp)
+    target_link_libraries(miinfer-qwen3-cached-attention-determinism-gpu-test PRIVATE miinfer_hip)
+    target_compile_options(miinfer-qwen3-cached-attention-determinism-gpu-test
+                           PRIVATE -Wall -Wextra -Wpedantic)
+
     add_executable(miinfer-qwen3-forward-gpu-test tests/qwen3_forward_gpu_test.cpp)
     target_link_libraries(miinfer-qwen3-forward-gpu-test PRIVATE miinfer_hip)
     target_compile_options(miinfer-qwen3-forward-gpu-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -386,6 +392,9 @@ if(BUILD_TESTING)
         set_tests_properties(qwen3-layer0-gpu PROPERTIES LABELS "gpu-required")
         add_test(NAME qwen3-kv-cache-gpu COMMAND miinfer-qwen3-kv-cache-gpu-test)
         set_tests_properties(qwen3-kv-cache-gpu PROPERTIES LABELS "gpu-required")
+        add_test(NAME qwen3-cached-attention-determinism-gpu
+                 COMMAND miinfer-qwen3-cached-attention-determinism-gpu-test)
+        set_tests_properties(qwen3-cached-attention-determinism-gpu PROPERTIES LABELS "gpu-required")
         add_test(NAME qwen3-forward-gpu COMMAND miinfer-qwen3-forward-gpu-test)
         set_tests_properties(qwen3-forward-gpu PROPERTIES LABELS "gpu-required")
         add_test(NAME qwen3-decode-gpu COMMAND miinfer-qwen3-decode-gpu-test)

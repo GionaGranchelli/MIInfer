@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-A23 CLOSED — qwen35 second hybrid block; M6-B1 deferred**
+**M6-A24 CLOSED — qwen35 eight-layer GPU prefix; M6-B1 deferred**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -40,7 +40,7 @@ boundary and advances the stateful block through positions 0–16, with entry
 and exit fingerprints for recurrent state, K/V cache, and hidden outputs and
 external checks at positions 0, 1, 2, 4, 8, and 16. The host audit passes;
 qwen35 recurrent HIP execution is now present for a complete layer-0 slice,
-so M6-B1 remains deferred until hybrid composition is complete.
+so M6-B1 remains deferred until full hybrid composition is complete.
 M6-A16 validates a second independent hybrid block and M6-A17 composes the
 full 64-layer host trunk with final logits. M6-A18 adds a persistent GPU
 resident DeltaNet state update, M6-A19 adds GPU convolution history and Q/K
@@ -51,7 +51,11 @@ M6-A22 extends the same GPU executor through positions 0, 1, 2, 4, 8, 16,
 and logical recurrent/KV fingerprints at every checkpoint. The full qwen35 GPU
 path remains absent, so M6-B1 remains deferred. M6-A23 composes layers 4–7
 from the actual L0–L3 GPU output through P64 with independent recurrent state,
-an independent L7 KV cache, and 48/48 recurrent state-entry checks.
+an independent L7 KV cache, and 48/48 recurrent state-entry checks. M6-A24
+composes layers 0–7 through one common ordered executor through P64, with
+bounded external-reference errors, entry/exit state fingerprints, poisoned
+reset/replay, zero decode-loop allocations, and permanent cached-attention
+determinism coverage.
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The
@@ -211,6 +215,9 @@ No other GPU architecture is currently supported.
 * M6-A23 qwen35 GPU layers 4–7 compose through the same executor from the
   actual L0–L3 output through P64; see
   `experiments/EXP-0067-m6a23-qwen35-gpu-hybrid-block-4-7.md`
+* M6-A24 qwen35 GPU layers 0–7 compose through one common executor through
+  P64 with poisoned reset/replay and cached-attention determinism coverage; see
+  `experiments/EXP-0068-m6a24-qwen35-eight-layer-gpu-prefix.md`
 * M4-B19 attention-to-Q8 boundary replay; external attention quantizes
   bitwise-identically to the host contract, while the external-attention GPU
   control itself retains `0.204956` layer-35 error, identifying a downstream
