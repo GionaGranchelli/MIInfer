@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-A18 CLOSED — qwen35 recurrent GPU state core; M6-B1 deferred**
+**Current phase: M6-A19 CLOSED — qwen35 recurrent GPU convolution path; M6-B1 deferred**
 
 The project currently has:
 
@@ -63,13 +63,16 @@ The project currently has:
 * a real MI50 qwen35 DeltaNet GPU state-update core with persistent
   `[48,128,128]` state validated across positions 0→1; see
   `experiments/EXP-0062-m6a18-qwen35-deltanet-state-gpu.md`
+* a real gfx906 qwen35 four-tap convolution, SiLU, Q/K/V split, and Q/K
+  normalization path with persistent circular history; see
+  `experiments/EXP-0063-m6a19-qwen35-conv-gpu.md`
 
 Sampling and serving remain out of scope. M5 is closed as a measured local
 optimization campaign. M6-A host bring-up and qwen35 GPU operation bring-up
 are progressing. The full Qwen3.8 GPU path is not yet implemented, so M6-B1
 performance measurement remains deferred. The host composition ladder is
-complete; the next bring-up gate is the remaining qwen35 recurrent HIP layer
-operations around the validated state core.
+complete; the next bring-up gate is recurrent projection preparation around
+the validated GPU state and convolution primitives.
 
 The current production path is approximately 55 tok/s at stable peak for the
 previous Qwen3-8B target. Qwen3.8-27B is not yet supported by the production

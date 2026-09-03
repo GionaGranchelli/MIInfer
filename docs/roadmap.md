@@ -10,7 +10,7 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-A18 CLOSED — qwen35 recurrent GPU state core; M6-B1 deferred**
+**Current phase: M6-A19 CLOSED — qwen35 recurrent GPU convolution path; M6-B1 deferred**
 
 Immediate objective:
 
@@ -34,7 +34,8 @@ Current work should focus on:
 * composition ladder through 8, 16, 32, and 64 layers
 * qwen35 recurrent HIP execution and GPU-resident state/workspace planning;
   the persistent state-update core is validated by
-  `experiments/EXP-0062-m6a18-qwen35-deltanet-state-gpu.md`
+  `experiments/EXP-0062-m6a18-qwen35-deltanet-state-gpu.md` and the recurrent
+  convolution path by `experiments/EXP-0063-m6a19-qwen35-conv-gpu.md`
 * zero steady-state allocations and GPU-resident state in the composed path
 * per-layer telemetry and the evolving VRAM ledger
 * preserving the M6-A1 external correctness authority

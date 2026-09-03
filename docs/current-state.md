@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-A18 CLOSED — qwen35 recurrent GPU state core; M6-B1 deferred**
+**M6-A19 CLOSED — qwen35 recurrent GPU convolution path; M6-B1 deferred**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -51,7 +51,10 @@ deferred. M6-A18 adds the first real qwen35 HIP recurrent primitive: a
 persistent GPU-resident `[48,128,128]` DeltaNet state update. It passes the
 external state/output checkpoints for positions 0 and 1 on gfx906. The
 complete recurrent layer and full qwen35 GPU path are still absent, so M6-B1
-remains deferred.
+remains deferred. M6-A19 adds GPU-resident four-tap convolution history,
+SiLU/Q/K/V split, and Q/K L2 normalization, passing positions 0 and 1 on the
+real fixture. The complete recurrent layer and full qwen35 GPU path are still
+absent.
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The
@@ -196,6 +199,8 @@ No other GPU architecture is currently supported.
   GPU tok/s claim
 * M6-A18 qwen35 DeltaNet state-update HIP primitive; persistent state and
   recurrent output pass positions 0→1 against the external fixture
+* M6-A19 qwen35 recurrent convolution/SiLU/split HIP primitive; persistent
+  circular history and Q/K normalization pass positions 0→1
 * M4-B19 attention-to-Q8 boundary replay; external attention quantizes
   bitwise-identically to the host contract, while the external-attention GPU
   control itself retains `0.204956` layer-35 error, identifying a downstream

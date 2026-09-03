@@ -257,6 +257,56 @@ __global__ void qwen35_deltanet_state_update_kernel(
         query_dot * rsqrtf(static_cast<float>(state_size));
 }
 
+__global__ void qwen35_conv_silu_split_kernel(
+    const float* current_qkv, const float* conv_weights, float* history,
+    float* query, float* key, float* value, std::uint32_t position,
+    std::uint32_t history_capacity, std::uint32_t channels,
+    std::uint32_t conv_kernel) {
+    const std::uint32_t channel = blockIdx.x * blockDim.x + threadIdx.x;
+    if (channel >= channels || history_capacity == 0 || conv_kernel == 0) return;
+
+    float result = current_qkv[channel] *
+        conv_weights[static_cast<std::size_t>(channel) * conv_kernel + conv_kernel - 1];
+    for (std::uint32_t lag = 1; lag < conv_kernel; ++lag) {
+        if (position < lag) continue;
+        const std::uint32_t slot = (position - lag) % history_capacity;
+        result += history[static_cast<std::size_t>(slot) * channels + channel]
+            * conv_weights[static_cast<std::size_t>(channel) * conv_kernel
+                           + conv_kernel - 1 - lag];
+    }
+    history[static_cast<std::size_t>(position % history_capacity) * channels + channel]
+        = current_qkv[channel];
+    const float activated = result / (1.0F + expf(-result));
+    const std::uint32_t q_size = channels / 5;
+    const std::uint32_t k_size = q_size;
+    if (channel < q_size) query[channel] = activated;
+    else if (channel < q_size + k_size) key[channel - q_size] = activated;
+    else value[channel - q_size - k_size] = activated;
+}
+
+__global__ void qwen35_head_l2_normalize_kernel(
+    const float* input, float* output, std::uint32_t heads, std::uint32_t head_dim) {
+    const std::uint32_t head = blockIdx.x;
+    if (head >= heads) return;
+    __shared__ float partials[128];
+    float sum = 0.0F;
+    const std::size_t base = static_cast<std::size_t>(head) * head_dim;
+    for (std::uint32_t index = threadIdx.x; index < head_dim; index += blockDim.x) {
+        const float value = input[base + index];
+        sum += value * value;
+    }
+    partials[threadIdx.x] = sum;
+    __syncthreads();
+    for (std::uint32_t stride = blockDim.x / 2; stride > 0; stride /= 2) {
+        if (threadIdx.x < stride) partials[threadIdx.x] += partials[threadIdx.x + stride];
+        __syncthreads();
+    }
+    const float scale = rsqrtf(fmaxf(partials[0], 1.0e-6F));
+    for (std::uint32_t index = threadIdx.x; index < head_dim; index += blockDim.x) {
+        output[base + index] = input[base + index] * scale;
+    }
+}
+
 __global__ void qwen3_rope_kernel(
     const float* input, float* output, std::uint32_t heads,
     std::uint32_t head_dim, std::uint32_t position, float theta) {
@@ -843,6 +893,37 @@ void launch_qwen35_deltanet_state_update(
                        dim3(value_heads), dim3(state_size), 0, stream,
                        query, key, value, beta, decay, state, output,
                        key_heads, value_heads, state_size);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_conv_silu_split(
+    const float* current_qkv, const float* conv_weights, float* history,
+    float* query, float* key, float* value, std::uint32_t position,
+    std::uint32_t history_capacity, std::uint32_t channels,
+    std::uint32_t conv_kernel, hipStream_t stream) {
+    if (current_qkv == nullptr || conv_weights == nullptr || history == nullptr
+        || query == nullptr || key == nullptr || value == nullptr
+        || history_capacity == 0 || channels == 0 || channels % 5 != 0
+        || conv_kernel == 0 || conv_kernel > history_capacity) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen35_conv_silu_split_kernel,
+                       dim3((channels + 255) / 256), dim3(256), 0, stream,
+                       current_qkv, conv_weights, history, query, key, value,
+                       position, history_capacity, channels, conv_kernel);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_head_l2_normalize(
+    const float* input, float* output, std::uint32_t heads,
+    std::uint32_t head_dim, hipStream_t stream) {
+    if (input == nullptr || output == nullptr || heads == 0 || head_dim == 0
+        || head_dim > 128) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen35_head_l2_normalize_kernel,
+                       dim3(heads), dim3(128), 0, stream,
+                       input, output, heads, head_dim);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

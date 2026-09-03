@@ -121,6 +121,28 @@ void launch_qwen35_deltanet_state_update(
     std::uint32_t state_size,
     hipStream_t stream = nullptr);
 
+// Apply the four-tap recurrent convolution, SiLU, and Q/K/V split while
+// updating a persistent circular history of raw QKV vectors.
+void launch_qwen35_conv_silu_split(
+    const float* current_qkv,
+    const float* conv_weights,
+    float* history,
+    float* query,
+    float* key,
+    float* value,
+    std::uint32_t position,
+    std::uint32_t history_capacity,
+    std::uint32_t channels,
+    std::uint32_t conv_kernel,
+    hipStream_t stream = nullptr);
+
+void launch_qwen35_head_l2_normalize(
+    const float* input,
+    float* output,
+    std::uint32_t heads,
+    std::uint32_t head_dim,
+    hipStream_t stream = nullptr);
+
 void launch_qwen3_rope(
     const float* input,
     float* output,
