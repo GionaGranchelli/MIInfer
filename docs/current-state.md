@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-A25 CLOSED — qwen35 sixteen-layer GPU prefix; M6-B1 deferred**
+**M6-A26 RETEST — qwen35 thirty-two-layer GPU prefix; M6-B1 deferred**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -58,6 +58,10 @@ reset/replay, zero decode-loop allocations, and permanent cached-attention
 determinism coverage. M6-A25 extends the same executor through layers 0–15,
 including full-attention layers 11 and 15, through P64 with later recurrent and
 K/V state validation and zero decode-loop allocations.
+M6-A26 extends the same executor through layers 0–31 and eight full-attention
+KV caches through P64. All layer outputs pass, but L30/P64 has a bounded
+recurrent-state max-absolute error of `0.0523846` against the current `0.05`
+state gate, so A26 remains in retest rather than being marked closed.
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The

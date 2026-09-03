@@ -533,14 +533,15 @@ void run_prefix(std::span<const GpuLayerRef> layers, std::span<float* const> out
 int main(int argc, char** argv) {
     if (argc != 3 && argc != 4) {
         std::cerr << "usage: miinfer-m6a21-qwen35-gpu-hybrid-block MODEL.gguf FIXTURE_DIR "
-                     "[--deep|--block4-7|--prefix8|--prefix16]\n";
+                     "[--deep|--block4-7|--prefix8|--prefix16|--prefix32]\n";
         return 2;
     }
     const std::string mode = argc == 4 ? argv[3] : "";
     const bool prefix8 = mode == "--prefix8";
     const bool prefix16 = mode == "--prefix16";
-    const bool deep = mode == "--deep" || mode == "--block4-7" || prefix8 || prefix16;
-    const bool second_block = mode == "--block4-7" || prefix8 || prefix16;
+    const bool prefix32 = mode == "--prefix32";
+    const bool deep = mode == "--deep" || mode == "--block4-7" || prefix8 || prefix16 || prefix32;
+    const bool second_block = mode == "--block4-7" || prefix8 || prefix16 || prefix32;
     if (argc == 4 && !deep) {
         std::cerr << "unknown option: " << mode << '\n';
         return 2;
@@ -564,13 +565,29 @@ int main(int argc, char** argv) {
         std::unique_ptr<RecurrentLayer> recurrent13;
         std::unique_ptr<RecurrentLayer> recurrent14;
         std::unique_ptr<FullAttentionLayer> attention15;
+        std::unique_ptr<RecurrentLayer> recurrent16;
+        std::unique_ptr<RecurrentLayer> recurrent17;
+        std::unique_ptr<RecurrentLayer> recurrent18;
+        std::unique_ptr<FullAttentionLayer> attention19;
+        std::unique_ptr<RecurrentLayer> recurrent20;
+        std::unique_ptr<RecurrentLayer> recurrent21;
+        std::unique_ptr<RecurrentLayer> recurrent22;
+        std::unique_ptr<FullAttentionLayer> attention23;
+        std::unique_ptr<RecurrentLayer> recurrent24;
+        std::unique_ptr<RecurrentLayer> recurrent25;
+        std::unique_ptr<RecurrentLayer> recurrent26;
+        std::unique_ptr<FullAttentionLayer> attention27;
+        std::unique_ptr<RecurrentLayer> recurrent28;
+        std::unique_ptr<RecurrentLayer> recurrent29;
+        std::unique_ptr<RecurrentLayer> recurrent30;
+        std::unique_ptr<FullAttentionLayer> attention31;
         if (second_block) {
             recurrent4 = std::make_unique<RecurrentLayer>(model, 4, fixture);
             recurrent5 = std::make_unique<RecurrentLayer>(model, 5, fixture);
             recurrent6 = std::make_unique<RecurrentLayer>(model, 6, fixture);
             attention7 = std::make_unique<FullAttentionLayer>(model, 7);
         }
-        if (prefix16) {
+        if (prefix16 || prefix32) {
             recurrent8 = std::make_unique<RecurrentLayer>(model, 8, fixture);
             recurrent9 = std::make_unique<RecurrentLayer>(model, 9, fixture);
             recurrent10 = std::make_unique<RecurrentLayer>(model, 10, fixture);
@@ -580,10 +597,28 @@ int main(int argc, char** argv) {
             recurrent14 = std::make_unique<RecurrentLayer>(model, 14, fixture);
             attention15 = std::make_unique<FullAttentionLayer>(model, 15);
         }
+        if (prefix32) {
+            recurrent16 = std::make_unique<RecurrentLayer>(model, 16, fixture);
+            recurrent17 = std::make_unique<RecurrentLayer>(model, 17, fixture);
+            recurrent18 = std::make_unique<RecurrentLayer>(model, 18, fixture);
+            attention19 = std::make_unique<FullAttentionLayer>(model, 19);
+            recurrent20 = std::make_unique<RecurrentLayer>(model, 20, fixture);
+            recurrent21 = std::make_unique<RecurrentLayer>(model, 21, fixture);
+            recurrent22 = std::make_unique<RecurrentLayer>(model, 22, fixture);
+            attention23 = std::make_unique<FullAttentionLayer>(model, 23);
+            recurrent24 = std::make_unique<RecurrentLayer>(model, 24, fixture);
+            recurrent25 = std::make_unique<RecurrentLayer>(model, 25, fixture);
+            recurrent26 = std::make_unique<RecurrentLayer>(model, 26, fixture);
+            attention27 = std::make_unique<FullAttentionLayer>(model, 27);
+            recurrent28 = std::make_unique<RecurrentLayer>(model, 28, fixture);
+            recurrent29 = std::make_unique<RecurrentLayer>(model, 29, fixture);
+            recurrent30 = std::make_unique<RecurrentLayer>(model, 30, fixture);
+            attention31 = std::make_unique<FullAttentionLayer>(model, 31);
+        }
 
-        if (prefix8 || prefix16) {
-            const std::size_t layer_count = prefix16 ? 16 : 8;
-            const std::array<GpuLayerRef, 16> layers{{
+        if (prefix8 || prefix16 || prefix32) {
+            const std::size_t layer_count = prefix32 ? 32 : prefix16 ? 16 : 8;
+            const std::array<GpuLayerRef, 32> layers{{
                 {&recurrent0, nullptr}, {&recurrent1, nullptr}, {&recurrent2, nullptr},
                 {nullptr, &attention3}, {recurrent4.get(), nullptr},
                 {recurrent5.get(), nullptr}, {recurrent6.get(), nullptr},
@@ -591,9 +626,17 @@ int main(int argc, char** argv) {
                 {recurrent9.get(), nullptr}, {recurrent10.get(), nullptr},
                 {nullptr, attention11.get()}, {recurrent12.get(), nullptr},
                 {recurrent13.get(), nullptr}, {recurrent14.get(), nullptr},
-                {nullptr, attention15.get()}}};
-            std::array<Buffer, 16> outputs{};
-            std::array<float*, 16> output_pointers{};
+                {nullptr, attention15.get()}, {recurrent16.get(), nullptr},
+                {recurrent17.get(), nullptr}, {recurrent18.get(), nullptr},
+                {nullptr, attention19.get()}, {recurrent20.get(), nullptr},
+                {recurrent21.get(), nullptr}, {recurrent22.get(), nullptr},
+                {nullptr, attention23.get()}, {recurrent24.get(), nullptr},
+                {recurrent25.get(), nullptr}, {recurrent26.get(), nullptr},
+                {nullptr, attention27.get()}, {recurrent28.get(), nullptr},
+                {recurrent29.get(), nullptr}, {recurrent30.get(), nullptr},
+                {nullptr, attention31.get()}}};
+            std::array<Buffer, 32> outputs{};
+            std::array<float*, 32> output_pointers{};
             for (std::size_t layer = 0; layer < layer_count; ++layer) {
                 outputs[layer] = allocate(kHidden * sizeof(float));
                 output_pointers[layer] = static_cast<float*>(outputs[layer]->get());
@@ -645,6 +688,13 @@ int main(int argc, char** argv) {
                             kVHeads * kState * kState,
                             checkpoint(fixture, position,
                                        "state_predelta-" + std::to_string(layer)));
+                        if (error.max_abs > 5.0e-2F) {
+                            std::cerr << "state mismatch position=" << position
+                                      << " layer=" << layer
+                                      << " max_abs=" << error.max_abs
+                                      << " rms=" << error.rms
+                                      << " relative_rms=" << error.relative_rms << '\n';
+                        }
                         state_correct = state_correct && error.max_abs <= 5.0e-2F;
                     }
                     for (std::size_t layer = 0; layer < layer_count; ++layer) {
@@ -662,7 +712,7 @@ int main(int argc, char** argv) {
                 prefix_cpu_ms += 1000.0 * static_cast<double>(std::clock() - run_start)
                     / static_cast<double>(CLOCKS_PER_SEC);
                 if (!is_checkpoint_position(position)) continue;
-                std::array<DetailedError, 16> errors{};
+                std::array<DetailedError, 32> errors{};
                 for (std::size_t layer = 0; layer < layer_count; ++layer) {
                     errors[layer] = detailed_device_error(
                         static_cast<const float*>(outputs[layer]->get()), kHidden,
@@ -671,7 +721,7 @@ int main(int argc, char** argv) {
                                   Metrics{errors[layer].max_abs, errors[layer].rms, 0}, 2.0F);
                     maximum = std::max(maximum, errors[layer].max_abs);
                 }
-                if (!state_correct) throw std::runtime_error("eight-layer recurrent state mismatch");
+                if (!state_correct) throw std::runtime_error("prefix recurrent state mismatch");
                 std::cout << position;
                 for (std::size_t layer = 0; layer < layer_count; ++layer) {
                     const auto& error = errors[layer];
@@ -770,8 +820,9 @@ int main(int argc, char** argv) {
                       << " peak_device_bytes=" << g_peak_device_bytes
                       << " dispatches=not-instrumented copies=not-instrumented\n"
                       << "poisoned_reset_replay=PASS\n"
-                      << (prefix16 ? "M6-A25 qwen35 sixteen-layer GPU prefix PASS\n"
-                                    : "M6-A24 qwen35 eight-layer GPU prefix PASS\n");
+                      << (prefix32 ? "M6-A26 qwen35 thirty-two-layer GPU prefix PASS\n"
+                                    : prefix16 ? "M6-A25 qwen35 sixteen-layer GPU prefix PASS\n"
+                                                : "M6-A24 qwen35 eight-layer GPU prefix PASS\n");
             return 0;
         }
 
@@ -920,10 +971,10 @@ int main(int argc, char** argv) {
             }
         }
         std::cout << "max_error=" << maximum << '\n'
-                  << (prefix8 ? "M6-A24" : second_block ? "M6-A23" : deep ? "M6-A22" : "M6-A21")
+                  << (prefix32 ? "M6-A26" : prefix8 ? "M6-A24" : second_block ? "M6-A23" : deep ? "M6-A22" : "M6-A21")
                   << " qwen35 GPU hybrid block PASS\n";
     } catch (const std::exception& error) {
-        std::cerr << (prefix8 ? "M6-A24" : second_block ? "M6-A23" : deep ? "M6-A22" : "M6-A21")
+        std::cerr << (prefix32 ? "M6-A26" : prefix8 ? "M6-A24" : second_block ? "M6-A23" : deep ? "M6-A22" : "M6-A21")
                   << " failed: " << error.what() << '\n';
         return 1;
     }
