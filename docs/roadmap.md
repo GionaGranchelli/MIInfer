@@ -10,12 +10,12 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-A21 CLOSED — qwen35 GPU hybrid block; M6-B1 deferred**
+**Current phase: M6-A22 CLOSED — qwen35 hybrid position audit; M6-B1 deferred**
 
 Immediate objective:
 
-> Extend the first qwen35 GPU hybrid-block audit through longer stateful
-> positions, then compose the full GPU trunk.
+> Validate the independent layers 4–7 qwen35 GPU hybrid block through the same
+> stateful positions, then climb the full GPU composition ladder.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
@@ -27,9 +27,10 @@ and M6-A2 maps the reusable and missing projection contracts. See
 
 Current work should focus on:
 
-* composing qwen35 recurrent and full-attention GPU layers 0–3
+* composing qwen35 recurrent and full-attention GPU layers 4–7 through the
+  same generic executor
 * preserving GPU-resident recurrent/KV state and zero steady-state allocations
-* state fingerprints, reset/replay checks, and external checkpoints
+* state fingerprints, reset/replay checks, and external checkpoints through P64
 * per-layer telemetry and the evolving VRAM ledger
 * preserving the M6-A1 external correctness authority
 * keeping the old qwen3 production path unchanged

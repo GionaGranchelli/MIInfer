@@ -8,6 +8,7 @@
 #include <hip/hip_runtime.h>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -21,6 +22,8 @@
 #include <vector>
 
 namespace {
+
+constexpr std::size_t kCacheCapacity = 128;
 
 class DeviceBytes {
 public:
@@ -49,12 +52,58 @@ void upload_tensor(const miinfer::GgufTensor& source, const Buffer& destination)
     upload(source.data, destination->get(), source.byte_size);
 }
 
-Metrics device_error(const float* device, std::size_t elements,
-                     const std::filesystem::path& expected_path) {
+struct DetailedError {
+    float max_abs = 0.0F;
+    float mean_abs = 0.0F;
+    float rms = 0.0F;
+    float reference_rms = 0.0F;
+    float relative_rms = 0.0F;
+};
+
+DetailedError detailed_compare(std::span<const float> actual,
+                               std::span<const float> expected) {
+    if (actual.size() != expected.size() || actual.empty()) {
+        throw std::runtime_error("comparison size mismatch");
+    }
+    double abs_sum = 0.0;
+    double error_sum = 0.0;
+    double reference_sum = 0.0;
+    DetailedError result;
+    for (std::size_t i = 0; i < actual.size(); ++i) {
+        if (!std::isfinite(actual[i]) || !std::isfinite(expected[i])) {
+            throw std::runtime_error("non-finite comparison value");
+        }
+        const double delta = static_cast<double>(actual[i]) - expected[i];
+        result.max_abs = std::max(result.max_abs, static_cast<float>(std::fabs(delta)));
+        abs_sum += std::fabs(delta);
+        error_sum += delta * delta;
+        reference_sum += static_cast<double>(expected[i]) * expected[i];
+    }
+    result.mean_abs = static_cast<float>(abs_sum / actual.size());
+    result.rms = static_cast<float>(std::sqrt(error_sum / actual.size()));
+    result.reference_rms = static_cast<float>(std::sqrt(reference_sum / actual.size()));
+    result.relative_rms = result.reference_rms == 0.0F
+        ? result.rms : result.rms / result.reference_rms;
+    return result;
+}
+
+DetailedError detailed_device_error(const float* device, std::size_t elements,
+                                    const std::filesystem::path& expected_path) {
     std::vector<float> actual(elements);
     MIINFER_HIP_CHECK(hipMemcpy(actual.data(), device, elements * sizeof(float),
                                 hipMemcpyDeviceToHost));
-    return compare(actual, read_f32(expected_path, elements));
+    return detailed_compare(actual, read_f32(expected_path, elements));
+}
+
+std::uint64_t fingerprint(const void* device, std::size_t bytes) {
+    std::vector<std::byte> host(bytes);
+    MIINFER_HIP_CHECK(hipMemcpy(host.data(), device, bytes, hipMemcpyDeviceToHost));
+    std::uint64_t hash = 1469598103934665603ULL;
+    for (const auto byte : host) {
+        hash ^= static_cast<std::uint8_t>(byte);
+        hash *= 1099511628211ULL;
+    }
+    return hash;
 }
 
 void require_type(const miinfer::GgufTensor& tensor_value,
@@ -326,16 +375,16 @@ struct FullAttentionLayer {
         key = allocate(1024 * sizeof(float)); key_norm = allocate(1024 * sizeof(float));
         value = allocate(1024 * sizeof(float)); query_norm = allocate(6144 * sizeof(float));
         query_rope = allocate(6144 * sizeof(float)); key_rope = allocate(1024 * sizeof(float));
-        key_cache = allocate(4 * 16 * 256 * sizeof(float));
-        value_cache = allocate(4 * 16 * 256 * sizeof(float)); attention = allocate(6144 * sizeof(float));
-        scores = allocate(24 * 16 * sizeof(float)); probabilities = allocate(24 * 16 * sizeof(float));
+        key_cache = allocate(4 * kCacheCapacity * 256 * sizeof(float));
+        value_cache = allocate(4 * kCacheCapacity * 256 * sizeof(float)); attention = allocate(6144 * sizeof(float));
+        scores = allocate(24 * kCacheCapacity * sizeof(float)); probabilities = allocate(24 * kCacheCapacity * sizeof(float));
         gated_attention = allocate(6144 * sizeof(float)); projected = allocate(kHidden * sizeof(float));
         residual = allocate(kHidden * sizeof(float)); post_normalized = allocate(kHidden * sizeof(float));
         ffn_gate = allocate(kFfnInner * sizeof(float)); ffn_up = allocate(kFfnInner * sizeof(float));
         ffn_activation = allocate(kFfnInner * sizeof(float)); layer_output = allocate(kHidden * sizeof(float));
         q8 = allocate((kFfnInner / 256) * sizeof(miinfer::Q8KDeviceBlock));
-        MIINFER_HIP_CHECK(hipMemset(key_cache->get(), 0, 4 * 16 * 256 * sizeof(float)));
-        MIINFER_HIP_CHECK(hipMemset(value_cache->get(), 0, 4 * 16 * 256 * sizeof(float)));
+        MIINFER_HIP_CHECK(hipMemset(key_cache->get(), 0, 4 * kCacheCapacity * 256 * sizeof(float)));
+        MIINFER_HIP_CHECK(hipMemset(value_cache->get(), 0, 4 * kCacheCapacity * 256 * sizeof(float)));
     }
 
     static std::string prefix(std::size_t layer, const char* suffix) {
@@ -376,10 +425,10 @@ struct FullAttentionLayer {
             static_cast<float*>(key_rope->get()), 4, 256, position, model.config().rope_theta);
         miinfer::launch_qwen3_kv_cache_store(static_cast<const float*>(key_rope->get()),
             static_cast<const float*>(value->get()), static_cast<float*>(key_cache->get()),
-            static_cast<float*>(value_cache->get()), position, 16, 4, 256);
+            static_cast<float*>(value_cache->get()), position, kCacheCapacity, 4, 256);
         miinfer::launch_qwen3_cached_attention_parallel(static_cast<const float*>(query_rope->get()),
             static_cast<const float*>(key_cache->get()), static_cast<const float*>(value_cache->get()),
-            position + 1, 16, static_cast<float*>(attention->get()), static_cast<float*>(scores->get()),
+            position + 1, kCacheCapacity, static_cast<float*>(attention->get()), static_cast<float*>(scores->get()),
             static_cast<float*>(probabilities->get()), 24, 4, 256, 1.0F / std::sqrt(256.0F));
         miinfer::launch_qwen35_sigmoid_mul(static_cast<const float*>(attention->get()),
             static_cast<const float*>(gate->get()), static_cast<float*>(gated_attention->get()), 6144);
@@ -407,13 +456,15 @@ struct FullAttentionLayer {
 }  // namespace
 
 int main(int argc, char** argv) {
-    if (argc != 3) {
-        std::cerr << "usage: miinfer-m6a21-qwen35-gpu-hybrid-block MODEL.gguf FIXTURE_DIR\n";
+    if (argc != 3 && argc != 4) {
+        std::cerr << "usage: miinfer-m6a21-qwen35-gpu-hybrid-block MODEL.gguf FIXTURE_DIR [--deep]\n";
         return 2;
     }
     try {
         const auto model = miinfer::Qwen35Model::load(argv[1]);
         const auto fixture = std::filesystem::path(argv[2]);
+        const bool deep = argc == 4 && std::string(argv[3]) == "--deep";
+        if (argc == 4 && !deep) throw std::runtime_error("unknown option");
         RecurrentLayer recurrent0(model, 0, fixture);
         RecurrentLayer recurrent1(model, 1, fixture);
         RecurrentLayer recurrent2(model, 2, fixture);
@@ -424,10 +475,36 @@ int main(int argc, char** argv) {
         Buffer state3 = allocate(kHidden * sizeof(float));
         Buffer output = allocate(kHidden * sizeof(float));
         float maximum = 0.0F;
+        const auto generated = deep ? read_tokens(fixture / "generated_tokens.txt")
+                                    : std::vector<std::uint32_t>{};
+        if (deep && generated.size() < 64) throw std::runtime_error("fixture has fewer than 64 tokens");
+        const auto is_checkpoint_position = [](std::size_t position) {
+            return position == 0 || position == 1 || position == 2 || position == 4
+                || position == 8 || position == 16 || position == 32 || position == 64;
+        };
+        if (deep) {
+            std::cout << "position l0_max l0_rms l0_rel l1_max l1_rms l1_rel "
+                         "l2_max l2_rms l2_rel l3_max l3_rms l3_rel state_correct\n";
+        }
 
-        for (const std::size_t position : {std::size_t{0}, std::size_t{1}}) {
-            const auto host_input = read_f32(checkpoint(fixture, position, "model_input_embed"), kHidden);
+        const std::size_t last_position = deep ? 64 : 1;
+        for (std::size_t position = 0; position <= last_position; ++position) {
+            const auto host_input = deep && position > 1
+                ? embedding(tensor(*model.file(), "token_embd.weight"), generated[position - 1])
+                : read_f32(checkpoint(fixture, position, "model_input_embed"), kHidden);
             upload(host_input.data(), input->get(), host_input.size() * sizeof(float));
+            bool state_correct = true;
+            if (deep && is_checkpoint_position(position)) {
+                for (std::size_t layer = 0; layer < 3; ++layer) {
+                    const auto& state_buffer = layer == 0 ? recurrent0.state
+                        : layer == 1 ? recurrent1.state : recurrent2.state;
+                    const auto state_error = detailed_device_error(
+                        static_cast<const float*>(state_buffer->get()),
+                        kVHeads * kState * kState,
+                        checkpoint(fixture, position, "state_predelta-" + std::to_string(layer)));
+                    state_correct = state_correct && state_error.max_abs <= 5.0e-2F;
+                }
+            }
             recurrent0.run(static_cast<const float*>(input->get()), position,
                            static_cast<float*>(state1->get()));
             recurrent1.run(static_cast<const float*>(state1->get()), position,
@@ -437,19 +514,50 @@ int main(int argc, char** argv) {
             attention.run(static_cast<const float*>(state3->get()), position,
                           static_cast<float*>(output->get()));
             MIINFER_HIP_CHECK(hipDeviceSynchronize());
-            for (std::size_t layer = 0; layer < 4; ++layer) {
-                const auto error = device_error(
-                    static_cast<const float*>(layer == 0 ? state1->get() :
-                        layer == 1 ? state2->get() : layer == 2 ? state3->get() : output->get()),
-                    kHidden, checkpoint(fixture, position, "l_out-" + std::to_string(layer)));
-                require_match("hybrid layer output", error, 2.0F);
-                maximum = std::max(maximum, error.max_abs);
-                std::cout << "position=" << position << " layer=" << layer
-                          << " max_abs=" << error.max_abs << " rmse=" << error.rmse << '\n';
+            if (!deep || is_checkpoint_position(position)) {
+                std::array<DetailedError, 4> errors{};
+                for (std::size_t layer = 0; layer < 4; ++layer) {
+                    const auto* layer_output = static_cast<const float*>(layer == 0 ? state1->get() :
+                        layer == 1 ? state2->get() : layer == 2 ? state3->get() : output->get());
+                    errors[layer] = detailed_device_error(
+                        layer_output, kHidden,
+                        checkpoint(fixture, position, "l_out-" + std::to_string(layer)));
+                    require_match("hybrid layer output", Metrics{errors[layer].max_abs,
+                                                                  errors[layer].rms, 0}, 2.0F);
+                    maximum = std::max(maximum, errors[layer].max_abs);
+                }
+                if (deep && !state_correct) {
+                    throw std::runtime_error("hybrid recurrent state mismatch");
+                }
+                if (deep) {
+                    std::cout << position;
+                    for (const auto& error : errors) {
+                        std::cout << ' ' << error.max_abs << ' ' << error.rms
+                                  << ' ' << error.relative_rms;
+                    }
+                    std::cout << ' ' << (state_correct ? "PASS" : "FAIL") << '\n';
+                    std::cout << "  fingerprints state0="
+                              << fingerprint(recurrent0.state->get(), kVHeads * kState * kState * sizeof(float))
+                              << " state1="
+                              << fingerprint(recurrent1.state->get(), kVHeads * kState * kState * sizeof(float))
+                              << " state2="
+                              << fingerprint(recurrent2.state->get(), kVHeads * kState * kState * sizeof(float))
+                              << " K=" << fingerprint(attention.key_cache->get(),
+                                  4 * (position + 1) * 256 * sizeof(float))
+                              << " V=" << fingerprint(attention.value_cache->get(),
+                                  4 * (position + 1) * 256 * sizeof(float)) << '\n';
+                } else {
+                    for (std::size_t layer = 0; layer < 4; ++layer) {
+                        std::cout << "position=" << position << " layer=" << layer
+                                  << " max_abs=" << errors[layer].max_abs
+                                  << " rmse=" << errors[layer].rms << '\n';
+                    }
+                }
             }
         }
         std::cout << "max_error=" << maximum << '\n'
-                  << "M6-A21 qwen35 GPU hybrid block PASS\n";
+                  << (deep ? "M6-A22" : "M6-A21")
+                  << " qwen35 GPU hybrid block PASS\n";
     } catch (const std::exception& error) {
         std::cerr << "M6-A21 failed: " << error.what() << '\n';
         return 1;
