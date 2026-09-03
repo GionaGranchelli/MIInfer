@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-A17 CLOSED — Qwen3.8-27B composition ladder; M6-B1 deferred**
+**Current phase: M6-A18 CLOSED — qwen35 recurrent GPU state core; M6-B1 deferred**
 
 The project currently has:
 
@@ -60,12 +60,16 @@ The project currently has:
 * qwen35 composition ladder through 8, 16, 32, and 64 layers with linear
   one-token scaling and final-logit validation; see
   `experiments/EXP-0061-m6a17-qwen35-composition-ladder.md`
+* a real MI50 qwen35 DeltaNet GPU state-update core with persistent
+  `[48,128,128]` state validated across positions 0→1; see
+  `experiments/EXP-0062-m6a18-qwen35-deltanet-state-gpu.md`
 
 Sampling and serving remain out of scope. M5 is closed as a measured local
 optimization campaign. M6-A host bring-up and qwen35 GPU operation bring-up
 are progressing. The full Qwen3.8 GPU path is not yet implemented, so M6-B1
 performance measurement remains deferred. The host composition ladder is
-complete; the next bring-up gate is qwen35 recurrent HIP execution.
+complete; the next bring-up gate is the remaining qwen35 recurrent HIP layer
+operations around the validated state core.
 
 The current production path is approximately 55 tok/s at stable peak for the
 previous Qwen3-8B target. Qwen3.8-27B is not yet supported by the production

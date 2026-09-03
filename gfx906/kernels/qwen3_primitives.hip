@@ -224,6 +224,39 @@ __global__ void qwen35_sigmoid_mul_kernel(
     if (index < elements) output[index] = input[index] / (1.0F + expf(-gate[index]));
 }
 
+__global__ void qwen35_deltanet_state_update_kernel(
+    const float* query, const float* key, const float* value,
+    const float* beta, const float* decay, float* state, float* output,
+    std::uint32_t key_heads, std::uint32_t value_heads, std::uint32_t state_size) {
+    const std::uint32_t head = blockIdx.x;
+    const std::uint32_t row = threadIdx.x;
+    if (head >= value_heads || row >= state_size || key_heads == 0) return;
+
+    const std::uint32_t key_head = head % key_heads;
+    const std::size_t state_base =
+        (static_cast<std::size_t>(head) * state_size + row) * state_size;
+    const std::size_t key_base = static_cast<std::size_t>(key_head) * state_size;
+    const float beta_value = beta[head];
+    const float decay_value = decay[head];
+    float* state_row = state + state_base;
+
+    float key_dot = 0.0F;
+    for (std::uint32_t column = 0; column < state_size; ++column) {
+        state_row[column] *= decay_value;
+        key_dot += state_row[column] * key[key_base + column];
+    }
+    const float delta = (value[static_cast<std::size_t>(head) * state_size + row]
+                         - key_dot) * beta_value;
+    float query_dot = 0.0F;
+    const std::size_t query_base = static_cast<std::size_t>(key_head) * state_size;
+    for (std::uint32_t column = 0; column < state_size; ++column) {
+        state_row[column] += delta * key[key_base + column];
+        query_dot += state_row[column] * query[query_base + column];
+    }
+    output[static_cast<std::size_t>(head) * state_size + row] =
+        query_dot * rsqrtf(static_cast<float>(state_size));
+}
+
 __global__ void qwen3_rope_kernel(
     const float* input, float* output, std::uint32_t heads,
     std::uint32_t head_dim, std::uint32_t position, float theta) {
@@ -792,6 +825,24 @@ void launch_qwen35_sigmoid_mul(
     hipLaunchKernelGGL(qwen35_sigmoid_mul_kernel,
                        dim3((elements + 255) / 256), dim3(256), 0, stream,
                        input, gate, output, elements);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_deltanet_state_update(
+    const float* query, const float* key, const float* value,
+    const float* beta, const float* decay, float* state, float* output,
+    std::uint32_t key_heads, std::uint32_t value_heads,
+    std::uint32_t state_size, hipStream_t stream) {
+    if (query == nullptr || key == nullptr || value == nullptr || beta == nullptr
+        || decay == nullptr || state == nullptr || output == nullptr
+        || key_heads == 0 || value_heads == 0 || state_size == 0
+        || state_size > 1024 || value_heads % key_heads != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen35_deltanet_state_update_kernel,
+                       dim3(value_heads), dim3(state_size), 0, stream,
+                       query, key, value, beta, decay, state, output,
+                       key_heads, value_heads, state_size);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

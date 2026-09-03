@@ -106,6 +106,21 @@ void launch_qwen35_sigmoid_mul(
     std::uint32_t elements,
     hipStream_t stream = nullptr);
 
+// Qwen35 DeltaNet recurrent core. State is persistent in the [v_head][row][column]
+// layout and is updated in place; one workgroup owns one value head.
+void launch_qwen35_deltanet_state_update(
+    const float* query,
+    const float* key,
+    const float* value,
+    const float* beta,
+    const float* decay,
+    float* state,
+    float* output,
+    std::uint32_t key_heads,
+    std::uint32_t value_heads,
+    std::uint32_t state_size,
+    hipStream_t stream = nullptr);
+
 void launch_qwen3_rope(
     const float* input,
     float* output,

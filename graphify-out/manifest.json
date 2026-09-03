@@ -150,15 +150,15 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788415137.3306572,
-    "seen": 1788416580.250789,
-    "ast_hash": "8875b7f3638245fc0727e066d9bcc87e",
+    "mtime": 1788438477.2998943,
+    "seen": 1788438487.8996904,
+    "ast_hash": "d39544404874aab5c23b723d8e0f5e54",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788416570.7378576,
-    "seen": 1788416580.25079,
-    "ast_hash": "a3e766bfa9e519210954d99fa15635cb",
+    "mtime": 1788438626.8102212,
+    "seen": 1788438655.8643022,
+    "ast_hash": "858ee017c8e907e718bb874436c915e1",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788416570.7388575,
-    "seen": 1788416580.250803,
-    "ast_hash": "0cf0230a4eea95d6b651562b11cb3ea3",
+    "mtime": 1788438642.8131492,
+    "seen": 1788438655.8643148,
+    "ast_hash": "cac3b93261630bd4d9ab6f33cc117771",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788416570.7398574,
-    "seen": 1788416580.2508254,
-    "ast_hash": "2dbb9ad4bd6bf278593cb33e85158d8d",
+    "mtime": 1788438633.1781926,
+    "seen": 1788438655.8643365,
+    "ast_hash": "2a4e7b5f51f6b1d5d83d88a6082bc713",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1788383043.710996,
-    "seen": 1788383405.587262,
-    "ast_hash": "82aa1b233ac85751bbc3589df178d882",
+    "mtime": 1788438477.2968943,
+    "seen": 1788438487.899543,
+    "ast_hash": "7db42e0fe94e0a970371692515b35e51",
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_primitives.hpp": {
@@ -1293,6 +1293,18 @@
     "mtime": 1788416570.7368574,
     "seen": 1788416580.2509227,
     "ast_hash": "43b2ecdc69ac994e09a5ccf8ece0ded6",
+    "semantic_hash": ""
+  },
+  "tools/m6a18_qwen35_deltanet_state_gpu.cpp": {
+    "mtime": 1788438510.1067467,
+    "seen": 1788438519.6144087,
+    "ast_hash": "9fc5960b9f0c9626a444c0a95e026bc2",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0062-m6a18-qwen35-deltanet-state-gpu.md": {
+    "mtime": 1788438596.191359,
+    "seen": 1788438655.864433,
+    "ast_hash": "607b39cb7b9732a0e409f11ad4ab5b16",
     "semantic_hash": ""
   }
 }
