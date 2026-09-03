@@ -10,12 +10,12 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-A20 CLOSED — complete qwen35 recurrent GPU layer; M6-B1 deferred**
+**Current phase: M6-A21 CLOSED — qwen35 GPU hybrid block; M6-B1 deferred**
 
 Immediate objective:
 
-> Compose the validated qwen35 recurrent GPU layer with the existing full-attention
-> GPU layer into the first stateful hybrid-block audit.
+> Extend the first qwen35 GPU hybrid-block audit through longer stateful
+> positions, then compose the full GPU trunk.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See

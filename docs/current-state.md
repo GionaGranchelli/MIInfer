@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-A20 CLOSED — complete qwen35 recurrent GPU layer; M6-B1 deferred**
+**M6-A21 CLOSED — qwen35 GPU hybrid block; M6-B1 deferred**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -41,24 +41,13 @@ and exit fingerprints for recurrent state, K/V cache, and hidden outputs and
 external checks at positions 0, 1, 2, 4, 8, and 16. The host audit passes;
 qwen35 recurrent HIP execution is now present for a complete layer-0 slice,
 so M6-B1 remains deferred until hybrid composition is complete.
-M6-A16 validates a second independent hybrid block: L4–L6 recurrent layers
-and L7 full attention consume the actual L0–L3 output in one stateful host
-run through positions 0–16, with external checks at positions 0, 1, 2, 4, 8,
-and 16 and entry/exit fingerprints for the second block's recurrent/KV state.
-M6-A17 composes the full 64-layer host trunk at position 0, validates the
-8/16/32/64-layer boundaries and final logits, and measures near-linear prefix
-scaling. The qwen35 recurrent HIP path is still absent, so M6-B1 remains
-deferred. M6-A18 adds the first real qwen35 HIP recurrent primitive: a
-persistent GPU-resident `[48,128,128]` DeltaNet state update. It passes the
-external state/output checkpoints for positions 0 and 1 on gfx906. The
-the full qwen35 GPU path is still absent, so M6-B1 remains deferred. M6-A19
-adds GPU-resident four-tap convolution history,
-SiLU/Q/K/V split, and Q/K L2 normalization, passing positions 0 and 1 on the
-real fixture. The complete recurrent layer and full qwen35 GPU path are still
-absent. M6-A20 adds GPU recurrent projections, beta/alpha preparation,
-persistent state composition, recurrent output projection, and the complete
-layer-0 FFN path, passing positions 0 and 1. The full qwen35 GPU path remains
-absent.
+M6-A16 validates a second independent hybrid block and M6-A17 composes the
+full 64-layer host trunk with final logits. M6-A18 adds a persistent GPU
+resident DeltaNet state update, M6-A19 adds GPU convolution history and Q/K
+normalization, M6-A20 composes the complete layer-0 recurrent GPU path, and
+M6-A21 composes recurrent GPU layers 0–2 with full-attention GPU layer 3.
+The GPU hybrid block passes layer-output checkpoints at positions 0 and 1;
+the full qwen35 GPU path remains absent, so M6-B1 remains deferred.
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The
@@ -209,6 +198,9 @@ No other GPU architecture is currently supported.
   state composition, recurrent output projection, and complete layer-0 FFN
   path pass positions 0→1; see
   `experiments/EXP-0064-m6a20-qwen35-recurrent-layer-gpu.md`
+* M6-A21 qwen35 GPU layers 0–3 compose through the complete layer-3 boundary
+  at positions 0→1; see
+  `experiments/EXP-0065-m6a21-qwen35-gpu-hybrid-block.md`
 * M4-B19 attention-to-Q8 boundary replay; external attention quantizes
   bitwise-identically to the host contract, while the external-attention GPU
   control itself retains `0.204956` layer-35 error, identifying a downstream
@@ -889,8 +881,8 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-03 — M6-A20 was recorded after validating the complete layer-0
-qwen35 recurrent GPU path. The upstream
+2026-09-03 — M6-A21 was recorded after composing qwen35 recurrent GPU layers
+0–2 with full-attention GPU layer 3 through positions 0 and 1. The upstream
 Qwen3.8-27B Q4_K_M baseline is captured at stable_peak with PP512 median
 196.585 tok/s, isolated TG64/TG128/TG256 medians 22.4888/22.2873/21.9009
 tok/s, and combined P1+TG64/P1+TG256/P1+TG1024 medians
