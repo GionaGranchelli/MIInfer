@@ -36,6 +36,8 @@ Current work should focus on:
   debugging unless an input-boundary discrepancy is demonstrated
 * use the A26.4 substitution result to trace only the L30 production `k_in`
   path upstream
+* use the A26.5 K-path result to trace the already-divergent L29 output
+  provenance; do not reopen L30 recurrence mechanics
 * preserving GPU-resident recurrent/KV state and zero steady-state allocations
 * state fingerprints, reset/replay checks, and external checkpoints through P64
 * per-layer telemetry and the evolving VRAM ledger

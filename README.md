@@ -98,6 +98,9 @@ The project currently has:
 * production operand substitution identifies L30 `k_in` as the dominant
   upstream discrepancy at P19→P20; see
   `experiments/EXP-0074-m6a264-qwen35-l30-production-operand-attribution.md`
+* L30 K-path provenance finds the first mismatch at its input (`l_out-29`),
+  while the K path remains bounded through convolution/SiLU and normalization;
+  see `experiments/EXP-0075-m6a265-qwen35-l30-k-path-provenance.md`
 
 Sampling and serving remain out of scope. M5 is closed as a measured local
 optimization campaign. M6-A host bring-up and qwen35 GPU operation bring-up

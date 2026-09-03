@@ -82,6 +82,11 @@ one-at-a-time GPU substitutions. Replacing only `k_in` reduces state max error
 from `0.0431299` to `0.00747788`; previous-state, q, value, beta, and decay
 substitutions are largely neutral. The next trace target is the upstream L30
 K-input boundary, not recurrence storage or update mechanics.
+EXP-0075 traces that boundary through L30 input, attention RMSNorm, QKV
+projection, convolution/SiLU, and K normalization. The first mismatch is
+already at L30 input (`l_out-29`, max `0.0793692`); K-path error is `0.0197068`
+after convolution/SiLU and `0.0180074` after K normalization. L30 K execution
+is therefore not the first separation; the next target is L29 output provenance.
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The
@@ -927,7 +932,10 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-03 — M6-A21 was recorded after composing qwen35 recurrent GPU layers
+2026-09-04 — M6-A26.5 was recorded after tracing the L30 production K path
+to its already-divergent L29 output input. The K-path error remains bounded
+through convolution/SiLU and K normalization, so L29 output provenance is the
+next target. M6-A21 was recorded after composing qwen35 recurrent GPU layers
 0–2 with full-attention GPU layer 3 through positions 0 and 1. The upstream
 Qwen3.8-27B Q4_K_M baseline is captured at stable_peak with PP512 median
 196.585 tok/s, isolated TG64/TG128/TG256 medians 22.4888/22.2873/21.9009

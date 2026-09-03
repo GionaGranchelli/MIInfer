@@ -185,6 +185,14 @@ struct RecurrentOperands {
     std::vector<float> decay;
 };
 
+struct KeyPathCapture {
+    std::vector<float> input;
+    std::vector<float> normalized;
+    std::vector<float> qkv;
+    std::vector<float> key;
+    std::vector<float> key_norm;
+};
+
 LocatedError located_host_error(std::span<const float> actual,
                                  std::span<const float> expected) {
     LocatedError result;
@@ -281,6 +289,8 @@ struct RecurrentLayer {
     std::size_t provenance_index = 0;
     RecurrentOperands* operand_capture = nullptr;
     std::uint32_t operand_capture_position = 0;
+    KeyPathCapture* key_path_capture = nullptr;
+    std::uint32_t key_path_capture_position = 0;
 
     RecurrentLayer(const miinfer::Qwen35Model& model_value, std::size_t layer,
                    const std::filesystem::path& fixture)
@@ -498,6 +508,13 @@ struct RecurrentLayer {
         }
         if (operand_capture != nullptr && operand_capture_position == position) {
             capture_operands(*operand_capture);
+        }
+        if (key_path_capture != nullptr && key_path_capture_position == position) {
+            key_path_capture->input = download(input, kHidden);
+            key_path_capture->normalized = download(normalized->get(), kHidden);
+            key_path_capture->qkv = download(qkv->get(), kChannels);
+            key_path_capture->key = download(key->get(), kKHeads * kState);
+            key_path_capture->key_norm = download(key_norm->get(), kKHeads * kState);
         }
         miinfer::launch_qwen35_deltanet_state_update(
             static_cast<const float*>(query_norm->get()), static_cast<const float*>(key_norm->get()),
@@ -781,7 +798,8 @@ int main(int argc, char** argv) {
         std::cerr << "usage: miinfer-m6a21-qwen35-gpu-hybrid-block MODEL.gguf FIXTURE_DIR "
                      "[EXTERNAL_OPERAND_FIXTURE] "
                      "[--deep|--block4-7|--prefix8|--prefix16|--prefix32|--prefix32-locate|"
-                     "--prefix32-provenance|--prefix32-operand-attribution]\n";
+                     "--prefix32-provenance|--prefix32-operand-attribution|"
+                     "--prefix32-k-path-attribution]\n";
         return 2;
     }
     const std::string mode = argc >= 4 ? argv[argc - 1] : "";
@@ -790,7 +808,9 @@ int main(int argc, char** argv) {
     const bool locate32 = mode == "--prefix32-locate";
     const bool provenance32 = mode == "--prefix32-provenance";
     const bool operand_attribution32 = mode == "--prefix32-operand-attribution";
-    const bool prefix32 = mode == "--prefix32" || locate32 || provenance32 || operand_attribution32;
+    const bool k_path_attribution32 = mode == "--prefix32-k-path-attribution";
+    const bool prefix32 = mode == "--prefix32" || locate32 || provenance32
+        || operand_attribution32 || k_path_attribution32;
     const bool deep = mode == "--deep" || mode == "--block4-7" || prefix8 || prefix16 || prefix32;
     const bool second_block = mode == "--block4-7" || prefix8 || prefix16 || prefix32;
     if (argc >= 4 && !deep) {
@@ -1067,6 +1087,62 @@ int main(int argc, char** argv) {
             Buffer input = allocate(kHidden * sizeof(float));
             const auto generated = read_tokens(fixture / "generated_tokens.txt");
             if (generated.size() < 64) throw std::runtime_error("fixture has fewer than 64 tokens");
+            if (k_path_attribution32) {
+                if (argc != 5) {
+                    throw std::runtime_error("K-path attribution requires an external fixture");
+                }
+                KeyPathCapture production;
+                recurrent30->key_path_capture = &production;
+                recurrent30->key_path_capture_position = 19;
+                for (std::size_t position = 0; position <= 19; ++position) {
+                    const auto host_input = position > 1
+                        ? embedding(tensor(*model.file(), "token_embd.weight"), generated[position - 1])
+                        : read_f32(checkpoint(fixture, position, "model_input_embed"), kHidden);
+                    upload(host_input.data(), input->get(), host_input.size() * sizeof(float));
+                    run_prefix(std::span<const GpuLayerRef>(layers),
+                               std::span<float* const>(output_pointers),
+                               static_cast<const float*>(input->get()), position);
+                    MIINFER_HIP_CHECK(hipDeviceSynchronize());
+                }
+
+                const auto external_input = read_f32(
+                    checkpoint(operand_fixture, 19, "l_out-29"), kHidden);
+                const auto external_norm = read_f32(
+                    checkpoint(operand_fixture, 19, "attn_norm-30"), kHidden);
+                const auto external_qkv = read_f32(
+                    checkpoint(operand_fixture, 19, "linear_attn_qkv_mixed-30"), kChannels);
+                const auto external_conv = read_f32(
+                    checkpoint(operand_fixture, 19, "conv_output_raw-30"), kChannels);
+                const auto external_key_full = read_f32(
+                    checkpoint(operand_fixture, 19, "k_in-30"), kVHeads * kState);
+                std::vector<float> external_key(kKHeads * kState);
+                std::vector<float> external_key_norm(kKHeads * kState);
+                for (std::size_t i = 0; i < external_key.size(); ++i) {
+                    const float raw = external_conv[kKHeads * kState + i];
+                    external_key[i] = raw / (1.0F + std::exp(-raw));
+                    external_key_norm[i] = external_key_full[i];
+                }
+                const auto report = [](const char* label, std::span<const float> actual,
+                                       std::span<const float> expected) {
+                    const auto error = located_host_error(actual, expected);
+                    std::cout << "stage=" << label
+                              << " max_abs=" << error.metrics.max_abs
+                              << " mean_abs=" << error.metrics.mean_abs
+                              << " rms=" << error.metrics.rms
+                              << " relative_rms=" << error.metrics.relative_rms
+                              << " max_index=" << error.index
+                              << " external=" << error.expected
+                              << " gpu=" << error.actual << '\n';
+                };
+                std::cout << "M6-A26.5 L30 P19 K-path provenance\n";
+                report("layer_input", production.input, external_input);
+                report("attn_norm", production.normalized, external_norm);
+                report("qkv_projection", production.qkv, external_qkv);
+                report("key_after_conv_silu", production.key, external_key);
+                report("key_after_l2_norm", production.key_norm, external_key_norm);
+                std::cout << "M6-A26.5 qwen35 L30 K-path provenance COMPLETE\n";
+                return 0;
+            }
             if (operand_attribution32) {
                 if (argc != 5) {
                     throw std::runtime_error(
