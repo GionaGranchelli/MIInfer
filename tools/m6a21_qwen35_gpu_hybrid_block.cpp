@@ -176,6 +176,37 @@ struct UpdateProvenance {
     float query_dot = 0.0F;
 };
 
+struct RecurrentOperands {
+    std::vector<float> previous;
+    std::vector<float> query;
+    std::vector<float> key;
+    std::vector<float> value;
+    std::vector<float> beta;
+    std::vector<float> decay;
+};
+
+LocatedError located_host_error(std::span<const float> actual,
+                                 std::span<const float> expected) {
+    LocatedError result;
+    result.metrics = detailed_compare(actual, expected);
+    for (std::size_t i = 0; i < actual.size(); ++i) {
+        if (std::fabs(actual[i] - expected[i]) >
+            std::fabs(result.actual - result.expected)) {
+            result.index = i;
+            result.actual = actual[i];
+            result.expected = expected[i];
+        }
+    }
+    return result;
+}
+
+std::vector<float> download(const void* device, std::size_t elements) {
+    std::vector<float> host(elements);
+    MIINFER_HIP_CHECK(hipMemcpy(host.data(), device, elements * sizeof(float),
+                                hipMemcpyDeviceToHost));
+    return host;
+}
+
 std::uint64_t fingerprint(const void* device, std::size_t bytes) {
     std::vector<std::byte> host(bytes);
     MIINFER_HIP_CHECK(hipMemcpy(host.data(), device, bytes, hipMemcpyDeviceToHost));
@@ -248,6 +279,8 @@ struct RecurrentLayer {
     UpdateProvenance* provenance = nullptr;
     std::uint32_t provenance_position = 0;
     std::size_t provenance_index = 0;
+    RecurrentOperands* operand_capture = nullptr;
+    std::uint32_t operand_capture_position = 0;
 
     RecurrentLayer(const miinfer::Qwen35Model& model_value, std::size_t layer,
                    const std::filesystem::path& fixture)
@@ -408,6 +441,15 @@ struct RecurrentLayer {
         return result;
     }
 
+    void capture_operands(RecurrentOperands& captured) const {
+        captured.previous = download(state->get(), kVHeads * kState * kState);
+        captured.query = download(query_norm->get(), kKHeads * kState);
+        captured.key = download(key_norm->get(), kKHeads * kState);
+        captured.value = download(value->get(), kVHeads * kState);
+        captured.beta = download(beta->get(), kVHeads);
+        captured.decay = download(decay->get(), kVHeads);
+    }
+
     float state_value(std::size_t flat_index) const {
         float result = 0.0F;
         MIINFER_HIP_CHECK(hipMemcpy(
@@ -453,6 +495,9 @@ struct RecurrentLayer {
             kKHeads, kState);
         if (provenance != nullptr && provenance_position == position) {
             *provenance = sample_update(provenance_index);
+        }
+        if (operand_capture != nullptr && operand_capture_position == position) {
+            capture_operands(*operand_capture);
         }
         miinfer::launch_qwen35_deltanet_state_update(
             static_cast<const float*>(query_norm->get()), static_cast<const float*>(key_norm->get()),
@@ -690,29 +735,73 @@ void run_prefix(std::span<const GpuLayerRef> layers, std::span<float* const> out
     }
 }
 
+RecurrentOperands read_external_operands(const std::filesystem::path& fixture) {
+    RecurrentOperands result;
+    const auto full_query = read_f32(checkpoint(fixture, 19, "q_in-30"), kVHeads * kState);
+    const auto full_key = read_f32(checkpoint(fixture, 19, "k_in-30"), kVHeads * kState);
+    result.query.assign(full_query.begin(), full_query.begin() + kKHeads * kState);
+    result.key.assign(full_key.begin(), full_key.begin() + kKHeads * kState);
+    result.value = read_f32(checkpoint(fixture, 19, "v_in-30"), kVHeads * kState);
+    result.beta = read_f32(checkpoint(fixture, 19, "b_in-30"), kVHeads);
+    const auto external_gate = read_f32(checkpoint(fixture, 19, "g_in-30"), kVHeads);
+    result.decay.resize(kVHeads);
+    for (std::size_t i = 0; i < kVHeads; ++i) result.decay[i] = std::exp(external_gate[i]);
+    result.previous = read_f32(checkpoint(fixture, 19, "state_predelta-30"),
+                               kVHeads * kState * kState);
+    return result;
+}
+
+std::vector<float> replay_state(const RecurrentOperands& operands) {
+    Buffer d_query = allocate(operands.query.size() * sizeof(float));
+    Buffer d_key = allocate(operands.key.size() * sizeof(float));
+    Buffer d_value = allocate(operands.value.size() * sizeof(float));
+    Buffer d_beta = allocate(operands.beta.size() * sizeof(float));
+    Buffer d_decay = allocate(operands.decay.size() * sizeof(float));
+    Buffer d_state = allocate(operands.previous.size() * sizeof(float));
+    Buffer d_output = allocate(kVHeads * kState * sizeof(float));
+    upload(operands.query.data(), d_query->get(), operands.query.size() * sizeof(float));
+    upload(operands.key.data(), d_key->get(), operands.key.size() * sizeof(float));
+    upload(operands.value.data(), d_value->get(), operands.value.size() * sizeof(float));
+    upload(operands.beta.data(), d_beta->get(), operands.beta.size() * sizeof(float));
+    upload(operands.decay.data(), d_decay->get(), operands.decay.size() * sizeof(float));
+    upload(operands.previous.data(), d_state->get(), operands.previous.size() * sizeof(float));
+    miinfer::launch_qwen35_deltanet_state_update(
+        static_cast<const float*>(d_query->get()), static_cast<const float*>(d_key->get()),
+        static_cast<const float*>(d_value->get()), static_cast<const float*>(d_beta->get()),
+        static_cast<const float*>(d_decay->get()), static_cast<float*>(d_state->get()),
+        static_cast<float*>(d_output->get()), kKHeads, kVHeads, kState);
+    MIINFER_HIP_CHECK(hipDeviceSynchronize());
+    return download(d_state->get(), operands.previous.size());
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
-    if (argc != 3 && argc != 4) {
+    if (argc != 3 && argc != 4 && argc != 5) {
         std::cerr << "usage: miinfer-m6a21-qwen35-gpu-hybrid-block MODEL.gguf FIXTURE_DIR "
-                     "[--deep|--block4-7|--prefix8|--prefix16|--prefix32|--prefix32-locate|--prefix32-provenance]\n";
+                     "[EXTERNAL_OPERAND_FIXTURE] "
+                     "[--deep|--block4-7|--prefix8|--prefix16|--prefix32|--prefix32-locate|"
+                     "--prefix32-provenance|--prefix32-operand-attribution]\n";
         return 2;
     }
-    const std::string mode = argc == 4 ? argv[3] : "";
+    const std::string mode = argc >= 4 ? argv[argc - 1] : "";
     const bool prefix8 = mode == "--prefix8";
     const bool prefix16 = mode == "--prefix16";
     const bool locate32 = mode == "--prefix32-locate";
     const bool provenance32 = mode == "--prefix32-provenance";
-    const bool prefix32 = mode == "--prefix32" || locate32 || provenance32;
+    const bool operand_attribution32 = mode == "--prefix32-operand-attribution";
+    const bool prefix32 = mode == "--prefix32" || locate32 || provenance32 || operand_attribution32;
     const bool deep = mode == "--deep" || mode == "--block4-7" || prefix8 || prefix16 || prefix32;
     const bool second_block = mode == "--block4-7" || prefix8 || prefix16 || prefix32;
-    if (argc == 4 && !deep) {
+    if (argc >= 4 && !deep) {
         std::cerr << "unknown option: " << mode << '\n';
         return 2;
     }
     try {
         const auto model = miinfer::Qwen35Model::load(argv[1]);
         const auto fixture = std::filesystem::path(argv[2]);
+        const auto operand_fixture = argc == 5
+            ? std::filesystem::path(argv[3]) : fixture;
         RecurrentLayer recurrent0(model, 0, fixture);
         RecurrentLayer recurrent1(model, 1, fixture);
         RecurrentLayer recurrent2(model, 2, fixture);
@@ -978,6 +1067,87 @@ int main(int argc, char** argv) {
             Buffer input = allocate(kHidden * sizeof(float));
             const auto generated = read_tokens(fixture / "generated_tokens.txt");
             if (generated.size() < 64) throw std::runtime_error("fixture has fewer than 64 tokens");
+            if (operand_attribution32) {
+                if (argc != 5) {
+                    throw std::runtime_error(
+                        "operand attribution requires an external operand fixture");
+                }
+                RecurrentOperands production;
+                recurrent30->operand_capture = &production;
+                recurrent30->operand_capture_position = 19;
+                for (std::size_t position = 0; position <= 19; ++position) {
+                    const auto host_input = position > 1
+                        ? embedding(tensor(*model.file(), "token_embd.weight"), generated[position - 1])
+                        : read_f32(checkpoint(fixture, position, "model_input_embed"), kHidden);
+                    upload(host_input.data(), input->get(), host_input.size() * sizeof(float));
+                    run_prefix(std::span<const GpuLayerRef>(layers),
+                               std::span<float* const>(output_pointers),
+                               static_cast<const float*>(input->get()), position);
+                    MIINFER_HIP_CHECK(hipDeviceSynchronize());
+                }
+
+                const auto external = read_external_operands(operand_fixture);
+                const auto report_operand = [](const char* label,
+                                               std::span<const float> actual,
+                                               std::span<const float> expected) {
+                    const auto error = located_host_error(actual, expected);
+                    std::cout << "operand=" << label
+                              << " max_abs=" << error.metrics.max_abs
+                              << " mean_abs=" << error.metrics.mean_abs
+                              << " rms=" << error.metrics.rms
+                              << " relative_rms=" << error.metrics.relative_rms
+                              << " max_index=" << error.index
+                              << " external=" << error.expected
+                              << " gpu=" << error.actual << '\n';
+                };
+                std::cout << "M6-A26.4 L30 P19->P20 production operand attribution\n"
+                          << "q/k compare first " << kKHeads
+                          << " heads of the external " << kVHeads << "-head fixture\n";
+                report_operand("previous_state", production.previous, external.previous);
+                report_operand("q_in", production.query, external.query);
+                report_operand("k_in", production.key, external.key);
+                report_operand("v_in", production.value, external.value);
+                report_operand("beta", production.beta, external.beta);
+                report_operand("g_in_as_decay", production.decay, external.decay);
+
+                const auto expected = read_f32(
+                    checkpoint(operand_fixture, 20, "state_predelta-30"),
+                    kVHeads * kState * kState);
+                const auto report_variant = [&](const char* label,
+                                                const std::vector<float>* previous,
+                                                const std::vector<float>* query,
+                                                const std::vector<float>* key,
+                                                const std::vector<float>* value,
+                                                const std::vector<float>* beta,
+                                                const std::vector<float>* decay) {
+                    RecurrentOperands operands = production;
+                    if (previous != nullptr) operands.previous = *previous;
+                    if (query != nullptr) operands.query = *query;
+                    if (key != nullptr) operands.key = *key;
+                    if (value != nullptr) operands.value = *value;
+                    if (beta != nullptr) operands.beta = *beta;
+                    if (decay != nullptr) operands.decay = *decay;
+                    const auto state = replay_state(operands);
+                    const auto error = located_host_error(state, expected);
+                    std::cout << "substitution=" << label
+                              << " max_abs=" << error.metrics.max_abs
+                              << " mean_abs=" << error.metrics.mean_abs
+                              << " rms=" << error.metrics.rms
+                              << " relative_rms=" << error.metrics.relative_rms
+                              << " max_index=" << error.index
+                              << " external=" << error.expected
+                              << " gpu=" << error.actual << '\n';
+                };
+                report_variant("production", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+                report_variant("previous_state", &external.previous, nullptr, nullptr, nullptr, nullptr, nullptr);
+                report_variant("q_in", nullptr, &external.query, nullptr, nullptr, nullptr, nullptr);
+                report_variant("k_in", nullptr, nullptr, &external.key, nullptr, nullptr, nullptr);
+                report_variant("v_in", nullptr, nullptr, nullptr, &external.value, nullptr, nullptr);
+                report_variant("beta", nullptr, nullptr, nullptr, nullptr, &external.beta, nullptr);
+                report_variant("g_in_as_decay", nullptr, nullptr, nullptr, nullptr, nullptr, &external.decay);
+                std::cout << "M6-A26.4 qwen35 L30 production operand attribution COMPLETE\n";
+                return 0;
+            }
             const auto is_checkpoint_position = [](std::size_t position) {
                 return position == 0 || position == 1 || position == 2 || position == 4
                     || position == 8 || position == 16 || position == 32 || position == 64;

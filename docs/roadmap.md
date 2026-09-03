@@ -34,6 +34,8 @@ Current work should focus on:
   qwen35 GPU trunk
 * use the A26.3 external-input replay to avoid further recurrence/storage
   debugging unless an input-boundary discrepancy is demonstrated
+* use the A26.4 substitution result to trace only the L30 production `k_in`
+  path upstream
 * preserving GPU-resident recurrent/KV state and zero steady-state allocations
 * state fingerprints, reset/replay checks, and external checkpoints through P64
 * per-layer telemetry and the evolving VRAM ledger

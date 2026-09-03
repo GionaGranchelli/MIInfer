@@ -77,6 +77,11 @@ recurrence reaches `5.96e-8` against the external P20 state. The recurrence
 itself is therefore cleared; the remaining question is the upstream input or
 checkpoint representation contract. Stop GPU state-mechanics debugging and
 keep A26 in retest.
+EXP-0074 captures the full L30 production operand set at P19→P20 and performs
+one-at-a-time GPU substitutions. Replacing only `k_in` reduces state max error
+from `0.0431299` to `0.00747788`; previous-state, q, value, beta, and decay
+substitutions are largely neutral. The next trace target is the upstream L30
+K-input boundary, not recurrence storage or update mechanics.
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The

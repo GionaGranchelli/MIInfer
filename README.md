@@ -95,6 +95,9 @@ The project currently has:
 * external-input replay clears the MIInfer L30 recurrence itself at the
   P19→P20 worst-case transition; A26 still awaits an explicit state contract;
   see `experiments/EXP-0073-m6a263-qwen35-recurrent-contract-adjudication.md`
+* production operand substitution identifies L30 `k_in` as the dominant
+  upstream discrepancy at P19→P20; see
+  `experiments/EXP-0074-m6a264-qwen35-l30-production-operand-attribution.md`
 
 Sampling and serving remain out of scope. M5 is closed as a measured local
 optimization campaign. M6-A host bring-up and qwen35 GPU operation bring-up
