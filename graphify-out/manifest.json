@@ -1332,8 +1332,8 @@
     "semantic_hash": ""
   },
   "tools/m6a21_qwen35_gpu_hybrid_block.cpp": {
-    "mtime": 1788559890.880821,
-    "seen": 1788560796.5066414,
+    "mtime": 1788562030.4677734,
+    "seen": 1788562096.006229,
     "ast_hash": "20f250844e625e22b5bc61aef9371570",
     "semantic_hash": ""
   },
@@ -1539,6 +1539,18 @@
     "mtime": 1788561445.5368667,
     "seen": 1788561456.2914834,
     "ast_hash": "18be8bafcab2d5fd117c221cad05f679",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0097-m6b4-q5k-four-row-workgroup.md": {
+    "mtime": 1788562051.6836727,
+    "seen": 1788562096.0064576,
+    "ast_hash": "e05b9516af60fc208aa2c1cc39a27182",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0098-m6b5-q8-reuse-qwen35.md": {
+    "mtime": 1788562051.6836727,
+    "seen": 1788562096.0064595,
+    "ast_hash": "a75df204f62ff9e43541f1c505a2f6f3",
     "semantic_hash": ""
   }
 }
