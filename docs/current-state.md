@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-A26 RETEST — qwen35 thirty-two-layer GPU prefix; M6-B1 deferred**
+**M6-A26.9 COMPLETE — external state contract accepted; full GPU composition next**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -94,6 +94,12 @@ EXP-0078 replays that gate projection with the external normalized input and
 reaches `1.90735e-6` max error against external `z-29`, clearing the gate
 kernel. The remaining A26 issue is an upstream L29 hidden-state/contract
 difference, not recurrent state storage or update mechanics.
+EXP-0079 adjudicates the external state contract: internal recurrent-state
+element identity remains diagnostic, while finite deterministic execution,
+observable layer/output envelopes, and reset/replay behavior define M6
+correctness. The strict `0.05` state check is unchanged for `--prefix32`; the
+new `--prefix32-external-contract` mode reports it diagnostically and permits
+composition to continue. Full GPU composition is now the next task.
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The
@@ -939,11 +945,14 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-04 — M6-A26.8 was recorded after tracing the L29 gate projection with
-external normalized input; the existing projection reaches `1.90735e-6` max
-error against external `z-29`. The remaining discrepancy is upstream L29
-hidden-state/contract sensitivity. A26 remains in RETEST pending the explicit
-state-contract decision. M6-A26.5 was recorded after tracing the L30 production K path
+2026-09-04 — M6-A26.9 was recorded after adjudicating the external recurrent
+state contract. The strict `0.05` internal state diagnostic remains unchanged,
+while the external-contract mode permits composition because recurrence,
+observable layer outputs, and deterministic reset/replay are valid. M6-A26.8
+was recorded after tracing the L29 gate projection with external normalized
+input; the existing projection reaches `1.90735e-6` max error against external
+`z-29`. The remaining discrepancy is upstream L29 hidden-state/contract
+sensitivity. M6-A26.5 was recorded after tracing the L30 production K path
 to its already-divergent L29 output input. The K-path error remains bounded
 through convolution/SiLU and K normalization, so L29 output provenance is the
 next target. M6-A21 was recorded after composing qwen35 recurrent GPU layers

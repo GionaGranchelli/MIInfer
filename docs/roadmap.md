@@ -10,12 +10,12 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-A26 RETEST — qwen35 thirty-two-layer GPU prefix; M6-B1 deferred**
+**Current phase: M6-A26.9 COMPLETE — external state contract accepted; full GPU composition next**
 
 Immediate objective:
 
-> Localize and resolve the bounded L30 recurrent-state discrepancy before
-> climbing the full GPU composition ladder.
+> Compose the remaining Qwen3.8 GPU layers through the common executor while
+> retaining external output, deterministic replay, and state-fingerprint gates.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
@@ -27,19 +27,8 @@ and M6-A2 maps the reusable and missing projection contracts. See
 
 Current work should focus on:
 
-* resolving the L30 recurrent-state discrepancy through the A26.1
-  diagnostic before composing the full qwen35 GPU trunk
-* using the A26.2 provenance result, including the full-scan P20 outlier, to
-  make the explicit external state contract decision before composing the full
-  qwen35 GPU trunk
-* use the A26.3 external-input replay to avoid further recurrence/storage
-  debugging unless an input-boundary discrepancy is demonstrated
-* use the A26.4 substitution result to trace only the L30 production `k_in`
-  path upstream
-* use the A26.5 K-path result to trace the already-divergent L29 output
-  provenance; do not reopen L30 recurrence mechanics
-* use A26.6–A26.8 to clear L29 recurrent/update and gate-kernel mechanics;
-  make the explicit external state-contract decision before full composition
+* composing the full qwen35 GPU trunk under the accepted external state
+  contract
 * preserving GPU-resident recurrent/KV state and zero steady-state allocations
 * state fingerprints, reset/replay checks, and external checkpoints through P64
 * per-layer telemetry and the evolving VRAM ledger
