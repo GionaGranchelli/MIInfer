@@ -912,7 +912,7 @@ int main(int argc, char** argv) {
                      "--prefix32-l29-gate-attribution|--prefix32-external-contract|"
                      "--prefix64-external-contract|--prefix64-l54-attribution|"
                      "--prefix64-l53-attribution|--prefix64-l53-gated-contract|"
-                     "--prefix64-observable-contract]\n";
+                     "--prefix64-observable-contract|--prefix64-l0-l2-p2-trace]\n";
         return 2;
     }
     const std::string mode = argc >= 4 ? argv[argc - 1] : "";
@@ -930,10 +930,12 @@ int main(int argc, char** argv) {
     const bool trace53 = mode == "--prefix64-l53-attribution";
     const bool gate53_contract = mode == "--prefix64-l53-gated-contract";
     const bool observable64 = mode == "--prefix64-observable-contract";
+    const bool trace012 = mode == "--prefix64-l0-l2-p2-trace";
     const bool prefix32 = mode == "--prefix32" || locate32 || provenance32
         || operand_attribution32 || k_path_attribution32 || l29_path_attribution32
         || l29_gate_attribution32 || external_contract32;
-    const bool prefix64 = external_contract64 || trace64 || trace53 || gate53_contract || observable64;
+    const bool prefix64 = external_contract64 || trace64 || trace53 || gate53_contract
+        || observable64 || trace012;
     const bool deep = mode == "--deep" || mode == "--block4-7" || prefix8 || prefix16 || prefix32
         || prefix64;
     const bool second_block = mode == "--block4-7" || prefix8 || prefix16 || prefix32 || prefix64;
@@ -1268,6 +1270,26 @@ int main(int argc, char** argv) {
             if (gate53_contract) {
                 recurrent32_plus[16]->gate_path_capture = &l53_gate_path;
                 recurrent32_plus[16]->gate_path_capture_position = 1;
+            }
+            if (trace012) {
+                static RecurrentTrace l0_trace{fixture, 0, 2};
+                static RecurrentTrace l1_trace{fixture, 1, 2};
+                static RecurrentTrace l2_trace{fixture, 2, 2};
+                recurrent0.trace = &l0_trace;
+                recurrent1.trace = &l1_trace;
+                recurrent2.trace = &l2_trace;
+                for (std::size_t position = 0; position <= 2; ++position) {
+                    const auto host_input = position > 1
+                        ? embedding(tensor(*model.file(), "token_embd.weight"), generated[position - 1])
+                        : read_f32(checkpoint(fixture, position, "model_input_embed"), kHidden);
+                    upload(host_input.data(), input->get(), host_input.size() * sizeof(float));
+                    run_prefix(std::span<const GpuLayerRef>(layers).first(layer_count),
+                               std::span<float* const>(output_pointers).first(layer_count),
+                               static_cast<const float*>(input->get()), position);
+                    MIINFER_HIP_CHECK(hipDeviceSynchronize());
+                }
+                std::cout << "M6-A27.6 qwen35 P2 L0-L2 precision-boundary trace COMPLETE\n";
+                return 0;
             }
             if (l29_path_attribution32) {
                 if (argc != 5) {

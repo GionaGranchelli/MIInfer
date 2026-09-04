@@ -35,6 +35,8 @@ Current work should focus on:
   benchmark yet
 * using EXP-0085's P2 scan to focus any further correctness work on early
   L0–L2 representation drift, not L53/L54 state mechanics
+* using EXP-0086's operation trace to focus the next test on L0 attention/
+  residual and L1/L2 QKV representation boundaries
 * retaining the accepted external state contract and the strict `0.05`
   recurrent-state check as diagnostic-only
 * preserving GPU-resident recurrent/KV state and zero steady-state allocations

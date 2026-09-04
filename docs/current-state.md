@@ -118,6 +118,10 @@ correctness. The strict `0.05` state check is unchanged for `--prefix32`; the
   EXP-0085's P2 layer scan finds measurable drift at L0, growth through L1/L2,
   and bounded later relative RMS without a new L53/L54 discontinuity. The P2
   final-logit decision remains the only teacher-forced mismatch (63/64).
+  EXP-0086 traces P2 operation boundaries through L0–L2: L0 recurrent output
+  remains at roundoff while attention/residual reaches `0.00164509`; L1/L2
+  QKV errors reach `0.0172018` and `0.0453629`. This confirms distributed
+  early representation drift rather than a new late-layer defect.
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The
@@ -963,7 +967,11 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-04 — M6-A27.5 localized the P2 mismatch to an early, distributed
+2026-09-04 — M6-A27.6 traced P2 operation boundaries through L0–L2: L0
+recurrent output remains at roundoff, while attention/residual and later QKV
+boundaries introduce the first material discrepancies (`0.00164509`, `0.0172018`,
+`0.0453629`). A27 remains in RETEST; no tolerance or production behavior
+changed. M6-A27.5 localized the P2 mismatch to an early, distributed
 activation drift: measurable at L0, growing through L1/L2, and with no new
 L53/L54 discontinuity. A27 remains in RETEST; no tolerance or production
 behavior changed. M6-A27.4 completed observable-contract adjudication: final P64
