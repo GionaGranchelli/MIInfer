@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-B7 — Qwen3.8-27B quantized projection optimization**
+**M6-B9 — Qwen3.8-27B fixed-clock performance optimization**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -37,6 +37,12 @@ additional TG64/TG128 improvement and a 64.9% reduction in the profiled
 recurrent Q5 output-projection stage. EXP-0100 records a further
 production-selected paired-nibble Q5_K decoding change with about 2.7%
 additional TG64/TG128 improvement.
+EXP-0101 rejected a Wave64-local cached-attention score reduction: it was
+neutral at TG64 and regressed TG128. EXP-0102 rejected Q6_K LM-head
+index/scale hoisting: it preserved replay but stayed below the useful
+end-to-end threshold and regressed TG128 slightly. The accepted production
+path remains unchanged; the next target must be a materially different,
+measured whole-token opportunity.
 M6-A8 provides a dedicated qwen35 model boundary and a real layer-0 RMSNorm
 GPU fixture on gfx906. M6-A9 validates the real Q6_K output head through the
 existing Q6_K×Q8_K GPU primitive, M6-A10 validates a real Q4_K×Q8_K attention

@@ -45,6 +45,10 @@ The project currently has:
 * a production-selected paired-nibble Q5_K decoding improvement adding about
   2.7% on TG64/TG128; see
   `experiments/EXP-0100-m6b7-q5k-paired-nibbles.md`
+* rejected Wave64-local cached-attention reduction and Q6_K LM-head
+  index-hoisting candidates, retained as negative evidence; see
+  `experiments/EXP-0101-m6b8-attention-wave-local-reduction.md` and
+  `experiments/EXP-0102-m6b9-q6k-lm-head-index-hoist.md`
 * a reproducible llama.cpp-backed Qwen3.8-27B hybrid tensor/state fixture; see
   `experiments/EXP-0043-m6a1-qwen38-reference-fixture.md`
 * a read-only Qwen3.8 projection/kernel compatibility map; see

@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788562965.7313356,
-    "seen": 1788562977.2205448,
-    "ast_hash": "db5a2e01309e4b357ac85a42c9c1b5da",
+    "mtime": 1788563965.9105992,
+    "seen": 1788563985.2517858,
+    "ast_hash": "689f16b03c9b2a85554c9397130359a6",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788562965.7343357,
-    "seen": 1788562977.2205596,
-    "ast_hash": "a15995d5d017ea4430760a383f00ef1e",
+    "mtime": 1788563975.7885513,
+    "seen": 1788563985.2517996,
+    "ast_hash": "b794a0d9851c71c9316d8f611b6c8d4d",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -1563,6 +1563,18 @@
     "mtime": 1788562965.7313356,
     "seen": 1788562977.2207575,
     "ast_hash": "e68af56c1a7da7c424746823f70d016c",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0101-m6b8-attention-wave-local-reduction.md": {
+    "mtime": 1788563632.2311895,
+    "seen": 1788563985.2519884,
+    "ast_hash": "d651f071343f577eed09a61c2b770345",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0102-m6b9-q6k-lm-head-index-hoist.md": {
+    "mtime": 1788563940.0587249,
+    "seen": 1788563985.25199,
+    "ast_hash": "9ebeb7b0b0706c42ea3834fbe0195c92",
     "semantic_hash": ""
   }
 }
