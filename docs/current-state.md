@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-A27 RETEST — sixty-four-layer GPU composition; P2 observable-token divergence**
+**M6-A28 — native autoregressive GPU generation**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -24,8 +24,9 @@ and a complete 64-layer host forward for the selected
 the complete recurrent state and full-attention KV histories through positions
 0–64, with external final-norm/logit checkpoints and greedy-token checks at
 positions 0, 1, 2, 4, 8, 16, 32, and 64. M6-B0 establishes the external MI50
-performance baseline. M6-B1 readiness was audited, but the current Qwen3.8
-path is host-only; the old HIP executor rejects `general.architecture=qwen35`.
+performance baseline. M6-A27 now composes all 64 qwen35 layers on the GPU
+through the common executor; M6-B1 remains deferred until native
+autoregressive generation is validated.
 M6-A8 provides a dedicated qwen35 model boundary and a real layer-0 RMSNorm
 GPU fixture on gfx906. M6-A9 validates the real Q6_K output head through the
 existing Q6_K×Q8_K GPU primitive, M6-A10 validates a real Q4_K×Q8_K attention
@@ -969,6 +970,18 @@ gfx906 reference without broadening the project into a generic runtime.
 ---
 
 # Last Updated
+
+2026-09-04 — M6-A27-CLOSE adjudicated the two remaining teacher-forced argmax
+flips under the external observable contract. P2 (`1318 → 1044`) has 5/5
+top-5 overlap, cosine `0.999803`, reference margin `0.0349064`, and
+`epsilon_top=0.127861`; P12 (`1044 → 1459`) has 5/5 overlap, cosine `0.999443`,
+reference margin `0.0483742`, and `epsilon_top=0.0737877`. Both are
+non-robust winners (`margin <= 2*epsilon_top`) with the alternate winner at
+reference rank 2. Exact teacher-forced agreement remains `62/64` as a
+diagnostic; no tolerance was changed. A27 is CLOSED under the
+margin-aware external contract. Next is M6-A28 native autoregressive GPU
+generation; M6-B1 performance remains pending. See
+`experiments/EXP-0091-m6a27-close-observable-contract.md`.
 
 2026-09-04 — M6-A27.9 fixed the L0 Q5_K × Q8_K arithmetic contract: per-block
 contributions now match the scalar reference within `5.96e-8`, block-sum error

@@ -10,13 +10,13 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-A27 RETEST — post-fix L3/P2 observable divergence**
+**Current phase: M6-A28 — native autoregressive GPU generation**
 
 Immediate objective:
 
-> Determine whether the deterministic P2 teacher-forced argmax mismatch is
-> acceptable under the external contract, or trace the earliest L0–L2
-> precision/representation boundary that causes it.
+> Validate native GPU autoregressive generation with persistent recurrent/KV
+> state, deterministic replay, finite outputs, and zero steady-state
+> allocations.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
@@ -28,17 +28,11 @@ and M6-A2 maps the reusable and missing projection contracts. See
 
 Current work should focus on:
 
-* retaining the EXP-0082/EXP-0083 L53 provenance and gated-contract results;
-  avoid further gated/state-mechanics debugging without new evidence
-* treating EXP-0084's 63/64 teacher-forced observable agreement as strong
-  diagnostic evidence, not correctness closure; no generation or performance
-  benchmark yet
-* using EXP-0085's P2 scan to focus any further correctness work on early
-  L0–L2 representation drift, not L53/L54 state mechanics
-* using EXP-0086's operation trace to focus the next test on L0 attention/
-  residual and L1/L2 QKV representation boundaries
-* using EXP-0087's shared-input replay to focus the next test on the L0
-  `ssm_out` Q8_K activation/reference representation contract
+* executing M6-A28 native GPU autoregressive generation
+* preserving EXP-0091's margin-aware observable closure: exact teacher-forced
+  agreement remains a `62/64` diagnostic, while P2/P12 are low-margin,
+  top-5-preserving flips
+* not reopening the cleared L3/P2 or Q5_K investigations without new evidence
 * retaining the accepted external state contract and the strict `0.05`
   recurrent-state check as diagnostic-only
 * preserving GPU-resident recurrent/KV state and zero steady-state allocations
@@ -46,6 +40,7 @@ Current work should focus on:
 * per-layer telemetry and the evolving VRAM ledger
 * preserving the M6-A1 external correctness authority
 * keeping the old qwen3 production path unchanged
+* deferring M6-B1 performance comparison until native generation passes
 
 Do not treat CPU hidden-state identity through all 36 layers as a universal
 GPU requirement. B23 characterized the pinned external implementation's

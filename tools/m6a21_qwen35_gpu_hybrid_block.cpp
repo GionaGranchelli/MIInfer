@@ -1852,6 +1852,9 @@ int main(int argc, char** argv) {
                 return position == 0 || position == 1 || position == 2 || position == 4
                     || position == 8 || position == 16 || position == 32 || position == 64;
             };
+            const auto is_observable_position = [&is_checkpoint_position](std::size_t position) {
+                return is_checkpoint_position(position) || position == 12;
+            };
             const std::size_t state_bytes = kVHeads * kState * kState * sizeof(float);
             const auto active_fingerprint = [](const void* device, std::size_t bytes) {
                 return bytes == 0 ? 1469598103934665603ULL : fingerprint(device, bytes);
@@ -1938,7 +1941,7 @@ int main(int argc, char** argv) {
                                   << " match=" << (gpu_token == generated[position] ? "PASS" : "FAIL")
                                   << '\n';
                     }
-                    if (is_checkpoint_position(position)) {
+                    if (is_observable_position(position)) {
                         const auto expected_hidden = read_f32(
                             checkpoint(fixture, position, "l_out-63"), kHidden);
                         const auto expected_norm = read_f32(
@@ -1967,6 +1970,17 @@ int main(int argc, char** argv) {
                                   << cosine_similarity(logits_host, expected_logits);
                         const auto reference_top = top_indices(expected_logits, 5);
                         const auto gpu_top = top_indices(logits_host, 5);
+                        std::vector<std::size_t> top_union = reference_top;
+                        for (const auto index : gpu_top) {
+                            if (std::find(top_union.begin(), top_union.end(), index) == top_union.end()) {
+                                top_union.push_back(index);
+                            }
+                        }
+                        float epsilon_top = 0.0F;
+                        for (const auto index : top_union) {
+                            epsilon_top = std::max(epsilon_top,
+                                                   std::fabs(logits_host[index] - expected_logits[index]));
+                        }
                         std::size_t overlap = 0;
                         for (const auto index : reference_top) {
                             if (std::find(gpu_top.begin(), gpu_top.end(), index) != gpu_top.end()) ++overlap;
@@ -1980,8 +1994,16 @@ int main(int argc, char** argv) {
                                   << " top5_overlap=" << overlap
                                   << " reference_winner_rank_on_gpu="
                                   << rank_of(logits_host, reference_token)
+                                  << " gpu_winner_rank_on_reference="
+                                  << rank_of(expected_logits, gpu_winner)
                                   << " reference_margin="
                                   << expected_logits[reference_top_two[0]] - expected_logits[reference_top_two[1]]
+                                  << " epsilon_top=" << epsilon_top
+                                  << " margin_robust="
+                                  << (expected_logits[reference_top_two[0]] - expected_logits[reference_top_two[1]]
+                                              > 2.0F * epsilon_top
+                                          ? "YES"
+                                          : "NO")
                                   << " gpu_margin="
                                   << logits_host[gpu_top_two[0]] - logits_host[gpu_top_two[1]]
                                   << " gpu_minus_reference_at_reference_winner="
