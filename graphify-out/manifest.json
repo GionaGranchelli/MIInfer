@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788561445.5368667,
-    "seen": 1788561456.2912927,
-    "ast_hash": "92f1d135af8a2ead9c23463cd94fd7bf",
+    "mtime": 1788562571.0712059,
+    "seen": 1788562581.8695512,
+    "ast_hash": "cc8e446cfefa58c2196f894f2248f736",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788561445.5398667,
-    "seen": 1788561456.2913058,
-    "ast_hash": "19162c2080a04e8f2faa3c6f72e77754",
+    "mtime": 1788562571.0762057,
+    "seen": 1788562581.869563,
+    "ast_hash": "d69bfa899df3ad28a6c8a09454b8147c",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788561445.5378666,
-    "seen": 1788561456.2913272,
-    "ast_hash": "2ff8a844cf446a3f93728d760dc3ac84",
+    "mtime": 1788562571.0732057,
+    "seen": 1788562581.869585,
+    "ast_hash": "02dfd1b8ac9914978ee433af90fc497f",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -1551,6 +1551,12 @@
     "mtime": 1788562051.6836727,
     "seen": 1788562096.0064595,
     "ast_hash": "a75df204f62ff9e43541f1c505a2f6f3",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0099-m6b6-q5k-subgroup-layout.md": {
+    "mtime": 1788562571.0692058,
+    "seen": 1788562581.8697312,
+    "ast_hash": "b6aa3b520e281a6ff6f9e68e2d9a863c",
     "semantic_hash": ""
   }
 }

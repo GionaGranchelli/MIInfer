@@ -685,14 +685,18 @@ __global__ void qwen3_q5_k_q8_k_gemv_kernel(
         for (int group = 0; group < 8; ++group) {
             q5_k_scale_min(quant, group, scales[group], minimums[group]);
         }
-        for (int index = 0; index < 256; ++index) {
-            const int group = index / 32;
-            const int q_index = (index / 64) * 32 + index % 32;
-            const std::uint8_t packed = quant.ql[q_index];
-            const int low = (group & 1) == 0 ? packed & 0x0f : packed >> 4;
-            const int high = (quant.qh[index % 32] >> (2 * (group / 2) + (group & 1))) & 1;
-            partials[index % 8] += scales[group] * (low + (high << 4))
-                                   * static_cast<int>(activation.qs[index]);
+        for (int group = 0; group < 8; ++group) {
+            const int qh_shift = 2 * (group / 2) + (group & 1);
+            const bool high_bit = (group & 1) != 0;
+            const int q_base = (group / 2) * 32;
+            for (int index = 0; index < 32; ++index) {
+                const std::uint8_t packed = quant.ql[q_base + index];
+                const int low = high_bit ? packed >> 4 : packed & 0x0f;
+                const int high = (quant.qh[index] >> qh_shift) & 1;
+                const int element = group * 32 + index;
+                partials[index % 8] += scales[group] * (low + (high << 4))
+                                       * static_cast<int>(activation.qs[element]);
+            }
         }
         int sumi = 0;
         for (int group = 0; group < 8; ++group) {

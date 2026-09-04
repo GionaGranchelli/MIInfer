@@ -10,12 +10,12 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-B3 — Qwen3.8-27B quantized projection optimization**
+**Current phase: M6-B6 — Qwen3.8-27B quantized projection optimization**
 
 Immediate objective:
 
-> Refresh the native Qwen3.8-27B profile after the Q4_K metadata-staging
-> optimization and select the next measured whole-token target.
+> Refresh the native Qwen3.8-27B profile after the Q5_K subgroup-structured
+> dot-loop optimization and select the next measured whole-token target.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
