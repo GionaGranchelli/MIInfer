@@ -10,13 +10,12 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-A28 — native autoregressive GPU generation**
+**Current phase: M6-B0 — Qwen3.8-27B MI50 performance baseline**
 
 Immediate objective:
 
-> Validate native GPU autoregressive generation with persistent recurrent/KV
-> state, deterministic replay, finite outputs, and zero steady-state
-> allocations.
+> Benchmark native Qwen3.8-27B generation against the pinned llama.cpp
+> baseline at controlled MI50 clocks and identical workloads.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
@@ -28,7 +27,7 @@ and M6-A2 maps the reusable and missing projection contracts. See
 
 Current work should focus on:
 
-* executing M6-A28 native GPU autoregressive generation
+* executing the M6-B0 MI50 benchmark comparison
 * preserving EXP-0091's margin-aware observable closure: exact teacher-forced
   agreement remains a `62/64` diagnostic, while P2/P12 are low-margin,
   top-5-preserving flips
@@ -40,7 +39,8 @@ Current work should focus on:
 * per-layer telemetry and the evolving VRAM ledger
 * preserving the M6-A1 external correctness authority
 * keeping the old qwen3 production path unchanged
-* deferring M6-B1 performance comparison until native generation passes
+* retaining EXP-0092's A28 result: 16/64/128 native runs pass exact replay,
+  with zero decode-loop allocations and stable device usage
 
 Do not treat CPU hidden-state identity through all 36 layers as a universal
 GPU requirement. B23 characterized the pinned external implementation's

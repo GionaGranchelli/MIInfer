@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-A28 — native autoregressive GPU generation**
+**M6-B0 — Qwen3.8-27B MI50 performance baseline**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -970,6 +970,14 @@ gfx906 reference without broadening the project into a generic runtime.
 ---
 
 # Last Updated
+
+2026-09-04 — M6-A28 completed native Qwen3.8-27B autoregressive GPU generation
+for 16, 64, and 128 token runs. GPU Q4_K embedding, all 64 hybrid layers,
+LM-head argmax, recurrent/KV state, and replay were exercised. Each run had
+zero decode-loop allocations, exact replay, and stable device usage of
+`17018706644` bytes. See
+`experiments/EXP-0092-m6a28-native-qwen35-generation.md`. Next is M6-B0
+benchmarking; no MIInfer throughput claim has been made for Qwen3.8 yet.
 
 2026-09-04 — M6-A27-CLOSE adjudicated the two remaining teacher-forced argmax
 flips under the external observable contract. P2 (`1318 → 1044`) has 5/5

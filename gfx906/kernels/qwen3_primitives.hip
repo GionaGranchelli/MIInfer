@@ -91,6 +91,19 @@ __global__ void qwen3_q4_embedding_kernel(
     output[index] = q4_value(weights + static_cast<std::size_t>(block_index) * 18, index % 32);
 }
 
+__global__ void qwen35_q4_k_embedding_kernel(
+    const Q4KDeviceBlock* weights,
+    std::uint32_t token,
+    std::uint32_t vocabulary,
+    std::uint32_t hidden_size,
+    float* output) {
+    const std::uint32_t index = blockIdx.x * blockDim.x + threadIdx.x;
+    if (index >= hidden_size || token >= vocabulary) return;
+    const std::uint32_t blocks_per_row = hidden_size / 256;
+    const auto& block = weights[static_cast<std::size_t>(token) * blocks_per_row + index / 256];
+    output[index] = q4_k_value(block, static_cast<int>(index % 256));
+}
+
 __global__ void qwen3_rms_norm_kernel(
     const float* input,
     const float* weights,
@@ -869,6 +882,23 @@ void launch_qwen3_q4_embedding(
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     hipLaunchKernelGGL(qwen3_q4_embedding_kernel,
+                       dim3((hidden_size + 255) / 256), dim3(256), 0, stream,
+                       weights, token, vocabulary, hidden_size, output);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_q4_k_embedding(
+    const Q4KDeviceBlock* weights,
+    std::uint32_t token,
+    std::uint32_t vocabulary,
+    std::uint32_t hidden_size,
+    float* output,
+    hipStream_t stream) {
+    if (weights == nullptr || output == nullptr || vocabulary == 0 || hidden_size == 0
+        || hidden_size % 256 != 0 || token >= vocabulary) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen35_q4_k_embedding_kernel,
                        dim3((hidden_size + 255) / 256), dim3(256), 0, stream,
                        weights, token, vocabulary, hidden_size, output);
     MIINFER_HIP_CHECK(hipGetLastError());

@@ -975,7 +975,8 @@ int main(int argc, char** argv) {
                      "--prefix64-external-contract|--prefix64-l54-attribution|"
                      "--prefix64-l53-attribution|--prefix64-l53-gated-contract|"
                      "--prefix64-observable-contract|--prefix64-l0-l2-p2-trace|"
-                     "--prefix64-l0-p2-output-projection]\n";
+                     "--prefix64-l0-p2-output-projection|--generate16|--generate64|"
+                     "--generate128]\n";
         return 2;
     }
     const std::string mode = argc >= 4 ? argv[argc - 1] : "";
@@ -995,11 +996,15 @@ int main(int argc, char** argv) {
     const bool observable64 = mode == "--prefix64-observable-contract";
     const bool trace012 = mode == "--prefix64-l0-l2-p2-trace";
     const bool trace_l0_output = mode == "--prefix64-l0-p2-output-projection";
+    const bool generation = mode == "--generate16" || mode == "--generate64"
+        || mode == "--generate128";
+    const std::size_t generation_tokens = mode == "--generate16" ? 16
+        : mode == "--generate64" ? 64 : 128;
     const bool prefix32 = mode == "--prefix32" || locate32 || provenance32
         || operand_attribution32 || k_path_attribution32 || l29_path_attribution32
         || l29_gate_attribution32 || external_contract32;
     const bool prefix64 = external_contract64 || trace64 || trace53 || gate53_contract
-        || observable64 || trace012 || trace_l0_output;
+        || observable64 || trace012 || trace_l0_output || generation;
     const bool deep = mode == "--deep" || mode == "--block4-7" || prefix8 || prefix16 || prefix32
         || prefix64;
     const bool second_block = mode == "--block4-7" || prefix8 || prefix16 || prefix32 || prefix64;
@@ -1303,7 +1308,9 @@ int main(int argc, char** argv) {
             Buffer final_norm;
             Buffer final_q8;
             Buffer logits;
-            if (observable64) {
+            Buffer d_embedding;
+            Buffer argmax_token;
+            if (observable64 || generation) {
                 const auto& final_norm_weight = tensor(*model.file(), "output_norm.weight");
                 const auto& output_weight = tensor(*model.file(), "output.weight");
                 require_type(final_norm_weight, {miinfer::GgufTensorType::f32});
@@ -1315,6 +1322,13 @@ int main(int argc, char** argv) {
                 final_norm = allocate(kHidden * sizeof(float));
                 final_q8 = allocate((kHidden / 256) * sizeof(miinfer::Q8KDeviceBlock));
                 logits = allocate(model.config().vocab_size * sizeof(float));
+                if (generation) {
+                    const auto& embedding_weight = tensor(*model.file(), "token_embd.weight");
+                    require_type(embedding_weight, {miinfer::GgufTensorType::q4_k});
+                    d_embedding = allocate(embedding_weight.byte_size);
+                    upload_tensor(embedding_weight, d_embedding);
+                    argmax_token = allocate(sizeof(std::uint32_t));
+                }
             }
             RecurrentTrace l54_trace{fixture, 54, 1};
             if (trace64) recurrent32_plus[17]->trace = &l54_trace;
@@ -1334,6 +1348,88 @@ int main(int argc, char** argv) {
             if (gate53_contract) {
                 recurrent32_plus[16]->gate_path_capture = &l53_gate_path;
                 recurrent32_plus[16]->gate_path_capture_position = 1;
+            }
+            if (generation) {
+                const auto prompt = read_tokens(fixture / "prompt_tokens.txt");
+                if (prompt.size() != 1 || prompt.front() >= model.config().vocab_size) {
+                    throw std::runtime_error("generation requires one valid prompt token");
+                }
+                const std::size_t state_bytes = kVHeads * kState * kState * sizeof(float);
+                const auto reset_all = [&] {
+                    for (const auto& layer : layers) {
+                        if (layer.recurrent != nullptr) layer.recurrent->reset(fixture);
+                        if (layer.attention != nullptr) layer.attention->reset();
+                    }
+                    MIINFER_HIP_CHECK(hipDeviceSynchronize());
+                };
+                const auto run_generation = [&] {
+                    std::vector<std::uint32_t> tokens;
+                    tokens.reserve(generation_tokens);
+                    auto token = prompt.front();
+                    for (std::size_t position = 0; position < generation_tokens; ++position) {
+                        miinfer::launch_qwen35_q4_k_embedding(
+                            static_cast<const miinfer::Q4KDeviceBlock*>(d_embedding->get()),
+                            token, model.config().vocab_size, kHidden,
+                            static_cast<float*>(input->get()));
+                        run_prefix(std::span<const GpuLayerRef>(layers),
+                                   std::span<float* const>(output_pointers),
+                                   static_cast<const float*>(input->get()), position);
+                        miinfer::launch_qwen3_rms_norm(
+                            output_pointers[63],
+                            static_cast<const float*>(d_final_norm_weight->get()),
+                            static_cast<float*>(final_norm->get()), kHidden,
+                            model.config().rms_epsilon);
+                        miinfer::launch_qwen3_q8_k_quantize(
+                            static_cast<const float*>(final_norm->get()),
+                            static_cast<miinfer::Q8KDeviceBlock*>(final_q8->get()), kHidden);
+                        miinfer::launch_qwen3_q6_k_q8_k_gemv(
+                            static_cast<const miinfer::Q6KDeviceBlock*>(d_output_weight->get()),
+                            static_cast<const miinfer::Q8KDeviceBlock*>(final_q8->get()),
+                            static_cast<float*>(logits->get()), model.config().vocab_size, kHidden);
+                        miinfer::launch_qwen3_argmax(
+                            static_cast<const float*>(logits->get()),
+                            static_cast<std::uint32_t*>(argmax_token->get()),
+                            model.config().vocab_size);
+                        MIINFER_HIP_CHECK(hipDeviceSynchronize());
+                        std::uint32_t next = 0;
+                        MIINFER_HIP_CHECK(hipMemcpy(&next, argmax_token->get(),
+                                                    sizeof(next), hipMemcpyDeviceToHost));
+                        tokens.push_back(next);
+                        token = next;
+                    }
+                    std::uint64_t state_hash = 0;
+                    for (const auto& layer : layers) {
+                        if (layer.recurrent != nullptr) {
+                            state_hash ^= fingerprint(layer.recurrent->state->get(), state_bytes);
+                        } else {
+                            state_hash ^= fingerprint(layer.attention->key_cache->get(),
+                                4 * kCacheCapacity * 256 * sizeof(float));
+                            state_hash ^= fingerprint(layer.attention->value_cache->get(),
+                                4 * kCacheCapacity * 256 * sizeof(float));
+                        }
+                    }
+                    return std::pair<std::vector<std::uint32_t>, std::uint64_t>{
+                        std::move(tokens), state_hash};
+                };
+                const auto allocations_before_generation = g_device_allocations;
+                reset_all();
+                const auto first = run_generation();
+                reset_all();
+                const auto second = run_generation();
+                if (first.first != second.first || first.second != second.second) {
+                    throw std::runtime_error("native generation replay mismatch");
+                }
+                std::cout << "generated_tokens=" << first.first.size()
+                          << " first_token=" << first.first.front()
+                          << " last_token=" << first.first.back()
+                          << " replay=PASS"
+                          << " state_fingerprint=" << first.second
+                          << " allocations_during_decode="
+                          << (g_device_allocations - allocations_before_generation)
+                          << " device_bytes_after_setup=" << g_device_bytes
+                          << " peak_device_bytes=" << g_peak_device_bytes << '\n'
+                          << "M6-A28 qwen35 native autoregressive GPU generation PASS\n";
+                return 0;
             }
             if (trace012) {
                 static RecurrentTrace l0_trace{fixture, 0, 2};
