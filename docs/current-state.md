@@ -115,6 +115,9 @@ correctness. The strict `0.05` state check is unchanged for `--prefix32`; the
   decision is `1318` reference versus `1044` GPU. A27 therefore remains in
   RETEST; external observable correctness is not closed, and
   generation/performance benchmarking is still deferred.
+  EXP-0085's P2 layer scan finds measurable drift at L0, growth through L1/L2,
+  and bounded later relative RMS without a new L53/L54 discontinuity. The P2
+  final-logit decision remains the only teacher-forced mismatch (63/64).
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The
@@ -960,7 +963,10 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-04 — M6-A27.4 completed observable-contract adjudication: final P64
+2026-09-04 — M6-A27.5 localized the P2 mismatch to an early, distributed
+activation drift: measurable at L0, growing through L1/L2, and with no new
+L53/L54 discontinuity. A27 remains in RETEST; no tolerance or production
+behavior changed. M6-A27.4 completed observable-contract adjudication: final P64
 logits have cosine `0.999558` and 5/5 top-5 overlap, but teacher-forced
 argmax agreement is 63/64 with a deterministic P2 mismatch (`1318` → `1044`).
 A27 remains in RETEST; no tolerance or production behavior changed. M6-A27.3

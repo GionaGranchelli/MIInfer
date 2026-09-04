@@ -14,8 +14,9 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 Immediate objective:
 
-> Resolve the deterministic P2 teacher-forced argmax mismatch against the
-> external contract before closing full GPU composition.
+> Determine whether the deterministic P2 teacher-forced argmax mismatch is
+> acceptable under the external contract, or trace the earliest L0–L2
+> precision/representation boundary that causes it.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
@@ -32,6 +33,8 @@ Current work should focus on:
 * treating EXP-0084's 63/64 teacher-forced observable agreement as strong
   diagnostic evidence, not correctness closure; no generation or performance
   benchmark yet
+* using EXP-0085's P2 scan to focus any further correctness work on early
+  L0–L2 representation drift, not L53/L54 state mechanics
 * retaining the accepted external state contract and the strict `0.05`
   recurrent-state check as diagnostic-only
 * preserving GPU-resident recurrent/KV state and zero steady-state allocations
