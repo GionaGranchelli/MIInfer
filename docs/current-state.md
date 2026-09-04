@@ -101,8 +101,10 @@ correctness. The strict `0.05` state check is unchanged for `--prefix32`; the
   new `--prefix32-external-contract` mode reports it diagnostically and permits
   composition to continue. M6-A27 adds layers 32–63 through the same executor,
   but the external-contract run first fails at L54/P1. EXP-0081 shows L54
-  recurrent output remains close while its gated path and subsequent FFN amplify
-  the difference. A27 remains in RETEST pending a narrow L54 path attribution.
+  input already differs by `1.02168`, with recurrent output remaining close
+  while its gated path and subsequent FFN amplify the difference. EXP-0082
+  traces the matching L53 output and confirms that L54 inherits this discrepancy.
+  A27 remains in RETEST pending the external-contract decision.
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The
@@ -948,10 +950,13 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-04 — M6-A27.1 was recorded after the 64-layer run localized its first
-observable failure to the L54 gated path at P1. L54 recurrent output is within
-`0.000902295`, while final layer output reaches `23.1531`; A27 remains in
-RETEST. M6-A26.9 was recorded after adjudicating the external recurrent
+2026-09-04 — M6-A27.2 traced the L54/P1 input discrepancy to the preceding L53
+layer output: L53 output and L54 input both reach `1.02168` max error, while
+L53 recurrent output remains within `0.00111498`. A27 remains in RETEST.
+M6-A27.1 was recorded after the 64-layer run localized its first observable
+failure to the L54 gated path at P1. L54 recurrent output is within
+`0.000902295`, while final layer output reaches `23.1531`; M6-A26.9 was recorded
+after adjudicating the external recurrent
 state contract. The strict `0.05` internal state diagnostic remains unchanged,
 while the external-contract mode permits composition because recurrence,
 observable layer outputs, and deterministic reset/replay are valid. M6-A26.8

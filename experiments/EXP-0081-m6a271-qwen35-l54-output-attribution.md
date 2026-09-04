@@ -14,6 +14,7 @@ were inspected.
 
 | Boundary | Max abs | RMS | Relative RMS |
 | --- | ---: | ---: | ---: |
+| layer input | 1.02168 | 0.109515 | 0.0496428 |
 | recurrent state after update | 0.0301082 | 0.000229391 | 0.0409835 |
 | attention normalization | 0.447712 | 0.0551093 | 0.0530756 |
 | QKV projection | 0.798281 | 0.0665291 | 0.0408106 |
@@ -24,10 +25,12 @@ were inspected.
 | FFN output | 20.8795 | 0.320547 | 0.157004 |
 | layer output | 23.1531 | 0.379572 | 0.100529 |
 
-The L54 recurrent output remains close to the external checkpoint. The gated
-path is the first substantial recurrent-layer output discrepancy, and the FFN
-amplifies it. This mirrors the earlier L29 finding at a deeper composition
-boundary, but does not identify the responsible upstream operand yet.
+The L54 input already differs from the external L53 output checkpoint by
+`1.02168`. Normalization and QKV retain that difference, while the L54
+recurrent output remains close. The gated path is the first substantial
+recurrent-layer output discrepancy, and the FFN amplifies it. EXP-0082 traces
+the matching L53 output and confirms that L54 inherits the discrepancy from
+the preceding layer.
 
 ## Decision
 
@@ -36,6 +39,5 @@ changed. A27 remains RETEST.
 
 ## Follow-up
 
-Trace the L54 gated path with one bounded operand/input substitution experiment.
-Prioritize the L54 normalized input and gate projection; keep recurrence and
-FFN kernels unchanged.
+If needed, trace the L53 gated-path input/projection boundary; keep recurrence
+and FFN kernels unchanged.

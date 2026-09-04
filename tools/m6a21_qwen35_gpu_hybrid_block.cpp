@@ -867,7 +867,8 @@ int main(int argc, char** argv) {
                      "--prefix32-provenance|--prefix32-operand-attribution|"
                      "--prefix32-k-path-attribution|--prefix32-l29-path-attribution|"
                      "--prefix32-l29-gate-attribution|--prefix32-external-contract|"
-                     "--prefix64-external-contract|--prefix64-l54-attribution]\n";
+                     "--prefix64-external-contract|--prefix64-l54-attribution|"
+                     "--prefix64-l53-attribution]\n";
         return 2;
     }
     const std::string mode = argc >= 4 ? argv[argc - 1] : "";
@@ -882,10 +883,11 @@ int main(int argc, char** argv) {
     const bool external_contract32 = mode == "--prefix32-external-contract";
     const bool external_contract64 = mode == "--prefix64-external-contract";
     const bool trace64 = mode == "--prefix64-l54-attribution";
+    const bool trace53 = mode == "--prefix64-l53-attribution";
     const bool prefix32 = mode == "--prefix32" || locate32 || provenance32
         || operand_attribution32 || k_path_attribution32 || l29_path_attribution32
         || l29_gate_attribution32 || external_contract32;
-    const bool prefix64 = external_contract64 || trace64;
+    const bool prefix64 = external_contract64 || trace64 || trace53;
     const bool deep = mode == "--deep" || mode == "--block4-7" || prefix8 || prefix16 || prefix32
         || prefix64;
     const bool second_block = mode == "--block4-7" || prefix8 || prefix16 || prefix32 || prefix64;
@@ -1186,6 +1188,18 @@ int main(int argc, char** argv) {
             if (generated.size() < 64) throw std::runtime_error("fixture has fewer than 64 tokens");
             RecurrentTrace l54_trace{fixture, 54, 1};
             if (trace64) recurrent32_plus[17]->trace = &l54_trace;
+            LayerPathCapture l54_path;
+            if (trace64) {
+                recurrent32_plus[17]->layer_path_capture = &l54_path;
+                recurrent32_plus[17]->layer_path_capture_position = 1;
+            }
+            RecurrentTrace l53_trace{fixture, 53, 1};
+            if (trace53) recurrent32_plus[16]->trace = &l53_trace;
+            LayerPathCapture l53_path;
+            if (trace53) {
+                recurrent32_plus[16]->layer_path_capture = &l53_path;
+                recurrent32_plus[16]->layer_path_capture_position = 1;
+            }
             if (l29_path_attribution32) {
                 if (argc != 5) {
                     throw std::runtime_error("L29 path attribution requires an external fixture");
@@ -1600,13 +1614,13 @@ int main(int argc, char** argv) {
                                   << " rms=" << errors[layer].rms
                                   << " relative_rms=" << errors[layer].relative_rms << '\n';
                     }
-                    if (!(trace64 && position == 1)) {
+                    if (!((trace64 || trace53) && position == 1)) {
                         require_match("prefix output",
                                       Metrics{errors[layer].max_abs, errors[layer].rms, 0}, 2.0F);
                     }
                     maximum = std::max(maximum, errors[layer].max_abs);
                 }
-                if (!state_correct && !external_contract64 && !trace64) {
+                if (!state_correct && !external_contract64 && !trace64 && !trace53) {
                     throw std::runtime_error("prefix recurrent state mismatch");
                 }
                 std::cout << position;
@@ -1644,7 +1658,69 @@ int main(int argc, char** argv) {
                 }
                 record_caches(position, false, record);
                 if (trace64 && position == 1) {
+                    const auto read = [&](const char* name, std::size_t elements) {
+                        return read_f32(checkpoint(fixture, 1, name), elements);
+                    };
+                    const auto report = [](const char* label, std::span<const float> actual,
+                                           std::span<const float> expected) {
+                        const auto error = located_host_error(actual, expected);
+                        std::cout << "path label=" << label
+                                  << " max_abs=" << error.metrics.max_abs
+                                  << " mean_abs=" << error.metrics.mean_abs
+                                  << " rms=" << error.metrics.rms
+                                  << " relative_rms=" << error.metrics.relative_rms
+                                  << " max_index=" << error.index
+                                  << " reference=" << error.expected
+                                  << " gpu=" << error.actual << '\n';
+                    };
+                    std::cout << "M6-A27.1 L54 P1 input/path attribution\n";
+                    report("layer_input", l54_path.input, read("l_out-53", kHidden));
+                    report("attn_norm", l54_path.normalized, read("attn_norm-54", kHidden));
+                    report("qkv_projection", l54_path.qkv,
+                           read("linear_attn_qkv_mixed-54", kChannels));
+                    report("recurrent_output", l54_path.recurrent_output,
+                           read("attn_output-54", kVHeads * kState));
+                    report("gated", l54_path.gated, read("final_output-54", kVHeads * kState));
+                    report("attention_residual", l54_path.attention_residual,
+                           read("attn_residual-54", kHidden));
+                    report("post_normalized", l54_path.post_normalized,
+                           read("attn_post_norm-54", kHidden));
+                    report("ffn_output", l54_path.ffn_output, read("ffn_out-54", kHidden));
+                    report("layer_output", l54_path.layer_output, read("l_out-54", kHidden));
                     std::cout << "M6-A27.1 qwen35 L54 P1 attribution COMPLETE\n";
+                    return 0;
+                }
+                if (trace53 && position == 1) {
+                    const auto read = [&](const char* name, std::size_t elements) {
+                        return read_f32(checkpoint(fixture, 1, name), elements);
+                    };
+                    const auto report = [](const char* label, std::span<const float> actual,
+                                           std::span<const float> expected) {
+                        const auto error = located_host_error(actual, expected);
+                        std::cout << "path label=" << label
+                                  << " max_abs=" << error.metrics.max_abs
+                                  << " mean_abs=" << error.metrics.mean_abs
+                                  << " rms=" << error.metrics.rms
+                                  << " relative_rms=" << error.metrics.relative_rms
+                                  << " max_index=" << error.index
+                                  << " reference=" << error.expected
+                                  << " gpu=" << error.actual << '\n';
+                    };
+                    std::cout << "M6-A27.2 L53 P1 output provenance\n";
+                    report("layer_input", l53_path.input, read("l_out-52", kHidden));
+                    report("attn_norm", l53_path.normalized, read("attn_norm-53", kHidden));
+                    report("qkv_projection", l53_path.qkv,
+                           read("linear_attn_qkv_mixed-53", kChannels));
+                    report("recurrent_output", l53_path.recurrent_output,
+                           read("attn_output-53", kVHeads * kState));
+                    report("gated", l53_path.gated, read("final_output-53", kVHeads * kState));
+                    report("attention_residual", l53_path.attention_residual,
+                           read("attn_residual-53", kHidden));
+                    report("post_normalized", l53_path.post_normalized,
+                           read("attn_post_norm-53", kHidden));
+                    report("ffn_output", l53_path.ffn_output, read("ffn_out-53", kHidden));
+                    report("layer_output", l53_path.layer_output, read("l_out-53", kHidden));
+                    std::cout << "M6-A27.2 qwen35 L53 P1 attribution COMPLETE\n";
                     return 0;
                 }
             }

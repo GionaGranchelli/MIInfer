@@ -14,7 +14,8 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 Immediate objective:
 
-> Localize the L54/P1 gated-path divergence before closing full GPU composition.
+> Decide whether the inherited L53/L54 gated-path discrepancy is within the
+> external correctness contract before closing full GPU composition.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
@@ -26,8 +27,8 @@ and M6-A2 maps the reusable and missing projection contracts. See
 
 Current work should focus on:
 
-* tracing the L54/P1 normalized/gated path using one bounded attribution
-  experiment
+* retaining the EXP-0082 L53/P1 provenance result and avoiding further state
+  mechanics debugging without new evidence
 * retaining the accepted external state contract and the strict `0.05`
   recurrent-state check as diagnostic-only
 * preserving GPU-resident recurrent/KV state and zero steady-state allocations
