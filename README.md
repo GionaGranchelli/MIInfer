@@ -54,6 +54,9 @@ The project currently has:
 * a production-selected Q4_K packed-dot4 projection path improving native
   TG64/TG128 by about 9.6%/10.0%; see
   `experiments/EXP-0104-m6b11-q4k-packed-dot4.md`
+* a rejected Q6_K packed-dot4 projection experiment: functionally clean but
+  end-to-end neutral; see
+  `experiments/EXP-0105-m6b12-q6k-packed-dot4.md`
 * a reproducible llama.cpp-backed Qwen3.8-27B hybrid tensor/state fixture; see
   `experiments/EXP-0043-m6a1-qwen38-reference-fixture.md`
 * a read-only Qwen3.8 projection/kernel compatibility map; see
