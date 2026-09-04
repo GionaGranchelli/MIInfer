@@ -974,7 +974,11 @@ gfx906 reference without broadening the project into a generic runtime.
 contributions now match the scalar reference within `5.96e-8`, block-sum error
 is `0`, and external-gated projection error dropped from `0.00164509` to
 `9.53674e-7`. Release CTest remains 20/20. A27 still needs the existing
-64-layer observable-contract and trajectory retest. M6-A27.8 cleared the L0
+64-layer observable-contract and trajectory retest. That retest now shows L0–L2
+at roundoff for P2, but P2 remains `1318 → 1044` and P12 is also `1044 → 1459`;
+teacher-forced agreement is 62/64. The first visible P2 layer discrepancy is
+now L3 (`0.00255775`). A27 remains in RETEST; no tolerance was changed. See
+`experiments/EXP-0090-m6a279-qwen35-a27-observable-retest.md`. M6-A27.8 cleared the L0
 Q8_K activation contract: the external
 gated P2 replay produces a 7,008-byte Q8_K buffer byte-identical to the pinned
 llama.cpp reference (`0` mismatches, fingerprint

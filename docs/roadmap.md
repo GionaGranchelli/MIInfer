@@ -10,7 +10,7 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-A27 RETEST — Q5_K×Q8_K fix awaiting full-model retest**
+**Current phase: M6-A27 RETEST — post-fix L3/P2 observable divergence**
 
 Immediate objective:
 
@@ -1009,7 +1009,10 @@ M6-A27.9 found a real per-block Q5_K × Q8_K arithmetic-contract mismatch and
 fixed it with integer partial accumulation plus reference scale/minimum
 handling. The selected row's block-sum error fell to `0`, and external-gated
 projection error fell to `9.53674e-7`; Release CTest is 20/20. The fix now
-awaits the existing 64-layer observable-contract and trajectory retest. See
+passes the L0–L2 P2 boundaries at roundoff, but the unchanged 64-layer retest
+still has P2 `1318 → 1044` and P12 `1044 → 1459` (62/64 teacher-forced
+agreement). The first visible P2 discrepancy is now L3 (`0.00255775`). See
+`experiments/EXP-0090-m6a279-qwen35-a27-observable-retest.md` and
 `experiments/EXP-0089-m6a279-qwen35-l0-q5k-block-contract.md`.
 
 M6-A27.8 cleared the L0 Q8_K activation representation: the external-gated
