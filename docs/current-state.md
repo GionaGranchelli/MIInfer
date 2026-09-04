@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-A27 RETEST — sixty-four-layer GPU composition; L54/P1 output divergence**
+**M6-A27 RETEST — sixty-four-layer GPU composition; P2 observable-token divergence**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -107,7 +107,14 @@ correctness. The strict `0.05` state check is unchanged for `--prefix32`; the
   A27 remains in RETEST pending the external-contract decision. EXP-0083
   replays L53 gating with external recurrent and `z-53` operands and matches
   the external output to `4.77e-7`; the L32–L53 scan shows gradual activation
-  drift rather than a new gated-kernel or state-storage failure.
+  drift rather than a new gated-kernel or state-storage failure. EXP-0084
+  runs the full 64-layer executor through final RMSNorm and the LM head
+  without aborting on intermediate diagnostics. Final P64 logits remain
+  highly aligned (cosine `0.999558`, relative RMS `0.029748`), but
+  teacher-forced argmax agrees at only 63/64 positions: the deterministic P2
+  decision is `1318` reference versus `1044` GPU. A27 therefore remains in
+  RETEST; external observable correctness is not closed, and
+  generation/performance benchmarking is still deferred.
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The
@@ -953,7 +960,11 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-04 — M6-A27.3 cleared the L53 gated operation: external operands replay
+2026-09-04 — M6-A27.4 completed observable-contract adjudication: final P64
+logits have cosine `0.999558` and 5/5 top-5 overlap, but teacher-forced
+argmax agreement is 63/64 with a deterministic P2 mismatch (`1318` → `1044`).
+A27 remains in RETEST; no tolerance or production behavior changed. M6-A27.3
+cleared the L53 gated operation: external operands replay
 matches the external gated output within `4.77e-7`. The L32–L53 P1 scan shows
 gradual activation drift, reaching `1.02168` at L53, so A27 remains in RETEST
 for external-contract adjudication. M6-A27.2 traced the L54/P1 input discrepancy to the preceding L53

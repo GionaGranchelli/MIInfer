@@ -17,6 +17,7 @@
 #include <initializer_list>
 #include <iostream>
 #include <memory>
+#include <numeric>
 #include <span>
 #include <stdexcept>
 #include <string>
@@ -97,6 +98,48 @@ DetailedError detailed_compare(std::span<const float> actual,
     result.relative_rms = result.reference_rms == 0.0F
         ? result.rms : result.rms / result.reference_rms;
     return result;
+}
+
+float cosine_similarity(std::span<const float> actual, std::span<const float> expected) {
+    double dot = 0.0;
+    double actual_norm = 0.0;
+    double expected_norm = 0.0;
+    for (std::size_t i = 0; i < actual.size(); ++i) {
+        dot += static_cast<double>(actual[i]) * expected[i];
+        actual_norm += static_cast<double>(actual[i]) * actual[i];
+        expected_norm += static_cast<double>(expected[i]) * expected[i];
+    }
+    return actual_norm == 0.0 || expected_norm == 0.0
+        ? 0.0F : static_cast<float>(dot / std::sqrt(actual_norm * expected_norm));
+}
+
+std::size_t first_argmax(std::span<const float> values) {
+    std::size_t result = 0;
+    for (std::size_t i = 1; i < values.size(); ++i) {
+        if (values[i] > values[result]) result = i;
+    }
+    return result;
+}
+
+std::vector<std::size_t> top_indices(std::span<const float> values, std::size_t count) {
+    count = std::min(count, values.size());
+    std::vector<std::size_t> indices(values.size());
+    std::iota(indices.begin(), indices.end(), 0);
+    const auto better = [&values](std::size_t a, std::size_t b) {
+        return values[a] > values[b] || (values[a] == values[b] && a < b);
+    };
+    std::partial_sort(indices.begin(), indices.begin() + count, indices.end(), better);
+    indices.resize(count);
+    return indices;
+}
+
+std::size_t rank_of(std::span<const float> values, std::size_t index) {
+    std::size_t rank = 1;
+    for (std::size_t i = 0; i < values.size(); ++i) {
+        if (values[i] > values[index] ||
+            (values[i] == values[index] && i < index)) ++rank;
+    }
+    return rank;
 }
 
 DetailedError detailed_device_error(const float* device, std::size_t elements,
@@ -868,7 +911,8 @@ int main(int argc, char** argv) {
                      "--prefix32-k-path-attribution|--prefix32-l29-path-attribution|"
                      "--prefix32-l29-gate-attribution|--prefix32-external-contract|"
                      "--prefix64-external-contract|--prefix64-l54-attribution|"
-                     "--prefix64-l53-attribution|--prefix64-l53-gated-contract]\n";
+                     "--prefix64-l53-attribution|--prefix64-l53-gated-contract|"
+                     "--prefix64-observable-contract]\n";
         return 2;
     }
     const std::string mode = argc >= 4 ? argv[argc - 1] : "";
@@ -885,10 +929,11 @@ int main(int argc, char** argv) {
     const bool trace64 = mode == "--prefix64-l54-attribution";
     const bool trace53 = mode == "--prefix64-l53-attribution";
     const bool gate53_contract = mode == "--prefix64-l53-gated-contract";
+    const bool observable64 = mode == "--prefix64-observable-contract";
     const bool prefix32 = mode == "--prefix32" || locate32 || provenance32
         || operand_attribution32 || k_path_attribution32 || l29_path_attribution32
         || l29_gate_attribution32 || external_contract32;
-    const bool prefix64 = external_contract64 || trace64 || trace53 || gate53_contract;
+    const bool prefix64 = external_contract64 || trace64 || trace53 || gate53_contract || observable64;
     const bool deep = mode == "--deep" || mode == "--block4-7" || prefix8 || prefix16 || prefix32
         || prefix64;
     const bool second_block = mode == "--block4-7" || prefix8 || prefix16 || prefix32 || prefix64;
@@ -1187,6 +1232,24 @@ int main(int argc, char** argv) {
             Buffer input = allocate(kHidden * sizeof(float));
             const auto generated = read_tokens(fixture / "generated_tokens.txt");
             if (generated.size() < 64) throw std::runtime_error("fixture has fewer than 64 tokens");
+            Buffer d_final_norm_weight;
+            Buffer d_output_weight;
+            Buffer final_norm;
+            Buffer final_q8;
+            Buffer logits;
+            if (observable64) {
+                const auto& final_norm_weight = tensor(*model.file(), "output_norm.weight");
+                const auto& output_weight = tensor(*model.file(), "output.weight");
+                require_type(final_norm_weight, {miinfer::GgufTensorType::f32});
+                require_type(output_weight, {miinfer::GgufTensorType::q6_k});
+                d_final_norm_weight = allocate(final_norm_weight.byte_size);
+                d_output_weight = allocate(output_weight.byte_size);
+                upload_tensor(final_norm_weight, d_final_norm_weight);
+                upload_tensor(output_weight, d_output_weight);
+                final_norm = allocate(kHidden * sizeof(float));
+                final_q8 = allocate((kHidden / 256) * sizeof(miinfer::Q8KDeviceBlock));
+                logits = allocate(model.config().vocab_size * sizeof(float));
+            }
             RecurrentTrace l54_trace{fixture, 54, 1};
             if (trace64) recurrent32_plus[17]->trace = &l54_trace;
             LayerPathCapture l54_path;
@@ -1605,6 +1668,87 @@ int main(int argc, char** argv) {
                            std::span<float* const>(output_pointers).first(layer_count),
                            static_cast<const float*>(input->get()), position);
                 MIINFER_HIP_CHECK(hipDeviceSynchronize());
+                if (observable64) {
+                    miinfer::launch_qwen3_rms_norm(
+                        static_cast<const float*>(outputs[63]->get()),
+                        static_cast<const float*>(d_final_norm_weight->get()),
+                        static_cast<float*>(final_norm->get()), kHidden,
+                        model.config().rms_epsilon);
+                    miinfer::launch_qwen3_q8_k_quantize(
+                        static_cast<const float*>(final_norm->get()),
+                        static_cast<miinfer::Q8KDeviceBlock*>(final_q8->get()), kHidden);
+                    miinfer::launch_qwen3_q6_k_q8_k_gemv(
+                        static_cast<const miinfer::Q6KDeviceBlock*>(d_output_weight->get()),
+                        static_cast<const miinfer::Q8KDeviceBlock*>(final_q8->get()),
+                        static_cast<float*>(logits->get()), model.config().vocab_size, kHidden);
+                    MIINFER_HIP_CHECK(hipDeviceSynchronize());
+                    const auto final_hidden_host = download(outputs[63]->get(), kHidden);
+                    const auto final_norm_host = download(final_norm->get(), kHidden);
+                    const auto logits_host = download(logits->get(), model.config().vocab_size);
+                    const auto gpu_token = first_argmax(logits_host);
+                    if (position < generated.size()) {
+                        std::cout << "teacher_forced position=" << position
+                                  << " reference_argmax=" << generated[position]
+                                  << " gpu_argmax=" << gpu_token
+                                  << " match=" << (gpu_token == generated[position] ? "PASS" : "FAIL")
+                                  << '\n';
+                    }
+                    if (is_checkpoint_position(position)) {
+                        const auto expected_hidden = read_f32(
+                            checkpoint(fixture, position, "l_out-63"), kHidden);
+                        const auto expected_norm = read_f32(
+                            checkpoint(fixture, position, "result_norm"), kHidden);
+                        const auto expected_logits = read_f32(
+                            fixture / "logits" / ("logits-" + std::to_string(position) + ".f32"),
+                            model.config().vocab_size);
+                        const auto hidden_error = detailed_compare(final_hidden_host, expected_hidden);
+                        const auto norm_error = detailed_compare(final_norm_host, expected_norm);
+                        const auto logits_error = detailed_compare(logits_host, expected_logits);
+                        std::cout << "observable position=" << position
+                                  << " final_hidden_max_abs=" << hidden_error.max_abs
+                                  << " final_hidden_rms=" << hidden_error.rms
+                                  << " final_hidden_relative_rms=" << hidden_error.relative_rms
+                                  << " final_hidden_cosine="
+                                  << cosine_similarity(final_hidden_host, expected_hidden)
+                                  << " final_norm_max_abs=" << norm_error.max_abs
+                                  << " final_norm_rms=" << norm_error.rms
+                                  << " final_norm_relative_rms=" << norm_error.relative_rms
+                                  << " final_norm_cosine="
+                                  << cosine_similarity(final_norm_host, expected_norm)
+                                  << " logits_max_abs=" << logits_error.max_abs
+                                  << " logits_rms=" << logits_error.rms
+                                  << " logits_relative_rms=" << logits_error.relative_rms
+                                  << " logits_cosine="
+                                  << cosine_similarity(logits_host, expected_logits);
+                        const auto reference_top = top_indices(expected_logits, 5);
+                        const auto gpu_top = top_indices(logits_host, 5);
+                        std::size_t overlap = 0;
+                        for (const auto index : reference_top) {
+                            if (std::find(gpu_top.begin(), gpu_top.end(), index) != gpu_top.end()) ++overlap;
+                        }
+                        const auto reference_token = first_argmax(expected_logits);
+                        const auto gpu_winner = first_argmax(logits_host);
+                        const auto gpu_top_two = top_indices(logits_host, 2);
+                        const auto reference_top_two = top_indices(expected_logits, 2);
+                        std::cout << " reference_argmax=" << reference_token
+                                  << " gpu_argmax=" << gpu_winner
+                                  << " top5_overlap=" << overlap
+                                  << " reference_winner_rank_on_gpu="
+                                  << rank_of(logits_host, reference_token)
+                                  << " reference_margin="
+                                  << expected_logits[reference_top_two[0]] - expected_logits[reference_top_two[1]]
+                                  << " gpu_margin="
+                                  << logits_host[gpu_top_two[0]] - logits_host[gpu_top_two[1]]
+                                  << " gpu_minus_reference_at_reference_winner="
+                                  << logits_host[reference_token] - expected_logits[reference_token]
+                                  << '\n';
+                        std::cout << "reference_top5=";
+                        for (const auto index : reference_top) std::cout << index << ',';
+                        std::cout << " gpu_top5=";
+                        for (const auto index : gpu_top) std::cout << index << ',';
+                        std::cout << '\n';
+                    }
+                }
                 prefix_cpu_ms += 1000.0 * static_cast<double>(std::clock() - run_start)
                     / static_cast<double>(CLOCKS_PER_SEC);
                 if (!is_checkpoint_position(position)) continue;
@@ -1620,14 +1764,15 @@ int main(int argc, char** argv) {
                                   << " rms=" << errors[layer].rms
                                   << " relative_rms=" << errors[layer].relative_rms << '\n';
                     }
-                    if (!((trace64 || trace53 || gate53_contract) && position == 1)) {
+                    if (!observable64 &&
+                        !((trace64 || trace53 || gate53_contract) && position == 1)) {
                         require_match("prefix output",
                                       Metrics{errors[layer].max_abs, errors[layer].rms, 0}, 2.0F);
                     }
                     maximum = std::max(maximum, errors[layer].max_abs);
                 }
                 if (!state_correct && !external_contract64 && !trace64 && !trace53 &&
-                    !gate53_contract) {
+                    !gate53_contract && !observable64) {
                     throw std::runtime_error("prefix recurrent state mismatch");
                 }
                 std::cout << position;

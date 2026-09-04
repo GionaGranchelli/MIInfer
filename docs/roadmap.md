@@ -10,12 +10,12 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-A27 RETEST — sixty-four-layer GPU composition; L54/P1 output divergence**
+**Current phase: M6-A27 RETEST — sixty-four-layer GPU composition; P2 observable-token divergence**
 
 Immediate objective:
 
-> Adjudicate the accumulated L32–L54 activation envelope against the external
-> correctness contract before closing full GPU composition.
+> Resolve the deterministic P2 teacher-forced argmax mismatch against the
+> external contract before closing full GPU composition.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
@@ -29,6 +29,9 @@ Current work should focus on:
 
 * retaining the EXP-0082/EXP-0083 L53 provenance and gated-contract results;
   avoid further gated/state-mechanics debugging without new evidence
+* treating EXP-0084's 63/64 teacher-forced observable agreement as strong
+  diagnostic evidence, not correctness closure; no generation or performance
+  benchmark yet
 * retaining the accepted external state contract and the strict `0.05`
   recurrent-state check as diagnostic-only
 * preserving GPU-resident recurrent/KV state and zero steady-state allocations
