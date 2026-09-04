@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-B2 — Qwen3.8-27B recurrent projection optimization**
+**Current phase: M6-B3 — Qwen3.8-27B quantized projection optimization**
 
 The project currently has:
 
@@ -36,6 +36,9 @@ The project currently has:
 * a production-selected Q5_K scale/min unpack-hoisting optimization improving
   native TG64/TG128 by about 27%; see
   `experiments/EXP-0095-m6b2-q5k-scale-hoist.md`
+* a production-selected Q4_K metadata-staging optimization improving native
+  TG64/TG128 by about 38%; see
+  `experiments/EXP-0096-m6b3-q4k-metadata-staging.md`
 * a reproducible llama.cpp-backed Qwen3.8-27B hybrid tensor/state fixture; see
   `experiments/EXP-0043-m6a1-qwen38-reference-fixture.md`
 * a read-only Qwen3.8 projection/kernel compatibility map; see

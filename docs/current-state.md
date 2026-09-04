@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-B2 — Qwen3.8-27B recurrent projection optimization**
+**M6-B3 — Qwen3.8-27B quantized projection optimization**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -29,7 +29,9 @@ through the common executor. M6-A28 validates native autoregressive GPU
 generation through 128 tokens; EXP-0093 records the first MIInfer throughput
 baseline against the pinned llama.cpp control. EXP-0095 records a
 production-selected Q5_K scale/min unpack-hoisting optimization with about
-27% TG64/TG128 improvement and unchanged replay/resource checks.
+27% TG64/TG128 improvement, and EXP-0096 records a production-selected Q4_K
+metadata-staging optimization with about 38% additional TG64/TG128
+improvement and unchanged replay/resource checks.
 M6-A8 provides a dedicated qwen35 model boundary and a real layer-0 RMSNorm
 GPU fixture on gfx906. M6-A9 validates the real Q6_K output head through the
 existing Q6_K×Q8_K GPU primitive, M6-A10 validates a real Q4_K×Q8_K attention

@@ -811,14 +811,42 @@ __global__ void qwen3_q4_k_q8_k_gemv_kernel(
     const std::uint32_t row = blockIdx.x;
     if (row >= rows) return;
     __shared__ float partials[256];
+    constexpr std::uint32_t metadata_tile_blocks = 32;
+    __shared__ int tile_scales[metadata_tile_blocks][8];
+    __shared__ int tile_minimums[metadata_tile_blocks][8];
+    __shared__ float tile_d[metadata_tile_blocks];
+    __shared__ float tile_dmin[metadata_tile_blocks];
     const std::uint32_t lane = threadIdx.x;
     const std::uint32_t blocks_per_row = columns / 256;
     const auto* row_weights = weights + static_cast<std::size_t>(row) * blocks_per_row;
     float sum = 0.0F;
-    for (std::uint32_t block = 0; block < blocks_per_row; ++block) {
-        const auto& quant = row_weights[block];
-        sum += q4_k_value(quant, static_cast<int>(lane))
-               * static_cast<float>(input[block].qs[lane]) * input[block].d;
+    for (std::uint32_t tile_base = 0; tile_base < blocks_per_row;
+         tile_base += metadata_tile_blocks) {
+        const std::uint32_t tile_count = min(metadata_tile_blocks, blocks_per_row - tile_base);
+        if (lane < tile_count) {
+            const auto& quant = row_weights[tile_base + lane];
+            tile_d[lane] = half_to_float(quant.d);
+            tile_dmin[lane] = half_to_float(quant.dmin);
+            for (std::uint32_t group = 0; group < 8; ++group) {
+                q4_k_scale_min(quant, static_cast<int>(group), tile_scales[lane][group],
+                               tile_minimums[lane][group]);
+            }
+        }
+        __syncthreads();
+        const std::uint32_t group = lane / 32;
+        const std::uint32_t quant_index = (lane / 64) * 32 + lane % 32;
+        for (std::uint32_t block = 0; block < tile_count; ++block) {
+            const auto& quant = row_weights[tile_base + block];
+            const std::uint8_t packed = quant.qs[quant_index];
+            const int quantized = (group & 1) == 0 ? packed & 0x0f : packed >> 4;
+            const float value = tile_d[block]
+                                * static_cast<float>(tile_scales[block][group] * quantized)
+                                - tile_dmin[block]
+                                * static_cast<float>(tile_minimums[block][group]);
+            sum += value * static_cast<float>(input[tile_base + block].qs[lane])
+                   * input[tile_base + block].d;
+        }
+        if (tile_base + tile_count < blocks_per_row) __syncthreads();
     }
     partials[lane] = sum;
     __syncthreads();
