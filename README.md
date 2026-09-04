@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-B1 — Qwen3.8-27B native GPU generation baseline**
+**Current phase: M6-B2 — Qwen3.8-27B recurrent projection optimization**
 
 The project currently has:
 
@@ -33,6 +33,9 @@ The project currently has:
 * the first MI50 native-generation throughput baseline and fresh pinned
   llama.cpp comparison; see
   `experiments/EXP-0093-m6b1-qwen35-native-generation-baseline.md`
+* a production-selected Q5_K scale/min unpack-hoisting optimization improving
+  native TG64/TG128 by about 27%; see
+  `experiments/EXP-0095-m6b2-q5k-scale-hoist.md`
 * a reproducible llama.cpp-backed Qwen3.8-27B hybrid tensor/state fixture; see
   `experiments/EXP-0043-m6a1-qwen38-reference-fixture.md`
 * a read-only Qwen3.8 projection/kernel compatibility map; see

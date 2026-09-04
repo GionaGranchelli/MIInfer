@@ -10,12 +10,12 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-B0 — Qwen3.8-27B MI50 performance baseline**
+**Current phase: M6-B2 — Qwen3.8-27B recurrent projection optimization**
 
 Immediate objective:
 
-> Benchmark native Qwen3.8-27B generation against the pinned llama.cpp
-> baseline at controlled MI50 clocks and identical workloads.
+> Refresh the native Qwen3.8-27B profile after the Q5_K recurrent projection
+> optimization and select the next measured whole-token target.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See

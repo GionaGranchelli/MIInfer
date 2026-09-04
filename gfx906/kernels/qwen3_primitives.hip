@@ -680,26 +680,24 @@ __global__ void qwen3_q5_k_q8_k_gemv_kernel(
         const auto& quant = row_weights[block];
         const auto& activation = input[block];
         int32_t partials[8] = {};
+        int scales[8];
+        int minimums[8];
+        for (int group = 0; group < 8; ++group) {
+            q5_k_scale_min(quant, group, scales[group], minimums[group]);
+        }
         for (int index = 0; index < 256; ++index) {
             const int group = index / 32;
             const int q_index = (index / 64) * 32 + index % 32;
             const std::uint8_t packed = quant.ql[q_index];
             const int low = (group & 1) == 0 ? packed & 0x0f : packed >> 4;
             const int high = (quant.qh[index % 32] >> (2 * (group / 2) + (group & 1))) & 1;
-            int scale = 0;
-            int minimum = 0;
-            q5_k_scale_min(quant, group, scale, minimum);
-            (void) minimum;
-            partials[index % 8] += scale * (low + (high << 4))
+            partials[index % 8] += scales[group] * (low + (high << 4))
                                    * static_cast<int>(activation.qs[index]);
         }
         int sumi = 0;
         for (int group = 0; group < 8; ++group) {
-            int minimum = 0;
-            int scale = 0;
-            q5_k_scale_min(quant, group, scale, minimum);
-            (void) scale;
-            sumi += (activation.bsums[group * 2] + activation.bsums[group * 2 + 1]) * minimum;
+            sumi += (activation.bsums[group * 2] + activation.bsums[group * 2 + 1])
+                    * minimums[group];
         }
         const float d = half_to_float(quant.d) * activation.d;
         const float dmin = half_to_float(quant.dmin) * activation.d;

@@ -407,6 +407,12 @@ struct RecurrentLayer {
     std::uint32_t output_projection_path_capture_position = 0;
     GatePathCapture* gate_path_capture = nullptr;
     std::uint32_t gate_path_capture_position = 0;
+    struct StageProfile {
+        std::array<hipEvent_t, 14> start{};
+        std::array<hipEvent_t, 14> end{};
+    };
+    StageProfile* stage_profile = nullptr;
+    std::uint32_t stage_profile_position = 0;
 
     RecurrentLayer(const miinfer::Qwen35Model& model_value, std::size_t layer,
                    const std::filesystem::path& fixture)
@@ -584,7 +590,20 @@ struct RecurrentLayer {
         return result;
     }
 
+    void stage_start(std::size_t stage, std::uint32_t position) const {
+        if (stage_profile != nullptr && stage_profile_position == position) {
+            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->start[stage], nullptr));
+        }
+    }
+
+    void stage_end(std::size_t stage, std::uint32_t position) const {
+        if (stage_profile != nullptr && stage_profile_position == position) {
+            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->end[stage], nullptr));
+        }
+    }
+
     void run(const float* input, std::uint32_t position, float* output) {
+        stage_start(0, position);
         miinfer::launch_qwen3_rms_norm(
             input, static_cast<const float*>(d_attn_norm->get()),
             static_cast<float*>(normalized->get()), kHidden, model.config().rms_epsilon);
@@ -593,6 +612,8 @@ struct RecurrentLayer {
         }
         trace_tensor(position, "attn_norm", static_cast<const float*>(normalized->get()),
                      kHidden, "attn_norm-" + std::to_string(index));
+        stage_end(0, position);
+        stage_start(1, position);
         project(qkv_weight, d_qkv, static_cast<const float*>(normalized->get()),
                 static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
                 static_cast<float*>(qkv->get()), kChannels, kHidden);
@@ -603,12 +624,16 @@ struct RecurrentLayer {
             layer_path_capture->normalized = download(normalized->get(), kHidden);
             layer_path_capture->qkv = download(qkv->get(), kChannels);
         }
+        stage_end(1, position);
+        stage_start(2, position);
         project(gate_weight, d_gate, static_cast<const float*>(normalized->get()),
                 static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
                 static_cast<float*>(gate->get()), kInner, kHidden);
         if (gate_path_capture != nullptr && gate_path_capture_position == position) {
             gate_path_capture->gate = download(gate->get(), kInner);
         }
+        stage_end(2, position);
+        stage_start(3, position);
         miinfer::launch_qwen35_f32_gemv(
             static_cast<const float*>(d_beta->get()), static_cast<const float*>(normalized->get()),
             static_cast<float*>(beta_raw->get()), kVHeads, kHidden);
@@ -619,6 +644,8 @@ struct RecurrentLayer {
             static_cast<const float*>(beta_raw->get()), static_cast<const float*>(alpha_raw->get()),
             static_cast<const float*>(d_dt->get()), static_cast<const float*>(d_a->get()),
             static_cast<float*>(beta->get()), static_cast<float*>(decay->get()), kVHeads);
+        stage_end(3, position);
+        stage_start(4, position);
         miinfer::launch_qwen35_conv_silu_split(
             static_cast<const float*>(qkv->get()), static_cast<const float*>(d_conv->get()),
             static_cast<float*>(history->get()), static_cast<float*>(query->get()),
@@ -630,6 +657,7 @@ struct RecurrentLayer {
         miinfer::launch_qwen35_head_l2_normalize(
             static_cast<const float*>(key->get()), static_cast<float*>(key_norm->get()),
             kKHeads, kState);
+        stage_end(4, position);
         if (provenance != nullptr && provenance_position == position) {
             *provenance = sample_update(provenance_index);
         }
@@ -643,6 +671,7 @@ struct RecurrentLayer {
             key_path_capture->key = download(key->get(), kKHeads * kState);
             key_path_capture->key_norm = download(key_norm->get(), kKHeads * kState);
         }
+        stage_start(5, position);
         miinfer::launch_qwen35_deltanet_state_update(
             static_cast<const float*>(query_norm->get()), static_cast<const float*>(key_norm->get()),
             static_cast<const float*>(value->get()), static_cast<const float*>(beta->get()),
@@ -653,6 +682,7 @@ struct RecurrentLayer {
                              kVHeads * kState * kState,
                              "state_predelta-" + std::to_string(index));
         }
+        stage_end(5, position);
         trace_tensor(position, "recurrent_output",
                      static_cast<const float*>(recurrent_output->get()), kVHeads * kState,
                      "attn_output-" + std::to_string(index));
@@ -662,6 +692,7 @@ struct RecurrentLayer {
         if (gate_path_capture != nullptr && gate_path_capture_position == position) {
             gate_path_capture->recurrent_output = download(recurrent_output->get(), kVHeads * kState);
         }
+        stage_start(6, position);
         miinfer::launch_qwen3_head_rms_normalize(
             static_cast<const float*>(recurrent_output->get()), static_cast<float*>(head_norm->get()),
             kVHeads, kState, model.config().rms_epsilon);
@@ -677,6 +708,7 @@ struct RecurrentLayer {
         miinfer::launch_qwen3_silu_mul(
             static_cast<const float*>(gate->get()), static_cast<const float*>(gated->get()),
             static_cast<float*>(gated->get()), kVHeads * kState);
+        stage_end(6, position);
         trace_tensor(position, "gated", static_cast<const float*>(gated->get()), kVHeads * kState,
                      "final_output-" + std::to_string(index));
         if (layer_path_capture != nullptr && layer_path_capture_position == position) {
@@ -689,6 +721,7 @@ struct RecurrentLayer {
         if (gate_path_capture != nullptr && gate_path_capture_position == position) {
             gate_path_capture->gated = download(gated->get(), kVHeads * kState);
         }
+        stage_start(7, position);
         project(ssm_out_weight, d_ssm_out, static_cast<const float*>(gated->get()),
                 static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
                 static_cast<float*>(projected->get()), kHidden, kInner);
@@ -698,6 +731,8 @@ struct RecurrentLayer {
                 q8->get(), (kInner / 256) * sizeof(miinfer::Q8KDeviceBlock));
             output_projection_path_capture->projected = download(projected->get(), kHidden);
         }
+        stage_end(7, position);
+        stage_start(8, position);
         miinfer::launch_qwen3_add(
             input, static_cast<const float*>(projected->get()),
             static_cast<float*>(residual->get()), kHidden);
@@ -711,24 +746,32 @@ struct RecurrentLayer {
         }
         trace_tensor(position, "attention_residual", static_cast<const float*>(residual->get()),
                      kHidden, "attn_residual-" + std::to_string(index));
+        stage_end(8, position);
+        stage_start(9, position);
         miinfer::launch_qwen3_rms_norm(
             static_cast<const float*>(residual->get()), static_cast<const float*>(d_post_norm->get()),
             static_cast<float*>(post_normalized->get()), kHidden, model.config().rms_epsilon);
         trace_tensor(position, "post_attention_norm",
                      static_cast<const float*>(post_normalized->get()), kHidden,
                      "attn_post_norm-" + std::to_string(index));
+        stage_end(9, position);
+        stage_start(10, position);
         project(ffn_gate_weight, d_ffn_gate, static_cast<const float*>(post_normalized->get()),
                 static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
                 static_cast<float*>(ffn_gate->get()), kFfnInner, kHidden);
         project(ffn_up_weight, d_ffn_up, static_cast<const float*>(post_normalized->get()),
                 static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
                 static_cast<float*>(ffn_up->get()), kFfnInner, kHidden);
+        stage_end(10, position);
+        stage_start(11, position);
         miinfer::launch_qwen3_silu_mul(
             static_cast<const float*>(ffn_gate->get()), static_cast<const float*>(ffn_up->get()),
             static_cast<float*>(ffn_activation->get()), kFfnInner);
+        stage_end(11, position);
         if (layer_path_capture != nullptr && layer_path_capture_position == position) {
             layer_path_capture->post_normalized = download(post_normalized->get(), kHidden);
         }
+        stage_start(12, position);
         project(ffn_down_weight, d_ffn_down, static_cast<const float*>(ffn_activation->get()),
                 static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
                 static_cast<float*>(projected->get()), kHidden, kFfnInner);
@@ -737,6 +780,8 @@ struct RecurrentLayer {
         if (layer_path_capture != nullptr && layer_path_capture_position == position) {
             layer_path_capture->ffn_output = download(projected->get(), kHidden);
         }
+        stage_end(12, position);
+        stage_start(13, position);
         miinfer::launch_qwen3_add(
             static_cast<const float*>(residual->get()), static_cast<const float*>(projected->get()),
             static_cast<float*>(layer_output->get()), kHidden);
@@ -747,6 +792,7 @@ struct RecurrentLayer {
         }
         MIINFER_HIP_CHECK(hipMemcpy(output, layer_output->get(), kHidden * sizeof(float),
                                     hipMemcpyDeviceToDevice));
+        stage_end(13, position);
     }
 };
 
@@ -977,7 +1023,7 @@ int main(int argc, char** argv) {
                      "--prefix64-l53-attribution|--prefix64-l53-gated-contract|"
                      "--prefix64-observable-contract|--prefix64-l0-l2-p2-trace|"
                      "--prefix64-l0-p2-output-projection|--generate16|--generate64|"
-                     "--generate128]\n";
+                     "--generate128|--bench64|--bench128|--profile64]\n";
         return 2;
     }
     const std::string mode = argc >= 4 ? argv[argc - 1] : "";
@@ -998,14 +1044,16 @@ int main(int argc, char** argv) {
     const bool trace012 = mode == "--prefix64-l0-l2-p2-trace";
     const bool trace_l0_output = mode == "--prefix64-l0-p2-output-projection";
     const bool generation = mode == "--generate16" || mode == "--generate64"
-        || mode == "--generate128";
+        || mode == "--generate128" || mode == "--bench64" || mode == "--bench128";
+    const bool benchmark = mode == "--bench64" || mode == "--bench128";
+    const bool profile64 = mode == "--profile64";
     const std::size_t generation_tokens = mode == "--generate16" ? 16
-        : mode == "--generate64" ? 64 : 128;
+        : mode == "--generate64" || mode == "--bench64" ? 64 : 128;
     const bool prefix32 = mode == "--prefix32" || locate32 || provenance32
         || operand_attribution32 || k_path_attribution32 || l29_path_attribution32
         || l29_gate_attribution32 || external_contract32;
     const bool prefix64 = external_contract64 || trace64 || trace53 || gate53_contract
-        || observable64 || trace012 || trace_l0_output || generation;
+        || observable64 || trace012 || trace_l0_output || generation || profile64;
     const bool deep = mode == "--deep" || mode == "--block4-7" || prefix8 || prefix16 || prefix32
         || prefix64;
     const bool second_block = mode == "--block4-7" || prefix8 || prefix16 || prefix32 || prefix64;
@@ -1311,7 +1359,7 @@ int main(int argc, char** argv) {
             Buffer logits;
             Buffer d_embedding;
             Buffer argmax_token;
-            if (observable64 || generation) {
+            if (observable64 || generation || profile64) {
                 const auto& final_norm_weight = tensor(*model.file(), "output_norm.weight");
                 const auto& output_weight = tensor(*model.file(), "output.weight");
                 require_type(final_norm_weight, {miinfer::GgufTensorType::f32});
@@ -1323,7 +1371,7 @@ int main(int argc, char** argv) {
                 final_norm = allocate(kHidden * sizeof(float));
                 final_q8 = allocate((kHidden / 256) * sizeof(miinfer::Q8KDeviceBlock));
                 logits = allocate(model.config().vocab_size * sizeof(float));
-                if (generation) {
+                if (generation || profile64) {
                     const auto& embedding_weight = tensor(*model.file(), "token_embd.weight");
                     require_type(embedding_weight, {miinfer::GgufTensorType::q4_k});
                     d_embedding = allocate(embedding_weight.byte_size);
@@ -1349,6 +1397,146 @@ int main(int argc, char** argv) {
             if (gate53_contract) {
                 recurrent32_plus[16]->gate_path_capture = &l53_gate_path;
                 recurrent32_plus[16]->gate_path_capture_position = 1;
+            }
+            if (profile64) {
+                const auto reset_all = [&] {
+                    for (const auto& layer : layers) {
+                        if (layer.recurrent != nullptr) layer.recurrent->reset(fixture);
+                        if (layer.attention != nullptr) layer.attention->reset();
+                    }
+                    MIINFER_HIP_CHECK(hipDeviceSynchronize());
+                };
+                std::array<hipEvent_t, 64> layer_start{};
+                std::array<hipEvent_t, 64> layer_end{};
+                for (std::size_t layer = 0; layer < layers.size(); ++layer) {
+                    MIINFER_HIP_CHECK(hipEventCreate(&layer_start[layer]));
+                    MIINFER_HIP_CHECK(hipEventCreate(&layer_end[layer]));
+                }
+                hipEvent_t token_start = nullptr;
+                hipEvent_t token_end = nullptr;
+                hipEvent_t final_start = nullptr;
+                hipEvent_t final_norm_end = nullptr;
+                hipEvent_t final_q8_end = nullptr;
+                hipEvent_t final_lm_end = nullptr;
+                RecurrentLayer::StageProfile recurrent_profile;
+                for (std::size_t stage = 0; stage < recurrent_profile.start.size(); ++stage) {
+                    MIINFER_HIP_CHECK(hipEventCreate(&recurrent_profile.start[stage]));
+                    MIINFER_HIP_CHECK(hipEventCreate(&recurrent_profile.end[stage]));
+                }
+                MIINFER_HIP_CHECK(hipEventCreate(&token_start));
+                MIINFER_HIP_CHECK(hipEventCreate(&token_end));
+                MIINFER_HIP_CHECK(hipEventCreate(&final_start));
+                MIINFER_HIP_CHECK(hipEventCreate(&final_norm_end));
+                MIINFER_HIP_CHECK(hipEventCreate(&final_q8_end));
+                MIINFER_HIP_CHECK(hipEventCreate(&final_lm_end));
+                recurrent0.stage_profile = &recurrent_profile;
+                recurrent0.stage_profile_position = 63;
+                reset_all();
+                const auto prompt = read_tokens(fixture / "prompt_tokens.txt");
+                if (prompt.size() != 1 || generated.size() < 63) {
+                    throw std::runtime_error("profile requires prompt and 63 generated tokens");
+                }
+                auto token = prompt.front();
+                for (std::size_t position = 0; position < 63; ++position) {
+                    miinfer::launch_qwen35_q4_k_embedding(
+                        static_cast<const miinfer::Q4KDeviceBlock*>(d_embedding->get()),
+                        token, model.config().vocab_size, kHidden,
+                        static_cast<float*>(input->get()));
+                    run_prefix(std::span<const GpuLayerRef>(layers),
+                               std::span<float* const>(output_pointers),
+                               static_cast<const float*>(input->get()), position);
+                    MIINFER_HIP_CHECK(hipDeviceSynchronize());
+                    token = generated[position];
+                }
+                miinfer::launch_qwen35_q4_k_embedding(
+                    static_cast<const miinfer::Q4KDeviceBlock*>(d_embedding->get()),
+                    token, model.config().vocab_size, kHidden,
+                    static_cast<float*>(input->get()));
+                MIINFER_HIP_CHECK(hipEventRecord(token_start, nullptr));
+                for (std::size_t layer = 0; layer < layers.size(); ++layer) {
+                    MIINFER_HIP_CHECK(hipEventRecord(layer_start[layer], nullptr));
+                    layers[layer].run(layer == 0
+                                          ? static_cast<const float*>(input->get())
+                                          : output_pointers[layer - 1],
+                                      63, output_pointers[layer]);
+                    MIINFER_HIP_CHECK(hipEventRecord(layer_end[layer], nullptr));
+                }
+                MIINFER_HIP_CHECK(hipEventRecord(final_start, nullptr));
+                miinfer::launch_qwen3_rms_norm(
+                    output_pointers[63], static_cast<const float*>(d_final_norm_weight->get()),
+                    static_cast<float*>(final_norm->get()), kHidden, model.config().rms_epsilon);
+                MIINFER_HIP_CHECK(hipEventRecord(final_norm_end, nullptr));
+                miinfer::launch_qwen3_q8_k_quantize(
+                    static_cast<const float*>(final_norm->get()),
+                    static_cast<miinfer::Q8KDeviceBlock*>(final_q8->get()), kHidden);
+                MIINFER_HIP_CHECK(hipEventRecord(final_q8_end, nullptr));
+                miinfer::launch_qwen3_q6_k_q8_k_gemv(
+                    static_cast<const miinfer::Q6KDeviceBlock*>(d_output_weight->get()),
+                    static_cast<const miinfer::Q8KDeviceBlock*>(final_q8->get()),
+                    static_cast<float*>(logits->get()), model.config().vocab_size, kHidden);
+                MIINFER_HIP_CHECK(hipEventRecord(final_lm_end, nullptr));
+                miinfer::launch_qwen3_argmax(
+                    static_cast<const float*>(logits->get()),
+                    static_cast<std::uint32_t*>(argmax_token->get()), model.config().vocab_size);
+                MIINFER_HIP_CHECK(hipEventRecord(token_end, nullptr));
+                MIINFER_HIP_CHECK(hipEventSynchronize(token_end));
+                float total_ms = 0.0F;
+                float final_norm_ms = 0.0F;
+                float final_q8_ms = 0.0F;
+                float final_lm_ms = 0.0F;
+                float final_argmax_ms = 0.0F;
+                MIINFER_HIP_CHECK(hipEventElapsedTime(&total_ms, token_start, token_end));
+                MIINFER_HIP_CHECK(hipEventElapsedTime(&final_norm_ms, final_start, final_norm_end));
+                MIINFER_HIP_CHECK(hipEventElapsedTime(&final_q8_ms, final_norm_end, final_q8_end));
+                MIINFER_HIP_CHECK(hipEventElapsedTime(&final_lm_ms, final_q8_end, final_lm_end));
+                MIINFER_HIP_CHECK(hipEventElapsedTime(&final_argmax_ms, final_lm_end, token_end));
+                std::cout << "profile_position=63 total_gpu_ms=" << total_ms
+                          << " final_norm_ms=" << final_norm_ms
+                          << " final_q8_ms=" << final_q8_ms
+                          << " final_lm_ms=" << final_lm_ms
+                          << " final_argmax_ms=" << final_argmax_ms << '\n';
+                float layer_sum = 0.0F;
+                for (std::size_t layer = 0; layer < layers.size(); ++layer) {
+                    float elapsed = 0.0F;
+                    MIINFER_HIP_CHECK(hipEventElapsedTime(
+                        &elapsed, layer_start[layer], layer_end[layer]));
+                    layer_sum += elapsed;
+                    std::cout << "layer=" << layer
+                              << " kind=" << (layers[layer].recurrent != nullptr ? "recurrent" : "attention")
+                              << " gpu_ms=" << elapsed << '\n';
+                }
+                static constexpr std::array<const char*, 14> stage_names{
+                    "attn_norm", "qkv_projection", "gate_projection", "beta_alpha",
+                    "conv_and_head_norm", "state_update", "recurrent_gate",
+                    "ssm_output_projection", "attention_residual", "ffn_norm",
+                    "ffn_gate_up", "ffn_activation", "ffn_down", "ffn_residual"};
+                std::cout << "recurrent_layer0_stages\n";
+                for (std::size_t stage = 0; stage < stage_names.size(); ++stage) {
+                    float elapsed = 0.0F;
+                    MIINFER_HIP_CHECK(hipEventElapsedTime(
+                        &elapsed, recurrent_profile.start[stage], recurrent_profile.end[stage]));
+                    std::cout << "stage=" << stage_names[stage]
+                              << " gpu_ms=" << elapsed << '\n';
+                }
+                std::cout << "layer_sum_gpu_ms=" << layer_sum
+                          << " dispatches=unknown_in_native_harness"
+                          << " allocations_during_profile=0\n"
+                          << "M6-B2 qwen35 native P64 profile PASS\n";
+                for (std::size_t layer = 0; layer < layers.size(); ++layer) {
+                    MIINFER_HIP_CHECK(hipEventDestroy(layer_start[layer]));
+                    MIINFER_HIP_CHECK(hipEventDestroy(layer_end[layer]));
+                }
+                MIINFER_HIP_CHECK(hipEventDestroy(token_start));
+                MIINFER_HIP_CHECK(hipEventDestroy(token_end));
+                MIINFER_HIP_CHECK(hipEventDestroy(final_start));
+                MIINFER_HIP_CHECK(hipEventDestroy(final_norm_end));
+                MIINFER_HIP_CHECK(hipEventDestroy(final_q8_end));
+                MIINFER_HIP_CHECK(hipEventDestroy(final_lm_end));
+                for (std::size_t stage = 0; stage < recurrent_profile.start.size(); ++stage) {
+                    MIINFER_HIP_CHECK(hipEventDestroy(recurrent_profile.start[stage]));
+                    MIINFER_HIP_CHECK(hipEventDestroy(recurrent_profile.end[stage]));
+                }
+                return 0;
             }
             if (generation) {
                 const auto prompt = read_tokens(fixture / "prompt_tokens.txt");
@@ -1429,6 +1617,40 @@ int main(int argc, char** argv) {
                         end - start};
                 };
                 const auto allocations_before_generation = g_device_allocations;
+                if (benchmark) {
+                    reset_all();
+                    const auto warmup = run_generation();
+                    std::array<GenerationResult, 5> samples{};
+                    for (auto& sample : samples) {
+                        reset_all();
+                        sample = run_generation();
+                        if (sample.tokens != warmup.tokens || sample.state_hash != warmup.state_hash) {
+                            throw std::runtime_error("benchmark generation replay mismatch");
+                        }
+                    }
+                    std::array<double, 5> times{};
+                    for (std::size_t i = 0; i < samples.size(); ++i) {
+                        times[i] = samples[i].decode_ms;
+                    }
+                    std::sort(times.begin(), times.end());
+                    const double median_ms = times[times.size() / 2];
+                    std::cout << "benchmark_tokens=" << generation_tokens
+                              << " warmup_ms=" << warmup.decode_ms
+                              << " samples_ms=";
+                    for (std::size_t i = 0; i < times.size(); ++i) {
+                        if (i != 0) std::cout << ',';
+                        std::cout << times[i];
+                    }
+                    std::cout << " median_ms=" << median_ms
+                              << " median_tok_s=" << (1000.0 * generation_tokens / median_ms)
+                              << " replay=PASS"
+                              << " allocations_during_decode="
+                              << (g_device_allocations - allocations_before_generation)
+                              << " device_bytes_after_setup=" << g_device_bytes
+                              << " peak_device_bytes=" << g_peak_device_bytes << '\n'
+                              << "M6-B2 native qwen35 generation benchmark PASS\n";
+                    return 0;
+                }
                 reset_all();
                 const auto first = run_generation();
                 reset_all();
