@@ -121,7 +121,10 @@ correctness. The strict `0.05` state check is unchanged for `--prefix32`; the
   EXP-0086 traces P2 operation boundaries through L0–L2: L0 recurrent output
   remains at roundoff while attention/residual reaches `0.00164509`; L1/L2
   QKV errors reach `0.0172018` and `0.0453629`. This confirms distributed
-  early representation drift rather than a new late-layer defect.
+  early representation drift rather than a new late-layer defect. EXP-0087
+  clears L0 gated output and residual arithmetic by shared-input replay, but
+  isolates the same `0.00164509` error in the direct Q8_K → Q5_K `ssm_out`
+  projection. A27 remains in RETEST pending this representation contract.
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The
@@ -967,7 +970,11 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-04 — M6-A27.6 traced P2 operation boundaries through L0–L2: L0
+2026-09-04 — M6-A27.7 isolated the L0 output-projection contract: external
+gated input replay through MIInfer's direct Q8_K → Q5_K `ssm_out` path leaves
+`0.00164509` error, while gated output and residual arithmetic are cleared.
+A27 remains in RETEST; no tolerance or production behavior changed. M6-A27.6
+traced P2 operation boundaries through L0–L2: L0
 recurrent output remains at roundoff, while attention/residual and later QKV
 boundaries introduce the first material discrepancies (`0.00164509`, `0.0172018`,
 `0.0453629`). A27 remains in RETEST; no tolerance or production behavior

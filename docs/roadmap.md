@@ -37,6 +37,8 @@ Current work should focus on:
   L0–L2 representation drift, not L53/L54 state mechanics
 * using EXP-0086's operation trace to focus the next test on L0 attention/
   residual and L1/L2 QKV representation boundaries
+* using EXP-0087's shared-input replay to focus the next test on the L0
+  `ssm_out` Q8_K activation/reference representation contract
 * retaining the accepted external state contract and the strict `0.05`
   recurrent-state check as diagnostic-only
 * preserving GPU-resident recurrent/KV state and zero steady-state allocations

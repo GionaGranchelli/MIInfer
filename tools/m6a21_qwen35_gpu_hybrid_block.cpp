@@ -248,6 +248,14 @@ struct LayerPathCapture {
     std::vector<float> layer_output;
 };
 
+struct OutputProjectionPathCapture {
+    std::vector<float> gated;
+    std::vector<std::byte> q8_input;
+    std::vector<float> projected;
+    std::vector<float> input;
+    std::vector<float> residual;
+};
+
 struct GatePathCapture {
     std::vector<float> recurrent_output;
     std::vector<float> head_norm;
@@ -277,6 +285,21 @@ std::vector<float> download(const void* device, std::size_t elements) {
     MIINFER_HIP_CHECK(hipMemcpy(host.data(), device, elements * sizeof(float),
                                 hipMemcpyDeviceToHost));
     return host;
+}
+
+std::vector<std::byte> download_bytes(const void* device, std::size_t bytes) {
+    std::vector<std::byte> host(bytes);
+    MIINFER_HIP_CHECK(hipMemcpy(host.data(), device, bytes, hipMemcpyDeviceToHost));
+    return host;
+}
+
+std::uint64_t host_fingerprint(std::span<const std::byte> bytes) {
+    std::uint64_t hash = 1469598103934665603ULL;
+    for (const auto byte : bytes) {
+        hash ^= static_cast<std::uint8_t>(byte);
+        hash *= 1099511628211ULL;
+    }
+    return hash;
 }
 
 std::uint64_t fingerprint(const void* device, std::size_t bytes) {
@@ -357,6 +380,8 @@ struct RecurrentLayer {
     std::uint32_t key_path_capture_position = 0;
     LayerPathCapture* layer_path_capture = nullptr;
     std::uint32_t layer_path_capture_position = 0;
+    OutputProjectionPathCapture* output_projection_path_capture = nullptr;
+    std::uint32_t output_projection_path_capture_position = 0;
     GatePathCapture* gate_path_capture = nullptr;
     std::uint32_t gate_path_capture_position = 0;
 
@@ -634,15 +659,30 @@ struct RecurrentLayer {
         if (layer_path_capture != nullptr && layer_path_capture_position == position) {
             layer_path_capture->gated = download(gated->get(), kVHeads * kState);
         }
+        if (output_projection_path_capture != nullptr
+            && output_projection_path_capture_position == position) {
+            output_projection_path_capture->gated = download(gated->get(), kVHeads * kState);
+        }
         if (gate_path_capture != nullptr && gate_path_capture_position == position) {
             gate_path_capture->gated = download(gated->get(), kVHeads * kState);
         }
         project(ssm_out_weight, d_ssm_out, static_cast<const float*>(gated->get()),
                 static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
                 static_cast<float*>(projected->get()), kHidden, kInner);
+        if (output_projection_path_capture != nullptr
+            && output_projection_path_capture_position == position) {
+            output_projection_path_capture->q8_input = download_bytes(
+                q8->get(), (kInner / 256) * sizeof(miinfer::Q8KDeviceBlock));
+            output_projection_path_capture->projected = download(projected->get(), kHidden);
+        }
         miinfer::launch_qwen3_add(
             input, static_cast<const float*>(projected->get()),
             static_cast<float*>(residual->get()), kHidden);
+        if (output_projection_path_capture != nullptr
+            && output_projection_path_capture_position == position) {
+            output_projection_path_capture->input = download(input, kHidden);
+            output_projection_path_capture->residual = download(residual->get(), kHidden);
+        }
         if (layer_path_capture != nullptr && layer_path_capture_position == position) {
             layer_path_capture->attention_residual = download(residual->get(), kHidden);
         }
@@ -912,7 +952,8 @@ int main(int argc, char** argv) {
                      "--prefix32-l29-gate-attribution|--prefix32-external-contract|"
                      "--prefix64-external-contract|--prefix64-l54-attribution|"
                      "--prefix64-l53-attribution|--prefix64-l53-gated-contract|"
-                     "--prefix64-observable-contract|--prefix64-l0-l2-p2-trace]\n";
+                     "--prefix64-observable-contract|--prefix64-l0-l2-p2-trace|"
+                     "--prefix64-l0-p2-output-projection]\n";
         return 2;
     }
     const std::string mode = argc >= 4 ? argv[argc - 1] : "";
@@ -931,11 +972,12 @@ int main(int argc, char** argv) {
     const bool gate53_contract = mode == "--prefix64-l53-gated-contract";
     const bool observable64 = mode == "--prefix64-observable-contract";
     const bool trace012 = mode == "--prefix64-l0-l2-p2-trace";
+    const bool trace_l0_output = mode == "--prefix64-l0-p2-output-projection";
     const bool prefix32 = mode == "--prefix32" || locate32 || provenance32
         || operand_attribution32 || k_path_attribution32 || l29_path_attribution32
         || l29_gate_attribution32 || external_contract32;
     const bool prefix64 = external_contract64 || trace64 || trace53 || gate53_contract
-        || observable64 || trace012;
+        || observable64 || trace012 || trace_l0_output;
     const bool deep = mode == "--deep" || mode == "--block4-7" || prefix8 || prefix16 || prefix32
         || prefix64;
     const bool second_block = mode == "--block4-7" || prefix8 || prefix16 || prefix32 || prefix64;
@@ -1289,6 +1331,79 @@ int main(int argc, char** argv) {
                     MIINFER_HIP_CHECK(hipDeviceSynchronize());
                 }
                 std::cout << "M6-A27.6 qwen35 P2 L0-L2 precision-boundary trace COMPLETE\n";
+                return 0;
+            }
+            if (trace_l0_output) {
+                OutputProjectionPathCapture production;
+                recurrent0.output_projection_path_capture = &production;
+                recurrent0.output_projection_path_capture_position = 2;
+                for (std::size_t position = 0; position <= 2; ++position) {
+                    const auto host_input = position > 1
+                        ? embedding(tensor(*model.file(), "token_embd.weight"), generated[position - 1])
+                        : read_f32(checkpoint(fixture, position, "model_input_embed"), kHidden);
+                    upload(host_input.data(), input->get(), host_input.size() * sizeof(float));
+                    run_prefix(std::span<const GpuLayerRef>(layers).first(layer_count),
+                               std::span<float* const>(output_pointers).first(layer_count),
+                               static_cast<const float*>(input->get()), position);
+                    MIINFER_HIP_CHECK(hipDeviceSynchronize());
+                }
+                const auto external_input = read_f32(
+                    checkpoint(fixture, 2, "model_input_embed"), kHidden);
+                const auto external_gated = read_f32(
+                    checkpoint(fixture, 2, "final_output-0"), kInner);
+                const auto external_residual = read_f32(
+                    checkpoint(fixture, 2, "attn_residual-0"), kHidden);
+                std::vector<float> external_projected(kHidden);
+                for (std::size_t i = 0; i < kHidden; ++i) {
+                    external_projected[i] = external_residual[i] - external_input[i];
+                }
+                const auto report = [](const char* label, std::span<const float> actual,
+                                       std::span<const float> expected) {
+                    const auto error = located_host_error(actual, expected);
+                    std::cout << "stage=" << label
+                              << " max_abs=" << error.metrics.max_abs
+                              << " mean_abs=" << error.metrics.mean_abs
+                              << " rms=" << error.metrics.rms
+                              << " relative_rms=" << error.metrics.relative_rms
+                              << " max_index=" << error.index
+                              << " external=" << error.expected
+                              << " gpu=" << error.actual << '\n';
+                };
+                report("production_gated", production.gated, external_gated);
+                report("production_projected", production.projected, external_projected);
+                report("production_residual", production.residual, external_residual);
+                std::cout << "production_q8k_bytes=" << production.q8_input.size()
+                          << " production_q8k_fingerprint="
+                          << host_fingerprint(production.q8_input) << '\n';
+
+                Buffer external_gated_device = allocate(external_gated.size() * sizeof(float));
+                Buffer external_projected_device = allocate(kHidden * sizeof(float));
+                Buffer external_q8_device = allocate(
+                    (kInner / 256) * sizeof(miinfer::Q8KDeviceBlock));
+                Buffer external_residual_device = allocate(kHidden * sizeof(float));
+                upload(external_gated.data(), external_gated_device->get(),
+                       external_gated.size() * sizeof(float));
+                project(recurrent0.ssm_out_weight, recurrent0.d_ssm_out,
+                        static_cast<const float*>(external_gated_device->get()),
+                        static_cast<miinfer::Q8KDeviceBlock*>(external_q8_device->get()),
+                        static_cast<float*>(external_projected_device->get()), kHidden, kInner);
+                upload(external_input.data(), external_residual_device->get(),
+                       external_input.size() * sizeof(float));
+                miinfer::launch_qwen3_add(
+                    static_cast<const float*>(external_residual_device->get()),
+                    static_cast<const float*>(external_projected_device->get()),
+                    static_cast<float*>(external_residual_device->get()), kHidden);
+                MIINFER_HIP_CHECK(hipDeviceSynchronize());
+                const auto replay_projected = download(external_projected_device->get(), kHidden);
+                const auto replay_residual = download(external_residual_device->get(), kHidden);
+                report("external_gated_replay_projected", replay_projected, external_projected);
+                report("external_gated_replay_residual", replay_residual, external_residual);
+                const auto replay_q8 = download_bytes(
+                    external_q8_device->get(), (kInner / 256) * sizeof(miinfer::Q8KDeviceBlock));
+                std::cout << "external_gated_replay_q8k_bytes=" << replay_q8.size()
+                          << " external_gated_replay_q8k_fingerprint="
+                          << host_fingerprint(replay_q8) << '\n';
+                std::cout << "M6-A27.7 qwen35 L0 P2 output-projection contract COMPLETE\n";
                 return 0;
             }
             if (l29_path_attribution32) {
