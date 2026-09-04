@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-B10 — Qwen3.8-27B recurrent-path optimization**
+**M6-B11 — Qwen3.8-27B Q4_K projection optimization**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -47,6 +47,9 @@ EXP-0103 tested reuse of the recurrent normalized Q8_K input between QKV and
 gate projections. It preserved replay but improved TG64/TG128 by only 0.07% /
 0.02%, below the useful threshold, so it was rejected and the separate
 quantization path remains active.
+EXP-0104 replaces the scalar Q4_K × Q8_K projection candidate with a
+gfx906 Wave64 packed-dot4 path. It is production-selected after replay and
+20/20 CTest: TG64/TG128 improve by 9.58%/9.99% to 8.41092/8.32747 tok/s.
 M6-A8 provides a dedicated qwen35 model boundary and a real layer-0 RMSNorm
 GPU fixture on gfx906. M6-A9 validates the real Q6_K output head through the
 existing Q6_K×Q8_K GPU primitive, M6-A10 validates a real Q4_K×Q8_K attention

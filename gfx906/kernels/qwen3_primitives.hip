@@ -861,6 +861,56 @@ __global__ void qwen3_q4_k_q8_k_gemv_kernel(
     if (lane == 0) output[row] = partials[0];
 }
 
+__device__ __forceinline__ int qwen3_dot4_i8(int lhs, int rhs, int accumulator) {
+    return __builtin_amdgcn_sdot4(lhs, rhs, accumulator, false);
+}
+
+__global__ void qwen3_q4_k_q8_k_gemv_dot4_kernel(
+    const Q4KDeviceBlock* weights,
+    const Q8KDeviceBlock* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns) {
+    const std::uint32_t row = blockIdx.x;
+    const std::uint32_t lane = threadIdx.x;
+    if (row >= rows || lane >= 64) return;
+    __shared__ float partials[64];
+    const std::uint32_t blocks_per_row = columns / 256;
+    const auto* row_weights = weights + static_cast<std::size_t>(row) * blocks_per_row;
+    const std::uint32_t element = lane * 4;
+    const std::uint32_t group = element / 32;
+    const std::uint32_t in_group = element % 32;
+    const std::uint32_t q_offset = (group / 2) * 32 + in_group;
+    const bool high_nibble = (group & 1) != 0;
+    const std::uint32_t scale_group = group;
+    float sum = 0.0F;
+    for (std::uint32_t block = 0; block < blocks_per_row; ++block) {
+        const auto& quant = row_weights[block];
+        const std::uint32_t packed_q =
+            *reinterpret_cast<const std::uint32_t*>(quant.qs + q_offset);
+        const std::uint32_t q = high_nibble
+            ? (packed_q >> 4) & 0x0f0f0f0f
+            : packed_q & 0x0f0f0f0f;
+        const std::uint32_t x =
+            *reinterpret_cast<const std::uint32_t*>(input[block].qs + element);
+        const int q_dot_x = qwen3_dot4_i8(static_cast<int>(q), static_cast<int>(x), 0);
+        const int x_sum = qwen3_dot4_i8(0x01010101, static_cast<int>(x), 0);
+        int scale = 0;
+        int minimum = 0;
+        q4_k_scale_min(quant, static_cast<int>(scale_group), scale, minimum);
+        sum += input[block].d * (half_to_float(quant.d) * static_cast<float>(scale * q_dot_x)
+                                 - half_to_float(quant.dmin)
+                                       * static_cast<float>(minimum * x_sum));
+    }
+    partials[lane] = sum;
+    __syncthreads();
+    for (std::uint32_t stride = 32; stride > 0; stride /= 2) {
+        if (lane < stride) partials[lane] += partials[lane + stride];
+        __syncthreads();
+    }
+    if (lane == 0) output[row] = partials[0];
+}
+
 __device__ __forceinline__ bool qwen3_argmax_wins(
     float candidate_value, std::uint32_t candidate_index,
     float best_value, std::uint32_t best_index) {
@@ -1275,6 +1325,22 @@ void launch_qwen3_q4_k_q8_k_gemv(
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     hipLaunchKernelGGL(qwen3_q4_k_q8_k_gemv_kernel, dim3(rows), dim3(256), 0, stream,
+                       weights, input, output, rows, columns);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen3_q4_k_q8_k_gemv_dot4(
+    const Q4KDeviceBlock* weights,
+    const Q8KDeviceBlock* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    hipStream_t stream) {
+    if (weights == nullptr || input == nullptr || output == nullptr || rows == 0 || columns == 0
+        || columns % 256 != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen3_q4_k_q8_k_gemv_dot4_kernel, dim3(rows), dim3(64), 0, stream,
                        weights, input, output, rows, columns);
     MIINFER_HIP_CHECK(hipGetLastError());
 }

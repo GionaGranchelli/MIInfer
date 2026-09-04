@@ -348,11 +348,19 @@ void project(const miinfer::GgufTensor& weight, const Buffer& device_weight,
              std::uint32_t rows, std::uint32_t columns) {
     miinfer::launch_qwen3_q8_k_quantize(input, q8, columns);
     switch (weight.type) {
-    case miinfer::GgufTensorType::q4_k:
-        miinfer::launch_qwen3_q4_k_q8_k_gemv(
-            static_cast<const miinfer::Q4KDeviceBlock*>(device_weight->get()), q8,
-            output, rows, columns);
+    case miinfer::GgufTensorType::q4_k: {
+        const char* dot4 = std::getenv("MIINFER_Q4K_DOT4");
+        if (dot4 == nullptr || std::strcmp(dot4, "0") != 0) {
+            miinfer::launch_qwen3_q4_k_q8_k_gemv_dot4(
+                static_cast<const miinfer::Q4KDeviceBlock*>(device_weight->get()), q8,
+                output, rows, columns);
+        } else {
+            miinfer::launch_qwen3_q4_k_q8_k_gemv(
+                static_cast<const miinfer::Q4KDeviceBlock*>(device_weight->get()), q8,
+                output, rows, columns);
+        }
         return;
+    }
     case miinfer::GgufTensorType::q5_k:
         miinfer::launch_qwen3_q5_k_q8_k_gemv(
             static_cast<const miinfer::Q5KDeviceBlock*>(device_weight->get()), q8,

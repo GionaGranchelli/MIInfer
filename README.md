@@ -51,6 +51,9 @@ The project currently has:
   `experiments/EXP-0102-m6b9-q6k-lm-head-index-hoist.md`
 * a rejected recurrent Q8_K input-reuse candidate; see
   `experiments/EXP-0103-m6b10-recurrent-q8-reuse.md`
+* a production-selected Q4_K packed-dot4 projection path improving native
+  TG64/TG128 by about 9.6%/10.0%; see
+  `experiments/EXP-0104-m6b11-q4k-packed-dot4.md`
 * a reproducible llama.cpp-backed Qwen3.8-27B hybrid tensor/state fixture; see
   `experiments/EXP-0043-m6a1-qwen38-reference-fixture.md`
 * a read-only Qwen3.8 projection/kernel compatibility map; see

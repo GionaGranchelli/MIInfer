@@ -303,6 +303,15 @@ void launch_qwen3_q4_k_q8_k_gemv(
     std::uint32_t columns,
     hipStream_t stream = nullptr);
 
+// Diagnostic gfx906 packed-dot candidate for Q4_K × Q8_K projections.
+void launch_qwen3_q4_k_q8_k_gemv_dot4(
+    const Q4KDeviceBlock* weights,
+    const Q8KDeviceBlock* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    hipStream_t stream = nullptr);
+
 void launch_qwen3_q5_k_q8_k_gemv(
     const Q5KDeviceBlock* weights,
     const Q8KDeviceBlock* input,
