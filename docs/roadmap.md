@@ -10,7 +10,7 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-A27 RETEST — L0 Q5_K×Q8_K projection contract remains**
+**Current phase: M6-A27 RETEST — Q5_K×Q8_K fix awaiting full-model retest**
 
 Immediate objective:
 
@@ -1005,6 +1005,13 @@ The project succeeds if it produces a rigorous answer to:
 > Does a runtime intentionally designed around gfx906 and a narrow model target provide meaningful advantages over the strongest generic-runtime implementations available for the same hardware?
 
 That answer must come from reproducible measurement.
+M6-A27.9 found a real per-block Q5_K × Q8_K arithmetic-contract mismatch and
+fixed it with integer partial accumulation plus reference scale/minimum
+handling. The selected row's block-sum error fell to `0`, and external-gated
+projection error fell to `9.53674e-7`; Release CTest is 20/20. The fix now
+awaits the existing 64-layer observable-contract and trajectory retest. See
+`experiments/EXP-0089-m6a279-qwen35-l0-q5k-block-contract.md`.
+
 M6-A27.8 cleared the L0 Q8_K activation representation: the external-gated
 P2 replay matches the pinned llama.cpp Q8_K reference byte-for-byte across all
 7,008 bytes. The remaining `ssm_out` discrepancy is downstream in the Q5_K ×

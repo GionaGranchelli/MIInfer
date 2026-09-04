@@ -970,7 +970,12 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-04 — M6-A27.8 cleared the L0 Q8_K activation contract: the external
+2026-09-04 — M6-A27.9 fixed the L0 Q5_K × Q8_K arithmetic contract: per-block
+contributions now match the scalar reference within `5.96e-8`, block-sum error
+is `0`, and external-gated projection error dropped from `0.00164509` to
+`9.53674e-7`. Release CTest remains 20/20. A27 still needs the existing
+64-layer observable-contract and trajectory retest. M6-A27.8 cleared the L0
+Q8_K activation contract: the external
 gated P2 replay produces a 7,008-byte Q8_K buffer byte-identical to the pinned
 llama.cpp reference (`0` mismatches, fingerprint
 `9331021456029706823`). The remaining L0 `ssm_out` projection discrepancy is

@@ -13,6 +13,7 @@
 #include <cstddef>
 #include <ctime>
 #include <cstdint>
+#include <cstring>
 #include <filesystem>
 #include <initializer_list>
 #include <iostream>
@@ -1434,7 +1435,83 @@ int main(int argc, char** argv) {
                           << host_fingerprint(reference_q8_bytes)
                           << " q8k_mismatch_bytes=" << q8_mismatch.count
                           << " q8k_first_mismatch=" << q8_mismatch.first << '\n';
-                std::cout << "M6-A27.8 qwen35 L0 P2 Q8_K contract COMPLETE\n";
+                const std::size_t row = located_host_error(replay_projected, external_projected).index;
+                const std::size_t blocks = kInner / 256;
+                std::vector<Q8K> host_q8(blocks);
+                std::memcpy(host_q8.data(), replay_q8.data(), replay_q8.size());
+                const auto* host_weights = reinterpret_cast<const Q5K*>(recurrent0.ssm_out_weight.data)
+                                           + row * blocks;
+                std::vector<float> host_contributions(blocks);
+                for (std::size_t block = 0; block < blocks; ++block) {
+                    std::array<std::int8_t, 256> q5{};
+                    std::uint8_t high_bit = 1;
+                    for (std::size_t group_pair = 0; group_pair < 4; ++group_pair) {
+                        const std::size_t q_offset = group_pair * 64;
+                        for (std::size_t index = 0; index < 32; ++index) {
+                            q5[q_offset + index] = static_cast<std::int8_t>(
+                                (host_weights[block].qs[group_pair * 32 + index] & 0x0fU)
+                                + ((host_weights[block].qh[index] & high_bit) != 0 ? 16 : 0));
+                            q5[q_offset + 32 + index] = static_cast<std::int8_t>(
+                                (host_weights[block].qs[group_pair * 32 + index] >> 4U)
+                                + ((host_weights[block].qh[index] & (high_bit << 1U)) != 0 ? 16 : 0));
+                        }
+                        high_bit = static_cast<std::uint8_t>(high_bit << 2U);
+                    }
+                    std::array<std::uint8_t, 8> scales{};
+                    std::array<std::uint8_t, 8> minimums{};
+                    for (std::size_t group = 0; group < 8; ++group) {
+                        scale_min(host_weights[block].scales, group, scales[group], minimums[group]);
+                    }
+                    std::array<std::int32_t, 8> partials{};
+                    for (std::size_t index = 0; index < 256; ++index) {
+                        partials[index % 8] += static_cast<std::int32_t>(scales[index / 32])
+                            * static_cast<std::int32_t>(q5[index])
+                            * static_cast<std::int32_t>(host_q8[block].qs[index]);
+                    }
+                    int sumi = 0;
+                    for (std::size_t group = 0; group < 16; ++group) {
+                        sumi += host_q8[block].bsums[group] * minimums[group / 2];
+                    }
+                    const float d = miinfer::fp16_bits_to_float(host_weights[block].d)
+                                    * host_q8[block].d;
+                    const float dmin = miinfer::fp16_bits_to_float(host_weights[block].dmin)
+                                       * host_q8[block].d;
+                    host_contributions[block] = -dmin * static_cast<float>(sumi);
+                    for (const auto partial : partials) {
+                        host_contributions[block] += d * static_cast<float>(partial);
+                    }
+                }
+                Buffer block_contributions_device = allocate(blocks * sizeof(float));
+                const auto* device_weights = static_cast<const miinfer::Q5KDeviceBlock*>(
+                    recurrent0.d_ssm_out->get()) + row * blocks;
+                const auto* device_q8 = static_cast<const miinfer::Q8KDeviceBlock*>(
+                    external_q8_device->get());
+                for (std::size_t block = 0; block < blocks; ++block) {
+                    miinfer::launch_qwen3_q5_k_q8_k_gemv(
+                        device_weights + block, device_q8 + block,
+                        static_cast<float*>(block_contributions_device->get()) + block,
+                        1, 256);
+                }
+                MIINFER_HIP_CHECK(hipDeviceSynchronize());
+                const auto gpu_contributions = download(block_contributions_device->get(), blocks);
+                std::cout << "q5k_row=" << row << " q5k_blocks=" << blocks << '\n';
+                for (std::size_t block = 0; block < blocks; ++block) {
+                    std::cout << "q5k_block=" << block
+                              << " host=" << host_contributions[block]
+                              << " gpu=" << gpu_contributions[block]
+                              << " abs_error=" << std::fabs(
+                                  gpu_contributions[block] - host_contributions[block]) << '\n';
+                }
+                const auto host_total = std::accumulate(
+                    host_contributions.begin(), host_contributions.end(), 0.0F);
+                const auto gpu_total = std::accumulate(
+                    gpu_contributions.begin(), gpu_contributions.end(), 0.0F);
+                std::cout << "q5k_host_block_sum=" << host_total
+                          << " q5k_gpu_block_sum=" << gpu_total
+                          << " q5k_block_sum_abs_error=" << std::fabs(gpu_total - host_total)
+                          << " external_row=" << external_projected[row]
+                          << " production_row=" << replay_projected[row] << '\n';
+                std::cout << "M6-A27.9 qwen35 L0 P2 Q5_K block contract COMPLETE\n";
                 return 0;
             }
             if (l29_path_attribution32) {
