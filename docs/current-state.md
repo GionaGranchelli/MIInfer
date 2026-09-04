@@ -104,7 +104,10 @@ correctness. The strict `0.05` state check is unchanged for `--prefix32`; the
   input already differs by `1.02168`, with recurrent output remaining close
   while its gated path and subsequent FFN amplify the difference. EXP-0082
   traces the matching L53 output and confirms that L54 inherits this discrepancy.
-  A27 remains in RETEST pending the external-contract decision.
+  A27 remains in RETEST pending the external-contract decision. EXP-0083
+  replays L53 gating with external recurrent and `z-53` operands and matches
+  the external output to `4.77e-7`; the L32–L53 scan shows gradual activation
+  drift rather than a new gated-kernel or state-storage failure.
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The
@@ -950,7 +953,10 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-04 — M6-A27.2 traced the L54/P1 input discrepancy to the preceding L53
+2026-09-04 — M6-A27.3 cleared the L53 gated operation: external operands replay
+matches the external gated output within `4.77e-7`. The L32–L53 P1 scan shows
+gradual activation drift, reaching `1.02168` at L53, so A27 remains in RETEST
+for external-contract adjudication. M6-A27.2 traced the L54/P1 input discrepancy to the preceding L53
 layer output: L53 output and L54 input both reach `1.02168` max error, while
 L53 recurrent output remains within `0.00111498`. A27 remains in RETEST.
 M6-A27.1 was recorded after the 64-layer run localized its first observable

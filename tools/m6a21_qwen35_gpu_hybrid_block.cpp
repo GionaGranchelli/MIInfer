@@ -868,7 +868,7 @@ int main(int argc, char** argv) {
                      "--prefix32-k-path-attribution|--prefix32-l29-path-attribution|"
                      "--prefix32-l29-gate-attribution|--prefix32-external-contract|"
                      "--prefix64-external-contract|--prefix64-l54-attribution|"
-                     "--prefix64-l53-attribution]\n";
+                     "--prefix64-l53-attribution|--prefix64-l53-gated-contract]\n";
         return 2;
     }
     const std::string mode = argc >= 4 ? argv[argc - 1] : "";
@@ -884,10 +884,11 @@ int main(int argc, char** argv) {
     const bool external_contract64 = mode == "--prefix64-external-contract";
     const bool trace64 = mode == "--prefix64-l54-attribution";
     const bool trace53 = mode == "--prefix64-l53-attribution";
+    const bool gate53_contract = mode == "--prefix64-l53-gated-contract";
     const bool prefix32 = mode == "--prefix32" || locate32 || provenance32
         || operand_attribution32 || k_path_attribution32 || l29_path_attribution32
         || l29_gate_attribution32 || external_contract32;
-    const bool prefix64 = external_contract64 || trace64 || trace53;
+    const bool prefix64 = external_contract64 || trace64 || trace53 || gate53_contract;
     const bool deep = mode == "--deep" || mode == "--block4-7" || prefix8 || prefix16 || prefix32
         || prefix64;
     const bool second_block = mode == "--block4-7" || prefix8 || prefix16 || prefix32 || prefix64;
@@ -1199,6 +1200,11 @@ int main(int argc, char** argv) {
             if (trace53) {
                 recurrent32_plus[16]->layer_path_capture = &l53_path;
                 recurrent32_plus[16]->layer_path_capture_position = 1;
+            }
+            GatePathCapture l53_gate_path;
+            if (gate53_contract) {
+                recurrent32_plus[16]->gate_path_capture = &l53_gate_path;
+                recurrent32_plus[16]->gate_path_capture_position = 1;
             }
             if (l29_path_attribution32) {
                 if (argc != 5) {
@@ -1614,13 +1620,14 @@ int main(int argc, char** argv) {
                                   << " rms=" << errors[layer].rms
                                   << " relative_rms=" << errors[layer].relative_rms << '\n';
                     }
-                    if (!((trace64 || trace53) && position == 1)) {
+                    if (!((trace64 || trace53 || gate53_contract) && position == 1)) {
                         require_match("prefix output",
                                       Metrics{errors[layer].max_abs, errors[layer].rms, 0}, 2.0F);
                     }
                     maximum = std::max(maximum, errors[layer].max_abs);
                 }
-                if (!state_correct && !external_contract64 && !trace64 && !trace53) {
+                if (!state_correct && !external_contract64 && !trace64 && !trace53 &&
+                    !gate53_contract) {
                     throw std::runtime_error("prefix recurrent state mismatch");
                 }
                 std::cout << position;
@@ -1721,6 +1728,65 @@ int main(int argc, char** argv) {
                     report("ffn_output", l53_path.ffn_output, read("ffn_out-53", kHidden));
                     report("layer_output", l53_path.layer_output, read("l_out-53", kHidden));
                     std::cout << "M6-A27.2 qwen35 L53 P1 attribution COMPLETE\n";
+                    return 0;
+                }
+                if (gate53_contract && position == 1) {
+                    const auto external_recurrent = read_f32(
+                        checkpoint(fixture, 1, "attn_output-53"), kVHeads * kState);
+                    const auto external_gate = read_f32(
+                        checkpoint(fixture, 1, "z-53"), kInner);
+                    const auto external_gated = read_f32(
+                        checkpoint(fixture, 1, "final_output-53"), kVHeads * kState);
+                    const auto replay_gated = [&](std::span<const float> recurrent,
+                                                  std::span<const float> gate) {
+                        Buffer d_recurrent = allocate(recurrent.size() * sizeof(float));
+                        Buffer d_gate = allocate(gate.size() * sizeof(float));
+                        Buffer d_head_norm = allocate(recurrent.size() * sizeof(float));
+                        Buffer d_gated = allocate(recurrent.size() * sizeof(float));
+                        upload(recurrent.data(), d_recurrent->get(), recurrent.size() * sizeof(float));
+                        upload(gate.data(), d_gate->get(), gate.size() * sizeof(float));
+                        miinfer::launch_qwen3_head_rms_normalize(
+                            static_cast<const float*>(d_recurrent->get()),
+                            static_cast<float*>(d_head_norm->get()), kVHeads, kState,
+                            model.config().rms_epsilon);
+                        miinfer::launch_qwen3_head_mul(
+                            static_cast<const float*>(d_head_norm->get()),
+                            static_cast<const float*>(recurrent32_plus[16]->d_ssm_norm->get()),
+                            static_cast<float*>(d_gated->get()), kVHeads, kState);
+                        miinfer::launch_qwen3_silu_mul(
+                            static_cast<const float*>(d_gate->get()),
+                            static_cast<const float*>(d_gated->get()),
+                            static_cast<float*>(d_gated->get()), kVHeads * kState);
+                        MIINFER_HIP_CHECK(hipDeviceSynchronize());
+                        return download(d_gated->get(), kVHeads * kState);
+                    };
+                    const auto report = [&](const char* label, std::span<const float> actual,
+                                            std::span<const float> expected) {
+                        const auto error = located_host_error(actual, expected);
+                        std::cout << "gated_contract=" << label
+                                  << " max_abs=" << error.metrics.max_abs
+                                  << " mean_abs=" << error.metrics.mean_abs
+                                  << " rms=" << error.metrics.rms
+                                  << " relative_rms=" << error.metrics.relative_rms
+                                  << " max_index=" << error.index
+                                  << " external=" << error.expected
+                                  << " gpu=" << error.actual << '\n';
+                    };
+                    report("production_recurrent", l53_gate_path.recurrent_output,
+                           external_recurrent);
+                    report("production_gate", l53_gate_path.gate, external_gate);
+                    report("external_operands", replay_gated(external_recurrent, external_gate),
+                           external_gated);
+                    report("external_recurrent", replay_gated(external_recurrent,
+                                                               l53_gate_path.gate),
+                           external_gated);
+                    report("external_gate", replay_gated(l53_gate_path.recurrent_output,
+                                                           external_gate),
+                           external_gated);
+                    report("production", replay_gated(l53_gate_path.recurrent_output,
+                                                       l53_gate_path.gate),
+                           external_gated);
+                    std::cout << "M6-A27.3 qwen35 L53 P1 gated contract COMPLETE\n";
                     return 0;
                 }
             }

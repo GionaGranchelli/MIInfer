@@ -45,7 +45,7 @@ struct Capture {
             "ffn_out-", "post_ffn-", "l_out-", "state_predelta-", "conv_output_raw-",
             "final_output-", "attn_q-", "attn_k-", "attn_v-", "attn_output-", "result_norm",
             "Qcur_full-", "Qcur_reshaped-", "Qcur_normed-", "Kcur-", "Kcur_normed-", "Vcur-",
-            "gate_reshaped-", "Qcur-", "attn_pregate-", "gate_sigmoid-", "attn_gated-"
+            "gate_reshaped-", "Qcur-", "attn_pregate-", "gate_sigmoid-", "attn_gated-", "z-"
         };
         return std::any_of(std::begin(needles), std::end(needles),
                            [name](const auto needle) { return name.find(needle) != std::string_view::npos; });
