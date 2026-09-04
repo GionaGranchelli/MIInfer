@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-A26.9 COMPLETE — external state contract accepted; full GPU composition next**
+**M6-A27 RETEST — sixty-four-layer GPU composition; L54/P1 output divergence**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -98,8 +98,11 @@ EXP-0079 adjudicates the external state contract: internal recurrent-state
 element identity remains diagnostic, while finite deterministic execution,
 observable layer/output envelopes, and reset/replay behavior define M6
 correctness. The strict `0.05` state check is unchanged for `--prefix32`; the
-new `--prefix32-external-contract` mode reports it diagnostically and permits
-composition to continue. Full GPU composition is now the next task.
+  new `--prefix32-external-contract` mode reports it diagnostically and permits
+  composition to continue. M6-A27 adds layers 32–63 through the same executor,
+  but the external-contract run first fails at L54/P1. EXP-0081 shows L54
+  recurrent output remains close while its gated path and subsequent FFN amplify
+  the difference. A27 remains in RETEST pending a narrow L54 path attribution.
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The
@@ -945,7 +948,10 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-04 — M6-A26.9 was recorded after adjudicating the external recurrent
+2026-09-04 — M6-A27.1 was recorded after the 64-layer run localized its first
+observable failure to the L54 gated path at P1. L54 recurrent output is within
+`0.000902295`, while final layer output reaches `23.1531`; A27 remains in
+RETEST. M6-A26.9 was recorded after adjudicating the external recurrent
 state contract. The strict `0.05` internal state diagnostic remains unchanged,
 while the external-contract mode permits composition because recurrence,
 observable layer outputs, and deterministic reset/replay are valid. M6-A26.8

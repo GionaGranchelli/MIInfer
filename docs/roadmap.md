@@ -10,12 +10,11 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-A26.9 COMPLETE — external state contract accepted; full GPU composition next**
+**Current phase: M6-A27 RETEST — sixty-four-layer GPU composition; L54/P1 output divergence**
 
 Immediate objective:
 
-> Compose the remaining Qwen3.8 GPU layers through the common executor while
-> retaining external output, deterministic replay, and state-fingerprint gates.
+> Localize the L54/P1 gated-path divergence before closing full GPU composition.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
@@ -27,8 +26,10 @@ and M6-A2 maps the reusable and missing projection contracts. See
 
 Current work should focus on:
 
-* composing the full qwen35 GPU trunk under the accepted external state
-  contract
+* tracing the L54/P1 normalized/gated path using one bounded attribution
+  experiment
+* retaining the accepted external state contract and the strict `0.05`
+  recurrent-state check as diagnostic-only
 * preserving GPU-resident recurrent/KV state and zero steady-state allocations
 * state fingerprints, reset/replay checks, and external checkpoints through P64
 * per-layer telemetry and the evolving VRAM ledger

@@ -866,7 +866,8 @@ int main(int argc, char** argv) {
                      "[--deep|--block4-7|--prefix8|--prefix16|--prefix32|--prefix32-locate|"
                      "--prefix32-provenance|--prefix32-operand-attribution|"
                      "--prefix32-k-path-attribution|--prefix32-l29-path-attribution|"
-                     "--prefix32-l29-gate-attribution|--prefix32-external-contract]\n";
+                     "--prefix32-l29-gate-attribution|--prefix32-external-contract|"
+                     "--prefix64-external-contract|--prefix64-l54-attribution]\n";
         return 2;
     }
     const std::string mode = argc >= 4 ? argv[argc - 1] : "";
@@ -879,11 +880,15 @@ int main(int argc, char** argv) {
     const bool l29_path_attribution32 = mode == "--prefix32-l29-path-attribution";
     const bool l29_gate_attribution32 = mode == "--prefix32-l29-gate-attribution";
     const bool external_contract32 = mode == "--prefix32-external-contract";
+    const bool external_contract64 = mode == "--prefix64-external-contract";
+    const bool trace64 = mode == "--prefix64-l54-attribution";
     const bool prefix32 = mode == "--prefix32" || locate32 || provenance32
         || operand_attribution32 || k_path_attribution32 || l29_path_attribution32
         || l29_gate_attribution32 || external_contract32;
-    const bool deep = mode == "--deep" || mode == "--block4-7" || prefix8 || prefix16 || prefix32;
-    const bool second_block = mode == "--block4-7" || prefix8 || prefix16 || prefix32;
+    const bool prefix64 = external_contract64 || trace64;
+    const bool deep = mode == "--deep" || mode == "--block4-7" || prefix8 || prefix16 || prefix32
+        || prefix64;
+    const bool second_block = mode == "--block4-7" || prefix8 || prefix16 || prefix32 || prefix64;
     if (argc >= 4 && !deep) {
         std::cerr << "unknown option: " << mode << '\n';
         return 2;
@@ -931,7 +936,7 @@ int main(int argc, char** argv) {
             recurrent6 = std::make_unique<RecurrentLayer>(model, 6, fixture);
             attention7 = std::make_unique<FullAttentionLayer>(model, 7);
         }
-        if (prefix16 || prefix32) {
+        if (prefix16 || prefix32 || prefix64) {
             recurrent8 = std::make_unique<RecurrentLayer>(model, 8, fixture);
             recurrent9 = std::make_unique<RecurrentLayer>(model, 9, fixture);
             recurrent10 = std::make_unique<RecurrentLayer>(model, 10, fixture);
@@ -941,7 +946,7 @@ int main(int argc, char** argv) {
             recurrent14 = std::make_unique<RecurrentLayer>(model, 14, fixture);
             attention15 = std::make_unique<FullAttentionLayer>(model, 15);
         }
-        if (prefix32) {
+        if (prefix32 || prefix64) {
             recurrent16 = std::make_unique<RecurrentLayer>(model, 16, fixture);
             recurrent17 = std::make_unique<RecurrentLayer>(model, 17, fixture);
             recurrent18 = std::make_unique<RecurrentLayer>(model, 18, fixture);
@@ -958,6 +963,17 @@ int main(int argc, char** argv) {
             recurrent29 = std::make_unique<RecurrentLayer>(model, 29, fixture);
             recurrent30 = std::make_unique<RecurrentLayer>(model, 30, fixture);
             attention31 = std::make_unique<FullAttentionLayer>(model, 31);
+        }
+        std::array<std::unique_ptr<RecurrentLayer>, 24> recurrent32_plus;
+        std::array<std::unique_ptr<FullAttentionLayer>, 8> attention32_plus;
+        if (prefix64) {
+            for (std::size_t layer = 0; layer < recurrent32_plus.size(); ++layer) {
+                const std::size_t model_layer = 32 + layer + layer / 3;
+                recurrent32_plus[layer] = std::make_unique<RecurrentLayer>(model, model_layer, fixture);
+            }
+            for (std::size_t layer = 0; layer < attention32_plus.size(); ++layer) {
+                attention32_plus[layer] = std::make_unique<FullAttentionLayer>(model, 35 + layer * 4);
+            }
         }
 
         if (locate32 || provenance32) {
@@ -1130,9 +1146,9 @@ int main(int argc, char** argv) {
             return 0;
         }
 
-        if (prefix8 || prefix16 || prefix32) {
-            const std::size_t layer_count = prefix32 ? 32 : prefix16 ? 16 : 8;
-            const std::array<GpuLayerRef, 32> layers{{
+        if (prefix8 || prefix16 || prefix32 || prefix64) {
+            const std::size_t layer_count = prefix64 ? 64 : prefix32 ? 32 : prefix16 ? 16 : 8;
+            std::array<GpuLayerRef, 64> layers{{
                 {&recurrent0, nullptr}, {&recurrent1, nullptr}, {&recurrent2, nullptr},
                 {nullptr, &attention3}, {recurrent4.get(), nullptr},
                 {recurrent5.get(), nullptr}, {recurrent6.get(), nullptr},
@@ -1149,8 +1165,18 @@ int main(int argc, char** argv) {
                 {nullptr, attention27.get()}, {recurrent28.get(), nullptr},
                 {recurrent29.get(), nullptr}, {recurrent30.get(), nullptr},
                 {nullptr, attention31.get()}}};
-            std::array<Buffer, 32> outputs{};
-            std::array<float*, 32> output_pointers{};
+            if (prefix64) {
+                for (std::size_t layer = 32; layer < 64; ++layer) {
+                    const std::size_t tail = layer - 32;
+                    if (tail % 4 == 3) {
+                        layers[layer] = {nullptr, attention32_plus[tail / 4].get()};
+                    } else {
+                        layers[layer] = {recurrent32_plus[tail - tail / 4].get(), nullptr};
+                    }
+                }
+            }
+            std::array<Buffer, 64> outputs{};
+            std::array<float*, 64> output_pointers{};
             for (std::size_t layer = 0; layer < layer_count; ++layer) {
                 outputs[layer] = allocate(kHidden * sizeof(float));
                 output_pointers[layer] = static_cast<float*>(outputs[layer]->get());
@@ -1158,6 +1184,8 @@ int main(int argc, char** argv) {
             Buffer input = allocate(kHidden * sizeof(float));
             const auto generated = read_tokens(fixture / "generated_tokens.txt");
             if (generated.size() < 64) throw std::runtime_error("fixture has fewer than 64 tokens");
+            RecurrentTrace l54_trace{fixture, 54, 1};
+            if (trace64) recurrent32_plus[17]->trace = &l54_trace;
             if (l29_path_attribution32) {
                 if (argc != 5) {
                     throw std::runtime_error("L29 path attribution requires an external fixture");
@@ -1560,16 +1588,27 @@ int main(int argc, char** argv) {
                 prefix_cpu_ms += 1000.0 * static_cast<double>(std::clock() - run_start)
                     / static_cast<double>(CLOCKS_PER_SEC);
                 if (!is_checkpoint_position(position)) continue;
-                std::array<DetailedError, 32> errors{};
+                std::array<DetailedError, 64> errors{};
                 for (std::size_t layer = 0; layer < layer_count; ++layer) {
                     errors[layer] = detailed_device_error(
                         static_cast<const float*>(outputs[layer]->get()), kHidden,
                         checkpoint(fixture, position, "l_out-" + std::to_string(layer)));
-                    require_match("prefix output",
-                                  Metrics{errors[layer].max_abs, errors[layer].rms, 0}, 2.0F);
+                    if (external_contract64 && errors[layer].max_abs > 2.0F) {
+                        std::cerr << "prefix64 external output mismatch position=" << position
+                                  << " layer=" << layer
+                                  << " max_abs=" << errors[layer].max_abs
+                                  << " rms=" << errors[layer].rms
+                                  << " relative_rms=" << errors[layer].relative_rms << '\n';
+                    }
+                    if (!(trace64 && position == 1)) {
+                        require_match("prefix output",
+                                      Metrics{errors[layer].max_abs, errors[layer].rms, 0}, 2.0F);
+                    }
                     maximum = std::max(maximum, errors[layer].max_abs);
                 }
-                if (!state_correct) throw std::runtime_error("prefix recurrent state mismatch");
+                if (!state_correct && !external_contract64 && !trace64) {
+                    throw std::runtime_error("prefix recurrent state mismatch");
+                }
                 std::cout << position;
                 for (std::size_t layer = 0; layer < layer_count; ++layer) {
                     const auto& error = errors[layer];
@@ -1604,6 +1643,10 @@ int main(int argc, char** argv) {
                     }
                 }
                 record_caches(position, false, record);
+                if (trace64 && position == 1) {
+                    std::cout << "M6-A27.1 qwen35 L54 P1 attribution COMPLETE\n";
+                    return 0;
+                }
             }
             for (std::size_t layer = 0; layer < layer_count; ++layer) {
                 if (layers[layer].recurrent != nullptr) layers[layer].recurrent->poison();
@@ -1668,7 +1711,9 @@ int main(int argc, char** argv) {
                       << " peak_device_bytes=" << g_peak_device_bytes
                       << " dispatches=not-instrumented copies=not-instrumented\n"
                       << "poisoned_reset_replay=PASS\n"
-                      << (external_contract32
+                      << (external_contract64
+                              ? "M6-A27 qwen35 sixty-four-layer external-contract PASS\n"
+                              : external_contract32
                               ? "M6-A26 qwen35 thirty-two-layer external-contract PASS\n"
                               : prefix32 ? "M6-A26 qwen35 thirty-two-layer GPU prefix PASS\n"
                                           : prefix16 ? "M6-A25 qwen35 sixteen-layer GPU prefix PASS\n"
@@ -1772,7 +1817,7 @@ int main(int argc, char** argv) {
                         maximum = std::max(maximum, error.max_abs);
                     }
                 }
-                if (deep && !state_correct && !external_contract32) {
+                if (deep && !state_correct && !external_contract32 && !external_contract64) {
                     throw std::runtime_error("hybrid recurrent state mismatch");
                 }
                 if (second_block) {
