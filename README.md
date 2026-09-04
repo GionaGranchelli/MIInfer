@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-A26 RETEST — qwen35 thirty-two-layer GPU prefix; M6-B1 deferred**
+**Current phase: M6-B1 — Qwen3.8-27B native GPU generation baseline**
 
 The project currently has:
 
@@ -27,6 +27,12 @@ The project currently has:
 * a model-backed tokenizer and minimal text-facing greedy CLI
 * a completed Qwen3.8-27B GGUF/architecture audit; see
   `experiments/EXP-0042-m6a0-qwen38-27b-gguf-audit.md`
+* native Qwen3.8-27B GPU generation through 128 tokens with deterministic
+  replay and zero decode-loop allocations; see
+  `experiments/EXP-0092-m6a28-native-qwen35-generation.md`
+* the first MI50 native-generation throughput baseline and fresh pinned
+  llama.cpp comparison; see
+  `experiments/EXP-0093-m6b1-qwen35-native-generation-baseline.md`
 * a reproducible llama.cpp-backed Qwen3.8-27B hybrid tensor/state fixture; see
   `experiments/EXP-0043-m6a1-qwen38-reference-fixture.md`
 * a read-only Qwen3.8 projection/kernel compatibility map; see
@@ -108,14 +114,14 @@ The project currently has:
   see `experiments/EXP-0075-m6a265-qwen35-l30-k-path-provenance.md`
 
 Sampling and serving remain out of scope. M5 is closed as a measured local
-optimization campaign. M6-A host bring-up and qwen35 GPU operation bring-up
-are progressing. The full Qwen3.8 GPU path is not yet implemented, so M6-B1
-performance measurement remains deferred. The next bring-up gate is resolving
-the L30 recurrent-state envelope before full qwen35 GPU composition.
+optimization campaign. M6-A bring-up is complete for the native qwen35 GPU
+generation path. M6-B1 now has a first performance baseline; the current
+benchmark harness is functional but not yet workload-equivalent enough for a
+final parity claim.
 
-The current production path is approximately 55 tok/s at stable peak for the
-previous Qwen3-8B target. Qwen3.8-27B is not yet supported by the production
-runtime.
+The previous Qwen3-8B production path is approximately 55 tok/s at stable
+peak. The current Qwen3.8-27B native GPU path measures approximately 3.36
+tok/s for TG128 at stable peak and remains a bring-up/performance baseline.
 
 ---
 

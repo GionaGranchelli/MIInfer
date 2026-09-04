@@ -22,6 +22,7 @@
 #include <span>
 #include <stdexcept>
 #include <string>
+#include <time.h>
 #include <utility>
 #include <vector>
 
@@ -1362,10 +1363,24 @@ int main(int argc, char** argv) {
                     }
                     MIINFER_HIP_CHECK(hipDeviceSynchronize());
                 };
+                struct GenerationResult {
+                    std::vector<std::uint32_t> tokens;
+                    std::uint64_t state_hash = 0;
+                    double decode_ms = 0.0;
+                };
+                const auto monotonic_ms = [] {
+                    timespec timestamp{};
+                    if (clock_gettime(CLOCK_MONOTONIC_RAW, &timestamp) != 0) {
+                        throw std::runtime_error("clock_gettime failed");
+                    }
+                    return static_cast<double>(timestamp.tv_sec) * 1000.0
+                        + static_cast<double>(timestamp.tv_nsec) / 1000000.0;
+                };
                 const auto run_generation = [&] {
                     std::vector<std::uint32_t> tokens;
                     tokens.reserve(generation_tokens);
                     auto token = prompt.front();
+                    const double start = monotonic_ms();
                     for (std::size_t position = 0; position < generation_tokens; ++position) {
                         miinfer::launch_qwen35_q4_k_embedding(
                             static_cast<const miinfer::Q4KDeviceBlock*>(d_embedding->get()),
@@ -1397,6 +1412,7 @@ int main(int argc, char** argv) {
                         tokens.push_back(next);
                         token = next;
                     }
+                    const double end = monotonic_ms();
                     std::uint64_t state_hash = 0;
                     for (const auto& layer : layers) {
                         if (layer.recurrent != nullptr) {
@@ -1408,22 +1424,29 @@ int main(int argc, char** argv) {
                                 4 * kCacheCapacity * 256 * sizeof(float));
                         }
                     }
-                    return std::pair<std::vector<std::uint32_t>, std::uint64_t>{
-                        std::move(tokens), state_hash};
+                    return GenerationResult{
+                        std::move(tokens), state_hash,
+                        end - start};
                 };
                 const auto allocations_before_generation = g_device_allocations;
                 reset_all();
                 const auto first = run_generation();
                 reset_all();
                 const auto second = run_generation();
-                if (first.first != second.first || first.second != second.second) {
+                if (first.tokens != second.tokens || first.state_hash != second.state_hash) {
                     throw std::runtime_error("native generation replay mismatch");
                 }
-                std::cout << "generated_tokens=" << first.first.size()
-                          << " first_token=" << first.first.front()
-                          << " last_token=" << first.first.back()
+                const double first_tps = 1000.0 * first.tokens.size() / first.decode_ms;
+                const double second_tps = 1000.0 * second.tokens.size() / second.decode_ms;
+                std::cout << "generated_tokens=" << first.tokens.size()
+                          << " first_token=" << first.tokens.front()
+                          << " last_token=" << first.tokens.back()
                           << " replay=PASS"
-                          << " state_fingerprint=" << first.second
+                          << " first_decode_ms=" << first.decode_ms
+                          << " first_tok_s=" << first_tps
+                          << " second_decode_ms=" << second.decode_ms
+                          << " second_tok_s=" << second_tps
+                          << " state_fingerprint=" << first.state_hash
                           << " allocations_during_decode="
                           << (g_device_allocations - allocations_before_generation)
                           << " device_bytes_after_setup=" << g_device_bytes

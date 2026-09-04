@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-B0 — Qwen3.8-27B MI50 performance baseline**
+**M6-B1 — Qwen3.8-27B native GPU generation baseline**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -25,8 +25,9 @@ the complete recurrent state and full-attention KV histories through positions
 0–64, with external final-norm/logit checkpoints and greedy-token checks at
 positions 0, 1, 2, 4, 8, 16, 32, and 64. M6-B0 establishes the external MI50
 performance baseline. M6-A27 now composes all 64 qwen35 layers on the GPU
-through the common executor; M6-B1 remains deferred until native
-autoregressive generation is validated.
+through the common executor. M6-A28 validates native autoregressive GPU
+generation through 128 tokens; EXP-0093 records the first MIInfer throughput
+baseline against the pinned llama.cpp control.
 M6-A8 provides a dedicated qwen35 model boundary and a real layer-0 RMSNorm
 GPU fixture on gfx906. M6-A9 validates the real Q6_K output head through the
 existing Q6_K×Q8_K GPU primitive, M6-A10 validates a real Q4_K×Q8_K attention
@@ -798,8 +799,8 @@ full forward, and stateful host validation (CLOSED)
 M6-B0 — upstream llama.cpp Qwen3.8-27B Q4_K_M MI50 baseline (CLOSED;
 stable_peak policy; actual SCLK varied during capture)
 
-M6-B1 — MIInfer Qwen3.8 GPU profile (DEFERRED; no full qwen35 executor yet;
-see `experiments/EXP-0051-m6b1-qwen38-miinfer-gpu-readiness.md`). M6-A8 through
+M6-B1 — MIInfer Qwen3.8 GPU profile (IN PROGRESS; native generation baseline
+recorded in `experiments/EXP-0093-m6b1-qwen35-native-generation-baseline.md`). M6-A8 through
 M6-A13 establish qwen35 GPU RMSNorm, quantized Q/K/V projections, K
 normalization, and a complete diagnostic layer-3 full-attention path; state
 fingerprints and layers-0–3 composition remain the prerequisite.
@@ -971,13 +972,21 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
+2026-09-04 — M6-B1 recorded the first native Qwen3.8-27B MI50 generation
+baseline. MIInfer measured 3.37 tok/s at TG64 and 3.36 tok/s at TG128, with
+stable_peak telemetry reaching 1725/1000 MHz, deterministic replay, and zero
+decode-loop allocations. Fresh pinned llama.cpp measured 22.57/22.58 tok/s
+at TG64/TG128. This is a bring-up baseline, not a final workload-equivalent
+parity claim. See
+`experiments/EXP-0093-m6b1-qwen35-native-generation-baseline.md`.
+
 2026-09-04 — M6-A28 completed native Qwen3.8-27B autoregressive GPU generation
 for 16, 64, and 128 token runs. GPU Q4_K embedding, all 64 hybrid layers,
 LM-head argmax, recurrent/KV state, and replay were exercised. Each run had
 zero decode-loop allocations, exact replay, and stable device usage of
 `17018706644` bytes. See
-`experiments/EXP-0092-m6a28-native-qwen35-generation.md`. Next is M6-B0
-benchmarking; no MIInfer throughput claim has been made for Qwen3.8 yet.
+`experiments/EXP-0092-m6a28-native-qwen35-generation.md`. M6-B1 now owns the
+performance-baseline work.
 
 2026-09-04 — M6-A27-CLOSE adjudicated the two remaining teacher-forced argmax
 flips under the external observable contract. P2 (`1318 → 1044`) has 5/5
