@@ -193,6 +193,26 @@ struct KeyPathCapture {
     std::vector<float> key_norm;
 };
 
+struct LayerPathCapture {
+    std::vector<float> input;
+    std::vector<float> normalized;
+    std::vector<float> qkv;
+    std::vector<float> recurrent_output;
+    std::vector<float> gated;
+    std::vector<float> attention_residual;
+    std::vector<float> post_normalized;
+    std::vector<float> ffn_output;
+    std::vector<float> layer_output;
+};
+
+struct GatePathCapture {
+    std::vector<float> recurrent_output;
+    std::vector<float> head_norm;
+    std::vector<float> head_scaled;
+    std::vector<float> gate;
+    std::vector<float> gated;
+};
+
 LocatedError located_host_error(std::span<const float> actual,
                                  std::span<const float> expected) {
     LocatedError result;
@@ -291,6 +311,10 @@ struct RecurrentLayer {
     std::uint32_t operand_capture_position = 0;
     KeyPathCapture* key_path_capture = nullptr;
     std::uint32_t key_path_capture_position = 0;
+    LayerPathCapture* layer_path_capture = nullptr;
+    std::uint32_t layer_path_capture_position = 0;
+    GatePathCapture* gate_path_capture = nullptr;
+    std::uint32_t gate_path_capture_position = 0;
 
     RecurrentLayer(const miinfer::Qwen35Model& model_value, std::size_t layer,
                    const std::filesystem::path& fixture)
@@ -479,9 +503,17 @@ struct RecurrentLayer {
                 static_cast<float*>(qkv->get()), kChannels, kHidden);
         trace_tensor(position, "qkv", static_cast<const float*>(qkv->get()), kChannels,
                      "linear_attn_qkv_mixed-" + std::to_string(index));
+        if (layer_path_capture != nullptr && layer_path_capture_position == position) {
+            layer_path_capture->input = download(input, kHidden);
+            layer_path_capture->normalized = download(normalized->get(), kHidden);
+            layer_path_capture->qkv = download(qkv->get(), kChannels);
+        }
         project(gate_weight, d_gate, static_cast<const float*>(normalized->get()),
                 static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
                 static_cast<float*>(gate->get()), kInner, kHidden);
+        if (gate_path_capture != nullptr && gate_path_capture_position == position) {
+            gate_path_capture->gate = download(gate->get(), kInner);
+        }
         miinfer::launch_qwen35_f32_gemv(
             static_cast<const float*>(d_beta->get()), static_cast<const float*>(normalized->get()),
             static_cast<float*>(beta_raw->get()), kVHeads, kHidden);
@@ -529,23 +561,44 @@ struct RecurrentLayer {
         trace_tensor(position, "recurrent_output",
                      static_cast<const float*>(recurrent_output->get()), kVHeads * kState,
                      "attn_output-" + std::to_string(index));
+        if (layer_path_capture != nullptr && layer_path_capture_position == position) {
+            layer_path_capture->recurrent_output = download(recurrent_output->get(), kVHeads * kState);
+        }
+        if (gate_path_capture != nullptr && gate_path_capture_position == position) {
+            gate_path_capture->recurrent_output = download(recurrent_output->get(), kVHeads * kState);
+        }
         miinfer::launch_qwen3_head_rms_normalize(
             static_cast<const float*>(recurrent_output->get()), static_cast<float*>(head_norm->get()),
             kVHeads, kState, model.config().rms_epsilon);
+        if (gate_path_capture != nullptr && gate_path_capture_position == position) {
+            gate_path_capture->head_norm = download(head_norm->get(), kVHeads * kState);
+        }
         miinfer::launch_qwen3_head_mul(
             static_cast<const float*>(head_norm->get()), static_cast<const float*>(d_ssm_norm->get()),
             static_cast<float*>(gated->get()), kVHeads, kState);
+        if (gate_path_capture != nullptr && gate_path_capture_position == position) {
+            gate_path_capture->head_scaled = download(gated->get(), kVHeads * kState);
+        }
         miinfer::launch_qwen3_silu_mul(
             static_cast<const float*>(gate->get()), static_cast<const float*>(gated->get()),
             static_cast<float*>(gated->get()), kVHeads * kState);
         trace_tensor(position, "gated", static_cast<const float*>(gated->get()), kVHeads * kState,
                      "final_output-" + std::to_string(index));
+        if (layer_path_capture != nullptr && layer_path_capture_position == position) {
+            layer_path_capture->gated = download(gated->get(), kVHeads * kState);
+        }
+        if (gate_path_capture != nullptr && gate_path_capture_position == position) {
+            gate_path_capture->gated = download(gated->get(), kVHeads * kState);
+        }
         project(ssm_out_weight, d_ssm_out, static_cast<const float*>(gated->get()),
                 static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
                 static_cast<float*>(projected->get()), kHidden, kInner);
         miinfer::launch_qwen3_add(
             input, static_cast<const float*>(projected->get()),
             static_cast<float*>(residual->get()), kHidden);
+        if (layer_path_capture != nullptr && layer_path_capture_position == position) {
+            layer_path_capture->attention_residual = download(residual->get(), kHidden);
+        }
         trace_tensor(position, "attention_residual", static_cast<const float*>(residual->get()),
                      kHidden, "attn_residual-" + std::to_string(index));
         miinfer::launch_qwen3_rms_norm(
@@ -563,16 +616,25 @@ struct RecurrentLayer {
         miinfer::launch_qwen3_silu_mul(
             static_cast<const float*>(ffn_gate->get()), static_cast<const float*>(ffn_up->get()),
             static_cast<float*>(ffn_activation->get()), kFfnInner);
+        if (layer_path_capture != nullptr && layer_path_capture_position == position) {
+            layer_path_capture->post_normalized = download(post_normalized->get(), kHidden);
+        }
         project(ffn_down_weight, d_ffn_down, static_cast<const float*>(ffn_activation->get()),
                 static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
                 static_cast<float*>(projected->get()), kHidden, kFfnInner);
         trace_tensor(position, "ffn_out", static_cast<const float*>(projected->get()), kHidden,
                      "ffn_out-" + std::to_string(index));
+        if (layer_path_capture != nullptr && layer_path_capture_position == position) {
+            layer_path_capture->ffn_output = download(projected->get(), kHidden);
+        }
         miinfer::launch_qwen3_add(
             static_cast<const float*>(residual->get()), static_cast<const float*>(projected->get()),
             static_cast<float*>(layer_output->get()), kHidden);
         trace_tensor(position, "layer_output", static_cast<const float*>(layer_output->get()),
                      kHidden, "l_out-" + std::to_string(index));
+        if (layer_path_capture != nullptr && layer_path_capture_position == position) {
+            layer_path_capture->layer_output = download(layer_output->get(), kHidden);
+        }
         MIINFER_HIP_CHECK(hipMemcpy(output, layer_output->get(), kHidden * sizeof(float),
                                     hipMemcpyDeviceToDevice));
     }
@@ -799,7 +861,8 @@ int main(int argc, char** argv) {
                      "[EXTERNAL_OPERAND_FIXTURE] "
                      "[--deep|--block4-7|--prefix8|--prefix16|--prefix32|--prefix32-locate|"
                      "--prefix32-provenance|--prefix32-operand-attribution|"
-                     "--prefix32-k-path-attribution]\n";
+                     "--prefix32-k-path-attribution|--prefix32-l29-path-attribution|"
+                     "--prefix32-l29-gate-attribution]\n";
         return 2;
     }
     const std::string mode = argc >= 4 ? argv[argc - 1] : "";
@@ -809,8 +872,11 @@ int main(int argc, char** argv) {
     const bool provenance32 = mode == "--prefix32-provenance";
     const bool operand_attribution32 = mode == "--prefix32-operand-attribution";
     const bool k_path_attribution32 = mode == "--prefix32-k-path-attribution";
+    const bool l29_path_attribution32 = mode == "--prefix32-l29-path-attribution";
+    const bool l29_gate_attribution32 = mode == "--prefix32-l29-gate-attribution";
     const bool prefix32 = mode == "--prefix32" || locate32 || provenance32
-        || operand_attribution32 || k_path_attribution32;
+        || operand_attribution32 || k_path_attribution32 || l29_path_attribution32
+        || l29_gate_attribution32;
     const bool deep = mode == "--deep" || mode == "--block4-7" || prefix8 || prefix16 || prefix32;
     const bool second_block = mode == "--block4-7" || prefix8 || prefix16 || prefix32;
     if (argc >= 4 && !deep) {
@@ -1087,6 +1153,132 @@ int main(int argc, char** argv) {
             Buffer input = allocate(kHidden * sizeof(float));
             const auto generated = read_tokens(fixture / "generated_tokens.txt");
             if (generated.size() < 64) throw std::runtime_error("fixture has fewer than 64 tokens");
+            if (l29_path_attribution32) {
+                if (argc != 5) {
+                    throw std::runtime_error("L29 path attribution requires an external fixture");
+                }
+                LayerPathCapture production;
+                recurrent29->layer_path_capture = &production;
+                recurrent29->layer_path_capture_position = 19;
+                for (std::size_t position = 0; position <= 19; ++position) {
+                    const auto host_input = position > 1
+                        ? embedding(tensor(*model.file(), "token_embd.weight"), generated[position - 1])
+                        : read_f32(checkpoint(fixture, position, "model_input_embed"), kHidden);
+                    upload(host_input.data(), input->get(), host_input.size() * sizeof(float));
+                    run_prefix(std::span<const GpuLayerRef>(layers),
+                               std::span<float* const>(output_pointers),
+                               static_cast<const float*>(input->get()), position);
+                    MIINFER_HIP_CHECK(hipDeviceSynchronize());
+                }
+                const auto read = [&](const char* name, std::size_t elements) {
+                    return read_f32(checkpoint(operand_fixture, 19, name), elements);
+                };
+                const auto report = [](const char* label, std::span<const float> actual,
+                                       std::span<const float> expected) {
+                    const auto error = located_host_error(actual, expected);
+                    std::cout << "stage=" << label
+                              << " max_abs=" << error.metrics.max_abs
+                              << " mean_abs=" << error.metrics.mean_abs
+                              << " rms=" << error.metrics.rms
+                              << " relative_rms=" << error.metrics.relative_rms
+                              << " max_index=" << error.index
+                              << " external=" << error.expected
+                              << " gpu=" << error.actual << '\n';
+                };
+                std::cout << "M6-A26.6 L29 P19 output provenance\n";
+                report("layer_input", production.input, read("l_out-28", kHidden));
+                report("attn_norm", production.normalized, read("attn_norm-29", kHidden));
+                report("qkv_projection", production.qkv, read("linear_attn_qkv_mixed-29", kChannels));
+                report("recurrent_output", production.recurrent_output,
+                       read("attn_output-29", kVHeads * kState));
+                report("gated", production.gated, read("final_output-29", kVHeads * kState));
+                report("attention_residual", production.attention_residual,
+                       read("attn_residual-29", kHidden));
+                report("post_normalized", production.post_normalized,
+                       read("attn_post_norm-29", kHidden));
+                report("ffn_output", production.ffn_output, read("ffn_out-29", kHidden));
+                report("layer_output", production.layer_output, read("l_out-29", kHidden));
+                std::cout << "M6-A26.6 qwen35 L29 output provenance COMPLETE\n";
+                return 0;
+            }
+            if (l29_gate_attribution32) {
+                if (argc != 5) {
+                    throw std::runtime_error("gate attribution requires an external fixture");
+                }
+                GatePathCapture production;
+                recurrent29->gate_path_capture = &production;
+                recurrent29->gate_path_capture_position = 19;
+                for (std::size_t position = 0; position <= 19; ++position) {
+                    const auto host_input = position > 1
+                        ? embedding(tensor(*model.file(), "token_embd.weight"), generated[position - 1])
+                        : read_f32(checkpoint(fixture, position, "model_input_embed"), kHidden);
+                    upload(host_input.data(), input->get(), host_input.size() * sizeof(float));
+                    run_prefix(std::span<const GpuLayerRef>(layers),
+                               std::span<float* const>(output_pointers),
+                               static_cast<const float*>(input->get()), position);
+                    MIINFER_HIP_CHECK(hipDeviceSynchronize());
+                }
+
+                const auto external_recurrent = read_f32(
+                    checkpoint(operand_fixture, 19, "attn_output-29"), kVHeads * kState);
+                const auto external_gate = read_f32(
+                    checkpoint(operand_fixture, 19, "z-29"), kInner);
+                const auto external_gated = read_f32(
+                    checkpoint(operand_fixture, 19, "final_output-29"), kVHeads * kState);
+                const auto* ssm_norm = reinterpret_cast<const float*>(recurrent29->ssm_norm_weight.data);
+                std::vector<float> external_head_norm(kVHeads * kState);
+                std::vector<float> external_head_scaled(kVHeads * kState);
+                std::vector<float> external_gate_silu(kVHeads * kState);
+                for (std::size_t head = 0; head < kVHeads; ++head) {
+                    const std::size_t base = head * kState;
+                    std::array<float, kState> partials{};
+                    for (std::size_t i = 0; i < kState; ++i) {
+                        const float value = external_recurrent[base + i];
+                        partials[i] = value * value;
+                    }
+                    for (std::size_t stride = kState / 2; stride > 0; stride /= 2) {
+                        for (std::size_t i = 0; i < stride; ++i) {
+                            partials[i] += partials[i + stride];
+                        }
+                    }
+                    const float inverse_rms = 1.0F / std::sqrt(
+                        partials[0] / static_cast<float>(kState) + model.config().rms_epsilon);
+                    for (std::size_t i = 0; i < kState; ++i) {
+                        const std::size_t index = base + i;
+                        external_head_norm[index] = external_recurrent[index] * inverse_rms;
+                        external_head_scaled[index] = external_head_norm[index] * ssm_norm[i];
+                        external_gate_silu[index] = external_head_scaled[index] == 0.0F
+                            ? 0.0F : external_gated[index] / external_head_scaled[index];
+                    }
+                }
+                const auto silu = [](float value) {
+                    return value / (1.0F + std::exp(-value));
+                };
+                std::vector<float> production_gate_silu(production.gate.size());
+                std::transform(production.gate.begin(), production.gate.end(),
+                               production_gate_silu.begin(), silu);
+                const auto report = [](const char* label, std::span<const float> actual,
+                                       std::span<const float> expected) {
+                    const auto error = located_host_error(actual, expected);
+                    std::cout << "stage=" << label
+                              << " max_abs=" << error.metrics.max_abs
+                              << " mean_abs=" << error.metrics.mean_abs
+                              << " rms=" << error.metrics.rms
+                              << " relative_rms=" << error.metrics.relative_rms
+                              << " max_index=" << error.index
+                              << " external=" << error.expected
+                              << " gpu=" << error.actual << '\n';
+                };
+                std::cout << "M6-A26.7 L29 P19 gated-output provenance\n";
+                report("recurrent_output", production.recurrent_output, external_recurrent);
+                report("head_norm", production.head_norm, external_head_norm);
+                report("head_scaled", production.head_scaled, external_head_scaled);
+                report("gate_projection", production.gate, external_gate);
+                report("gate_silu", production_gate_silu, external_gate_silu);
+                report("gated", production.gated, external_gated);
+                std::cout << "M6-A26.7 qwen35 L29 gated-output provenance COMPLETE\n";
+                return 0;
+            }
             if (k_path_attribution32) {
                 if (argc != 5) {
                     throw std::runtime_error("K-path attribution requires an external fixture");
