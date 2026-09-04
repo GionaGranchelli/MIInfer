@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788541894.7785301,
-    "seen": 1788541908.2259066,
-    "ast_hash": "04f21d70fd22b4d2596e780138972b89",
+    "mtime": 1788542351.1504493,
+    "seen": 1788542410.3855026,
+    "ast_hash": "89d4bf80f746f6a9f5ba325dee293317",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788541894.77953,
-    "seen": 1788541908.2259285,
-    "ast_hash": "636dc1bc562d4cd4d60982ab6fd6a4aa",
+    "mtime": 1788542351.1524494,
+    "seen": 1788542410.3855393,
+    "ast_hash": "5b36169759528b1d45cd28641bb400f2",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -1332,9 +1332,9 @@
     "semantic_hash": ""
   },
   "tools/m6a21_qwen35_gpu_hybrid_block.cpp": {
-    "mtime": 1788541831.9848175,
-    "seen": 1788541908.225861,
-    "ast_hash": "4d19cf212d88ac31ae09796f1c9dbd8f",
+    "mtime": 1788542269.017822,
+    "seen": 1788542410.3854568,
+    "ast_hash": "7c6c801e7e04cbb69a1178969d5a9ae2",
     "semantic_hash": ""
   },
   "experiments/EXP-0065-m6a21-qwen35-gpu-hybrid-block.md": {
@@ -1485,6 +1485,12 @@
     "mtime": 1788541894.7775302,
     "seen": 1788541908.2260597,
     "ast_hash": "a7907fc761f65fca2bc3766f5dfbbc48",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0088-m6a278-qwen35-l0-q8k-contract.md": {
+    "mtime": 1788542351.1474493,
+    "seen": 1788542410.3856769,
+    "ast_hash": "0d26e09c10a1e6d76fce02be25ced088",
     "semantic_hash": ""
   }
 }

@@ -302,6 +302,27 @@ std::uint64_t host_fingerprint(std::span<const std::byte> bytes) {
     return hash;
 }
 
+struct ByteMismatch {
+    std::size_t count = 0;
+    std::size_t first = 0;
+};
+
+ByteMismatch compare_bytes(std::span<const std::byte> actual,
+                           std::span<const std::byte> expected) {
+    if (actual.size() != expected.size()) {
+        throw std::runtime_error("byte comparison size mismatch");
+    }
+    ByteMismatch result;
+    result.first = actual.size();
+    for (std::size_t i = 0; i < actual.size(); ++i) {
+        if (actual[i] != expected[i]) {
+            if (result.count == 0) result.first = i;
+            ++result.count;
+        }
+    }
+    return result;
+}
+
 std::uint64_t fingerprint(const void* device, std::size_t bytes) {
     std::vector<std::byte> host(bytes);
     MIINFER_HIP_CHECK(hipMemcpy(host.data(), device, bytes, hipMemcpyDeviceToHost));
@@ -1403,7 +1424,17 @@ int main(int argc, char** argv) {
                 std::cout << "external_gated_replay_q8k_bytes=" << replay_q8.size()
                           << " external_gated_replay_q8k_fingerprint="
                           << host_fingerprint(replay_q8) << '\n';
-                std::cout << "M6-A27.7 qwen35 L0 P2 output-projection contract COMPLETE\n";
+                const auto reference_q8 = quantize_q8(external_gated);
+                const auto reference_q8_bytes = std::span<const std::byte>(
+                    reinterpret_cast<const std::byte*>(reference_q8.data()),
+                    reference_q8.size() * sizeof(Q8K));
+                const auto q8_mismatch = compare_bytes(replay_q8, reference_q8_bytes);
+                std::cout << "llama_cpu_q8k_reference_bytes=" << reference_q8_bytes.size()
+                          << " llama_cpu_q8k_reference_fingerprint="
+                          << host_fingerprint(reference_q8_bytes)
+                          << " q8k_mismatch_bytes=" << q8_mismatch.count
+                          << " q8k_first_mismatch=" << q8_mismatch.first << '\n';
+                std::cout << "M6-A27.8 qwen35 L0 P2 Q8_K contract COMPLETE\n";
                 return 0;
             }
             if (l29_path_attribution32) {

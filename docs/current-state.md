@@ -970,7 +970,13 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-04 — M6-A27.7 isolated the L0 output-projection contract: external
+2026-09-04 — M6-A27.8 cleared the L0 Q8_K activation contract: the external
+gated P2 replay produces a 7,008-byte Q8_K buffer byte-identical to the pinned
+llama.cpp reference (`0` mismatches, fingerprint
+`9331021456029706823`). The remaining L0 `ssm_out` projection discrepancy is
+therefore in Q5_K × Q8_K projection/accumulation or dot-product ordering. A27
+remains in RETEST; no tolerance or production behavior changed. M6-A27.7
+isolated the L0 output-projection contract: external
 gated input replay through MIInfer's direct Q8_K → Q5_K `ssm_out` path leaves
 `0.00164509` error, while gated output and residual arithmetic are cleared.
 A27 remains in RETEST; no tolerance or production behavior changed. M6-A27.6

@@ -10,7 +10,7 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-A27 RETEST — sixty-four-layer GPU composition; P2 observable-token divergence**
+**Current phase: M6-A27 RETEST — L0 Q5_K×Q8_K projection contract remains**
 
 Immediate objective:
 
@@ -1005,3 +1005,9 @@ The project succeeds if it produces a rigorous answer to:
 > Does a runtime intentionally designed around gfx906 and a narrow model target provide meaningful advantages over the strongest generic-runtime implementations available for the same hardware?
 
 That answer must come from reproducible measurement.
+M6-A27.8 cleared the L0 Q8_K activation representation: the external-gated
+P2 replay matches the pinned llama.cpp Q8_K reference byte-for-byte across all
+7,008 bytes. The remaining `ssm_out` discrepancy is downstream in the Q5_K ×
+Q8_K projection/accumulation contract. See
+`experiments/EXP-0088-m6a278-qwen35-l0-q8k-contract.md`. No production change
+was made.
