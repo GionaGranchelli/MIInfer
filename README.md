@@ -35,6 +35,11 @@ The project currently has:
   cannot profile qwen35; see
   `experiments/EXP-0051-m6b1-qwen38-miinfer-gpu-readiness.md`
 
+* L29 recurrent/gated provenance diagnostics through A26.8; see
+  `experiments/EXP-0076-m6a266-qwen35-l29-output-provenance.md`,
+  `experiments/EXP-0077-m6a267-qwen35-l29-gated-output-provenance.md`, and
+  `experiments/EXP-0078-m6a268-qwen35-l29-gate-input-provenance.md`
+
 * a qwen35 model boundary and real MI50 RMSNorm fixture; see
   `experiments/EXP-0052-m6a8-qwen35-gpu-foundation.md`
 * a qwen35 Q6_K×Q8_K LM-head projection validated against external logits; see

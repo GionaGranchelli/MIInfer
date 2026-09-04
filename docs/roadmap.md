@@ -38,6 +38,8 @@ Current work should focus on:
   path upstream
 * use the A26.5 K-path result to trace the already-divergent L29 output
   provenance; do not reopen L30 recurrence mechanics
+* use A26.6–A26.8 to clear L29 recurrent/update and gate-kernel mechanics;
+  make the explicit external state-contract decision before full composition
 * preserving GPU-resident recurrent/KV state and zero steady-state allocations
 * state fingerprints, reset/replay checks, and external checkpoints through P64
 * per-layer telemetry and the evolving VRAM ledger

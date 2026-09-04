@@ -209,6 +209,7 @@ struct GatePathCapture {
     std::vector<float> recurrent_output;
     std::vector<float> head_norm;
     std::vector<float> head_scaled;
+    std::vector<float> normalized;
     std::vector<float> gate;
     std::vector<float> gated;
 };
@@ -496,6 +497,9 @@ struct RecurrentLayer {
         miinfer::launch_qwen3_rms_norm(
             input, static_cast<const float*>(d_attn_norm->get()),
             static_cast<float*>(normalized->get()), kHidden, model.config().rms_epsilon);
+        if (gate_path_capture != nullptr && gate_path_capture_position == position) {
+            gate_path_capture->normalized = download(normalized->get(), kHidden);
+        }
         trace_tensor(position, "attn_norm", static_cast<const float*>(normalized->get()),
                      kHidden, "attn_norm-" + std::to_string(index));
         project(qkv_weight, d_qkv, static_cast<const float*>(normalized->get()),
@@ -1221,6 +1225,8 @@ int main(int argc, char** argv) {
 
                 const auto external_recurrent = read_f32(
                     checkpoint(operand_fixture, 19, "attn_output-29"), kVHeads * kState);
+                const auto external_norm = read_f32(
+                    checkpoint(operand_fixture, 19, "attn_norm-29"), kHidden);
                 const auto external_gate = read_f32(
                     checkpoint(operand_fixture, 19, "z-29"), kInner);
                 const auto external_gated = read_f32(
@@ -1257,6 +1263,68 @@ int main(int argc, char** argv) {
                 std::vector<float> production_gate_silu(production.gate.size());
                 std::transform(production.gate.begin(), production.gate.end(),
                                production_gate_silu.begin(), silu);
+                const auto replay_gated = [&](std::span<const float> recurrent,
+                                              std::span<const float> gate) {
+                    Buffer d_recurrent = allocate(recurrent.size() * sizeof(float));
+                    Buffer d_gate = allocate(gate.size() * sizeof(float));
+                    Buffer d_head_norm = allocate(recurrent.size() * sizeof(float));
+                    Buffer d_gated = allocate(recurrent.size() * sizeof(float));
+                    upload(recurrent.data(), d_recurrent->get(), recurrent.size() * sizeof(float));
+                    upload(gate.data(), d_gate->get(), gate.size() * sizeof(float));
+                    miinfer::launch_qwen3_head_rms_normalize(
+                        static_cast<const float*>(d_recurrent->get()),
+                        static_cast<float*>(d_head_norm->get()), kVHeads, kState,
+                        model.config().rms_epsilon);
+                    miinfer::launch_qwen3_head_mul(
+                        static_cast<const float*>(d_head_norm->get()),
+                        static_cast<const float*>(recurrent29->d_ssm_norm->get()),
+                        static_cast<float*>(d_gated->get()), kVHeads, kState);
+                    miinfer::launch_qwen3_silu_mul(
+                        static_cast<const float*>(d_gate->get()),
+                        static_cast<const float*>(d_gated->get()),
+                        static_cast<float*>(d_gated->get()), kInner);
+                    MIINFER_HIP_CHECK(hipDeviceSynchronize());
+                    return download(d_gated->get(), kVHeads * kState);
+                };
+                const auto report_variant = [&](const char* label,
+                                                std::span<const float> recurrent,
+                                                std::span<const float> gate) {
+                    const auto actual = replay_gated(recurrent, gate);
+                    const auto error = located_host_error(actual, external_gated);
+                    std::cout << "substitution=" << label
+                              << " max_abs=" << error.metrics.max_abs
+                              << " mean_abs=" << error.metrics.mean_abs
+                              << " rms=" << error.metrics.rms
+                              << " relative_rms=" << error.metrics.relative_rms
+                              << " max_index=" << error.index
+                              << " external=" << error.expected
+                              << " gpu=" << error.actual << '\n';
+                };
+                const auto replay_gate_projection = [&](std::span<const float> normalized_input) {
+                    Buffer d_input = allocate(normalized_input.size() * sizeof(float));
+                    Buffer d_output = allocate(kInner * sizeof(float));
+                    upload(normalized_input.data(), d_input->get(),
+                           normalized_input.size() * sizeof(float));
+                    project(recurrent29->gate_weight, recurrent29->d_gate,
+                            static_cast<const float*>(d_input->get()),
+                            static_cast<miinfer::Q8KDeviceBlock*>(recurrent29->q8->get()),
+                            static_cast<float*>(d_output->get()), kInner, kHidden);
+                    MIINFER_HIP_CHECK(hipDeviceSynchronize());
+                    return download(d_output->get(), kInner);
+                };
+                const auto report_gate_input_variant = [&](const char* label,
+                                                           std::span<const float> normalized_input) {
+                    const auto actual = replay_gate_projection(normalized_input);
+                    const auto error = located_host_error(actual, external_gate);
+                    std::cout << "gate_input=" << label
+                              << " max_abs=" << error.metrics.max_abs
+                              << " mean_abs=" << error.metrics.mean_abs
+                              << " rms=" << error.metrics.rms
+                              << " relative_rms=" << error.metrics.relative_rms
+                              << " max_index=" << error.index
+                              << " external=" << error.expected
+                              << " gpu=" << error.actual << '\n';
+                };
                 const auto report = [](const char* label, std::span<const float> actual,
                                        std::span<const float> expected) {
                     const auto error = located_host_error(actual, expected);
@@ -1269,6 +1337,9 @@ int main(int argc, char** argv) {
                               << " external=" << error.expected
                               << " gpu=" << error.actual << '\n';
                 };
+                std::cout << "M6-A26.8 L29 gate-input provenance\n";
+                report_gate_input_variant("production_norm", production.normalized);
+                report_gate_input_variant("external_norm", external_norm);
                 std::cout << "M6-A26.7 L29 P19 gated-output provenance\n";
                 report("recurrent_output", production.recurrent_output, external_recurrent);
                 report("head_norm", production.head_norm, external_head_norm);
@@ -1276,7 +1347,11 @@ int main(int argc, char** argv) {
                 report("gate_projection", production.gate, external_gate);
                 report("gate_silu", production_gate_silu, external_gate_silu);
                 report("gated", production.gated, external_gated);
-                std::cout << "M6-A26.7 qwen35 L29 gated-output provenance COMPLETE\n";
+                report_variant("production", production.recurrent_output, production.gate);
+                report_variant("external_recurrent", external_recurrent, production.gate);
+                report_variant("external_gate", production.recurrent_output, external_gate);
+                report_variant("external_both", external_recurrent, external_gate);
+                std::cout << "M6-A26.8 qwen35 L29 gate-input provenance COMPLETE\n";
                 return 0;
             }
             if (k_path_attribution32) {

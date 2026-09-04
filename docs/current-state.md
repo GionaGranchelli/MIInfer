@@ -87,6 +87,13 @@ projection, convolution/SiLU, and K normalization. The first mismatch is
 already at L30 input (`l_out-29`, max `0.0793692`); K-path error is `0.0197068`
 after convolution/SiLU and `0.0180074` after K normalization. L30 K execution
 is therefore not the first separation; the next target is L29 output provenance.
+EXP-0076–EXP-0077 trace L29 through its recurrent output and gated path: the
+recurrent output remains close, while head normalization amplifies small
+differences and the gate projection also differs under the production input.
+EXP-0078 replays that gate projection with the external normalized input and
+reaches `1.90735e-6` max error against external `z-29`, clearing the gate
+kernel. The remaining A26 issue is an upstream L29 hidden-state/contract
+difference, not recurrent state storage or update mechanics.
 
 M0 is closed, M1 established the kernel laboratory, M2 passed its
 gfx906-specific specialization gate with EXP-0009, and M3 is closed. The
@@ -932,7 +939,11 @@ gfx906 reference without broadening the project into a generic runtime.
 
 # Last Updated
 
-2026-09-04 — M6-A26.5 was recorded after tracing the L30 production K path
+2026-09-04 — M6-A26.8 was recorded after tracing the L29 gate projection with
+external normalized input; the existing projection reaches `1.90735e-6` max
+error against external `z-29`. The remaining discrepancy is upstream L29
+hidden-state/contract sensitivity. A26 remains in RETEST pending the explicit
+state-contract decision. M6-A26.5 was recorded after tracing the L30 production K path
 to its already-divergent L29 output input. The K-path error remains bounded
 through convolution/SiLU and K normalization, so L29 output provenance is the
 next target. M6-A21 was recorded after composing qwen35 recurrent GPU layers
