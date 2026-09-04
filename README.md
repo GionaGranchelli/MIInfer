@@ -49,6 +49,8 @@ The project currently has:
   index-hoisting candidates, retained as negative evidence; see
   `experiments/EXP-0101-m6b8-attention-wave-local-reduction.md` and
   `experiments/EXP-0102-m6b9-q6k-lm-head-index-hoist.md`
+* a rejected recurrent Q8_K input-reuse candidate; see
+  `experiments/EXP-0103-m6b10-recurrent-q8-reuse.md`
 * a reproducible llama.cpp-backed Qwen3.8-27B hybrid tensor/state fixture; see
   `experiments/EXP-0043-m6a1-qwen38-reference-fixture.md`
 * a read-only Qwen3.8 projection/kernel compatibility map; see
