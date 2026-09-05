@@ -1443,7 +1443,7 @@ void execute_qwen3_decode_gpu_fast_impl(
     const auto& config = model.config();
     const bool greedy = token_host != nullptr;
     const char* lm_mmvq_env = std::getenv("MIINFER_LM_Q8_1_MMVQ");
-    const bool lm_mmvq = lm_mmvq_env != nullptr && std::strcmp(lm_mmvq_env, "0") != 0;
+    const bool lm_mmvq = lm_mmvq_env == nullptr || std::strcmp(lm_mmvq_env, "0") != 0;
     if (token >= config.vocab_size
         || (greedy ? !logits_host.empty() : logits_host.size() != config.vocab_size)
         || model.layers().size() != config.layer_count

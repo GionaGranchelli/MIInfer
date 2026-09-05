@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-B14 — Qwen3.8-27B MMVQ-style LM-head candidate (opt-in; validation pending)**
+**M6-B14 — Qwen3.8-27B MMVQ-style LM-head production path**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -62,11 +62,13 @@ Q6_K×Q8_K production path remains active. The next LM-head attempt would need
 the measured MMVQ access strategy rather than a representation-only port.
 EXP-0107 implements that MMVQ-style candidate. After correcting its Q6 high
 bit-plane shift, it passes 16- and 64-token replay, Release CTest 20/20, and
-the available external observable checkpoints. Serial P64 improves from
-8.40767 to 8.68228 tok/s (+3.26%), while the final LM-head profile falls from
-about 6.19 ms to 2.449 ms. The candidate remains opt-in because the external
-fixture still lacks the late `12-l_out-63-` checkpoint; Q6_K×Q8_K remains the
-default until the complete observable contract is rerun.
+the complete temporary external observable fixture. Teacher-forced argmax
+agreement is 62/64; the only differences are the already-adjudicated low-margin
+P2/P12 choices, with late checkpoints and P64 completing successfully. Serial
+P64 improves from 8.40767 to 8.68228 tok/s (+3.26%), while the final LM-head
+profile falls from about 6.19 ms to 2.449 ms. The MMVQ path is now the
+Qwen3.8 production default; `MIINFER_LM_Q8_1_MMVQ=0` retains the former
+Q6_K×Q8_K control.
 M6-A8 provides a dedicated qwen35 model boundary and a real layer-0 RMSNorm
 GPU fixture on gfx906. M6-A9 validates the real Q6_K output head through the
 existing Q6_K×Q8_K GPU primitive, M6-A10 validates a real Q4_K×Q8_K attention

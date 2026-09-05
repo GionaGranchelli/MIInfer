@@ -27130,7 +27130,7 @@
       "node_kind": "heading",
       "norm_label": "benchmark",
       "source_file": "experiments/EXP-0107-m6b14-q6k-mmvq-q8-1.md",
-      "source_location": "L62"
+      "source_location": "L69"
     },
     {
       "id": "experiments_exp_0107_m6b14_q6k_mmvq_q8_1_candidate",
@@ -27166,7 +27166,7 @@
       "node_kind": "heading",
       "norm_label": "decision",
       "source_file": "experiments/EXP-0107-m6b14-q6k-mmvq-q8-1.md",
-      "source_location": "L92"
+      "source_location": "L98"
     },
     {
       "id": "experiments_exp_0107_m6b14_q6k_mmvq_q8_1_environment",
@@ -27202,7 +27202,7 @@
       "node_kind": "heading",
       "norm_label": "follow-up",
       "source_file": "experiments/EXP-0107-m6b14-q6k-mmvq-q8-1.md",
-      "source_location": "L100"
+      "source_location": "L104"
     },
     {
       "id": "experiments_exp_0107_m6b14_q6k_mmvq_q8_1_interpretation",
@@ -27214,7 +27214,7 @@
       "node_kind": "heading",
       "norm_label": "interpretation",
       "source_file": "experiments/EXP-0107-m6b14-q6k-mmvq-q8-1.md",
-      "source_location": "L84"
+      "source_location": "L91"
     },
     {
       "id": "experiments_exp_0107_m6b14_q6k_mmvq_q8_1_question",
@@ -42205,7 +42205,7 @@
       "node_kind": "heading",
       "norm_label": "completed",
       "source_file": "docs/current-state.md",
-      "source_location": "L193"
+      "source_location": "L195"
     },
     {
       "id": "docs_current_state_completed_in_task_3",
@@ -42217,7 +42217,7 @@
       "node_kind": "heading",
       "norm_label": "completed in task 3",
       "source_file": "docs/current-state.md",
-      "source_location": "L216"
+      "source_location": "L218"
     },
     {
       "id": "docs_current_state_current_project_status",
@@ -42229,7 +42229,7 @@
       "node_kind": "heading",
       "norm_label": "current project status",
       "source_file": "docs/current-state.md",
-      "source_location": "L191"
+      "source_location": "L193"
     },
     {
       "id": "docs_current_state_not_implemented",
@@ -42241,7 +42241,7 @@
       "node_kind": "heading",
       "norm_label": "not implemented",
       "source_file": "docs/current-state.md",
-      "source_location": "L497"
+      "source_location": "L499"
     },
     {
       "id": "experiments_exp_0094_m6b2_direct_layer_handoff",
@@ -43048,7 +43048,7 @@
       "node_kind": "heading",
       "norm_label": "current scope",
       "source_file": "docs/current-state.md",
-      "source_location": "L913"
+      "source_location": "L915"
     },
     {
       "id": "docs_current_state_in_scope_now",
@@ -43060,7 +43060,7 @@
       "node_kind": "heading",
       "norm_label": "in scope now",
       "source_file": "docs/current-state.md",
-      "source_location": "L915"
+      "source_location": "L917"
     },
     {
       "id": "docs_current_state_not_in_scope_now",
@@ -43072,7 +43072,7 @@
       "node_kind": "heading",
       "norm_label": "not in scope now",
       "source_file": "docs/current-state.md",
-      "source_location": "L926"
+      "source_location": "L928"
     },
     {
       "id": "experiments_exp_0104_m6b11_q4k_packed_dot4",
@@ -45107,7 +45107,7 @@
       "node_kind": "heading",
       "norm_label": "architecture direction",
       "source_file": "README.md",
-      "source_location": "L366"
+      "source_location": "L367"
     },
     {
       "id": "readme_benchmark_philosophy",
@@ -45119,7 +45119,7 @@
       "node_kind": "heading",
       "norm_label": "benchmark philosophy",
       "source_file": "README.md",
-      "source_location": "L547"
+      "source_location": "L548"
     },
     {
       "id": "readme_building",
@@ -45131,7 +45131,7 @@
       "node_kind": "heading",
       "norm_label": "building",
       "source_file": "README.md",
-      "source_location": "L618"
+      "source_location": "L619"
     },
     {
       "id": "readme_contributing",
@@ -45143,7 +45143,7 @@
       "node_kind": "heading",
       "norm_label": "contributing",
       "source_file": "README.md",
-      "source_location": "L719"
+      "source_location": "L720"
     },
     {
       "id": "readme_core_hypothesis",
@@ -45155,7 +45155,7 @@
       "node_kind": "heading",
       "norm_label": "core hypothesis",
       "source_file": "README.md",
-      "source_location": "L207"
+      "source_location": "L208"
     },
     {
       "id": "readme_correctness_before_performance",
@@ -45167,7 +45167,7 @@
       "node_kind": "heading",
       "norm_label": "correctness before performance",
       "source_file": "README.md",
-      "source_location": "L257"
+      "source_location": "L258"
     },
     {
       "id": "readme_design_principles",
@@ -45179,7 +45179,7 @@
       "node_kind": "heading",
       "norm_label": "design principles",
       "source_file": "README.md",
-      "source_location": "L225"
+      "source_location": "L226"
     },
     {
       "id": "readme_development_roadmap",
@@ -45191,7 +45191,7 @@
       "node_kind": "heading",
       "norm_label": "development roadmap",
       "source_file": "README.md",
-      "source_location": "L459"
+      "source_location": "L460"
     },
     {
       "id": "readme_experiments",
@@ -45203,7 +45203,7 @@
       "node_kind": "heading",
       "norm_label": "experiments",
       "source_file": "README.md",
-      "source_location": "L583"
+      "source_location": "L584"
     },
     {
       "id": "readme_gfx906_llama_cpp_forks",
@@ -45215,7 +45215,7 @@
       "node_kind": "heading",
       "norm_label": "gfx906 llama.cpp forks",
       "source_file": "README.md",
-      "source_location": "L420"
+      "source_location": "L421"
     },
     {
       "id": "readme_gfx906_vllm_work",
@@ -45227,7 +45227,7 @@
       "node_kind": "heading",
       "norm_label": "gfx906 vllm work",
       "source_file": "README.md",
-      "source_location": "L444"
+      "source_location": "L445"
     },
     {
       "id": "readme_guiding_principle",
@@ -45239,7 +45239,7 @@
       "node_kind": "heading",
       "norm_label": "guiding principle",
       "source_file": "README.md",
-      "source_location": "L753"
+      "source_location": "L754"
     },
     {
       "id": "readme_h0",
@@ -45251,7 +45251,7 @@
       "node_kind": "heading",
       "norm_label": "h0",
       "source_file": "README.md",
-      "source_location": "L211"
+      "source_location": "L212"
     },
     {
       "id": "readme_h1",
@@ -45263,7 +45263,7 @@
       "node_kind": "heading",
       "norm_label": "h1",
       "source_file": "README.md",
-      "source_location": "L215"
+      "source_location": "L216"
     },
     {
       "id": "readme_hardware_requirements",
@@ -45275,7 +45275,7 @@
       "node_kind": "heading",
       "norm_label": "hardware requirements",
       "source_file": "README.md",
-      "source_location": "L659"
+      "source_location": "L660"
     },
     {
       "id": "readme_hot_paths_should_be_static",
@@ -45287,7 +45287,7 @@
       "node_kind": "heading",
       "norm_label": "hot paths should be static",
       "source_file": "README.md",
-      "source_location": "L280"
+      "source_location": "L281"
     },
     {
       "id": "readme_initial_target",
@@ -45299,7 +45299,7 @@
       "node_kind": "heading",
       "norm_label": "initial target",
       "source_file": "README.md",
-      "source_location": "L158"
+      "source_location": "L159"
     },
     {
       "id": "readme_license",
@@ -45311,7 +45311,7 @@
       "node_kind": "heading",
       "norm_label": "license",
       "source_file": "README.md",
-      "source_location": "L743"
+      "source_location": "L744"
     },
     {
       "id": "readme_llama_cpp",
@@ -45323,7 +45323,7 @@
       "node_kind": "heading",
       "norm_label": "llama.cpp",
       "source_file": "README.md",
-      "source_location": "L409"
+      "source_location": "L410"
     },
     {
       "id": "readme_m0_baseline",
@@ -45335,7 +45335,7 @@
       "node_kind": "heading",
       "norm_label": "m0 \u2014 baseline",
       "source_file": "README.md",
-      "source_location": "L461"
+      "source_location": "L462"
     },
     {
       "id": "readme_m1_kernel_laboratory",
@@ -45347,7 +45347,7 @@
       "node_kind": "heading",
       "norm_label": "m1 \u2014 kernel laboratory",
       "source_file": "README.md",
-      "source_location": "L472"
+      "source_location": "L473"
     },
     {
       "id": "readme_m2_prove_specialization",
@@ -45359,7 +45359,7 @@
       "node_kind": "heading",
       "norm_label": "m2 \u2014 prove specialization",
       "source_file": "README.md",
-      "source_location": "L481"
+      "source_location": "L482"
     },
     {
       "id": "readme_m3_minimal_runtime",
@@ -45371,7 +45371,7 @@
       "node_kind": "heading",
       "norm_label": "m3 \u2014 minimal runtime",
       "source_file": "README.md",
-      "source_location": "L494"
+      "source_location": "L495"
     },
     {
       "id": "readme_m4_first_correct_generation",
@@ -45383,7 +45383,7 @@
       "node_kind": "heading",
       "norm_label": "m4 \u2014 first correct generation",
       "source_file": "README.md",
-      "source_location": "L504"
+      "source_location": "L505"
     },
     {
       "id": "readme_m5_beat_the_reference",
@@ -45395,7 +45395,7 @@
       "node_kind": "heading",
       "norm_label": "m5 \u2014 beat the reference",
       "source_file": "README.md",
-      "source_location": "L508"
+      "source_location": "L509"
     },
     {
       "id": "readme_m6_runtime_specialization",
@@ -45407,7 +45407,7 @@
       "node_kind": "heading",
       "norm_label": "m6 \u2014 runtime specialization",
       "source_file": "README.md",
-      "source_location": "L522"
+      "source_location": "L523"
     },
     {
       "id": "readme_m7_expansion",
@@ -45419,7 +45419,7 @@
       "node_kind": "heading",
       "norm_label": "m7 \u2014 expansion",
       "source_file": "README.md",
-      "source_location": "L533"
+      "source_location": "L534"
     },
     {
       "id": "readme_measure_before_optimizing",
@@ -45431,7 +45431,7 @@
       "node_kind": "heading",
       "norm_label": "measure before optimizing",
       "source_file": "README.md",
-      "source_location": "L242"
+      "source_location": "L243"
     },
     {
       "id": "readme_miinfer",
@@ -45455,7 +45455,7 @@
       "node_kind": "heading",
       "norm_label": "negative results are retained",
       "source_file": "README.md",
-      "source_location": "L270"
+      "source_location": "L271"
     },
     {
       "id": "readme_ninfer",
@@ -45467,7 +45467,7 @@
       "node_kind": "heading",
       "norm_label": "ninfer",
       "source_file": "README.md",
-      "source_location": "L436"
+      "source_location": "L437"
     },
     {
       "id": "readme_repository_structure",
@@ -45479,7 +45479,7 @@
       "node_kind": "heading",
       "norm_label": "repository structure",
       "source_file": "README.md",
-      "source_location": "L680"
+      "source_location": "L681"
     },
     {
       "id": "readme_research_influences",
@@ -45491,7 +45491,7 @@
       "node_kind": "heading",
       "norm_label": "research influences",
       "source_file": "README.md",
-      "source_location": "L405"
+      "source_location": "L406"
     },
     {
       "id": "readme_specialization_is_intentional",
@@ -45503,7 +45503,7 @@
       "node_kind": "heading",
       "norm_label": "specialization is intentional",
       "source_file": "README.md",
-      "source_location": "L227"
+      "source_location": "L228"
     },
     {
       "id": "readme_status",
@@ -45527,7 +45527,7 @@
       "node_kind": "heading",
       "norm_label": "what miinfer does not initially aim to build",
       "source_file": "README.md",
-      "source_location": "L339"
+      "source_location": "L340"
     },
     {
       "id": "readme_what_miinfer_intends_to_own",
@@ -45539,7 +45539,7 @@
       "node_kind": "heading",
       "norm_label": "what miinfer intends to own",
       "source_file": "README.md",
-      "source_location": "L318"
+      "source_location": "L319"
     },
     {
       "id": "readme_why_miinfer",
@@ -45551,7 +45551,7 @@
       "node_kind": "heading",
       "norm_label": "why miinfer?",
       "source_file": "README.md",
-      "source_location": "L180"
+      "source_location": "L181"
     },
     {
       "id": "attentionkernel",
@@ -46329,7 +46329,7 @@
       "node_kind": "heading",
       "norm_label": "current benchmark priority",
       "source_file": "docs/current-state.md",
-      "source_location": "L689"
+      "source_location": "L691"
     },
     {
       "id": "docs_current_state_current_build_direction",
@@ -46341,7 +46341,7 @@
       "node_kind": "heading",
       "norm_label": "current build direction",
       "source_file": "docs/current-state.md",
-      "source_location": "L605"
+      "source_location": "L607"
     },
     {
       "id": "docs_current_state_current_correctness_policy",
@@ -46353,7 +46353,7 @@
       "node_kind": "heading",
       "norm_label": "current correctness policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L862"
+      "source_location": "L864"
     },
     {
       "id": "docs_current_state_current_dependency_policy",
@@ -46365,7 +46365,7 @@
       "node_kind": "heading",
       "norm_label": "current dependency policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L631"
+      "source_location": "L633"
     },
     {
       "id": "docs_current_state_current_experiment_queue",
@@ -46377,7 +46377,7 @@
       "node_kind": "heading",
       "norm_label": "current experiment queue",
       "source_file": "docs/current-state.md",
-      "source_location": "L727"
+      "source_location": "L729"
     },
     {
       "id": "docs_current_state_current_hardware_observation_requirements",
@@ -46389,7 +46389,7 @@
       "node_kind": "heading",
       "norm_label": "current hardware observation requirements",
       "source_file": "docs/current-state.md",
-      "source_location": "L893"
+      "source_location": "L895"
     },
     {
       "id": "docs_current_state_current_hardware_target",
@@ -46401,7 +46401,7 @@
       "node_kind": "heading",
       "norm_label": "current hardware target",
       "source_file": "docs/current-state.md",
-      "source_location": "L178"
+      "source_location": "L180"
     },
     {
       "id": "docs_current_state_current_performance_policy",
@@ -46413,7 +46413,7 @@
       "node_kind": "heading",
       "norm_label": "current performance policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L878"
+      "source_location": "L880"
     },
     {
       "id": "docs_current_state_current_phase",
@@ -46437,7 +46437,7 @@
       "node_kind": "heading",
       "norm_label": "current reference strategy",
       "source_file": "docs/current-state.md",
-      "source_location": "L669"
+      "source_location": "L671"
     },
     {
       "id": "docs_current_state_current_runtime_policy",
@@ -46449,7 +46449,7 @@
       "node_kind": "heading",
       "norm_label": "current runtime policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L651"
+      "source_location": "L653"
     },
     {
       "id": "docs_current_state_definition_of_current_success",
@@ -46461,7 +46461,7 @@
       "node_kind": "heading",
       "norm_label": "definition of current success",
       "source_file": "docs/current-state.md",
-      "source_location": "L985"
+      "source_location": "L987"
     },
     {
       "id": "docs_current_state_do_not_start_yet",
@@ -46473,7 +46473,7 @@
       "node_kind": "heading",
       "norm_label": "do not start yet",
       "source_file": "docs/current-state.md",
-      "source_location": "L945"
+      "source_location": "L947"
     },
     {
       "id": "docs_current_state_first_major_gate",
@@ -46485,7 +46485,7 @@
       "node_kind": "heading",
       "norm_label": "first major gate",
       "source_file": "docs/current-state.md",
-      "source_location": "L852"
+      "source_location": "L854"
     },
     {
       "id": "docs_current_state_immediate_deliverables",
@@ -46497,7 +46497,7 @@
       "node_kind": "heading",
       "norm_label": "immediate deliverables",
       "source_file": "docs/current-state.md",
-      "source_location": "L555"
+      "source_location": "L557"
     },
     {
       "id": "docs_current_state_immediate_objective",
@@ -46509,7 +46509,7 @@
       "node_kind": "heading",
       "norm_label": "immediate objective",
       "source_file": "docs/current-state.md",
-      "source_location": "L520"
+      "source_location": "L522"
     },
     {
       "id": "docs_current_state_last_updated",
@@ -46521,7 +46521,7 @@
       "node_kind": "heading",
       "norm_label": "last updated",
       "source_file": "docs/current-state.md",
-      "source_location": "L1012"
+      "source_location": "L1014"
     },
     {
       "id": "docs_current_state_miinfer_current_state",
@@ -46545,7 +46545,7 @@
       "node_kind": "heading",
       "norm_label": "next implementation task",
       "source_file": "docs/current-state.md",
-      "source_location": "L965"
+      "source_location": "L967"
     },
     {
       "id": "codex_skills_graphify_references_hooks",
@@ -94552,7 +94552,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1012",
+      "source_location": "L1014",
       "weight": 1.0
     },
     {
@@ -94574,7 +94574,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L178",
+      "source_location": "L180",
       "weight": 1.0
     },
     {
@@ -94585,7 +94585,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L191",
+      "source_location": "L193",
       "weight": 1.0
     },
     {
@@ -94596,7 +94596,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L520",
+      "source_location": "L522",
       "weight": 1.0
     },
     {
@@ -94607,7 +94607,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L555",
+      "source_location": "L557",
       "weight": 1.0
     },
     {
@@ -94618,7 +94618,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L605",
+      "source_location": "L607",
       "weight": 1.0
     },
     {
@@ -94629,7 +94629,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L631",
+      "source_location": "L633",
       "weight": 1.0
     },
     {
@@ -94640,7 +94640,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L651",
+      "source_location": "L653",
       "weight": 1.0
     },
     {
@@ -94651,7 +94651,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L669",
+      "source_location": "L671",
       "weight": 1.0
     },
     {
@@ -94662,7 +94662,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L689",
+      "source_location": "L691",
       "weight": 1.0
     },
     {
@@ -94673,7 +94673,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L727",
+      "source_location": "L729",
       "weight": 1.0
     },
     {
@@ -94684,7 +94684,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L852",
+      "source_location": "L854",
       "weight": 1.0
     },
     {
@@ -94695,7 +94695,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L862",
+      "source_location": "L864",
       "weight": 1.0
     },
     {
@@ -94706,7 +94706,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L878",
+      "source_location": "L880",
       "weight": 1.0
     },
     {
@@ -94717,7 +94717,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L893",
+      "source_location": "L895",
       "weight": 1.0
     },
     {
@@ -94728,7 +94728,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L913",
+      "source_location": "L915",
       "weight": 1.0
     },
     {
@@ -94739,7 +94739,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L945",
+      "source_location": "L947",
       "weight": 1.0
     },
     {
@@ -94750,7 +94750,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L965",
+      "source_location": "L967",
       "weight": 1.0
     },
     {
@@ -94761,7 +94761,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L985",
+      "source_location": "L987",
       "weight": 1.0
     },
     {
@@ -94772,7 +94772,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L193",
+      "source_location": "L195",
       "weight": 1.0
     },
     {
@@ -94783,7 +94783,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L216",
+      "source_location": "L218",
       "weight": 1.0
     },
     {
@@ -94794,7 +94794,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L497",
+      "source_location": "L499",
       "weight": 1.0
     },
     {
@@ -94805,7 +94805,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L915",
+      "source_location": "L917",
       "weight": 1.0
     },
     {
@@ -94816,7 +94816,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L926",
+      "source_location": "L928",
       "weight": 1.0
     },
     {
@@ -111866,7 +111866,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0107-m6b14-q6k-mmvq-q8-1.md",
-      "source_location": "L100",
+      "source_location": "L104",
       "weight": 1.0
     },
     {
@@ -111921,7 +111921,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0107-m6b14-q6k-mmvq-q8-1.md",
-      "source_location": "L62",
+      "source_location": "L69",
       "weight": 1.0
     },
     {
@@ -111943,7 +111943,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0107-m6b14-q6k-mmvq-q8-1.md",
-      "source_location": "L84",
+      "source_location": "L91",
       "weight": 1.0
     },
     {
@@ -111954,7 +111954,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0107-m6b14-q6k-mmvq-q8-1.md",
-      "source_location": "L92",
+      "source_location": "L98",
       "weight": 1.0
     },
     {
@@ -113164,7 +113164,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L211",
+      "source_location": "L212",
       "weight": 1.0
     },
     {
@@ -113175,7 +113175,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L215",
+      "source_location": "L216",
       "weight": 1.0
     },
     {
@@ -113186,7 +113186,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L227",
+      "source_location": "L228",
       "weight": 1.0
     },
     {
@@ -113197,7 +113197,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L242",
+      "source_location": "L243",
       "weight": 1.0
     },
     {
@@ -113208,7 +113208,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L257",
+      "source_location": "L258",
       "weight": 1.0
     },
     {
@@ -113219,7 +113219,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L270",
+      "source_location": "L271",
       "weight": 1.0
     },
     {
@@ -113230,7 +113230,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L280",
+      "source_location": "L281",
       "weight": 1.0
     },
     {
@@ -113241,7 +113241,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L461",
+      "source_location": "L462",
       "weight": 1.0
     },
     {
@@ -113252,7 +113252,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L472",
+      "source_location": "L473",
       "weight": 1.0
     },
     {
@@ -113263,7 +113263,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L481",
+      "source_location": "L482",
       "weight": 1.0
     },
     {
@@ -113274,7 +113274,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L494",
+      "source_location": "L495",
       "weight": 1.0
     },
     {
@@ -113285,7 +113285,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L504",
+      "source_location": "L505",
       "weight": 1.0
     },
     {
@@ -113296,7 +113296,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L508",
+      "source_location": "L509",
       "weight": 1.0
     },
     {
@@ -113307,7 +113307,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L522",
+      "source_location": "L523",
       "weight": 1.0
     },
     {
@@ -113318,7 +113318,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L533",
+      "source_location": "L534",
       "weight": 1.0
     },
     {
@@ -113340,7 +113340,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L158",
+      "source_location": "L159",
       "weight": 1.0
     },
     {
@@ -113351,7 +113351,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L180",
+      "source_location": "L181",
       "weight": 1.0
     },
     {
@@ -113362,7 +113362,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L207",
+      "source_location": "L208",
       "weight": 1.0
     },
     {
@@ -113373,7 +113373,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L225",
+      "source_location": "L226",
       "weight": 1.0
     },
     {
@@ -113384,7 +113384,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L318",
+      "source_location": "L319",
       "weight": 1.0
     },
     {
@@ -113395,7 +113395,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L339",
+      "source_location": "L340",
       "weight": 1.0
     },
     {
@@ -113406,7 +113406,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L366",
+      "source_location": "L367",
       "weight": 1.0
     },
     {
@@ -113417,7 +113417,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L405",
+      "source_location": "L406",
       "weight": 1.0
     },
     {
@@ -113428,7 +113428,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L459",
+      "source_location": "L460",
       "weight": 1.0
     },
     {
@@ -113439,7 +113439,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L547",
+      "source_location": "L548",
       "weight": 1.0
     },
     {
@@ -113450,7 +113450,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L583",
+      "source_location": "L584",
       "weight": 1.0
     },
     {
@@ -113461,7 +113461,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L618",
+      "source_location": "L619",
       "weight": 1.0
     },
     {
@@ -113472,7 +113472,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L659",
+      "source_location": "L660",
       "weight": 1.0
     },
     {
@@ -113483,7 +113483,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L680",
+      "source_location": "L681",
       "weight": 1.0
     },
     {
@@ -113494,7 +113494,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L719",
+      "source_location": "L720",
       "weight": 1.0
     },
     {
@@ -113505,7 +113505,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L743",
+      "source_location": "L744",
       "weight": 1.0
     },
     {
@@ -113516,7 +113516,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L753",
+      "source_location": "L754",
       "weight": 1.0
     },
     {
@@ -113527,7 +113527,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L409",
+      "source_location": "L410",
       "weight": 1.0
     },
     {
@@ -113538,7 +113538,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L420",
+      "source_location": "L421",
       "weight": 1.0
     },
     {
@@ -113549,7 +113549,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L436",
+      "source_location": "L437",
       "weight": 1.0
     },
     {
@@ -113560,7 +113560,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L444",
+      "source_location": "L445",
       "weight": 1.0
     },
     {
@@ -121117,7 +121117,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L490",
+      "source_location": "L492",
       "weight": 1.0
     },
     {
@@ -121128,7 +121128,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L683",
+      "source_location": "L685",
       "weight": 1.0
     },
     {
@@ -121282,7 +121282,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L455",
+      "source_location": "L456",
       "weight": 1.0
     },
     {
@@ -121293,7 +121293,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L543",
+      "source_location": "L544",
       "weight": 1.0
     },
     {
@@ -121304,7 +121304,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L579",
+      "source_location": "L580",
       "weight": 1.0
     },
     {
@@ -121315,7 +121315,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L674",
+      "source_location": "L675",
       "weight": 1.0
     },
     {
@@ -121326,7 +121326,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L725",
+      "source_location": "L726",
       "weight": 1.0
     },
     {
@@ -121337,7 +121337,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L726",
+      "source_location": "L727",
       "weight": 1.0
     },
     {
@@ -121348,7 +121348,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L728",
+      "source_location": "L729",
       "weight": 1.0
     },
     {
@@ -121359,7 +121359,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L729",
+      "source_location": "L730",
       "weight": 1.0
     },
     {
@@ -124148,5 +124148,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "a6e6f36d89bc916e417179f63b5617b44feaba02"
+  "built_at_commit": "06e2be586245be64ff60981923fd4233011d6ff7"
 }

@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-B14 — Qwen3.8-27B MMVQ-style LM-head candidate**
+**Current phase: M6-B14 — Qwen3.8-27B MMVQ-style LM-head production path**
 
 The project currently has:
 
@@ -60,8 +60,9 @@ The project currently has:
 * a rejected Q6_K×Q8_1 LM-head compatibility path: matching representation but
   11.28% slower end-to-end; see
   `experiments/EXP-0106-m6b13-lm-head-q8-1.md`
-* an opt-in MMVQ-style Q6_K×Q8_1 LM-head candidate improving P64 by about
-  3.3%; full late-position external validation is still pending; see
+* a production-selected MMVQ-style Q6_K×Q8_1 LM-head path improving P64 by
+  about 3.3%; the former Q6_K×Q8_K path remains available with
+  `MIINFER_LM_Q8_1_MMVQ=0` for control comparisons; see
   `experiments/EXP-0107-m6b14-q6k-mmvq-q8-1.md`
 * a reproducible llama.cpp-backed Qwen3.8-27B hybrid tensor/state fixture; see
   `experiments/EXP-0043-m6a1-qwen38-reference-fixture.md`

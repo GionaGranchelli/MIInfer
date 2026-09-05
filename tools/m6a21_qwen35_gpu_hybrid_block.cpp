@@ -1056,7 +1056,7 @@ int main(int argc, char** argv) {
     const bool benchmark = mode == "--bench64" || mode == "--bench128";
     const bool profile64 = mode == "--profile64";
     const char* lm_mmvq_env = std::getenv("MIINFER_LM_Q8_1_MMVQ");
-    const bool lm_mmvq = lm_mmvq_env != nullptr && std::strcmp(lm_mmvq_env, "0") != 0;
+    const bool lm_mmvq = lm_mmvq_env == nullptr || std::strcmp(lm_mmvq_env, "0") != 0;
     const std::size_t generation_tokens = mode == "--generate16" ? 16
         : mode == "--generate64" || mode == "--bench64" ? 64 : 128;
     const bool prefix32 = mode == "--prefix32" || locate32 || provenance32

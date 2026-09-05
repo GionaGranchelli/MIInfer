@@ -34,7 +34,7 @@ Model: /home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf
 Build: build/mi50-release
 ROCm: 7.1.52802-9999
 Compiler: Clang 20.0.0.rocm
-Fixture: /tmp/m6a273-reference
+Fixture: /tmp/m6a273-reference-p12 (complete temporary observable fixture)
 ```
 
 ## Correctness
@@ -45,7 +45,16 @@ generate16: PASS; replay PASS; allocations during decode: 0
 generate64: PASS; replay PASS; allocations during decode: 0
 ```
 
-At available external observable checkpoints, the candidate produced:
+The complete temporary observable fixture was rerun after the high-bit-plane
+correction. The candidate produced 62/64 teacher-forced argmax matches; the
+only differences were the already-adjudicated low-margin P2 and P12 choices.
+The late checkpoints, including P64, completed successfully. At P64 the
+candidate had cosine `0.999616`, top-5 overlap `5/5`, matching argmax `8719`,
+and deterministic replay remained exact. The two non-matching positions retain
+the established margin-aware external contract: the winner is not robust under
+the measured logit perturbation and top-k membership remains preserved.
+
+At the earlier external observable checkpoints, the candidate produced:
 
 * P1 cosine `0.999851`, top-5 overlap `4/5`, reference argmax match;
 * P2 cosine `0.999831`, top-5 overlap `5/5`, `1318 → 1044`, with the
@@ -53,11 +62,9 @@ At available external observable checkpoints, the candidate produced:
 * P4 cosine `0.999841`, top-5 overlap `5/5`, reference argmax match;
 * P8 cosine `0.999870`, top-5 overlap `5/5`, reference argmax match.
 
-The observable fixture still terminates at the existing missing
-`12-l_out-63-` checkpoint, so this candidate is not yet promoted to the
-default production path. The available evidence shows the same accepted
-margin-aware behavior as the current external contract, but does not replace
-the missing late-position fixture.
+The complete fixture run also preserved the existing internal state diagnostics
+and deterministic replay; those strict state-envelope warnings are not the
+external observable acceptance authority established by A27.
 
 ## Benchmark
 
@@ -85,20 +92,16 @@ allocations during profile: 0
 
 Unlike EXP-0106, this candidate tests the representation together with the
 specific access/reduction strategy used by the pinned gfx906 MMVQ path. The
-candidate is a repeatable positive end-to-end result and clears the current
-available external observable checkpoints. Its late-position external
-validation remains incomplete because the fixture is missing a checkpoint.
+candidate is a repeatable positive end-to-end result and clears the complete
+temporary external observable run under the accepted margin-aware contract.
 
 ## Decision
 
-**KEEP as an opt-in candidate; not yet production-selected.**
-
-The candidate is worth promoting after the external fixture is completed and
-the full observable contract is rerun. Until then, the accepted Q6_K × Q8_K
-path remains the default.
+**KEEP; production-selected.** The Q6_K×Q8_1 MMVQ-style path is now the
+Qwen3.8 default. Set `MIINFER_LM_Q8_1_MMVQ=0` to run the former Q6_K×Q8_K
+control for A/B comparison.
 
 ## Follow-up
 
-Complete the missing late external checkpoint, rerun the full observable
-contract and serial A/B, then either production-select this MMVQ path or
-reject it on the complete correctness evidence.
+Refresh the post-selection benchmark/profile and retain the control toggle for
+future regressions.
