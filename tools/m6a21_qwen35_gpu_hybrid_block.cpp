@@ -451,11 +451,23 @@ void project_q4_q8_1_prequantized(const Buffer& device_weight,
                                   std::uint32_t rows, std::uint32_t columns,
                                   bool lds_input = false,
                                   bool lds_metadata = false,
-                                  bool lds_decoded_metadata = false) {
+                                  bool lds_decoded_metadata = false,
+                                  bool packed_input = false) {
+    static const bool packed_input_env = [] {
+        const char* value = std::getenv("MIINFER_Q4K_Q8_1_PACKED_INPUT");
+        return value != nullptr && std::strcmp(value, "0") != 0;
+    }();
+    packed_input = packed_input || packed_input_env;
     if (lds_decoded_metadata) {
-        miinfer::launch_qwen3_q4_k_q8_1_mmvq_lds_decoded_metadata(
-            static_cast<const miinfer::Q4KDeviceBlock*>(device_weight->get()), q8,
-            output, rows, columns);
+        if (packed_input) {
+            miinfer::launch_qwen3_q4_k_q8_1_mmvq_lds_decoded_metadata_packed_input(
+                static_cast<const miinfer::Q4KDeviceBlock*>(device_weight->get()), q8,
+                output, rows, columns);
+        } else {
+            miinfer::launch_qwen3_q4_k_q8_1_mmvq_lds_decoded_metadata(
+                static_cast<const miinfer::Q4KDeviceBlock*>(device_weight->get()), q8,
+                output, rows, columns);
+        }
     } else if (lds_metadata) {
         miinfer::launch_qwen3_q4_k_q8_1_mmvq_lds_metadata(
             static_cast<const miinfer::Q4KDeviceBlock*>(device_weight->get()), q8,

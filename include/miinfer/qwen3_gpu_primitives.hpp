@@ -461,6 +461,14 @@ void launch_qwen3_q4_k_q8_1_mmvq_lds_decoded_metadata(
     std::uint32_t columns,
     hipStream_t stream = nullptr);
 
+void launch_qwen3_q4_k_q8_1_mmvq_lds_decoded_metadata_packed_input(
+    const Q4KDeviceBlock* weights,
+    const Q8_1Block* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    hipStream_t stream = nullptr);
+
 void launch_qwen3_q4_k_q8_1_mmvq_expanded(
     const Q4KExpandedDeviceBlock* weights,
     const Q8_1Block* input,

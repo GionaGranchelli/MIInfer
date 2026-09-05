@@ -1524,6 +1524,44 @@ __device__ __forceinline__ float qwen3_q4_k_q8_1_mmvq_dot_decoded_metadata(
     return half_to_float(metadata.d) * sum_d - half_to_float(metadata.dmin) * sum_min;
 }
 
+__device__ __forceinline__ float qwen3_q4_k_q8_1_mmvq_dot_packed_input(
+    const Q4KDeviceBlock& quant, const Q4KDecodedMetadata& metadata,
+    const Q8_1Block* input, int iqs) {
+    const int q8_offset = 2 * ((iqs / 2) / 4);
+    const int ql_offset = 16 * q8_offset + 4 * ((iqs / 2) % 4);
+    const auto* ql = reinterpret_cast<const int*>(quant.qs + ql_offset);
+    const int vl[2] = {ql[0], ql[4]};
+    const int group = 2 * (iqs / 8);
+    const int scale_values[2] = {metadata.scales[group], metadata.scales[group + 1]};
+    const int minimum_values[2] = {metadata.minimums[group], metadata.minimums[group + 1]};
+    const int word_offset = (iqs / 2) % 4;
+    int q8_words[2][2];
+    float d8[2];
+#pragma unroll
+    for (int part = 0; part < 2; ++part) {
+        const auto& q8 = input[q8_offset + part];
+        const auto* words = reinterpret_cast<const int*>(q8.qs) + word_offset;
+        q8_words[part][0] = words[0];
+        q8_words[part][1] = words[4];
+        d8[part] = half_to_float(q8.d);
+    }
+    float sum_d = 0.0F;
+    float sum_min = 0.0F;
+#pragma unroll
+    for (int part = 0; part < 2; ++part) {
+        const int q0 = (vl[0] >> (4 * part)) & 0x0F0F0F0F;
+        const int q1 = (vl[1] >> (4 * part)) & 0x0F0F0F0F;
+        const int dot = qwen3_dot4_i8(q0, q8_words[part][0],
+                                      qwen3_dot4_i8(q1, q8_words[part][1], 0));
+        const int q8_sum = qwen3_dot4_i8(0x01010101, q8_words[part][0],
+                                         qwen3_dot4_i8(0x01010101, q8_words[part][1], 0));
+        sum_d += d8[part] * static_cast<float>(dot * scale_values[part]);
+        sum_min += d8[part] * static_cast<float>(q8_sum * minimum_values[part]);
+    }
+    return half_to_float(metadata.d) * sum_d - half_to_float(metadata.dmin) * sum_min;
+}
+
+template <bool PackInput>
 __global__ void qwen3_q4_k_q8_1_mmvq_lds_decoded_metadata_kernel(
     const Q4KDeviceBlock* weights,
     const Q8_1Block* input,
@@ -1569,8 +1607,13 @@ __global__ void qwen3_q4_k_q8_1_mmvq_lds_decoded_metadata_kernel(
     float sum = 0.0F;
     const int iqs = 2 * static_cast<int>(tid % 16);
     for (std::uint32_t block = tid / 16; block < blocks_per_row; block += 8) {
-        sum += qwen3_q4_k_q8_1_mmvq_dot_decoded_metadata(
-            row_weights[block], row_metadata[block], input_tile + block * 8, iqs);
+        if constexpr (PackInput) {
+            sum += qwen3_q4_k_q8_1_mmvq_dot_packed_input(
+                row_weights[block], row_metadata[block], input_tile + block * 8, iqs);
+        } else {
+            sum += qwen3_q4_k_q8_1_mmvq_dot_decoded_metadata(
+                row_weights[block], row_metadata[block], input_tile + block * 8, iqs);
+        }
     }
     partials[row_in_group][tid] = sum;
     __syncthreads();
@@ -2319,7 +2362,23 @@ void launch_qwen3_q4_k_q8_1_mmvq_lds_decoded_metadata(
     const auto input_bytes = static_cast<std::size_t>(columns / 32) * sizeof(Q8_1Block);
     const auto metadata_bytes = static_cast<std::size_t>(2) * (columns / 256)
                                 * sizeof(Q4KDecodedMetadata);
-    hipLaunchKernelGGL(qwen3_q4_k_q8_1_mmvq_lds_decoded_metadata_kernel,
+    hipLaunchKernelGGL((qwen3_q4_k_q8_1_mmvq_lds_decoded_metadata_kernel<false>),
+                       dim3((rows + 1) / 2), dim3(256), input_bytes + metadata_bytes, stream,
+                       weights, input, output, rows, columns);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen3_q4_k_q8_1_mmvq_lds_decoded_metadata_packed_input(
+    const Q4KDeviceBlock* weights, const Q8_1Block* input, float* output,
+    std::uint32_t rows, std::uint32_t columns, hipStream_t stream) {
+    if (weights == nullptr || input == nullptr || output == nullptr || rows == 0 || columns == 0
+        || columns % 256 != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    const auto input_bytes = static_cast<std::size_t>(columns / 32) * sizeof(Q8_1Block);
+    const auto metadata_bytes = static_cast<std::size_t>(2) * (columns / 256)
+                                * sizeof(Q4KDecodedMetadata);
+    hipLaunchKernelGGL((qwen3_q4_k_q8_1_mmvq_lds_decoded_metadata_kernel<true>),
                        dim3((rows + 1) / 2), dim3(256), input_bytes + metadata_bytes, stream,
                        weights, input, output, rows, columns);
     MIINFER_HIP_CHECK(hipGetLastError());
