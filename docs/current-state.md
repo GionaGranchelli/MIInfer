@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-B14 — Qwen3.8-27B MMVQ-style LM-head production path**
+**M6-B15 — Qwen3.8-27B recurrent-state optimization**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -69,6 +69,12 @@ P64 improves from 8.40767 to 8.68228 tok/s (+3.26%), while the final LM-head
 profile falls from about 6.19 ms to 2.449 ms. The MMVQ path is now the
 Qwen3.8 production default; `MIINFER_LM_Q8_1_MMVQ=0` retains the former
 Q6_K×Q8_K control.
+EXP-0108 adds a production-selected recurrent state-update path that avoids
+the intermediate decayed-state global store. The complete external observable
+run remains valid under the accepted A27 contract, Release CTest is 20/20, and
+TG64/TG128 improve from 8.68093/8.60479 to 8.92048/8.82940 tok/s
+(+2.76%/+2.61%). The representative state-update stage falls from 0.303039 to
+0.211680 ms; `MIINFER_DELTA_NO_DECAY_STORE=0` retains the former kernel.
 M6-A8 provides a dedicated qwen35 model boundary and a real layer-0 RMSNorm
 GPU fixture on gfx906. M6-A9 validates the real Q6_K output head through the
 existing Q6_K×Q8_K GPU primitive, M6-A10 validates a real Q4_K×Q8_K attention

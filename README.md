@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-B14 — Qwen3.8-27B MMVQ-style LM-head production path**
+**Current phase: M6-B15 — Qwen3.8-27B recurrent-state optimization**
 
 The project currently has:
 
@@ -64,6 +64,11 @@ The project currently has:
   about 3.3%; the former Q6_K×Q8_K path remains available with
   `MIINFER_LM_Q8_1_MMVQ=0` for control comparisons; see
   `experiments/EXP-0107-m6b14-q6k-mmvq-q8-1.md`
+* a production-selected recurrent state-update path that avoids the
+  intermediate decayed-state store and improves TG64/TG128 by about 2.8%/2.6%;
+  the former kernel remains available with
+  `MIINFER_DELTA_NO_DECAY_STORE=0`; see
+  `experiments/EXP-0108-m6b15-recurrent-no-decay-store.md`
 * a reproducible llama.cpp-backed Qwen3.8-27B hybrid tensor/state fixture; see
   `experiments/EXP-0043-m6a1-qwen38-reference-fixture.md`
 * a read-only Qwen3.8 projection/kernel compatibility map; see
