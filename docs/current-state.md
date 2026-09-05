@@ -15,15 +15,16 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-B52 — Q4_K×Q8_1 one-Wave64 rejection**
+**M6-B53 — Q4_K×Q8_K FFN differential rejection**
 
-The B50 fused recurrent-output candidate and B52 one-Wave64 Q4_K×Q8_1
-candidate were rejected after correctness passed but whole-token throughput
-did not improve. The post-B50 profile records `73.8636 ms/token` total GPU
-event and `70.5806 ms/token` layer work at position 63, with `2.4872 ms` final
-LM head and zero decode allocations. See
+The B50 fused recurrent-output candidate, B52 one-Wave64 Q4_K×Q8_1 candidate,
+and B53 Q4_K×Q8_K FFN differential were rejected after correctness passed but
+whole-token throughput did not improve. The post-B50 profile records
+`73.8636 ms/token` total GPU event and `70.5806 ms/token` layer work at
+position 63, with `2.4872 ms` final LM head and zero decode allocations. See
 `experiments/EXP-0143-m6b51-post-b50-profile.md` and
 `experiments/EXP-0144-m6b52-q4k-q8-1-one-wave.md`.
+`experiments/EXP-0145-m6b53-q4k-q8k-ffn-differential.md`.
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,

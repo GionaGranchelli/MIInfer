@@ -10,13 +10,13 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-B52 — Q4_K×Q8_1 one-Wave64 rejection**
+**Current phase: M6-B53 — Q4_K×Q8_K FFN differential rejection**
 
 Immediate objective:
 
 > Retain the B41 Q4_K×Q8_1 and transposed no-decay-store production paths
-> after rejecting the one-Wave64 mapping; select the next materially different
-> high-leverage target.
+> after rejecting the one-Wave64 and Q8_K FFN alternatives; select the next
+> materially different high-leverage target.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
