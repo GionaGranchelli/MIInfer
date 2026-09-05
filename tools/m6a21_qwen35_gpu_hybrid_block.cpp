@@ -510,6 +510,7 @@ struct RecurrentLayer {
     bool q6_q8_k_dot4_qkv = false;
     bool transposed_state = true;
     bool transposed_no_decay_store = true;
+    bool transposed_lds_inputs = true;
 
     RecurrentLayer(const miinfer::Qwen35Model& model_value, std::size_t layer,
                    const std::filesystem::path& fixture)
@@ -567,6 +568,11 @@ struct RecurrentLayer {
             std::getenv("MIINFER_DELTA_TRANSPOSED_NO_DECAY_STORE");
         if (transposed_no_decay_store_env != nullptr) {
             transposed_no_decay_store = std::strcmp(transposed_no_decay_store_env, "0") != 0;
+        }
+        const char* transposed_lds_inputs_env =
+            std::getenv("MIINFER_DELTA_TRANSPOSED_LDS_INPUTS");
+        if (transposed_lds_inputs_env != nullptr) {
+            transposed_lds_inputs = std::strcmp(transposed_lds_inputs_env, "0") != 0;
         }
         require_type(qkv_weight, {miinfer::GgufTensorType::q4_k,
                                    miinfer::GgufTensorType::q6_k});
@@ -888,11 +894,19 @@ struct RecurrentLayer {
         stage_start(5, position);
         if (transposed_state) {
             if (transposed_no_decay_store) {
-                miinfer::launch_qwen35_deltanet_state_update_transposed_no_decay_store(
-                    static_cast<const float*>(query_norm->get()), static_cast<const float*>(key_norm->get()),
-                    static_cast<const float*>(value->get()), static_cast<const float*>(beta->get()),
-                    static_cast<const float*>(decay->get()), static_cast<float*>(state->get()),
-                    static_cast<float*>(recurrent_output->get()), kKHeads, kVHeads, kState);
+                if (transposed_lds_inputs) {
+                    miinfer::launch_qwen35_deltanet_state_update_transposed_no_decay_store_lds_inputs(
+                        static_cast<const float*>(query_norm->get()), static_cast<const float*>(key_norm->get()),
+                        static_cast<const float*>(value->get()), static_cast<const float*>(beta->get()),
+                        static_cast<const float*>(decay->get()), static_cast<float*>(state->get()),
+                        static_cast<float*>(recurrent_output->get()), kKHeads, kVHeads, kState);
+                } else {
+                    miinfer::launch_qwen35_deltanet_state_update_transposed_no_decay_store(
+                        static_cast<const float*>(query_norm->get()), static_cast<const float*>(key_norm->get()),
+                        static_cast<const float*>(value->get()), static_cast<const float*>(beta->get()),
+                        static_cast<const float*>(decay->get()), static_cast<float*>(state->get()),
+                        static_cast<float*>(recurrent_output->get()), kKHeads, kVHeads, kState);
+                }
             } else {
                 miinfer::launch_qwen35_deltanet_state_update_transposed(
                     static_cast<const float*>(query_norm->get()), static_cast<const float*>(key_norm->get()),

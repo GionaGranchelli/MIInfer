@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-B54 — post-B53 production profile**
+**M6-B55 — DeltaNet LDS input reuse**
 
 The B50 fused recurrent-output candidate, B52 one-Wave64 Q4_K×Q8_1 candidate,
 and B53 Q4_K×Q8_K FFN differential were rejected after correctness passed but
@@ -32,6 +32,14 @@ zero decode allocations. Native TG64/TG128 medians are `13.9005/13.6719
 tok/s`, with deterministic replay. FFN Down remains the largest repeated
 projection family; no new standalone Q4_K geometry or representation target
 is selected. See `experiments/EXP-0146-m6b54-post-b53-profile.md`.
+
+M6-B55 production-selected LDS staging for the transposed no-decay-store
+DeltaNet update. It preserves the recurrence and state layout, passes the
+external P64 observable contract, poisoned reset/replay, and 20/20 CTest, and
+improves TG64/TG128 from `13.8564/13.6513` to `14.0953/13.8572 tok/s`
+(`+1.72%/+1.51%`) with unchanged device usage. Set
+`MIINFER_DELTA_TRANSPOSED_LDS_INPUTS=0` to select the control. See
+`experiments/EXP-0147-m6b55-deltanet-lds-inputs.md`.
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,

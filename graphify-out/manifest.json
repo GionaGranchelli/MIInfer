@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788606131.1777556,
-    "seen": 1788606145.4906652,
-    "ast_hash": "192c09b958e51cd984a65fd0683564a2",
+    "mtime": 1788606917.1567564,
+    "seen": 1788606948.5796285,
+    "ast_hash": "da4d1d7a4ded3628cc5a192aec1ba4d0",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788606131.174511,
-    "seen": 1788606145.4906802,
-    "ast_hash": "e47bc813e7324db1d9e16a0e54aba315",
+    "mtime": 1788606917.1537564,
+    "seen": 1788606948.5796402,
+    "ast_hash": "b8b548b607ec846fb8580d82c93a5688",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788606131.176511,
-    "seen": 1788606145.4907053,
-    "ast_hash": "3258e523df61fdff727e36546bc6700f",
+    "mtime": 1788606917.1557565,
+    "seen": 1788606948.5796614,
+    "ast_hash": "1c79668febd3c59b24185a46c7c8c90a",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1788605387.5020645,
-    "seen": 1788605534.545597,
-    "ast_hash": "e96e28f491bbfdca9e56eb0cf079b60c",
+    "mtime": 1788606445.2060108,
+    "seen": 1788606948.5794659,
+    "ast_hash": "d00c702d2397cfffebb43d01b883bc32",
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_primitives.hpp": {
@@ -1332,9 +1332,9 @@
     "semantic_hash": ""
   },
   "tools/m6a21_qwen35_gpu_hybrid_block.cpp": {
-    "mtime": 1788605387.5090644,
-    "seen": 1788605534.5457177,
-    "ast_hash": "a2e5e7901990e872ad15bc3bed662bb8",
+    "mtime": 1788606857.994039,
+    "seen": 1788606948.5795958,
+    "ast_hash": "a2c722f3ccccca4eab056a3cfe64f6a1",
     "semantic_hash": ""
   },
   "experiments/EXP-0065-m6a21-qwen35-gpu-hybrid-block.md": {
@@ -1839,6 +1839,12 @@
     "mtime": 1788606119.068569,
     "seen": 1788606145.4909523,
     "ast_hash": "302559eafeade2c87107b098b1a27127",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0147-m6b55-deltanet-lds-inputs.md": {
+    "mtime": 1788606904.2458181,
+    "seen": 1788606948.5798767,
+    "ast_hash": "e83abc8659766e2830a9d7e56692cc7f",
     "semantic_hash": ""
   }
 }
