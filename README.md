@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-B15 — Qwen3.8-27B recurrent-state optimization**
+**Current phase: M6-B16 — Qwen3.8-27B projection-input reuse**
 
 The project currently has:
 
@@ -69,6 +69,10 @@ The project currently has:
   the former kernel remains available with
   `MIINFER_DELTA_NO_DECAY_STORE=0`; see
   `experiments/EXP-0108-m6b15-recurrent-no-decay-store.md`
+* a production-selected Q8_K projection-input reuse path that quantizes shared
+  normalized inputs once for repeated consumers, improving TG64/TG128 by about
+  0.8%/0.7%; set `MIINFER_REUSE_PROJECTION_Q8=0` for the separate-quantization
+  control; see `experiments/EXP-0109-m6b16-projection-input-q8-reuse.md`
 * a reproducible llama.cpp-backed Qwen3.8-27B hybrid tensor/state fixture; see
   `experiments/EXP-0043-m6a1-qwen38-reference-fixture.md`
 * a read-only Qwen3.8 projection/kernel compatibility map; see
