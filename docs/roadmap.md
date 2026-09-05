@@ -10,12 +10,12 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-B27 — batched full-attention head normalization**
+**Current phase: M6-B28 — post-B27 production profile**
 
 Immediate objective:
 
-> Refresh the production profile after selecting batched full-attention head
-> normalization and choose the next measured whole-token target.
+> Use the post-B27 profile to select one bounded recurrent-layer differential
+> experiment; do not infer a fusion target from dispatch count alone.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See

@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-B27 — batched full-attention head normalization**
+**M6-B28 — post-B27 production profile**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -139,6 +139,11 @@ Q/K heads. Native replay, the external observable contract, poisoned reset,
 and CTest 20/20 pass. Three-process stable-peak medians improve TG64/TG128
 from 11.2861/11.1409 to 11.4420/11.2970 tok/s (+1.38%/+1.40%). Set
 `MIINFER_BATCH_HEAD_RMS=0` to select the separate-launch control.
+EXP-0120 refreshes the production profile after B27. Three instrumented
+profiles measure 88.8735–89.0098 ms/token, with 48 recurrent layers
+contributing 64.54208 ms aggregate and 16 full-attention layers contributing
+21.01088 ms. Recurrent-layer support/projection work is the next measured
+target; no production behavior changed.
 M6-A8 provides a dedicated qwen35 model boundary and a real layer-0 RMSNorm
 GPU fixture on gfx906. M6-A9 validates the real Q6_K output head through the
 existing Q6_K×Q8_K GPU primitive, M6-A10 validates a real Q4_K×Q8_K attention
