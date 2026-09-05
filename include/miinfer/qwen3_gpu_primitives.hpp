@@ -312,7 +312,7 @@ void launch_qwen3_q6_k_q8_k_gemv(
     std::uint32_t columns,
     hipStream_t stream = nullptr);
 
-// Opt-in M6-B22 diagnostic candidate: packed gfx906 dot4 for the Q6_K x Q8_K
+// Opt-in M6-B23 diagnostic candidate: packed gfx906 dot4 for the Q6_K x Q8_K
 // recurrent QKV shape. The quantized representation remains unchanged.
 void launch_qwen3_q6_k_q8_k_gemv_dot4(
     const Q6KDeviceBlock* weights,

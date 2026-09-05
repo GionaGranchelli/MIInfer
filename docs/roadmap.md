@@ -10,12 +10,12 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-B7 — Qwen3.8-27B quantized projection optimization**
+**Current phase: M6-B24 — full-attention stage attribution**
 
 Immediate objective:
 
-> Refresh the native Qwen3.8-27B profile after the paired-nibble Q5_K
-> optimization and select the next measured whole-token target.
+> Split the representative full-attention Q/K/V preparation bucket into
+> separable operation costs before selecting the next measured optimization.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See

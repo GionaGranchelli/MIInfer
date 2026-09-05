@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-B22 — Q6_K×Q8_K packed-dot4 recurrent QKV**
+**M6-B24 — full-attention stage attribution**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -118,6 +118,12 @@ QKV. It keeps the existing Q6_K/Q8_K representation, passes native replay and
 the external observable contract, and improves stable-peak TG64/TG128 medians
 from 10.9603/10.8261 to 11.2805/11.1392 tok/s (+2.92%/+2.89%). Set
 `MIINFER_Q6K_Q8K_DOT4_QKV=0` to select the scalar control.
+EXP-0116 adds measurement-only stage attribution to a representative full-
+attention layer at P64. The layer-3 profile reports 0.400319 ms for the
+combined Q/K/V, head-normalization, RoPE, and KV-store region, 0.13840 ms for
+cached attention, and about 0.852 ms for FFN work. No production behavior was
+changed; the next experiment must split the combined preparation bucket before
+selecting an optimization.
 M6-A8 provides a dedicated qwen35 model boundary and a real layer-0 RMSNorm
 GPU fixture on gfx906. M6-A9 validates the real Q6_K output head through the
 existing Q6_K×Q8_K GPU primitive, M6-A10 validates a real Q4_K×Q8_K attention

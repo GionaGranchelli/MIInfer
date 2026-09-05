@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788577537.6808808,
-    "seen": 1788577625.518287,
-    "ast_hash": "38c733cd5d1b6b0f754718b57cf65324",
+    "mtime": 1788578042.1324112,
+    "seen": 1788578052.0139735,
+    "ast_hash": "69008450bde8fcc3325b03dac746e9e3",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788577547.599832,
-    "seen": 1788577625.5182986,
-    "ast_hash": "d773dd5bd36c723a9a7b0c700c7e071b",
+    "mtime": 1788578042.1344113,
+    "seen": 1788578052.013986,
+    "ast_hash": "5fb46809f45c4fe3a909fae805f17c39",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788562965.7323356,
-    "seen": 1788562977.2205842,
-    "ast_hash": "63a5dfbdd448f91046e6c4784b7818ad",
+    "mtime": 1788578042.1354113,
+    "seen": 1788578052.0140078,
+    "ast_hash": "039dbe582c8b2eed1abd0176b99c9b8a",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1788576622.1343184,
-    "seen": 1788577625.5181317,
-    "ast_hash": "50716fd3d3dee9a61f748123236b7d9a",
+    "mtime": 1788577923.8089862,
+    "seen": 1788578052.013818,
+    "ast_hash": "6cf1b9e6d665bc509ad6a2e3abfa4abb",
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_primitives.hpp": {
@@ -1332,9 +1332,9 @@
     "semantic_hash": ""
   },
   "tools/m6a21_qwen35_gpu_hybrid_block.cpp": {
-    "mtime": 1788577510.678013,
-    "seen": 1788577625.5182543,
-    "ast_hash": "520889c01ae3b471b51f77dba8ac3436",
+    "mtime": 1788577938.8689122,
+    "seen": 1788578052.0139408,
+    "ast_hash": "f9ad5994f89d22b9ca28fa8890266d6e",
     "semantic_hash": ""
   },
   "experiments/EXP-0065-m6a21-qwen35-gpu-hybrid-block.md": {
@@ -1653,6 +1653,12 @@
     "mtime": 1788577527.5159307,
     "seen": 1788577625.5184991,
     "ast_hash": "4394edabac3aa1dec33ce2405a58184c",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0116-m6b24-full-attention-attribution.md": {
+    "mtime": 1788578042.1324112,
+    "seen": 1788578052.0141819,
+    "ast_hash": "69a00ea1a6c729d5f66b0d6cac75d385",
     "semantic_hash": ""
   }
 }

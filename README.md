@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-B22 — Q6_K×Q8_K packed-dot4 recurrent QKV**
+**Current phase: M6-B24 — full-attention stage attribution**
 
 The project currently has:
 
@@ -97,6 +97,10 @@ The project currently has:
   improving native TG64/TG128 by about 2.9%/2.9%; the scalar path remains
   available with `MIINFER_Q6K_Q8K_DOT4_QKV=0`; see
   `experiments/EXP-0115-m6b22-q6k-q8k-dot4-qkv.md`
+* a measurement-only full-attention stage attribution at P64; layer 3 is
+  dominated by the combined Q/K/V preparation bucket, FFN, and cached
+  attention, with no production behavior change; see
+  `experiments/EXP-0116-m6b24-full-attention-attribution.md`
 * a reproducible llama.cpp-backed Qwen3.8-27B hybrid tensor/state fixture; see
   `experiments/EXP-0043-m6a1-qwen38-reference-fixture.md`
 * a read-only Qwen3.8 projection/kernel compatibility map; see
