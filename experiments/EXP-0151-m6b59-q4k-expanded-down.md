@@ -12,7 +12,8 @@ The opt-in path expands each Q4_K block from 144 bytes to a 276-byte device
 block containing decoded scale/minimum metadata and 256 byte-addressable
 nibbles. The existing Q4_K×Q8_1 dot-product arithmetic and 256-thread
 two-row reduction are retained. Only Q4_K FFN Down projections use it; Q6_K
-Down layers retain their existing path. Production default remains unchanged.
+Down layers retain their existing path. It is production-selected by default;
+set `MIINFER_Q4K_EXPANDED_DOWN=0` to use the packed control path.
 
 Enable with `MIINFER_Q4K_EXPANDED_DOWN=1`.
 
@@ -46,8 +47,10 @@ Fresh five-sample medians:
 
 | Workload | Control tok/s | Candidate tok/s | Change |
 | --- | ---: | ---: | ---: |
-| TG64 | 14.0802 | 14.1874 | +0.76% |
-| TG128 | 13.8621 | 13.9449 | +0.60% |
+| TG64 (initial) | 14.0802 | 14.1874 | +0.76% |
+| TG128 (initial) | 13.8621 | 13.9449 | +0.60% |
+| TG64 (fresh A/B) | 14.1161 | 14.1819 | +0.47% |
+| TG128 (fresh A/B) | 13.8494 | 13.9308 | +0.59% |
 
 | Resource | Control | Candidate | Delta |
 | --- | ---: | ---: | ---: |
@@ -67,14 +70,14 @@ about 0.6–0.8% throughput.
 
 ## Decision
 
-**RETEST / candidate promising; production selection pending final regression
-and interleaved A/B confirmation.**
+**KEEP / production-selected.** The fresh A/B confirms a repeatable TG128 gain
+and a positive TG64 result. The VRAM tradeoff is explicit and the packed path
+remains available as a control.
 
-The production default remains the packed Q4_K path until those gates are
-complete. Do not claim a final M6 performance result from this experiment.
+The extra persistent storage is accepted for this 32 GB target; use the packed
+control when a deployment cannot afford the additional ~3.08 GB.
 
 ## Follow-up
 
-Run the full Release CTest suite and an interleaved TG64/TG128 A/B. If both
-remain exact and the gain persists, production-select the expanded Down path
-only for configurations with sufficient VRAM headroom; otherwise reject it.
+Revisit the selection only if context capacity or broader model coverage makes
+the VRAM tradeoff unacceptable.

@@ -555,7 +555,7 @@ struct RecurrentLayer {
     bool q4_q8_1_lds_decoded_metadata = true;
     bool q4_q8_1_attn_gate = false;
     bool direct_layer_output = false;
-    bool expanded_down = false;
+    bool expanded_down = true;
     bool q6_q8_k_dot4_qkv = false;
     bool transposed_state = true;
     bool transposed_no_decay_store = true;
@@ -610,8 +610,8 @@ struct RecurrentLayer {
         direct_layer_output = direct_layer_output_env != nullptr
             && std::strcmp(direct_layer_output_env, "0") != 0;
         const char* expanded_down_env = std::getenv("MIINFER_Q4K_EXPANDED_DOWN");
-        expanded_down = expanded_down_env != nullptr
-            && std::strcmp(expanded_down_env, "0") != 0;
+        expanded_down = expanded_down_env == nullptr
+            || std::strcmp(expanded_down_env, "0") != 0;
         const char* q6_q8_k_dot4_qkv_env = std::getenv("MIINFER_Q6K_Q8K_DOT4_QKV");
         q6_q8_k_dot4_qkv = q6_q8_k_dot4_qkv_env == nullptr
             || std::strcmp(q6_q8_k_dot4_qkv_env, "0") != 0;
@@ -1181,7 +1181,7 @@ struct FullAttentionLayer {
     bool q4_q8_1_lds_metadata = true;
     bool q4_q8_1_lds_decoded_metadata = true;
     bool direct_layer_output = false;
-    bool expanded_down = false;
+    bool expanded_down = true;
     bool batch_head_rms = false;
     struct StageProfile {
         std::array<hipEvent_t, 15> start{};
@@ -1214,8 +1214,8 @@ struct FullAttentionLayer {
         d_post = copy_weight(post_norm); d_ffn_gate = copy_weight(ffn_gate_weight);
         d_ffn_up = copy_weight(ffn_up_weight); d_ffn_down = copy_weight(ffn_down_weight);
         const char* expanded_down_env = std::getenv("MIINFER_Q4K_EXPANDED_DOWN");
-        expanded_down = expanded_down_env != nullptr
-            && std::strcmp(expanded_down_env, "0") != 0;
+        expanded_down = expanded_down_env == nullptr
+            || std::strcmp(expanded_down_env, "0") != 0;
         if (expanded_down && ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
             d_ffn_down_expanded = copy_expanded_q4k(ffn_down_weight);
         }
