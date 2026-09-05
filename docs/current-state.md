@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-B19 — Qwen3.8-27B Q4_K×Q8_1 FFN Gate/Up MMVQ**
+**M6-B20 — Q6_K×Q8_1 recurrent QKV MMVQ rejected; B19 remains production**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -103,6 +103,11 @@ external observable contract remain valid, CTest is 20/20, and stable-peak
 TG64/TG128 medians improve from 10.1707/10.0231 to 10.7750/10.6477 tok/s
 (+5.94%/+6.23%). Set `MIINFER_Q4K_Q8_1_MMVQ_FFN_GATE_UP=0` to select the
 former Q4_K×Q8_K control.
+EXP-0113 tested the existing Q6_K×Q8_1 MMVQ primitive for recurrent QKV.
+It failed native replay and produced immediate large external observable
+errors, including approximately 96 hidden-state max error and a wrong P0
+argmax. The candidate was removed; the B19 Q6_K×Q8_K QKV path remains
+active. No performance result was accepted.
 M6-A8 provides a dedicated qwen35 model boundary and a real layer-0 RMSNorm
 GPU fixture on gfx906. M6-A9 validates the real Q6_K output head through the
 existing Q6_K×Q8_K GPU primitive, M6-A10 validates a real Q4_K×Q8_K attention
