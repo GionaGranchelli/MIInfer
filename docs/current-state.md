@@ -1285,6 +1285,16 @@ fell `16.25%` at TG64 and `16.20%` at TG128. The candidate was removed; the
 two-independent-output-row B41 mapping remains selected. See
 experiments/EXP-0136-m6b44-q4k-q8-1-split-k.md.
 
+M6-B45 performed a source-level Q4_K×Q8_1 inner-loop differential after the
+split-K rejection. A fresh position-63 profile measured `73.9278 ms` total GPU
+event, `70.6851 ms` layer sum, `2.45568 ms` final LM head, and zero
+allocations. The pinned llama.cpp wrapper packs Q8 operand words and scales
+into local arrays before its dot helper, while MIInfer reads the same operands
+from its LDS-resident Q8 blocks inside the two-part helper. This is a concrete
+non-geometric hypothesis, but no performance result is inferred from source
+inspection and no candidate was selected. See
+experiments/EXP-0137-m6b45-q4k-q8-1-inner-loop-differential.md.
+
 Update this document whenever:
 
 * active milestone changes

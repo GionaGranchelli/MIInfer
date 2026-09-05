@@ -10,11 +10,12 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-B44 — post-B41 profile and Q4 split-K rejection**
+**Current phase: M6-B45 — Q4_K×Q8_1 inner-loop differential**
 
 Immediate objective:
 
-> Select the next bounded whole-token experiment from the post-B41 profile;
+> Decide whether a direct exact-shape test of llama.cpp-style Q8 operand
+> packing inside the existing B41 two-row Q4_K×Q8_1 mapping is justified;
 > retain decoded Q4_K metadata staging and the existing Q6_K×Q8_1 LM head.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
