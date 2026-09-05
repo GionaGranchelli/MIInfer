@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788610626.3328614,
-    "seen": 1788610684.4537861,
-    "ast_hash": "c3256a140f032b103a2d3963e6b14df4",
+    "mtime": 1788615309.3025966,
+    "seen": 1788615326.2109644,
+    "ast_hash": "9d4887878ce0065764002425af217948",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -1953,6 +1953,12 @@
     "mtime": 1788614178.7129416,
     "seen": 1788614192.4293687,
     "ast_hash": "4e600aa6b0f30a8dcce579bd93f208fa",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0167-m6b72-post-a28-b1-baseline.md": {
+    "mtime": 1788615309.3005967,
+    "seen": 1788615326.2112262,
+    "ast_hash": "58c9b77cd71b3f95e3fc85969eb2c23e",
     "semantic_hash": ""
   }
 }

@@ -15,6 +15,13 @@ For long-term direction, see:
 
 # Current Phase
 
+**M6-B1 — post-A28 performance baseline**
+
+Native Qwen3.8-27B generation is operational and allocation-free. EXP-0167
+records current MIInfer TG64 at `14.280 tok/s` versus pinned llama.cpp at
+`22.331 tok/s` under the same MI50 stable-peak setup; the performance target
+is not yet met. The next action is a whole-token MIInfer profile.
+
 **M6-B62 — DeltaNet row-wave mapping rejection**
 
 M6-B62 tested one Wave64 per transposed DeltaNet state row with four rows per
