@@ -459,6 +459,49 @@ __global__ void qwen35_deltanet_state_update_transposed_no_decay_store_lds_input
         query_dot * rsqrtf(static_cast<float>(state_size));
 }
 
+__global__ void qwen35_deltanet_state_update_transposed_fused_beta_alpha_kernel(
+    const float* query, const float* key, const float* value,
+    const float* beta_raw, const float* alpha_raw, const float* dt,
+    const float* a, float* state, float* output,
+    std::uint32_t key_heads, std::uint32_t value_heads, std::uint32_t state_size) {
+    const std::uint32_t head = blockIdx.x;
+    const std::uint32_t row = threadIdx.x;
+    if (head >= value_heads || row >= state_size || key_heads == 0) return;
+    extern __shared__ float fused_shared[];
+    const std::uint32_t key_head = head % key_heads;
+    const std::size_t key_base = static_cast<std::size_t>(key_head) * state_size;
+    float* shared_query = fused_shared;
+    float* shared_key = fused_shared + state_size;
+    shared_query[row] = query[key_base + row];
+    shared_key[row] = key[key_base + row];
+    if (row == 0) {
+        fused_shared[2 * state_size] = 1.0F / (1.0F + expf(-beta_raw[head]));
+        const float x = alpha_raw[head] + dt[head];
+        const float softplus = x <= 20.0F ? log1pf(expf(x)) : x;
+        fused_shared[2 * state_size + 1] = expf(softplus * a[head]);
+    }
+    __syncthreads();
+    const std::size_t state_base = static_cast<std::size_t>(head) * state_size * state_size;
+    const float beta_value = fused_shared[2 * state_size];
+    const float decay_value = fused_shared[2 * state_size + 1];
+    float key_dot = 0.0F;
+    for (std::uint32_t column = 0; column < state_size; ++column) {
+        key_dot += state[state_base + static_cast<std::size_t>(column) * state_size + row]
+                   * decay_value * shared_key[column];
+    }
+    const float delta = (value[static_cast<std::size_t>(head) * state_size + row] - key_dot)
+                        * beta_value;
+    float query_dot = 0.0F;
+    for (std::uint32_t column = 0; column < state_size; ++column) {
+        const std::size_t index = state_base + static_cast<std::size_t>(column) * state_size + row;
+        const float updated = state[index] * decay_value + delta * shared_key[column];
+        state[index] = updated;
+        query_dot += updated * shared_query[column];
+    }
+    output[static_cast<std::size_t>(head) * state_size + row] =
+        query_dot * rsqrtf(static_cast<float>(state_size));
+}
+
 __global__ void qwen35_conv_silu_split_kernel(
     const float* current_qkv, const float* conv_weights, float* history,
     float* query, float* key, float* value, std::uint32_t position,
@@ -1851,6 +1894,26 @@ void launch_qwen35_deltanet_state_update_transposed_no_decay_store_lds_inputs(
                        static_cast<std::size_t>(2) * state_size * sizeof(float), stream,
                        query, key, value, beta, decay, state, output,
                        key_heads, value_heads, state_size);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_deltanet_state_update_transposed_fused_beta_alpha(
+    const float* query, const float* key, const float* value,
+    const float* beta_raw, const float* alpha_raw, const float* dt,
+    const float* a, float* state, float* output,
+    std::uint32_t key_heads, std::uint32_t value_heads,
+    std::uint32_t state_size, hipStream_t stream) {
+    if (query == nullptr || key == nullptr || value == nullptr || beta_raw == nullptr
+        || alpha_raw == nullptr || dt == nullptr || a == nullptr || state == nullptr
+        || output == nullptr || key_heads == 0 || value_heads == 0 || state_size == 0
+        || state_size > 1024 || value_heads % key_heads != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen35_deltanet_state_update_transposed_fused_beta_alpha_kernel,
+                       dim3(value_heads), dim3(state_size),
+                       (static_cast<std::size_t>(2) * state_size + 2) * sizeof(float),
+                       stream, query, key, value, beta_raw, alpha_raw, dt, a,
+                       state, output, key_heads, value_heads, state_size);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

@@ -15,6 +15,14 @@ For long-term direction, see:
 
 # Current Phase
 
+**M6-B61 — fused beta/alpha preparation rejection**
+
+M6-B61 fused recurrent beta/alpha preparation into the transposed DeltaNet
+state-update kernel as an opt-in candidate. It passed replay but was neutral
+to slightly negative at TG64/TG128 (`14.1819/13.9308` production versus
+`14.1747/13.9277` candidate), so the separate preparation kernel remains in
+production. See `experiments/EXP-0153-m6b61-fused-beta-alpha.md`.
+
 **M6-B60 — post-B59 production profile**
 
 M6-B60 refreshed the selected path at position 63: total GPU event

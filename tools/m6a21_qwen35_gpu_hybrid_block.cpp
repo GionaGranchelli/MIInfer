@@ -560,6 +560,7 @@ struct RecurrentLayer {
     bool transposed_state = true;
     bool transposed_no_decay_store = true;
     bool transposed_lds_inputs = true;
+    bool fuse_beta_alpha = false;
 
     RecurrentLayer(const miinfer::Qwen35Model& model_value, std::size_t layer,
                    const std::filesystem::path& fixture)
@@ -629,6 +630,9 @@ struct RecurrentLayer {
         if (transposed_lds_inputs_env != nullptr) {
             transposed_lds_inputs = std::strcmp(transposed_lds_inputs_env, "0") != 0;
         }
+        const char* fuse_beta_alpha_env = std::getenv("MIINFER_FUSE_BETA_ALPHA");
+        fuse_beta_alpha = fuse_beta_alpha_env != nullptr
+            && std::strcmp(fuse_beta_alpha_env, "0") != 0;
         require_type(qkv_weight, {miinfer::GgufTensorType::q4_k,
                                    miinfer::GgufTensorType::q6_k});
         require_type(gate_weight, {miinfer::GgufTensorType::q4_k});
@@ -952,7 +956,14 @@ struct RecurrentLayer {
         stage_start(5, position);
         if (transposed_state) {
             if (transposed_no_decay_store) {
-                if (transposed_lds_inputs) {
+                if (fuse_beta_alpha && transposed_lds_inputs) {
+                    miinfer::launch_qwen35_deltanet_state_update_transposed_fused_beta_alpha(
+                        static_cast<const float*>(query_norm->get()), static_cast<const float*>(key_norm->get()),
+                        static_cast<const float*>(value->get()), static_cast<const float*>(beta_raw->get()),
+                        static_cast<const float*>(alpha_raw->get()), static_cast<const float*>(d_dt->get()),
+                        static_cast<const float*>(d_a->get()), static_cast<float*>(state->get()),
+                        static_cast<float*>(recurrent_output->get()), kKHeads, kVHeads, kState);
+                } else if (transposed_lds_inputs) {
                     miinfer::launch_qwen35_deltanet_state_update_transposed_no_decay_store_lds_inputs(
                         static_cast<const float*>(query_norm->get()), static_cast<const float*>(key_norm->get()),
                         static_cast<const float*>(value->get()), static_cast<const float*>(beta->get()),
