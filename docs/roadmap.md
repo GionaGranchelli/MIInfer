@@ -10,11 +10,11 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-B49 — recurrent state/head-RMS fusion rejection**
+**Current phase: M6-B50 — fused recurrent output rejection**
 
 Immediate objective:
 
-> Select the next measured whole-token target after rejecting state/head-RMS
+> Select the next measured whole-token target after rejecting recurrent-output
 > fusion; retain the B41 Q4_K×Q8_1 and transposed no-decay-store production
 > paths.
 

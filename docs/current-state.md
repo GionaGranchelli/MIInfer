@@ -1325,6 +1325,13 @@ noise-level: `-0.27%` at TG64 and `+0.16%` at TG128. The candidate was removed
 and rejected; the existing transposed no-decay-store path remains selected. See
 experiments/EXP-0141-m6b49-state-head-rms-fusion.md.
 
+2026-09-05 — M6-B50 tested an opt-in fusion of the transposed no-decay-store
+DeltaNet update through head normalization and recurrent gating. Native replay
+passed with zero decode allocations and unchanged device usage, but fresh
+serial A/B regressed `-0.32%` at TG64 and `-0.28%` at TG128. The candidate was
+removed and rejected; the existing transposed no-decay-store path remains
+selected. See experiments/EXP-0142-m6b50-fused-recurrent-output.md.
+
 Update this document whenever:
 
 * active milestone changes
