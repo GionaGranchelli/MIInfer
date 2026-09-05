@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-B31 — recurrent FFN Gate/Up two-row candidate rejected**
+**M6-B32 — transposed recurrent no-decay-store candidate kept**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -163,6 +163,13 @@ EXP-0123 tested two independent recurrent FFN Gate/Up output rows per
 4/5 top-5 overlap, outside the accepted A27 observable contract. The candidate
 was removed; B30 remains the production default. See
 `experiments/EXP-0123-m6b31-ffn-gate-up-two-row.md`.
+EXP-0124 removes the intermediate decayed-state global store from the
+production-selected transposed recurrent state-update path. Native generation
+and the complete P64 external observable contract remain valid, Release CTest
+is 20/20, and stable-peak TG64/TG128 improve from 11.8606/11.7073 to
+12.0637/11.8983 tok/s (+1.71%/+1.63%). Set
+`MIINFER_DELTA_TRANSPOSED_NO_DECAY_STORE=0` to select the B30 control. See
+`experiments/EXP-0124-m6b32-transposed-no-decay-store.md`.
 M6-A8 provides a dedicated qwen35 model boundary and a real layer-0 RMSNorm
 GPU fixture on gfx906. M6-A9 validates the real Q6_K output head through the
 existing Q6_K×Q8_K GPU primitive, M6-A10 validates a real Q4_K×Q8_K attention
@@ -1106,6 +1113,12 @@ gfx906 reference without broadening the project into a generic runtime.
 ---
 
 # Last Updated
+
+2026-09-05 — M6-B32 selects the transposed recurrent no-decay-store path,
+improving stable-peak native TG64/TG128 by 1.71%/1.63% to 12.0637/11.8983
+tok/s. Native generation and the complete P64 observable contract pass with
+zero decode allocations, unchanged device usage, and CTest 20/20. See
+`experiments/EXP-0124-m6b32-transposed-no-decay-store.md`.
 
 2026-09-05 — M6-B30 selects a physical `[value_head][column][row]` DeltaNet
 state layout. The logical state contract is unchanged; the isolated state

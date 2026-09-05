@@ -10,13 +10,12 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-B31 — recurrent FFN Gate/Up two-row candidate rejected**
+**Current phase: M6-B32 — transposed recurrent no-decay-store candidate kept**
 
 Immediate objective:
 
-> Refresh the post-B31 production profile and select the next measured
-> optimization; do not retry the rejected two-row FFN geometry without a new
-> correctness mechanism.
+> Refresh the post-B32 production profile and select the next measured
+> optimization; retain the no-decay-store transposed recurrent path.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
@@ -46,6 +45,8 @@ Current work should focus on:
   with zero decode-loop allocations and stable device usage
 * retaining EXP-0122's result: native TG64/TG128 improve by about 3.4%/3.6%
   with unchanged logical state behavior and no additional VRAM
+* retaining EXP-0124's result: native TG64/TG128 improve by about 1.71%/1.63%
+  with the transposed state layout and no-decay-store recurrent update
 
 Do not treat CPU hidden-state identity through all 36 layers as a universal
 GPU requirement. B23 characterized the pinned external implementation's

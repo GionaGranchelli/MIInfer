@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-B31 — recurrent FFN Gate/Up two-row candidate rejected**
+**Current phase: M6-B32 — transposed recurrent no-decay-store candidate kept**
 
 The project currently has:
 
@@ -128,6 +128,11 @@ The project currently has:
   TG64/TG128 by about 1.45%/1.49% but introduced an external-contract P6
   decision change and was removed; see
   `experiments/EXP-0123-m6b31-ffn-gate-up-two-row.md`
+* a production-selected transposed recurrent no-decay-store kernel: it
+  preserves the accepted external contract and improves stable-peak TG64/TG128
+  by about 1.71%/1.63%; set
+  `MIINFER_DELTA_TRANSPOSED_NO_DECAY_STORE=0` for the B30 control; see
+  `experiments/EXP-0124-m6b32-transposed-no-decay-store.md`
 * a reproducible llama.cpp-backed Qwen3.8-27B hybrid tensor/state fixture; see
   `experiments/EXP-0043-m6a1-qwen38-reference-fixture.md`
 * a read-only Qwen3.8 projection/kernel compatibility map; see
