@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-B28 — post-B27 production profile**
+**Current phase: M6-B29 — recurrent stage attribution**
 
 The project currently has:
 
@@ -116,6 +116,10 @@ The project currently has:
 * a measurement-only post-B27 profile showing 48 recurrent layers consume
   64.54 ms of the instrumented 88.99 ms token and remain the next measured
   target; see `experiments/EXP-0120-m6b28-post-b27-profile.md`
+* a measurement-only recurrent stage attribution across layers 0–2, showing
+  a stable recurring cost structure and identifying state update as the next
+  uncleared recurrent-specific target; see
+  `experiments/EXP-0121-m6b29-recurrent-stage-attribution.md`
 * a reproducible llama.cpp-backed Qwen3.8-27B hybrid tensor/state fixture; see
   `experiments/EXP-0043-m6a1-qwen38-reference-fixture.md`
 * a read-only Qwen3.8 projection/kernel compatibility map; see

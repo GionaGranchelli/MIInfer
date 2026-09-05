@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-B28 — post-B27 production profile**
+**M6-B29 — recurrent stage attribution**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -144,6 +144,11 @@ profiles measure 88.8735–89.0098 ms/token, with 48 recurrent layers
 contributing 64.54208 ms aggregate and 16 full-attention layers contributing
 21.01088 ms. Recurrent-layer support/projection work is the next measured
 target; no production behavior changed.
+EXP-0121 extends the existing profiler to recurrent layers 0, 1, and 2.
+Their stage structure is stable: state update costs 0.21088–0.22960 ms and
+FFN Gate/Up plus Down costs about 0.84–0.88 ms per recurrent layer. The next
+uncleared recurrent-specific target is state-update attribution; no production
+behavior changed.
 M6-A8 provides a dedicated qwen35 model boundary and a real layer-0 RMSNorm
 GPU fixture on gfx906. M6-A9 validates the real Q6_K output head through the
 existing Q6_K×Q8_K GPU primitive, M6-A10 validates a real Q4_K×Q8_K attention

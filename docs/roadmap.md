@@ -10,12 +10,12 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-B28 — post-B27 production profile**
+**Current phase: M6-B29 — recurrent stage attribution**
 
 Immediate objective:
 
-> Use the post-B27 profile to select one bounded recurrent-layer differential
-> experiment; do not infer a fusion target from dispatch count alone.
+> Use recurrent layers 0–2 attribution to select one bounded state-update
+> differential; do not infer a fusion target from dispatch count alone.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See

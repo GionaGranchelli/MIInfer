@@ -1655,10 +1655,14 @@ int main(int argc, char** argv) {
                 hipEvent_t final_norm_end = nullptr;
                 hipEvent_t final_q8_end = nullptr;
                 hipEvent_t final_lm_end = nullptr;
-                RecurrentLayer::StageProfile recurrent_profile;
-                for (std::size_t stage = 0; stage < recurrent_profile.start.size(); ++stage) {
-                    MIINFER_HIP_CHECK(hipEventCreate(&recurrent_profile.start[stage]));
-                    MIINFER_HIP_CHECK(hipEventCreate(&recurrent_profile.end[stage]));
+                std::array<RecurrentLayer*, 3> profiled_recurrent_layers{
+                    &recurrent0, &recurrent1, &recurrent2};
+                std::array<RecurrentLayer::StageProfile, 3> recurrent_profiles{};
+                for (auto& profile : recurrent_profiles) {
+                    for (std::size_t stage = 0; stage < profile.start.size(); ++stage) {
+                        MIINFER_HIP_CHECK(hipEventCreate(&profile.start[stage]));
+                        MIINFER_HIP_CHECK(hipEventCreate(&profile.end[stage]));
+                    }
                 }
                 FullAttentionLayer::StageProfile attention_profile;
                 for (std::size_t stage = 0; stage < attention_profile.start.size(); ++stage) {
@@ -1671,8 +1675,10 @@ int main(int argc, char** argv) {
                 MIINFER_HIP_CHECK(hipEventCreate(&final_norm_end));
                 MIINFER_HIP_CHECK(hipEventCreate(&final_q8_end));
                 MIINFER_HIP_CHECK(hipEventCreate(&final_lm_end));
-                recurrent0.stage_profile = &recurrent_profile;
-                recurrent0.stage_profile_position = 63;
+                for (std::size_t i = 0; i < profiled_recurrent_layers.size(); ++i) {
+                    profiled_recurrent_layers[i]->stage_profile = &recurrent_profiles[i];
+                    profiled_recurrent_layers[i]->stage_profile_position = 63;
+                }
                 attention3.stage_profile = &attention_profile;
                 attention3.stage_profile_position = 63;
                 reset_all();
@@ -1765,13 +1771,16 @@ int main(int argc, char** argv) {
                     "conv_and_head_norm", "state_update", "recurrent_gate",
                     "ssm_output_projection", "attention_residual", "ffn_norm",
                     "ffn_gate_up", "ffn_activation", "ffn_down", "ffn_residual"};
-                std::cout << "recurrent_layer0_stages\n";
-                for (std::size_t stage = 0; stage < stage_names.size(); ++stage) {
-                    float elapsed = 0.0F;
-                    MIINFER_HIP_CHECK(hipEventElapsedTime(
-                        &elapsed, recurrent_profile.start[stage], recurrent_profile.end[stage]));
-                    std::cout << "stage=" << stage_names[stage]
-                              << " gpu_ms=" << elapsed << '\n';
+                for (std::size_t i = 0; i < profiled_recurrent_layers.size(); ++i) {
+                    std::cout << "recurrent_layer" << profiled_recurrent_layers[i]->index
+                              << "_stages\n";
+                    for (std::size_t stage = 0; stage < stage_names.size(); ++stage) {
+                        float elapsed = 0.0F;
+                        MIINFER_HIP_CHECK(hipEventElapsedTime(
+                            &elapsed, recurrent_profiles[i].start[stage], recurrent_profiles[i].end[stage]));
+                        std::cout << "stage=" << stage_names[stage]
+                                  << " gpu_ms=" << elapsed << '\n';
+                    }
                 }
                 static constexpr std::array<const char*, 15> attention_stage_names{
                     "attn_norm", "q_projection", "q_split_head_norm", "k_projection",
@@ -1800,9 +1809,11 @@ int main(int argc, char** argv) {
                 MIINFER_HIP_CHECK(hipEventDestroy(final_norm_end));
                 MIINFER_HIP_CHECK(hipEventDestroy(final_q8_end));
                 MIINFER_HIP_CHECK(hipEventDestroy(final_lm_end));
-                for (std::size_t stage = 0; stage < recurrent_profile.start.size(); ++stage) {
-                    MIINFER_HIP_CHECK(hipEventDestroy(recurrent_profile.start[stage]));
-                    MIINFER_HIP_CHECK(hipEventDestroy(recurrent_profile.end[stage]));
+                for (const auto& profile : recurrent_profiles) {
+                    for (std::size_t stage = 0; stage < profile.start.size(); ++stage) {
+                        MIINFER_HIP_CHECK(hipEventDestroy(profile.start[stage]));
+                        MIINFER_HIP_CHECK(hipEventDestroy(profile.end[stage]));
+                    }
                 }
                 for (std::size_t stage = 0; stage < attention_profile.start.size(); ++stage) {
                     MIINFER_HIP_CHECK(hipEventDestroy(attention_profile.start[stage]));
