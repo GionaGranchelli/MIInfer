@@ -1318,6 +1318,13 @@ but was neutral/slower in A/B: `+0.03%` TG64 and `-0.17%` TG128, while adding
 `222,822,400` bytes of VRAM. It was removed and rejected; B41 remains
 selected. See experiments/EXP-0140-m6b48-persistent-q4k-metadata.md.
 
+2026-09-05 — M6-B49 tested an opt-in fusion of the transposed no-decay-store
+DeltaNet state update with head RMS normalization. Native replay passed with
+zero decode allocations and unchanged device usage, but fresh serial A/B was
+noise-level: `-0.27%` at TG64 and `+0.16%` at TG128. The candidate was removed
+and rejected; the existing transposed no-decay-store path remains selected. See
+experiments/EXP-0141-m6b49-state-head-rms-fusion.md.
+
 Update this document whenever:
 
 * active milestone changes
