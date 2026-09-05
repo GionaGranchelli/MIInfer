@@ -15,6 +15,14 @@ For long-term direction, see:
 
 # Current Phase
 
+**M6-B58 — Q6_K×Q8_K QKV LDS-input rejection**
+
+M6-B58 tested staging the shared Q8_K activation once per two-row recurrent
+QKV workgroup. Replay passed, but representative QKV stages regressed from
+about `0.173–0.184 ms` to `0.187–0.202 ms`; TG64/TG128 fell by `0.54%/0.50%`.
+The candidate is rejected and the B57/B55 production path remains active. See
+`experiments/EXP-0150-m6b58-q6k-q8k-qkv-lds-input.md`.
+
 **M6-B57 — direct layer-output copy rejection**
 
 M6-B57 tested writing each layer residual directly into the caller's output,

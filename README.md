@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-B57 — direct layer-output copy rejection**
+**Current phase: M6-B58 — Q6_K×Q8_K QKV LDS-input rejection**
 
 The project currently has:
 

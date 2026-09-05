@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788607613.106427,
-    "seen": 1788607666.5687327,
-    "ast_hash": "42827db4f1ffe6bb3bc074f6d96a14ee",
+    "mtime": 1788608189.5876708,
+    "seen": 1788608244.7647078,
+    "ast_hash": "ad44b38e6f95098d6f58e56ff69fd993",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788607613.103427,
-    "seen": 1788607666.568744,
-    "ast_hash": "206e8f75cc987aae6ca5e6c470af92d6",
+    "mtime": 1788608189.5846708,
+    "seen": 1788608244.7647197,
+    "ast_hash": "6683158a89261e4793979a61665000d4",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788607613.105427,
-    "seen": 1788607666.5687637,
-    "ast_hash": "e3666fd2ab44a50e2dd595900d821a13",
+    "mtime": 1788608189.5866706,
+    "seen": 1788608244.7647417,
+    "ast_hash": "e7b97e10f4b38e56ceb8792202354749",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1788606445.2060108,
-    "seen": 1788606948.5794659,
-    "ast_hash": "d00c702d2397cfffebb43d01b883bc32",
+    "mtime": 1788608133.4959385,
+    "seen": 1788608244.764549,
+    "ast_hash": "c2aa37f47a8bcbb7b313109f4c993731",
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_primitives.hpp": {
@@ -1332,8 +1332,8 @@
     "semantic_hash": ""
   },
   "tools/m6a21_qwen35_gpu_hybrid_block.cpp": {
-    "mtime": 1788607319.5478313,
-    "seen": 1788607666.5687013,
+    "mtime": 1788608133.5019386,
+    "seen": 1788608244.7646737,
     "ast_hash": "669220b270559f947cfaba2452b2edaf",
     "semantic_hash": ""
   },
@@ -1857,6 +1857,12 @@
     "mtime": 1788607613.102427,
     "seen": 1788607666.568978,
     "ast_hash": "ee7f395a3630dc95f27ba45112628e78",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0150-m6b58-q6k-q8k-qkv-lds-input.md": {
+    "mtime": 1788608148.0998688,
+    "seen": 1788608244.7649734,
+    "ast_hash": "96baa634066f4a4e7a87e2d92676e826",
     "semantic_hash": ""
   }
 }

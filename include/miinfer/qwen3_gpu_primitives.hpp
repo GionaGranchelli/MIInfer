@@ -363,6 +363,7 @@ void launch_qwen3_q6_k_q8_k_gemv_dot4(
     std::uint32_t columns,
     hipStream_t stream = nullptr);
 
+
 // Opt-in M6-B14 diagnostic candidate: llama.cpp-style GCN MMVQ decomposition
 // for the Q6_K x Q8_1 LM-head path. This is not production-selected.
 void launch_qwen3_q6_k_q8_1_mmvq(
