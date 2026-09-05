@@ -419,6 +419,7 @@ struct RecurrentLayer {
         std::array<hipEvent_t, 14> start{};
         std::array<hipEvent_t, 14> end{};
     };
+    bool no_decay_store = false;
     StageProfile* stage_profile = nullptr;
     std::uint32_t stage_profile_position = 0;
 
@@ -439,6 +440,9 @@ struct RecurrentLayer {
           ffn_gate_weight(tensor(*model.file(), name("ffn_gate.weight"))),
           ffn_up_weight(tensor(*model.file(), name("ffn_up.weight"))),
           ffn_down_weight(tensor(*model.file(), name("ffn_down.weight"))) {
+        const char* no_decay_store_env = std::getenv("MIINFER_DELTA_NO_DECAY_STORE");
+        no_decay_store = no_decay_store_env == nullptr
+            || std::strcmp(no_decay_store_env, "0") != 0;
         require_type(qkv_weight, {miinfer::GgufTensorType::q4_k,
                                    miinfer::GgufTensorType::q6_k});
         require_type(gate_weight, {miinfer::GgufTensorType::q4_k});
@@ -680,11 +684,19 @@ struct RecurrentLayer {
             key_path_capture->key_norm = download(key_norm->get(), kKHeads * kState);
         }
         stage_start(5, position);
-        miinfer::launch_qwen35_deltanet_state_update(
-            static_cast<const float*>(query_norm->get()), static_cast<const float*>(key_norm->get()),
-            static_cast<const float*>(value->get()), static_cast<const float*>(beta->get()),
-            static_cast<const float*>(decay->get()), static_cast<float*>(state->get()),
-            static_cast<float*>(recurrent_output->get()), kKHeads, kVHeads, kState);
+        if (no_decay_store) {
+            miinfer::launch_qwen35_deltanet_state_update_no_decay_store(
+                static_cast<const float*>(query_norm->get()), static_cast<const float*>(key_norm->get()),
+                static_cast<const float*>(value->get()), static_cast<const float*>(beta->get()),
+                static_cast<const float*>(decay->get()), static_cast<float*>(state->get()),
+                static_cast<float*>(recurrent_output->get()), kKHeads, kVHeads, kState);
+        } else {
+            miinfer::launch_qwen35_deltanet_state_update(
+                static_cast<const float*>(query_norm->get()), static_cast<const float*>(key_norm->get()),
+                static_cast<const float*>(value->get()), static_cast<const float*>(beta->get()),
+                static_cast<const float*>(decay->get()), static_cast<float*>(state->get()),
+                static_cast<float*>(recurrent_output->get()), kKHeads, kVHeads, kState);
+        }
         if (trace != nullptr && trace->layer == index && position + 1 == trace->position) {
             trace->report_at(position + 1, "state_after", static_cast<const float*>(state->get()),
                              kVHeads * kState * kState,
