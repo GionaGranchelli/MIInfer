@@ -10,13 +10,13 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-B50 — fused recurrent output rejection**
+**Current phase: M6-B51 — post-B50 production profile**
 
 Immediate objective:
 
-> Select the next measured whole-token target after rejecting recurrent-output
-> fusion; retain the B41 Q4_K×Q8_1 and transposed no-decay-store production
-> paths.
+> Use the fresh post-B50 profile to select one materially different
+> high-leverage target; retain the B41 Q4_K×Q8_1 and transposed no-decay-store
+> production paths.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
