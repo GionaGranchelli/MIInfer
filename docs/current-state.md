@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-B36 — post-B35 production profile**
+**M6-B43 — post-B41 profile and Q6 LM-head metadata rejection**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -1269,6 +1269,15 @@ M5-C15 then closed the local optimization campaign: the stable-peak
  explicit next decision is Path A (preserve the current trajectory) or Path B
  (begin M6-A reference-correct execution-contract exploration). See
  experiments/EXP-0041-m5c15-optimization-closure-parity-gate.md.
+
+2026-09-05 — M6-B42 refreshed the accepted B41 profile: position-63 total
+GPU event `73.8215 ms/token`, layer sum `70.5777 ms`, final LM head `2.45504
+ms`, argmax `0.49696 ms`, and zero allocations. M6-B43 tested staging Q6_K
+LM-head `d`/scale metadata in LDS. Native replay passed, but the serial
+same-build A/B was only `+0.13%` at TG64 and `+0.06%` at TG128, within noise;
+the candidate was removed and rejected. See
+experiments/EXP-0134-m6b42-post-b41-profile.md and
+experiments/EXP-0135-m6b43-q6k-q8-1-lm-metadata.md.
 
 Update this document whenever:
 

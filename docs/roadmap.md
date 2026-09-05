@@ -10,12 +10,12 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-B36 — post-B35 production profile**
+**Current phase: M6-B43 — post-B41 profile and Q6 LM-head metadata rejection**
 
 Immediate objective:
 
-> Run one bounded Down-specific Q4_K×Q8_1 experiment selected from the post-B35
-> profile; retain the no-decay-store transposed recurrent path and LDS reuse.
+> Select the next bounded whole-token experiment from the post-B41 profile;
+> retain decoded Q4_K metadata staging and the existing Q6_K×Q8_1 LM head.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
