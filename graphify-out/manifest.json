@@ -2016,9 +2016,15 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0174-q4k-wave-down-integration.md": {
-    "mtime": 1788631181.1330688,
-    "seen": 1788631345.0659435,
-    "ast_hash": "dd33b37996939ea31b8c353109c980b3",
+    "mtime": 1788631516.3236382,
+    "seen": 1788633454.9309518,
+    "ast_hash": "afc1b57b5bb72476e8a74306bbd9c2f3",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0175-mi50-sustained-operating-point.md": {
+    "mtime": 1788633443.1330335,
+    "seen": 1788633454.9309537,
+    "ast_hash": "16b4e9e8a0bd411e6af83a8f41526cd9",
     "semantic_hash": ""
   }
 }
