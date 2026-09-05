@@ -257,6 +257,15 @@ void launch_qwen35_head_l2_normalize(
     std::uint32_t head_dim,
     hipStream_t stream = nullptr);
 
+void launch_qwen35_dual_head_l2_normalize(
+    const float* input_a,
+    const float* input_b,
+    float* output_a,
+    float* output_b,
+    std::uint32_t heads,
+    std::uint32_t head_dim,
+    hipStream_t stream = nullptr);
+
 void launch_qwen3_rope(
     const float* input,
     float* output,

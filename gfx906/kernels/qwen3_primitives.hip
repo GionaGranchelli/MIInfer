@@ -608,6 +608,40 @@ __global__ void qwen35_head_l2_normalize_kernel(
     }
 }
 
+__global__ void qwen35_dual_head_l2_normalize_kernel(
+    const float* input_a, const float* input_b, float* output_a, float* output_b,
+    std::uint32_t heads, std::uint32_t head_dim) {
+    const std::uint32_t head = blockIdx.x;
+    if (head >= heads) return;
+    __shared__ float partials_a[128];
+    __shared__ float partials_b[128];
+    const std::size_t base = static_cast<std::size_t>(head) * head_dim;
+    float sum_a = 0.0F;
+    float sum_b = 0.0F;
+    for (std::uint32_t index = threadIdx.x; index < head_dim; index += blockDim.x) {
+        const float a = input_a[base + index];
+        const float b = input_b[base + index];
+        sum_a += a * a;
+        sum_b += b * b;
+    }
+    partials_a[threadIdx.x] = sum_a;
+    partials_b[threadIdx.x] = sum_b;
+    __syncthreads();
+    for (std::uint32_t stride = blockDim.x / 2; stride > 0; stride /= 2) {
+        if (threadIdx.x < stride) {
+            partials_a[threadIdx.x] += partials_a[threadIdx.x + stride];
+            partials_b[threadIdx.x] += partials_b[threadIdx.x + stride];
+        }
+        __syncthreads();
+    }
+    const float scale_a = rsqrtf(fmaxf(partials_a[0], 1.0e-6F));
+    const float scale_b = rsqrtf(fmaxf(partials_b[0], 1.0e-6F));
+    for (std::uint32_t index = threadIdx.x; index < head_dim; index += blockDim.x) {
+        output_a[base + index] = input_a[base + index] * scale_a;
+        output_b[base + index] = input_b[base + index] * scale_b;
+    }
+}
+
 __global__ void qwen3_rope_kernel(
     const float* input, float* output, std::uint32_t heads,
     std::uint32_t head_dim, std::uint32_t position, float theta) {
@@ -2086,6 +2120,19 @@ void launch_qwen35_head_l2_normalize(
     hipLaunchKernelGGL(qwen35_head_l2_normalize_kernel,
                        dim3(heads), dim3(128), 0, stream,
                        input, output, heads, head_dim);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_dual_head_l2_normalize(
+    const float* input_a, const float* input_b, float* output_a, float* output_b,
+    std::uint32_t heads, std::uint32_t head_dim, hipStream_t stream) {
+    if (input_a == nullptr || input_b == nullptr || output_a == nullptr || output_b == nullptr
+        || heads == 0 || head_dim == 0 || head_dim > 128) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen35_dual_head_l2_normalize_kernel,
+                       dim3(heads), dim3(128), 0, stream,
+                       input_a, input_b, output_a, output_b, heads, head_dim);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

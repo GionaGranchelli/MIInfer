@@ -563,6 +563,7 @@ struct RecurrentLayer {
     bool fuse_beta_alpha = false;
     bool dual_beta_alpha_projection = true;
     bool dual_beta_alpha_prepare = false;
+    bool dual_head_normalize = false;
     bool row_wave_state = false;
 
     RecurrentLayer(const miinfer::Qwen35Model& model_value, std::size_t layer,
@@ -623,6 +624,9 @@ struct RecurrentLayer {
         const char* dual_beta_alpha_prepare_env = std::getenv("MIINFER_DUAL_BETA_ALPHA_PREPARE");
         dual_beta_alpha_prepare = dual_beta_alpha_prepare_env != nullptr
             && std::strcmp(dual_beta_alpha_prepare_env, "0") != 0;
+        const char* dual_head_normalize_env = std::getenv("MIINFER_DUAL_HEAD_NORMALIZE");
+        dual_head_normalize = dual_head_normalize_env != nullptr
+            && std::strcmp(dual_head_normalize_env, "0") != 0;
         const char* q6_q8_k_dot4_qkv_env = std::getenv("MIINFER_Q6K_Q8K_DOT4_QKV");
         q6_q8_k_dot4_qkv = q6_q8_k_dot4_qkv_env == nullptr
             || std::strcmp(q6_q8_k_dot4_qkv_env, "0") != 0;
@@ -961,12 +965,19 @@ struct RecurrentLayer {
             static_cast<float*>(history->get()), static_cast<float*>(query->get()),
             static_cast<float*>(key->get()), static_cast<float*>(value->get()),
             position, 4, kChannels, 4);
-        miinfer::launch_qwen35_head_l2_normalize(
-            static_cast<const float*>(query->get()), static_cast<float*>(query_norm->get()),
-            kKHeads, kState);
-        miinfer::launch_qwen35_head_l2_normalize(
-            static_cast<const float*>(key->get()), static_cast<float*>(key_norm->get()),
-            kKHeads, kState);
+        if (dual_head_normalize) {
+            miinfer::launch_qwen35_dual_head_l2_normalize(
+                static_cast<const float*>(query->get()), static_cast<const float*>(key->get()),
+                static_cast<float*>(query_norm->get()), static_cast<float*>(key_norm->get()),
+                kKHeads, kState);
+        } else {
+            miinfer::launch_qwen35_head_l2_normalize(
+                static_cast<const float*>(query->get()), static_cast<float*>(query_norm->get()),
+                kKHeads, kState);
+            miinfer::launch_qwen35_head_l2_normalize(
+                static_cast<const float*>(key->get()), static_cast<float*>(key_norm->get()),
+                kKHeads, kState);
+        }
         stage_end(4, position);
         if (provenance != nullptr && provenance_position == position) {
             *provenance = sample_update(provenance_index);
