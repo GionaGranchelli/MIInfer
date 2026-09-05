@@ -37,6 +37,10 @@ device_bytes_after_setup: 20094914900
 peak_device_bytes: 20094914900
 ```
 
+The matching TG128 run used five samples of `9136.04, 9149.70, 9161.80,
+9164.43, 9174.24 ms`, giving a `9161.80 ms` median and **13.971 tok/s**.
+Replay passed with the same zero-allocation and device-byte results.
+
 ## Decision
 
 **MEASUREMENT-ONLY / BASELINE.** The accepted path is deterministic and
