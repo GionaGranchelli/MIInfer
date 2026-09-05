@@ -33,6 +33,13 @@ errors beginning at position 2 and multiple wrong teacher-forced decisions.
 The failure is not an acceptable floating-point envelope; it is a broken
 state-update candidate. No performance result was collected.
 
+An independent standalone state-update fixture confirmed the failure before
+any full-model interpretation. Position 0 was effectively identical, but the
+position-1 transposed output differed by `0.007025`. Thus the candidate's
+state/reduction mapping is not equivalent even on the isolated recurrent
+primitive; the row-wave geometry is rejected independently of model-level
+trajectory effects.
+
 ## Decision
 
 **REJECT.** Keep the existing one-block-per-head transposed state-update

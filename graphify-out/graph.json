@@ -41417,7 +41417,7 @@
       "node_kind": "heading",
       "norm_label": "decision",
       "source_file": "experiments/EXP-0154-m6b62-deltanet-row-waves.md",
-      "source_location": "L36"
+      "source_location": "L43"
     },
     {
       "id": "experiments_exp_0154_m6b62_deltanet_row_waves_environment",
@@ -41453,7 +41453,7 @@
       "node_kind": "heading",
       "norm_label": "follow-up",
       "source_file": "experiments/EXP-0154-m6b62-deltanet-row-waves.md",
-      "source_location": "L42"
+      "source_location": "L49"
     },
     {
       "id": "experiments_exp_0154_m6b62_deltanet_row_waves_question",
@@ -123729,7 +123729,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0154-m6b62-deltanet-row-waves.md",
-      "source_location": "L36",
+      "source_location": "L43",
       "weight": 1.0
     },
     {
@@ -123740,7 +123740,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0154-m6b62-deltanet-row-waves.md",
-      "source_location": "L42",
+      "source_location": "L49",
       "weight": 1.0
     },
     {
@@ -136132,5 +136132,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "75c4d7d897693301122cc38651aad7253f8814bd"
+  "built_at_commit": "75f6997281662cd2df880b96b12db16d90930b39"
 }
