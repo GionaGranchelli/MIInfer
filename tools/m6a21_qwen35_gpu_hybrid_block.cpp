@@ -67,6 +67,44 @@ void upload_tensor(const miinfer::GgufTensor& source, const Buffer& destination)
     upload(source.data, destination->get(), source.byte_size);
 }
 
+Buffer copy_expanded_q4k(const miinfer::GgufTensor& source) {
+    if (source.type != miinfer::GgufTensorType::q4_k
+        || source.byte_size % sizeof(miinfer::Q4KDeviceBlock) != 0) {
+        throw std::runtime_error("invalid Q4_K tensor for expanded copy: " + source.name);
+    }
+    const auto count = source.byte_size / sizeof(miinfer::Q4KDeviceBlock);
+    std::vector<miinfer::Q4KExpandedDeviceBlock> expanded(count);
+    const auto* input = reinterpret_cast<const miinfer::Q4KDeviceBlock*>(source.data);
+    for (std::size_t block = 0; block < count; ++block) {
+        auto& dst = expanded[block];
+        dst.d = input[block].d;
+        dst.dmin = input[block].dmin;
+        for (int group = 0; group < 8; ++group) {
+            int scale = 0;
+            int minimum = 0;
+            const auto& raw = input[block];
+            if (group < 4) {
+                scale = raw.scales[group] & 63;
+                minimum = raw.scales[group + 4] & 63;
+            } else {
+                scale = (raw.scales[group + 4] & 0x0f)
+                        | ((raw.scales[group - 4] >> 6) << 4);
+                minimum = (raw.scales[group + 4] >> 4)
+                          | ((raw.scales[group] >> 6) << 4);
+            }
+            dst.scales[group] = static_cast<std::uint8_t>(scale);
+            dst.minimums[group] = static_cast<std::uint8_t>(minimum);
+        }
+        for (int byte = 0; byte < 128; ++byte) {
+            dst.qs[2 * byte] = input[block].qs[byte] & 0x0f;
+            dst.qs[2 * byte + 1] = input[block].qs[byte] >> 4;
+        }
+    }
+    auto result = allocate(expanded.size() * sizeof(expanded.front()));
+    upload(expanded.data(), result->get(), expanded.size() * sizeof(expanded.front()));
+    return result;
+}
+
 struct DetailedError {
     float max_abs = 0.0F;
     float mean_abs = 0.0F;
@@ -433,6 +471,15 @@ void project_q4_q8_1_prequantized(const Buffer& device_weight,
     }
 }
 
+void project_q4_q8_1_expanded(const Buffer& device_weight, const float* input,
+                              miinfer::Q8_1Block* q8, float* output,
+                              std::uint32_t rows, std::uint32_t columns) {
+    miinfer::launch_q8_1_quantize_f32(input, q8, columns);
+    miinfer::launch_qwen3_q4_k_q8_1_mmvq_expanded(
+        static_cast<const miinfer::Q4KExpandedDeviceBlock*>(device_weight->get()), q8,
+        output, rows, columns);
+}
+
 void project_q4_q8_1(const Buffer& device_weight, const float* input,
                      miinfer::Q8_1Block* q8, float* output,
                      std::uint32_t rows, std::uint32_t columns,
@@ -473,7 +520,7 @@ struct RecurrentLayer {
     const miinfer::GgufTensor& ffn_down_weight;
 
     Buffer d_attn_norm, d_qkv, d_gate, d_beta, d_alpha, d_conv, d_ssm_norm;
-    Buffer d_ssm_out, d_post_norm, d_ffn_gate, d_ffn_up, d_ffn_down, d_dt, d_a;
+    Buffer d_ssm_out, d_post_norm, d_ffn_gate, d_ffn_up, d_ffn_down, d_ffn_down_expanded, d_dt, d_a;
     Buffer normalized, qkv, gate, beta_raw, alpha_raw, beta, decay, history;
     Buffer query, key, value, query_norm, key_norm, state, recurrent_output;
     Buffer head_norm, gated, projected, residual, post_normalized;
@@ -508,6 +555,7 @@ struct RecurrentLayer {
     bool q4_q8_1_lds_decoded_metadata = true;
     bool q4_q8_1_attn_gate = false;
     bool direct_layer_output = false;
+    bool expanded_down = false;
     bool q6_q8_k_dot4_qkv = false;
     bool transposed_state = true;
     bool transposed_no_decay_store = true;
@@ -561,6 +609,9 @@ struct RecurrentLayer {
         const char* direct_layer_output_env = std::getenv("MIINFER_DIRECT_LAYER_OUTPUT");
         direct_layer_output = direct_layer_output_env != nullptr
             && std::strcmp(direct_layer_output_env, "0") != 0;
+        const char* expanded_down_env = std::getenv("MIINFER_Q4K_EXPANDED_DOWN");
+        expanded_down = expanded_down_env != nullptr
+            && std::strcmp(expanded_down_env, "0") != 0;
         const char* q6_q8_k_dot4_qkv_env = std::getenv("MIINFER_Q6K_Q8K_DOT4_QKV");
         q6_q8_k_dot4_qkv = q6_q8_k_dot4_qkv_env == nullptr
             || std::strcmp(q6_q8_k_dot4_qkv_env, "0") != 0;
@@ -599,6 +650,9 @@ struct RecurrentLayer {
         d_ffn_gate = allocate(ffn_gate_weight.byte_size);
         d_ffn_up = allocate(ffn_up_weight.byte_size);
         d_ffn_down = allocate(ffn_down_weight.byte_size);
+        if (expanded_down && ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
+            d_ffn_down_expanded = copy_expanded_q4k(ffn_down_weight);
+        }
         d_dt = allocate(dt_weight.byte_size);
         d_a = allocate(a_weight.byte_size);
         for (const auto& pair : std::initializer_list<std::pair<const miinfer::GgufTensor*, const Buffer*>>{
@@ -1059,7 +1113,12 @@ struct RecurrentLayer {
             layer_path_capture->post_normalized = download(post_normalized->get(), kHidden);
         }
         stage_start(12, position);
-        if (q4_q8_1_mmvq && ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
+        if (expanded_down && d_ffn_down_expanded != nullptr) {
+            project_q4_q8_1_expanded(d_ffn_down_expanded,
+                                     static_cast<const float*>(ffn_activation->get()),
+                                     static_cast<miinfer::Q8_1Block*>(q8_1->get()),
+                                     static_cast<float*>(projected->get()), kHidden, kFfnInner);
+        } else if (q4_q8_1_mmvq && ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
             project_q4_q8_1(d_ffn_down, static_cast<const float*>(ffn_activation->get()),
                             static_cast<miinfer::Q8_1Block*>(q8_1->get()),
                             static_cast<float*>(projected->get()), kHidden, kFfnInner,
@@ -1109,7 +1168,7 @@ struct FullAttentionLayer {
     const miinfer::GgufTensor& ffn_up_weight;
     const miinfer::GgufTensor& ffn_down_weight;
     Buffer d_attn_norm, d_q, d_k, d_v, d_o, d_q_norm, d_k_norm, d_post;
-    Buffer d_ffn_gate, d_ffn_up, d_ffn_down;
+    Buffer d_ffn_gate, d_ffn_up, d_ffn_down, d_ffn_down_expanded;
     Buffer normalized, qfull, query, gate, key, key_norm, value, query_norm;
     Buffer query_rope, key_rope, key_cache, value_cache, attention, scores, probabilities;
     Buffer gated_attention, projected, residual, post_normalized, ffn_gate, ffn_up;
@@ -1122,6 +1181,7 @@ struct FullAttentionLayer {
     bool q4_q8_1_lds_metadata = true;
     bool q4_q8_1_lds_decoded_metadata = true;
     bool direct_layer_output = false;
+    bool expanded_down = false;
     bool batch_head_rms = false;
     struct StageProfile {
         std::array<hipEvent_t, 15> start{};
@@ -1153,6 +1213,12 @@ struct FullAttentionLayer {
         d_q_norm = copy_weight(q_norm); d_k_norm = copy_weight(k_norm);
         d_post = copy_weight(post_norm); d_ffn_gate = copy_weight(ffn_gate_weight);
         d_ffn_up = copy_weight(ffn_up_weight); d_ffn_down = copy_weight(ffn_down_weight);
+        const char* expanded_down_env = std::getenv("MIINFER_Q4K_EXPANDED_DOWN");
+        expanded_down = expanded_down_env != nullptr
+            && std::strcmp(expanded_down_env, "0") != 0;
+        if (expanded_down && ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
+            d_ffn_down_expanded = copy_expanded_q4k(ffn_down_weight);
+        }
         const char* reuse_projection_q8_env = std::getenv("MIINFER_REUSE_PROJECTION_Q8");
         reuse_projection_q8 = reuse_projection_q8_env == nullptr
             || std::strcmp(reuse_projection_q8_env, "0") != 0;
@@ -1342,7 +1408,12 @@ struct FullAttentionLayer {
             static_cast<const float*>(ffn_up->get()), static_cast<float*>(ffn_activation->get()), kFfnInner);
         stage_end(12, position);
         stage_start(13, position);
-        if (q4_q8_1_mmvq && ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
+        if (expanded_down && d_ffn_down_expanded != nullptr) {
+            project_q4_q8_1_expanded(d_ffn_down_expanded,
+                static_cast<const float*>(ffn_activation->get()),
+                static_cast<miinfer::Q8_1Block*>(q8_1->get()),
+                static_cast<float*>(projected->get()), kHidden, kFfnInner);
+        } else if (q4_q8_1_mmvq && ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
             project_q4_q8_1(d_ffn_down, static_cast<const float*>(ffn_activation->get()),
                             static_cast<miinfer::Q8_1Block*>(q8_1->get()),
                             static_cast<float*>(projected->get()), kHidden, kFfnInner,

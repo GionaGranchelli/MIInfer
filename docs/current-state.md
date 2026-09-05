@@ -15,6 +15,16 @@ For long-term direction, see:
 
 # Current Phase
 
+**M6-B59 — expanded Q4_K FFN Down retest**
+
+M6-B59 tests model-load expansion of Q4_K FFN Down blocks into byte-addressable
+nibbles and decoded scale/minimum metadata. The opt-in candidate matches the
+control through 64-token generation, passes the external observable contract,
+and improves fresh TG64/TG128 medians by `0.76%/0.60%`, at a cost of about
+`3.08 GB` persistent VRAM. Final CTest and interleaved A/B confirmation are
+pending; production remains on the packed path. See
+`experiments/EXP-0151-m6b59-q4k-expanded-down.md`.
+
 **M6-B58 — Q6_K×Q8_K QKV LDS-input rejection**
 
 M6-B58 tested staging the shared Q8_K activation once per two-row recurrent

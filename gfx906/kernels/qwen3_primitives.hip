@@ -1484,6 +1484,66 @@ __global__ void qwen3_q4_k_q8_1_mmvq_lds_decoded_metadata_kernel(
     if (tid == 0) output[row] = partials[row_in_group][0];
 }
 
+__device__ __forceinline__ float qwen3_q4_k_q8_1_mmvq_dot_expanded(
+    const Q4KExpandedDeviceBlock& quant, const Q8_1Block* input, int iqs) {
+    const int q8_offset = 2 * ((iqs / 2) / 4);
+    const int ql_offset = 16 * q8_offset + 4 * ((iqs / 2) % 4);
+    const int q8_word_offset = (iqs / 2) % 4;
+    const int group = 2 * (iqs / 8);
+    float sum_d = 0.0F;
+    float sum_min = 0.0F;
+#pragma unroll
+    for (int part = 0; part < 2; ++part) {
+        const auto& q8 = input[q8_offset + part];
+        const auto* q8_words = reinterpret_cast<const int*>(q8.qs) + q8_word_offset;
+        int q0 = 0;
+        int q1 = 0;
+#pragma unroll
+        for (int byte = 0; byte < 4; ++byte) {
+            q0 |= static_cast<int>(quant.qs[2 * (ql_offset + byte) + part]) << (8 * byte);
+            q1 |= static_cast<int>(quant.qs[2 * (ql_offset + 16 + byte) + part]) << (8 * byte);
+        }
+        const int dot = qwen3_dot4_i8(q0, q8_words[0],
+                                      qwen3_dot4_i8(q1, q8_words[4], 0));
+        const int q8_sum = qwen3_dot4_i8(0x01010101, q8_words[0],
+                                         qwen3_dot4_i8(0x01010101, q8_words[4], 0));
+        const float d8 = half_to_float(q8.d);
+        sum_d += d8 * static_cast<float>(dot * quant.scales[group + part]);
+        sum_min += d8 * static_cast<float>(q8_sum * quant.minimums[group + part]);
+    }
+    return half_to_float(quant.d) * sum_d - half_to_float(quant.dmin) * sum_min;
+}
+
+__global__ void qwen3_q4_k_q8_1_mmvq_expanded_kernel(
+    const Q4KExpandedDeviceBlock* weights,
+    const Q8_1Block* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns) {
+    const std::uint32_t thread = threadIdx.x;
+    const std::uint32_t row_in_group = thread / 128;
+    const std::uint32_t tid = thread % 128;
+    const std::uint32_t row = blockIdx.x * 2 + row_in_group;
+    if (row >= rows) return;
+    __shared__ float partials[2][128];
+    const std::uint32_t blocks_per_row = columns / 256;
+    const auto* row_weights = weights + static_cast<std::size_t>(row) * blocks_per_row;
+    float sum = 0.0F;
+    const int iqs = 2 * static_cast<int>(tid % 16);
+    for (std::uint32_t block = tid / 16; block < blocks_per_row; block += 8) {
+        sum += qwen3_q4_k_q8_1_mmvq_dot_expanded(row_weights[block], input + block * 8, iqs);
+    }
+    partials[row_in_group][tid] = sum;
+    __syncthreads();
+    if (tid < 64) partials[row_in_group][tid] += partials[row_in_group][tid + 64];
+    __syncthreads();
+    for (std::uint32_t stride = 32; stride > 0; stride /= 2) {
+        if (tid < stride) partials[row_in_group][tid] += partials[row_in_group][tid + stride];
+        __syncthreads();
+    }
+    if (tid == 0) output[row] = partials[row_in_group][0];
+}
+
 __global__ void qwen3_q4_k_q8_k_gemv_dot4_kernel(
     const Q4KDeviceBlock* weights,
     const Q8KDeviceBlock* input,
@@ -2124,6 +2184,23 @@ void launch_qwen3_q4_k_q8_1_mmvq_lds_decoded_metadata(
                                 * sizeof(Q4KDecodedMetadata);
     hipLaunchKernelGGL(qwen3_q4_k_q8_1_mmvq_lds_decoded_metadata_kernel,
                        dim3((rows + 1) / 2), dim3(256), input_bytes + metadata_bytes, stream,
+                       weights, input, output, rows, columns);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen3_q4_k_q8_1_mmvq_expanded(
+    const Q4KExpandedDeviceBlock* weights,
+    const Q8_1Block* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    hipStream_t stream) {
+    if (weights == nullptr || input == nullptr || output == nullptr || rows == 0 || columns == 0
+        || columns % 256 != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen3_q4_k_q8_1_mmvq_expanded_kernel,
+                       dim3((rows + 1) / 2), dim3(256), 0, stream,
                        weights, input, output, rows, columns);
     MIINFER_HIP_CHECK(hipGetLastError());
 }

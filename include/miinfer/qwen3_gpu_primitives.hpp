@@ -36,6 +36,16 @@ struct Q4KDeviceBlock {
 
 static_assert(sizeof(Q4KDeviceBlock) == 144);
 
+struct Q4KExpandedDeviceBlock {
+    __half d;
+    __half dmin;
+    std::uint8_t scales[8];
+    std::uint8_t minimums[8];
+    std::uint8_t qs[256];
+};
+
+static_assert(sizeof(Q4KExpandedDeviceBlock) == 276);
+
 struct Q5KDeviceBlock {
     __half d;
     __half dmin;
@@ -418,6 +428,14 @@ void launch_qwen3_q4_k_q8_1_mmvq_lds_metadata(
 // the existing two-row reduction.
 void launch_qwen3_q4_k_q8_1_mmvq_lds_decoded_metadata(
     const Q4KDeviceBlock* weights,
+    const Q8_1Block* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    hipStream_t stream = nullptr);
+
+void launch_qwen3_q4_k_q8_1_mmvq_expanded(
+    const Q4KExpandedDeviceBlock* weights,
     const Q8_1Block* input,
     float* output,
     std::uint32_t rows,
