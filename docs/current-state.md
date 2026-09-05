@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-B53 — Q4_K×Q8_K FFN differential rejection**
+**M6-B54 — post-B53 production profile**
 
 The B50 fused recurrent-output candidate, B52 one-Wave64 Q4_K×Q8_1 candidate,
 and B53 Q4_K×Q8_K FFN differential were rejected after correctness passed but
@@ -25,6 +25,13 @@ position 63, with `2.4872 ms` final LM head and zero decode allocations. See
 `experiments/EXP-0143-m6b51-post-b50-profile.md` and
 `experiments/EXP-0144-m6b52-q4k-q8-1-one-wave.md`.
 `experiments/EXP-0145-m6b53-q4k-q8k-ffn-differential.md`.
+
+M6-B54 refreshed the accepted path at stable peak: position-63 GPU event
+`73.9105 ms/token`, layer work `70.5859 ms`, final LM head `2.5264 ms`, and
+zero decode allocations. Native TG64/TG128 medians are `13.9005/13.6719
+tok/s`, with deterministic replay. FFN Down remains the largest repeated
+projection family; no new standalone Q4_K geometry or representation target
+is selected. See `experiments/EXP-0146-m6b54-post-b53-profile.md`.
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
