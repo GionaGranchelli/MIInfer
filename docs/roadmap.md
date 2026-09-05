@@ -10,14 +10,14 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-B55 — DeltaNet LDS input reuse**
+**Current phase: M6-B56 — post-B55 production profile**
 
 Immediate objective:
 
 > Retain the B41 Q4_K×Q8_1 and transposed no-decay-store production paths
 > after rejecting the one-Wave64 and Q8_K FFN alternatives; select the next
-> retain the production-selected DeltaNet LDS input reuse and refresh its
-> profile before selecting the next target.
+> retain the production-selected DeltaNet LDS input reuse and audit the next
+> higher-level FFN Down opportunity from the refreshed profile.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See

@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-B55 — DeltaNet LDS input reuse**
+**Current phase: M6-B56 — post-B55 production profile**
 
 The project currently has:
 

@@ -199,32 +199,6 @@
       "source_location": "L20"
     },
     {
-      "id": "include_miinfer_fp16_gemv_gemvkernelresources",
-      "label": "GemvKernelResources",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 129,
-      "community_name": "hip_check.hpp",
-      "file_type": "code",
-      "norm_label": "gemvkernelresources",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L87"
-    },
-    {
-      "id": "include_miinfer_fp16_gemv_rocblasgemmhandle",
-      "label": "RocblasGemmHandle",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 129,
-      "community_name": "hip_check.hpp",
-      "file_type": "code",
-      "norm_label": "rocblasgemmhandle",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L96"
-    },
-    {
       "id": "tools_m6a15_qwen35_hybrid_block_audit_runtimestate",
       "label": "RuntimeState",
       "_callable": true,
@@ -381,19 +355,6 @@
       "source_location": "L100"
     },
     {
-      "id": "src_qwen3_layer_hostq8block",
-      "label": "HostQ8Block",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 145,
-      "community_name": "qwen3_layer_host_impl",
-      "file_type": "code",
-      "norm_label": "hostq8block",
-      "source_file": "src/qwen3_layer.cpp",
-      "source_location": "L19"
-    },
-    {
       "id": "tests_qwen3_layer0_test_checkpoint",
       "label": "Checkpoint",
       "_callable": true,
@@ -491,7 +452,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 161,
-      "community_name": "Q5KDeviceBlock",
+      "community_name": "qwen3_gpu_primitives.hpp",
       "file_type": "code",
       "norm_label": "q4kdeviceblock",
       "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
@@ -504,7 +465,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 161,
-      "community_name": "Q5KDeviceBlock",
+      "community_name": "qwen3_gpu_primitives.hpp",
       "file_type": "code",
       "norm_label": "q5kdeviceblock",
       "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
@@ -517,11 +478,24 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 161,
-      "community_name": "Q5KDeviceBlock",
+      "community_name": "qwen3_gpu_primitives.hpp",
       "file_type": "code",
       "norm_label": "q6kdeviceblock",
       "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
       "source_location": "L13"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_primitives_q8kdeviceblock",
+      "label": "Q8KDeviceBlock",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 161,
+      "community_name": "qwen3_gpu_primitives.hpp",
+      "file_type": "code",
+      "norm_label": "q8kdeviceblock",
+      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
+      "source_location": "L22"
     },
     {
       "id": "include_miinfer_qwen3_layer_qwen3decodecache",
@@ -608,7 +582,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 166,
-      "community_name": "qwen3_gpu_layer.hpp",
+      "community_name": "Qwen3GpuDecodeCache",
       "file_type": "code",
       "norm_label": "qwen3downprojectioncontracttrace",
       "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
@@ -621,11 +595,24 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 166,
-      "community_name": "qwen3_gpu_layer.hpp",
+      "community_name": "Qwen3GpuDecodeCache",
       "file_type": "code",
       "norm_label": "qwen3ffnprobetrace",
       "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
       "source_location": "L206"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_layer_qwen3gpudecodecache",
+      "label": "Qwen3GpuDecodeCache",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 166,
+      "community_name": "Qwen3GpuDecodeCache",
+      "file_type": "code",
+      "norm_label": "qwen3gpudecodecache",
+      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
+      "source_location": "L259"
     },
     {
       "id": "include_miinfer_qwen3_gpu_layer_qwen3gpudecodeworkspace",
@@ -634,7 +621,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 166,
-      "community_name": "qwen3_gpu_layer.hpp",
+      "community_name": "Qwen3GpuDecodeCache",
       "file_type": "code",
       "norm_label": "qwen3gpudecodeworkspace",
       "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
@@ -647,7 +634,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 166,
-      "community_name": "qwen3_gpu_layer.hpp",
+      "community_name": "Qwen3GpuDecodeCache",
       "file_type": "code",
       "norm_label": "qwen3projectionprobetrace",
       "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
@@ -667,56 +654,17 @@
       "source_location": "L22"
     },
     {
-      "id": "include_miinfer_qwen3_gpu_primitives_q8kdeviceblock",
-      "label": "Q8KDeviceBlock",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 168,
-      "community_name": "size_t",
-      "file_type": "code",
-      "norm_label": "q8kdeviceblock",
-      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
-      "source_location": "L22"
-    },
-    {
       "id": "tools_m6a21_qwen35_gpu_hybrid_block_recurrenttrace",
       "label": "RecurrentTrace",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 168,
-      "community_name": "size_t",
+      "community_name": "uint32_t",
       "file_type": "code",
       "norm_label": "recurrenttrace",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
       "source_location": "L184"
-    },
-    {
-      "id": "include_miinfer_model_plan_qwen3gpuplan",
-      "label": "Qwen3GpuPlan",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 172,
-      "community_name": "Qwen3GpuPlan",
-      "file_type": "code",
-      "norm_label": "qwen3gpuplan",
-      "source_file": "include/miinfer/model_plan.hpp",
-      "source_location": "L58"
-    },
-    {
-      "id": "src_qwen3_gpu_layer_devicebuffer",
-      "label": "DeviceBuffer",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 173,
-      "community_name": "size_t",
-      "file_type": "code",
-      "norm_label": "devicebuffer",
-      "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L235"
     },
     {
       "id": "src_qwen3_gpu_layer_devicebytes",
@@ -1174,6 +1122,19 @@
       "source_location": "L24"
     },
     {
+      "id": "src_qwen3_gpu_layer_devicebuffer",
+      "label": "DeviceBuffer",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 270,
+      "community_name": "qwen3_gpu_layer.cpp",
+      "file_type": "code",
+      "norm_label": "devicebuffer",
+      "source_file": "src/qwen3_gpu_layer.cpp",
+      "source_location": "L235"
+    },
+    {
       "id": "tools_m6a21_qwen35_gpu_hybrid_block_bytemismatch",
       "label": "ByteMismatch",
       "_callable": true,
@@ -1278,6 +1239,19 @@
       "source_location": "L25"
     },
     {
+      "id": "include_miinfer_fp16_gemv_gemvkernelresources",
+      "label": "GemvKernelResources",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 282,
+      "community_name": "GemvShape",
+      "file_type": "code",
+      "norm_label": "gemvkernelresources",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L87"
+    },
+    {
       "id": "include_miinfer_fp16_gemv_gemvshape",
       "label": "GemvShape",
       "_callable": true,
@@ -1289,6 +1263,19 @@
       "norm_label": "gemvshape",
       "source_file": "include/miinfer/fp16_gemv.hpp",
       "source_location": "L12"
+    },
+    {
+      "id": "include_miinfer_fp16_gemv_rocblasgemmhandle",
+      "label": "RocblasGemmHandle",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 282,
+      "community_name": "GemvShape",
+      "file_type": "code",
+      "norm_label": "rocblasgemmhandle",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L96"
     },
     {
       "id": "include_miinfer_qwen3_model_qwen3layerweights",
@@ -1356,26 +1343,13 @@
       "source_location": "L24"
     },
     {
-      "id": "include_miinfer_qwen3_gpu_layer_qwen3gpudecodecache",
-      "label": "Qwen3GpuDecodeCache",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
-      "file_type": "code",
-      "norm_label": "qwen3gpudecodecache",
-      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
-      "source_location": "L259"
-    },
-    {
       "id": "include_miinfer_qwen3_gpu_layer_qwen3layer0gpukvcache",
       "label": "Qwen3Layer0GpuKvCache",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community_name": "Qwen3Layer0GpuKvCache",
       "file_type": "code",
       "norm_label": "qwen3layer0gpukvcache",
       "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
@@ -1393,6 +1367,19 @@
       "norm_label": "layerpathcapture",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
       "source_location": "L261"
+    },
+    {
+      "id": "include_miinfer_model_plan_qwen3gpuplan",
+      "label": "Qwen3GpuPlan",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 308,
+      "community_name": "Qwen3GpuPlan",
+      "file_type": "code",
+      "norm_label": "qwen3gpuplan",
+      "source_file": "include/miinfer/model_plan.hpp",
+      "source_location": "L58"
     },
     {
       "id": "bench_memory_stream_bench_options",
@@ -1414,24 +1401,37 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 320,
-      "community_name": "path_",
+      "community_name": "main",
       "file_type": "code",
       "norm_label": "devicebuffer",
       "source_file": "tools/m6a20_qwen35_recurrent_layer_gpu.cpp",
       "source_location": "L22"
     },
     {
-      "id": "include_miinfer_qwen3_layer_qwen3forwardtrace",
-      "label": "Qwen3ForwardTrace",
+      "id": "bench_qwen3_decode_profile_options",
+      "label": "Options",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 322,
-      "community_name": "Qwen3ForwardTrace",
+      "community_name": "qwen3_decode_profile.cpp",
       "file_type": "code",
-      "norm_label": "qwen3forwardtrace",
-      "source_file": "include/miinfer/qwen3_layer.hpp",
-      "source_location": "L52"
+      "norm_label": "options",
+      "source_file": "bench/qwen3_decode_profile.cpp",
+      "source_location": "L40"
+    },
+    {
+      "id": "bench_qwen3_decode_profile_timepoint",
+      "label": "TimePoint",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 322,
+      "community_name": "qwen3_decode_profile.cpp",
+      "file_type": "code",
+      "norm_label": "timepoint",
+      "source_file": "bench/qwen3_decode_profile.cpp",
+      "source_location": "L22"
     },
     {
       "id": "tools_m6a263_qwen35_recurrent_contract_devicebuffer",
@@ -1479,7 +1479,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 340,
-      "community_name": "m6a19_qwen35_conv_gpu.cpp",
+      "community_name": "DeviceBuffer",
       "file_type": "code",
       "norm_label": "devicebuffer",
       "source_file": "tools/m6a19_qwen35_conv_gpu.cpp",
@@ -1497,19 +1497,6 @@
       "norm_label": "devicebuffer",
       "source_file": "tools/m6a11_qwen35_attention_prefix.cpp",
       "source_location": "L22"
-    },
-    {
-      "id": "tools_m6a21_qwen35_gpu_hybrid_block_keypathcapture",
-      "label": "KeyPathCapture",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 343,
-      "community_name": "RecurrentOperands",
-      "file_type": "code",
-      "norm_label": "keypathcapture",
-      "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
-      "source_location": "L253"
     },
     {
       "id": "tools_m6a21_qwen35_gpu_hybrid_block_outputprojectionpathcapture",
@@ -1538,30 +1525,17 @@
       "source_location": "L244"
     },
     {
-      "id": "bench_qwen3_decode_profile_options",
-      "label": "Options",
+      "id": "include_miinfer_qwen3_layer_qwen3forwardtrace",
+      "label": "Qwen3ForwardTrace",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 344,
       "community_name": "qwen3_decode_sequence_gpu_test.cpp",
       "file_type": "code",
-      "norm_label": "options",
-      "source_file": "bench/qwen3_decode_profile.cpp",
-      "source_location": "L40"
-    },
-    {
-      "id": "bench_qwen3_decode_profile_timepoint",
-      "label": "TimePoint",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 344,
-      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
-      "file_type": "code",
-      "norm_label": "timepoint",
-      "source_file": "bench/qwen3_decode_profile.cpp",
-      "source_location": "L22"
+      "norm_label": "qwen3forwardtrace",
+      "source_file": "include/miinfer/qwen3_layer.hpp",
+      "source_location": "L52"
     },
     {
       "id": "include_miinfer_fp16_gemv_fp16gemvmetrics",
@@ -1629,6 +1603,32 @@
       "source_location": "L13"
     },
     {
+      "id": "src_qwen3_layer_hostq8block",
+      "label": "HostQ8Block",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 368,
+      "community_name": "HostQ8Block",
+      "file_type": "code",
+      "norm_label": "hostq8block",
+      "source_file": "src/qwen3_layer.cpp",
+      "source_location": "L19"
+    },
+    {
+      "id": "tools_m6a21_qwen35_gpu_hybrid_block_keypathcapture",
+      "label": "KeyPathCapture",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 369,
+      "community_name": "KeyPathCapture",
+      "file_type": "code",
+      "norm_label": "keypathcapture",
+      "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
+      "source_location": "L253"
+    },
+    {
       "id": "bench_qwen3_inference_bench_measurement",
       "label": "Measurement",
       "_callable": true,
@@ -1687,7 +1687,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 50,
-      "community_name": ".get",
+      "community_name": "size_t",
       "file_type": "code",
       "norm_label": "devicebytes",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
@@ -2259,18 +2259,6 @@
       "source_location": "L160"
     },
     {
-      "id": "tools_m6a21_qwen35_gpu_hybrid_block_recurrentlayer_name",
-      "label": ".name()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 121,
-      "community_name": "RecurrentLayer",
-      "file_type": "code",
-      "norm_label": ".name()",
-      "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
-      "source_location": "L645"
-    },
-    {
       "id": "include_miinfer_model_plan_gpuweightarena_bytes",
       "label": ".bytes()",
       "_callable": true,
@@ -2305,6 +2293,18 @@
       "norm_label": ".gpuweightarena()",
       "source_file": "include/miinfer/model_plan.hpp",
       "source_location": "L38"
+    },
+    {
+      "id": "include_miinfer_model_plan_qwen3gpuplan_workspace_bytes",
+      "label": ".workspace_bytes()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 122,
+      "community_name": "model_plan.cpp",
+      "file_type": "code",
+      "norm_label": ".workspace_bytes()",
+      "source_file": "include/miinfer/model_plan.hpp",
+      "source_location": "L72"
     },
     {
       "id": "src_model_plan_align_up",
@@ -2463,18 +2463,6 @@
       "source_location": "L13"
     },
     {
-      "id": "bench_q4_q8_gemv_bench_launch_selected_gemv",
-      "label": "launch_selected_gemv()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 123,
-      "community_name": "half",
-      "file_type": "code",
-      "norm_label": "launch_selected_gemv()",
-      "source_file": "bench/q4_q8_gemv_bench.cpp",
-      "source_location": "L138"
-    },
-    {
       "id": "src_q4_q8_gemv_reference_q4_q8_cpu_reference",
       "label": "q4_q8_cpu_reference()",
       "_callable": true,
@@ -2581,6 +2569,18 @@
       "norm_label": "free_shape()",
       "source_file": "bench/q4_q8_gemv_bench.cpp",
       "source_location": "L294"
+    },
+    {
+      "id": "bench_q4_q8_gemv_bench_launch_selected_gemv",
+      "label": "launch_selected_gemv()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 125,
+      "community_name": "q4_q8_gemv_bench.cpp",
+      "file_type": "code",
+      "norm_label": "launch_selected_gemv()",
+      "source_file": "bench/q4_q8_gemv_bench.cpp",
+      "source_location": "L138"
     },
     {
       "id": "bench_q4_q8_gemv_bench_main",
@@ -2905,66 +2905,6 @@
       "norm_label": "run_zero_point_identity_tests()",
       "source_file": "tests/q4_q8_gemv_test.cpp",
       "source_location": "L23"
-    },
-    {
-      "id": "tests_qwen3_primitives_test_close_enough",
-      "label": "close_enough()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 129,
-      "community_name": "hip_check.hpp",
-      "file_type": "code",
-      "norm_label": "close_enough()",
-      "source_file": "tests/qwen3_primitives_test.cpp",
-      "source_location": "L21"
-    },
-    {
-      "id": "tests_qwen3_primitives_test_device_copy",
-      "label": "device_copy()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 129,
-      "community_name": "hip_check.hpp",
-      "file_type": "code",
-      "norm_label": "device_copy()",
-      "source_file": "tests/qwen3_primitives_test.cpp",
-      "source_location": "L109"
-    },
-    {
-      "id": "tests_qwen3_primitives_test_gpu_tests",
-      "label": "gpu_tests()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 129,
-      "community_name": "hip_check.hpp",
-      "file_type": "code",
-      "norm_label": "gpu_tests()",
-      "source_file": "tests/qwen3_primitives_test.cpp",
-      "source_location": "L116"
-    },
-    {
-      "id": "tests_qwen3_primitives_test_host_tests",
-      "label": "host_tests()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 129,
-      "community_name": "hip_check.hpp",
-      "file_type": "code",
-      "norm_label": "host_tests()",
-      "source_file": "tests/qwen3_primitives_test.cpp",
-      "source_location": "L26"
-    },
-    {
-      "id": "tests_qwen3_primitives_test_main",
-      "label": "main()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 129,
-      "community_name": "hip_check.hpp",
-      "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "tests/qwen3_primitives_test.cpp",
-      "source_location": "L204"
     },
     {
       "id": "tools_m6a15_qwen35_hybrid_block_audit_cache_fingerprint",
@@ -4131,6 +4071,18 @@
       "source_location": "L336"
     },
     {
+      "id": "src_gguf_gguffile_metadata",
+      "label": "GgufFile::metadata()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 152,
+      "community_name": "gguf.cpp",
+      "file_type": "code",
+      "norm_label": "gguffile::metadata()",
+      "source_file": "src/gguf.cpp",
+      "source_location": "L345"
+    },
+    {
       "id": "src_gguf_gguffile_metadata_array_is_string",
       "label": "GgufFile::metadata_array_is_string()",
       "_callable": true,
@@ -4851,52 +4803,40 @@
       "source_location": "L29"
     },
     {
+      "id": "include_miinfer_qwen3_gpu_layer_qwen3gpudecodecache_capacity",
+      "label": ".capacity()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 166,
+      "community_name": "Qwen3GpuDecodeCache",
+      "file_type": "code",
+      "norm_label": ".capacity()",
+      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
+      "source_location": "L271"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_layer_qwen3gpudecodecache_qwen3gpudecodecache",
+      "label": ".Qwen3GpuDecodeCache()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 166,
+      "community_name": "Qwen3GpuDecodeCache",
+      "file_type": "code",
+      "norm_label": ".qwen3gpudecodecache()",
+      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
+      "source_location": "L263"
+    },
+    {
       "id": "src_qwen3_gpu_layer_execute_qwen3_down_projection_contract_probe",
       "label": "execute_qwen3_down_projection_contract_probe()",
       "_callable": true,
       "_origin": "ast",
       "community": 166,
-      "community_name": "qwen3_gpu_layer.hpp",
+      "community_name": "Qwen3GpuDecodeCache",
       "file_type": "code",
       "norm_label": "execute_qwen3_down_projection_contract_probe()",
       "source_file": "src/qwen3_gpu_layer.cpp",
       "source_location": "L1760"
-    },
-    {
-      "id": "src_qwen3_gpu_layer_execute_qwen3_ffn_gpu_probe",
-      "label": "execute_qwen3_ffn_gpu_probe()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 166,
-      "community_name": "qwen3_gpu_layer.hpp",
-      "file_type": "code",
-      "norm_label": "execute_qwen3_ffn_gpu_probe()",
-      "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L1599"
-    },
-    {
-      "id": "src_qwen3_gpu_layer_execute_qwen3_projection_gpu_probe",
-      "label": "execute_qwen3_projection_gpu_probe()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 166,
-      "community_name": "qwen3_gpu_layer.hpp",
-      "file_type": "code",
-      "norm_label": "execute_qwen3_projection_gpu_probe()",
-      "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L1676"
-    },
-    {
-      "id": "src_qwen3_gpu_layer_launch_projection_probe",
-      "label": "launch_projection_probe()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 166,
-      "community_name": "qwen3_gpu_layer.hpp",
-      "file_type": "code",
-      "norm_label": "launch_projection_probe()",
-      "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L635"
     },
     {
       "id": "tests_qwen3_forward_test_argmax",
@@ -5055,24 +4995,12 @@
       "source_location": "L49"
     },
     {
-      "id": "tools_m6a21_qwen35_gpu_hybrid_block_fullattentionlayer_prefix",
-      "label": ".prefix()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 168,
-      "community_name": "size_t",
-      "file_type": "code",
-      "norm_label": ".prefix()",
-      "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
-      "source_location": "L1187"
-    },
-    {
       "id": "tools_m6a21_qwen35_gpu_hybrid_block_fullattentionlayer_run",
       "label": ".run()",
       "_callable": true,
       "_origin": "ast",
       "community": 168,
-      "community_name": "size_t",
+      "community_name": "uint32_t",
       "file_type": "code",
       "norm_label": ".run()",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
@@ -5084,7 +5012,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 168,
-      "community_name": "size_t",
+      "community_name": "uint32_t",
       "file_type": "code",
       "norm_label": ".stage_end()",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
@@ -5096,7 +5024,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 168,
-      "community_name": "size_t",
+      "community_name": "uint32_t",
       "file_type": "code",
       "norm_label": ".stage_start()",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
@@ -5108,7 +5036,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 168,
-      "community_name": "size_t",
+      "community_name": "uint32_t",
       "file_type": "code",
       "norm_label": "project()",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
@@ -5120,7 +5048,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 168,
-      "community_name": "size_t",
+      "community_name": "uint32_t",
       "file_type": "code",
       "norm_label": "project_q4_q8_1()",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
@@ -5132,7 +5060,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 168,
-      "community_name": "size_t",
+      "community_name": "uint32_t",
       "file_type": "code",
       "norm_label": "project_q4_q8_1_prequantized()",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
@@ -5144,7 +5072,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 168,
-      "community_name": "size_t",
+      "community_name": "uint32_t",
       "file_type": "code",
       "norm_label": "project_q5_q8_1()",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
@@ -5156,11 +5084,23 @@
       "_callable": true,
       "_origin": "ast",
       "community": 168,
-      "community_name": "size_t",
+      "community_name": "uint32_t",
       "file_type": "code",
       "norm_label": "project_q6_q8_k_dot4()",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
       "source_location": "L447"
+    },
+    {
+      "id": "tools_m6a21_qwen35_gpu_hybrid_block_recurrentlayer_name",
+      "label": ".name()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 168,
+      "community_name": "uint32_t",
+      "file_type": "code",
+      "norm_label": ".name()",
+      "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
+      "source_location": "L645"
     },
     {
       "id": "tools_m6a21_qwen35_gpu_hybrid_block_recurrentlayer_run",
@@ -5168,47 +5108,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 168,
-      "community_name": "size_t",
+      "community_name": "uint32_t",
       "file_type": "code",
       "norm_label": ".run()",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
       "source_location": "L807"
-    },
-    {
-      "id": "tools_m6a21_qwen35_gpu_hybrid_block_recurrentlayer_sample_update",
-      "label": ".sample_update()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 168,
-      "community_name": "size_t",
-      "file_type": "code",
-      "norm_label": ".sample_update()",
-      "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
-      "source_location": "L711"
-    },
-    {
-      "id": "tools_m6a21_qwen35_gpu_hybrid_block_recurrentlayer_stage_end",
-      "label": ".stage_end()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 168,
-      "community_name": "size_t",
-      "file_type": "code",
-      "norm_label": ".stage_end()",
-      "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
-      "source_location": "L801"
-    },
-    {
-      "id": "tools_m6a21_qwen35_gpu_hybrid_block_recurrentlayer_stage_start",
-      "label": ".stage_start()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 168,
-      "community_name": "size_t",
-      "file_type": "code",
-      "norm_label": ".stage_start()",
-      "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
-      "source_location": "L795"
     },
     {
       "id": "tools_m6a21_qwen35_gpu_hybrid_block_recurrentlayer_trace_tensor",
@@ -5216,7 +5120,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 168,
-      "community_name": "size_t",
+      "community_name": "uint32_t",
       "file_type": "code",
       "norm_label": ".trace_tensor()",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
@@ -5228,7 +5132,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 168,
-      "community_name": "size_t",
+      "community_name": "uint32_t",
       "file_type": "code",
       "norm_label": ".report()",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
@@ -5240,7 +5144,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 168,
-      "community_name": "size_t",
+      "community_name": "uint32_t",
       "file_type": "code",
       "norm_label": ".report_at()",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
@@ -5252,47 +5156,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 168,
-      "community_name": "size_t",
+      "community_name": "uint32_t",
       "file_type": "code",
       "norm_label": ".report_host()",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
       "source_location": "L209"
-    },
-    {
-      "id": "include_miinfer_model_plan_qwen3gpuplan_qwen3gpuplan",
-      "label": ".Qwen3GpuPlan()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 172,
-      "community_name": "Qwen3GpuPlan",
-      "file_type": "code",
-      "norm_label": ".qwen3gpuplan()",
-      "source_file": "include/miinfer/model_plan.hpp",
-      "source_location": "L60"
-    },
-    {
-      "id": "include_miinfer_model_plan_qwen3gpuplan_workspace_bytes",
-      "label": ".workspace_bytes()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 172,
-      "community_name": "Qwen3GpuPlan",
-      "file_type": "code",
-      "norm_label": ".workspace_bytes()",
-      "source_file": "include/miinfer/model_plan.hpp",
-      "source_location": "L72"
-    },
-    {
-      "id": "src_qwen3_gpu_layer_qwen3gpudecodecache_prepare",
-      "label": "Qwen3GpuDecodeCache::prepare()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 172,
-      "community_name": "Qwen3GpuPlan",
-      "file_type": "code",
-      "norm_label": "qwen3gpudecodecache::prepare()",
-      "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L923"
     },
     {
       "id": "tests_model_info_json_escape",
@@ -5300,7 +5168,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 172,
-      "community_name": "Qwen3GpuPlan",
+      "community_name": "print_text",
       "file_type": "code",
       "norm_label": "json_escape()",
       "source_file": "tests/model_info.cpp",
@@ -5312,7 +5180,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 172,
-      "community_name": "Qwen3GpuPlan",
+      "community_name": "print_text",
       "file_type": "code",
       "norm_label": "main()",
       "source_file": "tests/model_info.cpp",
@@ -5324,7 +5192,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 172,
-      "community_name": "Qwen3GpuPlan",
+      "community_name": "print_text",
       "file_type": "code",
       "norm_label": "print_json()",
       "source_file": "tests/model_info.cpp",
@@ -5336,7 +5204,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 172,
-      "community_name": "Qwen3GpuPlan",
+      "community_name": "print_text",
       "file_type": "code",
       "norm_label": "print_text()",
       "source_file": "tests/model_info.cpp",
@@ -5348,7 +5216,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 172,
-      "community_name": "Qwen3GpuPlan",
+      "community_name": "print_text",
       "file_type": "code",
       "norm_label": "type_counts()",
       "source_file": "tests/model_info.cpp",
@@ -5775,16 +5643,28 @@
       "source_location": "L59"
     },
     {
-      "id": "src_gguf_gguffile_metadata",
-      "label": "GgufFile::metadata()",
+      "id": "tests_qwen3_primitives_host_test_main",
+      "label": "main()",
       "_callable": true,
       "_origin": "ast",
       "community": 185,
       "community_name": "vector",
       "file_type": "code",
-      "norm_label": "gguffile::metadata()",
-      "source_file": "src/gguf.cpp",
-      "source_location": "L345"
+      "norm_label": "main()",
+      "source_file": "tests/qwen3_primitives_host_test.cpp",
+      "source_location": "L10"
+    },
+    {
+      "id": "tests_qwen3_tokenizer_test_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 185,
+      "community_name": "vector",
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "tests/qwen3_tokenizer_test.cpp",
+      "source_location": "L11"
     },
     {
       "id": "tests_qwen3_cached_attention_determinism_gpu_test_devicebuffer_devicebuffer",
@@ -6103,24 +5983,12 @@
       "label": "run_sequence()",
       "_callable": true,
       "_origin": "ast",
-      "community": 217,
-      "community_name": "m6a3_qwen35_layer.cpp",
+      "community": 209,
+      "community_name": "m6a14_qwen35_state_audit.cpp",
       "file_type": "code",
       "norm_label": "run_sequence()",
       "source_file": "tools/m6a14_qwen35_state_audit.cpp",
       "source_location": "L159"
-    },
-    {
-      "id": "tools_m6a17_qwen35_composition_ladder_run_ladder",
-      "label": "run_ladder()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 217,
-      "community_name": "m6a3_qwen35_layer.cpp",
-      "file_type": "code",
-      "norm_label": "run_ladder()",
-      "source_file": "tools/m6a17_qwen35_composition_ladder.cpp",
-      "source_location": "L49"
     },
     {
       "id": "tools_m6a19_qwen35_conv_gpu_main",
@@ -6135,28 +6003,16 @@
       "source_location": "L42"
     },
     {
-      "id": "tools_m6a20_qwen35_recurrent_layer_gpu_check_values",
-      "label": "check_values()",
+      "id": "tools_m6a19_qwen35_conv_gpu_upload",
+      "label": "upload()",
       "_callable": true,
       "_origin": "ast",
       "community": 217,
       "community_name": "m6a3_qwen35_layer.cpp",
       "file_type": "code",
-      "norm_label": "check_values()",
-      "source_file": "tools/m6a20_qwen35_recurrent_layer_gpu.cpp",
-      "source_location": "L57"
-    },
-    {
-      "id": "tools_m6a20_qwen35_recurrent_layer_gpu_main",
-      "label": "main()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 217,
-      "community_name": "m6a3_qwen35_layer.cpp",
-      "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "tools/m6a20_qwen35_recurrent_layer_gpu.cpp",
-      "source_location": "L95"
+      "norm_label": "upload()",
+      "source_file": "tools/m6a19_qwen35_conv_gpu.cpp",
+      "source_location": "L36"
     },
     {
       "id": "tools_m6a3_qwen35_layer_checkpoint",
@@ -6339,18 +6195,6 @@
       "source_location": "L81"
     },
     {
-      "id": "tools_m6a3_qwen35_layer_read_tokens",
-      "label": "read_tokens()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 217,
-      "community_name": "m6a3_qwen35_layer.cpp",
-      "file_type": "code",
-      "norm_label": "read_tokens()",
-      "source_file": "tools/m6a3_qwen35_layer.cpp",
-      "source_location": "L93"
-    },
-    {
       "id": "tools_m6a3_qwen35_layer_recurrent",
       "label": "recurrent()",
       "_callable": true,
@@ -6373,18 +6217,6 @@
       "norm_label": "require_match()",
       "source_file": "tools/m6a3_qwen35_layer.cpp",
       "source_location": "L132"
-    },
-    {
-      "id": "tools_m6a3_qwen35_layer_rms_rows",
-      "label": "rms_rows()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 217,
-      "community_name": "m6a3_qwen35_layer.cpp",
-      "file_type": "code",
-      "norm_label": "rms_rows()",
-      "source_file": "tools/m6a3_qwen35_layer.cpp",
-      "source_location": "L333"
     },
     {
       "id": "tools_m6a3_qwen35_layer_scale_min",
@@ -6411,42 +6243,6 @@
       "source_location": "L329"
     },
     {
-      "id": "tools_m6a5_qwen35_hybrid_block_full_block",
-      "label": "full_block()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 217,
-      "community_name": "m6a3_qwen35_layer.cpp",
-      "file_type": "code",
-      "norm_label": "full_block()",
-      "source_file": "tools/m6a5_qwen35_hybrid_block.cpp",
-      "source_location": "L103"
-    },
-    {
-      "id": "tools_m6a5_qwen35_hybrid_block_recurrent_block",
-      "label": "recurrent_block()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 217,
-      "community_name": "m6a3_qwen35_layer.cpp",
-      "file_type": "code",
-      "norm_label": "recurrent_block()",
-      "source_file": "tools/m6a5_qwen35_hybrid_block.cpp",
-      "source_location": "L30"
-    },
-    {
-      "id": "tools_m6a6_qwen35_full_forward_main",
-      "label": "main()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 217,
-      "community_name": "m6a3_qwen35_layer.cpp",
-      "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "tools/m6a6_qwen35_full_forward.cpp",
-      "source_location": "L26"
-    },
-    {
       "id": "scripts_check_m6a1_fixture_main",
       "label": "main()",
       "_callable": true,
@@ -6457,6 +6253,18 @@
       "norm_label": "main()",
       "source_file": "scripts/check-m6a1-fixture.py",
       "source_location": "L11"
+    },
+    {
+      "id": "tools_m6a21_qwen35_gpu_hybrid_block_recurrentlayer_sample_update",
+      "label": ".sample_update()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 240,
+      "community_name": "UpdateProvenance",
+      "file_type": "code",
+      "norm_label": ".sample_update()",
+      "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
+      "source_location": "L711"
     },
     {
       "id": "src_device_validation_inspect_device",
@@ -6543,28 +6351,28 @@
       "source_location": "L9"
     },
     {
-      "id": "tests_qwen3_primitives_host_test_main",
-      "label": "main()",
+      "id": "tools_m6a3_qwen35_layer_rms_rows",
+      "label": "rms_rows()",
       "_callable": true,
       "_origin": "ast",
       "community": 245,
       "community_name": "array",
       "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "tests/qwen3_primitives_host_test.cpp",
-      "source_location": "L10"
+      "norm_label": "rms_rows()",
+      "source_file": "tools/m6a3_qwen35_layer.cpp",
+      "source_location": "L333"
     },
     {
-      "id": "tests_qwen3_tokenizer_test_main",
-      "label": "main()",
+      "id": "tools_m6a5_qwen35_hybrid_block_full_block",
+      "label": "full_block()",
       "_callable": true,
       "_origin": "ast",
       "community": 245,
       "community_name": "array",
       "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "tests/qwen3_tokenizer_test.cpp",
-      "source_location": "L11"
+      "norm_label": "full_block()",
+      "source_file": "tools/m6a5_qwen35_hybrid_block.cpp",
+      "source_location": "L103"
     },
     {
       "id": "tools_m6a5_qwen35_hybrid_block_main",
@@ -6577,6 +6385,18 @@
       "norm_label": "main()",
       "source_file": "tools/m6a5_qwen35_hybrid_block.cpp",
       "source_location": "L155"
+    },
+    {
+      "id": "tools_m6a5_qwen35_hybrid_block_recurrent_block",
+      "label": "recurrent_block()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 245,
+      "community_name": "array",
+      "file_type": "code",
+      "norm_label": "recurrent_block()",
+      "source_file": "tools/m6a5_qwen35_hybrid_block.cpp",
+      "source_location": "L30"
     },
     {
       "id": "tools_m6a6_qwen35_full_forward_argmax",
@@ -6601,6 +6421,18 @@
       "norm_label": "is_full_attention_layer()",
       "source_file": "tools/m6a6_qwen35_full_forward.cpp",
       "source_location": "L14"
+    },
+    {
+      "id": "tools_m6a6_qwen35_full_forward_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 245,
+      "community_name": "array",
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "tools/m6a6_qwen35_full_forward.cpp",
+      "source_location": "L26"
     },
     {
       "id": "tools_m6a7_qwen35_stateful_generation_argmax",
@@ -8415,36 +8247,12 @@
       "source_location": "L36"
     },
     {
-      "id": "include_miinfer_qwen3_gpu_layer_qwen3gpudecodecache_capacity",
-      "label": ".capacity()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
-      "file_type": "code",
-      "norm_label": ".capacity()",
-      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
-      "source_location": "L271"
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_layer_qwen3gpudecodecache_qwen3gpudecodecache",
-      "label": ".Qwen3GpuDecodeCache()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
-      "file_type": "code",
-      "norm_label": ".qwen3gpudecodecache()",
-      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
-      "source_location": "L263"
-    },
-    {
       "id": "include_miinfer_qwen3_gpu_layer_qwen3layer0gpukvcache_capacity",
       "label": ".capacity()",
       "_callable": true,
       "_origin": "ast",
       "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community_name": "Qwen3Layer0GpuKvCache",
       "file_type": "code",
       "norm_label": ".capacity()",
       "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
@@ -8456,7 +8264,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community_name": "Qwen3Layer0GpuKvCache",
       "file_type": "code",
       "norm_label": ".device_keys()",
       "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
@@ -8468,7 +8276,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community_name": "Qwen3Layer0GpuKvCache",
       "file_type": "code",
       "norm_label": ".device_values()",
       "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
@@ -8480,7 +8288,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community_name": "Qwen3Layer0GpuKvCache",
       "file_type": "code",
       "norm_label": ".head_dim()",
       "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
@@ -8492,7 +8300,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community_name": "Qwen3Layer0GpuKvCache",
       "file_type": "code",
       "norm_label": ".kv_heads()",
       "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
@@ -8504,7 +8312,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community_name": "Qwen3Layer0GpuKvCache",
       "file_type": "code",
       "norm_label": ".length()",
       "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
@@ -8516,19 +8324,43 @@
       "_callable": true,
       "_origin": "ast",
       "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community_name": "Qwen3Layer0GpuKvCache",
       "file_type": "code",
       "norm_label": ".qwen3layer0gpukvcache()",
       "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
       "source_location": "L227"
     },
     {
+      "id": "src_qwen3_gpu_layer_qwen3gpudecodecache_reset",
+      "label": "Qwen3GpuDecodeCache::reset()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 297,
+      "community_name": "Qwen3Layer0GpuKvCache",
+      "file_type": "code",
+      "norm_label": "qwen3gpudecodecache::reset()",
+      "source_file": "src/qwen3_gpu_layer.cpp",
+      "source_location": "L938"
+    },
+    {
+      "id": "include_miinfer_model_plan_qwen3gpuplan_qwen3gpuplan",
+      "label": ".Qwen3GpuPlan()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 308,
+      "community_name": "Qwen3GpuPlan",
+      "file_type": "code",
+      "norm_label": ".qwen3gpuplan()",
+      "source_file": "include/miinfer/model_plan.hpp",
+      "source_location": "L60"
+    },
+    {
       "id": "src_qwen3_gpu_layer_device_f32_tensor",
       "label": "device_f32_tensor()",
       "_callable": true,
       "_origin": "ast",
-      "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community": 308,
+      "community_name": "Qwen3GpuPlan",
       "file_type": "code",
       "norm_label": "device_f32_tensor()",
       "source_file": "src/qwen3_gpu_layer.cpp",
@@ -8539,8 +8371,8 @@
       "label": "execute_qwen3_decode_gpu()",
       "_callable": true,
       "_origin": "ast",
-      "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community": 308,
+      "community_name": "Qwen3GpuPlan",
       "file_type": "code",
       "norm_label": "execute_qwen3_decode_gpu()",
       "source_file": "src/qwen3_gpu_layer.cpp",
@@ -8551,8 +8383,8 @@
       "label": "execute_qwen3_decode_gpu_fast()",
       "_callable": true,
       "_origin": "ast",
-      "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community": 308,
+      "community_name": "Qwen3GpuPlan",
       "file_type": "code",
       "norm_label": "execute_qwen3_decode_gpu_fast()",
       "source_file": "src/qwen3_gpu_layer.cpp",
@@ -8563,8 +8395,8 @@
       "label": "execute_qwen3_decode_gpu_fast_impl()",
       "_callable": true,
       "_origin": "ast",
-      "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community": 308,
+      "community_name": "Qwen3GpuPlan",
       "file_type": "code",
       "norm_label": "execute_qwen3_decode_gpu_fast_impl()",
       "source_file": "src/qwen3_gpu_layer.cpp",
@@ -8575,60 +8407,72 @@
       "label": "execute_qwen3_decode_gpu_greedy()",
       "_callable": true,
       "_origin": "ast",
-      "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community": 308,
+      "community_name": "Qwen3GpuPlan",
       "file_type": "code",
       "norm_label": "execute_qwen3_decode_gpu_greedy()",
       "source_file": "src/qwen3_gpu_layer.cpp",
       "source_location": "L1541"
     },
     {
+      "id": "src_qwen3_gpu_layer_execute_qwen3_ffn_gpu_probe",
+      "label": "execute_qwen3_ffn_gpu_probe()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 308,
+      "community_name": "Qwen3GpuPlan",
+      "file_type": "code",
+      "norm_label": "execute_qwen3_ffn_gpu_probe()",
+      "source_file": "src/qwen3_gpu_layer.cpp",
+      "source_location": "L1599"
+    },
+    {
       "id": "src_qwen3_gpu_layer_execute_qwen3_forward_gpu",
       "label": "execute_qwen3_forward_gpu()",
       "_callable": true,
       "_origin": "ast",
-      "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community": 308,
+      "community_name": "Qwen3GpuPlan",
       "file_type": "code",
       "norm_label": "execute_qwen3_forward_gpu()",
       "source_file": "src/qwen3_gpu_layer.cpp",
       "source_location": "L1353"
     },
     {
-      "id": "src_qwen3_gpu_layer_qwen3gpudecodecache_reset",
-      "label": "Qwen3GpuDecodeCache::reset()",
+      "id": "src_qwen3_gpu_layer_execute_qwen3_projection_gpu_probe",
+      "label": "execute_qwen3_projection_gpu_probe()",
       "_callable": true,
       "_origin": "ast",
-      "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community": 308,
+      "community_name": "Qwen3GpuPlan",
       "file_type": "code",
-      "norm_label": "qwen3gpudecodecache::reset()",
+      "norm_label": "execute_qwen3_projection_gpu_probe()",
       "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L938"
+      "source_location": "L1676"
     },
     {
-      "id": "tools_m6a16_qwen35_hybrid_block_4_7_audit_main",
-      "label": "main()",
+      "id": "src_qwen3_gpu_layer_launch_projection_probe",
+      "label": "launch_projection_probe()",
       "_callable": true,
       "_origin": "ast",
       "community": 308,
-      "community_name": "run_combined",
+      "community_name": "Qwen3GpuPlan",
       "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "tools/m6a16_qwen35_hybrid_block_4_7_audit.cpp",
-      "source_location": "L68"
+      "norm_label": "launch_projection_probe()",
+      "source_file": "src/qwen3_gpu_layer.cpp",
+      "source_location": "L635"
     },
     {
-      "id": "tools_m6a16_qwen35_hybrid_block_4_7_audit_run_combined",
-      "label": "run_combined()",
+      "id": "src_qwen3_gpu_layer_qwen3gpudecodecache_prepare",
+      "label": "Qwen3GpuDecodeCache::prepare()",
       "_callable": true,
       "_origin": "ast",
       "community": 308,
-      "community_name": "run_combined",
+      "community_name": "Qwen3GpuPlan",
       "file_type": "code",
-      "norm_label": "run_combined()",
-      "source_file": "tools/m6a16_qwen35_hybrid_block_4_7_audit.cpp",
-      "source_location": "L11"
+      "norm_label": "qwen3gpudecodecache::prepare()",
+      "source_file": "src/qwen3_gpu_layer.cpp",
+      "source_location": "L923"
     },
     {
       "id": "bench_memory_stream_bench_escape",
@@ -8720,11 +8564,23 @@
       "_callable": true,
       "_origin": "ast",
       "community": 320,
-      "community_name": "path_",
+      "community_name": "main",
       "file_type": "code",
       "norm_label": "check_device()",
       "source_file": "tools/m6a20_qwen35_recurrent_layer_gpu.cpp",
       "source_location": "L48"
+    },
+    {
+      "id": "tools_m6a20_qwen35_recurrent_layer_gpu_check_values",
+      "label": "check_values()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 320,
+      "community_name": "main",
+      "file_type": "code",
+      "norm_label": "check_values()",
+      "source_file": "tools/m6a20_qwen35_recurrent_layer_gpu.cpp",
+      "source_location": "L57"
     },
     {
       "id": "tools_m6a20_qwen35_recurrent_layer_gpu_device_error",
@@ -8732,7 +8588,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 320,
-      "community_name": "path_",
+      "community_name": "main",
       "file_type": "code",
       "norm_label": "device_error()",
       "source_file": "tools/m6a20_qwen35_recurrent_layer_gpu.cpp",
@@ -8744,7 +8600,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 320,
-      "community_name": "path_",
+      "community_name": "main",
       "file_type": "code",
       "norm_label": ".devicebuffer()",
       "source_file": "tools/m6a20_qwen35_recurrent_layer_gpu.cpp",
@@ -8756,11 +8612,23 @@
       "_callable": true,
       "_origin": "ast",
       "community": 320,
-      "community_name": "path_",
+      "community_name": "main",
       "file_type": "code",
       "norm_label": ".get()",
       "source_file": "tools/m6a20_qwen35_recurrent_layer_gpu.cpp",
       "source_location": "L30"
+    },
+    {
+      "id": "tools_m6a20_qwen35_recurrent_layer_gpu_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 320,
+      "community_name": "main",
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "tools/m6a20_qwen35_recurrent_layer_gpu.cpp",
+      "source_location": "L95"
     },
     {
       "id": "tools_m6a20_qwen35_recurrent_layer_gpu_project",
@@ -8768,7 +8636,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 320,
-      "community_name": "path_",
+      "community_name": "main",
       "file_type": "code",
       "norm_label": "project()",
       "source_file": "tools/m6a20_qwen35_recurrent_layer_gpu.cpp",
@@ -8780,83 +8648,119 @@
       "_callable": true,
       "_origin": "ast",
       "community": 320,
-      "community_name": "path_",
+      "community_name": "main",
       "file_type": "code",
       "norm_label": "upload()",
       "source_file": "tools/m6a20_qwen35_recurrent_layer_gpu.cpp",
       "source_location": "L36"
     },
     {
-      "id": "tests_qwen3_decode_gpu_test_argmax",
-      "label": "argmax()",
+      "id": "bench_qwen3_decode_profile_build_json",
+      "label": "build_json()",
       "_callable": true,
       "_origin": "ast",
       "community": 322,
-      "community_name": "Qwen3ForwardTrace",
+      "community_name": "qwen3_decode_profile.cpp",
       "file_type": "code",
-      "norm_label": "argmax()",
-      "source_file": "tests/qwen3_decode_gpu_test.cpp",
-      "source_location": "L17"
+      "norm_label": "build_json()",
+      "source_file": "bench/qwen3_decode_profile.cpp",
+      "source_location": "L107"
     },
     {
-      "id": "tests_qwen3_decode_gpu_test_cache_lengths",
-      "label": "cache_lengths()",
+      "id": "bench_qwen3_decode_profile_elapsed_ms",
+      "label": "elapsed_ms()",
       "_callable": true,
       "_origin": "ast",
       "community": 322,
-      "community_name": "Qwen3ForwardTrace",
+      "community_name": "qwen3_decode_profile.cpp",
       "file_type": "code",
-      "norm_label": "cache_lengths()",
-      "source_file": "tests/qwen3_decode_gpu_test.cpp",
-      "source_location": "L44"
+      "norm_label": "elapsed_ms()",
+      "source_file": "bench/qwen3_decode_profile.cpp",
+      "source_location": "L34"
     },
     {
-      "id": "tests_qwen3_decode_gpu_test_exact",
-      "label": "exact()",
+      "id": "bench_qwen3_decode_profile_json_escape",
+      "label": "json_escape()",
       "_callable": true,
       "_origin": "ast",
       "community": 322,
-      "community_name": "Qwen3ForwardTrace",
+      "community_name": "qwen3_decode_profile.cpp",
       "file_type": "code",
-      "norm_label": "exact()",
-      "source_file": "tests/qwen3_decode_gpu_test.cpp",
-      "source_location": "L28"
+      "norm_label": "json_escape()",
+      "source_file": "bench/qwen3_decode_profile.cpp",
+      "source_location": "L95"
     },
     {
-      "id": "tests_qwen3_decode_gpu_test_finite",
-      "label": "finite()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 322,
-      "community_name": "Qwen3ForwardTrace",
-      "file_type": "code",
-      "norm_label": "finite()",
-      "source_file": "tests/qwen3_decode_gpu_test.cpp",
-      "source_location": "L23"
-    },
-    {
-      "id": "tests_qwen3_decode_gpu_test_main",
+      "id": "bench_qwen3_decode_profile_main",
       "label": "main()",
       "_callable": true,
       "_origin": "ast",
       "community": 322,
-      "community_name": "Qwen3ForwardTrace",
+      "community_name": "qwen3_decode_profile.cpp",
       "file_type": "code",
       "norm_label": "main()",
-      "source_file": "tests/qwen3_decode_gpu_test.cpp",
-      "source_location": "L134"
+      "source_file": "bench/qwen3_decode_profile.cpp",
+      "source_location": "L163"
     },
     {
-      "id": "tests_qwen3_decode_gpu_test_run",
-      "label": "run()",
+      "id": "bench_qwen3_decode_profile_now",
+      "label": "now()",
       "_callable": true,
       "_origin": "ast",
       "community": 322,
-      "community_name": "Qwen3ForwardTrace",
+      "community_name": "qwen3_decode_profile.cpp",
       "file_type": "code",
-      "norm_label": "run()",
-      "source_file": "tests/qwen3_decode_gpu_test.cpp",
-      "source_location": "L66"
+      "norm_label": "now()",
+      "source_file": "bench/qwen3_decode_profile.cpp",
+      "source_location": "L26"
+    },
+    {
+      "id": "bench_qwen3_decode_profile_parse_options",
+      "label": "parse_options()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 322,
+      "community_name": "qwen3_decode_profile.cpp",
+      "file_type": "code",
+      "norm_label": "parse_options()",
+      "source_file": "bench/qwen3_decode_profile.cpp",
+      "source_location": "L69"
+    },
+    {
+      "id": "bench_qwen3_decode_profile_parse_token",
+      "label": "parse_token()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 322,
+      "community_name": "qwen3_decode_profile.cpp",
+      "file_type": "code",
+      "norm_label": "parse_token()",
+      "source_file": "bench/qwen3_decode_profile.cpp",
+      "source_location": "L55"
+    },
+    {
+      "id": "bench_qwen3_decode_profile_usage",
+      "label": "usage()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 322,
+      "community_name": "qwen3_decode_profile.cpp",
+      "file_type": "code",
+      "norm_label": "usage()",
+      "source_file": "bench/qwen3_decode_profile.cpp",
+      "source_location": "L47"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_layer_qwen3gpuprofile_reset",
+      "label": ".reset()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 322,
+      "community_name": "qwen3_decode_profile.cpp",
+      "file_type": "code",
+      "norm_label": ".reset()",
+      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
+      "source_location": "L140"
     },
     {
       "id": "tools_m6a263_qwen35_recurrent_contract_apply_external",
@@ -8960,7 +8864,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 340,
-      "community_name": "m6a19_qwen35_conv_gpu.cpp",
+      "community_name": "DeviceBuffer",
       "file_type": "code",
       "norm_label": ".devicebuffer()",
       "source_file": "tools/m6a19_qwen35_conv_gpu.cpp",
@@ -8972,23 +8876,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 340,
-      "community_name": "m6a19_qwen35_conv_gpu.cpp",
+      "community_name": "DeviceBuffer",
       "file_type": "code",
       "norm_label": ".get()",
       "source_file": "tools/m6a19_qwen35_conv_gpu.cpp",
       "source_location": "L30"
-    },
-    {
-      "id": "tools_m6a19_qwen35_conv_gpu_upload",
-      "label": "upload()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 340,
-      "community_name": "m6a19_qwen35_conv_gpu.cpp",
-      "file_type": "code",
-      "norm_label": "upload()",
-      "source_file": "tools/m6a19_qwen35_conv_gpu.cpp",
-      "source_location": "L36"
     },
     {
       "id": "tools_m6a11_qwen35_attention_prefix_devicebuffer_data",
@@ -9087,100 +8979,16 @@
       "source_location": "L682"
     },
     {
-      "id": "bench_qwen3_decode_profile_build_json",
-      "label": "build_json()",
+      "id": "tools_m6a21_qwen35_gpu_hybrid_block_replay_state",
+      "label": "replay_state()",
       "_callable": true,
       "_origin": "ast",
-      "community": 344,
-      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
+      "community": 343,
+      "community_name": "RecurrentOperands",
       "file_type": "code",
-      "norm_label": "build_json()",
-      "source_file": "bench/qwen3_decode_profile.cpp",
-      "source_location": "L107"
-    },
-    {
-      "id": "bench_qwen3_decode_profile_elapsed_ms",
-      "label": "elapsed_ms()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 344,
-      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
-      "file_type": "code",
-      "norm_label": "elapsed_ms()",
-      "source_file": "bench/qwen3_decode_profile.cpp",
-      "source_location": "L34"
-    },
-    {
-      "id": "bench_qwen3_decode_profile_json_escape",
-      "label": "json_escape()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 344,
-      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
-      "file_type": "code",
-      "norm_label": "json_escape()",
-      "source_file": "bench/qwen3_decode_profile.cpp",
-      "source_location": "L95"
-    },
-    {
-      "id": "bench_qwen3_decode_profile_main",
-      "label": "main()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 344,
-      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
-      "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "bench/qwen3_decode_profile.cpp",
-      "source_location": "L163"
-    },
-    {
-      "id": "bench_qwen3_decode_profile_now",
-      "label": "now()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 344,
-      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
-      "file_type": "code",
-      "norm_label": "now()",
-      "source_file": "bench/qwen3_decode_profile.cpp",
-      "source_location": "L26"
-    },
-    {
-      "id": "bench_qwen3_decode_profile_parse_options",
-      "label": "parse_options()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 344,
-      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
-      "file_type": "code",
-      "norm_label": "parse_options()",
-      "source_file": "bench/qwen3_decode_profile.cpp",
-      "source_location": "L69"
-    },
-    {
-      "id": "bench_qwen3_decode_profile_parse_token",
-      "label": "parse_token()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 344,
-      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
-      "file_type": "code",
-      "norm_label": "parse_token()",
-      "source_file": "bench/qwen3_decode_profile.cpp",
-      "source_location": "L55"
-    },
-    {
-      "id": "bench_qwen3_decode_profile_usage",
-      "label": "usage()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 344,
-      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
-      "file_type": "code",
-      "norm_label": "usage()",
-      "source_file": "bench/qwen3_decode_profile.cpp",
-      "source_location": "L47"
+      "norm_label": "replay_state()",
+      "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
+      "source_location": "L1403"
     },
     {
       "id": "include_miinfer_qwen3_gpu_layer_qwen3gpudecodecache_layers",
@@ -9195,16 +9003,76 @@
       "source_location": "L269"
     },
     {
-      "id": "include_miinfer_qwen3_gpu_layer_qwen3gpuprofile_reset",
-      "label": ".reset()",
+      "id": "tests_qwen3_decode_gpu_test_argmax",
+      "label": "argmax()",
       "_callable": true,
       "_origin": "ast",
       "community": 344,
       "community_name": "qwen3_decode_sequence_gpu_test.cpp",
       "file_type": "code",
-      "norm_label": ".reset()",
-      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
-      "source_location": "L140"
+      "norm_label": "argmax()",
+      "source_file": "tests/qwen3_decode_gpu_test.cpp",
+      "source_location": "L17"
+    },
+    {
+      "id": "tests_qwen3_decode_gpu_test_cache_lengths",
+      "label": "cache_lengths()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 344,
+      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
+      "file_type": "code",
+      "norm_label": "cache_lengths()",
+      "source_file": "tests/qwen3_decode_gpu_test.cpp",
+      "source_location": "L44"
+    },
+    {
+      "id": "tests_qwen3_decode_gpu_test_exact",
+      "label": "exact()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 344,
+      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
+      "file_type": "code",
+      "norm_label": "exact()",
+      "source_file": "tests/qwen3_decode_gpu_test.cpp",
+      "source_location": "L28"
+    },
+    {
+      "id": "tests_qwen3_decode_gpu_test_finite",
+      "label": "finite()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 344,
+      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
+      "file_type": "code",
+      "norm_label": "finite()",
+      "source_file": "tests/qwen3_decode_gpu_test.cpp",
+      "source_location": "L23"
+    },
+    {
+      "id": "tests_qwen3_decode_gpu_test_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 344,
+      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "tests/qwen3_decode_gpu_test.cpp",
+      "source_location": "L134"
+    },
+    {
+      "id": "tests_qwen3_decode_gpu_test_run",
+      "label": "run()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 344,
+      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
+      "file_type": "code",
+      "norm_label": "run()",
+      "source_file": "tests/qwen3_decode_gpu_test.cpp",
+      "source_location": "L66"
     },
     {
       "id": "tests_qwen3_decode_sequence_gpu_test_argmax",
@@ -9507,12 +9375,36 @@
       "source_location": "L23"
     },
     {
+      "id": "tools_m6a16_qwen35_hybrid_block_4_7_audit_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 359,
+      "community_name": "path_",
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "tools/m6a16_qwen35_hybrid_block_4_7_audit.cpp",
+      "source_location": "L68"
+    },
+    {
+      "id": "tools_m6a16_qwen35_hybrid_block_4_7_audit_run_combined",
+      "label": "run_combined()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 359,
+      "community_name": "path_",
+      "file_type": "code",
+      "norm_label": "run_combined()",
+      "source_file": "tools/m6a16_qwen35_hybrid_block_4_7_audit.cpp",
+      "source_location": "L11"
+    },
+    {
       "id": "tools_m6a17_qwen35_composition_ladder_argmax",
       "label": "argmax()",
       "_callable": true,
       "_origin": "ast",
       "community": 359,
-      "community_name": "m6a17_qwen35_composition_ladder.cpp",
+      "community_name": "path_",
       "file_type": "code",
       "norm_label": "argmax()",
       "source_file": "tools/m6a17_qwen35_composition_ladder.cpp",
@@ -9524,7 +9416,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 359,
-      "community_name": "m6a17_qwen35_composition_ladder.cpp",
+      "community_name": "path_",
       "file_type": "code",
       "norm_label": "is_boundary()",
       "source_file": "tools/m6a17_qwen35_composition_ladder.cpp",
@@ -9536,7 +9428,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 359,
-      "community_name": "m6a17_qwen35_composition_ladder.cpp",
+      "community_name": "path_",
       "file_type": "code",
       "norm_label": "is_full_attention_layer()",
       "source_file": "tools/m6a17_qwen35_composition_ladder.cpp",
@@ -9548,7 +9440,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 359,
-      "community_name": "m6a17_qwen35_composition_ladder.cpp",
+      "community_name": "path_",
       "file_type": "code",
       "norm_label": "main()",
       "source_file": "tools/m6a17_qwen35_composition_ladder.cpp",
@@ -9560,11 +9452,35 @@
       "_callable": true,
       "_origin": "ast",
       "community": 359,
-      "community_name": "m6a17_qwen35_composition_ladder.cpp",
+      "community_name": "path_",
       "file_type": "code",
       "norm_label": "print_ledger()",
       "source_file": "tools/m6a17_qwen35_composition_ladder.cpp",
       "source_location": "L32"
+    },
+    {
+      "id": "tools_m6a17_qwen35_composition_ladder_run_ladder",
+      "label": "run_ladder()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 359,
+      "community_name": "path_",
+      "file_type": "code",
+      "norm_label": "run_ladder()",
+      "source_file": "tools/m6a17_qwen35_composition_ladder.cpp",
+      "source_location": "L49"
+    },
+    {
+      "id": "tools_m6a3_qwen35_layer_read_tokens",
+      "label": "read_tokens()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 359,
+      "community_name": "path_",
+      "file_type": "code",
+      "norm_label": "read_tokens()",
+      "source_file": "tools/m6a3_qwen35_layer.cpp",
+      "source_location": "L93"
     },
     {
       "id": "src_sha256_rotate_right",
@@ -9721,6 +9637,66 @@
       "norm_label": "print_ids()",
       "source_file": "tests/qwen3_generate.cpp",
       "source_location": "L54"
+    },
+    {
+      "id": "tests_qwen3_primitives_test_close_enough",
+      "label": "close_enough()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 367,
+      "community_name": "qwen3_primitives_test.cpp",
+      "file_type": "code",
+      "norm_label": "close_enough()",
+      "source_file": "tests/qwen3_primitives_test.cpp",
+      "source_location": "L21"
+    },
+    {
+      "id": "tests_qwen3_primitives_test_device_copy",
+      "label": "device_copy()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 367,
+      "community_name": "qwen3_primitives_test.cpp",
+      "file_type": "code",
+      "norm_label": "device_copy()",
+      "source_file": "tests/qwen3_primitives_test.cpp",
+      "source_location": "L109"
+    },
+    {
+      "id": "tests_qwen3_primitives_test_gpu_tests",
+      "label": "gpu_tests()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 367,
+      "community_name": "qwen3_primitives_test.cpp",
+      "file_type": "code",
+      "norm_label": "gpu_tests()",
+      "source_file": "tests/qwen3_primitives_test.cpp",
+      "source_location": "L116"
+    },
+    {
+      "id": "tests_qwen3_primitives_test_host_tests",
+      "label": "host_tests()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 367,
+      "community_name": "qwen3_primitives_test.cpp",
+      "file_type": "code",
+      "norm_label": "host_tests()",
+      "source_file": "tests/qwen3_primitives_test.cpp",
+      "source_location": "L26"
+    },
+    {
+      "id": "tests_qwen3_primitives_test_main",
+      "label": "main()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 367,
+      "community_name": "qwen3_primitives_test.cpp",
+      "file_type": "code",
+      "norm_label": "main()",
+      "source_file": "tests/qwen3_primitives_test.cpp",
+      "source_location": "L204"
     },
     {
       "id": "bench_qwen3_inference_bench_argmax",
@@ -9932,7 +9908,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 50,
-      "community_name": ".get",
+      "community_name": "size_t",
       "file_type": "code",
       "norm_label": "allocate()",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
@@ -9944,7 +9920,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 50,
-      "community_name": ".get",
+      "community_name": "size_t",
       "file_type": "code",
       "norm_label": ".devicebytes()",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
@@ -9956,7 +9932,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 50,
-      "community_name": ".get",
+      "community_name": "size_t",
       "file_type": "code",
       "norm_label": ".get()",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
@@ -9968,7 +9944,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 50,
-      "community_name": ".get",
+      "community_name": "size_t",
       "file_type": "code",
       "norm_label": ".copy_weight()",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
@@ -9980,7 +9956,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 50,
-      "community_name": ".get",
+      "community_name": "size_t",
       "file_type": "code",
       "norm_label": ".fullattentionlayer()",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
@@ -9992,11 +9968,23 @@
       "_callable": true,
       "_origin": "ast",
       "community": 50,
-      "community_name": ".get",
+      "community_name": "size_t",
       "file_type": "code",
       "norm_label": ".poison()",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
       "source_location": "L1196"
+    },
+    {
+      "id": "tools_m6a21_qwen35_gpu_hybrid_block_fullattentionlayer_prefix",
+      "label": ".prefix()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 50,
+      "community_name": "size_t",
+      "file_type": "code",
+      "norm_label": ".prefix()",
+      "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
+      "source_location": "L1187"
     },
     {
       "id": "tools_m6a21_qwen35_gpu_hybrid_block_fullattentionlayer_reset",
@@ -10004,7 +9992,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 50,
-      "community_name": ".get",
+      "community_name": "size_t",
       "file_type": "code",
       "norm_label": ".reset()",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
@@ -10016,7 +10004,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 50,
-      "community_name": ".get",
+      "community_name": "size_t",
       "file_type": "code",
       "norm_label": ".poison()",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
@@ -10028,7 +10016,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 50,
-      "community_name": ".get",
+      "community_name": "size_t",
       "file_type": "code",
       "norm_label": ".recurrentlayer()",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
@@ -10040,11 +10028,35 @@
       "_callable": true,
       "_origin": "ast",
       "community": 50,
-      "community_name": ".get",
+      "community_name": "size_t",
       "file_type": "code",
       "norm_label": ".reset()",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
       "source_location": "L656"
+    },
+    {
+      "id": "tools_m6a21_qwen35_gpu_hybrid_block_recurrentlayer_stage_end",
+      "label": ".stage_end()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 50,
+      "community_name": "size_t",
+      "file_type": "code",
+      "norm_label": ".stage_end()",
+      "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
+      "source_location": "L801"
+    },
+    {
+      "id": "tools_m6a21_qwen35_gpu_hybrid_block_recurrentlayer_stage_start",
+      "label": ".stage_start()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 50,
+      "community_name": "size_t",
+      "file_type": "code",
+      "norm_label": ".stage_start()",
+      "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
+      "source_location": "L795"
     },
     {
       "id": "tools_m6a21_qwen35_gpu_hybrid_block_recurrentlayer_state_value",
@@ -10052,7 +10064,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 50,
-      "community_name": ".get",
+      "community_name": "size_t",
       "file_type": "code",
       "norm_label": ".state_value()",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
@@ -10064,23 +10076,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 50,
-      "community_name": ".get",
+      "community_name": "size_t",
       "file_type": "code",
       "norm_label": ".upload_state()",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
       "source_location": "L664"
-    },
-    {
-      "id": "tools_m6a21_qwen35_gpu_hybrid_block_replay_state",
-      "label": "replay_state()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 50,
-      "community_name": ".get",
-      "file_type": "code",
-      "norm_label": "replay_state()",
-      "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
-      "source_location": "L1403"
     },
     {
       "id": "tools_m6a21_qwen35_gpu_hybrid_block_upload",
@@ -10088,7 +10088,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 50,
-      "community_name": ".get",
+      "community_name": "size_t",
       "file_type": "code",
       "norm_label": "upload()",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
@@ -10100,7 +10100,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 50,
-      "community_name": ".get",
+      "community_name": "size_t",
       "file_type": "code",
       "norm_label": "upload_tensor()",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
@@ -15512,6 +15512,17 @@
       "source_location": "L1"
     },
     {
+      "id": "include_miinfer_q4_q8_gemv",
+      "label": "q4_q8_gemv.hpp",
+      "_origin": "ast",
+      "community": 123,
+      "community_name": "half",
+      "file_type": "code",
+      "norm_label": "q4_q8_gemv.hpp",
+      "source_file": "include/miinfer/q4_q8_gemv.hpp",
+      "source_location": "L1"
+    },
+    {
       "id": "include_miinfer_q4_q8_gemv_hpp_int16_t",
       "label": "int16_t",
       "_origin": "ast",
@@ -15631,6 +15642,17 @@
       "norm_label": "sum",
       "source_file": "include/miinfer/q4_q8_gemv.hpp",
       "source_location": "L34"
+    },
+    {
+      "id": "include_miinfer_q4_q8_zero_point_dot",
+      "label": "q4_q8_zero_point_dot.hpp",
+      "_origin": "ast",
+      "community": 123,
+      "community_name": "half",
+      "file_type": "code",
+      "norm_label": "q4_q8_zero_point_dot.hpp",
+      "source_file": "include/miinfer/q4_q8_zero_point_dot.hpp",
+      "source_location": "L1"
     },
     {
       "id": "src_q4_q8_gemv_reference",
@@ -16508,83 +16530,6 @@
       "source_location": "L23"
     },
     {
-      "id": "include_miinfer_fp16_gemv",
-      "label": "fp16_gemv.hpp",
-      "_origin": "ast",
-      "community": 129,
-      "community_name": "hip_check.hpp",
-      "file_type": "code",
-      "norm_label": "fp16_gemv.hpp",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L1"
-    },
-    {
-      "id": "include_miinfer_fp16_gemv_gemvkernelresources_local_bytes",
-      "label": "local_bytes",
-      "_origin": "ast",
-      "community": 129,
-      "community_name": "hip_check.hpp",
-      "file_type": "code",
-      "norm_label": "local_bytes",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L90"
-    },
-    {
-      "id": "include_miinfer_fp16_gemv_gemvkernelresources_max_threads_per_block",
-      "label": "max_threads_per_block",
-      "_origin": "ast",
-      "community": 129,
-      "community_name": "hip_check.hpp",
-      "file_type": "code",
-      "norm_label": "max_threads_per_block",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L91"
-    },
-    {
-      "id": "include_miinfer_fp16_gemv_gemvkernelresources_registers",
-      "label": "registers",
-      "_origin": "ast",
-      "community": 129,
-      "community_name": "hip_check.hpp",
-      "file_type": "code",
-      "norm_label": "registers",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L88"
-    },
-    {
-      "id": "include_miinfer_fp16_gemv_gemvkernelresources_shared_bytes",
-      "label": "shared_bytes",
-      "_origin": "ast",
-      "community": 129,
-      "community_name": "hip_check.hpp",
-      "file_type": "code",
-      "norm_label": "shared_bytes",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L89"
-    },
-    {
-      "id": "include_miinfer_fp16_gemv_hpp_size_t",
-      "label": "size_t",
-      "_origin": "ast",
-      "community": 129,
-      "community_name": "hip_check.hpp",
-      "file_type": "code",
-      "norm_label": "size_t",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "include_miinfer_fp16_gemv_rocblasgemmhandle_opaque",
-      "label": "opaque",
-      "_origin": "ast",
-      "community": 129,
-      "community_name": "hip_check.hpp",
-      "file_type": "code",
-      "norm_label": "opaque",
-      "source_file": "include/miinfer/fp16_gemv.hpp",
-      "source_location": "L97"
-    },
-    {
       "id": "include_miinfer_hip_check",
       "label": "hip_check.hpp",
       "_origin": "ast",
@@ -16607,17 +16552,6 @@
       "source_location": ""
     },
     {
-      "id": "include_miinfer_q4_q8_gemv",
-      "label": "q4_q8_gemv.hpp",
-      "_origin": "ast",
-      "community": 129,
-      "community_name": "hip_check.hpp",
-      "file_type": "code",
-      "norm_label": "q4_q8_gemv.hpp",
-      "source_file": "include/miinfer/q4_q8_gemv.hpp",
-      "source_location": "L1"
-    },
-    {
       "id": "include_miinfer_q4_q8_packed_dot",
       "label": "q4_q8_packed_dot.hpp",
       "_origin": "ast",
@@ -16626,28 +16560,6 @@
       "file_type": "code",
       "norm_label": "q4_q8_packed_dot.hpp",
       "source_file": "include/miinfer/q4_q8_packed_dot.hpp",
-      "source_location": "L1"
-    },
-    {
-      "id": "include_miinfer_q4_q8_zero_point_dot",
-      "label": "q4_q8_zero_point_dot.hpp",
-      "_origin": "ast",
-      "community": 129,
-      "community_name": "hip_check.hpp",
-      "file_type": "code",
-      "norm_label": "q4_q8_zero_point_dot.hpp",
-      "source_file": "include/miinfer/q4_q8_zero_point_dot.hpp",
-      "source_location": "L1"
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives",
-      "label": "qwen3_gpu_primitives.hpp",
-      "_origin": "ast",
-      "community": 129,
-      "community_name": "hip_check.hpp",
-      "file_type": "code",
-      "norm_label": "qwen3_gpu_primitives.hpp",
-      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
       "source_location": "L1"
     },
     {
@@ -16680,39 +16592,6 @@
       "community_name": "hip_check.hpp",
       "file_type": "code",
       "norm_label": "string",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "tests_qwen3_primitives_test",
-      "label": "qwen3_primitives_test.cpp",
-      "_origin": "ast",
-      "community": 129,
-      "community_name": "hip_check.hpp",
-      "file_type": "code",
-      "norm_label": "qwen3_primitives_test.cpp",
-      "source_file": "tests/qwen3_primitives_test.cpp",
-      "source_location": "L1"
-    },
-    {
-      "id": "tests_qwen3_primitives_test_cpp_t",
-      "label": "T",
-      "_origin": "ast",
-      "community": 129,
-      "community_name": "hip_check.hpp",
-      "file_type": "code",
-      "norm_label": "t",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "tests_qwen3_primitives_test_cpp_vector",
-      "label": "vector",
-      "_origin": "ast",
-      "community": 129,
-      "community_name": "hip_check.hpp",
-      "file_type": "code",
-      "norm_label": "vector",
       "source_file": "",
       "source_location": ""
     },
@@ -18253,28 +18132,6 @@
       "source_location": "L96"
     },
     {
-      "id": "include_miinfer_qwen3_gpu_layer_qwen3layer0gpukvcache_snapshot_keys",
-      "label": "snapshot_keys",
-      "_origin": "ast",
-      "community": 139,
-      "community_name": "run_sequence",
-      "file_type": "code",
-      "norm_label": "snapshot_keys",
-      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
-      "source_location": "L239"
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_layer_qwen3layer0gpukvcache_snapshot_values",
-      "label": "snapshot_values",
-      "_origin": "ast",
-      "community": 139,
-      "community_name": "run_sequence",
-      "file_type": "code",
-      "norm_label": "snapshot_values",
-      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
-      "source_location": "L240"
-    },
-    {
       "id": "tests_qwen3_kv_cache_gpu_test",
       "label": "qwen3_kv_cache_gpu_test.cpp",
       "_origin": "ast",
@@ -19439,17 +19296,6 @@
       "source_location": "L1"
     },
     {
-      "id": "src_qwen3_layer_cpp_int8_t",
-      "label": "int8_t",
-      "_origin": "ast",
-      "community": 145,
-      "community_name": "qwen3_layer_host_impl",
-      "file_type": "code",
-      "norm_label": "int8_t",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
       "id": "src_qwen3_layer_cpp_size_t",
       "label": "size_t",
       "_origin": "ast",
@@ -19468,17 +19314,6 @@
       "community_name": "qwen3_layer_host_impl",
       "file_type": "code",
       "norm_label": "span",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "src_qwen3_layer_cpp_uint16_t",
-      "label": "uint16_t",
-      "_origin": "ast",
-      "community": 145,
-      "community_name": "qwen3_layer_host_impl",
-      "file_type": "code",
-      "norm_label": "uint16_t",
       "source_file": "",
       "source_location": ""
     },
@@ -19503,39 +19338,6 @@
       "norm_label": "vector",
       "source_file": "",
       "source_location": ""
-    },
-    {
-      "id": "src_qwen3_layer_hostq8block_d_bits",
-      "label": "d_bits",
-      "_origin": "ast",
-      "community": 145,
-      "community_name": "qwen3_layer_host_impl",
-      "file_type": "code",
-      "norm_label": "d_bits",
-      "source_file": "src/qwen3_layer.cpp",
-      "source_location": "L20"
-    },
-    {
-      "id": "src_qwen3_layer_hostq8block_qs",
-      "label": "qs",
-      "_origin": "ast",
-      "community": 145,
-      "community_name": "qwen3_layer_host_impl",
-      "file_type": "code",
-      "norm_label": "qs",
-      "source_file": "src/qwen3_layer.cpp",
-      "source_location": "L22"
-    },
-    {
-      "id": "src_qwen3_layer_hostq8block_s_bits",
-      "label": "s_bits",
-      "_origin": "ast",
-      "community": 145,
-      "community_name": "qwen3_layer_host_impl",
-      "file_type": "code",
-      "norm_label": "s_bits",
-      "source_file": "src/qwen3_layer.cpp",
-      "source_location": "L21"
     },
     {
       "id": "docs_m4c2_greedy",
@@ -21637,11 +21439,33 @@
       "source_location": "L32"
     },
     {
+      "id": "include_miinfer_qwen3_gpu_primitives",
+      "label": "qwen3_gpu_primitives.hpp",
+      "_origin": "ast",
+      "community": 161,
+      "community_name": "qwen3_gpu_primitives.hpp",
+      "file_type": "code",
+      "norm_label": "qwen3_gpu_primitives.hpp",
+      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
+      "source_location": "L1"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_primitives_hpp_int16_t",
+      "label": "int16_t",
+      "_origin": "ast",
+      "community": 161,
+      "community_name": "qwen3_gpu_primitives.hpp",
+      "file_type": "code",
+      "norm_label": "int16_t",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
       "id": "include_miinfer_qwen3_gpu_primitives_hpp_int8_t",
       "label": "int8_t",
       "_origin": "ast",
       "community": 161,
-      "community_name": "Q5KDeviceBlock",
+      "community_name": "qwen3_gpu_primitives.hpp",
       "file_type": "code",
       "norm_label": "int8_t",
       "source_file": "",
@@ -21652,7 +21476,7 @@
       "label": "uint8_t",
       "_origin": "ast",
       "community": 161,
-      "community_name": "Q5KDeviceBlock",
+      "community_name": "qwen3_gpu_primitives.hpp",
       "file_type": "code",
       "norm_label": "uint8_t",
       "source_file": "",
@@ -21663,7 +21487,7 @@
       "label": "d",
       "_origin": "ast",
       "community": 161,
-      "community_name": "Q5KDeviceBlock",
+      "community_name": "qwen3_gpu_primitives.hpp",
       "file_type": "code",
       "norm_label": "d",
       "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
@@ -21674,7 +21498,7 @@
       "label": "dmin",
       "_origin": "ast",
       "community": 161,
-      "community_name": "Q5KDeviceBlock",
+      "community_name": "qwen3_gpu_primitives.hpp",
       "file_type": "code",
       "norm_label": "dmin",
       "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
@@ -21685,7 +21509,7 @@
       "label": "qs",
       "_origin": "ast",
       "community": 161,
-      "community_name": "Q5KDeviceBlock",
+      "community_name": "qwen3_gpu_primitives.hpp",
       "file_type": "code",
       "norm_label": "qs",
       "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
@@ -21696,7 +21520,7 @@
       "label": "scales",
       "_origin": "ast",
       "community": 161,
-      "community_name": "Q5KDeviceBlock",
+      "community_name": "qwen3_gpu_primitives.hpp",
       "file_type": "code",
       "norm_label": "scales",
       "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
@@ -21707,7 +21531,7 @@
       "label": "d",
       "_origin": "ast",
       "community": 161,
-      "community_name": "Q5KDeviceBlock",
+      "community_name": "qwen3_gpu_primitives.hpp",
       "file_type": "code",
       "norm_label": "d",
       "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
@@ -21718,7 +21542,7 @@
       "label": "dmin",
       "_origin": "ast",
       "community": 161,
-      "community_name": "Q5KDeviceBlock",
+      "community_name": "qwen3_gpu_primitives.hpp",
       "file_type": "code",
       "norm_label": "dmin",
       "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
@@ -21729,7 +21553,7 @@
       "label": "qh",
       "_origin": "ast",
       "community": 161,
-      "community_name": "Q5KDeviceBlock",
+      "community_name": "qwen3_gpu_primitives.hpp",
       "file_type": "code",
       "norm_label": "qh",
       "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
@@ -21740,7 +21564,7 @@
       "label": "ql",
       "_origin": "ast",
       "community": 161,
-      "community_name": "Q5KDeviceBlock",
+      "community_name": "qwen3_gpu_primitives.hpp",
       "file_type": "code",
       "norm_label": "ql",
       "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
@@ -21751,7 +21575,7 @@
       "label": "scales",
       "_origin": "ast",
       "community": 161,
-      "community_name": "Q5KDeviceBlock",
+      "community_name": "qwen3_gpu_primitives.hpp",
       "file_type": "code",
       "norm_label": "scales",
       "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
@@ -21762,7 +21586,7 @@
       "label": "d",
       "_origin": "ast",
       "community": 161,
-      "community_name": "Q5KDeviceBlock",
+      "community_name": "qwen3_gpu_primitives.hpp",
       "file_type": "code",
       "norm_label": "d",
       "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
@@ -21773,7 +21597,7 @@
       "label": "qh",
       "_origin": "ast",
       "community": 161,
-      "community_name": "Q5KDeviceBlock",
+      "community_name": "qwen3_gpu_primitives.hpp",
       "file_type": "code",
       "norm_label": "qh",
       "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
@@ -21784,7 +21608,7 @@
       "label": "ql",
       "_origin": "ast",
       "community": 161,
-      "community_name": "Q5KDeviceBlock",
+      "community_name": "qwen3_gpu_primitives.hpp",
       "file_type": "code",
       "norm_label": "ql",
       "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
@@ -21795,11 +21619,44 @@
       "label": "scales",
       "_origin": "ast",
       "community": 161,
-      "community_name": "Q5KDeviceBlock",
+      "community_name": "qwen3_gpu_primitives.hpp",
       "file_type": "code",
       "norm_label": "scales",
       "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
       "source_location": "L16"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_primitives_q8kdeviceblock_bsums",
+      "label": "bsums",
+      "_origin": "ast",
+      "community": 161,
+      "community_name": "qwen3_gpu_primitives.hpp",
+      "file_type": "code",
+      "norm_label": "bsums",
+      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
+      "source_location": "L25"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_primitives_q8kdeviceblock_d",
+      "label": "d",
+      "_origin": "ast",
+      "community": 161,
+      "community_name": "qwen3_gpu_primitives.hpp",
+      "file_type": "code",
+      "norm_label": "d",
+      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
+      "source_location": "L23"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_primitives_q8kdeviceblock_qs",
+      "label": "qs",
+      "_origin": "ast",
+      "community": 161,
+      "community_name": "qwen3_gpu_primitives.hpp",
+      "file_type": "code",
+      "norm_label": "qs",
+      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
+      "source_location": "L24"
     },
     {
       "id": "experiments_exp_0042_m6a0_qwen38_27b_gguf_audit",
@@ -22041,6 +21898,17 @@
       "source_location": ""
     },
     {
+      "id": "include_miinfer_qwen3_layer_hpp_vector",
+      "label": "vector",
+      "_origin": "ast",
+      "community": 163,
+      "community_name": "Qwen3Layer0KvCache",
+      "file_type": "code",
+      "norm_label": "vector",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
       "id": "include_miinfer_qwen3_layer_qwen3decodecache_caches",
       "label": "caches_",
       "_origin": "ast",
@@ -22061,17 +21929,6 @@
       "norm_label": "length",
       "source_file": "include/miinfer/qwen3_layer.hpp",
       "source_location": "L96"
-    },
-    {
-      "id": "include_miinfer_qwen3_layer_qwen3decodecache_reset",
-      "label": "reset",
-      "_origin": "ast",
-      "community": 163,
-      "community_name": "Qwen3Layer0KvCache",
-      "file_type": "code",
-      "norm_label": "reset",
-      "source_file": "include/miinfer/qwen3_layer.hpp",
-      "source_location": "L94"
     },
     {
       "id": "include_miinfer_qwen3_layer_qwen3layer0kvcache_append",
@@ -22474,7 +22331,7 @@
       "label": "qwen3_gpu_layer.hpp",
       "_origin": "ast",
       "community": 166,
-      "community_name": "qwen3_gpu_layer.hpp",
+      "community_name": "Qwen3GpuDecodeCache",
       "file_type": "code",
       "norm_label": "qwen3_gpu_layer.hpp",
       "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
@@ -22485,7 +22342,7 @@
       "label": "vector",
       "_origin": "ast",
       "community": 166,
-      "community_name": "qwen3_gpu_layer.hpp",
+      "community_name": "Qwen3GpuDecodeCache",
       "file_type": "code",
       "norm_label": "vector",
       "source_file": "",
@@ -22496,7 +22353,7 @@
       "label": "current_s_correction",
       "_origin": "ast",
       "community": 166,
-      "community_name": "qwen3_gpu_layer.hpp",
+      "community_name": "Qwen3GpuDecodeCache",
       "file_type": "code",
       "norm_label": "current_s_correction",
       "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
@@ -22507,7 +22364,7 @@
       "label": "direct_signed_oracle",
       "_origin": "ast",
       "community": 166,
-      "community_name": "qwen3_gpu_layer.hpp",
+      "community_name": "Qwen3GpuDecodeCache",
       "file_type": "code",
       "norm_label": "direct_signed_oracle",
       "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
@@ -22518,7 +22375,7 @@
       "label": "exact_sum_correction",
       "_origin": "ast",
       "community": 166,
-      "community_name": "qwen3_gpu_layer.hpp",
+      "community_name": "Qwen3GpuDecodeCache",
       "file_type": "code",
       "norm_label": "exact_sum_correction",
       "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
@@ -22529,7 +22386,7 @@
       "label": "ffn_output",
       "_origin": "ast",
       "community": 166,
-      "community_name": "qwen3_gpu_layer.hpp",
+      "community_name": "Qwen3GpuDecodeCache",
       "file_type": "code",
       "norm_label": "ffn_output",
       "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
@@ -22540,7 +22397,7 @@
       "label": "gate",
       "_origin": "ast",
       "community": 166,
-      "community_name": "qwen3_gpu_layer.hpp",
+      "community_name": "Qwen3GpuDecodeCache",
       "file_type": "code",
       "norm_label": "gate",
       "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
@@ -22551,7 +22408,7 @@
       "label": "layer_output",
       "_origin": "ast",
       "community": 166,
-      "community_name": "qwen3_gpu_layer.hpp",
+      "community_name": "Qwen3GpuDecodeCache",
       "file_type": "code",
       "norm_label": "layer_output",
       "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
@@ -22562,7 +22419,7 @@
       "label": "swiglu",
       "_origin": "ast",
       "community": 166,
-      "community_name": "qwen3_gpu_layer.hpp",
+      "community_name": "Qwen3GpuDecodeCache",
       "file_type": "code",
       "norm_label": "swiglu",
       "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
@@ -22573,53 +22430,64 @@
       "label": "up",
       "_origin": "ast",
       "community": 166,
-      "community_name": "qwen3_gpu_layer.hpp",
+      "community_name": "Qwen3GpuDecodeCache",
       "file_type": "code",
       "norm_label": "up",
       "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
       "source_location": "L208"
     },
     {
+      "id": "include_miinfer_qwen3_gpu_layer_qwen3gpudecodecache_caches",
+      "label": "caches_",
+      "_origin": "ast",
+      "community": 166,
+      "community_name": "Qwen3GpuDecodeCache",
+      "file_type": "code",
+      "norm_label": "caches_",
+      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
+      "source_location": "L278"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_layer_qwen3gpudecodecache_prepare",
+      "label": "prepare",
+      "_origin": "ast",
+      "community": 166,
+      "community_name": "Qwen3GpuDecodeCache",
+      "file_type": "code",
+      "norm_label": "prepare",
+      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
+      "source_location": "L268"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_layer_qwen3gpudecodecache_workspace",
+      "label": "workspace_",
+      "_origin": "ast",
+      "community": 166,
+      "community_name": "Qwen3GpuDecodeCache",
+      "file_type": "code",
+      "norm_label": "workspace_",
+      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
+      "source_location": "L279"
+    },
+    {
       "id": "include_miinfer_qwen3_gpu_layer_qwen3projectionprobetrace_output",
       "label": "output",
       "_origin": "ast",
       "community": 166,
-      "community_name": "qwen3_gpu_layer.hpp",
+      "community_name": "Qwen3GpuDecodeCache",
       "file_type": "code",
       "norm_label": "output",
       "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
       "source_location": "L203"
     },
     {
-      "id": "qwen3projection",
-      "label": "Qwen3Projection",
+      "id": "unique_ptr",
+      "label": "unique_ptr",
       "_origin": "ast",
       "community": 166,
-      "community_name": "qwen3_gpu_layer.hpp",
+      "community_name": "Qwen3GpuDecodeCache",
       "file_type": "code",
-      "norm_label": "qwen3projection",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "qwen3projectionprecision",
-      "label": "Qwen3ProjectionPrecision",
-      "_origin": "ast",
-      "community": 166,
-      "community_name": "qwen3_gpu_layer.hpp",
-      "file_type": "code",
-      "norm_label": "qwen3projectionprecision",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "src_qwen3_gpu_layer_cpp_span",
-      "label": "span",
-      "_origin": "ast",
-      "community": 166,
-      "community_name": "qwen3_gpu_layer.hpp",
-      "file_type": "code",
-      "norm_label": "span",
+      "norm_label": "unique_ptr",
       "source_file": "",
       "source_location": ""
     },
@@ -22760,64 +22628,9 @@
       "label": "Buffer",
       "_origin": "ast",
       "community": 168,
-      "community_name": "size_t",
+      "community_name": "uint32_t",
       "file_type": "code",
       "norm_label": "buffer",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives_hpp_int16_t",
-      "label": "int16_t",
-      "_origin": "ast",
-      "community": 168,
-      "community_name": "size_t",
-      "file_type": "code",
-      "norm_label": "int16_t",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives_q8kdeviceblock_bsums",
-      "label": "bsums",
-      "_origin": "ast",
-      "community": 168,
-      "community_name": "size_t",
-      "file_type": "code",
-      "norm_label": "bsums",
-      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
-      "source_location": "L25"
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives_q8kdeviceblock_d",
-      "label": "d",
-      "_origin": "ast",
-      "community": 168,
-      "community_name": "size_t",
-      "file_type": "code",
-      "norm_label": "d",
-      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
-      "source_location": "L23"
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_primitives_q8kdeviceblock_qs",
-      "label": "qs",
-      "_origin": "ast",
-      "community": 168,
-      "community_name": "size_t",
-      "file_type": "code",
-      "norm_label": "qs",
-      "source_file": "include/miinfer/qwen3_gpu_primitives.hpp",
-      "source_location": "L24"
-    },
-    {
-      "id": "tools_m6a21_qwen35_gpu_hybrid_block_cpp_size_t",
-      "label": "size_t",
-      "_origin": "ast",
-      "community": 168,
-      "community_name": "size_t",
-      "file_type": "code",
-      "norm_label": "size_t",
       "source_file": "",
       "source_location": ""
     },
@@ -22826,7 +22639,7 @@
       "label": "string",
       "_origin": "ast",
       "community": 168,
-      "community_name": "size_t",
+      "community_name": "uint32_t",
       "file_type": "code",
       "norm_label": "string",
       "source_file": "",
@@ -22837,7 +22650,7 @@
       "label": "uint32_t",
       "_origin": "ast",
       "community": 168,
-      "community_name": "size_t",
+      "community_name": "uint32_t",
       "file_type": "code",
       "norm_label": "uint32_t",
       "source_file": "",
@@ -22848,7 +22661,7 @@
       "label": "kStateElements",
       "_origin": "ast",
       "community": 168,
-      "community_name": "size_t",
+      "community_name": "uint32_t",
       "file_type": "code",
       "norm_label": "kstateelements",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
@@ -22859,7 +22672,7 @@
       "label": "position",
       "_origin": "ast",
       "community": 168,
-      "community_name": "size_t",
+      "community_name": "uint32_t",
       "file_type": "code",
       "norm_label": "position",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
@@ -23272,84 +23085,40 @@
       "label": "buffers_",
       "_origin": "ast",
       "community": 172,
-      "community_name": "Qwen3GpuPlan",
+      "community_name": "print_text",
       "file_type": "code",
       "norm_label": "buffers_",
       "source_file": "include/miinfer/model_plan.hpp",
       "source_location": "L84"
     },
     {
-      "id": "include_miinfer_model_plan_qwen3gpuplan_build",
-      "label": "build",
-      "_origin": "ast",
-      "community": 172,
-      "community_name": "Qwen3GpuPlan",
-      "file_type": "code",
-      "norm_label": "build",
-      "source_file": "include/miinfer/model_plan.hpp",
-      "source_location": "L61"
-    },
-    {
       "id": "include_miinfer_model_plan_qwen3gpuplan_device",
       "label": "device_",
       "_origin": "ast",
       "community": 172,
-      "community_name": "Qwen3GpuPlan",
+      "community_name": "print_text",
       "file_type": "code",
       "norm_label": "device_",
       "source_file": "include/miinfer/model_plan.hpp",
       "source_location": "L86"
     },
     {
-      "id": "include_miinfer_model_plan_qwen3gpuplan_device_tensor_data",
-      "label": "device_tensor_data",
-      "_origin": "ast",
-      "community": 172,
-      "community_name": "Qwen3GpuPlan",
-      "file_type": "code",
-      "norm_label": "device_tensor_data",
-      "source_file": "include/miinfer/model_plan.hpp",
-      "source_location": "L76"
-    },
-    {
       "id": "include_miinfer_model_plan_qwen3gpuplan_kernel_for",
       "label": "kernel_for",
       "_origin": "ast",
       "community": 172,
-      "community_name": "Qwen3GpuPlan",
+      "community_name": "print_text",
       "file_type": "code",
       "norm_label": "kernel_for",
       "source_file": "include/miinfer/model_plan.hpp",
       "source_location": "L77"
     },
     {
-      "id": "include_miinfer_model_plan_qwen3gpuplan_model",
-      "label": "model_",
-      "_origin": "ast",
-      "community": 172,
-      "community_name": "Qwen3GpuPlan",
-      "file_type": "code",
-      "norm_label": "model_",
-      "source_file": "include/miinfer/model_plan.hpp",
-      "source_location": "L81"
-    },
-    {
-      "id": "include_miinfer_model_plan_qwen3gpuplan_tensors",
-      "label": "tensors_",
-      "_origin": "ast",
-      "community": 172,
-      "community_name": "Qwen3GpuPlan",
-      "file_type": "code",
-      "norm_label": "tensors_",
-      "source_file": "include/miinfer/model_plan.hpp",
-      "source_location": "L83"
-    },
-    {
       "id": "include_miinfer_model_plan_qwen3gpuplan_verify_tensor_sample",
       "label": "verify_tensor_sample",
       "_origin": "ast",
       "community": 172,
-      "community_name": "Qwen3GpuPlan",
+      "community_name": "print_text",
       "file_type": "code",
       "norm_label": "verify_tensor_sample",
       "source_file": "include/miinfer/model_plan.hpp",
@@ -23360,7 +23129,7 @@
       "label": "weights_",
       "_origin": "ast",
       "community": 172,
-      "community_name": "Qwen3GpuPlan",
+      "community_name": "print_text",
       "file_type": "code",
       "norm_label": "weights_",
       "source_file": "include/miinfer/model_plan.hpp",
@@ -23371,7 +23140,7 @@
       "label": "map",
       "_origin": "ast",
       "community": 172,
-      "community_name": "Qwen3GpuPlan",
+      "community_name": "print_text",
       "file_type": "code",
       "norm_label": "map",
       "source_file": "",
@@ -23382,7 +23151,7 @@
       "label": "model_info.cpp",
       "_origin": "ast",
       "community": 172,
-      "community_name": "Qwen3GpuPlan",
+      "community_name": "print_text",
       "file_type": "code",
       "norm_label": "model_info.cpp",
       "source_file": "tests/model_info.cpp",
@@ -23393,7 +23162,7 @@
       "label": "size_t",
       "_origin": "ast",
       "community": 172,
-      "community_name": "Qwen3GpuPlan",
+      "community_name": "print_text",
       "file_type": "code",
       "norm_label": "size_t",
       "source_file": "",
@@ -23404,22 +23173,11 @@
       "label": "string",
       "_origin": "ast",
       "community": 172,
-      "community_name": "Qwen3GpuPlan",
+      "community_name": "print_text",
       "file_type": "code",
       "norm_label": "string",
       "source_file": "",
       "source_location": ""
-    },
-    {
-      "id": "tools_m6a21_qwen35_gpu_hybrid_block_recurrenttrace_layer",
-      "label": "layer",
-      "_origin": "ast",
-      "community": 172,
-      "community_name": "Qwen3GpuPlan",
-      "file_type": "code",
-      "norm_label": "layer",
-      "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
-      "source_location": "L186"
     },
     {
       "id": "function",
@@ -25474,6 +25232,28 @@
       "file_type": "code",
       "norm_label": "qwen3_tokenizer.hpp",
       "source_file": "include/miinfer/qwen3_tokenizer.hpp",
+      "source_location": "L1"
+    },
+    {
+      "id": "tests_qwen3_primitives_host_test",
+      "label": "qwen3_primitives_host_test.cpp",
+      "_origin": "ast",
+      "community": 185,
+      "community_name": "vector",
+      "file_type": "code",
+      "norm_label": "qwen3_primitives_host_test.cpp",
+      "source_file": "tests/qwen3_primitives_host_test.cpp",
+      "source_location": "L1"
+    },
+    {
+      "id": "tests_qwen3_tokenizer_test",
+      "label": "qwen3_tokenizer_test.cpp",
+      "_origin": "ast",
+      "community": 185,
+      "community_name": "vector",
+      "file_type": "code",
+      "norm_label": "qwen3_tokenizer_test.cpp",
+      "source_file": "tests/qwen3_tokenizer_test.cpp",
       "source_location": "L1"
     },
     {
@@ -30256,37 +30036,15 @@
       "source_location": "L3"
     },
     {
-      "id": "include_miinfer_qwen35_model_qwen35model_tensor",
-      "label": "tensor",
+      "id": "tools_m6a19_qwen35_conv_gpu",
+      "label": "m6a19_qwen35_conv_gpu.cpp",
       "_origin": "ast",
       "community": 217,
       "community_name": "m6a3_qwen35_layer.cpp",
       "file_type": "code",
-      "norm_label": "tensor",
-      "source_file": "include/miinfer/qwen35_model.hpp",
-      "source_location": "L52"
-    },
-    {
-      "id": "tools_m6a17_qwen35_composition_ladder_cpp_uint32_t",
-      "label": "uint32_t",
-      "_origin": "ast",
-      "community": 217,
-      "community_name": "m6a3_qwen35_layer.cpp",
-      "file_type": "code",
-      "norm_label": "uint32_t",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "tools_m6a20_qwen35_recurrent_layer_gpu_cpp_span",
-      "label": "span",
-      "_origin": "ast",
-      "community": 217,
-      "community_name": "m6a3_qwen35_layer.cpp",
-      "file_type": "code",
-      "norm_label": "span",
-      "source_file": "",
-      "source_location": ""
+      "norm_label": "m6a19_qwen35_conv_gpu.cpp",
+      "source_file": "tools/m6a19_qwen35_conv_gpu.cpp",
+      "source_location": "L1"
     },
     {
       "id": "tools_m6a3_qwen35_layer",
@@ -30355,17 +30113,6 @@
       "source_location": ""
     },
     {
-      "id": "tools_m6a3_qwen35_layer_cpp_uint32_t",
-      "label": "uint32_t",
-      "_origin": "ast",
-      "community": 217,
-      "community_name": "m6a3_qwen35_layer.cpp",
-      "file_type": "code",
-      "norm_label": "uint32_t",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
       "id": "tools_m6a3_qwen35_layer_cpp_vector",
       "label": "vector",
       "_origin": "ast",
@@ -30408,61 +30155,6 @@
       "norm_label": "rmse",
       "source_file": "tools/m6a3_qwen35_layer.cpp",
       "source_location": "L70"
-    },
-    {
-      "id": "tools_m6a5_qwen35_hybrid_block_cpp_array",
-      "label": "array",
-      "_origin": "ast",
-      "community": 217,
-      "community_name": "m6a3_qwen35_layer.cpp",
-      "file_type": "code",
-      "norm_label": "array",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "tools_m6a5_qwen35_hybrid_block_cpp_kchannels",
-      "label": "kChannels",
-      "_origin": "ast",
-      "community": 217,
-      "community_name": "m6a3_qwen35_layer.cpp",
-      "file_type": "code",
-      "norm_label": "kchannels",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "tools_m6a5_qwen35_hybrid_block_cpp_size_t",
-      "label": "size_t",
-      "_origin": "ast",
-      "community": 217,
-      "community_name": "m6a3_qwen35_layer.cpp",
-      "file_type": "code",
-      "norm_label": "size_t",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "tools_m6a5_qwen35_hybrid_block_cpp_span",
-      "label": "span",
-      "_origin": "ast",
-      "community": 217,
-      "community_name": "m6a3_qwen35_layer.cpp",
-      "file_type": "code",
-      "norm_label": "span",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "tools_m6a5_qwen35_hybrid_block_cpp_vector",
-      "label": "vector",
-      "_origin": "ast",
-      "community": 217,
-      "community_name": "m6a3_qwen35_layer.cpp",
-      "file_type": "code",
-      "norm_label": "vector",
-      "source_file": "",
-      "source_location": ""
     },
     {
       "id": "experiments_exp_0029_m5c9c_gate_up_q8_reuse",
@@ -33763,6 +33455,17 @@
       "source_location": "L85"
     },
     {
+      "id": "include_miinfer_qwen35_model_qwen35model_tensor",
+      "label": "tensor",
+      "_origin": "ast",
+      "community": 245,
+      "community_name": "array",
+      "file_type": "code",
+      "norm_label": "tensor",
+      "source_file": "include/miinfer/qwen35_model.hpp",
+      "source_location": "L52"
+    },
+    {
       "id": "include_miinfer_qwen3_gpu_layer_hpp_array",
       "label": "array",
       "_origin": "ast",
@@ -33774,39 +33477,6 @@
       "source_location": ""
     },
     {
-      "id": "src_sha256",
-      "label": "sha256.cpp",
-      "_origin": "ast",
-      "community": 245,
-      "community_name": "array",
-      "file_type": "code",
-      "norm_label": "sha256.cpp",
-      "source_file": "src/sha256.cpp",
-      "source_location": "L1"
-    },
-    {
-      "id": "tests_qwen3_primitives_host_test",
-      "label": "qwen3_primitives_host_test.cpp",
-      "_origin": "ast",
-      "community": 245,
-      "community_name": "array",
-      "file_type": "code",
-      "norm_label": "qwen3_primitives_host_test.cpp",
-      "source_file": "tests/qwen3_primitives_host_test.cpp",
-      "source_location": "L1"
-    },
-    {
-      "id": "tests_qwen3_tokenizer_test",
-      "label": "qwen3_tokenizer_test.cpp",
-      "_origin": "ast",
-      "community": 245,
-      "community_name": "array",
-      "file_type": "code",
-      "norm_label": "qwen3_tokenizer_test.cpp",
-      "source_file": "tests/qwen3_tokenizer_test.cpp",
-      "source_location": "L1"
-    },
-    {
       "id": "tools_m6a5_qwen35_hybrid_block",
       "label": "m6a5_qwen35_hybrid_block.cpp",
       "_origin": "ast",
@@ -33816,6 +33486,61 @@
       "norm_label": "m6a5_qwen35_hybrid_block.cpp",
       "source_file": "tools/m6a5_qwen35_hybrid_block.cpp",
       "source_location": "L1"
+    },
+    {
+      "id": "tools_m6a5_qwen35_hybrid_block_cpp_array",
+      "label": "array",
+      "_origin": "ast",
+      "community": 245,
+      "community_name": "array",
+      "file_type": "code",
+      "norm_label": "array",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "tools_m6a5_qwen35_hybrid_block_cpp_kchannels",
+      "label": "kChannels",
+      "_origin": "ast",
+      "community": 245,
+      "community_name": "array",
+      "file_type": "code",
+      "norm_label": "kchannels",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "tools_m6a5_qwen35_hybrid_block_cpp_size_t",
+      "label": "size_t",
+      "_origin": "ast",
+      "community": 245,
+      "community_name": "array",
+      "file_type": "code",
+      "norm_label": "size_t",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "tools_m6a5_qwen35_hybrid_block_cpp_span",
+      "label": "span",
+      "_origin": "ast",
+      "community": 245,
+      "community_name": "array",
+      "file_type": "code",
+      "norm_label": "span",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "tools_m6a5_qwen35_hybrid_block_cpp_vector",
+      "label": "vector",
+      "_origin": "ast",
+      "community": 245,
+      "community_name": "array",
+      "file_type": "code",
+      "norm_label": "vector",
+      "source_file": "",
+      "source_location": ""
     },
     {
       "id": "tools_m6a6_qwen35_full_forward",
@@ -38450,6 +38175,61 @@
       "source_location": "L3"
     },
     {
+      "id": "include_miinfer_fp16_gemv",
+      "label": "fp16_gemv.hpp",
+      "_origin": "ast",
+      "community": 282,
+      "community_name": "GemvShape",
+      "file_type": "code",
+      "norm_label": "fp16_gemv.hpp",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L1"
+    },
+    {
+      "id": "include_miinfer_fp16_gemv_gemvkernelresources_local_bytes",
+      "label": "local_bytes",
+      "_origin": "ast",
+      "community": 282,
+      "community_name": "GemvShape",
+      "file_type": "code",
+      "norm_label": "local_bytes",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L90"
+    },
+    {
+      "id": "include_miinfer_fp16_gemv_gemvkernelresources_max_threads_per_block",
+      "label": "max_threads_per_block",
+      "_origin": "ast",
+      "community": 282,
+      "community_name": "GemvShape",
+      "file_type": "code",
+      "norm_label": "max_threads_per_block",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L91"
+    },
+    {
+      "id": "include_miinfer_fp16_gemv_gemvkernelresources_registers",
+      "label": "registers",
+      "_origin": "ast",
+      "community": 282,
+      "community_name": "GemvShape",
+      "file_type": "code",
+      "norm_label": "registers",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L88"
+    },
+    {
+      "id": "include_miinfer_fp16_gemv_gemvkernelresources_shared_bytes",
+      "label": "shared_bytes",
+      "_origin": "ast",
+      "community": 282,
+      "community_name": "GemvShape",
+      "file_type": "code",
+      "norm_label": "shared_bytes",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L89"
+    },
+    {
       "id": "include_miinfer_fp16_gemv_gemvshape_id",
       "label": "id",
       "_origin": "ast",
@@ -38492,6 +38272,28 @@
       "norm_label": "projection",
       "source_file": "include/miinfer/fp16_gemv.hpp",
       "source_location": "L14"
+    },
+    {
+      "id": "include_miinfer_fp16_gemv_hpp_size_t",
+      "label": "size_t",
+      "_origin": "ast",
+      "community": 282,
+      "community_name": "GemvShape",
+      "file_type": "code",
+      "norm_label": "size_t",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "include_miinfer_fp16_gemv_rocblasgemmhandle_opaque",
+      "label": "opaque",
+      "_origin": "ast",
+      "community": 282,
+      "community_name": "GemvShape",
+      "file_type": "code",
+      "norm_label": "opaque",
+      "source_file": "include/miinfer/fp16_gemv.hpp",
+      "source_location": "L97"
     },
     {
       "id": "tests_fp16_gemv_test",
@@ -40257,51 +40059,18 @@
       "label": "size_t",
       "_origin": "ast",
       "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community_name": "Qwen3Layer0GpuKvCache",
       "file_type": "code",
       "norm_label": "size_t",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "include_miinfer_qwen3_gpu_layer_qwen3gpudecodecache_caches",
-      "label": "caches_",
-      "_origin": "ast",
-      "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
-      "file_type": "code",
-      "norm_label": "caches_",
-      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
-      "source_location": "L278"
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_layer_qwen3gpudecodecache_prepare",
-      "label": "prepare",
-      "_origin": "ast",
-      "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
-      "file_type": "code",
-      "norm_label": "prepare",
-      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
-      "source_location": "L268"
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_layer_qwen3gpudecodecache_workspace",
-      "label": "workspace_",
-      "_origin": "ast",
-      "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
-      "file_type": "code",
-      "norm_label": "workspace_",
-      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
-      "source_location": "L279"
-    },
-    {
       "id": "include_miinfer_qwen3_gpu_layer_qwen3layer0gpukvcache_append",
       "label": "append",
       "_origin": "ast",
       "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community_name": "Qwen3Layer0GpuKvCache",
       "file_type": "code",
       "norm_label": "append",
       "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
@@ -40312,7 +40081,7 @@
       "label": "keys_",
       "_origin": "ast",
       "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community_name": "Qwen3Layer0GpuKvCache",
       "file_type": "code",
       "norm_label": "keys_",
       "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
@@ -40323,66 +40092,44 @@
       "label": "reset",
       "_origin": "ast",
       "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community_name": "Qwen3Layer0GpuKvCache",
       "file_type": "code",
       "norm_label": "reset",
       "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
       "source_location": "L231"
     },
     {
+      "id": "include_miinfer_qwen3_gpu_layer_qwen3layer0gpukvcache_snapshot_keys",
+      "label": "snapshot_keys",
+      "_origin": "ast",
+      "community": 297,
+      "community_name": "Qwen3Layer0GpuKvCache",
+      "file_type": "code",
+      "norm_label": "snapshot_keys",
+      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
+      "source_location": "L239"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_layer_qwen3layer0gpukvcache_snapshot_values",
+      "label": "snapshot_values",
+      "_origin": "ast",
+      "community": 297,
+      "community_name": "Qwen3Layer0GpuKvCache",
+      "file_type": "code",
+      "norm_label": "snapshot_values",
+      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
+      "source_location": "L240"
+    },
+    {
       "id": "include_miinfer_qwen3_gpu_layer_qwen3layer0gpukvcache_values",
       "label": "values_",
       "_origin": "ast",
       "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community_name": "Qwen3Layer0GpuKvCache",
       "file_type": "code",
       "norm_label": "values_",
       "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
       "source_location": "L251"
-    },
-    {
-      "id": "src_qwen3_gpu_layer_cpp_uint32_t",
-      "label": "uint32_t",
-      "_origin": "ast",
-      "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
-      "file_type": "code",
-      "norm_label": "uint32_t",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "src_qwen3_gpu_layer_qwen3gpudecodeworkspace_final_norm",
-      "label": "final_norm",
-      "_origin": "ast",
-      "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
-      "file_type": "code",
-      "norm_label": "final_norm",
-      "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L788"
-    },
-    {
-      "id": "src_qwen3_gpu_layer_qwen3gpudecodeworkspace_output",
-      "label": "output",
-      "_origin": "ast",
-      "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
-      "file_type": "code",
-      "norm_label": "output",
-      "source_file": "src/qwen3_gpu_layer.cpp",
-      "source_location": "L754"
-    },
-    {
-      "id": "unique_ptr",
-      "label": "unique_ptr",
-      "_origin": "ast",
-      "community": 297,
-      "community_name": "Qwen3GpuDecodeCache",
-      "file_type": "code",
-      "norm_label": "unique_ptr",
-      "source_file": "",
-      "source_location": ""
     },
     {
       "id": "experiments_exp_0087_m6a277_qwen35_l0_output_projection_contract",
@@ -41828,48 +41575,125 @@
       "source_location": "L30"
     },
     {
-      "id": "runtimestate",
-      "label": "RuntimeState",
+      "id": "include_miinfer_model_plan_qwen3gpuplan_build",
+      "label": "build",
       "_origin": "ast",
       "community": 308,
-      "community_name": "run_combined",
+      "community_name": "Qwen3GpuPlan",
       "file_type": "code",
-      "norm_label": "runtimestate",
+      "norm_label": "build",
+      "source_file": "include/miinfer/model_plan.hpp",
+      "source_location": "L61"
+    },
+    {
+      "id": "include_miinfer_model_plan_qwen3gpuplan_device_tensor_data",
+      "label": "device_tensor_data",
+      "_origin": "ast",
+      "community": 308,
+      "community_name": "Qwen3GpuPlan",
+      "file_type": "code",
+      "norm_label": "device_tensor_data",
+      "source_file": "include/miinfer/model_plan.hpp",
+      "source_location": "L76"
+    },
+    {
+      "id": "include_miinfer_model_plan_qwen3gpuplan_model",
+      "label": "model_",
+      "_origin": "ast",
+      "community": 308,
+      "community_name": "Qwen3GpuPlan",
+      "file_type": "code",
+      "norm_label": "model_",
+      "source_file": "include/miinfer/model_plan.hpp",
+      "source_location": "L81"
+    },
+    {
+      "id": "include_miinfer_model_plan_qwen3gpuplan_tensors",
+      "label": "tensors_",
+      "_origin": "ast",
+      "community": 308,
+      "community_name": "Qwen3GpuPlan",
+      "file_type": "code",
+      "norm_label": "tensors_",
+      "source_file": "include/miinfer/model_plan.hpp",
+      "source_location": "L83"
+    },
+    {
+      "id": "qwen3projection",
+      "label": "Qwen3Projection",
+      "_origin": "ast",
+      "community": 308,
+      "community_name": "Qwen3GpuPlan",
+      "file_type": "code",
+      "norm_label": "qwen3projection",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "tools_m6a16_qwen35_hybrid_block_4_7_audit",
-      "label": "m6a16_qwen35_hybrid_block_4_7_audit.cpp",
+      "id": "qwen3projectionprecision",
+      "label": "Qwen3ProjectionPrecision",
       "_origin": "ast",
       "community": 308,
-      "community_name": "run_combined",
+      "community_name": "Qwen3GpuPlan",
       "file_type": "code",
-      "norm_label": "m6a16_qwen35_hybrid_block_4_7_audit.cpp",
-      "source_file": "tools/m6a16_qwen35_hybrid_block_4_7_audit.cpp",
-      "source_location": "L1"
+      "norm_label": "qwen3projectionprecision",
+      "source_file": "",
+      "source_location": ""
     },
     {
-      "id": "tools_m6a16_qwen35_hybrid_block_4_7_audit_cpp_uint32_t",
+      "id": "src_qwen3_gpu_layer_cpp_span",
+      "label": "span",
+      "_origin": "ast",
+      "community": 308,
+      "community_name": "Qwen3GpuPlan",
+      "file_type": "code",
+      "norm_label": "span",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "src_qwen3_gpu_layer_cpp_uint32_t",
       "label": "uint32_t",
       "_origin": "ast",
       "community": 308,
-      "community_name": "run_combined",
+      "community_name": "Qwen3GpuPlan",
       "file_type": "code",
       "norm_label": "uint32_t",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "tools_m6a16_qwen35_hybrid_block_4_7_audit_cpp_vector",
-      "label": "vector",
+      "id": "src_qwen3_gpu_layer_qwen3gpudecodeworkspace_final_norm",
+      "label": "final_norm",
       "_origin": "ast",
       "community": 308,
-      "community_name": "run_combined",
+      "community_name": "Qwen3GpuPlan",
       "file_type": "code",
-      "norm_label": "vector",
-      "source_file": "",
-      "source_location": ""
+      "norm_label": "final_norm",
+      "source_file": "src/qwen3_gpu_layer.cpp",
+      "source_location": "L788"
+    },
+    {
+      "id": "src_qwen3_gpu_layer_qwen3gpudecodeworkspace_output",
+      "label": "output",
+      "_origin": "ast",
+      "community": 308,
+      "community_name": "Qwen3GpuPlan",
+      "file_type": "code",
+      "norm_label": "output",
+      "source_file": "src/qwen3_gpu_layer.cpp",
+      "source_location": "L754"
+    },
+    {
+      "id": "tools_m6a21_qwen35_gpu_hybrid_block_recurrenttrace_layer",
+      "label": "layer",
+      "_origin": "ast",
+      "community": 308,
+      "community_name": "Qwen3GpuPlan",
+      "file_type": "code",
+      "norm_label": "layer",
+      "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
+      "source_location": "L186"
     },
     {
       "id": "experiments_exp_0113_m6b20_q6k_mmvq_qkv",
@@ -43242,22 +43066,11 @@
       "source_location": "L753"
     },
     {
-      "id": "include_miinfer_gguf_gguffile_path",
-      "label": "path_",
-      "_origin": "ast",
-      "community": 320,
-      "community_name": "path_",
-      "file_type": "code",
-      "norm_label": "path_",
-      "source_file": "include/miinfer/gguf.hpp",
-      "source_location": "L74"
-    },
-    {
       "id": "tools_m6a20_qwen35_recurrent_layer_gpu",
       "label": "m6a20_qwen35_recurrent_layer_gpu.cpp",
       "_origin": "ast",
       "community": 320,
-      "community_name": "path_",
+      "community_name": "main",
       "file_type": "code",
       "norm_label": "m6a20_qwen35_recurrent_layer_gpu.cpp",
       "source_file": "tools/m6a20_qwen35_recurrent_layer_gpu.cpp",
@@ -43268,7 +43081,7 @@
       "label": "Metrics",
       "_origin": "ast",
       "community": 320,
-      "community_name": "path_",
+      "community_name": "main",
       "file_type": "code",
       "norm_label": "metrics",
       "source_file": "",
@@ -43279,9 +43092,20 @@
       "label": "size_t",
       "_origin": "ast",
       "community": 320,
-      "community_name": "path_",
+      "community_name": "main",
       "file_type": "code",
       "norm_label": "size_t",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "tools_m6a20_qwen35_recurrent_layer_gpu_cpp_span",
+      "label": "span",
+      "_origin": "ast",
+      "community": 320,
+      "community_name": "main",
+      "file_type": "code",
+      "norm_label": "span",
       "source_file": "",
       "source_location": ""
     },
@@ -43290,7 +43114,7 @@
       "label": "T",
       "_origin": "ast",
       "community": 320,
-      "community_name": "path_",
+      "community_name": "main",
       "file_type": "code",
       "norm_label": "t",
       "source_file": "",
@@ -43301,7 +43125,7 @@
       "label": "uint32_t",
       "_origin": "ast",
       "community": 320,
-      "community_name": "path_",
+      "community_name": "main",
       "file_type": "code",
       "norm_label": "uint32_t",
       "source_file": "",
@@ -43312,7 +43136,7 @@
       "label": "data_",
       "_origin": "ast",
       "community": 320,
-      "community_name": "path_",
+      "community_name": "main",
       "file_type": "code",
       "norm_label": "data_",
       "source_file": "tools/m6a20_qwen35_recurrent_layer_gpu.cpp",
@@ -43451,103 +43275,114 @@
       "source_location": "L3"
     },
     {
-      "id": "include_miinfer_qwen3_layer_hpp_vector",
-      "label": "vector",
+      "id": "bench_qwen3_decode_profile",
+      "label": "qwen3_decode_profile.cpp",
       "_origin": "ast",
       "community": 322,
-      "community_name": "Qwen3ForwardTrace",
+      "community_name": "qwen3_decode_profile.cpp",
       "file_type": "code",
-      "norm_label": "vector",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "include_miinfer_qwen3_layer_qwen3forwardtrace_embedding",
-      "label": "embedding",
-      "_origin": "ast",
-      "community": 322,
-      "community_name": "Qwen3ForwardTrace",
-      "file_type": "code",
-      "norm_label": "embedding",
-      "source_file": "include/miinfer/qwen3_layer.hpp",
-      "source_location": "L53"
-    },
-    {
-      "id": "include_miinfer_qwen3_layer_qwen3forwardtrace_final_norm",
-      "label": "final_norm",
-      "_origin": "ast",
-      "community": 322,
-      "community_name": "Qwen3ForwardTrace",
-      "file_type": "code",
-      "norm_label": "final_norm",
-      "source_file": "include/miinfer/qwen3_layer.hpp",
-      "source_location": "L55"
-    },
-    {
-      "id": "include_miinfer_qwen3_layer_qwen3forwardtrace_layer_outputs",
-      "label": "layer_outputs",
-      "_origin": "ast",
-      "community": 322,
-      "community_name": "Qwen3ForwardTrace",
-      "file_type": "code",
-      "norm_label": "layer_outputs",
-      "source_file": "include/miinfer/qwen3_layer.hpp",
-      "source_location": "L54"
-    },
-    {
-      "id": "include_miinfer_qwen3_layer_qwen3forwardtrace_logits",
-      "label": "logits",
-      "_origin": "ast",
-      "community": 322,
-      "community_name": "Qwen3ForwardTrace",
-      "file_type": "code",
-      "norm_label": "logits",
-      "source_file": "include/miinfer/qwen3_layer.hpp",
-      "source_location": "L56"
-    },
-    {
-      "id": "tests_qwen3_decode_gpu_test",
-      "label": "qwen3_decode_gpu_test.cpp",
-      "_origin": "ast",
-      "community": 322,
-      "community_name": "Qwen3ForwardTrace",
-      "file_type": "code",
-      "norm_label": "qwen3_decode_gpu_test.cpp",
-      "source_file": "tests/qwen3_decode_gpu_test.cpp",
+      "norm_label": "qwen3_decode_profile.cpp",
+      "source_file": "bench/qwen3_decode_profile.cpp",
       "source_location": "L1"
     },
     {
-      "id": "tests_qwen3_decode_gpu_test_cpp_size_t",
-      "label": "size_t",
-      "_origin": "ast",
-      "community": 322,
-      "community_name": "Qwen3ForwardTrace",
-      "file_type": "code",
-      "norm_label": "size_t",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "tests_qwen3_decode_gpu_test_cpp_string",
+      "id": "bench_qwen3_decode_profile_cpp_string",
       "label": "string",
       "_origin": "ast",
       "community": 322,
-      "community_name": "Qwen3ForwardTrace",
+      "community_name": "qwen3_decode_profile.cpp",
       "file_type": "code",
       "norm_label": "string",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "tests_qwen3_decode_gpu_test_cpp_vector",
-      "label": "vector",
+      "id": "bench_qwen3_decode_profile_cpp_timespec",
+      "label": "timespec",
       "_origin": "ast",
       "community": 322,
-      "community_name": "Qwen3ForwardTrace",
+      "community_name": "qwen3_decode_profile.cpp",
       "file_type": "code",
-      "norm_label": "vector",
+      "norm_label": "timespec",
       "source_file": "",
       "source_location": ""
+    },
+    {
+      "id": "bench_qwen3_decode_profile_cpp_uint32_t",
+      "label": "uint32_t",
+      "_origin": "ast",
+      "community": 322,
+      "community_name": "qwen3_decode_profile.cpp",
+      "file_type": "code",
+      "norm_label": "uint32_t",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "bench_qwen3_decode_profile_options_decode_token",
+      "label": "decode_token",
+      "_origin": "ast",
+      "community": 322,
+      "community_name": "qwen3_decode_profile.cpp",
+      "file_type": "code",
+      "norm_label": "decode_token",
+      "source_file": "bench/qwen3_decode_profile.cpp",
+      "source_location": "L43"
+    },
+    {
+      "id": "bench_qwen3_decode_profile_options_json_output",
+      "label": "json_output",
+      "_origin": "ast",
+      "community": 322,
+      "community_name": "qwen3_decode_profile.cpp",
+      "file_type": "code",
+      "norm_label": "json_output",
+      "source_file": "bench/qwen3_decode_profile.cpp",
+      "source_location": "L44"
+    },
+    {
+      "id": "bench_qwen3_decode_profile_options_model_path",
+      "label": "model_path",
+      "_origin": "ast",
+      "community": 322,
+      "community_name": "qwen3_decode_profile.cpp",
+      "file_type": "code",
+      "norm_label": "model_path",
+      "source_file": "bench/qwen3_decode_profile.cpp",
+      "source_location": "L41"
+    },
+    {
+      "id": "bench_qwen3_decode_profile_options_prompt_token",
+      "label": "prompt_token",
+      "_origin": "ast",
+      "community": 322,
+      "community_name": "qwen3_decode_profile.cpp",
+      "file_type": "code",
+      "norm_label": "prompt_token",
+      "source_file": "bench/qwen3_decode_profile.cpp",
+      "source_location": "L42"
+    },
+    {
+      "id": "bench_qwen3_decode_profile_timepoint_value",
+      "label": "value",
+      "_origin": "ast",
+      "community": 322,
+      "community_name": "qwen3_decode_profile.cpp",
+      "file_type": "code",
+      "norm_label": "value",
+      "source_file": "bench/qwen3_decode_profile.cpp",
+      "source_location": "L23"
+    },
+    {
+      "id": "include_miinfer_qwen3_gpu_layer_qwen3gpudecodecache_length",
+      "label": "length",
+      "_origin": "ast",
+      "community": 322,
+      "community_name": "qwen3_decode_profile.cpp",
+      "file_type": "code",
+      "norm_label": "length",
+      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
+      "source_location": "L270"
     },
     {
       "id": "experiments_exp_0116_m6b24_full_attention_attribution",
@@ -45635,22 +45470,11 @@
       "source_location": "L199"
     },
     {
-      "id": "tools_m6a19_qwen35_conv_gpu",
-      "label": "m6a19_qwen35_conv_gpu.cpp",
-      "_origin": "ast",
-      "community": 340,
-      "community_name": "m6a19_qwen35_conv_gpu.cpp",
-      "file_type": "code",
-      "norm_label": "m6a19_qwen35_conv_gpu.cpp",
-      "source_file": "tools/m6a19_qwen35_conv_gpu.cpp",
-      "source_location": "L1"
-    },
-    {
       "id": "tools_m6a19_qwen35_conv_gpu_cpp_size_t",
       "label": "size_t",
       "_origin": "ast",
       "community": 340,
-      "community_name": "m6a19_qwen35_conv_gpu.cpp",
+      "community_name": "DeviceBuffer",
       "file_type": "code",
       "norm_label": "size_t",
       "source_file": "",
@@ -45661,7 +45485,7 @@
       "label": "T",
       "_origin": "ast",
       "community": 340,
-      "community_name": "m6a19_qwen35_conv_gpu.cpp",
+      "community_name": "DeviceBuffer",
       "file_type": "code",
       "norm_label": "t",
       "source_file": "",
@@ -45672,7 +45496,7 @@
       "label": "data_",
       "_origin": "ast",
       "community": 340,
-      "community_name": "m6a19_qwen35_conv_gpu.cpp",
+      "community_name": "DeviceBuffer",
       "file_type": "code",
       "norm_label": "data_",
       "source_file": "tools/m6a19_qwen35_conv_gpu.cpp",
@@ -45831,61 +45655,6 @@
       "source_location": ""
     },
     {
-      "id": "tools_m6a21_qwen35_gpu_hybrid_block_keypathcapture_input",
-      "label": "input",
-      "_origin": "ast",
-      "community": 343,
-      "community_name": "RecurrentOperands",
-      "file_type": "code",
-      "norm_label": "input",
-      "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
-      "source_location": "L254"
-    },
-    {
-      "id": "tools_m6a21_qwen35_gpu_hybrid_block_keypathcapture_key",
-      "label": "key",
-      "_origin": "ast",
-      "community": 343,
-      "community_name": "RecurrentOperands",
-      "file_type": "code",
-      "norm_label": "key",
-      "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
-      "source_location": "L257"
-    },
-    {
-      "id": "tools_m6a21_qwen35_gpu_hybrid_block_keypathcapture_key_norm",
-      "label": "key_norm",
-      "_origin": "ast",
-      "community": 343,
-      "community_name": "RecurrentOperands",
-      "file_type": "code",
-      "norm_label": "key_norm",
-      "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
-      "source_location": "L258"
-    },
-    {
-      "id": "tools_m6a21_qwen35_gpu_hybrid_block_keypathcapture_normalized",
-      "label": "normalized",
-      "_origin": "ast",
-      "community": 343,
-      "community_name": "RecurrentOperands",
-      "file_type": "code",
-      "norm_label": "normalized",
-      "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
-      "source_location": "L255"
-    },
-    {
-      "id": "tools_m6a21_qwen35_gpu_hybrid_block_keypathcapture_qkv",
-      "label": "qkv",
-      "_origin": "ast",
-      "community": 343,
-      "community_name": "RecurrentOperands",
-      "file_type": "code",
-      "norm_label": "qkv",
-      "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
-      "source_location": "L256"
-    },
-    {
       "id": "tools_m6a21_qwen35_gpu_hybrid_block_outputprojectionpathcapture_gated",
       "label": "gated",
       "_origin": "ast",
@@ -46007,18 +45776,84 @@
       "source_location": "L248"
     },
     {
-      "id": "bench_qwen3_decode_profile",
-      "label": "qwen3_decode_profile.cpp",
+      "id": "include_miinfer_qwen3_layer_qwen3decodecache_reset",
+      "label": "reset",
       "_origin": "ast",
       "community": 344,
       "community_name": "qwen3_decode_sequence_gpu_test.cpp",
       "file_type": "code",
-      "norm_label": "qwen3_decode_profile.cpp",
-      "source_file": "bench/qwen3_decode_profile.cpp",
+      "norm_label": "reset",
+      "source_file": "include/miinfer/qwen3_layer.hpp",
+      "source_location": "L94"
+    },
+    {
+      "id": "include_miinfer_qwen3_layer_qwen3forwardtrace_embedding",
+      "label": "embedding",
+      "_origin": "ast",
+      "community": 344,
+      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
+      "file_type": "code",
+      "norm_label": "embedding",
+      "source_file": "include/miinfer/qwen3_layer.hpp",
+      "source_location": "L53"
+    },
+    {
+      "id": "include_miinfer_qwen3_layer_qwen3forwardtrace_final_norm",
+      "label": "final_norm",
+      "_origin": "ast",
+      "community": 344,
+      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
+      "file_type": "code",
+      "norm_label": "final_norm",
+      "source_file": "include/miinfer/qwen3_layer.hpp",
+      "source_location": "L55"
+    },
+    {
+      "id": "include_miinfer_qwen3_layer_qwen3forwardtrace_layer_outputs",
+      "label": "layer_outputs",
+      "_origin": "ast",
+      "community": 344,
+      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
+      "file_type": "code",
+      "norm_label": "layer_outputs",
+      "source_file": "include/miinfer/qwen3_layer.hpp",
+      "source_location": "L54"
+    },
+    {
+      "id": "include_miinfer_qwen3_layer_qwen3forwardtrace_logits",
+      "label": "logits",
+      "_origin": "ast",
+      "community": 344,
+      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
+      "file_type": "code",
+      "norm_label": "logits",
+      "source_file": "include/miinfer/qwen3_layer.hpp",
+      "source_location": "L56"
+    },
+    {
+      "id": "tests_qwen3_decode_gpu_test",
+      "label": "qwen3_decode_gpu_test.cpp",
+      "_origin": "ast",
+      "community": 344,
+      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
+      "file_type": "code",
+      "norm_label": "qwen3_decode_gpu_test.cpp",
+      "source_file": "tests/qwen3_decode_gpu_test.cpp",
       "source_location": "L1"
     },
     {
-      "id": "bench_qwen3_decode_profile_cpp_string",
+      "id": "tests_qwen3_decode_gpu_test_cpp_size_t",
+      "label": "size_t",
+      "_origin": "ast",
+      "community": 344,
+      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
+      "file_type": "code",
+      "norm_label": "size_t",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "tests_qwen3_decode_gpu_test_cpp_string",
       "label": "string",
       "_origin": "ast",
       "community": 344,
@@ -46029,92 +45864,15 @@
       "source_location": ""
     },
     {
-      "id": "bench_qwen3_decode_profile_cpp_timespec",
-      "label": "timespec",
+      "id": "tests_qwen3_decode_gpu_test_cpp_vector",
+      "label": "vector",
       "_origin": "ast",
       "community": 344,
       "community_name": "qwen3_decode_sequence_gpu_test.cpp",
       "file_type": "code",
-      "norm_label": "timespec",
+      "norm_label": "vector",
       "source_file": "",
       "source_location": ""
-    },
-    {
-      "id": "bench_qwen3_decode_profile_cpp_uint32_t",
-      "label": "uint32_t",
-      "_origin": "ast",
-      "community": 344,
-      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
-      "file_type": "code",
-      "norm_label": "uint32_t",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "bench_qwen3_decode_profile_options_decode_token",
-      "label": "decode_token",
-      "_origin": "ast",
-      "community": 344,
-      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
-      "file_type": "code",
-      "norm_label": "decode_token",
-      "source_file": "bench/qwen3_decode_profile.cpp",
-      "source_location": "L43"
-    },
-    {
-      "id": "bench_qwen3_decode_profile_options_json_output",
-      "label": "json_output",
-      "_origin": "ast",
-      "community": 344,
-      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
-      "file_type": "code",
-      "norm_label": "json_output",
-      "source_file": "bench/qwen3_decode_profile.cpp",
-      "source_location": "L44"
-    },
-    {
-      "id": "bench_qwen3_decode_profile_options_model_path",
-      "label": "model_path",
-      "_origin": "ast",
-      "community": 344,
-      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
-      "file_type": "code",
-      "norm_label": "model_path",
-      "source_file": "bench/qwen3_decode_profile.cpp",
-      "source_location": "L41"
-    },
-    {
-      "id": "bench_qwen3_decode_profile_options_prompt_token",
-      "label": "prompt_token",
-      "_origin": "ast",
-      "community": 344,
-      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
-      "file_type": "code",
-      "norm_label": "prompt_token",
-      "source_file": "bench/qwen3_decode_profile.cpp",
-      "source_location": "L42"
-    },
-    {
-      "id": "bench_qwen3_decode_profile_timepoint_value",
-      "label": "value",
-      "_origin": "ast",
-      "community": 344,
-      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
-      "file_type": "code",
-      "norm_label": "value",
-      "source_file": "bench/qwen3_decode_profile.cpp",
-      "source_location": "L23"
-    },
-    {
-      "id": "include_miinfer_qwen3_gpu_layer_qwen3gpudecodecache_length",
-      "label": "length",
-      "_origin": "ast",
-      "community": 344,
-      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
-      "file_type": "code",
-      "norm_label": "length",
-      "source_file": "include/miinfer/qwen3_gpu_layer.hpp",
-      "source_location": "L270"
     },
     {
       "id": "tests_qwen3_decode_sequence_gpu_test",
@@ -47691,11 +47449,66 @@
       "source_location": "L34"
     },
     {
+      "id": "include_miinfer_gguf_gguffile_path",
+      "label": "path_",
+      "_origin": "ast",
+      "community": 359,
+      "community_name": "path_",
+      "file_type": "code",
+      "norm_label": "path_",
+      "source_file": "include/miinfer/gguf.hpp",
+      "source_location": "L74"
+    },
+    {
+      "id": "runtimestate",
+      "label": "RuntimeState",
+      "_origin": "ast",
+      "community": 359,
+      "community_name": "path_",
+      "file_type": "code",
+      "norm_label": "runtimestate",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "tools_m6a16_qwen35_hybrid_block_4_7_audit",
+      "label": "m6a16_qwen35_hybrid_block_4_7_audit.cpp",
+      "_origin": "ast",
+      "community": 359,
+      "community_name": "path_",
+      "file_type": "code",
+      "norm_label": "m6a16_qwen35_hybrid_block_4_7_audit.cpp",
+      "source_file": "tools/m6a16_qwen35_hybrid_block_4_7_audit.cpp",
+      "source_location": "L1"
+    },
+    {
+      "id": "tools_m6a16_qwen35_hybrid_block_4_7_audit_cpp_uint32_t",
+      "label": "uint32_t",
+      "_origin": "ast",
+      "community": 359,
+      "community_name": "path_",
+      "file_type": "code",
+      "norm_label": "uint32_t",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "tools_m6a16_qwen35_hybrid_block_4_7_audit_cpp_vector",
+      "label": "vector",
+      "_origin": "ast",
+      "community": 359,
+      "community_name": "path_",
+      "file_type": "code",
+      "norm_label": "vector",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
       "id": "tools_m6a17_qwen35_composition_ladder",
       "label": "m6a17_qwen35_composition_ladder.cpp",
       "_origin": "ast",
       "community": 359,
-      "community_name": "m6a17_qwen35_composition_ladder.cpp",
+      "community_name": "path_",
       "file_type": "code",
       "norm_label": "m6a17_qwen35_composition_ladder.cpp",
       "source_file": "tools/m6a17_qwen35_composition_ladder.cpp",
@@ -47706,7 +47519,7 @@
       "label": "size_t",
       "_origin": "ast",
       "community": 359,
-      "community_name": "m6a17_qwen35_composition_ladder.cpp",
+      "community_name": "path_",
       "file_type": "code",
       "norm_label": "size_t",
       "source_file": "",
@@ -47717,11 +47530,44 @@
       "label": "span",
       "_origin": "ast",
       "community": 359,
-      "community_name": "m6a17_qwen35_composition_ladder.cpp",
+      "community_name": "path_",
       "file_type": "code",
       "norm_label": "span",
       "source_file": "",
       "source_location": ""
+    },
+    {
+      "id": "tools_m6a17_qwen35_composition_ladder_cpp_uint32_t",
+      "label": "uint32_t",
+      "_origin": "ast",
+      "community": 359,
+      "community_name": "path_",
+      "file_type": "code",
+      "norm_label": "uint32_t",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "tools_m6a3_qwen35_layer_cpp_uint32_t",
+      "label": "uint32_t",
+      "_origin": "ast",
+      "community": 359,
+      "community_name": "path_",
+      "file_type": "code",
+      "norm_label": "uint32_t",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "src_sha256",
+      "label": "sha256.cpp",
+      "_origin": "ast",
+      "community": 36,
+      "community_name": "Sha256",
+      "file_type": "code",
+      "norm_label": "sha256.cpp",
+      "source_file": "src/sha256.cpp",
+      "source_location": "L1"
     },
     {
       "id": "src_sha256_cpp_array",
@@ -48227,6 +48073,102 @@
       "source_location": "L20"
     },
     {
+      "id": "experiments_exp_0148_m6b56_post_b55_profile",
+      "label": "EXP-0148-m6b56-post-b55-profile.md",
+      "_origin": "ast",
+      "community": 365,
+      "community_name": "EXP-0148 \u2014 M6-B56 post-B55 production profile",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "exp-0148-m6b56-post-b55-profile.md",
+      "source_file": "experiments/EXP-0148-m6b56-post-b55-profile.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "experiments_exp_0148_m6b56_post_b55_profile_decision",
+      "label": "Decision",
+      "_origin": "ast",
+      "community": 365,
+      "community_name": "EXP-0148 \u2014 M6-B56 post-B55 production profile",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "decision",
+      "source_file": "experiments/EXP-0148-m6b56-post-b55-profile.md",
+      "source_location": "L53"
+    },
+    {
+      "id": "experiments_exp_0148_m6b56_post_b55_profile_environment",
+      "label": "Environment",
+      "_origin": "ast",
+      "community": 365,
+      "community_name": "EXP-0148 \u2014 M6-B56 post-B55 production profile",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "environment",
+      "source_file": "experiments/EXP-0148-m6b56-post-b55-profile.md",
+      "source_location": "L7"
+    },
+    {
+      "id": "experiments_exp_0148_m6b56_post_b55_profile_exp_0148_m6_b56_post_b55_production_profile",
+      "label": "EXP-0148 \u2014 M6-B56 post-B55 production profile",
+      "_origin": "ast",
+      "community": 365,
+      "community_name": "EXP-0148 \u2014 M6-B56 post-B55 production profile",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "exp-0148 \u2014 m6-b56 post-b55 production profile",
+      "source_file": "experiments/EXP-0148-m6b56-post-b55-profile.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "experiments_exp_0148_m6b56_post_b55_profile_follow_up",
+      "label": "Follow-up",
+      "_origin": "ast",
+      "community": 365,
+      "community_name": "EXP-0148 \u2014 M6-B56 post-B55 production profile",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "follow-up",
+      "source_file": "experiments/EXP-0148-m6b56-post-b55-profile.md",
+      "source_location": "L58"
+    },
+    {
+      "id": "experiments_exp_0148_m6b56_post_b55_profile_interpretation",
+      "label": "Interpretation",
+      "_origin": "ast",
+      "community": 365,
+      "community_name": "EXP-0148 \u2014 M6-B56 post-B55 production profile",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "interpretation",
+      "source_file": "experiments/EXP-0148-m6b56-post-b55-profile.md",
+      "source_location": "L46"
+    },
+    {
+      "id": "experiments_exp_0148_m6b56_post_b55_profile_question",
+      "label": "Question",
+      "_origin": "ast",
+      "community": 365,
+      "community_name": "EXP-0148 \u2014 M6-B56 post-B55 production profile",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "question",
+      "source_file": "experiments/EXP-0148-m6b56-post-b55-profile.md",
+      "source_location": "L3"
+    },
+    {
+      "id": "experiments_exp_0148_m6b56_post_b55_profile_results",
+      "label": "Results",
+      "_origin": "ast",
+      "community": 365,
+      "community_name": "EXP-0148 \u2014 M6-B56 post-B55 production profile",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "results",
+      "source_file": "experiments/EXP-0148-m6b56-post-b55-profile.md",
+      "source_location": "L17"
+    },
+    {
       "id": "experiments_exp_0143_m6b51_post_b50_profile",
       "label": "EXP-0143-m6b51-post-b50-profile.md",
       "_origin": "ast",
@@ -48345,6 +48287,149 @@
       "norm_label": "results",
       "source_file": "experiments/EXP-0143-m6b51-post-b50-profile.md",
       "source_location": "L25"
+    },
+    {
+      "id": "tests_qwen3_primitives_test",
+      "label": "qwen3_primitives_test.cpp",
+      "_origin": "ast",
+      "community": 367,
+      "community_name": "qwen3_primitives_test.cpp",
+      "file_type": "code",
+      "norm_label": "qwen3_primitives_test.cpp",
+      "source_file": "tests/qwen3_primitives_test.cpp",
+      "source_location": "L1"
+    },
+    {
+      "id": "tests_qwen3_primitives_test_cpp_t",
+      "label": "T",
+      "_origin": "ast",
+      "community": 367,
+      "community_name": "qwen3_primitives_test.cpp",
+      "file_type": "code",
+      "norm_label": "t",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "tests_qwen3_primitives_test_cpp_vector",
+      "label": "vector",
+      "_origin": "ast",
+      "community": 367,
+      "community_name": "qwen3_primitives_test.cpp",
+      "file_type": "code",
+      "norm_label": "vector",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "src_qwen3_layer_cpp_int8_t",
+      "label": "int8_t",
+      "_origin": "ast",
+      "community": 368,
+      "community_name": "HostQ8Block",
+      "file_type": "code",
+      "norm_label": "int8_t",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "src_qwen3_layer_cpp_uint16_t",
+      "label": "uint16_t",
+      "_origin": "ast",
+      "community": 368,
+      "community_name": "HostQ8Block",
+      "file_type": "code",
+      "norm_label": "uint16_t",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "src_qwen3_layer_hostq8block_d_bits",
+      "label": "d_bits",
+      "_origin": "ast",
+      "community": 368,
+      "community_name": "HostQ8Block",
+      "file_type": "code",
+      "norm_label": "d_bits",
+      "source_file": "src/qwen3_layer.cpp",
+      "source_location": "L20"
+    },
+    {
+      "id": "src_qwen3_layer_hostq8block_qs",
+      "label": "qs",
+      "_origin": "ast",
+      "community": 368,
+      "community_name": "HostQ8Block",
+      "file_type": "code",
+      "norm_label": "qs",
+      "source_file": "src/qwen3_layer.cpp",
+      "source_location": "L22"
+    },
+    {
+      "id": "src_qwen3_layer_hostq8block_s_bits",
+      "label": "s_bits",
+      "_origin": "ast",
+      "community": 368,
+      "community_name": "HostQ8Block",
+      "file_type": "code",
+      "norm_label": "s_bits",
+      "source_file": "src/qwen3_layer.cpp",
+      "source_location": "L21"
+    },
+    {
+      "id": "tools_m6a21_qwen35_gpu_hybrid_block_keypathcapture_input",
+      "label": "input",
+      "_origin": "ast",
+      "community": 369,
+      "community_name": "KeyPathCapture",
+      "file_type": "code",
+      "norm_label": "input",
+      "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
+      "source_location": "L254"
+    },
+    {
+      "id": "tools_m6a21_qwen35_gpu_hybrid_block_keypathcapture_key",
+      "label": "key",
+      "_origin": "ast",
+      "community": 369,
+      "community_name": "KeyPathCapture",
+      "file_type": "code",
+      "norm_label": "key",
+      "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
+      "source_location": "L257"
+    },
+    {
+      "id": "tools_m6a21_qwen35_gpu_hybrid_block_keypathcapture_key_norm",
+      "label": "key_norm",
+      "_origin": "ast",
+      "community": 369,
+      "community_name": "KeyPathCapture",
+      "file_type": "code",
+      "norm_label": "key_norm",
+      "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
+      "source_location": "L258"
+    },
+    {
+      "id": "tools_m6a21_qwen35_gpu_hybrid_block_keypathcapture_normalized",
+      "label": "normalized",
+      "_origin": "ast",
+      "community": 369,
+      "community_name": "KeyPathCapture",
+      "file_type": "code",
+      "norm_label": "normalized",
+      "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
+      "source_location": "L255"
+    },
+    {
+      "id": "tools_m6a21_qwen35_gpu_hybrid_block_keypathcapture_qkv",
+      "label": "qkv",
+      "_origin": "ast",
+      "community": 369,
+      "community_name": "KeyPathCapture",
+      "file_type": "code",
+      "norm_label": "qkv",
+      "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
+      "source_location": "L256"
     },
     {
       "id": "codex_skills_graphify_references_query",
@@ -48596,7 +48681,7 @@
       "node_kind": "heading",
       "norm_label": "completed",
       "source_file": "docs/current-state.md",
-      "source_location": "L344"
+      "source_location": "L350"
     },
     {
       "id": "docs_current_state_completed_in_task_3",
@@ -48608,7 +48693,7 @@
       "node_kind": "heading",
       "norm_label": "completed in task 3",
       "source_file": "docs/current-state.md",
-      "source_location": "L367"
+      "source_location": "L373"
     },
     {
       "id": "docs_current_state_current_project_status",
@@ -48620,7 +48705,7 @@
       "node_kind": "heading",
       "norm_label": "current project status",
       "source_file": "docs/current-state.md",
-      "source_location": "L342"
+      "source_location": "L348"
     },
     {
       "id": "docs_current_state_not_implemented",
@@ -48632,7 +48717,7 @@
       "node_kind": "heading",
       "norm_label": "not implemented",
       "source_file": "docs/current-state.md",
-      "source_location": "L648"
+      "source_location": "L654"
     },
     {
       "id": "docs_references_11_joe2gaan_localaiservers",
@@ -48728,7 +48813,7 @@
       "node_kind": "heading",
       "norm_label": "current scope",
       "source_file": "docs/current-state.md",
-      "source_location": "L1064"
+      "source_location": "L1070"
     },
     {
       "id": "docs_current_state_in_scope_now",
@@ -48740,7 +48825,7 @@
       "node_kind": "heading",
       "norm_label": "in scope now",
       "source_file": "docs/current-state.md",
-      "source_location": "L1066"
+      "source_location": "L1072"
     },
     {
       "id": "docs_current_state_not_in_scope_now",
@@ -48752,7 +48837,7 @@
       "node_kind": "heading",
       "norm_label": "not in scope now",
       "source_file": "docs/current-state.md",
-      "source_location": "L1077"
+      "source_location": "L1083"
     },
     {
       "id": "docs_benchmarking_43_initial_miinfer_benchmark_matrix",
@@ -50695,11 +50780,22 @@
       "source_location": "L264"
     },
     {
+      "id": "tools_m6a21_qwen35_gpu_hybrid_block_cpp_size_t",
+      "label": "size_t",
+      "_origin": "ast",
+      "community": 50,
+      "community_name": "size_t",
+      "file_type": "code",
+      "norm_label": "size_t",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
       "id": "tools_m6a21_qwen35_gpu_hybrid_block_devicebytes_bytes",
       "label": "bytes_",
       "_origin": "ast",
       "community": 50,
-      "community_name": ".get",
+      "community_name": "size_t",
       "file_type": "code",
       "norm_label": "bytes_",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
@@ -50710,7 +50806,7 @@
       "label": "data_",
       "_origin": "ast",
       "community": 50,
-      "community_name": ".get",
+      "community_name": "size_t",
       "file_type": "code",
       "norm_label": "data_",
       "source_file": "tools/m6a21_qwen35_gpu_hybrid_block.cpp",
@@ -51415,7 +51511,7 @@
       "node_kind": "heading",
       "norm_label": "current benchmark priority",
       "source_file": "docs/current-state.md",
-      "source_location": "L840"
+      "source_location": "L846"
     },
     {
       "id": "docs_current_state_current_build_direction",
@@ -51427,7 +51523,7 @@
       "node_kind": "heading",
       "norm_label": "current build direction",
       "source_file": "docs/current-state.md",
-      "source_location": "L756"
+      "source_location": "L762"
     },
     {
       "id": "docs_current_state_current_correctness_policy",
@@ -51439,7 +51535,7 @@
       "node_kind": "heading",
       "norm_label": "current correctness policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L1013"
+      "source_location": "L1019"
     },
     {
       "id": "docs_current_state_current_dependency_policy",
@@ -51451,7 +51547,7 @@
       "node_kind": "heading",
       "norm_label": "current dependency policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L782"
+      "source_location": "L788"
     },
     {
       "id": "docs_current_state_current_experiment_queue",
@@ -51463,7 +51559,7 @@
       "node_kind": "heading",
       "norm_label": "current experiment queue",
       "source_file": "docs/current-state.md",
-      "source_location": "L878"
+      "source_location": "L884"
     },
     {
       "id": "docs_current_state_current_hardware_observation_requirements",
@@ -51475,7 +51571,7 @@
       "node_kind": "heading",
       "norm_label": "current hardware observation requirements",
       "source_file": "docs/current-state.md",
-      "source_location": "L1044"
+      "source_location": "L1050"
     },
     {
       "id": "docs_current_state_current_hardware_target",
@@ -51487,7 +51583,7 @@
       "node_kind": "heading",
       "norm_label": "current hardware target",
       "source_file": "docs/current-state.md",
-      "source_location": "L329"
+      "source_location": "L335"
     },
     {
       "id": "docs_current_state_current_performance_policy",
@@ -51499,7 +51595,7 @@
       "node_kind": "heading",
       "norm_label": "current performance policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L1029"
+      "source_location": "L1035"
     },
     {
       "id": "docs_current_state_current_phase",
@@ -51523,7 +51619,7 @@
       "node_kind": "heading",
       "norm_label": "current reference strategy",
       "source_file": "docs/current-state.md",
-      "source_location": "L820"
+      "source_location": "L826"
     },
     {
       "id": "docs_current_state_current_runtime_policy",
@@ -51535,7 +51631,7 @@
       "node_kind": "heading",
       "norm_label": "current runtime policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L802"
+      "source_location": "L808"
     },
     {
       "id": "docs_current_state_definition_of_current_success",
@@ -51547,7 +51643,7 @@
       "node_kind": "heading",
       "norm_label": "definition of current success",
       "source_file": "docs/current-state.md",
-      "source_location": "L1136"
+      "source_location": "L1142"
     },
     {
       "id": "docs_current_state_do_not_start_yet",
@@ -51559,7 +51655,7 @@
       "node_kind": "heading",
       "norm_label": "do not start yet",
       "source_file": "docs/current-state.md",
-      "source_location": "L1096"
+      "source_location": "L1102"
     },
     {
       "id": "docs_current_state_first_major_gate",
@@ -51571,7 +51667,7 @@
       "node_kind": "heading",
       "norm_label": "first major gate",
       "source_file": "docs/current-state.md",
-      "source_location": "L1003"
+      "source_location": "L1009"
     },
     {
       "id": "docs_current_state_immediate_deliverables",
@@ -51583,7 +51679,7 @@
       "node_kind": "heading",
       "norm_label": "immediate deliverables",
       "source_file": "docs/current-state.md",
-      "source_location": "L706"
+      "source_location": "L712"
     },
     {
       "id": "docs_current_state_immediate_objective",
@@ -51595,7 +51691,7 @@
       "node_kind": "heading",
       "norm_label": "immediate objective",
       "source_file": "docs/current-state.md",
-      "source_location": "L671"
+      "source_location": "L677"
     },
     {
       "id": "docs_current_state_last_updated",
@@ -51607,7 +51703,7 @@
       "node_kind": "heading",
       "norm_label": "last updated",
       "source_file": "docs/current-state.md",
-      "source_location": "L1163"
+      "source_location": "L1169"
     },
     {
       "id": "docs_current_state_miinfer_current_state",
@@ -51631,7 +51727,7 @@
       "node_kind": "heading",
       "norm_label": "next implementation task",
       "source_file": "docs/current-state.md",
-      "source_location": "L1116"
+      "source_location": "L1122"
     },
     {
       "id": "codex_skills_graphify_references_hooks",
@@ -100598,7 +100694,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1003",
+      "source_location": "L1009",
       "weight": 1.0
     },
     {
@@ -100609,7 +100705,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1013",
+      "source_location": "L1019",
       "weight": 1.0
     },
     {
@@ -100620,7 +100716,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1029",
+      "source_location": "L1035",
       "weight": 1.0
     },
     {
@@ -100631,7 +100727,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1044",
+      "source_location": "L1050",
       "weight": 1.0
     },
     {
@@ -100642,7 +100738,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1064",
+      "source_location": "L1070",
       "weight": 1.0
     },
     {
@@ -100653,7 +100749,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1096",
+      "source_location": "L1102",
       "weight": 1.0
     },
     {
@@ -100664,7 +100760,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1116",
+      "source_location": "L1122",
       "weight": 1.0
     },
     {
@@ -100675,7 +100771,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1136",
+      "source_location": "L1142",
       "weight": 1.0
     },
     {
@@ -100686,7 +100782,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1163",
+      "source_location": "L1169",
       "weight": 1.0
     },
     {
@@ -100708,7 +100804,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L329",
+      "source_location": "L335",
       "weight": 1.0
     },
     {
@@ -100719,7 +100815,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L342",
+      "source_location": "L348",
       "weight": 1.0
     },
     {
@@ -100730,7 +100826,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L671",
+      "source_location": "L677",
       "weight": 1.0
     },
     {
@@ -100741,7 +100837,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L706",
+      "source_location": "L712",
       "weight": 1.0
     },
     {
@@ -100752,7 +100848,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L756",
+      "source_location": "L762",
       "weight": 1.0
     },
     {
@@ -100763,7 +100859,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L782",
+      "source_location": "L788",
       "weight": 1.0
     },
     {
@@ -100774,7 +100870,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L802",
+      "source_location": "L808",
       "weight": 1.0
     },
     {
@@ -100785,7 +100881,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L820",
+      "source_location": "L826",
       "weight": 1.0
     },
     {
@@ -100796,7 +100892,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L840",
+      "source_location": "L846",
       "weight": 1.0
     },
     {
@@ -100807,7 +100903,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L878",
+      "source_location": "L884",
       "weight": 1.0
     },
     {
@@ -100818,7 +100914,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L344",
+      "source_location": "L350",
       "weight": 1.0
     },
     {
@@ -100829,7 +100925,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L367",
+      "source_location": "L373",
       "weight": 1.0
     },
     {
@@ -100840,7 +100936,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L648",
+      "source_location": "L654",
       "weight": 1.0
     },
     {
@@ -100851,7 +100947,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1066",
+      "source_location": "L1072",
       "weight": 1.0
     },
     {
@@ -100862,7 +100958,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1077",
+      "source_location": "L1083",
       "weight": 1.0
     },
     {
@@ -121821,6 +121917,83 @@
       "weight": 1.0
     },
     {
+      "source": "experiments_exp_0148_m6b56_post_b55_profile",
+      "target": "experiments_exp_0148_m6b56_post_b55_profile_exp_0148_m6_b56_post_b55_production_profile",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0148-m6b56-post-b55-profile.md",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0148_m6b56_post_b55_profile_exp_0148_m6_b56_post_b55_production_profile",
+      "target": "experiments_exp_0148_m6b56_post_b55_profile_results",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0148-m6b56-post-b55-profile.md",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0148_m6b56_post_b55_profile_exp_0148_m6_b56_post_b55_production_profile",
+      "target": "experiments_exp_0148_m6b56_post_b55_profile_question",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0148-m6b56-post-b55-profile.md",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0148_m6b56_post_b55_profile_exp_0148_m6_b56_post_b55_production_profile",
+      "target": "experiments_exp_0148_m6b56_post_b55_profile_interpretation",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0148-m6b56-post-b55-profile.md",
+      "source_location": "L46",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0148_m6b56_post_b55_profile_exp_0148_m6_b56_post_b55_production_profile",
+      "target": "experiments_exp_0148_m6b56_post_b55_profile_decision",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0148-m6b56-post-b55-profile.md",
+      "source_location": "L53",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0148_m6b56_post_b55_profile_exp_0148_m6_b56_post_b55_production_profile",
+      "target": "experiments_exp_0148_m6b56_post_b55_profile_follow_up",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0148-m6b56-post-b55-profile.md",
+      "source_location": "L58",
+      "weight": 1.0
+    },
+    {
+      "source": "experiments_exp_0148_m6b56_post_b55_profile_exp_0148_m6_b56_post_b55_production_profile",
+      "target": "experiments_exp_0148_m6b56_post_b55_profile_environment",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/EXP-0148-m6b56-post-b55-profile.md",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
       "source": "experiments_template",
       "target": "experiments_template_exp_xxxx_experiment_title",
       "relation": "contains",
@@ -131134,7 +131307,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L641",
+      "source_location": "L647",
       "weight": 1.0
     },
     {
@@ -131145,7 +131318,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L834",
+      "source_location": "L840",
       "weight": 1.0
     },
     {
@@ -134165,5 +134338,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "7e978cb19eaa8d129a262e280e9125690df24522"
+  "built_at_commit": "f6b2ef73f808bdf7f6f64dd9104cc3fe7310a8a9"
 }

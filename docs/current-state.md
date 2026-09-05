@@ -41,6 +41,12 @@ improves TG64/TG128 from `13.8564/13.6513` to `14.0953/13.8572 tok/s`
 `MIINFER_DELTA_TRANSPOSED_LDS_INPUTS=0` to select the control. See
 `experiments/EXP-0147-m6b55-deltanet-lds-inputs.md`.
 
+M6-B56 refreshed the B55 profile: position-63 GPU event `72.9092 ms/token`,
+layer work `69.6170 ms`, final LM head `2.50336 ms`, and zero allocations.
+Sampled recurrent state-update stages are now about `0.091–0.096 ms`; FFN
+Down remains the largest repeated family. See
+`experiments/EXP-0148-m6b56-post-b55-profile.md`.
+
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
 and a complete 64-layer host forward for the selected
