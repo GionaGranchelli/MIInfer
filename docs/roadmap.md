@@ -10,12 +10,13 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-B29 — recurrent stage attribution**
+**Current phase: M6-B30 — transposed recurrent-state layout**
 
 Immediate objective:
 
-> Use recurrent layers 0–2 attribution to select one bounded state-update
-> differential; do not infer a fusion target from dispatch count alone.
+> Validate and production-select the transposed DeltaNet recurrent-state
+> layout after recurrent stage attribution identified state access as the next
+> bounded target.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
@@ -27,7 +28,9 @@ and M6-A2 maps the reusable and missing projection contracts. See
 
 Current work should focus on:
 
-* executing the M6-B0 MI50 benchmark comparison
+* preserving the M6-B30 transposed recurrent-state layout and its row-major
+  control flag for reproducible A/B comparisons
+* refreshing the post-B30 profile before selecting the next optimization
 * preserving EXP-0091's margin-aware observable closure: exact teacher-forced
   agreement remains a `62/64` diagnostic, while P2/P12 are low-margin,
   top-5-preserving flips
@@ -41,6 +44,8 @@ Current work should focus on:
 * keeping the old qwen3 production path unchanged
 * retaining EXP-0092's A28 result: 16/64/128 native runs pass exact replay,
   with zero decode-loop allocations and stable device usage
+* retaining EXP-0122's result: native TG64/TG128 improve by about 3.4%/3.6%
+  with unchanged logical state behavior and no additional VRAM
 
 Do not treat CPU hidden-state identity through all 36 layers as a universal
 GPU requirement. B23 characterized the pinned external implementation's

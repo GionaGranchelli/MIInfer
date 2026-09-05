@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-B29 — recurrent stage attribution**
+**Current phase: M6-B30 — transposed recurrent-state layout**
 
 The project currently has:
 
@@ -120,6 +120,10 @@ The project currently has:
   a stable recurring cost structure and identifying state update as the next
   uncleared recurrent-specific target; see
   `experiments/EXP-0121-m6b29-recurrent-stage-attribution.md`
+* a production-selected transposed DeltaNet recurrent-state layout, preserving
+  the logical state contract while improving native TG64/TG128 by about
+  3.4%/3.6%; set `MIINFER_DELTA_TRANSPOSED_STATE=0` for the former layout;
+  see `experiments/EXP-0122-m6b30-transposed-deltanet-state.md`
 * a reproducible llama.cpp-backed Qwen3.8-27B hybrid tensor/state fixture; see
   `experiments/EXP-0043-m6a1-qwen38-reference-fixture.md`
 * a read-only Qwen3.8 projection/kernel compatibility map; see
@@ -207,8 +211,9 @@ benchmark harness is functional but not yet workload-equivalent enough for a
 final parity claim.
 
 The previous Qwen3-8B production path is approximately 55 tok/s at stable
-peak. The current Qwen3.8-27B native GPU path measures approximately 3.36
-tok/s for TG128 at stable peak and remains a bring-up/performance baseline.
+peak. The current Qwen3.8-27B native GPU path measures approximately 11.72
+tok/s for TG128 at stable peak after the B30 recurrent-state layout change;
+the pinned llama.cpp parity target remains higher.
 
 ---
 

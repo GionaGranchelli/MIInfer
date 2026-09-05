@@ -159,6 +159,9 @@ struct LocatedError {
     float expected = 0.0F;
 };
 
+LocatedError located_host_error(std::span<const float> actual,
+                                std::span<const float> expected);
+
 LocatedError located_device_error(const float* device, std::size_t elements,
                                   const std::filesystem::path& expected_path) {
     std::vector<float> actual(elements);
@@ -202,6 +205,23 @@ struct RecurrentTrace {
                 const std::string& reference_name) const {
         report_at(position, label, device, elements, reference_name);
     }
+
+    void report_host(const char* label, std::span<const float> actual,
+                     const std::string& reference_name) const {
+        const auto error = located_host_error(
+            actual, read_f32(checkpoint(fixture, position, reference_name), kStateElements));
+        std::cout << "trace label=" << label
+                  << " max_abs=" << error.metrics.max_abs
+                  << " mean_abs=" << error.metrics.mean_abs
+                  << " rms=" << error.metrics.rms
+                  << " relative_rms=" << error.metrics.relative_rms
+                  << " max_index=" << error.index
+                  << " reference=" << error.expected
+                  << " gpu=" << error.actual << '\n';
+    }
+
+private:
+    static constexpr std::size_t kStateElements = 48 * 128 * 128;
 };
 
 struct UpdateProvenance {
@@ -464,6 +484,7 @@ struct RecurrentLayer {
     bool q4_q8_1_gate_up = false;
     bool q4_q8_1_attn_gate = false;
     bool q6_q8_k_dot4_qkv = false;
+    bool transposed_state = true;
 
     RecurrentLayer(const miinfer::Qwen35Model& model_value, std::size_t layer,
                    const std::filesystem::path& fixture)
@@ -503,6 +524,10 @@ struct RecurrentLayer {
         const char* q6_q8_k_dot4_qkv_env = std::getenv("MIINFER_Q6K_Q8K_DOT4_QKV");
         q6_q8_k_dot4_qkv = q6_q8_k_dot4_qkv_env == nullptr
             || std::strcmp(q6_q8_k_dot4_qkv_env, "0") != 0;
+        const char* transposed_state_env = std::getenv("MIINFER_DELTA_TRANSPOSED_STATE");
+        if (transposed_state_env != nullptr) {
+            transposed_state = std::strcmp(transposed_state_env, "0") != 0;
+        }
         require_type(qkv_weight, {miinfer::GgufTensorType::q4_k,
                                    miinfer::GgufTensorType::q6_k});
         require_type(gate_weight, {miinfer::GgufTensorType::q4_k});
@@ -568,7 +593,7 @@ struct RecurrentLayer {
         const auto initial = read_f32(
             checkpoint(fixture, 0, "state_predelta-" + std::to_string(index)),
             kVHeads * kState * kState);
-        upload(initial.data(), state->get(), initial.size() * sizeof(float));
+        upload_state(initial);
     }
 
     std::string name(const char* suffix) const {
@@ -587,7 +612,47 @@ struct RecurrentLayer {
         const auto initial = read_f32(
             checkpoint(fixture, 0, "state_predelta-" + std::to_string(index)),
             kVHeads * kState * kState);
-        upload(initial.data(), state->get(), initial.size() * sizeof(float));
+        upload_state(initial);
+    }
+
+    void upload_state(std::span<const float> logical) const {
+        if (!transposed_state) {
+            upload(logical.data(), state->get(), logical.size() * sizeof(float));
+            return;
+        }
+        const std::size_t matrix = kState * kState;
+        std::vector<float> physical(logical.size());
+        for (std::size_t head = 0; head < kVHeads; ++head) {
+            for (std::size_t row = 0; row < kState; ++row) {
+                for (std::size_t column = 0; column < kState; ++column) {
+                    physical[head * matrix + column * kState + row] =
+                        logical[head * matrix + row * kState + column];
+                }
+            }
+        }
+        upload(physical.data(), state->get(), physical.size() * sizeof(float));
+    }
+
+    std::vector<float> logical_state() const {
+        const std::size_t elements = kVHeads * kState * kState;
+        const auto physical = download(state->get(), elements);
+        if (!transposed_state) return physical;
+        const std::size_t matrix = kState * kState;
+        std::vector<float> logical(elements);
+        for (std::size_t head = 0; head < kVHeads; ++head) {
+            for (std::size_t row = 0; row < kState; ++row) {
+                for (std::size_t column = 0; column < kState; ++column) {
+                    logical[head * matrix + row * kState + column] =
+                        physical[head * matrix + column * kState + row];
+                }
+            }
+        }
+        return logical;
+    }
+
+    std::uint64_t state_fingerprint() const {
+        const auto logical = logical_state();
+        return host_fingerprint(std::as_bytes(std::span<const float>(logical)));
     }
 
     void trace_tensor(std::uint32_t position, const char* label, const float* device,
@@ -609,9 +674,14 @@ struct RecurrentLayer {
         std::array<float, state_size> previous{};
         std::array<float, state_size> key_values{};
         std::array<float, state_size> query_values{};
-        MIINFER_HIP_CHECK(hipMemcpy(previous.data(),
-                                    static_cast<const float*>(state->get()) + state_base,
-                                    sizeof(previous), hipMemcpyDeviceToHost));
+        if (transposed_state) {
+            const auto logical = logical_state();
+            std::copy_n(logical.data() + state_base, state_size, previous.data());
+        } else {
+            MIINFER_HIP_CHECK(hipMemcpy(previous.data(),
+                                        static_cast<const float*>(state->get()) + state_base,
+                                        sizeof(previous), hipMemcpyDeviceToHost));
+        }
         MIINFER_HIP_CHECK(hipMemcpy(key_values.data(),
                                     static_cast<const float*>(key_norm->get()) + key_base,
                                     sizeof(key_values), hipMemcpyDeviceToHost));
@@ -647,7 +717,7 @@ struct RecurrentLayer {
     }
 
     void capture_operands(RecurrentOperands& captured) const {
-        captured.previous = download(state->get(), kVHeads * kState * kState);
+        captured.previous = logical_state();
         captured.query = download(query_norm->get(), kKHeads * kState);
         captured.key = download(key_norm->get(), kKHeads * kState);
         captured.value = download(value->get(), kVHeads * kState);
@@ -656,6 +726,19 @@ struct RecurrentLayer {
     }
 
     float state_value(std::size_t flat_index) const {
+        if (transposed_state) {
+            const std::size_t matrix = kState * kState;
+            const std::size_t head = flat_index / matrix;
+            const std::size_t in_head = flat_index % matrix;
+            const std::size_t row = in_head / kState;
+            const std::size_t column = in_head % kState;
+            float result = 0.0F;
+            const std::size_t physical = head * matrix + column * kState + row;
+            MIINFER_HIP_CHECK(hipMemcpy(
+                &result, static_cast<const float*>(state->get()) + physical,
+                sizeof(float), hipMemcpyDeviceToHost));
+            return result;
+        }
         float result = 0.0F;
         MIINFER_HIP_CHECK(hipMemcpy(
             &result, static_cast<const float*>(state->get()) + flat_index,
@@ -761,7 +844,13 @@ struct RecurrentLayer {
             key_path_capture->key_norm = download(key_norm->get(), kKHeads * kState);
         }
         stage_start(5, position);
-        if (no_decay_store) {
+        if (transposed_state) {
+            miinfer::launch_qwen35_deltanet_state_update_transposed(
+                static_cast<const float*>(query_norm->get()), static_cast<const float*>(key_norm->get()),
+                static_cast<const float*>(value->get()), static_cast<const float*>(beta->get()),
+                static_cast<const float*>(decay->get()), static_cast<float*>(state->get()),
+                static_cast<float*>(recurrent_output->get()), kKHeads, kVHeads, kState);
+        } else if (no_decay_store) {
             miinfer::launch_qwen35_deltanet_state_update_no_decay_store(
                 static_cast<const float*>(query_norm->get()), static_cast<const float*>(key_norm->get()),
                 static_cast<const float*>(value->get()), static_cast<const float*>(beta->get()),
@@ -775,9 +864,14 @@ struct RecurrentLayer {
                 static_cast<float*>(recurrent_output->get()), kKHeads, kVHeads, kState);
         }
         if (trace != nullptr && trace->layer == index && position + 1 == trace->position) {
-            trace->report_at(position + 1, "state_after", static_cast<const float*>(state->get()),
-                             kVHeads * kState * kState,
-                             "state_predelta-" + std::to_string(index));
+            if (transposed_state) {
+                trace->report_host("state_after", logical_state(),
+                                   "state_predelta-" + std::to_string(index));
+            } else {
+                trace->report_at(position + 1, "state_after", static_cast<const float*>(state->get()),
+                                 kVHeads * kState * kState,
+                                 "state_predelta-" + std::to_string(index));
+            }
         }
         stage_end(5, position);
         trace_tensor(position, "recurrent_output",
@@ -1412,7 +1506,6 @@ int main(int argc, char** argv) {
             RecurrentTrace l30_trace{fixture, 30, 64};
             recurrent30->trace = locate32 ? &l30_trace : nullptr;
             const auto allocations_before_decode = g_device_allocations;
-            const std::size_t state_bytes = kVHeads * kState * kState * sizeof(float);
             if (provenance32) {
                 constexpr std::size_t tracked_index = 86909;
                 const std::array<std::size_t, 7> transitions{{3, 7, 31, 59, 60, 62, 63}};
@@ -1440,13 +1533,10 @@ int main(int argc, char** argv) {
                     MIINFER_HIP_CHECK(hipDeviceSynchronize());
                     if (position == 64) continue;
                     const std::size_t next_position = position + 1;
-                    const auto state = located_device_error(
-                        static_cast<const float*>(recurrent30->state->get()),
-                        kVHeads * kState * kState,
-                        checkpoint(fixture, next_position, "state_predelta-30"));
                     const auto expected = read_f32(
                         checkpoint(fixture, next_position, "state_predelta-30"),
                         kVHeads * kState * kState);
+                    const auto state = located_host_error(recurrent30->logical_state(), expected);
                     const auto fixed_gpu = recurrent30->state_value(tracked_index);
                     const auto fixed_reference = expected[tracked_index];
                     std::cout << next_position << ' ' << state.index << ' '
@@ -1487,21 +1577,21 @@ int main(int argc, char** argv) {
                     : read_f32(checkpoint(fixture, position, "model_input_embed"), kHidden);
                 upload(host_input.data(), input->get(), host_input.size() * sizeof(float));
                 if (is_position(position)) {
-                    const auto state = located_device_error(
-                        static_cast<const float*>(recurrent30->state->get()),
-                        kVHeads * kState * kState,
-                        checkpoint(fixture, position, "state_predelta-30"));
+                    const auto expected = read_f32(
+                        checkpoint(fixture, position, "state_predelta-30"),
+                        kVHeads * kState * kState);
+                    const auto state = located_host_error(recurrent30->logical_state(), expected);
                     std::cout << position << ' ' << state.metrics.max_abs << ' '
                               << state.metrics.mean_abs << ' '
                               << state.metrics.rms << ' ' << state.metrics.relative_rms << ' '
                               << state.index << ' ' << state.expected << ' ' << state.actual << '\n';
                     if (position == 64) {
                         for (std::size_t layer = 28; layer < 31; ++layer) {
-                            const auto adjacent = located_device_error(
-                                static_cast<const float*>(layers[layer].recurrent->state->get()),
-                                kVHeads * kState * kState,
-                                checkpoint(fixture, position,
-                                           "state_predelta-" + std::to_string(layer)));
+                            const auto adjacent = located_host_error(
+                                layers[layer].recurrent->logical_state(),
+                                read_f32(checkpoint(fixture, position,
+                                                    "state_predelta-" + std::to_string(layer)),
+                                        kVHeads * kState * kState));
                             std::cout << "entry_state_layer=" << layer
                                       << " max_abs=" << adjacent.metrics.max_abs
                                       << " mean_abs=" << adjacent.metrics.mean_abs
@@ -1531,9 +1621,9 @@ int main(int argc, char** argv) {
                               << " gpu=" << error.actual << '\n';
                 }
                 std::cout << "p64_fingerprints"
-                          << " state28=" << fingerprint(recurrent28->state->get(), state_bytes)
-                          << " state29=" << fingerprint(recurrent29->state->get(), state_bytes)
-                          << " state30=" << fingerprint(recurrent30->state->get(), state_bytes)
+                          << " state28=" << recurrent28->state_fingerprint()
+                          << " state29=" << recurrent29->state_fingerprint()
+                          << " state30=" << recurrent30->state_fingerprint()
                           << " K27=" << fingerprint(attention27->key_cache->get(),
                               4 * (position + 1) * 256 * sizeof(float))
                           << " V27=" << fingerprint(attention27->value_cache->get(),
@@ -1826,7 +1916,6 @@ int main(int argc, char** argv) {
                 if (prompt.size() != 1 || prompt.front() >= model.config().vocab_size) {
                     throw std::runtime_error("generation requires one valid prompt token");
                 }
-                const std::size_t state_bytes = kVHeads * kState * kState * sizeof(float);
                 const auto reset_all = [&] {
                     for (const auto& layer : layers) {
                         if (layer.recurrent != nullptr) layer.recurrent->reset(fixture);
@@ -1897,7 +1986,7 @@ int main(int argc, char** argv) {
                     std::uint64_t state_hash = 0;
                     for (const auto& layer : layers) {
                         if (layer.recurrent != nullptr) {
-                            state_hash ^= fingerprint(layer.recurrent->state->get(), state_bytes);
+                            state_hash ^= layer.recurrent->state_fingerprint();
                         } else {
                             state_hash ^= fingerprint(layer.attention->key_cache->get(),
                                 4 * kCacheCapacity * 256 * sizeof(float));
@@ -2489,7 +2578,6 @@ int main(int argc, char** argv) {
             const auto is_observable_position = [&is_checkpoint_position](std::size_t position) {
                 return is_checkpoint_position(position) || position == 12;
             };
-            const std::size_t state_bytes = kVHeads * kState * kState * sizeof(float);
             const auto active_fingerprint = [](const void* device, std::size_t bytes) {
                 return bytes == 0 ? 1469598103934665603ULL : fingerprint(device, bytes);
             };
@@ -2524,11 +2612,11 @@ int main(int argc, char** argv) {
                 if (is_checkpoint_position(position)) {
                     for (std::size_t layer = 0; layer < layer_count; ++layer) {
                         if (layers[layer].recurrent == nullptr) continue;
-                        const auto error = detailed_device_error(
-                            static_cast<const float*>(layers[layer].recurrent->state->get()),
-                            kVHeads * kState * kState,
-                            checkpoint(fixture, position,
-                                       "state_predelta-" + std::to_string(layer)));
+                        const auto error = detailed_compare(
+                            layers[layer].recurrent->logical_state(),
+                            read_f32(checkpoint(fixture, position,
+                                                "state_predelta-" + std::to_string(layer)),
+                                    kVHeads * kState * kState));
                         if (error.max_abs > 5.0e-2F) {
                             std::cerr << "state mismatch position=" << position
                                       << " layer=" << layer
@@ -2540,7 +2628,7 @@ int main(int argc, char** argv) {
                     }
                     for (std::size_t layer = 0; layer < layer_count; ++layer) {
                         if (layers[layer].recurrent != nullptr) {
-                            record(fingerprint(layers[layer].recurrent->state->get(), state_bytes));
+                            record(layers[layer].recurrent->state_fingerprint());
                         }
                     }
                     record_caches(position, true, record);
@@ -2698,7 +2786,7 @@ int main(int argc, char** argv) {
                 for (std::size_t layer = 0; layer < layer_count; ++layer) {
                     if (layers[layer].recurrent != nullptr) {
                         std::cout << " state" << layer << '='
-                                  << fingerprint(layers[layer].recurrent->state->get(), state_bytes);
+                                  << layers[layer].recurrent->state_fingerprint();
                     }
                 }
                 for (std::size_t layer = 0; layer < layer_count; ++layer) {
@@ -2716,7 +2804,7 @@ int main(int argc, char** argv) {
                 }
                 for (std::size_t layer = 0; layer < layer_count; ++layer) {
                     if (layers[layer].recurrent != nullptr) {
-                        record(fingerprint(layers[layer].recurrent->state->get(), state_bytes));
+                        record(layers[layer].recurrent->state_fingerprint());
                     }
                 }
                 record_caches(position, false, record);
@@ -2872,7 +2960,7 @@ int main(int argc, char** argv) {
                 if (is_checkpoint_position(position)) {
                     for (std::size_t layer = 0; layer < layer_count; ++layer) {
                         if (layers[layer].recurrent != nullptr) {
-                            expect_replay(fingerprint(layers[layer].recurrent->state->get(), state_bytes),
+                            expect_replay(layers[layer].recurrent->state_fingerprint(),
                                           "recurrent entry");
                         }
                     }
@@ -2889,7 +2977,7 @@ int main(int argc, char** argv) {
                     fingerprint(outputs[layer]->get(), kHidden * sizeof(float)), "layer output");
                 for (std::size_t layer = 0; layer < layer_count; ++layer) {
                     if (layers[layer].recurrent != nullptr) {
-                        expect_replay(fingerprint(layers[layer].recurrent->state->get(), state_bytes),
+                        expect_replay(layers[layer].recurrent->state_fingerprint(),
                                       "recurrent exit");
                     }
                 }
@@ -2945,7 +3033,6 @@ int main(int argc, char** argv) {
         }
 
         const std::size_t last_position = deep ? 64 : 1;
-        const std::size_t state_bytes = kVHeads * kState * kState * sizeof(float);
         for (std::size_t position = 0; position <= last_position; ++position) {
             const auto host_input = deep && position > 1
                 ? embedding(tensor(*model.file(), "token_embd.weight"), generated[position - 1])
@@ -2956,21 +3043,22 @@ int main(int argc, char** argv) {
                 const std::array<const RecurrentLayer*, 3> first_layers{
                     &recurrent0, &recurrent1, &recurrent2};
                 for (std::size_t layer = 0; layer < first_layers.size(); ++layer) {
-                    const auto state_error = detailed_device_error(
-                        static_cast<const float*>(first_layers[layer]->state->get()),
-                        kVHeads * kState * kState,
-                        checkpoint(fixture, position, "state_predelta-" + std::to_string(layer)));
+                    const auto state_error = detailed_compare(
+                        first_layers[layer]->logical_state(),
+                        read_f32(checkpoint(fixture, position,
+                                            "state_predelta-" + std::to_string(layer)),
+                                kVHeads * kState * kState));
                     state_correct = state_correct && state_error.max_abs <= 5.0e-2F;
                 }
                 if (second_block) {
                     const std::array<const RecurrentLayer*, 3> second_layers{
                         recurrent4.get(), recurrent5.get(), recurrent6.get()};
                     for (std::size_t offset = 0; offset < second_layers.size(); ++offset) {
-                        const auto state_error = detailed_device_error(
-                            static_cast<const float*>(second_layers[offset]->state->get()),
-                            kVHeads * kState * kState,
-                            checkpoint(fixture, position,
-                                       "state_predelta-" + std::to_string(4 + offset)));
+                        const auto state_error = detailed_compare(
+                            second_layers[offset]->logical_state(),
+                            read_f32(checkpoint(fixture, position,
+                                                "state_predelta-" + std::to_string(4 + offset)),
+                                    kVHeads * kState * kState));
                         state_correct = state_correct && state_error.max_abs <= 5.0e-2F;
                     }
                 }
@@ -3027,12 +3115,12 @@ int main(int argc, char** argv) {
                     std::cout << ' ' << (state_correct ? "PASS" : "DIAGNOSTIC_RETEST") << '\n';
                     std::cout << "  first_block_output="
                               << fingerprint(output3->get(), kHidden * sizeof(float)) << '\n';
-                    std::cout << "  fingerprints state0=" << fingerprint(recurrent0.state->get(), state_bytes)
-                              << " state1=" << fingerprint(recurrent1.state->get(), state_bytes)
-                              << " state2=" << fingerprint(recurrent2.state->get(), state_bytes)
-                              << " state4=" << fingerprint(recurrent4->state->get(), state_bytes)
-                              << " state5=" << fingerprint(recurrent5->state->get(), state_bytes)
-                              << " state6=" << fingerprint(recurrent6->state->get(), state_bytes)
+                    std::cout << "  fingerprints state0=" << recurrent0.state_fingerprint()
+                              << " state1=" << recurrent1.state_fingerprint()
+                              << " state2=" << recurrent2.state_fingerprint()
+                              << " state4=" << recurrent4->state_fingerprint()
+                              << " state5=" << recurrent5->state_fingerprint()
+                              << " state6=" << recurrent6->state_fingerprint()
                               << " K3=" << fingerprint(attention3.key_cache->get(),
                                   4 * (position + 1) * 256 * sizeof(float))
                               << " V3=" << fingerprint(attention3.value_cache->get(),
@@ -3048,10 +3136,9 @@ int main(int argc, char** argv) {
                                   << ' ' << errors[layer].relative_rms;
                     }
                     std::cout << ' ' << (state_correct ? "PASS" : "DIAGNOSTIC_RETEST") << '\n';
-                    std::cout << "  fingerprints state0="
-                              << fingerprint(recurrent0.state->get(), state_bytes)
-                              << " state1=" << fingerprint(recurrent1.state->get(), state_bytes)
-                              << " state2=" << fingerprint(recurrent2.state->get(), state_bytes)
+                    std::cout << "  fingerprints state0=" << recurrent0.state_fingerprint()
+                              << " state1=" << recurrent1.state_fingerprint()
+                              << " state2=" << recurrent2.state_fingerprint()
                               << " K=" << fingerprint(attention3.key_cache->get(),
                                   4 * (position + 1) * 256 * sizeof(float))
                               << " V=" << fingerprint(attention3.value_cache->get(),

@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-B29 — recurrent stage attribution**
+**M6-B30 — transposed recurrent-state layout**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -149,6 +149,14 @@ Their stage structure is stable: state update costs 0.21088–0.22960 ms and
 FFN Gate/Up plus Down costs about 0.84–0.88 ms per recurrent layer. The next
 uncleared recurrent-specific target is state-update attribution; no production
 behavior changed.
+EXP-0122 adds a transposed physical layout for the persistent DeltaNet state.
+The logical state contract and recurrence remain unchanged; the isolated
+state-update kernel improves from 202.979 to 118.153 us, and stable-peak native
+TG64/TG128 improve from 11.4679/11.3067 to 11.8587/11.7159 tok/s. Native
+generation through 128 tokens replays exactly with zero decode allocations,
+the complete P64 external observable contract passes, and Release CTest is
+20/20. `MIINFER_DELTA_TRANSPOSED_STATE=0` retains the row-major control.
+See `experiments/EXP-0122-m6b30-transposed-deltanet-state.md`.
 M6-A8 provides a dedicated qwen35 model boundary and a real layer-0 RMSNorm
 GPU fixture on gfx906. M6-A9 validates the real Q6_K output head through the
 existing Q6_K×Q8_K GPU primitive, M6-A10 validates a real Q4_K×Q8_K attention
@@ -920,11 +928,11 @@ full forward, and stateful host validation (CLOSED)
 M6-B0 — upstream llama.cpp Qwen3.8-27B Q4_K_M MI50 baseline (CLOSED;
 stable_peak policy; actual SCLK varied during capture)
 
-M6-B1 — MIInfer Qwen3.8 GPU profile (IN PROGRESS; native generation baseline
-recorded in `experiments/EXP-0093-m6b1-qwen35-native-generation-baseline.md`). M6-A8 through
-M6-A13 establish qwen35 GPU RMSNorm, quantized Q/K/V projections, K
-normalization, and a complete diagnostic layer-3 full-attention path; state
-fingerprints and layers-0–3 composition remain the prerequisite.
+M6-B1 — MIInfer Qwen3.8 GPU profile and native-generation baseline (CLOSED for
+bring-up; performance parity remains the project objective). M6-A8 through
+M6-A28 establish the qwen35 GPU executor, external observable contract, and
+native generation through 128 tokens. M6-B29 attributes recurrent stages and
+M6-B30 selects the transposed recurrent-state layout.
 ```
 
 The exact ordering may change based on early measurements.
@@ -1092,6 +1100,14 @@ gfx906 reference without broadening the project into a generic runtime.
 ---
 
 # Last Updated
+
+2026-09-05 — M6-B30 selects a physical `[value_head][column][row]` DeltaNet
+state layout. The logical state contract is unchanged; the isolated state
+update falls from `202.979` to `118.153 us`, and stable-peak native TG64/TG128
+improve from `11.4679/11.3067` to `11.8587/11.7159 tok/s`. Native 64/128-token
+generation replays pass with zero decode allocations, the complete P64
+observable contract passes with the complete `-p12` fixture, and CTest is
+20/20. See `experiments/EXP-0122-m6b30-transposed-deltanet-state.md`.
 
 2026-09-04 — M6-B1 recorded the first native Qwen3.8-27B MI50 generation
 baseline. MIInfer measured 3.37 tok/s at TG64 and 3.36 tok/s at TG128, with

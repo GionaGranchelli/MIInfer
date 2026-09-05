@@ -318,6 +318,43 @@ __global__ void qwen35_deltanet_state_update_no_decay_store_kernel(
         query_dot * rsqrtf(static_cast<float>(state_size));
 }
 
+__global__ void qwen35_deltanet_state_update_transposed_kernel(
+    const float* query, const float* key, const float* value,
+    const float* beta, const float* decay, float* state, float* output,
+    std::uint32_t key_heads, std::uint32_t value_heads, std::uint32_t state_size) {
+    const std::uint32_t head = blockIdx.x;
+    const std::uint32_t row = threadIdx.x;
+    if (head >= value_heads || row >= state_size || key_heads == 0) return;
+
+    const std::uint32_t key_head = head % key_heads;
+    const std::size_t state_base =
+        static_cast<std::size_t>(head) * state_size * state_size;
+    const std::size_t key_base = static_cast<std::size_t>(key_head) * state_size;
+    const float beta_value = beta[head];
+    const float decay_value = decay[head];
+
+    float key_dot = 0.0F;
+    for (std::uint32_t column = 0; column < state_size; ++column) {
+        const std::size_t index = state_base
+            + static_cast<std::size_t>(column) * state_size + row;
+        const float decayed = state[index] * decay_value;
+        state[index] = decayed;
+        key_dot += decayed * key[key_base + column];
+    }
+    const float delta = (value[static_cast<std::size_t>(head) * state_size + row]
+                         - key_dot) * beta_value;
+    float query_dot = 0.0F;
+    for (std::uint32_t column = 0; column < state_size; ++column) {
+        const std::size_t index = state_base
+            + static_cast<std::size_t>(column) * state_size + row;
+        const float updated = state[index] + delta * key[key_base + column];
+        state[index] = updated;
+        query_dot += updated * query[key_base + column];
+    }
+    output[static_cast<std::size_t>(head) * state_size + row] =
+        query_dot * rsqrtf(static_cast<float>(state_size));
+}
+
 __global__ void qwen35_conv_silu_split_kernel(
     const float* current_qkv, const float* conv_weights, float* history,
     float* query, float* key, float* value, std::uint32_t position,
@@ -1394,6 +1431,24 @@ void launch_qwen35_deltanet_state_update_no_decay_store(
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     hipLaunchKernelGGL(qwen35_deltanet_state_update_no_decay_store_kernel,
+                       dim3(value_heads), dim3(state_size), 0, stream,
+                       query, key, value, beta, decay, state, output,
+                       key_heads, value_heads, state_size);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_deltanet_state_update_transposed(
+    const float* query, const float* key, const float* value,
+    const float* beta, const float* decay, float* state, float* output,
+    std::uint32_t key_heads, std::uint32_t value_heads,
+    std::uint32_t state_size, hipStream_t stream) {
+    if (query == nullptr || key == nullptr || value == nullptr || beta == nullptr
+        || decay == nullptr || state == nullptr || output == nullptr
+        || key_heads == 0 || value_heads == 0 || state_size == 0
+        || state_size > 1024 || value_heads % key_heads != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen35_deltanet_state_update_transposed_kernel,
                        dim3(value_heads), dim3(state_size), 0, stream,
                        query, key, value, beta, decay, state, output,
                        key_heads, value_heads, state_size);
