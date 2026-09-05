@@ -15,6 +15,15 @@ For long-term direction, see:
 
 # Current Phase
 
+**M6-B60 — post-B59 production profile**
+
+M6-B60 refreshed the selected path at position 63: total GPU event
+`72.1585 ms/token`, layer sum `68.8474 ms`, final LM head `2.52304 ms`, and
+zero decode allocations. A matched packed-control profile measured
+`72.9130 ms/token`; the stage distribution remains dominated by repeated FFN
+Down and mixed recurrent/full-attention work. No new blind kernel target is
+selected. See `experiments/EXP-0152-m6b60-post-b59-profile.md`.
+
 **M6-B59 — expanded Q4_K FFN Down production selection**
 
 M6-B59 selects model-load expansion of Q4_K FFN Down blocks into byte-addressable

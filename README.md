@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-B59 — expanded Q4_K FFN Down production selection**
+**Current phase: M6-B60 — post-B59 production profile**
 
 The project currently has:
 
