@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-B12 — Qwen3.8-27B Q6_K projection differential (closed/rejected)**
+**M6-B13 — Qwen3.8-27B LM-head representation differential (closed/rejected)**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -55,6 +55,11 @@ EXP-0105 tests the analogous Q6_K × Q8_K packed-dot4 path. Native 16- and
 same-build A/B is neutral (9.44453 versus 9.44236 tok/s, +0.02%), so the
 candidate is rejected and the scalar Q6_K path remains active. The next
 optimization must come from a fresh post-EXP-0104 profile.
+EXP-0106 tests a Q6_K×Q8_1 LM-head compatibility path matching the pinned
+llama.cpp representation. Native replay passes, but P64 falls from 9.44236 to
+8.37676 tok/s (-11.28%), so the scalar compatibility path is rejected and the
+Q6_K×Q8_K production path remains active. The next LM-head attempt would need
+the measured MMVQ access strategy rather than a representation-only port.
 M6-A8 provides a dedicated qwen35 model boundary and a real layer-0 RMSNorm
 GPU fixture on gfx906. M6-A9 validates the real Q6_K output head through the
 existing Q6_K×Q8_K GPU primitive, M6-A10 validates a real Q4_K×Q8_K attention
