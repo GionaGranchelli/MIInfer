@@ -10,12 +10,12 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-B32 — transposed recurrent no-decay-store candidate kept**
+**Current phase: M6-B33 — post-B32 production profile**
 
 Immediate objective:
 
-> Refresh the post-B32 production profile and select the next measured
-> optimization; retain the no-decay-store transposed recurrent path.
+> Select the next measured optimization from the post-B32 profile; retain the
+> no-decay-store transposed recurrent path.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
@@ -47,6 +47,8 @@ Current work should focus on:
   with unchanged logical state behavior and no additional VRAM
 * retaining EXP-0124's result: native TG64/TG128 improve by about 1.71%/1.63%
   with the transposed state layout and no-decay-store recurrent update
+* retaining EXP-0125's profile: total GPU work is about 84.6–84.7 ms/token and
+  recurrent FFN projection work remains the largest repeated family
 
 Do not treat CPU hidden-state identity through all 36 layers as a universal
 GPU requirement. B23 characterized the pinned external implementation's

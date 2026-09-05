@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-B32 — transposed recurrent no-decay-store candidate kept**
+**M6-B33 — post-B32 production profile**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -170,6 +170,11 @@ is 20/20, and stable-peak TG64/TG128 improve from 11.8606/11.7073 to
 12.0637/11.8983 tok/s (+1.71%/+1.63%). Set
 `MIINFER_DELTA_TRANSPOSED_NO_DECAY_STORE=0` to select the B30 control. See
 `experiments/EXP-0124-m6b32-transposed-no-decay-store.md`.
+EXP-0125 refreshes the production profile after B32. Two position-63 profiles
+measure 84.6009 and 84.6991 ms/token of GPU work, with 48 recurrent and 16
+full-attention layers. Recurrent FFN Gate/Up plus Down remains the largest
+repeated family at about 0.84–0.89 ms/layer; no production behavior changed.
+See `experiments/EXP-0125-m6b33-post-b32-profile.md`.
 M6-A8 provides a dedicated qwen35 model boundary and a real layer-0 RMSNorm
 GPU fixture on gfx906. M6-A9 validates the real Q6_K output head through the
 existing Q6_K×Q8_K GPU primitive, M6-A10 validates a real Q4_K×Q8_K attention

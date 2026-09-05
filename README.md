@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-B32 — transposed recurrent no-decay-store candidate kept**
+**Current phase: M6-B33 — post-B32 production profile**
 
 The project currently has:
 
@@ -133,6 +133,9 @@ The project currently has:
   by about 1.71%/1.63%; set
   `MIINFER_DELTA_TRANSPOSED_NO_DECAY_STORE=0` for the B30 control; see
   `experiments/EXP-0124-m6b32-transposed-no-decay-store.md`
+* a measurement-only post-B32 profile: total GPU time is about 84.6–84.7
+  ms/token, with recurrent FFN Gate/Up plus Down remaining the largest repeated
+  family; see `experiments/EXP-0125-m6b33-post-b32-profile.md`
 * a reproducible llama.cpp-backed Qwen3.8-27B hybrid tensor/state fixture; see
   `experiments/EXP-0043-m6a1-qwen38-reference-fixture.md`
 * a read-only Qwen3.8 projection/kernel compatibility map; see
