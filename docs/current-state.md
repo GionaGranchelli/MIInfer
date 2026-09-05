@@ -1301,6 +1301,14 @@ neutral: `+0.01%` at TG64 and `+0.08%` at TG128. The candidate was removed and
 rejected; B41 remains selected. See
 experiments/EXP-0138-m6b46-q4k-q8-1-packed-input.md.
 
+2026-09-05 — M6-B47 tested an opt-in combined Gate/Up Q4_K×Q8_1 projection
+kernel that staged the already-shared Q8_1 input once. Native generation,
+the 64-layer external observable contract, poisoned reset/replay, and Release
+CTest 20/20 passed. The candidate was nevertheless slightly slower in serial
+same-build A/B: `-0.21%` at TG64 and `-0.04%` at TG128. It was removed and
+rejected; the B41 separate-projection path remains selected. See
+experiments/EXP-0139-m6b47-dual-gate-up.md.
+
 Update this document whenever:
 
 * active milestone changes
