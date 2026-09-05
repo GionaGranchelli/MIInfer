@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-B33 — post-B32 production profile**
+**Current phase: M6-B34 — fused SiLU/Q8_1 candidate rejected**
 
 The project currently has:
 
@@ -136,6 +136,9 @@ The project currently has:
 * a measurement-only post-B32 profile: total GPU time is about 84.6–84.7
   ms/token, with recurrent FFN Gate/Up plus Down remaining the largest repeated
   family; see `experiments/EXP-0125-m6b33-post-b32-profile.md`
+* a rejected fused SiLU-to-Q8_1 candidate: it passed the external observable
+  contract but improved TG64/TG128 by only 0.09%/0.08%, so the candidate was
+  removed; see `experiments/EXP-0126-m6b34-fused-silu-q8-1.md`
 * a reproducible llama.cpp-backed Qwen3.8-27B hybrid tensor/state fixture; see
   `experiments/EXP-0043-m6a1-qwen38-reference-fixture.md`
 * a read-only Qwen3.8 projection/kernel compatibility map; see

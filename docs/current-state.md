@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-B33 — post-B32 production profile**
+**M6-B34 — fused SiLU/Q8_1 candidate rejected**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -175,6 +175,11 @@ measure 84.6009 and 84.6991 ms/token of GPU work, with 48 recurrent and 16
 full-attention layers. Recurrent FFN Gate/Up plus Down remains the largest
 repeated family at about 0.84–0.89 ms/layer; no production behavior changed.
 See `experiments/EXP-0125-m6b33-post-b32-profile.md`.
+EXP-0126 tested a fused SiLU-to-Q8_1 Down-input path that retained the FP16
+rounding boundary. It passed native replay and the complete external P64
+observable contract, but stable-peak TG64/TG128 improved only 0.09%/0.08%,
+below the useful threshold. The candidate was removed; B32 remains the
+production path. See `experiments/EXP-0126-m6b34-fused-silu-q8-1.md`.
 M6-A8 provides a dedicated qwen35 model boundary and a real layer-0 RMSNorm
 GPU fixture on gfx906. M6-A9 validates the real Q6_K output head through the
 existing Q6_K×Q8_K GPU primitive, M6-A10 validates a real Q4_K×Q8_K attention

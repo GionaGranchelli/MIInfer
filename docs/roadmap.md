@@ -10,12 +10,13 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-B33 — post-B32 production profile**
+**Current phase: M6-B34 — fused SiLU/Q8_1 candidate rejected**
 
 Immediate objective:
 
 > Select the next measured optimization from the post-B32 profile; retain the
-> no-decay-store transposed recurrent path.
+> no-decay-store transposed recurrent path and do not retry the rejected fused
+> SiLU/Q8_1 candidate without a new mechanism.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
@@ -49,6 +50,8 @@ Current work should focus on:
   with the transposed state layout and no-decay-store recurrent update
 * retaining EXP-0125's profile: total GPU work is about 84.6–84.7 ms/token and
   recurrent FFN projection work remains the largest repeated family
+* retaining EXP-0126's rejection: fused SiLU/Q8_1 passed external correctness
+  but was throughput-neutral at TG64/TG128 and was removed
 
 Do not treat CPU hidden-state identity through all 36 layers as a universal
 GPU requirement. B23 characterized the pinned external implementation's
