@@ -453,6 +453,7 @@ struct RecurrentLayer {
     bool q5_q8_1_mmvq = false;
     bool q4_q8_1_mmvq = false;
     bool q4_q8_1_gate_up = false;
+    bool q4_q8_1_attn_gate = false;
 
     RecurrentLayer(const miinfer::Qwen35Model& model_value, std::size_t layer,
                    const std::filesystem::path& fixture)
@@ -486,6 +487,9 @@ struct RecurrentLayer {
         const char* q4_q8_1_gate_up_env = std::getenv("MIINFER_Q4K_Q8_1_MMVQ_FFN_GATE_UP");
         q4_q8_1_gate_up = q4_q8_1_gate_up_env == nullptr
             || std::strcmp(q4_q8_1_gate_up_env, "0") != 0;
+        const char* q4_q8_1_attn_gate_env = std::getenv("MIINFER_Q4K_Q8_1_MMVQ_ATTN_GATE");
+        q4_q8_1_attn_gate = q4_q8_1_attn_gate_env == nullptr
+            || std::strcmp(q4_q8_1_attn_gate_env, "0") != 0;
         require_type(qkv_weight, {miinfer::GgufTensorType::q4_k,
                                    miinfer::GgufTensorType::q6_k});
         require_type(gate_weight, {miinfer::GgufTensorType::q4_k});
@@ -682,10 +686,19 @@ struct RecurrentLayer {
         }
         stage_end(1, position);
         stage_start(2, position);
-        project(gate_weight, d_gate, static_cast<const float*>(normalized->get()),
-                static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
-                static_cast<float*>(gate->get()), kInner, kHidden,
-                reuse_projection_q8);
+        if (q4_q8_1_attn_gate && gate_weight.type == miinfer::GgufTensorType::q4_k) {
+            miinfer::launch_q8_1_quantize_f32(
+                static_cast<const float*>(normalized->get()),
+                static_cast<miinfer::Q8_1Block*>(q8_1->get()), kHidden);
+            project_q4_q8_1_prequantized(
+                d_gate, static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
+                static_cast<float*>(gate->get()), kInner, kHidden);
+        } else {
+            project(gate_weight, d_gate, static_cast<const float*>(normalized->get()),
+                    static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
+                    static_cast<float*>(gate->get()), kInner, kHidden,
+                    reuse_projection_q8);
+        }
         if (gate_path_capture != nullptr && gate_path_capture_position == position) {
             gate_path_capture->gate = download(gate->get(), kInner);
         }

@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-B20 — Q6_K×Q8_1 recurrent QKV MMVQ rejected; B19 remains production**
+**Current phase: M6-B21 — Q4_K×Q8_1 recurrent gate MMVQ**
 
 The project currently has:
 
@@ -89,6 +89,10 @@ The project currently has:
   external observable contract failed immediately, so the B19 Q6_K×Q8_K QKV
   path remains active; see
   `experiments/EXP-0113-m6b20-q6k-mmvq-qkv.md`
+* a production-selected Q4_K×Q8_1 MMVQ recurrent gate projection, improving
+  native TG64/TG128 by about 1.8%/1.6%; the former Q4_K×Q8_K path remains
+  available with `MIINFER_Q4K_Q8_1_MMVQ_ATTN_GATE=0`; see
+  `experiments/EXP-0114-m6b21-q4k-mmvq-attn-gate.md`
 * a reproducible llama.cpp-backed Qwen3.8-27B hybrid tensor/state fixture; see
   `experiments/EXP-0043-m6a1-qwen38-reference-fixture.md`
 * a read-only Qwen3.8 projection/kernel compatibility map; see
