@@ -1309,6 +1309,15 @@ same-build A/B: `-0.21%` at TG64 and `-0.04%` at TG128. It was removed and
 rejected; the B41 separate-projection path remains selected. See
 experiments/EXP-0139-m6b47-dual-gate-up.md.
 
+2026-09-05 — M6-B48 refreshed the post-B47 profile and tested an opt-in
+persistent decoded-metadata path for Q4_K FFN Down. The position-63 profile
+measured `73.8226 ms` total GPU event and `70.5030 ms` layer sum, with FFN
+Down still about `0.42–0.45 ms/layer`. The persistent candidate passed native
+and 64-layer external correctness, poisoned reset/replay, and CTest 20/20,
+but was neutral/slower in A/B: `+0.03%` TG64 and `-0.17%` TG128, while adding
+`222,822,400` bytes of VRAM. It was removed and rejected; B41 remains
+selected. See experiments/EXP-0140-m6b48-persistent-q4k-metadata.md.
+
 Update this document whenever:
 
 * active milestone changes

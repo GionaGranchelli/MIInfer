@@ -10,13 +10,13 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-B47 — dual Gate/Up projection rejection**
+**Current phase: M6-B48 — persistent Q4_K metadata rejection**
 
 Immediate objective:
 
-> Select the next measured whole-token target after rejecting dual Gate/Up
-> projection sharing; retain the B41 Q4_K×Q8_1 production path and decoded
-> Q4_K metadata staging.
+> Select the next measured whole-token target after rejecting persistent Q4_K
+> metadata; retain the B41 Q4_K×Q8_1 production path and decoded metadata
+> staging.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
