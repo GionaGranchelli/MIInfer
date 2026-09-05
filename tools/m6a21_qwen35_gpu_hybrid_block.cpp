@@ -1055,6 +1055,8 @@ int main(int argc, char** argv) {
         || mode == "--generate128" || mode == "--bench64" || mode == "--bench128";
     const bool benchmark = mode == "--bench64" || mode == "--bench128";
     const bool profile64 = mode == "--profile64";
+    const char* lm_mmvq_env = std::getenv("MIINFER_LM_Q8_1_MMVQ");
+    const bool lm_mmvq = lm_mmvq_env != nullptr && std::strcmp(lm_mmvq_env, "0") != 0;
     const std::size_t generation_tokens = mode == "--generate16" ? 16
         : mode == "--generate64" || mode == "--bench64" ? 64 : 128;
     const bool prefix32 = mode == "--prefix32" || locate32 || provenance32
@@ -1364,6 +1366,7 @@ int main(int argc, char** argv) {
             Buffer d_output_weight;
             Buffer final_norm;
             Buffer final_q8;
+            Buffer final_q8_1;
             Buffer logits;
             Buffer d_embedding;
             Buffer argmax_token;
@@ -1378,6 +1381,9 @@ int main(int argc, char** argv) {
                 upload_tensor(output_weight, d_output_weight);
                 final_norm = allocate(kHidden * sizeof(float));
                 final_q8 = allocate((kHidden / 256) * sizeof(miinfer::Q8KDeviceBlock));
+                if (lm_mmvq) {
+                    final_q8_1 = allocate((kHidden / 32) * sizeof(miinfer::Q8_1Block));
+                }
                 logits = allocate(model.config().vocab_size * sizeof(float));
                 if (generation || profile64) {
                     const auto& embedding_weight = tensor(*model.file(), "token_embd.weight");
@@ -1474,14 +1480,25 @@ int main(int argc, char** argv) {
                     output_pointers[63], static_cast<const float*>(d_final_norm_weight->get()),
                     static_cast<float*>(final_norm->get()), kHidden, model.config().rms_epsilon);
                 MIINFER_HIP_CHECK(hipEventRecord(final_norm_end, nullptr));
-                miinfer::launch_qwen3_q8_k_quantize(
-                    static_cast<const float*>(final_norm->get()),
-                    static_cast<miinfer::Q8KDeviceBlock*>(final_q8->get()), kHidden);
-                MIINFER_HIP_CHECK(hipEventRecord(final_q8_end, nullptr));
-                miinfer::launch_qwen3_q6_k_q8_k_gemv(
-                    static_cast<const miinfer::Q6KDeviceBlock*>(d_output_weight->get()),
-                    static_cast<const miinfer::Q8KDeviceBlock*>(final_q8->get()),
-                    static_cast<float*>(logits->get()), model.config().vocab_size, kHidden);
+                if (lm_mmvq) {
+                    miinfer::launch_q8_1_quantize_f32(
+                        static_cast<const float*>(final_norm->get()),
+                        static_cast<miinfer::Q8_1Block*>(final_q8_1->get()), kHidden);
+                    MIINFER_HIP_CHECK(hipEventRecord(final_q8_end, nullptr));
+                    miinfer::launch_qwen3_q6_k_q8_1_mmvq(
+                        static_cast<const miinfer::Q6KDeviceBlock*>(d_output_weight->get()),
+                        static_cast<const miinfer::Q8_1Block*>(final_q8_1->get()),
+                        static_cast<float*>(logits->get()), model.config().vocab_size, kHidden);
+                } else {
+                    miinfer::launch_qwen3_q8_k_quantize(
+                        static_cast<const float*>(final_norm->get()),
+                        static_cast<miinfer::Q8KDeviceBlock*>(final_q8->get()), kHidden);
+                    MIINFER_HIP_CHECK(hipEventRecord(final_q8_end, nullptr));
+                    miinfer::launch_qwen3_q6_k_q8_k_gemv(
+                        static_cast<const miinfer::Q6KDeviceBlock*>(d_output_weight->get()),
+                        static_cast<const miinfer::Q8KDeviceBlock*>(final_q8->get()),
+                        static_cast<float*>(logits->get()), model.config().vocab_size, kHidden);
+                }
                 MIINFER_HIP_CHECK(hipEventRecord(final_lm_end, nullptr));
                 miinfer::launch_qwen3_argmax(
                     static_cast<const float*>(logits->get()),
@@ -1590,13 +1607,23 @@ int main(int argc, char** argv) {
                             static_cast<const float*>(d_final_norm_weight->get()),
                             static_cast<float*>(final_norm->get()), kHidden,
                             model.config().rms_epsilon);
-                        miinfer::launch_qwen3_q8_k_quantize(
-                            static_cast<const float*>(final_norm->get()),
-                            static_cast<miinfer::Q8KDeviceBlock*>(final_q8->get()), kHidden);
-                        miinfer::launch_qwen3_q6_k_q8_k_gemv(
-                            static_cast<const miinfer::Q6KDeviceBlock*>(d_output_weight->get()),
-                            static_cast<const miinfer::Q8KDeviceBlock*>(final_q8->get()),
-                            static_cast<float*>(logits->get()), model.config().vocab_size, kHidden);
+                        if (lm_mmvq) {
+                            miinfer::launch_q8_1_quantize_f32(
+                                static_cast<const float*>(final_norm->get()),
+                                static_cast<miinfer::Q8_1Block*>(final_q8_1->get()), kHidden);
+                            miinfer::launch_qwen3_q6_k_q8_1_mmvq(
+                                static_cast<const miinfer::Q6KDeviceBlock*>(d_output_weight->get()),
+                                static_cast<const miinfer::Q8_1Block*>(final_q8_1->get()),
+                                static_cast<float*>(logits->get()), model.config().vocab_size, kHidden);
+                        } else {
+                            miinfer::launch_qwen3_q8_k_quantize(
+                                static_cast<const float*>(final_norm->get()),
+                                static_cast<miinfer::Q8KDeviceBlock*>(final_q8->get()), kHidden);
+                            miinfer::launch_qwen3_q6_k_q8_k_gemv(
+                                static_cast<const miinfer::Q6KDeviceBlock*>(d_output_weight->get()),
+                                static_cast<const miinfer::Q8KDeviceBlock*>(final_q8->get()),
+                                static_cast<float*>(logits->get()), model.config().vocab_size, kHidden);
+                        }
                         miinfer::launch_qwen3_argmax(
                             static_cast<const float*>(logits->get()),
                             static_cast<std::uint32_t*>(argmax_token->get()),
@@ -2271,13 +2298,23 @@ int main(int argc, char** argv) {
                         static_cast<const float*>(d_final_norm_weight->get()),
                         static_cast<float*>(final_norm->get()), kHidden,
                         model.config().rms_epsilon);
-                    miinfer::launch_qwen3_q8_k_quantize(
-                        static_cast<const float*>(final_norm->get()),
-                        static_cast<miinfer::Q8KDeviceBlock*>(final_q8->get()), kHidden);
-                    miinfer::launch_qwen3_q6_k_q8_k_gemv(
-                        static_cast<const miinfer::Q6KDeviceBlock*>(d_output_weight->get()),
-                        static_cast<const miinfer::Q8KDeviceBlock*>(final_q8->get()),
-                        static_cast<float*>(logits->get()), model.config().vocab_size, kHidden);
+                    if (lm_mmvq) {
+                        miinfer::launch_q8_1_quantize_f32(
+                            static_cast<const float*>(final_norm->get()),
+                            static_cast<miinfer::Q8_1Block*>(final_q8_1->get()), kHidden);
+                        miinfer::launch_qwen3_q6_k_q8_1_mmvq(
+                            static_cast<const miinfer::Q6KDeviceBlock*>(d_output_weight->get()),
+                            static_cast<const miinfer::Q8_1Block*>(final_q8_1->get()),
+                            static_cast<float*>(logits->get()), model.config().vocab_size, kHidden);
+                    } else {
+                        miinfer::launch_qwen3_q8_k_quantize(
+                            static_cast<const float*>(final_norm->get()),
+                            static_cast<miinfer::Q8KDeviceBlock*>(final_q8->get()), kHidden);
+                        miinfer::launch_qwen3_q6_k_q8_k_gemv(
+                            static_cast<const miinfer::Q6KDeviceBlock*>(d_output_weight->get()),
+                            static_cast<const miinfer::Q8KDeviceBlock*>(final_q8->get()),
+                            static_cast<float*>(logits->get()), model.config().vocab_size, kHidden);
+                    }
                     MIINFER_HIP_CHECK(hipDeviceSynchronize());
                     const auto final_hidden_host = download(outputs[63]->get(), kHidden);
                     const auto final_norm_host = download(final_norm->get(), kHidden);

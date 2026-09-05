@@ -1442,6 +1442,8 @@ void execute_qwen3_decode_gpu_fast_impl(
     const auto& model = plan.model();
     const auto& config = model.config();
     const bool greedy = token_host != nullptr;
+    const char* lm_mmvq_env = std::getenv("MIINFER_LM_Q8_1_MMVQ");
+    const bool lm_mmvq = lm_mmvq_env != nullptr && std::strcmp(lm_mmvq_env, "0") != 0;
     if (token >= config.vocab_size
         || (greedy ? !logits_host.empty() : logits_host.size() != config.vocab_size)
         || model.layers().size() != config.layer_count
@@ -1477,14 +1479,27 @@ void execute_qwen3_decode_gpu_fast_impl(
     const auto* output_weight = static_cast<const Q6KDeviceBlock*>(
         plan.device_tensor_data(model.output().name()));
     profile_gpu_call(profile, Qwen3ProfileCategory::quantization, 1, [&] {
-        launch_qwen3_q8_k_quantize(workspace.final_norm.data(), workspace.quantized_final_norm.data(),
-                                   config.hidden_size);
+        if (lm_mmvq) {
+            launch_q8_1_quantize_f32(
+                workspace.final_norm.data(), static_cast<Q8_1Block*>(workspace.input_q8.data()),
+                config.hidden_size);
+        } else {
+            launch_qwen3_q8_k_quantize(workspace.final_norm.data(), workspace.quantized_final_norm.data(),
+                                       config.hidden_size);
+        }
     }, Qwen3FfnProfileStage::count, Qwen3BoundaryProfileStage::final_norm_to_q8k,
-       static_cast<std::size_t>(config.hidden_size) / 256 * sizeof(Q8KDeviceBlock));
+       static_cast<std::size_t>(config.hidden_size) / (lm_mmvq ? 32 : 256)
+           * (lm_mmvq ? sizeof(Q8_1Block) : sizeof(Q8KDeviceBlock)));
     profile_gpu_call(profile, Qwen3ProfileCategory::lm_head, 1, [&] {
-        launch_qwen3_q6_k_q8_k_gemv(output_weight, workspace.quantized_final_norm.data(),
-                                    workspace.logits.data(),
-                                    config.vocab_size, config.hidden_size);
+        if (lm_mmvq) {
+            launch_qwen3_q6_k_q8_1_mmvq(
+                output_weight, static_cast<const Q8_1Block*>(workspace.input_q8.data()),
+                workspace.logits.data(), config.vocab_size, config.hidden_size);
+        } else {
+            launch_qwen3_q6_k_q8_k_gemv(output_weight, workspace.quantized_final_norm.data(),
+                                        workspace.logits.data(),
+                                        config.vocab_size, config.hidden_size);
+        }
     });
     if (greedy) {
         profile_gpu_call(profile, Qwen3ProfileCategory::argmax, 1, [&] {

@@ -865,6 +865,81 @@ __device__ __forceinline__ int qwen3_dot4_i8(int lhs, int rhs, int accumulator) 
     return __builtin_amdgcn_sdot4(lhs, rhs, accumulator, false);
 }
 
+__device__ __forceinline__ std::uint32_t qwen3_load_b2(
+    const std::uint8_t* values, int index) {
+    const auto* values16 = reinterpret_cast<const std::uint16_t*>(values);
+    return static_cast<std::uint32_t>(values16[2 * index])
+           | (static_cast<std::uint32_t>(values16[2 * index + 1]) << 16);
+}
+
+__device__ __forceinline__ int qwen3_q6_mmvq_word(
+    std::uint32_t low, std::uint32_t high, int nibble_shift) {
+    std::uint32_t packed = 0;
+#pragma unroll
+    for (int byte = 0; byte < 4; ++byte) {
+        const std::uint32_t low_nibble = (low >> (4 * nibble_shift + 8 * byte)) & 0x0fU;
+        const std::uint32_t high_bits =
+            ((high >> (4 * nibble_shift + 8 * byte)) << 4) & 0x30U;
+        const std::uint32_t q = low_nibble | high_bits;
+        packed |= ((q - 32U) & 0xffU) << (8 * byte);
+    }
+    return static_cast<int>(packed);
+}
+
+__device__ __forceinline__ float qwen3_q6_k_q8_1_mmvq_dot(
+    const Q6KDeviceBlock& quant, const Q8_1Block* input, int iqs) {
+    constexpr int qi6_half = 16;
+    constexpr int qi6_quarter = 8;
+    constexpr int qi8_1 = 8;
+    const int q8_offset = 4 * (iqs / qi6_half) + (iqs % qi6_half) / qi8_1;
+    const int scale_offset = qi6_quarter * (iqs / qi6_half)
+                             + (iqs % qi6_half) / 4;
+    const int high_shift = 2 * ((iqs % qi6_half) / qi6_quarter);
+    const std::uint32_t low = qwen3_load_b2(quant.ql, iqs);
+    const std::uint32_t high = qwen3_load_b2(
+        quant.qh, qi6_quarter * (iqs / qi6_half) + iqs % qi6_quarter) >> high_shift;
+    float sum = 0.0F;
+#pragma unroll
+    for (int part = 0; part < 2; ++part) {
+        const auto& q8 = input[q8_offset + 2 * part];
+        const int q6 = qwen3_q6_mmvq_word(low, high, part);
+        const int q8_values = static_cast<int>(*reinterpret_cast<const std::uint32_t*>(
+            q8.qs + 4 * (iqs % qi8_1)));
+        const float d8 = half_to_float(q8.d);
+        sum += d8 * static_cast<float>(qwen3_dot4_i8(q6, q8_values, 0)
+                                       * quant.scales[scale_offset + 4 * part]);
+    }
+    return half_to_float(quant.d) * sum;
+}
+
+__global__ void qwen3_q6_k_q8_1_mmvq_kernel(
+    const Q6KDeviceBlock* weights,
+    const Q8_1Block* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns) {
+    const std::uint32_t row = blockIdx.x;
+    const std::uint32_t tid = threadIdx.x;
+    if (row >= rows) return;
+    __shared__ float partials[128];
+    const std::uint32_t blocks_per_row = columns / 256;
+    const auto* row_weights = weights + static_cast<std::size_t>(row) * blocks_per_row;
+    float sum = 0.0F;
+    const int iqs = static_cast<int>(tid % 32);
+    for (std::uint32_t block = tid / 32; block < blocks_per_row; block += 4) {
+        sum += qwen3_q6_k_q8_1_mmvq_dot(row_weights[block], input + block * 8, iqs);
+    }
+    partials[tid] = sum;
+    __syncthreads();
+    if (tid < 64) partials[tid] += partials[tid + 64];
+    __syncthreads();
+    for (std::uint32_t stride = 32; stride > 0; stride /= 2) {
+        if (tid < stride) partials[tid] += partials[tid + stride];
+        __syncthreads();
+    }
+    if (tid == 0) output[row] = partials[0];
+}
+
 __global__ void qwen3_q4_k_q8_k_gemv_dot4_kernel(
     const Q4KDeviceBlock* weights,
     const Q8KDeviceBlock* input,
@@ -1309,6 +1384,22 @@ void launch_qwen3_q6_k_q8_k_gemv(
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     hipLaunchKernelGGL(qwen3_q6_k_q8_k_gemv_kernel, dim3(rows), dim3(256), 0, stream,
+                       weights, input, output, rows, columns);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen3_q6_k_q8_1_mmvq(
+    const Q6KDeviceBlock* weights,
+    const Q8_1Block* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    hipStream_t stream) {
+    if (weights == nullptr || input == nullptr || output == nullptr || rows == 0 || columns == 0
+        || columns % 256 != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen3_q6_k_q8_1_mmvq_kernel, dim3(rows), dim3(128), 0, stream,
                        weights, input, output, rows, columns);
     MIINFER_HIP_CHECK(hipGetLastError());
 }

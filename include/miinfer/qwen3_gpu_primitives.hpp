@@ -6,6 +6,8 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "miinfer/q4_q8_gemv.hpp"
+
 namespace miinfer {
 
 struct Q6KDeviceBlock {
@@ -289,6 +291,16 @@ void launch_qwen3_q8_k_quantize(
 void launch_qwen3_q6_k_q8_k_gemv(
     const Q6KDeviceBlock* weights,
     const Q8KDeviceBlock* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    hipStream_t stream = nullptr);
+
+// Opt-in M6-B14 diagnostic candidate: llama.cpp-style GCN MMVQ decomposition
+// for the Q6_K x Q8_1 LM-head path. This is not production-selected.
+void launch_qwen3_q6_k_q8_1_mmvq(
+    const Q6KDeviceBlock* weights,
+    const Q8_1Block* input,
     float* output,
     std::uint32_t rows,
     std::uint32_t columns,
