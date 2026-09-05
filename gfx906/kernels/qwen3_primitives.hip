@@ -502,6 +502,62 @@ __global__ void qwen35_deltanet_state_update_transposed_fused_beta_alpha_kernel(
         query_dot * rsqrtf(static_cast<float>(state_size));
 }
 
+__global__ void qwen35_deltanet_state_update_transposed_row_waves_kernel(
+    const float* query, const float* key, const float* value,
+    const float* beta, const float* decay, float* state, float* output,
+    std::uint32_t key_heads, std::uint32_t value_heads, std::uint32_t state_size) {
+    const std::uint32_t head = blockIdx.x;
+    const std::uint32_t thread = threadIdx.x;
+    const std::uint32_t warp = thread / 64;
+    const std::uint32_t lane = thread % 64;
+    if (head >= value_heads || key_heads == 0) return;
+
+    extern __shared__ float row_wave_shared[];
+    const std::uint32_t key_head = head % key_heads;
+    const std::size_t key_base = static_cast<std::size_t>(key_head) * state_size;
+    if (thread < state_size) {
+        row_wave_shared[thread] = query[key_base + thread];
+        row_wave_shared[state_size + thread] = key[key_base + thread];
+    }
+    __syncthreads();
+    const std::uint32_t row = blockIdx.y * 4 + warp;
+    if (row >= state_size) return;
+
+    const std::size_t state_base =
+        static_cast<std::size_t>(head) * state_size * state_size;
+    const std::size_t index0 = state_base + static_cast<std::size_t>(lane) * state_size + row;
+    const std::size_t index1 = state_base
+        + static_cast<std::size_t>(lane + 64) * state_size + row;
+    const float decay_value = decay[head];
+    const float beta_value = beta[head];
+    const float key_dot_partial = decay_value * (
+        state[index0] * row_wave_shared[state_size + lane]
+        + state[index1] * row_wave_shared[state_size + lane + 64]);
+    float key_dot = key_dot_partial;
+#pragma unroll
+    for (int offset = 32; offset > 0; offset /= 2) {
+        key_dot += __shfl_down(key_dot, offset, 64);
+    }
+    const float delta = (value[static_cast<std::size_t>(head) * state_size + row]
+                        - key_dot) * beta_value;
+    const float updated0 = state[index0] * decay_value
+        + delta * row_wave_shared[state_size + lane];
+    const float updated1 = state[index1] * decay_value
+        + delta * row_wave_shared[state_size + lane + 64];
+    state[index0] = updated0;
+    state[index1] = updated1;
+    float query_dot = updated0 * row_wave_shared[lane]
+        + updated1 * row_wave_shared[lane + 64];
+#pragma unroll
+    for (int offset = 32; offset > 0; offset /= 2) {
+        query_dot += __shfl_down(query_dot, offset, 64);
+    }
+    if (lane == 0) {
+        output[static_cast<std::size_t>(head) * state_size + row] =
+            query_dot * rsqrtf(static_cast<float>(state_size));
+    }
+}
+
 __global__ void qwen35_conv_silu_split_kernel(
     const float* current_qkv, const float* conv_weights, float* history,
     float* query, float* key, float* value, std::uint32_t position,
@@ -1914,6 +1970,24 @@ void launch_qwen35_deltanet_state_update_transposed_fused_beta_alpha(
                        (static_cast<std::size_t>(2) * state_size + 2) * sizeof(float),
                        stream, query, key, value, beta_raw, alpha_raw, dt, a,
                        state, output, key_heads, value_heads, state_size);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_deltanet_state_update_transposed_row_waves(
+    const float* query, const float* key, const float* value,
+    const float* beta, const float* decay, float* state, float* output,
+    std::uint32_t key_heads, std::uint32_t value_heads,
+    std::uint32_t state_size, hipStream_t stream) {
+    if (query == nullptr || key == nullptr || value == nullptr || beta == nullptr
+        || decay == nullptr || state == nullptr || output == nullptr || key_heads == 0
+        || value_heads == 0 || state_size != 128 || value_heads % key_heads != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen35_deltanet_state_update_transposed_row_waves_kernel,
+                       dim3(value_heads, (state_size + 3) / 4), dim3(256),
+                       static_cast<std::size_t>(2) * state_size * sizeof(float), stream,
+                       query, key, value, beta, decay, state, output,
+                       key_heads, value_heads, state_size);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

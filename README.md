@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-B61 — fused beta/alpha preparation rejection**
+**Current phase: M6-B62 — DeltaNet row-wave mapping rejection**
 
 The project currently has:
 

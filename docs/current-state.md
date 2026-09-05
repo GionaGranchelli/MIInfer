@@ -15,6 +15,14 @@ For long-term direction, see:
 
 # Current Phase
 
+**M6-B62 — DeltaNet row-wave mapping rejection**
+
+M6-B62 tested one Wave64 per transposed DeltaNet state row with four rows per
+workgroup. The opt-in candidate failed the external contract by position 2
+with large/non-finite state divergence and wrong teacher-forced tokens, so no
+performance result was collected. The B59 production path remains active. See
+`experiments/EXP-0154-m6b62-deltanet-row-waves.md`.
+
 **M6-B61 — fused beta/alpha preparation rejection**
 
 M6-B61 fused recurrent beta/alpha preparation into the transposed DeltaNet

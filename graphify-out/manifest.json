@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788610262.1377108,
-    "seen": 1788610318.2653673,
-    "ast_hash": "22163d458fdb054e438adb7ad44bf726",
+    "mtime": 1788610626.3308613,
+    "seen": 1788610684.4537747,
+    "ast_hash": "7359714a7192b07e91bc8f4eadd1d310",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788610262.139711,
-    "seen": 1788610318.2653787,
-    "ast_hash": "102e8b2e918112a9dac1e02d2c31a6db",
+    "mtime": 1788610626.3328614,
+    "seen": 1788610684.4537861,
+    "ast_hash": "c3256a140f032b103a2d3963e6b14df4",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1788610013.8889654,
-    "seen": 1788610318.2652237,
-    "ast_hash": "7e24c841f423403bc9a1b0a7f09568d5",
+    "mtime": 1788610402.0670002,
+    "seen": 1788610684.4536302,
+    "ast_hash": "419c43fb1124489640df058248f4236a",
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_primitives.hpp": {
@@ -1332,9 +1332,9 @@
     "semantic_hash": ""
   },
   "tools/m6a21_qwen35_gpu_hybrid_block.cpp": {
-    "mtime": 1788610060.8017333,
-    "seen": 1788610318.2653372,
-    "ast_hash": "1b06f945dd8d1d8587872b7a3ec4b021",
+    "mtime": 1788610402.0740001,
+    "seen": 1788610684.4537442,
+    "ast_hash": "902f232b573c426aa6128bf4e98beaee",
     "semantic_hash": ""
   },
   "experiments/EXP-0065-m6a21-qwen35-gpu-hybrid-block.md": {
@@ -1881,6 +1881,12 @@
     "mtime": 1788610262.136711,
     "seen": 1788610318.2656484,
     "ast_hash": "7d63aa5a917ca3ea0d09b1dc83136725",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0154-m6b62-deltanet-row-waves.md": {
+    "mtime": 1788610626.3308613,
+    "seen": 1788610684.454037,
+    "ast_hash": "262ab12066e02db484ca544ebcc51852",
     "semantic_hash": ""
   }
 }
