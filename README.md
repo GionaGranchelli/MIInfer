@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-B24 — full-attention stage attribution**
+**Current phase: M6-B26 — Q-projection differential rejected**
 
 The project currently has:
 
@@ -101,6 +101,14 @@ The project currently has:
   dominated by the combined Q/K/V preparation bucket, FFN, and cached
   attention, with no production behavior change; see
   `experiments/EXP-0116-m6b24-full-attention-attribution.md`
+* a measurement-only fine attribution that separates full-attention Q
+  projection (~0.199 ms), Q head normalization (~0.085 ms), K/V projections,
+  RoPE/KV store, and cached attention; see
+  `experiments/EXP-0117-m6b25-full-attention-fine-attribution.md`
+* a rejected Q4_K×Q8_1 MMVQ full-attention Q-projection candidate: it failed
+  the external observable contract immediately, so the Q4_K×Q8_K path remains
+  active; see
+  `experiments/EXP-0118-m6b26-q-projection-q8-1-reject.md`
 * a reproducible llama.cpp-backed Qwen3.8-27B hybrid tensor/state fixture; see
   `experiments/EXP-0043-m6a1-qwen38-reference-fixture.md`
 * a read-only Qwen3.8 projection/kernel compatibility map; see

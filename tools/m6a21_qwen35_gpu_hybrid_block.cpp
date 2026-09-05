@@ -947,8 +947,8 @@ struct FullAttentionLayer {
     bool q4_q8_1_mmvq = false;
     bool q4_q8_1_gate_up = false;
     struct StageProfile {
-        std::array<hipEvent_t, 8> start{};
-        std::array<hipEvent_t, 8> end{};
+        std::array<hipEvent_t, 15> start{};
+        std::array<hipEvent_t, 15> end{};
     };
     StageProfile* stage_profile = nullptr;
     std::uint32_t stage_profile_position = 0;
@@ -1046,6 +1046,8 @@ struct FullAttentionLayer {
         stage_start(1, position);
         project(q_weight, d_q, static_cast<const float*>(normalized->get()),
             static_cast<miinfer::Q8KDeviceBlock*>(q8->get()), static_cast<float*>(qfull->get()), 12288, kHidden);
+        stage_end(1, position);
+        stage_start(2, position);
         miinfer::launch_qwen35_split_q_gate(static_cast<const float*>(qfull->get()),
             static_cast<float*>(query->get()), static_cast<float*>(gate->get()), 24, 256);
         for (std::uint32_t h = 0; h < 24; ++h) {
@@ -1054,18 +1056,26 @@ struct FullAttentionLayer {
         }
         miinfer::launch_qwen3_head_mul(static_cast<const float*>(query_norm->get()),
             static_cast<const float*>(d_q_norm->get()), static_cast<float*>(query_norm->get()), 24, 256);
+        stage_end(2, position);
+        stage_start(3, position);
         project(k_weight, d_k, static_cast<const float*>(normalized->get()),
                 static_cast<miinfer::Q8KDeviceBlock*>(q8->get()), static_cast<float*>(key->get()),
                 1024, kHidden, reuse_projection_q8);
+        stage_end(3, position);
+        stage_start(4, position);
         for (std::uint32_t h = 0; h < 4; ++h) {
             miinfer::launch_qwen3_rms_normalize(static_cast<const float*>(key->get()) + h * 256,
                 static_cast<float*>(key_norm->get()) + h * 256, 256, model.config().rms_epsilon);
         }
         miinfer::launch_qwen3_head_mul(static_cast<const float*>(key_norm->get()),
             static_cast<const float*>(d_k_norm->get()), static_cast<float*>(key_norm->get()), 4, 256);
+        stage_end(4, position);
+        stage_start(5, position);
         project(v_weight, d_v, static_cast<const float*>(normalized->get()),
                 static_cast<miinfer::Q8KDeviceBlock*>(q8->get()), static_cast<float*>(value->get()),
                 1024, kHidden, reuse_projection_q8);
+        stage_end(5, position);
+        stage_start(6, position);
         miinfer::launch_qwen35_rope_sections(static_cast<const float*>(query_norm->get()),
             static_cast<float*>(query_rope->get()), 24, 256, position, model.config().rope_theta);
         miinfer::launch_qwen35_rope_sections(static_cast<const float*>(key_norm->get()),
@@ -1073,29 +1083,29 @@ struct FullAttentionLayer {
         miinfer::launch_qwen3_kv_cache_store(static_cast<const float*>(key_rope->get()),
             static_cast<const float*>(value->get()), static_cast<float*>(key_cache->get()),
             static_cast<float*>(value_cache->get()), position, kCacheCapacity, 4, 256);
-        stage_end(1, position);
-        stage_start(2, position);
+        stage_end(6, position);
+        stage_start(7, position);
         miinfer::launch_qwen3_cached_attention_parallel(static_cast<const float*>(query_rope->get()),
             static_cast<const float*>(key_cache->get()), static_cast<const float*>(value_cache->get()),
             position + 1, kCacheCapacity, static_cast<float*>(attention->get()), static_cast<float*>(scores->get()),
             static_cast<float*>(probabilities->get()), 24, 4, 256, 1.0F / std::sqrt(256.0F));
-        stage_end(2, position);
-        stage_start(3, position);
+        stage_end(7, position);
+        stage_start(8, position);
         miinfer::launch_qwen35_sigmoid_mul(static_cast<const float*>(attention->get()),
             static_cast<const float*>(gate->get()), static_cast<float*>(gated_attention->get()), 6144);
         project(o_weight, d_o, static_cast<const float*>(gated_attention->get()),
             static_cast<miinfer::Q8KDeviceBlock*>(q8->get()), static_cast<float*>(projected->get()), kHidden, 6144);
-        stage_end(3, position);
-        stage_start(4, position);
+        stage_end(8, position);
+        stage_start(9, position);
         miinfer::launch_qwen3_add(input, static_cast<const float*>(projected->get()),
             static_cast<float*>(residual->get()), kHidden);
-        stage_end(4, position);
-        stage_start(5, position);
+        stage_end(9, position);
+        stage_start(10, position);
         miinfer::launch_qwen3_rms_norm(static_cast<const float*>(residual->get()),
             static_cast<const float*>(d_post->get()), static_cast<float*>(post_normalized->get()), kHidden,
             model.config().rms_epsilon);
-        stage_end(5, position);
-        stage_start(6, position);
+        stage_end(10, position);
+        stage_start(11, position);
         if (q4_q8_1_gate_up
             && ffn_gate_weight.type == miinfer::GgufTensorType::q4_k
             && ffn_up_weight.type == miinfer::GgufTensorType::q4_k) {
@@ -1117,10 +1127,12 @@ struct FullAttentionLayer {
                     static_cast<float*>(ffn_up->get()), kFfnInner, kHidden,
                     reuse_projection_q8);
         }
-        stage_end(6, position);
-        stage_start(7, position);
+        stage_end(11, position);
+        stage_start(12, position);
         miinfer::launch_qwen3_silu_mul(static_cast<const float*>(ffn_gate->get()),
             static_cast<const float*>(ffn_up->get()), static_cast<float*>(ffn_activation->get()), kFfnInner);
+        stage_end(12, position);
+        stage_start(13, position);
         if (q4_q8_1_mmvq && ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
             project_q4_q8_1(d_ffn_down, static_cast<const float*>(ffn_activation->get()),
                             static_cast<miinfer::Q8_1Block*>(q8_1->get()),
@@ -1130,10 +1142,12 @@ struct FullAttentionLayer {
                     static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
                     static_cast<float*>(projected->get()), kHidden, kFfnInner);
         }
+        stage_end(13, position);
+        stage_start(14, position);
         miinfer::launch_qwen3_add(static_cast<const float*>(residual->get()),
             static_cast<const float*>(projected->get()), static_cast<float*>(layer_output->get()), kHidden);
         MIINFER_HIP_CHECK(hipMemcpy(output, layer_output->get(), kHidden * sizeof(float), hipMemcpyDeviceToDevice));
-        stage_end(7, position);
+        stage_end(14, position);
     }
 };
 
@@ -1743,10 +1757,11 @@ int main(int argc, char** argv) {
                     std::cout << "stage=" << stage_names[stage]
                               << " gpu_ms=" << elapsed << '\n';
                 }
-                static constexpr std::array<const char*, 8> attention_stage_names{
-                    "attn_norm_and_qkv", "head_norm_rope_kv_store", "cached_attention",
+                static constexpr std::array<const char*, 15> attention_stage_names{
+                    "attn_norm", "q_projection", "q_split_head_norm", "k_projection",
+                    "k_head_norm", "v_projection", "rope_kv_store", "cached_attention",
                     "attention_gate_o_projection", "attention_residual", "ffn_norm",
-                    "ffn_gate_up", "ffn_activation_down_residual"};
+                    "ffn_gate_up", "ffn_activation", "ffn_down", "ffn_residual"};
                 std::cout << "full_attention_layer3_stages\n";
                 for (std::size_t stage = 0; stage < attention_stage_names.size(); ++stage) {
                     float elapsed = 0.0F;

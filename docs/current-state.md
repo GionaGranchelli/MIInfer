@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-B24 — full-attention stage attribution**
+**M6-B26 — Q-projection differential rejected**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -124,6 +124,16 @@ combined Q/K/V, head-normalization, RoPE, and KV-store region, 0.13840 ms for
 cached attention, and about 0.852 ms for FFN work. No production behavior was
 changed; the next experiment must split the combined preparation bucket before
 selecting an optimization.
+EXP-0117 splits that preparation bucket. At position 63, layer 3 Q projection
+costs about 0.199 ms, Q split/head normalization about 0.085 ms, K projection
+about 0.033 ms, V projection about 0.067 ms, and RoPE/KV store about 0.017 ms.
+The next bounded candidate is an opt-in Q4_K×Q8_1 MMVQ Q projection using the
+existing validated primitive; B23 remains the production default.
+EXP-0118 rejects that Q-projection representation port. It failed native
+replay and the external observable contract at P0, with final-hidden cosine
+0.6435 and logits cosine 0.9465. The Q4_K×Q8_K production path is restored;
+the next candidate should preserve Q8_K semantics or have a new external
+contract justification.
 M6-A8 provides a dedicated qwen35 model boundary and a real layer-0 RMSNorm
 GPU fixture on gfx906. M6-A9 validates the real Q6_K output head through the
 existing Q6_K×Q8_K GPU primitive, M6-A10 validates a real Q4_K×Q8_K attention

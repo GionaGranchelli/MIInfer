@@ -10,12 +10,12 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-B24 — full-attention stage attribution**
+**Current phase: M6-B26 — Q-projection differential rejected**
 
 Immediate objective:
 
-> Split the representative full-attention Q/K/V preparation bucket into
-> separable operation costs before selecting the next measured optimization.
+> Investigate the next separable full-attention support cost after rejecting
+> the incompatible Q8_1 Q-projection representation port.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
