@@ -10,13 +10,13 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-B45 — Q4_K×Q8_1 inner-loop differential**
+**Current phase: M6-B46 — Q4_K×Q8_1 packed-input rejection**
 
 Immediate objective:
 
-> Decide whether a direct exact-shape test of llama.cpp-style Q8 operand
-> packing inside the existing B41 two-row Q4_K×Q8_1 mapping is justified;
-> retain decoded Q4_K metadata staging and the existing Q6_K×Q8_1 LM head.
+> Select the next measured whole-token target after rejecting Q4_K×Q8_1
+> local operand packing; retain decoded Q4_K metadata staging and the existing
+> Q6_K×Q8_1 LM head.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See

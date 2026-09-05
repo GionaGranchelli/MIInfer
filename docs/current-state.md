@@ -1295,6 +1295,12 @@ non-geometric hypothesis, but no performance result is inferred from source
 inspection and no candidate was selected. See
 experiments/EXP-0137-m6b45-q4k-q8-1-inner-loop-differential.md.
 
+M6-B46 tested that inner-loop hypothesis as an opt-in diagnostic. Native and
+64-layer external correctness checks passed, but serial whole-token A/B was
+neutral: `+0.01%` at TG64 and `+0.08%` at TG128. The candidate was removed and
+rejected; B41 remains selected. See
+experiments/EXP-0138-m6b46-q4k-q8-1-packed-input.md.
+
 Update this document whenever:
 
 * active milestone changes
