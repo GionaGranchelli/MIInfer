@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-B43 — post-B41 profile and Q6 LM-head metadata rejection**
+**M6-B44 — post-B41 profile and Q4 split-K rejection**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -1276,8 +1276,14 @@ ms`, argmax `0.49696 ms`, and zero allocations. M6-B43 tested staging Q6_K
 LM-head `d`/scale metadata in LDS. Native replay passed, but the serial
 same-build A/B was only `+0.13%` at TG64 and `+0.06%` at TG128, within noise;
 the candidate was removed and rejected. See
-experiments/EXP-0134-m6b42-post-b41-profile.md and
-experiments/EXP-0135-m6b43-q6k-q8-1-lm-metadata.md.
+ experiments/EXP-0134-m6b42-post-b41-profile.md and
+ experiments/EXP-0135-m6b43-q6k-q8-1-lm-metadata.md.
+
+M6-B44 tested the pinned llama.cpp-style two-Wave64 split-K mapping for the
+Q4_K×Q8_1 path. Native replay and zero-allocation checks passed, but throughput
+fell `16.25%` at TG64 and `16.20%` at TG128. The candidate was removed; the
+two-independent-output-row B41 mapping remains selected. See
+experiments/EXP-0136-m6b44-q4k-q8-1-split-k.md.
 
 Update this document whenever:
 

@@ -10,7 +10,7 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-B43 — post-B41 profile and Q6 LM-head metadata rejection**
+**Current phase: M6-B44 — post-B41 profile and Q4 split-K rejection**
 
 Immediate objective:
 
