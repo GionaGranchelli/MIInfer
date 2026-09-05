@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-B16 — Qwen3.8-27B projection-input reuse**
+**M6-B17 — Qwen3.8-27B recurrent Q5_K×Q8_1 MMVQ**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -82,6 +82,13 @@ the same; `MIINFER_REUSE_PROJECTION_Q8=0` retains separate quantization. Native
 replay, the 64-layer observable contract, and Release CTest remain valid. The
 same-build stable-peak medians improve TG64 from 8.91219 to 8.98126 tok/s
 (+0.78%) and TG128 from 8.82486 to 8.88730 tok/s (+0.71%).
+EXP-0110 adds a production-selected gfx906 Q5_K×Q8_1 MMVQ-style path for the
+recurrent `ssm_out` projection. It quantizes the FP32 input to canonical Q8_1
+blocks and uses a 128-thread/output-row decomposition. Native replay and the
+external observable contract remain valid, CTest is 20/20, and stable-peak
+TG64/TG128 medians improve from 8.97493/8.89340 to 9.95072/9.80298 tok/s
+(+10.87%/+10.23%). Set `MIINFER_Q5K_Q8_1_MMVQ=0` to select the former
+Q5_K×Q8_K control.
 M6-A8 provides a dedicated qwen35 model boundary and a real layer-0 RMSNorm
 GPU fixture on gfx906. M6-A9 validates the real Q6_K output head through the
 existing Q6_K×Q8_K GPU primitive, M6-A10 validates a real Q4_K×Q8_K attention

@@ -379,6 +379,15 @@ void project(const miinfer::GgufTensor& weight, const Buffer& device_weight,
     }
 }
 
+void project_q5_q8_1(const Buffer& device_weight, const float* input,
+                     miinfer::Q8_1Block* q8, float* output,
+                     std::uint32_t rows, std::uint32_t columns) {
+    miinfer::launch_q8_1_quantize_f32(input, q8, columns);
+    miinfer::launch_qwen3_q5_k_q8_1_mmvq(
+        static_cast<const miinfer::Q5KDeviceBlock*>(device_weight->get()), q8,
+        output, rows, columns);
+}
+
 struct RecurrentLayer {
     std::size_t index;
     const miinfer::Qwen35Model& model;
@@ -403,7 +412,7 @@ struct RecurrentLayer {
     Buffer normalized, qkv, gate, beta_raw, alpha_raw, beta, decay, history;
     Buffer query, key, value, query_norm, key_norm, state, recurrent_output;
     Buffer head_norm, gated, projected, residual, post_normalized;
-    Buffer ffn_gate, ffn_up, ffn_activation, layer_output, q8;
+    Buffer ffn_gate, ffn_up, ffn_activation, layer_output, q8, q8_1;
     RecurrentTrace* trace = nullptr;
     UpdateProvenance* provenance = nullptr;
     std::uint32_t provenance_position = 0;
@@ -426,6 +435,7 @@ struct RecurrentLayer {
     StageProfile* stage_profile = nullptr;
     std::uint32_t stage_profile_position = 0;
     bool reuse_projection_q8 = false;
+    bool q5_q8_1_mmvq = false;
 
     RecurrentLayer(const miinfer::Qwen35Model& model_value, std::size_t layer,
                    const std::filesystem::path& fixture)
@@ -450,6 +460,9 @@ struct RecurrentLayer {
         const char* reuse_projection_q8_env = std::getenv("MIINFER_REUSE_PROJECTION_Q8");
         reuse_projection_q8 = reuse_projection_q8_env == nullptr
             || std::strcmp(reuse_projection_q8_env, "0") != 0;
+        const char* q5_q8_1_mmvq_env = std::getenv("MIINFER_Q5K_Q8_1_MMVQ");
+        q5_q8_1_mmvq = q5_q8_1_mmvq_env == nullptr
+            || std::strcmp(q5_q8_1_mmvq_env, "0") != 0;
         require_type(qkv_weight, {miinfer::GgufTensorType::q4_k,
                                    miinfer::GgufTensorType::q6_k});
         require_type(gate_weight, {miinfer::GgufTensorType::q4_k});
@@ -509,6 +522,7 @@ struct RecurrentLayer {
         ffn_activation = allocate(kFfnInner * sizeof(float));
         layer_output = allocate(kHidden * sizeof(float));
         q8 = allocate((kFfnInner / 256) * sizeof(miinfer::Q8KDeviceBlock));
+        q8_1 = allocate((kInner / miinfer::kQ8_1BlockSize) * sizeof(miinfer::Q8_1Block));
 
         MIINFER_HIP_CHECK(hipMemset(history->get(), 0, 4 * kChannels * sizeof(float)));
         const auto initial = read_f32(
@@ -750,13 +764,22 @@ struct RecurrentLayer {
             gate_path_capture->gated = download(gated->get(), kVHeads * kState);
         }
         stage_start(7, position);
-        project(ssm_out_weight, d_ssm_out, static_cast<const float*>(gated->get()),
-                static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
-                static_cast<float*>(projected->get()), kHidden, kInner);
+        if (q5_q8_1_mmvq) {
+            project_q5_q8_1(d_ssm_out, static_cast<const float*>(gated->get()),
+                            static_cast<miinfer::Q8_1Block*>(q8_1->get()),
+                            static_cast<float*>(projected->get()), kHidden, kInner);
+        } else {
+            project(ssm_out_weight, d_ssm_out, static_cast<const float*>(gated->get()),
+                    static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
+                    static_cast<float*>(projected->get()), kHidden, kInner);
+        }
         if (output_projection_path_capture != nullptr
             && output_projection_path_capture_position == position) {
             output_projection_path_capture->q8_input = download_bytes(
-                q8->get(), (kInner / 256) * sizeof(miinfer::Q8KDeviceBlock));
+                q5_q8_1_mmvq ? q8_1->get() : q8->get(),
+                q5_q8_1_mmvq
+                    ? (kInner / miinfer::kQ8_1BlockSize) * sizeof(miinfer::Q8_1Block)
+                    : (kInner / 256) * sizeof(miinfer::Q8KDeviceBlock));
             output_projection_path_capture->projected = download(projected->get(), kHidden);
         }
         stage_end(7, position);

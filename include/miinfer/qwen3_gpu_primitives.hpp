@@ -322,6 +322,16 @@ void launch_qwen3_q6_k_q8_1_mmvq(
     std::uint32_t columns,
     hipStream_t stream = nullptr);
 
+// Opt-in M6-B17 diagnostic candidate: gfx906 MMVQ decomposition for
+// Q5_K x Q8_1 recurrent output projections.
+void launch_qwen3_q5_k_q8_1_mmvq(
+    const Q5KDeviceBlock* weights,
+    const Q8_1Block* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    hipStream_t stream = nullptr);
+
 // M6-A10 diagnostic primitive: canonical GGUF Q4_K weights with Q8_K input.
 void launch_qwen3_q4_k_q8_k_gemv(
     const Q4KDeviceBlock* weights,
