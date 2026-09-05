@@ -1624,6 +1624,16 @@ int main(int argc, char** argv) {
     try {
         const auto model = miinfer::Qwen35Model::load(argv[1]);
         const auto fixture = std::filesystem::path(argv[2]);
+        std::optional<std::uint32_t> prompt_override;
+        if (const char* prompt_env = std::getenv("MIINFER_PROMPT_TOKEN"); prompt_env != nullptr) {
+            try {
+                const auto parsed = std::stoull(prompt_env);
+                if (parsed >= model.config().vocab_size) throw std::invalid_argument("out of range");
+                prompt_override = static_cast<std::uint32_t>(parsed);
+            } catch (...) {
+                throw std::invalid_argument("MIINFER_PROMPT_TOKEN must be a valid vocabulary ID");
+            }
+        }
         const auto operand_fixture = argc == 5
             ? std::filesystem::path(argv[3]) : fixture;
         RecurrentLayer recurrent0(model, 0, fixture);
@@ -2005,7 +2015,9 @@ int main(int argc, char** argv) {
                 attention3.stage_profile = &attention_profile;
                 attention3.stage_profile_position = 63;
                 reset_all();
-                const auto prompt = read_tokens(fixture / "prompt_tokens.txt");
+                const auto prompt = prompt_override.has_value()
+                    ? std::vector<std::uint32_t>{*prompt_override}
+                    : read_tokens(fixture / "prompt_tokens.txt");
                 if (prompt.size() != 1 || generated.size() < 63) {
                     throw std::runtime_error("profile requires prompt and 63 generated tokens");
                 }
@@ -2145,7 +2157,9 @@ int main(int argc, char** argv) {
                 return 0;
             }
             if (generation) {
-                const auto prompt = read_tokens(fixture / "prompt_tokens.txt");
+                const auto prompt = prompt_override.has_value()
+                    ? std::vector<std::uint32_t>{*prompt_override}
+                    : read_tokens(fixture / "prompt_tokens.txt");
                 if (prompt.size() != 1 || prompt.front() >= model.config().vocab_size) {
                     throw std::runtime_error("generation requires one valid prompt token");
                 }
