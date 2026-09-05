@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-B30 — transposed recurrent-state layout**
+**Current phase: M6-B31 — recurrent FFN Gate/Up two-row candidate rejected**
 
 The project currently has:
 
@@ -124,6 +124,10 @@ The project currently has:
   the logical state contract while improving native TG64/TG128 by about
   3.4%/3.6%; set `MIINFER_DELTA_TRANSPOSED_STATE=0` for the former layout;
   see `experiments/EXP-0122-m6b30-transposed-deltanet-state.md`
+* a rejected two-row recurrent FFN Gate/Up MMVQ geometry: it improved sampled
+  TG64/TG128 by about 1.45%/1.49% but introduced an external-contract P6
+  decision change and was removed; see
+  `experiments/EXP-0123-m6b31-ffn-gate-up-two-row.md`
 * a reproducible llama.cpp-backed Qwen3.8-27B hybrid tensor/state fixture; see
   `experiments/EXP-0043-m6a1-qwen38-reference-fixture.md`
 * a read-only Qwen3.8 projection/kernel compatibility map; see

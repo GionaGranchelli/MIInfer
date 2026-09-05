@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788581855.4232006,
-    "seen": 1788581865.4580665,
-    "ast_hash": "203e4061a58c09b7b3b906e23a71d5b1",
+    "mtime": 1788582687.946264,
+    "seen": 1788582766.729527,
+    "ast_hash": "eeb0943e911ff58169b818256da25f10",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788581834.0063016,
-    "seen": 1788581865.4580798,
-    "ast_hash": "30d16161e17c139db94a8dff2011e65a",
+    "mtime": 1788582687.948264,
+    "seen": 1788582766.72954,
+    "ast_hash": "24617c226c18b7af93e409cc40f19045",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788581840.1142728,
-    "seen": 1788581865.4581075,
-    "ast_hash": "65478867ad9127ec36d5a17ad14c4113",
+    "mtime": 1788582687.950264,
+    "seen": 1788582766.729562,
+    "ast_hash": "377c73b1debe7f000b1cc65dad94dfcb",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -522,8 +522,8 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1788580676.8397856,
-    "seen": 1788580698.8766737,
+    "mtime": 1788582646.061462,
+    "seen": 1788582766.7293637,
     "ast_hash": "774f97ad54789d42b68da9caeac89ce5",
     "semantic_hash": ""
   },
@@ -1332,8 +1332,8 @@
     "semantic_hash": ""
   },
   "tools/m6a21_qwen35_gpu_hybrid_block.cpp": {
-    "mtime": 1788581559.0046015,
-    "seen": 1788581802.0025759,
+    "mtime": 1788582650.8494394,
+    "seen": 1788582766.7294843,
     "ast_hash": "793c0ed26443918da90541feb11cb6d0",
     "semantic_hash": ""
   },
@@ -1695,6 +1695,12 @@
     "mtime": 1788581671.9300678,
     "seen": 1788581802.0028489,
     "ast_hash": "f0ebfdfc95d34df0500254ffe3e6b8e2",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0123-m6b31-ffn-gate-up-two-row.md": {
+    "mtime": 1788582667.8833587,
+    "seen": 1788582766.7297547,
+    "ast_hash": "f79aad463e3fbaf29df0db17f7841134",
     "semantic_hash": ""
   }
 }

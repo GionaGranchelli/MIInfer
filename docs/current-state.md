@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-B30 — transposed recurrent-state layout**
+**M6-B31 — recurrent FFN Gate/Up two-row candidate rejected**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -157,6 +157,12 @@ generation through 128 tokens replays exactly with zero decode allocations,
 the complete P64 external observable contract passes, and Release CTest is
 20/20. `MIINFER_DELTA_TRANSPOSED_STATE=0` retains the row-major control.
 See `experiments/EXP-0122-m6b30-transposed-deltanet-state.md`.
+EXP-0123 tested two independent recurrent FFN Gate/Up output rows per
+128-thread Q4_K×Q8_1 MMVQ workgroup. It improved sampled TG64/TG128 by
+1.45%/1.49%, but introduced a new P6 teacher-forced decision change with only
+4/5 top-5 overlap, outside the accepted A27 observable contract. The candidate
+was removed; B30 remains the production default. See
+`experiments/EXP-0123-m6b31-ffn-gate-up-two-row.md`.
 M6-A8 provides a dedicated qwen35 model boundary and a real layer-0 RMSNorm
 GPU fixture on gfx906. M6-A9 validates the real Q6_K output head through the
 existing Q6_K×Q8_K GPU primitive, M6-A10 validates a real Q4_K×Q8_K attention

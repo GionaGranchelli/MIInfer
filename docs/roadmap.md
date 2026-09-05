@@ -10,13 +10,13 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-B30 — transposed recurrent-state layout**
+**Current phase: M6-B31 — recurrent FFN Gate/Up two-row candidate rejected**
 
 Immediate objective:
 
-> Validate and production-select the transposed DeltaNet recurrent-state
-> layout after recurrent stage attribution identified state access as the next
-> bounded target.
+> Refresh the post-B31 production profile and select the next measured
+> optimization; do not retry the rejected two-row FFN geometry without a new
+> correctness mechanism.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
