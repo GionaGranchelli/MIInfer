@@ -157,7 +157,7 @@ __global__ void qwen3_head_rms_normalize_kernel(
     std::uint32_t head_dim, float epsilon) {
     const std::uint32_t head = blockIdx.x;
     if (head >= heads) return;
-    __shared__ float partials[128];
+    __shared__ float partials[256];
     float sum = 0.0F;
     const std::uint32_t base = head * head_dim;
     for (std::uint32_t index = threadIdx.x; index < head_dim; index += blockDim.x) {
@@ -1308,8 +1308,9 @@ void launch_qwen3_head_rms_normalize(
     const float* input, float* output, std::uint32_t heads,
     std::uint32_t head_dim, float epsilon, hipStream_t stream) {
     if (input == nullptr || output == nullptr || heads == 0 || head_dim == 0
-        || head_dim > 128 || epsilon <= 0.0F) MIINFER_HIP_CHECK(hipErrorInvalidValue);
-    hipLaunchKernelGGL(qwen3_head_rms_normalize_kernel, dim3(heads), dim3(128), 0, stream,
+        || head_dim > 256 || epsilon <= 0.0F) MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    const unsigned threads = head_dim > 128 ? 256 : 128;
+    hipLaunchKernelGGL(qwen3_head_rms_normalize_kernel, dim3(heads), dim3(threads), 0, stream,
                        input, output, heads, head_dim, epsilon);
     MIINFER_HIP_CHECK(hipGetLastError());
 }

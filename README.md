@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-B26 — Q-projection differential rejected**
+**Current phase: M6-B27 — batched full-attention head normalization**
 
 The project currently has:
 
@@ -109,6 +109,10 @@ The project currently has:
   the external observable contract immediately, so the Q4_K×Q8_K path remains
   active; see
   `experiments/EXP-0118-m6b26-q-projection-q8-1-reject.md`
+* a production-selected batched full-attention head RMS-normalization path,
+  improving stable-peak TG64/TG128 by about 1.4%/1.4%; set
+  `MIINFER_BATCH_HEAD_RMS=0` for the separate-launch control; see
+  `experiments/EXP-0119-m6b27-batched-head-rms.md`
 * a reproducible llama.cpp-backed Qwen3.8-27B hybrid tensor/state fixture; see
   `experiments/EXP-0043-m6a1-qwen38-reference-fixture.md`
 * a read-only Qwen3.8 projection/kernel compatibility map; see

@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-B26 — Q-projection differential rejected**
+**M6-B27 — batched full-attention head normalization**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -134,6 +134,11 @@ replay and the external observable contract at P0, with final-hidden cosine
 0.6435 and logits cosine 0.9465. The Q4_K×Q8_K production path is restored;
 the next candidate should preserve Q8_K semantics or have a new external
 contract justification.
+EXP-0119 selects batched 256-thread head RMS normalization for full-attention
+Q/K heads. Native replay, the external observable contract, poisoned reset,
+and CTest 20/20 pass. Three-process stable-peak medians improve TG64/TG128
+from 11.2861/11.1409 to 11.4420/11.2970 tok/s (+1.38%/+1.40%). Set
+`MIINFER_BATCH_HEAD_RMS=0` to select the separate-launch control.
 M6-A8 provides a dedicated qwen35 model boundary and a real layer-0 RMSNorm
 GPU fixture on gfx906. M6-A9 validates the real Q6_K output head through the
 existing Q6_K×Q8_K GPU primitive, M6-A10 validates a real Q4_K×Q8_K attention

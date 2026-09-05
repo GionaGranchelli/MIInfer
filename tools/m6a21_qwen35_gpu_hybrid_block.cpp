@@ -946,6 +946,7 @@ struct FullAttentionLayer {
     Buffer q8_1;
     bool q4_q8_1_mmvq = false;
     bool q4_q8_1_gate_up = false;
+    bool batch_head_rms = false;
     struct StageProfile {
         std::array<hipEvent_t, 15> start{};
         std::array<hipEvent_t, 15> end{};
@@ -985,6 +986,9 @@ struct FullAttentionLayer {
         const char* q4_q8_1_gate_up_env = std::getenv("MIINFER_Q4K_Q8_1_MMVQ_FFN_GATE_UP");
         q4_q8_1_gate_up = q4_q8_1_gate_up_env == nullptr
             || std::strcmp(q4_q8_1_gate_up_env, "0") != 0;
+        const char* batch_head_rms_env = std::getenv("MIINFER_BATCH_HEAD_RMS");
+        batch_head_rms = batch_head_rms_env == nullptr
+            || std::strcmp(batch_head_rms_env, "0") != 0;
         normalized = allocate(kHidden * sizeof(float)); qfull = allocate(12288 * sizeof(float));
         query = allocate(6144 * sizeof(float)); gate = allocate(6144 * sizeof(float));
         key = allocate(1024 * sizeof(float)); key_norm = allocate(1024 * sizeof(float));
@@ -1050,9 +1054,15 @@ struct FullAttentionLayer {
         stage_start(2, position);
         miinfer::launch_qwen35_split_q_gate(static_cast<const float*>(qfull->get()),
             static_cast<float*>(query->get()), static_cast<float*>(gate->get()), 24, 256);
-        for (std::uint32_t h = 0; h < 24; ++h) {
-            miinfer::launch_qwen3_rms_normalize(static_cast<const float*>(query->get()) + h * 256,
-                static_cast<float*>(query_norm->get()) + h * 256, 256, model.config().rms_epsilon);
+        if (batch_head_rms) {
+            miinfer::launch_qwen3_head_rms_normalize(
+                static_cast<const float*>(query->get()), static_cast<float*>(query_norm->get()),
+                24, 256, model.config().rms_epsilon);
+        } else {
+            for (std::uint32_t h = 0; h < 24; ++h) {
+                miinfer::launch_qwen3_rms_normalize(static_cast<const float*>(query->get()) + h * 256,
+                    static_cast<float*>(query_norm->get()) + h * 256, 256, model.config().rms_epsilon);
+            }
         }
         miinfer::launch_qwen3_head_mul(static_cast<const float*>(query_norm->get()),
             static_cast<const float*>(d_q_norm->get()), static_cast<float*>(query_norm->get()), 24, 256);
@@ -1063,9 +1073,15 @@ struct FullAttentionLayer {
                 1024, kHidden, reuse_projection_q8);
         stage_end(3, position);
         stage_start(4, position);
-        for (std::uint32_t h = 0; h < 4; ++h) {
-            miinfer::launch_qwen3_rms_normalize(static_cast<const float*>(key->get()) + h * 256,
-                static_cast<float*>(key_norm->get()) + h * 256, 256, model.config().rms_epsilon);
+        if (batch_head_rms) {
+            miinfer::launch_qwen3_head_rms_normalize(
+                static_cast<const float*>(key->get()), static_cast<float*>(key_norm->get()),
+                4, 256, model.config().rms_epsilon);
+        } else {
+            for (std::uint32_t h = 0; h < 4; ++h) {
+                miinfer::launch_qwen3_rms_normalize(static_cast<const float*>(key->get()) + h * 256,
+                    static_cast<float*>(key_norm->get()) + h * 256, 256, model.config().rms_epsilon);
+            }
         }
         miinfer::launch_qwen3_head_mul(static_cast<const float*>(key_norm->get()),
             static_cast<const float*>(d_k_norm->get()), static_cast<float*>(key_norm->get()), 4, 256);

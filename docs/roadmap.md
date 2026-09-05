@@ -10,12 +10,12 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-B26 — Q-projection differential rejected**
+**Current phase: M6-B27 — batched full-attention head normalization**
 
 Immediate objective:
 
-> Investigate the next separable full-attention support cost after rejecting
-> the incompatible Q8_1 Q-projection representation port.
+> Refresh the production profile after selecting batched full-attention head
+> normalization and choose the next measured whole-token target.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
