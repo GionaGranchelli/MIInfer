@@ -1045,6 +1045,42 @@ __global__ void qwen35_f32_dual_gemv_kernel(
     }
 }
 
+__global__ void qwen35_f32_dual_beta_decay_kernel(
+    const float* beta_weights, const float* alpha_weights, const float* input,
+    const float* dt, const float* a, float* beta, float* decay,
+    std::uint32_t rows, std::uint32_t columns) {
+    const std::uint32_t row = blockIdx.x;
+    if (row >= rows) return;
+    __shared__ float partials_beta[256];
+    __shared__ float partials_alpha[256];
+    float sum_beta = 0.0F;
+    float sum_alpha = 0.0F;
+    for (std::uint32_t column = threadIdx.x; column < columns; column += blockDim.x) {
+        const float value = input[column];
+        const std::size_t index = static_cast<std::size_t>(row) * columns + column;
+        sum_beta += beta_weights[index] * value;
+        sum_alpha += alpha_weights[index] * value;
+    }
+    partials_beta[threadIdx.x] = sum_beta;
+    partials_alpha[threadIdx.x] = sum_alpha;
+    __syncthreads();
+    for (std::uint32_t stride = blockDim.x / 2; stride > 0; stride /= 2) {
+        if (threadIdx.x < stride) {
+            partials_beta[threadIdx.x] += partials_beta[threadIdx.x + stride];
+            partials_alpha[threadIdx.x] += partials_alpha[threadIdx.x + stride];
+        }
+        __syncthreads();
+    }
+    if (threadIdx.x == 0) {
+        const float beta_raw = partials_beta[0];
+        const float alpha_raw = partials_alpha[0];
+        beta[row] = 1.0F / (1.0F + expf(-beta_raw));
+        const float x = alpha_raw + dt[row];
+        const float softplus = x <= 20.0F ? log1pf(expf(x)) : x;
+        decay[row] = expf(softplus * a[row]);
+    }
+}
+
 __global__ void qwen35_prepare_beta_decay_kernel(
     const float* beta_raw, const float* alpha_raw, const float* dt,
     const float* a, float* beta, float* decay, std::uint32_t elements) {
@@ -2436,6 +2472,20 @@ void launch_qwen35_f32_dual_gemv(
     }
     hipLaunchKernelGGL(qwen35_f32_dual_gemv_kernel, dim3(rows), dim3(256), 0, stream,
                        weights_a, weights_b, input, output_a, output_b, rows, columns);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_f32_dual_beta_decay(
+    const float* beta_weights, const float* alpha_weights, const float* input,
+    const float* dt, const float* a, float* beta, float* decay,
+    std::uint32_t rows, std::uint32_t columns, hipStream_t stream) {
+    if (beta_weights == nullptr || alpha_weights == nullptr || input == nullptr
+        || dt == nullptr || a == nullptr || beta == nullptr || decay == nullptr
+        || rows == 0 || columns == 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen35_f32_dual_beta_decay_kernel, dim3(rows), dim3(256), 0, stream,
+                       beta_weights, alpha_weights, input, dt, a, beta, decay, rows, columns);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
