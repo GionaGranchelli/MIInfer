@@ -19,6 +19,7 @@
 #include <iostream>
 #include <memory>
 #include <numeric>
+#include <optional>
 #include <span>
 #include <stdexcept>
 #include <string>

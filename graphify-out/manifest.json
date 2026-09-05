@@ -522,8 +522,8 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1788614152.898064,
-    "seen": 1788614192.4289548,
+    "mtime": 1788616867.8622558,
+    "seen": 1788616890.1284547,
     "ast_hash": "a996d73a37316c4c8b279e2b62d8a9f8",
     "semantic_hash": ""
   },
@@ -1332,9 +1332,9 @@
     "semantic_hash": ""
   },
   "tools/m6a21_qwen35_gpu_hybrid_block.cpp": {
-    "mtime": 1788614152.903064,
-    "seen": 1788614192.4290693,
-    "ast_hash": "988047ee43865945978809a05b6c6591",
+    "mtime": 1788616867.8692558,
+    "seen": 1788616890.1285865,
+    "ast_hash": "ef001c65b7488fc8ddc6d3a093e0a5ee",
     "semantic_hash": ""
   },
   "experiments/EXP-0065-m6a21-qwen35-gpu-hybrid-block.md": {
@@ -1965,6 +1965,30 @@
     "mtime": 1788615408.84713,
     "seen": 1788615421.1907532,
     "ast_hash": "14deb367123c5fab18228be738efc3ea",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0169-m6b74-llama-architecture-differential.md": {
+    "mtime": 1788616672.0801845,
+    "seen": 1788616890.1289055,
+    "ast_hash": "287eea0c29ea1539455724c30a2c9034",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0170-m6b75-fused-gate-up-swiglu.md": {
+    "mtime": 1788616835.2104106,
+    "seen": 1788616890.1289072,
+    "ast_hash": "ccda1b4576d9bc0b18ee0da6f807ed6b",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0171-m6b76-architectural-blocker.md": {
+    "mtime": 1788617535.641086,
+    "seen": 1788617549.0311933,
+    "ast_hash": "6afe0042441eb6365d7b7fb9a8dc5b21",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0172-m6b77-q4k-reference-inner-loop-schedule.md": {
+    "mtime": 1788617400.11573,
+    "seen": 1788617411.665868,
+    "ast_hash": "592485fe8a3753fc1bc105fad75e2368",
     "semantic_hash": ""
   }
 }
