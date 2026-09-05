@@ -388,6 +388,15 @@ void project_q5_q8_1(const Buffer& device_weight, const float* input,
         output, rows, columns);
 }
 
+void project_q4_q8_1(const Buffer& device_weight, const float* input,
+                     miinfer::Q8_1Block* q8, float* output,
+                     std::uint32_t rows, std::uint32_t columns) {
+    miinfer::launch_q8_1_quantize_f32(input, q8, columns);
+    miinfer::launch_qwen3_q4_k_q8_1_mmvq(
+        static_cast<const miinfer::Q4KDeviceBlock*>(device_weight->get()), q8,
+        output, rows, columns);
+}
+
 struct RecurrentLayer {
     std::size_t index;
     const miinfer::Qwen35Model& model;
@@ -436,6 +445,7 @@ struct RecurrentLayer {
     std::uint32_t stage_profile_position = 0;
     bool reuse_projection_q8 = false;
     bool q5_q8_1_mmvq = false;
+    bool q4_q8_1_mmvq = false;
 
     RecurrentLayer(const miinfer::Qwen35Model& model_value, std::size_t layer,
                    const std::filesystem::path& fixture)
@@ -463,6 +473,9 @@ struct RecurrentLayer {
         const char* q5_q8_1_mmvq_env = std::getenv("MIINFER_Q5K_Q8_1_MMVQ");
         q5_q8_1_mmvq = q5_q8_1_mmvq_env == nullptr
             || std::strcmp(q5_q8_1_mmvq_env, "0") != 0;
+        const char* q4_q8_1_mmvq_env = std::getenv("MIINFER_Q4K_Q8_1_MMVQ");
+        q4_q8_1_mmvq = q4_q8_1_mmvq_env == nullptr
+            || std::strcmp(q4_q8_1_mmvq_env, "0") != 0;
         require_type(qkv_weight, {miinfer::GgufTensorType::q4_k,
                                    miinfer::GgufTensorType::q6_k});
         require_type(gate_weight, {miinfer::GgufTensorType::q4_k});
@@ -522,7 +535,7 @@ struct RecurrentLayer {
         ffn_activation = allocate(kFfnInner * sizeof(float));
         layer_output = allocate(kHidden * sizeof(float));
         q8 = allocate((kFfnInner / 256) * sizeof(miinfer::Q8KDeviceBlock));
-        q8_1 = allocate((kInner / miinfer::kQ8_1BlockSize) * sizeof(miinfer::Q8_1Block));
+        q8_1 = allocate((kFfnInner / miinfer::kQ8_1BlockSize) * sizeof(miinfer::Q8_1Block));
 
         MIINFER_HIP_CHECK(hipMemset(history->get(), 0, 4 * kChannels * sizeof(float)));
         const auto initial = read_f32(
@@ -824,9 +837,15 @@ struct RecurrentLayer {
             layer_path_capture->post_normalized = download(post_normalized->get(), kHidden);
         }
         stage_start(12, position);
-        project(ffn_down_weight, d_ffn_down, static_cast<const float*>(ffn_activation->get()),
-                static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
-                static_cast<float*>(projected->get()), kHidden, kFfnInner);
+        if (q4_q8_1_mmvq && ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
+            project_q4_q8_1(d_ffn_down, static_cast<const float*>(ffn_activation->get()),
+                            static_cast<miinfer::Q8_1Block*>(q8_1->get()),
+                            static_cast<float*>(projected->get()), kHidden, kFfnInner);
+        } else {
+            project(ffn_down_weight, d_ffn_down, static_cast<const float*>(ffn_activation->get()),
+                    static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
+                    static_cast<float*>(projected->get()), kHidden, kFfnInner);
+        }
         trace_tensor(position, "ffn_out", static_cast<const float*>(projected->get()), kHidden,
                      "ffn_out-" + std::to_string(index));
         if (layer_path_capture != nullptr && layer_path_capture_position == position) {
@@ -868,6 +887,8 @@ struct FullAttentionLayer {
     Buffer gated_attention, projected, residual, post_normalized, ffn_gate, ffn_up;
     Buffer ffn_activation, layer_output, q8;
     bool reuse_projection_q8 = false;
+    Buffer q8_1;
+    bool q4_q8_1_mmvq = false;
 
     FullAttentionLayer(const miinfer::Qwen35Model& model_value, std::size_t layer)
         : model(model_value),
@@ -895,6 +916,9 @@ struct FullAttentionLayer {
         const char* reuse_projection_q8_env = std::getenv("MIINFER_REUSE_PROJECTION_Q8");
         reuse_projection_q8 = reuse_projection_q8_env == nullptr
             || std::strcmp(reuse_projection_q8_env, "0") != 0;
+        const char* q4_q8_1_mmvq_env = std::getenv("MIINFER_Q4K_Q8_1_MMVQ");
+        q4_q8_1_mmvq = q4_q8_1_mmvq_env == nullptr
+            || std::strcmp(q4_q8_1_mmvq_env, "0") != 0;
         normalized = allocate(kHidden * sizeof(float)); qfull = allocate(12288 * sizeof(float));
         query = allocate(6144 * sizeof(float)); gate = allocate(6144 * sizeof(float));
         key = allocate(1024 * sizeof(float)); key_norm = allocate(1024 * sizeof(float));
@@ -908,6 +932,7 @@ struct FullAttentionLayer {
         ffn_gate = allocate(kFfnInner * sizeof(float)); ffn_up = allocate(kFfnInner * sizeof(float));
         ffn_activation = allocate(kFfnInner * sizeof(float)); layer_output = allocate(kHidden * sizeof(float));
         q8 = allocate((kFfnInner / 256) * sizeof(miinfer::Q8KDeviceBlock));
+        q8_1 = allocate((kFfnInner / miinfer::kQ8_1BlockSize) * sizeof(miinfer::Q8_1Block));
         MIINFER_HIP_CHECK(hipMemset(key_cache->get(), 0, 4 * kCacheCapacity * 256 * sizeof(float)));
         MIINFER_HIP_CHECK(hipMemset(value_cache->get(), 0, 4 * kCacheCapacity * 256 * sizeof(float)));
     }
@@ -987,8 +1012,15 @@ struct FullAttentionLayer {
             kFfnInner, kHidden, reuse_projection_q8);
         miinfer::launch_qwen3_silu_mul(static_cast<const float*>(ffn_gate->get()),
             static_cast<const float*>(ffn_up->get()), static_cast<float*>(ffn_activation->get()), kFfnInner);
-        project(ffn_down_weight, d_ffn_down, static_cast<const float*>(ffn_activation->get()),
-            static_cast<miinfer::Q8KDeviceBlock*>(q8->get()), static_cast<float*>(projected->get()), kHidden, kFfnInner);
+        if (q4_q8_1_mmvq && ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
+            project_q4_q8_1(d_ffn_down, static_cast<const float*>(ffn_activation->get()),
+                            static_cast<miinfer::Q8_1Block*>(q8_1->get()),
+                            static_cast<float*>(projected->get()), kHidden, kFfnInner);
+        } else {
+            project(ffn_down_weight, d_ffn_down, static_cast<const float*>(ffn_activation->get()),
+                    static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
+                    static_cast<float*>(projected->get()), kHidden, kFfnInner);
+        }
         miinfer::launch_qwen3_add(static_cast<const float*>(residual->get()),
             static_cast<const float*>(projected->get()), static_cast<float*>(layer_output->get()), kHidden);
         MIINFER_HIP_CHECK(hipMemcpy(output, layer_output->get(), kHidden * sizeof(float), hipMemcpyDeviceToDevice));

@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-B17 — Qwen3.8-27B recurrent Q5_K×Q8_1 MMVQ**
+**Current phase: M6-B18 — Qwen3.8-27B Q4_K×Q8_1 FFN Down MMVQ**
 
 The project currently has:
 
@@ -77,6 +77,10 @@ The project currently has:
   projection, improving native TG64/TG128 by about 10.9%/10.2%; the former
   Q5_K×Q8_K path remains available with `MIINFER_Q5K_Q8_1_MMVQ=0`; see
   `experiments/EXP-0110-m6b17-q5k-mmvq-q8-1.md`
+* a production-selected gfx906 Q4_K×Q8_1 MMVQ-style FFN Down projection,
+  improving native TG64/TG128 by about 2.3%/2.2%; the former Q4_K×Q8_K
+  path remains available with `MIINFER_Q4K_Q8_1_MMVQ=0`; see
+  `experiments/EXP-0111-m6b18-q4k-mmvq-q8-1-ffn-down.md`
 * a reproducible llama.cpp-backed Qwen3.8-27B hybrid tensor/state fixture; see
   `experiments/EXP-0043-m6a1-qwen38-reference-fixture.md`
 * a read-only Qwen3.8 projection/kernel compatibility map; see

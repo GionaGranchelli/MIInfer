@@ -1044,6 +1044,67 @@ __global__ void qwen3_q5_k_q8_1_mmvq_kernel(
     if (tid == 0) output[row] = partials[0];
 }
 
+__device__ __forceinline__ float qwen3_q4_k_q8_1_mmvq_dot(
+    const Q4KDeviceBlock& quant, const Q8_1Block* input, int iqs) {
+    const int q8_offset = 2 * ((iqs / 2) / 4);
+    const int ql_offset = 16 * q8_offset + 4 * ((iqs / 2) % 4);
+    const auto* ql = reinterpret_cast<const int*>(quant.qs + ql_offset);
+    const int vl[2] = {ql[0], ql[4]};
+
+    int scales[2];
+    int minimums[2];
+    const int group = 2 * (iqs / 8);
+    q4_k_scale_min(quant, group, scales[0], minimums[0]);
+    q4_k_scale_min(quant, group + 1, scales[1], minimums[1]);
+
+    float sum_d = 0.0F;
+    float sum_min = 0.0F;
+#pragma unroll
+    for (int part = 0; part < 2; ++part) {
+        const auto& q8 = input[q8_offset + part];
+        const auto* q8_words = reinterpret_cast<const int*>(q8.qs)
+                               + ((iqs / 2) % 4);
+        const int q0 = (vl[0] >> (4 * part)) & 0x0F0F0F0F;
+        const int q1 = (vl[1] >> (4 * part)) & 0x0F0F0F0F;
+        const int dot = qwen3_dot4_i8(q0, q8_words[0],
+                                      qwen3_dot4_i8(q1, q8_words[4], 0));
+        const int q8_sum = qwen3_dot4_i8(0x01010101, q8_words[0],
+                                         qwen3_dot4_i8(0x01010101, q8_words[4], 0));
+        const float d8 = half_to_float(q8.d);
+        sum_d += d8 * static_cast<float>(dot * scales[part]);
+        sum_min += d8 * static_cast<float>(q8_sum * minimums[part]);
+    }
+    return half_to_float(quant.d) * sum_d - half_to_float(quant.dmin) * sum_min;
+}
+
+__global__ void qwen3_q4_k_q8_1_mmvq_kernel(
+    const Q4KDeviceBlock* weights,
+    const Q8_1Block* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns) {
+    const std::uint32_t row = blockIdx.x;
+    const std::uint32_t tid = threadIdx.x;
+    if (row >= rows) return;
+    __shared__ float partials[128];
+    const std::uint32_t blocks_per_row = columns / 256;
+    const auto* row_weights = weights + static_cast<std::size_t>(row) * blocks_per_row;
+    float sum = 0.0F;
+    const int iqs = 2 * static_cast<int>(tid % 16);
+    for (std::uint32_t block = tid / 16; block < blocks_per_row; block += 8) {
+        sum += qwen3_q4_k_q8_1_mmvq_dot(row_weights[block], input + block * 8, iqs);
+    }
+    partials[tid] = sum;
+    __syncthreads();
+    if (tid < 64) partials[tid] += partials[tid + 64];
+    __syncthreads();
+    for (std::uint32_t stride = 32; stride > 0; stride /= 2) {
+        if (tid < stride) partials[tid] += partials[tid + stride];
+        __syncthreads();
+    }
+    if (tid == 0) output[row] = partials[0];
+}
+
 __global__ void qwen3_q4_k_q8_k_gemv_dot4_kernel(
     const Q4KDeviceBlock* weights,
     const Q8KDeviceBlock* input,
@@ -1538,6 +1599,22 @@ void launch_qwen3_q5_k_q8_1_mmvq(
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     hipLaunchKernelGGL(qwen3_q5_k_q8_1_mmvq_kernel, dim3(rows), dim3(128), 0, stream,
+                       weights, input, output, rows, columns);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen3_q4_k_q8_1_mmvq(
+    const Q4KDeviceBlock* weights,
+    const Q8_1Block* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    hipStream_t stream) {
+    if (weights == nullptr || input == nullptr || output == nullptr || rows == 0 || columns == 0
+        || columns % 256 != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen3_q4_k_q8_1_mmvq_kernel, dim3(rows), dim3(128), 0, stream,
                        weights, input, output, rows, columns);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
