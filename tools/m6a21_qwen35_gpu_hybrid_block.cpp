@@ -403,6 +403,15 @@ void project_q4_q8_1(const Buffer& device_weight, const float* input,
     project_q4_q8_1_prequantized(device_weight, q8, output, rows, columns);
 }
 
+void project_q6_q8_k_dot4(const Buffer& device_weight, const float* input,
+                          miinfer::Q8KDeviceBlock* q8, float* output,
+                          std::uint32_t rows, std::uint32_t columns) {
+    miinfer::launch_qwen3_q8_k_quantize(input, q8, columns);
+    miinfer::launch_qwen3_q6_k_q8_k_gemv_dot4(
+        static_cast<const miinfer::Q6KDeviceBlock*>(device_weight->get()), q8,
+        output, rows, columns);
+}
+
 struct RecurrentLayer {
     std::size_t index;
     const miinfer::Qwen35Model& model;
@@ -454,6 +463,7 @@ struct RecurrentLayer {
     bool q4_q8_1_mmvq = false;
     bool q4_q8_1_gate_up = false;
     bool q4_q8_1_attn_gate = false;
+    bool q6_q8_k_dot4_qkv = false;
 
     RecurrentLayer(const miinfer::Qwen35Model& model_value, std::size_t layer,
                    const std::filesystem::path& fixture)
@@ -490,6 +500,9 @@ struct RecurrentLayer {
         const char* q4_q8_1_attn_gate_env = std::getenv("MIINFER_Q4K_Q8_1_MMVQ_ATTN_GATE");
         q4_q8_1_attn_gate = q4_q8_1_attn_gate_env == nullptr
             || std::strcmp(q4_q8_1_attn_gate_env, "0") != 0;
+        const char* q6_q8_k_dot4_qkv_env = std::getenv("MIINFER_Q6K_Q8K_DOT4_QKV");
+        q6_q8_k_dot4_qkv = q6_q8_k_dot4_qkv_env == nullptr
+            || std::strcmp(q6_q8_k_dot4_qkv_env, "0") != 0;
         require_type(qkv_weight, {miinfer::GgufTensorType::q4_k,
                                    miinfer::GgufTensorType::q6_k});
         require_type(gate_weight, {miinfer::GgufTensorType::q4_k});
@@ -674,9 +687,15 @@ struct RecurrentLayer {
                      kHidden, "attn_norm-" + std::to_string(index));
         stage_end(0, position);
         stage_start(1, position);
-        project(qkv_weight, d_qkv, static_cast<const float*>(normalized->get()),
-                static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
-                static_cast<float*>(qkv->get()), kChannels, kHidden);
+        if (q6_q8_k_dot4_qkv && qkv_weight.type == miinfer::GgufTensorType::q6_k) {
+            project_q6_q8_k_dot4(d_qkv, static_cast<const float*>(normalized->get()),
+                                static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
+                                static_cast<float*>(qkv->get()), kChannels, kHidden);
+        } else {
+            project(qkv_weight, d_qkv, static_cast<const float*>(normalized->get()),
+                    static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
+                    static_cast<float*>(qkv->get()), kChannels, kHidden);
+        }
         trace_tensor(position, "qkv", static_cast<const float*>(qkv->get()), kChannels,
                      "linear_attn_qkv_mixed-" + std::to_string(index));
         if (layer_path_capture != nullptr && layer_path_capture_position == position) {

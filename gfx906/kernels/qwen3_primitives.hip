@@ -841,6 +841,46 @@ __global__ void qwen3_q6_k_q8_k_gemv_kernel(
     if (lane == 0) output[row] = partials[0];
 }
 
+__global__ void qwen3_q6_k_q8_k_gemv_dot4_kernel(
+    const Q6KDeviceBlock* weights,
+    const Q8KDeviceBlock* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns) {
+    const std::uint32_t row = blockIdx.x;
+    const std::uint32_t lane = threadIdx.x;
+    if (row >= rows) return;
+    __shared__ float partials[64];
+    const std::uint32_t blocks_per_row = columns / 256;
+    const auto* row_weights = weights + static_cast<std::size_t>(row) * blocks_per_row;
+    float sum = 0.0F;
+    for (std::uint32_t block = 0; block < blocks_per_row; ++block) {
+        const auto& quant = row_weights[block];
+        const auto& activation = input[block];
+        const std::uint32_t base = lane * 4;
+        int packed_q6 = 0;
+        int packed_q8 = 0;
+#pragma unroll
+        for (std::uint32_t index = 0; index < 4; ++index) {
+            packed_q6 |= (q6_value(quant, static_cast<int>(base + index)) & 0xff)
+                         << (8 * index);
+            packed_q8 |= (static_cast<int>(activation.qs[base + index]) & 0xff)
+                         << (8 * index);
+        }
+        const float scale = half_to_float(quant.d) * activation.d
+                            * static_cast<float>(quant.scales[base / 16]);
+        sum += scale * static_cast<float>(
+            __builtin_amdgcn_sdot4(packed_q6, packed_q8, 0, false));
+    }
+    partials[lane] = sum;
+    __syncthreads();
+    for (std::uint32_t stride = 32; stride > 0; stride /= 2) {
+        if (lane < stride) partials[lane] += partials[lane + stride];
+        __syncthreads();
+    }
+    if (lane == 0) output[row] = partials[0];
+}
+
 __global__ void qwen3_q4_k_q8_k_gemv_kernel(
     const Q4KDeviceBlock* weights,
     const Q8KDeviceBlock* input,
@@ -1567,6 +1607,22 @@ void launch_qwen3_q6_k_q8_k_gemv(
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     hipLaunchKernelGGL(qwen3_q6_k_q8_k_gemv_kernel, dim3(rows), dim3(256), 0, stream,
+                       weights, input, output, rows, columns);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen3_q6_k_q8_k_gemv_dot4(
+    const Q6KDeviceBlock* weights,
+    const Q8KDeviceBlock* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    hipStream_t stream) {
+    if (weights == nullptr || input == nullptr || output == nullptr || rows == 0 || columns == 0
+        || columns % 256 != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen3_q6_k_q8_k_gemv_dot4_kernel, dim3(rows), dim3(64), 0, stream,
                        weights, input, output, rows, columns);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
