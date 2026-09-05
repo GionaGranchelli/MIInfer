@@ -388,13 +388,19 @@ void project_q5_q8_1(const Buffer& device_weight, const float* input,
         output, rows, columns);
 }
 
+void project_q4_q8_1_prequantized(const Buffer& device_weight,
+                                  const miinfer::Q8_1Block* q8, float* output,
+                                  std::uint32_t rows, std::uint32_t columns) {
+    miinfer::launch_qwen3_q4_k_q8_1_mmvq(
+        static_cast<const miinfer::Q4KDeviceBlock*>(device_weight->get()), q8,
+        output, rows, columns);
+}
+
 void project_q4_q8_1(const Buffer& device_weight, const float* input,
                      miinfer::Q8_1Block* q8, float* output,
                      std::uint32_t rows, std::uint32_t columns) {
     miinfer::launch_q8_1_quantize_f32(input, q8, columns);
-    miinfer::launch_qwen3_q4_k_q8_1_mmvq(
-        static_cast<const miinfer::Q4KDeviceBlock*>(device_weight->get()), q8,
-        output, rows, columns);
+    project_q4_q8_1_prequantized(device_weight, q8, output, rows, columns);
 }
 
 struct RecurrentLayer {
@@ -446,6 +452,7 @@ struct RecurrentLayer {
     bool reuse_projection_q8 = false;
     bool q5_q8_1_mmvq = false;
     bool q4_q8_1_mmvq = false;
+    bool q4_q8_1_gate_up = false;
 
     RecurrentLayer(const miinfer::Qwen35Model& model_value, std::size_t layer,
                    const std::filesystem::path& fixture)
@@ -476,6 +483,9 @@ struct RecurrentLayer {
         const char* q4_q8_1_mmvq_env = std::getenv("MIINFER_Q4K_Q8_1_MMVQ");
         q4_q8_1_mmvq = q4_q8_1_mmvq_env == nullptr
             || std::strcmp(q4_q8_1_mmvq_env, "0") != 0;
+        const char* q4_q8_1_gate_up_env = std::getenv("MIINFER_Q4K_Q8_1_MMVQ_FFN_GATE_UP");
+        q4_q8_1_gate_up = q4_q8_1_gate_up_env == nullptr
+            || std::strcmp(q4_q8_1_gate_up_env, "0") != 0;
         require_type(qkv_weight, {miinfer::GgufTensorType::q4_k,
                                    miinfer::GgufTensorType::q6_k});
         require_type(gate_weight, {miinfer::GgufTensorType::q4_k});
@@ -820,13 +830,27 @@ struct RecurrentLayer {
                      "attn_post_norm-" + std::to_string(index));
         stage_end(9, position);
         stage_start(10, position);
-        project(ffn_gate_weight, d_ffn_gate, static_cast<const float*>(post_normalized->get()),
-                static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
+        if (q4_q8_1_gate_up
+            && ffn_gate_weight.type == miinfer::GgufTensorType::q4_k
+            && ffn_up_weight.type == miinfer::GgufTensorType::q4_k) {
+            miinfer::launch_q8_1_quantize_f32(
+                static_cast<const float*>(post_normalized->get()),
+                static_cast<miinfer::Q8_1Block*>(q8_1->get()), kHidden);
+            project_q4_q8_1_prequantized(
+                d_ffn_gate, static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
                 static_cast<float*>(ffn_gate->get()), kFfnInner, kHidden);
-        project(ffn_up_weight, d_ffn_up, static_cast<const float*>(post_normalized->get()),
-                static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
-                static_cast<float*>(ffn_up->get()), kFfnInner, kHidden,
-                reuse_projection_q8);
+            project_q4_q8_1_prequantized(
+                d_ffn_up, static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
+                static_cast<float*>(ffn_up->get()), kFfnInner, kHidden);
+        } else {
+            project(ffn_gate_weight, d_ffn_gate, static_cast<const float*>(post_normalized->get()),
+                    static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
+                    static_cast<float*>(ffn_gate->get()), kFfnInner, kHidden);
+            project(ffn_up_weight, d_ffn_up, static_cast<const float*>(post_normalized->get()),
+                    static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
+                    static_cast<float*>(ffn_up->get()), kFfnInner, kHidden,
+                    reuse_projection_q8);
+        }
         stage_end(10, position);
         stage_start(11, position);
         miinfer::launch_qwen3_silu_mul(
@@ -889,6 +913,7 @@ struct FullAttentionLayer {
     bool reuse_projection_q8 = false;
     Buffer q8_1;
     bool q4_q8_1_mmvq = false;
+    bool q4_q8_1_gate_up = false;
 
     FullAttentionLayer(const miinfer::Qwen35Model& model_value, std::size_t layer)
         : model(model_value),
@@ -919,6 +944,9 @@ struct FullAttentionLayer {
         const char* q4_q8_1_mmvq_env = std::getenv("MIINFER_Q4K_Q8_1_MMVQ");
         q4_q8_1_mmvq = q4_q8_1_mmvq_env == nullptr
             || std::strcmp(q4_q8_1_mmvq_env, "0") != 0;
+        const char* q4_q8_1_gate_up_env = std::getenv("MIINFER_Q4K_Q8_1_MMVQ_FFN_GATE_UP");
+        q4_q8_1_gate_up = q4_q8_1_gate_up_env == nullptr
+            || std::strcmp(q4_q8_1_gate_up_env, "0") != 0;
         normalized = allocate(kHidden * sizeof(float)); qfull = allocate(12288 * sizeof(float));
         query = allocate(6144 * sizeof(float)); gate = allocate(6144 * sizeof(float));
         key = allocate(1024 * sizeof(float)); key_norm = allocate(1024 * sizeof(float));
@@ -1005,11 +1033,27 @@ struct FullAttentionLayer {
         miinfer::launch_qwen3_rms_norm(static_cast<const float*>(residual->get()),
             static_cast<const float*>(d_post->get()), static_cast<float*>(post_normalized->get()), kHidden,
             model.config().rms_epsilon);
-        project(ffn_gate_weight, d_ffn_gate, static_cast<const float*>(post_normalized->get()),
-            static_cast<miinfer::Q8KDeviceBlock*>(q8->get()), static_cast<float*>(ffn_gate->get()), kFfnInner, kHidden);
-        project(ffn_up_weight, d_ffn_up, static_cast<const float*>(post_normalized->get()),
-            static_cast<miinfer::Q8KDeviceBlock*>(q8->get()), static_cast<float*>(ffn_up->get()),
-            kFfnInner, kHidden, reuse_projection_q8);
+        if (q4_q8_1_gate_up
+            && ffn_gate_weight.type == miinfer::GgufTensorType::q4_k
+            && ffn_up_weight.type == miinfer::GgufTensorType::q4_k) {
+            miinfer::launch_q8_1_quantize_f32(
+                static_cast<const float*>(post_normalized->get()),
+                static_cast<miinfer::Q8_1Block*>(q8_1->get()), kHidden);
+            project_q4_q8_1_prequantized(
+                d_ffn_gate, static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
+                static_cast<float*>(ffn_gate->get()), kFfnInner, kHidden);
+            project_q4_q8_1_prequantized(
+                d_ffn_up, static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
+                static_cast<float*>(ffn_up->get()), kFfnInner, kHidden);
+        } else {
+            project(ffn_gate_weight, d_ffn_gate, static_cast<const float*>(post_normalized->get()),
+                    static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
+                    static_cast<float*>(ffn_gate->get()), kFfnInner, kHidden);
+            project(ffn_up_weight, d_ffn_up, static_cast<const float*>(post_normalized->get()),
+                    static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
+                    static_cast<float*>(ffn_up->get()), kFfnInner, kHidden,
+                    reuse_projection_q8);
+        }
         miinfer::launch_qwen3_silu_mul(static_cast<const float*>(ffn_gate->get()),
             static_cast<const float*>(ffn_up->get()), static_cast<float*>(ffn_activation->get()), kFfnInner);
         if (q4_q8_1_mmvq && ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
