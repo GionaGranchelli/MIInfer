@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-B35 — Q4_K×Q8_1 LDS activation reuse kept**
+**M6-B36 — post-B35 production profile**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -188,6 +188,12 @@ stable-peak TG64/TG128 improve from 12.0637/11.8983 to 12.4235/12.2563 tok/s
 (+2.98%/+3.01%) with unchanged tracked device usage. Set
 `MIINFER_Q4K_Q8_1_LDS_INPUT=0` for the B32 control. See
 `experiments/EXP-0127-m6b35-q4k-q8-1-lds-input.md`.
+EXP-0128 refreshes the profile after B35. Position-63 total GPU work is
+82.1223 ms/token with a layer sum of 78.8699 ms, 48 recurrent layers, and 16
+full-attention layers. LDS reuse reduces recurrent Gate/Up to about
+0.36–0.38 ms/layer, while long-K Q4_K×Q8_1 FFN Down remains about
+0.42–0.44 ms/layer. No production behavior changed. See
+`experiments/EXP-0128-m6b36-post-b35-profile.md`.
 M6-A8 provides a dedicated qwen35 model boundary and a real layer-0 RMSNorm
 GPU fixture on gfx906. M6-A9 validates the real Q6_K output head through the
 existing Q6_K×Q8_K GPU primitive, M6-A10 validates a real Q4_K×Q8_K attention

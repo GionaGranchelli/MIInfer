@@ -10,12 +10,12 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-B35 — Q4_K×Q8_1 LDS activation reuse kept**
+**Current phase: M6-B36 — post-B35 production profile**
 
 Immediate objective:
 
-> Refresh the post-B35 profile and select the next measured optimization; retain
-> the no-decay-store transposed recurrent path and LDS activation reuse.
+> Run one bounded Down-specific Q4_K×Q8_1 experiment selected from the post-B35
+> profile; retain the no-decay-store transposed recurrent path and LDS reuse.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
@@ -53,6 +53,8 @@ Current work should focus on:
   but was throughput-neutral at TG64/TG128 and was removed
 * retaining EXP-0127's result: Q4_K×Q8_1 LDS activation reuse improves native
   TG64/TG128 by about 2.98%/3.01% with unchanged device usage
+* retaining EXP-0128's profile: total GPU work is 82.1223 ms/token and long-K
+  Q4_K×Q8_1 FFN Down remains the largest repeated projection family
 
 Do not treat CPU hidden-state identity through all 36 layers as a universal
 GPU requirement. B23 characterized the pinned external implementation's
