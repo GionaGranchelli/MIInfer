@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-B34 — fused SiLU/Q8_1 candidate rejected**
+**Current phase: M6-B35 — Q4_K×Q8_1 LDS activation reuse kept**
 
 The project currently has:
 
@@ -139,6 +139,10 @@ The project currently has:
 * a rejected fused SiLU-to-Q8_1 candidate: it passed the external observable
   contract but improved TG64/TG128 by only 0.09%/0.08%, so the candidate was
   removed; see `experiments/EXP-0126-m6b34-fused-silu-q8-1.md`
+* a production-selected Q4_K×Q8_1 LDS activation-reuse path: it preserves the
+  external contract and improves stable-peak TG64/TG128 by about 2.98%/3.01%;
+  set `MIINFER_Q4K_Q8_1_LDS_INPUT=0` for the B32 control; see
+  `experiments/EXP-0127-m6b35-q4k-q8-1-lds-input.md`
 * a reproducible llama.cpp-backed Qwen3.8-27B hybrid tensor/state fixture; see
   `experiments/EXP-0043-m6a1-qwen38-reference-fixture.md`
 * a read-only Qwen3.8 projection/kernel compatibility map; see

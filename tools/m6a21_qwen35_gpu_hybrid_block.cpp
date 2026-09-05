@@ -410,17 +410,25 @@ void project_q5_q8_1(const Buffer& device_weight, const float* input,
 
 void project_q4_q8_1_prequantized(const Buffer& device_weight,
                                   const miinfer::Q8_1Block* q8, float* output,
-                                  std::uint32_t rows, std::uint32_t columns) {
-    miinfer::launch_qwen3_q4_k_q8_1_mmvq(
-        static_cast<const miinfer::Q4KDeviceBlock*>(device_weight->get()), q8,
-        output, rows, columns);
+                                  std::uint32_t rows, std::uint32_t columns,
+                                  bool lds_input = false) {
+    if (lds_input) {
+        miinfer::launch_qwen3_q4_k_q8_1_mmvq_lds_input(
+            static_cast<const miinfer::Q4KDeviceBlock*>(device_weight->get()), q8,
+            output, rows, columns);
+    } else {
+        miinfer::launch_qwen3_q4_k_q8_1_mmvq(
+            static_cast<const miinfer::Q4KDeviceBlock*>(device_weight->get()), q8,
+            output, rows, columns);
+    }
 }
 
 void project_q4_q8_1(const Buffer& device_weight, const float* input,
                      miinfer::Q8_1Block* q8, float* output,
-                     std::uint32_t rows, std::uint32_t columns) {
+                     std::uint32_t rows, std::uint32_t columns,
+                     bool lds_input = false) {
     miinfer::launch_q8_1_quantize_f32(input, q8, columns);
-    project_q4_q8_1_prequantized(device_weight, q8, output, rows, columns);
+    project_q4_q8_1_prequantized(device_weight, q8, output, rows, columns, lds_input);
 }
 
 void project_q6_q8_k_dot4(const Buffer& device_weight, const float* input,
@@ -482,6 +490,7 @@ struct RecurrentLayer {
     bool q5_q8_1_mmvq = false;
     bool q4_q8_1_mmvq = false;
     bool q4_q8_1_gate_up = false;
+    bool q4_q8_1_lds_input = true;
     bool q4_q8_1_attn_gate = false;
     bool q6_q8_k_dot4_qkv = false;
     bool transposed_state = true;
@@ -519,6 +528,9 @@ struct RecurrentLayer {
         const char* q4_q8_1_gate_up_env = std::getenv("MIINFER_Q4K_Q8_1_MMVQ_FFN_GATE_UP");
         q4_q8_1_gate_up = q4_q8_1_gate_up_env == nullptr
             || std::strcmp(q4_q8_1_gate_up_env, "0") != 0;
+        const char* q4_q8_1_lds_input_env = std::getenv("MIINFER_Q4K_Q8_1_LDS_INPUT");
+        q4_q8_1_lds_input = q4_q8_1_lds_input_env == nullptr
+            || std::strcmp(q4_q8_1_lds_input_env, "0") != 0;
         const char* q4_q8_1_attn_gate_env = std::getenv("MIINFER_Q4K_Q8_1_MMVQ_ATTN_GATE");
         q4_q8_1_attn_gate = q4_q8_1_attn_gate_env == nullptr
             || std::strcmp(q4_q8_1_attn_gate_env, "0") != 0;
@@ -978,10 +990,10 @@ struct RecurrentLayer {
                 static_cast<miinfer::Q8_1Block*>(q8_1->get()), kHidden);
             project_q4_q8_1_prequantized(
                 d_ffn_gate, static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
-                static_cast<float*>(ffn_gate->get()), kFfnInner, kHidden);
+                static_cast<float*>(ffn_gate->get()), kFfnInner, kHidden, q4_q8_1_lds_input);
             project_q4_q8_1_prequantized(
                 d_ffn_up, static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
-                static_cast<float*>(ffn_up->get()), kFfnInner, kHidden);
+                static_cast<float*>(ffn_up->get()), kFfnInner, kHidden, q4_q8_1_lds_input);
         } else {
             project(ffn_gate_weight, d_ffn_gate, static_cast<const float*>(post_normalized->get()),
                     static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
@@ -1004,7 +1016,8 @@ struct RecurrentLayer {
         if (q4_q8_1_mmvq && ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
             project_q4_q8_1(d_ffn_down, static_cast<const float*>(ffn_activation->get()),
                             static_cast<miinfer::Q8_1Block*>(q8_1->get()),
-                            static_cast<float*>(projected->get()), kHidden, kFfnInner);
+                            static_cast<float*>(projected->get()), kHidden, kFfnInner,
+                            q4_q8_1_lds_input);
         } else {
             project(ffn_down_weight, d_ffn_down, static_cast<const float*>(ffn_activation->get()),
                     static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
@@ -1054,6 +1067,7 @@ struct FullAttentionLayer {
     Buffer q8_1;
     bool q4_q8_1_mmvq = false;
     bool q4_q8_1_gate_up = false;
+    bool q4_q8_1_lds_input = true;
     bool batch_head_rms = false;
     struct StageProfile {
         std::array<hipEvent_t, 15> start{};
@@ -1094,6 +1108,9 @@ struct FullAttentionLayer {
         const char* q4_q8_1_gate_up_env = std::getenv("MIINFER_Q4K_Q8_1_MMVQ_FFN_GATE_UP");
         q4_q8_1_gate_up = q4_q8_1_gate_up_env == nullptr
             || std::strcmp(q4_q8_1_gate_up_env, "0") != 0;
+        const char* q4_q8_1_lds_input_env = std::getenv("MIINFER_Q4K_Q8_1_LDS_INPUT");
+        q4_q8_1_lds_input = q4_q8_1_lds_input_env == nullptr
+            || std::strcmp(q4_q8_1_lds_input_env, "0") != 0;
         const char* batch_head_rms_env = std::getenv("MIINFER_BATCH_HEAD_RMS");
         batch_head_rms = batch_head_rms_env == nullptr
             || std::strcmp(batch_head_rms_env, "0") != 0;
@@ -1238,10 +1255,10 @@ struct FullAttentionLayer {
                 static_cast<miinfer::Q8_1Block*>(q8_1->get()), kHidden);
             project_q4_q8_1_prequantized(
                 d_ffn_gate, static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
-                static_cast<float*>(ffn_gate->get()), kFfnInner, kHidden);
+                static_cast<float*>(ffn_gate->get()), kFfnInner, kHidden, q4_q8_1_lds_input);
             project_q4_q8_1_prequantized(
                 d_ffn_up, static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
-                static_cast<float*>(ffn_up->get()), kFfnInner, kHidden);
+                static_cast<float*>(ffn_up->get()), kFfnInner, kHidden, q4_q8_1_lds_input);
         } else {
             project(ffn_gate_weight, d_ffn_gate, static_cast<const float*>(post_normalized->get()),
                     static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
@@ -1260,7 +1277,8 @@ struct FullAttentionLayer {
         if (q4_q8_1_mmvq && ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
             project_q4_q8_1(d_ffn_down, static_cast<const float*>(ffn_activation->get()),
                             static_cast<miinfer::Q8_1Block*>(q8_1->get()),
-                            static_cast<float*>(projected->get()), kHidden, kFfnInner);
+                            static_cast<float*>(projected->get()), kHidden, kFfnInner,
+                            q4_q8_1_lds_input);
         } else {
             project(ffn_down_weight, d_ffn_down, static_cast<const float*>(ffn_activation->get()),
                     static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),

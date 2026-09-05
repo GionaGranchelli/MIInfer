@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-B34 — fused SiLU/Q8_1 candidate rejected**
+**M6-B35 — Q4_K×Q8_1 LDS activation reuse kept**
 
 MIInfer now has a completed M6-A0 audit, a real M6-A1 fixture, validated
 recurrent and full-attention layer executors, a four-layer hybrid composition,
@@ -180,6 +180,14 @@ rounding boundary. It passed native replay and the complete external P64
 observable contract, but stable-peak TG64/TG128 improved only 0.09%/0.08%,
 below the useful threshold. The candidate was removed; B32 remains the
 production path. See `experiments/EXP-0126-m6b34-fused-silu-q8-1.md`.
+EXP-0127 adds LDS activation reuse to the Q4_K×Q8_1 MMVQ path. Two
+independent 128-thread output-row groups share one staged Q8_1 input tile in a
+256-thread workgroup while retaining per-row arithmetic. Native 16/64/128-token
+replay, the complete P64 external observable contract, and CTest 20/20 pass;
+stable-peak TG64/TG128 improve from 12.0637/11.8983 to 12.4235/12.2563 tok/s
+(+2.98%/+3.01%) with unchanged tracked device usage. Set
+`MIINFER_Q4K_Q8_1_LDS_INPUT=0` for the B32 control. See
+`experiments/EXP-0127-m6b35-q4k-q8-1-lds-input.md`.
 M6-A8 provides a dedicated qwen35 model boundary and a real layer-0 RMSNorm
 GPU fixture on gfx906. M6-A9 validates the real Q6_K output head through the
 existing Q6_K×Q8_K GPU primitive, M6-A10 validates a real Q4_K×Q8_K attention

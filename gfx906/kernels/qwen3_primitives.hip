@@ -1217,6 +1217,44 @@ __global__ void qwen3_q4_k_q8_1_mmvq_kernel(
     if (tid == 0) output[row] = partials[0];
 }
 
+__global__ void qwen3_q4_k_q8_1_mmvq_lds_input_kernel(
+    const Q4KDeviceBlock* weights,
+    const Q8_1Block* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns) {
+    extern __shared__ Q8_1Block input_tile[];
+    const std::uint32_t thread = threadIdx.x;
+    const std::uint32_t block_count = columns / 32;
+    for (std::uint32_t block = thread; block < block_count; block += 256) {
+        input_tile[block] = input[block];
+    }
+    __syncthreads();
+
+    const std::uint32_t row_in_group = thread / 128;
+    const std::uint32_t tid = thread % 128;
+    const std::uint32_t row = blockIdx.x * 2 + row_in_group;
+    if (row >= rows) return;
+
+    __shared__ float partials[2][128];
+    const std::uint32_t blocks_per_row = columns / 256;
+    const auto* row_weights = weights + static_cast<std::size_t>(row) * blocks_per_row;
+    float sum = 0.0F;
+    const int iqs = 2 * static_cast<int>(tid % 16);
+    for (std::uint32_t block = tid / 16; block < blocks_per_row; block += 8) {
+        sum += qwen3_q4_k_q8_1_mmvq_dot(row_weights[block], input_tile + block * 8, iqs);
+    }
+    partials[row_in_group][tid] = sum;
+    __syncthreads();
+    if (tid < 64) partials[row_in_group][tid] += partials[row_in_group][tid + 64];
+    __syncthreads();
+    for (std::uint32_t stride = 32; stride > 0; stride /= 2) {
+        if (tid < stride) partials[row_in_group][tid] += partials[row_in_group][tid + stride];
+        __syncthreads();
+    }
+    if (tid == 0) output[row] = partials[row_in_group][0];
+}
+
 __global__ void qwen3_q4_k_q8_k_gemv_dot4_kernel(
     const Q4KDeviceBlock* weights,
     const Q8KDeviceBlock* input,
@@ -1780,6 +1818,24 @@ void launch_qwen3_q4_k_q8_1_mmvq(
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     hipLaunchKernelGGL(qwen3_q4_k_q8_1_mmvq_kernel, dim3(rows), dim3(128), 0, stream,
+                       weights, input, output, rows, columns);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen3_q4_k_q8_1_mmvq_lds_input(
+    const Q4KDeviceBlock* weights,
+    const Q8_1Block* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    hipStream_t stream) {
+    if (weights == nullptr || input == nullptr || output == nullptr || rows == 0 || columns == 0
+        || columns % 256 != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    const auto shared_bytes = static_cast<std::size_t>(columns / 32) * sizeof(Q8_1Block);
+    hipLaunchKernelGGL(qwen3_q4_k_q8_1_mmvq_lds_input_kernel,
+                       dim3((rows + 1) / 2), dim3(256), shared_bytes, stream,
                        weights, input, output, rows, columns);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
