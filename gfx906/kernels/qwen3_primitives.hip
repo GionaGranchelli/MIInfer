@@ -1014,6 +1014,37 @@ __global__ void qwen35_f32_gemv_kernel(
     if (threadIdx.x == 0) output[row] = partials[0];
 }
 
+__global__ void qwen35_f32_dual_gemv_kernel(
+    const float* weights_a, const float* weights_b, const float* input,
+    float* output_a, float* output_b, std::uint32_t rows, std::uint32_t columns) {
+    const std::uint32_t row = blockIdx.x;
+    if (row >= rows) return;
+    __shared__ float partials_a[256];
+    __shared__ float partials_b[256];
+    float sum_a = 0.0F;
+    float sum_b = 0.0F;
+    for (std::uint32_t column = threadIdx.x; column < columns; column += blockDim.x) {
+        const float value = input[column];
+        const std::size_t index = static_cast<std::size_t>(row) * columns + column;
+        sum_a += weights_a[index] * value;
+        sum_b += weights_b[index] * value;
+    }
+    partials_a[threadIdx.x] = sum_a;
+    partials_b[threadIdx.x] = sum_b;
+    __syncthreads();
+    for (std::uint32_t stride = blockDim.x / 2; stride > 0; stride /= 2) {
+        if (threadIdx.x < stride) {
+            partials_a[threadIdx.x] += partials_a[threadIdx.x + stride];
+            partials_b[threadIdx.x] += partials_b[threadIdx.x + stride];
+        }
+        __syncthreads();
+    }
+    if (threadIdx.x == 0) {
+        output_a[row] = partials_a[0];
+        output_b[row] = partials_b[0];
+    }
+}
+
 __global__ void qwen35_prepare_beta_decay_kernel(
     const float* beta_raw, const float* alpha_raw, const float* dt,
     const float* a, float* beta, float* decay, std::uint32_t elements) {
@@ -2392,6 +2423,19 @@ void launch_qwen35_f32_gemv(
     }
     hipLaunchKernelGGL(qwen35_f32_gemv_kernel, dim3(rows), dim3(256), 0, stream,
                        weights, input, output, rows, columns);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_f32_dual_gemv(
+    const float* weights_a, const float* weights_b, const float* input,
+    float* output_a, float* output_b, std::uint32_t rows,
+    std::uint32_t columns, hipStream_t stream) {
+    if (weights_a == nullptr || weights_b == nullptr || input == nullptr
+        || output_a == nullptr || output_b == nullptr || rows == 0 || columns == 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen35_f32_dual_gemv_kernel, dim3(rows), dim3(256), 0, stream,
+                       weights_a, weights_b, input, output_a, output_b, rows, columns);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

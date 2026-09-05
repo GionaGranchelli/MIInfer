@@ -503,6 +503,16 @@ void launch_qwen35_f32_gemv(
     std::uint32_t columns,
     hipStream_t stream = nullptr);
 
+void launch_qwen35_f32_dual_gemv(
+    const float* weights_a,
+    const float* weights_b,
+    const float* input,
+    float* output_a,
+    float* output_b,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    hipStream_t stream = nullptr);
+
 void launch_qwen35_prepare_beta_decay(
     const float* beta_raw,
     const float* alpha_raw,

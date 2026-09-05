@@ -561,6 +561,7 @@ struct RecurrentLayer {
     bool transposed_no_decay_store = true;
     bool transposed_lds_inputs = true;
     bool fuse_beta_alpha = false;
+    bool dual_beta_alpha_projection = true;
     bool row_wave_state = false;
 
     RecurrentLayer(const miinfer::Qwen35Model& model_value, std::size_t layer,
@@ -614,6 +615,10 @@ struct RecurrentLayer {
         const char* expanded_down_env = std::getenv("MIINFER_Q4K_EXPANDED_DOWN");
         expanded_down = expanded_down_env == nullptr
             || std::strcmp(expanded_down_env, "0") != 0;
+        const char* dual_beta_alpha_env = std::getenv("MIINFER_DUAL_BETA_ALPHA_GEMV");
+        if (dual_beta_alpha_env != nullptr) {
+            dual_beta_alpha_projection = std::strcmp(dual_beta_alpha_env, "0") != 0;
+        }
         const char* q6_q8_k_dot4_qkv_env = std::getenv("MIINFER_Q6K_Q8K_DOT4_QKV");
         q6_q8_k_dot4_qkv = q6_q8_k_dot4_qkv_env == nullptr
             || std::strcmp(q6_q8_k_dot4_qkv_env, "0") != 0;
@@ -920,12 +925,19 @@ struct RecurrentLayer {
         }
         stage_end(2, position);
         stage_start(3, position);
-        miinfer::launch_qwen35_f32_gemv(
-            static_cast<const float*>(d_beta->get()), static_cast<const float*>(normalized->get()),
-            static_cast<float*>(beta_raw->get()), kVHeads, kHidden);
-        miinfer::launch_qwen35_f32_gemv(
-            static_cast<const float*>(d_alpha->get()), static_cast<const float*>(normalized->get()),
-            static_cast<float*>(alpha_raw->get()), kVHeads, kHidden);
+        if (dual_beta_alpha_projection) {
+            miinfer::launch_qwen35_f32_dual_gemv(
+                static_cast<const float*>(d_beta->get()), static_cast<const float*>(d_alpha->get()),
+                static_cast<const float*>(normalized->get()), static_cast<float*>(beta_raw->get()),
+                static_cast<float*>(alpha_raw->get()), kVHeads, kHidden);
+        } else {
+            miinfer::launch_qwen35_f32_gemv(
+                static_cast<const float*>(d_beta->get()), static_cast<const float*>(normalized->get()),
+                static_cast<float*>(beta_raw->get()), kVHeads, kHidden);
+            miinfer::launch_qwen35_f32_gemv(
+                static_cast<const float*>(d_alpha->get()), static_cast<const float*>(normalized->get()),
+                static_cast<float*>(alpha_raw->get()), kVHeads, kHidden);
+        }
         miinfer::launch_qwen35_prepare_beta_decay(
             static_cast<const float*>(beta_raw->get()), static_cast<const float*>(alpha_raw->get()),
             static_cast<const float*>(d_dt->get()), static_cast<const float*>(d_a->get()),
