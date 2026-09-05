@@ -22,6 +22,12 @@ records current MIInfer TG64 at `14.280 tok/s` versus pinned llama.cpp at
 `22.331 tok/s` under the same MI50 stable-peak setup; the performance target
 is not yet met. The next action is a whole-token MIInfer profile.
 
+EXP-0168 completed that profile at position 63: total GPU event
+`71.9133 ms/token`, layer sum `68.6269 ms`, final LM head `2.50016 ms`, and
+zero allocations. FFN Down remains the largest repeated individual stage,
+but its prior optimization families are exhausted; a materially different
+whole-pipeline hypothesis is required before another implementation change.
+
 **M6-B62 — DeltaNet row-wave mapping rejection**
 
 M6-B62 tested one Wave64 per transposed DeltaNet state row with four rows per
