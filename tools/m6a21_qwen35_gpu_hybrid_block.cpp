@@ -1,3 +1,4 @@
+#include "miinfer/q4k_wave_layout.hpp"
 #define MIINFER_M6A3_HELPERS_ONLY
 #include "m6a3_qwen35_layer.cpp"
 
@@ -66,6 +67,26 @@ void upload(const void* source, void* destination, std::size_t bytes) {
 
 void upload_tensor(const miinfer::GgufTensor& source, const Buffer& destination) {
     upload(source.data, destination->get(), source.byte_size);
+}
+
+bool native_down_enabled() {
+    const char* value = std::getenv("MIINFER_Q4K_NATIVE_DOWN");
+    if (!value || std::strcmp(value, "0") == 0) return false;
+    if (std::strcmp(value, "1") == 0) return true;
+    throw std::runtime_error("MIINFER_Q4K_NATIVE_DOWN must be 0 or 1");
+}
+
+Buffer copy_native_down(const miinfer::GgufTensor& source) {
+    const auto packed = pack_q4k_wave_down(source);
+    auto result = allocate(packed.size() * sizeof(Q4KWaveTile));
+    upload(packed.data(), result->get(), packed.size() * sizeof(Q4KWaveTile));
+    return result;
+}
+
+void project_native_down(const Buffer& weights, const float* input,
+                         miinfer::Q8_1Block* q8, float* output) {
+    miinfer::launch_q8_1_quantize_f32(input, q8, 17408);
+    launch_q4k_wave_down(static_cast<const Q4KWaveTile*>(weights->get()), q8, output);
 }
 
 Buffer copy_expanded_q4k(const miinfer::GgufTensor& source) {
@@ -557,6 +578,7 @@ struct RecurrentLayer {
     bool q4_q8_1_attn_gate = false;
     bool direct_layer_output = false;
     bool expanded_down = true;
+    Buffer d_ffn_down_native;
     bool q6_q8_k_dot4_qkv = false;
     bool transposed_state = true;
     bool transposed_no_decay_store = true;
@@ -672,7 +694,9 @@ struct RecurrentLayer {
         d_ffn_gate = allocate(ffn_gate_weight.byte_size);
         d_ffn_up = allocate(ffn_up_weight.byte_size);
         d_ffn_down = allocate(ffn_down_weight.byte_size);
-        if (expanded_down && ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
+        if (native_down_enabled() && ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
+            d_ffn_down_native = copy_native_down(ffn_down_weight);
+        } else if (expanded_down && ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
             d_ffn_down_expanded = copy_expanded_q4k(ffn_down_weight);
         }
         d_dt = allocate(dt_weight.byte_size);
@@ -1170,7 +1194,12 @@ struct RecurrentLayer {
             layer_path_capture->post_normalized = download(post_normalized->get(), kHidden);
         }
         stage_start(12, position);
-        if (expanded_down && d_ffn_down_expanded != nullptr) {
+        if (d_ffn_down_native) {
+            project_native_down(d_ffn_down_native,
+                static_cast<const float*>(ffn_activation->get()),
+                static_cast<miinfer::Q8_1Block*>(q8_1->get()),
+                static_cast<float*>(projected->get()));
+        } else if (expanded_down && d_ffn_down_expanded != nullptr) {
             project_q4_q8_1_expanded(d_ffn_down_expanded,
                                      static_cast<const float*>(ffn_activation->get()),
                                      static_cast<miinfer::Q8_1Block*>(q8_1->get()),
@@ -1239,6 +1268,7 @@ struct FullAttentionLayer {
     bool q4_q8_1_lds_decoded_metadata = true;
     bool direct_layer_output = false;
     bool expanded_down = true;
+    Buffer d_ffn_down_native;
     bool batch_head_rms = false;
     struct StageProfile {
         std::array<hipEvent_t, 15> start{};
@@ -1273,7 +1303,9 @@ struct FullAttentionLayer {
         const char* expanded_down_env = std::getenv("MIINFER_Q4K_EXPANDED_DOWN");
         expanded_down = expanded_down_env == nullptr
             || std::strcmp(expanded_down_env, "0") != 0;
-        if (expanded_down && ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
+        if (native_down_enabled() && ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
+            d_ffn_down_native = copy_native_down(ffn_down_weight);
+        } else if (expanded_down && ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
             d_ffn_down_expanded = copy_expanded_q4k(ffn_down_weight);
         }
         const char* reuse_projection_q8_env = std::getenv("MIINFER_REUSE_PROJECTION_Q8");
@@ -1465,7 +1497,12 @@ struct FullAttentionLayer {
             static_cast<const float*>(ffn_up->get()), static_cast<float*>(ffn_activation->get()), kFfnInner);
         stage_end(12, position);
         stage_start(13, position);
-        if (expanded_down && d_ffn_down_expanded != nullptr) {
+        if (d_ffn_down_native) {
+            project_native_down(d_ffn_down_native,
+                static_cast<const float*>(ffn_activation->get()),
+                static_cast<miinfer::Q8_1Block*>(q8_1->get()),
+                static_cast<float*>(projected->get()));
+        } else if (expanded_down && d_ffn_down_expanded != nullptr) {
             project_q4_q8_1_expanded(d_ffn_down_expanded,
                 static_cast<const float*>(ffn_activation->get()),
                 static_cast<miinfer::Q8_1Block*>(q8_1->get()),

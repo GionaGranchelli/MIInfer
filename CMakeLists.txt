@@ -107,6 +107,8 @@ if(MIINFER_ENABLE_HIP)
         gfx906/kernels/q4_q8_packed_dot.hip
         gfx906/kernels/q4_q8_zero_point_dot.hip
         gfx906/kernels/qwen3_primitives.hip
+        gfx906/kernels/q4k_wave_layout.hip
+        src/q4k_wave_layout.cpp
         gfx906/kernels/memory_stream.hip
     )
     target_include_directories(miinfer_hip
@@ -280,6 +282,9 @@ if(MIINFER_ENABLE_HIP)
     target_compile_options(miinfer-fp16-gemv-k-split-bench PRIVATE -Wall -Wextra -Wpedantic)
 
     add_executable(miinfer-q4-q8-gemv-bench bench/q4_q8_gemv_bench.cpp)
+    add_executable(miinfer-q4k-layout-bench bench/q4k_layout_bench.cpp)
+    target_link_libraries(miinfer-q4k-layout-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-q4k-layout-bench PRIVATE -Wall -Wextra -Wpedantic)
     target_link_libraries(miinfer-q4-q8-gemv-bench PRIVATE miinfer_hip)
     target_compile_options(miinfer-q4-q8-gemv-bench PRIVATE -Wall -Wextra -Wpedantic)
 
