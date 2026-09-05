@@ -507,6 +507,7 @@ struct RecurrentLayer {
     bool q4_q8_1_lds_metadata = true;
     bool q4_q8_1_lds_decoded_metadata = true;
     bool q4_q8_1_attn_gate = false;
+    bool direct_layer_output = false;
     bool q6_q8_k_dot4_qkv = false;
     bool transposed_state = true;
     bool transposed_no_decay_store = true;
@@ -557,6 +558,9 @@ struct RecurrentLayer {
         const char* q4_q8_1_attn_gate_env = std::getenv("MIINFER_Q4K_Q8_1_MMVQ_ATTN_GATE");
         q4_q8_1_attn_gate = q4_q8_1_attn_gate_env == nullptr
             || std::strcmp(q4_q8_1_attn_gate_env, "0") != 0;
+        const char* direct_layer_output_env = std::getenv("MIINFER_DIRECT_LAYER_OUTPUT");
+        direct_layer_output = direct_layer_output_env != nullptr
+            && std::strcmp(direct_layer_output_env, "0") != 0;
         const char* q6_q8_k_dot4_qkv_env = std::getenv("MIINFER_Q6K_Q8K_DOT4_QKV");
         q6_q8_k_dot4_qkv = q6_q8_k_dot4_qkv_env == nullptr
             || std::strcmp(q6_q8_k_dot4_qkv_env, "0") != 0;
@@ -1073,16 +1077,20 @@ struct RecurrentLayer {
         }
         stage_end(12, position);
         stage_start(13, position);
+        float* completed_output = direct_layer_output
+            ? output : static_cast<float*>(layer_output->get());
         miinfer::launch_qwen3_add(
             static_cast<const float*>(residual->get()), static_cast<const float*>(projected->get()),
-            static_cast<float*>(layer_output->get()), kHidden);
-        trace_tensor(position, "layer_output", static_cast<const float*>(layer_output->get()),
-                     kHidden, "l_out-" + std::to_string(index));
+            completed_output, kHidden);
+        trace_tensor(position, "layer_output", completed_output, kHidden,
+                     "l_out-" + std::to_string(index));
         if (layer_path_capture != nullptr && layer_path_capture_position == position) {
-            layer_path_capture->layer_output = download(layer_output->get(), kHidden);
+            layer_path_capture->layer_output = download(completed_output, kHidden);
         }
-        MIINFER_HIP_CHECK(hipMemcpy(output, layer_output->get(), kHidden * sizeof(float),
-                                    hipMemcpyDeviceToDevice));
+        if (!direct_layer_output) {
+            MIINFER_HIP_CHECK(hipMemcpy(output, layer_output->get(), kHidden * sizeof(float),
+                                        hipMemcpyDeviceToDevice));
+        }
         stage_end(13, position);
     }
 };
@@ -1113,6 +1121,7 @@ struct FullAttentionLayer {
     bool q4_q8_1_lds_input = true;
     bool q4_q8_1_lds_metadata = true;
     bool q4_q8_1_lds_decoded_metadata = true;
+    bool direct_layer_output = false;
     bool batch_head_rms = false;
     struct StageProfile {
         std::array<hipEvent_t, 15> start{};
@@ -1153,6 +1162,9 @@ struct FullAttentionLayer {
         const char* q4_q8_1_gate_up_env = std::getenv("MIINFER_Q4K_Q8_1_MMVQ_FFN_GATE_UP");
         q4_q8_1_gate_up = q4_q8_1_gate_up_env == nullptr
             || std::strcmp(q4_q8_1_gate_up_env, "0") != 0;
+        const char* direct_layer_output_env = std::getenv("MIINFER_DIRECT_LAYER_OUTPUT");
+        direct_layer_output = direct_layer_output_env != nullptr
+            && std::strcmp(direct_layer_output_env, "0") != 0;
         const char* q4_q8_1_lds_input_env = std::getenv("MIINFER_Q4K_Q8_1_LDS_INPUT");
         q4_q8_1_lds_input = q4_q8_1_lds_input_env == nullptr
             || std::strcmp(q4_q8_1_lds_input_env, "0") != 0;
@@ -1343,9 +1355,14 @@ struct FullAttentionLayer {
         }
         stage_end(13, position);
         stage_start(14, position);
+        float* completed_output = direct_layer_output
+            ? output : static_cast<float*>(layer_output->get());
         miinfer::launch_qwen3_add(static_cast<const float*>(residual->get()),
-            static_cast<const float*>(projected->get()), static_cast<float*>(layer_output->get()), kHidden);
-        MIINFER_HIP_CHECK(hipMemcpy(output, layer_output->get(), kHidden * sizeof(float), hipMemcpyDeviceToDevice));
+            static_cast<const float*>(projected->get()), completed_output, kHidden);
+        if (!direct_layer_output) {
+            MIINFER_HIP_CHECK(hipMemcpy(output, layer_output->get(), kHidden * sizeof(float),
+                                        hipMemcpyDeviceToDevice));
+        }
         stage_end(14, position);
     }
 };

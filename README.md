@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M6-B56 — post-B55 production profile**
+**Current phase: M6-B57 — direct layer-output copy rejection**
 
 The project currently has:
 

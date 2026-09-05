@@ -15,6 +15,15 @@ For long-term direction, see:
 
 # Current Phase
 
+**M6-B57 — direct layer-output copy rejection**
+
+M6-B57 tested writing each layer residual directly into the caller's output,
+removing 64 16-KiB D2D copies (1 MiB/token). Native replay passed, but the
+same-build result was neutral at TG64 (`14.1004 -> 14.1039 tok/s`, +0.02%) and
+slightly negative at TG128 (`13.8573 -> 13.8449`, -0.09%). The candidate is
+rejected and the B56/B55 production path remains active. See
+`experiments/EXP-0149-m6b57-direct-layer-output.md`.
+
 **M6-B55 — DeltaNet LDS input reuse**
 
 The B50 fused recurrent-output candidate, B52 one-Wave64 Q4_K×Q8_1 candidate,

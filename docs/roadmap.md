@@ -10,7 +10,7 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-B56 — post-B55 production profile**
+**Current phase: M6-B57 — direct layer-output copy rejection**
 
 Immediate objective:
 
