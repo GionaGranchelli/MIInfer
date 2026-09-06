@@ -237,11 +237,119 @@ void launch_kquant_gemv_dispatch(
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
+template <unsigned NumTiles>
+__global__ void q4k_wave_fused_gate_up_swiglu_kernel(
+    const Q4KWaveTile* __restrict__ weights_gate,
+    const Q4KWaveTile* __restrict__ weights_up,
+    const miinfer::Q8_1Block* __restrict__ input,
+    float* __restrict__ output) {
+    const unsigned tid = threadIdx.x % 128;
+    const unsigned local_row = threadIdx.x / 128;
+    const unsigned row = blockIdx.x * 2 + local_row;
+    const unsigned lane = tid % 64;
+    const unsigned in_block = lane % 16;
+    const unsigned group = 2 * (in_block / 4);
+
+    float sum_gate = 0.0f;
+    float sum_up = 0.0f;
+
+    for (unsigned tile = tid / 64; tile < NumTiles; tile += 2) {
+        const auto& w_g = weights_gate[row * NumTiles + tile];
+        const auto& w_u = weights_up[row * NumTiles + tile];
+        Q4KDecoder::LaneState state_g;
+        Q4KDecoder::LaneState state_u;
+        Q4KDecoder::load_tile(w_g, lane, state_g);
+        Q4KDecoder::load_tile(w_u, lane, state_u);
+
+        #pragma unroll
+        for (unsigned part = 0; part < 2; ++part) {
+            const auto& q = input[(tile * 4 + lane / 16) * 8 + group + part];
+            const auto* u = reinterpret_cast<const int*>(q.qs) + (in_block % 4);
+
+            const int a_g = (state_g.v0 >> (4 * part)) & 0x0f0f0f0f;
+            const int b_g = (state_g.v1 >> (4 * part)) & 0x0f0f0f0f;
+            const int dot_g = __builtin_amdgcn_sdot4(a_g, u[0],
+                __builtin_amdgcn_sdot4(b_g, u[4], 0, false), false);
+
+            const int a_u = (state_u.v0 >> (4 * part)) & 0x0f0f0f0f;
+            const int b_u = (state_u.v1 >> (4 * part)) & 0x0f0f0f0f;
+            const int dot_u = __builtin_amdgcn_sdot4(a_u, u[0],
+                __builtin_amdgcn_sdot4(b_u, u[4], 0, false), false);
+
+            const int ones = __builtin_amdgcn_sdot4(0x01010101, u[0],
+                __builtin_amdgcn_sdot4(0x01010101, u[4], 0, false), false);
+
+            const float q_d = __half2float(q.d);
+            const float q_ones = q_d * float(ones);
+
+            state_g.sd += q_d * float(dot_g * state_g.m->scales[group + part]);
+            state_g.sm += q_ones * float(state_g.m->minimums[group + part]);
+
+            state_u.sd += q_d * float(dot_u * state_u.m->scales[group + part]);
+            state_u.sm += q_ones * float(state_u.m->minimums[group + part]);
+        }
+        sum_gate += Q4KDecoder::finalize_tile(state_g);
+        sum_up += Q4KDecoder::finalize_tile(state_u);
+    }
+
+    __shared__ float partials_gate[2][128];
+    __shared__ float partials_up[2][128];
+    partials_gate[local_row][tid] = sum_gate;
+    partials_up[local_row][tid] = sum_up;
+    __syncthreads();
+
+    if (tid < 64) {
+        partials_gate[local_row][tid] += partials_gate[local_row][tid + 64];
+        partials_up[local_row][tid] += partials_up[local_row][tid + 64];
+    }
+    __syncthreads();
+
+    for (unsigned stride = 32; stride; stride /= 2) {
+        if (tid < stride) {
+            partials_gate[local_row][tid] += partials_gate[local_row][tid + stride];
+            partials_up[local_row][tid] += partials_up[local_row][tid + stride];
+        }
+        __syncthreads();
+    }
+
+    if (!tid) {
+        const float g = partials_gate[local_row][0];
+        const float u = partials_up[local_row][0];
+        const float silu_g = g / (1.0f + expf(-g));
+        output[row] = silu_g * u;
+    }
+}
+
 } // namespace
 
 void launch_q4k_wave_gemv(const Q4KWaveTile* w, const miinfer::Q8_1Block* x, float* y,
                           std::uint32_t rows, std::uint32_t columns) {
     launch_kquant_gemv_dispatch<Q4KDecoder>(w, x, y, rows, columns);
+}
+
+void launch_q4k_wave_fused_gate_up_swiglu(
+    const Q4KWaveTile* w_gate,
+    const Q4KWaveTile* w_up,
+    const miinfer::Q8_1Block* x,
+    float* y_activation,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    hipStream_t stream) {
+    if (!w_gate || !w_up || !x || !y_activation) MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    if (rows % 2 != 0 || columns % 1024 != 0) MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    const unsigned num_tiles = columns / 1024;
+    const dim3 grid(rows / 2);
+    const dim3 block(256);
+    switch (num_tiles) {
+    case 5: {
+        auto kernel = q4k_wave_fused_gate_up_swiglu_kernel<5>;
+        hipLaunchKernelGGL(kernel, grid, block, 0, stream, w_gate, w_up, x, y_activation);
+        break;
+    }
+    default:
+        throw std::runtime_error("unsupported NumTiles in launch_q4k_wave_fused_gate_up_swiglu: " + std::to_string(num_tiles));
+    }
+    MIINFER_HIP_CHECK(hipGetLastError());
 }
 
 void launch_q4k_wave_down(const Q4KWaveTile* w, const miinfer::Q8_1Block* x, float* y) {

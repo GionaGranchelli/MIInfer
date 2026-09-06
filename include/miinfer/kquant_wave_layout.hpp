@@ -57,10 +57,25 @@ void q5k_wave_gemv_reference(const Q5KWaveTile* w, const miinfer::Q8_1Block* x, 
                              std::uint32_t rows, std::uint32_t columns);
 void q6k_wave_gemv_reference(const Q6KWaveTile* w, const miinfer::Q8_1Block* x, float* y,
                              std::uint32_t rows, std::uint32_t columns);
+void q4k_wave_fused_gate_up_swiglu_reference(
+    const Q4KWaveTile* w_gate,
+    const Q4KWaveTile* w_up,
+    const miinfer::Q8_1Block* x,
+    float* y_activation,
+    std::uint32_t rows,
+    std::uint32_t columns);
 
 // Device kernel dispatch functions
 void launch_q4k_wave_gemv(const Q4KWaveTile* w, const miinfer::Q8_1Block* x, float* y,
                           std::uint32_t rows, std::uint32_t columns);
+void launch_q4k_wave_fused_gate_up_swiglu(
+    const Q4KWaveTile* w_gate,
+    const Q4KWaveTile* w_up,
+    const miinfer::Q8_1Block* x,
+    float* y_activation,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    hipStream_t stream = nullptr);
 void launch_q4k_wave_down(const Q4KWaveTile* w, const miinfer::Q8_1Block* x, float* y);
 void launch_q5k_wave_gemv(const Q5KWaveTile* w, const miinfer::Q8_1Block* x, float* y,
                           std::uint32_t rows, std::uint32_t columns);

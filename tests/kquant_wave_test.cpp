@@ -209,6 +209,84 @@ int main() {
         }
     }
 
+    // -------------------------------------------------------------
+    // Test 5: Synthetic Q4_K fused gate+up SwiGLU reference equivalence
+    // -------------------------------------------------------------
+    {
+        std::cout << "Test 5: Synthetic Q4_K fused gate+up SwiGLU reference... ";
+        const std::size_t rows = 4;
+        const std::size_t cols = 1024;
+        const std::size_t blocks = cols / 256;
+        std::vector<miinfer::Q4KDeviceBlock> gate_blocks(rows * blocks);
+        std::vector<miinfer::Q4KDeviceBlock> up_blocks(rows * blocks);
+        std::vector<miinfer::Q8_1Block> x_blocks(cols / 32);
+
+        std::mt19937 rng(777);
+        for (std::size_t b = 0; b < gate_blocks.size(); ++b) {
+            std::uint16_t d_bits = 0x3c00;
+            std::uint16_t dmin_bits = 0x3800;
+            std::memcpy(&gate_blocks[b].d, &d_bits, 2);
+            std::memcpy(&gate_blocks[b].dmin, &dmin_bits, 2);
+            for (int i = 0; i < 12; ++i) gate_blocks[b].scales[i] = static_cast<std::uint8_t>(rng() & 0x3f);
+            for (int i = 0; i < 128; ++i) gate_blocks[b].qs[i] = static_cast<std::uint8_t>(rng() & 0xff);
+
+            std::memcpy(&up_blocks[b].d, &d_bits, 2);
+            std::memcpy(&up_blocks[b].dmin, &dmin_bits, 2);
+            for (int i = 0; i < 12; ++i) up_blocks[b].scales[i] = static_cast<std::uint8_t>(rng() & 0x3f);
+            for (int i = 0; i < 128; ++i) up_blocks[b].qs[i] = static_cast<std::uint8_t>(rng() & 0xff);
+        }
+        for (auto& b : x_blocks) {
+            std::uint16_t d_bits = 0x3800;
+            std::memcpy(&b.d, &d_bits, 2);
+            std::uint16_t s_bits = 0;
+            std::memcpy(&b.s, &s_bits, 2);
+            for (int i = 0; i < 32; ++i) b.qs[i] = static_cast<std::int8_t>((rng() % 255) - 128);
+        }
+
+        miinfer::GgufTensor tensor_gate{};
+        tensor_gate.type = miinfer::GgufTensorType::q4_k;
+        tensor_gate.dimensions = {cols, rows};
+        tensor_gate.byte_size = gate_blocks.size() * sizeof(miinfer::Q4KDeviceBlock);
+        tensor_gate.data = reinterpret_cast<const std::byte*>(gate_blocks.data());
+
+        miinfer::GgufTensor tensor_up{};
+        tensor_up.type = miinfer::GgufTensorType::q4_k;
+        tensor_up.dimensions = {cols, rows};
+        tensor_up.byte_size = up_blocks.size() * sizeof(miinfer::Q4KDeviceBlock);
+        tensor_up.data = reinterpret_cast<const std::byte*>(up_blocks.data());
+
+        auto packed_gate = pack_q4k_wave_tensor(tensor_gate);
+        auto packed_up = pack_q4k_wave_tensor(tensor_up);
+
+        std::vector<float> fused_out(rows);
+        q4k_wave_fused_gate_up_swiglu_reference(
+            packed_gate.data(), packed_up.data(), x_blocks.data(),
+            fused_out.data(), rows, cols);
+
+        std::vector<float> gate_out(rows), up_out(rows), expected_out(rows);
+        q4k_wave_gemv_reference(packed_gate.data(), x_blocks.data(), gate_out.data(), rows, cols);
+        q4k_wave_gemv_reference(packed_up.data(), x_blocks.data(), up_out.data(), rows, cols);
+        for (std::size_t r = 0; r < rows; ++r) {
+            const float g = gate_out[r];
+            const float u = up_out[r];
+            expected_out[r] = (g / (1.0f + std::exp(-g))) * u;
+        }
+
+        bool match = true;
+        for (std::size_t r = 0; r < rows; ++r) {
+            if (std::fabs(fused_out[r] - expected_out[r]) > 1e-4f) {
+                match = false;
+                break;
+            }
+        }
+        if (match) {
+            std::cout << "PASS\n";
+        } else {
+            std::cout << "FAIL (numerical mismatch)\n";
+            all_passed = false;
+        }
+    }
+
     std::cout << "\nAll K-quant WaveTile host tests: " << (all_passed ? "PASS" : "FAIL") << '\n';
     return all_passed ? 0 : 1;
 }

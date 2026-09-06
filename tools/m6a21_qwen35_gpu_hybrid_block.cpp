@@ -664,6 +664,7 @@ struct RecurrentLayer {
     bool q4_q8_1_lds_decoded_metadata = true;
     bool q4_q8_1_attn_gate = false;
     bool direct_layer_output = false;
+    bool fused_gate_up_swiglu = false;
     bool expanded_down = true;
     Buffer d_ffn_down_native;
     Buffer d_ffn_gate_native, d_ffn_up_native;
@@ -743,6 +744,9 @@ struct RecurrentLayer {
         const char* dual_head_normalize_env = std::getenv("MIINFER_DUAL_HEAD_NORMALIZE");
         dual_head_normalize = dual_head_normalize_env != nullptr
             && std::strcmp(dual_head_normalize_env, "0") != 0;
+        const char* fused_gate_up_swiglu_env = std::getenv("MIINFER_FUSED_GATE_UP_SWIGLU");
+        fused_gate_up_swiglu = fused_gate_up_swiglu_env != nullptr
+            && std::strcmp(fused_gate_up_swiglu_env, "0") != 0;
         const char* q6_q8_k_dot4_qkv_env = std::getenv("MIINFER_Q6K_Q8K_DOT4_QKV");
         q6_q8_k_dot4_qkv = q6_q8_k_dot4_qkv_env == nullptr
             || std::strcmp(q6_q8_k_dot4_qkv_env, "0") != 0;
@@ -1324,14 +1328,22 @@ struct RecurrentLayer {
             miinfer::launch_q8_1_quantize_f32(
                 static_cast<const float*>(post_normalized->get()),
                 static_cast<miinfer::Q8_1Block*>(q8_1->get()), kHidden);
-            launch_q4k_wave_gemv(
-                static_cast<const Q4KWaveTile*>(d_ffn_gate_native->get()),
-                static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
-                static_cast<float*>(ffn_gate->get()), kFfnInner, kHidden);
-            launch_q4k_wave_gemv(
-                static_cast<const Q4KWaveTile*>(d_ffn_up_native->get()),
-                static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
-                static_cast<float*>(ffn_up->get()), kFfnInner, kHidden);
+            if (fused_gate_up_swiglu) {
+                launch_q4k_wave_fused_gate_up_swiglu(
+                    static_cast<const Q4KWaveTile*>(d_ffn_gate_native->get()),
+                    static_cast<const Q4KWaveTile*>(d_ffn_up_native->get()),
+                    static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
+                    static_cast<float*>(ffn_activation->get()), kFfnInner, kHidden);
+            } else {
+                launch_q4k_wave_gemv(
+                    static_cast<const Q4KWaveTile*>(d_ffn_gate_native->get()),
+                    static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
+                    static_cast<float*>(ffn_gate->get()), kFfnInner, kHidden);
+                launch_q4k_wave_gemv(
+                    static_cast<const Q4KWaveTile*>(d_ffn_up_native->get()),
+                    static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
+                    static_cast<float*>(ffn_up->get()), kFfnInner, kHidden);
+            }
         } else if (q4_q8_1_gate_up
             && ffn_gate_weight.type == miinfer::GgufTensorType::q4_k
             && ffn_up_weight.type == miinfer::GgufTensorType::q4_k) {
@@ -1359,9 +1371,11 @@ struct RecurrentLayer {
         }
         stage_end(10, position);
         stage_start(11, position);
-        miinfer::launch_qwen3_silu_mul(
-            static_cast<const float*>(ffn_gate->get()), static_cast<const float*>(ffn_up->get()),
-            static_cast<float*>(ffn_activation->get()), kFfnInner);
+        if (!fused_gate_up_swiglu || !d_ffn_gate_native || !d_ffn_up_native) {
+            miinfer::launch_qwen3_silu_mul(
+                static_cast<const float*>(ffn_gate->get()), static_cast<const float*>(ffn_up->get()),
+                static_cast<float*>(ffn_activation->get()), kFfnInner);
+        }
         stage_end(11, position);
         if (layer_path_capture != nullptr && layer_path_capture_position == position) {
             layer_path_capture->post_normalized = download(post_normalized->get(), kHidden);
@@ -1447,6 +1461,7 @@ struct FullAttentionLayer {
     bool q4_q8_1_lds_metadata = true;
     bool q4_q8_1_lds_decoded_metadata = true;
     bool direct_layer_output = false;
+    bool fused_gate_up_swiglu = false;
     bool expanded_down = true;
     Buffer d_ffn_down_native;
     Buffer d_ffn_gate_native, d_ffn_up_native;
@@ -1541,6 +1556,9 @@ struct FullAttentionLayer {
         const char* q4_q8_1_gate_up_env = std::getenv("MIINFER_Q4K_Q8_1_MMVQ_FFN_GATE_UP");
         q4_q8_1_gate_up = q4_q8_1_gate_up_env == nullptr
             || std::strcmp(q4_q8_1_gate_up_env, "0") != 0;
+        const char* fused_gate_up_swiglu_env = std::getenv("MIINFER_FUSED_GATE_UP_SWIGLU");
+        fused_gate_up_swiglu = fused_gate_up_swiglu_env != nullptr
+            && std::strcmp(fused_gate_up_swiglu_env, "0") != 0;
         const char* direct_layer_output_env = std::getenv("MIINFER_DIRECT_LAYER_OUTPUT");
         const char* hip_graph_env = std::getenv("MIINFER_HIP_GRAPH");
         const bool use_hip_graph = hip_graph_env != nullptr && std::strcmp(hip_graph_env, "0") != 0;
@@ -1747,14 +1765,22 @@ struct FullAttentionLayer {
             miinfer::launch_q8_1_quantize_f32(
                 static_cast<const float*>(post_normalized->get()),
                 static_cast<miinfer::Q8_1Block*>(q8_1->get()), kHidden);
-            launch_q4k_wave_gemv(
-                static_cast<const Q4KWaveTile*>(d_ffn_gate_native->get()),
-                static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
-                static_cast<float*>(ffn_gate->get()), kFfnInner, kHidden);
-            launch_q4k_wave_gemv(
-                static_cast<const Q4KWaveTile*>(d_ffn_up_native->get()),
-                static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
-                static_cast<float*>(ffn_up->get()), kFfnInner, kHidden);
+            if (fused_gate_up_swiglu) {
+                launch_q4k_wave_fused_gate_up_swiglu(
+                    static_cast<const Q4KWaveTile*>(d_ffn_gate_native->get()),
+                    static_cast<const Q4KWaveTile*>(d_ffn_up_native->get()),
+                    static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
+                    static_cast<float*>(ffn_activation->get()), kFfnInner, kHidden);
+            } else {
+                launch_q4k_wave_gemv(
+                    static_cast<const Q4KWaveTile*>(d_ffn_gate_native->get()),
+                    static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
+                    static_cast<float*>(ffn_gate->get()), kFfnInner, kHidden);
+                launch_q4k_wave_gemv(
+                    static_cast<const Q4KWaveTile*>(d_ffn_up_native->get()),
+                    static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
+                    static_cast<float*>(ffn_up->get()), kFfnInner, kHidden);
+            }
         } else if (q4_q8_1_gate_up
             && ffn_gate_weight.type == miinfer::GgufTensorType::q4_k
             && ffn_up_weight.type == miinfer::GgufTensorType::q4_k) {
@@ -1782,8 +1808,10 @@ struct FullAttentionLayer {
         }
         stage_end(11, position);
         stage_start(12, position);
-        miinfer::launch_qwen3_silu_mul(static_cast<const float*>(ffn_gate->get()),
-            static_cast<const float*>(ffn_up->get()), static_cast<float*>(ffn_activation->get()), kFfnInner);
+        if (!fused_gate_up_swiglu || !d_ffn_gate_native || !d_ffn_up_native) {
+            miinfer::launch_qwen3_silu_mul(static_cast<const float*>(ffn_gate->get()),
+                static_cast<const float*>(ffn_up->get()), static_cast<float*>(ffn_activation->get()), kFfnInner);
+        }
         stage_end(12, position);
         stage_start(13, position);
         if (d_ffn_down_native) {

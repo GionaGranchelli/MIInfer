@@ -527,3 +527,22 @@ void q6k_wave_gemv_reference(const Q6KWaveTile* w, const miinfer::Q8_1Block* x, 
         y[r] = sum;
     }
 }
+
+void q4k_wave_fused_gate_up_swiglu_reference(
+    const Q4KWaveTile* w_gate,
+    const Q4KWaveTile* w_up,
+    const miinfer::Q8_1Block* x,
+    float* y_activation,
+    std::uint32_t rows,
+    std::uint32_t columns) {
+    std::vector<float> gate(rows);
+    std::vector<float> up(rows);
+    q4k_wave_gemv_reference(w_gate, x, gate.data(), rows, columns);
+    q4k_wave_gemv_reference(w_up, x, up.data(), rows, columns);
+    for (std::uint32_t r = 0; r < rows; ++r) {
+        const float g = gate[r];
+        const float u = up[r];
+        const float silu_g = g / (1.0f + std::exp(-g));
+        y_activation[r] = silu_g * u;
+    }
+}
