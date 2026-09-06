@@ -1,0 +1,259 @@
+#include "miinfer/kquant_wave_layout.hpp"
+#include "miinfer/hip_check.hpp"
+#include <hip/hip_runtime.h>
+#if defined(__HIP_DEVICE_COMPILE__) && !defined(__gfx906__)
+#error "K-quant Wave layout requires gfx906"
+#endif
+
+#include <string>
+#include <stdexcept>
+
+namespace {
+
+// =========================================================================
+// Decoder Policies
+// =========================================================================
+
+struct Q4KDecoder {
+    using Tile = Q4KWaveTile;
+
+    struct LaneState {
+        const Tile::Metadata* m;
+        std::uint32_t v0;
+        std::uint32_t v1;
+        float sd;
+        float sm;
+    };
+
+    static __device__ __forceinline__ void load_tile(const Tile& w, unsigned lane, LaneState& state) {
+        state.m = &w.metadata[lane / 16];
+        state.v0 = w.words[0][lane];
+        state.v1 = w.words[1][lane];
+        state.sd = 0.0f;
+        state.sm = 0.0f;
+    }
+
+    static __device__ __forceinline__ void process_part(
+        LaneState& state, unsigned part, unsigned group,
+        const miinfer::Q8_1Block& q, const int* u) {
+        const int a = (state.v0 >> (4 * part)) & 0x0f0f0f0f;
+        const int b = (state.v1 >> (4 * part)) & 0x0f0f0f0f;
+        const int dot = __builtin_amdgcn_sdot4(a, u[0],
+            __builtin_amdgcn_sdot4(b, u[4], 0, false), false);
+        const int ones = __builtin_amdgcn_sdot4(0x01010101, u[0],
+            __builtin_amdgcn_sdot4(0x01010101, u[4], 0, false), false);
+        state.sd += __half2float(q.d) * float(dot * state.m->scales[group + part]);
+        state.sm += __half2float(q.d) * float(ones * state.m->minimums[group + part]);
+    }
+
+    static __device__ __forceinline__ float finalize_tile(const LaneState& state) {
+        return __half2float(state.m->d) * state.sd - __half2float(state.m->dmin) * state.sm;
+    }
+};
+
+struct Q5KDecoder {
+    using Tile = Q5KWaveTile;
+
+    struct LaneState {
+        const Tile::Metadata* m;
+        std::uint32_t v0;
+        std::uint32_t v1;
+        std::uint32_t h;
+        float sd;
+        float sm;
+    };
+
+    static __device__ __forceinline__ void load_tile(const Tile& w, unsigned lane, LaneState& state) {
+        state.m = &w.metadata[lane / 16];
+        state.v0 = w.words[0][lane];
+        state.v1 = w.words[1][lane];
+        state.h = w.qh[lane];
+        state.sd = 0.0f;
+        state.sm = 0.0f;
+    }
+
+    static __device__ __forceinline__ void process_part(
+        LaneState& state, unsigned part, unsigned group,
+        const miinfer::Q8_1Block& q, const int* u) {
+        const int low_a = (state.v0 >> (4 * part)) & 0x0f0f0f0f;
+        const int low_b = (state.v1 >> (4 * part)) & 0x0f0f0f0f;
+        const int high_a = (part == 0) ? ((state.h << 4) & 0x10101010) : ((state.h << 3) & 0x10101010);
+        const int high_b = (part == 0) ? ((state.h << 2) & 0x10101010) : ((state.h << 1) & 0x10101010);
+        const int a = low_a | high_a;
+        const int b = low_b | high_b;
+        const int dot = __builtin_amdgcn_sdot4(a, u[0],
+            __builtin_amdgcn_sdot4(b, u[4], 0, false), false);
+        const int ones = __builtin_amdgcn_sdot4(0x01010101, u[0],
+            __builtin_amdgcn_sdot4(0x01010101, u[4], 0, false), false);
+        state.sd += __half2float(q.d) * float(dot * state.m->scales[group + part]);
+        state.sm += __half2float(q.d) * float(ones * state.m->minimums[group + part]);
+    }
+
+    static __device__ __forceinline__ float finalize_tile(const LaneState& state) {
+        return __half2float(state.m->d) * state.sd - __half2float(state.m->dmin) * state.sm;
+    }
+};
+
+struct Q6KDecoder {
+    using Tile = Q6KWaveTile;
+
+    struct LaneState {
+        const Tile::Metadata* m;
+        std::uint32_t v0;
+        std::uint32_t v1;
+        std::uint32_t h;
+        float sd;
+    };
+
+    static __device__ __forceinline__ void load_tile(const Tile& w, unsigned lane, LaneState& state) {
+        state.m = &w.metadata[lane / 16];
+        state.v0 = w.words[0][lane];
+        state.v1 = w.words[1][lane];
+        state.h = w.qh[lane];
+        state.sd = 0.0f;
+    }
+
+    static __device__ __forceinline__ void process_part(
+        LaneState& state, unsigned part, unsigned group,
+        const miinfer::Q8_1Block& q, const int* u) {
+        std::uint32_t a = 0;
+        std::uint32_t b = 0;
+        #pragma unroll
+        for (int j = 0; j < 4; ++j) {
+            const std::uint32_t byte_v0 = (state.v0 >> (8 * j)) & 0xff;
+            const std::uint32_t byte_v1 = (state.v1 >> (8 * j)) & 0xff;
+            const std::uint32_t low_a = (part == 0) ? (byte_v0 & 0x0f) : (byte_v0 >> 4);
+            const std::uint32_t low_b = (part == 0) ? (byte_v1 & 0x0f) : (byte_v1 >> 4);
+
+            const std::uint32_t byte_h = (state.h >> (8 * j)) & 0xff;
+            const int shift_a = (part == 0) ? 0 : 4;
+            const int shift_b = (part == 0) ? 2 : 6;
+            const std::uint32_t high_a = (byte_h >> shift_a) & 0x03;
+            const std::uint32_t high_b = (byte_h >> shift_b) & 0x03;
+
+            const std::int32_t q_a = static_cast<std::int32_t>(low_a | (high_a << 4)) - 32;
+            const std::int32_t q_b = static_cast<std::int32_t>(low_b | (high_b << 4)) - 32;
+
+            a |= (static_cast<std::uint32_t>(q_a & 0xff) << (8 * j));
+            b |= (static_cast<std::uint32_t>(q_b & 0xff) << (8 * j));
+        }
+
+        const int dot_a = __builtin_amdgcn_sdot4(static_cast<int>(a), u[0], 0, false);
+        const int dot_b = __builtin_amdgcn_sdot4(static_cast<int>(b), u[4], 0, false);
+        const int sc_a = state.m->scales[2 * (group + part)];
+        const int sc_b = state.m->scales[2 * (group + part) + 1];
+        state.sd += __half2float(q.d) * float(dot_a * sc_a + dot_b * sc_b);
+    }
+
+    static __device__ __forceinline__ float finalize_tile(const LaneState& state) {
+        return __half2float(state.m->d) * state.sd;
+    }
+};
+
+// =========================================================================
+// Common Wave64 Tile Executor Kernel
+// =========================================================================
+
+template <typename Decoder, unsigned NumTiles>
+__global__ void kquant_wave_gemv_kernel(
+    const typename Decoder::Tile* weights,
+    const miinfer::Q8_1Block* input,
+    float* output) {
+    const unsigned tid = threadIdx.x % 128;
+    const unsigned local_row = threadIdx.x / 128;
+    const unsigned row = blockIdx.x * 2 + local_row;
+    const unsigned lane = tid % 64;
+    const unsigned in_block = lane % 16;
+    const unsigned group = 2 * (in_block / 4);
+
+    float sum = 0.0f;
+    for (unsigned tile = tid / 64; tile < NumTiles; tile += 2) {
+        const auto& w = weights[row * NumTiles + tile];
+        typename Decoder::LaneState state;
+        Decoder::load_tile(w, lane, state);
+
+        #pragma unroll
+        for (unsigned part = 0; part < 2; ++part) {
+            const auto& q = input[(tile * 4 + lane / 16) * 8 + group + part];
+            const auto* u = reinterpret_cast<const int*>(q.qs) + (in_block % 4);
+            Decoder::process_part(state, part, group, q, u);
+        }
+        sum += Decoder::finalize_tile(state);
+    }
+
+    __shared__ float partials[2][128];
+    partials[local_row][tid] = sum;
+    __syncthreads();
+    if (tid < 64) partials[local_row][tid] += partials[local_row][tid + 64];
+    __syncthreads();
+    for (unsigned stride = 32; stride; stride /= 2) {
+        if (tid < stride) partials[local_row][tid] += partials[local_row][tid + stride];
+        __syncthreads();
+    }
+    if (!tid) output[row] = partials[local_row][0];
+}
+
+template <typename Decoder>
+void launch_kquant_gemv_dispatch(
+    const typename Decoder::Tile* w,
+    const miinfer::Q8_1Block* x,
+    float* y,
+    std::uint32_t rows,
+    std::uint32_t columns) {
+    if (!w || !x || !y) MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    if (rows % 2 != 0 || columns % 1024 != 0) MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    const unsigned num_tiles = columns / 1024;
+    const dim3 grid(rows / 2);
+    const dim3 block(256);
+    switch (num_tiles) {
+    case 1: {
+        auto kernel = kquant_wave_gemv_kernel<Decoder, 1>;
+        hipLaunchKernelGGL(kernel, grid, block, 0, nullptr, w, x, y);
+        break;
+    }
+    case 5: {
+        auto kernel = kquant_wave_gemv_kernel<Decoder, 5>;
+        hipLaunchKernelGGL(kernel, grid, block, 0, nullptr, w, x, y);
+        break;
+    }
+    case 6: {
+        auto kernel = kquant_wave_gemv_kernel<Decoder, 6>;
+        hipLaunchKernelGGL(kernel, grid, block, 0, nullptr, w, x, y);
+        break;
+    }
+    case 12: {
+        auto kernel = kquant_wave_gemv_kernel<Decoder, 12>;
+        hipLaunchKernelGGL(kernel, grid, block, 0, nullptr, w, x, y);
+        break;
+    }
+    case 17: {
+        auto kernel = kquant_wave_gemv_kernel<Decoder, 17>;
+        hipLaunchKernelGGL(kernel, grid, block, 0, nullptr, w, x, y);
+        break;
+    }
+    default:
+        throw std::runtime_error("unsupported NumTiles in launch_kquant_gemv_dispatch: " + std::to_string(num_tiles));
+    }
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+} // namespace
+
+void launch_q4k_wave_gemv(const Q4KWaveTile* w, const miinfer::Q8_1Block* x, float* y,
+                          std::uint32_t rows, std::uint32_t columns) {
+    launch_kquant_gemv_dispatch<Q4KDecoder>(w, x, y, rows, columns);
+}
+
+void launch_q4k_wave_down(const Q4KWaveTile* w, const miinfer::Q8_1Block* x, float* y) {
+    launch_q4k_wave_gemv(w, x, y, 5120, 17408);
+}
+
+void launch_q5k_wave_gemv(const Q5KWaveTile* w, const miinfer::Q8_1Block* x, float* y,
+                          std::uint32_t rows, std::uint32_t columns) {
+    launch_kquant_gemv_dispatch<Q5KDecoder>(w, x, y, rows, columns);
+}
+
+void launch_q6k_wave_gemv(const Q6KWaveTile* w, const miinfer::Q8_1Block* x, float* y,
+                          std::uint32_t rows, std::uint32_t columns) {
+    launch_kquant_gemv_dispatch<Q6KDecoder>(w, x, y, rows, columns);
+}

@@ -107,8 +107,8 @@ if(MIINFER_ENABLE_HIP)
         gfx906/kernels/q4_q8_packed_dot.hip
         gfx906/kernels/q4_q8_zero_point_dot.hip
         gfx906/kernels/qwen3_primitives.hip
-        gfx906/kernels/q4k_wave_layout.hip
-        src/q4k_wave_layout.cpp
+        gfx906/kernels/kquant_wave_layout.hip
+        src/kquant_wave_layout.cpp
         gfx906/kernels/memory_stream.hip
     )
     target_include_directories(miinfer_hip
@@ -288,6 +288,14 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-q4-q8-gemv-bench PRIVATE miinfer_hip)
     target_compile_options(miinfer-q4-q8-gemv-bench PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-kquant-layout-bench bench/kquant_layout_bench.cpp)
+    target_link_libraries(miinfer-kquant-layout-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-kquant-layout-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-kquant-wave-test tests/kquant_wave_test.cpp)
+    target_link_libraries(miinfer-kquant-wave-test PRIVATE miinfer_hip)
+    target_compile_options(miinfer-kquant-wave-test PRIVATE -Wall -Wextra -Wpedantic)
+
     add_executable(miinfer-model-info tests/model_info.cpp)
     target_link_libraries(miinfer-model-info PRIVATE miinfer_hip)
     target_compile_options(miinfer-model-info PRIVATE -Wall -Wextra -Wpedantic)
@@ -384,6 +392,8 @@ if(BUILD_TESTING)
     add_test(NAME qwen3-layer0-comparator-mutation
              COMMAND miinfer-qwen3-layer0-test --self-test-mutation)
     set_tests_properties(qwen3-layer0-comparator-mutation PROPERTIES LABELS "host-only")
+    add_test(NAME kquant-wave-host COMMAND miinfer-kquant-wave-test)
+    set_tests_properties(kquant-wave-host PROPERTIES LABELS "host-only")
     if(MIINFER_ENABLE_HIP)
         add_test(NAME hip-smoke COMMAND miinfer-hip-smoke)
         set_tests_properties(hip-smoke PROPERTIES LABELS "gpu-required")
