@@ -219,3 +219,5 @@ vcpkg_installed/
 
 *.bench.json.tmp
 *.bench.csv.tmp
+scratch/
+.agents/
