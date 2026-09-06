@@ -680,6 +680,7 @@ struct RecurrentLayer {
     bool dual_beta_alpha_prepare = false;
     bool dual_head_normalize = false;
     bool row_wave_state = false;
+    bool fused_recurrent_core = false;
 
     RecurrentLayer(const miinfer::Qwen35Model& model_value, std::size_t layer,
                    const std::filesystem::path& fixture)
@@ -770,6 +771,9 @@ struct RecurrentLayer {
         const char* row_wave_state_env = std::getenv("MIINFER_DELTA_ROW_WAVES");
         row_wave_state = row_wave_state_env != nullptr
             && std::strcmp(row_wave_state_env, "0") != 0;
+        const char* fused_recurrent_core_env = std::getenv("MIINFER_FUSED_RECURRENT_CORE");
+        fused_recurrent_core = fused_recurrent_core_env != nullptr
+            && std::strcmp(fused_recurrent_core_env, "0") != 0;
         require_type(qkv_weight, {miinfer::GgufTensorType::q4_k,
                                    miinfer::GgufTensorType::q6_k});
         require_type(gate_weight, {miinfer::GgufTensorType::q4_k});
@@ -1175,7 +1179,23 @@ struct RecurrentLayer {
             key_path_capture->key_norm = download(key_norm->get(), kKHeads * kState);
         }
         stage_start(5, position);
-        if (transposed_state) {
+        if (fused_recurrent_core && transposed_state) {
+            float* rec_out_ptr = (layer_path_capture != nullptr || gate_path_capture != nullptr || trace != nullptr)
+                ? static_cast<float*>(recurrent_output->get()) : nullptr;
+            miinfer::launch_qwen35_deltanet_fused_recurrent_core(
+                static_cast<const float*>(query_norm->get()),
+                static_cast<const float*>(key_norm->get()),
+                static_cast<const float*>(value->get()),
+                static_cast<const float*>(beta->get()),
+                static_cast<const float*>(decay->get()),
+                static_cast<const float*>(d_ssm_norm->get()),
+                static_cast<const float*>(gate->get()),
+                static_cast<float*>(state->get()),
+                static_cast<float*>(gated->get()),
+                rec_out_ptr,
+                kKHeads, kVHeads, kState,
+                model.config().rms_epsilon);
+        } else if (transposed_state) {
             if (transposed_no_decay_store) {
                 if (row_wave_state && transposed_lds_inputs) {
                     miinfer::launch_qwen35_deltanet_state_update_transposed_row_waves(
@@ -1244,21 +1264,23 @@ struct RecurrentLayer {
             gate_path_capture->recurrent_output = download(recurrent_output->get(), kVHeads * kState);
         }
         stage_start(6, position);
-        miinfer::launch_qwen3_head_rms_normalize(
-            static_cast<const float*>(recurrent_output->get()), static_cast<float*>(head_norm->get()),
-            kVHeads, kState, model.config().rms_epsilon);
-        if (gate_path_capture != nullptr && gate_path_capture_position == position) {
-            gate_path_capture->head_norm = download(head_norm->get(), kVHeads * kState);
+        if (!fused_recurrent_core || !transposed_state) {
+            miinfer::launch_qwen3_head_rms_normalize(
+                static_cast<const float*>(recurrent_output->get()), static_cast<float*>(head_norm->get()),
+                kVHeads, kState, model.config().rms_epsilon);
+            if (gate_path_capture != nullptr && gate_path_capture_position == position) {
+                gate_path_capture->head_norm = download(head_norm->get(), kVHeads * kState);
+            }
+            miinfer::launch_qwen3_head_mul(
+                static_cast<const float*>(head_norm->get()), static_cast<const float*>(d_ssm_norm->get()),
+                static_cast<float*>(gated->get()), kVHeads, kState);
+            if (gate_path_capture != nullptr && gate_path_capture_position == position) {
+                gate_path_capture->head_scaled = download(gated->get(), kVHeads * kState);
+            }
+            miinfer::launch_qwen3_silu_mul(
+                static_cast<const float*>(gate->get()), static_cast<const float*>(gated->get()),
+                static_cast<float*>(gated->get()), kVHeads * kState);
         }
-        miinfer::launch_qwen3_head_mul(
-            static_cast<const float*>(head_norm->get()), static_cast<const float*>(d_ssm_norm->get()),
-            static_cast<float*>(gated->get()), kVHeads, kState);
-        if (gate_path_capture != nullptr && gate_path_capture_position == position) {
-            gate_path_capture->head_scaled = download(gated->get(), kVHeads * kState);
-        }
-        miinfer::launch_qwen3_silu_mul(
-            static_cast<const float*>(gate->get()), static_cast<const float*>(gated->get()),
-            static_cast<float*>(gated->get()), kVHeads * kState);
         stage_end(6, position);
         trace_tensor(position, "gated", static_cast<const float*>(gated->get()), kVHeads * kState,
                      "final_output-" + std::to_string(index));

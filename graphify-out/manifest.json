@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1788616867.8622558,
-    "seen": 1788616890.1284547,
-    "ast_hash": "a996d73a37316c4c8b279e2b62d8a9f8",
+    "mtime": 1788721942.8988461,
+    "seen": 1788724451.9861755,
+    "ast_hash": "2cf13728a0c07701bd6406e21604c1a1",
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_primitives.hpp": {
@@ -1332,9 +1332,9 @@
     "semantic_hash": ""
   },
   "tools/m6a21_qwen35_gpu_hybrid_block.cpp": {
-    "mtime": 1788719187.565347,
-    "seen": 1788721684.302804,
-    "ast_hash": "fb50284f0ba95ced1203e042e72a8d39",
+    "mtime": 1788721996.5435648,
+    "seen": 1788724451.9863455,
+    "ast_hash": "b78856f65db4de5cf532f1245310e060",
     "semantic_hash": ""
   },
   "experiments/EXP-0065-m6a21-qwen35-gpu-hybrid-block.md": {
@@ -2175,6 +2175,18 @@
     "mtime": 1788721675.3543634,
     "seen": 1788721684.3031287,
     "ast_hash": "15120132748b3ab963667e2d08ad717f",
+    "semantic_hash": ""
+  },
+  "scripts/run-exp0183-fused-recurrent-ab.sh": {
+    "mtime": 1788722248.3013113,
+    "seen": 1788724451.9862146,
+    "ast_hash": "127744a9b05567dd7d37200835562002",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0183-fused-recurrent-core.md": {
+    "mtime": 1788724441.7163951,
+    "seen": 1788724451.9867435,
+    "ast_hash": "4cc64811222c93bd1e7e7efd3b33542d",
     "semantic_hash": ""
   }
 }

@@ -558,6 +558,89 @@ __global__ void qwen35_deltanet_state_update_transposed_row_waves_kernel(
     }
 }
 
+__global__ void qwen35_deltanet_fused_recurrent_core_kernel(
+    const float* __restrict__ query,
+    const float* __restrict__ key,
+    const float* __restrict__ value,
+    const float* __restrict__ beta,
+    const float* __restrict__ decay,
+    const float* __restrict__ ssm_norm,
+    const float* __restrict__ gate,
+    float* __restrict__ state,
+    float* __restrict__ gated_output,
+    float* __restrict__ recurrent_output,
+    std::uint32_t key_heads,
+    std::uint32_t value_heads,
+    std::uint32_t state_size,
+    float epsilon) {
+    const std::uint32_t head = blockIdx.x;
+    const std::uint32_t row = threadIdx.x;
+    if (head >= value_heads || row >= state_size || key_heads == 0) return;
+
+    extern __shared__ float shared_mem[];
+    const std::uint32_t key_head = head % key_heads;
+    const std::size_t key_base = static_cast<std::size_t>(key_head) * state_size;
+    float* shared_query = shared_mem;
+    float* shared_key = shared_mem + state_size;
+    shared_query[row] = query[key_base + row];
+    shared_key[row] = key[key_base + row];
+    __syncthreads();
+
+    const std::size_t state_base =
+        static_cast<std::size_t>(head) * state_size * state_size;
+    const float beta_value = beta[head];
+    const float decay_value = decay[head];
+
+    // Register caching of the 128-element state row to eliminate redundant HBM read pass
+    float s[128];
+    float key_dot = 0.0F;
+    #pragma unroll 4
+    for (std::uint32_t column = 0; column < 128; ++column) {
+        const std::size_t index = state_base
+            + static_cast<std::size_t>(column) * 128 + row;
+        const float val = state[index];
+        s[column] = val;
+        key_dot += val * decay_value * shared_key[column];
+    }
+    const float delta = (value[static_cast<std::size_t>(head) * 128 + row]
+                         - key_dot) * beta_value;
+    float query_dot = 0.0F;
+    #pragma unroll 4
+    for (std::uint32_t column = 0; column < 128; ++column) {
+        const std::size_t index = state_base
+            + static_cast<std::size_t>(column) * 128 + row;
+        const float updated = s[column] * decay_value + delta * shared_key[column];
+        state[index] = updated;
+        query_dot += updated * shared_query[column];
+    }
+    const float rec_val = query_dot * rsqrtf(128.0F);
+    if (recurrent_output != nullptr) {
+        recurrent_output[static_cast<std::size_t>(head) * 128 + row] = rec_val;
+    }
+
+    __syncthreads();
+    // Reuse shared memory for head RMS reduction:
+    // shared_partials matches qwen3_head_rms_normalize reduction tree bit-for-bit
+    float* shared_partials = shared_mem + 128;
+    shared_partials[row] = rec_val * rec_val;
+    __syncthreads();
+
+    for (std::uint32_t stride = 64; stride > 0; stride /= 2) {
+        if (row < stride) {
+            shared_partials[row] += shared_partials[row + stride];
+        }
+        __syncthreads();
+    }
+
+    const float inverse_rms = rsqrtf(shared_partials[0] / 128.0F + epsilon);
+    const float head_norm = rec_val * inverse_rms;
+    const float head_scaled = head_norm * ssm_norm[row];
+    const std::size_t out_idx = static_cast<std::size_t>(head) * 128 + row;
+    const float g = gate[out_idx];
+    const float silu_g = g / (1.0F + expf(-g));
+    gated_output[out_idx] = silu_g * head_scaled;
+}
+
 __global__ void qwen35_conv_silu_split_kernel(
     const float* current_qkv, const float* conv_weights, float* history,
     float* query, float* key, float* value, std::uint32_t position,
@@ -2089,6 +2172,37 @@ void launch_qwen35_deltanet_state_update_transposed_row_waves(
                        static_cast<std::size_t>(2) * state_size * sizeof(float), stream,
                        query, key, value, beta, decay, state, output,
                        key_heads, value_heads, state_size);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_deltanet_fused_recurrent_core(
+    const float* query,
+    const float* key,
+    const float* value,
+    const float* beta,
+    const float* decay,
+    const float* ssm_norm,
+    const float* gate,
+    float* state,
+    float* gated_output,
+    float* recurrent_output,
+    std::uint32_t key_heads,
+    std::uint32_t value_heads,
+    std::uint32_t state_size,
+    float epsilon,
+    hipStream_t stream) {
+    if (query == nullptr || key == nullptr || value == nullptr || beta == nullptr
+        || decay == nullptr || ssm_norm == nullptr || gate == nullptr || state == nullptr
+        || gated_output == nullptr || key_heads == 0 || value_heads == 0
+        || state_size != 128 || value_heads % key_heads != 0 || epsilon <= 0.0F) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    const std::size_t shared_bytes = static_cast<std::size_t>(2) * state_size * sizeof(float);
+    hipLaunchKernelGGL(qwen35_deltanet_fused_recurrent_core_kernel,
+                       dim3(value_heads), dim3(state_size), shared_bytes, stream,
+                       query, key, value, beta, decay, ssm_norm, gate,
+                       state, gated_output, recurrent_output,
+                       key_heads, value_heads, state_size, epsilon);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
