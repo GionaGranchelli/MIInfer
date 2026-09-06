@@ -355,6 +355,24 @@ void launch_qwen3_cached_attention_history_parallel(
     float scale,
     hipStream_t stream = nullptr);
 
+// M7-F tiled online-softmax attention with optional gate sigmoid fusion:
+// Dispatches a 2-stage Split-K reduction across MI50's 60 CUs with zero
+// global score/probability writes and in-register online softmax.
+void launch_qwen35_tiled_online_attention(
+    const float* q,
+    const float* key_cache,
+    const float* value_cache,
+    std::uint32_t cache_length,
+    std::uint32_t cache_capacity,
+    float* output,
+    const float* gate,
+    float* gated_output,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float scale,
+    hipStream_t stream = nullptr);
+
 // Store one token's contiguous K/V vectors in the persistent
 // [kv_head][position][head_dim] cache layout with one device launch.
 void launch_qwen3_kv_cache_store(

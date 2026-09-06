@@ -986,6 +986,141 @@ __global__ void qwen3_cached_attention_history_parallel_kernel(
     }
 }
 
+__device__ static float s_attn_split_acc[4 * 24 * 256];
+__device__ static float s_attn_split_max[4 * 24];
+__device__ static float s_attn_split_sum[4 * 24];
+
+__global__ void qwen3_splitk_stage1_kernel(
+    const float* __restrict__ q,
+    const float* __restrict__ key_cache,
+    const float* __restrict__ value_cache,
+    std::uint32_t cache_length,
+    std::uint32_t cache_capacity,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float scale,
+    std::uint32_t num_splits) {
+
+    const std::uint32_t head = blockIdx.x;
+    const std::uint32_t split = blockIdx.y;
+    const std::uint32_t tid = threadIdx.x;
+    if (head >= query_heads || tid >= head_dim) return;
+
+    const std::uint32_t kv_head = head / (query_heads / kv_heads);
+    const std::uint32_t q_base = head * head_dim;
+    const std::uint32_t wave = tid / 64;
+    const std::uint32_t wave_lane = tid % 64;
+
+    const std::uint32_t tokens_per_split = (cache_length + num_splits - 1) / num_splits;
+    const std::uint32_t pos_start = split * tokens_per_split;
+    const std::uint32_t pos_end = min(pos_start + tokens_per_split, cache_length);
+
+    const float q_val = q[q_base + tid];
+    float acc = 0.0F;
+    float running_max = -INFINITY;
+    float running_sum = 0.0F;
+
+    __shared__ float s_wave_sum[4];
+    __shared__ float s_alpha;
+    __shared__ float s_weight;
+
+    for (std::uint32_t pos = pos_start; pos < pos_end; ++pos) {
+        const std::size_t cache_base =
+            (static_cast<std::size_t>(kv_head) * cache_capacity + pos) * head_dim;
+        const float k_val = key_cache[cache_base + tid];
+        float prod = q_val * k_val;
+
+        prod = qwen3_wave_sum(prod);
+        if (wave_lane == 0) {
+            s_wave_sum[wave] = prod;
+        }
+        __syncthreads();
+
+        if (tid == 0) {
+            const float dot = (s_wave_sum[0] + s_wave_sum[1] + s_wave_sum[2] + s_wave_sum[3]) * scale;
+            float alpha = 1.0F;
+            float weight = 0.0F;
+            if (dot > running_max) {
+                alpha = expf(running_max - dot);
+                running_sum = running_sum * alpha + 1.0F;
+                running_max = dot;
+                weight = 1.0F;
+            } else {
+                weight = expf(dot - running_max);
+                running_sum += weight;
+            }
+            s_alpha = alpha;
+            s_weight = weight;
+        }
+        __syncthreads();
+
+        const float alpha = s_alpha;
+        const float weight = s_weight;
+        const float v_val = value_cache[cache_base + tid];
+        acc = acc * alpha + weight * v_val;
+    }
+
+    const std::size_t split_head_idx = static_cast<std::size_t>(split) * query_heads + head;
+    s_attn_split_acc[split_head_idx * head_dim + tid] = acc;
+    if (tid == 0) {
+        s_attn_split_max[split_head_idx] = running_max;
+        s_attn_split_sum[split_head_idx] = running_sum;
+    }
+}
+
+__global__ void qwen3_splitk_stage2_kernel(
+    float* __restrict__ output,
+    const float* __restrict__ gate,
+    float* __restrict__ gated_output,
+    std::uint32_t query_heads,
+    std::uint32_t head_dim,
+    std::uint32_t num_splits) {
+
+    const std::uint32_t head = blockIdx.x;
+    const std::uint32_t tid = threadIdx.x;
+    if (head >= query_heads || tid >= head_dim) return;
+
+    __shared__ float s_global_sum;
+    __shared__ float s_alphas[4];
+
+    if (tid == 0) {
+        float g_max = -INFINITY;
+        for (std::uint32_t s = 0; s < num_splits; ++s) {
+            const float m = s_attn_split_max[s * query_heads + head];
+            g_max = fmaxf(g_max, m);
+        }
+        float g_sum = 0.0F;
+        for (std::uint32_t s = 0; s < num_splits; ++s) {
+            const float m = s_attn_split_max[s * query_heads + head];
+            const float l = s_attn_split_sum[s * query_heads + head];
+            const float a = expf(m - g_max);
+            s_alphas[s] = a;
+            g_sum += l * a;
+        }
+        s_global_sum = g_sum;
+    }
+    __syncthreads();
+
+    float total_acc = 0.0F;
+    for (std::uint32_t s = 0; s < num_splits; ++s) {
+        const float a = s_alphas[s];
+        const float partial = s_attn_split_acc[(s * query_heads + head) * head_dim + tid];
+        total_acc += partial * a;
+    }
+
+    const float out_val = (s_global_sum > 0.0F) ? (total_acc / s_global_sum) : 0.0F;
+    const std::uint32_t q_base = head * head_dim;
+    if (output != nullptr) {
+        output[q_base + tid] = out_val;
+    }
+    if (gate != nullptr && gated_output != nullptr) {
+        const float g = gate[q_base + tid];
+        const float sig = 1.0F / (1.0F + expf(-g));
+        gated_output[q_base + tid] = out_val * sig;
+    }
+}
+
 __global__ void qwen3_kv_cache_store_kernel(
     const float* keys, const float* values, float* key_cache, float* value_cache,
     std::uint32_t position, std::uint32_t cache_capacity,
@@ -2400,6 +2535,29 @@ void launch_qwen3_cached_attention_history_parallel(
                        dim3(query_heads), dim3(256), 0, stream,
                        q, key_cache, value_cache, cache_length, cache_capacity, output,
                        scores, probabilities, query_heads, kv_heads, head_dim, scale);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_tiled_online_attention(
+    const float* q, const float* key_cache, const float* value_cache,
+    std::uint32_t cache_length, std::uint32_t cache_capacity, float* output,
+    const float* gate, float* gated_output,
+    std::uint32_t query_heads, std::uint32_t kv_heads,
+    std::uint32_t head_dim, float scale, hipStream_t stream) {
+    if (q == nullptr || key_cache == nullptr || value_cache == nullptr
+        || cache_length == 0 || query_heads == 0 || kv_heads == 0
+        || head_dim == 0 || head_dim > 256 || (output == nullptr && gated_output == nullptr)
+        || query_heads % kv_heads != 0 || !std::isfinite(scale)) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    const std::uint32_t splits = (cache_length <= 16) ? 1 : ((cache_length <= 32) ? 2 : 4);
+    hipLaunchKernelGGL(qwen3_splitk_stage1_kernel,
+                       dim3(query_heads, splits), dim3(head_dim), 0, stream,
+                       q, key_cache, value_cache, cache_length, cache_capacity,
+                       query_heads, kv_heads, head_dim, scale, splits);
+    hipLaunchKernelGGL(qwen3_splitk_stage2_kernel,
+                       dim3(query_heads), dim3(head_dim), 0, stream,
+                       output, gate, gated_output, query_heads, head_dim, splits);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

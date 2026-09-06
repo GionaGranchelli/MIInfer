@@ -1484,6 +1484,7 @@ struct FullAttentionLayer {
     bool q4_q8_1_lds_decoded_metadata = true;
     bool direct_layer_output = false;
     bool fused_gate_up_swiglu = false;
+    bool tiled_online_attention = true;
     bool expanded_down = true;
     Buffer d_ffn_down_native;
     Buffer d_ffn_gate_native, d_ffn_up_native;
@@ -1581,6 +1582,9 @@ struct FullAttentionLayer {
         const char* fused_gate_up_swiglu_env = std::getenv("MIINFER_FUSED_GATE_UP_SWIGLU");
         fused_gate_up_swiglu = fused_gate_up_swiglu_env != nullptr
             && std::strcmp(fused_gate_up_swiglu_env, "0") != 0;
+        const char* tiled_online_attention_env = std::getenv("MIINFER_TILED_ONLINE_ATTENTION");
+        tiled_online_attention = tiled_online_attention_env == nullptr
+            || std::strcmp(tiled_online_attention_env, "0") != 0;
         const char* direct_layer_output_env = std::getenv("MIINFER_DIRECT_LAYER_OUTPUT");
         const char* hip_graph_env = std::getenv("MIINFER_HIP_GRAPH");
         const bool use_hip_graph = hip_graph_env != nullptr && std::strcmp(hip_graph_env, "0") != 0;
@@ -1752,14 +1756,36 @@ struct FullAttentionLayer {
             static_cast<float*>(value_cache->get()), position, kCacheCapacity, 4, 256);
         stage_end(6, position);
         stage_start(7, position);
-        miinfer::launch_qwen3_cached_attention_parallel(static_cast<const float*>(query_rope->get()),
-            static_cast<const float*>(key_cache->get()), static_cast<const float*>(value_cache->get()),
-            position + 1, kCacheCapacity, static_cast<float*>(attention->get()), static_cast<float*>(scores->get()),
-            static_cast<float*>(probabilities->get()), 24, 4, 256, 1.0F / std::sqrt(256.0F));
-        stage_end(7, position);
-        stage_start(8, position);
-        miinfer::launch_qwen35_sigmoid_mul(static_cast<const float*>(attention->get()),
-            static_cast<const float*>(gate->get()), static_cast<float*>(gated_attention->get()), 6144);
+        if (tiled_online_attention) {
+            miinfer::launch_qwen35_tiled_online_attention(
+                static_cast<const float*>(query_rope->get()),
+                static_cast<const float*>(key_cache->get()),
+                static_cast<const float*>(value_cache->get()),
+                position + 1, kCacheCapacity,
+                static_cast<float*>(attention->get()),
+                static_cast<const float*>(gate->get()),
+                static_cast<float*>(gated_attention->get()),
+                24, 4, 256, 1.0F / std::sqrt(256.0F));
+            stage_end(7, position);
+            stage_start(8, position);
+        } else {
+            miinfer::launch_qwen3_cached_attention_parallel(
+                static_cast<const float*>(query_rope->get()),
+                static_cast<const float*>(key_cache->get()),
+                static_cast<const float*>(value_cache->get()),
+                position + 1, kCacheCapacity,
+                static_cast<float*>(attention->get()),
+                static_cast<float*>(scores->get()),
+                static_cast<float*>(probabilities->get()),
+                24, 4, 256, 1.0F / std::sqrt(256.0F));
+            stage_end(7, position);
+            stage_start(8, position);
+            miinfer::launch_qwen35_sigmoid_mul(
+                static_cast<const float*>(attention->get()),
+                static_cast<const float*>(gate->get()),
+                static_cast<float*>(gated_attention->get()),
+                6144);
+        }
         if (d_o_native) {
             miinfer::launch_q8_1_quantize_f32(
                 static_cast<const float*>(gated_attention->get()),

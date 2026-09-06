@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1788721942.8988461,
-    "seen": 1788724451.9861755,
-    "ast_hash": "2cf13728a0c07701bd6406e21604c1a1",
+    "mtime": 1788727328.4944377,
+    "seen": 1788729932.39751,
+    "ast_hash": "d3eeacfea21710e2d0eb1098d2b38c41",
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_primitives.hpp": {
@@ -1332,9 +1332,9 @@
     "semantic_hash": ""
   },
   "tools/m6a21_qwen35_gpu_hybrid_block.cpp": {
-    "mtime": 1788721996.5435648,
-    "seen": 1788724451.9863455,
-    "ast_hash": "b78856f65db4de5cf532f1245310e060",
+    "mtime": 1788727389.0691864,
+    "seen": 1788729932.3977056,
+    "ast_hash": "14154180f211124c4e457356c9253d90",
     "semantic_hash": ""
   },
   "experiments/EXP-0065-m6a21-qwen35-gpu-hybrid-block.md": {
@@ -2199,6 +2199,18 @@
     "mtime": 1788727076.9855247,
     "seen": 1788727089.4752781,
     "ast_hash": "9e3e19067d6f97ad6b57dc3d1cd6fab2",
+    "semantic_hash": ""
+  },
+  "scripts/run-exp0185-tiled-online-attention-ab.sh": {
+    "mtime": 1788727760.704646,
+    "seen": 1788729932.3975675,
+    "ast_hash": "b4a693f3082fd2d602755332c1864572",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0185-tiled-online-attention.md": {
+    "mtime": 1788729923.561707,
+    "seen": 1788729932.3980877,
+    "ast_hash": "543d6a3e0e92bc22d01bc35de57dba3e",
     "semantic_hash": ""
   }
 }
