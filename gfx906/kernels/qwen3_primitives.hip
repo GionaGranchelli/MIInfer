@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 
 #if defined(__HIP_DEVICE_COMPILE__) && !defined(__gfx906__)
 #error "Qwen3 primitives are intentionally gfx906-only"
@@ -1880,6 +1881,78 @@ __device__ __forceinline__ bool qwen3_argmax_wins(
         || (candidate_value == best_value && candidate_index < best_index);
 }
 
+__device__ static float s_argmax_partial_vals[256];
+__device__ static std::uint32_t s_argmax_partial_idxs[256];
+
+__global__ void qwen3_argmax_stage1_kernel(
+    const float* __restrict__ input,
+    std::uint32_t elements) {
+    __shared__ float s_vals[256];
+    __shared__ std::uint32_t s_idxs[256];
+
+    const std::uint32_t tid = threadIdx.x;
+    const std::uint32_t total_threads = gridDim.x * blockDim.x;
+    const std::uint32_t global_tid = blockIdx.x * blockDim.x + tid;
+
+    float best_val = -INFINITY;
+    std::uint32_t best_idx = elements;
+
+    for (std::uint32_t idx = global_tid; idx < elements; idx += total_threads) {
+        const float val = input[idx];
+        if (qwen3_argmax_wins(val, idx, best_val, best_idx)) {
+            best_val = val;
+            best_idx = idx;
+        }
+    }
+
+    s_vals[tid] = best_val;
+    s_idxs[tid] = best_idx;
+    __syncthreads();
+
+    for (std::uint32_t stride = blockDim.x / 2; stride > 0; stride /= 2) {
+        if (tid < stride && qwen3_argmax_wins(s_vals[tid + stride], s_idxs[tid + stride], s_vals[tid], s_idxs[tid])) {
+            s_vals[tid] = s_vals[tid + stride];
+            s_idxs[tid] = s_idxs[tid + stride];
+        }
+        __syncthreads();
+    }
+
+    if (tid == 0) {
+        s_argmax_partial_vals[blockIdx.x] = s_vals[0];
+        s_argmax_partial_idxs[blockIdx.x] = s_idxs[0];
+    }
+}
+
+__global__ void qwen3_argmax_stage2_kernel(
+    std::uint32_t* __restrict__ output,
+    std::uint32_t num_partials) {
+    __shared__ float s_vals[256];
+    __shared__ std::uint32_t s_idxs[256];
+
+    const std::uint32_t tid = threadIdx.x;
+    float best_val = -INFINITY;
+    std::uint32_t best_idx = 0xFFFFFFFF;
+
+    if (tid < num_partials) {
+        best_val = s_argmax_partial_vals[tid];
+        best_idx = s_argmax_partial_idxs[tid];
+    }
+
+    s_vals[tid] = best_val;
+    s_idxs[tid] = best_idx;
+    __syncthreads();
+
+    for (std::uint32_t stride = blockDim.x / 2; stride > 0; stride /= 2) {
+        if (tid < stride && qwen3_argmax_wins(s_vals[tid + stride], s_idxs[tid + stride], s_vals[tid], s_idxs[tid])) {
+            s_vals[tid] = s_vals[tid + stride];
+            s_idxs[tid] = s_idxs[tid + stride];
+        }
+        __syncthreads();
+    }
+
+    if (tid == 0) output[0] = s_idxs[0];
+}
+
 __global__ void qwen3_argmax_kernel(
     const float* input, std::uint32_t* output, std::uint32_t elements) {
     __shared__ float values[256];
@@ -2663,13 +2736,29 @@ void launch_qwen35_prepare_beta_decay(
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
+static bool fast_argmax_enabled() {
+    static const bool enabled = [] {
+        const char* env = std::getenv("MIINFER_FAST_ARGMAX");
+        return env == nullptr || std::strcmp(env, "0") != 0;
+    }();
+    return enabled;
+}
+
 void launch_qwen3_argmax(
     const float* input, std::uint32_t* output, std::uint32_t elements, hipStream_t stream) {
     if (input == nullptr || output == nullptr || elements == 0) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
-    hipLaunchKernelGGL(qwen3_argmax_kernel, dim3(1), dim3(256), 0, stream,
-                       input, output, elements);
+    if (elements <= 256 || !fast_argmax_enabled()) {
+        hipLaunchKernelGGL(qwen3_argmax_kernel, dim3(1), dim3(256), 0, stream,
+                           input, output, elements);
+    } else {
+        constexpr std::uint32_t kPartials = 256;
+        hipLaunchKernelGGL(qwen3_argmax_stage1_kernel, dim3(kPartials), dim3(256), 0, stream,
+                           input, elements);
+        hipLaunchKernelGGL(qwen3_argmax_stage2_kernel, dim3(1), dim3(256), 0, stream,
+                           output, kPartials);
+    }
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

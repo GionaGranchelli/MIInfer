@@ -540,9 +540,9 @@
     "semantic_hash": ""
   },
   "tests/qwen3_primitives_test.cpp": {
-    "mtime": 1788254805.38675,
-    "seen": 1788254843.8300374,
-    "ast_hash": "31a977a36e8cfaf941a3ec418476e37c",
+    "mtime": 1788724602.214936,
+    "seen": 1788727089.4749084,
+    "ast_hash": "56ef7df4db8b8c918fad802048bb56a3",
     "semantic_hash": ""
   },
   "tests/qwen3_primitives_host_test.cpp": {
@@ -2187,6 +2187,18 @@
     "mtime": 1788724441.7163951,
     "seen": 1788724451.9867435,
     "ast_hash": "4cc64811222c93bd1e7e7efd3b33542d",
+    "semantic_hash": ""
+  },
+  "scripts/run-exp0184-fast-argmax-ab.sh": {
+    "mtime": 1788724931.9164166,
+    "seen": 1788727089.4748223,
+    "ast_hash": "f71f910d8b1f811c0c84dfeb6d619c2e",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0184-fast-parallel-argmax.md": {
+    "mtime": 1788727076.9855247,
+    "seen": 1788727089.4752781,
+    "ast_hash": "9e3e19067d6f97ad6b57dc3d1cd6fab2",
     "semantic_hash": ""
   }
 }

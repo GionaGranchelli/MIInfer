@@ -165,8 +165,23 @@ bool gpu_tests() {
     passed = argmax_output == 1 && passed;
     std::cout << "argmax gpu=" << (argmax_output == 1 ? "PASS" : "FAIL")
               << " selected=" << argmax_output << " (first tie)\n";
+
+    std::vector<float> large_argmax_input(151936, 0.0F);
+    large_argmax_input[42000] = 10.0F;
+    large_argmax_input[105000] = 10.0F;
+    auto* device_large_input = device_copy(large_argmax_input);
+    miinfer::launch_qwen3_argmax(
+        device_large_input, device_argmax_output,
+        static_cast<std::uint32_t>(large_argmax_input.size()));
+    MIINFER_HIP_CHECK(hipDeviceSynchronize());
+    MIINFER_HIP_CHECK(hipMemcpy(&argmax_output, device_argmax_output, sizeof(argmax_output),
+                                hipMemcpyDeviceToHost));
+    passed = argmax_output == 42000 && passed;
+    std::cout << "argmax large gpu=" << (argmax_output == 42000 ? "PASS" : "FAIL")
+              << " selected=" << argmax_output << " (expected 42000)\n";
     MIINFER_HIP_CHECK(hipFree(device_argmax_output));
     MIINFER_HIP_CHECK(hipFree(device_argmax_input));
+    MIINFER_HIP_CHECK(hipFree(device_large_input));
 
     std::vector<miinfer::Q6KDeviceBlock> q6_blocks(2);
     for (auto& block : q6_blocks) {
