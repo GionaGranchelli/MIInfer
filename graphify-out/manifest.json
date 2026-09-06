@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788629674.583499,
-    "seen": 1788631345.065636,
-    "ast_hash": "524b9edfcee4810ccfa85309c826b65e",
+    "mtime": 1788647434.7879596,
+    "seen": 1788676381.8176672,
+    "ast_hash": "88012caa2841a17bdf0d99add7711f9a",
     "semantic_hash": ""
   },
   "README.md": {
@@ -1332,9 +1332,9 @@
     "semantic_hash": ""
   },
   "tools/m6a21_qwen35_gpu_hybrid_block.cpp": {
-    "mtime": 1788629704.2763722,
-    "seen": 1788631345.0656002,
-    "ast_hash": "0a8c16f2cc0a9e31322350c0ec08f786",
+    "mtime": 1788644532.5496895,
+    "seen": 1788676381.8176346,
+    "ast_hash": "94174536be36a0eef0a5cceb3b09696a",
     "semantic_hash": ""
   },
   "experiments/EXP-0065-m6a21-qwen35-gpu-hybrid-block.md": {
@@ -2004,15 +2004,15 @@
     "semantic_hash": ""
   },
   "include/miinfer/q4k_wave_layout.hpp": {
-    "mtime": 1788629674.5814989,
-    "seen": 1788631345.0654438,
-    "ast_hash": "bdf7ee03b7faece6c0acf6cbe606b04d",
+    "mtime": 1788647247.1067228,
+    "seen": 1788676381.8174794,
+    "ast_hash": "363b3e42ad937907f293da36c0ec2d8f",
     "semantic_hash": ""
   },
   "src/q4k_wave_layout.cpp": {
-    "mtime": 1788629674.590499,
-    "seen": 1788631345.0655088,
-    "ast_hash": "cc01393319cb1c5aaa02d0345ad48383",
+    "mtime": 1788647441.9189308,
+    "seen": 1788676381.817559,
+    "ast_hash": "8a25e3bdd3851c9c108c4744a70b71a8",
     "semantic_hash": ""
   },
   "experiments/EXP-0174-q4k-wave-down-integration.md": {
@@ -2031,6 +2031,84 @@
     "mtime": 1788636086.9551485,
     "seen": 1788636100.5820007,
     "ast_hash": "714933a6630fbeb4e2c3ef355ed98d2a",
+    "semantic_hash": ""
+  },
+  "bench/kquant_layout_bench.cpp": {
+    "mtime": 1788647329.1083894,
+    "seen": 1788676381.8174348,
+    "ast_hash": "12e87010e9acb5562c4ac02b6659408b",
+    "semantic_hash": ""
+  },
+  "include/miinfer/kquant_wave_layout.hpp": {
+    "mtime": 1788647244.1297348,
+    "seen": 1788676381.8174694,
+    "ast_hash": "fb80a8d6584592ad81ef76503a379421",
+    "semantic_hash": ""
+  },
+  "scripts/run-exp0177-attn-gate-ab.sh": {
+    "mtime": 1788643007.9165704,
+    "seen": 1788676381.8175015,
+    "ast_hash": "0f456ea6e9cec4e6c5b9c38b852028ac",
+    "semantic_hash": ""
+  },
+  "scripts/run-exp0177-attn-out-ab.sh": {
+    "mtime": 1788644790.1595302,
+    "seen": 1788676381.8175077,
+    "ast_hash": "aead1bcb511e58d096fa82093ce3875c",
+    "semantic_hash": ""
+  },
+  "scripts/run-exp0177-gate-up-ab.sh": {
+    "mtime": 1788639947.7585232,
+    "seen": 1788676381.8175092,
+    "ast_hash": "406792f5f3b0f775991525ff97be63cb",
+    "semantic_hash": ""
+  },
+  "scripts/run-exp0177-k-ab.sh": {
+    "mtime": 1788644813.1664267,
+    "seen": 1788676381.8175101,
+    "ast_hash": "d44e99f2ea0c32a6fcfc4542995ecd17",
+    "semantic_hash": ""
+  },
+  "scripts/run-exp0177-q-ab.sh": {
+    "mtime": 1788641119.4581356,
+    "seen": 1788676381.8175118,
+    "ast_hash": "59bc4e6eda5e2eeb596b5b76d2cab2c8",
+    "semantic_hash": ""
+  },
+  "src/kquant_wave_layout.cpp": {
+    "mtime": 1788647273.0746171,
+    "seen": 1788676381.8175542,
+    "ast_hash": "1f17e98a4053bca8724eba7ba4fbc3c9",
+    "semantic_hash": ""
+  },
+  "tests/kquant_wave_test.cpp": {
+    "mtime": 1788647800.920471,
+    "seen": 1788676381.8175786,
+    "ast_hash": "cfd92b0e62b94baee00c4b2df63c5059",
+    "semantic_hash": ""
+  },
+  "docs/deltanet-ssm-fusion-design.md": {
+    "mtime": 1788647357.209275,
+    "seen": 1788676381.8176842,
+    "ast_hash": "8a22d4c4976a9132bcf6dbed2b953f89",
+    "semantic_hash": ""
+  },
+  "docs/graph-dispatch-overhead-analysis.md": {
+    "mtime": 1788647368.3682296,
+    "seen": 1788676381.8176858,
+    "ast_hash": "f77411824847be6823f30d2de4db95a6",
+    "semantic_hash": ""
+  },
+  "docs/lm-head-fused-argmax-design.md": {
+    "mtime": 1788647363.2082508,
+    "seen": 1788676381.8176882,
+    "ast_hash": "005b710d77248f6fe7272196a06ab039",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0177-q4k-native-rollout.md": {
+    "mtime": 1788647773.632582,
+    "seen": 1788676381.8179805,
+    "ast_hash": "32db764460fea51cb16c3f2a87e11f62",
     "semantic_hash": ""
   }
 }
