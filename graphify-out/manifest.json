@@ -2142,15 +2142,15 @@
     "semantic_hash": ""
   },
   "docs/M7-GFX906-PERFORMANCE-FRONTIER.md": {
-    "mtime": 1788700190.1398594,
-    "seen": 1788700199.6511948,
-    "ast_hash": "309fc8a10336a45848e6614f4ff3ed76",
+    "mtime": 1788700997.998329,
+    "seen": 1788701014.6184976,
+    "ast_hash": "b8c90f3ac92f7837dce32b9394138fdd",
     "semantic_hash": ""
   },
   "experiments/EXP-0180-m7-frontier-benchmark.md": {
-    "mtime": 1788700167.4899585,
-    "seen": 1788700199.651533,
-    "ast_hash": "4b8324259166eb30949e4e650c7fcc34",
+    "mtime": 1788701005.8100908,
+    "seen": 1788701014.6188152,
+    "ast_hash": "25b444a3d23629cb7646b6569d427424",
     "semantic_hash": ""
   }
 }

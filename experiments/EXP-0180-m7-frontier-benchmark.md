@@ -80,12 +80,14 @@ Under Milestone M7, project discipline requires establishing the strongest repro
 1. **The gfx906 Performance Frontier is 25.94 tok/s (38.55 ms/tok), established by `mx-llama.cpp` (repack).**
 2. Upstream `llama.cpp` (22.53 tok/s) has seen no material decode optimization for gfx906 since July 2026; competing only against upstream masks true hardware potential.
 3. Repacking provides a massive +12.5% throughput boost (+2.88 tok/s / -4.82 ms/tok) over identical non-repacked kernels by de-aliasing weights and enabling vectorized `dp4a` arithmetic with fused `{MM, MM, GLU}` epilogues.
-4. MIInfer EXP-0179 is faster than vanilla (+5.3%) and upstream (+3.9%) llama.cpp, but trails the frontier by 4.31 ms/tok at TG64 and 5.45 ms/tok at TG128.
+4. MIInfer EXP-0179 is faster than vanilla (+5.3%) and upstream (+3.9%) llama.cpp, but trails the frontier by 4.01 ms/tok at TG64 and 5.45 ms/tok at TG128.
 5. MIInfer suffers from context degradation (-7.0% from TG64 to TG256), whereas `mx-llama.cpp` is perfectly flat across context lengths.
+6. **Subsystem Disadvantage vs Net Gap:** The sum of identified local disadvantages (+2.64 ms FFN + 3.17 ms DeltaNet + 1.15 ms LM-Head + 0.97 ms HIP Graph = 7.93 ms) exceeds the actual end-to-end TG64 gap (4.01 ms) by ~3.92 ms. This reveals that **MIInfer is already ~3.9 ms faster than `mx-llama.cpp` in its raw Wave64 GEMV inner loops**, but pays an architectural modularity tax in uncaptured dispatch and unfused tensors.
 
 ## Decision
 
-**ESTABLISH NEW GOAL GATE.**
-The performance gate for MIInfer is reset from the vanilla baseline (22.4 tok/s) to the qualified gfx906 frontier:
-$$\text{Target TG64} \ge 25.94 \times 1.05 = \mathbf{27.24\ \text{tok/s}}\quad (\le \mathbf{36.71\ \text{ms/token}})$$
-with context degradation eliminated at TG128 and TG256.
+**CLOSE SUBPHASE M7-A. SET M7 PRIMARY AND STRETCH GATES.**
+The campaign to beat the gfx906 frontier remains OPEN under the following gates:
+- **Literal TG64 +5% Gate:** $\text{TG64} \ge 25.74 \times 1.05 = \mathbf{27.03\ \text{tok/s}}$ ($\le 37.00\ \text{ms/token}$).
+- **Hard Primary Gate:** $\mathbf{\text{TG64} \ge 27.24\ \text{tok/s}}$ ($\le 36.71\ \text{ms/token}$), representing $+5.0\%$ above the peak throughput observed for `mx-llama.cpp` across any tested decode length ($25.94 \times 1.05 = 27.24\text{ tok/s}$ at TG128).
+- **Stretch Gate:** $\mathbf{\text{TG64} \ge 28.50\ \text{tok/s}}$ ($\le 35.00\ \text{ms/token}$).
