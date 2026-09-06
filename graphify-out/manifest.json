@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788647434.7879596,
-    "seen": 1788676381.8176672,
-    "ast_hash": "88012caa2841a17bdf0d99add7711f9a",
+    "mtime": 1788701455.935283,
+    "seen": 1788704578.0277884,
+    "ast_hash": "647d19e34a3f39725b85ab569426b38b",
     "semantic_hash": ""
   },
   "README.md": {
@@ -1332,9 +1332,9 @@
     "semantic_hash": ""
   },
   "tools/m6a21_qwen35_gpu_hybrid_block.cpp": {
-    "mtime": 1788698648.6927578,
-    "seen": 1788700199.6511378,
-    "ast_hash": "6695efaecf1294c2225881344deaebb3",
+    "mtime": 1788701948.8510747,
+    "seen": 1788704578.027752,
+    "ast_hash": "cdcd57ef4a0c66432845bd044cf3999a",
     "semantic_hash": ""
   },
   "experiments/EXP-0065-m6a21-qwen35-gpu-hybrid-block.md": {
@@ -2151,6 +2151,18 @@
     "mtime": 1788701005.8100908,
     "seen": 1788701014.6188152,
     "ast_hash": "25b444a3d23629cb7646b6569d427424",
+    "semantic_hash": ""
+  },
+  "scripts/run-exp0181-hip-graph-ab.sh": {
+    "mtime": 1788703330.357557,
+    "seen": 1788704578.0276186,
+    "ast_hash": "db082d3b8cbdad954273c3dab7c4f010",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0181-static-hip-graph-capture.md": {
+    "mtime": 1788704569.5000267,
+    "seen": 1788704578.0281224,
+    "ast_hash": "bd10d5d5173c250f15855e35dee4e934",
     "semantic_hash": ""
   }
 }

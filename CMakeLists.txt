@@ -121,7 +121,7 @@ if(MIINFER_ENABLE_HIP)
     target_compile_definitions(miinfer_hip PUBLIC __HIP_PLATFORM_AMD__)
     target_compile_options(miinfer_hip PRIVATE
         $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Wpedantic>
-        $<$<COMPILE_LANGUAGE:HIP>:-Wall;-Wextra>
+        $<$<COMPILE_LANGUAGE:HIP>:-Wall;-Wextra;-fgpu-default-stream=per-thread>
     )
 endif()
 

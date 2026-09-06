@@ -726,8 +726,10 @@ struct RecurrentLayer {
         q4_q8_1_attn_gate = q4_q8_1_attn_gate_env == nullptr
             || std::strcmp(q4_q8_1_attn_gate_env, "0") != 0;
         const char* direct_layer_output_env = std::getenv("MIINFER_DIRECT_LAYER_OUTPUT");
-        direct_layer_output = direct_layer_output_env != nullptr
-            && std::strcmp(direct_layer_output_env, "0") != 0;
+        const char* hip_graph_env = std::getenv("MIINFER_HIP_GRAPH");
+        const bool use_hip_graph = hip_graph_env != nullptr && std::strcmp(hip_graph_env, "0") != 0;
+        direct_layer_output = (direct_layer_output_env != nullptr
+            && std::strcmp(direct_layer_output_env, "0") != 0) || use_hip_graph;
         const char* expanded_down_env = std::getenv("MIINFER_Q4K_EXPANDED_DOWN");
         expanded_down = expanded_down_env == nullptr
             || std::strcmp(expanded_down_env, "0") != 0;
@@ -1411,8 +1413,8 @@ struct RecurrentLayer {
             layer_path_capture->layer_output = download(completed_output, kHidden);
         }
         if (!direct_layer_output) {
-            MIINFER_HIP_CHECK(hipMemcpy(output, layer_output->get(), kHidden * sizeof(float),
-                                        hipMemcpyDeviceToDevice));
+            MIINFER_HIP_CHECK(hipMemcpyAsync(output, layer_output->get(), kHidden * sizeof(float),
+                                            hipMemcpyDeviceToDevice, hipStreamPerThread));
         }
         stage_end(13, position);
     }
@@ -1540,8 +1542,10 @@ struct FullAttentionLayer {
         q4_q8_1_gate_up = q4_q8_1_gate_up_env == nullptr
             || std::strcmp(q4_q8_1_gate_up_env, "0") != 0;
         const char* direct_layer_output_env = std::getenv("MIINFER_DIRECT_LAYER_OUTPUT");
-        direct_layer_output = direct_layer_output_env != nullptr
-            && std::strcmp(direct_layer_output_env, "0") != 0;
+        const char* hip_graph_env = std::getenv("MIINFER_HIP_GRAPH");
+        const bool use_hip_graph = hip_graph_env != nullptr && std::strcmp(hip_graph_env, "0") != 0;
+        direct_layer_output = (direct_layer_output_env != nullptr
+            && std::strcmp(direct_layer_output_env, "0") != 0) || use_hip_graph;
         const char* q4_q8_1_lds_input_env = std::getenv("MIINFER_Q4K_Q8_1_LDS_INPUT");
         q4_q8_1_lds_input = q4_q8_1_lds_input_env == nullptr
             || std::strcmp(q4_q8_1_lds_input_env, "0") != 0;
@@ -1817,8 +1821,8 @@ struct FullAttentionLayer {
         miinfer::launch_qwen3_add(static_cast<const float*>(residual->get()),
             static_cast<const float*>(projected->get()), completed_output, kHidden);
         if (!direct_layer_output) {
-            MIINFER_HIP_CHECK(hipMemcpy(output, layer_output->get(), kHidden * sizeof(float),
-                                        hipMemcpyDeviceToDevice));
+            MIINFER_HIP_CHECK(hipMemcpyAsync(output, layer_output->get(), kHidden * sizeof(float),
+                                            hipMemcpyDeviceToDevice, hipStreamPerThread));
         }
         stage_end(14, position);
     }
@@ -1938,6 +1942,8 @@ int main(int argc, char** argv) {
     const bool profile64 = mode == "--profile64";
     const char* lm_mmvq_env = std::getenv("MIINFER_LM_Q8_1_MMVQ");
     const bool lm_mmvq = lm_mmvq_env == nullptr || std::strcmp(lm_mmvq_env, "0") != 0;
+    const char* hip_graph_env = std::getenv("MIINFER_HIP_GRAPH");
+    const bool use_hip_graph = hip_graph_env != nullptr && std::strcmp(hip_graph_env, "0") != 0;
     const std::size_t generation_tokens = mode == "--generate16" ? 16
         : mode == "--generate64" || mode == "--bench64" ? 64
         : mode == "--generate128" || mode == "--bench128" ? 128 : 256;
@@ -2515,16 +2521,12 @@ int main(int argc, char** argv) {
                     return static_cast<double>(timestamp.tv_sec) * 1000.0
                         + static_cast<double>(timestamp.tv_nsec) / 1000000.0;
                 };
-                const auto run_generation = [&] {
-                    std::vector<std::uint32_t> tokens;
-                    tokens.reserve(generation_tokens);
-                    auto token = prompt.front();
-                    const double start = monotonic_ms();
+                std::vector<hipGraphExec_t> decode_graphs;
+                if (use_hip_graph) {
+                    decode_graphs.resize(generation_tokens, nullptr);
                     for (std::size_t position = 0; position < generation_tokens; ++position) {
-                        miinfer::launch_qwen35_q4_k_embedding(
-                            static_cast<const miinfer::Q4KDeviceBlock*>(d_embedding->get()),
-                            token, model.config().vocab_size, kHidden,
-                            static_cast<float*>(input->get()));
+                        hipGraph_t graph = nullptr;
+                        MIINFER_HIP_CHECK(hipStreamBeginCapture(hipStreamPerThread, hipStreamCaptureModeRelaxed));
                         run_prefix(std::span<const GpuLayerRef>(layers),
                                    std::span<float* const>(output_pointers),
                                    static_cast<const float*>(input->get()), position);
@@ -2554,6 +2556,62 @@ int main(int argc, char** argv) {
                             static_cast<const float*>(logits->get()),
                             static_cast<std::uint32_t*>(argmax_token->get()),
                             model.config().vocab_size);
+                        MIINFER_HIP_CHECK(hipStreamEndCapture(hipStreamPerThread, &graph));
+                        MIINFER_HIP_CHECK(hipGraphInstantiate(&decode_graphs[position], graph, nullptr, nullptr, 0));
+                        MIINFER_HIP_CHECK(hipGraphDestroy(graph));
+                    }
+                }
+                const auto cleanup_graphs = [&] {
+                    for (auto& graph_exec : decode_graphs) {
+                        if (graph_exec != nullptr) {
+                            (void)hipGraphExecDestroy(graph_exec);
+                            graph_exec = nullptr;
+                        }
+                    }
+                };
+                const auto run_generation = [&] {
+                    std::vector<std::uint32_t> tokens;
+                    tokens.reserve(generation_tokens);
+                    auto token = prompt.front();
+                    const double start = monotonic_ms();
+                    for (std::size_t position = 0; position < generation_tokens; ++position) {
+                        miinfer::launch_qwen35_q4_k_embedding(
+                            static_cast<const miinfer::Q4KDeviceBlock*>(d_embedding->get()),
+                            token, model.config().vocab_size, kHidden,
+                            static_cast<float*>(input->get()));
+                        if (use_hip_graph) {
+                            MIINFER_HIP_CHECK(hipGraphLaunch(decode_graphs[position], hipStreamPerThread));
+                        } else {
+                            run_prefix(std::span<const GpuLayerRef>(layers),
+                                       std::span<float* const>(output_pointers),
+                                       static_cast<const float*>(input->get()), position);
+                            miinfer::launch_qwen3_rms_norm(
+                                output_pointers[63],
+                                static_cast<const float*>(d_final_norm_weight->get()),
+                                static_cast<float*>(final_norm->get()), kHidden,
+                                model.config().rms_epsilon);
+                            if (lm_mmvq) {
+                                miinfer::launch_q8_1_quantize_f32(
+                                    static_cast<const float*>(final_norm->get()),
+                                    static_cast<miinfer::Q8_1Block*>(final_q8_1->get()), kHidden);
+                                miinfer::launch_qwen3_q6_k_q8_1_mmvq(
+                                    static_cast<const miinfer::Q6KDeviceBlock*>(d_output_weight->get()),
+                                    static_cast<const miinfer::Q8_1Block*>(final_q8_1->get()),
+                                    static_cast<float*>(logits->get()), model.config().vocab_size, kHidden);
+                            } else {
+                                miinfer::launch_qwen3_q8_k_quantize(
+                                    static_cast<const float*>(final_norm->get()),
+                                    static_cast<miinfer::Q8KDeviceBlock*>(final_q8->get()), kHidden);
+                                miinfer::launch_qwen3_q6_k_q8_k_gemv(
+                                    static_cast<const miinfer::Q6KDeviceBlock*>(d_output_weight->get()),
+                                    static_cast<const miinfer::Q8KDeviceBlock*>(final_q8->get()),
+                                    static_cast<float*>(logits->get()), model.config().vocab_size, kHidden);
+                            }
+                            miinfer::launch_qwen3_argmax(
+                                static_cast<const float*>(logits->get()),
+                                static_cast<std::uint32_t*>(argmax_token->get()),
+                                model.config().vocab_size);
+                        }
                         MIINFER_HIP_CHECK(hipDeviceSynchronize());
                         std::uint32_t next = 0;
                         MIINFER_HIP_CHECK(hipMemcpy(&next, argmax_token->get(),
@@ -2610,6 +2668,7 @@ int main(int argc, char** argv) {
                               << " device_bytes_after_setup=" << g_device_bytes
                               << " peak_device_bytes=" << g_peak_device_bytes << '\n'
                               << "M6-B2 native qwen35 generation benchmark PASS\n";
+                    cleanup_graphs();
                     return 0;
                 }
                 reset_all();
@@ -2640,6 +2699,7 @@ int main(int argc, char** argv) {
                           << " device_bytes_after_setup=" << g_device_bytes
                           << " peak_device_bytes=" << g_peak_device_bytes << '\n'
                           << "M6-A28 qwen35 native autoregressive GPU generation PASS\n";
+                cleanup_graphs();
                 return 0;
             }
             if (trace012) {
