@@ -30,7 +30,7 @@
 
 namespace {
 
-constexpr std::size_t kCacheCapacity = 128;
+constexpr std::size_t kCacheCapacity = 512;
 
 class DeviceBytes {
 public:
@@ -1911,7 +1911,7 @@ int main(int argc, char** argv) {
                      "--prefix64-l53-attribution|--prefix64-l53-gated-contract|"
                      "--prefix64-observable-contract|--prefix64-l0-l2-p2-trace|"
                      "--prefix64-l0-p2-output-projection|--generate16|--generate64|"
-                     "--generate128|--bench64|--bench128|--profile64]\n";
+                     "--generate128|--generate256|--bench64|--bench128|--bench256|--profile64]\n";
         return 2;
     }
     const std::string mode = argc >= 4 ? argv[argc - 1] : "";
@@ -1932,13 +1932,15 @@ int main(int argc, char** argv) {
     const bool trace012 = mode == "--prefix64-l0-l2-p2-trace";
     const bool trace_l0_output = mode == "--prefix64-l0-p2-output-projection";
     const bool generation = mode == "--generate16" || mode == "--generate64"
-        || mode == "--generate128" || mode == "--bench64" || mode == "--bench128";
-    const bool benchmark = mode == "--bench64" || mode == "--bench128";
+        || mode == "--generate128" || mode == "--generate256"
+        || mode == "--bench64" || mode == "--bench128" || mode == "--bench256";
+    const bool benchmark = mode == "--bench64" || mode == "--bench128" || mode == "--bench256";
     const bool profile64 = mode == "--profile64";
     const char* lm_mmvq_env = std::getenv("MIINFER_LM_Q8_1_MMVQ");
     const bool lm_mmvq = lm_mmvq_env == nullptr || std::strcmp(lm_mmvq_env, "0") != 0;
     const std::size_t generation_tokens = mode == "--generate16" ? 16
-        : mode == "--generate64" || mode == "--bench64" ? 64 : 128;
+        : mode == "--generate64" || mode == "--bench64" ? 64
+        : mode == "--generate128" || mode == "--bench128" ? 128 : 256;
     const bool prefix32 = mode == "--prefix32" || locate32 || provenance32
         || operand_attribution32 || k_path_attribution32 || l29_path_attribution32
         || l29_gate_attribution32 || external_contract32;

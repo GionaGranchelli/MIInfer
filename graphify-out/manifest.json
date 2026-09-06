@@ -1332,9 +1332,9 @@
     "semantic_hash": ""
   },
   "tools/m6a21_qwen35_gpu_hybrid_block.cpp": {
-    "mtime": 1788693623.934626,
-    "seen": 1788695706.2193508,
-    "ast_hash": "a613fdf6a58e62ddfac0644be4efca3b",
+    "mtime": 1788698648.6927578,
+    "seen": 1788700199.6511378,
+    "ast_hash": "6695efaecf1294c2225881344deaebb3",
     "semantic_hash": ""
   },
   "experiments/EXP-0065-m6a21-qwen35-gpu-hybrid-block.md": {
@@ -2133,6 +2133,24 @@
     "mtime": 1788695641.4584024,
     "seen": 1788695706.21974,
     "ast_hash": "b90f8e62587df14e409b8b382c3e0d46",
+    "semantic_hash": ""
+  },
+  "scripts/run-m7-frontier-benchmark.sh": {
+    "mtime": 1788698885.593443,
+    "seen": 1788700199.651033,
+    "ast_hash": "e51ad8facf2d31aadce0a8e0ae30125e",
+    "semantic_hash": ""
+  },
+  "docs/M7-GFX906-PERFORMANCE-FRONTIER.md": {
+    "mtime": 1788700190.1398594,
+    "seen": 1788700199.6511948,
+    "ast_hash": "309fc8a10336a45848e6614f4ff3ed76",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0180-m7-frontier-benchmark.md": {
+    "mtime": 1788700167.4899585,
+    "seen": 1788700199.651533,
+    "ast_hash": "4b8324259166eb30949e4e650c7fcc34",
     "semantic_hash": ""
   }
 }
