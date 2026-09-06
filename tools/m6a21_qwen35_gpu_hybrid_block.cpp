@@ -118,6 +118,27 @@ bool native_ssm_out_enabled() {
     throw std::runtime_error("MIINFER_Q5K_NATIVE_SSM_OUT must be 0 or 1");
 }
 
+bool native_qkv_enabled() {
+    const char* value = std::getenv("MIINFER_KQUANT_NATIVE_QKV");
+    if (!value || std::strcmp(value, "0") == 0) return false;
+    if (std::strcmp(value, "1") == 0) return true;
+    throw std::runtime_error("MIINFER_KQUANT_NATIVE_QKV must be 0 or 1");
+}
+
+bool native_v_enabled() {
+    const char* value = std::getenv("MIINFER_KQUANT_NATIVE_V");
+    if (!value || std::strcmp(value, "0") == 0) return false;
+    if (std::strcmp(value, "1") == 0) return true;
+    throw std::runtime_error("MIINFER_KQUANT_NATIVE_V must be 0 or 1");
+}
+
+bool native_q6k_down_enabled() {
+    const char* value = std::getenv("MIINFER_Q6K_NATIVE_DOWN");
+    if (!value || std::strcmp(value, "0") == 0) return false;
+    if (std::strcmp(value, "1") == 0) return true;
+    throw std::runtime_error("MIINFER_Q6K_NATIVE_DOWN must be 0 or 1");
+}
+
 Buffer copy_native_tensor(const miinfer::GgufTensor& source) {
     const auto packed = pack_q4k_wave_tensor(source);
     auto result = allocate(packed.size() * sizeof(Q4KWaveTile));
@@ -132,6 +153,13 @@ Buffer copy_native_q5k_tensor(const miinfer::GgufTensor& source) {
     return result;
 }
 
+Buffer copy_native_q6k_tensor(const miinfer::GgufTensor& source) {
+    const auto packed = pack_q6k_wave_tensor(source);
+    auto result = allocate(packed.size() * sizeof(Q6KWaveTile));
+    upload(packed.data(), result->get(), packed.size() * sizeof(Q6KWaveTile));
+    return result;
+}
+
 Buffer copy_native_down(const miinfer::GgufTensor& source) {
     return copy_native_tensor(source);
 }
@@ -140,6 +168,12 @@ void project_native_down(const Buffer& weights, const float* input,
                          miinfer::Q8_1Block* q8, float* output) {
     miinfer::launch_q8_1_quantize_f32(input, q8, 17408);
     launch_q4k_wave_down(static_cast<const Q4KWaveTile*>(weights->get()), q8, output);
+}
+
+void project_native_q6k_down(const Buffer& weights, const float* input,
+                             miinfer::Q8_1Block* q8, float* output) {
+    miinfer::launch_q8_1_quantize_f32(input, q8, 17408);
+    launch_q6k_wave_gemv(static_cast<const Q6KWaveTile*>(weights->get()), q8, output, 5120, 17408);
 }
 
 Buffer copy_expanded_q4k(const miinfer::GgufTensor& source) {
@@ -635,6 +669,7 @@ struct RecurrentLayer {
     Buffer d_ffn_gate_native, d_ffn_up_native;
     Buffer d_attn_gate_native;
     Buffer d_ssm_out_native;
+    Buffer d_qkv_native;
     bool q6_q8_k_dot4_qkv = false;
     bool transposed_state = true;
     bool transposed_no_decay_store = true;
@@ -739,7 +774,16 @@ struct RecurrentLayer {
                                        miinfer::GgufTensorType::q6_k});
 
         d_attn_norm = allocate(attn_norm.byte_size);
-        d_qkv = allocate(qkv_weight.byte_size);
+        if (native_qkv_enabled()) {
+            if (qkv_weight.type == miinfer::GgufTensorType::q4_k) {
+                d_qkv_native = copy_native_tensor(qkv_weight);
+            } else if (qkv_weight.type == miinfer::GgufTensorType::q6_k) {
+                d_qkv_native = copy_native_q6k_tensor(qkv_weight);
+            }
+        }
+        if (!d_qkv_native) {
+            d_qkv = allocate(qkv_weight.byte_size);
+        }
         if (native_attn_gate_enabled() && gate_weight.type == miinfer::GgufTensorType::q4_k) {
             d_attn_gate_native = copy_native_tensor(gate_weight);
         } else {
@@ -763,28 +807,36 @@ struct RecurrentLayer {
             d_ffn_gate = allocate(ffn_gate_weight.byte_size);
             d_ffn_up = allocate(ffn_up_weight.byte_size);
         }
-        d_ffn_down = allocate(ffn_down_weight.byte_size);
-        if (native_down_enabled() && ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
-            d_ffn_down_native = copy_native_down(ffn_down_weight);
+        if ((native_down_enabled() && ffn_down_weight.type == miinfer::GgufTensorType::q4_k) ||
+            (native_q6k_down_enabled() && ffn_down_weight.type == miinfer::GgufTensorType::q6_k)) {
+            if (ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
+                d_ffn_down_native = copy_native_down(ffn_down_weight);
+            } else {
+                d_ffn_down_native = copy_native_q6k_tensor(ffn_down_weight);
+            }
         } else if (expanded_down && ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
             d_ffn_down_expanded = copy_expanded_q4k(ffn_down_weight);
+        }
+        if (!d_ffn_down_native) {
+            d_ffn_down = allocate(ffn_down_weight.byte_size);
         }
         d_dt = allocate(dt_weight.byte_size);
         d_a = allocate(a_weight.byte_size);
         for (const auto& pair : std::initializer_list<std::pair<const miinfer::GgufTensor*, const Buffer*>>{
-                 {&attn_norm, &d_attn_norm}, {&qkv_weight, &d_qkv},
+                 {&attn_norm, &d_attn_norm},
                  {&beta_weight, &d_beta},
                  {&alpha_weight, &d_alpha}, {&conv_weight, &d_conv},
                  {&ssm_norm_weight, &d_ssm_norm},
                  {&post_norm_weight, &d_post_norm},
-                 {&ffn_down_weight, &d_ffn_down},
                  {&dt_weight, &d_dt}, {&a_weight, &d_a}}) {
             upload_tensor(*pair.first, *pair.second);
         }
+        if (d_qkv) upload_tensor(qkv_weight, d_qkv);
         if (d_gate) upload_tensor(gate_weight, d_gate);
         if (d_ssm_out) upload_tensor(ssm_out_weight, d_ssm_out);
         if (d_ffn_gate) upload_tensor(ffn_gate_weight, d_ffn_gate);
         if (d_ffn_up) upload_tensor(ffn_up_weight, d_ffn_up);
+        if (d_ffn_down) upload_tensor(ffn_down_weight, d_ffn_down);
 
         normalized = allocate(kHidden * sizeof(float));
         qkv = allocate(kChannels * sizeof(float));
@@ -994,7 +1046,22 @@ struct RecurrentLayer {
                      kHidden, "attn_norm-" + std::to_string(index));
         stage_end(0, position);
         stage_start(1, position);
-        if (q6_q8_k_dot4_qkv && qkv_weight.type == miinfer::GgufTensorType::q6_k) {
+        if (d_qkv_native) {
+            miinfer::launch_q8_1_quantize_f32(
+                static_cast<const float*>(normalized->get()),
+                static_cast<miinfer::Q8_1Block*>(q8_1->get()), kHidden);
+            if (qkv_weight.type == miinfer::GgufTensorType::q4_k) {
+                launch_q4k_wave_gemv(
+                    static_cast<const Q4KWaveTile*>(d_qkv_native->get()),
+                    static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
+                    static_cast<float*>(qkv->get()), kChannels, kHidden);
+            } else {
+                launch_q6k_wave_gemv(
+                    static_cast<const Q6KWaveTile*>(d_qkv_native->get()),
+                    static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
+                    static_cast<float*>(qkv->get()), kChannels, kHidden);
+            }
+        } else if (q6_q8_k_dot4_qkv && qkv_weight.type == miinfer::GgufTensorType::q6_k) {
             project_q6_q8_k_dot4(d_qkv, static_cast<const float*>(normalized->get()),
                                 static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
                                 static_cast<float*>(qkv->get()), kChannels, kHidden);
@@ -1013,9 +1080,11 @@ struct RecurrentLayer {
         stage_end(1, position);
         stage_start(2, position);
         if (d_attn_gate_native) {
-            miinfer::launch_q8_1_quantize_f32(
-                static_cast<const float*>(normalized->get()),
-                static_cast<miinfer::Q8_1Block*>(q8_1->get()), kHidden);
+            if (!d_qkv_native) {
+                miinfer::launch_q8_1_quantize_f32(
+                    static_cast<const float*>(normalized->get()),
+                    static_cast<miinfer::Q8_1Block*>(q8_1->get()), kHidden);
+            }
             launch_q4k_wave_gemv(
                 static_cast<const Q4KWaveTile*>(d_attn_gate_native->get()),
                 static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
@@ -1297,10 +1366,17 @@ struct RecurrentLayer {
         }
         stage_start(12, position);
         if (d_ffn_down_native) {
-            project_native_down(d_ffn_down_native,
-                static_cast<const float*>(ffn_activation->get()),
-                static_cast<miinfer::Q8_1Block*>(q8_1->get()),
-                static_cast<float*>(projected->get()));
+            if (ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
+                project_native_down(d_ffn_down_native,
+                    static_cast<const float*>(ffn_activation->get()),
+                    static_cast<miinfer::Q8_1Block*>(q8_1->get()),
+                    static_cast<float*>(projected->get()));
+            } else {
+                project_native_q6k_down(d_ffn_down_native,
+                    static_cast<const float*>(ffn_activation->get()),
+                    static_cast<miinfer::Q8_1Block*>(q8_1->get()),
+                    static_cast<float*>(projected->get()));
+            }
         } else if (expanded_down && d_ffn_down_expanded != nullptr) {
             project_q4_q8_1_expanded(d_ffn_down_expanded,
                                      static_cast<const float*>(ffn_activation->get()),
@@ -1375,6 +1451,7 @@ struct FullAttentionLayer {
     Buffer d_q_native;
     Buffer d_o_native;
     Buffer d_k_native;
+    Buffer d_v_native;
     bool batch_head_rms = false;
     struct StageProfile {
         std::array<hipEvent_t, 15> start{};
@@ -1412,7 +1489,16 @@ struct FullAttentionLayer {
         } else {
             d_k = copy_weight(k_weight);
         }
-        d_v = copy_weight(v_weight);
+        if (native_v_enabled()) {
+            if (v_weight.type == miinfer::GgufTensorType::q4_k) {
+                d_v_native = copy_native_tensor(v_weight);
+            } else if (v_weight.type == miinfer::GgufTensorType::q6_k) {
+                d_v_native = copy_native_q6k_tensor(v_weight);
+            }
+        }
+        if (!d_v_native) {
+            d_v = copy_weight(v_weight);
+        }
         if (native_attn_out_enabled() && o_weight.type == miinfer::GgufTensorType::q4_k) {
             d_o_native = copy_native_tensor(o_weight);
         } else {
@@ -1428,14 +1514,21 @@ struct FullAttentionLayer {
             d_ffn_gate = copy_weight(ffn_gate_weight);
             d_ffn_up = copy_weight(ffn_up_weight);
         }
-        d_ffn_down = copy_weight(ffn_down_weight);
         const char* expanded_down_env = std::getenv("MIINFER_Q4K_EXPANDED_DOWN");
         expanded_down = expanded_down_env == nullptr
             || std::strcmp(expanded_down_env, "0") != 0;
-        if (native_down_enabled() && ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
-            d_ffn_down_native = copy_native_down(ffn_down_weight);
+        if ((native_down_enabled() && ffn_down_weight.type == miinfer::GgufTensorType::q4_k) ||
+            (native_q6k_down_enabled() && ffn_down_weight.type == miinfer::GgufTensorType::q6_k)) {
+            if (ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
+                d_ffn_down_native = copy_native_down(ffn_down_weight);
+            } else {
+                d_ffn_down_native = copy_native_q6k_tensor(ffn_down_weight);
+            }
         } else if (expanded_down && ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
             d_ffn_down_expanded = copy_expanded_q4k(ffn_down_weight);
+        }
+        if (!d_ffn_down_native) {
+            d_ffn_down = copy_weight(ffn_down_weight);
         }
         const char* reuse_projection_q8_env = std::getenv("MIINFER_REUSE_PROJECTION_Q8");
         reuse_projection_q8 = reuse_projection_q8_env == nullptr
@@ -1582,9 +1675,28 @@ struct FullAttentionLayer {
             static_cast<const float*>(d_k_norm->get()), static_cast<float*>(key_norm->get()), 4, 256);
         stage_end(4, position);
         stage_start(5, position);
-        project(v_weight, d_v, static_cast<const float*>(normalized->get()),
-                static_cast<miinfer::Q8KDeviceBlock*>(q8->get()), static_cast<float*>(value->get()),
-                1024, kHidden, (d_q_native || d_k_native) ? false : reuse_projection_q8);
+        if (d_v_native) {
+            if (!d_q_native && !d_k_native) {
+                miinfer::launch_q8_1_quantize_f32(
+                    static_cast<const float*>(normalized->get()),
+                    static_cast<miinfer::Q8_1Block*>(q8_1->get()), kHidden);
+            }
+            if (v_weight.type == miinfer::GgufTensorType::q4_k) {
+                launch_q4k_wave_gemv(
+                    static_cast<const Q4KWaveTile*>(d_v_native->get()),
+                    static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
+                    static_cast<float*>(value->get()), 1024, kHidden);
+            } else {
+                launch_q6k_wave_gemv(
+                    static_cast<const Q6KWaveTile*>(d_v_native->get()),
+                    static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
+                    static_cast<float*>(value->get()), 1024, kHidden);
+            }
+        } else {
+            project(v_weight, d_v, static_cast<const float*>(normalized->get()),
+                    static_cast<miinfer::Q8KDeviceBlock*>(q8->get()), static_cast<float*>(value->get()),
+                    1024, kHidden, (d_q_native || d_k_native) ? false : reuse_projection_q8);
+        }
         stage_end(5, position);
         stage_start(6, position);
         miinfer::launch_qwen35_rope_sections(static_cast<const float*>(query_norm->get()),
@@ -1671,10 +1783,17 @@ struct FullAttentionLayer {
         stage_end(12, position);
         stage_start(13, position);
         if (d_ffn_down_native) {
-            project_native_down(d_ffn_down_native,
-                static_cast<const float*>(ffn_activation->get()),
-                static_cast<miinfer::Q8_1Block*>(q8_1->get()),
-                static_cast<float*>(projected->get()));
+            if (ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
+                project_native_down(d_ffn_down_native,
+                    static_cast<const float*>(ffn_activation->get()),
+                    static_cast<miinfer::Q8_1Block*>(q8_1->get()),
+                    static_cast<float*>(projected->get()));
+            } else {
+                project_native_q6k_down(d_ffn_down_native,
+                    static_cast<const float*>(ffn_activation->get()),
+                    static_cast<miinfer::Q8_1Block*>(q8_1->get()),
+                    static_cast<float*>(projected->get()));
+            }
         } else if (expanded_down && d_ffn_down_expanded != nullptr) {
             project_q4_q8_1_expanded(d_ffn_down_expanded,
                 static_cast<const float*>(ffn_activation->get()),
