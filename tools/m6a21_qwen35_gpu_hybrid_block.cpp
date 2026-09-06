@@ -111,10 +111,24 @@ bool native_k_enabled() {
     throw std::runtime_error("MIINFER_Q4K_NATIVE_K must be 0 or 1");
 }
 
+bool native_ssm_out_enabled() {
+    const char* value = std::getenv("MIINFER_Q5K_NATIVE_SSM_OUT");
+    if (!value || std::strcmp(value, "0") == 0) return false;
+    if (std::strcmp(value, "1") == 0) return true;
+    throw std::runtime_error("MIINFER_Q5K_NATIVE_SSM_OUT must be 0 or 1");
+}
+
 Buffer copy_native_tensor(const miinfer::GgufTensor& source) {
     const auto packed = pack_q4k_wave_tensor(source);
     auto result = allocate(packed.size() * sizeof(Q4KWaveTile));
     upload(packed.data(), result->get(), packed.size() * sizeof(Q4KWaveTile));
+    return result;
+}
+
+Buffer copy_native_q5k_tensor(const miinfer::GgufTensor& source) {
+    const auto packed = pack_q5k_wave_tensor(source);
+    auto result = allocate(packed.size() * sizeof(Q5KWaveTile));
+    upload(packed.data(), result->get(), packed.size() * sizeof(Q5KWaveTile));
     return result;
 }
 
@@ -620,6 +634,7 @@ struct RecurrentLayer {
     Buffer d_ffn_down_native;
     Buffer d_ffn_gate_native, d_ffn_up_native;
     Buffer d_attn_gate_native;
+    Buffer d_ssm_out_native;
     bool q6_q8_k_dot4_qkv = false;
     bool transposed_state = true;
     bool transposed_no_decay_store = true;
@@ -734,7 +749,11 @@ struct RecurrentLayer {
         d_alpha = allocate(alpha_weight.byte_size);
         d_conv = allocate(conv_weight.byte_size);
         d_ssm_norm = allocate(ssm_norm_weight.byte_size);
-        d_ssm_out = allocate(ssm_out_weight.byte_size);
+        if (native_ssm_out_enabled() && ssm_out_weight.type == miinfer::GgufTensorType::q5_k) {
+            d_ssm_out_native = copy_native_q5k_tensor(ssm_out_weight);
+        } else {
+            d_ssm_out = allocate(ssm_out_weight.byte_size);
+        }
         d_post_norm = allocate(post_norm_weight.byte_size);
         if (native_gate_up_enabled() && ffn_gate_weight.type == miinfer::GgufTensorType::q4_k
             && ffn_up_weight.type == miinfer::GgufTensorType::q4_k) {
@@ -756,13 +775,14 @@ struct RecurrentLayer {
                  {&attn_norm, &d_attn_norm}, {&qkv_weight, &d_qkv},
                  {&beta_weight, &d_beta},
                  {&alpha_weight, &d_alpha}, {&conv_weight, &d_conv},
-                 {&ssm_norm_weight, &d_ssm_norm}, {&ssm_out_weight, &d_ssm_out},
+                 {&ssm_norm_weight, &d_ssm_norm},
                  {&post_norm_weight, &d_post_norm},
                  {&ffn_down_weight, &d_ffn_down},
                  {&dt_weight, &d_dt}, {&a_weight, &d_a}}) {
             upload_tensor(*pair.first, *pair.second);
         }
         if (d_gate) upload_tensor(gate_weight, d_gate);
+        if (d_ssm_out) upload_tensor(ssm_out_weight, d_ssm_out);
         if (d_ffn_gate) upload_tensor(ffn_gate_weight, d_ffn_gate);
         if (d_ffn_up) upload_tensor(ffn_up_weight, d_ffn_up);
 
@@ -1178,7 +1198,15 @@ struct RecurrentLayer {
             gate_path_capture->gated = download(gated->get(), kVHeads * kState);
         }
         stage_start(7, position);
-        if (q5_q8_1_mmvq) {
+        if (d_ssm_out_native) {
+            miinfer::launch_q8_1_quantize_f32(
+                static_cast<const float*>(gated->get()),
+                static_cast<miinfer::Q8_1Block*>(q8_1->get()), kInner);
+            launch_q5k_wave_gemv(
+                static_cast<const Q5KWaveTile*>(d_ssm_out_native->get()),
+                static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
+                static_cast<float*>(projected->get()), kHidden, kInner);
+        } else if (q5_q8_1_mmvq) {
             project_q5_q8_1(d_ssm_out, static_cast<const float*>(gated->get()),
                             static_cast<miinfer::Q8_1Block*>(q8_1->get()),
                             static_cast<float*>(projected->get()), kHidden, kInner);
@@ -1190,8 +1218,8 @@ struct RecurrentLayer {
         if (output_projection_path_capture != nullptr
             && output_projection_path_capture_position == position) {
             output_projection_path_capture->q8_input = download_bytes(
-                q5_q8_1_mmvq ? q8_1->get() : q8->get(),
-                q5_q8_1_mmvq
+                (d_ssm_out_native || q5_q8_1_mmvq) ? q8_1->get() : q8->get(),
+                (d_ssm_out_native || q5_q8_1_mmvq)
                     ? (kInner / miinfer::kQ8_1BlockSize) * sizeof(miinfer::Q8_1Block)
                     : (kInner / 256) * sizeof(miinfer::Q8KDeviceBlock));
             output_projection_path_capture->projected = download(projected->get(), kHidden);
@@ -2563,7 +2591,13 @@ int main(int argc, char** argv) {
                 Buffer external_residual_device = allocate(kHidden * sizeof(float));
                 upload(external_gated.data(), external_gated_device->get(),
                        external_gated.size() * sizeof(float));
-                project(recurrent0.ssm_out_weight, recurrent0.d_ssm_out,
+                Buffer temp_ssm_out;
+                if (!recurrent0.d_ssm_out) {
+                    temp_ssm_out = allocate(recurrent0.ssm_out_weight.byte_size);
+                    upload_tensor(recurrent0.ssm_out_weight, temp_ssm_out);
+                }
+                const Buffer& ssm_out_dev = recurrent0.d_ssm_out ? recurrent0.d_ssm_out : temp_ssm_out;
+                project(recurrent0.ssm_out_weight, ssm_out_dev,
                         static_cast<const float*>(external_gated_device->get()),
                         static_cast<miinfer::Q8KDeviceBlock*>(external_q8_device->get()),
                         static_cast<float*>(external_projected_device->get()), kHidden, kInner);

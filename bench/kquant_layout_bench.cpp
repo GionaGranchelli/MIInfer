@@ -280,6 +280,12 @@ int main(int argc, char** argv) try {
     // Benchmark Q5_K recurrent ssm_out projection
     run_q5k_benchmark(model, "blk.0.ssm_out.weight", warmups, batches, iters);
 
+    // Benchmark Q6_K recurrent ffn_down projection
+    run_q6k_benchmark(model, "blk.0.ffn_down.weight", warmups, batches, iters);
+
+    // Benchmark Q6_K full-attn v projection
+    run_q6k_benchmark(model, "blk.3.attn_v.weight", warmups, batches, iters);
+
     std::cout << "\nK-quant layout laboratory benchmark completed successfully.\n";
     return 0;
 } catch (const std::exception& e) {
