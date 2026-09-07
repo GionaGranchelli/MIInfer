@@ -150,15 +150,15 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788821274.690636,
-    "seen": 1788821297.5817387,
+    "mtime": 1788823548.0674908,
+    "seen": 1788823565.5227098,
     "ast_hash": "359f961e8e18e5e0cf12cc1070fb3fad",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788821048.7205448,
-    "seen": 1788821073.0308285,
-    "ast_hash": "d2124321834cd9a0d95531a512a97eae",
+    "mtime": 1788823535.3255422,
+    "seen": 1788823565.5227113,
+    "ast_hash": "e084f0c7626978a030933883d2f5ee28",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788821048.7205448,
-    "seen": 1788821073.030858,
-    "ast_hash": "0e8e7fe3f285d8bde45eb9ff69fa74b9",
+    "mtime": 1788823535.323542,
+    "seen": 1788823565.52274,
+    "ast_hash": "123f9de204acd74236532359bde1eee8",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -324,8 +324,8 @@
     "semantic_hash": ""
   },
   "include/miinfer/fp16_gemv.hpp": {
-    "mtime": 1788039948.5022614,
-    "seen": 1788040109.816849,
+    "mtime": 1788822884.6061597,
+    "seen": 1788823565.5224652,
     "ast_hash": "ff920ea9dc556637219a090ed7cb97b0",
     "semantic_hash": ""
   },
@@ -2040,8 +2040,8 @@
     "semantic_hash": ""
   },
   "include/miinfer/kquant_wave_layout.hpp": {
-    "mtime": 1788821274.3446372,
-    "seen": 1788821297.5815053,
+    "mtime": 1788823548.4284894,
+    "seen": 1788823565.5224705,
     "ast_hash": "8dd28b79700228b35792dd0aa2b07b7b",
     "semantic_hash": ""
   },
@@ -2364,14 +2364,14 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1788818468.544924,
-    "seen": 1788819167.042019,
+    "mtime": 1788822885.1481576,
+    "seen": 1788823565.5226908,
     "ast_hash": "7468771a82c7904195f0dba2e8d2fd71",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1788820907.6411123,
-    "seen": 1788821073.0308087,
+    "mtime": 1788822884.9731584,
+    "seen": 1788823565.5226924,
     "ast_hash": "8fb5312fdf24228849b1c391d1d8f49f",
     "semantic_hash": ""
   },
@@ -2535,6 +2535,18 @@
     "mtime": 1788821285.9325907,
     "seen": 1788821297.5821035,
     "ast_hash": "b139eb414c9bfa2e0eeee21f6a90daf0",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0213-m11b-fp16-gemm-dequant-rejection.md": {
+    "mtime": 1788822958.2218635,
+    "seen": 1788823565.5230782,
+    "ast_hash": "95929e88bfd5f0b3b2cfaa6135094925",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0214-m11b-native-q4k-split-k-gemm.md": {
+    "mtime": 1788823535.3225422,
+    "seen": 1788823565.5230799,
+    "ast_hash": "addd290b83845584e313493736dcbf6b",
     "semantic_hash": ""
   }
 }

@@ -23,8 +23,12 @@ P512 is `39.96 tok/s` and P128 is `41.21 tok/s`, versus the token-major P512
 baseline of `32.20 tok/s`. The 100 tok/s M11-B gate is not met. EXP-0211
 rejects row-LDS and generic B=8 accumulator extensions after production-shaped
 testing; EXP-0212's exact B=8 accumulator GEMV reached only 0.69× the existing
-B=4 pair. The next experiment is a true skinny-GEMM mapping for the dominant
-Q4_K/Q6_K projections.
+B=4 pair. EXP-0213 rejected a dequantize-then-hipBLAS FP16 GEMM: the measured
+Q4_K expansion cost was 639.4 ms versus 3.66 ms for the GEMM at B=128.
+EXP-0214's exact native Q4_K split-K GEMM reached 1.64× the same-run B=4
+projection sequence, but it was not sufficient for end-to-end production
+integration. The 100 tok/s gate remains open; the next attempt must measure a
+whole-pipeline decomposition before adding another runtime path.
 
 The default path remains token-major and unchanged. Layer-major prefill stays
 opt-in until longer-context and generation correctness are fully qualified.
