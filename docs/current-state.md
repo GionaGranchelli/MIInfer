@@ -15,12 +15,18 @@ For long-term direction, see:
 
 # Current Phase
 
-**M6-B1 — post-A28 performance baseline**
+**M11-B — production layer-major prefill**
 
-Native Qwen3.8-27B generation is operational and allocation-free. EXP-0167
-records current MIInfer TG64 at `14.280 tok/s` versus pinned llama.cpp at
-`22.331 tok/s` under the same MI50 stable-peak setup; the performance target
-is not yet met. The next action is a whole-token MIInfer profile.
+Native Qwen3.8-27B generation is operational and allocation-free. The
+qualified opt-in layer-major prefill path uses validated B=4 projection reuse:
+P512 is `39.96 tok/s` and P128 is `41.21 tok/s`, versus the token-major P512
+baseline of `32.20 tok/s`. The 100 tok/s M11-B gate is not met. EXP-0211
+rejects a row-LDS B=8 extension after production-shaped testing; the next
+experiment is a true skinny-GEMM mapping for the dominant Q4_K/Q6_K
+projections.
+
+The default path remains token-major and unchanged. Layer-major prefill stays
+opt-in until longer-context and generation correctness are fully qualified.
 
 EXP-0168 completed that profile at position 63: total GPU event
 `71.9133 ms/token`, layer sum `68.6269 ms`, final LM head `2.50016 ms`, and
