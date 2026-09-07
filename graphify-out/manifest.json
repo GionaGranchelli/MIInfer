@@ -150,8 +150,8 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788782707.7233715,
-    "seen": 1788802984.7957592,
+    "mtime": 1788819899.1291692,
+    "seen": 1788819917.4375756,
     "ast_hash": "359f961e8e18e5e0cf12cc1070fb3fad",
     "semantic_hash": ""
   },
@@ -2040,8 +2040,8 @@
     "semantic_hash": ""
   },
   "include/miinfer/kquant_wave_layout.hpp": {
-    "mtime": 1788818149.4442074,
-    "seen": 1788819167.0418127,
+    "mtime": 1788819825.3524659,
+    "seen": 1788819917.4373403,
     "ast_hash": "8dd28b79700228b35792dd0aa2b07b7b",
     "semantic_hash": ""
   },
@@ -2511,6 +2511,12 @@
     "mtime": 1788819047.4625952,
     "seen": 1788819167.042404,
     "ast_hash": "c5d0ea97e85b1e46bcd7bfb88993cdbb",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0209-batched8-lds-shared-weight-shape.md": {
+    "mtime": 1788819878.787251,
+    "seen": 1788819917.4379284,
+    "ast_hash": "a6ce51f993077b3ff10fdbd5228f04c7",
     "semantic_hash": ""
   }
 }
