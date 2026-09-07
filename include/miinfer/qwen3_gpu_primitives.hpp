@@ -400,6 +400,42 @@ void launch_qwen35_tiled_online_attention(
     hipStream_t stream = nullptr,
     Q8_1Block* gated_output_q8 = nullptr);
 
+void launch_qwen35_tiled_online_attention_f16(
+    const float* q,
+    const __half* key_cache,
+    const __half* value_cache,
+    std::uint32_t cache_length,
+    std::uint32_t cache_capacity,
+    float* output,
+    const float* gate,
+    float* gated_output,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float scale,
+    hipStream_t stream = nullptr,
+    Q8_1Block* gated_output_q8 = nullptr);
+
+inline void launch_qwen35_tiled_online_attention(
+    const float* q,
+    const __half* key_cache,
+    const __half* value_cache,
+    std::uint32_t cache_length,
+    std::uint32_t cache_capacity,
+    float* output,
+    const float* gate,
+    float* gated_output,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float scale,
+    hipStream_t stream = nullptr,
+    Q8_1Block* gated_output_q8 = nullptr) {
+    launch_qwen35_tiled_online_attention_f16(
+        q, key_cache, value_cache, cache_length, cache_capacity,
+        output, gate, gated_output, query_heads, kv_heads, head_dim, scale, stream, gated_output_q8);
+}
+
 // M7-G fused Q-split + RMS norm + scale + RoPE:
 // Combines launch_qwen35_split_q_gate, launch_qwen3_head_rms_normalize,
 // launch_qwen3_head_mul, and launch_qwen35_rope_sections into a single launch.
@@ -432,6 +468,38 @@ void launch_qwen35_fused_k_norm_rope_kv_store(
     float epsilon,
     hipStream_t stream = nullptr);
 
+void launch_qwen35_fused_k_norm_rope_kv_store_f16(
+    const float* key,
+    const float* value,
+    const float* k_norm_weight,
+    __half* key_cache,
+    __half* value_cache,
+    std::uint32_t heads,
+    std::uint32_t head_dim,
+    std::uint32_t position,
+    std::uint32_t cache_capacity,
+    float theta,
+    float epsilon,
+    hipStream_t stream = nullptr);
+
+inline void launch_qwen35_fused_k_norm_rope_kv_store(
+    const float* key,
+    const float* value,
+    const float* k_norm_weight,
+    __half* key_cache,
+    __half* value_cache,
+    std::uint32_t heads,
+    std::uint32_t head_dim,
+    std::uint32_t position,
+    std::uint32_t cache_capacity,
+    float theta,
+    float epsilon,
+    hipStream_t stream = nullptr) {
+    launch_qwen35_fused_k_norm_rope_kv_store_f16(
+        key, value, k_norm_weight, key_cache, value_cache,
+        heads, head_dim, position, cache_capacity, theta, epsilon, stream);
+}
+
 // Store one token's contiguous K/V vectors in the persistent
 // [kv_head][position][head_dim] cache layout with one device launch.
 void launch_qwen3_kv_cache_store(
@@ -444,6 +512,31 @@ void launch_qwen3_kv_cache_store(
     std::uint32_t kv_heads,
     std::uint32_t head_dim,
     hipStream_t stream = nullptr);
+
+void launch_qwen3_kv_cache_store_f16(
+    const float* keys,
+    const float* values,
+    __half* key_cache,
+    __half* value_cache,
+    std::uint32_t position,
+    std::uint32_t cache_capacity,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    hipStream_t stream = nullptr);
+
+inline void launch_qwen3_kv_cache_store(
+    const float* keys,
+    const float* values,
+    __half* key_cache,
+    __half* value_cache,
+    std::uint32_t position,
+    std::uint32_t cache_capacity,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    hipStream_t stream = nullptr) {
+    launch_qwen3_kv_cache_store_f16(
+        keys, values, key_cache, value_cache, position, cache_capacity, kv_heads, head_dim, stream);
+}
 
 void launch_qwen3_silu_mul(
     const float* gate,

@@ -147,6 +147,25 @@ public:
         return {next_token, ms};
     }
 
+    void prefill_step(std::uint32_t input_token, std::size_t position) {
+        if (position >= kCacheCapacity) {
+            throw std::runtime_error("context length exceeded capacity " + std::to_string(kCacheCapacity));
+        }
+        MIINFER_HIP_CHECK(hipMemcpyAsync(
+            static_cast<std::uint32_t*>(d_decode_tokens_->get()) + position,
+            &input_token, sizeof(input_token), hipMemcpyHostToDevice, hipStreamPerThread));
+
+        miinfer::launch_qwen35_q4_k_embedding_device_token(
+            static_cast<const miinfer::Q4KDeviceBlock*>(d_embedding_->get()),
+            static_cast<const std::uint32_t*>(d_decode_tokens_->get()) + position,
+            model_.config().vocab_size, kHidden,
+            static_cast<float*>(input_->get()), hipStreamPerThread);
+
+        run_prefix(std::span<const GpuLayerRef>(layers_),
+                   std::span<float* const>(output_pointers_),
+                   static_cast<const float*>(input_->get()), position);
+    }
+
     GenerateStats generate(std::span<const std::uint32_t> prompt, const GenerateOptions& opt = GenerateOptions()) {
         reset();
         GenerateStats stats;
@@ -155,12 +174,13 @@ public:
 
         const auto gen_start = std::chrono::steady_clock::now();
 
-        // 1. Prefill / Process prompt tokens
+        // 1. Prefill / Process prompt tokens (Phase 0: No LM head, no per-token host sync)
         const auto prefill_start = std::chrono::steady_clock::now();
-        std::uint32_t cur_token = prompt.front();
         for (std::size_t pos = 0; pos < prompt.size() - 1; ++pos) {
-            cur_token = prompt[pos];
-            step(cur_token, pos);
+            prefill_step(prompt[pos], pos);
+        }
+        if (prompt.size() > 1) {
+            MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
         }
         const auto prefill_end = std::chrono::steady_clock::now();
         stats.prefill_ms = std::chrono::duration<double, std::milli>(prefill_end - prefill_start).count();
@@ -169,7 +189,7 @@ public:
         }
 
         // 2. Decode generation loop
-        cur_token = prompt.back();
+        std::uint32_t cur_token = prompt.back();
         std::size_t pos = prompt.size() - 1;
 
         if (!opt.stream && use_hip_graph_) {

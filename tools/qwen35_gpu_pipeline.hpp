@@ -31,7 +31,7 @@
 
 namespace {
 
-constexpr std::size_t kCacheCapacity = 1024;
+constexpr std::size_t kCacheCapacity = 65536;
 
 class DeviceBytes {
 public:
@@ -1632,6 +1632,7 @@ struct FullAttentionLayer {
     bool fused_core_q8 = false;
     bool fused_norm_q8 = false;
     bool tiled_online_attention = true;
+    bool fp16_kv_cache = true;
     bool fused_rope_norm = true;
     bool fused_add_rms_norm = true;
     bool fused_interlayer_norm = true;
@@ -1752,6 +1753,9 @@ struct FullAttentionLayer {
         const char* tiled_online_attention_env = std::getenv("MIINFER_TILED_ONLINE_ATTENTION");
         tiled_online_attention = tiled_online_attention_env == nullptr
             || std::strcmp(tiled_online_attention_env, "0") != 0;
+        const char* fp16_kv_cache_env = std::getenv("MIINFER_FP16_KV_CACHE");
+        fp16_kv_cache = fp16_kv_cache_env == nullptr
+            || std::strcmp(fp16_kv_cache_env, "0") != 0;
         const char* direct_layer_output_env = std::getenv("MIINFER_DIRECT_LAYER_OUTPUT");
         const char* hip_graph_env = std::getenv("MIINFER_HIP_GRAPH");
         const bool use_hip_graph = hip_graph_env != nullptr && std::strcmp(hip_graph_env, "0") != 0;
@@ -1788,17 +1792,22 @@ struct FullAttentionLayer {
         key_norm = allocate(1024 * sizeof(float));
         value = allocate(1024 * sizeof(float)); query_norm = allocate(6144 * sizeof(float));
         query_rope = allocate(6144 * sizeof(float)); key_rope = allocate(1024 * sizeof(float));
-        key_cache = allocate(4 * kCacheCapacity * 256 * sizeof(float));
-        value_cache = allocate(4 * kCacheCapacity * 256 * sizeof(float)); attention = allocate(6144 * sizeof(float));
-        scores = allocate(24 * kCacheCapacity * sizeof(float)); probabilities = allocate(24 * kCacheCapacity * sizeof(float));
+        const std::size_t kv_element_size = fp16_kv_cache ? sizeof(__half) : sizeof(float);
+        key_cache = allocate(4 * kCacheCapacity * 256 * kv_element_size);
+        value_cache = allocate(4 * kCacheCapacity * 256 * kv_element_size);
+        attention = allocate(6144 * sizeof(float));
+        if (!tiled_online_attention) {
+            scores = allocate(24 * kCacheCapacity * sizeof(float));
+            probabilities = allocate(24 * kCacheCapacity * sizeof(float));
+        }
         gated_attention = allocate(6144 * sizeof(float)); projected = allocate(kHidden * sizeof(float));
         residual = allocate(kHidden * sizeof(float)); post_normalized = allocate(kHidden * sizeof(float));
         ffn_gate = allocate(kFfnInner * sizeof(float)); ffn_up = allocate(kFfnInner * sizeof(float));
         ffn_activation = allocate(kFfnInner * sizeof(float)); layer_output = allocate(kHidden * sizeof(float));
         q8 = allocate((kFfnInner / 256) * sizeof(miinfer::Q8KDeviceBlock));
         q8_1 = allocate((kFfnInner / miinfer::kQ8_1BlockSize) * sizeof(miinfer::Q8_1Block));
-        MIINFER_HIP_CHECK(hipMemset(key_cache->get(), 0, 4 * kCacheCapacity * 256 * sizeof(float)));
-        MIINFER_HIP_CHECK(hipMemset(value_cache->get(), 0, 4 * kCacheCapacity * 256 * sizeof(float)));
+        MIINFER_HIP_CHECK(hipMemset(key_cache->get(), 0, 4 * kCacheCapacity * 256 * kv_element_size));
+        MIINFER_HIP_CHECK(hipMemset(value_cache->get(), 0, 4 * kCacheCapacity * 256 * kv_element_size));
     }
 
     static std::string prefix(std::size_t layer, const char* suffix) {
@@ -1811,17 +1820,19 @@ struct FullAttentionLayer {
     }
 
     void poison() {
+        const std::size_t kv_element_size = fp16_kv_cache ? sizeof(__half) : sizeof(float);
         MIINFER_HIP_CHECK(hipMemset(key_cache->get(), 0xA5,
-                                    4 * kCacheCapacity * 256 * sizeof(float)));
+                                    4 * kCacheCapacity * 256 * kv_element_size));
         MIINFER_HIP_CHECK(hipMemset(value_cache->get(), 0xA5,
-                                    4 * kCacheCapacity * 256 * sizeof(float)));
+                                    4 * kCacheCapacity * 256 * kv_element_size));
     }
 
     void reset() {
+        const std::size_t kv_element_size = fp16_kv_cache ? sizeof(__half) : sizeof(float);
         MIINFER_HIP_CHECK(hipMemset(key_cache->get(), 0,
-                                    4 * kCacheCapacity * 256 * sizeof(float)));
+                                    4 * kCacheCapacity * 256 * kv_element_size));
         MIINFER_HIP_CHECK(hipMemset(value_cache->get(), 0,
-                                    4 * kCacheCapacity * 256 * sizeof(float)));
+                                    4 * kCacheCapacity * 256 * kv_element_size));
     }
 
     void stage_start(std::size_t stage, std::uint32_t position) const {
@@ -1962,39 +1973,72 @@ struct FullAttentionLayer {
         stage_end(5, position);
         stage_start(6, position);
         if (fused_rope_norm) {
-            miinfer::launch_qwen35_fused_k_norm_rope_kv_store(
-                key_dest,
-                static_cast<const float*>(value->get()),
-                static_cast<const float*>(d_k_norm->get()),
-                static_cast<float*>(key_cache->get()),
-                static_cast<float*>(value_cache->get()),
-                4, 256, position, kCacheCapacity, model.config().rope_theta, model.config().rms_epsilon);
+            if (fp16_kv_cache) {
+                miinfer::launch_qwen35_fused_k_norm_rope_kv_store(
+                    key_dest,
+                    static_cast<const float*>(value->get()),
+                    static_cast<const float*>(d_k_norm->get()),
+                    static_cast<__half*>(key_cache->get()),
+                    static_cast<__half*>(value_cache->get()),
+                    4, 256, position, kCacheCapacity, model.config().rope_theta, model.config().rms_epsilon);
+            } else {
+                miinfer::launch_qwen35_fused_k_norm_rope_kv_store(
+                    key_dest,
+                    static_cast<const float*>(value->get()),
+                    static_cast<const float*>(d_k_norm->get()),
+                    static_cast<float*>(key_cache->get()),
+                    static_cast<float*>(value_cache->get()),
+                    4, 256, position, kCacheCapacity, model.config().rope_theta, model.config().rms_epsilon);
+            }
         } else {
             miinfer::launch_qwen35_rope_sections(static_cast<const float*>(query_norm->get()),
                 static_cast<float*>(query_rope->get()), 24, 256, position, model.config().rope_theta);
             miinfer::launch_qwen35_rope_sections(static_cast<const float*>(key_norm->get()),
                 static_cast<float*>(key_rope->get()), 4, 256, position, model.config().rope_theta);
-            miinfer::launch_qwen3_kv_cache_store(static_cast<const float*>(key_rope->get()),
-                static_cast<const float*>(value->get()), static_cast<float*>(key_cache->get()),
-                static_cast<float*>(value_cache->get()), position, kCacheCapacity, 4, 256);
+            if (fp16_kv_cache) {
+                miinfer::launch_qwen3_kv_cache_store(static_cast<const float*>(key_rope->get()),
+                    static_cast<const float*>(value->get()), static_cast<__half*>(key_cache->get()),
+                    static_cast<__half*>(value_cache->get()), position, kCacheCapacity, 4, 256);
+            } else {
+                miinfer::launch_qwen3_kv_cache_store(static_cast<const float*>(key_rope->get()),
+                    static_cast<const float*>(value->get()), static_cast<float*>(key_cache->get()),
+                    static_cast<float*>(value_cache->get()), position, kCacheCapacity, 4, 256);
+            }
         }
         stage_end(6, position);
         stage_start(7, position);
         if (tiled_online_attention) {
-            miinfer::launch_qwen35_tiled_online_attention(
-                static_cast<const float*>(query_rope->get()),
-                static_cast<const float*>(key_cache->get()),
-                static_cast<const float*>(value_cache->get()),
-                position + 1, kCacheCapacity,
-                static_cast<float*>(attention->get()),
-                static_cast<const float*>(gate->get()),
-                static_cast<float*>(gated_attention->get()),
-                24, 4, 256, 1.0F / std::sqrt(256.0F),
-                nullptr,
-                (fused_core_q8 && d_o_native) ? static_cast<miinfer::Q8_1Block*>(q8_1->get()) : nullptr);
+            if (fp16_kv_cache) {
+                miinfer::launch_qwen35_tiled_online_attention(
+                    static_cast<const float*>(query_rope->get()),
+                    static_cast<const __half*>(key_cache->get()),
+                    static_cast<const __half*>(value_cache->get()),
+                    position + 1, kCacheCapacity,
+                    static_cast<float*>(attention->get()),
+                    static_cast<const float*>(gate->get()),
+                    static_cast<float*>(gated_attention->get()),
+                    24, 4, 256, 1.0F / std::sqrt(256.0F),
+                    nullptr,
+                    (fused_core_q8 && d_o_native) ? static_cast<miinfer::Q8_1Block*>(q8_1->get()) : nullptr);
+            } else {
+                miinfer::launch_qwen35_tiled_online_attention(
+                    static_cast<const float*>(query_rope->get()),
+                    static_cast<const float*>(key_cache->get()),
+                    static_cast<const float*>(value_cache->get()),
+                    position + 1, kCacheCapacity,
+                    static_cast<float*>(attention->get()),
+                    static_cast<const float*>(gate->get()),
+                    static_cast<float*>(gated_attention->get()),
+                    24, 4, 256, 1.0F / std::sqrt(256.0F),
+                    nullptr,
+                    (fused_core_q8 && d_o_native) ? static_cast<miinfer::Q8_1Block*>(q8_1->get()) : nullptr);
+            }
             stage_end(7, position);
             stage_start(8, position);
         } else {
+            if (fp16_kv_cache) {
+                throw std::runtime_error("Untiled attention fallback requires FP32 KV cache (MIINFER_FP16_KV_CACHE=0)");
+            }
             miinfer::launch_qwen3_cached_attention_parallel(
                 static_cast<const float*>(query_rope->get()),
                 static_cast<const float*>(key_cache->get()),
