@@ -150,8 +150,8 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788820986.029797,
-    "seen": 1788821073.0308268,
+    "mtime": 1788821274.690636,
+    "seen": 1788821297.5817387,
     "ast_hash": "359f961e8e18e5e0cf12cc1070fb3fad",
     "semantic_hash": ""
   },
@@ -2040,8 +2040,8 @@
     "semantic_hash": ""
   },
   "include/miinfer/kquant_wave_layout.hpp": {
-    "mtime": 1788820907.6421123,
-    "seen": 1788821073.030576,
+    "mtime": 1788821274.3446372,
+    "seen": 1788821297.5815053,
     "ast_hash": "8dd28b79700228b35792dd0aa2b07b7b",
     "semantic_hash": ""
   },
@@ -2529,6 +2529,12 @@
     "mtime": 1788821048.7185447,
     "seen": 1788821073.0312018,
     "ast_hash": "d87a12fdb5bab2e426d728dd958d110e",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0212-m11b-batched8-accumulator-gemv.md": {
+    "mtime": 1788821285.9325907,
+    "seen": 1788821297.5821035,
+    "ast_hash": "b139eb414c9bfa2e0eeee21f6a90daf0",
     "semantic_hash": ""
   }
 }

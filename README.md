@@ -18,9 +18,11 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 The qualified opt-in layer-major prefill path reaches `39.96 tok/s` at P512
 with validated B=4 projection reuse. The M11-B `100 tok/s` gate is not met;
-the production-shaped row-LDS B=8 extension was rejected in
-`experiments/EXP-0211-m11b-row-lds-production-shape.md`. The default token-major
-path remains unchanged while a true skinny-GEMM mapping is investigated.
+the production-shaped row-LDS and generic B=8 accumulator extensions were
+rejected in `experiments/EXP-0211-m11b-row-lds-production-shape.md` and
+`experiments/EXP-0212-m11b-batched8-accumulator-gemv.md`. The default
+token-major path remains unchanged while a true skinny-GEMM mapping is
+investigated.
 
 The project currently has:
 

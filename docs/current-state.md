@@ -21,9 +21,10 @@ Native Qwen3.8-27B generation is operational and allocation-free. The
 qualified opt-in layer-major prefill path uses validated B=4 projection reuse:
 P512 is `39.96 tok/s` and P128 is `41.21 tok/s`, versus the token-major P512
 baseline of `32.20 tok/s`. The 100 tok/s M11-B gate is not met. EXP-0211
-rejects a row-LDS B=8 extension after production-shaped testing; the next
-experiment is a true skinny-GEMM mapping for the dominant Q4_K/Q6_K
-projections.
+rejects row-LDS and generic B=8 accumulator extensions after production-shaped
+testing; EXP-0212's exact B=8 accumulator GEMV reached only 0.69× the existing
+B=4 pair. The next experiment is a true skinny-GEMM mapping for the dominant
+Q4_K/Q6_K projections.
 
 The default path remains token-major and unchanged. Layer-major prefill stays
 opt-in until longer-context and generation correctness are fully qualified.
