@@ -82,6 +82,9 @@ void q4k_wave_fused_gate_up_swiglu_reference(
 void launch_q4k_wave_gemv(const Q4KWaveTile* w, const miinfer::Q8_1Block* x, float* y,
                           std::uint32_t rows, std::uint32_t columns,
                           hipStream_t stream = nullptr);
+void launch_q4k_wave_gemv_batched4(const Q4KWaveTile* w, const miinfer::Q8_1Block* x,
+                                   float* y, std::uint32_t rows, std::uint32_t columns,
+                                   hipStream_t stream = nullptr);
 void launch_q4k_wave_fused_gate_up_swiglu(
     const Q4KWaveTile* w_gate,
     const Q4KWaveTile* w_up,
@@ -97,11 +100,24 @@ void launch_q4k_wave_fused_gate_up_swiglu_paired(
     std::uint32_t rows,
     std::uint32_t columns,
     hipStream_t stream = nullptr);
+void launch_q4k_wave_fused_gate_up_swiglu_paired_batched4(
+    const Q4KWaveSwigluFusedTile* w_fused,
+    const miinfer::Q8_1Block* x,
+    float* y_activation,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    hipStream_t stream = nullptr);
 void launch_q4k_wave_down(const Q4KWaveTile* w, const miinfer::Q8_1Block* x, float* y,
                           hipStream_t stream = nullptr);
 void launch_q5k_wave_gemv(const Q5KWaveTile* w, const miinfer::Q8_1Block* x, float* y,
                           std::uint32_t rows, std::uint32_t columns,
                           hipStream_t stream = nullptr);
+void launch_q5k_wave_gemv_batched4(const Q5KWaveTile* w, const miinfer::Q8_1Block* x,
+                                   float* y, std::uint32_t rows, std::uint32_t columns,
+                                   hipStream_t stream = nullptr);
 void launch_q6k_wave_gemv(const Q6KWaveTile* w, const miinfer::Q8_1Block* x, float* y,
                           std::uint32_t rows, std::uint32_t columns,
                           hipStream_t stream = nullptr);
+void launch_q6k_wave_gemv_batched4(const Q6KWaveTile* w, const miinfer::Q8_1Block* x,
+                                   float* y, std::uint32_t rows, std::uint32_t columns,
+                                   hipStream_t stream = nullptr);

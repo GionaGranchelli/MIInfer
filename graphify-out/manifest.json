@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1788800405.7309303,
-    "seen": 1788802984.7955022,
-    "ast_hash": "c43186c4340bda7539e90b712d5cd89f",
+    "mtime": 1788806583.994814,
+    "seen": 1788813765.7829943,
+    "ast_hash": "565d14976865c5b7790b3c90cc247312",
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_primitives.hpp": {
@@ -2040,9 +2040,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/kquant_wave_layout.hpp": {
-    "mtime": 1788786280.8816352,
-    "seen": 1788802984.7954843,
-    "ast_hash": "db13645c96ba241b3b68d5f61da268fe",
+    "mtime": 1788812560.2196908,
+    "seen": 1788813765.7829795,
+    "ast_hash": "8dd28b79700228b35792dd0aa2b07b7b",
     "semantic_hash": ""
   },
   "scripts/run-exp0177-attn-gate-ab.sh": {
@@ -2364,15 +2364,15 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1788805083.1079605,
-    "seen": 1788805709.7837331,
-    "ast_hash": "aaab3f0ee4f6b01c3213d80454a94b98",
+    "mtime": 1788813187.4641678,
+    "seen": 1788813765.7831836,
+    "ast_hash": "329cc25b9acfdcaab4315f80d185f77e",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1788786440.4319804,
-    "seen": 1788802984.7957397,
-    "ast_hash": "38b95582e85cd60041b37a2c72b83c12",
+    "mtime": 1788813606.6624815,
+    "seen": 1788813765.7831852,
+    "ast_hash": "918de007c42e66747cce2eb0663523a3",
     "semantic_hash": ""
   },
   "docs/M9-AUTOREGRESSIVE-QUALIFICATION.md": {
@@ -2469,6 +2469,36 @@
     "mtime": 1788805635.741329,
     "seen": 1788805709.7840893,
     "ast_hash": "67bd63c58f0d158fb8d2caab864108d8",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0202-fp16-kv-cache.md": {
+    "mtime": 1788806287.1292274,
+    "seen": 1788813765.7835703,
+    "ast_hash": "6d9dc00b1dffeeea822708691c5d7941",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0203-wave64-barrier-free-splitk-attention.md": {
+    "mtime": 1788806295.2861886,
+    "seen": 1788813765.783572,
+    "ast_hash": "0d32553517f5f762e99af4f3d236bbf2",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0204-production-context-scaling-m11.md": {
+    "mtime": 1788809295.7276943,
+    "seen": 1788813765.7835732,
+    "ast_hash": "a68a24dcd07f11d529ad09292cafec4b",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0205-batched-q4k-gemv-prefill.md": {
+    "mtime": 1788809330.4565864,
+    "seen": 1788813765.7835746,
+    "ast_hash": "a32fe9f2a7108dd23d25b32f64643674",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0206-layer-major-prefill.md": {
+    "mtime": 1788813691.0161421,
+    "seen": 1788813765.7835758,
+    "ast_hash": "bfb6a0bd154d6fb608b11558e27592d3",
     "semantic_hash": ""
   }
 }

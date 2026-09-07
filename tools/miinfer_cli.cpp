@@ -166,6 +166,146 @@ public:
                    static_cast<const float*>(input_->get()), position);
     }
 
+    const float* prefill_layer_major(std::span<const std::uint32_t> prompt) {
+        constexpr std::size_t kChunk = kPrefillBatch;
+        float* current = static_cast<float*>(prefill_a_->get());
+        float* next = static_cast<float*>(prefill_b_->get());
+        const auto layer_span = std::span<const GpuLayerRef>(layers_);
+        for (std::size_t base = 0; base < prompt.size(); base += kChunk) {
+            const std::size_t count = std::min(kChunk, prompt.size() - base);
+            for (std::size_t i = 0; i < count; ++i) {
+                const auto position = base + i;
+                MIINFER_HIP_CHECK(hipMemcpyAsync(
+                    static_cast<std::uint32_t*>(d_decode_tokens_->get()) + position,
+                    &prompt[position], sizeof(std::uint32_t), hipMemcpyHostToDevice,
+                    hipStreamPerThread));
+                miinfer::launch_qwen35_q4_k_embedding_device_token(
+                    static_cast<const miinfer::Q4KDeviceBlock*>(d_embedding_->get()),
+                    static_cast<const std::uint32_t*>(d_decode_tokens_->get()) + position,
+                    model_.config().vocab_size, kHidden, current + i * kHidden,
+                    hipStreamPerThread);
+            }
+
+            // Bounded chunk storage; layer order preserves recurrent state and
+            // causal KV dependencies while keeping the full chunk at one layer.
+            for (std::size_t layer = 0; layer < layer_span.size(); ++layer) {
+                const bool normalized_ready = layer > 0 && layer_span[layer - 1].fused_interlayer_norm();
+                const bool prepared = layer_span[layer].prepare_prefill_batch(current, count, normalized_ready);
+                const bool deferred_tail = prepared && layer_span[layer].prefill_tail_batch_supported();
+                const bool fuse_next_norm = layer + 1 < layer_span.size()
+                    && layer_span[layer].fused_interlayer_norm();
+                const float* next_norm_weight = fuse_next_norm
+                    ? layer_span[layer + 1].attn_norm_weight() : nullptr;
+                float* next_normalized_batch = fuse_next_norm
+                    ? const_cast<float*>(layer_span[layer + 1].prefill_normalized_at(0)) : nullptr;
+                for (std::size_t i = 0; i < count; ++i) {
+                    float* next_normalized = fuse_next_norm
+                        ? next_normalized_batch + i * kHidden : nullptr;
+                    const float* prepared_normalized = normalized_ready
+                        ? layer_span[layer].prefill_normalized_at(i) : nullptr;
+                    if (prepared) {
+                        layer_span[layer].run(
+                            current + i * kHidden, base + i, next + i * kHidden,
+                            next_norm_weight, next_normalized, false, nullptr, false,
+                            layer_span[layer].prefill_qkv_at(i),
+                            layer_span[layer].prefill_gate_at(i),
+                            prepared_normalized,
+                            deferred_tail, i);
+                    } else {
+                        layer_span[layer].run(current + i * kHidden, base + i,
+                                              next + i * kHidden, next_norm_weight,
+                                              next_normalized, false,
+                                              nullptr, false, nullptr, nullptr,
+                                              prepared_normalized);
+                    }
+                }
+                if (deferred_tail) {
+                    layer_span[layer].finish_prefill_batch(
+                        current, next, count, next_norm_weight, next_normalized_batch);
+                }
+                std::swap(current, next);
+            }
+        }
+        MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+        return current + (std::min<std::size_t>(kChunk, prompt.size()) - 1) * kHidden;
+    }
+
+    std::uint32_t next_token_from_hidden(const float* hidden, std::size_t position) {
+        miinfer::launch_qwen3_rms_norm(
+            hidden, static_cast<const float*>(d_final_norm_weight_->get()),
+            static_cast<float*>(final_norm_->get()), kHidden, model_.config().rms_epsilon);
+        miinfer::launch_q8_1_quantize_f32(
+            static_cast<const float*>(final_norm_->get()),
+            static_cast<miinfer::Q8_1Block*>(final_q8_1_->get()), kHidden,
+            hipStreamPerThread);
+        launch_q6k_wave_gemv(
+            static_cast<const Q6KWaveTile*>(d_output_weight_->get()),
+            static_cast<const miinfer::Q8_1Block*>(final_q8_1_->get()),
+            static_cast<float*>(logits_->get()), model_.config().vocab_size, kHidden,
+            hipStreamPerThread);
+        miinfer::launch_qwen3_argmax(
+            static_cast<const float*>(logits_->get()),
+            static_cast<std::uint32_t*>(d_decode_tokens_->get()) + position + 1,
+            model_.config().vocab_size);
+        std::uint32_t result = 0;
+        MIINFER_HIP_CHECK(hipMemcpyAsync(
+            &result, static_cast<const std::uint32_t*>(d_decode_tokens_->get()) + position + 1,
+            sizeof(result), hipMemcpyDeviceToHost, hipStreamPerThread));
+        MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+        return result;
+    }
+
+    GenerateStats generate_layer_major(std::span<const std::uint32_t> prompt,
+                                       const GenerateOptions& opt,
+                                       std::chrono::steady_clock::time_point gen_start) {
+        GenerateStats stats;
+        stats.prompt_tokens = prompt.size();
+        const auto prefill_start = std::chrono::steady_clock::now();
+        const float* final_hidden = prefill_layer_major(prompt);
+        const auto prefill_end = std::chrono::steady_clock::now();
+        stats.prefill_ms = std::chrono::duration<double, std::milli>(prefill_end - prefill_start).count();
+        stats.prefill_tok_s = stats.prefill_ms > 0.0
+            ? (1000.0 * prompt.size()) / stats.prefill_ms : 0.0;
+        if (opt.max_new_tokens == 0) {
+            stats.total_ms = std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - gen_start).count();
+            return stats;
+        }
+
+        const auto first_start = std::chrono::steady_clock::now();
+        std::uint32_t cur_token = next_token_from_hidden(final_hidden, prompt.size() - 1);
+        const auto first_end = std::chrono::steady_clock::now();
+        stats.first_token_ms = std::chrono::duration<double, std::milli>(first_end - first_start).count();
+        stats.tokens.push_back(cur_token);
+        if (cur_token != tokenizer_.eos_id() && cur_token != 151643 && cur_token != 151645) {
+            const std::string piece = tokenizer_.decode(std::span<const std::uint32_t>(&cur_token, 1));
+            stats.text += piece;
+            if (opt.on_token) opt.on_token(cur_token, piece);
+        }
+
+        std::size_t pos = prompt.size();
+        for (std::size_t gen_idx = 1; gen_idx < opt.max_new_tokens && pos < kCacheCapacity; ++gen_idx) {
+            if (g_shutdown_requested) break;
+            const auto step_res = step(cur_token, pos);
+            cur_token = step_res.token;
+            stats.tokens.push_back(cur_token);
+            stats.decode_ms += step_res.latency_ms;
+            ++pos;
+            if (cur_token == tokenizer_.eos_id() || cur_token == 151643 || cur_token == 151645) break;
+            const std::string piece = tokenizer_.decode(std::span<const std::uint32_t>(&cur_token, 1));
+            stats.text += piece;
+            if (opt.on_token) opt.on_token(cur_token, piece);
+        }
+        stats.decode_ms += stats.first_token_ms;
+        stats.generated_tokens = stats.tokens.size();
+        if (stats.generated_tokens > 0 && stats.decode_ms > 0.0) {
+            stats.decode_tok_s = (1000.0 * stats.generated_tokens) / stats.decode_ms;
+        }
+        stats.total_ms = std::chrono::duration<double, std::milli>(
+            std::chrono::steady_clock::now() - gen_start).count();
+        return stats;
+    }
+
     GenerateStats generate(std::span<const std::uint32_t> prompt, const GenerateOptions& opt = GenerateOptions()) {
         reset();
         GenerateStats stats;
@@ -173,6 +313,8 @@ public:
         if (prompt.empty()) return stats;
 
         const auto gen_start = std::chrono::steady_clock::now();
+
+        if (layer_major_prefill_) return generate_layer_major(prompt, opt, gen_start);
 
         // 1. Prefill / Process prompt tokens (Phase 0: No LM head, no per-token host sync)
         const auto prefill_start = std::chrono::steady_clock::now();
@@ -297,6 +439,8 @@ private:
 
         const char* graph_env = std::getenv("MIINFER_HIP_GRAPH");
         use_hip_graph_ = graph_env == nullptr || std::strcmp(graph_env, "0") != 0;
+        const char* layer_major_env = std::getenv("MIINFER_PREFILL_LAYER_MAJOR");
+        layer_major_prefill_ = layer_major_env != nullptr && std::strcmp(layer_major_env, "0") != 0;
     }
 
     void init_layers() {
@@ -340,6 +484,8 @@ private:
         logits_ = allocate(model_.config().vocab_size * sizeof(float));
         argmax_token_ = allocate(sizeof(std::uint32_t));
         d_decode_tokens_ = allocate(kCacheCapacity * sizeof(std::uint32_t));
+        prefill_a_ = allocate(kPrefillBatch * kHidden * sizeof(float));
+        prefill_b_ = allocate(kPrefillBatch * kHidden * sizeof(float));
 
         decode_graphs_.resize(kCacheCapacity, nullptr);
     }
@@ -421,8 +567,11 @@ private:
     Buffer logits_;
     Buffer argmax_token_;
     Buffer d_decode_tokens_;
+    Buffer prefill_a_;
+    Buffer prefill_b_;
 
     bool use_hip_graph_ = true;
+    bool layer_major_prefill_ = false;
     std::vector<hipGraphExec_t> decode_graphs_;
 };
 
