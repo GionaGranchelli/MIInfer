@@ -522,8 +522,8 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1788806583.994814,
-    "seen": 1788813765.7829943,
+    "mtime": 1788816912.9401815,
+    "seen": 1788819167.041828,
     "ast_hash": "565d14976865c5b7790b3c90cc247312",
     "semantic_hash": ""
   },
@@ -2040,8 +2040,8 @@
     "semantic_hash": ""
   },
   "include/miinfer/kquant_wave_layout.hpp": {
-    "mtime": 1788812560.2196908,
-    "seen": 1788813765.7829795,
+    "mtime": 1788818149.4442074,
+    "seen": 1788819167.0418127,
     "ast_hash": "8dd28b79700228b35792dd0aa2b07b7b",
     "semantic_hash": ""
   },
@@ -2364,15 +2364,15 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1788813187.4641678,
-    "seen": 1788813765.7831836,
-    "ast_hash": "329cc25b9acfdcaab4315f80d185f77e",
+    "mtime": 1788818468.544924,
+    "seen": 1788819167.042019,
+    "ast_hash": "7468771a82c7904195f0dba2e8d2fd71",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1788813606.6624815,
-    "seen": 1788813765.7831852,
-    "ast_hash": "918de007c42e66747cce2eb0663523a3",
+    "mtime": 1788818434.431061,
+    "seen": 1788819167.04202,
+    "ast_hash": "8fb5312fdf24228849b1c391d1d8f49f",
     "semantic_hash": ""
   },
   "docs/M9-AUTOREGRESSIVE-QUALIFICATION.md": {
@@ -2496,9 +2496,21 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0206-layer-major-prefill.md": {
-    "mtime": 1788813691.0161421,
-    "seen": 1788813765.7835758,
-    "ast_hash": "bfb6a0bd154d6fb608b11558e27592d3",
+    "mtime": 1788819062.0195365,
+    "seen": 1788819167.0424,
+    "ast_hash": "95f5e92744c0f6aa5c54e334ef059e85",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0207-batched8-lds-prefill.md": {
+    "mtime": 1788818252.269794,
+    "seen": 1788819167.0424023,
+    "ast_hash": "42dd453d5a2dbe96c6ca62e0cdf38f73",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0208-full-attention-prefill-projections.md": {
+    "mtime": 1788819047.4625952,
+    "seen": 1788819167.042404,
+    "ast_hash": "c5d0ea97e85b1e46bcd7bfb88993cdbb",
     "semantic_hash": ""
   }
 }

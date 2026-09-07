@@ -58,3 +58,11 @@ The ≥100 tok/s P512 target was not reached.
 Compare per-layer/per-position tensors between token-major and layer-major
 execution to locate the first accumulated numerical divergence. Re-run the
 performance comparison only after that mismatch is fixed.
+
+## Re-evaluation — EXP-0208
+
+EXP-0208 retained the B=4 layer-major path and batched the previously scalar
+full-attention Q/K/V projections. This improved repeated P512 prefill from a
+32.20 tok/s token-major median to 39.96 tok/s while matching the tested
+generation output. The long-generation qualification and the ≥100 tok/s gate
+remain open.

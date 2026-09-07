@@ -210,7 +210,9 @@ public:
                             layer_span[layer].prefill_qkv_at(i),
                             layer_span[layer].prefill_gate_at(i),
                             prepared_normalized,
-                            deferred_tail, i);
+                            deferred_tail, i,
+                            layer_span[layer].prefill_qfull_at(i),
+                            layer_span[layer].prefill_value_at(i));
                     } else {
                         layer_span[layer].run(current + i * kHidden, base + i,
                                               next + i * kHidden, next_norm_weight,

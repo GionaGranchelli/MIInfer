@@ -1844,7 +1844,7 @@ struct FullAttentionLayer {
     Buffer query_rope, key_rope, key_cache, value_cache, attention, scores, probabilities;
     Buffer gated_attention, projected, residual, post_normalized, ffn_gate, ffn_up;
     Buffer ffn_activation, layer_output, q8;
-    Buffer prefill_normalized;
+    Buffer prefill_normalized, prefill_qfull, prefill_value, prefill_q8_1;
     bool reuse_projection_q8 = false;
     Buffer q8_1;
     bool q4_q8_1_mmvq = false;
@@ -2037,6 +2037,10 @@ struct FullAttentionLayer {
         q8_1 = allocate((kFfnInner / miinfer::kQ8_1BlockSize) * sizeof(miinfer::Q8_1Block));
         if (prefill_batch_enabled) {
             prefill_normalized = allocate(kPrefillBatch * kHidden * sizeof(float));
+            prefill_qfull = allocate(kPrefillBatch * (12288 + 1024) * sizeof(float));
+            prefill_value = allocate(kPrefillBatch * 1024 * sizeof(float));
+            prefill_q8_1 = allocate(kPrefillBatch * (kHidden / miinfer::kQ8_1BlockSize)
+                                    * sizeof(miinfer::Q8_1Block));
         }
         MIINFER_HIP_CHECK(hipMemset(key_cache->get(), 0, 4 * kCacheCapacity * 256 * kv_element_size));
         MIINFER_HIP_CHECK(hipMemset(value_cache->get(), 0, 4 * kCacheCapacity * 256 * kv_element_size));
@@ -2079,8 +2083,53 @@ struct FullAttentionLayer {
         }
     }
 
+    bool prepare_prefill_batch(const float* inputs, std::size_t count,
+                               bool normalized_ready = false) {
+        if (!prefill_batch_enabled || count != kPrefillBatch || inputs == nullptr
+            || d_qk_combined == nullptr || d_v_native == nullptr) {
+            return false;
+        }
+        auto* normalized_out = static_cast<float*>(prefill_normalized->get());
+        auto* q8_out = static_cast<miinfer::Q8_1Block*>(prefill_q8_1->get());
+        for (std::size_t i = 0; i < count; ++i) {
+            if (!normalized_ready) {
+                miinfer::launch_qwen3_rms_norm(
+                    inputs + i * kHidden, static_cast<const float*>(d_attn_norm->get()),
+                    normalized_out + i * kHidden, kHidden, model.config().rms_epsilon);
+            }
+            miinfer::launch_q8_1_quantize_f32(
+                normalized_out + i * kHidden,
+                q8_out + i * (kHidden / miinfer::kQ8_1BlockSize), kHidden,
+                hipStreamPerThread);
+        }
+        launch_q4k_wave_gemv_batched4(
+            static_cast<const Q4KWaveTile*>(d_qk_combined->get()), q8_out,
+            static_cast<float*>(prefill_qfull->get()), 12288 + 1024, kHidden,
+            hipStreamPerThread);
+        if (v_weight.type == miinfer::GgufTensorType::q4_k) {
+            launch_q4k_wave_gemv_batched4(
+                static_cast<const Q4KWaveTile*>(d_v_native->get()), q8_out,
+                static_cast<float*>(prefill_value->get()), 1024, kHidden,
+                hipStreamPerThread);
+        } else {
+            launch_q6k_wave_gemv_batched4(
+                static_cast<const Q6KWaveTile*>(d_v_native->get()), q8_out,
+                static_cast<float*>(prefill_value->get()), 1024, kHidden,
+                hipStreamPerThread);
+        }
+        return true;
+    }
+
     const float* prefill_normalized_at(std::size_t index) const {
         return static_cast<const float*>(prefill_normalized->get()) + index * kHidden;
+    }
+
+    const float* prefill_qfull_at(std::size_t index) const {
+        return static_cast<const float*>(prefill_qfull->get()) + index * (12288 + 1024);
+    }
+
+    const float* prefill_value_at(std::size_t index) const {
+        return static_cast<const float*>(prefill_value->get()) + index * 1024;
     }
 
     void run(const float* input, std::uint32_t position, float* output,
@@ -2089,12 +2138,25 @@ struct FullAttentionLayer {
              bool precomputed_norm = false,
              miinfer::Q8_1Block* next_q8_1 = nullptr,
              bool precomputed_q8 = false,
-             const float* prepared_normalized = nullptr) {
+             const float* prepared_normalized = nullptr,
+             const float* prepared_qfull = nullptr,
+             const float* prepared_value = nullptr) {
         if (prepared_normalized != nullptr) {
             MIINFER_HIP_CHECK(hipMemcpyAsync(
                 normalized->get(), prepared_normalized, kHidden * sizeof(float),
                 hipMemcpyDeviceToDevice, hipStreamPerThread));
             precomputed_norm = true;
+        }
+        const bool precomputed_projection = prepared_qfull != nullptr;
+        if (precomputed_projection) {
+            MIINFER_HIP_CHECK(hipMemcpyAsync(
+                qfull->get(), prepared_qfull, (12288 + 1024) * sizeof(float),
+                hipMemcpyDeviceToDevice, hipStreamPerThread));
+        }
+        if (prepared_value != nullptr) {
+            MIINFER_HIP_CHECK(hipMemcpyAsync(
+                value->get(), prepared_value, 1024 * sizeof(float),
+                hipMemcpyDeviceToDevice, hipStreamPerThread));
         }
         stage_start(0, position);
         if (!precomputed_norm) {
@@ -2105,7 +2167,9 @@ struct FullAttentionLayer {
         stage_start(1, position);
         float* qfull_dest = static_cast<float*>(qfull->get());
         float* key_dest = d_qk_combined ? (qfull_dest + 12288) : (key ? static_cast<float*>(key->get()) : nullptr);
-        if (d_qk_combined) {
+        if (precomputed_projection) {
+            // The layer-major path already populated Q+gate+K with B=4.
+        } else if (d_qk_combined) {
             if (!precomputed_q8 || !fused_norm_q8) {
                 miinfer::launch_q8_1_quantize_f32(
                     static_cast<const float*>(normalized->get()),
@@ -2191,7 +2255,9 @@ struct FullAttentionLayer {
         }
         stage_end(4, position);
         stage_start(5, position);
-        if (d_v_native) {
+        if (prepared_value != nullptr) {
+            // The layer-major path already populated V with B=4.
+        } else if (d_v_native) {
             if (!d_qk_combined && !d_q_native && !d_k_native) {
                 miinfer::launch_q8_1_quantize_f32(
                     static_cast<const float*>(normalized->get()),
@@ -2497,7 +2563,8 @@ struct GpuLayerRef {
 
     bool prepare_prefill_batch(const float* inputs, std::size_t count,
                                bool normalized_ready = false) const {
-        return recurrent != nullptr && recurrent->prepare_prefill_batch(inputs, count, normalized_ready);
+        if (recurrent != nullptr) return recurrent->prepare_prefill_batch(inputs, count, normalized_ready);
+        return attention != nullptr && attention->prepare_prefill_batch(inputs, count, normalized_ready);
     }
 
     const float* prefill_normalized_at(std::size_t index) const {
@@ -2511,6 +2578,14 @@ struct GpuLayerRef {
 
     const float* prefill_gate_at(std::size_t index) const {
         return recurrent == nullptr ? nullptr : recurrent->prefill_gate_at(index);
+    }
+
+    const float* prefill_qfull_at(std::size_t index) const {
+        return attention == nullptr ? nullptr : attention->prefill_qfull_at(index);
+    }
+
+    const float* prefill_value_at(std::size_t index) const {
+        return attention == nullptr ? nullptr : attention->prefill_value_at(index);
     }
 
     bool prefill_tail_batch_supported() const {
@@ -2534,7 +2609,9 @@ struct GpuLayerRef {
              const float* prepared_gate = nullptr,
              const float* prepared_normalized = nullptr,
              bool defer_prefill_tail = false,
-             std::size_t prefill_index = 0) const {
+             std::size_t prefill_index = 0,
+             const float* prepared_qfull = nullptr,
+             const float* prepared_value = nullptr) const {
         if (recurrent != nullptr) {
             recurrent->run(input, position, output, next_norm_weight, next_normalized,
                            precomputed_norm, next_q8_1, precomputed_q8,
@@ -2542,7 +2619,8 @@ struct GpuLayerRef {
                            defer_prefill_tail, prefill_index);
         } else if (attention != nullptr) {
             attention->run(input, position, output, next_norm_weight, next_normalized,
-                           precomputed_norm, next_q8_1, precomputed_q8, prepared_normalized);
+                           precomputed_norm, next_q8_1, precomputed_q8, prepared_normalized,
+                           prepared_qfull, prepared_value);
         } else {
             throw std::runtime_error("empty qwen35 GPU layer reference");
         }
