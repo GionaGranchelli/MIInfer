@@ -6,6 +6,8 @@
 #endif
 
 #include <string>
+#include <cstring>
+#include <cstdlib>
 #include <stdexcept>
 
 namespace {
@@ -94,7 +96,7 @@ struct Q5KDecoder {
     }
 };
 
-struct Q6KDecoder {
+struct Q6KDecoderLegacy {
     using Tile = Q6KWaveTile;
 
     struct LaneState {
@@ -149,6 +151,57 @@ struct Q6KDecoder {
         return __half2float(state.m->d) * state.sd;
     }
 };
+
+struct Q6KDecoderSimd {
+    using Tile = Q6KWaveTile;
+
+    struct LaneState {
+        const Tile::Metadata* m;
+        std::uint32_t v0;
+        std::uint32_t v1;
+        std::uint32_t h;
+        float sd;
+    };
+
+    static __device__ __forceinline__ void load_tile(const Tile& w, unsigned lane, LaneState& state) {
+        state.m = &w.metadata[lane / 16];
+        state.v0 = w.words[0][lane];
+        state.v1 = w.words[1][lane];
+        state.h = w.qh[lane];
+        state.sd = 0.0f;
+    }
+
+    static __device__ __forceinline__ void process_part(
+        LaneState& state, unsigned part, unsigned group,
+        const miinfer::Q8_1Block& q, const int* u) {
+        const std::uint32_t low_a = (part == 0) ? (state.v0 & 0x0f0f0f0f) : ((state.v0 >> 4) & 0x0f0f0f0f);
+        const std::uint32_t low_b = (part == 0) ? (state.v1 & 0x0f0f0f0f) : ((state.v1 >> 4) & 0x0f0f0f0f);
+
+        const std::uint32_t high_a = (part == 0) ? ((state.h & 0x03030303) << 4) : (state.h & 0x30303030);
+        const std::uint32_t high_b = (part == 0) ? ((state.h & 0x0c0c0c0c) << 2) : ((state.h >> 2) & 0x30303030);
+
+        const std::uint32_t u_a = low_a | high_a;
+        const std::uint32_t u_b = low_b | high_b;
+
+        const std::uint32_t not_b5_a = (u_a & 0x20202020) ^ 0x20202020;
+        const std::uint32_t a = (u_a & 0x1f1f1f1f) | (not_b5_a | (not_b5_a << 1) | (not_b5_a << 2));
+
+        const std::uint32_t not_b5_b = (u_b & 0x20202020) ^ 0x20202020;
+        const std::uint32_t b = (u_b & 0x1f1f1f1f) | (not_b5_b | (not_b5_b << 1) | (not_b5_b << 2));
+
+        const int dot_a = __builtin_amdgcn_sdot4(static_cast<int>(a), u[0], 0, false);
+        const int dot_b = __builtin_amdgcn_sdot4(static_cast<int>(b), u[4], 0, false);
+        const int sc_a = state.m->scales[2 * (group + part)];
+        const int sc_b = state.m->scales[2 * (group + part) + 1];
+        state.sd += __half2float(q.d) * float(dot_a * sc_a + dot_b * sc_b);
+    }
+
+    static __device__ __forceinline__ float finalize_tile(const LaneState& state) {
+        return __half2float(state.m->d) * state.sd;
+    }
+};
+
+using Q6KDecoder = Q6KDecoderSimd;
 
 // =========================================================================
 // Common Wave64 Tile Executor Kernel
@@ -237,7 +290,7 @@ void launch_kquant_gemv_dispatch(
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
-template <unsigned NumTiles>
+template <unsigned NumTiles, bool FastShuffle = true>
 __global__ void q4k_wave_fused_gate_up_swiglu_kernel(
     const Q4KWaveTile* __restrict__ weights_gate,
     const Q4KWaveTile* __restrict__ weights_up,
@@ -292,32 +345,64 @@ __global__ void q4k_wave_fused_gate_up_swiglu_kernel(
         sum_up += Q4KDecoder::finalize_tile(state_u);
     }
 
-    __shared__ float partials_gate[2][128];
-    __shared__ float partials_up[2][128];
-    partials_gate[local_row][tid] = sum_gate;
-    partials_up[local_row][tid] = sum_up;
-    __syncthreads();
+    if constexpr (FastShuffle) {
+        #pragma unroll
+        for (int offset = 32; offset > 0; offset /= 2) {
+            sum_gate += __shfl_down(sum_gate, offset, 64);
+            sum_up += __shfl_down(sum_up, offset, 64);
+        }
 
-    if (tid < 64) {
-        partials_gate[local_row][tid] += partials_gate[local_row][tid + 64];
-        partials_up[local_row][tid] += partials_up[local_row][tid + 64];
-    }
-    __syncthreads();
+        __shared__ float odd_gate[2];
+        __shared__ float odd_up[2];
 
-    for (unsigned stride = 32; stride; stride /= 2) {
-        if (tid < stride) {
-            partials_gate[local_row][tid] += partials_gate[local_row][tid + stride];
-            partials_up[local_row][tid] += partials_up[local_row][tid + stride];
+        if (tid == 64) {
+            odd_gate[local_row] = sum_gate;
+            odd_up[local_row] = sum_up;
         }
         __syncthreads();
-    }
 
-    if (!tid) {
-        const float g = partials_gate[local_row][0];
-        const float u = partials_up[local_row][0];
-        const float silu_g = g / (1.0f + expf(-g));
-        output[row] = silu_g * u;
+        if (tid == 0) {
+            const float g = sum_gate + odd_gate[local_row];
+            const float u = sum_up + odd_up[local_row];
+            const float silu_g = g / (1.0f + expf(-g));
+            output[row] = silu_g * u;
+        }
+    } else {
+        __shared__ float partials_gate[2][128];
+        __shared__ float partials_up[2][128];
+        partials_gate[local_row][tid] = sum_gate;
+        partials_up[local_row][tid] = sum_up;
+        __syncthreads();
+
+        if (tid < 64) {
+            partials_gate[local_row][tid] += partials_gate[local_row][tid + 64];
+            partials_up[local_row][tid] += partials_up[local_row][tid + 64];
+        }
+        __syncthreads();
+
+        for (unsigned stride = 32; stride; stride /= 2) {
+            if (tid < stride) {
+                partials_gate[local_row][tid] += partials_gate[local_row][tid + stride];
+                partials_up[local_row][tid] += partials_up[local_row][tid + stride];
+            }
+            __syncthreads();
+        }
+
+        if (!tid) {
+            const float g = partials_gate[local_row][0];
+            const float u = partials_up[local_row][0];
+            const float silu_g = g / (1.0f + expf(-g));
+            output[row] = silu_g * u;
+        }
     }
+}
+
+static bool swiglu_shuffle_enabled() {
+    static const bool enabled = [] {
+        const char* env = std::getenv("MIINFER_SWIGLU_SHUFFLE");
+        return env == nullptr || (std::strcmp(env, "0") != 0 && std::strcmp(env, "OFF") != 0 && std::strcmp(env, "off") != 0);
+    }();
+    return enabled;
 }
 
 } // namespace
@@ -342,8 +427,13 @@ void launch_q4k_wave_fused_gate_up_swiglu(
     const dim3 block(256);
     switch (num_tiles) {
     case 5: {
-        auto kernel = q4k_wave_fused_gate_up_swiglu_kernel<5>;
-        hipLaunchKernelGGL(kernel, grid, block, 0, stream, w_gate, w_up, x, y_activation);
+        if (swiglu_shuffle_enabled()) {
+            auto kernel = q4k_wave_fused_gate_up_swiglu_kernel<5, true>;
+            hipLaunchKernelGGL(kernel, grid, block, 0, stream, w_gate, w_up, x, y_activation);
+        } else {
+            auto kernel = q4k_wave_fused_gate_up_swiglu_kernel<5, false>;
+            hipLaunchKernelGGL(kernel, grid, block, 0, stream, w_gate, w_up, x, y_activation);
+        }
         break;
     }
     default:
@@ -361,7 +451,19 @@ void launch_q5k_wave_gemv(const Q5KWaveTile* w, const miinfer::Q8_1Block* x, flo
     launch_kquant_gemv_dispatch<Q5KDecoder>(w, x, y, rows, columns, stream);
 }
 
+static bool q6k_simd_unpack_enabled() {
+    static const bool enabled = [] {
+        const char* env = std::getenv("MIINFER_Q6K_SIMD_UNPACK");
+        return env == nullptr || (std::strcmp(env, "0") != 0 && std::strcmp(env, "OFF") != 0 && std::strcmp(env, "off") != 0);
+    }();
+    return enabled;
+}
+
 void launch_q6k_wave_gemv(const Q6KWaveTile* w, const miinfer::Q8_1Block* x, float* y,
                           std::uint32_t rows, std::uint32_t columns, hipStream_t stream) {
-    launch_kquant_gemv_dispatch<Q6KDecoder>(w, x, y, rows, columns, stream);
+    if (q6k_simd_unpack_enabled()) {
+        launch_kquant_gemv_dispatch<Q6KDecoderSimd>(w, x, y, rows, columns, stream);
+    } else {
+        launch_kquant_gemv_dispatch<Q6KDecoderLegacy>(w, x, y, rows, columns, stream);
+    }
 }
