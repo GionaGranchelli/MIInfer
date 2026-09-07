@@ -2364,9 +2364,9 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1788802329.171223,
-    "seen": 1788802984.7957382,
-    "ast_hash": "5c7c32c1472ad348e63c694b8ea31985",
+    "mtime": 1788805083.1079605,
+    "seen": 1788805709.7837331,
+    "ast_hash": "aaab3f0ee4f6b01c3213d80454a94b98",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
@@ -2445,6 +2445,30 @@
     "mtime": 1788802493.2711236,
     "seen": 1788802984.796128,
     "ast_hash": "3940e1d19a388de1ab50d5a688a30c4c",
+    "semantic_hash": ""
+  },
+  "scripts/bench-streaming-modes.sh": {
+    "mtime": 1788804124.9385228,
+    "seen": 1788805709.7835584,
+    "ast_hash": "69e2f92d22f2aca89451925ead3b2a2b",
+    "semantic_hash": ""
+  },
+  "scripts/bench_m10_latency_curve.py": {
+    "mtime": 1788805074.051429,
+    "seen": 1788805709.7835612,
+    "ast_hash": "54788449322b5a281ce4646623e54938",
+    "semantic_hash": ""
+  },
+  "docs/M10-REAL-WORLD-PERFORMANCE.md": {
+    "mtime": 1788805648.575268,
+    "seen": 1788805709.7837615,
+    "ast_hash": "5a2d17882d6c5ce125d30624e463baf8",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0201-real-world-latency-context-scaling.md": {
+    "mtime": 1788805635.741329,
+    "seen": 1788805709.7840893,
+    "ast_hash": "67bd63c58f0d158fb8d2caab864108d8",
     "semantic_hash": ""
   }
 }

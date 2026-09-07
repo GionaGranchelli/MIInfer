@@ -724,6 +724,17 @@ int cmd_serve(int argc, char** argv) {
             bool is_stream = request.find("\"stream\": true") != std::string::npos ||
                              request.find("\"stream\":true") != std::string::npos;
 
+            std::size_t max_tokens = 256;
+            std::size_t max_pos = request.find("\"max_tokens\":");
+            if (max_pos != std::string::npos) {
+                try {
+                    std::size_t start = request.find_first_of("0123456789", max_pos + 12);
+                    if (start != std::string::npos) {
+                        max_tokens = std::stoull(request.substr(start));
+                    }
+                } catch (...) {}
+            }
+
             // Extract prompt or user messages
             std::string prompt = "<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n";
             std::size_t content_pos = request.find("\"content\": \"");
@@ -745,7 +756,7 @@ int cmd_serve(int argc, char** argv) {
                 (void)write(client_fd, header.data(), header.size());
 
                 Qwen35RuntimeEngine::GenerateOptions opt;
-                opt.max_new_tokens = 256;
+                opt.max_new_tokens = max_tokens;
                 opt.on_token = [&](std::uint32_t /*token*/, std::string_view piece) {
                     std::string sse = "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"delta\":{\"content\":\"";
                     for (char c : piece) {
@@ -764,7 +775,7 @@ int cmd_serve(int argc, char** argv) {
                 (void)write(client_fd, done.data(), done.size());
             } else {
                 Qwen35RuntimeEngine::GenerateOptions opt;
-                opt.max_new_tokens = 256;
+                opt.max_new_tokens = max_tokens;
                 opt.stream = false;
                 const auto stats = engine.generate(prompt_tokens, opt);
 
