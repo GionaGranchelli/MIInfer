@@ -1,4 +1,5 @@
 #include "miinfer/qwen3_gpu_primitives.hpp"
+#include "miinfer/q4_q8_gemv.hpp"
 
 #include "miinfer/hip_check.hpp"
 
@@ -214,12 +215,14 @@ __global__ void qwen3_rms_norm_vec4_kernel(
     }
 }
 
+template <bool EmitQ8>
 __global__ void qwen3_fused_add_rms_norm_vec4_kernel(
     const float* __restrict__ residual_in,
     const float* __restrict__ projection,
     const float* __restrict__ weights,
     float* __restrict__ residual_out,
     float* __restrict__ normalized_out,
+    Q8_1Block* __restrict__ q8_out,
     std::uint32_t elements,
     float epsilon) {
 
@@ -246,7 +249,9 @@ __global__ void qwen3_fused_add_rms_norm_vec4_kernel(
         res[i].y = a.y + b.y;
         res[i].z = a.z + b.z;
         res[i].w = a.w + b.w;
-        res_out_vec[idx] = res[i];
+        if (res_out_vec != nullptr) {
+            res_out_vec[idx] = res[i];
+        }
 
         sum += res[i].x * res[i].x;
         sum += res[i].y * res[i].y;
@@ -263,6 +268,10 @@ __global__ void qwen3_fused_add_rms_norm_vec4_kernel(
     const float total_sum = s_wave_sums[0] + s_wave_sums[1] + s_wave_sums[2] + s_wave_sums[3];
     const float inv_rms = rsqrtf(total_sum / static_cast<float>(elements) + epsilon);
 
+    const int group_in_wave = lane_id / 8;
+    const int k = lane_id % 8;
+    const int group_in_block = wave_id * 8 + group_in_wave;
+
     #pragma unroll
     for (int i = 0; i < 5; ++i) {
         const std::uint32_t idx = i * 256 + tid;
@@ -272,7 +281,46 @@ __global__ void qwen3_fused_add_rms_norm_vec4_kernel(
         out.y = res[i].y * inv_rms * w.y;
         out.z = res[i].z * inv_rms * w.z;
         out.w = res[i].w * inv_rms * w.w;
-        norm_out_vec[idx] = out;
+        if (norm_out_vec != nullptr) {
+            norm_out_vec[idx] = out;
+        }
+
+        if constexpr (EmitQ8) {
+            const int global_block = i * 32 + group_in_block;
+
+            float amax = fmaxf(fmaxf(fabsf(out.x), fabsf(out.y)), fmaxf(fabsf(out.z), fabsf(out.w)));
+            #pragma unroll
+            for (int offset = 4; offset > 0; offset /= 2) {
+                amax = fmaxf(amax, __shfl_xor(amax, offset, 64));
+            }
+
+            const float scale = amax / 127.0f;
+            const float inv_scale = (scale != 0.0f) ? (1.0f / scale) : 0.0f;
+
+            const int q0 = max(-127, min(127, static_cast<int>(roundf(out.x * inv_scale))));
+            const int q1 = max(-127, min(127, static_cast<int>(roundf(out.y * inv_scale))));
+            const int q2 = max(-127, min(127, static_cast<int>(roundf(out.z * inv_scale))));
+            const int q3 = max(-127, min(127, static_cast<int>(roundf(out.w * inv_scale))));
+
+            int qsum = q0 + q1 + q2 + q3;
+            #pragma unroll
+            for (int offset = 4; offset > 0; offset /= 2) {
+                qsum += __shfl_xor(qsum, offset, 64);
+            }
+
+            if (k == 0) {
+                q8_out[global_block].d = __float2half_rn(scale);
+                q8_out[global_block].s = __float2half_rn(static_cast<float>(qsum) * scale);
+            }
+
+            const std::uint32_t packed =
+                (static_cast<std::uint32_t>(static_cast<std::uint8_t>(q0))) |
+                (static_cast<std::uint32_t>(static_cast<std::uint8_t>(q1)) << 8) |
+                (static_cast<std::uint32_t>(static_cast<std::uint8_t>(q2)) << 16) |
+                (static_cast<std::uint32_t>(static_cast<std::uint8_t>(q3)) << 24);
+
+            reinterpret_cast<std::uint32_t*>(q8_out[global_block].qs)[k] = packed;
+        }
     }
 }
 
@@ -874,7 +922,8 @@ __global__ void qwen35_deltanet_fused_recurrent_core_kernel(
     std::uint32_t key_heads,
     std::uint32_t value_heads,
     std::uint32_t state_size,
-    float epsilon) {
+    float epsilon,
+    miinfer::Q8_1Block* __restrict__ gated_output_q8) {
     const std::uint32_t head = blockIdx.x;
     const std::uint32_t row = threadIdx.x;
     if (head >= value_heads || row >= state_size || key_heads == 0) return;
@@ -940,7 +989,40 @@ __global__ void qwen35_deltanet_fused_recurrent_core_kernel(
     const std::size_t out_idx = static_cast<std::size_t>(head) * 128 + row;
     const float g = gate[out_idx];
     const float silu_g = g / (1.0F + expf(-g));
-    gated_output[out_idx] = silu_g * head_scaled;
+    const float gated_val = silu_g * head_scaled;
+    if (gated_output != nullptr) {
+        gated_output[out_idx] = gated_val;
+    }
+    if (gated_output_q8 != nullptr) {
+        const int lane = static_cast<int>(row % 64);
+        const int wave_in_block = static_cast<int>(row / 64);
+        const int block_in_wave = lane / 32;
+        const int in_block = lane % 32;
+        const int head_block_idx = wave_in_block * 2 + block_in_wave;
+        const int global_block = static_cast<int>(head * (state_size / 32) + head_block_idx);
+
+        float amax = fabsf(gated_val);
+        #pragma unroll
+        for (int offset = 16; offset > 0; offset /= 2) {
+            amax = fmaxf(amax, __shfl_xor(amax, offset, 64));
+        }
+
+        const float scale = amax / 127.0f;
+        const float inv_scale = (scale != 0.0f) ? (1.0f / scale) : 0.0f;
+        const int q_int = max(-127, min(127, static_cast<int>(roundf(gated_val * inv_scale))));
+
+        int sum = q_int;
+        #pragma unroll
+        for (int offset = 16; offset > 0; offset /= 2) {
+            sum += __shfl_xor(sum, offset, 64);
+        }
+
+        if (in_block == 0) {
+            gated_output_q8[global_block].d = __float2half_rn(scale);
+            gated_output_q8[global_block].s = __float2half_rn(static_cast<float>(sum) * scale);
+        }
+        gated_output_q8[global_block].qs[in_block] = static_cast<std::int8_t>(q_int);
+    }
 }
 
 __global__ void qwen35_conv_silu_split_kernel(
@@ -1369,7 +1451,8 @@ __global__ void qwen3_splitk_stage2_kernel(
     float* __restrict__ gated_output,
     std::uint32_t query_heads,
     std::uint32_t head_dim,
-    std::uint32_t num_splits) {
+    std::uint32_t num_splits,
+    miinfer::Q8_1Block* __restrict__ gated_output_q8) {
 
     const std::uint32_t head = blockIdx.x;
     const std::uint32_t tid = threadIdx.x;
@@ -1408,10 +1491,43 @@ __global__ void qwen3_splitk_stage2_kernel(
     if (output != nullptr) {
         output[q_base + tid] = out_val;
     }
-    if (gate != nullptr && gated_output != nullptr) {
+    if (gate != nullptr) {
         const float g = gate[q_base + tid];
         const float sig = 1.0F / (1.0F + expf(-g));
-        gated_output[q_base + tid] = out_val * sig;
+        const float gated_val = out_val * sig;
+        if (gated_output != nullptr) {
+            gated_output[q_base + tid] = gated_val;
+        }
+        if (gated_output_q8 != nullptr) {
+            const int lane = static_cast<int>(tid % 64);
+            const int wave_in_block = static_cast<int>(tid / 64);
+            const int block_in_wave = lane / 32;
+            const int in_block = lane % 32;
+            const int head_block_idx = wave_in_block * 2 + block_in_wave;
+            const int global_block = static_cast<int>(head * (head_dim / 32) + head_block_idx);
+
+            float amax = fabsf(gated_val);
+            #pragma unroll
+            for (int offset = 16; offset > 0; offset /= 2) {
+                amax = fmaxf(amax, __shfl_xor(amax, offset, 64));
+            }
+
+            const float scale = amax / 127.0f;
+            const float inv_scale = (scale != 0.0f) ? (1.0f / scale) : 0.0f;
+            const int q_int = max(-127, min(127, static_cast<int>(roundf(gated_val * inv_scale))));
+
+            int sum = q_int;
+            #pragma unroll
+            for (int offset = 16; offset > 0; offset /= 2) {
+                sum += __shfl_xor(sum, offset, 64);
+            }
+
+            if (in_block == 0) {
+                gated_output_q8[global_block].d = __float2half_rn(scale);
+                gated_output_q8[global_block].s = __float2half_rn(static_cast<float>(sum) * scale);
+            }
+            gated_output_q8[global_block].qs[in_block] = static_cast<std::int8_t>(q_int);
+        }
     }
 }
 
@@ -2479,20 +2595,29 @@ void launch_qwen3_fused_add_rms_norm(
     float* normalized_out,
     std::uint32_t elements,
     float epsilon,
-    hipStream_t stream) {
+    hipStream_t stream,
+    Q8_1Block* q8_out) {
     if (residual_in == nullptr || projection == nullptr || weights == nullptr
-        || residual_out == nullptr || normalized_out == nullptr || elements == 0
+        || residual_out == nullptr || (normalized_out == nullptr && q8_out == nullptr) || elements == 0
         || elements > 256U * 1024U || epsilon <= 0.0F) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     if (elements == 5120 && (reinterpret_cast<std::uintptr_t>(residual_in) % 16 == 0)
         && (reinterpret_cast<std::uintptr_t>(projection) % 16 == 0)
         && (reinterpret_cast<std::uintptr_t>(weights) % 16 == 0)
-        && (reinterpret_cast<std::uintptr_t>(residual_out) % 16 == 0)
-        && (reinterpret_cast<std::uintptr_t>(normalized_out) % 16 == 0)) {
-        hipLaunchKernelGGL(qwen3_fused_add_rms_norm_vec4_kernel, dim3(1), dim3(256), 0, stream,
-                           residual_in, projection, weights, residual_out, normalized_out, elements, epsilon);
+        && (residual_out == nullptr || reinterpret_cast<std::uintptr_t>(residual_out) % 16 == 0)
+        && (normalized_out == nullptr || reinterpret_cast<std::uintptr_t>(normalized_out) % 16 == 0)) {
+        if (q8_out != nullptr) {
+            hipLaunchKernelGGL(qwen3_fused_add_rms_norm_vec4_kernel<true>, dim3(1), dim3(256), 0, stream,
+                               residual_in, projection, weights, residual_out, normalized_out, q8_out, elements, epsilon);
+        } else {
+            hipLaunchKernelGGL(qwen3_fused_add_rms_norm_vec4_kernel<false>, dim3(1), dim3(256), 0, stream,
+                               residual_in, projection, weights, residual_out, normalized_out, nullptr, elements, epsilon);
+        }
     } else {
+        if (q8_out != nullptr) {
+            throw std::runtime_error("launch_qwen3_fused_add_rms_norm with q8_out requires elements == 5120 and 16-byte alignment");
+        }
         hipLaunchKernelGGL(qwen3_fused_add_rms_norm_kernel, dim3(1), dim3(256), 0, stream,
                            residual_in, projection, weights, residual_out, normalized_out, elements, epsilon);
     }
@@ -2775,10 +2900,11 @@ void launch_qwen35_deltanet_fused_recurrent_core(
     std::uint32_t value_heads,
     std::uint32_t state_size,
     float epsilon,
-    hipStream_t stream) {
+    hipStream_t stream,
+    Q8_1Block* gated_output_q8) {
     if (query == nullptr || key == nullptr || value == nullptr || beta == nullptr
         || decay == nullptr || ssm_norm == nullptr || gate == nullptr || state == nullptr
-        || gated_output == nullptr || key_heads == 0 || value_heads == 0
+        || (gated_output == nullptr && gated_output_q8 == nullptr) || key_heads == 0 || value_heads == 0
         || state_size != 128 || value_heads % key_heads != 0 || epsilon <= 0.0F) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
@@ -2787,7 +2913,7 @@ void launch_qwen35_deltanet_fused_recurrent_core(
                        dim3(value_heads), dim3(state_size), shared_bytes, stream,
                        query, key, value, beta, decay, ssm_norm, gate,
                        state, gated_output, recurrent_output,
-                       key_heads, value_heads, state_size, epsilon);
+                       key_heads, value_heads, state_size, epsilon, gated_output_q8);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
@@ -2920,10 +3046,11 @@ void launch_qwen35_tiled_online_attention(
     std::uint32_t cache_length, std::uint32_t cache_capacity, float* output,
     const float* gate, float* gated_output,
     std::uint32_t query_heads, std::uint32_t kv_heads,
-    std::uint32_t head_dim, float scale, hipStream_t stream) {
+    std::uint32_t head_dim, float scale, hipStream_t stream,
+    Q8_1Block* gated_output_q8) {
     if (q == nullptr || key_cache == nullptr || value_cache == nullptr
         || cache_length == 0 || query_heads == 0 || kv_heads == 0
-        || head_dim == 0 || head_dim > 256 || (output == nullptr && gated_output == nullptr)
+        || head_dim == 0 || head_dim > 256 || (output == nullptr && gated_output == nullptr && gated_output_q8 == nullptr)
         || query_heads % kv_heads != 0 || !std::isfinite(scale)) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
@@ -2934,7 +3061,8 @@ void launch_qwen35_tiled_online_attention(
                        query_heads, kv_heads, head_dim, scale, splits);
     hipLaunchKernelGGL(qwen3_splitk_stage2_kernel,
                        dim3(query_heads), dim3(head_dim), 0, stream,
-                       output, gate, gated_output, query_heads, head_dim, splits);
+                       output, gate, gated_output, query_heads, head_dim, splits,
+                       gated_output_q8);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

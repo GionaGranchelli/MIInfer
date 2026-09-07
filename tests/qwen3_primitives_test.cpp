@@ -150,6 +150,72 @@ bool gpu_tests() {
     passed = close_enough(norm_output[0], 0.5F) && close_enough(norm_output[127], 0.5F) && passed;
     std::cout << "rms_norm gpu=" << (passed ? "PASS" : "FAIL")
               << " values=" << norm_output[0] << ',' << norm_output[127] << '\n';
+    // Test fused add rms norm with in-register Q8_1 quantization (5120 elements)
+    constexpr int kFfnNormDim = 5120;
+    constexpr int kFfnNormBlocks = kFfnNormDim / 32;
+    std::vector<float> fused_res_in(kFfnNormDim, 1.5F);
+    std::vector<float> fused_proj(kFfnNormDim, 0.5F);
+    std::vector<float> fused_weights(kFfnNormDim, 0.8F);
+    for (int i = 0; i < kFfnNormDim; ++i) {
+        fused_res_in[i] = 1.0F + static_cast<float>(i % 17) * 0.1F;
+        fused_proj[i] = -0.5F + static_cast<float>(i % 13) * 0.2F;
+        fused_weights[i] = 0.5F + static_cast<float>(i % 7) * 0.1F;
+    }
+    auto* d_fused_res_in = device_copy(fused_res_in);
+    auto* d_fused_proj = device_copy(fused_proj);
+    auto* d_fused_weights = device_copy(fused_weights);
+    float* d_fused_res_out = nullptr;
+    float* d_fused_norm_ref = nullptr;
+    float* d_fused_norm_test = nullptr;
+    miinfer::Q8_1Block* d_fused_q8_ref = nullptr;
+    miinfer::Q8_1Block* d_fused_q8_test = nullptr;
+    MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&d_fused_res_out), kFfnNormDim * sizeof(float)));
+    MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&d_fused_norm_ref), kFfnNormDim * sizeof(float)));
+    MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&d_fused_norm_test), kFfnNormDim * sizeof(float)));
+    MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&d_fused_q8_ref), kFfnNormBlocks * sizeof(miinfer::Q8_1Block)));
+    MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&d_fused_q8_test), kFfnNormBlocks * sizeof(miinfer::Q8_1Block)));
+
+    // Reference: separate fused_add_rms_norm + launch_q8_1_quantize_f32
+    miinfer::launch_qwen3_fused_add_rms_norm(
+        d_fused_res_in, d_fused_proj, d_fused_weights,
+        d_fused_res_out, d_fused_norm_ref, kFfnNormDim, 1.0e-6F);
+    miinfer::launch_q8_1_quantize_f32(d_fused_norm_ref, d_fused_q8_ref, kFfnNormDim);
+
+    // Candidate: fused_add_rms_norm with in-register q8_out
+    miinfer::launch_qwen3_fused_add_rms_norm(
+        d_fused_res_in, d_fused_proj, d_fused_weights,
+        d_fused_res_out, d_fused_norm_test, kFfnNormDim, 1.0e-6F, nullptr, d_fused_q8_test);
+    MIINFER_HIP_CHECK(hipDeviceSynchronize());
+
+    std::vector<miinfer::Q8_1Block> h_q8_ref(kFfnNormBlocks), h_q8_test(kFfnNormBlocks);
+    MIINFER_HIP_CHECK(hipMemcpy(h_q8_ref.data(), d_fused_q8_ref, sizeof(miinfer::Q8_1Block) * kFfnNormBlocks, hipMemcpyDeviceToHost));
+    MIINFER_HIP_CHECK(hipMemcpy(h_q8_test.data(), d_fused_q8_test, sizeof(miinfer::Q8_1Block) * kFfnNormBlocks, hipMemcpyDeviceToHost));
+
+    bool fused_q8_exact = true;
+    for (int b = 0; b < kFfnNormBlocks; ++b) {
+        if (__half2float(h_q8_ref[b].d) != __half2float(h_q8_test[b].d) ||
+            __half2float(h_q8_ref[b].s) != __half2float(h_q8_test[b].s)) {
+            fused_q8_exact = false;
+            break;
+        }
+        for (int j = 0; j < 32; ++j) {
+            if (h_q8_ref[b].qs[j] != h_q8_test[b].qs[j]) {
+                fused_q8_exact = false;
+                break;
+            }
+        }
+    }
+    passed = fused_q8_exact && passed;
+    std::cout << "fused_add_rms_norm_q8 gpu=" << (fused_q8_exact ? "PASS" : "FAIL") << '\n';
+
+    MIINFER_HIP_CHECK(hipFree(d_fused_q8_test));
+    MIINFER_HIP_CHECK(hipFree(d_fused_q8_ref));
+    MIINFER_HIP_CHECK(hipFree(d_fused_norm_test));
+    MIINFER_HIP_CHECK(hipFree(d_fused_norm_ref));
+    MIINFER_HIP_CHECK(hipFree(d_fused_res_out));
+    MIINFER_HIP_CHECK(hipFree(d_fused_weights));
+    MIINFER_HIP_CHECK(hipFree(d_fused_proj));
+    MIINFER_HIP_CHECK(hipFree(d_fused_res_in));
 
     const std::vector<float> argmax_input{1.0F, 5.0F, 5.0F, -2.0F, 4.0F};
     auto* device_argmax_input = device_copy(argmax_input);

@@ -56,6 +56,8 @@ struct Q5KDeviceBlock {
 
 static_assert(sizeof(Q5KDeviceBlock) == 176);
 
+struct Q8_1Block;
+
 void launch_qwen3_q4_embedding(
     const std::byte* weights,
     std::uint32_t token,
@@ -92,7 +94,8 @@ void launch_qwen3_fused_add_rms_norm(
     float* normalized_out,
     std::uint32_t elements,
     float epsilon,
-    hipStream_t stream = nullptr);
+    hipStream_t stream = nullptr,
+    Q8_1Block* q8_out = nullptr);
 
 void launch_qwen3_rms_normalize(
     const float* input,
@@ -264,7 +267,8 @@ void launch_qwen35_deltanet_fused_recurrent_core(
     std::uint32_t value_heads,
     std::uint32_t state_size,
     float epsilon,
-    hipStream_t stream = nullptr);
+    hipStream_t stream = nullptr,
+    Q8_1Block* gated_output_q8 = nullptr);
 
 // Apply the four-tap recurrent convolution, SiLU, and Q/K/V split while
 // updating a persistent circular history of raw QKV vectors.
@@ -385,7 +389,8 @@ void launch_qwen35_tiled_online_attention(
     std::uint32_t kv_heads,
     std::uint32_t head_dim,
     float scale,
-    hipStream_t stream = nullptr);
+    hipStream_t stream = nullptr,
+    Q8_1Block* gated_output_q8 = nullptr);
 
 // M7-G fused Q-split + RMS norm + scale + RoPE:
 // Combines launch_qwen35_split_q_gate, launch_qwen3_head_rms_normalize,
