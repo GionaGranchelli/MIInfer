@@ -25,10 +25,12 @@ rejects row-LDS and generic B=8 accumulator extensions after production-shaped
 testing; EXP-0212's exact B=8 accumulator GEMV reached only 0.69× the existing
 B=4 pair. EXP-0213 rejected a dequantize-then-hipBLAS FP16 GEMM: the measured
 Q4_K expansion cost was 639.4 ms versus 3.66 ms for the GEMM at B=128.
-EXP-0214's exact native Q4_K split-K GEMM reached 1.64× the same-run B=4
-projection sequence, but it was not sufficient for end-to-end production
-integration. The 100 tok/s gate remains open; the next attempt must measure a
-whole-pipeline decomposition before adding another runtime path.
+EXP-0214's debug result was superseded by a release re-evaluation: the exact
+native Q4_K split-K GEMM reached only 0.64× the B=4 control. EXP-0215 also
+rejected expanding the logical chunk to 128 around B=4 microtiles: P513 was
+40.26 tok/s versus the qualified P512 39.96 tok/s, at approximately 2.6 GiB
+of extra workspace. The 100 tok/s gate remains open; the remaining gap needs a
+different projection mapping or an experimentally proven Amdahl ceiling.
 
 The default path remains token-major and unchanged. Layer-major prefill stays
 opt-in until longer-context and generation correctness are fully qualified.

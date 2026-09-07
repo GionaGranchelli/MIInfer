@@ -22,9 +22,10 @@ the production-shaped row-LDS and generic B=8 accumulator extensions were
 rejected in `experiments/EXP-0211-m11b-row-lds-production-shape.md` and
 `experiments/EXP-0212-m11b-batched8-accumulator-gemv.md`. EXP-0213 rejected
 dequantize-then-hipBLAS FP16 GEMM because conversion dominated the measured
-projection, and EXP-0214 rejected native Q4_K split-K GEMM for production
-integration after its isolated 1.64× result remained insufficient for the
-end-to-end gate. The default token-major path remains unchanged.
+projection. EXP-0214's release re-evaluation measured native Q4_K split-K at
+0.64× the B=4 control, and EXP-0215 rejected a larger logical chunk around B=4
+microtiles as neutral at roughly 2.6 GiB extra workspace. The default
+token-major path remains unchanged.
 
 The project currently has:
 

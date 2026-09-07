@@ -48,3 +48,18 @@ mechanism result, but this decomposition is not sufficient to close the
 Do not add another runtime path until a whole-pipeline projection plan is
 measured; Q4_K split-K alone is not a sufficient M11-B gate strategy, and Q6_K
 plus attention/recurrent preparation still require independent evidence.
+
+## Re-evaluation — release build
+
+The original isolated result was collected from a debug build and is not a
+qualified performance claim. Repeating the same A/B harness with the
+`mi50-release` target produced:
+
+| Candidate | Time |
+| --- | ---: |
+| 32 existing B=4 launches | 9.48421 ms |
+| Native split-K two-wave GEMM | 14.7235 ms |
+
+The outputs remained exact (`max_abs_error=9.54e-7`), but the split-K mapping
+was only `0.64×` the release B=4 control. The release result supersedes the
+debug performance numbers; the rejection is strengthened.

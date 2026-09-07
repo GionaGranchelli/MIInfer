@@ -150,15 +150,15 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788823548.0674908,
-    "seen": 1788823565.5227098,
+    "mtime": 1788825343.7712674,
+    "seen": 1788825430.0656261,
     "ast_hash": "359f961e8e18e5e0cf12cc1070fb3fad",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788823535.3255422,
-    "seen": 1788823565.5227113,
-    "ast_hash": "e084f0c7626978a030933883d2f5ee28",
+    "mtime": 1788825417.519971,
+    "seen": 1788825430.0656276,
+    "ast_hash": "b202373096c86d437314cfdee043fa9a",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788823535.323542,
-    "seen": 1788823565.52274,
-    "ast_hash": "123f9de204acd74236532359bde1eee8",
+    "mtime": 1788825417.5179708,
+    "seen": 1788825430.0656543,
+    "ast_hash": "c979a3c6ea717eecdd17eb8bcfe7ffca",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -2040,8 +2040,8 @@
     "semantic_hash": ""
   },
   "include/miinfer/kquant_wave_layout.hpp": {
-    "mtime": 1788823548.4284894,
-    "seen": 1788823565.5224705,
+    "mtime": 1788825344.118266,
+    "seen": 1788825430.065397,
     "ast_hash": "8dd28b79700228b35792dd0aa2b07b7b",
     "semantic_hash": ""
   },
@@ -2364,14 +2364,14 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1788822885.1481576,
-    "seen": 1788823565.5226908,
+    "mtime": 1788825344.5012646,
+    "seen": 1788825430.0656085,
     "ast_hash": "7468771a82c7904195f0dba2e8d2fd71",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1788822884.9731584,
-    "seen": 1788823565.5226924,
+    "mtime": 1788825344.3012652,
+    "seen": 1788825430.0656097,
     "ast_hash": "8fb5312fdf24228849b1c391d1d8f49f",
     "semantic_hash": ""
   },
@@ -2544,9 +2544,15 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0214-m11b-native-q4k-split-k-gemm.md": {
-    "mtime": 1788823535.3225422,
-    "seen": 1788823565.5230799,
-    "ast_hash": "addd290b83845584e313493736dcbf6b",
+    "mtime": 1788825417.5169709,
+    "seen": 1788825430.0659993,
+    "ast_hash": "e42ad107bbb839f3d1fe87a83e5f6bb6",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0215-m11b-logical-chunk-b4-rejection.md": {
+    "mtime": 1788825417.5169709,
+    "seen": 1788825430.0660014,
+    "ast_hash": "494c8e7c852c0e6b06eff0bcc13616d3",
     "semantic_hash": ""
   }
 }
