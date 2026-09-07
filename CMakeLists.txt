@@ -189,6 +189,10 @@ target_compile_options(miinfer-m6a16-qwen35-hybrid-block-4-7-audit PRIVATE -Wall
     target_link_libraries(miinfer-m6a21-qwen35-gpu-hybrid-block PRIVATE miinfer_hip)
     target_compile_options(miinfer-m6a21-qwen35-gpu-hybrid-block PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer tools/miinfer_cli.cpp)
+    target_link_libraries(miinfer PRIVATE miinfer_hip miinfer_model)
+    target_compile_options(miinfer PRIVATE -Wall -Wextra -Wpedantic)
+
     add_executable(miinfer-m6a263-qwen35-recurrent-contract tools/m6a263_qwen35_recurrent_contract.cpp)
     target_link_libraries(miinfer-m6a263-qwen35-recurrent-contract PRIVATE miinfer_hip)
     target_compile_options(miinfer-m6a263-qwen35-recurrent-contract PRIVATE -Wall -Wextra -Wpedantic)

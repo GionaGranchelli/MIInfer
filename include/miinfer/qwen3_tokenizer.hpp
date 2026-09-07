@@ -18,6 +18,7 @@ namespace miinfer {
 // producing different token IDs.
 class Qwen3Tokenizer {
 public:
+    static Qwen3Tokenizer load(const GgufFile& file);
     static Qwen3Tokenizer load(const Qwen3Model& model);
 
     [[nodiscard]] std::vector<std::uint32_t> encode(std::string_view text) const;

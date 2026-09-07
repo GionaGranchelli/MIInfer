@@ -144,6 +144,61 @@ std::vector<Q4KWaveTile> pack_q4k_wave_down(const miinfer::GgufTensor& tensor) {
     return pack_q4k_wave_tensor(tensor);
 }
 
+std::vector<Q4KWaveSwigluFusedTile> pack_q4k_wave_swiglu_fused(
+    const miinfer::GgufTensor& gate,
+    const miinfer::GgufTensor& up) {
+    if (gate.dimensions != up.dimensions || gate.type != up.type ||
+        gate.type != miinfer::GgufTensorType::q4_k) {
+        throw std::runtime_error("pack_q4k_wave_swiglu_fused requires matching 2D Q4_K tensors: " + gate.name);
+    }
+    const auto packed_gate = pack_q4k_wave_tensor(gate);
+    const auto packed_up = pack_q4k_wave_tensor(up);
+    if (packed_gate.size() != packed_up.size()) {
+        throw std::runtime_error("pack_q4k_wave_swiglu_fused tile count mismatch: " + gate.name);
+    }
+
+    const std::size_t total_tiles = packed_gate.size();
+    std::vector<Q4KWaveSwigluFusedTile> fused(total_tiles);
+
+    const auto fuse_range = [&](std::size_t start, std::size_t end) {
+        for (std::size_t i = start; i < end; ++i) {
+            auto& dst = fused[i];
+            const auto& g = packed_gate[i];
+            const auto& u = packed_up[i];
+            for (int lane = 0; lane < 64; ++lane) {
+                dst.words_p0[lane] = static_cast<std::uint64_t>(g.words[0][lane]) |
+                                     (static_cast<std::uint64_t>(u.words[0][lane]) << 32);
+                dst.words_p1[lane] = static_cast<std::uint64_t>(g.words[1][lane]) |
+                                     (static_cast<std::uint64_t>(u.words[1][lane]) << 32);
+            }
+            for (int b = 0; b < 4; ++b) {
+                dst.metadata_gate[b] = g.metadata[b];
+                dst.metadata_up[b] = u.metadata[b];
+            }
+            std::memset(dst.padding, 0, sizeof(dst.padding));
+        }
+    };
+
+    const unsigned int hw = std::thread::hardware_concurrency();
+    const unsigned int num_threads = (total_tiles > 1024 && hw > 1) ? std::min(48u, hw) : 1u;
+    if (num_threads == 1) {
+        fuse_range(0, total_tiles);
+    } else {
+        std::vector<std::thread> workers;
+        workers.reserve(num_threads);
+        const std::size_t chunk = (total_tiles + num_threads - 1) / num_threads;
+        for (unsigned int t = 0; t < num_threads; ++t) {
+            const std::size_t start = t * chunk;
+            const std::size_t end = std::min(total_tiles, start + chunk);
+            if (start >= end) break;
+            workers.emplace_back(fuse_range, start, end);
+        }
+        for (auto& w : workers) w.join();
+    }
+
+    return fused;
+}
+
 std::vector<Q5KWaveTile> pack_q5k_wave_tensor(const miinfer::GgufTensor& tensor) {
     if (tensor.type != miinfer::GgufTensorType::q5_k ||
         tensor.dimensions.size() != 2 ||

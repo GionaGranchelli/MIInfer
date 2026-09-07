@@ -226,16 +226,16 @@ std::string decode_piece(std::string_view piece) {
     return result;
 }
 
-const std::vector<GgufScalar>& metadata_array(const Qwen3Model& model, const char* key) {
-    const auto* value = model.file()->metadata(key);
+const std::vector<GgufScalar>& metadata_array(const GgufFile& file, const char* key) {
+    const auto* value = file.metadata(key);
     if (value == nullptr || !std::holds_alternative<std::vector<GgufScalar>>(value->value)) {
         throw std::invalid_argument(std::string("missing or non-array GGUF metadata: ") + key);
     }
     return std::get<std::vector<GgufScalar>>(value->value);
 }
 
-std::uint32_t metadata_uint(const Qwen3Model& model, const char* key) {
-    const auto* value = model.file()->metadata(key);
+std::uint32_t metadata_uint(const GgufFile& file, const char* key) {
+    const auto* value = file.metadata(key);
     if (value == nullptr || !std::holds_alternative<GgufScalar>(value->value)) {
         throw std::invalid_argument(std::string("missing GGUF metadata: ") + key);
     }
@@ -246,8 +246,8 @@ std::uint32_t metadata_uint(const Qwen3Model& model, const char* key) {
     return static_cast<std::uint32_t>(std::get<std::uint64_t>(scalar));
 }
 
-bool metadata_bool(const Qwen3Model& model, const char* key, bool fallback) {
-    const auto* value = model.file()->metadata(key);
+bool metadata_bool(const GgufFile& file, const char* key, bool fallback) {
+    const auto* value = file.metadata(key);
     if (value == nullptr) return fallback;
     if (!std::holds_alternative<GgufScalar>(value->value)) {
         throw std::invalid_argument(std::string("GGUF metadata is not scalar: ") + key);
@@ -261,21 +261,24 @@ bool metadata_bool(const Qwen3Model& model, const char* key, bool fallback) {
 
 }  // namespace
 
-Qwen3Tokenizer Qwen3Tokenizer::load(const Qwen3Model& model) {
-    const auto* model_value = model.file()->metadata("tokenizer.ggml.model");
-    const auto* pre_value = model.file()->metadata("tokenizer.ggml.pre");
+Qwen3Tokenizer Qwen3Tokenizer::load(const GgufFile& file) {
+    const auto* model_value = file.metadata("tokenizer.ggml.model");
+    const auto* pre_value = file.metadata("tokenizer.ggml.pre");
     if (model_value == nullptr || pre_value == nullptr
         || !std::holds_alternative<GgufScalar>(model_value->value)
         || !std::holds_alternative<GgufScalar>(pre_value->value)
         || !std::holds_alternative<std::string>(std::get<GgufScalar>(model_value->value))
-        || !std::holds_alternative<std::string>(std::get<GgufScalar>(pre_value->value))
-        || std::get<std::string>(std::get<GgufScalar>(model_value->value)) != "gpt2"
-        || std::get<std::string>(std::get<GgufScalar>(pre_value->value)) != "qwen2") {
-        throw std::invalid_argument("unsupported tokenizer; expected GGUF gpt2/qwen2");
+        || !std::holds_alternative<std::string>(std::get<GgufScalar>(pre_value->value))) {
+        throw std::invalid_argument("unsupported tokenizer metadata format");
+    }
+    const auto& model_str = std::get<std::string>(std::get<GgufScalar>(model_value->value));
+    const auto& pre_str = std::get<std::string>(std::get<GgufScalar>(pre_value->value));
+    if (model_str != "gpt2" || (pre_str != "qwen2" && pre_str != "qwen35")) {
+        throw std::invalid_argument("unsupported tokenizer; expected GGUF gpt2/qwen2 or gpt2/qwen35");
     }
 
     Qwen3Tokenizer tokenizer;
-    const auto& token_values = metadata_array(model, "tokenizer.ggml.tokens");
+    const auto& token_values = metadata_array(file, "tokenizer.ggml.tokens");
     tokenizer.tokens_.reserve(token_values.size());
     for (std::size_t id = 0; id < token_values.size(); ++id) {
         if (!std::holds_alternative<std::string>(token_values[id])) {
@@ -284,7 +287,7 @@ Qwen3Tokenizer Qwen3Tokenizer::load(const Qwen3Model& model) {
         tokenizer.tokens_.push_back(std::get<std::string>(token_values[id]));
         tokenizer.token_to_id_.emplace(tokenizer.tokens_.back(), static_cast<std::uint32_t>(id));
     }
-    const auto& merge_values = metadata_array(model, "tokenizer.ggml.merges");
+    const auto& merge_values = metadata_array(file, "tokenizer.ggml.merges");
     for (std::size_t rank = 0; rank < merge_values.size(); ++rank) {
         if (!std::holds_alternative<std::string>(merge_values[rank])) {
             throw std::invalid_argument("tokenizer.ggml.merges contains a non-string value");
@@ -296,42 +299,75 @@ Qwen3Tokenizer Qwen3Tokenizer::load(const Qwen3Model& model) {
         const auto right = merge.substr(separator + 1);
         tokenizer.merge_ranks_.emplace(merge_key(left, right), static_cast<std::uint32_t>(rank));
     }
-    tokenizer.bos_id_ = metadata_uint(model, "tokenizer.ggml.bos_token_id");
-    tokenizer.eos_id_ = metadata_uint(model, "tokenizer.ggml.eos_token_id");
-    tokenizer.add_bos_ = metadata_bool(model, "tokenizer.ggml.add_bos_token", false);
-    tokenizer.add_eos_ = metadata_bool(model, "tokenizer.ggml.add_eos_token", false);
+    tokenizer.bos_id_ = metadata_uint(file, "tokenizer.ggml.bos_token_id");
+    tokenizer.eos_id_ = metadata_uint(file, "tokenizer.ggml.eos_token_id");
+    tokenizer.add_bos_ = metadata_bool(file, "tokenizer.ggml.add_bos_token", false);
+    tokenizer.add_eos_ = metadata_bool(file, "tokenizer.ggml.add_eos_token", false);
     return tokenizer;
+}
+
+Qwen3Tokenizer Qwen3Tokenizer::load(const Qwen3Model& model) {
+    return load(*model.file());
 }
 
 std::vector<std::uint32_t> Qwen3Tokenizer::encode(std::string_view text) const {
     std::vector<std::uint32_t> result;
     if (add_bos_) result.push_back(bos_id_);
-    for (const auto& raw_piece : split_qwen2(text)) {
-        std::vector<std::string> symbols;
-        const auto encoded = byte_encode(raw_piece);
-        for (const auto point : codepoints(encoded)) {
-            symbols.emplace_back(encoded.substr(point.begin, point.end - point.begin));
-        }
-        while (symbols.size() > 1) {
-            std::size_t best = symbols.size();
-            std::uint32_t best_rank = 0;
-            for (std::size_t i = 0; i + 1 < symbols.size(); ++i) {
-                const auto it = merge_ranks_.find(merge_key(symbols[i], symbols[i + 1]));
-                if (it != merge_ranks_.end() && (best == symbols.size() || it->second < best_rank)) {
-                    best = i;
-                    best_rank = it->second;
-                }
+
+    const auto encode_plain = [&](std::string_view slice) {
+        if (slice.empty()) return;
+        for (const auto& raw_piece : split_qwen2(slice)) {
+            std::vector<std::string> symbols;
+            const auto encoded = byte_encode(raw_piece);
+            for (const auto point : codepoints(encoded)) {
+                symbols.emplace_back(encoded.substr(point.begin, point.end - point.begin));
             }
-            if (best == symbols.size()) break;
-            symbols[best] += symbols[best + 1];
-            symbols.erase(symbols.begin() + static_cast<std::ptrdiff_t>(best + 1));
+            while (symbols.size() > 1) {
+                std::size_t best = symbols.size();
+                std::uint32_t best_rank = 0;
+                for (std::size_t i = 0; i + 1 < symbols.size(); ++i) {
+                    const auto it = merge_ranks_.find(merge_key(symbols[i], symbols[i + 1]));
+                    if (it != merge_ranks_.end() && (best == symbols.size() || it->second < best_rank)) {
+                        best = i;
+                        best_rank = it->second;
+                    }
+                }
+                if (best == symbols.size()) break;
+                symbols[best] += symbols[best + 1];
+                symbols.erase(symbols.begin() + static_cast<std::ptrdiff_t>(best + 1));
+            }
+            for (const auto& symbol : symbols) {
+                const auto it = token_to_id_.find(symbol);
+                if (it == token_to_id_.end()) throw std::runtime_error("Qwen2 BPE produced an unknown token");
+                result.push_back(it->second);
+            }
         }
-        for (const auto& symbol : symbols) {
-            const auto it = token_to_id_.find(symbol);
-            if (it == token_to_id_.end()) throw std::runtime_error("Qwen2 BPE produced an unknown token");
+    };
+
+    std::size_t pos = 0;
+    while (pos < text.size()) {
+        const auto special_start = text.find("<|", pos);
+        if (special_start == std::string_view::npos) {
+            encode_plain(text.substr(pos));
+            break;
+        }
+        const auto special_end = text.find("|>", special_start + 2);
+        if (special_end == std::string_view::npos) {
+            encode_plain(text.substr(pos));
+            break;
+        }
+        const auto candidate = text.substr(special_start, special_end + 2 - special_start);
+        const auto it = token_to_id_.find(std::string(candidate));
+        if (it != token_to_id_.end()) {
+            encode_plain(text.substr(pos, special_start - pos));
             result.push_back(it->second);
+            pos = special_end + 2;
+        } else {
+            encode_plain(text.substr(pos, special_start + 2 - pos));
+            pos = special_start + 2;
         }
     }
+
     if (add_eos_) result.push_back(eos_id_);
     return result;
 }

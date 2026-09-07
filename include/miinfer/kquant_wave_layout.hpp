@@ -14,6 +14,16 @@ struct alignas(128) Q4KWaveTile {
 };
 static_assert(sizeof(Q4KWaveTile) == 640);
 
+// Gfx906-native paired SwiGLU layout: paired Gate and Up tiles with dwordx2 coalescing.
+struct alignas(128) Q4KWaveSwigluFusedTile {
+    std::uint64_t words_p0[64];             // 512 bytes: paired {gate_word, up_word} for plane 0
+    std::uint64_t words_p1[64];             // 512 bytes: paired {gate_word, up_word} for plane 1
+    Q4KWaveTile::Metadata metadata_gate[4]; // 80 bytes
+    Q4KWaveTile::Metadata metadata_up[4];   // 80 bytes
+    std::uint8_t padding[96];               // 96 bytes -> total = 1280 bytes
+};
+static_assert(sizeof(Q4KWaveSwigluFusedTile) == 1280);
+
 // Gfx906-native Q5_K layout: four K blocks per tile (1024 weights), two low planes + high-bit plane.
 struct alignas(128) Q5KWaveTile {
     std::uint32_t words[2][64];  // 512 bytes: low 4-bit planes (plane 0: v0, plane 1: v1)
@@ -44,6 +54,9 @@ std::vector<Q4KWaveTile> pack_q4k_wave_tensor(const miinfer::GgufTensor& tensor)
 std::vector<Q4KWaveTile> pack_q4k_wave_down(const miinfer::GgufTensor& tensor);
 std::vector<Q5KWaveTile> pack_q5k_wave_tensor(const miinfer::GgufTensor& tensor);
 std::vector<Q6KWaveTile> pack_q6k_wave_tensor(const miinfer::GgufTensor& tensor);
+std::vector<Q4KWaveSwigluFusedTile> pack_q4k_wave_swiglu_fused(
+    const miinfer::GgufTensor& gate,
+    const miinfer::GgufTensor& up);
 
 // Host reference dequantizers (each outputs 1024 floats)
 void q4k_wave_tile_dequantize(const Q4KWaveTile& tile, float* output);
@@ -72,6 +85,13 @@ void launch_q4k_wave_gemv(const Q4KWaveTile* w, const miinfer::Q8_1Block* x, flo
 void launch_q4k_wave_fused_gate_up_swiglu(
     const Q4KWaveTile* w_gate,
     const Q4KWaveTile* w_up,
+    const miinfer::Q8_1Block* x,
+    float* y_activation,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    hipStream_t stream = nullptr);
+void launch_q4k_wave_fused_gate_up_swiglu_paired(
+    const Q4KWaveSwigluFusedTile* w_fused,
     const miinfer::Q8_1Block* x,
     float* y_activation,
     std::uint32_t rows,
