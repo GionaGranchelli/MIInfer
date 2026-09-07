@@ -21,6 +21,13 @@ __device__ __forceinline__ float half_to_float(__half value) {
     return __half2float(value);
 }
 
+__device__ __forceinline__ float qwen3_wave_sum(float value) {
+    for (std::uint32_t offset = 32; offset > 0; offset >>= 1) {
+        value += __shfl_down(value, offset, 64);
+    }
+    return value;
+}
+
 __device__ __forceinline__ float q4_value(const std::byte* block, int index) {
     const auto* bytes = reinterpret_cast<const std::uint8_t*>(block);
     const float scale = half_to_float(*reinterpret_cast<const __half*>(bytes));
@@ -156,6 +163,149 @@ __global__ void qwen3_rms_norm_kernel(
     }
 }
 
+__global__ void qwen3_rms_norm_vec4_kernel(
+    const float* __restrict__ input,
+    const float* __restrict__ weights,
+    float* __restrict__ output,
+    std::uint32_t elements,
+    float epsilon) {
+
+    __shared__ float s_wave_sums[4];
+    const std::uint32_t tid = threadIdx.x;
+    const std::uint32_t wave_id = tid / 64;
+    const std::uint32_t lane_id = tid % 64;
+
+    const float4* in_vec = reinterpret_cast<const float4*>(input);
+    const float4* w_vec = reinterpret_cast<const float4*>(weights);
+    float4* out_vec = reinterpret_cast<float4*>(output);
+
+    float4 in_val[5];
+    float sum = 0.0f;
+
+    #pragma unroll
+    for (int i = 0; i < 5; ++i) {
+        const std::uint32_t idx = i * 256 + tid;
+        in_val[i] = in_vec[idx];
+        sum += in_val[i].x * in_val[i].x;
+        sum += in_val[i].y * in_val[i].y;
+        sum += in_val[i].z * in_val[i].z;
+        sum += in_val[i].w * in_val[i].w;
+    }
+
+    const float wave_sum_val = qwen3_wave_sum(sum);
+    if (lane_id == 0) {
+        s_wave_sums[wave_id] = wave_sum_val;
+    }
+    __syncthreads();
+
+    const float total_sum = s_wave_sums[0] + s_wave_sums[1] + s_wave_sums[2] + s_wave_sums[3];
+    const float inv_rms = rsqrtf(total_sum / static_cast<float>(elements) + epsilon);
+
+    #pragma unroll
+    for (int i = 0; i < 5; ++i) {
+        const std::uint32_t idx = i * 256 + tid;
+        const float4 w = w_vec[idx];
+        float4 out;
+        out.x = in_val[i].x * inv_rms * w.x;
+        out.y = in_val[i].y * inv_rms * w.y;
+        out.z = in_val[i].z * inv_rms * w.z;
+        out.w = in_val[i].w * inv_rms * w.w;
+        out_vec[idx] = out;
+    }
+}
+
+__global__ void qwen3_fused_add_rms_norm_vec4_kernel(
+    const float* __restrict__ residual_in,
+    const float* __restrict__ projection,
+    const float* __restrict__ weights,
+    float* __restrict__ residual_out,
+    float* __restrict__ normalized_out,
+    std::uint32_t elements,
+    float epsilon) {
+
+    __shared__ float s_wave_sums[4];
+    const std::uint32_t tid = threadIdx.x;
+    const std::uint32_t wave_id = tid / 64;
+    const std::uint32_t lane_id = tid % 64;
+
+    const float4* in_vec = reinterpret_cast<const float4*>(residual_in);
+    const float4* proj_vec = reinterpret_cast<const float4*>(projection);
+    const float4* w_vec = reinterpret_cast<const float4*>(weights);
+    float4* res_out_vec = reinterpret_cast<float4*>(residual_out);
+    float4* norm_out_vec = reinterpret_cast<float4*>(normalized_out);
+
+    float4 res[5];
+    float sum = 0.0f;
+
+    #pragma unroll
+    for (int i = 0; i < 5; ++i) {
+        const std::uint32_t idx = i * 256 + tid;
+        const float4 a = in_vec[idx];
+        const float4 b = proj_vec[idx];
+        res[i].x = a.x + b.x;
+        res[i].y = a.y + b.y;
+        res[i].z = a.z + b.z;
+        res[i].w = a.w + b.w;
+        res_out_vec[idx] = res[i];
+
+        sum += res[i].x * res[i].x;
+        sum += res[i].y * res[i].y;
+        sum += res[i].z * res[i].z;
+        sum += res[i].w * res[i].w;
+    }
+
+    const float wave_sum_val = qwen3_wave_sum(sum);
+    if (lane_id == 0) {
+        s_wave_sums[wave_id] = wave_sum_val;
+    }
+    __syncthreads();
+
+    const float total_sum = s_wave_sums[0] + s_wave_sums[1] + s_wave_sums[2] + s_wave_sums[3];
+    const float inv_rms = rsqrtf(total_sum / static_cast<float>(elements) + epsilon);
+
+    #pragma unroll
+    for (int i = 0; i < 5; ++i) {
+        const std::uint32_t idx = i * 256 + tid;
+        const float4 w = w_vec[idx];
+        float4 out;
+        out.x = res[i].x * inv_rms * w.x;
+        out.y = res[i].y * inv_rms * w.y;
+        out.z = res[i].z * inv_rms * w.z;
+        out.w = res[i].w * inv_rms * w.w;
+        norm_out_vec[idx] = out;
+    }
+}
+
+__global__ void qwen3_fused_add_rms_norm_kernel(
+    const float* __restrict__ residual_in,
+    const float* __restrict__ projection,
+    const float* __restrict__ weights,
+    float* __restrict__ residual_out,
+    float* __restrict__ normalized_out,
+    std::uint32_t elements,
+    float epsilon) {
+
+    __shared__ float partials[256];
+    float sum = 0.0F;
+    for (std::uint32_t index = threadIdx.x; index < elements; index += blockDim.x) {
+        const float val = residual_in[index] + projection[index];
+        residual_out[index] = val;
+        sum += val * val;
+    }
+    partials[threadIdx.x] = sum;
+    __syncthreads();
+
+    for (std::uint32_t stride = blockDim.x / 2; stride > 0; stride /= 2) {
+        if (threadIdx.x < stride) partials[threadIdx.x] += partials[threadIdx.x + stride];
+        __syncthreads();
+    }
+
+    const float inverse_rms = rsqrtf(partials[0] / static_cast<float>(elements) + epsilon);
+    for (std::uint32_t index = threadIdx.x; index < elements; index += blockDim.x) {
+        normalized_out[index] = residual_out[index] * inverse_rms * weights[index];
+    }
+}
+
 __global__ void qwen3_rms_normalize_kernel(
     const float* input, float* output, std::uint32_t elements, float epsilon) {
     __shared__ float partials[256];
@@ -224,6 +374,157 @@ __global__ void qwen35_split_q_gate_kernel(
     const std::uint32_t source = head * (2 * head_dim) + local;
     query[index] = input[source];
     gate[index] = input[source + head_dim];
+}
+
+__device__ __forceinline__ void compute_qwen35_rope_pair(
+    float x0, float x1, std::uint32_t local, std::uint32_t position, float theta,
+    float& out0, float& out1) {
+    if (local >= 32) {
+        out0 = x0;
+        out1 = x1;
+        return;
+    }
+    float theta_t = static_cast<float>(position);
+    float theta_h = static_cast<float>(position);
+    float theta_w = static_cast<float>(position);
+    constexpr float theta_e = 0.0F;
+    constexpr int sections[] = {11, 11, 10, 0};
+    constexpr int section_count = 32;
+    const float theta_scale = powf(theta, -2.0F / 64.0F);
+    for (std::uint32_t pair = 0; pair < local; ++pair) {
+        const int sector = static_cast<int>(pair % section_count);
+        float angle = theta_t;
+        if (sector % 3 == 1 && sector < 3 * sections[1]) angle = theta_h;
+        else if (sector % 3 == 2 && sector < 3 * sections[2]) angle = theta_w;
+        else if (sector % 3 == 0 && sector < 3 * sections[0]) angle = theta_t;
+        else angle = theta_e;
+        (void) angle;
+        theta_t *= theta_scale;
+        theta_h *= theta_scale;
+        theta_w *= theta_scale;
+    }
+    const int sector = static_cast<int>(local % section_count);
+    float angle = theta_t;
+    if (sector % 3 == 1 && sector < 3 * sections[1]) angle = theta_h;
+    else if (sector % 3 == 2 && sector < 3 * sections[2]) angle = theta_w;
+    else if (sector % 3 == 0 && sector < 3 * sections[0]) angle = theta_t;
+    else angle = theta_e;
+    const float cosine = cosf(angle);
+    const float sine = sinf(angle);
+    out0 = x0 * cosine - x1 * sine;
+    out1 = x0 * sine + x1 * cosine;
+}
+
+__global__ void qwen35_fused_q_split_norm_rope_kernel(
+    const float* __restrict__ qfull,
+    const float* __restrict__ q_norm_weight,
+    float* __restrict__ query_rope,
+    float* __restrict__ gate,
+    std::uint32_t heads,
+    std::uint32_t head_dim,
+    std::uint32_t position,
+    float theta,
+    float epsilon) {
+
+    const std::uint32_t head = blockIdx.x;
+    const std::uint32_t tid = threadIdx.x;
+    if (head >= heads || tid >= head_dim) return;
+
+    __shared__ float s_partials[256];
+    __shared__ float s_rot[64];
+
+    const std::uint32_t src_base = head * (head_dim * 2);
+    const float q_val = qfull[src_base + tid];
+    const float g_val = qfull[src_base + head_dim + tid];
+    gate[head * head_dim + tid] = g_val;
+
+    s_partials[tid] = q_val * q_val;
+    __syncthreads();
+
+    for (std::uint32_t stride = blockDim.x / 2; stride > 0; stride /= 2) {
+        if (tid < stride) s_partials[tid] += s_partials[tid + stride];
+        __syncthreads();
+    }
+
+    const float inv_rms = rsqrtf(s_partials[0] / static_cast<float>(head_dim) + epsilon);
+    const float norm_val = q_val * inv_rms * q_norm_weight[tid];
+
+    if (tid < 64) {
+        s_rot[tid] = norm_val;
+    }
+    __syncthreads();
+
+    float final_val = norm_val;
+    if (tid < 32) {
+        float out0, out1;
+        compute_qwen35_rope_pair(s_rot[tid], s_rot[tid + 32], tid, position, theta, out0, out1);
+        final_val = out0;
+        s_rot[tid + 32] = out1;
+    }
+    __syncthreads();
+
+    if (tid >= 32 && tid < 64) {
+        final_val = s_rot[tid];
+    }
+
+    query_rope[head * head_dim + tid] = final_val;
+}
+
+__global__ void qwen35_fused_k_norm_rope_kv_store_kernel(
+    const float* __restrict__ key,
+    const float* __restrict__ value,
+    const float* __restrict__ k_norm_weight,
+    float* __restrict__ key_cache,
+    float* __restrict__ value_cache,
+    std::uint32_t heads,
+    std::uint32_t head_dim,
+    std::uint32_t position,
+    std::uint32_t cache_capacity,
+    float theta,
+    float epsilon) {
+
+    const std::uint32_t head = blockIdx.x;
+    const std::uint32_t tid = threadIdx.x;
+    if (head >= heads || tid >= head_dim) return;
+
+    __shared__ float s_partials[256];
+    __shared__ float s_rot[64];
+
+    const std::uint32_t base = head * head_dim;
+    const float k_val = key[base + tid];
+    s_partials[tid] = k_val * k_val;
+    __syncthreads();
+
+    for (std::uint32_t stride = blockDim.x / 2; stride > 0; stride /= 2) {
+        if (tid < stride) s_partials[tid] += s_partials[tid + stride];
+        __syncthreads();
+    }
+
+    const float inv_rms = rsqrtf(s_partials[0] / static_cast<float>(head_dim) + epsilon);
+    const float norm_val = k_val * inv_rms * k_norm_weight[tid];
+
+    if (tid < 64) {
+        s_rot[tid] = norm_val;
+    }
+    __syncthreads();
+
+    float final_k = norm_val;
+    if (tid < 32) {
+        float out0, out1;
+        compute_qwen35_rope_pair(s_rot[tid], s_rot[tid + 32], tid, position, theta, out0, out1);
+        final_k = out0;
+        s_rot[tid + 32] = out1;
+    }
+    __syncthreads();
+
+    if (tid >= 32 && tid < 64) {
+        final_k = s_rot[tid];
+    }
+
+    const std::size_t cache_base =
+        (static_cast<std::size_t>(head) * cache_capacity + position) * head_dim;
+    key_cache[cache_base + tid] = final_k;
+    value_cache[cache_base + tid] = value[base + tid];
 }
 
 __global__ void qwen35_rope_sections_kernel(
@@ -883,13 +1184,6 @@ __global__ void qwen3_cached_attention_parallel_kernel(
     for (std::uint32_t position = lane; position < cache_length; position += blockDim.x) {
         probabilities[score_base + position] /= denominator;
     }
-}
-
-__device__ __forceinline__ float qwen3_wave_sum(float value) {
-    for (std::uint32_t offset = 32; offset > 0; offset >>= 1) {
-        value += __shfl_down(value, offset, 64);
-    }
-    return value;
 }
 
 // C12b diagnostic candidate. Four Wave64s partition the history dimension;
@@ -2165,8 +2459,43 @@ void launch_qwen3_rms_norm(
         || elements > 256U * 1024U || epsilon <= 0.0F) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
-    hipLaunchKernelGGL(qwen3_rms_norm_kernel, dim3(1), dim3(256), 0, stream,
-                       input, weights, output, elements, epsilon);
+    if (elements == 5120 && (reinterpret_cast<std::uintptr_t>(input) % 16 == 0)
+        && (reinterpret_cast<std::uintptr_t>(weights) % 16 == 0)
+        && (reinterpret_cast<std::uintptr_t>(output) % 16 == 0)) {
+        hipLaunchKernelGGL(qwen3_rms_norm_vec4_kernel, dim3(1), dim3(256), 0, stream,
+                           input, weights, output, elements, epsilon);
+    } else {
+        hipLaunchKernelGGL(qwen3_rms_norm_kernel, dim3(1), dim3(256), 0, stream,
+                           input, weights, output, elements, epsilon);
+    }
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen3_fused_add_rms_norm(
+    const float* residual_in,
+    const float* projection,
+    const float* weights,
+    float* residual_out,
+    float* normalized_out,
+    std::uint32_t elements,
+    float epsilon,
+    hipStream_t stream) {
+    if (residual_in == nullptr || projection == nullptr || weights == nullptr
+        || residual_out == nullptr || normalized_out == nullptr || elements == 0
+        || elements > 256U * 1024U || epsilon <= 0.0F) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    if (elements == 5120 && (reinterpret_cast<std::uintptr_t>(residual_in) % 16 == 0)
+        && (reinterpret_cast<std::uintptr_t>(projection) % 16 == 0)
+        && (reinterpret_cast<std::uintptr_t>(weights) % 16 == 0)
+        && (reinterpret_cast<std::uintptr_t>(residual_out) % 16 == 0)
+        && (reinterpret_cast<std::uintptr_t>(normalized_out) % 16 == 0)) {
+        hipLaunchKernelGGL(qwen3_fused_add_rms_norm_vec4_kernel, dim3(1), dim3(256), 0, stream,
+                           residual_in, projection, weights, residual_out, normalized_out, elements, epsilon);
+    } else {
+        hipLaunchKernelGGL(qwen3_fused_add_rms_norm_kernel, dim3(1), dim3(256), 0, stream,
+                           residual_in, projection, weights, residual_out, normalized_out, elements, epsilon);
+    }
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
@@ -2239,6 +2568,54 @@ void launch_qwen35_rope_sections(
     hipLaunchKernelGGL(qwen35_rope_sections_kernel,
                        dim3((heads * head_dim + 255) / 256), dim3(256), 0, stream,
                        input, output, heads, head_dim, position, theta);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_fused_q_split_norm_rope(
+    const float* qfull,
+    const float* q_norm_weight,
+    float* query_rope,
+    float* gate,
+    std::uint32_t heads,
+    std::uint32_t head_dim,
+    std::uint32_t position,
+    float theta,
+    float epsilon,
+    hipStream_t stream) {
+    if (qfull == nullptr || q_norm_weight == nullptr || query_rope == nullptr || gate == nullptr
+        || heads == 0 || head_dim == 0 || head_dim > 256 || theta <= 0.0F || epsilon <= 0.0F) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen35_fused_q_split_norm_rope_kernel,
+                       dim3(heads), dim3(head_dim), 0, stream,
+                       qfull, q_norm_weight, query_rope, gate,
+                       heads, head_dim, position, theta, epsilon);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_fused_k_norm_rope_kv_store(
+    const float* key,
+    const float* value,
+    const float* k_norm_weight,
+    float* key_cache,
+    float* value_cache,
+    std::uint32_t heads,
+    std::uint32_t head_dim,
+    std::uint32_t position,
+    std::uint32_t cache_capacity,
+    float theta,
+    float epsilon,
+    hipStream_t stream) {
+    if (key == nullptr || value == nullptr || k_norm_weight == nullptr
+        || key_cache == nullptr || value_cache == nullptr
+        || heads == 0 || head_dim == 0 || head_dim > 256 || cache_capacity == 0
+        || position >= cache_capacity || theta <= 0.0F || epsilon <= 0.0F) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen35_fused_k_norm_rope_kv_store_kernel,
+                       dim3(heads), dim3(head_dim), 0, stream,
+                       key, value, k_norm_weight, key_cache, value_cache,
+                       heads, head_dim, position, cache_capacity, theta, epsilon);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

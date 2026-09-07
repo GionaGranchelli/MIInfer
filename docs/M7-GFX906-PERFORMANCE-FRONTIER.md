@@ -4,8 +4,8 @@
 **Target Hardware:** AMD Instinct MI50 32GB (gfx906 / Vega20, 60 CUs, Wave64)  
 **Qualified Operating Point:** MANUAL DPM Level 7 (1606 MHz SCLK), Level 2 (1000 MHz MCLK), 225.0W Cap  
 **Telemetry:** 2,238 continuous 250ms samples (99.2% 1606 MHz residency, 100% 1000 MHz MCLK residency, Max Junction 69.0 °C)  
-**Date:** September 6, 2026  
-**Status:** Subphase M7-A Complete (Competitive Frontier Established). Milestone M7 Overall OPEN / IN FLIGHT.
+**Date:** September 6-7, 2026  
+**Status:** Milestone M7 Primary Success Gate PASSED (MIInfer TG64 = 27.88 tok/s vs 27.24 tok/s gate, +8.31% over mx-llama.cpp frontier). Stretch Goal in flight.
 
 ---
 
@@ -276,29 +276,46 @@ graph TD
 
 ## 6. Socratic Subsystem Scorecard
 
-For each subsequent phase, MIInfer will not merely verify whether end-to-end throughput increased, but whether the specific architectural differential was eliminated while preserving MIInfer's faster inner components:
+For each phase, MIInfer did not merely verify whether end-to-end throughput increased, but whether the specific architectural differential was eliminated while preserving MIInfer's faster inner components:
 
-| Subsystem Component | MIInfer EXP-0179 | `mx-llama.cpp` (repack) | Target MIInfer State | Status |
+| Subsystem Component | MIInfer EXP-0179 | `mx-llama.cpp` (repack) | Final MIInfer State (EXP-0187) | Status |
 |---|---|---|---|---|
-| **Raw GEMV Core Math** | **Better (Wave64 DPP)** | Baseline | **Retain superior Wave64 math** | Proven in EXP-0179 |
-| **Host Dispatch** | Worse (1,333 launches) | **Better (hipGraphLaunch)** | Eliminate launch gap (M7-B) | In Flight |
-| **FFN Gate/Up/SiLU** | Worse (3 kernels / layer) | **Better (Dual-acc GLU)** | Eliminate VRAM round-trips (M7-C) | Planned |
-| **DeltaNet SSM Core** | Worse (4 kernels / layer) | **Better (LDS-fused)** | Fuse recurrence into LDS (M7-D) | Planned |
-| **LM-Head / Argmax** | Worse (VRAM logit write) | **Better (Fused reduction)**| In-register argmax (M7-E) | Planned |
-| **Attention Scaling** | Worse (-7.0% at TG256) | **Better (Tiled FlashAttn)**| Tiled online softmax (M7-F) | Planned |
+| **Raw GEMV Core Math** | **Better (Wave64 DPP)** | Baseline | **Retained superior Wave64 math** | ✅ Verified in EXP-0179–0187 |
+| **Host Dispatch** | Worse (1,333 launches) | **Better (hipGraphLaunch)** | Eliminated launch overhead via static graphs | ✅ M7-B (EXP-0181) |
+| **FFN Gate/Up/SiLU** | Worse (3 kernels / layer) | **Better (Dual-acc GLU)** | Eliminated VRAM roundtrips (fused SwiGLU) | ✅ M7-C (EXP-0182) |
+| **DeltaNet SSM Core** | Worse (4 kernels / layer) | **Better (LDS-fused)** | Fused recurrence into LDS + Wave64 DPP | ✅ M7-D (EXP-0183) |
+| **LM-Head / Argmax** | Worse (VRAM logit write) | **Better (Fused reduction)**| 2-Stage parallel argmax (7.8 µs) | ✅ M7-E (EXP-0184) |
+| **Attention Scaling** | Worse (-7.0% at TG256) | **Better (Tiled FlashAttn)**| Tiled online Split-K softmax | ✅ M7-F (EXP-0185) |
+| **RoPE / Head Norm** | Worse (8 kernels / layer) | Baseline | Fused Q/K norm + RoPE + KV store | ✅ M7-G (EXP-0186) |
+| **Residual / RMS Norm**| Worse (12.9 µs / norm) | Baseline | Vectorized float4 Wave64 norm + fused add | ✅ M7-H (EXP-0187) |
 
 ---
 
-## 7. Milestone M7 Campaign Status
+## 7. Final Competitive Frontier Benchmark Summary
+
+| Candidate | Configuration | TG64 tok/s | TG64 ms/tok | TG128 tok/s | TG128 ms/tok | Delta vs mx Frontier |
+|---|---|---:|---:|---:|---:|---|
+| **Pinned Vanilla** | `llama.cpp` commit `c0bc8591` | 22.16 | 45.13 | 22.54 | 44.36 | -13.9% |
+| **Upstream** | `llama.cpp` commit `73a43d1f` | 22.46 | 44.53 | 22.53 | 44.38 | -12.7% |
+| **`mx-llama.cpp` (no repack)** | Fork `2e9d29fe`, canonical layout | 22.95 | 43.57 | 23.06 | 43.37 | -10.8% |
+| **`mx-llama.cpp` (repack) [FRONTIER]** | Fork `2e9d29fe`, repacked layout | 25.74 | 38.85 | 25.94 | 38.55 | 0.00% (Frontier) |
+| **MIInfer Baseline (EXP-0179)** | Commit `aeaf1a2` | 23.33 | 42.86 | 22.72 | 44.00 | -9.36% |
+| **MIInfer Final (EXP-0187)** | Fused trunk + static graph | **27.88** | **35.87** | **27.73** | **36.06** | **+8.31% (TG64) / +6.91% (TG128)** |
+
+---
+
+## 8. Milestone M7 Campaign Status
 
 ```text
 M7-A  Competitive Frontier Characterization    ✅ COMPLETE (mx = 25.94 tok/s max)
-M7-B  Static HIP Graph Capture                 ⏳ IN FLIGHT
-M7-C  Fused Gate+Up SwiGLU Wave64 GEMV         ⏳ PLANNED
-M7-D  Fused DeltaNet Recurrent Core in LDS      ⏳ PLANNED
-M7-E  Fused LM-Head GEMV + Argmax Reduction     ⏳ PLANNED
-M7-F  Tiled Online-Softmax Attention           ⏳ PLANNED
+M7-B  Static HIP Graph Capture                 ✅ COMPLETE (EXP-0181: 23.47 tok/s)
+M7-C  Fused Gate+Up SwiGLU Wave64 GEMV         ✅ COMPLETE (EXP-0182: 23.95 tok/s)
+M7-D  Fused DeltaNet Recurrent Core in LDS      ✅ COMPLETE (EXP-0183: 25.66 tok/s)
+M7-E  Fused LM-Head GEMV + Argmax Reduction     ✅ COMPLETE (EXP-0184: 25.95 tok/s)
+M7-F  Tiled Online-Softmax Attention           ✅ COMPLETE (EXP-0185: 26.60 tok/s)
+M7-G  Fused RoPE + Head Norm in Attention      ✅ COMPLETE (EXP-0186: 26.68 tok/s)
+M7-H  Vectorized RMS Norm & Fused Add          ✅ COMPLETE (EXP-0187: 27.88 tok/s)
 
-M7 Primary Gate:  TG64 >= 27.24 tok/s          ⏳ NOT YET PASSED
-M7 Stretch Gate:  TG64 >= 28.50 tok/s          ⏳ NOT YET PASSED
+M7 Primary Gate:  TG64 >= 27.24 tok/s          ✅ PASSED (27.88 tok/s, peak 27.90 tok/s)
+M7 Stretch Gate:  TG64 >= 28.50 tok/s          ⏳ OPEN (Within 0.62 tok/s)
 ```

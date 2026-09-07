@@ -80,6 +80,20 @@ void launch_qwen3_rms_norm(
     float epsilon,
     hipStream_t stream = nullptr);
 
+// M7-H fused residual addition + RMS normalization:
+// Combines launch_qwen3_add and launch_qwen3_rms_norm into a single launch,
+// writing residual_out = residual_in + projection and computing
+// normalized_out = residual_out * inv_rms(residual_out) * weights.
+void launch_qwen3_fused_add_rms_norm(
+    const float* residual_in,
+    const float* projection,
+    const float* weights,
+    float* residual_out,
+    float* normalized_out,
+    std::uint32_t elements,
+    float epsilon,
+    hipStream_t stream = nullptr);
+
 void launch_qwen3_rms_normalize(
     const float* input,
     float* output,
@@ -371,6 +385,38 @@ void launch_qwen35_tiled_online_attention(
     std::uint32_t kv_heads,
     std::uint32_t head_dim,
     float scale,
+    hipStream_t stream = nullptr);
+
+// M7-G fused Q-split + RMS norm + scale + RoPE:
+// Combines launch_qwen35_split_q_gate, launch_qwen3_head_rms_normalize,
+// launch_qwen3_head_mul, and launch_qwen35_rope_sections into a single launch.
+void launch_qwen35_fused_q_split_norm_rope(
+    const float* qfull,
+    const float* q_norm_weight,
+    float* query_rope,
+    float* gate,
+    std::uint32_t heads,
+    std::uint32_t head_dim,
+    std::uint32_t position,
+    float theta,
+    float epsilon,
+    hipStream_t stream = nullptr);
+
+// M7-G fused K RMS norm + scale + RoPE + KV cache store:
+// Combines launch_qwen3_head_rms_normalize, launch_qwen3_head_mul,
+// launch_qwen35_rope_sections, and launch_qwen3_kv_cache_store into a single launch.
+void launch_qwen35_fused_k_norm_rope_kv_store(
+    const float* key,
+    const float* value,
+    const float* k_norm_weight,
+    float* key_cache,
+    float* value_cache,
+    std::uint32_t heads,
+    std::uint32_t head_dim,
+    std::uint32_t position,
+    std::uint32_t cache_capacity,
+    float theta,
+    float epsilon,
     hipStream_t stream = nullptr);
 
 // Store one token's contiguous K/V vectors in the persistent

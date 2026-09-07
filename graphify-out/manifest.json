@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1788727328.4944377,
-    "seen": 1788729932.39751,
-    "ast_hash": "d3eeacfea21710e2d0eb1098d2b38c41",
+    "mtime": 1788732805.8718462,
+    "seen": 1788735216.7313988,
+    "ast_hash": "ec137fe059de0ae02272d1e3c9a4ee09",
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_primitives.hpp": {
@@ -1332,9 +1332,9 @@
     "semantic_hash": ""
   },
   "tools/m6a21_qwen35_gpu_hybrid_block.cpp": {
-    "mtime": 1788727389.0691864,
-    "seen": 1788729932.3977056,
-    "ast_hash": "14154180f211124c4e457356c9253d90",
+    "mtime": 1788732894.598485,
+    "seen": 1788735216.731576,
+    "ast_hash": "0e140476d5cb9633c5f718d9de580054",
     "semantic_hash": ""
   },
   "experiments/EXP-0065-m6a21-qwen35-gpu-hybrid-block.md": {
@@ -2142,9 +2142,9 @@
     "semantic_hash": ""
   },
   "docs/M7-GFX906-PERFORMANCE-FRONTIER.md": {
-    "mtime": 1788700997.998329,
-    "seen": 1788701014.6184976,
-    "ast_hash": "b8c90f3ac92f7837dce32b9394138fdd",
+    "mtime": 1788735198.3521307,
+    "seen": 1788735216.7316217,
+    "ast_hash": "70e171b2fb16e940409dbe2a4ab61abf",
     "semantic_hash": ""
   },
   "experiments/EXP-0180-m7-frontier-benchmark.md": {
@@ -2211,6 +2211,30 @@
     "mtime": 1788729923.561707,
     "seen": 1788729932.3980877,
     "ast_hash": "543d6a3e0e92bc22d01bc35de57dba3e",
+    "semantic_hash": ""
+  },
+  "scripts/run-exp0186-fused-rope-norm-ab.sh": {
+    "mtime": 1788730568.1499727,
+    "seen": 1788735216.7314413,
+    "ast_hash": "876369accb24322d1f2309bd46e0fc01",
+    "semantic_hash": ""
+  },
+  "scripts/run-exp0187-fused-add-rms-norm-ab.sh": {
+    "mtime": 1788733059.4267092,
+    "seen": 1788735216.731443,
+    "ast_hash": "e6b6cfed5f2cdd41d7a449a77ebd740c",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0186-fused-rope-norm.md": {
+    "mtime": 1788732706.1232522,
+    "seen": 1788735216.7319431,
+    "ast_hash": "2aeecdd5bcac4dccc1b3dbd8cd15e2bc",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0187-fused-add-rms-norm.md": {
+    "mtime": 1788735181.1992006,
+    "seen": 1788735216.7319448,
+    "ast_hash": "941b6a0b4137838c898e61e7d416c2db",
     "semantic_hash": ""
   }
 }
