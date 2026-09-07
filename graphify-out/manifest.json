@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1788732805.8718462,
-    "seen": 1788735216.7313988,
-    "ast_hash": "ec137fe059de0ae02272d1e3c9a4ee09",
+    "mtime": 1788771526.5074856,
+    "seen": 1788776166.335844,
+    "ast_hash": "7941c37edd24394bde4fc82bf0c244d2",
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_primitives.hpp": {
@@ -540,9 +540,9 @@
     "semantic_hash": ""
   },
   "tests/qwen3_primitives_test.cpp": {
-    "mtime": 1788724602.214936,
-    "seen": 1788727089.4749084,
-    "ast_hash": "56ef7df4db8b8c918fad802048bb56a3",
+    "mtime": 1788771637.1677725,
+    "seen": 1788776166.3359964,
+    "ast_hash": "31234c6c35ffaec52cd5c0c2d51ce43a",
     "semantic_hash": ""
   },
   "tests/qwen3_primitives_host_test.cpp": {
@@ -1332,9 +1332,9 @@
     "semantic_hash": ""
   },
   "tools/m6a21_qwen35_gpu_hybrid_block.cpp": {
-    "mtime": 1788763481.8000197,
-    "seen": 1788764756.280135,
-    "ast_hash": "03ec6417aaf244eead482df8df79ddba",
+    "mtime": 1788776079.6901748,
+    "seen": 1788776166.336019,
+    "ast_hash": "3c376ff9dd0a959f0fcbc732c2df76d0",
     "semantic_hash": ""
   },
   "experiments/EXP-0065-m6a21-qwen35-gpu-hybrid-block.md": {
@@ -2247,6 +2247,78 @@
     "mtime": 1788764702.332128,
     "seen": 1788764756.2804642,
     "ast_hash": "e577ebf6aa1a281e24c032c360fba5f8",
+    "semantic_hash": ""
+  },
+  "scripts/run-exp0189-wave64-q8-ab.sh": {
+    "mtime": 1788768540.5795543,
+    "seen": 1788776166.335893,
+    "ast_hash": "18cd7b4f2511842b2f9c35e6f2d14598",
+    "semantic_hash": ""
+  },
+  "scripts/run-exp0190-fused-core-q8-ab.sh": {
+    "mtime": 1788770089.7548754,
+    "seen": 1788776166.3358946,
+    "ast_hash": "f548f8718a2532f42ab74067d4000acf",
+    "semantic_hash": ""
+  },
+  "scripts/run-exp0191-fused-norm-q8-ab.sh": {
+    "mtime": 1788772135.70556,
+    "seen": 1788776166.3358958,
+    "ast_hash": "9f506689496e691f49f459e076ba884f",
+    "semantic_hash": ""
+  },
+  "scripts/run-exp0192-swiglu-shuffle-ab.sh": {
+    "mtime": 1788773307.5895562,
+    "seen": 1788776166.335897,
+    "ast_hash": "c2247a1b660d9c830b57bf4d47d464d3",
+    "semantic_hash": ""
+  },
+  "scripts/run-exp0193-q6k-simd-unpack-ab.sh": {
+    "mtime": 1788774983.2149532,
+    "seen": 1788776166.3358984,
+    "ast_hash": "610bce00acbfeed642398485117f443a",
+    "semantic_hash": ""
+  },
+  "scripts/run-m8a-requal.sh": {
+    "mtime": 1788767187.439449,
+    "seen": 1788776166.3359272,
+    "ast_hash": "c362b1943fa3fe0a0ca5c8cfafac8589",
+    "semantic_hash": ""
+  },
+  "docs/M8-GFX906-DECODE-FLOOR.md": {
+    "mtime": 1788768253.682987,
+    "seen": 1788776166.3360631,
+    "ast_hash": "49403643ced3f28b77524701ef1c7f6a",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0189-wave64-q8-quantizer.md": {
+    "mtime": 1788769488.5998383,
+    "seen": 1788776166.3363705,
+    "ast_hash": "1a8df45ab9710dbebdfe1655e4e6cd30",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0190-fused-core-q8-epilogue.md": {
+    "mtime": 1788771043.7252223,
+    "seen": 1788776166.3363717,
+    "ast_hash": "15289c24852b06f880953a4c4d3de9cc",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0191-fused-norm-q8.md": {
+    "mtime": 1788773119.2794778,
+    "seen": 1788776166.3363733,
+    "ast_hash": "58348bc4cb797e9f68b70e72a4ff6858",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0192-swiglu-wave64-shuffle.md": {
+    "mtime": 1788774302.9439626,
+    "seen": 1788776166.3363745,
+    "ast_hash": "46d25e62ed3efc7cc9145022667fb4d5",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0193-q6k-simd-unpack.md": {
+    "mtime": 1788775940.4457774,
+    "seen": 1788776166.3363757,
+    "ast_hash": "e353743c2e9c7197bd18a5afbd7be46b",
     "semantic_hash": ""
   }
 }

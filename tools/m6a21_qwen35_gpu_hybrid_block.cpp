@@ -665,6 +665,8 @@ struct RecurrentLayer {
     bool q4_q8_1_attn_gate = false;
     bool direct_layer_output = false;
     bool fused_gate_up_swiglu = false;
+    bool fused_core_q8 = false;
+    bool fused_norm_q8 = false;
     bool expanded_down = true;
     Buffer d_ffn_down_native;
     Buffer d_ffn_gate_native, d_ffn_up_native;
@@ -748,8 +750,14 @@ struct RecurrentLayer {
         dual_head_normalize = dual_head_normalize_env != nullptr
             && std::strcmp(dual_head_normalize_env, "0") != 0;
         const char* fused_gate_up_swiglu_env = std::getenv("MIINFER_FUSED_GATE_UP_SWIGLU");
-        fused_gate_up_swiglu = fused_gate_up_swiglu_env != nullptr
-            && std::strcmp(fused_gate_up_swiglu_env, "0") != 0;
+        fused_gate_up_swiglu = fused_gate_up_swiglu_env == nullptr
+            || std::strcmp(fused_gate_up_swiglu_env, "0") != 0;
+        const char* fused_core_q8_env = std::getenv("MIINFER_FUSED_CORE_Q8");
+        fused_core_q8 = fused_core_q8_env == nullptr
+            || std::strcmp(fused_core_q8_env, "0") != 0;
+        const char* fused_norm_q8_env = std::getenv("MIINFER_FUSED_NORM_Q8");
+        fused_norm_q8 = fused_norm_q8_env != nullptr
+            && std::strcmp(fused_norm_q8_env, "0") != 0;
         const char* q6_q8_k_dot4_qkv_env = std::getenv("MIINFER_Q6K_Q8K_DOT4_QKV");
         q6_q8_k_dot4_qkv = q6_q8_k_dot4_qkv_env == nullptr
             || std::strcmp(q6_q8_k_dot4_qkv_env, "0") != 0;
@@ -774,8 +782,8 @@ struct RecurrentLayer {
         row_wave_state = row_wave_state_env != nullptr
             && std::strcmp(row_wave_state_env, "0") != 0;
         const char* fused_recurrent_core_env = std::getenv("MIINFER_FUSED_RECURRENT_CORE");
-        fused_recurrent_core = fused_recurrent_core_env != nullptr
-            && std::strcmp(fused_recurrent_core_env, "0") != 0;
+        fused_recurrent_core = fused_recurrent_core_env == nullptr
+            || std::strcmp(fused_recurrent_core_env, "0") != 0;
         const char* fused_add_rms_norm_env = std::getenv("MIINFER_FUSED_ADD_RMS_NORM");
         fused_add_rms_norm = fused_add_rms_norm_env == nullptr
             || std::strcmp(fused_add_rms_norm_env, "0") != 0;
@@ -1055,7 +1063,9 @@ struct RecurrentLayer {
     void run(const float* input, std::uint32_t position, float* output,
              const float* next_norm_weight = nullptr,
              float* next_normalized = nullptr,
-             bool precomputed_norm = false) {
+             bool precomputed_norm = false,
+             miinfer::Q8_1Block* next_q8_1 = nullptr,
+             bool precomputed_q8 = false) {
         stage_start(0, position);
         if (!precomputed_norm) {
             miinfer::launch_qwen3_rms_norm(
@@ -1070,9 +1080,11 @@ struct RecurrentLayer {
         stage_end(0, position);
         stage_start(1, position);
         if (d_qkv_native) {
-            miinfer::launch_q8_1_quantize_f32(
-                static_cast<const float*>(normalized->get()),
-                static_cast<miinfer::Q8_1Block*>(q8_1->get()), kHidden);
+            if (!precomputed_q8 || !fused_norm_q8) {
+                miinfer::launch_q8_1_quantize_f32(
+                    static_cast<const float*>(normalized->get()),
+                    static_cast<miinfer::Q8_1Block*>(q8_1->get()), kHidden);
+            }
             if (qkv_weight.type == miinfer::GgufTensorType::q4_k) {
                 launch_q4k_wave_gemv(
                     static_cast<const Q4KWaveTile*>(d_qkv_native->get()),
@@ -1207,7 +1219,9 @@ struct RecurrentLayer {
                 static_cast<float*>(gated->get()),
                 rec_out_ptr,
                 kKHeads, kVHeads, kState,
-                model.config().rms_epsilon);
+                model.config().rms_epsilon,
+                nullptr,
+                (fused_core_q8 && d_ssm_out_native) ? static_cast<miinfer::Q8_1Block*>(q8_1->get()) : nullptr);
         } else if (transposed_state) {
             if (transposed_no_decay_store) {
                 if (row_wave_state && transposed_lds_inputs) {
@@ -1309,9 +1323,11 @@ struct RecurrentLayer {
         }
         stage_start(7, position);
         if (d_ssm_out_native) {
-            miinfer::launch_q8_1_quantize_f32(
-                static_cast<const float*>(gated->get()),
-                static_cast<miinfer::Q8_1Block*>(q8_1->get()), kInner);
+            if (!fused_core_q8 || !fused_recurrent_core || !transposed_state) {
+                miinfer::launch_q8_1_quantize_f32(
+                    static_cast<const float*>(gated->get()),
+                    static_cast<miinfer::Q8_1Block*>(q8_1->get()), kInner);
+            }
             launch_q5k_wave_gemv(
                 static_cast<const Q5KWaveTile*>(d_ssm_out_native->get()),
                 static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
@@ -1342,7 +1358,9 @@ struct RecurrentLayer {
                 static_cast<const float*>(d_post_norm->get()),
                 static_cast<float*>(residual->get()),
                 static_cast<float*>(post_normalized->get()),
-                kHidden, model.config().rms_epsilon);
+                kHidden, model.config().rms_epsilon, nullptr,
+                (fused_norm_q8 && d_ffn_gate_native && d_ffn_up_native)
+                    ? static_cast<miinfer::Q8_1Block*>(q8_1->get()) : nullptr);
         } else {
             miinfer::launch_qwen3_add(
                 input, static_cast<const float*>(projected->get()),
@@ -1371,9 +1389,11 @@ struct RecurrentLayer {
         stage_end(9, position);
         stage_start(10, position);
         if (d_ffn_gate_native && d_ffn_up_native) {
-            miinfer::launch_q8_1_quantize_f32(
-                static_cast<const float*>(post_normalized->get()),
-                static_cast<miinfer::Q8_1Block*>(q8_1->get()), kHidden);
+            if (!fused_norm_q8) {
+                miinfer::launch_q8_1_quantize_f32(
+                    static_cast<const float*>(post_normalized->get()),
+                    static_cast<miinfer::Q8_1Block*>(q8_1->get()), kHidden);
+            }
             if (fused_gate_up_swiglu) {
                 launch_q4k_wave_fused_gate_up_swiglu(
                     static_cast<const Q4KWaveTile*>(d_ffn_gate_native->get()),
@@ -1472,7 +1492,8 @@ struct RecurrentLayer {
                 completed_output,
                 next_normalized,
                 kHidden,
-                model.config().rms_epsilon);
+                model.config().rms_epsilon, nullptr,
+                (fused_norm_q8 && next_q8_1 != nullptr) ? next_q8_1 : nullptr);
         } else {
             miinfer::launch_qwen3_add(
                 static_cast<const float*>(residual->get()), static_cast<const float*>(projected->get()),
@@ -1519,6 +1540,8 @@ struct FullAttentionLayer {
     bool q4_q8_1_lds_decoded_metadata = true;
     bool direct_layer_output = false;
     bool fused_gate_up_swiglu = false;
+    bool fused_core_q8 = false;
+    bool fused_norm_q8 = false;
     bool tiled_online_attention = true;
     bool fused_rope_norm = true;
     bool fused_add_rms_norm = true;
@@ -1618,8 +1641,14 @@ struct FullAttentionLayer {
         q4_q8_1_gate_up = q4_q8_1_gate_up_env == nullptr
             || std::strcmp(q4_q8_1_gate_up_env, "0") != 0;
         const char* fused_gate_up_swiglu_env = std::getenv("MIINFER_FUSED_GATE_UP_SWIGLU");
-        fused_gate_up_swiglu = fused_gate_up_swiglu_env != nullptr
-            && std::strcmp(fused_gate_up_swiglu_env, "0") != 0;
+        fused_gate_up_swiglu = fused_gate_up_swiglu_env == nullptr
+            || std::strcmp(fused_gate_up_swiglu_env, "0") != 0;
+        const char* fused_core_q8_env = std::getenv("MIINFER_FUSED_CORE_Q8");
+        fused_core_q8 = fused_core_q8_env == nullptr
+            || std::strcmp(fused_core_q8_env, "0") != 0;
+        const char* fused_norm_q8_env = std::getenv("MIINFER_FUSED_NORM_Q8");
+        fused_norm_q8 = fused_norm_q8_env != nullptr
+            && std::strcmp(fused_norm_q8_env, "0") != 0;
         const char* tiled_online_attention_env = std::getenv("MIINFER_TILED_ONLINE_ATTENTION");
         tiled_online_attention = tiled_online_attention_env == nullptr
             || std::strcmp(tiled_online_attention_env, "0") != 0;
@@ -1706,7 +1735,9 @@ struct FullAttentionLayer {
     void run(const float* input, std::uint32_t position, float* output,
              const float* next_norm_weight = nullptr,
              float* next_normalized = nullptr,
-             bool precomputed_norm = false) {
+             bool precomputed_norm = false,
+             miinfer::Q8_1Block* next_q8_1 = nullptr,
+             bool precomputed_q8 = false) {
         stage_start(0, position);
         if (!precomputed_norm) {
             miinfer::launch_qwen3_rms_norm(input, static_cast<const float*>(d_attn_norm->get()),
@@ -1715,9 +1746,11 @@ struct FullAttentionLayer {
         stage_end(0, position);
         stage_start(1, position);
         if (d_q_native) {
-            miinfer::launch_q8_1_quantize_f32(
-                static_cast<const float*>(normalized->get()),
-                static_cast<miinfer::Q8_1Block*>(q8_1->get()), kHidden);
+            if (!precomputed_q8 || !fused_norm_q8) {
+                miinfer::launch_q8_1_quantize_f32(
+                    static_cast<const float*>(normalized->get()),
+                    static_cast<miinfer::Q8_1Block*>(q8_1->get()), kHidden);
+            }
             launch_q4k_wave_gemv(
                 static_cast<const Q4KWaveTile*>(d_q_native->get()),
                 static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
@@ -1838,7 +1871,9 @@ struct FullAttentionLayer {
                 static_cast<float*>(attention->get()),
                 static_cast<const float*>(gate->get()),
                 static_cast<float*>(gated_attention->get()),
-                24, 4, 256, 1.0F / std::sqrt(256.0F));
+                24, 4, 256, 1.0F / std::sqrt(256.0F),
+                nullptr,
+                (fused_core_q8 && d_o_native) ? static_cast<miinfer::Q8_1Block*>(q8_1->get()) : nullptr);
             stage_end(7, position);
             stage_start(8, position);
         } else {
@@ -1860,9 +1895,11 @@ struct FullAttentionLayer {
                 6144);
         }
         if (d_o_native) {
-            miinfer::launch_q8_1_quantize_f32(
-                static_cast<const float*>(gated_attention->get()),
-                static_cast<miinfer::Q8_1Block*>(q8_1->get()), 6144);
+            if (!fused_core_q8 || !tiled_online_attention) {
+                miinfer::launch_q8_1_quantize_f32(
+                    static_cast<const float*>(gated_attention->get()),
+                    static_cast<miinfer::Q8_1Block*>(q8_1->get()), 6144);
+            }
             launch_q4k_wave_gemv(
                 static_cast<const Q4KWaveTile*>(d_o_native->get()),
                 static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
@@ -1879,7 +1916,9 @@ struct FullAttentionLayer {
                 static_cast<const float*>(d_post->get()),
                 static_cast<float*>(residual->get()),
                 static_cast<float*>(post_normalized->get()),
-                kHidden, model.config().rms_epsilon);
+                kHidden, model.config().rms_epsilon, nullptr,
+                (fused_norm_q8 && d_ffn_gate_native && d_ffn_up_native)
+                    ? static_cast<miinfer::Q8_1Block*>(q8_1->get()) : nullptr);
             stage_end(9, position);
             stage_start(10, position);
             stage_end(10, position);
@@ -1895,9 +1934,11 @@ struct FullAttentionLayer {
         }
         stage_start(11, position);
         if (d_ffn_gate_native && d_ffn_up_native) {
-            miinfer::launch_q8_1_quantize_f32(
-                static_cast<const float*>(post_normalized->get()),
-                static_cast<miinfer::Q8_1Block*>(q8_1->get()), kHidden);
+            if (!fused_norm_q8) {
+                miinfer::launch_q8_1_quantize_f32(
+                    static_cast<const float*>(post_normalized->get()),
+                    static_cast<miinfer::Q8_1Block*>(q8_1->get()), kHidden);
+            }
             if (fused_gate_up_swiglu) {
                 launch_q4k_wave_fused_gate_up_swiglu(
                     static_cast<const Q4KWaveTile*>(d_ffn_gate_native->get()),
@@ -1987,7 +2028,8 @@ struct FullAttentionLayer {
                 completed_output,
                 next_normalized,
                 kHidden,
-                model.config().rms_epsilon);
+                model.config().rms_epsilon, nullptr,
+                (fused_norm_q8 && next_q8_1 != nullptr) ? next_q8_1 : nullptr);
         } else {
             miinfer::launch_qwen3_add(static_cast<const float*>(residual->get()),
                 static_cast<const float*>(projected->get()), completed_output, kHidden);
@@ -2026,6 +2068,12 @@ struct GpuLayerRef {
         return nullptr;
     }
 
+    miinfer::Q8_1Block* q8_1_buffer() const {
+        if (recurrent != nullptr && recurrent->q8_1) return static_cast<miinfer::Q8_1Block*>(recurrent->q8_1->get());
+        if (attention != nullptr && attention->q8_1) return static_cast<miinfer::Q8_1Block*>(attention->q8_1->get());
+        return nullptr;
+    }
+
     bool fused_interlayer_norm() const {
         if (recurrent != nullptr) return recurrent->fused_interlayer_norm;
         if (attention != nullptr) return attention->fused_interlayer_norm;
@@ -2035,11 +2083,13 @@ struct GpuLayerRef {
     void run(const float* input, std::uint32_t position, float* output,
              const float* next_norm_weight = nullptr,
              float* next_normalized = nullptr,
-             bool precomputed_norm = false) const {
+             bool precomputed_norm = false,
+             miinfer::Q8_1Block* next_q8_1 = nullptr,
+             bool precomputed_q8 = false) const {
         if (recurrent != nullptr) {
-            recurrent->run(input, position, output, next_norm_weight, next_normalized, precomputed_norm);
+            recurrent->run(input, position, output, next_norm_weight, next_normalized, precomputed_norm, next_q8_1, precomputed_q8);
         } else if (attention != nullptr) {
-            attention->run(input, position, output, next_norm_weight, next_normalized, precomputed_norm);
+            attention->run(input, position, output, next_norm_weight, next_normalized, precomputed_norm, next_q8_1, precomputed_q8);
         } else {
             throw std::runtime_error("empty qwen35 GPU layer reference");
         }
@@ -2049,24 +2099,30 @@ struct GpuLayerRef {
 void run_prefix(std::span<const GpuLayerRef> layers, std::span<float* const> outputs,
                 const float* input, std::uint32_t position,
                 const float* final_norm_weight = nullptr,
-                float* final_norm_out = nullptr) {
+                float* final_norm_out = nullptr,
+                miinfer::Q8_1Block* final_q8_1_out = nullptr) {
     const float* current = input;
     bool precomputed = false;
+    bool precomputed_q8 = false;
     for (std::size_t layer = 0; layer < layers.size(); ++layer) {
         const float* next_weight = nullptr;
         float* next_norm = nullptr;
+        miinfer::Q8_1Block* next_q8 = nullptr;
         if (layers[layer].fused_interlayer_norm()) {
             if (layer + 1 < layers.size()) {
                 next_weight = layers[layer + 1].attn_norm_weight();
                 next_norm = layers[layer + 1].normalized_buffer();
+                next_q8 = layers[layer + 1].q8_1_buffer();
             } else if (final_norm_weight != nullptr && final_norm_out != nullptr) {
                 next_weight = final_norm_weight;
                 next_norm = final_norm_out;
+                next_q8 = final_q8_1_out;
             }
         }
-        layers[layer].run(current, position, outputs[layer], next_weight, next_norm, precomputed);
+        layers[layer].run(current, position, outputs[layer], next_weight, next_norm, precomputed, next_q8, precomputed_q8);
         current = outputs[layer];
         precomputed = (next_weight != nullptr && next_norm != nullptr);
+        precomputed_q8 = precomputed && (next_q8 != nullptr);
     }
 }
 
@@ -2155,6 +2211,9 @@ int main(int argc, char** argv) {
     const char* fused_interlayer_norm_env = std::getenv("MIINFER_FUSED_INTERLAYER_NORM");
     const bool fused_interlayer_norm = fused_interlayer_norm_env == nullptr
         || std::strcmp(fused_interlayer_norm_env, "0") != 0;
+    const char* fused_norm_q8_env = std::getenv("MIINFER_FUSED_NORM_Q8");
+    const bool fused_norm_q8 = fused_norm_q8_env != nullptr
+        && std::strcmp(fused_norm_q8_env, "0") != 0;
     const char* hip_graph_env = std::getenv("MIINFER_HIP_GRAPH");
     const bool use_hip_graph = hip_graph_env != nullptr && std::strcmp(hip_graph_env, "0") != 0;
     const std::size_t generation_tokens = mode == "--generate16" ? 16
@@ -2757,7 +2816,8 @@ int main(int argc, char** argv) {
                                    std::span<float* const>(output_pointers),
                                    static_cast<const float*>(input->get()), position,
                                    static_cast<const float*>(d_final_norm_weight->get()),
-                                   static_cast<float*>(final_norm->get()));
+                                   static_cast<float*>(final_norm->get()),
+                                   final_q8_1 ? static_cast<miinfer::Q8_1Block*>(final_q8_1->get()) : nullptr);
                         if (!fused_interlayer_norm) {
                             miinfer::launch_qwen3_rms_norm(
                                 output_pointers[63],
@@ -2766,10 +2826,12 @@ int main(int argc, char** argv) {
                                 model.config().rms_epsilon);
                         }
                         if (native_lm_head) {
-                            miinfer::launch_q8_1_quantize_f32(
-                                static_cast<const float*>(final_norm->get()),
-                                static_cast<miinfer::Q8_1Block*>(final_q8_1->get()), kHidden,
-                                hipStreamPerThread);
+                            if (!fused_norm_q8 || !fused_interlayer_norm) {
+                                miinfer::launch_q8_1_quantize_f32(
+                                    static_cast<const float*>(final_norm->get()),
+                                    static_cast<miinfer::Q8_1Block*>(final_q8_1->get()), kHidden,
+                                    hipStreamPerThread);
+                            }
                             launch_q6k_wave_gemv(
                                 static_cast<const Q6KWaveTile*>(d_output_weight->get()),
                                 static_cast<const miinfer::Q8_1Block*>(final_q8_1->get()),
@@ -2826,7 +2888,8 @@ int main(int argc, char** argv) {
                                        std::span<float* const>(output_pointers),
                                        static_cast<const float*>(input->get()), position,
                                        static_cast<const float*>(d_final_norm_weight->get()),
-                                       static_cast<float*>(final_norm->get()));
+                                       static_cast<float*>(final_norm->get()),
+                                       final_q8_1 ? static_cast<miinfer::Q8_1Block*>(final_q8_1->get()) : nullptr);
                             if (!fused_interlayer_norm) {
                                 miinfer::launch_qwen3_rms_norm(
                                     output_pointers[63],
@@ -2835,9 +2898,11 @@ int main(int argc, char** argv) {
                                     model.config().rms_epsilon);
                             }
                             if (native_lm_head) {
-                                miinfer::launch_q8_1_quantize_f32(
-                                    static_cast<const float*>(final_norm->get()),
-                                    static_cast<miinfer::Q8_1Block*>(final_q8_1->get()), kHidden);
+                                if (!fused_norm_q8 || !fused_interlayer_norm) {
+                                    miinfer::launch_q8_1_quantize_f32(
+                                        static_cast<const float*>(final_norm->get()),
+                                        static_cast<miinfer::Q8_1Block*>(final_q8_1->get()), kHidden);
+                                }
                                 launch_q6k_wave_gemv(
                                     static_cast<const Q6KWaveTile*>(d_output_weight->get()),
                                     static_cast<const miinfer::Q8_1Block*>(final_q8_1->get()),
@@ -3554,6 +3619,9 @@ int main(int argc, char** argv) {
                                : nullptr,
                            (observable64 && fused_interlayer_norm && layer_count == 64)
                                ? static_cast<float*>(final_norm->get())
+                               : nullptr,
+                           (observable64 && fused_interlayer_norm && layer_count == 64 && final_q8_1)
+                               ? static_cast<miinfer::Q8_1Block*>(final_q8_1->get())
                                : nullptr);
                 MIINFER_HIP_CHECK(hipDeviceSynchronize());
                 if (observable64) {
@@ -3565,9 +3633,11 @@ int main(int argc, char** argv) {
                             model.config().rms_epsilon);
                     }
                     if (native_lm_head) {
-                        miinfer::launch_q8_1_quantize_f32(
-                            static_cast<const float*>(final_norm->get()),
-                            static_cast<miinfer::Q8_1Block*>(final_q8_1->get()), kHidden);
+                        if (!fused_norm_q8 || !fused_interlayer_norm) {
+                            miinfer::launch_q8_1_quantize_f32(
+                                static_cast<const float*>(final_norm->get()),
+                                static_cast<miinfer::Q8_1Block*>(final_q8_1->get()), kHidden);
+                        }
                         launch_q6k_wave_gemv(
                             static_cast<const Q6KWaveTile*>(d_output_weight->get()),
                             static_cast<const miinfer::Q8_1Block*>(final_q8_1->get()),
