@@ -158,16 +158,17 @@ template <typename Decoder, unsigned NumTiles>
 __global__ void kquant_wave_gemv_kernel(
     const typename Decoder::Tile* weights,
     const miinfer::Q8_1Block* input,
-    float* output) {
-    const unsigned tid = threadIdx.x % 128;
-    const unsigned local_row = threadIdx.x / 128;
-    const unsigned row = blockIdx.x * 2 + local_row;
-    const unsigned lane = tid % 64;
+    float* output,
+    unsigned rows) {
+    const unsigned wave_id = threadIdx.x / 64;
+    const unsigned row = blockIdx.x * 4 + wave_id;
+    if (row >= rows) return;
+    const unsigned lane = threadIdx.x % 64;
     const unsigned in_block = lane % 16;
     const unsigned group = 2 * (in_block / 4);
 
     float sum = 0.0f;
-    for (unsigned tile = tid / 64; tile < NumTiles; tile += 2) {
+    for (unsigned tile = 0; tile < NumTiles; ++tile) {
         const auto& w = weights[row * NumTiles + tile];
         typename Decoder::LaneState state;
         Decoder::load_tile(w, lane, state);
@@ -181,16 +182,14 @@ __global__ void kquant_wave_gemv_kernel(
         sum += Decoder::finalize_tile(state);
     }
 
-    __shared__ float partials[2][128];
-    partials[local_row][tid] = sum;
-    __syncthreads();
-    if (tid < 64) partials[local_row][tid] += partials[local_row][tid + 64];
-    __syncthreads();
-    for (unsigned stride = 32; stride; stride /= 2) {
-        if (tid < stride) partials[local_row][tid] += partials[local_row][tid + stride];
-        __syncthreads();
+    #pragma unroll
+    for (int offset = 32; offset > 0; offset /= 2) {
+        sum += __shfl_down(sum, offset, 64);
     }
-    if (!tid) output[row] = partials[local_row][0];
+
+    if (lane == 0) {
+        output[row] = sum;
+    }
 }
 
 template <typename Decoder>
@@ -199,36 +198,37 @@ void launch_kquant_gemv_dispatch(
     const miinfer::Q8_1Block* x,
     float* y,
     std::uint32_t rows,
-    std::uint32_t columns) {
+    std::uint32_t columns,
+    hipStream_t stream = nullptr) {
     if (!w || !x || !y) MIINFER_HIP_CHECK(hipErrorInvalidValue);
-    if (rows % 2 != 0 || columns % 1024 != 0) MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    if (columns % 1024 != 0) MIINFER_HIP_CHECK(hipErrorInvalidValue);
     const unsigned num_tiles = columns / 1024;
-    const dim3 grid(rows / 2);
+    const dim3 grid((rows + 3) / 4);
     const dim3 block(256);
     switch (num_tiles) {
     case 1: {
         auto kernel = kquant_wave_gemv_kernel<Decoder, 1>;
-        hipLaunchKernelGGL(kernel, grid, block, 0, nullptr, w, x, y);
+        hipLaunchKernelGGL(kernel, grid, block, 0, stream, w, x, y, rows);
         break;
     }
     case 5: {
         auto kernel = kquant_wave_gemv_kernel<Decoder, 5>;
-        hipLaunchKernelGGL(kernel, grid, block, 0, nullptr, w, x, y);
+        hipLaunchKernelGGL(kernel, grid, block, 0, stream, w, x, y, rows);
         break;
     }
     case 6: {
         auto kernel = kquant_wave_gemv_kernel<Decoder, 6>;
-        hipLaunchKernelGGL(kernel, grid, block, 0, nullptr, w, x, y);
+        hipLaunchKernelGGL(kernel, grid, block, 0, stream, w, x, y, rows);
         break;
     }
     case 12: {
         auto kernel = kquant_wave_gemv_kernel<Decoder, 12>;
-        hipLaunchKernelGGL(kernel, grid, block, 0, nullptr, w, x, y);
+        hipLaunchKernelGGL(kernel, grid, block, 0, stream, w, x, y, rows);
         break;
     }
     case 17: {
         auto kernel = kquant_wave_gemv_kernel<Decoder, 17>;
-        hipLaunchKernelGGL(kernel, grid, block, 0, nullptr, w, x, y);
+        hipLaunchKernelGGL(kernel, grid, block, 0, stream, w, x, y, rows);
         break;
     }
     default:
@@ -323,8 +323,8 @@ __global__ void q4k_wave_fused_gate_up_swiglu_kernel(
 } // namespace
 
 void launch_q4k_wave_gemv(const Q4KWaveTile* w, const miinfer::Q8_1Block* x, float* y,
-                          std::uint32_t rows, std::uint32_t columns) {
-    launch_kquant_gemv_dispatch<Q4KDecoder>(w, x, y, rows, columns);
+                          std::uint32_t rows, std::uint32_t columns, hipStream_t stream) {
+    launch_kquant_gemv_dispatch<Q4KDecoder>(w, x, y, rows, columns, stream);
 }
 
 void launch_q4k_wave_fused_gate_up_swiglu(
@@ -352,16 +352,16 @@ void launch_q4k_wave_fused_gate_up_swiglu(
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
-void launch_q4k_wave_down(const Q4KWaveTile* w, const miinfer::Q8_1Block* x, float* y) {
-    launch_q4k_wave_gemv(w, x, y, 5120, 17408);
+void launch_q4k_wave_down(const Q4KWaveTile* w, const miinfer::Q8_1Block* x, float* y, hipStream_t stream) {
+    launch_q4k_wave_gemv(w, x, y, 5120, 17408, stream);
 }
 
 void launch_q5k_wave_gemv(const Q5KWaveTile* w, const miinfer::Q8_1Block* x, float* y,
-                          std::uint32_t rows, std::uint32_t columns) {
-    launch_kquant_gemv_dispatch<Q5KDecoder>(w, x, y, rows, columns);
+                          std::uint32_t rows, std::uint32_t columns, hipStream_t stream) {
+    launch_kquant_gemv_dispatch<Q5KDecoder>(w, x, y, rows, columns, stream);
 }
 
 void launch_q6k_wave_gemv(const Q6KWaveTile* w, const miinfer::Q8_1Block* x, float* y,
-                          std::uint32_t rows, std::uint32_t columns) {
-    launch_kquant_gemv_dispatch<Q6KDecoder>(w, x, y, rows, columns);
+                          std::uint32_t rows, std::uint32_t columns, hipStream_t stream) {
+    launch_kquant_gemv_dispatch<Q6KDecoder>(w, x, y, rows, columns, stream);
 }

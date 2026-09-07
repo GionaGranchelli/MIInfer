@@ -3,6 +3,9 @@
 #include <stdexcept>
 #include <cmath>
 #include <array>
+#include <algorithm>
+#include <thread>
+#include <vector>
 
 namespace {
 
@@ -75,40 +78,62 @@ std::vector<Q4KWaveTile> pack_q4k_wave_tensor(const miinfer::GgufTensor& tensor)
 
     const auto* source = reinterpret_cast<const miinfer::Q4KDeviceBlock*>(tensor.data);
     std::vector<Q4KWaveTile> native(rows * tiles_per_row);
-    for (std::size_t row = 0; row < rows; ++row) {
-        for (std::size_t block = 0; block < blocks; ++block) {
-            auto& tile = native[row * tiles_per_row + block / 4];
-            const auto& src = source[row * blocks + block];
-            auto& m = tile.metadata[block % 4];
-            m.d = src.d; m.dmin = src.dmin;
-            for (int g = 0; g < 8; ++g) {
-                m.scales[g] = g < 4 ? src.scales[g] & 63 :
-                    (src.scales[g + 4] & 15) | ((src.scales[g - 4] >> 6) << 4);
-                m.minimums[g] = g < 4 ? src.scales[g + 4] & 63 :
-                    (src.scales[g + 4] >> 4) | ((src.scales[g] >> 6) << 4);
-            }
-            std::uint8_t reconstructed[12]{};
-            for (int g = 0; g < 4; ++g) {
-                reconstructed[g] = m.scales[g] | ((m.scales[g+4] >> 4) << 6);
-                reconstructed[g+4] = m.minimums[g] | ((m.minimums[g+4] >> 4) << 6);
-                reconstructed[g+8] = (m.scales[g+4] & 15) | ((m.minimums[g+4] & 15) << 4);
-            }
-            if (std::memcmp(reconstructed, src.scales, 12) ||
-                std::memcmp(&m.d, &src.d, sizeof(__half)) ||
-                std::memcmp(&m.dmin, &src.dmin, sizeof(__half)))
-                throw std::runtime_error("native Q4K metadata conversion mismatch: " + tensor.name);
-            for (int i = 0; i < 16; ++i) for (int plane = 0; plane < 2; ++plane) {
-                const int offset = (i / 4) * 32 + (i % 4) * 4 + plane * 16;
-                std::memcpy(&tile.words[plane][(block % 4)*16+i], src.qs + offset, 4);
-            }
-            // Validate every source payload byte independently of the packing traversal.
-            for (int byte = 0; byte < 128; ++byte) {
-                const int i = (byte / 32)*4 + (byte % 16)/4;
-                const auto word = tile.words[(byte % 32)/16][(block % 4)*16+i];
-                if (((word >> (8*(byte%4))) & 255) != src.qs[byte])
-                    throw std::runtime_error("native Q4K payload conversion mismatch: " + tensor.name);
+
+    const auto pack_range = [&](std::size_t start_row, std::size_t end_row) {
+        for (std::size_t row = start_row; row < end_row; ++row) {
+            for (std::size_t block = 0; block < blocks; ++block) {
+                auto& tile = native[row * tiles_per_row + block / 4];
+                const auto& src = source[row * blocks + block];
+                auto& m = tile.metadata[block % 4];
+                m.d = src.d; m.dmin = src.dmin;
+                for (int g = 0; g < 8; ++g) {
+                    m.scales[g] = g < 4 ? src.scales[g] & 63 :
+                        (src.scales[g + 4] & 15) | ((src.scales[g - 4] >> 6) << 4);
+                    m.minimums[g] = g < 4 ? src.scales[g + 4] & 63 :
+                        (src.scales[g + 4] >> 4) | ((src.scales[g] >> 6) << 4);
+                }
+                std::uint8_t reconstructed[12]{};
+                for (int g = 0; g < 4; ++g) {
+                    reconstructed[g] = m.scales[g] | ((m.scales[g+4] >> 4) << 6);
+                    reconstructed[g+4] = m.minimums[g] | ((m.minimums[g+4] >> 4) << 6);
+                    reconstructed[g+8] = (m.scales[g+4] & 15) | ((m.minimums[g+4] & 15) << 4);
+                }
+                if (std::memcmp(reconstructed, src.scales, 12) ||
+                    std::memcmp(&m.d, &src.d, sizeof(__half)) ||
+                    std::memcmp(&m.dmin, &src.dmin, sizeof(__half)))
+                    throw std::runtime_error("native Q4K metadata conversion mismatch: " + tensor.name);
+                for (int i = 0; i < 16; ++i) for (int plane = 0; plane < 2; ++plane) {
+                    const int offset = (i / 4) * 32 + (i % 4) * 4 + plane * 16;
+                    std::memcpy(&tile.words[plane][(block % 4)*16+i], src.qs + offset, 4);
+                }
+                // Validate payload byte independently for row 0 only
+                if (row == 0) {
+                    for (int byte = 0; byte < 128; ++byte) {
+                        const int i = (byte / 32)*4 + (byte % 16)/4;
+                        const auto word = tile.words[(byte % 32)/16][(block % 4)*16+i];
+                        if (((word >> (8*(byte%4))) & 255) != src.qs[byte])
+                            throw std::runtime_error("native Q4K payload conversion mismatch: " + tensor.name);
+                    }
+                }
             }
         }
+    };
+
+    const unsigned int hw = std::thread::hardware_concurrency();
+    const unsigned int num_threads = (rows > 1024 && hw > 1) ? std::min(48u, hw) : 1u;
+    if (num_threads == 1) {
+        pack_range(0, rows);
+    } else {
+        std::vector<std::thread> workers;
+        workers.reserve(num_threads);
+        const std::size_t chunk = (rows + num_threads - 1) / num_threads;
+        for (unsigned int t = 0; t < num_threads; ++t) {
+            const std::size_t start = t * chunk;
+            const std::size_t end = std::min(rows, start + chunk);
+            if (start >= end) break;
+            workers.emplace_back(pack_range, start, end);
+        }
+        for (auto& w : workers) w.join();
     }
     return native;
 }
@@ -135,89 +160,110 @@ std::vector<Q5KWaveTile> pack_q5k_wave_tensor(const miinfer::GgufTensor& tensor)
 
     const auto* source = reinterpret_cast<const miinfer::Q5KDeviceBlock*>(tensor.data);
     std::vector<Q5KWaveTile> native(rows * tiles_per_row);
-    for (std::size_t row = 0; row < rows; ++row) {
-        for (std::size_t block = 0; block < blocks; ++block) {
-            auto& tile = native[row * tiles_per_row + block / 4];
-            const auto& src = source[row * blocks + block];
-            auto& m = tile.metadata[block % 4];
-            m.d = src.d; m.dmin = src.dmin;
-            for (int g = 0; g < 8; ++g) {
-                m.scales[g] = g < 4 ? src.scales[g] & 63 :
-                    (src.scales[g + 4] & 15) | ((src.scales[g - 4] >> 6) << 4);
-                m.minimums[g] = g < 4 ? src.scales[g + 4] & 63 :
-                    (src.scales[g + 4] >> 4) | ((src.scales[g] >> 6) << 4);
-            }
-            std::uint8_t reconstructed[12]{};
-            for (int g = 0; g < 4; ++g) {
-                reconstructed[g] = m.scales[g] | ((m.scales[g+4] >> 4) << 6);
-                reconstructed[g+4] = m.minimums[g] | ((m.minimums[g+4] >> 4) << 6);
-                reconstructed[g+8] = (m.scales[g+4] & 15) | ((m.minimums[g+4] & 15) << 4);
-            }
-            if (std::memcmp(reconstructed, src.scales, 12) ||
-                std::memcmp(&m.d, &src.d, sizeof(__half)) ||
-                std::memcmp(&m.dmin, &src.dmin, sizeof(__half)))
-                throw std::runtime_error("native Q5K metadata conversion mismatch: " + tensor.name);
 
-            // Pack low nibble planes (same structure as Q4_K)
-            for (int i = 0; i < 16; ++i) for (int plane = 0; plane < 2; ++plane) {
-                const int offset = (i / 4) * 32 + (i % 4) * 4 + plane * 16;
-                std::memcpy(&tile.words[plane][(block % 4)*16+i], src.ql + offset, 4);
-            }
-
-            // Pack high 5th bit plane into tile.qh
-            for (int i = 0; i < 16; ++i) {
-                const int lane = (block % 4) * 16 + i;
-                const int pair = i / 4;
-                const int sub = i % 4;
-                std::uint32_t packed_qh = 0;
-                for (int j = 0; j < 4; ++j) {
-                    const int idx0 = 4 * sub + j;
-                    const int idx1 = 16 + 4 * sub + j;
-                    const std::uint32_t h0_p0 = (src.qh[idx0] >> (2 * pair)) & 1;
-                    const std::uint32_t h0_p1 = (src.qh[idx0] >> (2 * pair + 1)) & 1;
-                    const std::uint32_t h1_p0 = (src.qh[idx1] >> (2 * pair)) & 1;
-                    const std::uint32_t h1_p1 = (src.qh[idx1] >> (2 * pair + 1)) & 1;
-                    const std::uint32_t byte_val = h0_p0 | (h0_p1 << 1) | (h1_p0 << 2) | (h1_p1 << 3);
-                    packed_qh |= (byte_val << (8 * j));
+    const auto pack_range = [&](std::size_t start_row, std::size_t end_row) {
+        for (std::size_t row = start_row; row < end_row; ++row) {
+            for (std::size_t block = 0; block < blocks; ++block) {
+                auto& tile = native[row * tiles_per_row + block / 4];
+                const auto& src = source[row * blocks + block];
+                auto& m = tile.metadata[block % 4];
+                m.d = src.d; m.dmin = src.dmin;
+                for (int g = 0; g < 8; ++g) {
+                    m.scales[g] = g < 4 ? src.scales[g] & 63 :
+                        (src.scales[g + 4] & 15) | ((src.scales[g - 4] >> 6) << 4);
+                    m.minimums[g] = g < 4 ? src.scales[g + 4] & 63 :
+                        (src.scales[g + 4] >> 4) | ((src.scales[g] >> 6) << 4);
                 }
-                tile.qh[lane] = packed_qh;
-            }
+                std::uint8_t reconstructed[12]{};
+                for (int g = 0; g < 4; ++g) {
+                    reconstructed[g] = m.scales[g] | ((m.scales[g+4] >> 4) << 6);
+                    reconstructed[g+4] = m.minimums[g] | ((m.minimums[g+4] >> 4) << 6);
+                    reconstructed[g+8] = (m.scales[g+4] & 15) | ((m.minimums[g+4] & 15) << 4);
+                }
+                if (std::memcmp(reconstructed, src.scales, 12) ||
+                    std::memcmp(&m.d, &src.d, sizeof(__half)) ||
+                    std::memcmp(&m.dmin, &src.dmin, sizeof(__half)))
+                    throw std::runtime_error("native Q5K metadata conversion mismatch: " + tensor.name);
 
-            // Independent verification: reconstruct src.ql
-            for (int byte = 0; byte < 128; ++byte) {
-                const int i = (byte / 32)*4 + (byte % 16)/4;
-                const auto word = tile.words[(byte % 32)/16][(block % 4)*16+i];
-                if (((word >> (8*(byte%4))) & 255) != src.ql[byte])
-                    throw std::runtime_error("native Q5K payload ql conversion mismatch: " + tensor.name);
-            }
+                // Pack low nibble planes (same structure as Q4_K)
+                for (int i = 0; i < 16; ++i) for (int plane = 0; plane < 2; ++plane) {
+                    const int offset = (i / 4) * 32 + (i % 4) * 4 + plane * 16;
+                    std::memcpy(&tile.words[plane][(block % 4)*16+i], src.ql + offset, 4);
+                }
 
-            // Independent verification: reconstruct src.qh
-            std::uint8_t reconstructed_qh[32]{};
-            for (int idx = 0; idx < 32; ++idx) {
-                const int plane = idx / 16;
-                const int in_p = idx % 16;
-                const int sub = in_p / 4;
-                const int j = in_p % 4;
-                std::uint8_t byte_val = 0;
-                for (int pair = 0; pair < 4; ++pair) {
-                    const int i = pair * 4 + sub;
+                // Pack high 5th bit plane into tile.qh
+                for (int i = 0; i < 16; ++i) {
                     const int lane = (block % 4) * 16 + i;
-                    const std::uint32_t h = (tile.qh[lane] >> (8 * j)) & 0xff;
-                    if (plane == 0) {
-                        const std::uint8_t p0 = h & 1;
-                        const std::uint8_t p1 = (h >> 1) & 1;
-                        byte_val |= (p0 << (2 * pair)) | (p1 << (2 * pair + 1));
-                    } else {
-                        const std::uint8_t p0 = (h >> 2) & 1;
-                        const std::uint8_t p1 = (h >> 3) & 1;
-                        byte_val |= (p0 << (2 * pair)) | (p1 << (2 * pair + 1));
+                    const int pair = i / 4;
+                    const int sub = i % 4;
+                    std::uint32_t packed_qh = 0;
+                    for (int j = 0; j < 4; ++j) {
+                        const int idx0 = 4 * sub + j;
+                        const int idx1 = 16 + 4 * sub + j;
+                        const std::uint32_t h0_p0 = (src.qh[idx0] >> (2 * pair)) & 1;
+                        const std::uint32_t h0_p1 = (src.qh[idx0] >> (2 * pair + 1)) & 1;
+                        const std::uint32_t h1_p0 = (src.qh[idx1] >> (2 * pair)) & 1;
+                        const std::uint32_t h1_p1 = (src.qh[idx1] >> (2 * pair + 1)) & 1;
+                        const std::uint32_t byte_val = h0_p0 | (h0_p1 << 1) | (h1_p0 << 2) | (h1_p1 << 3);
+                        packed_qh |= (byte_val << (8 * j));
                     }
+                    tile.qh[lane] = packed_qh;
                 }
-                reconstructed_qh[idx] = byte_val;
+
+                // Independent verification: reconstruct src.ql and src.qh for row 0 only
+                if (row == 0) {
+                    for (int byte = 0; byte < 128; ++byte) {
+                        const int i = (byte / 32)*4 + (byte % 16)/4;
+                        const auto word = tile.words[(byte % 32)/16][(block % 4)*16+i];
+                        if (((word >> (8*(byte%4))) & 255) != src.ql[byte])
+                            throw std::runtime_error("native Q5K payload ql conversion mismatch: " + tensor.name);
+                    }
+
+                    std::uint8_t reconstructed_qh[32]{};
+                    for (int idx = 0; idx < 32; ++idx) {
+                        const int plane = idx / 16;
+                        const int in_p = idx % 16;
+                        const int sub = in_p / 4;
+                        const int j = in_p % 4;
+                        std::uint8_t byte_val = 0;
+                        for (int pair = 0; pair < 4; ++pair) {
+                            const int i = pair * 4 + sub;
+                            const int lane = (block % 4) * 16 + i;
+                            const std::uint32_t h = (tile.qh[lane] >> (8 * j)) & 0xff;
+                            if (plane == 0) {
+                                const std::uint8_t p0 = h & 1;
+                                const std::uint8_t p1 = (h >> 1) & 1;
+                                byte_val |= (p0 << (2 * pair)) | (p1 << (2 * pair + 1));
+                            } else {
+                                const std::uint8_t p0 = (h >> 2) & 1;
+                                const std::uint8_t p1 = (h >> 3) & 1;
+                                byte_val |= (p0 << (2 * pair)) | (p1 << (2 * pair + 1));
+                            }
+                        }
+                        reconstructed_qh[idx] = byte_val;
+                    }
+                    if (std::memcmp(reconstructed_qh, src.qh, 32) != 0)
+                        throw std::runtime_error("native Q5K payload qh conversion mismatch: " + tensor.name);
+                }
             }
-            if (std::memcmp(reconstructed_qh, src.qh, 32) != 0)
-                throw std::runtime_error("native Q5K payload qh conversion mismatch: " + tensor.name);
         }
+    };
+
+    const unsigned int hw = std::thread::hardware_concurrency();
+    const unsigned int num_threads = (rows > 1024 && hw > 1) ? std::min(48u, hw) : 1u;
+    if (num_threads == 1) {
+        pack_range(0, rows);
+    } else {
+        std::vector<std::thread> workers;
+        workers.reserve(num_threads);
+        const std::size_t chunk = (rows + num_threads - 1) / num_threads;
+        for (unsigned int t = 0; t < num_threads; ++t) {
+            const std::size_t start = t * chunk;
+            const std::size_t end = std::min(rows, start + chunk);
+            if (start >= end) break;
+            workers.emplace_back(pack_range, start, end);
+        }
+        for (auto& w : workers) w.join();
     }
     return native;
 }
@@ -238,104 +284,126 @@ std::vector<Q6KWaveTile> pack_q6k_wave_tensor(const miinfer::GgufTensor& tensor)
 
     const auto* source = reinterpret_cast<const miinfer::Q6KDeviceBlock*>(tensor.data);
     std::vector<Q6KWaveTile> native(rows * tiles_per_row);
-    for (std::size_t row = 0; row < rows; ++row) {
-        for (std::size_t block = 0; block < blocks; ++block) {
-            auto& tile = native[row * tiles_per_row + block / 4];
-            const auto& src = source[row * blocks + block];
-            auto& m = tile.metadata[block % 4];
-            m.d = src.d;
-            std::memcpy(m.scales, src.scales, 16);
-            m.pad[0] = 0;
-            m.pad[1] = 0;
 
-            if (std::memcmp(&m.d, &src.d, sizeof(__half)) ||
-                std::memcmp(m.scales, src.scales, 16))
-                throw std::runtime_error("native Q6K metadata conversion mismatch: " + tensor.name);
+    const auto pack_range = [&](std::size_t start_row, std::size_t end_row) {
+        for (std::size_t row = start_row; row < end_row; ++row) {
+            for (std::size_t block = 0; block < blocks; ++block) {
+                auto& tile = native[row * tiles_per_row + block / 4];
+                const auto& src = source[row * blocks + block];
+                auto& m = tile.metadata[block % 4];
+                m.d = src.d;
+                std::memcpy(m.scales, src.scales, 16);
+                m.pad[0] = 0;
+                m.pad[1] = 0;
 
-            // Pack words[0], words[1], and qh for the 16 lanes in this block
-            for (int i = 0; i < 16; ++i) {
-                const int lane = (block % 4) * 16 + i;
-                const int pair = i / 4;
-                const int sub = i % 4;
+                if (std::memcmp(&m.d, &src.d, sizeof(__half)) ||
+                    std::memcmp(m.scales, src.scales, 16))
+                    throw std::runtime_error("native Q6K metadata conversion mismatch: " + tensor.name);
 
-                std::uint32_t w0 = 0;
-                std::uint32_t w1 = 0;
-                std::uint32_t qh_val = 0;
+                // Pack words[0], words[1], and qh for the 16 lanes in this block
+                for (int i = 0; i < 16; ++i) {
+                    const int lane = (block % 4) * 16 + i;
+                    const int pair = i / 4;
+                    const int sub = i % 4;
 
-                const int group_0 = 2 * pair;
-                const int group_1 = 2 * pair + 1;
+                    std::uint32_t w0 = 0;
+                    std::uint32_t w1 = 0;
+                    std::uint32_t qh_val = 0;
 
-                for (int j = 0; j < 4; ++j) {
-                    const int elem_a0 = 32 * group_0 + 4 * sub + j;
-                    const int elem_b0 = 32 * group_0 + 16 + 4 * sub + j;
-                    const int elem_a1 = 32 * group_1 + 4 * sub + j;
-                    const int elem_b1 = 32 * group_1 + 16 + 4 * sub + j;
+                    const int group_0 = 2 * pair;
+                    const int group_1 = 2 * pair + 1;
 
-                    auto extract_q6 = [&](int elem) {
-                        const std::size_t g = elem / 128;
-                        const std::size_t l = elem % 128;
-                        const std::size_t q = l / 32;
-                        const std::size_t in_q = l % 32;
-                        const std::size_t low_idx = g * 64 + in_q + (q == 1 || q == 3 ? 32 : 0);
-                        const std::size_t high_idx = g * 32 + in_q;
-                        const std::uint8_t low = (q < 2) ? (src.ql[low_idx] & 0x0f) : (src.ql[low_idx] >> 4);
-                        const std::uint8_t high = (src.qh[high_idx] >> (2 * q)) & 0x03;
-                        return std::make_pair(low, high);
-                    };
+                    for (int j = 0; j < 4; ++j) {
+                        const int elem_a0 = 32 * group_0 + 4 * sub + j;
+                        const int elem_b0 = 32 * group_0 + 16 + 4 * sub + j;
+                        const int elem_a1 = 32 * group_1 + 4 * sub + j;
+                        const int elem_b1 = 32 * group_1 + 16 + 4 * sub + j;
 
-                    const auto [low_a0, high_a0] = extract_q6(elem_a0);
-                    const auto [low_b0, high_b0] = extract_q6(elem_b0);
-                    const auto [low_a1, high_a1] = extract_q6(elem_a1);
-                    const auto [low_b1, high_b1] = extract_q6(elem_b1);
+                        auto extract_q6 = [&](int elem) {
+                            const std::size_t g = elem / 128;
+                            const std::size_t l = elem % 128;
+                            const std::size_t q = l / 32;
+                            const std::size_t in_q = l % 32;
+                            const std::size_t low_idx = g * 64 + in_q + (q == 1 || q == 3 ? 32 : 0);
+                            const std::size_t high_idx = g * 32 + in_q;
+                            const std::uint8_t low = (q < 2) ? (src.ql[low_idx] & 0x0f) : (src.ql[low_idx] >> 4);
+                            const std::uint8_t high = (src.qh[high_idx] >> (2 * q)) & 0x03;
+                            return std::make_pair(low, high);
+                        };
 
-                    const std::uint32_t byte_w0 = low_a0 | (low_a1 << 4);
-                    const std::uint32_t byte_w1 = low_b0 | (low_b1 << 4);
-                    const std::uint32_t byte_qh = high_a0 | (high_b0 << 2) | (high_a1 << 4) | (high_b1 << 6);
+                        const auto [low_a0, high_a0] = extract_q6(elem_a0);
+                        const auto [low_b0, high_b0] = extract_q6(elem_b0);
+                        const auto [low_a1, high_a1] = extract_q6(elem_a1);
+                        const auto [low_b1, high_b1] = extract_q6(elem_b1);
 
-                    w0 |= (byte_w0 << (8 * j));
-                    w1 |= (byte_w1 << (8 * j));
-                    qh_val |= (byte_qh << (8 * j));
+                        const std::uint32_t byte_w0 = low_a0 | (low_a1 << 4);
+                        const std::uint32_t byte_w1 = low_b0 | (low_b1 << 4);
+                        const std::uint32_t byte_qh = high_a0 | (high_b0 << 2) | (high_a1 << 4) | (high_b1 << 6);
+
+                        w0 |= (byte_w0 << (8 * j));
+                        w1 |= (byte_w1 << (8 * j));
+                        qh_val |= (byte_qh << (8 * j));
+                    }
+
+                    tile.words[0][lane] = w0;
+                    tile.words[1][lane] = w1;
+                    tile.qh[lane] = qh_val;
                 }
 
-                tile.words[0][lane] = w0;
-                tile.words[1][lane] = w1;
-                tile.qh[lane] = qh_val;
-            }
+                // Independent verification: verify signed_q6 for row 0 only as sanity check
+                if (row == 0) {
+                    for (int elem = 0; elem < 256; ++elem) {
+                        const int expected = signed_q6_canonical(src, elem);
+                        const int q8_idx = elem / 32;
+                        const int in_q8 = elem % 32;
+                        const int pair = q8_idx / 2;
+                        const int part = q8_idx % 2;
+                        const int is_b = (in_q8 >= 16);
+                        const int in_half = in_q8 % 16;
+                        const int sub = in_half / 4;
+                        const int j = in_half % 4;
 
-            // Independent verification: verify signed_q6 for all 256 elements in the block
-            for (int elem = 0; elem < 256; ++elem) {
-                const int expected = signed_q6_canonical(src, elem);
-                const int q8_idx = elem / 32;
-                const int in_q8 = elem % 32;
-                const int pair = q8_idx / 2;
-                const int part = q8_idx % 2;
-                const int is_b = (in_q8 >= 16);
-                const int in_half = in_q8 % 16;
-                const int sub = in_half / 4;
-                const int j = in_half % 4;
+                        const int i = pair * 4 + sub;
+                        const int lane = (block % 4) * 16 + i;
 
-                const int i = pair * 4 + sub;
-                const int lane = (block % 4) * 16 + i;
+                        std::uint32_t word = is_b ? tile.words[1][lane] : tile.words[0][lane];
+                        std::uint32_t qh_word = tile.qh[lane];
 
-                std::uint32_t word = is_b ? tile.words[1][lane] : tile.words[0][lane];
-                std::uint32_t qh_word = tile.qh[lane];
+                        std::uint32_t byte_w = (word >> (8 * j)) & 0xff;
+                        std::uint32_t low = (part == 0) ? (byte_w & 0x0f) : (byte_w >> 4);
 
-                std::uint32_t byte_w = (word >> (8 * j)) & 0xff;
-                std::uint32_t low = (part == 0) ? (byte_w & 0x0f) : (byte_w >> 4);
+                        std::uint32_t byte_qh = (qh_word >> (8 * j)) & 0xff;
+                        int shift = 0;
+                        if (part == 0 && !is_b) shift = 0;
+                        else if (part == 0 && is_b) shift = 2;
+                        else if (part == 1 && !is_b) shift = 4;
+                        else if (part == 1 && is_b) shift = 6;
+                        std::uint32_t high = (byte_qh >> shift) & 0x03;
 
-                std::uint32_t byte_qh = (qh_word >> (8 * j)) & 0xff;
-                int shift = 0;
-                if (part == 0 && !is_b) shift = 0;
-                else if (part == 0 && is_b) shift = 2;
-                else if (part == 1 && !is_b) shift = 4;
-                else if (part == 1 && is_b) shift = 6;
-                std::uint32_t high = (byte_qh >> shift) & 0x03;
-
-                int actual = static_cast<int>(low | (high << 4)) - 32;
-                if (actual != expected)
-                    throw std::runtime_error("native Q6K value mismatch at elem " + std::to_string(elem) + ": " + tensor.name);
+                        int actual = static_cast<int>(low | (high << 4)) - 32;
+                        if (actual != expected)
+                            throw std::runtime_error("native Q6K value mismatch at elem " + std::to_string(elem) + ": " + tensor.name);
+                    }
+                }
             }
         }
+    };
+
+    const unsigned int hw = std::thread::hardware_concurrency();
+    const unsigned int num_threads = (rows > 1024 && hw > 1) ? std::min(48u, hw) : 1u;
+    if (num_threads == 1) {
+        pack_range(0, rows);
+    } else {
+        std::vector<std::thread> workers;
+        workers.reserve(num_threads);
+        const std::size_t chunk = (rows + num_threads - 1) / num_threads;
+        for (unsigned int t = 0; t < num_threads; ++t) {
+            const std::size_t start = t * chunk;
+            const std::size_t end = std::min(rows, start + chunk);
+            if (start >= end) break;
+            workers.emplace_back(pack_range, start, end);
+        }
+        for (auto& w : workers) w.join();
     }
     return native;
 }

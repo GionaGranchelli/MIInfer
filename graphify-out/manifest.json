@@ -1332,9 +1332,9 @@
     "semantic_hash": ""
   },
   "tools/m6a21_qwen35_gpu_hybrid_block.cpp": {
-    "mtime": 1788732894.598485,
-    "seen": 1788735216.731576,
-    "ast_hash": "0e140476d5cb9633c5f718d9de580054",
+    "mtime": 1788763481.8000197,
+    "seen": 1788764756.280135,
+    "ast_hash": "03ec6417aaf244eead482df8df79ddba",
     "semantic_hash": ""
   },
   "experiments/EXP-0065-m6a21-qwen35-gpu-hybrid-block.md": {
@@ -2040,9 +2040,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/kquant_wave_layout.hpp": {
-    "mtime": 1788718981.2993321,
-    "seen": 1788721684.302654,
-    "ast_hash": "0b3cc007aa5fdb030940ac3d61fcf0db",
+    "mtime": 1788762401.8632185,
+    "seen": 1788764756.2799754,
+    "ast_hash": "10cb84f700f3039d4e0bdad7d5bafffe",
     "semantic_hash": ""
   },
   "scripts/run-exp0177-attn-gate-ab.sh": {
@@ -2076,9 +2076,9 @@
     "semantic_hash": ""
   },
   "src/kquant_wave_layout.cpp": {
-    "mtime": 1788719027.8431098,
-    "seen": 1788721684.3027294,
-    "ast_hash": "0483c44ad2cda38d573139950f309b84",
+    "mtime": 1788762501.3647408,
+    "seen": 1788764756.2800622,
+    "ast_hash": "4e55ea8fc13370aa6f2b149624893df2",
     "semantic_hash": ""
   },
   "tests/kquant_wave_test.cpp": {
@@ -2142,9 +2142,9 @@
     "semantic_hash": ""
   },
   "docs/M7-GFX906-PERFORMANCE-FRONTIER.md": {
-    "mtime": 1788735198.3521307,
-    "seen": 1788735216.7316217,
-    "ast_hash": "70e171b2fb16e940409dbe2a4ab61abf",
+    "mtime": 1788764728.9859996,
+    "seen": 1788764756.2801738,
+    "ast_hash": "9b37db85c155d9e130317c3e008fd84f",
     "semantic_hash": ""
   },
   "experiments/EXP-0180-m7-frontier-benchmark.md": {
@@ -2235,6 +2235,18 @@
     "mtime": 1788735181.1992006,
     "seen": 1788735216.7319448,
     "ast_hash": "941b6a0b4137838c898e61e7d416c2db",
+    "semantic_hash": ""
+  },
+  "scripts/run-exp0188-stretch-goal-ab.sh": {
+    "mtime": 1788762955.4893327,
+    "seen": 1788764756.2800295,
+    "ast_hash": "26931917f2ea091bc1030ed72ef173e9",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0188-interlayer-norm-native-lm-head.md": {
+    "mtime": 1788764702.332128,
+    "seen": 1788764756.2804642,
+    "ast_hash": "e577ebf6aa1a281e24c032c360fba5f8",
     "semantic_hash": ""
   }
 }
