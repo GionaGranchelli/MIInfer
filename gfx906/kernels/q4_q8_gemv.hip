@@ -3,6 +3,8 @@
 #include "miinfer/hip_check.hpp"
 
 #include <hip/hip_runtime.h>
+#include <cstdlib>
+#include <cstring>
 
 namespace miinfer {
 
@@ -10,7 +12,15 @@ namespace {
 
 constexpr unsigned int kThreadsPerBlock = 256;
 
-__global__ void q8_1_quantize_kernel(
+static bool wave64_q8_enabled() {
+    static const bool enabled = [] {
+        const char* env = std::getenv("MIINFER_WAVE64_Q8");
+        return env == nullptr || (std::strcmp(env, "0") != 0 && std::strcmp(env, "OFF") != 0 && std::strcmp(env, "off") != 0);
+    }();
+    return enabled;
+}
+
+__global__ void q8_1_quantize_legacy_kernel(
     const __half* input,
     Q8_1Block* output,
     int elements) {
@@ -50,7 +60,7 @@ __global__ void q8_1_quantize_kernel(
     output[block].qs[index] = static_cast<std::int8_t>(quantized[index]);
 }
 
-__global__ void q8_1_quantize_f32_kernel(
+__global__ void q8_1_quantize_f32_legacy_kernel(
     const float* input,
     Q8_1Block* output,
     int elements) {
@@ -88,80 +98,164 @@ __global__ void q8_1_quantize_f32_kernel(
     output[block].qs[index] = static_cast<std::int8_t>(quantized[index]);
 }
 
-__global__ void q8_exact_quantize_kernel(
-    const __half* input,
-    Q8ExactBlock* output,
+__global__ void q8_1_quantize_kernel(
+    const __half* __restrict__ input,
+    Q8_1Block* __restrict__ output,
     int elements) {
-    const int block = static_cast<int>(blockIdx.x);
-    const int index = static_cast<int>(threadIdx.x);
-    if (index >= kQ8_1BlockSize || block * kQ8_1BlockSize + index >= elements) return;
+    const int tid = static_cast<int>(blockIdx.x * blockDim.x + threadIdx.x);
+    const int lane = static_cast<int>(threadIdx.x % 64);
+    const int wave_in_grid = tid / 64;
+    const int block_in_wave = lane / 32;
+    const int in_block = lane % 32;
+    const int global_block = wave_in_grid * 2 + block_in_wave;
+    const int num_blocks = elements / kQ8_1BlockSize;
 
-    __shared__ float absolute_values[kQ8_1BlockSize];
-    __shared__ int quantized[kQ8_1BlockSize];
-    __shared__ float scale;
-    absolute_values[index] = fabsf(__half2float(input[block * kQ8_1BlockSize + index]));
-    __syncthreads();
-    for (int stride = kQ8_1BlockSize / 2; stride > 0; stride /= 2) {
-        if (index < stride) {
-            absolute_values[index] = fmaxf(absolute_values[index], absolute_values[index + stride]);
+    const int elem_idx = global_block * kQ8_1BlockSize + in_block;
+    const float val = (elem_idx < elements) ? __half2float(input[elem_idx]) : 0.0f;
+    float amax = fabsf(val);
+
+    #pragma unroll
+    for (int offset = 16; offset > 0; offset /= 2) {
+        amax = fmaxf(amax, __shfl_xor(amax, offset, 64));
+    }
+
+    const float scale = amax / 127.0f;
+    const float inv_scale = (scale != 0.0f) ? (1.0f / scale) : 0.0f;
+    const int q_int = max(-127, min(127, static_cast<int>(roundf(val * inv_scale))));
+
+    int sum = q_int;
+    #pragma unroll
+    for (int offset = 16; offset > 0; offset /= 2) {
+        sum += __shfl_xor(sum, offset, 64);
+    }
+
+    if (global_block < num_blocks) {
+        if (in_block == 0) {
+            output[global_block].d = __float2half_rn(scale);
+            output[global_block].s = __float2half_rn(static_cast<float>(sum) * scale);
         }
-        __syncthreads();
+        output[global_block].qs[in_block] = static_cast<std::int8_t>(q_int);
     }
-    if (index == 0) {
-        scale = absolute_values[0] / 127.0F;
-        output[block].d = __float2half_rn(scale);
+}
+
+__global__ void q8_1_quantize_f32_kernel(
+    const float* __restrict__ input,
+    Q8_1Block* __restrict__ output,
+    int elements) {
+    const int tid = static_cast<int>(blockIdx.x * blockDim.x + threadIdx.x);
+    const int lane = static_cast<int>(threadIdx.x % 64);
+    const int wave_in_grid = tid / 64;
+    const int block_in_wave = lane / 32;
+    const int in_block = lane % 32;
+    const int global_block = wave_in_grid * 2 + block_in_wave;
+    const int num_blocks = elements / kQ8_1BlockSize;
+
+    const int elem_idx = global_block * kQ8_1BlockSize + in_block;
+    const float val = (elem_idx < elements) ? input[elem_idx] : 0.0f;
+    float amax = fabsf(val);
+
+    #pragma unroll
+    for (int offset = 16; offset > 0; offset /= 2) {
+        amax = fmaxf(amax, __shfl_xor(amax, offset, 64));
     }
-    __syncthreads();
-    const float inverse_scale = scale != 0.0F ? 1.0F / scale : 0.0F;
-    quantized[index] = max(-127, min(127, static_cast<int>(roundf(
-        __half2float(input[block * kQ8_1BlockSize + index]) * inverse_scale))));
-    __syncthreads();
-    if (index == 0) {
-        int sum = 0;
-        for (int quant_index = 0; quant_index < kQ8_1BlockSize; ++quant_index) {
-            sum += quantized[quant_index];
+
+    const float scale = amax / 127.0f;
+    const float inv_scale = (scale != 0.0f) ? (1.0f / scale) : 0.0f;
+    const int q_int = max(-127, min(127, static_cast<int>(roundf(val * inv_scale))));
+
+    int sum = q_int;
+    #pragma unroll
+    for (int offset = 16; offset > 0; offset /= 2) {
+        sum += __shfl_xor(sum, offset, 64);
+    }
+
+    if (global_block < num_blocks) {
+        if (in_block == 0) {
+            output[global_block].d = __float2half_rn(scale);
+            output[global_block].s = __float2half_rn(static_cast<float>(sum) * scale);
         }
-        output[block].sum = static_cast<std::int16_t>(sum);
+        output[global_block].qs[in_block] = static_cast<std::int8_t>(q_int);
     }
-    output[block].qs[index] = static_cast<std::int8_t>(quantized[index]);
+}
+
+__global__ void q8_exact_quantize_kernel(
+    const __half* __restrict__ input,
+    Q8ExactBlock* __restrict__ output,
+    int elements) {
+    const int tid = static_cast<int>(blockIdx.x * blockDim.x + threadIdx.x);
+    const int lane = static_cast<int>(threadIdx.x % 64);
+    const int wave_in_grid = tid / 64;
+    const int block_in_wave = lane / 32;
+    const int in_block = lane % 32;
+    const int global_block = wave_in_grid * 2 + block_in_wave;
+    const int num_blocks = elements / kQ8_1BlockSize;
+
+    const int elem_idx = global_block * kQ8_1BlockSize + in_block;
+    const float val = (elem_idx < elements) ? __half2float(input[elem_idx]) : 0.0f;
+    float amax = fabsf(val);
+
+    #pragma unroll
+    for (int offset = 16; offset > 0; offset /= 2) {
+        amax = fmaxf(amax, __shfl_xor(amax, offset, 64));
+    }
+
+    const float scale = amax / 127.0f;
+    const float inv_scale = (scale != 0.0f) ? (1.0f / scale) : 0.0f;
+    const int q_int = max(-127, min(127, static_cast<int>(roundf(val * inv_scale))));
+
+    int sum = q_int;
+    #pragma unroll
+    for (int offset = 16; offset > 0; offset /= 2) {
+        sum += __shfl_xor(sum, offset, 64);
+    }
+
+    if (global_block < num_blocks) {
+        if (in_block == 0) {
+            output[global_block].d = __float2half_rn(scale);
+            output[global_block].sum = static_cast<std::int16_t>(sum);
+        }
+        output[global_block].qs[in_block] = static_cast<std::int8_t>(q_int);
+    }
 }
 
 __global__ void q8_exact_quantize_f32_kernel(
-    const float* input,
-    Q8ExactBlock* output,
+    const float* __restrict__ input,
+    Q8ExactBlock* __restrict__ output,
     int elements) {
-    const int block = static_cast<int>(blockIdx.x);
-    const int index = static_cast<int>(threadIdx.x);
-    if (index >= kQ8_1BlockSize || block * kQ8_1BlockSize + index >= elements) return;
+    const int tid = static_cast<int>(blockIdx.x * blockDim.x + threadIdx.x);
+    const int lane = static_cast<int>(threadIdx.x % 64);
+    const int wave_in_grid = tid / 64;
+    const int block_in_wave = lane / 32;
+    const int in_block = lane % 32;
+    const int global_block = wave_in_grid * 2 + block_in_wave;
+    const int num_blocks = elements / kQ8_1BlockSize;
 
-    __shared__ float absolute_values[kQ8_1BlockSize];
-    __shared__ int quantized[kQ8_1BlockSize];
-    __shared__ float scale;
-    absolute_values[index] = fabsf(input[block * kQ8_1BlockSize + index]);
-    __syncthreads();
-    for (int stride = kQ8_1BlockSize / 2; stride > 0; stride /= 2) {
-        if (index < stride) {
-            absolute_values[index] = fmaxf(absolute_values[index], absolute_values[index + stride]);
+    const int elem_idx = global_block * kQ8_1BlockSize + in_block;
+    const float val = (elem_idx < elements) ? input[elem_idx] : 0.0f;
+    float amax = fabsf(val);
+
+    #pragma unroll
+    for (int offset = 16; offset > 0; offset /= 2) {
+        amax = fmaxf(amax, __shfl_xor(amax, offset, 64));
+    }
+
+    const float scale = amax / 127.0f;
+    const float inv_scale = (scale != 0.0f) ? (1.0f / scale) : 0.0f;
+    const int q_int = max(-127, min(127, static_cast<int>(roundf(val * inv_scale))));
+
+    int sum = q_int;
+    #pragma unroll
+    for (int offset = 16; offset > 0; offset /= 2) {
+        sum += __shfl_xor(sum, offset, 64);
+    }
+
+    if (global_block < num_blocks) {
+        if (in_block == 0) {
+            output[global_block].d = __float2half_rn(scale);
+            output[global_block].sum = static_cast<std::int16_t>(sum);
         }
-        __syncthreads();
+        output[global_block].qs[in_block] = static_cast<std::int8_t>(q_int);
     }
-    if (index == 0) {
-        scale = absolute_values[0] / 127.0F;
-        output[block].d = __float2half_rn(scale);
-    }
-    __syncthreads();
-    const float inverse_scale = scale != 0.0F ? 1.0F / scale : 0.0F;
-    quantized[index] = max(-127, min(127, static_cast<int>(roundf(
-        input[block * kQ8_1BlockSize + index] * inverse_scale))));
-    __syncthreads();
-    if (index == 0) {
-        int sum = 0;
-        for (int quant_index = 0; quant_index < kQ8_1BlockSize; ++quant_index) {
-            sum += quantized[quant_index];
-        }
-        output[block].sum = static_cast<std::int16_t>(sum);
-    }
-    output[block].qs[index] = static_cast<std::int8_t>(quantized[index]);
 }
 
 // C10c candidate. One workgroup performs the same 256-thread RMS reduction
@@ -345,18 +439,33 @@ void launch_q8_1_quantize(
     Q8_1Block* output,
     int elements,
     hipStream_t stream) {
-    if (elements <= 0 || elements % kQ8_1BlockSize != 0) {
+    if (input == nullptr || output == nullptr || elements <= 0
+        || elements % kQ8_1BlockSize != 0) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
-    hipLaunchKernelGGL(
-        q8_1_quantize_kernel,
-        dim3(static_cast<unsigned int>(elements / kQ8_1BlockSize)),
-        dim3(kQ8_1BlockSize),
-        0,
-        stream,
-        input,
-        output,
-        elements);
+    const unsigned int num_blocks = static_cast<unsigned int>(elements / kQ8_1BlockSize);
+    if (wave64_q8_enabled()) {
+        const unsigned int grid_dim = (num_blocks + 7) / 8;
+        hipLaunchKernelGGL(
+            q8_1_quantize_kernel,
+            dim3(grid_dim),
+            dim3(kThreadsPerBlock),
+            0,
+            stream,
+            input,
+            output,
+            elements);
+    } else {
+        hipLaunchKernelGGL(
+            q8_1_quantize_legacy_kernel,
+            dim3(num_blocks),
+            dim3(kQ8_1BlockSize),
+            0,
+            stream,
+            input,
+            output,
+            elements);
+    }
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
@@ -369,15 +478,29 @@ void launch_q8_1_quantize_f32(
         || elements % kQ8_1BlockSize != 0) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
-    hipLaunchKernelGGL(
-        q8_1_quantize_f32_kernel,
-        dim3(static_cast<unsigned int>(elements / kQ8_1BlockSize)),
-        dim3(kQ8_1BlockSize),
-        0,
-        stream,
-        input,
-        output,
-        elements);
+    const unsigned int num_blocks = static_cast<unsigned int>(elements / kQ8_1BlockSize);
+    if (wave64_q8_enabled()) {
+        const unsigned int grid_dim = (num_blocks + 7) / 8;
+        hipLaunchKernelGGL(
+            q8_1_quantize_f32_kernel,
+            dim3(grid_dim),
+            dim3(kThreadsPerBlock),
+            0,
+            stream,
+            input,
+            output,
+            elements);
+    } else {
+        hipLaunchKernelGGL(
+            q8_1_quantize_f32_legacy_kernel,
+            dim3(num_blocks),
+            dim3(kQ8_1BlockSize),
+            0,
+            stream,
+            input,
+            output,
+            elements);
+    }
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
@@ -390,10 +513,17 @@ void launch_q8_exact_quantize(
         || elements % kQ8_1BlockSize != 0) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
+    const unsigned int num_blocks = static_cast<unsigned int>(elements / kQ8_1BlockSize);
+    const unsigned int grid_dim = (num_blocks + 7) / 8;
     hipLaunchKernelGGL(
         q8_exact_quantize_kernel,
-        dim3(static_cast<unsigned int>(elements / kQ8_1BlockSize)),
-        dim3(kQ8_1BlockSize), 0, stream, input, output, elements);
+        dim3(grid_dim),
+        dim3(kThreadsPerBlock),
+        0,
+        stream,
+        input,
+        output,
+        elements);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
@@ -406,10 +536,17 @@ void launch_q8_exact_quantize_f32(
         || elements % kQ8_1BlockSize != 0) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
+    const unsigned int num_blocks = static_cast<unsigned int>(elements / kQ8_1BlockSize);
+    const unsigned int grid_dim = (num_blocks + 7) / 8;
     hipLaunchKernelGGL(
         q8_exact_quantize_f32_kernel,
-        dim3(static_cast<unsigned int>(elements / kQ8_1BlockSize)),
-        dim3(kQ8_1BlockSize), 0, stream, input, output, elements);
+        dim3(grid_dim),
+        dim3(kThreadsPerBlock),
+        0,
+        stream,
+        input,
+        output,
+        elements);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
