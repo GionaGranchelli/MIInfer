@@ -47,7 +47,9 @@ EXP-0231 tested the more relevant three-plane Q4_K repack and 16×16-thread
 MMQ tile: it was 1.125x faster at a full 64-token tile, but 13.8x slower at
 the production B=4 chunk. It is rejected because the current causal
 layer-major schedule cannot expose that tile without a different recurrent
-chunk architecture. The 100 tok/s gate remains open.
+chunk architecture. EXP-0232 tested a smaller 16-token version with exact
+Q4_K arithmetic and reached only 0.351x the four-launch B=4 control, so the
+intermediate tile is rejected too. The 100 tok/s gate remains open.
 
 EXP-0168 completed that profile at position 63: total GPU event
 `71.9133 ms/token`, layer sum `68.6269 ms`, final LM head `2.50016 ms`, and

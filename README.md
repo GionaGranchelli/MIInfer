@@ -36,7 +36,9 @@ candidate is 45.56 tok/s after EXP-0221's copy elimination.
 EXP-0230 measured a raw int8 GEMM ceiling at 1.387x over native Q4_K B=4
 launches. EXP-0231 tested a three-plane Q4_K repack with a 64-token MMQ tile:
 it reached 1.125x at B=64 but was 13.8x slower at the production B=4 chunk,
-so it is rejected pending a causally valid larger-chunk schedule.
+so it is rejected pending a causally valid larger-chunk schedule. EXP-0232
+tested a 16-token version and reached only 0.351x the four-launch B=4 control;
+the intermediate tile is also rejected.
 
 The project currently has:
 
