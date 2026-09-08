@@ -1992,8 +1992,8 @@
     "semantic_hash": ""
   },
   "bench/q4k_layout_bench.cpp": {
-    "mtime": 1788833235.4285223,
-    "seen": 1788833252.077958,
+    "mtime": 1788833622.4519653,
+    "seen": 1788833640.4970238,
     "ast_hash": "0194fa1c61f041344a4c768a2e005b6f",
     "semantic_hash": ""
   },
@@ -2040,8 +2040,8 @@
     "semantic_hash": ""
   },
   "include/miinfer/kquant_wave_layout.hpp": {
-    "mtime": 1788833235.4275222,
-    "seen": 1788833252.077976,
+    "mtime": 1788833622.4519653,
+    "seen": 1788833640.4970422,
     "ast_hash": "8dd28b79700228b35792dd0aa2b07b7b",
     "semantic_hash": ""
   },
@@ -2631,6 +2631,12 @@
     "mtime": 1788833235.4275222,
     "seen": 1788833252.078562,
     "ast_hash": "548665dd941ca1435d986d4fe5fb8f2a",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0229-m11b-q4k-tile-micro-rejection.md": {
+    "mtime": 1788833622.4519653,
+    "seen": 1788833640.4976397,
+    "ast_hash": "080dc80a1177e4e57a4648114b858c25",
     "semantic_hash": ""
   }
 }
