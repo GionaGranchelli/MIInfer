@@ -304,6 +304,10 @@ if(MIINFER_ENABLE_HIP)
     add_executable(miinfer-m12-dense-stage-bench bench/m12_dense_stage_bench.cpp)
     target_link_libraries(miinfer-m12-dense-stage-bench PRIVATE miinfer_hip miinfer_model)
     target_compile_options(miinfer-m12-dense-stage-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-m13-quant-mm-bench bench/m13_quant_mm_bench.cpp)
+    target_link_libraries(miinfer-m13-quant-mm-bench PRIVATE miinfer_hip miinfer_model)
+    target_compile_options(miinfer-m13-quant-mm-bench PRIVATE -Wall -Wextra -Wpedantic)
     target_link_libraries(miinfer-q4-q8-gemv-bench PRIVATE miinfer_hip)
     target_compile_options(miinfer-q4-q8-gemv-bench PRIVATE -Wall -Wextra -Wpedantic)
 

@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M12 — matrix prefill architecture feasibility**
+**Current phase: M13 closed — M14 release/packaging next**
 
 M11-B is frozen at the qualified `46.22 tok/s` P513 packed-Q4 baseline. The
 opt-in layer-major prefill path reaches that rate with deferred
@@ -101,6 +101,10 @@ the default and decode paths remain unchanged. B256 runtime capacity is
 rejected as out-of-memory.
 EXP-0260 composes dense B128 with chunkwise GDN at 52.99 tok/s P512; it
 remains opt-in because the aspirational 60 tok/s gate is still open.
+EXP-0261 tested resident quantized Q4_K/Q6_K multi-token projection at B64–B2048:
+the exact Q4 FFN-down candidate reached only 0.860–0.863x of repeated B4 and
+the Q6 candidate 0.695–0.717x, with exact B64 output agreement. M13 is closed
+without runtime integration; M14 release and packaging work is next.
 
 The project currently has:
 

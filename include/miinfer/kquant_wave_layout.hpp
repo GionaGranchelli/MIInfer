@@ -85,6 +85,14 @@ void launch_q4k_wave_gemv(const Q4KWaveTile* w, const miinfer::Q8_1Block* x, flo
 void launch_q4k_wave_gemv_batched4(const Q4KWaveTile* w, const miinfer::Q8_1Block* x,
                                    float* y, std::uint32_t rows, std::uint32_t columns,
                                    hipStream_t stream = nullptr);
+// M13: quantized multi-token projection. The input stride is measured in
+// Q8_1 blocks because prefill workspaces reserve the larger FFN stride.
+void launch_q4k_wave_gemv_batched_mm(const Q4KWaveTile* w,
+                                     const miinfer::Q8_1Block* x,
+                                     float* y, std::uint32_t rows,
+                                     std::uint32_t columns, std::uint32_t batch,
+                                     std::uint32_t input_stride_blocks,
+                                     hipStream_t stream = nullptr);
 void launch_q4k_wave_fused_gate_up_swiglu(
     const Q4KWaveTile* w_gate,
     const Q4KWaveTile* w_up,
@@ -121,3 +129,9 @@ void launch_q6k_wave_gemv(const Q6KWaveTile* w, const miinfer::Q8_1Block* x, flo
 void launch_q6k_wave_gemv_batched4(const Q6KWaveTile* w, const miinfer::Q8_1Block* x,
                                    float* y, std::uint32_t rows, std::uint32_t columns,
                                    hipStream_t stream = nullptr);
+void launch_q6k_wave_gemv_batched_mm(const Q6KWaveTile* w,
+                                     const miinfer::Q8_1Block* x,
+                                     float* y, std::uint32_t rows,
+                                     std::uint32_t columns, std::uint32_t batch,
+                                     std::uint32_t input_stride_blocks,
+                                     hipStream_t stream = nullptr);

@@ -10,13 +10,12 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M12 — matrix prefill architecture feasibility**
+**Current phase: M13 — quantized matrix prefill closed; M14 next**
 
 Immediate objective:
 
-> Keep M11-B frozen at the qualified 46.22 P513 packed-Q4 baseline. Validate
-> one chunkwise Gated DeltaNet oracle and determine whether the EXP-0255
-> B128+ dense-staging primitive can be exposed without changing decode.
+> Preserve the measured M12 composition, qualify the final opt-in path, and
+> stop single-MI50 prefill kernel research after the direct quantized MMQ gate.
 
 M11-B's current-family search is closed by EXP-0244 through EXP-0254.
 EXP-0255 is the first M12 feasibility result: whole-matrix Q4_K→FP16 staging
@@ -42,6 +41,18 @@ a new memory plan.
 EXP-0260 combines the independently measured paths at 52.99 P512 tok/s.
 Keep that composition opt-in; the next experiment must target another measured
 tail rather than broadening the default runtime.
+
+M13 then tested direct quantized multi-token projection while keeping Q4_K/Q6_K
+weight tiles resident. EXP-0261's exact Q4 FFN-down candidate reached only
+0.860–0.863x of repeated B4 at B64–B2048; the compatible Q6 candidate reached
+0.695–0.717x. B64 outputs matched exactly, so this is a performance rejection
+rather than a correctness failure. The combined M12 path was re-profiled at
+51.73 tok/s P512. M13 is closed: do not integrate the slower kernel or reopen
+the same single-GPU projection family without a materially different mapping.
+
+Next: M14 release, packaging, and hardware detection. Serving/UI and
+multi-MI50 work follow release hygiene; single-MI50 prefill remains frozen at
+the opt-in M12 result.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See

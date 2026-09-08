@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M12 — matrix prefill architecture feasibility**
+**M13 — quantized matrix prefill closed; M14 next**
 
 M11-B is frozen at the qualified `46.22 tok/s` P513 packed-Q4 baseline.
 Native Qwen3.8-27B generation is operational and allocation-free. The
@@ -48,6 +48,18 @@ B256 runtime capacity was rejected on HIP out-of-memory.
 EXP-0260 composes the independent paths at 52.99 tok/s P512. This is the
 best M12 result so far, but it remains opt-in below the aspirational 60 tok/s
 gate.
+
+M13 tested direct quantized multi-token projection while keeping Q4_K/Q6_K
+weights resident. EXP-0261 measured the exact Q4 FFN-down shape at 0.860–0.863x
+of repeated B4 for B64–B2048 and a compatible Q6 projection at 0.695–0.717x.
+B64 outputs matched exactly. The combined M12 path was re-profiled at exact
+P512: 9897.51 ms / 51.73 tok/s. The direct MMQ candidate is rejected before
+runtime integration; M12's opt-in path and decode behavior remain unchanged.
+M13 is the hard stop for this single-MI50 prefill research branch.
+
+The next milestone is M14 release/packaging/hardware detection. Do not add
+another quantized projection mapping without a new, materially different
+hypothesis and an isolated win over the existing B4 path.
 
 Re-evaluation: the earlier 32-value-head note was incorrect. The actual
 Qwen3.8 geometry is 16 key heads / 48 value heads / state 128. The corrected
