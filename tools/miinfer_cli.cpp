@@ -2,19 +2,23 @@
 #include <array>
 #include <chrono>
 #include <cmath>
+#include <condition_variable>
 #include <csignal>
 #include <cstdint>
 #include <cstring>
+#include <deque>
 #include <functional>
 #include <filesystem>
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <numeric>
 #include <span>
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <thread>
 #include <vector>
 
 #include <arpa/inet.h>
@@ -1077,13 +1081,15 @@ int cmd_serve(int argc, char** argv) {
         return 1;
     }
 
-    if (listen(server_fd, 8) < 0) {
+    constexpr std::size_t kQueueCapacity = 8;
+    if (listen(server_fd, static_cast<int>(kQueueCapacity)) < 0) {
         std::cerr << "Listen failed\n";
         close(server_fd);
         return 1;
     }
 
     std::cerr << "MIInfer OpenAI-compatible API listening at http://" << host << ":" << port << "\n";
+    std::cerr << "Request queue capacity: " << kQueueCapacity << "\n";
     std::cerr << "Endpoints:\n";
     std::cerr << "  GET  /healthz\n";
     std::cerr << "  GET  /readyz\n";
@@ -1100,21 +1106,12 @@ int cmd_serve(int argc, char** argv) {
     std::uint64_t prompt_tokens_total = 0;
     std::uint64_t generated_tokens_total = 0;
 
-    while (!g_shutdown_requested) {
-        pollfd pfd{server_fd, POLLIN, 0};
-        int poll_res = poll(&pfd, 1, 1000);
-        if (poll_res <= 0) continue;
-
-        sockaddr_in client_addr{};
-        socklen_t client_len = sizeof(client_addr);
-        int client_fd = accept(server_fd, reinterpret_cast<sockaddr*>(&client_addr), &client_len);
-        if (client_fd < 0) continue;
-
+    auto handle_client = [&](int client_fd) {
         std::vector<char> buffer(65536, 0);
         ssize_t bytes_read = read(client_fd, buffer.data(), buffer.size() - 1);
         if (bytes_read <= 0) {
             close(client_fd);
-            continue;
+            return;
         }
         ++http_requests;
 
@@ -1239,7 +1236,60 @@ int cmd_serve(int argc, char** argv) {
         }
 
         close(client_fd);
+    };
+
+    std::deque<int> pending_clients;
+    std::mutex queue_mutex;
+    std::condition_variable queue_cv;
+    bool accepting = true;
+    std::thread worker([&] {
+        while (true) {
+            int client_fd = -1;
+            {
+                std::unique_lock lock(queue_mutex);
+                queue_cv.wait(lock, [&] { return !pending_clients.empty() || !accepting; });
+                if (pending_clients.empty() && !accepting) return;
+                client_fd = pending_clients.front();
+                pending_clients.pop_front();
+            }
+            handle_client(client_fd);
+        }
+    });
+
+    while (!g_shutdown_requested) {
+        pollfd pfd{server_fd, POLLIN, 0};
+        int poll_res = poll(&pfd, 1, 1000);
+        if (poll_res <= 0) continue;
+
+        sockaddr_in client_addr{};
+        socklen_t client_len = sizeof(client_addr);
+        int client_fd = accept(server_fd, reinterpret_cast<sockaddr*>(&client_addr), &client_len);
+        if (client_fd < 0) continue;
+
+        bool queued = false;
+        {
+            std::lock_guard lock(queue_mutex);
+            if (pending_clients.size() < kQueueCapacity) {
+                pending_clients.push_back(client_fd);
+                queued = true;
+            }
+        }
+        if (queued) {
+            queue_cv.notify_one();
+        } else {
+            const std::string response =
+                "HTTP/1.1 503 Service Unavailable\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+            (void)write(client_fd, response.data(), response.size());
+            close(client_fd);
+        }
     }
+
+    {
+        std::lock_guard lock(queue_mutex);
+        accepting = false;
+    }
+    queue_cv.notify_one();
+    worker.join();
 
     std::cerr << "Shutting down HTTP server...\n";
     close(server_fd);

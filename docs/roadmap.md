@@ -65,9 +65,10 @@ numerically qualified dense replacement exists.
 
 M15 provides stable `miinfer --version`, `miinfer config`, and
 `miinfer models [directory]` contracts. M16 adds dependency-free serving
-metrics while retaining the single-threaded runtime; queueing and concurrency
-require measurements before implementation. Keep the implementation narrow to
-the supported MI50/Qwen3.8 path.
+metrics and a bounded single-worker request queue while retaining serialized
+GPU execution. Concurrent GPU execution requires measurements before
+implementation. Keep the implementation narrow to the supported MI50/Qwen3.8
+path.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See

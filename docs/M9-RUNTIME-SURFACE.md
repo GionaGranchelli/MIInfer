@@ -51,13 +51,16 @@ Provides an interactive multi-turn conversational REPL in the terminal:
 - **Commands**: Supports `/reset` (clears conversation history and KV/state buffers) and `/exit` / `/quit`.
 
 ### 2.4 `miinfer serve`
-Launches a high-performance, single-threaded, non-blocking HTTP daemon implementing the standard OpenAI API specification:
+Launches a high-performance HTTP daemon with a bounded single-worker request
+queue implementing the standard OpenAI API specification:
 - **Endpoints**:
   - `GET /healthz`: Returns process health after model initialization.
   - `GET /readyz`: Returns readiness for inference requests.
   - `GET /metrics`: Exposes Prometheus-compatible request and token counters.
   - `GET /v1/models`: Lists the loaded model artifact identifier.
   - `POST /v1/chat/completions`: Supports standard JSON responses (`"stream": false`) and real-time Server-Sent Events (`"stream": true`, `data: {...}`, ending with `data: [DONE]`).
+- **Queueing**: Accepts up to eight pending client connections while one GPU
+  inference request is active; excess connections receive HTTP 503.
 - **Payload Parsing**: Extracts system, user, and assistant message hierarchies into native ChatML token sequences.
 
 ---

@@ -1015,7 +1015,7 @@
       "file_type": "code",
       "norm_label": "qwen35runtimeengine",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L76"
+      "source_location": "L80"
     },
     {
       "id": "tools_m6a18_qwen35_deltanet_state_gpu_devicebuffer",
@@ -1405,7 +1405,7 @@
       "file_type": "code",
       "norm_label": "prefillprofile",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L102"
+      "source_location": "L106"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_updateprovenance",
@@ -1574,7 +1574,7 @@
       "file_type": "code",
       "norm_label": "runtimegeneratestats",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L60"
+      "source_location": "L64"
     },
     {
       "id": "tools_miinfer_cli_runtimegenerateoptions",
@@ -1587,7 +1587,7 @@
       "file_type": "code",
       "norm_label": "runtimegenerateoptions",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L54"
+      "source_location": "L58"
     },
     {
       "id": "tools_miinfer_cli_stepresult",
@@ -1600,7 +1600,7 @@
       "file_type": "code",
       "norm_label": "stepresult",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L161"
+      "source_location": "L165"
     },
     {
       "id": "tests_qwen3_cached_attention_determinism_gpu_test_devicebuffer",
@@ -2567,7 +2567,7 @@
       "file_type": "code",
       "norm_label": ".init_buffers()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L635"
+      "source_location": "L639"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_allocate",
@@ -8591,7 +8591,7 @@
       "file_type": "code",
       "norm_label": ".init()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L111"
+      "source_location": "L115"
     },
     {
       "id": "bench_m12_dense_stage_bench_as",
@@ -9395,7 +9395,7 @@
       "file_type": "code",
       "norm_label": ".report()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L130"
+      "source_location": "L134"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_ensure_graph_captured",
@@ -9407,7 +9407,7 @@
       "file_type": "code",
       "norm_label": ".ensure_graph_captured()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L669"
+      "source_location": "L673"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_generate",
@@ -9419,7 +9419,7 @@
       "file_type": "code",
       "norm_label": ".generate()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L424"
+      "source_location": "L428"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_generate_layer_major",
@@ -9431,7 +9431,7 @@
       "file_type": "code",
       "norm_label": ".generate_layer_major()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L372"
+      "source_location": "L376"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_next_token_from_hidden",
@@ -9443,7 +9443,7 @@
       "file_type": "code",
       "norm_label": ".next_token_from_hidden()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L347"
+      "source_location": "L351"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_prefill_layer_major",
@@ -9455,7 +9455,7 @@
       "file_type": "code",
       "norm_label": ".prefill_layer_major()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L241"
+      "source_location": "L245"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_prefill_step",
@@ -9467,7 +9467,7 @@
       "file_type": "code",
       "norm_label": ".prefill_step()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L222"
+      "source_location": "L226"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_reset",
@@ -9479,7 +9479,7 @@
       "file_type": "code",
       "norm_label": ".reset()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L153"
+      "source_location": "L157"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_step",
@@ -9491,7 +9491,7 @@
       "file_type": "code",
       "norm_label": ".step()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L166"
+      "source_location": "L170"
     },
     {
       "id": "tests_qwen3_cached_attention_determinism_gpu_test_devicebuffer_devicebuffer",
@@ -9635,7 +9635,7 @@
       "file_type": "code",
       "norm_label": "cmd_chat()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L988"
+      "source_location": "L992"
     },
     {
       "id": "tools_miinfer_cli_cmd_config",
@@ -9647,7 +9647,7 @@
       "file_type": "code",
       "norm_label": "cmd_config()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L900"
+      "source_location": "L904"
     },
     {
       "id": "tools_miinfer_cli_cmd_inspect",
@@ -9659,7 +9659,7 @@
       "file_type": "code",
       "norm_label": "cmd_inspect()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L767"
+      "source_location": "L771"
     },
     {
       "id": "tools_miinfer_cli_cmd_models",
@@ -9671,7 +9671,7 @@
       "file_type": "code",
       "norm_label": "cmd_models()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L872"
+      "source_location": "L876"
     },
     {
       "id": "tools_miinfer_cli_cmd_run",
@@ -9683,7 +9683,7 @@
       "file_type": "code",
       "norm_label": "cmd_run()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L918"
+      "source_location": "L922"
     },
     {
       "id": "tools_miinfer_cli_cmd_serve",
@@ -9695,7 +9695,7 @@
       "file_type": "code",
       "norm_label": "cmd_serve()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1038"
+      "source_location": "L1042"
     },
     {
       "id": "tools_miinfer_cli_json_escape",
@@ -9707,7 +9707,7 @@
       "file_type": "code",
       "norm_label": "json_escape()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L41"
+      "source_location": "L45"
     },
     {
       "id": "tools_miinfer_cli_main",
@@ -9719,7 +9719,7 @@
       "file_type": "code",
       "norm_label": "main()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1264"
+      "source_location": "L1314"
     },
     {
       "id": "tools_miinfer_cli_print_usage",
@@ -9731,7 +9731,7 @@
       "file_type": "code",
       "norm_label": "print_usage()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1249"
+      "source_location": "L1299"
     },
     {
       "id": "tools_miinfer_cli_signal_handler",
@@ -9743,7 +9743,7 @@
       "file_type": "code",
       "norm_label": "signal_handler()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L35"
+      "source_location": "L39"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_recurrentlayer_prefill_tail_batch_supported",
@@ -10379,7 +10379,7 @@
       "file_type": "code",
       "norm_label": ".destroy()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L118"
+      "source_location": "L122"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_cleanup_graphs",
@@ -10391,7 +10391,7 @@
       "file_type": "code",
       "norm_label": ".cleanup_graphs()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L717"
+      "source_location": "L721"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_init_layers",
@@ -10403,7 +10403,7 @@
       "file_type": "code",
       "norm_label": ".init_layers()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L581"
+      "source_location": "L585"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_init_m12_dense_workspace",
@@ -10415,7 +10415,7 @@
       "file_type": "code",
       "norm_label": ".init_m12_dense_workspace()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L618"
+      "source_location": "L622"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_init_m12_gdn_workspace",
@@ -10427,7 +10427,7 @@
       "file_type": "code",
       "norm_label": ".init_m12_gdn_workspace()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L597"
+      "source_location": "L601"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_qwen35runtimeengine",
@@ -10439,7 +10439,7 @@
       "file_type": "code",
       "norm_label": ".qwen35runtimeengine()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L81"
+      "source_location": "L85"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_setup_environment",
@@ -10451,7 +10451,7 @@
       "file_type": "code",
       "norm_label": ".setup_environment()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L528"
+      "source_location": "L532"
     },
     {
       "id": "bench_m12_gdn_oracle_at",
@@ -22988,7 +22988,7 @@
       "node_kind": "heading",
       "norm_label": "candidate research areas",
       "source_file": "docs/roadmap.md",
-      "source_location": "L313"
+      "source_location": "L314"
     },
     {
       "id": "docs_roadmap_core_question",
@@ -23000,7 +23000,7 @@
       "node_kind": "heading",
       "norm_label": "core question",
       "source_file": "docs/roadmap.md",
-      "source_location": "L309"
+      "source_location": "L310"
     },
     {
       "id": "docs_roadmap_gfx906_primitives",
@@ -23012,7 +23012,7 @@
       "node_kind": "heading",
       "norm_label": "gfx906 primitives",
       "source_file": "docs/roadmap.md",
-      "source_location": "L323"
+      "source_location": "L324"
     },
     {
       "id": "docs_roadmap_go",
@@ -23024,7 +23024,7 @@
       "node_kind": "heading",
       "norm_label": "go",
       "source_file": "docs/roadmap.md",
-      "source_location": "L405"
+      "source_location": "L406"
     },
     {
       "id": "docs_roadmap_go_no_go_decision",
@@ -23036,10 +23036,10 @@
       "node_kind": "heading",
       "norm_label": "go / no-go decision",
       "source_file": "docs/roadmap.md",
-      "source_location": "L403"
+      "source_location": "L404"
     },
     {
-      "id": "docs_roadmap_goal_303",
+      "id": "docs_roadmap_goal_304",
       "label": "Goal",
       "_origin": "ast",
       "community": 16,
@@ -23048,7 +23048,7 @@
       "node_kind": "heading",
       "norm_label": "goal",
       "source_file": "docs/roadmap.md",
-      "source_location": "L303"
+      "source_location": "L304"
     },
     {
       "id": "docs_roadmap_kernel_configuration",
@@ -23060,7 +23060,7 @@
       "node_kind": "heading",
       "norm_label": "kernel configuration",
       "source_file": "docs/roadmap.md",
-      "source_location": "L364"
+      "source_location": "L365"
     },
     {
       "id": "docs_roadmap_m2_prove_specialization",
@@ -23072,7 +23072,7 @@
       "node_kind": "heading",
       "norm_label": "m2 \u2014 prove specialization",
       "source_file": "docs/roadmap.md",
-      "source_location": "L301"
+      "source_location": "L302"
     },
     {
       "id": "docs_roadmap_memory_behavior",
@@ -23084,7 +23084,7 @@
       "node_kind": "heading",
       "norm_label": "memory behavior",
       "source_file": "docs/roadmap.md",
-      "source_location": "L352"
+      "source_location": "L353"
     },
     {
       "id": "docs_roadmap_quantized_execution",
@@ -23096,7 +23096,7 @@
       "node_kind": "heading",
       "norm_label": "quantized execution",
       "source_file": "docs/roadmap.md",
-      "source_location": "L333"
+      "source_location": "L334"
     },
     {
       "id": "docs_roadmap_reassess",
@@ -23108,7 +23108,7 @@
       "node_kind": "heading",
       "norm_label": "reassess",
       "source_file": "docs/roadmap.md",
-      "source_location": "L412"
+      "source_location": "L413"
     },
     {
       "id": "docs_roadmap_required_experimental_discipline",
@@ -23120,7 +23120,7 @@
       "node_kind": "heading",
       "norm_label": "required experimental discipline",
       "source_file": "docs/roadmap.md",
-      "source_location": "L375"
+      "source_location": "L376"
     },
     {
       "id": "docs_roadmap_success_criteria",
@@ -23132,7 +23132,7 @@
       "node_kind": "heading",
       "norm_label": "success criteria",
       "source_file": "docs/roadmap.md",
-      "source_location": "L388"
+      "source_location": "L389"
     },
     {
       "id": "docs_roadmap_wave_execution",
@@ -23144,7 +23144,7 @@
       "node_kind": "heading",
       "norm_label": "wave execution",
       "source_file": "docs/roadmap.md",
-      "source_location": "L315"
+      "source_location": "L316"
     },
     {
       "id": "docs_roadmap_weight_layout",
@@ -23156,7 +23156,7 @@
       "node_kind": "heading",
       "norm_label": "weight layout",
       "source_file": "docs/roadmap.md",
-      "source_location": "L343"
+      "source_location": "L344"
     },
     {
       "id": "experiments_exp_0046_m6a4_qwen35_full_attention_layer",
@@ -30144,7 +30144,7 @@
       "node_kind": "heading",
       "norm_label": "comparison dimensions",
       "source_file": "docs/roadmap.md",
-      "source_location": "L569"
+      "source_location": "L570"
     },
     {
       "id": "docs_roadmap_comparison_rules",
@@ -30156,7 +30156,7 @@
       "node_kind": "heading",
       "norm_label": "comparison rules",
       "source_file": "docs/roadmap.md",
-      "source_location": "L604"
+      "source_location": "L605"
     },
     {
       "id": "docs_roadmap_context_regimes",
@@ -30168,7 +30168,7 @@
       "node_kind": "heading",
       "norm_label": "context regimes",
       "source_file": "docs/roadmap.md",
-      "source_location": "L585"
+      "source_location": "L586"
     },
     {
       "id": "docs_roadmap_decode",
@@ -30180,10 +30180,10 @@
       "node_kind": "heading",
       "norm_label": "decode",
       "source_file": "docs/roadmap.md",
-      "source_location": "L579"
+      "source_location": "L580"
     },
     {
-      "id": "docs_roadmap_exit_criteria_617",
+      "id": "docs_roadmap_exit_criteria_618",
       "label": "Exit criteria",
       "_origin": "ast",
       "community": 21,
@@ -30192,10 +30192,10 @@
       "node_kind": "heading",
       "norm_label": "exit criteria",
       "source_file": "docs/roadmap.md",
-      "source_location": "L617"
+      "source_location": "L618"
     },
     {
-      "id": "docs_roadmap_goal_563",
+      "id": "docs_roadmap_goal_564",
       "label": "Goal",
       "_origin": "ast",
       "community": 21,
@@ -30204,7 +30204,7 @@
       "node_kind": "heading",
       "norm_label": "goal",
       "source_file": "docs/roadmap.md",
-      "source_location": "L563"
+      "source_location": "L564"
     },
     {
       "id": "docs_roadmap_h0_supported",
@@ -30216,7 +30216,7 @@
       "node_kind": "heading",
       "norm_label": "h0 supported",
       "source_file": "docs/roadmap.md",
-      "source_location": "L641"
+      "source_location": "L642"
     },
     {
       "id": "docs_roadmap_h1_supported",
@@ -30228,7 +30228,7 @@
       "node_kind": "heading",
       "norm_label": "h1 supported",
       "source_file": "docs/roadmap.md",
-      "source_location": "L629"
+      "source_location": "L630"
     },
     {
       "id": "docs_roadmap_m5_beat_the_reference",
@@ -30240,7 +30240,7 @@
       "node_kind": "heading",
       "norm_label": "m5 \u2014 beat the reference",
       "source_file": "docs/roadmap.md",
-      "source_location": "L561"
+      "source_location": "L562"
     },
     {
       "id": "docs_roadmap_m5_c15_optimization_closure_and_parity_decision_gate",
@@ -30252,7 +30252,7 @@
       "node_kind": "heading",
       "norm_label": "m5-c15 \u2014 optimization closure and parity decision gate",
       "source_file": "docs/roadmap.md",
-      "source_location": "L649"
+      "source_location": "L650"
     },
     {
       "id": "docs_roadmap_mixed_result",
@@ -30264,7 +30264,7 @@
       "node_kind": "heading",
       "norm_label": "mixed result",
       "source_file": "docs/roadmap.md",
-      "source_location": "L635"
+      "source_location": "L636"
     },
     {
       "id": "docs_roadmap_prompt_processing",
@@ -30276,7 +30276,7 @@
       "node_kind": "heading",
       "norm_label": "prompt processing",
       "source_file": "docs/roadmap.md",
-      "source_location": "L573"
+      "source_location": "L574"
     },
     {
       "id": "docs_roadmap_system_metrics",
@@ -30288,7 +30288,7 @@
       "node_kind": "heading",
       "norm_label": "system metrics",
       "source_file": "docs/roadmap.md",
-      "source_location": "L593"
+      "source_location": "L594"
     },
     {
       "id": "experiments_exp_0028_m5c9b_swiglu_q8_fusion",
@@ -32663,7 +32663,7 @@
       "node_kind": "heading",
       "norm_label": "candidate areas",
       "source_file": "docs/roadmap.md",
-      "source_location": "L682"
+      "source_location": "L683"
     },
     {
       "id": "docs_roadmap_contract",
@@ -32675,7 +32675,7 @@
       "node_kind": "heading",
       "norm_label": "contract",
       "source_file": "docs/roadmap.md",
-      "source_location": "L674"
+      "source_location": "L675"
     },
     {
       "id": "docs_roadmap_current_execution_order",
@@ -32687,7 +32687,7 @@
       "node_kind": "heading",
       "norm_label": "current execution order",
       "source_file": "docs/roadmap.md",
-      "source_location": "L883"
+      "source_location": "L884"
     },
     {
       "id": "docs_roadmap_current_status",
@@ -32711,10 +32711,10 @@
       "node_kind": "heading",
       "norm_label": "deferred / explicitly out of scope",
       "source_file": "docs/roadmap.md",
-      "source_location": "L827"
+      "source_location": "L828"
     },
     {
-      "id": "docs_roadmap_goal_669",
+      "id": "docs_roadmap_goal_670",
       "label": "Goal",
       "_origin": "ast",
       "community": 23,
@@ -32723,7 +32723,7 @@
       "node_kind": "heading",
       "norm_label": "goal",
       "source_file": "docs/roadmap.md",
-      "source_location": "L669"
+      "source_location": "L670"
     },
     {
       "id": "docs_roadmap_immediate_next_milestone",
@@ -32735,7 +32735,7 @@
       "node_kind": "heading",
       "norm_label": "immediate next milestone",
       "source_file": "docs/roadmap.md",
-      "source_location": "L941"
+      "source_location": "L942"
     },
     {
       "id": "docs_roadmap_m6_a_reference_correct_execution_contract_exploration",
@@ -32747,7 +32747,7 @@
       "node_kind": "heading",
       "norm_label": "m6-a \u2014 reference-correct execution-contract exploration",
       "source_file": "docs/roadmap.md",
-      "source_location": "L665"
+      "source_location": "L666"
     },
     {
       "id": "docs_roadmap_miinfer_roadmap",
@@ -32771,7 +32771,7 @@
       "node_kind": "heading",
       "norm_label": "milestone dependencies",
       "source_file": "docs/roadmap.md",
-      "source_location": "L852"
+      "source_location": "L853"
     },
     {
       "id": "docs_roadmap_roadmap_change_policy",
@@ -32783,7 +32783,7 @@
       "node_kind": "heading",
       "norm_label": "roadmap change policy",
       "source_file": "docs/roadmap.md",
-      "source_location": "L1040"
+      "source_location": "L1041"
     },
     {
       "id": "docs_roadmap_success_definition",
@@ -32795,7 +32795,7 @@
       "node_kind": "heading",
       "norm_label": "success definition",
       "source_file": "docs/roadmap.md",
-      "source_location": "L1058"
+      "source_location": "L1059"
     },
     {
       "id": "experiments_exp_0054_m6a10_qwen35_q4k_projection",
@@ -33761,7 +33761,7 @@
       "node_kind": "heading",
       "norm_label": "activation reuse",
       "source_file": "docs/roadmap.md",
-      "source_location": "L715"
+      "source_location": "L716"
     },
     {
       "id": "docs_roadmap_candidate_work",
@@ -33773,10 +33773,10 @@
       "node_kind": "heading",
       "norm_label": "candidate work",
       "source_file": "docs/roadmap.md",
-      "source_location": "L702"
+      "source_location": "L703"
     },
     {
-      "id": "docs_roadmap_exit_criteria_749",
+      "id": "docs_roadmap_exit_criteria_750",
       "label": "Exit criteria",
       "_origin": "ast",
       "community": 24,
@@ -33785,10 +33785,10 @@
       "node_kind": "heading",
       "norm_label": "exit criteria",
       "source_file": "docs/roadmap.md",
-      "source_location": "L749"
+      "source_location": "L750"
     },
     {
-      "id": "docs_roadmap_goal_698",
+      "id": "docs_roadmap_goal_699",
       "label": "Goal",
       "_origin": "ast",
       "community": 24,
@@ -33797,7 +33797,7 @@
       "node_kind": "heading",
       "norm_label": "goal",
       "source_file": "docs/roadmap.md",
-      "source_location": "L698"
+      "source_location": "L699"
     },
     {
       "id": "docs_roadmap_hip_graph_capture",
@@ -33809,7 +33809,7 @@
       "node_kind": "heading",
       "norm_label": "hip graph capture",
       "source_file": "docs/roadmap.md",
-      "source_location": "L733"
+      "source_location": "L734"
     },
     {
       "id": "docs_roadmap_kernel_specialization",
@@ -33821,7 +33821,7 @@
       "node_kind": "heading",
       "norm_label": "kernel specialization",
       "source_file": "docs/roadmap.md",
-      "source_location": "L745"
+      "source_location": "L746"
     },
     {
       "id": "docs_roadmap_m6_runtime_specialization",
@@ -33833,7 +33833,7 @@
       "node_kind": "heading",
       "norm_label": "m6 \u2014 runtime specialization",
       "source_file": "docs/roadmap.md",
-      "source_location": "L696"
+      "source_location": "L697"
     },
     {
       "id": "docs_roadmap_native_weight_packing",
@@ -33845,7 +33845,7 @@
       "node_kind": "heading",
       "norm_label": "native weight packing",
       "source_file": "docs/roadmap.md",
-      "source_location": "L704"
+      "source_location": "L705"
     },
     {
       "id": "docs_roadmap_operation_fusion",
@@ -33857,7 +33857,7 @@
       "node_kind": "heading",
       "norm_label": "operation fusion",
       "source_file": "docs/roadmap.md",
-      "source_location": "L723"
+      "source_location": "L724"
     },
     {
       "id": "docs_roadmap_static_memory_plan",
@@ -33869,7 +33869,7 @@
       "node_kind": "heading",
       "norm_label": "static memory plan",
       "source_file": "docs/roadmap.md",
-      "source_location": "L719"
+      "source_location": "L720"
     },
     {
       "id": "docs_m7_gfx906_performance_frontier",
@@ -35565,7 +35565,7 @@
       "node_kind": "heading",
       "norm_label": "benchmark protocol",
       "source_file": "docs/roadmap.md",
-      "source_location": "L205"
+      "source_location": "L206"
     },
     {
       "id": "docs_roadmap_deliverables",
@@ -35577,7 +35577,7 @@
       "node_kind": "heading",
       "norm_label": "deliverables",
       "source_file": "docs/roadmap.md",
-      "source_location": "L163"
+      "source_location": "L164"
     },
     {
       "id": "docs_roadmap_exit_criteria",
@@ -35589,7 +35589,7 @@
       "node_kind": "heading",
       "norm_label": "exit criteria",
       "source_file": "docs/roadmap.md",
-      "source_location": "L217"
+      "source_location": "L218"
     },
     {
       "id": "docs_roadmap_goal",
@@ -35601,7 +35601,7 @@
       "node_kind": "heading",
       "norm_label": "goal",
       "source_file": "docs/roadmap.md",
-      "source_location": "L147"
+      "source_location": "L148"
     },
     {
       "id": "docs_roadmap_hardware_environment",
@@ -35613,7 +35613,7 @@
       "node_kind": "heading",
       "norm_label": "hardware environment",
       "source_file": "docs/roadmap.md",
-      "source_location": "L178"
+      "source_location": "L179"
     },
     {
       "id": "docs_roadmap_m0_baseline_and_project_bootstrap",
@@ -35625,7 +35625,7 @@
       "node_kind": "heading",
       "norm_label": "m0 \u2014 baseline and project bootstrap",
       "source_file": "docs/roadmap.md",
-      "source_location": "L145"
+      "source_location": "L146"
     },
     {
       "id": "docs_roadmap_non_goals",
@@ -35637,7 +35637,7 @@
       "node_kind": "heading",
       "norm_label": "non-goals",
       "source_file": "docs/roadmap.md",
-      "source_location": "L229"
+      "source_location": "L230"
     },
     {
       "id": "docs_roadmap_questions",
@@ -35649,7 +35649,7 @@
       "node_kind": "heading",
       "norm_label": "questions",
       "source_file": "docs/roadmap.md",
-      "source_location": "L153"
+      "source_location": "L154"
     },
     {
       "id": "docs_roadmap_reference_runtime",
@@ -35661,7 +35661,7 @@
       "node_kind": "heading",
       "norm_label": "reference runtime",
       "source_file": "docs/roadmap.md",
-      "source_location": "L194"
+      "source_location": "L195"
     },
     {
       "id": "docs_roadmap_repository",
@@ -35673,7 +35673,7 @@
       "node_kind": "heading",
       "norm_label": "repository",
       "source_file": "docs/roadmap.md",
-      "source_location": "L165"
+      "source_location": "L166"
     },
     {
       "id": "experiments_exp_0254_m11b_repacked_mmq_exact_layout_rejection",
@@ -38854,7 +38854,7 @@
       "file_type": "code",
       "norm_label": "argmax_token_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L744"
+      "source_location": "L748"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_attention_layers",
@@ -38865,7 +38865,7 @@
       "file_type": "code",
       "norm_label": "attention_layers_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L730"
+      "source_location": "L734"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_d_decode_tokens",
@@ -38876,7 +38876,7 @@
       "file_type": "code",
       "norm_label": "d_decode_tokens_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L745"
+      "source_location": "L749"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_d_embedding",
@@ -38887,7 +38887,7 @@
       "file_type": "code",
       "norm_label": "d_embedding_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L738"
+      "source_location": "L742"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_d_final_norm_weight",
@@ -38898,7 +38898,7 @@
       "file_type": "code",
       "norm_label": "d_final_norm_weight_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L736"
+      "source_location": "L740"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_d_output_weight",
@@ -38909,7 +38909,7 @@
       "file_type": "code",
       "norm_label": "d_output_weight_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L737"
+      "source_location": "L741"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_decode_graphs",
@@ -38920,7 +38920,7 @@
       "file_type": "code",
       "norm_label": "decode_graphs_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L761"
+      "source_location": "L765"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_dense_prefill",
@@ -38931,7 +38931,7 @@
       "file_type": "code",
       "norm_label": "dense_prefill_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L758"
+      "source_location": "L762"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_final_norm",
@@ -38942,7 +38942,7 @@
       "file_type": "code",
       "norm_label": "final_norm_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L740"
+      "source_location": "L744"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_final_q8",
@@ -38953,7 +38953,7 @@
       "file_type": "code",
       "norm_label": "final_q8_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L741"
+      "source_location": "L745"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_final_q8_1",
@@ -38964,7 +38964,7 @@
       "file_type": "code",
       "norm_label": "final_q8_1_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L742"
+      "source_location": "L746"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_gdn_chunkwise_prefill",
@@ -38975,7 +38975,7 @@
       "file_type": "code",
       "norm_label": "gdn_chunkwise_prefill_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L757"
+      "source_location": "L761"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_input",
@@ -38986,7 +38986,7 @@
       "file_type": "code",
       "norm_label": "input_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L739"
+      "source_location": "L743"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_layer_major_prefill",
@@ -38997,7 +38997,7 @@
       "file_type": "code",
       "norm_label": "layer_major_prefill_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L756"
+      "source_location": "L760"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_layers",
@@ -39008,7 +39008,7 @@
       "file_type": "code",
       "norm_label": "layers_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L731"
+      "source_location": "L735"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_logits",
@@ -39019,7 +39019,7 @@
       "file_type": "code",
       "norm_label": "logits_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L743"
+      "source_location": "L747"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_m12_dense_gemm",
@@ -39030,7 +39030,7 @@
       "file_type": "code",
       "norm_label": "m12_dense_gemm_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L751"
+      "source_location": "L755"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_m12_dense_input",
@@ -39041,7 +39041,7 @@
       "file_type": "code",
       "norm_label": "m12_dense_input_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L750"
+      "source_location": "L754"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_m12_dense_weights",
@@ -39052,7 +39052,7 @@
       "file_type": "code",
       "norm_label": "m12_dense_weights_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L750"
+      "source_location": "L754"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_m12_gdn_corrected_values",
@@ -39063,7 +39063,7 @@
       "file_type": "code",
       "norm_label": "m12_gdn_corrected_values_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L747"
+      "source_location": "L751"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_m12_gdn_decayed_keys",
@@ -39074,7 +39074,7 @@
       "file_type": "code",
       "norm_label": "m12_gdn_decayed_keys_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L746"
+      "source_location": "L750"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_m12_gdn_new_values",
@@ -39085,7 +39085,7 @@
       "file_type": "code",
       "norm_label": "m12_gdn_new_values_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L746"
+      "source_location": "L750"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_m12_gdn_raw_output",
@@ -39096,7 +39096,7 @@
       "file_type": "code",
       "norm_label": "m12_gdn_raw_output_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L748"
+      "source_location": "L752"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_m12_gdn_solved_keys",
@@ -39107,7 +39107,7 @@
       "file_type": "code",
       "norm_label": "m12_gdn_solved_keys_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L747"
+      "source_location": "L751"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_m12_gdn_solved_values",
@@ -39118,7 +39118,7 @@
       "file_type": "code",
       "norm_label": "m12_gdn_solved_values_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L747"
+      "source_location": "L751"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_m12_gdn_workspace",
@@ -39129,7 +39129,7 @@
       "file_type": "code",
       "norm_label": "m12_gdn_workspace_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L749"
+      "source_location": "L753"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_model",
@@ -39140,7 +39140,7 @@
       "file_type": "code",
       "norm_label": "model_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L726"
+      "source_location": "L730"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_output_pointers",
@@ -39151,7 +39151,7 @@
       "file_type": "code",
       "norm_label": "output_pointers_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L734"
+      "source_location": "L738"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_outputs",
@@ -39162,7 +39162,7 @@
       "file_type": "code",
       "norm_label": "outputs_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L733"
+      "source_location": "L737"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_prefill_a",
@@ -39173,7 +39173,7 @@
       "file_type": "code",
       "norm_label": "prefill_a_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L752"
+      "source_location": "L756"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_prefill_b",
@@ -39184,7 +39184,7 @@
       "file_type": "code",
       "norm_label": "prefill_b_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L753"
+      "source_location": "L757"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_prefill_chunk",
@@ -39195,7 +39195,7 @@
       "file_type": "code",
       "norm_label": "prefill_chunk_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L759"
+      "source_location": "L763"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_prefill_profile",
@@ -39206,7 +39206,7 @@
       "file_type": "code",
       "norm_label": "prefill_profile_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L760"
+      "source_location": "L764"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_recurrent_layers",
@@ -39217,7 +39217,7 @@
       "file_type": "code",
       "norm_label": "recurrent_layers_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L729"
+      "source_location": "L733"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_tokenizer",
@@ -39228,7 +39228,7 @@
       "file_type": "code",
       "norm_label": "tokenizer_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L727"
+      "source_location": "L731"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_use_hip_graph",
@@ -39239,7 +39239,7 @@
       "file_type": "code",
       "norm_label": "use_hip_graph_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L755"
+      "source_location": "L759"
     },
     {
       "id": "experiments_exp_0066_m6a22_qwen35_gpu_hybrid_position_audit",
@@ -45789,7 +45789,7 @@
       "node_kind": "heading",
       "norm_label": "additional quantization",
       "source_file": "docs/roadmap.md",
-      "source_location": "L769"
+      "source_location": "L770"
     },
     {
       "id": "docs_roadmap_long_context_specialization",
@@ -45801,7 +45801,7 @@
       "node_kind": "heading",
       "norm_label": "long-context specialization",
       "source_file": "docs/roadmap.md",
-      "source_location": "L792"
+      "source_location": "L793"
     },
     {
       "id": "docs_roadmap_m7_expansion",
@@ -45813,7 +45813,7 @@
       "node_kind": "heading",
       "norm_label": "m7 \u2014 expansion",
       "source_file": "docs/roadmap.md",
-      "source_location": "L761"
+      "source_location": "L762"
     },
     {
       "id": "docs_roadmap_potential_areas",
@@ -45825,7 +45825,7 @@
       "node_kind": "heading",
       "norm_label": "potential areas",
       "source_file": "docs/roadmap.md",
-      "source_location": "L767"
+      "source_location": "L768"
     },
     {
       "id": "docs_roadmap_second_model",
@@ -45837,7 +45837,7 @@
       "node_kind": "heading",
       "norm_label": "second model",
       "source_file": "docs/roadmap.md",
-      "source_location": "L780"
+      "source_location": "L781"
     },
     {
       "id": "docs_roadmap_serving",
@@ -45849,7 +45849,7 @@
       "node_kind": "heading",
       "norm_label": "serving",
       "source_file": "docs/roadmap.md",
-      "source_location": "L815"
+      "source_location": "L816"
     },
     {
       "id": "docs_roadmap_speculative_decoding_mtp",
@@ -45861,7 +45861,7 @@
       "node_kind": "heading",
       "norm_label": "speculative decoding / mtp",
       "source_file": "docs/roadmap.md",
-      "source_location": "L803"
+      "source_location": "L804"
     },
     {
       "id": "tools_m6a20_qwen35_recurrent_layer_gpu",
@@ -52910,7 +52910,7 @@
       "file_type": "code",
       "norm_label": "chunks",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L109"
+      "source_location": "L113"
     },
     {
       "id": "tools_miinfer_cli_prefillprofile_embedding_end",
@@ -52921,7 +52921,7 @@
       "file_type": "code",
       "norm_label": "embedding_end",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L106"
+      "source_location": "L110"
     },
     {
       "id": "tools_miinfer_cli_prefillprofile_embedding_ms",
@@ -52932,7 +52932,7 @@
       "file_type": "code",
       "norm_label": "embedding_ms",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L108"
+      "source_location": "L112"
     },
     {
       "id": "tools_miinfer_cli_prefillprofile_embedding_start",
@@ -52943,7 +52943,7 @@
       "file_type": "code",
       "norm_label": "embedding_start",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L105"
+      "source_location": "L109"
     },
     {
       "id": "tools_miinfer_cli_prefillprofile_enabled",
@@ -52954,7 +52954,7 @@
       "file_type": "code",
       "norm_label": "enabled",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L103"
+      "source_location": "L107"
     },
     {
       "id": "tools_miinfer_cli_prefillprofile_layer_ms",
@@ -52965,7 +52965,7 @@
       "file_type": "code",
       "norm_label": "layer_ms",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L107"
+      "source_location": "L111"
     },
     {
       "id": "tools_miinfer_cli_prefillprofile_stage",
@@ -52976,7 +52976,7 @@
       "file_type": "code",
       "norm_label": "stage",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L104"
+      "source_location": "L108"
     },
     {
       "id": "experiments_exp_0237_m11b_production_prefill_profile",
@@ -53958,7 +53958,7 @@
       "node_kind": "heading",
       "norm_label": "3.1 `miinfer inspect` output",
       "source_file": "docs/M9-RUNTIME-SURFACE.md",
-      "source_location": "L67"
+      "source_location": "L70"
     },
     {
       "id": "docs_m9_runtime_surface_3_2_miinfer_run_generation_evidence",
@@ -53970,7 +53970,7 @@
       "node_kind": "heading",
       "norm_label": "3.2 `miinfer run` generation evidence",
       "source_file": "docs/M9-RUNTIME-SURFACE.md",
-      "source_location": "L116"
+      "source_location": "L119"
     },
     {
       "id": "docs_m9_runtime_surface_3_3_miinfer_serve_openai_compatible_api_verification",
@@ -53982,7 +53982,7 @@
       "node_kind": "heading",
       "norm_label": "3.3 `miinfer serve` openai-compatible api verification",
       "source_file": "docs/M9-RUNTIME-SURFACE.md",
-      "source_location": "L147"
+      "source_location": "L150"
     },
     {
       "id": "docs_m9_runtime_surface_3_verification_qualification_evidence",
@@ -53994,7 +53994,7 @@
       "node_kind": "heading",
       "norm_label": "3. verification & qualification evidence",
       "source_file": "docs/M9-RUNTIME-SURFACE.md",
-      "source_location": "L65"
+      "source_location": "L68"
     },
     {
       "id": "docs_m9_runtime_surface_4_conclusion",
@@ -54006,7 +54006,7 @@
       "node_kind": "heading",
       "norm_label": "4. conclusion",
       "source_file": "docs/M9-RUNTIME-SURFACE.md",
-      "source_location": "L195"
+      "source_location": "L198"
     },
     {
       "id": "docs_m9_runtime_surface_m9_lane_f_unified_runtime_surface_miinfer",
@@ -54030,7 +54030,7 @@
       "node_kind": "heading",
       "norm_label": "non-streaming json completion (`\"stream\": false`)",
       "source_file": "docs/M9-RUNTIME-SURFACE.md",
-      "source_location": "L149"
+      "source_location": "L152"
     },
     {
       "id": "docs_m9_runtime_surface_streaming_server_sent_events_stream_true",
@@ -54042,7 +54042,7 @@
       "node_kind": "heading",
       "norm_label": "streaming server-sent events (`\"stream\": true`)",
       "source_file": "docs/M9-RUNTIME-SURFACE.md",
-      "source_location": "L175"
+      "source_location": "L178"
     },
     {
       "id": "experiments_exp_0158_m6b66_q4k_expanded_gate_up",
@@ -60000,7 +60000,7 @@
       "file_type": "code",
       "norm_label": "decode_ms",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L66"
+      "source_location": "L70"
     },
     {
       "id": "tools_miinfer_cli_runtimegeneratestats_decode_tok_s",
@@ -60011,7 +60011,7 @@
       "file_type": "code",
       "norm_label": "decode_tok_s",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L70"
+      "source_location": "L74"
     },
     {
       "id": "tools_miinfer_cli_runtimegeneratestats_first_token_ms",
@@ -60022,7 +60022,7 @@
       "file_type": "code",
       "norm_label": "first_token_ms",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L67"
+      "source_location": "L71"
     },
     {
       "id": "tools_miinfer_cli_runtimegeneratestats_generated_tokens",
@@ -60033,7 +60033,7 @@
       "file_type": "code",
       "norm_label": "generated_tokens",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L64"
+      "source_location": "L68"
     },
     {
       "id": "tools_miinfer_cli_runtimegeneratestats_prefill_ms",
@@ -60044,7 +60044,7 @@
       "file_type": "code",
       "norm_label": "prefill_ms",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L65"
+      "source_location": "L69"
     },
     {
       "id": "tools_miinfer_cli_runtimegeneratestats_prefill_tok_s",
@@ -60055,7 +60055,7 @@
       "file_type": "code",
       "norm_label": "prefill_tok_s",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L69"
+      "source_location": "L73"
     },
     {
       "id": "tools_miinfer_cli_runtimegeneratestats_prompt_tokens",
@@ -60066,7 +60066,7 @@
       "file_type": "code",
       "norm_label": "prompt_tokens",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L63"
+      "source_location": "L67"
     },
     {
       "id": "tools_miinfer_cli_runtimegeneratestats_text",
@@ -60077,7 +60077,7 @@
       "file_type": "code",
       "norm_label": "text",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L62"
+      "source_location": "L66"
     },
     {
       "id": "tools_miinfer_cli_runtimegeneratestats_tokens",
@@ -60088,7 +60088,7 @@
       "file_type": "code",
       "norm_label": "tokens",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L61"
+      "source_location": "L65"
     },
     {
       "id": "tools_miinfer_cli_runtimegeneratestats_total_ms",
@@ -60099,7 +60099,7 @@
       "file_type": "code",
       "norm_label": "total_ms",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L68"
+      "source_location": "L72"
     },
     {
       "id": "scripts_run_exp0178_ssm_out_ab",
@@ -61359,10 +61359,10 @@
       "node_kind": "heading",
       "norm_label": "benchmark harness",
       "source_file": "docs/roadmap.md",
-      "source_location": "L270"
+      "source_location": "L271"
     },
     {
-      "id": "docs_roadmap_exit_criteria_289",
+      "id": "docs_roadmap_exit_criteria_290",
       "label": "Exit criteria",
       "_origin": "ast",
       "community": 447,
@@ -61371,10 +61371,10 @@
       "node_kind": "heading",
       "norm_label": "exit criteria",
       "source_file": "docs/roadmap.md",
-      "source_location": "L289"
+      "source_location": "L290"
     },
     {
-      "id": "docs_roadmap_goal_245",
+      "id": "docs_roadmap_goal_246",
       "label": "Goal",
       "_origin": "ast",
       "community": 447,
@@ -61383,7 +61383,7 @@
       "node_kind": "heading",
       "norm_label": "goal",
       "source_file": "docs/roadmap.md",
-      "source_location": "L245"
+      "source_location": "L246"
     },
     {
       "id": "docs_roadmap_initial_kernel_areas",
@@ -61395,7 +61395,7 @@
       "node_kind": "heading",
       "norm_label": "initial kernel areas",
       "source_file": "docs/roadmap.md",
-      "source_location": "L258"
+      "source_location": "L259"
     },
     {
       "id": "docs_roadmap_initial_representative_shapes",
@@ -61407,7 +61407,7 @@
       "node_kind": "heading",
       "norm_label": "initial representative shapes",
       "source_file": "docs/roadmap.md",
-      "source_location": "L283"
+      "source_location": "L284"
     },
     {
       "id": "docs_roadmap_m1_kernel_laboratory",
@@ -61419,10 +61419,10 @@
       "node_kind": "heading",
       "norm_label": "m1 \u2014 kernel laboratory",
       "source_file": "docs/roadmap.md",
-      "source_location": "L243"
+      "source_location": "L244"
     },
     {
-      "id": "docs_roadmap_questions_249",
+      "id": "docs_roadmap_questions_250",
       "label": "Questions",
       "_origin": "ast",
       "community": 447,
@@ -61431,7 +61431,7 @@
       "node_kind": "heading",
       "norm_label": "questions",
       "source_file": "docs/roadmap.md",
-      "source_location": "L249"
+      "source_location": "L250"
     },
     {
       "id": "docs_m8_primary_gate_qualification",
@@ -62054,7 +62054,7 @@
       "file_type": "code",
       "norm_label": "max_new_tokens",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L55"
+      "source_location": "L59"
     },
     {
       "id": "tools_miinfer_cli_runtimegenerateoptions_on_token",
@@ -62065,7 +62065,7 @@
       "file_type": "code",
       "norm_label": "on_token",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L57"
+      "source_location": "L61"
     },
     {
       "id": "tools_miinfer_cli_runtimegenerateoptions_stream",
@@ -62076,7 +62076,7 @@
       "file_type": "code",
       "norm_label": "stream",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L56"
+      "source_location": "L60"
     },
     {
       "id": "tools_miinfer_cli_stepresult_latency_ms",
@@ -62087,7 +62087,7 @@
       "file_type": "code",
       "norm_label": "latency_ms",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L163"
+      "source_location": "L167"
     },
     {
       "id": "tools_miinfer_cli_stepresult_token",
@@ -62098,7 +62098,7 @@
       "file_type": "code",
       "norm_label": "token",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L162"
+      "source_location": "L166"
     },
     {
       "id": "experiments_exp_0253_m11b_repacked_mmq_side_sums_rejection",
@@ -68537,7 +68537,7 @@
       "node_kind": "heading",
       "norm_label": "architecture direction",
       "source_file": "README.md",
-      "source_location": "L556"
+      "source_location": "L557"
     },
     {
       "id": "readme_benchmark_philosophy",
@@ -68549,7 +68549,7 @@
       "node_kind": "heading",
       "norm_label": "benchmark philosophy",
       "source_file": "README.md",
-      "source_location": "L737"
+      "source_location": "L738"
     },
     {
       "id": "readme_building",
@@ -68561,7 +68561,7 @@
       "node_kind": "heading",
       "norm_label": "building",
       "source_file": "README.md",
-      "source_location": "L808"
+      "source_location": "L809"
     },
     {
       "id": "readme_contributing",
@@ -68573,7 +68573,7 @@
       "node_kind": "heading",
       "norm_label": "contributing",
       "source_file": "README.md",
-      "source_location": "L909"
+      "source_location": "L910"
     },
     {
       "id": "readme_core_hypothesis",
@@ -68585,7 +68585,7 @@
       "node_kind": "heading",
       "norm_label": "core hypothesis",
       "source_file": "README.md",
-      "source_location": "L397"
+      "source_location": "L398"
     },
     {
       "id": "readme_correctness_before_performance",
@@ -68597,7 +68597,7 @@
       "node_kind": "heading",
       "norm_label": "correctness before performance",
       "source_file": "README.md",
-      "source_location": "L447"
+      "source_location": "L448"
     },
     {
       "id": "readme_design_principles",
@@ -68609,7 +68609,7 @@
       "node_kind": "heading",
       "norm_label": "design principles",
       "source_file": "README.md",
-      "source_location": "L415"
+      "source_location": "L416"
     },
     {
       "id": "readme_development_roadmap",
@@ -68621,7 +68621,7 @@
       "node_kind": "heading",
       "norm_label": "development roadmap",
       "source_file": "README.md",
-      "source_location": "L649"
+      "source_location": "L650"
     },
     {
       "id": "readme_experiments",
@@ -68633,7 +68633,7 @@
       "node_kind": "heading",
       "norm_label": "experiments",
       "source_file": "README.md",
-      "source_location": "L773"
+      "source_location": "L774"
     },
     {
       "id": "readme_gfx906_llama_cpp_forks",
@@ -68645,7 +68645,7 @@
       "node_kind": "heading",
       "norm_label": "gfx906 llama.cpp forks",
       "source_file": "README.md",
-      "source_location": "L610"
+      "source_location": "L611"
     },
     {
       "id": "readme_gfx906_vllm_work",
@@ -68657,7 +68657,7 @@
       "node_kind": "heading",
       "norm_label": "gfx906 vllm work",
       "source_file": "README.md",
-      "source_location": "L634"
+      "source_location": "L635"
     },
     {
       "id": "readme_guiding_principle",
@@ -68669,7 +68669,7 @@
       "node_kind": "heading",
       "norm_label": "guiding principle",
       "source_file": "README.md",
-      "source_location": "L943"
+      "source_location": "L944"
     },
     {
       "id": "readme_h0",
@@ -68681,7 +68681,7 @@
       "node_kind": "heading",
       "norm_label": "h0",
       "source_file": "README.md",
-      "source_location": "L401"
+      "source_location": "L402"
     },
     {
       "id": "readme_h1",
@@ -68693,7 +68693,7 @@
       "node_kind": "heading",
       "norm_label": "h1",
       "source_file": "README.md",
-      "source_location": "L405"
+      "source_location": "L406"
     },
     {
       "id": "readme_hardware_requirements",
@@ -68705,7 +68705,7 @@
       "node_kind": "heading",
       "norm_label": "hardware requirements",
       "source_file": "README.md",
-      "source_location": "L849"
+      "source_location": "L850"
     },
     {
       "id": "readme_hot_paths_should_be_static",
@@ -68717,7 +68717,7 @@
       "node_kind": "heading",
       "norm_label": "hot paths should be static",
       "source_file": "README.md",
-      "source_location": "L470"
+      "source_location": "L471"
     },
     {
       "id": "readme_initial_target",
@@ -68729,7 +68729,7 @@
       "node_kind": "heading",
       "norm_label": "initial target",
       "source_file": "README.md",
-      "source_location": "L348"
+      "source_location": "L349"
     },
     {
       "id": "readme_license",
@@ -68741,7 +68741,7 @@
       "node_kind": "heading",
       "norm_label": "license",
       "source_file": "README.md",
-      "source_location": "L933"
+      "source_location": "L934"
     },
     {
       "id": "readme_llama_cpp",
@@ -68753,7 +68753,7 @@
       "node_kind": "heading",
       "norm_label": "llama.cpp",
       "source_file": "README.md",
-      "source_location": "L599"
+      "source_location": "L600"
     },
     {
       "id": "readme_m0_baseline",
@@ -68765,7 +68765,7 @@
       "node_kind": "heading",
       "norm_label": "m0 \u2014 baseline",
       "source_file": "README.md",
-      "source_location": "L651"
+      "source_location": "L652"
     },
     {
       "id": "readme_m1_kernel_laboratory",
@@ -68777,7 +68777,7 @@
       "node_kind": "heading",
       "norm_label": "m1 \u2014 kernel laboratory",
       "source_file": "README.md",
-      "source_location": "L662"
+      "source_location": "L663"
     },
     {
       "id": "readme_m2_prove_specialization",
@@ -68789,7 +68789,7 @@
       "node_kind": "heading",
       "norm_label": "m2 \u2014 prove specialization",
       "source_file": "README.md",
-      "source_location": "L671"
+      "source_location": "L672"
     },
     {
       "id": "readme_m3_minimal_runtime",
@@ -68801,7 +68801,7 @@
       "node_kind": "heading",
       "norm_label": "m3 \u2014 minimal runtime",
       "source_file": "README.md",
-      "source_location": "L684"
+      "source_location": "L685"
     },
     {
       "id": "readme_m4_first_correct_generation",
@@ -68813,7 +68813,7 @@
       "node_kind": "heading",
       "norm_label": "m4 \u2014 first correct generation",
       "source_file": "README.md",
-      "source_location": "L694"
+      "source_location": "L695"
     },
     {
       "id": "readme_m5_beat_the_reference",
@@ -68825,7 +68825,7 @@
       "node_kind": "heading",
       "norm_label": "m5 \u2014 beat the reference",
       "source_file": "README.md",
-      "source_location": "L698"
+      "source_location": "L699"
     },
     {
       "id": "readme_m6_runtime_specialization",
@@ -68837,7 +68837,7 @@
       "node_kind": "heading",
       "norm_label": "m6 \u2014 runtime specialization",
       "source_file": "README.md",
-      "source_location": "L712"
+      "source_location": "L713"
     },
     {
       "id": "readme_m7_expansion",
@@ -68849,7 +68849,7 @@
       "node_kind": "heading",
       "norm_label": "m7 \u2014 expansion",
       "source_file": "README.md",
-      "source_location": "L723"
+      "source_location": "L724"
     },
     {
       "id": "readme_measure_before_optimizing",
@@ -68861,7 +68861,7 @@
       "node_kind": "heading",
       "norm_label": "measure before optimizing",
       "source_file": "README.md",
-      "source_location": "L432"
+      "source_location": "L433"
     },
     {
       "id": "readme_miinfer",
@@ -68885,7 +68885,7 @@
       "node_kind": "heading",
       "norm_label": "negative results are retained",
       "source_file": "README.md",
-      "source_location": "L460"
+      "source_location": "L461"
     },
     {
       "id": "readme_ninfer",
@@ -68897,7 +68897,7 @@
       "node_kind": "heading",
       "norm_label": "ninfer",
       "source_file": "README.md",
-      "source_location": "L626"
+      "source_location": "L627"
     },
     {
       "id": "readme_repository_structure",
@@ -68909,7 +68909,7 @@
       "node_kind": "heading",
       "norm_label": "repository structure",
       "source_file": "README.md",
-      "source_location": "L870"
+      "source_location": "L871"
     },
     {
       "id": "readme_research_influences",
@@ -68921,7 +68921,7 @@
       "node_kind": "heading",
       "norm_label": "research influences",
       "source_file": "README.md",
-      "source_location": "L595"
+      "source_location": "L596"
     },
     {
       "id": "readme_specialization_is_intentional",
@@ -68933,7 +68933,7 @@
       "node_kind": "heading",
       "norm_label": "specialization is intentional",
       "source_file": "README.md",
-      "source_location": "L417"
+      "source_location": "L418"
     },
     {
       "id": "readme_status",
@@ -68957,7 +68957,7 @@
       "node_kind": "heading",
       "norm_label": "what miinfer does not initially aim to build",
       "source_file": "README.md",
-      "source_location": "L529"
+      "source_location": "L530"
     },
     {
       "id": "readme_what_miinfer_intends_to_own",
@@ -68969,7 +68969,7 @@
       "node_kind": "heading",
       "norm_label": "what miinfer intends to own",
       "source_file": "README.md",
-      "source_location": "L508"
+      "source_location": "L509"
     },
     {
       "id": "readme_why_miinfer",
@@ -68981,7 +68981,7 @@
       "node_kind": "heading",
       "norm_label": "why miinfer?",
       "source_file": "README.md",
-      "source_location": "L370"
+      "source_location": "L371"
     },
     {
       "id": "experiments_exp_0179_q6k_native_rollout",
@@ -71755,7 +71755,7 @@
       "node_kind": "heading",
       "norm_label": "architectural rule",
       "source_file": "docs/roadmap.md",
-      "source_location": "L452"
+      "source_location": "L453"
     },
     {
       "id": "docs_roadmap_core_runtime_responsibilities",
@@ -71767,10 +71767,10 @@
       "node_kind": "heading",
       "norm_label": "core runtime responsibilities",
       "source_file": "docs/roadmap.md",
-      "source_location": "L438"
+      "source_location": "L439"
     },
     {
-      "id": "docs_roadmap_exit_criteria_480",
+      "id": "docs_roadmap_exit_criteria_481",
       "label": "Exit criteria",
       "_origin": "ast",
       "community": 523,
@@ -71779,10 +71779,10 @@
       "node_kind": "heading",
       "norm_label": "exit criteria",
       "source_file": "docs/roadmap.md",
-      "source_location": "L480"
+      "source_location": "L481"
     },
     {
-      "id": "docs_roadmap_goal_432",
+      "id": "docs_roadmap_goal_433",
       "label": "Goal",
       "_origin": "ast",
       "community": 523,
@@ -71791,7 +71791,7 @@
       "node_kind": "heading",
       "norm_label": "goal",
       "source_file": "docs/roadmap.md",
-      "source_location": "L432"
+      "source_location": "L433"
     },
     {
       "id": "docs_roadmap_m3_minimal_runtime",
@@ -71803,7 +71803,7 @@
       "node_kind": "heading",
       "norm_label": "m3 \u2014 minimal runtime",
       "source_file": "docs/roadmap.md",
-      "source_location": "L430"
+      "source_location": "L431"
     },
     {
       "id": "docs_roadmap_model_scope",
@@ -71815,7 +71815,7 @@
       "node_kind": "heading",
       "norm_label": "model scope",
       "source_file": "docs/roadmap.md",
-      "source_location": "L466"
+      "source_location": "L467"
     },
     {
       "id": "docs_roadmap_quantization_scope",
@@ -71827,7 +71827,7 @@
       "node_kind": "heading",
       "norm_label": "quantization scope",
       "source_file": "docs/roadmap.md",
-      "source_location": "L474"
+      "source_location": "L475"
     },
     {
       "id": "tools_m6a9_qwen35_lm_head",
@@ -72541,7 +72541,7 @@
       "node_kind": "heading",
       "norm_label": "benchmark before claim",
       "source_file": "docs/roadmap.md",
-      "source_location": "L137"
+      "source_location": "L138"
     },
     {
       "id": "docs_roadmap_correctness_before_speed",
@@ -72553,7 +72553,7 @@
       "node_kind": "heading",
       "norm_label": "correctness before speed",
       "source_file": "docs/roadmap.md",
-      "source_location": "L133"
+      "source_location": "L134"
     },
     {
       "id": "docs_roadmap_evidence_before_architecture",
@@ -72565,7 +72565,7 @@
       "node_kind": "heading",
       "norm_label": "evidence before architecture",
       "source_file": "docs/roadmap.md",
-      "source_location": "L125"
+      "source_location": "L126"
     },
     {
       "id": "docs_roadmap_narrow_before_broad",
@@ -72577,7 +72577,7 @@
       "node_kind": "heading",
       "norm_label": "narrow before broad",
       "source_file": "docs/roadmap.md",
-      "source_location": "L129"
+      "source_location": "L130"
     },
     {
       "id": "docs_roadmap_roadmap_principles",
@@ -72589,7 +72589,7 @@
       "node_kind": "heading",
       "norm_label": "roadmap principles",
       "source_file": "docs/roadmap.md",
-      "source_location": "L123"
+      "source_location": "L124"
     },
     {
       "id": "include_miinfer_gguf",
@@ -73687,10 +73687,10 @@
       "node_kind": "heading",
       "norm_label": "correctness validation",
       "source_file": "docs/roadmap.md",
-      "source_location": "L537"
+      "source_location": "L538"
     },
     {
-      "id": "docs_roadmap_exit_criteria_549",
+      "id": "docs_roadmap_exit_criteria_550",
       "label": "Exit criteria",
       "_origin": "ast",
       "community": 547,
@@ -73699,10 +73699,10 @@
       "node_kind": "heading",
       "norm_label": "exit criteria",
       "source_file": "docs/roadmap.md",
-      "source_location": "L549"
+      "source_location": "L550"
     },
     {
-      "id": "docs_roadmap_goal_503",
+      "id": "docs_roadmap_goal_504",
       "label": "Goal",
       "_origin": "ast",
       "community": 547,
@@ -73711,7 +73711,7 @@
       "node_kind": "heading",
       "norm_label": "goal",
       "source_file": "docs/roadmap.md",
-      "source_location": "L503"
+      "source_location": "L504"
     },
     {
       "id": "docs_roadmap_initial_inference_mode",
@@ -73723,7 +73723,7 @@
       "node_kind": "heading",
       "norm_label": "initial inference mode",
       "source_file": "docs/roadmap.md",
-      "source_location": "L525"
+      "source_location": "L526"
     },
     {
       "id": "docs_roadmap_m4_first_correct_end_to_end_generation",
@@ -73735,7 +73735,7 @@
       "node_kind": "heading",
       "norm_label": "m4 \u2014 first correct end-to-end generation",
       "source_file": "docs/roadmap.md",
-      "source_location": "L501"
+      "source_location": "L502"
     },
     {
       "id": "docs_roadmap_required_execution_pieces",
@@ -73747,7 +73747,7 @@
       "node_kind": "heading",
       "norm_label": "required execution pieces",
       "source_file": "docs/roadmap.md",
-      "source_location": "L509"
+      "source_location": "L510"
     },
     {
       "id": "docs_architecture_13_prefill_vs_decode",
@@ -73876,7 +73876,7 @@
       "node_kind": "heading",
       "norm_label": "completed",
       "source_file": "docs/current-state.md",
-      "source_location": "L614"
+      "source_location": "L616"
     },
     {
       "id": "docs_current_state_completed_in_task_3",
@@ -73888,7 +73888,7 @@
       "node_kind": "heading",
       "norm_label": "completed in task 3",
       "source_file": "docs/current-state.md",
-      "source_location": "L637"
+      "source_location": "L639"
     },
     {
       "id": "docs_current_state_current_project_status",
@@ -73900,7 +73900,7 @@
       "node_kind": "heading",
       "norm_label": "current project status",
       "source_file": "docs/current-state.md",
-      "source_location": "L612"
+      "source_location": "L614"
     },
     {
       "id": "docs_current_state_not_implemented",
@@ -73912,7 +73912,7 @@
       "node_kind": "heading",
       "norm_label": "not implemented",
       "source_file": "docs/current-state.md",
-      "source_location": "L918"
+      "source_location": "L920"
     },
     {
       "id": "docs_current_state_current_scope",
@@ -73924,7 +73924,7 @@
       "node_kind": "heading",
       "norm_label": "current scope",
       "source_file": "docs/current-state.md",
-      "source_location": "L1334"
+      "source_location": "L1336"
     },
     {
       "id": "docs_current_state_in_scope_now",
@@ -73936,7 +73936,7 @@
       "node_kind": "heading",
       "norm_label": "in scope now",
       "source_file": "docs/current-state.md",
-      "source_location": "L1336"
+      "source_location": "L1338"
     },
     {
       "id": "docs_current_state_not_in_scope_now",
@@ -73948,7 +73948,7 @@
       "node_kind": "heading",
       "norm_label": "not in scope now",
       "source_file": "docs/current-state.md",
-      "source_location": "L1347"
+      "source_location": "L1349"
     },
     {
       "id": "docs_references_15_research_classification",
@@ -74585,7 +74585,7 @@
       "node_kind": "heading",
       "norm_label": "current benchmark priority",
       "source_file": "docs/current-state.md",
-      "source_location": "L1110"
+      "source_location": "L1112"
     },
     {
       "id": "docs_current_state_current_build_direction",
@@ -74597,7 +74597,7 @@
       "node_kind": "heading",
       "norm_label": "current build direction",
       "source_file": "docs/current-state.md",
-      "source_location": "L1026"
+      "source_location": "L1028"
     },
     {
       "id": "docs_current_state_current_correctness_policy",
@@ -74609,7 +74609,7 @@
       "node_kind": "heading",
       "norm_label": "current correctness policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L1283"
+      "source_location": "L1285"
     },
     {
       "id": "docs_current_state_current_dependency_policy",
@@ -74621,7 +74621,7 @@
       "node_kind": "heading",
       "norm_label": "current dependency policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L1052"
+      "source_location": "L1054"
     },
     {
       "id": "docs_current_state_current_experiment_queue",
@@ -74633,7 +74633,7 @@
       "node_kind": "heading",
       "norm_label": "current experiment queue",
       "source_file": "docs/current-state.md",
-      "source_location": "L1148"
+      "source_location": "L1150"
     },
     {
       "id": "docs_current_state_current_hardware_observation_requirements",
@@ -74645,7 +74645,7 @@
       "node_kind": "heading",
       "norm_label": "current hardware observation requirements",
       "source_file": "docs/current-state.md",
-      "source_location": "L1314"
+      "source_location": "L1316"
     },
     {
       "id": "docs_current_state_current_hardware_target",
@@ -74657,7 +74657,7 @@
       "node_kind": "heading",
       "norm_label": "current hardware target",
       "source_file": "docs/current-state.md",
-      "source_location": "L599"
+      "source_location": "L601"
     },
     {
       "id": "docs_current_state_current_performance_policy",
@@ -74669,7 +74669,7 @@
       "node_kind": "heading",
       "norm_label": "current performance policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L1299"
+      "source_location": "L1301"
     },
     {
       "id": "docs_current_state_current_phase",
@@ -74693,7 +74693,7 @@
       "node_kind": "heading",
       "norm_label": "current reference strategy",
       "source_file": "docs/current-state.md",
-      "source_location": "L1090"
+      "source_location": "L1092"
     },
     {
       "id": "docs_current_state_current_runtime_policy",
@@ -74705,7 +74705,7 @@
       "node_kind": "heading",
       "norm_label": "current runtime policy",
       "source_file": "docs/current-state.md",
-      "source_location": "L1072"
+      "source_location": "L1074"
     },
     {
       "id": "docs_current_state_definition_of_current_success",
@@ -74717,7 +74717,7 @@
       "node_kind": "heading",
       "norm_label": "definition of current success",
       "source_file": "docs/current-state.md",
-      "source_location": "L1406"
+      "source_location": "L1408"
     },
     {
       "id": "docs_current_state_do_not_start_yet",
@@ -74729,7 +74729,7 @@
       "node_kind": "heading",
       "norm_label": "do not start yet",
       "source_file": "docs/current-state.md",
-      "source_location": "L1366"
+      "source_location": "L1368"
     },
     {
       "id": "docs_current_state_first_major_gate",
@@ -74741,7 +74741,7 @@
       "node_kind": "heading",
       "norm_label": "first major gate",
       "source_file": "docs/current-state.md",
-      "source_location": "L1273"
+      "source_location": "L1275"
     },
     {
       "id": "docs_current_state_immediate_deliverables",
@@ -74753,7 +74753,7 @@
       "node_kind": "heading",
       "norm_label": "immediate deliverables",
       "source_file": "docs/current-state.md",
-      "source_location": "L976"
+      "source_location": "L978"
     },
     {
       "id": "docs_current_state_immediate_objective",
@@ -74765,7 +74765,7 @@
       "node_kind": "heading",
       "norm_label": "immediate objective",
       "source_file": "docs/current-state.md",
-      "source_location": "L941"
+      "source_location": "L943"
     },
     {
       "id": "docs_current_state_last_updated",
@@ -74777,7 +74777,7 @@
       "node_kind": "heading",
       "norm_label": "last updated",
       "source_file": "docs/current-state.md",
-      "source_location": "L1433"
+      "source_location": "L1435"
     },
     {
       "id": "docs_current_state_miinfer_current_state",
@@ -74801,7 +74801,7 @@
       "node_kind": "heading",
       "norm_label": "next implementation task",
       "source_file": "docs/current-state.md",
-      "source_location": "L1386"
+      "source_location": "L1388"
     },
     {
       "id": "codex_skills_graphify_references_hooks",
@@ -88033,7 +88033,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1024",
+      "source_location": "L1028",
       "weight": 1.0
     },
     {
@@ -88045,7 +88045,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L896",
+      "source_location": "L900",
       "weight": 1.0
     },
     {
@@ -88057,7 +88057,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L964",
+      "source_location": "L968",
       "weight": 1.0
     },
     {
@@ -88069,7 +88069,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1044",
+      "source_location": "L1048",
       "weight": 1.0
     },
     {
@@ -88081,7 +88081,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1147",
+      "source_location": "L1144",
       "weight": 1.0
     },
     {
@@ -88093,7 +88093,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1203",
+      "source_location": "L1200",
       "weight": 1.0
     },
     {
@@ -88105,7 +88105,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1266",
+      "source_location": "L1316",
       "weight": 1.0
     },
     {
@@ -88117,7 +88117,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1272",
+      "source_location": "L1322",
       "weight": 1.0
     },
     {
@@ -88129,7 +88129,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1274",
+      "source_location": "L1324",
       "weight": 1.0
     },
     {
@@ -88141,7 +88141,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1276",
+      "source_location": "L1326",
       "weight": 1.0
     },
     {
@@ -88153,7 +88153,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1278",
+      "source_location": "L1328",
       "weight": 1.0
     },
     {
@@ -88165,7 +88165,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1280",
+      "source_location": "L1330",
       "weight": 1.0
     },
     {
@@ -88177,7 +88177,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1282",
+      "source_location": "L1332",
       "weight": 1.0
     },
     {
@@ -88189,7 +88189,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L425",
+      "source_location": "L429",
       "weight": 1.0
     },
     {
@@ -88201,7 +88201,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L432",
+      "source_location": "L436",
       "weight": 1.0
     },
     {
@@ -88213,7 +88213,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L437",
+      "source_location": "L441",
       "weight": 1.0
     },
     {
@@ -88225,7 +88225,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L455",
+      "source_location": "L459",
       "weight": 1.0
     },
     {
@@ -88237,7 +88237,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L494",
+      "source_location": "L498",
       "weight": 1.0
     },
     {
@@ -88249,7 +88249,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L512",
+      "source_location": "L516",
       "weight": 1.0
     },
     {
@@ -88261,7 +88261,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L378",
+      "source_location": "L382",
       "weight": 1.0
     },
     {
@@ -88273,7 +88273,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L383",
+      "source_location": "L387",
       "weight": 1.0
     },
     {
@@ -88285,7 +88285,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L391",
+      "source_location": "L395",
       "weight": 1.0
     },
     {
@@ -88297,7 +88297,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L398",
+      "source_location": "L402",
       "weight": 1.0
     },
     {
@@ -88309,7 +88309,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L404",
+      "source_location": "L408",
       "weight": 1.0
     },
     {
@@ -88321,7 +88321,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L666",
+      "source_location": "L670",
+      "weight": 1.0
+    },
+    {
+      "source": "tools_miinfer_cli_qwen35runtimeengine_qwen35runtimeengine",
+      "target": "tools_miinfer_cli_prefillprofile_destroy",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "tools/miinfer_cli.cpp",
+      "source_location": "L100",
       "weight": 1.0
     },
     {
@@ -88333,7 +88345,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L84",
+      "source_location": "L88",
       "weight": 1.0
     },
     {
@@ -88345,7 +88357,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L85",
+      "source_location": "L89",
       "weight": 1.0
     },
     {
@@ -88357,7 +88369,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L86",
+      "source_location": "L90",
       "weight": 1.0
     },
     {
@@ -88369,7 +88381,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L87",
+      "source_location": "L91",
       "weight": 1.0
     },
     {
@@ -88381,24 +88393,12 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L88",
-      "weight": 1.0
-    },
-    {
-      "source": "tools_miinfer_cli_qwen35runtimeengine_qwen35runtimeengine",
-      "target": "tools_miinfer_cli_qwen35runtimeengine_cleanup_graphs",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "tools/miinfer_cli.cpp",
       "source_location": "L92",
       "weight": 1.0
     },
     {
       "source": "tools_miinfer_cli_qwen35runtimeengine_qwen35runtimeengine",
-      "target": "tools_miinfer_cli_prefillprofile_destroy",
+      "target": "tools_miinfer_cli_qwen35runtimeengine_cleanup_graphs",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -88417,7 +88417,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L170",
+      "source_location": "L174",
       "weight": 1.0
     },
     {
@@ -97729,7 +97729,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L103",
+      "source_location": "L107",
       "weight": 1.0
     },
     {
@@ -97741,7 +97741,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L104",
+      "source_location": "L108",
       "weight": 1.0
     },
     {
@@ -97753,7 +97753,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L105",
+      "source_location": "L109",
       "weight": 1.0
     },
     {
@@ -97765,7 +97765,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L106",
+      "source_location": "L110",
       "weight": 1.0
     },
     {
@@ -97777,7 +97777,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L107",
+      "source_location": "L111",
       "weight": 1.0
     },
     {
@@ -97789,7 +97789,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L108",
+      "source_location": "L112",
       "weight": 1.0
     },
     {
@@ -97801,7 +97801,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L109",
+      "source_location": "L113",
       "weight": 1.0
     },
     {
@@ -97813,7 +97813,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L726",
+      "source_location": "L730",
       "weight": 1.0
     },
     {
@@ -97825,7 +97825,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L727",
+      "source_location": "L731",
       "weight": 1.0
     },
     {
@@ -97837,7 +97837,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L729",
+      "source_location": "L733",
       "weight": 1.0
     },
     {
@@ -97849,7 +97849,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L730",
+      "source_location": "L734",
       "weight": 1.0
     },
     {
@@ -97861,7 +97861,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L731",
+      "source_location": "L735",
       "weight": 1.0
     },
     {
@@ -97873,7 +97873,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L733",
+      "source_location": "L737",
       "weight": 1.0
     },
     {
@@ -97885,7 +97885,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L734",
+      "source_location": "L738",
       "weight": 1.0
     },
     {
@@ -97897,7 +97897,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L736",
+      "source_location": "L740",
       "weight": 1.0
     },
     {
@@ -97909,7 +97909,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L737",
+      "source_location": "L741",
       "weight": 1.0
     },
     {
@@ -97921,7 +97921,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L738",
+      "source_location": "L742",
       "weight": 1.0
     },
     {
@@ -97933,7 +97933,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L739",
+      "source_location": "L743",
       "weight": 1.0
     },
     {
@@ -97945,7 +97945,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L740",
+      "source_location": "L744",
       "weight": 1.0
     },
     {
@@ -97957,7 +97957,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L741",
+      "source_location": "L745",
       "weight": 1.0
     },
     {
@@ -97969,7 +97969,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L742",
+      "source_location": "L746",
       "weight": 1.0
     },
     {
@@ -97981,7 +97981,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L743",
+      "source_location": "L747",
       "weight": 1.0
     },
     {
@@ -97993,7 +97993,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L744",
+      "source_location": "L748",
       "weight": 1.0
     },
     {
@@ -98005,7 +98005,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L745",
+      "source_location": "L749",
       "weight": 1.0
     },
     {
@@ -98017,7 +98017,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L746",
+      "source_location": "L750",
       "weight": 1.0
     },
     {
@@ -98029,7 +98029,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L746",
+      "source_location": "L750",
       "weight": 1.0
     },
     {
@@ -98041,7 +98041,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L747",
+      "source_location": "L751",
       "weight": 1.0
     },
     {
@@ -98053,7 +98053,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L747",
+      "source_location": "L751",
       "weight": 1.0
     },
     {
@@ -98065,7 +98065,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L747",
+      "source_location": "L751",
       "weight": 1.0
     },
     {
@@ -98077,7 +98077,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L748",
+      "source_location": "L752",
       "weight": 1.0
     },
     {
@@ -98089,7 +98089,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L749",
+      "source_location": "L753",
       "weight": 1.0
     },
     {
@@ -98101,7 +98101,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L750",
+      "source_location": "L754",
       "weight": 1.0
     },
     {
@@ -98113,7 +98113,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L750",
+      "source_location": "L754",
       "weight": 1.0
     },
     {
@@ -98125,7 +98125,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L751",
+      "source_location": "L755",
       "weight": 1.0
     },
     {
@@ -98137,7 +98137,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L752",
+      "source_location": "L756",
       "weight": 1.0
     },
     {
@@ -98149,7 +98149,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L753",
+      "source_location": "L757",
       "weight": 1.0
     },
     {
@@ -98161,7 +98161,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L755",
+      "source_location": "L759",
       "weight": 1.0
     },
     {
@@ -98173,7 +98173,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L756",
+      "source_location": "L760",
       "weight": 1.0
     },
     {
@@ -98185,7 +98185,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L757",
+      "source_location": "L761",
       "weight": 1.0
     },
     {
@@ -98197,7 +98197,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L758",
+      "source_location": "L762",
       "weight": 1.0
     },
     {
@@ -98209,7 +98209,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L759",
+      "source_location": "L763",
       "weight": 1.0
     },
     {
@@ -98221,7 +98221,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L760",
+      "source_location": "L764",
       "weight": 1.0
     },
     {
@@ -98233,7 +98233,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L761",
+      "source_location": "L765",
       "weight": 1.0
     },
     {
@@ -98245,7 +98245,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L55",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -98257,7 +98257,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L56",
+      "source_location": "L60",
       "weight": 1.0
     },
     {
@@ -98269,7 +98269,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L57",
+      "source_location": "L61",
       "weight": 1.0
     },
     {
@@ -98281,7 +98281,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L61",
+      "source_location": "L65",
       "weight": 1.0
     },
     {
@@ -98293,7 +98293,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L62",
+      "source_location": "L66",
       "weight": 1.0
     },
     {
@@ -98305,7 +98305,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L63",
+      "source_location": "L67",
       "weight": 1.0
     },
     {
@@ -98317,7 +98317,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L64",
+      "source_location": "L68",
       "weight": 1.0
     },
     {
@@ -98329,7 +98329,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L65",
+      "source_location": "L69",
       "weight": 1.0
     },
     {
@@ -98341,7 +98341,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L66",
+      "source_location": "L70",
       "weight": 1.0
     },
     {
@@ -98353,7 +98353,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L67",
+      "source_location": "L71",
       "weight": 1.0
     },
     {
@@ -98365,7 +98365,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L68",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
@@ -98377,7 +98377,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L69",
+      "source_location": "L73",
       "weight": 1.0
     },
     {
@@ -98389,7 +98389,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L70",
+      "source_location": "L74",
       "weight": 1.0
     },
     {
@@ -98401,7 +98401,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L162",
+      "source_location": "L166",
       "weight": 1.0
     },
     {
@@ -98413,7 +98413,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L163",
+      "source_location": "L167",
       "weight": 1.0
     },
     {
@@ -104533,7 +104533,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L106",
+      "source_location": "L110",
       "weight": 1.0
     },
     {
@@ -104545,7 +104545,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L109",
+      "source_location": "L113",
       "weight": 1.0
     },
     {
@@ -104557,7 +104557,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L726",
+      "source_location": "L730",
       "weight": 1.0
     },
     {
@@ -104569,7 +104569,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L727",
+      "source_location": "L731",
       "weight": 1.0
     },
     {
@@ -104581,7 +104581,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L734",
+      "source_location": "L738",
       "weight": 1.0
     },
     {
@@ -104593,7 +104593,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L749",
+      "source_location": "L753",
       "weight": 1.0
     },
     {
@@ -104605,7 +104605,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L751",
+      "source_location": "L755",
       "weight": 1.0
     },
     {
@@ -104617,7 +104617,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L753",
+      "source_location": "L757",
       "weight": 1.0
     },
     {
@@ -104629,7 +104629,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L759",
+      "source_location": "L763",
       "weight": 1.0
     },
     {
@@ -104641,7 +104641,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L761",
+      "source_location": "L765",
       "weight": 1.0
     },
     {
@@ -104653,7 +104653,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L55",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -104665,7 +104665,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L57",
+      "source_location": "L61",
       "weight": 1.0
     },
     {
@@ -104677,7 +104677,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L61",
+      "source_location": "L65",
       "weight": 1.0
     },
     {
@@ -104689,7 +104689,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L62",
+      "source_location": "L66",
       "weight": 1.0
     },
     {
@@ -104701,7 +104701,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L64",
+      "source_location": "L68",
       "weight": 1.0
     },
     {
@@ -104713,7 +104713,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L162",
+      "source_location": "L166",
       "weight": 1.0
     },
     {
@@ -106873,7 +106873,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L107",
+      "source_location": "L111",
       "weight": 1.0
     },
     {
@@ -106885,7 +106885,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L729",
+      "source_location": "L733",
       "weight": 1.0
     },
     {
@@ -106897,7 +106897,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L730",
+      "source_location": "L734",
       "weight": 1.0
     },
     {
@@ -106909,7 +106909,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L730",
+      "source_location": "L734",
       "weight": 1.0
     },
     {
@@ -106921,7 +106921,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L731",
+      "source_location": "L735",
       "weight": 1.0
     },
     {
@@ -106933,7 +106933,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L761",
+      "source_location": "L765",
       "weight": 1.0
     },
     {
@@ -106945,7 +106945,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L424",
+      "source_location": "L428",
       "weight": 1.0
     },
     {
@@ -106957,7 +106957,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L372",
+      "source_location": "L376",
       "weight": 1.0
     },
     {
@@ -106969,7 +106969,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L241",
+      "source_location": "L245",
       "weight": 1.0
     },
     {
@@ -106981,7 +106981,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L61",
+      "source_location": "L65",
       "weight": 1.0
     },
     {
@@ -110557,7 +110557,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L14",
+      "source_location": "L17",
       "weight": 1.0
     },
     {
@@ -110569,31 +110569,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L16",
-      "weight": 1.0
-    },
-    {
-      "source": "tools_miinfer_cli",
-      "target": "tools_miinfer_cli_cpp_string_view",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L17",
-      "weight": 1.0
-    },
-    {
-      "source": "tools_miinfer_cli",
-      "target": "include_miinfer_gguf_hpp_vector",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L18",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -110610,6 +110586,30 @@
     },
     {
       "source": "tools_miinfer_cli",
+      "target": "tools_miinfer_cli_cpp_string_view",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "tools/miinfer_cli.cpp",
+      "source_location": "L20",
+      "weight": 1.0
+    },
+    {
+      "source": "tools_miinfer_cli",
+      "target": "include_miinfer_gguf_hpp_vector",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "tools/miinfer_cli.cpp",
+      "source_location": "L22",
+      "weight": 1.0
+    },
+    {
+      "source": "tools_miinfer_cli",
       "target": "tools_qwen35_gpu_pipeline",
       "relation": "imports",
       "_origin": "ast",
@@ -110617,7 +110617,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L26",
+      "source_location": "L30",
       "weight": 1.0
     },
     {
@@ -121273,7 +121273,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L41",
+      "source_location": "L45",
       "weight": 1.0
     },
     {
@@ -121285,7 +121285,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L130",
+      "source_location": "L134",
       "weight": 1.0
     },
     {
@@ -121297,7 +121297,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L669",
+      "source_location": "L673",
       "weight": 1.0
     },
     {
@@ -121309,7 +121309,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L424",
+      "source_location": "L428",
       "weight": 1.0
     },
     {
@@ -121321,7 +121321,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L372",
+      "source_location": "L376",
       "weight": 1.0
     },
     {
@@ -121333,7 +121333,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L372",
+      "source_location": "L376",
       "weight": 1.0
     },
     {
@@ -121345,7 +121345,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L372",
+      "source_location": "L376",
       "weight": 1.0
     },
     {
@@ -121357,7 +121357,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L347",
+      "source_location": "L351",
       "weight": 1.0
     },
     {
@@ -121369,7 +121369,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L241",
+      "source_location": "L245",
       "weight": 1.0
     },
     {
@@ -121381,7 +121381,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L222",
+      "source_location": "L226",
       "weight": 1.0
     },
     {
@@ -121393,7 +121393,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L222",
+      "source_location": "L226",
       "weight": 1.0
     },
     {
@@ -121405,7 +121405,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L81",
+      "source_location": "L85",
       "weight": 1.0
     },
     {
@@ -121417,7 +121417,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L166",
+      "source_location": "L170",
       "weight": 1.0
     },
     {
@@ -121429,7 +121429,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L166",
+      "source_location": "L170",
       "weight": 1.0
     },
     {
@@ -125605,7 +125605,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L41",
+      "source_location": "L45",
       "weight": 1.0
     },
     {
@@ -125617,7 +125617,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L424",
+      "source_location": "L428",
       "weight": 1.0
     },
     {
@@ -125629,7 +125629,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L372",
+      "source_location": "L376",
       "weight": 1.0
     },
     {
@@ -125641,7 +125641,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L347",
+      "source_location": "L351",
       "weight": 1.0
     },
     {
@@ -125653,7 +125653,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L166",
+      "source_location": "L170",
       "weight": 1.0
     },
     {
@@ -131302,7 +131302,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1026",
+      "source_location": "L1028",
       "weight": 1.0
     },
     {
@@ -131313,7 +131313,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1052",
+      "source_location": "L1054",
       "weight": 1.0
     },
     {
@@ -131324,7 +131324,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1072",
+      "source_location": "L1074",
       "weight": 1.0
     },
     {
@@ -131335,7 +131335,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1090",
+      "source_location": "L1092",
       "weight": 1.0
     },
     {
@@ -131346,7 +131346,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1110",
+      "source_location": "L1112",
       "weight": 1.0
     },
     {
@@ -131357,7 +131357,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1148",
+      "source_location": "L1150",
       "weight": 1.0
     },
     {
@@ -131368,7 +131368,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1273",
+      "source_location": "L1275",
       "weight": 1.0
     },
     {
@@ -131379,7 +131379,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1283",
+      "source_location": "L1285",
       "weight": 1.0
     },
     {
@@ -131390,7 +131390,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1299",
+      "source_location": "L1301",
       "weight": 1.0
     },
     {
@@ -131401,7 +131401,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1314",
+      "source_location": "L1316",
       "weight": 1.0
     },
     {
@@ -131412,7 +131412,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1334",
+      "source_location": "L1336",
       "weight": 1.0
     },
     {
@@ -131423,7 +131423,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1366",
+      "source_location": "L1368",
       "weight": 1.0
     },
     {
@@ -131434,7 +131434,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1386",
+      "source_location": "L1388",
       "weight": 1.0
     },
     {
@@ -131445,7 +131445,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1406",
+      "source_location": "L1408",
       "weight": 1.0
     },
     {
@@ -131456,7 +131456,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1433",
+      "source_location": "L1435",
       "weight": 1.0
     },
     {
@@ -131478,7 +131478,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L599",
+      "source_location": "L601",
       "weight": 1.0
     },
     {
@@ -131489,7 +131489,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L612",
+      "source_location": "L614",
       "weight": 1.0
     },
     {
@@ -131500,7 +131500,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L941",
+      "source_location": "L943",
       "weight": 1.0
     },
     {
@@ -131511,7 +131511,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L976",
+      "source_location": "L978",
       "weight": 1.0
     },
     {
@@ -131522,7 +131522,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L614",
+      "source_location": "L616",
       "weight": 1.0
     },
     {
@@ -131533,7 +131533,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L637",
+      "source_location": "L639",
       "weight": 1.0
     },
     {
@@ -131544,7 +131544,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L918",
+      "source_location": "L920",
       "weight": 1.0
     },
     {
@@ -131555,7 +131555,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1336",
+      "source_location": "L1338",
       "weight": 1.0
     },
     {
@@ -131566,7 +131566,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1347",
+      "source_location": "L1349",
       "weight": 1.0
     },
     {
@@ -135592,7 +135592,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/M9-RUNTIME-SURFACE.md",
-      "source_location": "L149",
+      "source_location": "L152",
       "weight": 1.0
     },
     {
@@ -135603,7 +135603,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/M9-RUNTIME-SURFACE.md",
-      "source_location": "L175",
+      "source_location": "L178",
       "weight": 1.0
     },
     {
@@ -135614,7 +135614,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/M9-RUNTIME-SURFACE.md",
-      "source_location": "L116",
+      "source_location": "L119",
       "weight": 1.0
     },
     {
@@ -135625,7 +135625,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/M9-RUNTIME-SURFACE.md",
-      "source_location": "L147",
+      "source_location": "L150",
       "weight": 1.0
     },
     {
@@ -135636,7 +135636,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/M9-RUNTIME-SURFACE.md",
-      "source_location": "L67",
+      "source_location": "L70",
       "weight": 1.0
     },
     {
@@ -135647,7 +135647,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/M9-RUNTIME-SURFACE.md",
-      "source_location": "L195",
+      "source_location": "L198",
       "weight": 1.0
     },
     {
@@ -135669,7 +135669,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/M9-RUNTIME-SURFACE.md",
-      "source_location": "L65",
+      "source_location": "L68",
       "weight": 1.0
     },
     {
@@ -137374,7 +137374,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L1040",
+      "source_location": "L1041",
       "weight": 1.0
     },
     {
@@ -137385,7 +137385,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L1058",
+      "source_location": "L1059",
       "weight": 1.0
     },
     {
@@ -137407,7 +137407,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L123",
+      "source_location": "L124",
       "weight": 1.0
     },
     {
@@ -137418,7 +137418,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L145",
+      "source_location": "L146",
       "weight": 1.0
     },
     {
@@ -137429,7 +137429,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L243",
+      "source_location": "L244",
       "weight": 1.0
     },
     {
@@ -137440,7 +137440,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L301",
+      "source_location": "L302",
       "weight": 1.0
     },
     {
@@ -137451,7 +137451,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L430",
+      "source_location": "L431",
       "weight": 1.0
     },
     {
@@ -137462,7 +137462,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L501",
+      "source_location": "L502",
       "weight": 1.0
     },
     {
@@ -137473,7 +137473,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L561",
+      "source_location": "L562",
       "weight": 1.0
     },
     {
@@ -137484,7 +137484,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L665",
+      "source_location": "L666",
       "weight": 1.0
     },
     {
@@ -137495,7 +137495,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L696",
+      "source_location": "L697",
       "weight": 1.0
     },
     {
@@ -137506,7 +137506,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L761",
+      "source_location": "L762",
       "weight": 1.0
     },
     {
@@ -137517,7 +137517,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L827",
+      "source_location": "L828",
       "weight": 1.0
     },
     {
@@ -137528,7 +137528,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L852",
+      "source_location": "L853",
       "weight": 1.0
     },
     {
@@ -137539,7 +137539,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L883",
+      "source_location": "L884",
       "weight": 1.0
     },
     {
@@ -137550,7 +137550,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L941",
+      "source_location": "L942",
       "weight": 1.0
     },
     {
@@ -137561,7 +137561,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L315",
+      "source_location": "L316",
       "weight": 1.0
     },
     {
@@ -137572,7 +137572,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L323",
+      "source_location": "L324",
       "weight": 1.0
     },
     {
@@ -137583,7 +137583,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L333",
+      "source_location": "L334",
       "weight": 1.0
     },
     {
@@ -137594,7 +137594,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L343",
+      "source_location": "L344",
       "weight": 1.0
     },
     {
@@ -137605,7 +137605,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L352",
+      "source_location": "L353",
       "weight": 1.0
     },
     {
@@ -137616,7 +137616,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L364",
+      "source_location": "L365",
       "weight": 1.0
     },
     {
@@ -137627,7 +137627,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L704",
+      "source_location": "L705",
       "weight": 1.0
     },
     {
@@ -137638,7 +137638,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L715",
+      "source_location": "L716",
       "weight": 1.0
     },
     {
@@ -137649,7 +137649,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L719",
+      "source_location": "L720",
       "weight": 1.0
     },
     {
@@ -137660,7 +137660,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L723",
+      "source_location": "L724",
       "weight": 1.0
     },
     {
@@ -137671,7 +137671,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L733",
+      "source_location": "L734",
       "weight": 1.0
     },
     {
@@ -137682,7 +137682,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L745",
+      "source_location": "L746",
       "weight": 1.0
     },
     {
@@ -137693,7 +137693,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L573",
+      "source_location": "L574",
       "weight": 1.0
     },
     {
@@ -137704,7 +137704,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L579",
+      "source_location": "L580",
       "weight": 1.0
     },
     {
@@ -137715,7 +137715,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L585",
+      "source_location": "L586",
       "weight": 1.0
     },
     {
@@ -137726,7 +137726,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L593",
+      "source_location": "L594",
       "weight": 1.0
     },
     {
@@ -137737,7 +137737,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L165",
+      "source_location": "L166",
       "weight": 1.0
     },
     {
@@ -137748,7 +137748,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L178",
+      "source_location": "L179",
       "weight": 1.0
     },
     {
@@ -137759,7 +137759,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L194",
+      "source_location": "L195",
       "weight": 1.0
     },
     {
@@ -137770,40 +137770,40 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L205",
+      "source_location": "L206",
       "weight": 1.0
     },
     {
-      "source": "docs_roadmap_exit_criteria_617",
+      "source": "docs_roadmap_exit_criteria_618",
       "target": "docs_roadmap_h1_supported",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L629",
+      "source_location": "L630",
       "weight": 1.0
     },
     {
-      "source": "docs_roadmap_exit_criteria_617",
+      "source": "docs_roadmap_exit_criteria_618",
       "target": "docs_roadmap_mixed_result",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L635",
+      "source_location": "L636",
       "weight": 1.0
     },
     {
-      "source": "docs_roadmap_exit_criteria_617",
+      "source": "docs_roadmap_exit_criteria_618",
       "target": "docs_roadmap_h0_supported",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L641",
+      "source_location": "L642",
       "weight": 1.0
     },
     {
@@ -137814,7 +137814,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L405",
+      "source_location": "L406",
       "weight": 1.0
     },
     {
@@ -137825,7 +137825,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L412",
+      "source_location": "L413",
       "weight": 1.0
     },
     {
@@ -137836,7 +137836,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L147",
+      "source_location": "L148",
       "weight": 1.0
     },
     {
@@ -137847,7 +137847,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L153",
+      "source_location": "L154",
       "weight": 1.0
     },
     {
@@ -137858,7 +137858,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L163",
+      "source_location": "L164",
       "weight": 1.0
     },
     {
@@ -137869,7 +137869,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L217",
+      "source_location": "L218",
       "weight": 1.0
     },
     {
@@ -137880,29 +137880,29 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L229",
+      "source_location": "L230",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m1_kernel_laboratory",
-      "target": "docs_roadmap_goal_245",
+      "target": "docs_roadmap_goal_246",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L245",
+      "source_location": "L246",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m1_kernel_laboratory",
-      "target": "docs_roadmap_questions_249",
+      "target": "docs_roadmap_questions_250",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L249",
+      "source_location": "L250",
       "weight": 1.0
     },
     {
@@ -137913,7 +137913,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L258",
+      "source_location": "L259",
       "weight": 1.0
     },
     {
@@ -137924,7 +137924,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L270",
+      "source_location": "L271",
       "weight": 1.0
     },
     {
@@ -137935,29 +137935,29 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L283",
+      "source_location": "L284",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m1_kernel_laboratory",
-      "target": "docs_roadmap_exit_criteria_289",
+      "target": "docs_roadmap_exit_criteria_290",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L289",
+      "source_location": "L290",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m2_prove_specialization",
-      "target": "docs_roadmap_goal_303",
+      "target": "docs_roadmap_goal_304",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L303",
+      "source_location": "L304",
       "weight": 1.0
     },
     {
@@ -137968,7 +137968,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L309",
+      "source_location": "L310",
       "weight": 1.0
     },
     {
@@ -137979,7 +137979,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L313",
+      "source_location": "L314",
       "weight": 1.0
     },
     {
@@ -137990,7 +137990,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L375",
+      "source_location": "L376",
       "weight": 1.0
     },
     {
@@ -138001,7 +138001,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L388",
+      "source_location": "L389",
       "weight": 1.0
     },
     {
@@ -138012,18 +138012,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L403",
+      "source_location": "L404",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m3_minimal_runtime",
-      "target": "docs_roadmap_goal_432",
+      "target": "docs_roadmap_goal_433",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L432",
+      "source_location": "L433",
       "weight": 1.0
     },
     {
@@ -138034,7 +138034,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L438",
+      "source_location": "L439",
       "weight": 1.0
     },
     {
@@ -138045,7 +138045,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L452",
+      "source_location": "L453",
       "weight": 1.0
     },
     {
@@ -138056,7 +138056,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L466",
+      "source_location": "L467",
       "weight": 1.0
     },
     {
@@ -138067,29 +138067,29 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L474",
+      "source_location": "L475",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m3_minimal_runtime",
-      "target": "docs_roadmap_exit_criteria_480",
+      "target": "docs_roadmap_exit_criteria_481",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L480",
+      "source_location": "L481",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m4_first_correct_end_to_end_generation",
-      "target": "docs_roadmap_goal_503",
+      "target": "docs_roadmap_goal_504",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L503",
+      "source_location": "L504",
       "weight": 1.0
     },
     {
@@ -138100,7 +138100,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L509",
+      "source_location": "L510",
       "weight": 1.0
     },
     {
@@ -138111,7 +138111,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L525",
+      "source_location": "L526",
       "weight": 1.0
     },
     {
@@ -138122,29 +138122,29 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L537",
+      "source_location": "L538",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m4_first_correct_end_to_end_generation",
-      "target": "docs_roadmap_exit_criteria_549",
+      "target": "docs_roadmap_exit_criteria_550",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L549",
+      "source_location": "L550",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m5_beat_the_reference",
-      "target": "docs_roadmap_goal_563",
+      "target": "docs_roadmap_goal_564",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L563",
+      "source_location": "L564",
       "weight": 1.0
     },
     {
@@ -138155,7 +138155,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L569",
+      "source_location": "L570",
       "weight": 1.0
     },
     {
@@ -138166,18 +138166,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L604",
+      "source_location": "L605",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m5_beat_the_reference",
-      "target": "docs_roadmap_exit_criteria_617",
+      "target": "docs_roadmap_exit_criteria_618",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L617",
+      "source_location": "L618",
       "weight": 1.0
     },
     {
@@ -138188,18 +138188,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L649",
+      "source_location": "L650",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m6_a_reference_correct_execution_contract_exploration",
-      "target": "docs_roadmap_goal_669",
+      "target": "docs_roadmap_goal_670",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L669",
+      "source_location": "L670",
       "weight": 1.0
     },
     {
@@ -138210,7 +138210,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L674",
+      "source_location": "L675",
       "weight": 1.0
     },
     {
@@ -138221,18 +138221,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L682",
+      "source_location": "L683",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m6_runtime_specialization",
-      "target": "docs_roadmap_goal_698",
+      "target": "docs_roadmap_goal_699",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L698",
+      "source_location": "L699",
       "weight": 1.0
     },
     {
@@ -138243,18 +138243,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L702",
+      "source_location": "L703",
       "weight": 1.0
     },
     {
       "source": "docs_roadmap_m6_runtime_specialization",
-      "target": "docs_roadmap_exit_criteria_749",
+      "target": "docs_roadmap_exit_criteria_750",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L749",
+      "source_location": "L750",
       "weight": 1.0
     },
     {
@@ -138265,7 +138265,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L767",
+      "source_location": "L768",
       "weight": 1.0
     },
     {
@@ -138276,7 +138276,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L769",
+      "source_location": "L770",
       "weight": 1.0
     },
     {
@@ -138287,7 +138287,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L780",
+      "source_location": "L781",
       "weight": 1.0
     },
     {
@@ -138298,7 +138298,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L792",
+      "source_location": "L793",
       "weight": 1.0
     },
     {
@@ -138309,7 +138309,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L803",
+      "source_location": "L804",
       "weight": 1.0
     },
     {
@@ -138320,7 +138320,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L815",
+      "source_location": "L816",
       "weight": 1.0
     },
     {
@@ -138331,7 +138331,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L125",
+      "source_location": "L126",
       "weight": 1.0
     },
     {
@@ -138342,7 +138342,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L129",
+      "source_location": "L130",
       "weight": 1.0
     },
     {
@@ -138353,7 +138353,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L133",
+      "source_location": "L134",
       "weight": 1.0
     },
     {
@@ -138364,7 +138364,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L137",
+      "source_location": "L138",
       "weight": 1.0
     },
     {
@@ -167932,7 +167932,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L401",
+      "source_location": "L402",
       "weight": 1.0
     },
     {
@@ -167943,7 +167943,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L405",
+      "source_location": "L406",
       "weight": 1.0
     },
     {
@@ -167954,7 +167954,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L417",
+      "source_location": "L418",
       "weight": 1.0
     },
     {
@@ -167965,7 +167965,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L432",
+      "source_location": "L433",
       "weight": 1.0
     },
     {
@@ -167976,7 +167976,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L447",
+      "source_location": "L448",
       "weight": 1.0
     },
     {
@@ -167987,7 +167987,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L460",
+      "source_location": "L461",
       "weight": 1.0
     },
     {
@@ -167998,7 +167998,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L470",
+      "source_location": "L471",
       "weight": 1.0
     },
     {
@@ -168009,7 +168009,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L651",
+      "source_location": "L652",
       "weight": 1.0
     },
     {
@@ -168020,7 +168020,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L662",
+      "source_location": "L663",
       "weight": 1.0
     },
     {
@@ -168031,7 +168031,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L671",
+      "source_location": "L672",
       "weight": 1.0
     },
     {
@@ -168042,7 +168042,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L684",
+      "source_location": "L685",
       "weight": 1.0
     },
     {
@@ -168053,7 +168053,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L694",
+      "source_location": "L695",
       "weight": 1.0
     },
     {
@@ -168064,7 +168064,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L698",
+      "source_location": "L699",
       "weight": 1.0
     },
     {
@@ -168075,7 +168075,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L712",
+      "source_location": "L713",
       "weight": 1.0
     },
     {
@@ -168086,7 +168086,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L723",
+      "source_location": "L724",
       "weight": 1.0
     },
     {
@@ -168108,7 +168108,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L348",
+      "source_location": "L349",
       "weight": 1.0
     },
     {
@@ -168119,7 +168119,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L370",
+      "source_location": "L371",
       "weight": 1.0
     },
     {
@@ -168130,7 +168130,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L397",
+      "source_location": "L398",
       "weight": 1.0
     },
     {
@@ -168141,7 +168141,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L415",
+      "source_location": "L416",
       "weight": 1.0
     },
     {
@@ -168152,7 +168152,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L508",
+      "source_location": "L509",
       "weight": 1.0
     },
     {
@@ -168163,7 +168163,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L529",
+      "source_location": "L530",
       "weight": 1.0
     },
     {
@@ -168174,7 +168174,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L556",
+      "source_location": "L557",
       "weight": 1.0
     },
     {
@@ -168185,7 +168185,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L595",
+      "source_location": "L596",
       "weight": 1.0
     },
     {
@@ -168196,7 +168196,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L649",
+      "source_location": "L650",
       "weight": 1.0
     },
     {
@@ -168207,7 +168207,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L737",
+      "source_location": "L738",
       "weight": 1.0
     },
     {
@@ -168218,7 +168218,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L773",
+      "source_location": "L774",
       "weight": 1.0
     },
     {
@@ -168229,7 +168229,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L808",
+      "source_location": "L809",
       "weight": 1.0
     },
     {
@@ -168240,7 +168240,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L849",
+      "source_location": "L850",
       "weight": 1.0
     },
     {
@@ -168251,7 +168251,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L870",
+      "source_location": "L871",
       "weight": 1.0
     },
     {
@@ -168262,7 +168262,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L909",
+      "source_location": "L910",
       "weight": 1.0
     },
     {
@@ -168273,7 +168273,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L933",
+      "source_location": "L934",
       "weight": 1.0
     },
     {
@@ -168284,7 +168284,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L943",
+      "source_location": "L944",
       "weight": 1.0
     },
     {
@@ -168295,7 +168295,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L599",
+      "source_location": "L600",
       "weight": 1.0
     },
     {
@@ -168306,7 +168306,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L610",
+      "source_location": "L611",
       "weight": 1.0
     },
     {
@@ -168317,7 +168317,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L626",
+      "source_location": "L627",
       "weight": 1.0
     },
     {
@@ -168328,7 +168328,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L634",
+      "source_location": "L635",
       "weight": 1.0
     },
     {
@@ -175082,7 +175082,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1038",
+      "source_location": "L1042",
       "weight": 1.0
     },
     {
@@ -175093,7 +175093,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1249",
+      "source_location": "L1299",
       "weight": 1.0
     },
     {
@@ -175104,7 +175104,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1264",
+      "source_location": "L1314",
       "weight": 1.0
     },
     {
@@ -175115,7 +175115,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L35",
+      "source_location": "L39",
       "weight": 1.0
     },
     {
@@ -175126,7 +175126,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L41",
+      "source_location": "L45",
       "weight": 1.0
     },
     {
@@ -175137,7 +175137,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L54",
+      "source_location": "L58",
       "weight": 1.0
     },
     {
@@ -175148,18 +175148,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L60",
-      "weight": 1.0
-    },
-    {
-      "source": "tools_miinfer_cli",
-      "target": "tools_miinfer_cli_qwen35runtimeengine",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L76",
+      "source_location": "L64",
       "weight": 1.0
     },
     {
@@ -175170,7 +175159,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L767",
+      "source_location": "L771",
+      "weight": 1.0
+    },
+    {
+      "source": "tools_miinfer_cli",
+      "target": "tools_miinfer_cli_qwen35runtimeengine",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tools/miinfer_cli.cpp",
+      "source_location": "L80",
       "weight": 1.0
     },
     {
@@ -175181,7 +175181,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L872",
+      "source_location": "L876",
       "weight": 1.0
     },
     {
@@ -175192,7 +175192,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L900",
+      "source_location": "L904",
       "weight": 1.0
     },
     {
@@ -175203,7 +175203,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L918",
+      "source_location": "L922",
       "weight": 1.0
     },
     {
@@ -175214,7 +175214,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L988",
+      "source_location": "L992",
       "weight": 1.0
     },
     {
@@ -175225,7 +175225,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L102",
+      "source_location": "L106",
       "weight": 1.0
     },
     {
@@ -175236,7 +175236,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L161",
+      "source_location": "L165",
       "weight": 1.0
     },
     {
@@ -177106,7 +177106,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L111",
+      "source_location": "L115",
       "weight": 1.0
     },
     {
@@ -177117,7 +177117,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L118",
+      "source_location": "L122",
       "weight": 1.0
     },
     {
@@ -177128,7 +177128,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L130",
+      "source_location": "L134",
       "weight": 1.0
     },
     {
@@ -177139,7 +177139,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L153",
+      "source_location": "L157",
       "weight": 1.0
     },
     {
@@ -177150,7 +177150,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L166",
+      "source_location": "L170",
       "weight": 1.0
     },
     {
@@ -177161,7 +177161,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L222",
+      "source_location": "L226",
       "weight": 1.0
     },
     {
@@ -177172,7 +177172,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L241",
+      "source_location": "L245",
       "weight": 1.0
     },
     {
@@ -177183,7 +177183,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L347",
+      "source_location": "L351",
       "weight": 1.0
     },
     {
@@ -177194,7 +177194,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L372",
+      "source_location": "L376",
       "weight": 1.0
     },
     {
@@ -177205,7 +177205,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L424",
+      "source_location": "L428",
       "weight": 1.0
     },
     {
@@ -177216,7 +177216,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L528",
+      "source_location": "L532",
       "weight": 1.0
     },
     {
@@ -177227,7 +177227,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L581",
+      "source_location": "L585",
       "weight": 1.0
     },
     {
@@ -177238,7 +177238,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L597",
+      "source_location": "L601",
       "weight": 1.0
     },
     {
@@ -177249,7 +177249,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L618",
+      "source_location": "L622",
       "weight": 1.0
     },
     {
@@ -177260,7 +177260,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L635",
+      "source_location": "L639",
       "weight": 1.0
     },
     {
@@ -177271,7 +177271,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L669",
+      "source_location": "L673",
       "weight": 1.0
     },
     {
@@ -177282,7 +177282,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L717",
+      "source_location": "L721",
       "weight": 1.0
     },
     {
@@ -177293,7 +177293,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L91",
+      "source_location": "L95",
       "weight": 1.0
     },
     {
@@ -177953,7 +177953,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L1104",
+      "source_location": "L1106",
       "weight": 1.0
     },
     {
@@ -177986,7 +177986,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-state.md",
-      "source_location": "L911",
+      "source_location": "L913",
       "weight": 1.0
     },
     {
@@ -178019,7 +178019,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/roadmap.md",
-      "source_location": "L955",
+      "source_location": "L956",
       "weight": 1.0
     },
     {
@@ -178129,7 +178129,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L645",
+      "source_location": "L646",
       "weight": 1.0
     },
     {
@@ -178140,7 +178140,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L733",
+      "source_location": "L734",
       "weight": 1.0
     },
     {
@@ -178151,7 +178151,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L769",
+      "source_location": "L770",
       "weight": 1.0
     },
     {
@@ -178162,7 +178162,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L864",
+      "source_location": "L865",
       "weight": 1.0
     },
     {
@@ -178173,7 +178173,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L915",
+      "source_location": "L916",
       "weight": 1.0
     },
     {
@@ -178184,7 +178184,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L916",
+      "source_location": "L917",
       "weight": 1.0
     },
     {
@@ -178195,7 +178195,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L918",
+      "source_location": "L919",
       "weight": 1.0
     },
     {
@@ -178206,7 +178206,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L919",
+      "source_location": "L920",
       "weight": 1.0
     },
     {
@@ -181422,7 +181422,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1114",
+      "source_location": "L1111",
       "weight": 1.0
     },
     {
@@ -181434,24 +181434,12 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L683",
+      "source_location": "L687",
       "weight": 1.0
     },
     {
       "source": "tools_miinfer_cli_qwen35runtimeengine_init_buffers",
       "target": "tools_qwen35_gpu_pipeline_allocate",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "context": "call",
-      "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L637",
-      "weight": 1.0
-    },
-    {
-      "source": "tools_miinfer_cli_qwen35runtimeengine_init_buffers",
-      "target": "include_miinfer_qwen35_model_qwen35model_tensor",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "INFERRED",
@@ -181463,6 +181451,18 @@
     },
     {
       "source": "tools_miinfer_cli_qwen35runtimeengine_init_buffers",
+      "target": "include_miinfer_qwen35_model_qwen35model_tensor",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "context": "call",
+      "source_file": "tools/miinfer_cli.cpp",
+      "source_location": "L645",
+      "weight": 1.0
+    },
+    {
+      "source": "tools_miinfer_cli_qwen35runtimeengine_init_buffers",
       "target": "tools_qwen35_gpu_pipeline_upload_tensor",
       "relation": "calls",
       "_origin": "ast",
@@ -181470,7 +181470,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L646",
+      "source_location": "L650",
       "weight": 1.0
     },
     {
@@ -181482,7 +181482,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L648",
+      "source_location": "L652",
       "weight": 1.0
     },
     {
@@ -181494,7 +181494,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L620",
+      "source_location": "L624",
       "weight": 1.0
     },
     {
@@ -181506,7 +181506,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L600",
+      "source_location": "L604",
       "weight": 1.0
     },
     {
@@ -181518,7 +181518,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L236",
+      "source_location": "L240",
       "weight": 1.0
     },
     {
@@ -181530,7 +181530,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L185",
+      "source_location": "L189",
       "weight": 1.0
     },
     {
@@ -181595,5 +181595,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "1ea5bcd4e4c5f95bb24669b85159633d1fc36772"
+  "built_at_commit": "3a95cd4b5cf882886cab65ea8060e0ed5386dc3f"
 }

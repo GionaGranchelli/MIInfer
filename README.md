@@ -120,7 +120,8 @@ M15 provides stable `miinfer --version`, `miinfer config`, and
 `miinfer models [directory]` contracts for installers, runtime configuration,
 and model discovery. The serving API now exposes health/readiness endpoints
 and reports the loaded model identity. M16 adds dependency-free Prometheus
-request/token counters; queueing and concurrency remain unqualified.
+request/token counters and a bounded single-worker request queue; concurrent
+GPU execution remains unqualified.
 
 The project currently has:
 
