@@ -115,16 +115,23 @@ M16-A adds `/metrics` with in-process Prometheus-compatible counters for HTTP
 requests, 404 responses, inference requests, prompt tokens, and generated
 tokens. M16-B now parses requests before queueing a bounded set of inference
 jobs, keeps control-plane endpoints responsive, uses a single GPU worker, and
-returns HTTP 503 on overflow. It remains RETEST until timeout, disconnect,
-malformed-request, overflow, and shutdown cases are recorded. The chat body is
-still a documented first-content-string subset; full JSON message parsing is
-M16-D.
+returns HTTP 503 on overflow. Requests have a 10-second absolute receive
+deadline; streaming disconnects cancel generation; malformed/missing chat
+content returns HTTP 400. It remains RETEST until overflow and shutdown cases
+are recorded by a repeatable serving test. The chat body is still a documented
+first-content-string subset; full JSON message parsing is M16-D.
 
 The extracted-package hardening smoke has passed fragmented `Content-Length`
 requests, chunked-transfer rejection, 4 MiB overflow rejection, idle-client
 timeout, disconnected streaming-client survival, localhost binding, control
 plane access during generation, and clean SIGTERM. Queue overflow and full
 shutdown-drain qualification remain open before M16-B can be marked PASS.
+
+The repeatable qualified-machine serving gate is:
+
+```bash
+scripts/test-serve.sh /path/to/miinfer /path/to/model.gguf
+```
 
 The first M12 promotion campaign is recorded in
 `experiments/EXP-0262-m12-production-qualification.md`. EXP-0263 fixes the

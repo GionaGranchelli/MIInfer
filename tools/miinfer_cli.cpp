@@ -1,6 +1,7 @@
 #include <atomic>
 #include <array>
 #include <cctype>
+#include <charconv>
 #include <chrono>
 #include <cmath>
 #include <condition_variable>
@@ -62,7 +63,7 @@ std::string json_escape(std::string_view value) {
 struct RuntimeGenerateOptions {
     std::size_t max_new_tokens = 256;
     bool stream = true;
-    std::function<void(std::uint32_t token, std::string_view piece)> on_token = nullptr;
+    std::function<bool(std::uint32_t token, std::string_view piece)> on_token = nullptr;
 };
 
 struct RuntimeGenerateStats {
@@ -403,7 +404,7 @@ public:
         if (cur_token != tokenizer_.eos_id() && cur_token != 151643 && cur_token != 151645) {
             const std::string piece = tokenizer_.decode(std::span<const std::uint32_t>(&cur_token, 1));
             stats.text += piece;
-            if (opt.on_token) opt.on_token(cur_token, piece);
+            if (opt.on_token && !opt.on_token(cur_token, piece)) return stats;
         }
 
         std::size_t pos = prompt.size();
@@ -417,7 +418,7 @@ public:
             if (cur_token == tokenizer_.eos_id() || cur_token == 151643 || cur_token == 151645) break;
             const std::string piece = tokenizer_.decode(std::span<const std::uint32_t>(&cur_token, 1));
             stats.text += piece;
-            if (opt.on_token) opt.on_token(cur_token, piece);
+            if (opt.on_token && !opt.on_token(cur_token, piece)) return stats;
         }
         stats.decode_ms += stats.first_token_ms;
         stats.generated_tokens = stats.tokens.size();
@@ -516,9 +517,7 @@ public:
             const std::string piece = tokenizer_.decode(std::span<const std::uint32_t>(&next, 1));
             stats.text += piece;
 
-            if (opt.on_token) {
-                opt.on_token(next, piece);
-            }
+            if (opt.on_token && !opt.on_token(next, piece)) break;
         }
 
         const auto gen_end = std::chrono::steady_clock::now();
@@ -967,6 +966,7 @@ int cmd_run(int argc, char** argv) {
     if (stream) {
         opt.on_token = [](std::uint32_t /*token*/, std::string_view piece) {
             std::cout << piece << std::flush;
+            return true;
         };
     }
 
@@ -1028,6 +1028,7 @@ int cmd_chat(int argc, char** argv) {
         opt.on_token = [&](std::uint32_t /*token*/, std::string_view piece) {
             std::cout << piece << std::flush;
             assistant_reply += piece;
+            return true;
         };
 
         const auto stats = engine.generate(prompt_tokens, opt);
@@ -1128,13 +1129,33 @@ std::optional<std::string> http_header(std::string_view headers, std::string_vie
 
 HttpReadResult read_http_request(int client_fd) {
     set_client_timeouts(client_fd);
+    char buffer[8192];
+    const auto deadline = std::chrono::steady_clock::now()
+                        + std::chrono::seconds(kClientIoTimeoutSeconds);
+    const auto receive = [&]() -> ssize_t {
+        while (true) {
+            const auto now = std::chrono::steady_clock::now();
+            if (now >= deadline) {
+                errno = EAGAIN;
+                return -1;
+            }
+            const auto remaining = std::chrono::duration_cast<std::chrono::milliseconds>(deadline - now);
+            pollfd pfd{client_fd, POLLIN, 0};
+            const int ready = poll(&pfd, 1, static_cast<int>(std::max<std::int64_t>(1, remaining.count())));
+            if (ready > 0) return recv(client_fd, buffer, sizeof(buffer), 0);
+            if (ready == 0) {
+                errno = EAGAIN;
+                return -1;
+            }
+            if (errno != EINTR) return -1;
+        }
+    };
     std::string data;
     data.reserve(8192);
-    char buffer[8192];
     std::size_t header_end = std::string::npos;
     while ((header_end = data.find("\r\n\r\n")) == std::string::npos) {
         if (data.size() >= kMaxHttpHeaderBytes) return {std::nullopt, 431, "Request Header Fields Too Large"};
-        const ssize_t count = recv(client_fd, buffer, sizeof(buffer), 0);
+        const ssize_t count = receive();
         if (count == 0) return {std::nullopt, 400, "Bad Request"};
         if (count < 0 && errno == EINTR) continue;
         if (count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
@@ -1146,16 +1167,14 @@ HttpReadResult read_http_request(int client_fd) {
     if (header_end > kMaxHttpHeaderBytes) return {std::nullopt, 431, "Request Header Fields Too Large"};
 
     const std::string_view header_block(data.data(), header_end);
-    if (const auto transfer_encoding = http_header(header_block, "transfer-encoding");
-        transfer_encoding && lowercase_ascii(*transfer_encoding) == "chunked") {
-        return {std::nullopt, 400, "Chunked Transfer Encoding Unsupported"};
+    if (http_header(header_block, "transfer-encoding")) {
+        return {std::nullopt, 400, "Transfer Encoding Unsupported"};
     }
 
     std::size_t content_length = 0;
     if (const auto length = http_header(header_block, "content-length")) {
-        try {
-            content_length = std::stoull(*length);
-        } catch (...) {
+        const auto [end, error] = std::from_chars(length->data(), length->data() + length->size(), content_length);
+        if (error != std::errc{} || end != length->data() + length->size()) {
             return {std::nullopt, 400, "Invalid Content-Length"};
         }
     }
@@ -1165,7 +1184,7 @@ HttpReadResult read_http_request(int client_fd) {
     }
     const std::size_t request_end = body_start + content_length;
     while (data.size() < request_end) {
-        const ssize_t count = recv(client_fd, buffer, sizeof(buffer), 0);
+        const ssize_t count = receive();
         if (count == 0) return {std::nullopt, 400, "Incomplete Request"};
         if (count < 0 && errno == EINTR) continue;
         if (count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
@@ -1284,9 +1303,15 @@ int cmd_serve(int argc, char** argv) {
             if (end != std::string::npos) {
                 prompt += "<|im_start|>user\n" + raw.substr(start, end - start)
                         + "<|im_end|>\n<|im_start|>assistant\n";
+            } else {
+                ++http_errors;
+                send_http_error(client_fd, 400, "Invalid Chat Content");
+                return;
             }
         } else {
-            prompt += "<|im_start|>user\nHello, tell me about AMD MI50!<|im_end|>\n<|im_start|>assistant\n";
+            ++http_errors;
+            send_http_error(client_fd, 400, "Missing Chat Content");
+            return;
         }
 
         const auto prompt_tokens = engine.tokenizer().encode(prompt);
@@ -1297,14 +1322,23 @@ int cmd_serve(int argc, char** argv) {
             Qwen35RuntimeEngine::GenerateOptions opt;
             opt.max_new_tokens = max_tokens;
             opt.on_token = [&](std::uint32_t /*token*/, std::string_view piece) {
-                if (!client_connected) return;
+                if (!client_connected) return false;
                 const std::string sse = "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"delta\":{\"content\":\""
                     + json_escape(piece) + "\"}}]}\n\n";
                 client_connected = send_all(client_fd, sse);
+                return client_connected;
             };
-            const auto stats = engine.generate(prompt_tokens, opt);
-            prompt_tokens_total += stats.prompt_tokens;
-            generated_tokens_total += stats.generated_tokens;
+            try {
+                const auto stats = engine.generate(prompt_tokens, opt);
+                prompt_tokens_total += stats.prompt_tokens;
+                generated_tokens_total += stats.generated_tokens;
+            } catch (...) {
+                ++http_errors;
+                if (client_connected) {
+                    (void)send_all(client_fd, "event: error\ndata: {\"error\":\"Internal Server Error\"}\n\n");
+                }
+                return;
+            }
             if (client_connected) (void)send_all(client_fd, "data: [DONE]\n\n");
         } else {
             Qwen35RuntimeEngine::GenerateOptions opt;

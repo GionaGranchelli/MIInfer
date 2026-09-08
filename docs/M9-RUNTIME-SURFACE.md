@@ -63,7 +63,7 @@ queue implementing an OpenAI-compatible chat-completions subset. It binds to
 - **Queueing**: Accepts up to eight pending client connections while one GPU
   inference request is active; excess connections receive HTTP 503.
 - **HTTP framing**: Reads bounded `Content-Length` bodies up to 4 MiB, with
-  10-second client I/O timeouts; chunked transfer encoding is rejected.
+  a 10-second absolute request deadline; all transfer encodings are rejected.
 - **Generation bound**: Requests are capped at 4096 generated tokens.
 - **Payload Parsing**: The current release accepts the first string `content`
   field as a chat prompt. Full multi-message JSON parsing remains open work.
