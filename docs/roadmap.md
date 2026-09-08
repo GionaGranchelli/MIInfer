@@ -10,7 +10,7 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M15 — product surface**
+**Current phase: M16 — serving throughput**
 
 Immediate objective:
 
@@ -63,10 +63,11 @@ contract and missing barrier; the dense FFN-down path still changes the P128
 greedy token from baseline EOS 248046 to 271. M12 remains opt-in until a
 numerically qualified dense replacement exists.
 
-M15 now provides stable `miinfer --version`, `miinfer config`, and
-`miinfer models [directory]` contracts. Serving now includes health/readiness
-endpoints and artifact-derived model identity; keep the implementation narrow
-to the supported MI50/Qwen3.8 path.
+M15 provides stable `miinfer --version`, `miinfer config`, and
+`miinfer models [directory]` contracts. M16 adds dependency-free serving
+metrics while retaining the single-threaded runtime; queueing and concurrency
+require measurements before implementation. Keep the implementation narrow to
+the supported MI50/Qwen3.8 path.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See

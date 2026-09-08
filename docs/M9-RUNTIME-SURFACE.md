@@ -55,6 +55,7 @@ Launches a high-performance, single-threaded, non-blocking HTTP daemon implement
 - **Endpoints**:
   - `GET /healthz`: Returns process health after model initialization.
   - `GET /readyz`: Returns readiness for inference requests.
+  - `GET /metrics`: Exposes Prometheus-compatible request and token counters.
   - `GET /v1/models`: Lists the loaded model artifact identifier.
   - `POST /v1/chat/completions`: Supports standard JSON responses (`"stream": false`) and real-time Server-Sent Events (`"stream": true`, `data: {...}`, ending with `data: [DONE]`).
 - **Payload Parsing**: Extracts system, user, and assistant message hierarchies into native ChatML token sequences.

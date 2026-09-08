@@ -1087,11 +1087,18 @@ int cmd_serve(int argc, char** argv) {
     std::cerr << "Endpoints:\n";
     std::cerr << "  GET  /healthz\n";
     std::cerr << "  GET  /readyz\n";
+    std::cerr << "  GET  /metrics\n";
     std::cerr << "  GET  /v1/models\n";
     std::cerr << "  POST /v1/chat/completions\n";
 
     std::signal(SIGINT, signal_handler);
     std::signal(SIGTERM, signal_handler);
+
+    std::uint64_t http_requests = 0;
+    std::uint64_t http_errors = 0;
+    std::uint64_t inference_requests = 0;
+    std::uint64_t prompt_tokens_total = 0;
+    std::uint64_t generated_tokens_total = 0;
 
     while (!g_shutdown_requested) {
         pollfd pfd{server_fd, POLLIN, 0};
@@ -1109,6 +1116,7 @@ int cmd_serve(int argc, char** argv) {
             close(client_fd);
             continue;
         }
+        ++http_requests;
 
         std::string request(buffer.data(), bytes_read);
         std::istringstream req_stream(request);
@@ -1120,6 +1128,20 @@ int cmd_serve(int argc, char** argv) {
             std::string response = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: "
                                  + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
             (void)write(client_fd, response.data(), response.size());
+        } else if (method == "GET" && path == "/metrics") {
+            std::string body = "# TYPE miinfer_http_requests_total counter\n"
+                             "miinfer_http_requests_total " + std::to_string(http_requests) + "\n"
+                             "# TYPE miinfer_http_errors_total counter\n"
+                             "miinfer_http_errors_total " + std::to_string(http_errors) + "\n"
+                             "# TYPE miinfer_inference_requests_total counter\n"
+                             "miinfer_inference_requests_total " + std::to_string(inference_requests) + "\n"
+                             "# TYPE miinfer_prompt_tokens_total counter\n"
+                             "miinfer_prompt_tokens_total " + std::to_string(prompt_tokens_total) + "\n"
+                             "# TYPE miinfer_generated_tokens_total counter\n"
+                             "miinfer_generated_tokens_total " + std::to_string(generated_tokens_total) + "\n";
+            std::string response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain; version=0.0.4\r\nContent-Length: "
+                                 + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
+            (void)write(client_fd, response.data(), response.size());
         } else if (method == "GET" && path == "/v1/models") {
             std::string body = "{\"object\":\"list\",\"data\":[{\"id\":\""
                              + json_escape(model_id) + "\",\"object\":\"model\",\"owned_by\":\"miinfer\"}]}";
@@ -1127,6 +1149,7 @@ int cmd_serve(int argc, char** argv) {
                                  + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
             (void)write(client_fd, response.data(), response.size());
         } else if (method == "POST" && path == "/v1/chat/completions") {
+            ++inference_requests;
             // Check for streaming request
             bool is_stream = request.find("\"stream\": true") != std::string::npos ||
                              request.find("\"stream\":true") != std::string::npos;
@@ -1177,7 +1200,9 @@ int cmd_serve(int argc, char** argv) {
                     (void)write(client_fd, sse.data(), sse.size());
                 };
 
-                engine.generate(prompt_tokens, opt);
+                const auto stats = engine.generate(prompt_tokens, opt);
+                prompt_tokens_total += stats.prompt_tokens;
+                generated_tokens_total += stats.generated_tokens;
                 std::string done = "data: [DONE]\n\n";
                 (void)write(client_fd, done.data(), done.size());
             } else {
@@ -1185,6 +1210,8 @@ int cmd_serve(int argc, char** argv) {
                 opt.max_new_tokens = max_tokens;
                 opt.stream = false;
                 const auto stats = engine.generate(prompt_tokens, opt);
+                prompt_tokens_total += stats.prompt_tokens;
+                generated_tokens_total += stats.generated_tokens;
 
                 std::string escaped_text;
                 for (char c : stats.text) {
@@ -1204,6 +1231,7 @@ int cmd_serve(int argc, char** argv) {
                 (void)write(client_fd, response.data(), response.size());
             }
         } else {
+            ++http_errors;
             std::string body = R"({"error":"Not Found"})";
             std::string response = "HTTP/1.1 404 Not Found\r\nContent-Type: application/json\r\nContent-Length: "
                                  + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;

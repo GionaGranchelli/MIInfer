@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788886261.1260278,
-    "seen": 1788886286.8028433,
-    "ast_hash": "0e0bf085d5c54fe89e969dc8ae0a8c70",
+    "mtime": 1788888792.5502446,
+    "seen": 1788888810.7005978,
+    "ast_hash": "2ef78e14eaac238fa5bbea616a07500a",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788886261.1240277,
-    "seen": 1788886286.80287,
-    "ast_hash": "a8ba867ddd2d612d6364f1973a6e086c",
+    "mtime": 1788888792.5522447,
+    "seen": 1788888810.7006252,
+    "ast_hash": "b82a46f06fc8868cc082cc15d62d4424",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788886261.1270278,
-    "seen": 1788886286.8028955,
-    "ast_hash": "e074e1440ddb2c5702ac68d7171de33d",
+    "mtime": 1788888792.5542448,
+    "seen": 1788888810.700651,
+    "ast_hash": "8a59a6136e9fa3a785d3d245109de5fd",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -2364,9 +2364,9 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1788886274.0369728,
-    "seen": 1788886286.8028243,
-    "ast_hash": "1cdb95632ddba97b3172bf55e19b633b",
+    "mtime": 1788888776.768312,
+    "seen": 1788888810.700578,
+    "ast_hash": "edb417bc4248c526f8e80a48e8418339",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
@@ -2406,9 +2406,9 @@
     "semantic_hash": ""
   },
   "docs/M9-RUNTIME-SURFACE.md": {
-    "mtime": 1788886261.1220279,
-    "seen": 1788886286.8028655,
-    "ast_hash": "bdf06805efd7e731af2025a27b505939",
+    "mtime": 1788888792.5502446,
+    "seen": 1788888810.700621,
+    "ast_hash": "2dd72cb51427e0e2cb7113e05fb1425f",
     "semantic_hash": ""
   },
   "experiments/EXP-0194-kquant-fast-tile-arith.md": {

@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M15 — product surface**
+**M16 — serving throughput**
 
 Milestone status:
 
@@ -26,6 +26,9 @@ M15-A: runtime version      PASS
 M15-B: model discovery      PASS
 M15-C: configuration        PASS
 M15-D: serving lifecycle    PASS
+M16-A: request metrics      PASS
+M16-B: queueing             OPEN
+M16-C: concurrency          OPEN
 ```
 
 M11-B is frozen at the qualified `46.22 tok/s` P513 packed-Q4 baseline.
@@ -106,6 +109,11 @@ prefill path is explicit; M12 remains opt-in research configuration.
 The serving surface exposes `/healthz` and `/readyz` after model
 initialization, and `/v1/models` reports the loaded artifact identifier rather
 than a hard-coded model name. Shutdown remains signal-driven and graceful.
+
+M16-A adds `/metrics` with in-process Prometheus-compatible counters for HTTP
+requests, 404 responses, inference requests, prompt tokens, and generated
+tokens. The server remains single-threaded until queueing/concurrency is
+measured and qualified.
 
 The first M12 promotion campaign is recorded in
 `experiments/EXP-0262-m12-production-qualification.md`. EXP-0263 fixes the

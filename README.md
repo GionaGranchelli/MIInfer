@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M15 product surface**
+**Current phase: M16 serving throughput**
 
 M11-B is frozen at the qualified `46.22 tok/s` P513 packed-Q4 baseline. The
 opt-in layer-major prefill path reaches that rate with deferred
@@ -119,7 +119,8 @@ differs from baseline. The default runtime remains unchanged.
 M15 provides stable `miinfer --version`, `miinfer config`, and
 `miinfer models [directory]` contracts for installers, runtime configuration,
 and model discovery. The serving API now exposes health/readiness endpoints
-and reports the loaded model identity.
+and reports the loaded model identity. M16 adds dependency-free Prometheus
+request/token counters; queueing and concurrency remain unqualified.
 
 The project currently has:
 
