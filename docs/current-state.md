@@ -59,6 +59,11 @@ recurrent Q8_1 output into that core and measures 46.22 versus 45.90 tok/s in
 one matched P513 pair. The projection ceiling and 100 tok/s gate remain
 unchanged. EXP-0236 rejects direct Q8_1 emission from the existing
 full-attention reduction after a matched P513 change of only `+0.04%`.
+EXP-0237 profiles the production path at P512: recurrent layers consume
+8.41 s of measured layer work, including 6.07 s in the deferred tail and
+1.52 s in prepared projections; the ordered recurrent region is only 0.82 s.
+The next design therefore needs more projection token parallelism, not a
+recurrent scan as the first change.
 
 EXP-0168 completed that profile at position 63: total GPU event
 `71.9133 ms/token`, layer sum `68.6269 ms`, final LM head `2.50016 ms`, and

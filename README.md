@@ -48,6 +48,11 @@ recurrent Q8_1 output in that same core, measuring 46.22 versus 45.90 tok/s in
 one matched P513 pair; it does not change the projection ceiling or the gate.
 EXP-0236 rejects direct Q8_1 emission from the existing full-attention
 reduction: it changed P513 by only `+0.04%` and was removed.
+EXP-0237 adds a disabled-by-default production prefill profile: at P512,
+recurrent layers consume 8.41 s of measured layer work, including 6.07 s in
+the deferred tail and 1.52 s in prepared projections. The ordered recurrent
+region is only 0.82 s, so the next design must raise projection token
+parallelism rather than start with a recurrent scan.
 
 The project currently has:
 

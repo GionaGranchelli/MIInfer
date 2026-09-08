@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788838173.0433037,
-    "seen": 1788838191.9060113,
-    "ast_hash": "a07bb9b97d87e3b9f93091a32cf148b7",
+    "mtime": 1788839315.9475255,
+    "seen": 1788839394.0116162,
+    "ast_hash": "5e7cbdf45e1da975afb69fc2b32ddcfd",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788838173.0453038,
-    "seen": 1788838191.9060383,
-    "ast_hash": "b11eaf9f8a83dd59a769085aeb992239",
+    "mtime": 1788839315.9475255,
+    "seen": 1788839394.011644,
+    "ast_hash": "676603f2dbcfaeb7e2b4e0cc491148ee",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -2364,15 +2364,15 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1788830701.786714,
-    "seen": 1788830948.8201003,
-    "ast_hash": "26e3112bf078ed67469ab30ca973ffbf",
+    "mtime": 1788839289.5866356,
+    "seen": 1788839394.01159,
+    "ast_hash": "84f3d4c73df2b9679d23a1b4d1d854f7",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1788838674.3712077,
-    "seen": 1788838718.0234547,
-    "ast_hash": "913955d006e9721e3fd988e341fa89b9",
+    "mtime": 1788838737.3109446,
+    "seen": 1788839394.0115914,
+    "ast_hash": "129073e36037c502aac4e358315a5682",
     "semantic_hash": ""
   },
   "docs/M9-AUTOREGRESSIVE-QUALIFICATION.md": {
@@ -2679,6 +2679,12 @@
     "mtime": 1788838692.498132,
     "seen": 1788838718.0239122,
     "ast_hash": "a483801058319df5a3f083733fe32c27",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0237-m11b-production-prefill-profile.md": {
+    "mtime": 1788839315.9465256,
+    "seen": 1788839394.0120142,
+    "ast_hash": "313ae4facc0e1a5c4670549aeedeb3bc",
     "semantic_hash": ""
   }
 }

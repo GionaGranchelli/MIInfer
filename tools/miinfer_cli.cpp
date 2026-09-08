@@ -1,4 +1,5 @@
 #include <atomic>
+#include <array>
 #include <chrono>
 #include <cmath>
 #include <csignal>
@@ -73,10 +74,62 @@ public:
 
     ~Qwen35RuntimeEngine() {
         cleanup_graphs();
+        prefill_profile_.destroy();
     }
 
     [[nodiscard]] const miinfer::Qwen35Model& model() const noexcept { return model_; }
     [[nodiscard]] const miinfer::Qwen3Tokenizer& tokenizer() const noexcept { return tokenizer_; }
+
+    struct PrefillProfile {
+        bool enabled = false;
+        std::array<hipEvent_t, 4> stage{};
+        hipEvent_t embedding_start = nullptr;
+        hipEvent_t embedding_end = nullptr;
+        std::array<std::array<double, 3>, 64> layer_ms{};
+        double embedding_ms = 0.0;
+        std::size_t chunks = 0;
+
+        void init() {
+            if (!enabled) return;
+            for (auto& event : stage) MIINFER_HIP_CHECK(hipEventCreate(&event));
+            MIINFER_HIP_CHECK(hipEventCreate(&embedding_start));
+            MIINFER_HIP_CHECK(hipEventCreate(&embedding_end));
+        }
+
+        void destroy() {
+            if (!enabled) return;
+            for (auto& event : stage) {
+                if (event != nullptr) (void)hipEventDestroy(event);
+                event = nullptr;
+            }
+            if (embedding_start != nullptr) (void)hipEventDestroy(embedding_start);
+            if (embedding_end != nullptr) (void)hipEventDestroy(embedding_end);
+            embedding_start = nullptr;
+            embedding_end = nullptr;
+        }
+
+        void report(double wall_ms, std::size_t prompt_tokens) const {
+            if (!enabled) return;
+            double layer_total = 0.0;
+            std::cout << "Prefill profile: prompt=" << prompt_tokens
+                      << " chunks=" << chunks << " wall_ms=" << wall_ms
+                      << " embedding_ms=" << embedding_ms << '\n';
+            for (std::size_t layer = 0; layer < layer_ms.size(); ++layer) {
+                const double total = layer_ms[layer][0] + layer_ms[layer][1] + layer_ms[layer][2];
+                layer_total += total;
+                std::cout << "  layer=" << layer
+                          << " kind=" << (layer % 4 == 3 ? "attention" : "recurrent")
+                          << " prepare_ms=" << layer_ms[layer][0]
+                          << " ordered_ms=" << layer_ms[layer][1]
+                          << " tail_ms=" << layer_ms[layer][2]
+                          << " total_ms=" << total << '\n';
+            }
+            std::cout << "  layer_total_ms=" << layer_total
+                      << " accounted_ms=" << (layer_total + embedding_ms)
+                      << " unaccounted_wall_ms=" << (wall_ms - layer_total - embedding_ms)
+                      << '\n';
+        }
+    };
 
     void reset() {
         for (const auto& layer : layers_) {
@@ -174,6 +227,9 @@ public:
         const auto layer_span = std::span<const GpuLayerRef>(layers_);
         for (std::size_t base = 0; base < prompt.size(); base += kChunk) {
             const std::size_t count = std::min(kChunk, prompt.size() - base);
+            if (prefill_profile_.enabled) {
+                MIINFER_HIP_CHECK(hipEventRecord(prefill_profile_.embedding_start, hipStreamPerThread));
+            }
             for (std::size_t i = 0; i < count; ++i) {
                 const auto position = base + i;
                 MIINFER_HIP_CHECK(hipMemcpyAsync(
@@ -186,13 +242,28 @@ public:
                     model_.config().vocab_size, kHidden, current + i * kHidden,
                     hipStreamPerThread);
             }
+            if (prefill_profile_.enabled) {
+                MIINFER_HIP_CHECK(hipEventRecord(prefill_profile_.embedding_end, hipStreamPerThread));
+                MIINFER_HIP_CHECK(hipEventSynchronize(prefill_profile_.embedding_end));
+                float embedding_ms = 0.0F;
+                MIINFER_HIP_CHECK(hipEventElapsedTime(
+                    &embedding_ms, prefill_profile_.embedding_start, prefill_profile_.embedding_end));
+                prefill_profile_.embedding_ms += embedding_ms;
+                ++prefill_profile_.chunks;
+            }
 
             // Bounded chunk storage; layer order preserves recurrent state and
             // causal KV dependencies while keeping the full chunk at one layer.
             for (std::size_t layer = 0; layer < layer_span.size(); ++layer) {
+                if (prefill_profile_.enabled) {
+                    MIINFER_HIP_CHECK(hipEventRecord(prefill_profile_.stage[0], hipStreamPerThread));
+                }
                 const bool normalized_ready = layer > 0 && layer_span[layer - 1].fused_interlayer_norm();
                 const bool prepared = layer_span[layer].prepare_prefill_batch(current, count, normalized_ready);
                 const bool deferred_tail = prepared && layer_span[layer].prefill_tail_batch_supported();
+                if (prefill_profile_.enabled) {
+                    MIINFER_HIP_CHECK(hipEventRecord(prefill_profile_.stage[1], hipStreamPerThread));
+                }
                 const bool fuse_next_norm = layer + 1 < layer_span.size()
                     && layer_span[layer].fused_interlayer_norm();
                 const float* next_norm_weight = fuse_next_norm
@@ -222,9 +293,23 @@ public:
                                               prepared_normalized);
                     }
                 }
+                if (prefill_profile_.enabled) {
+                    MIINFER_HIP_CHECK(hipEventRecord(prefill_profile_.stage[2], hipStreamPerThread));
+                }
                 if (deferred_tail) {
                     layer_span[layer].finish_prefill_batch(
                         current, next, count, next_norm_weight, next_normalized_batch);
+                }
+                if (prefill_profile_.enabled) {
+                    MIINFER_HIP_CHECK(hipEventRecord(prefill_profile_.stage[3], hipStreamPerThread));
+                    MIINFER_HIP_CHECK(hipEventSynchronize(prefill_profile_.stage[3]));
+                    for (std::size_t stage = 0; stage < 3; ++stage) {
+                        float elapsed_ms = 0.0F;
+                        MIINFER_HIP_CHECK(hipEventElapsedTime(
+                            &elapsed_ms, prefill_profile_.stage[stage],
+                            prefill_profile_.stage[stage + 1]));
+                        prefill_profile_.layer_ms[layer][stage] += elapsed_ms;
+                    }
                 }
                 std::swap(current, next);
             }
@@ -270,6 +355,7 @@ public:
         stats.prefill_ms = std::chrono::duration<double, std::milli>(prefill_end - prefill_start).count();
         stats.prefill_tok_s = stats.prefill_ms > 0.0
             ? (1000.0 * prompt.size()) / stats.prefill_ms : 0.0;
+        prefill_profile_.report(stats.prefill_ms, prompt.size());
         if (opt.max_new_tokens == 0) {
             stats.total_ms = std::chrono::duration<double, std::milli>(
                 std::chrono::steady_clock::now() - gen_start).count();
@@ -445,6 +531,9 @@ private:
         use_hip_graph_ = graph_env == nullptr || std::strcmp(graph_env, "0") != 0;
         const char* layer_major_env = std::getenv("MIINFER_PREFILL_LAYER_MAJOR");
         layer_major_prefill_ = layer_major_env != nullptr && std::strcmp(layer_major_env, "0") != 0;
+        const char* prefill_profile_env = std::getenv("MIINFER_PREFILL_PROFILE");
+        prefill_profile_.enabled = layer_major_prefill_ && prefill_profile_env != nullptr
+            && std::strcmp(prefill_profile_env, "0") != 0;
     }
 
     void init_layers() {
@@ -492,6 +581,7 @@ private:
         prefill_b_ = allocate(kPrefillBatch * kHidden * sizeof(float));
 
         decode_graphs_.resize(kCacheCapacity, nullptr);
+        prefill_profile_.init();
     }
 
     void ensure_graph_captured(std::size_t position) {
@@ -576,6 +666,7 @@ private:
 
     bool use_hip_graph_ = true;
     bool layer_major_prefill_ = false;
+    PrefillProfile prefill_profile_;
     std::vector<hipGraphExec_t> decode_graphs_;
 };
 
