@@ -27,8 +27,9 @@ M15-B: model discovery      PASS
 M15-C: configuration        PASS
 M15-D: serving lifecycle    PASS
 M16-A: request metrics      PASS
-M16-B: queueing             PASS
+M16-B: queueing             RETEST
 M16-C: concurrency          OPEN
+M16-D: JSON parsing         OPEN
 ```
 
 M11-B is frozen at the qualified `46.22 tok/s` P513 packed-Q4 baseline.
@@ -112,10 +113,18 @@ than a hard-coded model name. Shutdown remains signal-driven and graceful.
 
 M16-A adds `/metrics` with in-process Prometheus-compatible counters for HTTP
 requests, 404 responses, inference requests, prompt tokens, and generated
-tokens. The server remains single-threaded until queueing/concurrency is
-measured and qualified. M16-B now adds a bounded eight-connection queue with a
-single GPU worker; excess accepted connections receive HTTP 503, preserving
-serialized inference state.
+tokens. M16-B now parses requests before queueing a bounded set of inference
+jobs, keeps control-plane endpoints responsive, uses a single GPU worker, and
+returns HTTP 503 on overflow. It remains RETEST until timeout, disconnect,
+malformed-request, overflow, and shutdown cases are recorded. The chat body is
+still a documented first-content-string subset; full JSON message parsing is
+M16-D.
+
+The extracted-package hardening smoke has passed fragmented `Content-Length`
+requests, chunked-transfer rejection, 4 MiB overflow rejection, idle-client
+timeout, disconnected streaming-client survival, localhost binding, control
+plane access during generation, and clean SIGTERM. Queue overflow and full
+shutdown-drain qualification remain open before M16-B can be marked PASS.
 
 The first M12 promotion campaign is recorded in
 `experiments/EXP-0262-m12-production-qualification.md`. EXP-0263 fixes the

@@ -52,7 +52,8 @@ Provides an interactive multi-turn conversational REPL in the terminal:
 
 ### 2.4 `miinfer serve`
 Launches a high-performance HTTP daemon with a bounded single-worker request
-queue implementing the standard OpenAI API specification:
+queue implementing an OpenAI-compatible chat-completions subset. It binds to
+`127.0.0.1` by default; use `--host 0.0.0.0` for explicit LAN exposure.
 - **Endpoints**:
   - `GET /healthz`: Returns process health after model initialization.
   - `GET /readyz`: Returns readiness for inference requests.
@@ -61,7 +62,11 @@ queue implementing the standard OpenAI API specification:
   - `POST /v1/chat/completions`: Supports standard JSON responses (`"stream": false`) and real-time Server-Sent Events (`"stream": true`, `data: {...}`, ending with `data: [DONE]`).
 - **Queueing**: Accepts up to eight pending client connections while one GPU
   inference request is active; excess connections receive HTTP 503.
-- **Payload Parsing**: Extracts system, user, and assistant message hierarchies into native ChatML token sequences.
+- **HTTP framing**: Reads bounded `Content-Length` bodies up to 4 MiB, with
+  10-second client I/O timeouts; chunked transfer encoding is rejected.
+- **Generation bound**: Requests are capped at 4096 generated tokens.
+- **Payload Parsing**: The current release accepts the first string `content`
+  field as a chat prompt. Full multi-message JSON parsing remains open work.
 
 ---
 

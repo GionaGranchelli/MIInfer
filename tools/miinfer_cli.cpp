@@ -1,8 +1,10 @@
 #include <atomic>
 #include <array>
+#include <cctype>
 #include <chrono>
 #include <cmath>
 #include <condition_variable>
+#include <cerrno>
 #include <csignal>
 #include <cstdint>
 #include <cstring>
@@ -14,6 +16,7 @@
 #include <memory>
 #include <mutex>
 #include <numeric>
+#include <optional>
 #include <span>
 #include <sstream>
 #include <string>
@@ -25,6 +28,7 @@
 #include <netinet/in.h>
 #include <poll.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <unistd.h>
 
 #include "qwen35_gpu_pipeline.hpp"
@@ -910,7 +914,8 @@ int cmd_config(int argc, char**) {
               << "hardware=AMD Instinct MI50 32GB\n"
               << "model=Qwen3.8-27B\n"
               << "quantization=Q4_K_M\n"
-              << "context_capacity=1024\n"
+              << "runtime_context_capacity=65536\n"
+              << "qualified_context_length=1024\n"
               << "prefill_path=validated-default\n"
               << "m12_prefill=opt-in\n";
     return 0;
@@ -1039,15 +1044,160 @@ int cmd_chat(int argc, char** argv) {
 // ---------------------------------------------------------------------------
 // Subcommand 4: serve (OpenAI-compatible HTTP API)
 // ---------------------------------------------------------------------------
+struct HttpRequest {
+    int client_fd = -1;
+    std::string method;
+    std::string path;
+    std::string raw;
+};
+
+struct HttpReadResult {
+    std::optional<HttpRequest> request;
+    int status = 400;
+    std::string reason = "Bad Request";
+};
+
+constexpr std::size_t kMaxHttpHeaderBytes = 64 * 1024;
+constexpr std::size_t kMaxHttpRequestBytes = 4 * 1024 * 1024;
+constexpr std::size_t kMaxRequestTokens = 4096;
+constexpr int kClientIoTimeoutSeconds = 10;
+
+bool send_all(int client_fd, std::string_view bytes) {
+    std::size_t sent = 0;
+    while (sent < bytes.size()) {
+        const ssize_t count = send(client_fd, bytes.data() + sent, bytes.size() - sent, MSG_NOSIGNAL);
+        if (count > 0) {
+            sent += static_cast<std::size_t>(count);
+        } else if (count < 0 && errno == EINTR) {
+            continue;
+        } else {
+            return false;
+        }
+    }
+    return true;
+}
+
+void set_client_timeouts(int client_fd) {
+    const timeval timeout{kClientIoTimeoutSeconds, 0};
+    (void)setsockopt(client_fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+    (void)setsockopt(client_fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
+}
+
+bool send_http_response(int client_fd, int status, std::string_view reason,
+                        std::string_view content_type, std::string_view body) {
+    const std::string header = "HTTP/1.1 " + std::to_string(status) + " "
+                             + std::string(reason) + "\r\nContent-Type: "
+                             + std::string(content_type) + "\r\nContent-Length: "
+                             + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n";
+    return send_all(client_fd, header) && send_all(client_fd, body);
+}
+
+std::string lowercase_ascii(std::string_view value) {
+    std::string result;
+    result.reserve(value.size());
+    for (const unsigned char c : value) result += static_cast<char>(std::tolower(c));
+    return result;
+}
+
+std::string trim_ascii(std::string_view value) {
+    std::size_t begin = 0;
+    while (begin < value.size() && std::isspace(static_cast<unsigned char>(value[begin]))) ++begin;
+    std::size_t end = value.size();
+    while (end > begin && std::isspace(static_cast<unsigned char>(value[end - 1]))) --end;
+    return std::string(value.substr(begin, end - begin));
+}
+
+std::optional<std::string> http_header(std::string_view headers, std::string_view wanted) {
+    const std::string target = lowercase_ascii(wanted);
+    std::size_t line_start = 0;
+    while (line_start < headers.size()) {
+        const std::size_t separator = headers.find("\r\n", line_start);
+        const std::size_t line_end = separator == std::string_view::npos
+            ? headers.size() : separator;
+        const std::string_view line = headers.substr(line_start, line_end - line_start);
+        const std::size_t colon = line.find(':');
+        if (colon != std::string_view::npos
+            && lowercase_ascii(trim_ascii(line.substr(0, colon))) == target) {
+            return trim_ascii(line.substr(colon + 1));
+        }
+        if (separator == std::string_view::npos) break;
+        line_start = separator + 2;
+    }
+    return std::nullopt;
+}
+
+HttpReadResult read_http_request(int client_fd) {
+    set_client_timeouts(client_fd);
+    std::string data;
+    data.reserve(8192);
+    char buffer[8192];
+    std::size_t header_end = std::string::npos;
+    while ((header_end = data.find("\r\n\r\n")) == std::string::npos) {
+        if (data.size() >= kMaxHttpHeaderBytes) return {std::nullopt, 431, "Request Header Fields Too Large"};
+        const ssize_t count = recv(client_fd, buffer, sizeof(buffer), 0);
+        if (count == 0) return {std::nullopt, 400, "Bad Request"};
+        if (count < 0 && errno == EINTR) continue;
+        if (count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+            return {std::nullopt, 408, "Request Timeout"};
+        }
+        if (count < 0) return {std::nullopt, 400, "Bad Request"};
+        data.append(buffer, static_cast<std::size_t>(count));
+    }
+    if (header_end > kMaxHttpHeaderBytes) return {std::nullopt, 431, "Request Header Fields Too Large"};
+
+    const std::string_view header_block(data.data(), header_end);
+    if (const auto transfer_encoding = http_header(header_block, "transfer-encoding");
+        transfer_encoding && lowercase_ascii(*transfer_encoding) == "chunked") {
+        return {std::nullopt, 400, "Chunked Transfer Encoding Unsupported"};
+    }
+
+    std::size_t content_length = 0;
+    if (const auto length = http_header(header_block, "content-length")) {
+        try {
+            content_length = std::stoull(*length);
+        } catch (...) {
+            return {std::nullopt, 400, "Invalid Content-Length"};
+        }
+    }
+    const std::size_t body_start = header_end + 4;
+    if (content_length > kMaxHttpRequestBytes - body_start) {
+        return {std::nullopt, 413, "Payload Too Large"};
+    }
+    const std::size_t request_end = body_start + content_length;
+    while (data.size() < request_end) {
+        const ssize_t count = recv(client_fd, buffer, sizeof(buffer), 0);
+        if (count == 0) return {std::nullopt, 400, "Incomplete Request"};
+        if (count < 0 && errno == EINTR) continue;
+        if (count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+            return {std::nullopt, 408, "Request Timeout"};
+        }
+        if (count < 0) return {std::nullopt, 400, "Bad Request"};
+        data.append(buffer, static_cast<std::size_t>(count));
+    }
+    data.resize(request_end);
+
+    std::istringstream request_line(data.substr(0, header_end));
+    std::string method;
+    std::string path;
+    request_line >> method >> path;
+    if (method.empty() || path.empty()) return {std::nullopt, 400, "Bad Request"};
+    return {HttpRequest{client_fd, std::move(method), std::move(path), std::move(data)}, 0, {}};
+}
+
+void send_http_error(int client_fd, int status, std::string_view reason) {
+    const std::string body = "{\"error\":\"" + std::string(reason) + "\"}";
+    (void)send_http_response(client_fd, status, reason, "application/json", body);
+}
+
 int cmd_serve(int argc, char** argv) {
     if (argc < 3) {
-        std::cerr << "usage: miinfer serve <model.gguf> [--port 8080] [--host 0.0.0.0]\n";
+        std::cerr << "usage: miinfer serve <model.gguf> [--port 8080] [--host 127.0.0.1]\n";
         return 1;
     }
     const std::string model_path = argv[2];
     const std::string model_id = std::filesystem::path(model_path).stem().string();
     int port = 8080;
-    std::string host = "0.0.0.0";
+    std::string host = "127.0.0.1";
 
     for (int i = 3; i < argc; ++i) {
         std::string_view arg = argv[i];
@@ -1100,159 +1250,104 @@ int cmd_serve(int argc, char** argv) {
     std::signal(SIGINT, signal_handler);
     std::signal(SIGTERM, signal_handler);
 
-    std::uint64_t http_requests = 0;
-    std::uint64_t http_errors = 0;
-    std::uint64_t inference_requests = 0;
-    std::uint64_t prompt_tokens_total = 0;
-    std::uint64_t generated_tokens_total = 0;
+    std::atomic<std::uint64_t> http_requests = 0;
+    std::atomic<std::uint64_t> http_errors = 0;
+    std::atomic<std::uint64_t> inference_requests = 0;
+    std::atomic<std::uint64_t> prompt_tokens_total = 0;
+    std::atomic<std::uint64_t> generated_tokens_total = 0;
+    std::atomic<std::uint64_t> queue_rejected = 0;
+    std::atomic<std::size_t> queue_depth = 0;
 
-    auto handle_client = [&](int client_fd) {
-        std::vector<char> buffer(65536, 0);
-        ssize_t bytes_read = read(client_fd, buffer.data(), buffer.size() - 1);
-        if (bytes_read <= 0) {
-            close(client_fd);
-            return;
+    auto handle_request = [&](const HttpRequest& request) {
+        const int client_fd = request.client_fd;
+        ++inference_requests;
+        const std::string& raw = request.raw;
+
+        const bool is_stream = raw.find("\"stream\": true") != std::string::npos
+            || raw.find("\"stream\":true") != std::string::npos;
+        std::size_t max_tokens = 256;
+        const std::size_t max_pos = raw.find("\"max_tokens\":");
+        if (max_pos != std::string::npos) {
+            try {
+                const std::size_t start = raw.find_first_of("0123456789", max_pos + 12);
+                if (start != std::string::npos) max_tokens = std::stoull(raw.substr(start));
+            } catch (...) {}
         }
-        ++http_requests;
+        max_tokens = std::min(max_tokens, kMaxRequestTokens);
 
-        std::string request(buffer.data(), bytes_read);
-        std::istringstream req_stream(request);
-        std::string method, path;
-        req_stream >> method >> path;
-
-        if (method == "GET" && (path == "/healthz" || path == "/readyz")) {
-            std::string body = R"({"status":"ok","ready":true})";
-            std::string response = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: "
-                                 + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
-            (void)write(client_fd, response.data(), response.size());
-        } else if (method == "GET" && path == "/metrics") {
-            std::string body = "# TYPE miinfer_http_requests_total counter\n"
-                             "miinfer_http_requests_total " + std::to_string(http_requests) + "\n"
-                             "# TYPE miinfer_http_errors_total counter\n"
-                             "miinfer_http_errors_total " + std::to_string(http_errors) + "\n"
-                             "# TYPE miinfer_inference_requests_total counter\n"
-                             "miinfer_inference_requests_total " + std::to_string(inference_requests) + "\n"
-                             "# TYPE miinfer_prompt_tokens_total counter\n"
-                             "miinfer_prompt_tokens_total " + std::to_string(prompt_tokens_total) + "\n"
-                             "# TYPE miinfer_generated_tokens_total counter\n"
-                             "miinfer_generated_tokens_total " + std::to_string(generated_tokens_total) + "\n";
-            std::string response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain; version=0.0.4\r\nContent-Length: "
-                                 + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
-            (void)write(client_fd, response.data(), response.size());
-        } else if (method == "GET" && path == "/v1/models") {
-            std::string body = "{\"object\":\"list\",\"data\":[{\"id\":\""
-                             + json_escape(model_id) + "\",\"object\":\"model\",\"owned_by\":\"miinfer\"}]}";
-            std::string response = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: "
-                                 + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
-            (void)write(client_fd, response.data(), response.size());
-        } else if (method == "POST" && path == "/v1/chat/completions") {
-            ++inference_requests;
-            // Check for streaming request
-            bool is_stream = request.find("\"stream\": true") != std::string::npos ||
-                             request.find("\"stream\":true") != std::string::npos;
-
-            std::size_t max_tokens = 256;
-            std::size_t max_pos = request.find("\"max_tokens\":");
-            if (max_pos != std::string::npos) {
-                try {
-                    std::size_t start = request.find_first_of("0123456789", max_pos + 12);
-                    if (start != std::string::npos) {
-                        max_tokens = std::stoull(request.substr(start));
-                    }
-                } catch (...) {}
-            }
-
-            // Extract prompt or user messages
-            std::string prompt = "<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n";
-            std::size_t content_pos = request.find("\"content\": \"");
-            if (content_pos == std::string::npos) content_pos = request.find("\"content\":\"");
-            if (content_pos != std::string::npos) {
-                std::size_t start = request.find('"', content_pos + 10) + 1;
-                std::size_t end = request.find('"', start);
-                if (end != std::string::npos) {
-                    prompt += "<|im_start|>user\n" + request.substr(start, end - start) + "<|im_end|>\n<|im_start|>assistant\n";
-                }
-            } else {
-                prompt += "<|im_start|>user\nHello, tell me about AMD MI50!<|im_end|>\n<|im_start|>assistant\n";
-            }
-
-            const auto prompt_tokens = engine.tokenizer().encode(prompt);
-
-            if (is_stream) {
-                std::string header = "HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nCache-Control: no-cache\r\nConnection: close\r\n\r\n";
-                (void)write(client_fd, header.data(), header.size());
-
-                Qwen35RuntimeEngine::GenerateOptions opt;
-                opt.max_new_tokens = max_tokens;
-                opt.on_token = [&](std::uint32_t /*token*/, std::string_view piece) {
-                    std::string sse = "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"delta\":{\"content\":\"";
-                    for (char c : piece) {
-                        if (c == '"') sse += "\\\"";
-                        else if (c == '\n') sse += "\\n";
-                        else if (c == '\r') sse += "\\r";
-                        else if (c == '\t') sse += "\\t";
-                        else sse += c;
-                    }
-                    sse += "\"}}]}\n\n";
-                    (void)write(client_fd, sse.data(), sse.size());
-                };
-
-                const auto stats = engine.generate(prompt_tokens, opt);
-                prompt_tokens_total += stats.prompt_tokens;
-                generated_tokens_total += stats.generated_tokens;
-                std::string done = "data: [DONE]\n\n";
-                (void)write(client_fd, done.data(), done.size());
-            } else {
-                Qwen35RuntimeEngine::GenerateOptions opt;
-                opt.max_new_tokens = max_tokens;
-                opt.stream = false;
-                const auto stats = engine.generate(prompt_tokens, opt);
-                prompt_tokens_total += stats.prompt_tokens;
-                generated_tokens_total += stats.generated_tokens;
-
-                std::string escaped_text;
-                for (char c : stats.text) {
-                    if (c == '"') escaped_text += "\\\"";
-                    else if (c == '\n') escaped_text += "\\n";
-                    else if (c == '\r') escaped_text += "\\r";
-                    else if (c == '\t') escaped_text += "\\t";
-                    else escaped_text += c;
-                }
-
-                std::string body = "{\"id\":\"chatcmpl-1\",\"object\":\"chat.completion\",\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\""
-                                 + escaped_text + "\"}}],\"usage\":{\"prompt_tokens\":"
-                                 + std::to_string(stats.prompt_tokens) + ",\"completion_tokens\":"
-                                 + std::to_string(stats.generated_tokens) + "}}";
-                std::string response = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: "
-                                     + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
-                (void)write(client_fd, response.data(), response.size());
+        std::string prompt = "<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n";
+        std::size_t content_pos = raw.find("\"content\": \"");
+        if (content_pos == std::string::npos) content_pos = raw.find("\"content\":\"");
+        if (content_pos != std::string::npos) {
+            const std::size_t start = raw.find('"', content_pos + 10) + 1;
+            const std::size_t end = raw.find('"', start);
+            if (end != std::string::npos) {
+                prompt += "<|im_start|>user\n" + raw.substr(start, end - start)
+                        + "<|im_end|>\n<|im_start|>assistant\n";
             }
         } else {
-            ++http_errors;
-            std::string body = R"({"error":"Not Found"})";
-            std::string response = "HTTP/1.1 404 Not Found\r\nContent-Type: application/json\r\nContent-Length: "
-                                 + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
-            (void)write(client_fd, response.data(), response.size());
+            prompt += "<|im_start|>user\nHello, tell me about AMD MI50!<|im_end|>\n<|im_start|>assistant\n";
         }
 
-        close(client_fd);
+        const auto prompt_tokens = engine.tokenizer().encode(prompt);
+        if (is_stream) {
+            bool client_connected = send_all(
+                client_fd,
+                "HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nCache-Control: no-cache\r\nConnection: close\r\n\r\n");
+            Qwen35RuntimeEngine::GenerateOptions opt;
+            opt.max_new_tokens = max_tokens;
+            opt.on_token = [&](std::uint32_t /*token*/, std::string_view piece) {
+                if (!client_connected) return;
+                const std::string sse = "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"delta\":{\"content\":\""
+                    + json_escape(piece) + "\"}}]}\n\n";
+                client_connected = send_all(client_fd, sse);
+            };
+            const auto stats = engine.generate(prompt_tokens, opt);
+            prompt_tokens_total += stats.prompt_tokens;
+            generated_tokens_total += stats.generated_tokens;
+            if (client_connected) (void)send_all(client_fd, "data: [DONE]\n\n");
+        } else {
+            Qwen35RuntimeEngine::GenerateOptions opt;
+            opt.max_new_tokens = max_tokens;
+            opt.stream = false;
+            const auto stats = engine.generate(prompt_tokens, opt);
+            prompt_tokens_total += stats.prompt_tokens;
+            generated_tokens_total += stats.generated_tokens;
+            const std::string body = "{\"id\":\"chatcmpl-1\",\"object\":\"chat.completion\",\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\""
+                + json_escape(stats.text) + "\"}}],\"usage\":{\"prompt_tokens\":"
+                + std::to_string(stats.prompt_tokens) + ",\"completion_tokens\":"
+                + std::to_string(stats.generated_tokens) + "}}";
+            (void)send_http_response(client_fd, 200, "OK", "application/json", body);
+        }
     };
 
-    std::deque<int> pending_clients;
+    std::deque<HttpRequest> pending_requests;
     std::mutex queue_mutex;
     std::condition_variable queue_cv;
     bool accepting = true;
     std::thread worker([&] {
         while (true) {
-            int client_fd = -1;
+            HttpRequest request;
             {
                 std::unique_lock lock(queue_mutex);
-                queue_cv.wait(lock, [&] { return !pending_clients.empty() || !accepting; });
-                if (pending_clients.empty() && !accepting) return;
-                client_fd = pending_clients.front();
-                pending_clients.pop_front();
+                queue_cv.wait(lock, [&] { return !pending_requests.empty() || !accepting; });
+                if (pending_requests.empty() && !accepting) return;
+                request = std::move(pending_requests.front());
+                pending_requests.pop_front();
+                queue_depth.fetch_sub(1);
             }
-            handle_client(client_fd);
+            try {
+                handle_request(request);
+            } catch (const std::exception& error) {
+                ++http_errors;
+                std::cerr << "request failed: " << error.what() << "\n";
+                send_http_error(request.client_fd, 500, "Internal Server Error");
+            } catch (...) {
+                ++http_errors;
+                std::cerr << "request failed with an unknown error\n";
+                send_http_error(request.client_fd, 500, "Internal Server Error");
+            }
+            close(request.client_fd);
         }
     });
 
@@ -1266,20 +1361,70 @@ int cmd_serve(int argc, char** argv) {
         int client_fd = accept(server_fd, reinterpret_cast<sockaddr*>(&client_addr), &client_len);
         if (client_fd < 0) continue;
 
+        HttpReadResult result = read_http_request(client_fd);
+        if (!result.request) {
+            ++http_errors;
+            send_http_error(client_fd, result.status, result.reason);
+            close(client_fd);
+            continue;
+        }
+        ++http_requests;
+        HttpRequest request = std::move(*result.request);
+
+        if (request.method == "GET" && (request.path == "/healthz" || request.path == "/readyz")) {
+            (void)send_http_response(client_fd, 200, "OK", "application/json", R"({"status":"ok","ready":true})");
+            close(client_fd);
+            continue;
+        }
+        if (request.method == "GET" && request.path == "/metrics") {
+            const std::string body = "# TYPE miinfer_http_requests_total counter\n"
+                "miinfer_http_requests_total " + std::to_string(http_requests.load()) + "\n"
+                "# TYPE miinfer_http_errors_total counter\n"
+                "miinfer_http_errors_total " + std::to_string(http_errors.load()) + "\n"
+                "# TYPE miinfer_inference_requests_total counter\n"
+                "miinfer_inference_requests_total " + std::to_string(inference_requests.load()) + "\n"
+                "# TYPE miinfer_queue_depth gauge\n"
+                "miinfer_queue_depth " + std::to_string(queue_depth.load()) + "\n"
+                "# TYPE miinfer_queue_capacity gauge\n"
+                "miinfer_queue_capacity " + std::to_string(kQueueCapacity) + "\n"
+                "# TYPE miinfer_queue_rejected_total counter\n"
+                "miinfer_queue_rejected_total " + std::to_string(queue_rejected.load()) + "\n"
+                "# TYPE miinfer_prompt_tokens_total counter\n"
+                "miinfer_prompt_tokens_total " + std::to_string(prompt_tokens_total.load()) + "\n"
+                "# TYPE miinfer_generated_tokens_total counter\n"
+                "miinfer_generated_tokens_total " + std::to_string(generated_tokens_total.load()) + "\n";
+            (void)send_http_response(client_fd, 200, "OK", "text/plain; version=0.0.4", body);
+            close(client_fd);
+            continue;
+        }
+        if (request.method == "GET" && request.path == "/v1/models") {
+            const std::string body = "{\"object\":\"list\",\"data\":[{\"id\":\""
+                + json_escape(model_id) + "\",\"object\":\"model\",\"owned_by\":\"miinfer\"}]}";
+            (void)send_http_response(client_fd, 200, "OK", "application/json", body);
+            close(client_fd);
+            continue;
+        }
+        if (request.method != "POST" || request.path != "/v1/chat/completions") {
+            ++http_errors;
+            send_http_error(client_fd, 404, "Not Found");
+            close(client_fd);
+            continue;
+        }
+
         bool queued = false;
         {
             std::lock_guard lock(queue_mutex);
-            if (pending_clients.size() < kQueueCapacity) {
-                pending_clients.push_back(client_fd);
+            if (accepting && pending_requests.size() < kQueueCapacity) {
+                pending_requests.push_back(std::move(request));
+                queue_depth.fetch_add(1);
                 queued = true;
             }
         }
         if (queued) {
             queue_cv.notify_one();
         } else {
-            const std::string response =
-                "HTTP/1.1 503 Service Unavailable\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
-            (void)write(client_fd, response.data(), response.size());
+            ++queue_rejected;
+            send_http_error(client_fd, 503, "Server Busy");
             close(client_fd);
         }
     }
@@ -1287,12 +1432,19 @@ int cmd_serve(int argc, char** argv) {
     {
         std::lock_guard lock(queue_mutex);
         accepting = false;
+        while (!pending_requests.empty()) {
+            HttpRequest request = std::move(pending_requests.front());
+            pending_requests.pop_front();
+            queue_depth.fetch_sub(1);
+            send_http_error(request.client_fd, 503, "Server Shutting Down");
+            close(request.client_fd);
+        }
     }
     queue_cv.notify_one();
+    close(server_fd);
     worker.join();
 
     std::cerr << "Shutting down HTTP server...\n";
-    close(server_fd);
     return 0;
 }
 
