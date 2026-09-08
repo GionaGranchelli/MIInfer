@@ -72,6 +72,11 @@ within `2.5e-6`, but measured `2619.89 us` versus `1201.44 us` for the exact
 production code; another projection dataflow is required before the 100 tok/s
 gate can be reconsidered.
 
+EXP-0240 tested the complementary wave-major mapping of the same 16-token
+tile. It matched within `3.7e-6`, but measured `2193.49 us` versus `1200.21 us`
+(`0.547x`) on the same shape. Both minimal native token-tile mappings are
+rejected and removed.
+
 EXP-0168 completed that profile at position 63: total GPU event
 `71.9133 ms/token`, layer sum `68.6269 ms`, final LM head `2.50016 ms`, and
 zero allocations. FFN Down remains the largest repeated individual stage,

@@ -57,8 +57,10 @@ causal 64-token staging schedule but rejects it because repeated B=4 launches
 are neutral against the qualified baseline and the fixed staging footprint is
 16x larger. EXP-0239 rejects a native-layout 16-token Q4_K tile: it matches
 the B=4 path within 2.5e-6 but reaches only 0.459x its speed at the exact
-FFN-down production shape. A materially different quantized projection
-dataflow is still required for the 100 tok/s gate.
+FFN-down production shape. EXP-0240 also rejects a wave-major 16-token
+variant: it matches within 3.7e-6 but reaches only 0.547x. A materially
+different quantized projection dataflow is still required for the 100 tok/s
+gate.
 
 The project currently has:
 
