@@ -220,7 +220,7 @@ public:
     }
 
     const float* prefill_layer_major(std::span<const std::uint32_t> prompt) {
-        constexpr std::size_t kChunk = kPrefillBatch;
+        const std::size_t kChunk = prefill_chunk_;
         float* current = static_cast<float*>(prefill_a_->get());
         float* next = static_cast<float*>(prefill_b_->get());
         const float* final_hidden = nullptr;
@@ -531,6 +531,14 @@ private:
         use_hip_graph_ = graph_env == nullptr || std::strcmp(graph_env, "0") != 0;
         const char* layer_major_env = std::getenv("MIINFER_PREFILL_LAYER_MAJOR");
         layer_major_prefill_ = layer_major_env != nullptr && std::strcmp(layer_major_env, "0") != 0;
+        const char* prefill_chunk_env = std::getenv("MIINFER_PREFILL_CHUNK");
+        if (prefill_chunk_env != nullptr) {
+            const auto requested = std::stoul(prefill_chunk_env);
+            if (requested != 4 && requested != kPrefillBatch) {
+                throw std::runtime_error("MIINFER_PREFILL_CHUNK must be 4 or 64");
+            }
+            prefill_chunk_ = requested;
+        }
         const char* prefill_profile_env = std::getenv("MIINFER_PREFILL_PROFILE");
         prefill_profile_.enabled = layer_major_prefill_ && prefill_profile_env != nullptr
             && std::strcmp(prefill_profile_env, "0") != 0;
@@ -666,6 +674,7 @@ private:
 
     bool use_hip_graph_ = true;
     bool layer_major_prefill_ = false;
+    std::size_t prefill_chunk_ = kPrefillBatch;
     PrefillProfile prefill_profile_;
     std::vector<hipGraphExec_t> decode_graphs_;
 };
