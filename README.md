@@ -16,8 +16,8 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 **Current phase: M11-B — production layer-major prefill**
 
-The opt-in layer-major prefill path reaches `45.56 tok/s` at P513 (`45.28`
-tok/s at P128) with deferred full-attention tails, shape-specific Q5_K B=4
+The opt-in layer-major prefill path reaches `46.22 tok/s` at P513 with deferred
+full-attention tails, shape-specific Q5_K B=4
 reuse, and direct consumption of batched workspaces. The M11-B `100 tok/s`
 gate is not met;
 the production-shaped row-LDS and generic B=8 accumulator extensions were
@@ -52,7 +52,10 @@ EXP-0237 adds a disabled-by-default production prefill profile: at P512,
 recurrent layers consume 8.41 s of measured layer work, including 6.07 s in
 the deferred tail and 1.52 s in prepared projections. The ordered recurrent
 region is only 0.82 s, so the next design must raise projection token
-parallelism rather than start with a recurrent scan.
+parallelism rather than start with a recurrent scan. EXP-0238 validates a
+causal 64-token staging schedule but rejects it because repeated B=4 launches
+are neutral against the qualified baseline and the fixed staging footprint is
+16x larger; a true token-tiled quantized GEMM remains the next gate.
 
 The project currently has:
 
