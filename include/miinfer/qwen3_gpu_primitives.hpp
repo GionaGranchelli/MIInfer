@@ -278,6 +278,43 @@ void launch_qwen35_deltanet_fused_recurrent_core(
     hipStream_t stream = nullptr,
     Q8_1Block* gated_output_q8 = nullptr);
 
+// M11-B candidate: process four causally ordered recurrent tokens in one
+// workgroup while retaining the final state and one gated output per token.
+void launch_qwen35_deltanet_fused_recurrent_core_batched4(
+    const float* query,
+    const float* key,
+    const float* value,
+    const float* beta,
+    const float* decay,
+    const float* ssm_norm,
+    const float* gate,
+    float* state,
+    float* gated_output,
+    std::uint32_t key_heads,
+    std::uint32_t value_heads,
+    std::uint32_t state_size,
+    float epsilon,
+    hipStream_t stream = nullptr);
+
+void launch_qwen35_deltanet_prefill_stage(
+    const float* query,
+    const float* key,
+    const float* value,
+    const float* beta,
+    const float* decay,
+    const float* gate,
+    float* query_batch,
+    float* key_batch,
+    float* value_batch,
+    float* beta_batch,
+    float* decay_batch,
+    float* gate_batch,
+    std::uint32_t token_index,
+    std::uint32_t key_heads,
+    std::uint32_t value_heads,
+    std::uint32_t state_size,
+    hipStream_t stream = nullptr);
+
 // Apply the four-tap recurrent convolution, SiLU, and Q/K/V split while
 // updating a persistent circular history of raw QKV vectors.
 void launch_qwen35_conv_silu_split(

@@ -52,7 +52,10 @@ Q4_K arithmetic and reached only 0.351x the four-launch B=4 control, so the
 intermediate tile is rejected too. EXP-0233 closes this projection-mapping
 branch: the optimistic 1.387x raw-int8 ceiling reaches only 63.19 tok/s when
 applied to the entire current path. The 100 tok/s gate remains open for a
-materially different prefill dataflow.
+materially different prefill dataflow. EXP-0234 keeps a causal recurrent-core
+B=4 batch in the opt-in layer-major path, improving P513 from 45.86 to 46.19
+tok/s at approximately 12.1 MiB extra bounded workspace. The projection
+ceiling and 100 tok/s gate remain unchanged.
 
 EXP-0168 completed that profile at position 63: total GPU event
 `71.9133 ms/token`, layer sum `68.6269 ms`, final LM head `2.50016 ms`, and

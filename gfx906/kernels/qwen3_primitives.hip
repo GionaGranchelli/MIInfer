@@ -1096,6 +1096,119 @@ __global__ void qwen35_deltanet_fused_recurrent_core_kernel(
     }
 }
 
+__global__ void qwen35_deltanet_fused_recurrent_core_batched4_kernel(
+    const float* __restrict__ query,
+    const float* __restrict__ key,
+    const float* __restrict__ value,
+    const float* __restrict__ beta,
+    const float* __restrict__ decay,
+    const float* __restrict__ ssm_norm,
+    const float* __restrict__ gate,
+    float* __restrict__ state,
+    float* __restrict__ gated_output,
+    std::uint32_t key_heads,
+    std::uint32_t value_heads,
+    std::uint32_t state_size,
+    float epsilon) {
+    constexpr std::uint32_t batch = 4;
+    const std::uint32_t head = blockIdx.x;
+    const std::uint32_t row = threadIdx.x;
+    if (head >= value_heads || row >= state_size || key_heads == 0) return;
+
+    extern __shared__ float shared_mem[];
+    float* shared_query = shared_mem;
+    float* shared_key = shared_mem + batch * state_size;
+    float* shared_partials = shared_mem + 2 * batch * state_size;
+    const std::uint32_t key_head = head % key_heads;
+    const std::size_t state_base = static_cast<std::size_t>(head) * state_size * state_size;
+    float s[128];
+    #pragma unroll 4
+    for (std::uint32_t column = 0; column < 128; ++column) {
+        s[column] = state[state_base + static_cast<std::size_t>(column) * 128 + row];
+    }
+
+    for (std::uint32_t token = 0; token < batch; ++token) {
+        shared_query[token * state_size + row] =
+            query[token * key_heads * state_size + key_head * state_size + row];
+        shared_key[token * state_size + row] =
+            key[token * key_heads * state_size + key_head * state_size + row];
+        __syncthreads();
+
+        const float beta_value = beta[token * value_heads + head];
+        const float decay_value = decay[token * value_heads + head];
+        float key_dot = 0.0F;
+        #pragma unroll 4
+        for (std::uint32_t column = 0; column < 128; ++column) {
+            key_dot += s[column] * decay_value * shared_key[token * state_size + column];
+        }
+        const float delta = (value[token * value_heads * state_size
+                                    + head * state_size + row] - key_dot) * beta_value;
+        float query_dot = 0.0F;
+        #pragma unroll 4
+        for (std::uint32_t column = 0; column < 128; ++column) {
+            const float updated = s[column] * decay_value
+                + delta * shared_key[token * state_size + column];
+            s[column] = updated;
+            query_dot += updated * shared_query[token * state_size + column];
+        }
+
+        const float recurrent_value = query_dot * rsqrtf(128.0F);
+        shared_partials[row] = recurrent_value * recurrent_value;
+        __syncthreads();
+        for (std::uint32_t stride = 64; stride > 0; stride /= 2) {
+            if (row < stride) shared_partials[row] += shared_partials[row + stride];
+            __syncthreads();
+        }
+        const float inverse_rms = rsqrtf(shared_partials[0] / 128.0F + epsilon);
+        const float head_scaled = recurrent_value * inverse_rms * ssm_norm[row];
+        const std::size_t output_index = static_cast<std::size_t>(token)
+            * value_heads * state_size + static_cast<std::size_t>(head) * state_size + row;
+        const float gate_value = gate[output_index];
+        gated_output[output_index] =
+            (gate_value / (1.0F + expf(-gate_value))) * head_scaled;
+        __syncthreads();
+    }
+
+    #pragma unroll 4
+    for (std::uint32_t column = 0; column < 128; ++column) {
+        state[state_base + static_cast<std::size_t>(column) * 128 + row] = s[column];
+    }
+}
+
+__global__ void qwen35_deltanet_prefill_stage_kernel(
+    const float* __restrict__ query,
+    const float* __restrict__ key,
+    const float* __restrict__ value,
+    const float* __restrict__ beta,
+    const float* __restrict__ decay,
+    const float* __restrict__ gate,
+    float* __restrict__ query_batch,
+    float* __restrict__ key_batch,
+    float* __restrict__ value_batch,
+    float* __restrict__ beta_batch,
+    float* __restrict__ decay_batch,
+    float* __restrict__ gate_batch,
+    std::uint32_t token_index,
+    std::uint32_t key_heads,
+    std::uint32_t value_heads,
+    std::uint32_t state_size) {
+    const std::uint32_t index = blockIdx.x * blockDim.x + threadIdx.x;
+    const std::uint32_t key_elements = key_heads * state_size;
+    const std::uint32_t value_elements = value_heads * state_size;
+    if (index < key_elements) {
+        query_batch[token_index * key_elements + index] = query[index];
+        key_batch[token_index * key_elements + index] = key[index];
+    }
+    if (index < value_elements) {
+        value_batch[token_index * value_elements + index] = value[index];
+        gate_batch[token_index * value_elements + index] = gate[index];
+    }
+    if (index < value_heads) {
+        beta_batch[token_index * value_heads + index] = beta[index];
+        decay_batch[token_index * value_heads + index] = decay[index];
+    }
+}
+
 __global__ void qwen35_conv_silu_split_kernel(
     const float* current_qkv, const float* conv_weights, float* history,
     float* query, float* key, float* value, std::uint32_t position,
@@ -3140,6 +3253,70 @@ void launch_qwen35_deltanet_fused_recurrent_core(
                        query, key, value, beta, decay, ssm_norm, gate,
                        state, gated_output, recurrent_output,
                        key_heads, value_heads, state_size, epsilon, gated_output_q8);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_deltanet_fused_recurrent_core_batched4(
+    const float* query,
+    const float* key,
+    const float* value,
+    const float* beta,
+    const float* decay,
+    const float* ssm_norm,
+    const float* gate,
+    float* state,
+    float* gated_output,
+    std::uint32_t key_heads,
+    std::uint32_t value_heads,
+    std::uint32_t state_size,
+    float epsilon,
+    hipStream_t stream) {
+    if (query == nullptr || key == nullptr || value == nullptr || beta == nullptr
+        || decay == nullptr || ssm_norm == nullptr || gate == nullptr || state == nullptr
+        || gated_output == nullptr || key_heads == 0 || value_heads == 0
+        || state_size != 128 || value_heads % key_heads != 0 || epsilon <= 0.0F) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    constexpr std::size_t batch = 4;
+    const std::size_t shared_bytes = (2 * batch + 1) * state_size * sizeof(float);
+    hipLaunchKernelGGL(qwen35_deltanet_fused_recurrent_core_batched4_kernel,
+                       dim3(value_heads), dim3(state_size), shared_bytes, stream,
+                       query, key, value, beta, decay, ssm_norm, gate,
+                       state, gated_output, key_heads, value_heads, state_size, epsilon);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_deltanet_prefill_stage(
+    const float* query,
+    const float* key,
+    const float* value,
+    const float* beta,
+    const float* decay,
+    const float* gate,
+    float* query_batch,
+    float* key_batch,
+    float* value_batch,
+    float* beta_batch,
+    float* decay_batch,
+    float* gate_batch,
+    std::uint32_t token_index,
+    std::uint32_t key_heads,
+    std::uint32_t value_heads,
+    std::uint32_t state_size,
+    hipStream_t stream) {
+    if (query == nullptr || key == nullptr || value == nullptr || beta == nullptr
+        || decay == nullptr || gate == nullptr || query_batch == nullptr || key_batch == nullptr
+        || value_batch == nullptr || beta_batch == nullptr || decay_batch == nullptr
+        || gate_batch == nullptr || key_heads == 0 || value_heads == 0 || state_size == 0
+        || value_heads % key_heads != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    const auto elements = std::max(key_heads * state_size, value_heads * state_size);
+    hipLaunchKernelGGL(qwen35_deltanet_prefill_stage_kernel,
+                       dim3((elements + 255) / 256), dim3(256), 0, stream,
+                       query, key, value, beta, decay, gate,
+                       query_batch, key_batch, value_batch, beta_batch, decay_batch, gate_batch,
+                       token_index, key_heads, value_heads, state_size);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

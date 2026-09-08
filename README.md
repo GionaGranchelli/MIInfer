@@ -41,7 +41,10 @@ tested a 16-token version and reached only 0.351x the four-launch B=4 control;
 the intermediate tile is also rejected. EXP-0233 closes this projection
 mapping branch with an optimistic 1.387x Amdahl ceiling, or 63.19 tok/s even
 if applied to the whole current path; the 100 tok/s gate remains open for a
-materially different prefill dataflow.
+materially different prefill dataflow. EXP-0234 keeps a causal recurrent-core
+B=4 batch inside layer-major prefill, improving P513 from 45.86 to 46.19
+tok/s with approximately 12.1 MiB of bounded workspace; it does not change
+the projection ceiling or the gate.
 
 The project currently has:
 

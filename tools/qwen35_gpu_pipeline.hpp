@@ -733,9 +733,13 @@ struct RecurrentLayer {
     bool fused_add_rms_norm = true;
     bool fused_interlayer_norm = true;
     bool prefill_batch_enabled = false;
+    bool prefill_recurrent_batch = false;
+    bool prefill_core_batch_active = false;
     Buffer prefill_normalized, prefill_qkv, prefill_gate, prefill_q8_1;
     Buffer prefill_gated, prefill_residual, prefill_post_normalized;
     Buffer prefill_ffn_gate, prefill_ffn_up, prefill_ffn_activation, prefill_projected;
+    Buffer prefill_core_query, prefill_core_key, prefill_core_value;
+    Buffer prefill_core_beta, prefill_core_decay, prefill_core_gate;
 
     RecurrentLayer(const miinfer::Qwen35Model& model_value, std::size_t layer,
                    const std::filesystem::path& fixture)
@@ -844,6 +848,9 @@ struct RecurrentLayer {
         const char* prefill_batch_env = std::getenv("MIINFER_PREFILL_LAYER_MAJOR");
         prefill_batch_enabled = prefill_batch_env != nullptr
             && std::strcmp(prefill_batch_env, "0") != 0;
+        const char* prefill_recurrent_env = std::getenv("MIINFER_PREFILL_RECURRENT_BATCH");
+        prefill_recurrent_batch = prefill_batch_enabled
+            && (prefill_recurrent_env == nullptr || std::strcmp(prefill_recurrent_env, "0") != 0);
         require_type(qkv_weight, {miinfer::GgufTensorType::q4_k,
                                    miinfer::GgufTensorType::q6_k});
         require_type(gate_weight, {miinfer::GgufTensorType::q4_k});
@@ -969,6 +976,14 @@ struct RecurrentLayer {
             prefill_ffn_up = allocate(kPrefillBatch * kFfnInner * sizeof(float));
             prefill_ffn_activation = allocate(kPrefillBatch * kFfnInner * sizeof(float));
             prefill_projected = allocate(kPrefillBatch * kHidden * sizeof(float));
+            if (prefill_recurrent_batch) {
+                prefill_core_query = allocate(kPrefillBatch * kKHeads * kState * sizeof(float));
+                prefill_core_key = allocate(kPrefillBatch * kKHeads * kState * sizeof(float));
+                prefill_core_value = allocate(kPrefillBatch * kVHeads * kState * sizeof(float));
+                prefill_core_beta = allocate(kPrefillBatch * kVHeads * sizeof(float));
+                prefill_core_decay = allocate(kPrefillBatch * kVHeads * sizeof(float));
+                prefill_core_gate = allocate(kPrefillBatch * kVHeads * kState * sizeof(float));
+            }
         }
 
         MIINFER_HIP_CHECK(hipMemset(history->get(), 0, 4 * kChannels * sizeof(float)));
@@ -1209,6 +1224,13 @@ struct RecurrentLayer {
             && (d_ffn_swiglu_native || (d_ffn_gate_native && d_ffn_up_native));
     }
 
+    bool recurrent_prefill_core_batch_supported() const noexcept {
+        return prefill_recurrent_batch && trace == nullptr && provenance == nullptr
+            && operand_capture == nullptr && key_path_capture == nullptr
+            && layer_path_capture == nullptr && output_projection_path_capture == nullptr
+            && gate_path_capture == nullptr;
+    }
+
     void finish_prefill_batch(const float* inputs, float* outputs, std::size_t count,
                               const float* next_norm_weight = nullptr,
                               float* next_normalized = nullptr) {
@@ -1219,6 +1241,20 @@ struct RecurrentLayer {
         auto* residual_batch = static_cast<float*>(prefill_residual->get());
         auto* normalized_batch = static_cast<float*>(prefill_post_normalized->get());
         auto* q8_batch = static_cast<miinfer::Q8_1Block*>(prefill_q8_1->get());
+        prefill_core_batch_active = recurrent_prefill_core_batch_supported();
+        if (prefill_core_batch_active) {
+            miinfer::launch_qwen35_deltanet_fused_recurrent_core_batched4(
+                static_cast<const float*>(prefill_core_query->get()),
+                static_cast<const float*>(prefill_core_key->get()),
+                static_cast<const float*>(prefill_core_value->get()),
+                static_cast<const float*>(prefill_core_beta->get()),
+                static_cast<const float*>(prefill_core_decay->get()),
+                static_cast<const float*>(d_ssm_norm->get()),
+                static_cast<const float*>(prefill_core_gate->get()),
+                static_cast<float*>(state->get()), gated_batch,
+                kKHeads, kVHeads, kState, model.config().rms_epsilon,
+                hipStreamPerThread);
+        }
         const char* ssm_batch_env = std::getenv("MIINFER_PREFILL_SSM_BATCH");
         const bool batch_ssm_out = d_ssm_out_native
             && (ssm_batch_env == nullptr || std::strcmp(ssm_batch_env, "0") != 0);
@@ -1514,6 +1550,26 @@ struct RecurrentLayer {
             key_path_capture->key_norm = download(key_norm->get(), kKHeads * kState);
         }
         stage_start(5, position);
+        const bool defer_recurrent_core = defer_prefill_tail
+            && recurrent_prefill_core_batch_supported();
+        if (defer_recurrent_core) {
+            if (prefill_index >= kPrefillBatch) throw std::runtime_error("invalid recurrent prefill index");
+            miinfer::launch_qwen35_deltanet_prefill_stage(
+                static_cast<const float*>(query_norm->get()),
+                static_cast<const float*>(key_norm->get()),
+                static_cast<const float*>(value->get()),
+                static_cast<const float*>(beta->get()),
+                static_cast<const float*>(decay->get()), gate_dest,
+                static_cast<float*>(prefill_core_query->get()),
+                static_cast<float*>(prefill_core_key->get()),
+                static_cast<float*>(prefill_core_value->get()),
+                static_cast<float*>(prefill_core_beta->get()),
+                static_cast<float*>(prefill_core_decay->get()),
+                static_cast<float*>(prefill_core_gate->get()), prefill_index,
+                kKHeads, kVHeads, kState, hipStreamPerThread);
+            stage_end(5, position);
+            return;
+        }
         if (fused_recurrent_core && transposed_state) {
             float* rec_out_ptr = (layer_path_capture != nullptr || gate_path_capture != nullptr || trace != nullptr)
                 ? static_cast<float*>(recurrent_output->get()) : nullptr;
