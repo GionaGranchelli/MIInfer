@@ -62,7 +62,9 @@ variant: it matches within 3.7e-6 but reaches only 0.547x. EXP-0241 rejects
 one-row-per-workgroup token reuse at 0.591x. A materially different
 quantized projection dataflow or recurrent-tail fusion is still required for
 the 100 tok/s gate. EXP-0242 also rejects direct Q8 emission from recurrent
-fused normalization: P513 changed only 0.15%.
+fused normalization: P513 changed only 0.15%. EXP-0243 rejects paired
+SwiGLU/Q8 producer-consumer fusion: exact-shape timing fell from 372.959 us to
+475.999 us (0.784x), despite removing four quantizer launches.
 
 The project currently has:
 

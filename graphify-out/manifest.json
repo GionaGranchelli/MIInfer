@@ -150,15 +150,15 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788842849.7257514,
-    "seen": 1788842949.3137488,
+    "mtime": 1788844179.4921918,
+    "seen": 1788844193.8096461,
     "ast_hash": "359f961e8e18e5e0cf12cc1070fb3fad",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788843458.2022073,
-    "seen": 1788843478.2031386,
-    "ast_hash": "73a3a7b81767548f2923b4b01f862c77",
+    "mtime": 1788844127.5294092,
+    "seen": 1788844193.8096476,
+    "ast_hash": "943e577ce5828352257bd624ab0690ca",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788843458.2042074,
-    "seen": 1788843478.2031658,
-    "ast_hash": "8dd174c83f687e1a65c9092e5366bb8b",
+    "mtime": 1788844127.530409,
+    "seen": 1788844193.809675,
+    "ast_hash": "466ffa7eb6d3a6199548a368a59cd1e1",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -2040,8 +2040,8 @@
     "semantic_hash": ""
   },
   "include/miinfer/kquant_wave_layout.hpp": {
-    "mtime": 1788842849.7247512,
-    "seen": 1788842949.3135285,
+    "mtime": 1788844085.7735837,
+    "seen": 1788844193.8094184,
     "ast_hash": "8dd28b79700228b35792dd0aa2b07b7b",
     "semantic_hash": ""
   },
@@ -2715,6 +2715,12 @@
     "mtime": 1788843458.2012074,
     "seen": 1788843478.2035494,
     "ast_hash": "9379613c02fe35e38cb334a15d90f4a4",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0243-m11b-swiglu-q8-fusion-rejection.md": {
+    "mtime": 1788844127.528409,
+    "seen": 1788844193.8100526,
+    "ast_hash": "5f2e769b81c9fbde6c2ffb0c2a24b966",
     "semantic_hash": ""
   }
 }

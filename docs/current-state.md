@@ -87,6 +87,11 @@ normalization. It preserved the P17 continuation hash and changed P513 only
 from `11080.57 ms` to `11064.28 ms` (`+0.15%`), so the candidate was removed
 as neutral. The deferred FFN projections remain the measured dominant tail.
 
+EXP-0243 tested fusing paired Q4_K gate/up SwiGLU with direct Q8_1 emission.
+The exact-shape four-token microbenchmark was byte-identical but fell from
+`372.959 us` to `475.999 us` (`0.784x`) because the 512-thread, four-row
+workgroup increased register/workgroup cost. The candidate was removed.
+
 EXP-0168 completed that profile at position 63: total GPU event
 `71.9133 ms/token`, layer sum `68.6269 ms`, final LM head `2.50016 ms`, and
 zero allocations. FFN Down remains the largest repeated individual stage,
