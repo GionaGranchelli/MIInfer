@@ -2034,14 +2034,14 @@
     "semantic_hash": ""
   },
   "bench/kquant_layout_bench.cpp": {
-    "mtime": 1788682214.7318347,
-    "seen": 1788695706.21914,
+    "mtime": 1788829094.0231817,
+    "seen": 1788829147.437611,
     "ast_hash": "393d189eb9530c05237b4962ed55c23c",
     "semantic_hash": ""
   },
   "include/miinfer/kquant_wave_layout.hpp": {
-    "mtime": 1788825344.118266,
-    "seen": 1788825430.065397,
+    "mtime": 1788829094.0211816,
+    "seen": 1788829147.437644,
     "ast_hash": "8dd28b79700228b35792dd0aa2b07b7b",
     "semantic_hash": ""
   },
@@ -2565,6 +2565,12 @@
     "mtime": 1788828315.6793127,
     "seen": 1788828335.2072165,
     "ast_hash": "cfc0908c70b71734bbd4f509cdbda7af",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0218-m11b-q4k-word-reuse-b8-rejection.md": {
+    "mtime": 1788829024.039463,
+    "seen": 1788829147.4382315,
+    "ast_hash": "4e91b423d463992d19a2e9fe057a6a78",
     "semantic_hash": ""
   }
 }
