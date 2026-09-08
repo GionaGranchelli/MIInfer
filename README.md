@@ -14,9 +14,10 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M11-B — production layer-major prefill**
+**Current phase: M12 — matrix prefill architecture feasibility**
 
-The opt-in layer-major prefill path reaches `46.22 tok/s` at P513 with deferred
+M11-B is frozen at the qualified `46.22 tok/s` P513 packed-Q4 baseline. The
+opt-in layer-major prefill path reaches that rate with deferred
 full-attention tails, shape-specific Q5_K B=4
 reuse, and direct consumption of batched workspaces. The M11-B `100 tok/s`
 gate is not met;
@@ -82,7 +83,14 @@ slower at B4/B16, so it was also removed. EXP-0253 tested a bounded exact-sum
 side buffer; it fell to 0.649x at B64 and was removed as well.
 EXP-0254 kept the exact sum in the candidate activation footprint; it improved
 the grouped tile to 0.894x at B64 but remained slower and was removed. The
-repacked-MMQ/token-reuse family is now closed.
+repacked-MMQ/token-reuse family is now closed. EXP-0255 measured one Q4_K→FP16
+staging pass plus hipBLAS GEMM at 1.364x for B64, then 2.724x, 4.001x, and
+5.806x for B128/B256/B512. It remains a lab primitive until chunkwise
+recurrent execution can expose B128+ work. EXP-0256 validates the chunkwise
+Gated DeltaNet WY oracle at chunk 64: max output error is 1.4e-8 and final
+state error is 1.5e-7 against the token recurrence. EXP-0257 passes the
+gfx906 correctness gate with the same 1.5e-7 state agreement, but reaches only
+1.112x over 128 token launches, so it remains a lab prototype.
 
 The project currently has:
 

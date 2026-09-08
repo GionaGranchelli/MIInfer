@@ -108,6 +108,8 @@ if(MIINFER_ENABLE_HIP)
         gfx906/kernels/q4_q8_zero_point_dot.hip
         gfx906/kernels/qwen3_primitives.hip
         gfx906/kernels/kquant_wave_layout.hip
+        gfx906/kernels/m12_dense_stage.hip
+        gfx906/kernels/m12_gdn_chunk.hip
         src/kquant_wave_layout.cpp
         gfx906/kernels/memory_stream.hip
     )
@@ -128,6 +130,15 @@ endif()
 add_executable(miinfer-host-test tests/host_test.cpp)
 target_link_libraries(miinfer-host-test PRIVATE miinfer_build_info miinfer_model)
 target_compile_options(miinfer-host-test PRIVATE -Wall -Wextra -Wpedantic)
+
+add_executable(miinfer-m12-gdn-oracle bench/m12_gdn_oracle.cpp)
+target_compile_options(miinfer-m12-gdn-oracle PRIVATE -Wall -Wextra -Wpedantic)
+
+if(MIINFER_ENABLE_HIP)
+    add_executable(miinfer-m12-gdn-chunk-bench bench/m12_gdn_chunk_bench.cpp)
+    target_link_libraries(miinfer-m12-gdn-chunk-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-m12-gdn-chunk-bench PRIVATE -Wall -Wextra -Wpedantic)
+endif()
 
 add_executable(miinfer-model-loader-test tests/model_loader_test.cpp)
 target_link_libraries(miinfer-model-loader-test PRIVATE miinfer_model)
@@ -289,6 +300,10 @@ if(MIINFER_ENABLE_HIP)
     add_executable(miinfer-q4k-layout-bench bench/q4k_layout_bench.cpp)
     target_link_libraries(miinfer-q4k-layout-bench PRIVATE miinfer_hip)
     target_compile_options(miinfer-q4k-layout-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-m12-dense-stage-bench bench/m12_dense_stage_bench.cpp)
+    target_link_libraries(miinfer-m12-dense-stage-bench PRIVATE miinfer_hip miinfer_model)
+    target_compile_options(miinfer-m12-dense-stage-bench PRIVATE -Wall -Wextra -Wpedantic)
     target_link_libraries(miinfer-q4-q8-gemv-bench PRIVATE miinfer_hip)
     target_compile_options(miinfer-q4-q8-gemv-bench PRIVATE -Wall -Wextra -Wpedantic)
 
@@ -381,6 +396,8 @@ include(CTest)
 if(BUILD_TESTING)
     add_test(NAME host-only COMMAND miinfer-host-test)
     set_tests_properties(host-only PROPERTIES LABELS "host-only")
+    add_test(NAME m12-gdn-oracle COMMAND miinfer-m12-gdn-oracle)
+    set_tests_properties(m12-gdn-oracle PROPERTIES LABELS "host-only")
     add_test(NAME model-loader-host COMMAND miinfer-model-loader-test)
     set_tests_properties(model-loader-host PROPERTIES LABELS "host-only")
     add_test(NAME qwen3-primitives-host COMMAND miinfer-qwen3-primitives-host-test)

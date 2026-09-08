@@ -150,15 +150,15 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788851076.162633,
-    "seen": 1788851106.7185662,
-    "ast_hash": "359f961e8e18e5e0cf12cc1070fb3fad",
+    "mtime": 1788854085.3482122,
+    "seen": 1788854100.269089,
+    "ast_hash": "543a02d363ceb70a9d8d3aa8bbb1de2f",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788851092.376566,
-    "seen": 1788851106.7185674,
-    "ast_hash": "4f206f1092a1885664c52441cd109178",
+    "mtime": 1788854339.1731646,
+    "seen": 1788854359.4614167,
+    "ast_hash": "fb622e66ccb8cdf2bfe068b484187ac0",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,15 +186,15 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788851092.3785658,
-    "seen": 1788851106.718594,
-    "ast_hash": "530186a09906dad61ad5def47d8a12f6",
+    "mtime": 1788854339.1751647,
+    "seen": 1788854359.4614437,
+    "ast_hash": "de2a27d1057d29354103ced7f45cd1c2",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
-    "mtime": 1787992718.2545557,
-    "seen": 1788003634.2733374,
-    "ast_hash": "a74ca1a3c0548b3a82d10e9afd93b296",
+    "mtime": 1788853135.919131,
+    "seen": 1788853350.8512821,
+    "ast_hash": "d000472f319cc8fcd02fa989855f044d",
     "semantic_hash": ""
   },
   "docs/hardware.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788608189.5866706,
-    "seen": 1788608244.7647417,
-    "ast_hash": "e7b97e10f4b38e56ceb8792202354749",
+    "mtime": 1788854346.2521355,
+    "seen": 1788854359.461469,
+    "ast_hash": "fc2166062b7ff4fd805d138183db0168",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -2787,6 +2787,54 @@
     "mtime": 1788851066.3756733,
     "seen": 1788851106.7189772,
     "ast_hash": "8e9b5a34622d1bb12eda5a95b3c31dba",
+    "semantic_hash": ""
+  },
+  "bench/m12_dense_stage_bench.cpp": {
+    "mtime": 1788852944.9539194,
+    "seen": 1788852957.3866177,
+    "ast_hash": "1a7c9a24a83b4c6993b94894cdd76721",
+    "semantic_hash": ""
+  },
+  "include/miinfer/m12_dense_stage.hpp": {
+    "mtime": 1788852660.602093,
+    "seen": 1788852793.90917,
+    "ast_hash": "e773f762a55365a041dd55c21beb5923",
+    "semantic_hash": ""
+  },
+  "bench/m12_gdn_oracle.cpp": {
+    "mtime": 1788853554.095405,
+    "seen": 1788853567.0603247,
+    "ast_hash": "dcb3eb360ab9790cdb5bf4342f5feeed",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0255-m12-dense-staging-feasibility.md": {
+    "mtime": 1788853106.0002546,
+    "seen": 1788853350.851688,
+    "ast_hash": "61cc4510eb2e6fadc676df9f6dc91107",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0256-m12-gdn-chunkwise-oracle.md": {
+    "mtime": 1788853617.598143,
+    "seen": 1788853630.880837,
+    "ast_hash": "e9a197132ef2613441ff6aa50d750e5d",
+    "semantic_hash": ""
+  },
+  "bench/m12_gdn_chunk_bench.cpp": {
+    "mtime": 1788854117.2640805,
+    "seen": 1788854130.0442429,
+    "ast_hash": "cf156d5d74fdc8b2b94b80e841e3dc9f",
+    "semantic_hash": ""
+  },
+  "include/miinfer/m12_gdn_chunk.hpp": {
+    "mtime": 1788853989.0406098,
+    "seen": 1788854100.2688735,
+    "ast_hash": "43f71a70080aff85146cdc20b83a00cf",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0257-m12-gdn-gpu-chunk-prototype.md": {
+    "mtime": 1788854222.5326462,
+    "seen": 1788854256.227672,
+    "ast_hash": "c55f426be3e663ebc04710763b89b79f",
     "semantic_hash": ""
   }
 }

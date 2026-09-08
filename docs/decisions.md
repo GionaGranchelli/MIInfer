@@ -774,6 +774,35 @@ That result should be documented rather than treated as failure.
 
 ---
 
+# D031 — Freeze M11-B and Isolate Matrix Prefill from Decode
+
+**Status:** Accepted
+
+## Decision
+
+Freeze M11-B at commit `556a82a` and evaluate matrix-oriented prefill as a
+separate M12 backend. Dense staging may be promoted only after a chunkwise
+recurrent schedule exposes its B128+ advantage. The existing decode executor
+and packed-Q4 representation remain unchanged.
+
+## Reason
+
+EXP-0244 and the subsequent EXP-0245–0254 records close the current-family
+search. EXP-0255 shows that whole-matrix Q4_K→FP16 staging plus GEMM is
+promising at B128–B512 but is only 1.364× at the current B64 causal chunk.
+This separates the matrix projection question from the recurrent scheduling
+question and prevents another mixed production experiment from obscuring the
+bottleneck.
+
+## Consequences
+
+* M11-B remains the reproducible single-MI50 packed-Q4 baseline.
+* M12 must first establish a chunkwise Gated DeltaNet state/output oracle.
+* No persistent full-model FP16 expansion is allowed.
+* Decode performance and correctness are protected from prefill experiments.
+
+---
+
 # Decision Change Process
 
 A major accepted decision may be changed when evidence justifies it.

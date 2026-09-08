@@ -15,8 +15,9 @@ For long-term direction, see:
 
 # Current Phase
 
-**M11-B — production layer-major prefill**
+**M12 — matrix prefill architecture feasibility**
 
+M11-B is frozen at the qualified `46.22 tok/s` P513 packed-Q4 baseline.
 Native Qwen3.8-27B generation is operational and allocation-free. The
 opt-in layer-major prefill path now batches the full-attention O/FFN tail and
 uses a shape-specific native Q5_K B=4 `ssm_out` mapping: P513 reaches
@@ -26,6 +27,20 @@ rejects row-LDS and generic B=8 accumulator extensions after production-shaped
 testing; EXP-0212's exact B=8 accumulator GEMV reached only 0.69× the existing
 B=4 pair. EXP-0213 rejected a dequantize-then-hipBLAS FP16 GEMM: the measured
 Q4_K expansion cost was 639.4 ms versus 3.66 ms for the GEMM at B=128.
+EXP-0255 revisited that question with reusable whole-matrix GPU staging:
+repack was `1.098 ms`, and repack-plus-GEMM measured 1.364x at B64, 2.724x at
+B128, 4.001x at B256, and 5.806x at B512 against the exact current FFN-Down
+B4 path. The B64 result fails the approximately 2x drop-in gate, so the
+primitive remains lab-only until a chunkwise recurrent schedule can expose
+B128+ work.
+EXP-0256 then validated the chunkwise Gated DeltaNet WY oracle for the exact
+16-key-head/32-value-head/state-128 geometry at chunk 64: max output error was
+`1.4e-8` and final-state error was `1.5e-7` against the token recurrence.
+EXP-0257 passes the subsequent gfx906 state/output comparison with the same
+1.5e-7 state error and reaches 1.112x over the existing 128-launch token core;
+production integration is still deferred.
+The GPU candidate remains a lab prototype pending profiling and a materially
+better batch schedule.
 EXP-0214's debug result was superseded by a release re-evaluation: the exact
 native Q4_K split-K GEMM reached only 0.64× the B=4 control. EXP-0215 also
 rejected expanding the logical chunk to 128 around B=4 microtiles: P513 was

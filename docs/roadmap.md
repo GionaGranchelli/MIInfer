@@ -10,14 +10,24 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M6-B58 — Q6_K×Q8_K QKV LDS-input rejection**
+**Current phase: M12 — matrix prefill architecture feasibility**
 
 Immediate objective:
 
-> Retain the B41 Q4_K×Q8_1 and transposed no-decay-store production paths
-> after rejecting the one-Wave64 and Q8_K FFN alternatives; select the next
-> retain the production-selected DeltaNet LDS input reuse and audit the next
-> higher-level FFN Down opportunity from the refreshed profile.
+> Keep M11-B frozen at the qualified 46.22 P513 packed-Q4 baseline. Validate
+> one chunkwise Gated DeltaNet oracle and determine whether the EXP-0255
+> B128+ dense-staging primitive can be exposed without changing decode.
+
+M11-B's current-family search is closed by EXP-0244 through EXP-0254.
+EXP-0255 is the first M12 feasibility result: whole-matrix Q4_K→FP16 staging
+plus hipBLAS GEMM is 1.364x at B64 and 2.724x–5.806x at B128–B512. It is
+retained as a lab primitive, not yet a production backend. EXP-0256 validates
+the chunkwise Gated DeltaNet WY oracle at chunk 64 with `1.4e-8` output error
+and `1.5e-7` final-state error. EXP-0257 passes the gfx906 correctness gate
+but reaches only 1.112x over the existing token core, so it is not yet a
+production prefill backend. Profile or simplify that prototype before any
+dense projection integration; stop the branch if it cannot expose a material
+B128+ schedule.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
