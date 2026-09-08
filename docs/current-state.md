@@ -112,7 +112,9 @@ native 64-row × 64-token MMQ at `0.527x`; and EXP-0250 rejected expanded
 decoded-metadata grouping at `0.098x`. All temporary kernels and schedule
 changes were removed. The local grouped-projection search is exhausted for
 this pass; the 100 tok/s gate still requires a genuinely new causal
-grouped-dataflow design.
+grouped-dataflow design. EXP-0252 retested the external-style repacked MMQ64
+shape with exact activation-sum correctness: it reached only `0.978x` at B64
+and was much slower at B4/B16, so it was removed as well.
 
 EXP-0168 completed that profile at position 63: total GPU event
 `71.9133 ms/token`, layer sum `68.6269 ms`, final LM head `2.50016 ms`, and

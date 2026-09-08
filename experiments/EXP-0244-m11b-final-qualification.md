@@ -107,3 +107,9 @@ discussion also reports that larger warp counts can regress Q4_K even when
 they help Q8, so it does not supply a defensible untested candidate for this
 path. The next implementation would need a new causal grouped-dataflow design,
 not another tile or warp-count sweep.
+
+EXP-0252 retested that three-plane repack/MMQ family against the exact current
+FFN-down shape with strict numerical validation. Exact int8 activation sums
+were required for correctness; the resulting candidate measured `0.978x` at
+B64 and was substantially slower at B4/B16. It was removed, so the required
+next implementation remains an end-to-end causal grouped-dataflow schedule.

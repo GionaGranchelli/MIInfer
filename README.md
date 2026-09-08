@@ -76,7 +76,9 @@ EXP-0247 rejects a two-thread-per-output-cell 64-token Q4_K decomposition at
 EXP-0249 rejects native 64-row MMQ staging at 0.527x; and EXP-0250 rejects
 expanded decoded-metadata grouping at 0.098x. All temporary candidates were
 removed. The 100 tok/s gate still requires a genuinely new causal
-grouped-dataflow design.
+grouped-dataflow design. EXP-0252 retested the external-style repacked MMQ64
+shape with exact activation-sum correctness: it was 0.978x at B64 and much
+slower at B4/B16, so it was also removed.
 
 The project currently has:
 
