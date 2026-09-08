@@ -38,6 +38,19 @@ void signal_handler(int sig) {
     }
 }
 
+std::string json_escape(std::string_view value) {
+    std::string escaped;
+    for (const char c : value) {
+        if (c == '"') escaped += "\\\"";
+        else if (c == '\\') escaped += "\\\\";
+        else if (c == '\n') escaped += "\\n";
+        else if (c == '\r') escaped += "\\r";
+        else if (c == '\t') escaped += "\\t";
+        else escaped += c;
+    }
+    return escaped;
+}
+
 struct RuntimeGenerateOptions {
     std::size_t max_new_tokens = 256;
     bool stream = true;
@@ -1028,6 +1041,7 @@ int cmd_serve(int argc, char** argv) {
         return 1;
     }
     const std::string model_path = argv[2];
+    const std::string model_id = std::filesystem::path(model_path).stem().string();
     int port = 8080;
     std::string host = "0.0.0.0";
 
@@ -1071,6 +1085,8 @@ int cmd_serve(int argc, char** argv) {
 
     std::cerr << "MIInfer OpenAI-compatible API listening at http://" << host << ":" << port << "\n";
     std::cerr << "Endpoints:\n";
+    std::cerr << "  GET  /healthz\n";
+    std::cerr << "  GET  /readyz\n";
     std::cerr << "  GET  /v1/models\n";
     std::cerr << "  POST /v1/chat/completions\n";
 
@@ -1099,8 +1115,14 @@ int cmd_serve(int argc, char** argv) {
         std::string method, path;
         req_stream >> method >> path;
 
-        if (method == "GET" && path == "/v1/models") {
-            std::string body = R"({"object":"list","data":[{"id":"qwen3.5-27b","object":"model","owned_by":"miinfer"}]})";
+        if (method == "GET" && (path == "/healthz" || path == "/readyz")) {
+            std::string body = R"({"status":"ok","ready":true})";
+            std::string response = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: "
+                                 + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
+            (void)write(client_fd, response.data(), response.size());
+        } else if (method == "GET" && path == "/v1/models") {
+            std::string body = "{\"object\":\"list\",\"data\":[{\"id\":\""
+                             + json_escape(model_id) + "\",\"object\":\"model\",\"owned_by\":\"miinfer\"}]}";
             std::string response = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: "
                                  + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
             (void)write(client_fd, response.data(), response.size());

@@ -64,8 +64,9 @@ greedy token from baseline EOS 248046 to 271. M12 remains opt-in until a
 numerically qualified dense replacement exists.
 
 M15 now provides stable `miinfer --version`, `miinfer config`, and
-`miinfer models [directory]` contracts. A more robust serving lifecycle is next;
-keep the implementation narrow to the supported MI50/Qwen3.8 path.
+`miinfer models [directory]` contracts. Serving now includes health/readiness
+endpoints and artifact-derived model identity; keep the implementation narrow
+to the supported MI50/Qwen3.8 path.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See

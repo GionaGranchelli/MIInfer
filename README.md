@@ -118,8 +118,8 @@ differs from baseline. The default runtime remains unchanged.
 
 M15 provides stable `miinfer --version`, `miinfer config`, and
 `miinfer models [directory]` contracts for installers, runtime configuration,
-and model discovery. Expanded serving lifecycle remains open product-surface
-work.
+and model discovery. The serving API now exposes health/readiness endpoints
+and reports the loaded model identity.
 
 The project currently has:
 
