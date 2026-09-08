@@ -1109,7 +1109,8 @@ __global__ void qwen35_deltanet_fused_recurrent_core_batched4_kernel(
     std::uint32_t key_heads,
     std::uint32_t value_heads,
     std::uint32_t state_size,
-    float epsilon) {
+    float epsilon,
+    miinfer::Q8_1Block* __restrict__ gated_output_q8) {
     constexpr std::uint32_t batch = 4;
     const std::uint32_t head = blockIdx.x;
     const std::uint32_t row = threadIdx.x;
@@ -1166,6 +1167,36 @@ __global__ void qwen35_deltanet_fused_recurrent_core_batched4_kernel(
         const float gate_value = gate[output_index];
         gated_output[output_index] =
             (gate_value / (1.0F + expf(-gate_value))) * head_scaled;
+        if (gated_output_q8 != nullptr) {
+            const int lane = static_cast<int>(row % 64);
+            const int wave_in_block = static_cast<int>(row / 64);
+            const int block_in_wave = lane / 32;
+            const int in_block = lane % 32;
+            const int head_block_idx = wave_in_block * 2 + block_in_wave;
+            const int token_blocks = static_cast<int>(value_heads * (state_size / 32));
+            const int global_block = static_cast<int>(token) * token_blocks
+                + static_cast<int>(head) * (state_size / 32) + head_block_idx;
+            float amax = fabsf(gated_output[output_index]);
+            #pragma unroll
+            for (int offset = 16; offset > 0; offset /= 2) {
+                amax = fmaxf(amax, __shfl_xor(amax, offset, 64));
+            }
+            const float scale = amax / 127.0f;
+            const float inv_scale = scale != 0.0F ? 1.0F / scale : 0.0F;
+            const int q_int = max(-127, min(127,
+                static_cast<int>(roundf(gated_output[output_index] * inv_scale))));
+            int sum = q_int;
+            #pragma unroll
+            for (int offset = 16; offset > 0; offset /= 2) {
+                sum += __shfl_xor(sum, offset, 64);
+            }
+            if (in_block == 0) {
+                gated_output_q8[global_block].d = __float2half_rn(scale);
+                gated_output_q8[global_block].s =
+                    __float2half_rn(static_cast<float>(sum) * scale);
+            }
+            gated_output_q8[global_block].qs[in_block] = static_cast<std::int8_t>(q_int);
+        }
         __syncthreads();
     }
 
@@ -3270,7 +3301,8 @@ void launch_qwen35_deltanet_fused_recurrent_core_batched4(
     std::uint32_t value_heads,
     std::uint32_t state_size,
     float epsilon,
-    hipStream_t stream) {
+    hipStream_t stream,
+    Q8_1Block* gated_output_q8) {
     if (query == nullptr || key == nullptr || value == nullptr || beta == nullptr
         || decay == nullptr || ssm_norm == nullptr || gate == nullptr || state == nullptr
         || gated_output == nullptr || key_heads == 0 || value_heads == 0
@@ -3282,7 +3314,8 @@ void launch_qwen35_deltanet_fused_recurrent_core_batched4(
     hipLaunchKernelGGL(qwen35_deltanet_fused_recurrent_core_batched4_kernel,
                        dim3(value_heads), dim3(state_size), shared_bytes, stream,
                        query, key, value, beta, decay, ssm_norm, gate,
-                       state, gated_output, key_heads, value_heads, state_size, epsilon);
+                       state, gated_output, key_heads, value_heads, state_size, epsilon,
+                       gated_output_q8);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

@@ -734,6 +734,7 @@ struct RecurrentLayer {
     bool fused_interlayer_norm = true;
     bool prefill_batch_enabled = false;
     bool prefill_recurrent_batch = false;
+    bool prefill_recurrent_q8 = false;
     bool prefill_core_batch_active = false;
     Buffer prefill_normalized, prefill_qkv, prefill_gate, prefill_q8_1;
     Buffer prefill_gated, prefill_residual, prefill_post_normalized;
@@ -851,6 +852,9 @@ struct RecurrentLayer {
         const char* prefill_recurrent_env = std::getenv("MIINFER_PREFILL_RECURRENT_BATCH");
         prefill_recurrent_batch = prefill_batch_enabled
             && (prefill_recurrent_env == nullptr || std::strcmp(prefill_recurrent_env, "0") != 0);
+        const char* prefill_recurrent_q8_env = std::getenv("MIINFER_PREFILL_RECURRENT_Q8");
+        prefill_recurrent_q8 = prefill_recurrent_batch
+            && (prefill_recurrent_q8_env == nullptr || std::strcmp(prefill_recurrent_q8_env, "0") != 0);
         require_type(qkv_weight, {miinfer::GgufTensorType::q4_k,
                                    miinfer::GgufTensorType::q6_k});
         require_type(gate_weight, {miinfer::GgufTensorType::q4_k});
@@ -1241,7 +1245,11 @@ struct RecurrentLayer {
         auto* residual_batch = static_cast<float*>(prefill_residual->get());
         auto* normalized_batch = static_cast<float*>(prefill_post_normalized->get());
         auto* q8_batch = static_cast<miinfer::Q8_1Block*>(prefill_q8_1->get());
+        const char* ssm_batch_env = std::getenv("MIINFER_PREFILL_SSM_BATCH");
+        const bool batch_ssm_out = d_ssm_out_native
+            && (ssm_batch_env == nullptr || std::strcmp(ssm_batch_env, "0") != 0);
         prefill_core_batch_active = recurrent_prefill_core_batch_supported();
+        const bool core_q8_ready = prefill_core_batch_active && prefill_recurrent_q8 && batch_ssm_out;
         if (prefill_core_batch_active) {
             miinfer::launch_qwen35_deltanet_fused_recurrent_core_batched4(
                 static_cast<const float*>(prefill_core_query->get()),
@@ -1253,20 +1261,19 @@ struct RecurrentLayer {
                 static_cast<const float*>(prefill_core_gate->get()),
                 static_cast<float*>(state->get()), gated_batch,
                 kKHeads, kVHeads, kState, model.config().rms_epsilon,
-                hipStreamPerThread);
+                hipStreamPerThread, core_q8_ready ? q8_batch : nullptr);
         }
-        const char* ssm_batch_env = std::getenv("MIINFER_PREFILL_SSM_BATCH");
-        const bool batch_ssm_out = d_ssm_out_native
-            && (ssm_batch_env == nullptr || std::strcmp(ssm_batch_env, "0") != 0);
 
         // The generic Q5 batch decoder regressed; this path uses the
         // shape-specific word-reuse kernel, with an opt-out for A/B control.
         if (batch_ssm_out) {
-            for (std::size_t i = 0; i < count; ++i) {
-                miinfer::launch_q8_1_quantize_f32(
-                    gated_batch + i * kInner,
-                    q8_batch + i * (kInner / miinfer::kQ8_1BlockSize), kInner,
-                    hipStreamPerThread);
+            if (!core_q8_ready) {
+                for (std::size_t i = 0; i < count; ++i) {
+                    miinfer::launch_q8_1_quantize_f32(
+                        gated_batch + i * kInner,
+                        q8_batch + i * (kInner / miinfer::kQ8_1BlockSize), kInner,
+                        hipStreamPerThread);
+                }
             }
             launch_q5k_wave_gemv_batched4(
                 static_cast<const Q5KWaveTile*>(d_ssm_out_native->get()), q8_batch,

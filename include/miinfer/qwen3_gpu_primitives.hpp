@@ -294,7 +294,8 @@ void launch_qwen35_deltanet_fused_recurrent_core_batched4(
     std::uint32_t value_heads,
     std::uint32_t state_size,
     float epsilon,
-    hipStream_t stream = nullptr);
+    hipStream_t stream = nullptr,
+    Q8_1Block* gated_output_q8 = nullptr);
 
 void launch_qwen35_deltanet_prefill_stage(
     const float* query,
