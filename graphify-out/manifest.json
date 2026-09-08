@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788869380.6720064,
-    "seen": 1788869394.060804,
-    "ast_hash": "221fb0bb80f948a8a9a6086f2b098ad0",
+    "mtime": 1788875441.5971158,
+    "seen": 1788875455.8431861,
+    "ast_hash": "828e88db48358cec0d8be08e0a695457",
     "semantic_hash": ""
   },
   "README.md": {
@@ -2889,6 +2889,24 @@
     "mtime": 1788874882.781496,
     "seen": 1788874899.2928271,
     "ast_hash": "a1e0516c78fb9a7a9c73d5bb45dfa155",
+    "semantic_hash": ""
+  },
+  "_CPack_Packages/Linux/TGZ/miinfer-0.1.0-gfx906-Linux/share/doc/MIInfer/README.md": {
+    "mtime": 1788874882.0,
+    "seen": 1788875455.8431892,
+    "ast_hash": "b537ad86a2943d8c3b92afd352199bac",
+    "semantic_hash": ""
+  },
+  "_CPack_Packages/Linux/TGZ/miinfer-0.1.0-gfx906-Linux/share/doc/MIInfer/current-state.md": {
+    "mtime": 1788874882.0,
+    "seen": 1788875455.8431907,
+    "ast_hash": "560996f760976606c644177d224539bb",
+    "semantic_hash": ""
+  },
+  "_CPack_Packages/Linux/TGZ/miinfer-0.1.0-gfx906-Linux/share/doc/MIInfer/hardware.md": {
+    "mtime": 1787992633.0,
+    "seen": 1788875455.843192,
+    "ast_hash": "1ef30cd9bc361fa964c26c9a92fd999f",
     "semantic_hash": ""
   }
 }
