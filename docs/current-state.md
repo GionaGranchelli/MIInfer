@@ -92,6 +92,14 @@ The exact-shape four-token microbenchmark was byte-identical but fell from
 `372.959 us` to `475.999 us` (`0.784x`) because the 512-thread, four-row
 workgroup increased register/workgroup cost. The candidate was removed.
 
+EXP-0244 records the final M11-B qualification state. Fresh production checks
+measured P129/TG64 at `47.84` PP / `31.53` TG tok/s, P513 at `46.61` PP tok/s,
+and P2049 at `43.31` PP tok/s. The repeated qualified P513 result remains
+`46.22` tok/s. The P512 profile's dominant bucket is the recurrent deferred
+tail at `6.07 s`; the optimistic whole-path raw-int8 ceiling is only about
+`64.1` tok/s. The 100 tok/s gate is therefore unmet and remains an explicit
+future causal grouped-dataflow target, not a redefined success criterion.
+
 EXP-0168 completed that profile at position 63: total GPU event
 `71.9133 ms/token`, layer sum `68.6269 ms`, final LM head `2.50016 ms`, and
 zero allocations. FFN Down remains the largest repeated individual stage,

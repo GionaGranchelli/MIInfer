@@ -65,6 +65,10 @@ the 100 tok/s gate. EXP-0242 also rejects direct Q8 emission from recurrent
 fused normalization: P513 changed only 0.15%. EXP-0243 rejects paired
 SwiGLU/Q8 producer-consumer fusion: exact-shape timing fell from 372.959 us to
 475.999 us (0.784x), despite removing four quantizer launches.
+EXP-0244 records the final measured ceiling: current P513 qualification is
+46.22 tok/s, fresh P2049 is 43.31 tok/s, and the optimistic raw-int8 whole-path
+ceiling is about 64.1 tok/s. The 100 tok/s gate remains unmet and requires a
+new causal grouped-dataflow experiment.
 
 The project currently has:
 
