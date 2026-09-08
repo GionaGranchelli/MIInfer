@@ -1052,6 +1052,7 @@ struct HttpRequest {
     std::string method;
     std::string path;
     std::string raw;
+    std::chrono::steady_clock::time_point queued_at;
 };
 
 struct HttpReadResult {
@@ -1202,7 +1203,7 @@ HttpReadResult read_http_request(int client_fd) {
     std::string path;
     request_line >> method >> path;
     if (method.empty() || path.empty()) return {std::nullopt, 400, "Bad Request"};
-    return {HttpRequest{client_fd, std::move(method), std::move(path), std::move(data)}, 0, {}};
+    return {HttpRequest{client_fd, std::move(method), std::move(path), std::move(data), {}}, 0, {}};
 }
 
 void send_http_error(int client_fd, int status, std::string_view reason) {
@@ -1278,8 +1279,16 @@ int cmd_serve(int argc, char** argv) {
     std::atomic<std::uint64_t> generated_tokens_total = 0;
     std::atomic<std::uint64_t> queue_rejected = 0;
     std::atomic<std::size_t> queue_depth = 0;
+    std::atomic<std::size_t> active_requests = 0;
+    std::atomic<std::uint64_t> queue_wait_us = 0;
+    std::atomic<std::uint64_t> request_duration_us = 0;
+    std::atomic<std::uint64_t> ttft_us = 0;
 
     auto handle_request = [&](const HttpRequest& request) {
+        const auto started_at = std::chrono::steady_clock::now();
+        queue_wait_us += static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(started_at - request.queued_at).count());
+        active_requests.fetch_add(1);
+        struct Guard { std::atomic<std::size_t>& active; ~Guard() { active.fetch_sub(1); } } guard{active_requests};
         const int client_fd = request.client_fd;
         ++inference_requests;
         const std::size_t body_start = request.raw.find("\r\n\r\n");
@@ -1312,6 +1321,8 @@ int cmd_serve(int argc, char** argv) {
                 const auto stats = engine.generate(prompt_tokens, opt);
                 prompt_tokens_total += stats.prompt_tokens;
                 generated_tokens_total += stats.generated_tokens;
+                ttft_us += static_cast<std::uint64_t>(stats.first_token_ms * 1000.0);
+                request_duration_us += static_cast<std::uint64_t>(stats.total_ms * 1000.0);
             } catch (...) {
                 ++http_errors;
                 if (client_connected) {
@@ -1329,6 +1340,8 @@ int cmd_serve(int argc, char** argv) {
             const auto stats = engine.generate(prompt_tokens, opt);
             prompt_tokens_total += stats.prompt_tokens;
             generated_tokens_total += stats.generated_tokens;
+            ttft_us += static_cast<std::uint64_t>(stats.first_token_ms * 1000.0);
+            request_duration_us += static_cast<std::uint64_t>(stats.total_ms * 1000.0);
             const std::string body = "{\"id\":\"chatcmpl-1\",\"object\":\"chat.completion\",\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\""
                 + json_escape(stats.text) + "\"}}],\"usage\":{\"prompt_tokens\":"
                 + std::to_string(stats.prompt_tokens) + ",\"completion_tokens\":"
@@ -1386,6 +1399,7 @@ int cmd_serve(int argc, char** argv) {
         }
         ++http_requests;
         HttpRequest request = std::move(*result.request);
+        request.queued_at = std::chrono::steady_clock::now();
 
         if (request.method == "GET" && (request.path == "/healthz" || request.path == "/readyz")) {
             (void)send_http_response(client_fd, 200, "OK", "application/json", R"({"status":"ok","ready":true})");
@@ -1405,6 +1419,14 @@ int cmd_serve(int argc, char** argv) {
                 "miinfer_queue_capacity " + std::to_string(kQueueCapacity) + "\n"
                 "# TYPE miinfer_queue_rejected_total counter\n"
                 "miinfer_queue_rejected_total " + std::to_string(queue_rejected.load()) + "\n"
+                "# TYPE miinfer_active_requests gauge\n"
+                "miinfer_active_requests " + std::to_string(active_requests.load()) + "\n"
+                "# TYPE miinfer_queue_wait_seconds_sum counter\n"
+                "miinfer_queue_wait_seconds_sum " + std::to_string(queue_wait_us.load() / 1000000.0) + "\n"
+                "# TYPE miinfer_request_duration_seconds_sum counter\n"
+                "miinfer_request_duration_seconds_sum " + std::to_string(request_duration_us.load() / 1000000.0) + "\n"
+                "# TYPE miinfer_time_to_first_token_seconds_sum counter\n"
+                "miinfer_time_to_first_token_seconds_sum " + std::to_string(ttft_us.load() / 1000000.0) + "\n"
                 "# TYPE miinfer_prompt_tokens_total counter\n"
                 "miinfer_prompt_tokens_total " + std::to_string(prompt_tokens_total.load()) + "\n"
                 "# TYPE miinfer_generated_tokens_total counter\n"

@@ -1,0 +1,5 @@
+{
+  "artifact": "/home/fedora-workstation/Development/mi50/results/m16c/20260908-222724-d486f3e",
+  "levels": [],
+  "failure": "RuntimeError('server exited before readiness: -6')"
+}

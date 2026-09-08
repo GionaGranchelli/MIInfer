@@ -1,0 +1,28 @@
+{
+  "git_sha": "d486f3e",
+  "dirty": true,
+  "binary": "/home/fedora-workstation/Development/mi50/build/mi50-release/miinfer",
+  "model": "/home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf",
+  "server_argv": [
+    "/home/fedora-workstation/Development/mi50/build/mi50-release/miinfer",
+    "serve",
+    "/home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "43449"
+  ],
+  "benchmark_argv": [
+    "scripts/bench-serve-concurrency.py",
+    "build/mi50-release/miinfer",
+    "/home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf",
+    "--trials",
+    "3"
+  ],
+  "port": 43449,
+  "hostname": "fedora",
+  "started_utc": "2026-09-08T20:27:24Z",
+  "version": "MIInfer version: 0.2.0\nGit commit: cc6c95db2e31\nGit dirty: true\nBuild type: Release\nCompiler: GNU 16.2.1\nHIP compiler: Clang 20.0.0\nHIP availability: true\nTarget architecture: gfx906\n",
+  "rocm_smi": "\n\n============================================= ROCm System Management Interface =============================================\n======================================================= Concise Info =======================================================\nDevice  Node  IDs              Temp    Power     Partitions          SCLK     MCLK     Fan    Perf    PwrCap  VRAM%  GPU%  \n\u001b[3m              (DID,     GUID)  (Edge)  (Socket)  (Mem, Compute, ID)                                                        \u001b[0m\n============================================================================================================================\n0       2     0x66a1,   4670   70.0\u00b0C  217.0W    N/A, N/A, 0         1485Mhz  1000Mhz  30.2%  manual  225.0W  69%    100%  \n============================================================================================================================\n=================================================== End of ROCm SMI Log ====================================================\n",
+  "server_pid": 3525669
+}

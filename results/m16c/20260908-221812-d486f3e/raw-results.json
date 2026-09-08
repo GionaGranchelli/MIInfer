@@ -1,0 +1,982 @@
+{
+  "artifact": "/home/fedora-workstation/Development/mi50/results/m16c/20260908-221812-d486f3e",
+  "levels": [
+    {
+      "clients": 1,
+      "trials": [
+        {
+          "trial": 1,
+          "wall_s": 1.8879830410005525,
+          "requests": [
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 0.000768571044318378,
+              "latency_s": 1.8856886399444193,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            }
+          ],
+          "control": {}
+        },
+        {
+          "trial": 2,
+          "wall_s": 1.88482284208294,
+          "requests": [
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 0.0007229599868878722,
+              "latency_s": 1.8842806669417769,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            }
+          ],
+          "control": {}
+        },
+        {
+          "trial": 3,
+          "wall_s": 1.8859558509429917,
+          "requests": [
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 0.0006196090253069997,
+              "latency_s": 1.8854682119563222,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            }
+          ],
+          "control": {}
+        }
+      ]
+    },
+    {
+      "clients": 2,
+      "trials": [
+        {
+          "trial": 1,
+          "wall_s": 3.7780577469384298,
+          "requests": [
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 0.000846249982714653,
+              "latency_s": 1.8845234779873863,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 1.8843696230323985,
+              "latency_s": 3.7772481760475785,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            }
+          ],
+          "control": {}
+        },
+        {
+          "trial": 2,
+          "wall_s": 3.780179696972482,
+          "requests": [
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 0.0007640200201421976,
+              "latency_s": 1.8854661280056462,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 1.8854115599533543,
+              "latency_s": 3.7793798719067127,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            }
+          ],
+          "control": {}
+        },
+        {
+          "trial": 3,
+          "wall_s": 3.784548931987956,
+          "requests": [
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 1.8926812880672514,
+              "latency_s": 3.7839022639673203,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 0.000674859038554132,
+              "latency_s": 1.8921164349885657,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            }
+          ],
+          "control": {}
+        }
+      ]
+    },
+    {
+      "clients": 4,
+      "trials": [
+        {
+          "trial": 1,
+          "wall_s": 7.574988552951254,
+          "requests": [
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 1.8939652999397367,
+              "latency_s": 3.786221285001375,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 0.0006148270331323147,
+              "latency_s": 1.893408540985547,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 3.7858460739953443,
+              "latency_s": 5.680078480974771,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 5.680137307033874,
+              "latency_s": 7.573552443063818,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            }
+          ],
+          "control": {}
+        },
+        {
+          "trial": 2,
+          "wall_s": 7.584069108008407,
+          "requests": [
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 0.0008146360050886869,
+              "latency_s": 1.8961217809701338,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 1.8962699950207025,
+              "latency_s": 3.7901376880472526,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 3.7900303279748186,
+              "latency_s": 5.690468132030219,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 5.690494454000145,
+              "latency_s": 7.582739860052243,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            }
+          ],
+          "control": {}
+        },
+        {
+          "trial": 3,
+          "wall_s": 7.586927665979601,
+          "requests": [
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 0.0007444409420713782,
+              "latency_s": 1.9012863700045273,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 1.9014541490469128,
+              "latency_s": 3.792204887024127,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 3.7920441390015185,
+              "latency_s": 5.692676083068363,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 5.692811035900377,
+              "latency_s": 7.585669351974502,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            }
+          ],
+          "control": {}
+        }
+      ]
+    },
+    {
+      "clients": 8,
+      "trials": [
+        {
+          "trial": 1,
+          "wall_s": 15.18722682702355,
+          "requests": [
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 1.902617037994787,
+              "latency_s": 3.795090334955603,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 0.0005813929019495845,
+              "latency_s": 1.9020230548921973,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 3.794834559899755,
+              "latency_s": 5.687761252978817,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 5.687675434048288,
+              "latency_s": 7.589431444066577,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 7.589523870963603,
+              "latency_s": 9.48875791404862,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 9.488780514919199,
+              "latency_s": 11.38529003795702,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 11.38523307396099,
+              "latency_s": 13.28724820795469,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 13.287486996967345,
+              "latency_s": 15.184720322024077,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            }
+          ],
+          "control": {
+            "/healthz": {
+              "status": 200,
+              "latency_s": 0.0005379529902711511
+            },
+            "/readyz": {
+              "status": 200,
+              "latency_s": 0.0003824559971690178
+            },
+            "/metrics": {
+              "status": 200,
+              "latency_s": 0.00040397699922323227
+            },
+            "/v1/models": {
+              "status": 200,
+              "latency_s": 0.00035960006061941385
+            }
+          }
+        },
+        {
+          "trial": 2,
+          "wall_s": 15.202550251968205,
+          "requests": [
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 1.9019238019827753,
+              "latency_s": 3.7989475299837068,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 0.0006450699875131249,
+              "latency_s": 1.9013748309807852,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 3.7986456329235807,
+              "latency_s": 5.699757813010365,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 5.699881520005874,
+              "latency_s": 7.597522621974349,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 7.597344858921133,
+              "latency_s": 9.499339133966714,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 9.499434637022205,
+              "latency_s": 11.395665179006755,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 11.395579649950378,
+              "latency_s": 13.29832803294994,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 13.298477506963536,
+              "latency_s": 15.200141662964597,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            }
+          ],
+          "control": {
+            "/healthz": {
+              "status": 200,
+              "latency_s": 0.0005231560207903385
+            },
+            "/readyz": {
+              "status": 200,
+              "latency_s": 0.00037094601429998875
+            },
+            "/metrics": {
+              "status": 200,
+              "latency_s": 0.0003811430651694536
+            },
+            "/v1/models": {
+              "status": 200,
+              "latency_s": 0.000339534948579967
+            }
+          }
+        },
+        {
+          "trial": 3,
+          "wall_s": 15.212821122026071,
+          "requests": [
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 0.000878799008205533,
+              "latency_s": 1.900946548092179,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 1.9008382479660213,
+              "latency_s": 3.801665710983798,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 3.801824919995852,
+              "latency_s": 5.70236793498043,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 5.702068064943887,
+              "latency_s": 7.604491686914116,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 7.604599562007934,
+              "latency_s": 9.505061669042334,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 9.504920034087263,
+              "latency_s": 11.406796782044694,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 11.406932082027197,
+              "latency_s": 13.307539814035408,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 13.30736313899979,
+              "latency_s": 15.210230784956366,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            }
+          ],
+          "control": {
+            "/healthz": {
+              "status": 200,
+              "latency_s": 0.000599031918682158
+            },
+            "/readyz": {
+              "status": 200,
+              "latency_s": 0.00037246395368129015
+            },
+            "/metrics": {
+              "status": 200,
+              "latency_s": 0.0004029669798910618
+            },
+            "/v1/models": {
+              "status": 200,
+              "latency_s": 0.00034565303940325975
+            }
+          }
+        }
+      ]
+    },
+    {
+      "clients": 16,
+      "trials": [
+        {
+          "trial": 1,
+          "wall_s": 17.13237228395883,
+          "requests": [
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 1.9021952510811388,
+              "latency_s": 3.80775087303482,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 0.0007399650057777762,
+              "latency_s": 1.901883951970376,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 3.807756312075071,
+              "latency_s": 5.71105618798174,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 5.711209814064205,
+              "latency_s": 7.612874641083181,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 7.612709389999509,
+              "latency_s": 9.519417992909439,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 9.519600225030445,
+              "latency_s": 11.422750178957358,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 11.422889183042571,
+              "latency_s": 13.323814573930576,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 13.32374012703076,
+              "latency_s": 15.230201462982222,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 15.230229786015116,
+              "latency_s": 17.12929821491707,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 503 Server Busy",
+              "ttft_s": 0.0011897480580955744,
+              "latency_s": 0.0018465290777385235,
+              "bytes": 122,
+              "sse_chunks": 0,
+              "hash": "5e25db69d6d5cc5be9038360eef8a09f5d28f17c98f5524da6f8f4994b58f13a"
+            },
+            {
+              "status": "HTTP/1.1 503 Server Busy",
+              "ttft_s": 0.0008412429597228765,
+              "latency_s": 0.0011244929628446698,
+              "bytes": 122,
+              "sse_chunks": 0,
+              "hash": "5e25db69d6d5cc5be9038360eef8a09f5d28f17c98f5524da6f8f4994b58f13a"
+            },
+            {
+              "status": "HTTP/1.1 503 Server Busy",
+              "ttft_s": 0.000945241074077785,
+              "latency_s": 0.0013070000568404794,
+              "bytes": 122,
+              "sse_chunks": 0,
+              "hash": "5e25db69d6d5cc5be9038360eef8a09f5d28f17c98f5524da6f8f4994b58f13a"
+            },
+            {
+              "status": "HTTP/1.1 503 Server Busy",
+              "ttft_s": 0.0010472609428688884,
+              "latency_s": 0.0012804779689759016,
+              "bytes": 122,
+              "sse_chunks": 0,
+              "hash": "5e25db69d6d5cc5be9038360eef8a09f5d28f17c98f5524da6f8f4994b58f13a"
+            },
+            {
+              "status": "HTTP/1.1 503 Server Busy",
+              "ttft_s": 0.0010123730171471834,
+              "latency_s": 0.0013546550180763006,
+              "bytes": 122,
+              "sse_chunks": 0,
+              "hash": "5e25db69d6d5cc5be9038360eef8a09f5d28f17c98f5524da6f8f4994b58f13a"
+            },
+            {
+              "status": "HTTP/1.1 503 Server Busy",
+              "ttft_s": 0.0007314389804378152,
+              "latency_s": 0.0008444930426776409,
+              "bytes": 122,
+              "sse_chunks": 0,
+              "hash": "5e25db69d6d5cc5be9038360eef8a09f5d28f17c98f5524da6f8f4994b58f13a"
+            },
+            {
+              "status": "HTTP/1.1 503 Server Busy",
+              "ttft_s": 0.0007219199324026704,
+              "latency_s": 0.0008636369602754712,
+              "bytes": 122,
+              "sse_chunks": 0,
+              "hash": "5e25db69d6d5cc5be9038360eef8a09f5d28f17c98f5524da6f8f4994b58f13a"
+            }
+          ],
+          "control": {
+            "/healthz": {
+              "status": 200,
+              "latency_s": 0.00098420400172472
+            },
+            "/readyz": {
+              "status": 200,
+              "latency_s": 0.00041909096762537956
+            },
+            "/metrics": {
+              "status": 200,
+              "latency_s": 0.0003674309700727463
+            },
+            "/v1/models": {
+              "status": 200,
+              "latency_s": 0.0003595929592847824
+            }
+          }
+        },
+        {
+          "trial": 2,
+          "wall_s": 17.102662177057937,
+          "requests": [
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 0.0007372000254690647,
+              "latency_s": 1.9042194230714813,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 1.904375773970969,
+              "latency_s": 3.806320313946344,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 3.806190592935309,
+              "latency_s": 5.704612122033723,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 5.704464762005955,
+              "latency_s": 7.603224315913394,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 7.603103316971101,
+              "latency_s": 9.502514917054214,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 9.502437215996906,
+              "latency_s": 11.402257914072834,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 11.40212909609545,
+              "latency_s": 13.301237224019133,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 13.301110409083776,
+              "latency_s": 15.200827345019206,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 15.200711596990004,
+              "latency_s": 17.09990840998944,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 503 Server Busy",
+              "ttft_s": 0.0007553829345852137,
+              "latency_s": 0.0009346629958599806,
+              "bytes": 122,
+              "sse_chunks": 0,
+              "hash": "5e25db69d6d5cc5be9038360eef8a09f5d28f17c98f5524da6f8f4994b58f13a"
+            },
+            {
+              "status": "HTTP/1.1 503 Server Busy",
+              "ttft_s": 0.0005604739999398589,
+              "latency_s": 0.0006935599958524108,
+              "bytes": 122,
+              "sse_chunks": 0,
+              "hash": "5e25db69d6d5cc5be9038360eef8a09f5d28f17c98f5524da6f8f4994b58f13a"
+            },
+            {
+              "status": "HTTP/1.1 503 Server Busy",
+              "ttft_s": 0.0009335950016975403,
+              "latency_s": 0.000975749921053648,
+              "bytes": 122,
+              "sse_chunks": 0,
+              "hash": "5e25db69d6d5cc5be9038360eef8a09f5d28f17c98f5524da6f8f4994b58f13a"
+            },
+            {
+              "status": "HTTP/1.1 503 Server Busy",
+              "ttft_s": 0.0008921909611672163,
+              "latency_s": 0.000941677950322628,
+              "bytes": 122,
+              "sse_chunks": 0,
+              "hash": "5e25db69d6d5cc5be9038360eef8a09f5d28f17c98f5524da6f8f4994b58f13a"
+            },
+            {
+              "status": "HTTP/1.1 503 Server Busy",
+              "ttft_s": 0.0006703740218654275,
+              "latency_s": 0.0007569130975753069,
+              "bytes": 122,
+              "sse_chunks": 0,
+              "hash": "5e25db69d6d5cc5be9038360eef8a09f5d28f17c98f5524da6f8f4994b58f13a"
+            },
+            {
+              "status": "HTTP/1.1 503 Server Busy",
+              "ttft_s": 0.00034154998138546944,
+              "latency_s": 0.0004570189630612731,
+              "bytes": 122,
+              "sse_chunks": 0,
+              "hash": "5e25db69d6d5cc5be9038360eef8a09f5d28f17c98f5524da6f8f4994b58f13a"
+            },
+            {
+              "status": "HTTP/1.1 503 Server Busy",
+              "ttft_s": 0.00032104598358273506,
+              "latency_s": 0.0004092509625479579,
+              "bytes": 122,
+              "sse_chunks": 0,
+              "hash": "5e25db69d6d5cc5be9038360eef8a09f5d28f17c98f5524da6f8f4994b58f13a"
+            }
+          ],
+          "control": {
+            "/healthz": {
+              "status": 200,
+              "latency_s": 0.0009933050023391843
+            },
+            "/readyz": {
+              "status": 200,
+              "latency_s": 0.0003508480731397867
+            },
+            "/metrics": {
+              "status": 200,
+              "latency_s": 0.00036143604665994644
+            },
+            "/v1/models": {
+              "status": 200,
+              "latency_s": 0.0003318829694762826
+            }
+          }
+        },
+        {
+          "trial": 3,
+          "wall_s": 17.11605644004885,
+          "requests": [
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 1.9005144629627466,
+              "latency_s": 3.8000106079271063,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 0.0006543389754369855,
+              "latency_s": 1.9002721009310335,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 3.7997556559275836,
+              "latency_s": 5.699040913023055,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 5.698764047003351,
+              "latency_s": 7.598778018029407,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 7.5985483640106395,
+              "latency_s": 9.498278283979744,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 9.498191231978126,
+              "latency_s": 11.398565185023472,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 11.398449250962585,
+              "latency_s": 13.304696551989764,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 13.30484322400298,
+              "latency_s": 15.21032004407607,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 200 OK",
+              "ttft_s": 15.210460955975577,
+              "latency_s": 17.112870094017126,
+              "bytes": 4465,
+              "sse_chunks": 43,
+              "hash": "81a8cd2b26be10163c6e5af0aa8ae8300d98ccc7f34cc778b2f9bdc219a5e420"
+            },
+            {
+              "status": "HTTP/1.1 503 Server Busy",
+              "ttft_s": 0.000627772998996079,
+              "latency_s": 0.0007234519580379128,
+              "bytes": 122,
+              "sse_chunks": 0,
+              "hash": "5e25db69d6d5cc5be9038360eef8a09f5d28f17c98f5524da6f8f4994b58f13a"
+            },
+            {
+              "status": "HTTP/1.1 503 Server Busy",
+              "ttft_s": 0.0009375941008329391,
+              "latency_s": 0.0013010380789637566,
+              "bytes": 122,
+              "sse_chunks": 0,
+              "hash": "5e25db69d6d5cc5be9038360eef8a09f5d28f17c98f5524da6f8f4994b58f13a"
+            },
+            {
+              "status": "HTTP/1.1 503 Server Busy",
+              "ttft_s": 0.0012460809666663408,
+              "latency_s": 0.0014716570731252432,
+              "bytes": 122,
+              "sse_chunks": 0,
+              "hash": "5e25db69d6d5cc5be9038360eef8a09f5d28f17c98f5524da6f8f4994b58f13a"
+            },
+            {
+              "status": "HTTP/1.1 503 Server Busy",
+              "ttft_s": 0.00097916298545897,
+              "latency_s": 0.0011063190177083015,
+              "bytes": 122,
+              "sse_chunks": 0,
+              "hash": "5e25db69d6d5cc5be9038360eef8a09f5d28f17c98f5524da6f8f4994b58f13a"
+            },
+            {
+              "status": "HTTP/1.1 503 Server Busy",
+              "ttft_s": 0.0007138509536162019,
+              "latency_s": 0.0007851839764043689,
+              "bytes": 122,
+              "sse_chunks": 0,
+              "hash": "5e25db69d6d5cc5be9038360eef8a09f5d28f17c98f5524da6f8f4994b58f13a"
+            },
+            {
+              "status": "HTTP/1.1 503 Server Busy",
+              "ttft_s": 0.0009166949894279242,
+              "latency_s": 0.0012537399306893349,
+              "bytes": 122,
+              "sse_chunks": 0,
+              "hash": "5e25db69d6d5cc5be9038360eef8a09f5d28f17c98f5524da6f8f4994b58f13a"
+            },
+            {
+              "status": "HTTP/1.1 503 Server Busy",
+              "ttft_s": 0.0007163689006119967,
+              "latency_s": 0.0008378999773412943,
+              "bytes": 122,
+              "sse_chunks": 0,
+              "hash": "5e25db69d6d5cc5be9038360eef8a09f5d28f17c98f5524da6f8f4994b58f13a"
+            }
+          ],
+          "control": {
+            "/healthz": {
+              "status": 200,
+              "latency_s": 0.0010090790456160903
+            },
+            "/readyz": {
+              "status": 200,
+              "latency_s": 0.0003549089888110757
+            },
+            "/metrics": {
+              "status": 200,
+              "latency_s": 0.00038684799801558256
+            },
+            "/v1/models": {
+              "status": 200,
+              "latency_s": 0.0003519919700920582
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "failure": null
+}

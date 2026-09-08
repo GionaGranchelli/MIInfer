@@ -1,0 +1,5 @@
+{
+  "accepted": 0,
+  "rejected": 0,
+  "failure": "RuntimeError('server exited before readiness: -6')"
+}
