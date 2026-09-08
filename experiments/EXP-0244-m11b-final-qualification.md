@@ -79,3 +79,13 @@ qualification and must not be treated as one.
 workspace, correctness checks, decode path, and negative evidence are
 complete. The 100 tok/s target is not silently redefined; reaching it requires
 the new causal grouped-dataflow experiment above.
+
+## Subsequent re-evaluation
+
+EXP-0245 tested a native Q4_K four-row × 16-token split-4 mapping and measured
+`0.594x` against four existing B=4 launches. EXP-0246 widened the same idea
+to four rows × 64 tokens, staging each weight tile once; it was numerically
+correct but measured `0.660x` against sixteen B=4 launches. Both candidates
+were removed. These results further narrow the blocker to a genuinely
+different causal grouped-dataflow schedule rather than another native
+Q4_K remapping.
