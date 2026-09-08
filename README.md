@@ -116,9 +116,9 @@ EXP-0262 records the original GDN qualification failure; EXP-0263 fixes that
 overflow but rejects the dense FFN-down path because its P128 greedy token
 differs from baseline. The default runtime remains unchanged.
 
-M15 begins with a stable `miinfer --version` contract for installers and
-health checks. Configuration, model discovery, and expanded serving lifecycle
-remain open product-surface work.
+M15 begins with stable `miinfer --version` and `miinfer models [directory]`
+contracts for installers and model discovery. Configuration and expanded
+serving lifecycle remain open product-surface work.
 
 The project currently has:
 

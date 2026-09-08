@@ -23,8 +23,8 @@ Milestone status:
 M13:   CLOSED
 M14:   v0.1.0 release       PASS at c7b3737
 M15-A: runtime version      PASS
-M15-B: configuration        OPEN
-M15-C: model discovery      OPEN
+M15-B: model discovery      PASS
+M15-C: configuration        OPEN
 M15-D: serving lifecycle    OPEN
 ```
 

@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <cstring>
 #include <functional>
+#include <filesystem>
 #include <iomanip>
 #include <iostream>
 #include <memory>
@@ -855,6 +856,34 @@ int cmd_inspect(int argc, char** argv) {
     return 0;
 }
 
+int cmd_models(int argc, char** argv) {
+    if (argc > 3) {
+        std::cerr << "usage: miinfer models [directory]\n";
+        return 2;
+    }
+    const std::filesystem::path root = argc == 3 ? argv[2] : ".";
+    std::error_code error;
+    if (!std::filesystem::is_directory(root, error)) {
+        std::cerr << "model directory not found: " << root << '\n';
+        return 1;
+    }
+
+    std::vector<std::filesystem::path> models;
+    for (const auto& entry : std::filesystem::recursive_directory_iterator(
+             root, std::filesystem::directory_options::skip_permission_denied, error)) {
+        if (error) break;
+        if (entry.is_regular_file(error) && entry.path().extension() == ".gguf") {
+            models.push_back(entry.path());
+        }
+        error.clear();
+    }
+    std::sort(models.begin(), models.end());
+
+    std::cout << "GGUF models: " << models.size() << '\n';
+    for (const auto& model : models) std::cout << model.string() << '\n';
+    return 0;
+}
+
 // ---------------------------------------------------------------------------
 // Subcommand 2: run
 // ---------------------------------------------------------------------------
@@ -1157,6 +1186,7 @@ void print_usage() {
     std::cout << "Usage: miinfer <command> [options]\n\n";
     std::cout << "Commands:\n";
     std::cout << "  --version                              Print build and target information\n";
+    std::cout << "  models [directory]                     List GGUF model artifacts\n";
     std::cout << "  inspect <model.gguf>                     Inspect model metadata, quantization, and VRAM budget\n";
     std::cout << "  run <model.gguf> --prompt \"...\"         Generate text from a prompt with streaming output\n";
     std::cout << "  chat <model.gguf>                        Start an interactive multi-turn terminal chat REPL\n";
@@ -1174,6 +1204,8 @@ int main(int argc, char** argv) {
     const std::string_view cmd = argv[1];
     if (cmd == "inspect") {
         return cmd_inspect(argc, argv);
+    } else if (cmd == "models") {
+        return cmd_models(argc, argv);
     } else if (cmd == "run") {
         return cmd_run(argc, argv);
     } else if (cmd == "chat") {

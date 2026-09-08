@@ -15,6 +15,7 @@ miinfer <command> [options]
 
 Commands:
   --version                              Print build and target information
+  models [directory]                     List GGUF model artifacts
   inspect <model.gguf>                     Inspect model metadata, quantization, and VRAM budget
   run <model.gguf> --prompt "..."         Generate text from a prompt with streaming output
   chat <model.gguf>                        Start an interactive multi-turn terminal chat REPL
@@ -27,6 +28,10 @@ Performs comprehensive offline and hardware-aware validation of the GGUF model:
 - **Quantization Inventory**: Enumerates tensor counts and sizes across Q4_K, Q5_K, Q6_K, Q8_0, and F32.
 - **VRAM Budget Calculation**: Breaks down weights (~15.92 GiB), 1024-token KV cache (64.0 MiB), recurrent states (48.0 MiB), and activation/graph allocations (~49.2 MiB), demonstrating 16.08 GiB total utilization against the 31.98 GiB MI50 HBM2 pool (15.91 GiB / ~50% headroom).
 - **Target Compatibility**: Verifies gfx906 target, Wave64 compilation, and execution plan sanity.
+
+### 2.1a `miinfer models`
+Lists `.gguf` files recursively without loading model metadata or requiring a
+GPU. The optional directory defaults to the current working directory.
 
 ### 2.2 `miinfer run`
 Executes streaming autoregressive generation directly from the command line:

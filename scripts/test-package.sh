@@ -38,6 +38,12 @@ done
 "$package_root/bin/miinfer" --help >/dev/null
 "$package_root/bin/miinfer" --version >/dev/null
 "$package_root/bin/miinfer-device-info" --version >/dev/null
+mkdir -p "$stage/models/nested"
+: > "$stage/models/nested/sample.gguf"
+if ! "$package_root/bin/miinfer" models "$stage/models" | grep -q 'sample.gguf'; then
+    printf 'model discovery did not find the GGUF fixture\n' >&2
+    exit 1
+fi
 "$package_root/bin/miinfer-device-info" > "$stage/device-info.txt"
 
 if ! grep -q 'MIInfer contract: gfx906 compatible' "$stage/device-info.txt"; then
