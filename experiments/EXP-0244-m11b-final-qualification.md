@@ -118,3 +118,8 @@ EXP-0253 precomputed those exact sums into a bounded int16 side buffer to
 remove the candidate's inner-loop reductions. It remained numerically correct
 but fell to `0.649x` at B64 and was much slower at B4/B16, so the side-buffer
 variant was removed as well.
+
+EXP-0254 kept the exact sum in the candidate activation footprint, improving
+the grouped tile to `0.894x` at B64 while remaining slower than native B4. It
+was removed, closing the repacked-MMQ/token-reuse projection family for this
+M11-B path.

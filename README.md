@@ -80,6 +80,9 @@ grouped-dataflow design. EXP-0252 retested the external-style repacked MMQ64
 shape with exact activation-sum correctness: it was 0.978x at B64 and much
 slower at B4/B16, so it was also removed. EXP-0253 tested a bounded exact-sum
 side buffer; it fell to 0.649x at B64 and was removed as well.
+EXP-0254 kept the exact sum in the candidate activation footprint; it improved
+the grouped tile to 0.894x at B64 but remained slower and was removed. The
+repacked-MMQ/token-reuse family is now closed.
 
 The project currently has:
 

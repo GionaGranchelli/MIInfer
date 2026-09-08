@@ -116,6 +116,9 @@ grouped-dataflow design. EXP-0252 retested the external-style repacked MMQ64
 shape with exact activation-sum correctness: it reached only `0.978x` at B64
 and was much slower at B4/B16, so it was removed as well. EXP-0253 tested a
 bounded exact-sum side buffer and fell to `0.649x` at B64; it was removed too.
+EXP-0254 kept the exact sum in the candidate activation footprint and reached
+`0.894x` at B64, still slower than native B4, so the repacked-MMQ/token-reuse
+family is now closed.
 
 EXP-0168 completed that profile at position 63: total GPU event
 `71.9133 ms/token`, layer sum `68.6269 ms`, final LM head `2.50016 ms`, and
