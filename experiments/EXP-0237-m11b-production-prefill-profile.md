@@ -32,6 +32,17 @@ qualified throughput result.
 
 ## Results
 
+The current non-profiled production baseline at this HEAD was:
+
+| Workload | Prefill | PP tok/s |
+| --- | ---: | ---: |
+| P128 | 2681.24 ms | 47.74 |
+| P512 | 11163.67 ms | 45.86 |
+
+A P128/TG64 run measured `32.47 tok/s` average decode, preserving the
+M11-A short-context decode range. These are single qualification checks; the
+repeated P513 result in EXP-0235 remains the performance claim.
+
 Profiled GPU-region totals, in milliseconds:
 
 | Prompt | Family | Prepare | Ordered | Tail | Layer total |
