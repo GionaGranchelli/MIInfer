@@ -65,6 +65,13 @@ EXP-0237 profiles the production path at P512: recurrent layers consume
 The next design therefore needs more projection token parallelism, not a
 recurrent scan as the first change.
 
+EXP-0239 tested the smallest direct native-layout token-tiled projection
+following that profile. A 16-token Q4_K tile matched the existing B=4 path
+within `2.5e-6`, but measured `2619.89 us` versus `1201.44 us` for the exact
+`[17408, 5120]` FFN-down shape (`0.459x`). The kernel was removed and is not
+production code; another projection dataflow is required before the 100 tok/s
+gate can be reconsidered.
+
 EXP-0168 completed that profile at position 63: total GPU event
 `71.9133 ms/token`, layer sum `68.6269 ms`, final LM head `2.50016 ms`, and
 zero allocations. FFN Down remains the largest repeated individual stage,
