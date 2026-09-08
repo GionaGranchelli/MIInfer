@@ -2578,5 +2578,11 @@
     "seen": 1788829470.6019716,
     "ast_hash": "d76e97068303031d9bab64e3f63fde1f",
     "semantic_hash": ""
+  },
+  "experiments/EXP-0220-m11b-q4k-b4-compact-arithmetic-rejection.md": {
+    "mtime": 1788829865.2160795,
+    "seen": 1788829927.1116104,
+    "ast_hash": "d8ac73cc3023d6b67852b6f620a6a851",
+    "semantic_hash": ""
   }
 }
