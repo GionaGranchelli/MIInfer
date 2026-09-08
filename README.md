@@ -14,7 +14,7 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M13 closed — M14 release/packaging next**
+**Current phase: M14 release qualification**
 
 M11-B is frozen at the qualified `46.22 tok/s` P513 packed-Q4 baseline. The
 opt-in layer-major prefill path reaches that rate with deferred
@@ -109,6 +109,11 @@ without runtime integration; M14 release and packaging work is next.
 M14 now provides a focused MI50 release package. It contains the `miinfer`
 runtime, the `miinfer-device-info` gfx906 contract probe, and operational
 documentation; benchmark and historical audit binaries remain build-tree only.
+The package gate is `scripts/test-package.sh`; M12 remains opt-in until its
+boundary, continuation, replay, and long-context qualification campaign passes.
+EXP-0262 records the original GDN qualification failure; EXP-0263 fixes that
+overflow but rejects the dense FFN-down path because its P128 greedy token
+differs from baseline. The default runtime remains unchanged.
 
 The project currently has:
 

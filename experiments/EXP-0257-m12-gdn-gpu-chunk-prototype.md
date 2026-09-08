@@ -1,5 +1,9 @@
 # EXP-0257 — M12 gfx906 Gated DeltaNet chunk prototype
 
+> **Superseded geometry note:** early measurements used an incorrect
+> 32-value-head description. The qualified geometry is 16 key heads / 48 value
+> heads / state 128; see EXP-0258 and the later M12 re-evaluation.
+
 ## Hypothesis
 
 The exact chunkwise/WY formulation can run on gfx906 with one workgroup per

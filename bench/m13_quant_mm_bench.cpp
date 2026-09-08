@@ -2,6 +2,7 @@
 #include "miinfer/hip_check.hpp"
 #include "miinfer/kquant_wave_layout.hpp"
 #include "miinfer/qwen35_model.hpp"
+#include "m13_quant_mm_bench.hpp"
 
 #include <hip/hip_runtime.h>
 
@@ -188,7 +189,7 @@ int main(int argc, char** argv) try {
         },
         [](const Q4KWaveTile* w, const miinfer::Q8_1Block* x, float* y,
            unsigned rows, unsigned columns, unsigned batch, unsigned stride, hipStream_t stream) {
-            launch_q4k_wave_gemv_batched_mm(w, x, y, rows, columns, batch, stride, stream);
+            launch_m13_q4k_wave_gemv_batched_mm(w, x, y, rows, columns, batch, stride, stream);
         },
         "Q4_K", results);
     if (q6 != nullptr) {
@@ -201,7 +202,7 @@ int main(int argc, char** argv) try {
             },
             [](const Q6KWaveTile* w, const miinfer::Q8_1Block* x, float* y,
                unsigned rows, unsigned columns, unsigned batch, unsigned stride, hipStream_t stream) {
-                launch_q6k_wave_gemv_batched_mm(w, x, y, rows, columns, batch, stride, stream);
+                launch_m13_q6k_wave_gemv_batched_mm(w, x, y, rows, columns, batch, stride, stream);
             },
             "Q6_K", results);
     }

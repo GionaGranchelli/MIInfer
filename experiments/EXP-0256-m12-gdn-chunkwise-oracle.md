@@ -1,5 +1,9 @@
 # EXP-0256 — M12 chunkwise Gated DeltaNet oracle
 
+> **Superseded geometry note:** early surrounding M12 records described 32
+> value heads. The qualified geometry is 16 key heads / 48 value heads /
+> state 128; see the re-evaluation recorded in EXP-0258 and EXP-0261.
+
 ## Hypothesis
 
 The FLA/Hugging Face chunkwise Gated DeltaNet formulation can reproduce the
@@ -19,7 +23,7 @@ geometry:
 - nonzero initial state
 
 The candidate follows the current Qwen3.5 chunk equations: cumulative
-log-decay, lower-triangular WY solve, intra-chunk causal attention, and one
+decay, lower-triangular WY solve, intra-chunk causal attention, and one
 state update per chunk. It does not implement a prefix scan or change runtime
 code.
 
@@ -33,14 +37,16 @@ and a sequential scan over chunk boundary states.
 The independent token reference applies, for every token:
 
 ```text
-S <- exp(g) * S
+S <- g * S
 delta <- beta * (v - k^T S)
 S <- S + k outer delta
 o <- q^T S / sqrt(128)
 ```
 
 Both implementations use FP32 arithmetic and the same normalized Q/K inputs,
-beta, log-decay, and nonzero initial state.
+beta, multiplicative decay, and nonzero initial state. The runtime and oracle
+store decay as a positive multiplicative factor; the GPU chunk kernel converts
+it to log space only for the cumulative product calculation.
 
 ## Environment
 

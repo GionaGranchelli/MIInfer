@@ -46,7 +46,7 @@ void recurrent(const Matrix& query, const Matrix& key, const Matrix& value,
             const float* key_token = key.data() + (key_head * kTokens + token) * kState;
             const float* value_token = value.data() + (head * kTokens + token) * kState;
             const float* query_token = query.data() + (key_head * kTokens + token) * kState;
-            const float decay_value = std::exp(decay[head * kTokens + token]);
+            const float decay_value = decay[head * kTokens + token];
             const float beta_value = beta[head * kTokens + token];
 
             for (std::size_t row = 0; row < kState; ++row) {
@@ -93,7 +93,7 @@ void chunkwise(const Matrix& query, const Matrix& key, const Matrix& value,
             Matrix intra(kChunk * kChunk, 0.0F);
 
             for (std::size_t row = 0; row < kChunk; ++row) {
-                cumulative[row] = decay[scalar_base + chunk_start + row]
+                cumulative[row] = std::log(decay[scalar_base + chunk_start + row])
                                   + (row == 0 ? 0.0F : cumulative[row - 1]);
                 for (std::size_t column = 0; column <= row; ++column) {
                     pairwise[at(row, column, kChunk)] = std::exp(cumulative[row] - cumulative[column]);
@@ -210,7 +210,9 @@ int main() {
     for (float& element : key) element = distribution(generator);
     for (float& element : value) element = distribution(generator);
     for (float& element : beta) element = 0.05F + 0.9F * std::abs(distribution(generator));
-    for (float& element : decay) element = -0.001F - 0.03F * std::abs(distribution(generator));
+    for (float& element : decay) {
+        element = std::exp(-0.001F - 0.03F * std::abs(distribution(generator)));
+    }
     for (float& element : initial_state) element = 0.01F * distribution(generator);
     normalize_rows(query, kKeyHeads * kTokens);
     normalize_rows(key, kKeyHeads * kTokens);

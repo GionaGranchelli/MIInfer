@@ -15,7 +15,17 @@ For long-term direction, see:
 
 # Current Phase
 
-**M13 — quantized matrix prefill closed; M14 next**
+**M14 — release qualification**
+
+Milestone status:
+
+```text
+M13:   CLOSED
+M14-A: package layout       PASS
+M14-B: artifact smoke test  PASS on qualified gfx906 host
+M14-C: M12 promotion        OPEN; dense-path correctness blocker in EXP-0263
+M14-D: tagged release       OPEN
+```
 
 M11-B is frozen at the qualified `46.22 tok/s` P513 packed-Q4 baseline.
 Native Qwen3.8-27B generation is operational and allocation-free. The
@@ -74,6 +84,22 @@ cpack --config build/mi50-release/CPackConfig.cmake
 
 The generated archive is named `miinfer-<version>-gfx906-Linux.tar.gz`; ROCm
 and HIP remain host prerequisites.
+
+The extracted artifact gate is:
+
+```bash
+scripts/test-package.sh build/mi50-release/miinfer-0.1.0-gfx906-Linux.tar.gz
+```
+
+It checks both shipped executables, unresolved dynamic dependencies, and the
+gfx906 device contract independently of the build-tree paths.
+
+The first M12 promotion campaign is recorded in
+`experiments/EXP-0262-m12-production-qualification.md`. EXP-0263 fixes the
+GDN decay-contract overflow and missing shared-memory barrier; P1024
+continuation now completes. The dense FFN-down path still changes the P128
+greedy token from baseline EOS 248046 to 271, so M12 remains opt-in and the
+packaged default is not changed.
 
 Re-evaluation: the earlier 32-value-head note was incorrect. The actual
 Qwen3.8 geometry is 16 key heads / 48 value heads / state 128. The corrected

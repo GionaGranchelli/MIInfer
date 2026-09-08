@@ -1269,7 +1269,9 @@ void launch_q4k_wave_gemv_batched4(const Q4KWaveTile* w, const miinfer::Q8_1Bloc
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
-void launch_q4k_wave_gemv_batched_mm(
+// M13 lab-only dispatch. Keep it out of the runtime-facing header because the
+// measured mapping was rejected against repeated B4 on the production shapes.
+void launch_m13_q4k_wave_gemv_batched_mm(
     const Q4KWaveTile* w, const miinfer::Q8_1Block* x, float* y,
     std::uint32_t rows, std::uint32_t columns, std::uint32_t batch,
     std::uint32_t input_stride_blocks, hipStream_t stream) {
@@ -1442,7 +1444,7 @@ void launch_q6k_wave_gemv_batched4(const Q6KWaveTile* w, const miinfer::Q8_1Bloc
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
-void launch_q6k_wave_gemv_batched_mm(
+void launch_m13_q6k_wave_gemv_batched_mm(
     const Q6KWaveTile* w, const miinfer::Q8_1Block* x, float* y,
     std::uint32_t rows, std::uint32_t columns, std::uint32_t batch,
     std::uint32_t input_stride_blocks, hipStream_t stream) {

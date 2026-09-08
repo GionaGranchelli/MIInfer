@@ -79,7 +79,9 @@ __global__ void m12_gdn_chunk_kernel(
     if (tid == 0) {
         float running = 0.0F;
         for (std::uint32_t row = 0; row < chunk_size; ++row) {
-            running += decay[static_cast<std::size_t>(chunk_start + row) * value_heads + head];
+            // The runtime supplies multiplicative decay. Accumulate it in log
+            // space so the chunk equations still operate on decay products.
+            running += logf(decay[static_cast<std::size_t>(chunk_start + row) * value_heads + head]);
             cumulative[row] = running;
         }
     }
@@ -125,6 +127,7 @@ __global__ void m12_gdn_chunk_kernel(
         intra_attention[flat] =
             query_key_dot * pairwise * query_scale;
     }
+    __syncthreads();
 
     for (std::size_t flat = tid; flat < static_cast<std::size_t>(chunk_size) * state_size;
          flat += blockDim.x) {
@@ -189,6 +192,7 @@ __global__ void m12_gdn_chunk_kernel(
         workspace.corrected_values[work_values_base + flat] =
             workspace.solved_values[work_values_base + flat] - predicted;
     }
+    __syncthreads();
 
     for (std::size_t flat = tid; flat < static_cast<std::size_t>(chunk_size) * state_size;
          flat += blockDim.x) {

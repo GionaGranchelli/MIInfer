@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788869462.3194828,
-    "seen": 1788869525.6495998,
-    "ast_hash": "03652bc30f1d3ef41b6953afafa50599",
+    "mtime": 1788874882.781496,
+    "seen": 1788874899.292378,
+    "ast_hash": "b537ad86a2943d8c3b92afd352199bac",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788869462.321483,
-    "seen": 1788869525.649628,
-    "ast_hash": "9ad823ea2b75da61eefd83ce3e1333f1",
+    "mtime": 1788874882.778496,
+    "seen": 1788874899.2924047,
+    "ast_hash": "560996f760976606c644177d224539bb",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788869462.3234828,
-    "seen": 1788869525.649654,
-    "ast_hash": "c9ae588c158a373c6712e3faa02044ae",
+    "mtime": 1788874882.7794962,
+    "seen": 1788874899.2924306,
+    "ast_hash": "46a9eb0b3838383062c78d0bad6c6a97",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -2040,9 +2040,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/kquant_wave_layout.hpp": {
-    "mtime": 1788868347.8336287,
-    "seen": 1788869111.6225486,
-    "ast_hash": "91536bc890770ae4e82d2d9e71ad74fa",
+    "mtime": 1788872295.2453184,
+    "seen": 1788872356.411782,
+    "ast_hash": "8dd28b79700228b35792dd0aa2b07b7b",
     "semantic_hash": ""
   },
   "scripts/run-exp0177-attn-gate-ab.sh": {
@@ -2364,8 +2364,8 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1788858664.0753582,
-    "seen": 1788858697.032014,
+    "mtime": 1788874838.390685,
+    "seen": 1788874899.2923582,
     "ast_hash": "3839ace7633fa3a008fd7370a5ccaf2b",
     "semantic_hash": ""
   },
@@ -2802,9 +2802,9 @@
     "semantic_hash": ""
   },
   "bench/m12_gdn_oracle.cpp": {
-    "mtime": 1788855987.060364,
-    "seen": 1788856016.2696786,
-    "ast_hash": "22c84b335317a091dfdc971fa9c26625",
+    "mtime": 1788873978.226349,
+    "seen": 1788873989.8072033,
+    "ast_hash": "7292974b96586e7a61f4342ee528c8bb",
     "semantic_hash": ""
   },
   "experiments/EXP-0255-m12-dense-staging-feasibility.md": {
@@ -2814,15 +2814,15 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0256-m12-gdn-chunkwise-oracle.md": {
-    "mtime": 1788857282.1690395,
-    "seen": 1788857512.412594,
-    "ast_hash": "5513ec468ac926d7d9ecc2b0d08d303c",
+    "mtime": 1788873943.9004955,
+    "seen": 1788873958.488585,
+    "ast_hash": "d01c6eb655c1a0ef66b81b9ee95db16a",
     "semantic_hash": ""
   },
   "bench/m12_gdn_chunk_bench.cpp": {
-    "mtime": 1788856217.3184173,
-    "seen": 1788856243.6483922,
-    "ast_hash": "e2c14ab84720bd1349f2e86057e253c8",
+    "mtime": 1788873943.8994954,
+    "seen": 1788873958.487901,
+    "ast_hash": "e569d99905dfd9e76b98c3c60d299882",
     "semantic_hash": ""
   },
   "include/miinfer/m12_gdn_chunk.hpp": {
@@ -2832,9 +2832,9 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0257-m12-gdn-gpu-chunk-prototype.md": {
-    "mtime": 1788857316.1019,
-    "seen": 1788857512.4125955,
-    "ast_hash": "6fbb5c270b7d89102f1ad4a6108e9c15",
+    "mtime": 1788872326.693117,
+    "seen": 1788872356.4124212,
+    "ast_hash": "91bc6d6044d5e3d85305f70831d059ae",
     "semantic_hash": ""
   },
   "experiments/EXP-0258-m12-runtime-composition.md": {
@@ -2856,15 +2856,39 @@
     "semantic_hash": ""
   },
   "bench/m13_quant_mm_bench.cpp": {
-    "mtime": 1788868853.1883883,
-    "seen": 1788869111.6225116,
-    "ast_hash": "5ab11aad081bcdc089f5bd89ad9e947d",
+    "mtime": 1788872295.2463183,
+    "seen": 1788872356.411749,
+    "ast_hash": "e958c76f800d98906345a9a1d3203194",
     "semantic_hash": ""
   },
   "experiments/EXP-0261-m13-quantized-matrix-prefill.md": {
     "mtime": 1788868954.8947363,
     "seen": 1788869111.6231875,
     "ast_hash": "1998c114b665baac6bd7f75b876ac1c5",
+    "semantic_hash": ""
+  },
+  "bench/m13_quant_mm_bench.hpp": {
+    "mtime": 1788872410.40458,
+    "seen": 1788872938.6936991,
+    "ast_hash": "6acff6dba9ce725180ea927744fd246a",
+    "semantic_hash": ""
+  },
+  "scripts/test-package.sh": {
+    "mtime": 1788872326.6881168,
+    "seen": 1788872356.4118893,
+    "ast_hash": "c5fec132acda643e1bc7017b799cc358",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0262-m12-production-qualification.md": {
+    "mtime": 1788873943.9004955,
+    "seen": 1788873958.4885945,
+    "ast_hash": "fdcc8c2331cf5033641721400b08fbef",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0263-m12-gdn-contract-and-dense-qualification.md": {
+    "mtime": 1788874882.781496,
+    "seen": 1788874899.2928271,
+    "ast_hash": "a1e0516c78fb9a7a9c73d5bb45dfa155",
     "semantic_hash": ""
   }
 }

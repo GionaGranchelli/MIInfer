@@ -101,7 +101,7 @@ void recurrent(const std::vector<float>& query, const std::vector<float>& key,
             const float* key_token = key.data() + at(key_head, token, 0, kTokens, kState);
             const float* value_token = value.data() + at(head, token, 0, kTokens, kState);
             const float* query_token = query.data() + at(key_head, token, 0, kTokens, kState);
-            const float decay_value = std::exp(decay[head * kTokens + token]);
+            const float decay_value = decay[head * kTokens + token];
             const float beta_value = beta[head * kTokens + token];
             for (std::size_t row = 0; row < kState; ++row) {
                 float key_dot = 0.0F;
@@ -149,7 +149,9 @@ int main() try {
     for (float& element : key) element = distribution(generator);
     for (float& element : value) element = distribution(generator);
     for (float& element : beta) element = 0.05F + 0.9F * std::abs(distribution(generator));
-    for (float& element : decay) element = -0.001F - 0.03F * std::abs(distribution(generator));
+    for (float& element : decay) {
+        element = std::exp(-0.001F - 0.03F * std::abs(distribution(generator)));
+    }
     for (float& element : initial_state) element = 0.01F * distribution(generator);
     normalize_rows(query, kKeyHeads);
     normalize_rows(key, kKeyHeads);
