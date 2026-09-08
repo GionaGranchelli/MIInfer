@@ -100,6 +100,11 @@ tail at `6.07 s`; the optimistic whole-path raw-int8 ceiling is only about
 `64.1` tok/s. The 100 tok/s gate is therefore unmet and remains an explicit
 future causal grouped-dataflow target, not a redefined success criterion.
 
+EXP-0245 tested a native 16-token Q4_K output-stationary split-4 mapping. It
+matched within `1.90735e-6` but measured `2040.32 us` versus `1212.96 us`
+for four native B=4 launches (`0.594x`), so the direct native 16-token
+remapping family remains rejected and was removed.
+
 EXP-0168 completed that profile at position 63: total GPU event
 `71.9133 ms/token`, layer sum `68.6269 ms`, final LM head `2.50016 ms`, and
 zero allocations. FFN Down remains the largest repeated individual stage,

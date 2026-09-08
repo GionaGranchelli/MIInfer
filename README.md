@@ -69,6 +69,8 @@ EXP-0244 records the final measured ceiling: current P513 qualification is
 46.22 tok/s, fresh P2049 is 43.31 tok/s, and the optimistic raw-int8 whole-path
 ceiling is about 64.1 tok/s. The 100 tok/s gate remains unmet and requires a
 new causal grouped-dataflow experiment.
+EXP-0245 rejects a native 16-token split-4 output-stationary mapping: it was
+correct within 1.90735e-6 but reached only 0.594x four B=4 launches.
 
 The project currently has:
 
