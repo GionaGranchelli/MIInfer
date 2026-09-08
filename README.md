@@ -25,7 +25,8 @@ dequantize-then-hipBLAS FP16 GEMM because conversion dominated the measured
 projection. EXP-0214's release re-evaluation measured native Q4_K split-K at
 0.64× the B=4 control, and EXP-0215 rejected a larger logical chunk around B=4
 microtiles as neutral at roughly 2.6 GiB extra workspace. The default
-token-major path remains unchanged.
+token-major path remains unchanged. EXP-0216 also rejected generic Q5_K B=4
+`ssm_out` batching after P513 fell from 39.98 to 31.61 tok/s.
 
 The project currently has:
 

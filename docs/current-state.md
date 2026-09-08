@@ -29,8 +29,10 @@ EXP-0214's debug result was superseded by a release re-evaluation: the exact
 native Q4_K split-K GEMM reached only 0.64× the B=4 control. EXP-0215 also
 rejected expanding the logical chunk to 128 around B=4 microtiles: P513 was
 40.26 tok/s versus the qualified P512 39.96 tok/s, at approximately 2.6 GiB
-of extra workspace. The 100 tok/s gate remains open; the remaining gap needs a
-different projection mapping or an experimentally proven Amdahl ceiling.
+of extra workspace. EXP-0216 rejected reusing the generic Q5_K B=4 kernel for
+the deferred recurrent `ssm_out`: P513 fell from 39.98 to 31.61 tok/s. The
+100 tok/s gate remains open; the remaining gap needs a different projection
+mapping or an experimentally proven Amdahl ceiling.
 
 The default path remains token-major and unchanged. Layer-major prefill stays
 opt-in until longer-context and generation correctness are fully qualified.
