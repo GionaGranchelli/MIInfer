@@ -36,6 +36,7 @@ for binary in miinfer miinfer-device-info; do
 done
 
 "$package_root/bin/miinfer" --help >/dev/null
+"$package_root/bin/miinfer" --version >/dev/null
 "$package_root/bin/miinfer-device-info" --version >/dev/null
 "$package_root/bin/miinfer-device-info" > "$stage/device-info.txt"
 

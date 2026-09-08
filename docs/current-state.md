@@ -15,16 +15,17 @@ For long-term direction, see:
 
 # Current Phase
 
-**M14 — release qualification**
+**M15 — product surface**
 
 Milestone status:
 
 ```text
 M13:   CLOSED
-M14-A: package layout       PASS
-M14-B: artifact smoke test  PASS on qualified gfx906 host
-M14-C: M12 promotion        OPEN; dense-path correctness blocker in EXP-0263
-M14-D: tagged release       OPEN
+M14:   v0.1.0 release       PASS at c7b3737
+M15-A: runtime version      PASS
+M15-B: configuration        OPEN
+M15-C: model discovery      OPEN
+M15-D: serving lifecycle    OPEN
 ```
 
 M11-B is frozen at the qualified `46.22 tok/s` P513 packed-Q4 baseline.
@@ -93,6 +94,10 @@ scripts/test-package.sh build/mi50-release/miinfer-0.1.0-gfx906-Linux.tar.gz
 
 It checks both shipped executables, unresolved dynamic dependencies, and the
 gfx906 device contract independently of the build-tree paths.
+
+The installed runtime also exposes `miinfer --version` with version, commit,
+build, compiler, HIP, and target-architecture fields for installer and health
+checks.
 
 The first M12 promotion campaign is recorded in
 `experiments/EXP-0262-m12-production-qualification.md`. EXP-0263 fixes the

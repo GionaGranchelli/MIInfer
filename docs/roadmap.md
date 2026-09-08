@@ -10,12 +10,12 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M14 — release qualification**
+**Current phase: M15 — product surface**
 
 Immediate objective:
 
-> Qualify the final M12 composition, validate the installable artifact, and
-> finish the single-MI50 release without reopening the closed kernel search.
+> Build the smallest useful installer, configuration, discovery, and serving
+> surface around the validated v0.1.0 runtime without reopening kernel search.
 
 M11-B's current-family search is closed by EXP-0244 through EXP-0254.
 EXP-0255 is the first M12 feasibility result: whole-matrix Q4_K→FP16 staging
@@ -50,7 +50,9 @@ rather than a correctness failure. The combined M12 path was re-profiled at
 51.73 tok/s P512. M13 is closed: do not integrate the slower kernel or reopen
 the same single-GPU projection family without a materially different mapping.
 
-M14 status: release, packaging, and hardware detection. The focused CPack
+M14 is complete at `v0.1.0` (`c7b3737`): release, packaging, hardware
+detection, extracted-model inference, and OpenAI endpoint smoke all pass. The
+focused CPack
 archive now ships the runtime CLI, gfx906 device probe, and operational docs;
 serving/UI and
 multi-MI50 work follow release hygiene; single-MI50 prefill remains frozen at
@@ -60,6 +62,10 @@ EXP-0262 is the first M14 promotion gate. EXP-0263 fixes the GDN decay
 contract and missing barrier; the dense FFN-down path still changes the P128
 greedy token from baseline EOS 248046 to 271. M12 remains opt-in until a
 numerically qualified dense replacement exists.
+
+M15 starts with the stable `miinfer --version` contract. Next product-surface
+work is configuration/model discovery, followed by a more robust serving
+lifecycle; keep the implementation narrow to the supported MI50/Qwen3.8 path.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See

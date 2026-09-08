@@ -1156,6 +1156,7 @@ void print_usage() {
     std::cout << "MIInfer: Purpose-Built AMD gfx906 (MI50) LLM Inference Runtime\n\n";
     std::cout << "Usage: miinfer <command> [options]\n\n";
     std::cout << "Commands:\n";
+    std::cout << "  --version                              Print build and target information\n";
     std::cout << "  inspect <model.gguf>                     Inspect model metadata, quantization, and VRAM budget\n";
     std::cout << "  run <model.gguf> --prompt \"...\"         Generate text from a prompt with streaming output\n";
     std::cout << "  chat <model.gguf>                        Start an interactive multi-turn terminal chat REPL\n";
@@ -1179,6 +1180,9 @@ int main(int argc, char** argv) {
         return cmd_chat(argc, argv);
     } else if (cmd == "serve") {
         return cmd_serve(argc, argv);
+    } else if (cmd == "--version") {
+        miinfer::print_build_info(std::cout);
+        return 0;
     } else if (cmd == "--help" || cmd == "-h" || cmd == "help") {
         print_usage();
         return 0;

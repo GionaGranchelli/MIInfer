@@ -14,6 +14,7 @@ The `miinfer` executable exposes four subcommands:
 miinfer <command> [options]
 
 Commands:
+  --version                              Print build and target information
   inspect <model.gguf>                     Inspect model metadata, quantization, and VRAM budget
   run <model.gguf> --prompt "..."         Generate text from a prompt with streaming output
   chat <model.gguf>                        Start an interactive multi-turn terminal chat REPL
