@@ -77,6 +77,11 @@ tile. It matched within `3.7e-6`, but measured `2193.49 us` versus `1200.21 us`
 (`0.547x`) on the same shape. Both minimal native token-tile mappings are
 rejected and removed.
 
+EXP-0241 tested one-row-per-workgroup token reuse, matching within `2.5e-6`
+but measuring `2027.04 us` versus `1198.67 us` (`0.591x`) for the same
+FFN-down shape. The kernel was removed; three direct native 16-token Q4_K
+decompositions are now rejected.
+
 EXP-0168 completed that profile at position 63: total GPU event
 `71.9133 ms/token`, layer sum `68.6269 ms`, final LM head `2.50016 ms`, and
 zero allocations. FFN Down remains the largest repeated individual stage,
