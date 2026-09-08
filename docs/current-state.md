@@ -20,7 +20,7 @@ For long-term direction, see:
 Native Qwen3.8-27B generation is operational and allocation-free. The
 opt-in layer-major prefill path now batches the full-attention O/FFN tail and
 uses a shape-specific native Q5_K B=4 `ssm_out` mapping: P513 reaches
-`45.02 tok/s` (P128 `46.39 tok/s`) versus the fresh matched layer-major
+`45.56 tok/s` (P128 `45.28 tok/s`) versus the fresh matched layer-major
 control of `39.90 tok/s`. The 100 tok/s M11-B gate is not met. EXP-0211
 rejects row-LDS and generic B=8 accumulator extensions after production-shaped
 testing; EXP-0212's exact B=8 accumulator GEMV reached only 0.69× the existing
@@ -33,9 +33,10 @@ rejected expanding the logical chunk to 128 around B=4 microtiles: P513 was
 of extra workspace. EXP-0216 rejected reusing the generic Q5_K B=4 kernel for
 the deferred recurrent `ssm_out`: P513 fell from 39.98 to 31.61 tok/s. EXP-0217
 keeps the deferred full-attention tail and replaces that generic mapping with
-a shape-specific word-reuse kernel, but the 100 tok/s gate remains open; the
-remaining gap needs a different projection mapping or an experimentally proven
-Amdahl ceiling.
+a shape-specific word-reuse kernel. EXP-0221 removes prepared-workspace device
+copies from the layer-major hot path and measures a further 1.2% P513 gain, but
+the 100 tok/s gate remains open; the remaining gap needs a different projection
+mapping or an experimentally proven Amdahl ceiling.
 
 The default path remains token-major and unchanged. Layer-major prefill stays
 opt-in until longer-context and generation correctness are fully qualified.

@@ -1353,24 +1353,10 @@ struct RecurrentLayer {
              const float* prepared_normalized = nullptr,
              bool defer_prefill_tail = false,
              std::size_t prefill_index = 0) {
-        if (prepared_normalized != nullptr) {
-            MIINFER_HIP_CHECK(hipMemcpyAsync(
-                normalized->get(), prepared_normalized, kHidden * sizeof(float),
-                hipMemcpyDeviceToDevice, hipStreamPerThread));
-            precomputed_norm = true;
-        }
+        const float* normalized_input = prepared_normalized != nullptr
+            ? prepared_normalized : static_cast<const float*>(normalized->get());
+        if (prepared_normalized != nullptr) precomputed_norm = true;
         const bool precomputed_projection = prepared_qkv != nullptr;
-        if (precomputed_projection) {
-            const std::size_t qkv_elements = d_qkv_gate_combined ? kChannels + kInner : kChannels;
-            MIINFER_HIP_CHECK(hipMemcpyAsync(
-                qkv->get(), prepared_qkv, qkv_elements * sizeof(float),
-                hipMemcpyDeviceToDevice, hipStreamPerThread));
-            if (prepared_gate != nullptr) {
-                MIINFER_HIP_CHECK(hipMemcpyAsync(
-                    gate->get(), prepared_gate, kInner * sizeof(float),
-                    hipMemcpyDeviceToDevice, hipStreamPerThread));
-            }
-        }
         stage_start(0, position);
         if (!precomputed_norm) {
             miinfer::launch_qwen3_rms_norm(
@@ -1378,57 +1364,60 @@ struct RecurrentLayer {
                 static_cast<float*>(normalized->get()), kHidden, model.config().rms_epsilon);
         }
         if (gate_path_capture != nullptr && gate_path_capture_position == position) {
-            gate_path_capture->normalized = download(normalized->get(), kHidden);
+            gate_path_capture->normalized = download(normalized_input, kHidden);
         }
-        trace_tensor(position, "attn_norm", static_cast<const float*>(normalized->get()),
-                     kHidden, "attn_norm-" + std::to_string(index));
+        trace_tensor(position, "attn_norm", normalized_input, kHidden,
+                     "attn_norm-" + std::to_string(index));
         stage_end(0, position);
         stage_start(1, position);
-        float* qkv_dest = static_cast<float*>(qkv->get());
-        float* gate_dest = d_qkv_gate_combined ? (qkv_dest + kChannels) : (gate ? static_cast<float*>(gate->get()) : nullptr);
+        float* qkv_storage = static_cast<float*>(qkv->get());
+        const float* qkv_dest = precomputed_projection ? prepared_qkv : qkv_storage;
+        float* gate_storage = gate ? static_cast<float*>(gate->get()) : nullptr;
+        const float* gate_dest = d_qkv_gate_combined ? qkv_dest + kChannels
+            : (precomputed_projection && prepared_gate != nullptr ? prepared_gate : gate_storage);
         if (precomputed_projection) {
             // The batch path already populated qkv/gate with the native B=4 kernel.
         } else if (d_qkv_gate_combined) {
             if (!precomputed_q8 || !fused_norm_q8) {
                 miinfer::launch_q8_1_quantize_f32(
-                    static_cast<const float*>(normalized->get()),
+                    normalized_input,
                     static_cast<miinfer::Q8_1Block*>(q8_1->get()), kHidden);
             }
             launch_q4k_wave_gemv(
                 static_cast<const Q4KWaveTile*>(d_qkv_gate_combined->get()),
                 static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
-                qkv_dest, kChannels + kInner, kHidden);
+                qkv_storage, kChannels + kInner, kHidden);
         } else if (d_qkv_native) {
             if (!precomputed_q8 || !fused_norm_q8) {
                 miinfer::launch_q8_1_quantize_f32(
-                    static_cast<const float*>(normalized->get()),
+                    normalized_input,
                     static_cast<miinfer::Q8_1Block*>(q8_1->get()), kHidden);
             }
             if (qkv_weight.type == miinfer::GgufTensorType::q4_k) {
                 launch_q4k_wave_gemv(
                     static_cast<const Q4KWaveTile*>(d_qkv_native->get()),
                     static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
-                    qkv_dest, kChannels, kHidden);
+                    qkv_storage, kChannels, kHidden);
             } else {
                 launch_q6k_wave_gemv(
                     static_cast<const Q6KWaveTile*>(d_qkv_native->get()),
                     static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
-                    qkv_dest, kChannels, kHidden);
+                    qkv_storage, kChannels, kHidden);
             }
         } else if (q6_q8_k_dot4_qkv && qkv_weight.type == miinfer::GgufTensorType::q6_k) {
-            project_q6_q8_k_dot4(d_qkv, static_cast<const float*>(normalized->get()),
+            project_q6_q8_k_dot4(d_qkv, normalized_input,
                                 static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
-                                qkv_dest, kChannels, kHidden);
+                                qkv_storage, kChannels, kHidden);
         } else {
-            project(qkv_weight, d_qkv, static_cast<const float*>(normalized->get()),
+            project(qkv_weight, d_qkv, normalized_input,
                     static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
-                    qkv_dest, kChannels, kHidden);
+                    qkv_storage, kChannels, kHidden);
         }
         trace_tensor(position, "qkv", qkv_dest, kChannels,
                      "linear_attn_qkv_mixed-" + std::to_string(index));
         if (layer_path_capture != nullptr && layer_path_capture_position == position) {
             layer_path_capture->input = download(input, kHidden);
-            layer_path_capture->normalized = download(normalized->get(), kHidden);
+            layer_path_capture->normalized = download(normalized_input, kHidden);
             layer_path_capture->qkv = download(qkv_dest, kChannels);
         }
         stage_end(1, position);
@@ -1437,26 +1426,26 @@ struct RecurrentLayer {
             if (d_attn_gate_native) {
                 if (!d_qkv_native) {
                     miinfer::launch_q8_1_quantize_f32(
-                        static_cast<const float*>(normalized->get()),
+                        normalized_input,
                         static_cast<miinfer::Q8_1Block*>(q8_1->get()), kHidden);
                 }
                 launch_q4k_wave_gemv(
                     static_cast<const Q4KWaveTile*>(d_attn_gate_native->get()),
                     static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
-                    gate_dest, kInner, kHidden);
+                    gate_storage, kInner, kHidden);
             } else if (q4_q8_1_attn_gate && gate_weight.type == miinfer::GgufTensorType::q4_k) {
                 miinfer::launch_q8_1_quantize_f32(
-                    static_cast<const float*>(normalized->get()),
+                    normalized_input,
                     static_cast<miinfer::Q8_1Block*>(q8_1->get()), kHidden);
                 project_q4_q8_1_prequantized(
                     d_gate, static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
-                    gate_dest, kInner, kHidden,
+                    gate_storage, kInner, kHidden,
                     q4_q8_1_lds_input, q4_q8_1_lds_metadata,
                     q4_q8_1_lds_decoded_metadata);
             } else {
-                project(gate_weight, d_gate, static_cast<const float*>(normalized->get()),
+                project(gate_weight, d_gate, normalized_input,
                         static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
-                        gate_dest, kInner, kHidden,
+                        gate_storage, kInner, kHidden,
                         reuse_projection_q8);
             }
         }
@@ -1468,20 +1457,20 @@ struct RecurrentLayer {
         if (dual_beta_alpha_prepare) {
             miinfer::launch_qwen35_f32_dual_beta_decay(
                 static_cast<const float*>(d_beta->get()), static_cast<const float*>(d_alpha->get()),
-                static_cast<const float*>(normalized->get()), static_cast<const float*>(d_dt->get()),
+                normalized_input, static_cast<const float*>(d_dt->get()),
                 static_cast<const float*>(d_a->get()), static_cast<float*>(beta->get()),
                 static_cast<float*>(decay->get()), kVHeads, kHidden);
         } else if (dual_beta_alpha_projection) {
             miinfer::launch_qwen35_f32_dual_gemv(
                 static_cast<const float*>(d_beta->get()), static_cast<const float*>(d_alpha->get()),
-                static_cast<const float*>(normalized->get()), static_cast<float*>(beta_raw->get()),
+                normalized_input, static_cast<float*>(beta_raw->get()),
                 static_cast<float*>(alpha_raw->get()), kVHeads, kHidden);
         } else {
             miinfer::launch_qwen35_f32_gemv(
-                static_cast<const float*>(d_beta->get()), static_cast<const float*>(normalized->get()),
+                static_cast<const float*>(d_beta->get()), normalized_input,
                 static_cast<float*>(beta_raw->get()), kVHeads, kHidden);
             miinfer::launch_qwen35_f32_gemv(
-                static_cast<const float*>(d_alpha->get()), static_cast<const float*>(normalized->get()),
+                static_cast<const float*>(d_alpha->get()), normalized_input,
                 static_cast<float*>(alpha_raw->get()), kVHeads, kHidden);
         }
         if (!dual_beta_alpha_prepare) {
@@ -1519,7 +1508,7 @@ struct RecurrentLayer {
         }
         if (key_path_capture != nullptr && key_path_capture_position == position) {
             key_path_capture->input = download(input, kHidden);
-            key_path_capture->normalized = download(normalized->get(), kHidden);
+            key_path_capture->normalized = download(normalized_input, kHidden);
             key_path_capture->qkv = download(qkv_dest, kChannels);
             key_path_capture->key = download(key->get(), kKHeads * kState);
             key_path_capture->key_norm = download(key_norm->get(), kKHeads * kState);
@@ -2276,23 +2265,10 @@ struct FullAttentionLayer {
              const float* prepared_value = nullptr,
              bool defer_prefill_tail = false,
              std::size_t prefill_index = 0) {
-        if (prepared_normalized != nullptr) {
-            MIINFER_HIP_CHECK(hipMemcpyAsync(
-                normalized->get(), prepared_normalized, kHidden * sizeof(float),
-                hipMemcpyDeviceToDevice, hipStreamPerThread));
-            precomputed_norm = true;
-        }
+        const float* normalized_input = prepared_normalized != nullptr
+            ? prepared_normalized : static_cast<const float*>(normalized->get());
+        if (prepared_normalized != nullptr) precomputed_norm = true;
         const bool precomputed_projection = prepared_qfull != nullptr;
-        if (precomputed_projection) {
-            MIINFER_HIP_CHECK(hipMemcpyAsync(
-                qfull->get(), prepared_qfull, (12288 + 1024) * sizeof(float),
-                hipMemcpyDeviceToDevice, hipStreamPerThread));
-        }
-        if (prepared_value != nullptr) {
-            MIINFER_HIP_CHECK(hipMemcpyAsync(
-                value->get(), prepared_value, 1024 * sizeof(float),
-                hipMemcpyDeviceToDevice, hipStreamPerThread));
-        }
         stage_start(0, position);
         if (!precomputed_norm) {
             miinfer::launch_qwen3_rms_norm(input, static_cast<const float*>(d_attn_norm->get()),
@@ -2300,33 +2276,36 @@ struct FullAttentionLayer {
         }
         stage_end(0, position);
         stage_start(1, position);
-        float* qfull_dest = static_cast<float*>(qfull->get());
-        float* key_dest = d_qk_combined ? (qfull_dest + 12288) : (key ? static_cast<float*>(key->get()) : nullptr);
+        float* qfull_storage = static_cast<float*>(qfull->get());
+        const float* qfull_dest = precomputed_projection ? prepared_qfull : qfull_storage;
+        float* key_storage = key ? static_cast<float*>(key->get()) : nullptr;
+        const float* key_dest = d_qk_combined ? qfull_dest + 12288
+            : (precomputed_projection ? qfull_dest + 12288 : key_storage);
         if (precomputed_projection) {
             // The layer-major path already populated Q+gate+K with B=4.
         } else if (d_qk_combined) {
             if (!precomputed_q8 || !fused_norm_q8) {
                 miinfer::launch_q8_1_quantize_f32(
-                    static_cast<const float*>(normalized->get()),
+                    normalized_input,
                     static_cast<miinfer::Q8_1Block*>(q8_1->get()), kHidden);
             }
             launch_q4k_wave_gemv(
                 static_cast<const Q4KWaveTile*>(d_qk_combined->get()),
                 static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
-                qfull_dest, 12288 + 1024, kHidden);
+                qfull_storage, 12288 + 1024, kHidden);
         } else if (d_q_native) {
             if (!precomputed_q8 || !fused_norm_q8) {
                 miinfer::launch_q8_1_quantize_f32(
-                    static_cast<const float*>(normalized->get()),
+                    normalized_input,
                     static_cast<miinfer::Q8_1Block*>(q8_1->get()), kHidden);
             }
             launch_q4k_wave_gemv(
                 static_cast<const Q4KWaveTile*>(d_q_native->get()),
                 static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
-                qfull_dest, 12288, kHidden);
+                qfull_storage, 12288, kHidden);
         } else {
-            project(q_weight, d_q, static_cast<const float*>(normalized->get()),
-                static_cast<miinfer::Q8KDeviceBlock*>(q8->get()), qfull_dest, 12288, kHidden);
+            project(q_weight, d_q, normalized_input,
+                static_cast<miinfer::Q8KDeviceBlock*>(q8->get()), qfull_storage, 12288, kHidden);
         }
         stage_end(1, position);
         stage_start(2, position);
@@ -2359,16 +2338,16 @@ struct FullAttentionLayer {
             if (d_k_native) {
                 if (!d_q_native) {
                     miinfer::launch_q8_1_quantize_f32(
-                        static_cast<const float*>(normalized->get()),
+                        normalized_input,
                         static_cast<miinfer::Q8_1Block*>(q8_1->get()), kHidden);
                 }
                 launch_q4k_wave_gemv(
                     static_cast<const Q4KWaveTile*>(d_k_native->get()),
                     static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
-                    key_dest, 1024, kHidden);
+                    key_storage, 1024, kHidden);
             } else {
-                project(k_weight, d_k, static_cast<const float*>(normalized->get()),
-                        static_cast<miinfer::Q8KDeviceBlock*>(q8->get()), key_dest,
+                project(k_weight, d_k, normalized_input,
+                        static_cast<miinfer::Q8KDeviceBlock*>(q8->get()), key_storage,
                         1024, kHidden, d_q_native ? false : reuse_projection_q8);
             }
         }
@@ -2390,12 +2369,14 @@ struct FullAttentionLayer {
         }
         stage_end(4, position);
         stage_start(5, position);
+        const float* value_input = prepared_value != nullptr
+            ? prepared_value : static_cast<const float*>(value->get());
         if (prepared_value != nullptr) {
             // The layer-major path already populated V with B=4.
         } else if (d_v_native) {
             if (!d_qk_combined && !d_q_native && !d_k_native) {
                 miinfer::launch_q8_1_quantize_f32(
-                    static_cast<const float*>(normalized->get()),
+                    normalized_input,
                     static_cast<miinfer::Q8_1Block*>(q8_1->get()), kHidden);
             }
             if (v_weight.type == miinfer::GgufTensorType::q4_k) {
@@ -2410,7 +2391,7 @@ struct FullAttentionLayer {
                     static_cast<float*>(value->get()), 1024, kHidden);
             }
         } else {
-            project(v_weight, d_v, static_cast<const float*>(normalized->get()),
+            project(v_weight, d_v, normalized_input,
                     static_cast<miinfer::Q8KDeviceBlock*>(q8->get()), static_cast<float*>(value->get()),
                     1024, kHidden, (d_qk_combined || d_q_native || d_k_native) ? false : reuse_projection_q8);
         }
@@ -2420,7 +2401,7 @@ struct FullAttentionLayer {
             if (fp16_kv_cache) {
                 miinfer::launch_qwen35_fused_k_norm_rope_kv_store(
                     key_dest,
-                    static_cast<const float*>(value->get()),
+                    value_input,
                     static_cast<const float*>(d_k_norm->get()),
                     static_cast<__half*>(key_cache->get()),
                     static_cast<__half*>(value_cache->get()),
@@ -2428,7 +2409,7 @@ struct FullAttentionLayer {
             } else {
                 miinfer::launch_qwen35_fused_k_norm_rope_kv_store(
                     key_dest,
-                    static_cast<const float*>(value->get()),
+                    value_input,
                     static_cast<const float*>(d_k_norm->get()),
                     static_cast<float*>(key_cache->get()),
                     static_cast<float*>(value_cache->get()),
@@ -2441,11 +2422,11 @@ struct FullAttentionLayer {
                 static_cast<float*>(key_rope->get()), 4, 256, position, model.config().rope_theta);
             if (fp16_kv_cache) {
                 miinfer::launch_qwen3_kv_cache_store(static_cast<const float*>(key_rope->get()),
-                    static_cast<const float*>(value->get()), static_cast<__half*>(key_cache->get()),
+                    value_input, static_cast<__half*>(key_cache->get()),
                     static_cast<__half*>(value_cache->get()), position, kCacheCapacity, 4, 256);
             } else {
                 miinfer::launch_qwen3_kv_cache_store(static_cast<const float*>(key_rope->get()),
-                    static_cast<const float*>(value->get()), static_cast<float*>(key_cache->get()),
+                    value_input, static_cast<float*>(key_cache->get()),
                     static_cast<float*>(value_cache->get()), position, kCacheCapacity, 4, 256);
             }
         }

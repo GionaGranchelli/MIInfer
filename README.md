@@ -16,9 +16,10 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 **Current phase: M11-B — production layer-major prefill**
 
-The opt-in layer-major prefill path reaches `45.02 tok/s` at P513 (`46.39`
-tok/s at P128) with deferred full-attention tails and shape-specific Q5_K B=4
-reuse. The M11-B `100 tok/s` gate is not met;
+The opt-in layer-major prefill path reaches `45.56 tok/s` at P513 (`45.28`
+tok/s at P128) with deferred full-attention tails, shape-specific Q5_K B=4
+reuse, and direct consumption of batched workspaces. The M11-B `100 tok/s`
+gate is not met;
 the production-shaped row-LDS and generic B=8 accumulator extensions were
 rejected in `experiments/EXP-0211-m11b-row-lds-production-shape.md` and
 `experiments/EXP-0212-m11b-batched8-accumulator-gemv.md`. EXP-0213 rejected
@@ -30,7 +31,7 @@ token-major path remains unchanged. EXP-0216 also rejected generic Q5_K B=4
 `ssm_out` batching after P513 fell from 39.98 to 31.61 tok/s. EXP-0217 keeps
 the full-attention tail and replaces that generic Q5_K mapping with a
 shape-specific kernel; the matched P513 control is 39.90 tok/s and the
-candidate is 45.02 tok/s.
+candidate is 45.56 tok/s after EXP-0221's copy elimination.
 
 The project currently has:
 
