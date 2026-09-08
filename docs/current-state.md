@@ -114,7 +114,8 @@ changes were removed. The local grouped-projection search is exhausted for
 this pass; the 100 tok/s gate still requires a genuinely new causal
 grouped-dataflow design. EXP-0252 retested the external-style repacked MMQ64
 shape with exact activation-sum correctness: it reached only `0.978x` at B64
-and was much slower at B4/B16, so it was removed as well.
+and was much slower at B4/B16, so it was removed as well. EXP-0253 tested a
+bounded exact-sum side buffer and fell to `0.649x` at B64; it was removed too.
 
 EXP-0168 completed that profile at position 63: total GPU event
 `71.9133 ms/token`, layer sum `68.6269 ms`, final LM head `2.50016 ms`, and

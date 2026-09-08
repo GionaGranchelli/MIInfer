@@ -113,3 +113,8 @@ FFN-down shape with strict numerical validation. Exact int8 activation sums
 were required for correctness; the resulting candidate measured `0.978x` at
 B64 and was substantially slower at B4/B16. It was removed, so the required
 next implementation remains an end-to-end causal grouped-dataflow schedule.
+
+EXP-0253 precomputed those exact sums into a bounded int16 side buffer to
+remove the candidate's inner-loop reductions. It remained numerically correct
+but fell to `0.649x` at B64 and was much slower at B4/B16, so the side-buffer
+variant was removed as well.

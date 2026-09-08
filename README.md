@@ -78,7 +78,8 @@ expanded decoded-metadata grouping at 0.098x. All temporary candidates were
 removed. The 100 tok/s gate still requires a genuinely new causal
 grouped-dataflow design. EXP-0252 retested the external-style repacked MMQ64
 shape with exact activation-sum correctness: it was 0.978x at B64 and much
-slower at B4/B16, so it was also removed.
+slower at B4/B16, so it was also removed. EXP-0253 tested a bounded exact-sum
+side buffer; it fell to 0.649x at B64 and was removed as well.
 
 The project currently has:
 
