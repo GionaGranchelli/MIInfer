@@ -5,6 +5,12 @@ include(cmake/MIInferOptions.cmake)
 project(MIInfer VERSION 0.2.0 LANGUAGES CXX)
 
 include(GNUInstallDirs)
+include(FetchContent)
+
+FetchContent_Declare(nlohmann_json
+    URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
+)
+FetchContent_MakeAvailable(nlohmann_json)
 
 if(MIINFER_ENABLE_HIP)
     enable_language(HIP)
@@ -95,6 +101,12 @@ target_include_directories(miinfer_model
 )
 target_compile_features(miinfer_model PUBLIC cxx_std_20)
 target_compile_options(miinfer_model PRIVATE -Wall -Wextra -Wpedantic)
+
+add_library(miinfer_openai_api STATIC src/openai_api.cpp)
+target_include_directories(miinfer_openai_api PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_link_libraries(miinfer_openai_api PUBLIC nlohmann_json::nlohmann_json)
+target_compile_features(miinfer_openai_api PUBLIC cxx_std_20)
+target_compile_options(miinfer_openai_api PRIVATE -Wall -Wextra -Wpedantic)
 
 if(MIINFER_ENABLE_HIP)
     add_library(miinfer_hip STATIC
@@ -203,7 +215,7 @@ target_compile_options(miinfer-m6a16-qwen35-hybrid-block-4-7-audit PRIVATE -Wall
     target_compile_options(miinfer-m6a21-qwen35-gpu-hybrid-block PRIVATE -Wall -Wextra -Wpedantic)
 
     add_executable(miinfer tools/miinfer_cli.cpp)
-    target_link_libraries(miinfer PRIVATE miinfer_hip miinfer_model)
+    target_link_libraries(miinfer PRIVATE miinfer_hip miinfer_model miinfer_openai_api)
     target_compile_options(miinfer PRIVATE -Wall -Wextra -Wpedantic)
 
     add_executable(miinfer-m6a263-qwen35-recurrent-contract tools/m6a263_qwen35_recurrent_contract.cpp)
