@@ -540,6 +540,74 @@ __global__ void q4k_wave_gemv_batched4_reuse_kernel(
 
 
 template <unsigned NumTiles>
+// Unlike the generic decoder-state batch kernel, this mapping decodes each
+// weight word once and keeps only the four output sums live.
+__global__ void q5k_wave_gemv_batched4_reuse_kernel(
+    const Q5KWaveTile* __restrict__ weights,
+    const miinfer::Q8_1Block* __restrict__ input,
+    float* __restrict__ output,
+    unsigned rows) {
+    const unsigned wave_id = threadIdx.x / 64;
+    const unsigned row = blockIdx.x * 4 + wave_id;
+    if (row >= rows) return;
+    const unsigned lane = threadIdx.x % 64;
+    const unsigned in_block = lane % 16;
+    const unsigned group = 2 * (in_block / 4);
+    float sums[4] = {};
+
+    for (unsigned tile = 0; tile < NumTiles; ++tile) {
+        const auto& w = weights[row * NumTiles + tile];
+        const auto& meta = w.metadata[lane / 16];
+        const unsigned group2 = 2 * (in_block / 4);
+        const std::uint16_t scales2 = *reinterpret_cast<const std::uint16_t*>(&meta.scales[group2]);
+        const std::uint16_t mins2 = *reinterpret_cast<const std::uint16_t*>(&meta.minimums[group2]);
+        const float d = __half2float(meta.d);
+        const float dmin = __half2float(meta.dmin);
+        const std::uint32_t v0 = w.words[0][lane];
+        const std::uint32_t v1 = w.words[1][lane];
+        const std::uint32_t h = w.qh[lane];
+        float sd[4] = {};
+        float sm[4] = {};
+        #pragma unroll
+        for (unsigned part = 0; part < 2; ++part) {
+            const std::uint32_t low_a = (part == 0) ? (v0 & 0x0f0f0f0f) : ((v0 >> 4) & 0x0f0f0f0f);
+            const std::uint32_t low_b = (part == 0) ? (v1 & 0x0f0f0f0f) : ((v1 >> 4) & 0x0f0f0f0f);
+            const std::uint32_t high_a = (part == 0) ? ((h << 4) & 0x10101010) : ((h << 3) & 0x10101010);
+            const std::uint32_t high_b = (part == 0) ? ((h << 2) & 0x10101010) : ((h << 1) & 0x10101010);
+            const int a = static_cast<int>(low_a | high_a);
+            const int b = static_cast<int>(low_b | high_b);
+            const int scale = (part == 0) ? (scales2 & 0xff) : (scales2 >> 8);
+            const int minimum = (part == 0) ? (mins2 & 0xff) : (mins2 >> 8);
+            #pragma unroll
+            for (unsigned batch = 0; batch < 4; ++batch) {
+                const auto& q = input[batch * NumTiles * 32 + (tile * 4 + lane / 16) * 8 + group + part];
+                const auto* u = reinterpret_cast<const int*>(q.qs) + (in_block % 4);
+                const int qdot = __builtin_amdgcn_sdot4(a, u[0],
+                    __builtin_amdgcn_sdot4(b, u[4], 0, false), false);
+                const int ones = __builtin_amdgcn_sdot4(0x01010101, u[0],
+                    __builtin_amdgcn_sdot4(0x01010101, u[4], 0, false), false);
+                const float qd = __half2float(q.d);
+                sd[batch] += qd * float(qdot * scale);
+                sm[batch] += (qd * float(ones)) * float(minimum);
+            }
+        }
+        #pragma unroll
+        for (unsigned batch = 0; batch < 4; ++batch) {
+            sums[batch] += d * sd[batch] - dmin * sm[batch];
+        }
+    }
+
+    #pragma unroll
+    for (unsigned batch = 0; batch < 4; ++batch) {
+        #pragma unroll
+        for (int offset = 32; offset > 0; offset /= 2) {
+            sums[batch] += __shfl_down(sums[batch], offset, 64);
+        }
+        if (lane == 0) output[batch * rows + row] = sums[batch];
+    }
+}
+
+template <unsigned NumTiles>
 __global__ void q6k_wave_gemv_batched4_reuse_kernel(
     const Q6KWaveTile* __restrict__ weights,
     const miinfer::Q8_1Block* __restrict__ input,
@@ -1295,7 +1363,18 @@ void launch_q5k_wave_gemv(const Q5KWaveTile* w, const miinfer::Q8_1Block* x, flo
 void launch_q5k_wave_gemv_batched4(const Q5KWaveTile* w, const miinfer::Q8_1Block* x,
                                    float* y, std::uint32_t rows, std::uint32_t columns,
                                    hipStream_t stream) {
-    launch_kquant_gemv_batched4_dispatch<Q5KDecoderFast>(w, x, y, rows, columns, stream);
+    if (!w || !x || !y || columns % 1024 != 0) MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    const dim3 grid((rows + 3) / 4);
+    const dim3 block(256);
+    switch (columns / 1024) {
+    case 1: hipLaunchKernelGGL((q5k_wave_gemv_batched4_reuse_kernel<1>), grid, block, 0, stream, w, x, y, rows); break;
+    case 5: hipLaunchKernelGGL((q5k_wave_gemv_batched4_reuse_kernel<5>), grid, block, 0, stream, w, x, y, rows); break;
+    case 6: hipLaunchKernelGGL((q5k_wave_gemv_batched4_reuse_kernel<6>), grid, block, 0, stream, w, x, y, rows); break;
+    case 12: hipLaunchKernelGGL((q5k_wave_gemv_batched4_reuse_kernel<12>), grid, block, 0, stream, w, x, y, rows); break;
+    case 17: hipLaunchKernelGGL((q5k_wave_gemv_batched4_reuse_kernel<17>), grid, block, 0, stream, w, x, y, rows); break;
+    default: throw std::runtime_error("unsupported batched Q5K NumTiles: " + std::to_string(columns / 1024));
+    }
+    MIINFER_HIP_CHECK(hipGetLastError());
 }
 
 static bool q6k_simd_unpack_enabled() {

@@ -1219,35 +1219,61 @@ struct RecurrentLayer {
         auto* residual_batch = static_cast<float*>(prefill_residual->get());
         auto* normalized_batch = static_cast<float*>(prefill_post_normalized->get());
         auto* q8_batch = static_cast<miinfer::Q8_1Block*>(prefill_q8_1->get());
+        const char* ssm_batch_env = std::getenv("MIINFER_PREFILL_SSM_BATCH");
+        const bool batch_ssm_out = d_ssm_out_native
+            && (ssm_batch_env == nullptr || std::strcmp(ssm_batch_env, "0") != 0);
 
-        for (std::size_t i = 0; i < count; ++i) {
-            MIINFER_HIP_CHECK(hipMemcpyAsync(
-                gated->get(), gated_batch + i * kInner, kInner * sizeof(float),
-                hipMemcpyDeviceToDevice, hipStreamPerThread));
-            if (d_ssm_out_native) {
+        // The generic Q5 batch decoder regressed; this path uses the
+        // shape-specific word-reuse kernel, with an opt-out for A/B control.
+        if (batch_ssm_out) {
+            for (std::size_t i = 0; i < count; ++i) {
                 miinfer::launch_q8_1_quantize_f32(
-                    static_cast<const float*>(gated->get()),
-                    static_cast<miinfer::Q8_1Block*>(q8_1->get()), kInner,
+                    gated_batch + i * kInner,
+                    q8_batch + i * (kInner / miinfer::kQ8_1BlockSize), kInner,
                     hipStreamPerThread);
-                launch_q5k_wave_gemv(
-                    static_cast<const Q5KWaveTile*>(d_ssm_out_native->get()),
-                    static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
-                    static_cast<float*>(projected->get()), kHidden, kInner,
-                    hipStreamPerThread);
-            } else if (q5_q8_1_mmvq) {
-                project_q5_q8_1(d_ssm_out, static_cast<const float*>(gated->get()),
-                                static_cast<miinfer::Q8_1Block*>(q8_1->get()),
-                                static_cast<float*>(projected->get()), kHidden, kInner);
-            } else {
-                project(ssm_out_weight, d_ssm_out, static_cast<const float*>(gated->get()),
-                        static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
-                        static_cast<float*>(projected->get()), kHidden, kInner);
             }
-            miinfer::launch_qwen3_fused_add_rms_norm(
-                inputs + i * kHidden, static_cast<const float*>(projected->get()),
-                static_cast<const float*>(d_post_norm->get()),
-                residual_batch + i * kHidden, normalized_batch + i * kHidden,
-                kHidden, model.config().rms_epsilon, nullptr, nullptr);
+            launch_q5k_wave_gemv_batched4(
+                static_cast<const Q5KWaveTile*>(d_ssm_out_native->get()), q8_batch,
+                static_cast<float*>(prefill_projected->get()), kHidden, kInner,
+                hipStreamPerThread);
+            for (std::size_t i = 0; i < count; ++i) {
+                miinfer::launch_qwen3_fused_add_rms_norm(
+                    inputs + i * kHidden,
+                    static_cast<const float*>(prefill_projected->get()) + i * kHidden,
+                    static_cast<const float*>(d_post_norm->get()),
+                    residual_batch + i * kHidden, normalized_batch + i * kHidden,
+                    kHidden, model.config().rms_epsilon, nullptr, nullptr);
+            }
+        } else {
+            for (std::size_t i = 0; i < count; ++i) {
+                MIINFER_HIP_CHECK(hipMemcpyAsync(
+                    gated->get(), gated_batch + i * kInner, kInner * sizeof(float),
+                    hipMemcpyDeviceToDevice, hipStreamPerThread));
+                if (d_ssm_out_native) {
+                    miinfer::launch_q8_1_quantize_f32(
+                        static_cast<const float*>(gated->get()),
+                        static_cast<miinfer::Q8_1Block*>(q8_1->get()), kInner,
+                        hipStreamPerThread);
+                    launch_q5k_wave_gemv(
+                        static_cast<const Q5KWaveTile*>(d_ssm_out_native->get()),
+                        static_cast<const miinfer::Q8_1Block*>(q8_1->get()),
+                        static_cast<float*>(projected->get()), kHidden, kInner,
+                        hipStreamPerThread);
+                } else if (q5_q8_1_mmvq) {
+                    project_q5_q8_1(d_ssm_out, static_cast<const float*>(gated->get()),
+                                    static_cast<miinfer::Q8_1Block*>(q8_1->get()),
+                                    static_cast<float*>(projected->get()), kHidden, kInner);
+                } else {
+                    project(ssm_out_weight, d_ssm_out, static_cast<const float*>(gated->get()),
+                            static_cast<miinfer::Q8KDeviceBlock*>(q8->get()),
+                            static_cast<float*>(projected->get()), kHidden, kInner);
+                }
+                miinfer::launch_qwen3_fused_add_rms_norm(
+                    inputs + i * kHidden, static_cast<const float*>(projected->get()),
+                    static_cast<const float*>(d_post_norm->get()),
+                    residual_batch + i * kHidden, normalized_batch + i * kHidden,
+                    kHidden, model.config().rms_epsilon, nullptr, nullptr);
+            }
         }
 
         for (std::size_t i = 0; i < count; ++i) {
@@ -1845,6 +1871,8 @@ struct FullAttentionLayer {
     Buffer gated_attention, projected, residual, post_normalized, ffn_gate, ffn_up;
     Buffer ffn_activation, layer_output, q8;
     Buffer prefill_normalized, prefill_qfull, prefill_value, prefill_q8_1;
+    Buffer prefill_gated_attention, prefill_projected, prefill_residual, prefill_post_normalized;
+    Buffer prefill_ffn_gate, prefill_ffn_up, prefill_ffn_activation, prefill_ffn_projected;
     bool reuse_projection_q8 = false;
     Buffer q8_1;
     bool q4_q8_1_mmvq = false;
@@ -2039,8 +2067,16 @@ struct FullAttentionLayer {
             prefill_normalized = allocate(kPrefillBatch * kHidden * sizeof(float));
             prefill_qfull = allocate(kPrefillBatch * (12288 + 1024) * sizeof(float));
             prefill_value = allocate(kPrefillBatch * 1024 * sizeof(float));
-            prefill_q8_1 = allocate(kPrefillBatch * (kHidden / miinfer::kQ8_1BlockSize)
+            prefill_q8_1 = allocate(kPrefillBatch * (kFfnInner / miinfer::kQ8_1BlockSize)
                                     * sizeof(miinfer::Q8_1Block));
+            prefill_gated_attention = allocate(kPrefillBatch * kInner * sizeof(float));
+            prefill_projected = allocate(kPrefillBatch * kHidden * sizeof(float));
+            prefill_residual = allocate(kPrefillBatch * kHidden * sizeof(float));
+            prefill_post_normalized = allocate(kPrefillBatch * kHidden * sizeof(float));
+            prefill_ffn_gate = allocate(kPrefillBatch * kFfnInner * sizeof(float));
+            prefill_ffn_up = allocate(kPrefillBatch * kFfnInner * sizeof(float));
+            prefill_ffn_activation = allocate(kPrefillBatch * kFfnInner * sizeof(float));
+            prefill_ffn_projected = allocate(kPrefillBatch * kHidden * sizeof(float));
         }
         MIINFER_HIP_CHECK(hipMemset(key_cache->get(), 0, 4 * kCacheCapacity * 256 * kv_element_size));
         MIINFER_HIP_CHECK(hipMemset(value_cache->get(), 0, 4 * kCacheCapacity * 256 * kv_element_size));
@@ -2132,6 +2168,103 @@ struct FullAttentionLayer {
         return static_cast<const float*>(prefill_value->get()) + index * 1024;
     }
 
+    bool prefill_tail_batch_supported() const {
+        const char* env = std::getenv("MIINFER_PREFILL_ATTN_TAIL");
+        const bool enabled = env == nullptr || std::strcmp(env, "0") != 0;
+        return enabled && prefill_batch_enabled && d_o_native && d_ffn_down_native
+            && (d_ffn_swiglu_native || (d_ffn_gate_native && d_ffn_up_native));
+    }
+
+    void finish_prefill_batch(const float* inputs, float* outputs, std::size_t count,
+                              const float* next_norm_weight = nullptr,
+                              float* next_normalized = nullptr) {
+        if (!prefill_tail_batch_supported() || inputs == nullptr || outputs == nullptr
+            || count != kPrefillBatch) {
+            throw std::runtime_error("invalid attention prefill batch tail");
+        }
+        auto* q8_batch = static_cast<miinfer::Q8_1Block*>(prefill_q8_1->get());
+        auto* projection_batch = static_cast<float*>(prefill_projected->get());
+        auto* residual_batch = static_cast<float*>(prefill_residual->get());
+        auto* normalized_batch = static_cast<float*>(prefill_post_normalized->get());
+
+        // Q/K/V, causal attention, and KV writes remain position-ordered in
+        // run(); only the post-attention O/FFN tail is deferred and batched.
+        for (std::size_t i = 0; i < count; ++i) {
+            miinfer::launch_q8_1_quantize_f32(
+                static_cast<const float*>(prefill_gated_attention->get()) + i * kInner,
+                q8_batch + i * (kInner / miinfer::kQ8_1BlockSize), kInner,
+                hipStreamPerThread);
+        }
+        launch_q4k_wave_gemv_batched4(
+            static_cast<const Q4KWaveTile*>(d_o_native->get()), q8_batch,
+            projection_batch, kHidden, kInner, hipStreamPerThread);
+        for (std::size_t i = 0; i < count; ++i) {
+            miinfer::launch_qwen3_fused_add_rms_norm(
+                inputs + i * kHidden, projection_batch + i * kHidden,
+                static_cast<const float*>(d_post->get()),
+                residual_batch + i * kHidden, normalized_batch + i * kHidden,
+                kHidden, model.config().rms_epsilon, nullptr, nullptr);
+            miinfer::launch_q8_1_quantize_f32(
+                normalized_batch + i * kHidden,
+                q8_batch + i * (kHidden / miinfer::kQ8_1BlockSize), kHidden,
+                hipStreamPerThread);
+        }
+        if (d_ffn_swiglu_native) {
+            launch_q4k_wave_fused_gate_up_swiglu_paired_batched4(
+                static_cast<const Q4KWaveSwigluFusedTile*>(d_ffn_swiglu_native->get()),
+                q8_batch, static_cast<float*>(prefill_ffn_activation->get()),
+                kFfnInner, kHidden, hipStreamPerThread);
+        } else {
+            launch_q4k_wave_gemv_batched4(
+                static_cast<const Q4KWaveTile*>(d_ffn_gate_native->get()), q8_batch,
+                static_cast<float*>(prefill_ffn_gate->get()), kFfnInner, kHidden,
+                hipStreamPerThread);
+            launch_q4k_wave_gemv_batched4(
+                static_cast<const Q4KWaveTile*>(d_ffn_up_native->get()), q8_batch,
+                static_cast<float*>(prefill_ffn_up->get()), kFfnInner, kHidden,
+                hipStreamPerThread);
+            for (std::size_t i = 0; i < count; ++i) {
+                miinfer::launch_qwen3_silu_mul(
+                    static_cast<const float*>(prefill_ffn_gate->get()) + i * kFfnInner,
+                    static_cast<const float*>(prefill_ffn_up->get()) + i * kFfnInner,
+                    static_cast<float*>(prefill_ffn_activation->get()) + i * kFfnInner,
+                    kFfnInner, hipStreamPerThread);
+            }
+        }
+        for (std::size_t i = 0; i < count; ++i) {
+            miinfer::launch_q8_1_quantize_f32(
+                static_cast<const float*>(prefill_ffn_activation->get()) + i * kFfnInner,
+                q8_batch + i * (kFfnInner / miinfer::kQ8_1BlockSize), kFfnInner,
+                hipStreamPerThread);
+        }
+        if (ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
+            launch_q4k_wave_gemv_batched4(
+                static_cast<const Q4KWaveTile*>(d_ffn_down_native->get()), q8_batch,
+                static_cast<float*>(prefill_ffn_projected->get()), kHidden, kFfnInner,
+                hipStreamPerThread);
+        } else {
+            launch_q6k_wave_gemv_batched4(
+                static_cast<const Q6KWaveTile*>(d_ffn_down_native->get()), q8_batch,
+                static_cast<float*>(prefill_ffn_projected->get()), kHidden, kFfnInner,
+                hipStreamPerThread);
+        }
+        for (std::size_t i = 0; i < count; ++i) {
+            if (next_norm_weight != nullptr && next_normalized != nullptr) {
+                miinfer::launch_qwen3_fused_add_rms_norm(
+                    residual_batch + i * kHidden,
+                    static_cast<const float*>(prefill_ffn_projected->get()) + i * kHidden,
+                    next_norm_weight, outputs + i * kHidden,
+                    next_normalized + i * kHidden, kHidden,
+                    model.config().rms_epsilon, nullptr, nullptr);
+            } else {
+                miinfer::launch_qwen3_add(
+                    residual_batch + i * kHidden,
+                    static_cast<const float*>(prefill_ffn_projected->get()) + i * kHidden,
+                    outputs + i * kHidden, kHidden, hipStreamPerThread);
+            }
+        }
+    }
+
     void run(const float* input, std::uint32_t position, float* output,
              const float* next_norm_weight = nullptr,
              float* next_normalized = nullptr,
@@ -2140,7 +2273,9 @@ struct FullAttentionLayer {
              bool precomputed_q8 = false,
              const float* prepared_normalized = nullptr,
              const float* prepared_qfull = nullptr,
-             const float* prepared_value = nullptr) {
+             const float* prepared_value = nullptr,
+             bool defer_prefill_tail = false,
+             std::size_t prefill_index = 0) {
         if (prepared_normalized != nullptr) {
             MIINFER_HIP_CHECK(hipMemcpyAsync(
                 normalized->get(), prepared_normalized, kHidden * sizeof(float),
@@ -2364,6 +2499,16 @@ struct FullAttentionLayer {
                 static_cast<const float*>(gate->get()),
                 static_cast<float*>(gated_attention->get()),
                 6144);
+        }
+        if (defer_prefill_tail) {
+            if (!prefill_tail_batch_supported() || prefill_index >= kPrefillBatch) {
+                throw std::runtime_error("invalid deferred attention prefill tail");
+            }
+            MIINFER_HIP_CHECK(hipMemcpyAsync(
+                static_cast<float*>(prefill_gated_attention->get()) + prefill_index * kInner,
+                gated_attention->get(), kInner * sizeof(float),
+                hipMemcpyDeviceToDevice, hipStreamPerThread));
+            return;
         }
         if (d_o_native) {
             if (!fused_core_q8 || !tiled_online_attention) {
@@ -2589,14 +2734,20 @@ struct GpuLayerRef {
     }
 
     bool prefill_tail_batch_supported() const {
-        return recurrent != nullptr && recurrent->prefill_tail_batch_supported();
+        if (recurrent != nullptr) return recurrent->prefill_tail_batch_supported();
+        return attention != nullptr && attention->prefill_tail_batch_supported();
     }
 
     void finish_prefill_batch(const float* inputs, float* outputs, std::size_t count,
                               const float* next_norm_weight = nullptr,
                               float* next_normalized = nullptr) const {
-        if (recurrent == nullptr) throw std::runtime_error("attention layer cannot finish recurrent prefill batch");
-        recurrent->finish_prefill_batch(inputs, outputs, count, next_norm_weight, next_normalized);
+        if (recurrent != nullptr) {
+            recurrent->finish_prefill_batch(inputs, outputs, count, next_norm_weight, next_normalized);
+        } else if (attention != nullptr) {
+            attention->finish_prefill_batch(inputs, outputs, count, next_norm_weight, next_normalized);
+        } else {
+            throw std::runtime_error("empty qwen35 GPU layer reference");
+        }
     }
 
     void run(const float* input, std::uint32_t position, float* output,
@@ -2620,7 +2771,7 @@ struct GpuLayerRef {
         } else if (attention != nullptr) {
             attention->run(input, position, output, next_norm_weight, next_normalized,
                            precomputed_norm, next_q8_1, precomputed_q8, prepared_normalized,
-                           prepared_qfull, prepared_value);
+                           prepared_qfull, prepared_value, defer_prefill_tail, prefill_index);
         } else {
             throw std::runtime_error("empty qwen35 GPU layer reference");
         }

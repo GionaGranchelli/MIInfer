@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788826282.4154916,
-    "seen": 1788826296.790189,
-    "ast_hash": "09b4b10b04a4d04360abe1c0e6681f35",
+    "mtime": 1788828315.6763127,
+    "seen": 1788828335.206842,
+    "ast_hash": "629868d1a14fe4f87cbd028757011db7",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788826282.4144917,
-    "seen": 1788826296.7902203,
-    "ast_hash": "9af4fe5d5f95483529b4cff31f93d345",
+    "mtime": 1788828315.6783125,
+    "seen": 1788828335.20687,
+    "ast_hash": "84fb044f1ed72a9c6c10430ee13f82c4",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -2370,9 +2370,9 @@
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1788826246.9546342,
-    "seen": 1788826296.7901707,
-    "ast_hash": "8fb5312fdf24228849b1c391d1d8f49f",
+    "mtime": 1788827811.902339,
+    "seen": 1788827932.0257545,
+    "ast_hash": "dfc48d8f56b35e197ee67b57fe2b9659",
     "semantic_hash": ""
   },
   "docs/M9-AUTOREGRESSIVE-QUALIFICATION.md": {
@@ -2559,6 +2559,12 @@
     "mtime": 1788826282.4124916,
     "seen": 1788826296.7905946,
     "ast_hash": "c6d892ed37d20263c30fabda05f51074",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0217-m11b-attention-tail-q5-reuse.md": {
+    "mtime": 1788828315.6793127,
+    "seen": 1788828335.2072165,
+    "ast_hash": "cfc0908c70b71734bbd4f509cdbda7af",
     "semantic_hash": ""
   }
 }
