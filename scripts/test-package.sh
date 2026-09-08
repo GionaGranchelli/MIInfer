@@ -38,6 +38,11 @@ done
 "$package_root/bin/miinfer" --help >/dev/null
 "$package_root/bin/miinfer" --version >/dev/null
 "$package_root/bin/miinfer-device-info" --version >/dev/null
+"$package_root/bin/miinfer" config > "$stage/config.txt"
+if ! grep -q '^prefill_path=validated-default$' "$stage/config.txt"; then
+    printf 'configuration contract missing validated prefill path\n' >&2
+    exit 1
+fi
 mkdir -p "$stage/models/nested"
 : > "$stage/models/nested/sample.gguf"
 if ! "$package_root/bin/miinfer" models "$stage/models" | grep -q 'sample.gguf'; then

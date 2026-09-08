@@ -24,7 +24,7 @@ M13:   CLOSED
 M14:   v0.1.0 release       PASS at c7b3737
 M15-A: runtime version      PASS
 M15-B: model discovery      PASS
-M15-C: configuration        OPEN
+M15-C: configuration        PASS
 M15-D: serving lifecycle    OPEN
 ```
 
@@ -68,8 +68,8 @@ P512: 9897.51 ms / 51.73 tok/s. The direct MMQ candidate is rejected before
 runtime integration; M12's opt-in path and decode behavior remain unchanged.
 M13 is the hard stop for this single-MI50 prefill research branch.
 
-The next milestone is M14 release/packaging/hardware detection. Do not add
-another quantized projection mapping without a new, materially different
+M13 is closed and M14 release/packaging/hardware detection is complete. Do not
+add another quantized projection mapping without a new, materially different
 hypothesis and an isolated win over the existing B4 path.
 
 M14 release packaging is now wired through CPack. A release package contains
@@ -98,6 +98,10 @@ gfx906 device contract independently of the build-tree paths.
 The installed runtime also exposes `miinfer --version` with version, commit,
 build, compiler, HIP, and target-architecture fields for installer and health
 checks.
+
+`miinfer config` exposes the stable target/model/quantization/context contract
+without requiring model loading or GPU initialization. The validated default
+prefill path is explicit; M12 remains opt-in research configuration.
 
 The first M12 promotion campaign is recorded in
 `experiments/EXP-0262-m12-production-qualification.md`. EXP-0263 fixes the

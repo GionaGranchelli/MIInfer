@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788877608.2808862,
-    "seen": 1788877619.0361564,
-    "ast_hash": "299b93c983dfb4108e105099a58983b0",
+    "mtime": 1788878019.3641353,
+    "seen": 1788878031.3082352,
+    "ast_hash": "f7daf556fa828c600f771f826bd4337a",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788877608.2828863,
-    "seen": 1788877619.0361848,
-    "ast_hash": "7983bd6774948b20451cf6e8753fb5d8",
+    "mtime": 1788878019.3621352,
+    "seen": 1788878031.308263,
+    "ast_hash": "bb7d38979695f42ddc7b45d8c803d539",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788877608.2848864,
-    "seen": 1788877619.0362093,
-    "ast_hash": "697f862370a1c37c83ee054ac152f991",
+    "mtime": 1788878019.3661351,
+    "seen": 1788878031.3082886,
+    "ast_hash": "78ede3d962e721ae17606b3260fe49bb",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -2364,9 +2364,9 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1788877494.0543728,
-    "seen": 1788877577.9486246,
-    "ast_hash": "fa648a99f83eebe431b26ce9990002b7",
+    "mtime": 1788878047.4190156,
+    "seen": 1788878058.0462408,
+    "ast_hash": "57d51284fac3b54ca8072d36dfbb4e45",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
@@ -2406,9 +2406,9 @@
     "semantic_hash": ""
   },
   "docs/M9-RUNTIME-SURFACE.md": {
-    "mtime": 1788877494.055373,
-    "seen": 1788877577.948665,
-    "ast_hash": "59c68e648dce74f1d1326f3db0e9d466",
+    "mtime": 1788878001.4742115,
+    "seen": 1788878031.3082585,
+    "ast_hash": "e7d238b109fdf44d5bd9cf425243caef",
     "semantic_hash": ""
   },
   "experiments/EXP-0194-kquant-fast-tile-arith.md": {
@@ -2874,9 +2874,9 @@
     "semantic_hash": ""
   },
   "scripts/test-package.sh": {
-    "mtime": 1788877494.055373,
-    "seen": 1788877577.9485297,
-    "ast_hash": "a9781e781e4bb50a8faf7f2a064bfdf1",
+    "mtime": 1788877991.8402524,
+    "seen": 1788878031.3081226,
+    "ast_hash": "5464182ee559d63ddae48f741123e0f8",
     "semantic_hash": ""
   },
   "experiments/EXP-0262-m12-production-qualification.md": {

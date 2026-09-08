@@ -8,13 +8,14 @@ Milestone M9 Lane F delivers the production-grade, standalone unified CLI binary
 
 ## 2. Command Architecture
 
-The `miinfer` executable exposes four subcommands:
+The `miinfer` executable exposes the following commands:
 
 ```bash
 miinfer <command> [options]
 
 Commands:
   --version                              Print build and target information
+  config                                 Print supported runtime configuration
   models [directory]                     List GGUF model artifacts
   inspect <model.gguf>                     Inspect model metadata, quantization, and VRAM budget
   run <model.gguf> --prompt "..."         Generate text from a prompt with streaming output
@@ -29,7 +30,12 @@ Performs comprehensive offline and hardware-aware validation of the GGUF model:
 - **VRAM Budget Calculation**: Breaks down weights (~15.92 GiB), 1024-token KV cache (64.0 MiB), recurrent states (48.0 MiB), and activation/graph allocations (~49.2 MiB), demonstrating 16.08 GiB total utilization against the 31.98 GiB MI50 HBM2 pool (15.91 GiB / ~50% headroom).
 - **Target Compatibility**: Verifies gfx906 target, Wave64 compilation, and execution plan sanity.
 
-### 2.1a `miinfer models`
+### 2.1a `miinfer config`
+Prints the stable, machine-readable runtime contract without loading a model or
+requiring a GPU. M12 prefill remains explicitly opt-in and is not part of the
+validated default path.
+
+### 2.1b `miinfer models`
 Lists `.gguf` files recursively without loading model metadata or requiring a
 GPU. The optional directory defaults to the current working directory.
 

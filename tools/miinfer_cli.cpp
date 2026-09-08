@@ -884,6 +884,21 @@ int cmd_models(int argc, char** argv) {
     return 0;
 }
 
+int cmd_config(int argc, char**) {
+    if (argc != 2) {
+        std::cerr << "usage: miinfer config\n";
+        return 2;
+    }
+    std::cout << "target_architecture=gfx906\n"
+              << "hardware=AMD Instinct MI50 32GB\n"
+              << "model=Qwen3.8-27B\n"
+              << "quantization=Q4_K_M\n"
+              << "context_capacity=1024\n"
+              << "prefill_path=validated-default\n"
+              << "m12_prefill=opt-in\n";
+    return 0;
+}
+
 // ---------------------------------------------------------------------------
 // Subcommand 2: run
 // ---------------------------------------------------------------------------
@@ -1186,6 +1201,7 @@ void print_usage() {
     std::cout << "Usage: miinfer <command> [options]\n\n";
     std::cout << "Commands:\n";
     std::cout << "  --version                              Print build and target information\n";
+    std::cout << "  config                                 Print supported runtime configuration\n";
     std::cout << "  models [directory]                     List GGUF model artifacts\n";
     std::cout << "  inspect <model.gguf>                     Inspect model metadata, quantization, and VRAM budget\n";
     std::cout << "  run <model.gguf> --prompt \"...\"         Generate text from a prompt with streaming output\n";
@@ -1204,6 +1220,8 @@ int main(int argc, char** argv) {
     const std::string_view cmd = argv[1];
     if (cmd == "inspect") {
         return cmd_inspect(argc, argv);
+    } else if (cmd == "config") {
+        return cmd_config(argc, argv);
     } else if (cmd == "models") {
         return cmd_models(argc, argv);
     } else if (cmd == "run") {

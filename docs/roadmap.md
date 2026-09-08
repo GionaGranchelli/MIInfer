@@ -63,8 +63,8 @@ contract and missing barrier; the dense FFN-down path still changes the P128
 greedy token from baseline EOS 248046 to 271. M12 remains opt-in until a
 numerically qualified dense replacement exists.
 
-M15 starts with stable `miinfer --version` and `miinfer models [directory]`
-contracts. Configuration is next, followed by a more robust serving lifecycle;
+M15 now provides stable `miinfer --version`, `miinfer config`, and
+`miinfer models [directory]` contracts. A more robust serving lifecycle is next;
 keep the implementation narrow to the supported MI50/Qwen3.8 path.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
