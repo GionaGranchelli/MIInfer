@@ -1992,9 +1992,9 @@
     "semantic_hash": ""
   },
   "bench/q4k_layout_bench.cpp": {
-    "mtime": 1788832493.5835063,
-    "seen": 1788832590.5094,
-    "ast_hash": "032238a3ef69d3802f67b0257e1e2716",
+    "mtime": 1788832908.5308373,
+    "seen": 1788832972.8340478,
+    "ast_hash": "0194fa1c61f041344a4c768a2e005b6f",
     "semantic_hash": ""
   },
   "experiments/EXP-0173-q4k-native-layout-laboratory.md": {
@@ -2040,8 +2040,8 @@
     "semantic_hash": ""
   },
   "include/miinfer/kquant_wave_layout.hpp": {
-    "mtime": 1788832493.5825064,
-    "seen": 1788832590.5094197,
+    "mtime": 1788832908.5308373,
+    "seen": 1788832972.8340683,
     "ast_hash": "8dd28b79700228b35792dd0aa2b07b7b",
     "semantic_hash": ""
   },
@@ -2619,6 +2619,12 @@
     "mtime": 1788832514.4964223,
     "seen": 1788832590.510037,
     "ast_hash": "07a522d42105aa2ec412fe8edf40fe3d",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0227-m11b-q4k-token-tile-rejection.md": {
+    "mtime": 1788832908.5298374,
+    "seen": 1788832972.8346896,
+    "ast_hash": "a2b266b94593c00c454ca3d615c93acd",
     "semantic_hash": ""
   }
 }
