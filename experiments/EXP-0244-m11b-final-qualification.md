@@ -89,3 +89,21 @@ correct but measured `0.660x` against sixteen B=4 launches. Both candidates
 were removed. These results further narrow the blocker to a genuinely
 different causal grouped-dataflow schedule rather than another native
 Q4_K remapping.
+
+EXP-0247 tested a two-thread-per-output-cell, four-row × 64-token Q4_K
+decomposition. It was correct within `3.57628e-6` but reached only `0.116x`
+the B=4 control. EXP-0248 tested an operator-major production tail ordering;
+repeated P546 controls measured `45.45 tok/s` and candidates `45.15 tok/s`
+(`0.993x`), with identical one-token continuation checks. EXP-0249 tested a
+native 64-row × 64-token LDS-staged MMQ and measured `0.527x`. EXP-0250
+tested expanded decoded-metadata grouping; it was correct within `6.4373e-6`
+but measured `0.098x`. All four candidates were removed. The local grouped
+projection search therefore remains negative: no tested variant closes the
+end-to-end gap or justifies changing the production schedule.
+
+The final external intake check found only the already-tested three-plane
+repack/MMQ family and generic gfx906 MMQ warp-count tuning. Published Q4_K
+discussion also reports that larger warp counts can regress Q4_K even when
+they help Q8, so it does not supply a defensible untested candidate for this
+path. The next implementation would need a new causal grouped-dataflow design,
+not another tile or warp-count sweep.

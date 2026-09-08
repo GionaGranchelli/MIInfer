@@ -71,6 +71,12 @@ ceiling is about 64.1 tok/s. The 100 tok/s gate remains unmet and requires a
 new causal grouped-dataflow experiment.
 EXP-0245 rejects a native 16-token split-4 output-stationary mapping: it was
 correct within 1.90735e-6 but reached only 0.594x four B=4 launches.
+EXP-0247 rejects a two-thread-per-output-cell 64-token Q4_K decomposition at
+0.116x; EXP-0248 rejects operator-major tail ordering at 0.993x end-to-end;
+EXP-0249 rejects native 64-row MMQ staging at 0.527x; and EXP-0250 rejects
+expanded decoded-metadata grouping at 0.098x. All temporary candidates were
+removed. The 100 tok/s gate still requires a genuinely new causal
+grouped-dataflow design.
 
 The project currently has:
 

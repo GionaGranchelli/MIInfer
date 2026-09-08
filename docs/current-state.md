@@ -105,6 +105,15 @@ matched within `1.90735e-6` but measured `2040.32 us` versus `1212.96 us`
 for four native B=4 launches (`0.594x`), so the direct native 16-token
 remapping family remains rejected and was removed.
 
+EXP-0247 rejected a two-thread-per-output-cell four-row × 64-token Q4_K
+decomposition at `0.116x`; EXP-0248 rejected operator-major tail ordering at
+`0.993x` end-to-end with matching continuation output; EXP-0249 rejected a
+native 64-row × 64-token MMQ at `0.527x`; and EXP-0250 rejected expanded
+decoded-metadata grouping at `0.098x`. All temporary kernels and schedule
+changes were removed. The local grouped-projection search is exhausted for
+this pass; the 100 tok/s gate still requires a genuinely new causal
+grouped-dataflow design.
+
 EXP-0168 completed that profile at position 63: total GPU event
 `71.9133 ms/token`, layer sum `68.6269 ms`, final LM head `2.50016 ms`, and
 zero allocations. FFN Down remains the largest repeated individual stage,
