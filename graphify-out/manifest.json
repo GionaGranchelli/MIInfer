@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788830478.4206128,
-    "seen": 1788830491.8989232,
-    "ast_hash": "82ef8465fbcf7366de5f0e3565644d5f",
+    "mtime": 1788835068.8301473,
+    "seen": 1788835080.5893679,
+    "ast_hash": "62d523590a7fd75a00cd6e5f7f6760de",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788830478.4226127,
-    "seen": 1788830491.8989508,
-    "ast_hash": "0e4d3015d3acc8d7f21cb3b930ee70d9",
+    "mtime": 1788835068.8281472,
+    "seen": 1788835080.589394,
+    "ast_hash": "62ea8558eed62b372aebf8bb9e6e4ce6",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -1992,8 +1992,8 @@
     "semantic_hash": ""
   },
   "bench/q4k_layout_bench.cpp": {
-    "mtime": 1788834000.5804443,
-    "seen": 1788834033.1372757,
+    "mtime": 1788834960.5925827,
+    "seen": 1788835080.5891304,
     "ast_hash": "0194fa1c61f041344a4c768a2e005b6f",
     "semantic_hash": ""
   },
@@ -2040,8 +2040,8 @@
     "semantic_hash": ""
   },
   "include/miinfer/kquant_wave_layout.hpp": {
-    "mtime": 1788833622.4519653,
-    "seen": 1788833640.4970422,
+    "mtime": 1788834985.372483,
+    "seen": 1788835080.5891495,
     "ast_hash": "8dd28b79700228b35792dd0aa2b07b7b",
     "semantic_hash": ""
   },
@@ -2076,8 +2076,8 @@
     "semantic_hash": ""
   },
   "src/kquant_wave_layout.cpp": {
-    "mtime": 1788786289.8745983,
-    "seen": 1788802984.7956254,
+    "mtime": 1788834985.373483,
+    "seen": 1788835080.589259,
     "ast_hash": "2a9196dfc739ff5e51797e76b78af13c",
     "semantic_hash": ""
   },
@@ -2643,6 +2643,12 @@
     "mtime": 1788834017.0313783,
     "seen": 1788834033.1379538,
     "ast_hash": "0f3625898ad1809a0a97660c5b0b883d",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0231-m11b-q4k-repacked-mmq-rejection.md": {
+    "mtime": 1788834915.5977635,
+    "seen": 1788835080.589767,
+    "ast_hash": "e68ad379f581d9b035c16c87979de068",
     "semantic_hash": ""
   }
 }
