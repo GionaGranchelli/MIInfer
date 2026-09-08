@@ -57,7 +57,8 @@ B=4 batch in the opt-in layer-major path, improving P513 from 45.86 to 46.19
 tok/s at approximately 12.1 MiB extra bounded workspace. EXP-0235 fuses the
 recurrent Q8_1 output into that core and measures 46.22 versus 45.90 tok/s in
 one matched P513 pair. The projection ceiling and 100 tok/s gate remain
-unchanged.
+unchanged. EXP-0236 rejects direct Q8_1 emission from the existing
+full-attention reduction after a matched P513 change of only `+0.04%`.
 
 EXP-0168 completed that profile at position 63: total GPU event
 `71.9133 ms/token`, layer sum `68.6269 ms`, final LM head `2.50016 ms`, and

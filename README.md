@@ -46,6 +46,8 @@ B=4 batch inside layer-major prefill, improving P513 from 45.86 to 46.19
 tok/s with approximately 12.1 MiB of bounded workspace. EXP-0235 emits the
 recurrent Q8_1 output in that same core, measuring 46.22 versus 45.90 tok/s in
 one matched P513 pair; it does not change the projection ceiling or the gate.
+EXP-0236 rejects direct Q8_1 emission from the existing full-attention
+reduction: it changed P513 by only `+0.04%` and was removed.
 
 The project currently has:
 
