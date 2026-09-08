@@ -36,6 +36,7 @@
 #include "miinfer/qwen3_tokenizer.hpp"
 #include "miinfer/qwen35_model.hpp"
 #include "miinfer/build_info.hpp"
+#include "miinfer/openai_api.hpp"
 
 namespace {
 
@@ -1281,39 +1282,17 @@ int cmd_serve(int argc, char** argv) {
     auto handle_request = [&](const HttpRequest& request) {
         const int client_fd = request.client_fd;
         ++inference_requests;
-        const std::string& raw = request.raw;
-
-        const bool is_stream = raw.find("\"stream\": true") != std::string::npos
-            || raw.find("\"stream\":true") != std::string::npos;
-        std::size_t max_tokens = 256;
-        const std::size_t max_pos = raw.find("\"max_tokens\":");
-        if (max_pos != std::string::npos) {
-            try {
-                const std::size_t start = raw.find_first_of("0123456789", max_pos + 12);
-                if (start != std::string::npos) max_tokens = std::stoull(raw.substr(start));
-            } catch (...) {}
-        }
-        max_tokens = std::min(max_tokens, kMaxRequestTokens);
-
-        std::string prompt = "<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n";
-        std::size_t content_pos = raw.find("\"content\": \"");
-        if (content_pos == std::string::npos) content_pos = raw.find("\"content\":\"");
-        if (content_pos != std::string::npos) {
-            const std::size_t start = raw.find('"', content_pos + 10) + 1;
-            const std::size_t end = raw.find('"', start);
-            if (end != std::string::npos) {
-                prompt += "<|im_start|>user\n" + raw.substr(start, end - start)
-                        + "<|im_end|>\n<|im_start|>assistant\n";
-            } else {
-                ++http_errors;
-                send_http_error(client_fd, 400, "Invalid Chat Content");
-                return;
-            }
-        } else {
+        const std::size_t body_start = request.raw.find("\r\n\r\n");
+        const auto parsed = miinfer::parse_openai_chat_request(
+            body_start == std::string::npos ? std::string_view{} : std::string_view(request.raw).substr(body_start + 4));
+        if (!parsed.request) {
             ++http_errors;
-            send_http_error(client_fd, 400, "Missing Chat Content");
+            send_http_error(client_fd, 400, parsed.error);
             return;
         }
+        const bool is_stream = parsed.request->stream;
+        const std::size_t max_tokens = parsed.request->max_tokens;
+        const std::string prompt = miinfer::build_chatml(*parsed.request);
 
         const auto prompt_tokens = engine.tokenizer().encode(prompt);
         if (is_stream) {

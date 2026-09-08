@@ -29,7 +29,7 @@ M15-D: serving lifecycle    PASS
 M16-A: request metrics      PASS
 M16-B: queueing             PASS
 M16-C: concurrency          OPEN
-M16-D: JSON parsing         OPEN
+M16-D: JSON parsing         PASS
 ```
 
 M11-B is frozen at the qualified `46.22 tok/s` P513 packed-Q4 baseline.
