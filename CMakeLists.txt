@@ -476,6 +476,7 @@ install(FILES
     docs/hardware.md
     DESTINATION "${CMAKE_INSTALL_DOCDIR}"
 )
+install(PROGRAMS install.sh DESTINATION ".")
 if(MIINFER_ENABLE_HIP)
     install(TARGETS miinfer miinfer-device-info
             RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")

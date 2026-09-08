@@ -61,6 +61,13 @@ std::string json_escape(std::string_view value) {
     return escaped;
 }
 
+std::optional<int> parse_port(std::string_view value) {
+    int port = 0;
+    const auto [end, error] = std::from_chars(value.data(), value.data() + value.size(), port);
+    if (error != std::errc{} || end != value.data() + value.size() || port < 0 || port > 65535) return std::nullopt;
+    return port;
+}
+
 struct RuntimeGenerateOptions {
     std::size_t max_new_tokens = 256;
     bool stream = true;
@@ -922,6 +929,44 @@ int cmd_config(int argc, char**) {
     return 0;
 }
 
+int cmd_doctor(int argc, char** argv) {
+    std::optional<std::filesystem::path> model;
+    int port = 8080;
+    for (int i = 2; i < argc; ++i) {
+        const std::string_view arg = argv[i];
+        if (arg == "--model" && i + 1 < argc) model = argv[++i];
+        else if (arg == "--port" && i + 1 < argc) {
+            const auto parsed = parse_port(argv[++i]);
+            if (!parsed) { std::cerr << "port must be an integer from 0 to 65535\n"; return 2; }
+            port = *parsed;
+        }
+        else { std::cerr << "usage: miinfer doctor [--model MODEL.gguf] [--port PORT]\n"; return 2; }
+    }
+    bool healthy = true;
+    hipDeviceProp_t prop{};
+    if (hipGetDeviceProperties(&prop, 0) != hipSuccess) {
+        std::cout << "gpu=FAIL: HIP cannot access device 0\n"; healthy = false;
+    } else {
+        std::size_t free_bytes = 0, total_bytes = 0;
+        const bool gfx906 = std::string_view(prop.gcnArchName).find("gfx906") != std::string_view::npos;
+        if (hipMemGetInfo(&free_bytes, &total_bytes) != hipSuccess) healthy = false;
+        std::cout << "gpu=" << (gfx906 ? "PASS" : "FAIL") << ": " << prop.name << " " << prop.gcnArchName << "\n"
+                  << "vram_free_gib=" << std::fixed << std::setprecision(2) << free_bytes / 1073741824.0 << "\n"
+                  << "rocm_hip=PASS\n";
+        healthy &= gfx906;
+    }
+    if (model) {
+        try { (void)miinfer::Qwen35Model::load(*model); std::cout << "model=PASS: " << *model << "\n"; }
+        catch (const std::exception& error) { std::cout << "model=FAIL: " << error.what() << "\n"; healthy = false; }
+    }
+    int fd = socket(AF_INET, SOCK_STREAM, 0);
+    sockaddr_in address{}; address.sin_family = AF_INET; address.sin_addr.s_addr = htonl(INADDR_LOOPBACK); address.sin_port = htons(port);
+    const bool available = fd >= 0 && bind(fd, reinterpret_cast<sockaddr*>(&address), sizeof(address)) == 0;
+    if (fd >= 0) close(fd);
+    std::cout << "port=" << (available ? "PASS" : "FAIL") << ": " << port << "\n";
+    return healthy && available ? 0 : 1;
+}
+
 // ---------------------------------------------------------------------------
 // Subcommand 2: run
 // ---------------------------------------------------------------------------
@@ -1212,23 +1257,28 @@ void send_http_error(int client_fd, int status, std::string_view reason) {
 }
 
 int cmd_serve(int argc, char** argv) {
-    if (argc < 3) {
-        std::cerr << "usage: miinfer serve <model.gguf> [--port 8080] [--host 127.0.0.1]\n";
-        return 1;
-    }
-    const std::string model_path = argv[2];
-    const std::string model_id = std::filesystem::path(model_path).stem().string();
+    std::string model_path;
     int port = 8080;
     std::string host = "127.0.0.1";
 
-    for (int i = 3; i < argc; ++i) {
+    for (int i = 2; i < argc; ++i) {
         std::string_view arg = argv[i];
-        if (arg == "--port" && i + 1 < argc) {
-            port = std::stoi(argv[++i]);
+        if (arg == "--model" && i + 1 < argc) {
+            model_path = argv[++i];
+        } else if (arg == "--port" && i + 1 < argc) {
+            const auto parsed = parse_port(argv[++i]);
+            if (!parsed) { std::cerr << "port must be an integer from 0 to 65535\n"; return 2; }
+            port = *parsed;
         } else if (arg == "--host" && i + 1 < argc) {
             host = argv[++i];
+        } else if (model_path.empty() && !arg.starts_with("--")) {
+            model_path = arg;
+        } else {
+            std::cerr << "usage: miinfer serve --model MODEL.gguf [--port PORT] [--host HOST]\n"; return 2;
         }
     }
+    if (model_path.empty()) { std::cerr << "missing model; use --model MODEL.gguf\n"; return 2; }
+    const std::string model_id = std::filesystem::path(model_path).stem().string();
 
     std::cerr << "Initializing MIInfer gfx906 HTTP Server on " << host << ":" << port << " ...\n";
     Qwen35RuntimeEngine engine(model_path);
@@ -1401,6 +1451,13 @@ int cmd_serve(int argc, char** argv) {
         HttpRequest request = std::move(*result.request);
         request.queued_at = std::chrono::steady_clock::now();
 
+        if (request.method == "GET" && request.path == "/") {
+            constexpr std::string_view page = R"HTML(<!doctype html><meta charset="utf-8"><title>MIInfer</title><style>body{max-width:48rem;margin:2rem auto;font:16px system-ui}#chat{white-space:pre-wrap;border:1px solid #ccc;padding:1rem;min-height:20rem}textarea{width:100%;height:5rem}button{margin-top:.5rem}</style><h1>MIInfer <small id="model"></small></h1><div id="chat"></div><textarea id="prompt" placeholder="Message"></textarea><br><button onclick="send()">Send</button><script>const chat=document.querySelector('#chat'),prompt=document.querySelector('#prompt'),messages=[];fetch('/v1/models').then(r=>r.json()).then(x=>model.textContent=x.data?.[0]?.id||'');async function send(){const text=prompt.value.trim();if(!text)return;messages.push({role:'user',content:text});chat.textContent+='You: '+text+'\nMIInfer: ';prompt.value='';const r=await fetch('/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages,stream:true,max_tokens:512})});const reader=r.body.getReader(),d=new TextDecoder;let pending='',reply='';for(;;){const x=await reader.read();if(x.done)break;pending+=d.decode(x.value,{stream:true});const lines=pending.split('\n');pending=lines.pop();for(const line of lines)if(line.startsWith('data: {')){const piece=JSON.parse(line.slice(6)).choices[0].delta.content||'';reply+=piece;chat.textContent+=piece}}messages.push({role:'assistant',content:reply});chat.textContent+='\n\n'}</script>)HTML";
+            (void)send_http_response(client_fd, 200, "OK", "text/html; charset=utf-8", page);
+            close(client_fd);
+            continue;
+        }
+
         if (request.method == "GET" && (request.path == "/healthz" || request.path == "/readyz")) {
             (void)send_http_response(client_fd, 200, "OK", "application/json", R"({"status":"ok","ready":true})");
             close(client_fd);
@@ -1492,11 +1549,12 @@ void print_usage() {
     std::cout << "Commands:\n";
     std::cout << "  --version                              Print build and target information\n";
     std::cout << "  config                                 Print supported runtime configuration\n";
+    std::cout << "  doctor [--model MODEL] [--port PORT]  Check MI50, HIP, VRAM, model, and port\n";
     std::cout << "  models [directory]                     List GGUF model artifacts\n";
     std::cout << "  inspect <model.gguf>                     Inspect model metadata, quantization, and VRAM budget\n";
     std::cout << "  run <model.gguf> --prompt \"...\"         Generate text from a prompt with streaming output\n";
     std::cout << "  chat <model.gguf>                        Start an interactive multi-turn terminal chat REPL\n";
-    std::cout << "  serve <model.gguf> [--port 8080]         Launch an OpenAI-compatible HTTP API server\n\n";
+    std::cout << "  serve --model MODEL.gguf [--port 8080]   Launch API and Web UI\n\n";
 }
 
 } // namespace
@@ -1512,6 +1570,8 @@ int main(int argc, char** argv) {
         return cmd_inspect(argc, argv);
     } else if (cmd == "config") {
         return cmd_config(argc, argv);
+    } else if (cmd == "doctor") {
+        return cmd_doctor(argc, argv);
     } else if (cmd == "models") {
         return cmd_models(argc, argv);
     } else if (cmd == "run") {

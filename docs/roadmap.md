@@ -10,12 +10,12 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M16 — serving throughput**
+**Current phase: M17 — product experience / local appliance**
 
 Immediate objective:
 
-> Build the smallest useful installer, configuration, discovery, and serving
-> surface around the validated v0.1.0 runtime without reopening kernel search.
+> Make the qualified MI50 runtime usable from a release archive: install,
+> diagnose, discover a GGUF, serve it, and chat through the public API/UI.
 
 M11-B's current-family search is closed by EXP-0244 through EXP-0254.
 EXP-0255 is the first M12 feasibility result: whole-matrix Q4_K→FP16 staging
@@ -65,10 +65,16 @@ numerically qualified dense replacement exists.
 
 M15 provides stable `miinfer --version`, `miinfer config`, and
 `miinfer models [directory]` contracts. M16 adds dependency-free serving
-metrics and a parsed bounded single-worker request queue while retaining
-serialized GPU execution. Concurrent GPU execution and full JSON message
-parsing require measurements/qualification before implementation. Keep the
-implementation narrow to the supported MI50/Qwen3.8 path.
+metrics, a parsed bounded single-worker request queue, proper multi-turn JSON
+parsing, and qualified concurrent-client behavior while retaining serialized
+GPU execution. M17 must keep that runtime path unchanged: it adds only the
+release installer, `miinfer doctor`, `serve --model`, and a browser UI that
+uses `/v1/models` and `/v1/chat/completions`.
+
+EXP-0267 closes M17: the fresh package install, diagnostics, model discovery,
+server/Web UI route, and qualified-MI50 serving gate all pass. The next work is
+M18 product refinement only when user feedback demonstrates a need; do not
+reopen single-MI50 kernel or serving-queue research by default.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See

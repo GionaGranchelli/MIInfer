@@ -14,7 +14,21 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
-**Current phase: M16 serving throughput**
+## M17 local appliance quick start
+
+From a release archive on a supported MI50/gfx906 Linux machine:
+
+```bash
+./install.sh miinfer-0.2.0-gfx906-Linux.tar.gz
+~/.local/miinfer/bin/miinfer doctor --model ~/models/Qwen3.8-27B-Q4_K_M.gguf
+~/.local/miinfer/bin/miinfer models ~/models
+~/.local/miinfer/bin/miinfer serve --model ~/models/Qwen3.8-27B-Q4_K_M.gguf
+```
+
+Open `http://127.0.0.1:8080/` for the bundled Web UI. It uses the same public
+`/v1/chat/completions` endpoint as external OpenAI-compatible clients.
+
+**Current phase: M17 product experience**
 
 M11-B is frozen at the qualified `46.22 tok/s` P513 packed-Q4 baseline. The
 opt-in layer-major prefill path reaches that rate with deferred

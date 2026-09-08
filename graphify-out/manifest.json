@@ -150,15 +150,15 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788895543.8784862,
-    "seen": 1788895840.3420026,
-    "ast_hash": "bb33418dd06b22bc656581991d207e88",
+    "mtime": 1788900029.2678683,
+    "seen": 1788900541.9727306,
+    "ast_hash": "16c9571b7d5356c1b30004ccea2e7480",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788890137.2275167,
-    "seen": 1788890150.5052335,
-    "ast_hash": "94840069c690f0cf66e70187c4649b65",
+    "mtime": 1788900229.622976,
+    "seen": 1788900541.972732,
+    "ast_hash": "7921043a076b4ac70272cf689e67cf8b",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788899572.4549024,
-    "seen": 1788899698.124142,
-    "ast_hash": "f714eb1294dd0de04b564e4363652093",
+    "mtime": 1788900528.757644,
+    "seen": 1788900541.9727626,
+    "ast_hash": "204cfeb37c11e981c7bedc2487b42212",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788890137.2295167,
-    "seen": 1788890150.5052893,
-    "ast_hash": "793175c8784ce10ffe9ef91e94932fde",
+    "mtime": 1788900528.759644,
+    "seen": 1788900541.9727912,
+    "ast_hash": "a3e24fd3e22f965e738214c3f69696ba",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -2364,9 +2364,9 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1788896185.500753,
-    "seen": 1788896311.1569555,
-    "ast_hash": "a8cc228c61d68865104e1a702bb9b5b8",
+    "mtime": 1788900229.620976,
+    "seen": 1788900541.9727097,
+    "ast_hash": "16671d744776112975a39c70dc882bfe",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
@@ -2874,9 +2874,9 @@
     "semantic_hash": ""
   },
   "scripts/test-package.sh": {
-    "mtime": 1788890719.4200368,
-    "seen": 1788890738.7577639,
-    "ast_hash": "d6db54b198a2a13267c3f4a046212b53",
+    "mtime": 1788900183.6101809,
+    "seen": 1788900541.9725862,
+    "ast_hash": "084ee5dd51a99125cf02e58871ec498e",
     "semantic_hash": ""
   },
   "experiments/EXP-0262-m12-production-qualification.md": {
@@ -2892,9 +2892,9 @@
     "semantic_hash": ""
   },
   "scripts/test-serve.sh": {
-    "mtime": 1788893958.540239,
-    "seen": 1788893985.7130904,
-    "ast_hash": "bd84540ca09a0ed54473f1443c6769f9",
+    "mtime": 1788900183.6101809,
+    "seen": 1788900541.9725883,
+    "ast_hash": "11787f413ec920ef2f43319fd0b4c992",
     "semantic_hash": ""
   },
   "experiments/EXP-0264-m16b-serving-queue-qualification.md": {
@@ -3165,6 +3165,18 @@
     "mtime": 1788899485.3283205,
     "seen": 1788899698.1245809,
     "ast_hash": "bf9c2048d7f4077dbdb37f92a29cf342",
+    "semantic_hash": ""
+  },
+  "install.sh": {
+    "mtime": 1788900029.2678683,
+    "seen": 1788900541.972426,
+    "ast_hash": "4b7d6f5a0be09fe737e52ae1a72f6d21",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0267-m17-local-appliance-qualification.md": {
+    "mtime": 1788900528.758644,
+    "seen": 1788900541.97324,
+    "ast_hash": "6c0456736b1a9b248bac5d67c26ab4b0",
     "semantic_hash": ""
   }
 }

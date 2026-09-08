@@ -34,11 +34,21 @@ for binary in miinfer miinfer-device-info; do
         exit 1
     fi
 done
+if [[ ! -x "$package_root/install.sh" ]]; then
+    printf 'package is missing install.sh\n' >&2
+    exit 1
+fi
 
 "$package_root/bin/miinfer" --help >/dev/null
 "$package_root/bin/miinfer" --version >/dev/null
 "$package_root/bin/miinfer-device-info" --version >/dev/null
 "$package_root/bin/miinfer" config > "$stage/config.txt"
+"$package_root/bin/miinfer" doctor --port 0 > "$stage/doctor.txt"
+if ! grep -q '^gpu=PASS:' "$stage/doctor.txt"; then
+    printf 'doctor did not validate the gfx906 GPU\n' >&2
+    cat "$stage/doctor.txt" >&2
+    exit 1
+fi
 if ! grep -q '^prefill_path=validated-default$' "$stage/config.txt"; then
     printf 'configuration contract missing validated prefill path\n' >&2
     exit 1
@@ -54,6 +64,13 @@ if ! "$package_root/bin/miinfer" models "$stage/models" | grep -q 'sample.gguf';
     printf 'model discovery did not find the GGUF fixture\n' >&2
     exit 1
 fi
+"$package_root/install.sh" "$archive" "$stage/installed"
+if [[ ! -x "$stage/installed/bin/miinfer" ]]; then
+    printf 'installer did not create a runnable release layout\n' >&2
+    exit 1
+fi
+"$stage/installed/bin/miinfer" config >/dev/null
+"$stage/installed/bin/miinfer" models "$stage/models" | grep -q 'sample.gguf'
 "$package_root/bin/miinfer-device-info" > "$stage/device-info.txt"
 
 if ! grep -q 'MIInfer contract: gfx906 compatible' "$stage/device-info.txt"; then

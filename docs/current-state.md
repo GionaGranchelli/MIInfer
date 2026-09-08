@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M16 — serving throughput**
+**M17 — product experience**
 
 Milestone status:
 
@@ -30,6 +30,8 @@ M16-A: request metrics      PASS
 M16-B: queueing             PASS
 M16-C: concurrency          PASS
 M16-D: JSON parsing         PASS
+M17-A: installation/doctor  PASS
+M17-B: local Web UI          PASS
 ```
 
 M11-B is frozen at the qualified `46.22 tok/s` P513 packed-Q4 baseline.
@@ -77,9 +79,9 @@ add another quantized projection mapping without a new, materially different
 hypothesis and an isolated win over the existing B4 path.
 
 M14 release packaging is now wired through CPack. A release package contains
-only the `miinfer` runtime, `miinfer-device-info`, and target/hardware
-documentation. The device probe remains a hard gfx906 gate and does not fall
-back to another GPU. Build it with:
+only the `miinfer` runtime, `miinfer-device-info`, `install.sh`, and
+target/hardware documentation. The device probe remains a hard gfx906 gate and
+does not fall back to another GPU. Build it with:
 
 ```bash
 cmake --preset mi50-release
@@ -93,11 +95,11 @@ and HIP remain host prerequisites.
 The extracted artifact gate is:
 
 ```bash
-scripts/test-package.sh build/mi50-release/miinfer-0.1.0-gfx906-Linux.tar.gz
+scripts/test-package.sh build/mi50-release/miinfer-0.2.0-gfx906-Linux.tar.gz
 ```
 
-It checks both shipped executables, unresolved dynamic dependencies, and the
-gfx906 device contract independently of the build-tree paths.
+It checks both shipped executables, unresolved dynamic dependencies, the gfx906
+device contract, and an `install.sh` extraction into a fresh directory.
 
 The installed runtime also exposes `miinfer --version` with version, commit,
 build, compiler, HIP, and target-architecture fields for installer and health
@@ -118,21 +120,27 @@ jobs, keeps control-plane endpoints responsive, uses a single GPU worker, and
 returns HTTP 503 on overflow. Requests have a 10-second absolute receive
 deadline; streaming disconnects cancel generation; malformed/missing chat
 content returns HTTP 400. `scripts/test-serve.sh` covers the queue cap,
-overflow, control-plane responsiveness, and shutdown rejection on a qualified
-machine. The chat body is still a documented first-content-string subset; full
-JSON message parsing is M16-D.
+overflow, control-plane responsiveness, shutdown rejection, and the bundled
+Web UI route on a qualified machine. M16-D parses the OpenAI-compatible JSON
+message array and preserves multi-turn ChatML ordering.
 
 The extracted-package hardening smoke has passed fragmented `Content-Length`
 requests, chunked-transfer rejection, 4 MiB overflow rejection, idle-client
 timeout, disconnected streaming-client survival, localhost binding, control
-plane access during generation, and clean SIGTERM. Queue overflow and full
-shutdown-drain qualification remain open before M16-B can be marked PASS.
+plane access during generation, queue overflow, and clean SIGTERM.
 
 The repeatable qualified-machine serving gate is:
 
 ```bash
 scripts/test-serve.sh /path/to/miinfer /path/to/model.gguf
 ```
+
+M17 is qualified at EXP-0267. The packaged `install.sh` installs a release
+archive without a source checkout; `miinfer doctor --model MODEL.gguf` checks
+the MI50/gfx906 contract, HIP, free VRAM, model compatibility, and a loopback
+port. `miinfer serve --model MODEL.gguf` serves the existing public API and a
+small local Web UI at `/`; the UI uses `/v1/models` and
+`/v1/chat/completions` only.
 
 The first M12 promotion campaign is recorded in
 `experiments/EXP-0262-m12-production-qualification.md`. EXP-0263 fixes the

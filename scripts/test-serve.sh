@@ -15,7 +15,7 @@ with socket.socket() as sock:
     print(sock.getsockname()[1])
 PY
 )
-"$miinfer_bin" serve "$model_path" --port "$port" >/tmp/miinfer-serve-test.log 2>&1 &
+"$miinfer_bin" serve --model "$model_path" --port "$port" >/tmp/miinfer-serve-test.log 2>&1 &
 server_pid=$!
 cleanup() { kill -TERM "$server_pid" 2>/dev/null || true; wait "$server_pid" 2>/dev/null || true; }
 trap cleanup EXIT
@@ -25,6 +25,7 @@ for _ in $(seq 1 90); do
     sleep 1
 done
 curl --silent --fail "http://127.0.0.1:$port/readyz" >/dev/null
+curl --silent --fail "http://127.0.0.1:$port/" | grep -q '/v1/chat/completions'
 
 python3 - "$port" "$server_pid" <<'PY'
 import json
