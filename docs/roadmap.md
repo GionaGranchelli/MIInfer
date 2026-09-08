@@ -50,7 +50,9 @@ rather than a correctness failure. The combined M12 path was re-profiled at
 51.73 tok/s P512. M13 is closed: do not integrate the slower kernel or reopen
 the same single-GPU projection family without a materially different mapping.
 
-Next: M14 release, packaging, and hardware detection. Serving/UI and
+Next: M14 release, packaging, and hardware detection. The focused CPack
+archive now ships the runtime CLI, gfx906 device probe, and operational docs;
+serving/UI and
 multi-MI50 work follow release hygiene; single-MI50 prefill remains frozen at
 the opt-in M12 result.
 

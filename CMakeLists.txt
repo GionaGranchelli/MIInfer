@@ -4,6 +4,8 @@ include(cmake/MIInferOptions.cmake)
 
 project(MIInfer VERSION 0.1.0 LANGUAGES CXX)
 
+include(GNUInstallDirs)
+
 if(MIINFER_ENABLE_HIP)
     enable_language(HIP)
 endif()
@@ -449,29 +451,23 @@ if(BUILD_TESTING)
     endif()
 endif()
 
-install(TARGETS miinfer-host-test miinfer-qwen3-primitives-host-test miinfer-qwen3-layer0-test
-                miinfer-qwen3-forward-test miinfer-qwen3-trace-compare
-                miinfer-qwen3-tokenizer-test)
+install(FILES
+    README.md
+    LICENSE
+    docs/current-state.md
+    docs/hardware.md
+    DESTINATION "${CMAKE_INSTALL_DOCDIR}"
+)
 if(MIINFER_ENABLE_HIP)
-    install(TARGETS miinfer-device-info miinfer-hip-smoke miinfer-bench
-                    miinfer-fp16-gemv-test miinfer-fp16-gemv-bench)
-    install(TARGETS miinfer-q4-q8-gemv-test)
-    install(TARGETS miinfer-q4-q8-dot4-probe)
-    install(TARGETS miinfer-memory-stream-bench)
-    install(TARGETS miinfer-fp16-gemv-reduction-diag)
-    install(TARGETS miinfer-fp16-gemv-k-split-bench)
-    install(TARGETS miinfer-q4-q8-gemv-bench)
-    install(TARGETS miinfer-model-info miinfer-model-gpu-test miinfer-qwen3-primitives-test)
-    install(TARGETS miinfer-qwen3-decode-gpu-test)
-    install(TARGETS miinfer-qwen3-decode-sequence-gpu-test)
-    install(TARGETS miinfer-qwen3-generate)
-    install(TARGETS miinfer-qwen3-inference-bench)
-    install(TARGETS miinfer-qwen3-decode-profile)
-    install(TARGETS miinfer-qwen3-fast-decode-bench)
-    install(TARGETS miinfer-qwen3-attention-ab-bench)
-    install(TARGETS miinfer-qwen3-position-audit)
-    install(TARGETS miinfer-qwen3-layer0-gpu-test)
-    install(TARGETS miinfer-qwen3-kv-cache-gpu-test)
-    install(TARGETS miinfer-qwen3-forward-gpu-test)
-    install(TARGETS miinfer-m6a8-qwen35-gpu-foundation)
+    install(TARGETS miinfer miinfer-device-info
+            RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
 endif()
+
+set(CPACK_PACKAGE_NAME "miinfer")
+set(CPACK_PACKAGE_VENDOR "MIInfer")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MI50/gfx906 LLM inference runtime")
+set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+set(CPACK_PACKAGE_FILE_NAME
+    "miinfer-${PROJECT_VERSION}-${MIINFER_TARGET_ARCH}-${CMAKE_SYSTEM_NAME}")
+set(CPACK_GENERATOR "TGZ")
+include(CPack)

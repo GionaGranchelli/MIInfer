@@ -61,6 +61,20 @@ The next milestone is M14 release/packaging/hardware detection. Do not add
 another quantized projection mapping without a new, materially different
 hypothesis and an isolated win over the existing B4 path.
 
+M14 release packaging is now wired through CPack. A release package contains
+only the `miinfer` runtime, `miinfer-device-info`, and target/hardware
+documentation. The device probe remains a hard gfx906 gate and does not fall
+back to another GPU. Build it with:
+
+```bash
+cmake --preset mi50-release
+cmake --build --preset mi50-release
+cpack --config build/mi50-release/CPackConfig.cmake
+```
+
+The generated archive is named `miinfer-<version>-gfx906-Linux.tar.gz`; ROCm
+and HIP remain host prerequisites.
+
 Re-evaluation: the earlier 32-value-head note was incorrect. The actual
 Qwen3.8 geometry is 16 key heads / 48 value heads / state 128. The corrected
 oracle and GPU prototype retain the reported numerical errors; EXP-0258

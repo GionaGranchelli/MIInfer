@@ -106,6 +106,10 @@ the exact Q4 FFN-down candidate reached only 0.860–0.863x of repeated B4 and
 the Q6 candidate 0.695–0.717x, with exact B64 output agreement. M13 is closed
 without runtime integration; M14 release and packaging work is next.
 
+M14 now provides a focused MI50 release package. It contains the `miinfer`
+runtime, the `miinfer-device-info` gfx906 contract probe, and operational
+documentation; benchmark and historical audit binaries remain build-tree only.
+
 The project currently has:
 
 * a reproducible MI50/gfx906 development environment
