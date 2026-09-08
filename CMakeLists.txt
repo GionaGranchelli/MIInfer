@@ -108,6 +108,10 @@ target_link_libraries(miinfer_openai_api PUBLIC nlohmann_json::nlohmann_json)
 target_compile_features(miinfer_openai_api PUBLIC cxx_std_20)
 target_compile_options(miinfer_openai_api PRIVATE -Wall -Wextra -Wpedantic)
 
+add_executable(miinfer-openai-api-test tests/openai_api_test.cpp)
+target_link_libraries(miinfer-openai-api-test PRIVATE miinfer_openai_api)
+target_compile_options(miinfer-openai-api-test PRIVATE -Wall -Wextra -Wpedantic)
+
 if(MIINFER_ENABLE_HIP)
     add_library(miinfer_hip STATIC
         src/device_validation.cpp
@@ -414,6 +418,8 @@ include(CTest)
 if(BUILD_TESTING)
     add_test(NAME host-only COMMAND miinfer-host-test)
     set_tests_properties(host-only PROPERTIES LABELS "host-only")
+    add_test(NAME openai-api-host COMMAND miinfer-openai-api-test)
+    set_tests_properties(openai-api-host PROPERTIES LABELS "host-only")
     add_test(NAME m12-gdn-oracle COMMAND miinfer-m12-gdn-oracle)
     set_tests_properties(m12-gdn-oracle PROPERTIES LABELS "host-only")
     add_test(NAME model-loader-host COMMAND miinfer-model-loader-test)

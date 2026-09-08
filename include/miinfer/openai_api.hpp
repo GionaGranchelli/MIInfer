@@ -4,11 +4,18 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace miinfer {
 
+struct ChatMessage {
+    std::string role;
+    std::string content;
+};
+
 struct OpenAiChatRequest {
-    std::string chatml_prompt;
+    std::optional<std::string> model;
+    std::vector<ChatMessage> messages;
     bool stream = false;
     std::size_t max_tokens = 256;
 };
@@ -19,5 +26,6 @@ struct OpenAiParseResult {
 };
 
 OpenAiParseResult parse_openai_chat_request(std::string_view body);
+std::string build_chatml(const OpenAiChatRequest& request);
 
 } // namespace miinfer

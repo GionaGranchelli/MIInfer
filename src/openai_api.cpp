@@ -11,6 +11,10 @@ OpenAiParseResult parse_openai_chat_request(std::string_view body) {
         if (!json.is_object() || !json.contains("messages") || !json["messages"].is_array()
             || json["messages"].empty()) return {{}, "messages must be a non-empty array"};
         OpenAiChatRequest request;
+        if (json.contains("model")) {
+            if (!json["model"].is_string()) return {{}, "model must be a string"};
+            request.model = json["model"].get<std::string>();
+        }
         if (json.contains("stream")) {
             if (!json["stream"].is_boolean()) return {{}, "stream must be a boolean"};
             request.stream = json["stream"].get<bool>();
@@ -24,13 +28,20 @@ OpenAiParseResult parse_openai_chat_request(std::string_view body) {
                 || !message.contains("content") || !message["content"].is_string()) return {{}, "each message needs string role and content"};
             const auto role = message["role"].get<std::string>();
             if (role != "system" && role != "user" && role != "assistant") return {{}, "unsupported message role"};
-            request.chatml_prompt += "<|im_start|>" + role + "\n" + message["content"].get<std::string>() + "<|im_end|>\n";
+            request.messages.push_back({role, message["content"].get<std::string>()});
         }
-        request.chatml_prompt += "<|im_start|>assistant\n";
         return {std::move(request), {}};
     } catch (const nlohmann::json::exception&) {
         return {{}, "invalid JSON"};
     }
+}
+
+std::string build_chatml(const OpenAiChatRequest& request) {
+    std::string prompt;
+    for (const auto& message : request.messages) {
+        prompt += "<|im_start|>" + message.role + "\n" + message.content + "<|im_end|>\n";
+    }
+    return prompt + "<|im_start|>assistant\n";
 }
 
 } // namespace miinfer
