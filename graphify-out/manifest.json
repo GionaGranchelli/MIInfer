@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788842929.8874161,
-    "seen": 1788842949.3137503,
-    "ast_hash": "ae2f7ba0bb6411f9c8f25a1cd51e09ae",
+    "mtime": 1788843458.2022073,
+    "seen": 1788843478.2031386,
+    "ast_hash": "73a3a7b81767548f2923b4b01f862c77",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788842929.8894162,
-    "seen": 1788842949.313778,
-    "ast_hash": "55cfad94a1363c7eecda095a895b0be2",
+    "mtime": 1788843458.2042074,
+    "seen": 1788843478.2031658,
+    "ast_hash": "8dd174c83f687e1a65c9092e5366bb8b",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -2370,8 +2370,8 @@
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1788840350.3752007,
-    "seen": 1788841023.5395103,
+    "mtime": 1788843440.0292833,
+    "seen": 1788843478.2031207,
     "ast_hash": "6a0a0d50a360db33f1d07936db4f874f",
     "semantic_hash": ""
   },
@@ -2709,6 +2709,12 @@
     "mtime": 1788842922.8114457,
     "seen": 1788842949.3141484,
     "ast_hash": "72724db866e334397a583bd2daefaeea",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0242-m11b-recurrent-fused-norm-q8-rejection.md": {
+    "mtime": 1788843458.2012074,
+    "seen": 1788843478.2035494,
+    "ast_hash": "9379613c02fe35e38cb334a15d90f4a4",
     "semantic_hash": ""
   }
 }

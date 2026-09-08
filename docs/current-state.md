@@ -82,6 +82,11 @@ but measuring `2027.04 us` versus `1198.67 us` (`0.591x`) for the same
 FFN-down shape. The kernel was removed; three direct native 16-token Q4_K
 decompositions are now rejected.
 
+EXP-0242 tested direct Q8_1 emission from recurrent fused residual/RMS
+normalization. It preserved the P17 continuation hash and changed P513 only
+from `11080.57 ms` to `11064.28 ms` (`+0.15%`), so the candidate was removed
+as neutral. The deferred FFN projections remain the measured dominant tail.
+
 EXP-0168 completed that profile at position 63: total GPU event
 `71.9133 ms/token`, layer sum `68.6269 ms`, final LM head `2.50016 ms`, and
 zero allocations. FFN Down remains the largest repeated individual stage,

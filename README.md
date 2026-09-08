@@ -61,7 +61,8 @@ FFN-down production shape. EXP-0240 also rejects a wave-major 16-token
 variant: it matches within 3.7e-6 but reaches only 0.547x. EXP-0241 rejects
 one-row-per-workgroup token reuse at 0.591x. A materially different
 quantized projection dataflow or recurrent-tail fusion is still required for
-the 100 tok/s gate.
+the 100 tok/s gate. EXP-0242 also rejects direct Q8 emission from recurrent
+fused normalization: P513 changed only 0.15%.
 
 The project currently has:
 
