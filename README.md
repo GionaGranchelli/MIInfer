@@ -33,6 +33,11 @@ the full-attention tail and replaces that generic Q5_K mapping with a
 shape-specific kernel; the matched P513 control is 39.90 tok/s and the
 candidate is 45.56 tok/s after EXP-0221's copy elimination.
 
+EXP-0230 measured a raw int8 GEMM ceiling at 1.387x over native Q4_K B=4
+launches. EXP-0231 tested a three-plane Q4_K repack with a 64-token MMQ tile:
+it reached 1.125x at B=64 but was 13.8x slower at the production B=4 chunk,
+so it is rejected pending a causally valid larger-chunk schedule.
+
 The project currently has:
 
 * a reproducible MI50/gfx906 development environment

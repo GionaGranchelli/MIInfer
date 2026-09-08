@@ -41,6 +41,14 @@ mapping or an experimentally proven Amdahl ceiling.
 The default path remains token-major and unchanged. Layer-major prefill stays
 opt-in until longer-context and generation correctness are fully qualified.
 
+EXP-0230 measured a raw int8 hipBLAS GEMM ceiling at only 1.387x over eight
+native Q4_K B=4 FFN Down launches, before Q4_K groupwise scale/minimum work.
+EXP-0231 tested the more relevant three-plane Q4_K repack and 16×16-thread
+MMQ tile: it was 1.125x faster at a full 64-token tile, but 13.8x slower at
+the production B=4 chunk. It is rejected because the current causal
+layer-major schedule cannot expose that tile without a different recurrent
+chunk architecture. The 100 tok/s gate remains open.
+
 EXP-0168 completed that profile at position 63: total GPU event
 `71.9133 ms/token`, layer sum `68.6269 ms`, final LM head `2.50016 ms`, and
 zero allocations. FFN Down remains the largest repeated individual stage,
