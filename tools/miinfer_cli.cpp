@@ -170,6 +170,7 @@ public:
         constexpr std::size_t kChunk = kPrefillBatch;
         float* current = static_cast<float*>(prefill_a_->get());
         float* next = static_cast<float*>(prefill_b_->get());
+        const float* final_hidden = nullptr;
         const auto layer_span = std::span<const GpuLayerRef>(layers_);
         for (std::size_t base = 0; base < prompt.size(); base += kChunk) {
             const std::size_t count = std::min(kChunk, prompt.size() - base);
@@ -227,9 +228,10 @@ public:
                 }
                 std::swap(current, next);
             }
+            final_hidden = current + (count - 1) * kHidden;
         }
         MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
-        return current + (std::min<std::size_t>(kChunk, prompt.size()) - 1) * kHidden;
+        return final_hidden;
     }
 
     std::uint32_t next_token_from_hidden(const float* hidden, std::size_t position) {

@@ -2364,9 +2364,9 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1788825344.5012646,
-    "seen": 1788825430.0656085,
-    "ast_hash": "7468771a82c7904195f0dba2e8d2fd71",
+    "mtime": 1788830701.786714,
+    "seen": 1788830948.8201003,
+    "ast_hash": "26e3112bf078ed67469ab30ca973ffbf",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
@@ -2589,6 +2589,12 @@
     "mtime": 1788830478.4196126,
     "seen": 1788830491.8993049,
     "ast_hash": "4039e0e637a4202bea6063e7d0c64f03",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0222-m11b-prefill-tail-pointer-correction.md": {
+    "mtime": 1788830936.021772,
+    "seen": 1788830948.8204927,
+    "ast_hash": "60c1b84aefc47f1907cea75d2eddc302",
     "semantic_hash": ""
   }
 }
