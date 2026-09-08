@@ -9,16 +9,11 @@ namespace miinfer {
 // M12 lab primitive. Workspace is one 64-token chunk per value head and is
 // reused across sequential chunk launches.
 struct M12GdnChunkWorkspace {
-    float* cumulative = nullptr;
-    float* pairwise_decay = nullptr;
-    float* system = nullptr;
-    float* inverse = nullptr;
     float* new_values = nullptr;
     float* decayed_keys = nullptr;
     float* solved_values = nullptr;
     float* solved_keys = nullptr;
     float* corrected_values = nullptr;
-    float* intra_attention = nullptr;
 };
 
 void launch_m12_gdn_chunk(
@@ -36,6 +31,17 @@ void launch_m12_gdn_chunk(
     std::uint32_t value_heads,
     std::uint32_t state_size,
     std::uint32_t chunk_size,
+    hipStream_t stream = nullptr);
+
+void launch_m12_gdn_postprocess(
+    const float* recurrent_output,
+    const float* gate,
+    const float* ssm_norm,
+    float* gated_output,
+    std::uint32_t token_count,
+    std::uint32_t value_heads,
+    std::uint32_t state_size,
+    float epsilon,
     hipStream_t stream = nullptr);
 
 } // namespace miinfer

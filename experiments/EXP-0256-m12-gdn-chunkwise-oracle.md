@@ -78,3 +78,12 @@ References:
 
 - [Hugging Face Qwen3.5 chunk implementation](https://github.com/huggingface/transformers/blob/main/src/transformers/models/qwen3_5/modeling_qwen3_5.py#L2674-L2892)
 - [FLA DeltaNet implementation](https://github.com/fla-org/flash-linear-attention/blob/main/fla/layers/delta_net.py)
+
+## Re-evaluation — 2026-09-08
+
+The initial record used an incorrect 32-value-head geometry. The Qwen3.8
+runtime contract is 16 key heads, 48 value heads, and state size 128; the
+host oracle and GPU prototype were corrected without changing the chunkwise
+algebra. The corrected host run still reports 1.4e-8 maximum output error and
+1.5e-7 maximum final-state error. The original 32-head measurements are
+historical and are superseded by the corrected 48-head result.

@@ -4,6 +4,9 @@
 #include "m6a3_qwen35_layer.cpp"
 
 #include "miinfer/hip_check.hpp"
+#include "miinfer/fp16_gemv.hpp"
+#include "miinfer/m12_dense_stage.hpp"
+#include "miinfer/m12_gdn_chunk.hpp"
 #include "miinfer/qwen3_gpu_primitives.hpp"
 #include "miinfer/qwen35_model.hpp"
 
@@ -35,6 +38,7 @@ constexpr std::size_t kCacheCapacity = 65536;
 // The layer-major prefill schedule stages a causal chunk, then drains it in
 // ordered B=4 groups where recurrent state and KV writes require ordering.
 constexpr std::size_t kPrefillBatch = 64;
+constexpr std::size_t kM12PrefillBatch = 128;
 
 class DeviceBytes {
 public:
@@ -716,6 +720,7 @@ struct RecurrentLayer {
     bool fused_norm_q8 = false;
     bool expanded_down = true;
     Buffer d_ffn_down_native;
+    Buffer d_ffn_down_dense_source;
     Buffer d_ffn_gate_native, d_ffn_up_native;
     Buffer d_ffn_swiglu_native;
     Buffer d_attn_gate_native;
@@ -737,12 +742,22 @@ struct RecurrentLayer {
     bool prefill_batch_enabled = false;
     bool prefill_recurrent_batch = false;
     bool prefill_recurrent_q8 = false;
+    bool prefill_gdn_chunkwise = false;
+    bool prefill_dense_ffn_down = false;
+    std::size_t prefill_capacity = kPrefillBatch;
     bool prefill_core_batch_active = false;
     Buffer prefill_normalized, prefill_qkv, prefill_gate, prefill_q8_1;
     Buffer prefill_gated, prefill_residual, prefill_post_normalized;
     Buffer prefill_ffn_gate, prefill_ffn_up, prefill_ffn_activation, prefill_projected;
     Buffer prefill_core_query, prefill_core_key, prefill_core_value;
     Buffer prefill_core_beta, prefill_core_decay, prefill_core_gate;
+    miinfer::M12GdnChunkWorkspace m12_gdn_workspace{};
+    bool m12_gdn_workspace_ready = false;
+    float* m12_gdn_raw_output = nullptr;
+    __half* m12_dense_weights = nullptr;
+    __half* m12_dense_input = nullptr;
+    miinfer::RocblasGemmHandle* m12_dense_handle = nullptr;
+    bool m12_dense_workspace_ready = false;
 
     RecurrentLayer(const miinfer::Qwen35Model& model_value, std::size_t layer,
                    const std::filesystem::path& fixture)
@@ -857,6 +872,15 @@ struct RecurrentLayer {
         const char* prefill_recurrent_q8_env = std::getenv("MIINFER_PREFILL_RECURRENT_Q8");
         prefill_recurrent_q8 = prefill_recurrent_batch
             && (prefill_recurrent_q8_env == nullptr || std::strcmp(prefill_recurrent_q8_env, "0") != 0);
+        const char* prefill_gdn_env = std::getenv("MIINFER_PREFILL_GDN_CHUNKWISE");
+        prefill_gdn_chunkwise = prefill_recurrent_batch
+            && prefill_gdn_env != nullptr && std::strcmp(prefill_gdn_env, "0") != 0;
+        const char* prefill_dense_env = std::getenv("MIINFER_PREFILL_DENSE_FFN_DOWN");
+        prefill_dense_ffn_down = prefill_batch_enabled
+            && prefill_dense_env != nullptr && std::strcmp(prefill_dense_env, "0") != 0;
+        prefill_capacity = (prefill_dense_ffn_down || prefill_gdn_chunkwise)
+            ? kM12PrefillBatch
+            : kPrefillBatch;
         require_type(qkv_weight, {miinfer::GgufTensorType::q4_k,
                                    miinfer::GgufTensorType::q6_k});
         require_type(gate_weight, {miinfer::GgufTensorType::q4_k});
@@ -865,6 +889,10 @@ struct RecurrentLayer {
         require_type(ffn_up_weight, {miinfer::GgufTensorType::q4_k});
         require_type(ffn_down_weight, {miinfer::GgufTensorType::q4_k,
                                        miinfer::GgufTensorType::q6_k});
+        if (prefill_dense_ffn_down && ffn_down_weight.type != miinfer::GgufTensorType::q4_k
+            && ffn_down_weight.type != miinfer::GgufTensorType::q6_k) {
+            throw std::runtime_error("M12 dense FFN-down requires Q4_K or Q6_K");
+        }
 
         d_attn_norm = allocate(attn_norm.byte_size);
         if (combined_qkv_gate_enabled() &&
@@ -939,6 +967,10 @@ struct RecurrentLayer {
         if (d_ffn_gate) upload_tensor(ffn_gate_weight, d_ffn_gate);
         if (d_ffn_up) upload_tensor(ffn_up_weight, d_ffn_up);
         if (d_ffn_down) upload_tensor(ffn_down_weight, d_ffn_down);
+        if (prefill_dense_ffn_down) {
+            d_ffn_down_dense_source = allocate(ffn_down_weight.byte_size);
+            upload_tensor(ffn_down_weight, d_ffn_down_dense_source);
+        }
 
         normalized = allocate(kHidden * sizeof(float));
         qkv = allocate((d_qkv_gate_combined ? (kChannels + kInner) : kChannels) * sizeof(float));
@@ -970,25 +1002,25 @@ struct RecurrentLayer {
         q8_1 = allocate((kFfnInner / miinfer::kQ8_1BlockSize) * sizeof(miinfer::Q8_1Block));
 
         if (prefill_batch_enabled) {
-            prefill_normalized = allocate(kPrefillBatch * kHidden * sizeof(float));
-            prefill_qkv = allocate(kPrefillBatch * (kChannels + kInner) * sizeof(float));
-            prefill_gate = allocate(kPrefillBatch * kInner * sizeof(float));
-            prefill_q8_1 = allocate(kPrefillBatch * (kFfnInner / miinfer::kQ8_1BlockSize)
+            prefill_normalized = allocate(prefill_capacity * kHidden * sizeof(float));
+            prefill_qkv = allocate(prefill_capacity * (kChannels + kInner) * sizeof(float));
+            prefill_gate = allocate(prefill_capacity * kInner * sizeof(float));
+            prefill_q8_1 = allocate(prefill_capacity * (kFfnInner / miinfer::kQ8_1BlockSize)
                                      * sizeof(miinfer::Q8_1Block));
-            prefill_gated = allocate(kPrefillBatch * kInner * sizeof(float));
-            prefill_residual = allocate(kPrefillBatch * kHidden * sizeof(float));
-            prefill_post_normalized = allocate(kPrefillBatch * kHidden * sizeof(float));
-            prefill_ffn_gate = allocate(kPrefillBatch * kFfnInner * sizeof(float));
-            prefill_ffn_up = allocate(kPrefillBatch * kFfnInner * sizeof(float));
-            prefill_ffn_activation = allocate(kPrefillBatch * kFfnInner * sizeof(float));
-            prefill_projected = allocate(kPrefillBatch * kHidden * sizeof(float));
+            prefill_gated = allocate(prefill_capacity * kInner * sizeof(float));
+            prefill_residual = allocate(prefill_capacity * kHidden * sizeof(float));
+            prefill_post_normalized = allocate(prefill_capacity * kHidden * sizeof(float));
+            prefill_ffn_gate = allocate(prefill_capacity * kFfnInner * sizeof(float));
+            prefill_ffn_up = allocate(prefill_capacity * kFfnInner * sizeof(float));
+            prefill_ffn_activation = allocate(prefill_capacity * kFfnInner * sizeof(float));
+            prefill_projected = allocate(prefill_capacity * kHidden * sizeof(float));
             if (prefill_recurrent_batch) {
-                prefill_core_query = allocate(kPrefillBatch * kKHeads * kState * sizeof(float));
-                prefill_core_key = allocate(kPrefillBatch * kKHeads * kState * sizeof(float));
-                prefill_core_value = allocate(kPrefillBatch * kVHeads * kState * sizeof(float));
-                prefill_core_beta = allocate(kPrefillBatch * kVHeads * sizeof(float));
-                prefill_core_decay = allocate(kPrefillBatch * kVHeads * sizeof(float));
-                prefill_core_gate = allocate(kPrefillBatch * kVHeads * kState * sizeof(float));
+                prefill_core_query = allocate(prefill_capacity * kKHeads * kState * sizeof(float));
+                prefill_core_key = allocate(prefill_capacity * kKHeads * kState * sizeof(float));
+                prefill_core_value = allocate(prefill_capacity * kVHeads * kState * sizeof(float));
+                prefill_core_beta = allocate(prefill_capacity * kVHeads * sizeof(float));
+                prefill_core_decay = allocate(prefill_capacity * kVHeads * sizeof(float));
+                prefill_core_gate = allocate(prefill_capacity * kVHeads * kState * sizeof(float));
             }
         }
 
@@ -1170,7 +1202,7 @@ struct RecurrentLayer {
     }
 
     bool prepare_prefill_batch(const float* inputs, std::size_t count, bool normalized_ready = false) {
-        if (!prefill_batch_enabled || count == 0 || count > kPrefillBatch || count % 4 != 0 || inputs == nullptr
+        if (!prefill_batch_enabled || count == 0 || count > prefill_capacity || count % 4 != 0 || inputs == nullptr
             || (!d_qkv_gate_combined && !d_qkv_native)) {
             return false;
         }
@@ -1229,7 +1261,8 @@ struct RecurrentLayer {
     }
 
     bool prefill_tail_batch_supported() const {
-        return prefill_batch_enabled && d_ffn_down_native
+        return prefill_batch_enabled
+            && (d_ffn_down_native || (prefill_dense_ffn_down && m12_dense_workspace_ready))
             && (d_ffn_swiglu_native || (d_ffn_gate_native && d_ffn_up_native));
     }
 
@@ -1240,10 +1273,27 @@ struct RecurrentLayer {
             && gate_path_capture == nullptr;
     }
 
+    void set_m12_gdn_workspace(const miinfer::M12GdnChunkWorkspace& workspace,
+                                float* raw_output) {
+        m12_gdn_workspace = workspace;
+        m12_gdn_workspace_ready = true;
+        m12_gdn_raw_output = raw_output;
+    }
+
+    void set_m12_dense_workspace(
+        __half* weights, __half* input,
+        miinfer::RocblasGemmHandle* handle) {
+        m12_dense_weights = weights;
+        m12_dense_input = input;
+        m12_dense_handle = handle;
+        m12_dense_workspace_ready = true;
+    }
+
     void finish_prefill_batch4(const float* inputs, float* outputs, std::size_t count,
                                std::size_t offset,
                                const float* next_norm_weight = nullptr,
-                               float* next_normalized = nullptr) {
+                               float* next_normalized = nullptr,
+                               bool defer_dense_down = false) {
         if (!prefill_tail_batch_supported() || inputs == nullptr || outputs == nullptr || count != 4) {
             throw std::runtime_error("invalid recurrent prefill batch tail");
         }
@@ -1272,7 +1322,8 @@ struct RecurrentLayer {
         const char* ssm_batch_env = std::getenv("MIINFER_PREFILL_SSM_BATCH");
         const bool batch_ssm_out = d_ssm_out_native
             && (ssm_batch_env == nullptr || std::strcmp(ssm_batch_env, "0") != 0);
-        prefill_core_batch_active = recurrent_prefill_core_batch_supported();
+        prefill_core_batch_active = recurrent_prefill_core_batch_supported()
+            && !prefill_gdn_chunkwise;
         const bool core_q8_ready = prefill_core_batch_active && prefill_recurrent_q8 && batch_ssm_out;
         if (prefill_core_batch_active) {
             miinfer::launch_qwen35_deltanet_fused_recurrent_core_batched4(
@@ -1356,7 +1407,7 @@ struct RecurrentLayer {
                 kFfnInner, kHidden, hipStreamPerThread);
             for (std::size_t i = 0; i < count; ++i) {
                 miinfer::launch_q8_1_quantize_f32(
-                    ffn_activation_batch + i * kFfnInner,
+                    ffn_activation_batch + i * (kFfnInner),
                     q8_batch + i * (kFfnInner / miinfer::kQ8_1BlockSize), kFfnInner,
                     hipStreamPerThread);
             }
@@ -1381,6 +1432,7 @@ struct RecurrentLayer {
                     hipStreamPerThread);
             }
         }
+        if (defer_dense_down) return;
         if (ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
             launch_q4k_wave_gemv_batched4(
                 static_cast<const Q4KWaveTile*>(d_ffn_down_native->get()), q8_batch,
@@ -1413,8 +1465,77 @@ struct RecurrentLayer {
                               const float* next_norm_weight = nullptr,
                               float* next_normalized = nullptr) {
         if (!prefill_tail_batch_supported() || inputs == nullptr || outputs == nullptr
-            || count == 0 || count > kPrefillBatch || count % 4 != 0) {
+            || count == 0 || count > prefill_capacity || count % 4 != 0) {
             throw std::runtime_error("invalid recurrent prefill batch tail");
+        }
+        if (prefill_gdn_chunkwise && m12_gdn_workspace_ready && m12_gdn_raw_output != nullptr
+            && count % kPrefillBatch == 0
+            && recurrent_prefill_core_batch_supported()) {
+            for (std::size_t start = 0; start < count; start += kPrefillBatch) {
+                miinfer::launch_m12_gdn_chunk(
+                    static_cast<const float*>(prefill_core_query->get()),
+                    static_cast<const float*>(prefill_core_key->get()),
+                    static_cast<const float*>(prefill_core_value->get()),
+                    static_cast<const float*>(prefill_core_beta->get()),
+                    static_cast<const float*>(prefill_core_decay->get()),
+                    static_cast<float*>(state->get()),
+                    m12_gdn_raw_output, m12_gdn_workspace,
+                    static_cast<std::uint32_t>(count), static_cast<std::uint32_t>(start),
+                    kKHeads, kVHeads, kState, kPrefillBatch, hipStreamPerThread);
+            }
+            miinfer::launch_m12_gdn_postprocess(
+                static_cast<const float*>(m12_gdn_raw_output),
+                static_cast<const float*>(prefill_core_gate->get()),
+                static_cast<const float*>(d_ssm_norm->get()),
+                static_cast<float*>(prefill_gated->get()),
+                static_cast<std::uint32_t>(count), kVHeads, kState,
+                model.config().rms_epsilon, hipStreamPerThread);
+        }
+        const bool dense_batch = prefill_dense_ffn_down && m12_dense_workspace_ready
+            && (count == kPrefillBatch || count == kM12PrefillBatch);
+        if (dense_batch) {
+            for (std::size_t offset = 0; offset < count; offset += 4) {
+                finish_prefill_batch4(
+                    inputs + offset * kHidden, outputs + offset * kHidden, 4, offset,
+                    next_norm_weight, next_normalized, true);
+            }
+            miinfer::launch_m12_f32_to_fp16(
+                static_cast<const float*>(prefill_ffn_activation->get()),
+                m12_dense_input, count * kFfnInner, hipStreamPerThread);
+            const auto* quantized =
+                static_cast<const std::byte*>(d_ffn_down_dense_source->get());
+            if (ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
+                miinfer::launch_m12_q4k_to_fp16(
+                    reinterpret_cast<const miinfer::Q4KDeviceBlock*>(quantized),
+                    m12_dense_weights, kHidden, kFfnInner, hipStreamPerThread);
+            } else {
+                miinfer::launch_m12_q6k_to_fp16(
+                    reinterpret_cast<const miinfer::Q6KDeviceBlock*>(quantized),
+                    m12_dense_weights, kHidden, kFfnInner, hipStreamPerThread);
+            }
+            std::string error;
+            if (!miinfer::launch_rocblas_gemm_fp16_batch(
+                    *m12_dense_handle, m12_dense_weights, m12_dense_input,
+                    static_cast<float*>(prefill_projected->get()), kHidden, kFfnInner,
+                    static_cast<int>(count), error)) {
+                throw std::runtime_error(error);
+            }
+            auto* residual_batch = static_cast<float*>(prefill_residual->get());
+            auto* projected_batch = static_cast<float*>(prefill_projected->get());
+            for (std::size_t i = 0; i < count; ++i) {
+                if (next_norm_weight != nullptr && next_normalized != nullptr) {
+                    miinfer::launch_qwen3_fused_add_rms_norm(
+                        residual_batch + i * kHidden, projected_batch + i * kHidden,
+                        next_norm_weight, outputs + i * kHidden,
+                        next_normalized + i * kHidden, kHidden,
+                        model.config().rms_epsilon, nullptr, nullptr);
+                } else {
+                    miinfer::launch_qwen3_add(
+                        residual_batch + i * kHidden, projected_batch + i * kHidden,
+                        outputs + i * kHidden, kHidden, hipStreamPerThread);
+                }
+            }
+            return;
         }
         for (std::size_t offset = 0; offset < count; offset += 4) {
             finish_prefill_batch4(inputs + offset * kHidden, outputs + offset * kHidden,
@@ -1597,7 +1718,7 @@ struct RecurrentLayer {
         const bool defer_recurrent_core = defer_prefill_tail
             && recurrent_prefill_core_batch_supported();
         if (defer_recurrent_core) {
-            if (prefill_index >= kPrefillBatch) throw std::runtime_error("invalid recurrent prefill index");
+            if (prefill_index >= prefill_capacity) throw std::runtime_error("invalid recurrent prefill index");
             miinfer::launch_qwen35_deltanet_prefill_stage(
                 static_cast<const float*>(query_norm->get()),
                 static_cast<const float*>(key_norm->get()),
@@ -1720,7 +1841,7 @@ struct RecurrentLayer {
         }
         stage_end(6, position);
         if (defer_prefill_tail) {
-            if (prefill_index >= kPrefillBatch) throw std::runtime_error("invalid recurrent prefill index");
+            if (prefill_index >= prefill_capacity) throw std::runtime_error("invalid recurrent prefill index");
             MIINFER_HIP_CHECK(hipMemcpyAsync(
                 static_cast<float*>(prefill_gated->get()) + prefill_index * kInner,
                 gated->get(), kInner * sizeof(float), hipMemcpyDeviceToDevice,
@@ -1980,6 +2101,7 @@ struct FullAttentionLayer {
     bool fused_interlayer_norm = true;
     bool expanded_down = true;
     bool prefill_batch_enabled = false;
+    std::size_t prefill_capacity = kPrefillBatch;
     Buffer d_ffn_down_native;
     Buffer d_ffn_gate_native, d_ffn_up_native;
     Buffer d_ffn_swiglu_native;
@@ -2129,6 +2251,12 @@ struct FullAttentionLayer {
         const char* prefill_batch_env = std::getenv("MIINFER_PREFILL_LAYER_MAJOR");
         prefill_batch_enabled = prefill_batch_env != nullptr
             && std::strcmp(prefill_batch_env, "0") != 0;
+        const char* prefill_gdn_env = std::getenv("MIINFER_PREFILL_GDN_CHUNKWISE");
+        const char* prefill_dense_env = std::getenv("MIINFER_PREFILL_DENSE_FFN_DOWN");
+        prefill_capacity = prefill_batch_enabled && prefill_dense_env != nullptr
+            && std::strcmp(prefill_dense_env, "0") != 0 ? kM12PrefillBatch
+            : (prefill_batch_enabled && prefill_gdn_env != nullptr
+               && std::strcmp(prefill_gdn_env, "0") != 0 ? kM12PrefillBatch : kPrefillBatch);
         normalized = allocate(kHidden * sizeof(float));
         qfull = allocate((d_qk_combined ? (12288 + 1024) : 12288) * sizeof(float));
         query = allocate(6144 * sizeof(float)); gate = allocate(6144 * sizeof(float));
@@ -2153,19 +2281,19 @@ struct FullAttentionLayer {
         q8 = allocate((kFfnInner / 256) * sizeof(miinfer::Q8KDeviceBlock));
         q8_1 = allocate((kFfnInner / miinfer::kQ8_1BlockSize) * sizeof(miinfer::Q8_1Block));
         if (prefill_batch_enabled) {
-            prefill_normalized = allocate(kPrefillBatch * kHidden * sizeof(float));
-            prefill_qfull = allocate(kPrefillBatch * (12288 + 1024) * sizeof(float));
-            prefill_value = allocate(kPrefillBatch * 1024 * sizeof(float));
-            prefill_q8_1 = allocate(kPrefillBatch * (kFfnInner / miinfer::kQ8_1BlockSize)
+            prefill_normalized = allocate(prefill_capacity * kHidden * sizeof(float));
+            prefill_qfull = allocate(prefill_capacity * (12288 + 1024) * sizeof(float));
+            prefill_value = allocate(prefill_capacity * 1024 * sizeof(float));
+            prefill_q8_1 = allocate(prefill_capacity * (kFfnInner / miinfer::kQ8_1BlockSize)
                                     * sizeof(miinfer::Q8_1Block));
-            prefill_gated_attention = allocate(kPrefillBatch * kInner * sizeof(float));
-            prefill_projected = allocate(kPrefillBatch * kHidden * sizeof(float));
-            prefill_residual = allocate(kPrefillBatch * kHidden * sizeof(float));
-            prefill_post_normalized = allocate(kPrefillBatch * kHidden * sizeof(float));
-            prefill_ffn_gate = allocate(kPrefillBatch * kFfnInner * sizeof(float));
-            prefill_ffn_up = allocate(kPrefillBatch * kFfnInner * sizeof(float));
-            prefill_ffn_activation = allocate(kPrefillBatch * kFfnInner * sizeof(float));
-            prefill_ffn_projected = allocate(kPrefillBatch * kHidden * sizeof(float));
+            prefill_gated_attention = allocate(prefill_capacity * kInner * sizeof(float));
+            prefill_projected = allocate(prefill_capacity * kHidden * sizeof(float));
+            prefill_residual = allocate(prefill_capacity * kHidden * sizeof(float));
+            prefill_post_normalized = allocate(prefill_capacity * kHidden * sizeof(float));
+            prefill_ffn_gate = allocate(prefill_capacity * kFfnInner * sizeof(float));
+            prefill_ffn_up = allocate(prefill_capacity * kFfnInner * sizeof(float));
+            prefill_ffn_activation = allocate(prefill_capacity * kFfnInner * sizeof(float));
+            prefill_ffn_projected = allocate(prefill_capacity * kHidden * sizeof(float));
         }
         MIINFER_HIP_CHECK(hipMemset(key_cache->get(), 0, 4 * kCacheCapacity * 256 * kv_element_size));
         MIINFER_HIP_CHECK(hipMemset(value_cache->get(), 0, 4 * kCacheCapacity * 256 * kv_element_size));
@@ -2210,7 +2338,9 @@ struct FullAttentionLayer {
 
     bool prepare_prefill_batch(const float* inputs, std::size_t count,
                                bool normalized_ready = false) {
-        if (!prefill_batch_enabled || count != kPrefillBatch || inputs == nullptr
+        if (!prefill_batch_enabled
+            || (count != kPrefillBatch && count != prefill_capacity)
+            || inputs == nullptr
             || d_qk_combined == nullptr || d_v_native == nullptr) {
             return false;
         }
@@ -2371,7 +2501,7 @@ struct FullAttentionLayer {
                               const float* next_norm_weight = nullptr,
                               float* next_normalized = nullptr) {
         if (!prefill_tail_batch_supported() || inputs == nullptr || outputs == nullptr
-            || count == 0 || count > kPrefillBatch || count % 4 != 0) {
+            || count == 0 || count > prefill_capacity || count % 4 != 0) {
             throw std::runtime_error("invalid attention prefill batch tail");
         }
         for (std::size_t offset = 0; offset < count; offset += 4) {
@@ -2608,7 +2738,7 @@ struct FullAttentionLayer {
                 6144);
         }
         if (defer_prefill_tail) {
-            if (!prefill_tail_batch_supported() || prefill_index >= kPrefillBatch) {
+            if (!prefill_tail_batch_supported() || prefill_index >= prefill_capacity) {
                 throw std::runtime_error("invalid deferred attention prefill tail");
             }
             MIINFER_HIP_CHECK(hipMemcpyAsync(

@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788854339.1731646,
-    "seen": 1788854359.4614167,
-    "ast_hash": "fb622e66ccb8cdf2bfe068b484187ac0",
+    "mtime": 1788859160.1943183,
+    "seen": 1788859220.5251245,
+    "ast_hash": "223765e0e16e983b3a8785a153ad0da1",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788854339.1751647,
-    "seen": 1788854359.4614437,
-    "ast_hash": "de2a27d1057d29354103ced7f45cd1c2",
+    "mtime": 1788859168.1642857,
+    "seen": 1788859220.5251522,
+    "ast_hash": "b68cf50f35fb3fd508384930362fd882",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788854346.2521355,
-    "seen": 1788854359.461469,
-    "ast_hash": "fc2166062b7ff4fd805d138183db0168",
+    "mtime": 1788859173.7202628,
+    "seen": 1788859220.5251777,
+    "ast_hash": "ae1eabe3173c99f0bebbefa24aad1e91",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -324,9 +324,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/fp16_gemv.hpp": {
-    "mtime": 1788822884.6061597,
-    "seen": 1788823565.5224652,
-    "ast_hash": "ff920ea9dc556637219a090ed7cb97b0",
+    "mtime": 1788857716.1032555,
+    "seen": 1788858697.0318139,
+    "ast_hash": "7f13230fa105256c718a2ae38b6ce097",
     "semantic_hash": ""
   },
   "src/fp16_gemv_reference.cpp": {
@@ -2364,15 +2364,15 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1788840497.3255863,
-    "seen": 1788841023.5395083,
-    "ast_hash": "dec2ce9aa4830baf0eae3153fa8acafc",
+    "mtime": 1788858664.0753582,
+    "seen": 1788858697.032014,
+    "ast_hash": "3839ace7633fa3a008fd7370a5ccaf2b",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1788847106.3570182,
-    "seen": 1788847143.0758185,
-    "ast_hash": "6a0a0d50a360db33f1d07936db4f874f",
+    "mtime": 1788859619.6564295,
+    "seen": 1788859871.7837186,
+    "ast_hash": "b9c91cb5189716e725b4a2e6d01f5d9b",
     "semantic_hash": ""
   },
   "docs/M9-AUTOREGRESSIVE-QUALIFICATION.md": {
@@ -2796,45 +2796,63 @@
     "semantic_hash": ""
   },
   "include/miinfer/m12_dense_stage.hpp": {
-    "mtime": 1788852660.602093,
-    "seen": 1788852793.90917,
-    "ast_hash": "e773f762a55365a041dd55c21beb5923",
+    "mtime": 1788857668.9764493,
+    "seen": 1788858697.0318203,
+    "ast_hash": "7af153c2cf2dc675cc7b1b4338f85d40",
     "semantic_hash": ""
   },
   "bench/m12_gdn_oracle.cpp": {
-    "mtime": 1788853554.095405,
-    "seen": 1788853567.0603247,
-    "ast_hash": "dcb3eb360ab9790cdb5bf4342f5feeed",
+    "mtime": 1788855987.060364,
+    "seen": 1788856016.2696786,
+    "ast_hash": "22c84b335317a091dfdc971fa9c26625",
     "semantic_hash": ""
   },
   "experiments/EXP-0255-m12-dense-staging-feasibility.md": {
-    "mtime": 1788853106.0002546,
-    "seen": 1788853350.851688,
-    "ast_hash": "61cc4510eb2e6fadc676df9f6dc91107",
+    "mtime": 1788857414.7424943,
+    "seen": 1788857512.4125926,
+    "ast_hash": "3a29736dab1dab28ac67b5bcf4748123",
     "semantic_hash": ""
   },
   "experiments/EXP-0256-m12-gdn-chunkwise-oracle.md": {
-    "mtime": 1788853617.598143,
-    "seen": 1788853630.880837,
-    "ast_hash": "e9a197132ef2613441ff6aa50d750e5d",
+    "mtime": 1788857282.1690395,
+    "seen": 1788857512.412594,
+    "ast_hash": "5513ec468ac926d7d9ecc2b0d08d303c",
     "semantic_hash": ""
   },
   "bench/m12_gdn_chunk_bench.cpp": {
-    "mtime": 1788854117.2640805,
-    "seen": 1788854130.0442429,
-    "ast_hash": "cf156d5d74fdc8b2b94b80e841e3dc9f",
+    "mtime": 1788856217.3184173,
+    "seen": 1788856243.6483922,
+    "ast_hash": "e2c14ab84720bd1349f2e86057e253c8",
     "semantic_hash": ""
   },
   "include/miinfer/m12_gdn_chunk.hpp": {
-    "mtime": 1788853989.0406098,
-    "seen": 1788854100.2688735,
-    "ast_hash": "43f71a70080aff85146cdc20b83a00cf",
+    "mtime": 1788855366.823923,
+    "seen": 1788855380.9701183,
+    "ast_hash": "68a3c911e9025fc968b623ea2506b04c",
     "semantic_hash": ""
   },
   "experiments/EXP-0257-m12-gdn-gpu-chunk-prototype.md": {
-    "mtime": 1788854222.5326462,
-    "seen": 1788854256.227672,
-    "ast_hash": "c55f426be3e663ebc04710763b89b79f",
+    "mtime": 1788857316.1019,
+    "seen": 1788857512.4125955,
+    "ast_hash": "6fbb5c270b7d89102f1ad4a6108e9c15",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0258-m12-runtime-composition.md": {
+    "mtime": 1788858930.3252635,
+    "seen": 1788859220.525551,
+    "ast_hash": "a806aa25f4e91dcc4274cfb1317f6667",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0259-m12-dense-prefill-backend.md": {
+    "mtime": 1788859669.2232256,
+    "seen": 1788859871.7841587,
+    "ast_hash": "a8735b276c80fc70f33ecbcfb6c139ad",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0260-m12-combined-prefill.md": {
+    "mtime": 1788859144.653559,
+    "seen": 1788859220.5255556,
+    "ast_hash": "c54fd7c751d9053ae4f53b8db62e9106",
     "semantic_hash": ""
   }
 }

@@ -11,7 +11,7 @@ decode path.
 Implemented `launch_m12_gdn_chunk` as a fixed-shape M12 lab primitive:
 
 - 16 key heads
-- 32 value heads
+- 48 value heads
 - state size 128
 - 128 tokens in two sequential 64-token chunks
 - one workgroup per value head
@@ -56,17 +56,30 @@ Median GPU timings over five measured runs after one warmup:
 
 ## Interpretation
 
-The chunkwise algebra and state layout are correct on gfx906, and the two
-chunk launches remove most per-token dispatches. The current kernel is only a
-1.112× core speedup, so it does not by itself justify production integration or
-the approximately 2× M12 dense-prefill gate. Its global workspace and serial
-host chunk schedule also leave substantial optimization work before it can
-expose the B128+ matrix path from EXP-0255.
+The corrected 48-head kernel is 3.17× faster than the token recurrence in the
+isolated core benchmark, but it uses a fixed 64-token chunk and a serial host
+launch schedule. That result is sufficient to test runtime composition, not to
+claim a production backend or the full M12 gate.
 
 ## Decision
 
 **KEEP AS A GPU CORRECTNESS PROTOTYPE; DO NOT PROMOTE TO PRODUCTION.** The
 decode path remains unchanged.
+
+## Re-evaluation — 2026-09-08
+
+The runtime integration uses one shared five-buffer workspace and an isolated
+raw-output buffer across recurrent layers. At P512 with HIP graphs disabled,
+the corrected chunkwise path measured 47.79 tok/s / 10714.43 ms against a
+matched 46.50 tok/s / 11011.19 ms control. A greedy P64 one-token check
+produced identical output. The runtime path remains opt-in via
+MIINFER_PREFILL_GDN_CHUNKWISE=1; decode is unchanged.
+
+An opt-in 128-token staging capacity was added to expose the dense experiment.
+At an exact 512-token prompt, 128-token scheduling measured 47.64 tok/s
+versus 47.74 tok/s at 64, so 128 is retained for isolated experiments but is
+not promoted. Non-128 prompt lengths automatically use 64-token chunks to
+avoid a large partial-chunk fallback.
 
 ## Follow-up
 
@@ -74,3 +87,10 @@ Profile the prototype before adding more machinery. The next viable test is to
 reduce workspace traffic and fuse the chunk-local preparation/solve with the
 head computation. If that cannot expose a materially larger batch window, stop
 the dense-prefill branch rather than building a second runtime.
+
+## Corrected isolated result — 2026-09-08
+
+The original 32-value-head result above is historical. With the actual
+16-key-head/48-value-head Qwen3.8 geometry, the standalone benchmark reports
+chunkwise 3826 us versus token recurrence 12141 us, or 3.17x, with maximum
+output error 1.4e-8 and final-state error 1.5e-7.

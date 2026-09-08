@@ -10,7 +10,7 @@
 namespace {
 
 constexpr std::size_t kKeyHeads = 16;
-constexpr std::size_t kValueHeads = 32;
+constexpr std::size_t kValueHeads = 48;
 constexpr std::size_t kState = 128;
 constexpr std::size_t kTokens = 128;
 constexpr std::size_t kChunk = 64;

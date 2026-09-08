@@ -113,4 +113,14 @@ bool launch_rocblas_gemm_fp16(
     int k,
     std::string& error);
 
+bool launch_rocblas_gemm_fp16_batch(
+    RocblasGemmHandle& handle,
+    const __half* weights,
+    const __half* input,
+    float* output,
+    int m,
+    int k,
+    int batch,
+    std::string& error);
+
 }  // namespace miinfer

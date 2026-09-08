@@ -34,13 +34,26 @@ B4 path. The B64 result fails the approximately 2x drop-in gate, so the
 primitive remains lab-only until a chunkwise recurrent schedule can expose
 B128+ work.
 EXP-0256 then validated the chunkwise Gated DeltaNet WY oracle for the exact
-16-key-head/32-value-head/state-128 geometry at chunk 64: max output error was
+16-key-head/48-value-head/state-128 geometry at chunk 64: max output error was
 `1.4e-8` and final-state error was `1.5e-7` against the token recurrence.
 EXP-0257 passes the subsequent gfx906 state/output comparison with the same
-1.5e-7 state error and reaches 1.112x over the existing 128-launch token core;
-production integration is still deferred.
-The GPU candidate remains a lab prototype pending profiling and a materially
-better batch schedule.
+1.5e-7 state error and reaches 3.17x over the existing 128-launch token core
+in isolation. EXP-0258 composes the corrected kernel into an opt-in runtime
+path with a shared workspace; the exact P512 128-token schedule is neutral
+against 64 tokens, so 128 remains experimental and decode is unchanged.
+EXP-0259 now provides the separate opt-in dense FFN-down prefill backend.
+Repeated exact-P512 runs measure 51.56 tok/s versus 46.60 tok/s control
+(10.6%); it remains below the aspirational 60 tok/s gate and is not default.
+B256 runtime capacity was rejected on HIP out-of-memory.
+EXP-0260 composes the independent paths at 52.99 tok/s P512. This is the
+best M12 result so far, but it remains opt-in below the aspirational 60 tok/s
+gate.
+
+Re-evaluation: the earlier 32-value-head note was incorrect. The actual
+Qwen3.8 geometry is 16 key heads / 48 value heads / state 128. The corrected
+oracle and GPU prototype retain the reported numerical errors; EXP-0258
+records the shared-workspace runtime composition and the neutral 128-token
+schedule.
 EXP-0214's debug result was superseded by a release re-evaluation: the exact
 native Q4_K split-K GEMM reached only 0.64× the B=4 control. EXP-0215 also
 rejected expanding the logical chunk to 128 around B=4 microtiles: P513 was

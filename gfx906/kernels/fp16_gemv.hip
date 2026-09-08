@@ -319,4 +319,53 @@ bool launch_rocblas_gemm_fp16(
         error);
 }
 
+bool launch_rocblas_gemm_fp16_batch(
+    RocblasGemmHandle& handle,
+    const __half* weights,
+    const __half* input,
+    float* output,
+    int m,
+    int k,
+    int batch,
+    std::string& error) {
+    if (handle.opaque == nullptr) {
+        error = "hipBLAS handle is not initialized";
+        return false;
+    }
+    if (weights == nullptr || input == nullptr || output == nullptr
+        || m <= 0 || k <= 0 || batch <= 0) {
+        error = "invalid batched GEMM arguments";
+        return false;
+    }
+    auto* hipblas_handle = static_cast<hipblasHandle_t*>(handle.opaque);
+    const float alpha = 1.0F;
+    const float beta = 0.0F;
+
+    // Row-major input[B,K], weights[M,K], output[B,M] are exposed as
+    // column-major KxB, KxM, and MxB matrices respectively.
+    return check_hipblas(
+        hipblasGemmEx(
+            *hipblas_handle,
+            HIPBLAS_OP_N,
+            HIPBLAS_OP_N,
+            batch,
+            m,
+            k,
+            &alpha,
+            input,
+            HIP_R_16F,
+            batch,
+            weights,
+            HIP_R_16F,
+            k,
+            &beta,
+            output,
+            HIP_R_32F,
+            batch,
+            HIPBLAS_COMPUTE_32F,
+            HIPBLAS_GEMM_DEFAULT),
+        "hipblasGemmEx batch",
+        error);
+}
+
 }  // namespace miinfer

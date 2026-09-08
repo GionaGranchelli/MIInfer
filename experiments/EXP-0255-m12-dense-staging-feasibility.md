@@ -88,3 +88,13 @@ decode changes based on this result alone.
 Prototype one recurrent-layer chunkwise/WY Gated DeltaNet oracle at chunk size
 64–128. Require exact state/output agreement with the current token-recurrent
 oracle before combining it with the B128+ dense projection path.
+
+## Re-evaluation — 2026-09-08
+
+The isolated dense-stage backend was rerun after the corrected runtime geometry
+work. It measured 1.367x at B64, 2.736x at B128, 4.006x at B256, and 5.784x
+at B512, with 1097.76 us repack time and the same 1.5e-5 sampled expansion
+error. This confirms the B128+ result, but the exact P512 runtime comparison
+shows no gain from choosing 128-token scheduling over 64-token scheduling.
+The backend therefore remains a separate lab executable; it is not integrated
+into the token runtime or decode path.

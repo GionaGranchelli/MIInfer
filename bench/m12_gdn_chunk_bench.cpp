@@ -18,7 +18,7 @@
 namespace {
 
 constexpr std::size_t kKeyHeads = 16;
-constexpr std::size_t kValueHeads = 32;
+constexpr std::size_t kValueHeads = 48;
 constexpr std::size_t kState = 128;
 constexpr std::size_t kTokens = 128;
 constexpr std::size_t kChunk = 64;
@@ -191,27 +191,29 @@ int main() try {
     Buffer decay_device(decay.size() * sizeof(float));
     Buffer state_device(initial_state.size() * sizeof(float));
     Buffer output_device(expected_output.size() * sizeof(float));
+    Buffer gate_device(expected_output.size() * sizeof(float));
+    Buffer ssm_norm_device(kState * sizeof(float));
+    Buffer postprocessed_device(expected_output.size() * sizeof(float));
     Buffer query_token_device(query_token_bytes);
     Buffer key_token_device(query_token_bytes);
     Buffer value_token_device(value_token_bytes);
     Buffer beta_token_device(beta_tokens.size() * sizeof(float));
     Buffer decay_token_device(decay_tokens.size() * sizeof(float));
     Buffer token_output_device(kValueHeads * kState * sizeof(float));
-    Buffer cumulative(kValueHeads * kChunk * sizeof(float));
-    Buffer pairwise(kValueHeads * kChunk * kChunk * sizeof(float));
-    Buffer system(kValueHeads * kChunk * kChunk * sizeof(float));
-    Buffer inverse(kValueHeads * kChunk * kChunk * sizeof(float));
     Buffer new_values(kValueHeads * kChunk * kState * sizeof(float));
     Buffer decayed_keys(kValueHeads * kChunk * kState * sizeof(float));
     Buffer solved_values(kValueHeads * kChunk * kState * sizeof(float));
     Buffer solved_keys(kValueHeads * kChunk * kState * sizeof(float));
     Buffer corrected_values(kValueHeads * kChunk * kState * sizeof(float));
-    Buffer intra_attention(kValueHeads * kChunk * kChunk * sizeof(float));
-    MIINFER_HIP_CHECK(hipMemcpy(query_device.pointer, query.data(), query.size() * sizeof(float), hipMemcpyHostToDevice));
-    MIINFER_HIP_CHECK(hipMemcpy(key_device.pointer, key.data(), key.size() * sizeof(float), hipMemcpyHostToDevice));
-    MIINFER_HIP_CHECK(hipMemcpy(value_device.pointer, value.data(), value.size() * sizeof(float), hipMemcpyHostToDevice));
-    MIINFER_HIP_CHECK(hipMemcpy(beta_device.pointer, beta.data(), beta.size() * sizeof(float), hipMemcpyHostToDevice));
-    MIINFER_HIP_CHECK(hipMemcpy(decay_device.pointer, decay.data(), decay.size() * sizeof(float), hipMemcpyHostToDevice));
+    MIINFER_HIP_CHECK(hipMemcpy(query_device.pointer, query_tokens.data(), query_token_bytes, hipMemcpyHostToDevice));
+    MIINFER_HIP_CHECK(hipMemcpy(key_device.pointer, key_tokens.data(), query_token_bytes, hipMemcpyHostToDevice));
+    MIINFER_HIP_CHECK(hipMemcpy(value_device.pointer, value_tokens.data(), value_token_bytes, hipMemcpyHostToDevice));
+    MIINFER_HIP_CHECK(hipMemcpy(beta_device.pointer, beta_tokens.data(), beta_tokens.size() * sizeof(float), hipMemcpyHostToDevice));
+    MIINFER_HIP_CHECK(hipMemcpy(decay_device.pointer, decay_tokens.data(), decay_tokens.size() * sizeof(float), hipMemcpyHostToDevice));
+    std::vector<float> ssm_norm_host(kState, 1.0F);
+    MIINFER_HIP_CHECK(hipMemset(gate_device.pointer, 0, expected_output.size() * sizeof(float)));
+    MIINFER_HIP_CHECK(hipMemcpy(ssm_norm_device.pointer, ssm_norm_host.data(),
+                                ssm_norm_host.size() * sizeof(float), hipMemcpyHostToDevice));
     MIINFER_HIP_CHECK(hipMemcpy(query_token_device.pointer, query_tokens.data(), query_token_bytes, hipMemcpyHostToDevice));
     MIINFER_HIP_CHECK(hipMemcpy(key_token_device.pointer, key_tokens.data(), query_token_bytes, hipMemcpyHostToDevice));
     MIINFER_HIP_CHECK(hipMemcpy(value_token_device.pointer, value_tokens.data(), value_token_bytes, hipMemcpyHostToDevice));
@@ -219,9 +221,8 @@ int main() try {
     MIINFER_HIP_CHECK(hipMemcpy(decay_token_device.pointer, decay_tokens.data(), decay_tokens.size() * sizeof(float), hipMemcpyHostToDevice));
 
     const miinfer::M12GdnChunkWorkspace workspace{
-        cumulative.as<float>(), pairwise.as<float>(), system.as<float>(), inverse.as<float>(),
         new_values.as<float>(), decayed_keys.as<float>(), solved_values.as<float>(),
-        solved_keys.as<float>(), corrected_values.as<float>(), intra_attention.as<float>()};
+        solved_keys.as<float>(), corrected_values.as<float>()};
     auto reset_state = [&] {
         MIINFER_HIP_CHECK(hipMemcpy(state_device.pointer, initial_state.data(),
                                     initial_state.size() * sizeof(float), hipMemcpyHostToDevice));
@@ -254,13 +255,29 @@ int main() try {
     const double token_us = measure(run_token);
     run_chunk();
     MIINFER_HIP_CHECK(hipDeviceSynchronize());
+    miinfer::launch_m12_gdn_postprocess(
+        output_device.as<float>(), gate_device.as<float>(), ssm_norm_device.as<float>(),
+        postprocessed_device.as<float>(), kTokens, kValueHeads, kState, 1.0e-5F,
+        hipStreamPerThread);
+    MIINFER_HIP_CHECK(hipDeviceSynchronize());
     std::vector<float> actual_output(expected_output.size());
     std::vector<float> actual_state(initial_state.size());
     MIINFER_HIP_CHECK(hipMemcpy(actual_output.data(), output_device.pointer,
                                 actual_output.size() * sizeof(float), hipMemcpyDeviceToHost));
     MIINFER_HIP_CHECK(hipMemcpy(actual_state.data(), state_device.pointer,
                                 actual_state.size() * sizeof(float), hipMemcpyDeviceToHost));
-    const double output_error = max_error(actual_output, expected_output);
+    double output_error = 0.0;
+    for (std::size_t token = 0; token < kTokens; ++token) {
+        for (std::size_t head = 0; head < kValueHeads; ++head) {
+            for (std::size_t dimension = 0; dimension < kState; ++dimension) {
+                const std::size_t device_index =
+                    (token * kValueHeads + head) * kState + dimension;
+                const std::size_t expected_index = at(head, token, dimension, kTokens, kState);
+                output_error = std::max(output_error, static_cast<double>(std::abs(
+                    actual_output[device_index] - expected_output[expected_index])));
+            }
+        }
+    }
     const double state_error = max_error(actual_state, expected_state);
     std::cout << std::fixed << std::setprecision(9)
               << "{\"tokens\":" << kTokens << ",\"chunk\":" << kChunk

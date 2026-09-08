@@ -69,11 +69,16 @@ public:
           tokenizer_(miinfer::Qwen3Tokenizer::load(*model_.file())) {
         setup_environment();
         init_layers();
+        init_m12_gdn_workspace();
+        init_m12_dense_workspace();
         init_buffers();
     }
 
     ~Qwen35RuntimeEngine() {
         cleanup_graphs();
+        if (m12_dense_gemm_.opaque != nullptr) {
+            miinfer::destroy_rocblas_gemm_handle(m12_dense_gemm_);
+        }
         prefill_profile_.destroy();
     }
 
@@ -220,7 +225,11 @@ public:
     }
 
     const float* prefill_layer_major(std::span<const std::uint32_t> prompt) {
-        const std::size_t kChunk = prefill_chunk_;
+        // A 128-token request with a non-128 tail would otherwise make the
+        // final nearly-full chunk fall back to per-token recurrent execution.
+        const bool matrix_prefill = gdn_chunkwise_prefill_ || dense_prefill_;
+        const std::size_t kChunk = (prefill_chunk_ > kPrefillBatch && matrix_prefill
+            && prompt.size() % prefill_chunk_ != 0) ? kPrefillBatch : prefill_chunk_;
         float* current = static_cast<float*>(prefill_a_->get());
         float* next = static_cast<float*>(prefill_b_->get());
         const float* final_hidden = nullptr;
@@ -260,7 +269,9 @@ public:
                 }
                 const bool normalized_ready = layer > 0 && layer_span[layer - 1].fused_interlayer_norm();
                 const bool prepared = layer_span[layer].prepare_prefill_batch(current, count, normalized_ready);
-                const bool deferred_tail = prepared && layer_span[layer].prefill_tail_batch_supported();
+                const bool full_m12_chunk = count % kPrefillBatch == 0;
+                const bool deferred_tail = prepared && layer_span[layer].prefill_tail_batch_supported()
+                    && (!gdn_chunkwise_prefill_ || full_m12_chunk);
                 if (prefill_profile_.enabled) {
                     MIINFER_HIP_CHECK(hipEventRecord(prefill_profile_.stage[1], hipStreamPerThread));
                 }
@@ -531,11 +542,20 @@ private:
         use_hip_graph_ = graph_env == nullptr || std::strcmp(graph_env, "0") != 0;
         const char* layer_major_env = std::getenv("MIINFER_PREFILL_LAYER_MAJOR");
         layer_major_prefill_ = layer_major_env != nullptr && std::strcmp(layer_major_env, "0") != 0;
+        const char* gdn_chunkwise_env = std::getenv("MIINFER_PREFILL_GDN_CHUNKWISE");
+        gdn_chunkwise_prefill_ = layer_major_prefill_ && gdn_chunkwise_env != nullptr
+            && std::strcmp(gdn_chunkwise_env, "0") != 0;
+        const char* dense_prefill_env = std::getenv("MIINFER_PREFILL_DENSE_FFN_DOWN");
+        dense_prefill_ = layer_major_prefill_ && dense_prefill_env != nullptr
+            && std::strcmp(dense_prefill_env, "0") != 0;
         const char* prefill_chunk_env = std::getenv("MIINFER_PREFILL_CHUNK");
         if (prefill_chunk_env != nullptr) {
             const auto requested = std::stoul(prefill_chunk_env);
-            if (requested != 4 && requested != kPrefillBatch) {
-                throw std::runtime_error("MIINFER_PREFILL_CHUNK must be 4 or 64");
+            if (requested != 4 && requested != kPrefillBatch
+                && !((gdn_chunkwise_prefill_ || dense_prefill_)
+                     && requested == kM12PrefillBatch)) {
+                throw std::runtime_error(
+                    "MIINFER_PREFILL_CHUNK must be 4 or 64; M12 also accepts 128");
             }
             prefill_chunk_ = requested;
         }
@@ -557,6 +577,44 @@ private:
                 recurrent_layers_.push_back(std::make_unique<RecurrentLayer>(model_, i, empty_fixture));
                 layers_[i] = {recurrent_layers_.back().get(), nullptr};
             }
+        }
+    }
+
+    void init_m12_gdn_workspace() {
+        if (!gdn_chunkwise_prefill_) return;
+        const std::size_t bytes = kVHeads * 64 * kState * sizeof(float);
+        m12_gdn_new_values_ = allocate(bytes);
+        m12_gdn_decayed_keys_ = allocate(bytes);
+        m12_gdn_solved_values_ = allocate(bytes);
+        m12_gdn_solved_keys_ = allocate(bytes);
+        m12_gdn_corrected_values_ = allocate(bytes);
+        m12_gdn_workspace_ = {
+            static_cast<float*>(m12_gdn_new_values_->get()),
+            static_cast<float*>(m12_gdn_decayed_keys_->get()),
+            static_cast<float*>(m12_gdn_solved_values_->get()),
+            static_cast<float*>(m12_gdn_solved_keys_->get()),
+            static_cast<float*>(m12_gdn_corrected_values_->get())};
+        m12_gdn_raw_output_ = allocate(kM12PrefillBatch * kVHeads * kState * sizeof(float));
+        for (auto& layer : recurrent_layers_) {
+            layer->set_m12_gdn_workspace(
+                m12_gdn_workspace_, static_cast<float*>(m12_gdn_raw_output_->get()));
+        }
+    }
+
+    void init_m12_dense_workspace() {
+        if (!dense_prefill_) return;
+        m12_dense_weights_ = allocate(kHidden * kFfnInner * sizeof(__half));
+        m12_dense_input_ = allocate(kM12PrefillBatch * kFfnInner * sizeof(__half));
+        std::string error;
+        if (!miinfer::create_rocblas_gemm_handle(m12_dense_gemm_,
+                                                  hipStreamPerThread, error)) {
+            throw std::runtime_error(error);
+        }
+        for (auto& layer : recurrent_layers_) {
+            layer->set_m12_dense_workspace(
+                static_cast<__half*>(m12_dense_weights_->get()),
+                static_cast<__half*>(m12_dense_input_->get()),
+                &m12_dense_gemm_);
         }
     }
 
@@ -585,8 +643,10 @@ private:
         logits_ = allocate(model_.config().vocab_size * sizeof(float));
         argmax_token_ = allocate(sizeof(std::uint32_t));
         d_decode_tokens_ = allocate(kCacheCapacity * sizeof(std::uint32_t));
-        prefill_a_ = allocate(kPrefillBatch * kHidden * sizeof(float));
-        prefill_b_ = allocate(kPrefillBatch * kHidden * sizeof(float));
+        const std::size_t prefill_capacity = (gdn_chunkwise_prefill_ || dense_prefill_)
+            ? kM12PrefillBatch : kPrefillBatch;
+        prefill_a_ = allocate(prefill_capacity * kHidden * sizeof(float));
+        prefill_b_ = allocate(prefill_capacity * kHidden * sizeof(float));
 
         decode_graphs_.resize(kCacheCapacity, nullptr);
         prefill_profile_.init();
@@ -669,11 +729,19 @@ private:
     Buffer logits_;
     Buffer argmax_token_;
     Buffer d_decode_tokens_;
+    Buffer m12_gdn_new_values_, m12_gdn_decayed_keys_;
+    Buffer m12_gdn_solved_values_, m12_gdn_solved_keys_, m12_gdn_corrected_values_;
+    Buffer m12_gdn_raw_output_;
+    miinfer::M12GdnChunkWorkspace m12_gdn_workspace_{};
+    Buffer m12_dense_weights_, m12_dense_input_;
+    miinfer::RocblasGemmHandle m12_dense_gemm_{};
     Buffer prefill_a_;
     Buffer prefill_b_;
 
     bool use_hip_graph_ = true;
     bool layer_major_prefill_ = false;
+    bool gdn_chunkwise_prefill_ = false;
+    bool dense_prefill_ = false;
     std::size_t prefill_chunk_ = kPrefillBatch;
     PrefillProfile prefill_profile_;
     std::vector<hipGraphExec_t> decode_graphs_;

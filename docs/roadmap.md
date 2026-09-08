@@ -29,6 +29,20 @@ production prefill backend. Profile or simplify that prototype before any
 dense projection integration; stop the branch if it cannot expose a material
 B128+ schedule.
 
+The corrected geometry is 16 key heads / 48 value heads / state 128. The
+standalone chunkwise kernel reaches 3.17x over the token core, and EXP-0258
+composes it into an opt-in runtime path. Exact P512 scheduling at 128 tokens
+is neutral against 64, so 128 remains an experiment rather than a production
+prefill backend; keep dense projection integration isolated.
+EXP-0259 fulfills that isolation with a reusable opt-in FFN-down backend:
+exact-P512 repeated runs reach 51.56 tok/s versus 46.60 tok/s control. The
+gain is real but below the aspirational 60 tok/s gate; B256 is not memory-safe
+in the current per-layer allocation, so further projection expansion requires
+a new memory plan.
+EXP-0260 combines the independently measured paths at 52.99 P512 tok/s.
+Keep that composition opt-in; the next experiment must target another measured
+tail rather than broadening the default runtime.
+
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See
 `experiments/EXP-0041-m5c15-optimization-closure-parity-gate.md`. M6-A0 audited

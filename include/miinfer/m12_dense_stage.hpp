@@ -5,6 +5,7 @@
 #include <hip/hip_runtime_api.h>
 
 #include <cstdint>
+#include <cstddef>
 
 namespace miinfer {
 
@@ -15,6 +16,19 @@ void launch_m12_q4k_to_fp16(
     __half* destination,
     std::uint32_t rows,
     std::uint32_t columns,
+    hipStream_t stream = nullptr);
+
+void launch_m12_q6k_to_fp16(
+    const Q6KDeviceBlock* source,
+    __half* destination,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    hipStream_t stream = nullptr);
+
+void launch_m12_f32_to_fp16(
+    const float* source,
+    __half* destination,
+    std::size_t elements,
     hipStream_t stream = nullptr);
 
 } // namespace miinfer

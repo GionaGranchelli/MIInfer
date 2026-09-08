@@ -86,11 +86,21 @@ the grouped tile to 0.894x at B64 but remained slower and was removed. The
 repacked-MMQ/token-reuse family is now closed. EXP-0255 measured one Q4_K→FP16
 staging pass plus hipBLAS GEMM at 1.364x for B64, then 2.724x, 4.001x, and
 5.806x for B128/B256/B512. It remains a lab primitive until chunkwise
-recurrent execution can expose B128+ work. EXP-0256 validates the chunkwise
-Gated DeltaNet WY oracle at chunk 64: max output error is 1.4e-8 and final
-state error is 1.5e-7 against the token recurrence. EXP-0257 passes the
-gfx906 correctness gate with the same 1.5e-7 state agreement, but reaches only
-1.112x over 128 token launches, so it remains a lab prototype.
+recurrent execution can expose B128+ work. EXP-0256 validates the corrected
+16-key-head/48-value-head chunkwise Gated DeltaNet WY oracle at chunk 64: max
+output error is 1.4e-8 and final state error is 1.5e-7 against the token
+recurrence. EXP-0257 passes the gfx906 correctness gate and reaches 3.17x over
+128 token launches in isolation. EXP-0258 composes it into the opt-in runtime
+path; exact P512 is 47.79 tok/s in the earlier matched integration pair. The
+128-token schedule is operational but neutral at 47.64 versus 47.74 tok/s, so
+it remains experimental.
+EXP-0259 adds an opt-in recurrent FFN-down dense backend: repeated exact-P512
+measurements are 51.56 tok/s versus 46.60 tok/s control, a 10.6% gain. It
+keeps only canonical quantized sources per layer plus shared FP16 workspaces;
+the default and decode paths remain unchanged. B256 runtime capacity is
+rejected as out-of-memory.
+EXP-0260 composes dense B128 with chunkwise GDN at 52.99 tok/s P512; it
+remains opt-in because the aspirational 60 tok/s gate is still open.
 
 The project currently has:
 
