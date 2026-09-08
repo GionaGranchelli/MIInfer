@@ -1992,9 +1992,9 @@
     "semantic_hash": ""
   },
   "bench/q4k_layout_bench.cpp": {
-    "mtime": 1788629674.5984988,
-    "seen": 1788631345.0654123,
-    "ast_hash": "0194fa1c61f041344a4c768a2e005b6f",
+    "mtime": 1788832493.5835063,
+    "seen": 1788832590.5094,
+    "ast_hash": "032238a3ef69d3802f67b0257e1e2716",
     "semantic_hash": ""
   },
   "experiments/EXP-0173-q4k-native-layout-laboratory.md": {
@@ -2040,8 +2040,8 @@
     "semantic_hash": ""
   },
   "include/miinfer/kquant_wave_layout.hpp": {
-    "mtime": 1788829453.6377351,
-    "seen": 1788829470.6013634,
+    "mtime": 1788832493.5825064,
+    "seen": 1788832590.5094197,
     "ast_hash": "8dd28b79700228b35792dd0aa2b07b7b",
     "semantic_hash": ""
   },
@@ -2601,6 +2601,24 @@
     "mtime": 1788831455.0516841,
     "seen": 1788831471.6080818,
     "ast_hash": "894a7f62292a6b99f63cb08d3abe08e4",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0224-m11b-q4k-b4-lds-token-rejection.md": {
+    "mtime": 1788831843.82712,
+    "seen": 1788832590.5100338,
+    "ast_hash": "4cf3683de778513c3726698d9da52125",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0225-m11b-q4k-b4-lds-row-tile-rejection.md": {
+    "mtime": 1788832077.1881814,
+    "seen": 1788832590.5100358,
+    "ast_hash": "7f21b6a05bf0b666a72aa3a3778ef6ba",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0226-m11b-q4k-chunked-row-tile-rejection.md": {
+    "mtime": 1788832514.4964223,
+    "seen": 1788832590.510037,
+    "ast_hash": "07a522d42105aa2ec412fe8edf40fe3d",
     "semantic_hash": ""
   }
 }
