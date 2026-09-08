@@ -27,7 +27,7 @@ M15-B: model discovery      PASS
 M15-C: configuration        PASS
 M15-D: serving lifecycle    PASS
 M16-A: request metrics      PASS
-M16-B: queueing             RETEST
+M16-B: queueing             PASS
 M16-C: concurrency          OPEN
 M16-D: JSON parsing         OPEN
 ```
