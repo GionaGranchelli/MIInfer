@@ -117,9 +117,10 @@ tokens. M16-B now parses requests before queueing a bounded set of inference
 jobs, keeps control-plane endpoints responsive, uses a single GPU worker, and
 returns HTTP 503 on overflow. Requests have a 10-second absolute receive
 deadline; streaming disconnects cancel generation; malformed/missing chat
-content returns HTTP 400. It remains RETEST until overflow and shutdown cases
-are recorded by a repeatable serving test. The chat body is still a documented
-first-content-string subset; full JSON message parsing is M16-D.
+content returns HTTP 400. `scripts/test-serve.sh` covers the queue cap,
+overflow, control-plane responsiveness, and shutdown rejection on a qualified
+machine. The chat body is still a documented first-content-string subset; full
+JSON message parsing is M16-D.
 
 The extracted-package hardening smoke has passed fragmented `Content-Length`
 requests, chunked-transfer rejection, 4 MiB overflow rejection, idle-client

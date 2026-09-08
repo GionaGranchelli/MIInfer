@@ -401,14 +401,15 @@ public:
         const auto first_end = std::chrono::steady_clock::now();
         stats.first_token_ms = std::chrono::duration<double, std::milli>(first_end - first_start).count();
         stats.tokens.push_back(cur_token);
+        bool cancelled = false;
         if (cur_token != tokenizer_.eos_id() && cur_token != 151643 && cur_token != 151645) {
             const std::string piece = tokenizer_.decode(std::span<const std::uint32_t>(&cur_token, 1));
             stats.text += piece;
-            if (opt.on_token && !opt.on_token(cur_token, piece)) return stats;
+            cancelled = opt.on_token && !opt.on_token(cur_token, piece);
         }
 
         std::size_t pos = prompt.size();
-        for (std::size_t gen_idx = 1; gen_idx < opt.max_new_tokens && pos < kCacheCapacity; ++gen_idx) {
+        for (std::size_t gen_idx = 1; !cancelled && gen_idx < opt.max_new_tokens && pos < kCacheCapacity; ++gen_idx) {
             if (g_shutdown_requested) break;
             const auto step_res = step(cur_token, pos);
             cur_token = step_res.token;
@@ -418,7 +419,7 @@ public:
             if (cur_token == tokenizer_.eos_id() || cur_token == 151643 || cur_token == 151645) break;
             const std::string piece = tokenizer_.decode(std::span<const std::uint32_t>(&cur_token, 1));
             stats.text += piece;
-            if (opt.on_token && !opt.on_token(cur_token, piece)) return stats;
+            if (opt.on_token && !opt.on_token(cur_token, piece)) break;
         }
         stats.decode_ms += stats.first_token_ms;
         stats.generated_tokens = stats.tokens.size();
@@ -1343,7 +1344,9 @@ int cmd_serve(int argc, char** argv) {
         } else {
             Qwen35RuntimeEngine::GenerateOptions opt;
             opt.max_new_tokens = max_tokens;
-            opt.stream = false;
+            // Server requests must observe shutdown between tokens; the bulk
+            // graph path intentionally does not provide that interruption point.
+            opt.stream = true;
             const auto stats = engine.generate(prompt_tokens, opt);
             prompt_tokens_total += stats.prompt_tokens;
             generated_tokens_total += stats.generated_tokens;
