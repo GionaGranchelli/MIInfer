@@ -49,7 +49,10 @@ the production B=4 chunk. It is rejected because the current causal
 layer-major schedule cannot expose that tile without a different recurrent
 chunk architecture. EXP-0232 tested a smaller 16-token version with exact
 Q4_K arithmetic and reached only 0.351x the four-launch B=4 control, so the
-intermediate tile is rejected too. The 100 tok/s gate remains open.
+intermediate tile is rejected too. EXP-0233 closes this projection-mapping
+branch: the optimistic 1.387x raw-int8 ceiling reaches only 63.19 tok/s when
+applied to the entire current path. The 100 tok/s gate remains open for a
+materially different prefill dataflow.
 
 EXP-0168 completed that profile at position 63: total GPU event
 `71.9133 ms/token`, layer sum `68.6269 ms`, final LM head `2.50016 ms`, and

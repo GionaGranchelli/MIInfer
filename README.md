@@ -38,7 +38,10 @@ launches. EXP-0231 tested a three-plane Q4_K repack with a 64-token MMQ tile:
 it reached 1.125x at B=64 but was 13.8x slower at the production B=4 chunk,
 so it is rejected pending a causally valid larger-chunk schedule. EXP-0232
 tested a 16-token version and reached only 0.351x the four-launch B=4 control;
-the intermediate tile is also rejected.
+the intermediate tile is also rejected. EXP-0233 closes this projection
+mapping branch with an optimistic 1.387x Amdahl ceiling, or 63.19 tok/s even
+if applied to the whole current path; the 100 tok/s gate remains open for a
+materially different prefill dataflow.
 
 The project currently has:
 
