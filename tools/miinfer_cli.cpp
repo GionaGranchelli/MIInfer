@@ -1029,11 +1029,12 @@ int cmd_doctor(int argc, char** argv) {
 // ---------------------------------------------------------------------------
 int cmd_run(int argc, char** argv) {
     if (argc < 3) {
-        std::cerr << "usage: miinfer run <model.gguf> --prompt \"...\" [--max-tokens N]\n";
+        std::cerr << "usage: miinfer run <model.gguf> (--prompt \"...\" | --prompt-file PATH) [--max-tokens N]\n";
         return 1;
     }
     const std::string model_path = argv[2];
     std::string prompt_text;
+    std::optional<std::filesystem::path> prompt_file;
     std::size_t max_tokens = 128;
     bool stream = true;
 
@@ -1041,11 +1042,24 @@ int cmd_run(int argc, char** argv) {
         std::string_view arg = argv[i];
         if (arg == "--prompt" && i + 1 < argc) {
             prompt_text = argv[++i];
+        } else if (arg == "--prompt-file" && i + 1 < argc) {
+            prompt_file = argv[++i];
         } else if (arg == "--max-tokens" && i + 1 < argc) {
             max_tokens = std::stoull(argv[++i]);
         } else if (arg == "--no-stream") {
             stream = false;
         }
+    }
+
+    if (prompt_file) {
+        std::ifstream input(*prompt_file);
+        if (!input) {
+            std::cerr << "unable to open prompt file: " << *prompt_file << '\n';
+            return 2;
+        }
+        std::ostringstream contents;
+        contents << input.rdbuf();
+        prompt_text = contents.str();
     }
 
     if (prompt_text.empty()) {

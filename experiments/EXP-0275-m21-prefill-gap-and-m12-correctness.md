@@ -30,18 +30,23 @@ token-ID capture uses `MIINFER_DUMP_TOKENS=1`.
 | P8 | 31.80 | 32.32 | 55.89 | 0.569x | 0.578x |
 | P128 | 33.12 | 47.05 | 180.45 | 0.184x | 0.261x |
 | P512 | 32.49 | 45.85 | 222.64 | 0.146x | 0.206x |
-| P8K | — | 38.33 | 229.20 | — | 0.167x |
-| P16K | — | 36.18 | 219.91 | — | 0.165x |
-| P32K | — | 33.96 | 202.84 | — | 0.167x |
+| P2K | 31.10 | 42.83 | 236.72 | 0.131x | 0.181x |
+| P8K | 28.45 | 38.33 | 229.20 | 0.124x | 0.167x |
+| P16K | 27.26 | 36.18 | 219.91 | 0.124x | 0.165x |
+| P32K | 25.73 | 33.96 | 202.84 | 0.127x | 0.167x |
 | P64K | — | 28.37 | 175.75 | — | 0.161x |
 | P128K | — | 20.55 | 138.39 | — | 0.149x |
 
 The MIInfer short results are corrected PP-only or TG64 runs in
-`results/m18-runtime-corrected/`. The reference raw ladder through P128K is in
+`results/m18-runtime-corrected/`. The default-path P2K–P32K extension is in
+`results/m21-prefill-default/`; its P32K prompt used `--prompt-file` after the
+argv-based attempt hit `E2BIG`. The M12 P2K point is in
+`results/m21-prefill-m12-2k/`. The reference raw ladder through P128K is in
 `results/m21-reference/20260909-mx-2e9d29fe/`.
 
 At P512, layer-major is about 4.86x slower than the specialized reference;
-the default path is about 6.85x slower. At P128K, layer-major is about 6.73x
+the default path is about 6.85x slower. At P32K, layer-major is about 5.97x
+slower and default is about 7.88x slower. At P128K, layer-major is about 6.73x
 slower. At P8 the rates are close, so the gap appears when prompt parallelism
 becomes useful, not in startup/dispatch alone.
 

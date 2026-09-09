@@ -1,0 +1,16 @@
+Initializing MIInfer gfx906 runtime engine for /home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf ...
+device_allocation_count=2396
+device_allocated_bytes=23046914388
+device_peak_allocated_bytes=23046914388
+model_context_length=262144
+Prompt tokens: 2049 tokens
+Generating up to 1 tokens...
+---------------------------------------------------------
+---------------------------------------------------------
+Performance Summary:
+  Prefill Tokens:   2049 tokens (65844.93 ms, 31.10 tok/s)
+  Decode Tokens:    1 tokens (37.94 ms, 26.36 tok/s)
+  First Token TTFT: 33.08 ms
+  Average Decode:   37.938 ms/token
+  Total Latency:    65882.87 ms
+---------------------------------------------------------

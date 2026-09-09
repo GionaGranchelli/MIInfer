@@ -1,0 +1,6 @@
+The initial 900-second harness attempt could not start the P32768 case:
+
+OSError: [Errno 7] Argument list too long: 'build/mi50-release/miinfer'
+
+The same prompt completed through --prompt-file; see
+results/m21-prefill-default-file/20260909-183813-1277332/.

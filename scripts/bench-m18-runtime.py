@@ -26,18 +26,26 @@ def command_output(command):
         return "UNAVAILABLE\n"
 
 
-def run_case(binary, model, prompt_words, mode, max_tokens, output):
+def run_case(binary, model, prompt_words, mode, max_tokens, output, timeout_seconds):
     prompt = "hello " * prompt_words
     env = os.environ.copy()
     if mode == "experimental":
         env["MIINFER_PREFILL_LAYER_MAJOR"] = "1"
+    suffix = f"{mode}-words{prompt_words}-max{max_tokens}"
+    command = [str(binary), "run", str(model)]
+    if len(prompt) > 100_000:
+        prompt_file = output / f"{suffix}.prompt.txt"
+        prompt_file.write_text(prompt)
+        command.extend(["--prompt-file", str(prompt_file)])
+    else:
+        command.extend(["--prompt", prompt])
+    command.extend(["--max-tokens", str(max_tokens)])
     began = time.monotonic()
     result = subprocess.run(
-        [str(binary), "run", str(model), "--prompt", prompt, "--max-tokens", str(max_tokens)],
+        command,
         capture_output=True, text=True, encoding="utf-8", errors="replace",
-        env=env, timeout=900, check=False)
+        env=env, timeout=timeout_seconds, check=False)
     elapsed_ms = (time.monotonic() - began) * 1000.0
-    suffix = f"{mode}-words{prompt_words}-max{max_tokens}"
     (output / f"{suffix}.stdout").write_text(result.stdout)
     (output / f"{suffix}.stderr").write_text(result.stderr)
     prefill = re.search(r"Prefill Tokens:.*?\(([0-9.]+) ms, ([0-9.]+) tok/s\)", result.stderr)
@@ -89,6 +97,8 @@ def main():
     parser.add_argument("--modes", default="default,experimental")
     parser.add_argument("--max-tokens", type=int, default=1,
                         help="1 for PP-only/first-token runs; use 64 or 128 for TG")
+    parser.add_argument("--timeout", type=int, default=1800,
+                        help="per-case timeout in seconds")
     args = parser.parse_args()
     stamp = time.strftime("%Y%m%d-%H%M%S")
     output = args.output / f"{stamp}-{os.getpid()}"
@@ -112,7 +122,8 @@ def main():
         for words in (int(value) for value in args.prompts.split(",")):
             print(f"running mode={mode} prompt_words={words}", flush=True)
             cases.append(add_steady_rate(
-                run_case(args.binary, args.model, words, mode, args.max_tokens, output)))
+                run_case(args.binary, args.model, words, mode, args.max_tokens, output,
+                         args.timeout)))
     (output / "summary.json").write_text(json.dumps({
         **metadata,
         "hardware_after": command_output(["rocm-smi"]),

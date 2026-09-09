@@ -1,0 +1,8 @@
+binary=build/mi50-release/miinfer
+model=/home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf
+model_sha256=7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169
+environment=default token-major path; MIINFER_PREFILL_LAYER_MAJOR unset
+command=python3 scripts/bench-m18-runtime.py build/mi50-release/miinfer MODEL --output results/m21-prefill-default --prompts 2048,8192,16384,32768 --modes default --max-tokens 1 --timeout 900
+P32K_note=argv-based harness attempt hit E2BIG at 900s; same prompt completed through --prompt-file with a direct 1800s timeout in results/m21-prefill-default-file/20260909-183813-1277332/
+hardware_clocks=SCLK 1606 MHz; MCLK 1000 MHz
+compiler=HIP version 7.1.52802-9999; clang 20.0.0.rocm
