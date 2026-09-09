@@ -1,0 +1,25 @@
+Initializing MIInfer gfx906 HTTP Server on 127.0.0.1:19405 ...
+configured_context_length=32768
+runtime_context_capacity=32768
+qualified_context_length=1024
+context_qualification=experimental
+MIInfer OpenAI-compatible API listening at http://127.0.0.1:19405
+Request queue capacity: 8
+Endpoints:
+  GET  /healthz
+  GET  /readyz
+  GET  /metrics
+  GET  /v1/models
+  POST /v1/chat/completions
+miinfer_request_state request_id=1 state=received
+miinfer_request_state request_id=2 state=received
+miinfer_request_state request_id=2 state=queued
+miinfer_request_state request_id=2 state=dequeued
+miinfer_request_state request_id=2 state=parsed
+miinfer_request_state request_id=2 state=tokenized
+miinfer_request_state request_id=2 state=prefill_started
+miinfer_request_state request_id=2 state=prefill_completed
+miinfer_request_state request_id=2 state=first_token
+miinfer_request_state request_id=2 state=completed
+miinfer_request {"request_id":2,"request_body_bytes":192192,"message_count":1,"prompt_chars":192050,"prompt_tokens":32009,"tokenization_ms":33.907,"queue_wait_ms":0.068918,"prefill_ms":939160,"prefill_tokens_per_second":34.0826,"first_decode_token_ms":1.57211,"time_to_first_token_ms":939162,"generated_tokens":1,"decode_ms":1.57211,"decode_tokens_per_second":636.09,"total_ms":939162,"cancelled":false,"finish_reason":"stop","error":null,"configured_context":32768,"runtime_context_capacity":32768}
+Shutting down HTTP server...

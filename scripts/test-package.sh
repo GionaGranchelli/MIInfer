@@ -54,6 +54,7 @@ if ! grep -q '^prefill_path=validated-default$' "$stage/config.txt"; then
     exit 1
 fi
 if ! grep -q '^runtime_context_capacity=65536$' "$stage/config.txt" || \
+   ! grep -q '^model_context_length=262144$' "$stage/config.txt" || \
    ! grep -q '^qualified_context_length=1024$' "$stage/config.txt"; then
     printf 'configuration contract missing context limits\n' >&2
     exit 1

@@ -1,0 +1,19 @@
+Initializing MIInfer gfx906 HTTP Server on 127.0.0.1:19408 ...
+configured_context_length=131072
+runtime_context_capacity=131072
+qualified_context_length=1024
+context_qualification=experimental
+model_context_length=262144
+device_allocation_count=2396
+device_allocated_bytes=27342143828
+device_peak_allocated_bytes=27342143828
+MIInfer OpenAI-compatible API listening at http://127.0.0.1:19408
+Request queue capacity: 8
+Endpoints:
+  GET  /healthz
+  GET  /readyz
+  GET  /metrics
+  GET  /v1/models
+  POST /v1/chat/completions
+miinfer_request_state request_id=1 state=received
+Shutting down HTTP server...

@@ -1,0 +1,6 @@
+HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 481
+Connection: close
+
+{"id":"chatcmpl-1","object":"chat.completion","choices":[{"message":{"role":"assistant","content":"<think>\nThe user has sent a very long message that consists entirely of the word \"hello\" repeated many, many times. There's no actual question or request here. I should respond in a friendly, lighthearted way acknowledging what they've sent without being condescending. I'll keep it brief and fun"},"finish_reason":"stop"}],"usage":{"prompt_tokens":16009,"completion_tokens":64}}

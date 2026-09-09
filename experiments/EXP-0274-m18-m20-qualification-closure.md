@@ -24,13 +24,13 @@ comparison when the pinned competitor cannot load the exact model.
 | lifecycle/cancellation | PASS | EXP-0268; `results/m18-lifecycle/` |
 | strict request limits | PASS | `scripts/test-serve.sh`; CTest |
 | runtime-only MIInfer PP/TG | PASS | EXP-0271; `results/m18-runtime/` |
-| pinned llama.cpp PP/TG | BLOCKED | EXP-0269: exact model unsupported at pin |
+| pinned llama.cpp PP/TG | BLOCKED | EXP-0269: exact model unsupported at pin; compatible supplemental curve retained |
 | dynamic allocation 1K–128K | PASS | EXP-0270; `results/m19-context/20260909-allocation-sweep/` |
 | 1K inference qualification | PASS | EXP-0270 |
 | 8K inference smoke | PASS | EXP-0270 |
-| 16K–128K correctness/steady-state decode | NOT QUALIFIED | no promotion from allocation-only evidence |
+| 16K–128K correctness/steady-state decode | NOT QUALIFIED | 16K/32K/64K functional smoke and 8K/16K TG64 completed; replay/KV/deeper TG64 ladder remains open |
 | API authentication | PASS | EXP-0272; `results/m20-auth/` |
-| constrained Hermes submission | PARTIAL | EXP-0273; `results/hermes/` |
+| constrained Hermes submission | PARTIAL | EXP-0273; two completed ~8K requests plus controlled cancellation |
 | regression suite | PASS | 23/23 CTest tests |
 
 ## Runtime-only result
@@ -42,25 +42,27 @@ The retained short curve uses one generated token per case:
 | default | 32.36 | 33.15 | 32.44 | 27.26–28.17 |
 | M12 experimental | 32.22 | 47.15 | 45.94 | 613.31–635.51 |
 
-The comparison excludes HTTP, JSON, ChatML, and Hermes. Since the pinned
-llama.cpp binary rejects the exact model, the campaign cannot answer the
-requested MIInfer-vs-llama.cpp ratio or attribute the gap to HTTP versus GPU
-prefill architecture. That is a reference compatibility blocker, not a
-performance conclusion.
+The comparison excludes HTTP, JSON, ChatML, and Hermes. The mandated pinned
+llama.cpp binary rejects the exact model, so the requested pinned ratio and
+HTTP-versus-GPU attribution remain unavailable. A compatible, newer local
+llama.cpp build measured PP8/128/512 at 33.4849/151.2700/191.3250 tok/s and
+TG64 at 22.2467 tok/s; it is explicitly supplemental, not the pinned claim.
 
 ## Architectural conclusion
 
 The observed evidence supports retaining one serialized GPU worker, explicit
 host-boundary cancellation, and the opt-in M12 layer-major prefill path. It
 does not justify multiple workers, continuous batching, or automatic promotion
-of 128K. The next valid performance step is to obtain an approved llama.cpp
-reference revision that supports the same GGUF, then repeat the pinned PP/TG
-ladder before changing prefill kernels.
+of 128K. M12 is numerically functional through the measured 64K smoke path but
+its PP curve falls from 34.0826 tok/s at 32K to 28.3657 tok/s at 64K. The next
+valid performance step is an approved compatible pinned reference and a
+long-context correctness/replay campaign before changing prefill kernels.
 
 ## Final decision
 
-M18-A, dynamic serving controls, M20-B authentication, and the available
-regression gates are KEEP/PASS. M18-B exact comparison and M20-A production
-Hermes qualification remain explicitly BLOCKED/PARTIAL for the evidence stated
-above. The repository is ready for that next external-state change without
-silently claiming long-context production support.
+M18-A, dynamic serving controls, M20-B authentication, the available regression
+gates, and functional long-context smoke through 64K are KEEP/PASS. M18-B
+exact comparison remains BLOCKED by the pinned checkout’s model support;
+M19 correctness/TG64 promotion and M20-A production Hermes remain PARTIAL.
+The repository records those limits without silently claiming long-context
+production support.

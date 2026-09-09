@@ -1,0 +1,1 @@
+LD_LIBRARY_PATH=/home/fedora-workstation/Development/upstream-llama-build/bin:/usr/lib64/rocm/lib:/usr/lib64 /home/fedora-workstation/Development/upstream-llama-build/bin/llama-bench -m /home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf -ngl 99 -fa on -ctk q8_0 -ctv f16 -b 2048 -ub 2048 -p 8,128,512 -n 64 -r 1 -o json

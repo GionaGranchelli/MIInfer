@@ -1,0 +1,6 @@
+HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 165
+Connection: close
+
+{"id":"chatcmpl-1","object":"chat.completion","choices":[{"message":{"role":"assistant","content":"<think>"}}],"usage":{"prompt_tokens":64009,"completion_tokens":1}}

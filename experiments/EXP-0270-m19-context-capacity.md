@@ -25,8 +25,11 @@ log reported matching `configured_context_length=N` and
 `runtime_context_capacity=N`. Raw logs and hardware captures are in
 `results/m19-context/20260909-allocation-sweep/`.
 
-The 131072 allocation retained approximately 27.996 GB VRAM while resident;
-the model remained loadable and the process shut down cleanly. This proves
+The rebuilt 131072 allocation reported 2,396 device allocations and
+27,342,143,828 bytes internally, while `rocm-smi` showed the corresponding
+process/driver VRAM capture. The model remained loadable and the process shut
+down cleanly. The detailed bounded ledger is in
+`results/m19-context/20260909-context/131072-ledger/ledger.json`. This proves
 dynamic allocation, not 128K inference correctness.
 
 ## Long-context inference evidence
@@ -36,11 +39,26 @@ dynamic allocation, not 128K inference correctness.
 * P16384: HTTP 200, 16,009 prompt tokens, one generated token, 439.770 s
   wall time and 36.405 prompt tokens/s using the M12 path. Raw request and
   response data are in `results/m19-context/20260909-context/16384-retry/`.
+* P32768: HTTP 200, 32,009 prompt tokens, one generated token, 939.161 s
+  prefill and 34.0826 prompt tokens/s using M12. Raw data are in
+  `results/m19-context/20260909-context/32768/`.
+* P65536: HTTP 200, 64,009 prompt tokens, one generated token, 2,256.570 s
+  prefill and 28.3657 prompt tokens/s using M12. The first decode token took
+  1.57063 ms; raw data are in `results/m19-context/20260909-context/65536/`.
 * The 8K run completed prefill and generation; the same shape was also used
-  to verify cancellation during prefill.
+  to verify cancellation during prefill. The 8K TG64 run is recorded under
+  `results/m19-context/20260909-context/8192-tg64/`.
+* The valid 16K TG64 run completed with 16,009 prompt tokens, 442.436 s
+  prefill at 36.1838 tok/s, and 64 generated tokens at 24.6454 tok/s. Raw
+  data are in `results/m19-context/20260909-context/16384-tg64/`. A concurrent
+  duplicate launch hit OOM before readiness and is retained separately as
+  contaminated evidence under `16384-tg64-retry/`.
 
-The 16K–128K prompt correctness gates remain experimental and are not promoted
-by the allocation sweep alone.
+These are functional smoke measurements, not full correctness qualification:
+deterministic replay, KV/state agreement, and steady-state TG64 at every
+long-context rung remain open. The measured PP collapse from 34.0826 tok/s at
+32K to 28.3657 tok/s at 64K also rules out production promotion on this
+hardware. 128K remains allocation-only evidence.
 
 ## Decision
 

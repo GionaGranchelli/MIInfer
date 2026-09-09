@@ -1,0 +1,1 @@
+MIINFER_PREFILL_LAYER_MAJOR=1 HIP_VISIBLE_DEVICES=0 HSA_OVERRIDE_GFX_VERSION=9.0.6 ./build/mi50-release/miinfer serve --model /home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf --port 19407 --context 8192 --experimental-context

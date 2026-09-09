@@ -1,0 +1,19 @@
+{
+  "model_bytes": 17106775008,
+  "model_context_length": 262144,
+  "configured_context_length": 131072,
+  "runtime_context_capacity": 131072,
+  "qualified_context_length": 1024,
+  "ready": true,
+  "device_allocation_count": 2396,
+  "device_allocated_bytes": 27342143828,
+  "device_peak_allocated_bytes": 27342143828,
+  "attention_layers": 16,
+  "kv_heads": 4,
+  "head_dim": 256,
+  "kv_cache_formula": "2 (K,V) * 16 attention layers * 4 KV heads * 131072 positions * 256 head_dim * 2 FP16 bytes",
+  "kv_cache_bytes_per_attention_layer": 536870912,
+  "kv_cache_bytes_all_attention_layers": 8589934592,
+  "steady_state_decode_allocations": "not exercised in this allocation-only run",
+  "interpretation": "device_* is MIInfer's internal allocation sum; rocm-smi is the process/driver VRAM total. The instrumented total is bounded evidence, not a per-category allocator ledger."
+}

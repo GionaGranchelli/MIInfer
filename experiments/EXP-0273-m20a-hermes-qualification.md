@@ -16,15 +16,20 @@ Hermes first exposed two real integration constraints:
 2. Hermes requires at least 64K context, so a 16K MIInfer profile was rejected
    before inference even with an explicit output cap.
 
-The final 64K run reached MIInfer’s queued request and `prefill_started` state.
-Raw Hermes/server logs are in `results/hermes/20260909-qualification-110554/`.
-The request did not complete within the recorded run window, so Hermes
-delivery, multi-turn, reset, and Telegram gates are not claimed as passed.
+The final 64K run completed two ordinary-chat requests before the controlled
+stop. The first request sent 7,961 prompt tokens and generated 121 tokens:
+PP 28.647 tok/s, TTFT 277,906 ms, TG 24.3172 tok/s. The second sent 8,049
+prompt tokens and generated 188 tokens. A third request was cancelled during
+prefill by the controlled stop. Raw Hermes/server logs are in
+`results/hermes/20260909-qualification-110554/`.
+
+This proves constrained Hermes submission and cancellation at a 64K-configured
+endpoint, but not Telegram delivery, restart/reset, or a clean multi-turn
+qualification. Hermes’ actual requests were approximately 8K tokens, not
+128K; configuration capacity is not evidence of prompt length.
 
 ## Decision
 
-PARTIAL / BLOCKED. The endpoint is protocol-compatible enough for Hermes to
-construct and submit a real request, but Hermes usability is not qualified on
-this prefill curve. Keep ordinary-chat qualification separate from tool-heavy
-agent behavior and do not treat a configured 128K value as proof of a 128K
-Hermes context.
+PARTIAL. The endpoint accepts constrained Hermes traffic and exposes the real
+latency/cancellation behavior. Production Hermes qualification remains open
+until the long-context performance and external delivery gates are completed.

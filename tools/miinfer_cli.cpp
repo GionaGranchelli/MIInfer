@@ -856,7 +856,9 @@ int cmd_inspect(int argc, char** argv) {
     std::cout << "  Recurrent State:       " << config.recurrent_group_count << " heads, "
               << config.recurrent_state_size << "x" << config.recurrent_state_size << " state matrix\n";
     std::cout << "  Vocabulary Size:       " << config.vocab_size << "\n";
-    std::cout << "  Native Context Limit:  " << config.context_length << " tokens (MIInfer capacity: 1024)\n\n";
+    std::cout << "  Native Context Limit:  " << config.context_length
+              << " tokens (MIInfer runtime capacity: " << g_cache_capacity
+              << ", qualified: 1024)\n\n";
 
     std::cout << "Tensor Quantization Breakdown:\n";
     std::cout << "  " << std::left << std::setw(12) << "Type"
@@ -949,6 +951,7 @@ int cmd_config(int argc, char**) {
               << "hardware=AMD Instinct MI50 32GB\n"
               << "model=Qwen3.8-27B\n"
               << "quantization=Q4_K_M\n"
+              << "model_context_length=262144\n"
               << "configured_context_length=1024\n"
               << "runtime_context_capacity=" << g_cache_capacity << "\n"
               << "qualified_context_length=1024\n"
@@ -1027,6 +1030,10 @@ int cmd_run(int argc, char** argv) {
 
     std::cerr << "Initializing MIInfer gfx906 runtime engine for " << model_path << " ...\n";
     Qwen35RuntimeEngine engine(model_path);
+    std::cerr << "device_allocation_count=" << g_device_allocations << "\n"
+              << "device_allocated_bytes=" << g_device_bytes << "\n"
+              << "device_peak_allocated_bytes=" << g_peak_device_bytes << "\n";
+    std::cerr << "model_context_length=" << engine.model().config().context_length << "\n";
 
     const auto prompt_tokens = engine.tokenizer().encode(prompt_text);
     std::cerr << "Prompt tokens: " << prompt_tokens.size() << " tokens\n";
@@ -1373,6 +1380,10 @@ int cmd_serve(int argc, char** argv) {
               << "qualified_context_length=1024\n"
               << "context_qualification=" << (context_length > 1024 ? "experimental" : "qualified") << "\n";
     Qwen35RuntimeEngine engine(model_path);
+    std::cerr << "model_context_length=" << engine.model().config().context_length << "\n";
+    std::cerr << "device_allocation_count=" << g_device_allocations << "\n"
+              << "device_allocated_bytes=" << g_device_bytes << "\n"
+              << "device_peak_allocated_bytes=" << g_peak_device_bytes << "\n";
 
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd < 0) {
@@ -1587,7 +1598,8 @@ int cmd_serve(int argc, char** argv) {
                       << ",\"configured_context\":" << context_length
                       << ",\"runtime_context_capacity\":" << g_cache_capacity << "}\n";
             const std::string body = "{\"id\":\"chatcmpl-1\",\"object\":\"chat.completion\",\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\""
-                + json_escape(stats.text) + "\"}}],\"usage\":{\"prompt_tokens\":"
+                + json_escape(stats.text) + "\"},\"finish_reason\":\""
+                + std::string(stats.cancelled ? "cancelled" : "stop") + "\"}],\"usage\":{\"prompt_tokens\":"
                 + std::to_string(stats.prompt_tokens) + ",\"completion_tokens\":"
                 + std::to_string(stats.generated_tokens) + "}}";
             (void)send_http_response(client_fd, 200, "OK", "application/json", body);
@@ -1677,6 +1689,8 @@ int cmd_serve(int argc, char** argv) {
                 "miinfer_requests_total " + std::to_string(http_requests.load()) + "\n"
                 "# TYPE miinfer_http_errors_total counter\n"
                 "miinfer_http_errors_total " + std::to_string(http_errors.load()) + "\n"
+                "# TYPE miinfer_rejected_requests_total counter\n"
+                "miinfer_rejected_requests_total " + std::to_string(http_errors.load() + queue_rejected.load()) + "\n"
                 "# TYPE miinfer_inference_requests_total counter\n"
                 "miinfer_inference_requests_total " + std::to_string(inference_requests.load()) + "\n"
                 "# TYPE miinfer_queue_depth gauge\n"
@@ -1689,6 +1703,8 @@ int cmd_serve(int argc, char** argv) {
                 "miinfer_active_requests " + std::to_string(active_requests.load()) + "\n"
                 "# TYPE miinfer_queue_wait_seconds_sum counter\n"
                 "miinfer_queue_wait_seconds_sum " + std::to_string(queue_wait_us.load() / 1000000.0) + "\n"
+                "# TYPE miinfer_queue_wait_seconds counter\n"
+                "miinfer_queue_wait_seconds " + std::to_string(queue_wait_us.load() / 1000000.0) + "\n"
                 "# TYPE miinfer_request_duration_seconds_sum counter\n"
                 "miinfer_request_duration_seconds_sum " + std::to_string(request_duration_us.load() / 1000000.0) + "\n"
                 "# TYPE miinfer_request_duration_seconds counter\n"
@@ -1697,8 +1713,12 @@ int cmd_serve(int argc, char** argv) {
                 "miinfer_time_to_first_token_seconds_sum " + std::to_string(ttft_us.load() / 1000000.0) + "\n"
                 "# TYPE miinfer_tokenization_duration_seconds_sum counter\n"
                 "miinfer_tokenization_duration_seconds_sum " + std::to_string(tokenization_us.load() / 1000000.0) + "\n"
+                "# TYPE miinfer_tokenization_duration_seconds counter\n"
+                "miinfer_tokenization_duration_seconds " + std::to_string(tokenization_us.load() / 1000000.0) + "\n"
                 "# TYPE miinfer_prefill_duration_seconds_sum counter\n"
                 "miinfer_prefill_duration_seconds_sum " + std::to_string(prefill_us.load() / 1000000.0) + "\n"
+                "# TYPE miinfer_prefill_duration_seconds counter\n"
+                "miinfer_prefill_duration_seconds " + std::to_string(prefill_us.load() / 1000000.0) + "\n"
                 "# TYPE miinfer_prefill_tokens_total counter\n"
                 "miinfer_prefill_tokens_total " + std::to_string(prefill_tokens_total.load()) + "\n"
                 "# TYPE miinfer_cancelled_requests_total counter\n"

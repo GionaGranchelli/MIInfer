@@ -1,0 +1,1 @@
+HIP_VISIBLE_DEVICES=0 HSA_OVERRIDE_GFX_VERSION=9.0.6 ./build/mi50-release/miinfer serve --model /home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf --port 19408 --context 131072 --experimental-context

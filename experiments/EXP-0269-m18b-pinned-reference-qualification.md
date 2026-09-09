@@ -39,6 +39,18 @@ pinned source contains no `qwen35`/`Qwen3.8` implementation, so this is a
 model/commit compatibility blocker, not an MIInfer timing result. No
 side-by-side PP/TG claim is made from an incompatible model.
 
+The durable rerun is in `results/m18-reference/20260909-125db33/` and records
+the exact command, commit, model hash, hardware captures, stdout, stderr, and
+exit status `1`.
+
+As a supplemental, non-pinned comparison, the locally available compatible
+llama.cpp checkout at commit `73a43d1f69345aee8bb186ef4b3172cef892f2e5`
+loaded the same model with the requested GPU/Flash-Attention/Q8 K/F16 V and
+2048 batch settings. Its single-run runtime-only results were PP8/128/512 =
+33.4849/151.2700/191.3250 tok/s and TG64 = 22.2467 tok/s. Raw output is in
+`results/m18-reference/20260909-upstream-73a43d1/`. These numbers are useful
+context, but are not a substitute for the pinned baseline.
+
 ## Decision
 
 BLOCKED FOR COMPARISON at this exact pin. Preserve the pin and model as the

@@ -2364,9 +2364,9 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1788946409.629825,
-    "seen": 1788946439.2860703,
-    "ast_hash": "9bc9e39198530e3b6bdf3247427d99b1",
+    "mtime": 1788949575.177401,
+    "seen": 1788951192.8924286,
+    "ast_hash": "f6ff384912b480bedd88908d548a2ceb",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
@@ -2874,9 +2874,9 @@
     "semantic_hash": ""
   },
   "scripts/test-package.sh": {
-    "mtime": 1788900183.6101809,
-    "seen": 1788900541.9725862,
-    "ast_hash": "084ee5dd51a99125cf02e58871ec498e",
+    "mtime": 1788947711.0812504,
+    "seen": 1788951192.8923314,
+    "ast_hash": "0f1c4fb9802920f4a9a90dada91fab92",
     "semantic_hash": ""
   },
   "experiments/EXP-0262-m12-production-qualification.md": {
@@ -3276,9 +3276,9 @@
     "semantic_hash": ""
   },
   "scripts/bench-m18-runtime.py": {
-    "mtime": 1788943872.4535918,
-    "seen": 1788945637.162162,
-    "ast_hash": "7ff6a62621d8c93c8b1e723e9fceeb58",
+    "mtime": 1788947086.7558842,
+    "seen": 1788947581.1134868,
+    "ast_hash": "116bf6cdd2c685db4e19ceb86f9d7aa0",
     "semantic_hash": ""
   },
   "experiments/EXP-0268-m18a-lifecycle-cancellation.md": {
@@ -3288,21 +3288,21 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0269-m18b-pinned-reference-qualification.md": {
-    "mtime": 1788945191.1709168,
-    "seen": 1788945637.1627963,
-    "ast_hash": "47f8ec45690e5615de6ed8b74d1574bd",
+    "mtime": 1788950261.8024049,
+    "seen": 1788951192.8929086,
+    "ast_hash": "be78ec4a2787120bff0a863b33daa370",
     "semantic_hash": ""
   },
   "experiments/EXP-0270-m19-context-capacity.md": {
-    "mtime": 1788946356.8541322,
-    "seen": 1788946390.3590436,
-    "ast_hash": "49c8b200330560270380a1c626680807",
+    "mtime": 1788951082.1897063,
+    "seen": 1788951192.8929098,
+    "ast_hash": "9b38f69d5626f6bad2fd61e55ab30cb2",
     "semantic_hash": ""
   },
   "experiments/EXP-0271-m18-runtime-only-curve.md": {
-    "mtime": 1788945191.1709168,
-    "seen": 1788945637.1627986,
-    "ast_hash": "4b9d7bf4d7fa6d418c4013b367ebf194",
+    "mtime": 1788946465.8624978,
+    "seen": 1788947581.114119,
+    "ast_hash": "69def26b19745b612fdae428e68db1f9",
     "semantic_hash": ""
   },
   "experiments/EXP-0272-m20b-api-hardening.md": {
@@ -3312,9 +3312,9 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0273-m20a-hermes-qualification.md": {
-    "mtime": 1788945191.1719167,
-    "seen": 1788945637.1628008,
-    "ast_hash": "eed382ce1b2ee2a9813ce925c9ad45d0",
+    "mtime": 1788950261.8034048,
+    "seen": 1788951192.8929143,
+    "ast_hash": "4edce69c0ed2a8fed96c6a6650569f7e",
     "semantic_hash": ""
   },
   "results/hermes/20260909-hi/metrics.txt": {
@@ -3654,9 +3654,9 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0274-m18-m20-qualification-closure.md": {
-    "mtime": 1788945852.6620667,
-    "seen": 1788946390.3590496,
-    "ast_hash": "2b2baa1d7c31a8601ea855a3074f2818",
+    "mtime": 1788951082.1907063,
+    "seen": 1788951192.8929157,
+    "ast_hash": "53cad357b4f58dca14aef56a944f671c",
     "semantic_hash": ""
   },
   "results/m19-context/20260909-context/16384-retry/hardware-after-request.txt": {
@@ -3705,6 +3705,318 @@
     "mtime": 1788945852.6720667,
     "seen": 1788946390.3591557,
     "ast_hash": "6ea5bbf5d7fdf7bf5c45208b58f33ccb",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/32768/health.json": {
+    "mtime": 1788946591.9747639,
+    "seen": 1788947581.1134744,
+    "ast_hash": "3362bf74ffeeccf2b79818d19df2d621",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/32768/request.json": {
+    "mtime": 1788947531.2149715,
+    "seen": 1788947581.1134758,
+    "ast_hash": "c9f779940bfaabdb1bed5d2fd4be8db1",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/65536/health.json": {
+    "mtime": 1788947570.610068,
+    "seen": 1788947581.1134772,
+    "ast_hash": "3362bf74ffeeccf2b79818d19df2d621",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/32768/hardware-after-request.txt": {
+    "mtime": 1788947531.3592966,
+    "seen": 1788947581.1142282,
+    "ast_hash": "924b3e2533a0682f1e071bb5092429c2",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/32768/hardware-before.txt": {
+    "mtime": 1788946570.6700976,
+    "seen": 1788947581.1142292,
+    "ast_hash": "514301a9953a2adf42c3906ab53a61b3",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/32768/started-at.txt": {
+    "mtime": 1788946570.5408885,
+    "seen": 1788947581.1142306,
+    "ast_hash": "b66889d1d76a79cff49696023bf39aa1",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/32768/stopped-at.txt": {
+    "mtime": 1788947532.124292,
+    "seen": 1788947581.1142318,
+    "ast_hash": "bb47f353137354871d97010fb3882ace",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/65536/hardware-before.txt": {
+    "mtime": 1788947549.330272,
+    "seen": 1788947581.1142328,
+    "ast_hash": "514301a9953a2adf42c3906ab53a61b3",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/65536/started-at.txt": {
+    "mtime": 1788947549.1951926,
+    "seen": 1788947581.1142342,
+    "ast_hash": "f12756f5531937ab7f25ec81cfbdd086",
+    "semantic_hash": ""
+  },
+  "results/m18-runtime/20260909-123317-269474/metadata.json": {
+    "mtime": 1788950040.9558032,
+    "seen": 1788951192.8922126,
+    "ast_hash": "fc28abc2943dec2a2c4982db1b971332",
+    "semantic_hash": ""
+  },
+  "results/m18-runtime/20260909-123317-269474/summary.json": {
+    "mtime": 1788950085.552085,
+    "seen": 1788951192.8922148,
+    "ast_hash": "192e250ed47e032c974271bd1393314e",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/131072-ledger/ledger.json": {
+    "mtime": 1788950499.561021,
+    "seen": 1788951192.8922281,
+    "ast_hash": "1146ac9821bb5ae79cf741cd01c66b75",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/16384-tg64-retry/request.json": {
+    "mtime": 1788950742.442466,
+    "seen": 1788951192.892233,
+    "ast_hash": "63f4d08c94e61952ef330bdf823c722e",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/16384-tg64/request.json": {
+    "mtime": 1788950602.703182,
+    "seen": 1788951192.8922343,
+    "ast_hash": "63f4d08c94e61952ef330bdf823c722e",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/65536/request.json": {
+    "mtime": 1788949827.295256,
+    "seen": 1788951192.8922422,
+    "ast_hash": "58b8ab054e2ace481c0bb81a386d39c8",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/8192-tg64/request.json": {
+    "mtime": 1788950157.2588704,
+    "seen": 1788951192.8922434,
+    "ast_hash": "295432521b3aee0efd7bb4aac1986c10",
+    "semantic_hash": ""
+  },
+  "results/m18-reference/20260909-125db33/command.txt": {
+    "mtime": 1788949853.8789911,
+    "seen": 1788951192.892951,
+    "ast_hash": "3500e958869fcea9bc636e81bf13685c",
+    "semantic_hash": ""
+  },
+  "results/m18-reference/20260909-125db33/commit.txt": {
+    "mtime": 1788949853.879779,
+    "seen": 1788951192.892952,
+    "ast_hash": "dd3fd9c1a2e43e30eb15bd66c4a5c9b4",
+    "semantic_hash": ""
+  },
+  "results/m18-reference/20260909-125db33/hardware-after.txt": {
+    "mtime": 1788949899.5475132,
+    "seen": 1788951192.8929534,
+    "ast_hash": "db9c2ec7f042b5d26a00791fdb42d608",
+    "semantic_hash": ""
+  },
+  "results/m18-reference/20260909-125db33/hardware-before.txt": {
+    "mtime": 1788949898.42567,
+    "seen": 1788951192.892954,
+    "ast_hash": "e1a481bdd25f7261679364cea3414de3",
+    "semantic_hash": ""
+  },
+  "results/m18-reference/20260909-125db33/status.txt": {
+    "mtime": 1788949899.562513,
+    "seen": 1788951192.892955,
+    "ast_hash": "b026324c6904b2a9cb4b88d6d61c81d1",
+    "semantic_hash": ""
+  },
+  "results/m18-reference/20260909-125db33/stderr.txt": {
+    "mtime": 1788949899.3905141,
+    "seen": 1788951192.8929563,
+    "ast_hash": "4627c6d5fd85ec0028608e80e03e6500",
+    "semantic_hash": ""
+  },
+  "results/m18-reference/20260909-125db33/stdout.txt": {
+    "mtime": 1788949899.4025142,
+    "seen": 1788951192.8929572,
+    "ast_hash": "74bc5dbda2125bd0da4c244a530fbabf",
+    "semantic_hash": ""
+  },
+  "results/m18-reference/20260909-upstream-73a43d1/command.txt": {
+    "mtime": 1788949923.156499,
+    "seen": 1788951192.8929582,
+    "ast_hash": "5eeca6056f70bfdcf38dc9166af711e3",
+    "semantic_hash": ""
+  },
+  "results/m18-reference/20260909-upstream-73a43d1/commit.txt": {
+    "mtime": 1788949923.1573758,
+    "seen": 1788951192.892959,
+    "ast_hash": "d1bae2ff505b3e846cdc8275205ec238",
+    "semantic_hash": ""
+  },
+  "results/m18-reference/20260909-upstream-73a43d1/hardware-after.txt": {
+    "mtime": 1788949983.043141,
+    "seen": 1788951192.89296,
+    "ast_hash": "2d65a2d9ce34a2bb4f76032bf2aa60ea",
+    "semantic_hash": ""
+  },
+  "results/m18-reference/20260909-upstream-73a43d1/hardware-before.txt": {
+    "mtime": 1788949967.7321165,
+    "seen": 1788951192.892961,
+    "ast_hash": "cdfddfc4da081d33ead31caaaaea3db6",
+    "semantic_hash": ""
+  },
+  "results/m18-reference/20260909-upstream-73a43d1/status.txt": {
+    "mtime": 1788949983.0570273,
+    "seen": 1788951192.892962,
+    "ast_hash": "897316929176464ebc9ad085f31e7284",
+    "semantic_hash": ""
+  },
+  "results/m18-reference/20260909-upstream-73a43d1/stderr.txt": {
+    "mtime": 1788949967.818116,
+    "seen": 1788951192.8929632,
+    "ast_hash": "41a224b00413b31ede1f08b41f94de54",
+    "semantic_hash": ""
+  },
+  "results/m18-reference/20260909-upstream-73a43d1/stdout.txt": {
+    "mtime": 1788949982.8850281,
+    "seen": 1788951192.8929641,
+    "ast_hash": "c40005c05e3e2e3d5b18696994efc528",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/131072-ledger/command.txt": {
+    "mtime": 1788950397.8992736,
+    "seen": 1788951192.8930168,
+    "ast_hash": "fca7f66bbed4d55d62240a69d3d23ea0",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/131072-ledger/hardware-after-start.txt": {
+    "mtime": 1788950464.8895957,
+    "seen": 1788951192.8930178,
+    "ast_hash": "67c6a5722d84a277640f872dbc2acb91",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/131072-ledger/hardware-after-stop.txt": {
+    "mtime": 1788950465.64523,
+    "seen": 1788951192.893019,
+    "ast_hash": "d811f55b3d1f63e86bf245196537c3f4",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/131072-ledger/hardware-before.txt": {
+    "mtime": 1788950442.4637637,
+    "seen": 1788951192.89302,
+    "ast_hash": "03793d37377c4ed7073c389c0cb9c406",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/131072-ledger/ready.txt": {
+    "mtime": 1788950464.7582238,
+    "seen": 1788951192.8930209,
+    "ast_hash": "b026324c6904b2a9cb4b88d6d61c81d1",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/131072-ledger/readyz.txt": {
+    "mtime": 1788950464.7572236,
+    "seen": 1788951192.893022,
+    "ast_hash": "3362bf74ffeeccf2b79818d19df2d621",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/16384-tg64-retry/command.txt": {
+    "mtime": 1788950621.0474625,
+    "seen": 1788951192.8930328,
+    "ast_hash": "b356c9971fa80524f80a4d21d4ef565b",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/16384-tg64-retry/hardware-after.txt": {
+    "mtime": 1788950742.6172192,
+    "seen": 1788951192.8930337,
+    "ast_hash": "fdc0732ebbeca79ecdcf98bda6a87b4f",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/16384-tg64-retry/hardware-before.txt": {
+    "mtime": 1788950621.1723132,
+    "seen": 1788951192.8930347,
+    "ast_hash": "a7de25321db8c6970f65cc777536a773",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/16384-tg64-retry/readyz.txt": {
+    "mtime": 1788950741.3996162,
+    "seen": 1788951192.893036,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/16384-tg64/command.txt": {
+    "mtime": 1788950536.0623667,
+    "seen": 1788951192.8930368,
+    "ast_hash": "a5e14663a8a818b4d3349f6f83fd6ce2",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/16384-tg64/elapsed-seconds.txt": {
+    "mtime": 1788951048.1214852,
+    "seen": 1788951192.8930378,
+    "ast_hash": "7d2482a41619a723f2c0a5d566eb4ab6",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/16384-tg64/hardware-after.txt": {
+    "mtime": 1788951049.0120277,
+    "seen": 1788951192.8930387,
+    "ast_hash": "3505d1a1fa103e1ba39cdf88abfb9420",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/16384-tg64/hardware-before.txt": {
+    "mtime": 1788950580.365585,
+    "seen": 1788951192.8930402,
+    "ast_hash": "ef9f1dd49293e01c32fbcf8d7e4e0826",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/16384-tg64/readyz.txt": {
+    "mtime": 1788950602.667421,
+    "seen": 1788951192.8930411,
+    "ast_hash": "3362bf74ffeeccf2b79818d19df2d621",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/65536/hardware-after-request.txt": {
+    "mtime": 1788949827.4440265,
+    "seen": 1788951192.8930535,
+    "ast_hash": "26f2d78887a925d403872e368e727a91",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/65536/stopped-at.txt": {
+    "mtime": 1788949828.1059291,
+    "seen": 1788951192.8930573,
+    "ast_hash": "028927f80e520390bac30770e15cf12c",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/8192-tg64/command.txt": {
+    "mtime": 1788950134.791108,
+    "seen": 1788951192.8930583,
+    "ast_hash": "748e0409943b076570ab97621af92891",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/8192-tg64/elapsed-seconds.txt": {
+    "mtime": 1788950369.1479409,
+    "seen": 1788951192.8930593,
+    "ast_hash": "0321b73921ab6840c6379d0d68196780",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/8192-tg64/hardware-after.txt": {
+    "mtime": 1788950370.0263762,
+    "seen": 1788951192.8930607,
+    "ast_hash": "b241b4c58eb3a8c1c283b352ff6fde54",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/8192-tg64/hardware-before.txt": {
+    "mtime": 1788950134.9241433,
+    "seen": 1788951192.8930616,
+    "ast_hash": "4c1c1b9e61381e287768b7edd2a9c4f1",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/8192-tg64/readyz.txt": {
+    "mtime": 1788950157.2250135,
+    "seen": 1788951192.8930626,
+    "ast_hash": "3362bf74ffeeccf2b79818d19df2d621",
     "semantic_hash": ""
   }
 }
