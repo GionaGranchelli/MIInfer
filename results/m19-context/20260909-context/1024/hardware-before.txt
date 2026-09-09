@@ -1,0 +1,25 @@
+WARNING: AMD GPU device(s) is/are in a low-power state. Check power control/runtime_status
+
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 30.0
+GPU[0]		: Temperature (Sensor junction) (C): 32.0
+GPU[0]		: Temperature (Sensor memory) (C): 30.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 6: (1080Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 7: (1606Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 29.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 10866688
+==========================================================================================
+================================== End of ROCm SMI Log ===================================

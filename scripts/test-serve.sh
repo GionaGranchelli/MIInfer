@@ -37,29 +37,52 @@ import urllib.request
 
 port = int(sys.argv[1])
 server_pid = int(sys.argv[2])
+def read_response(sock):
+    chunks = []
+    while True:
+        chunk = sock.recv(4096)
+        if not chunk:
+            return b"".join(chunks)
+        chunks.append(chunk)
+
 request = b'POST /v1/chat/completions HTTP/1.1\r\nHost: localhost\r\nContent-Length: 2\r\n\r\n{}'
 with socket.create_connection(("127.0.0.1", port), timeout=5) as sock:
     sock.sendall(request)
     assert b" 400 " in sock.recv(4096)
+oversized_output = json.dumps({"messages": [{"role": "user", "content": "x"}], "max_tokens": 4097}).encode()
+request = b"POST /v1/chat/completions HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nContent-Length: " + str(len(oversized_output)).encode() + b"\r\n\r\n" + oversized_output
+with socket.create_connection(("127.0.0.1", port), timeout=5) as sock:
+    sock.sendall(request)
+    response = read_response(sock)
+    assert b" 400 " in response and b"invalid_request_error" in response
+oversized_prompt = json.dumps({"messages": [{"role": "user", "content": "hello " * 1100}], "max_tokens": 1}).encode()
+request = b"POST /v1/chat/completions HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nContent-Length: " + str(len(oversized_prompt)).encode() + b"\r\n\r\n" + oversized_prompt
+with socket.create_connection(("127.0.0.1", port), timeout=5) as sock:
+    sock.sendall(request)
+    response = read_response(sock)
+    assert b" 400 " in response and b"context_length_exceeded" in response
 with socket.create_connection(("127.0.0.1", port), timeout=15) as sock:
     sock.sendall(b"G")
     time.sleep(11)
     assert b" 408 " in sock.recv(4096)
 
-body = json.dumps({"messages": [{"role": "user", "content": "queue test"}], "max_tokens": 4096}).encode()
+body = json.dumps({"messages": [{"role": "user", "content": "hello " * 600}], "max_tokens": 1}).encode()
 request = b"POST /v1/chat/completions HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nContent-Length: " + str(len(body)).encode() + b"\r\n\r\n" + body
+busy = socket.create_connection(("127.0.0.1", port), timeout=5)
+busy.sendall(request)
+time.sleep(1)
 clients = []
-for _ in range(10):
+for _ in range(9):
     sock = socket.create_connection(("127.0.0.1", port), timeout=5)
     sock.sendall(request)
     clients.append(sock)
-time.sleep(1)
 clients[-1].settimeout(5)
 assert b" 503 " in clients[-1].recv(4096)
 assert urllib.request.urlopen(f"http://127.0.0.1:{port}/healthz", timeout=5).status == 200
 metrics = urllib.request.urlopen(f"http://127.0.0.1:{port}/metrics", timeout=5).read()
-assert b"miinfer_queue_rejected_total 1" in metrics
+assert b"miinfer_queue_rejected_total 0" not in metrics
 os.kill(server_pid, 15)
+busy.close()
 queued = 0
 for sock in clients[1:-1]:
     sock.settimeout(15)

@@ -10,12 +10,13 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M17 — product experience / local appliance**
+**Current phase: M18–M20 qualification closure**
 
 Immediate objective:
 
-> Make the qualified MI50 runtime usable from a release archive: install,
-> diagnose, discover a GGUF, serve it, and chat through the public API/UI.
+> Close lifecycle, context-capacity, reference-benchmark, and constrained
+> Hermes gates with durable evidence; keep unqualified long-context paths
+> explicitly experimental.
 
 M11-B's current-family search is closed by EXP-0244 through EXP-0254.
 EXP-0255 is the first M12 feasibility result: whole-matrix Q4_K→FP16 staging
@@ -72,9 +73,22 @@ release installer, `miinfer doctor`, `serve --model`, and a browser UI that
 uses `/v1/models` and `/v1/chat/completions`.
 
 EXP-0267 closes M17: the fresh package install, diagnostics, model discovery,
-server/Web UI route, and qualified-MI50 serving gate all pass. The next work is
-M18 product refinement only when user feedback demonstrates a need; do not
-reopen single-MI50 kernel or serving-queue research by default.
+server/Web UI route, and qualified-MI50 serving gate all pass.
+
+EXP-0268 closes the implementable M18-A lifecycle contract: self-pipe signal
+wakeup, host-boundary cancellation, queue shutdown responses, strict context
+and output limits, and structured request telemetry. EXP-0269 records the
+M18-B reference blocker: the mandated pinned llama.cpp-gfx906 commit cannot
+load the exact Qwen3.8 GGUF because it predates Qwen3.5 support. EXP-0270
+proves model-load-time allocation from 1K through 128K, while only 1K is
+qualified and 8K has a successful real request. EXP-0271 retains the M12
+runtime-only PP/TG curve. EXP-0272 closes the optional API-key hardening gate.
+EXP-0273 records constrained Hermes submission and the remaining usability
+blocker: Hermes requires 64K and its long prefill/retry behavior is not yet a
+production qualification.
+
+The complete M18–M20 evidence summary is
+`experiments/EXP-0274-m18-m20-qualification-closure.md`.
 
 M5 closed with a reproducible local optimization result, but whole-runtime
 parity with the strongest gfx906 llama.cpp control was not demonstrated. See

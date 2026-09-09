@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788900229.622976,
-    "seen": 1788900541.972732,
-    "ast_hash": "7921043a076b4ac70272cf689e67cf8b",
+    "mtime": 1788945852.6610668,
+    "seen": 1788946390.3585858,
+    "ast_hash": "5b6a80a065d8f35a344d4e6d709eb7cb",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1788900528.759644,
-    "seen": 1788900541.9727912,
-    "ast_hash": "a3e24fd3e22f965e738214c3f69696ba",
+    "mtime": 1788945852.6600666,
+    "seen": 1788946390.3586388,
+    "ast_hash": "dafff3ae31ad4fadb828cfb217971e2f",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -1332,9 +1332,9 @@
     "semantic_hash": ""
   },
   "tools/m6a21_qwen35_gpu_hybrid_block.cpp": {
-    "mtime": 1788800855.952099,
-    "seen": 1788802984.7957199,
-    "ast_hash": "c195a8db835d2c8db4b8d9f3eebb6e75",
+    "mtime": 1788944382.549623,
+    "seen": 1788945637.1623235,
+    "ast_hash": "0788c5e9f3dae044a6f69792a0d97753",
     "semantic_hash": ""
   },
   "experiments/EXP-0065-m6a21-qwen35-gpu-hybrid-block.md": {
@@ -2364,9 +2364,9 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1788940883.7471302,
-    "seen": 1788940889.7901926,
-    "ast_hash": "1f11af8fa71adb233a833b79ebeb5994",
+    "mtime": 1788946409.629825,
+    "seen": 1788946439.2860703,
+    "ast_hash": "9bc9e39198530e3b6bdf3247427d99b1",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
@@ -2892,9 +2892,9 @@
     "semantic_hash": ""
   },
   "scripts/test-serve.sh": {
-    "mtime": 1788900183.6101809,
-    "seen": 1788900541.9725883,
-    "ast_hash": "11787f413ec920ef2f43319fd0b4c992",
+    "mtime": 1788945741.791712,
+    "seen": 1788946390.3584576,
+    "ast_hash": "95333c6a57026620f0e823652a074df2",
     "semantic_hash": ""
   },
   "experiments/EXP-0264-m16b-serving-queue-qualification.md": {
@@ -3177,6 +3177,534 @@
     "mtime": 1788900528.758644,
     "seen": 1788900541.97324,
     "ast_hash": "6c0456736b1a9b248bac5d67c26ab4b0",
+    "semantic_hash": ""
+  },
+  "results/m18-lifecycle/20260909-111922/health.json": {
+    "mtime": 1788945583.6826322,
+    "seen": 1788945637.162142,
+    "ast_hash": "3362bf74ffeeccf2b79818d19df2d621",
+    "semantic_hash": ""
+  },
+  "results/m18-lifecycle/20260909-111922/request.json": {
+    "mtime": 1788945586.7188919,
+    "seen": 1788945637.162144,
+    "ast_hash": "53ff1e8cf20b6c11949427e914dea56b",
+    "semantic_hash": ""
+  },
+  "results/m18-runtime/20260909-105118-3881308/summary.json": {
+    "mtime": 1788944044.1668966,
+    "seen": 1788945637.1621454,
+    "ast_hash": "2799899049e6b1f50891630d6eb53b88",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/1024/health.json": {
+    "mtime": 1788944462.5331573,
+    "seen": 1788945637.1621463,
+    "ast_hash": "3362bf74ffeeccf2b79818d19df2d621",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/131072/health.json": {
+    "mtime": 1788944577.2824895,
+    "seen": 1788945637.1621475,
+    "ast_hash": "3362bf74ffeeccf2b79818d19df2d621",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/16384/health.json": {
+    "mtime": 1788944508.2518914,
+    "seen": 1788945637.162149,
+    "ast_hash": "3362bf74ffeeccf2b79818d19df2d621",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/32768/health.json": {
+    "mtime": 1788944531.5497558,
+    "seen": 1788945637.1621501,
+    "ast_hash": "3362bf74ffeeccf2b79818d19df2d621",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/65536/health.json": {
+    "mtime": 1788944554.8856199,
+    "seen": 1788945637.1621513,
+    "ast_hash": "3362bf74ffeeccf2b79818d19df2d621",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/8192/health.json": {
+    "mtime": 1788944485.9010215,
+    "seen": 1788945637.1621528,
+    "ast_hash": "3362bf74ffeeccf2b79818d19df2d621",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/1024/request.json": {
+    "mtime": 1788943262.7521062,
+    "seen": 1788945637.162154,
+    "ast_hash": "af80640d669aa818d509e48591b43100",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/8192/request.json": {
+    "mtime": 1788943526.0272272,
+    "seen": 1788945637.1621552,
+    "ast_hash": "6abb8f80c25098a915d3d01abff67c8e",
+    "semantic_hash": ""
+  },
+  "results/m20-auth/20260909-112004/health-body.json": {
+    "mtime": 1788945625.639388,
+    "seen": 1788945637.1621563,
+    "ast_hash": "3362bf74ffeeccf2b79818d19df2d621",
+    "semantic_hash": ""
+  },
+  "results/m20-auth/20260909-112004/metrics-no-auth.json": {
+    "mtime": 1788945625.6893384,
+    "seen": 1788945637.1621575,
+    "ast_hash": "c24761b104492eb1ae168958e200e064",
+    "semantic_hash": ""
+  },
+  "results/m20-auth/20260909-112004/models-correct-auth.json": {
+    "mtime": 1788945625.6800718,
+    "seen": 1788945637.162159,
+    "ast_hash": "9a7fe61dd87058f51f3d5b8d4bbb346a",
+    "semantic_hash": ""
+  },
+  "results/m20-auth/20260909-112004/models-no-auth.json": {
+    "mtime": 1788945625.660388,
+    "seen": 1788945637.16216,
+    "ast_hash": "c24761b104492eb1ae168958e200e064",
+    "semantic_hash": ""
+  },
+  "results/m20-auth/20260909-112004/models-wrong-auth.json": {
+    "mtime": 1788945625.670501,
+    "seen": 1788945637.162161,
+    "ast_hash": "c24761b104492eb1ae168958e200e064",
+    "semantic_hash": ""
+  },
+  "scripts/bench-m18-runtime.py": {
+    "mtime": 1788943872.4535918,
+    "seen": 1788945637.162162,
+    "ast_hash": "7ff6a62621d8c93c8b1e723e9fceeb58",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0268-m18a-lifecycle-cancellation.md": {
+    "mtime": 1788946378.4200068,
+    "seen": 1788946390.3590407,
+    "ast_hash": "49d6dd083b248dd5d6ad4970fba2fd19",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0269-m18b-pinned-reference-qualification.md": {
+    "mtime": 1788945191.1709168,
+    "seen": 1788945637.1627963,
+    "ast_hash": "47f8ec45690e5615de6ed8b74d1574bd",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0270-m19-context-capacity.md": {
+    "mtime": 1788946356.8541322,
+    "seen": 1788946390.3590436,
+    "ast_hash": "49c8b200330560270380a1c626680807",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0271-m18-runtime-only-curve.md": {
+    "mtime": 1788945191.1709168,
+    "seen": 1788945637.1627986,
+    "ast_hash": "4b9d7bf4d7fa6d418c4013b367ebf194",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0272-m20b-api-hardening.md": {
+    "mtime": 1788946378.4200068,
+    "seen": 1788946390.3590467,
+    "ast_hash": "be0a311b9ad3b1e8d10230526c01956a",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0273-m20a-hermes-qualification.md": {
+    "mtime": 1788945191.1719167,
+    "seen": 1788945637.1628008,
+    "ast_hash": "eed382ce1b2ee2a9813ce925c9ad45d0",
+    "semantic_hash": ""
+  },
+  "results/hermes/20260909-hi/metrics.txt": {
+    "mtime": 1788944165.880884,
+    "seen": 1788945637.1628056,
+    "ast_hash": "6845c5bce6df91dfef94393dde69c56a",
+    "semantic_hash": ""
+  },
+  "results/hermes/20260909-qualification-110433/client-started-at.txt": {
+    "mtime": 1788944694.876805,
+    "seen": 1788945637.1628065,
+    "ast_hash": "d7db15e85fc5dd3835126daca8852542",
+    "semantic_hash": ""
+  },
+  "results/hermes/20260909-qualification-110512/client-started-at.txt": {
+    "mtime": 1788944733.6895792,
+    "seen": 1788945637.1628077,
+    "ast_hash": "bd4ea271abde2c1bb7150abee04af553",
+    "semantic_hash": ""
+  },
+  "results/hermes/20260909-qualification-110512/status.txt": {
+    "mtime": 1788944735.6928737,
+    "seen": 1788945637.1628091,
+    "ast_hash": "c33abeab2d637e7dde7b8bc6a1d9db36",
+    "semantic_hash": ""
+  },
+  "results/hermes/20260909-qualification-110512/stopped-at.txt": {
+    "mtime": 1788944736.317564,
+    "seen": 1788945637.1628103,
+    "ast_hash": "6122c4fb422b3274621f3ab814da35a3",
+    "semantic_hash": ""
+  },
+  "results/hermes/20260909-qualification-110554/client-started-at.txt": {
+    "mtime": 1788944775.9223335,
+    "seen": 1788945637.1628113,
+    "ast_hash": "4774be4bd990dd03868cadfb550c1b02",
+    "semantic_hash": ""
+  },
+  "results/hermes/20260909-qualification-110554/status.txt": {
+    "mtime": 1788945423.5566888,
+    "seen": 1788945637.1628127,
+    "ast_hash": "3c9fb87a96ec7cb9f3e02ee7218cc595",
+    "semantic_hash": ""
+  },
+  "results/hermes/20260909-qualification-110554/stopped-at.txt": {
+    "mtime": 1788945423.559564,
+    "seen": 1788945637.162814,
+    "ast_hash": "3e739a2dbd44384e35b02218e6fa6abe",
+    "semantic_hash": ""
+  },
+  "results/m18-lifecycle/20260909-111922/metrics.txt": {
+    "mtime": 1788945591.7355855,
+    "seen": 1788945637.1628368,
+    "ast_hash": "7bc95ab693b7db9c6a4ab77e0c9a66de",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/1024/hardware-after-start.txt": {
+    "mtime": 1788944462.6801567,
+    "seen": 1788945637.162838,
+    "ast_hash": "f2fa46760b1cd2cd5b6950d0893d8583",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/1024/hardware-after-stop.txt": {
+    "mtime": 1788944463.4665341,
+    "seen": 1788945637.162839,
+    "ast_hash": "d24e31820cbc51956eeb09456d0ae281",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/1024/hardware-before.txt": {
+    "mtime": 1788944441.2256405,
+    "seen": 1788945637.1628404,
+    "ast_hash": "d3a82aa46d0bc93b16e63872905e8491",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/1024/started-at.txt": {
+    "mtime": 1788944441.0902822,
+    "seen": 1788945637.1628413,
+    "ast_hash": "4f4a4a163bed23bc4efb6f976828645b",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/1024/status.txt": {
+    "mtime": 1788944462.5351038,
+    "seen": 1788945637.1628425,
+    "ast_hash": "b29fe6e6e6504ca798cad7b28382f6c5",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/1024/stopped-at.txt": {
+    "mtime": 1788944463.4841518,
+    "seen": 1788945637.1628437,
+    "ast_hash": "f01c16388438e58656ce2b00b34d369a",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/131072/hardware-after-start.txt": {
+    "mtime": 1788944577.4246666,
+    "seen": 1788945637.1628447,
+    "ast_hash": "c910f6b7f6ddd2c31386ec5e8200a15f",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/131072/hardware-after-stop.txt": {
+    "mtime": 1788944578.1904843,
+    "seen": 1788945637.1628458,
+    "ast_hash": "32b792dbdc27b09d1221b2a61051796a",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/131072/hardware-before.txt": {
+    "mtime": 1788944556.0114944,
+    "seen": 1788945637.162847,
+    "ast_hash": "d3a82aa46d0bc93b16e63872905e8491",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/131072/started-at.txt": {
+    "mtime": 1788944555.8776143,
+    "seen": 1788945637.1628485,
+    "ast_hash": "8dff515b7720ee1f78ccc0c5b7a8d8f4",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/131072/status.txt": {
+    "mtime": 1788944577.2834897,
+    "seen": 1788945637.16285,
+    "ast_hash": "d751336273e51810fc82ad61e27e37f5",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/131072/stopped-at.txt": {
+    "mtime": 1788944578.2074842,
+    "seen": 1788945637.162851,
+    "ast_hash": "4b8ce688febf2ae980d1f2e5439e6cc2",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/16384/hardware-after-start.txt": {
+    "mtime": 1788944508.3937726,
+    "seen": 1788945637.162852,
+    "ast_hash": "8ef69d801e4a55dbac2404d78aa421cb",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/16384/hardware-after-stop.txt": {
+    "mtime": 1788944509.1231992,
+    "seen": 1788945637.1628535,
+    "ast_hash": "11296c81bd87e26920a0275b44f1008d",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/16384/hardware-before.txt": {
+    "mtime": 1788944486.9544396,
+    "seen": 1788945637.1628547,
+    "ast_hash": "d24e31820cbc51956eeb09456d0ae281",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/16384/started-at.txt": {
+    "mtime": 1788944486.8263404,
+    "seen": 1788945637.1628556,
+    "ast_hash": "75dc309c4e0a05a23111bcd215666d90",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/16384/status.txt": {
+    "mtime": 1788944508.2528913,
+    "seen": 1788945637.162857,
+    "ast_hash": "5648d4a8a538a7be9b25269db513acc9",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/16384/stopped-at.txt": {
+    "mtime": 1788944509.1388862,
+    "seen": 1788945637.162858,
+    "ast_hash": "37419504aaa89d2d3b61ab78b5261dcf",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/32768/hardware-after-start.txt": {
+    "mtime": 1788944531.6923537,
+    "seen": 1788945637.1628594,
+    "ast_hash": "093a8040eee58968497d8b7b88fc705d",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/32768/hardware-after-stop.txt": {
+    "mtime": 1788944532.4253907,
+    "seen": 1788945637.1628606,
+    "ast_hash": "f5ca1c7b45f41581b129df2a06105dbd",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/32768/hardware-before.txt": {
+    "mtime": 1788944509.277092,
+    "seen": 1788945637.1628618,
+    "ast_hash": "d3a82aa46d0bc93b16e63872905e8491",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/32768/started-at.txt": {
+    "mtime": 1788944509.1418862,
+    "seen": 1788945637.1628628,
+    "ast_hash": "37419504aaa89d2d3b61ab78b5261dcf",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/32768/status.txt": {
+    "mtime": 1788944531.5507557,
+    "seen": 1788945637.1628642,
+    "ast_hash": "1847197cf470c9540be9aef941406e51",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/32768/stopped-at.txt": {
+    "mtime": 1788944532.4397507,
+    "seen": 1788945637.1628654,
+    "ast_hash": "e618084971d064ef5e5d1832b54b1abc",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/65536/hardware-after-start.txt": {
+    "mtime": 1788944555.0315754,
+    "seen": 1788945637.1628666,
+    "ast_hash": "728b151045a0c77771567190db7f33bb",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/65536/hardware-after-stop.txt": {
+    "mtime": 1788944555.8577101,
+    "seen": 1788945637.162868,
+    "ast_hash": "1969605ac9570de9b402e3302ec0ac80",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/65536/hardware-before.txt": {
+    "mtime": 1788944532.5754428,
+    "seen": 1788945637.162869,
+    "ast_hash": "2f467cc7a6d72ba6ab11547aafc93f11",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/65536/started-at.txt": {
+    "mtime": 1788944532.4437506,
+    "seen": 1788945637.1628702,
+    "ast_hash": "e618084971d064ef5e5d1832b54b1abc",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/65536/status.txt": {
+    "mtime": 1788944554.88762,
+    "seen": 1788945637.1628716,
+    "ast_hash": "99adfe715a30b261c36f73129aa25195",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/65536/stopped-at.txt": {
+    "mtime": 1788944555.8746142,
+    "seen": 1788945637.1628726,
+    "ast_hash": "8dff515b7720ee1f78ccc0c5b7a8d8f4",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/8192/hardware-after-start.txt": {
+    "mtime": 1788944486.0427604,
+    "seen": 1788945637.1628737,
+    "ast_hash": "fadf1ad98c4beee865bfb3c7b16980b7",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/8192/hardware-after-stop.txt": {
+    "mtime": 1788944486.8060648,
+    "seen": 1788945637.162875,
+    "ast_hash": "d24e31820cbc51956eeb09456d0ae281",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/8192/hardware-before.txt": {
+    "mtime": 1788944463.6223936,
+    "seen": 1788945637.1628761,
+    "ast_hash": "d24e31820cbc51956eeb09456d0ae281",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/8192/started-at.txt": {
+    "mtime": 1788944463.4871519,
+    "seen": 1788945637.162877,
+    "ast_hash": "f01c16388438e58656ce2b00b34d369a",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/8192/status.txt": {
+    "mtime": 1788944485.9010215,
+    "seen": 1788945637.1628785,
+    "ast_hash": "34ee43c90148dbbbf4d8084b3fd08a6e",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-allocation-sweep/8192/stopped-at.txt": {
+    "mtime": 1788944486.822016,
+    "seen": 1788945637.1628797,
+    "ast_hash": "75dc309c4e0a05a23111bcd215666d90",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/1024/hardware-after.txt": {
+    "mtime": 1788943262.9031684,
+    "seen": 1788945637.1628811,
+    "ast_hash": "f7ae0b590b7a67016080ef99fc5abaa7",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/1024/hardware-before.txt": {
+    "mtime": 1788943216.3428814,
+    "seen": 1788945637.1628823,
+    "ast_hash": "c945aa995f88916f28c0d32eb8614a99",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/131072/hardware-after-start.txt": {
+    "mtime": 1788944091.1014028,
+    "seen": 1788945637.1628833,
+    "ast_hash": "bf961dff08c7793fa96299660b1d6660",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/131072/hardware-after-stop.txt": {
+    "mtime": 1788944091.8617957,
+    "seen": 1788945637.1628847,
+    "ast_hash": "9373abf8fd081b57d25b048faa4940c9",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/131072/hardware-before.txt": {
+    "mtime": 1788944068.6814497,
+    "seen": 1788945637.162886,
+    "ast_hash": "2b2d34ba2a498d1202ec3d1ab8835973",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/8192/hardware-after.txt": {
+    "mtime": 1788943526.1745958,
+    "seen": 1788945637.1628869,
+    "ast_hash": "2314b62d8c7084347d9398c8d75ff378",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/8192/hardware-before.txt": {
+    "mtime": 1788943263.6911638,
+    "seen": 1788945637.1628883,
+    "ast_hash": "243660107a28e7488154160bf9ff4b88",
+    "semantic_hash": ""
+  },
+  "results/m20-auth/20260909-112004/status.txt": {
+    "mtime": 1788945625.6893384,
+    "seen": 1788945637.1628892,
+    "ast_hash": "077b826f87ce14094414147583cf4a03",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/16384-retry/health.json": {
+    "mtime": 1788945902.1587787,
+    "seen": 1788946390.358361,
+    "ast_hash": "3362bf74ffeeccf2b79818d19df2d621",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/16384-retry/request.json": {
+    "mtime": 1788946341.963219,
+    "seen": 1788946390.3583639,
+    "ast_hash": "0ec7638e104a3e7134a1997d97a547f6",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/16384/health.json": {
+    "mtime": 1788945831.7761884,
+    "seen": 1788946390.3583655,
+    "ast_hash": "3362bf74ffeeccf2b79818d19df2d621",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0274-m18-m20-qualification-closure.md": {
+    "mtime": 1788945852.6620667,
+    "seen": 1788946390.3590496,
+    "ast_hash": "2b2baa1d7c31a8601ea855a3074f2818",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/16384-retry/hardware-after-request.txt": {
+    "mtime": 1788946342.0952182,
+    "seen": 1788946390.3591473,
+    "ast_hash": "30b3c4026f61c868d878fa417abba6e2",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/16384-retry/hardware-before.txt": {
+    "mtime": 1788945879.884289,
+    "seen": 1788946390.3591483,
+    "ast_hash": "514301a9953a2adf42c3906ab53a61b3",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/16384-retry/started-at.txt": {
+    "mtime": 1788945879.7534032,
+    "seen": 1788946390.3591495,
+    "ast_hash": "364149f17b5fc031d94b9115a1c54aef",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/16384-retry/stopped-at.txt": {
+    "mtime": 1788946342.7312145,
+    "seen": 1788946390.3591514,
+    "ast_hash": "6f79dfef8b0bbc0fdeb24ec57e5def65",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/16384/hardware-after-request.txt": {
+    "mtime": 1788945852.0154073,
+    "seen": 1788946390.3591523,
+    "ast_hash": "4123d151f6015bd22904318a39044f9f",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/16384/hardware-before.txt": {
+    "mtime": 1788945809.4563181,
+    "seen": 1788946390.3591535,
+    "ast_hash": "514301a9953a2adf42c3906ab53a61b3",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/16384/started-at.txt": {
+    "mtime": 1788945809.327319,
+    "seen": 1788946390.3591547,
+    "ast_hash": "c399573a3a8ea4ed7e4590ad4467a7a5",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/16384/stopped-at.txt": {
+    "mtime": 1788945852.6720667,
+    "seen": 1788946390.3591557,
+    "ast_hash": "6ea5bbf5d7fdf7bf5c45208b58f33ccb",
     "semantic_hash": ""
   }
 }

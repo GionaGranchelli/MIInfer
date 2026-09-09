@@ -28,7 +28,7 @@ From a release archive on a supported MI50/gfx906 Linux machine:
 Open `http://127.0.0.1:8080/` for the bundled Web UI. It uses the same public
 `/v1/chat/completions` endpoint as external OpenAI-compatible clients.
 
-**Current phase: M17 product experience**
+**Current phase: M18–M20 qualification closure**
 
 M11-B is frozen at the qualified `46.22 tok/s` P513 packed-Q4 baseline. The
 opt-in layer-major prefill path reaches that rate with deferred

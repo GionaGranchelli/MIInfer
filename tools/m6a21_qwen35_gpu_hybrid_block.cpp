@@ -821,9 +821,9 @@ int main(int argc, char** argv) {
                             state_hash ^= layer.recurrent->state_fingerprint();
                         } else {
                             state_hash ^= fingerprint(layer.attention->key_cache->get(),
-                                4 * kCacheCapacity * 256 * sizeof(float));
+                                4 * g_cache_capacity * 256 * sizeof(float));
                             state_hash ^= fingerprint(layer.attention->value_cache->get(),
-                                4 * kCacheCapacity * 256 * sizeof(float));
+                                4 * g_cache_capacity * 256 * sizeof(float));
                         }
                     }
                     return GenerationResult{

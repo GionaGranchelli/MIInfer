@@ -1,0 +1,90 @@
+{
+  "binary": "/home/fedora-workstation/Development/mi50/build/mi50-release/miinfer",
+  "model": "/home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf",
+  "cases": [
+    {
+      "mode": "default",
+      "prompt_words": 8,
+      "prompt_tokens": 9,
+      "generated_tokens": 1,
+      "prefill_ms": 247.24,
+      "prefill_tok_s": 32.36,
+      "decode_ms": 35.61,
+      "decode_tok_s": 28.09,
+      "ttft_ms": 30.72,
+      "total_ms": 282.84,
+      "wall_ms": 22007.31412298046,
+      "returncode": 0
+    },
+    {
+      "mode": "default",
+      "prompt_words": 128,
+      "prompt_tokens": 129,
+      "generated_tokens": 1,
+      "prefill_ms": 3860.88,
+      "prefill_tok_s": 33.15,
+      "decode_ms": 35.5,
+      "decode_tok_s": 28.17,
+      "ttft_ms": 31.22,
+      "total_ms": 3896.38,
+      "wall_ms": 25599.138821009547,
+      "returncode": 0
+    },
+    {
+      "mode": "default",
+      "prompt_words": 512,
+      "prompt_tokens": 513,
+      "generated_tokens": 1,
+      "prefill_ms": 15781.3,
+      "prefill_tok_s": 32.44,
+      "decode_ms": 36.68,
+      "decode_tok_s": 27.26,
+      "ttft_ms": 31.81,
+      "total_ms": 15817.98,
+      "wall_ms": 37682.49680206645,
+      "returncode": 0
+    },
+    {
+      "mode": "experimental",
+      "prompt_words": 8,
+      "prompt_tokens": 9,
+      "generated_tokens": 1,
+      "prefill_ms": 279.34,
+      "prefill_tok_s": 32.22,
+      "decode_ms": 1.63,
+      "decode_tok_s": 613.65,
+      "ttft_ms": 1.63,
+      "total_ms": 280.99,
+      "wall_ms": 22313.412790070288,
+      "returncode": 0
+    },
+    {
+      "mode": "experimental",
+      "prompt_words": 128,
+      "prompt_tokens": 129,
+      "generated_tokens": 1,
+      "prefill_ms": 2735.77,
+      "prefill_tok_s": 47.15,
+      "decode_ms": 1.63,
+      "decode_tok_s": 613.31,
+      "ttft_ms": 1.63,
+      "total_ms": 2737.4,
+      "wall_ms": 24735.846819006838,
+      "returncode": 0
+    },
+    {
+      "mode": "experimental",
+      "prompt_words": 512,
+      "prompt_tokens": 513,
+      "generated_tokens": 1,
+      "prefill_ms": 11167.91,
+      "prefill_tok_s": 45.94,
+      "decode_ms": 1.57,
+      "decode_tok_s": 635.51,
+      "ttft_ms": 1.57,
+      "total_ms": 11169.49,
+      "wall_ms": 32962.74211106356,
+      "returncode": 0
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+WARNING: AMD GPU device(s) is/are in a low-power state. Check power control/runtime_status
+
+
+
+============================ ROCm System Management Interface ============================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 23137636352
+==========================================================================================
+================================== End of ROCm SMI Log ===================================

@@ -1,0 +1,5 @@
+health_no_auth=200
+models_no_auth=401
+models_wrong_auth=401
+models_correct_auth=200
+metrics_no_auth=401

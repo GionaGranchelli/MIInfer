@@ -11,6 +11,7 @@
 #include <cstring>
 #include <deque>
 #include <functional>
+#include <fstream>
 #include <filesystem>
 #include <iomanip>
 #include <iostream>
@@ -76,6 +77,7 @@ std::optional<int> parse_port(std::string_view value) {
 struct RuntimeGenerateOptions {
     std::size_t max_new_tokens = 256;
     bool stream = true;
+    std::function<bool()> should_cancel = nullptr;
     std::function<bool(std::uint32_t token, std::string_view piece)> on_token = nullptr;
 };
 
@@ -90,6 +92,7 @@ struct RuntimeGenerateStats {
     double total_ms = 0.0;
     double prefill_tok_s = 0.0;
     double decode_tok_s = 0.0;
+    bool cancelled = false;
 };
 
 // ---------------------------------------------------------------------------
@@ -260,7 +263,8 @@ public:
                    static_cast<const float*>(input_->get()), position);
     }
 
-    const float* prefill_layer_major(std::span<const std::uint32_t> prompt) {
+    const float* prefill_layer_major(std::span<const std::uint32_t> prompt,
+                                     const std::function<bool()>& should_cancel) {
         // A 128-token request with a non-128 tail would otherwise make the
         // final nearly-full chunk fall back to per-token recurrent execution.
         const bool matrix_prefill = gdn_chunkwise_prefill_ || dense_prefill_;
@@ -271,11 +275,13 @@ public:
         const float* final_hidden = nullptr;
         const auto layer_span = std::span<const GpuLayerRef>(layers_);
         for (std::size_t base = 0; base < prompt.size(); base += kChunk) {
+            if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
             const std::size_t count = std::min(kChunk, prompt.size() - base);
             if (prefill_profile_.enabled) {
                 MIINFER_HIP_CHECK(hipEventRecord(prefill_profile_.embedding_start, hipStreamPerThread));
             }
             for (std::size_t i = 0; i < count; ++i) {
+                if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
                 const auto position = base + i;
                 MIINFER_HIP_CHECK(hipMemcpyAsync(
                     static_cast<std::uint32_t*>(d_decode_tokens_->get()) + position,
@@ -300,6 +306,7 @@ public:
             // Bounded chunk storage; layer order preserves recurrent state and
             // causal KV dependencies while keeping the full chunk at one layer.
             for (std::size_t layer = 0; layer < layer_span.size(); ++layer) {
+                if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
                 if (prefill_profile_.enabled) {
                     MIINFER_HIP_CHECK(hipEventRecord(prefill_profile_.stage[0], hipStreamPerThread));
                 }
@@ -318,6 +325,7 @@ public:
                 float* next_normalized_batch = fuse_next_norm
                     ? const_cast<float*>(layer_span[layer + 1].prefill_normalized_at(0)) : nullptr;
                 for (std::size_t i = 0; i < count; ++i) {
+                    if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
                     float* next_normalized = fuse_next_norm
                         ? next_normalized_batch + i * kHidden : nullptr;
                     const float* prepared_normalized = normalized_ready
@@ -397,11 +405,17 @@ public:
         GenerateStats stats;
         stats.prompt_tokens = prompt.size();
         const auto prefill_start = std::chrono::steady_clock::now();
-        const float* final_hidden = prefill_layer_major(prompt);
+        const float* final_hidden = prefill_layer_major(prompt, opt.should_cancel);
         const auto prefill_end = std::chrono::steady_clock::now();
         stats.prefill_ms = std::chrono::duration<double, std::milli>(prefill_end - prefill_start).count();
         stats.prefill_tok_s = stats.prefill_ms > 0.0
             ? (1000.0 * prompt.size()) / stats.prefill_ms : 0.0;
+        if (final_hidden == nullptr) {
+            stats.cancelled = true;
+            stats.total_ms = std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - gen_start).count();
+            return stats;
+        }
         prefill_profile_.report(stats.prefill_ms, prompt.size());
         if (opt.max_new_tokens == 0) {
             stats.total_ms = std::chrono::duration<double, std::milli>(
@@ -423,7 +437,7 @@ public:
 
         std::size_t pos = prompt.size();
         for (std::size_t gen_idx = 1; !cancelled && gen_idx < opt.max_new_tokens && pos < g_cache_capacity; ++gen_idx) {
-            if (g_shutdown_requested) break;
+            if (g_shutdown_requested || (opt.should_cancel && opt.should_cancel())) { cancelled = true; break; }
             const auto step_res = step(cur_token, pos);
             cur_token = step_res.token;
             stats.tokens.push_back(cur_token);
@@ -436,6 +450,7 @@ public:
         }
         stats.decode_ms += stats.first_token_ms;
         stats.generated_tokens = stats.tokens.size();
+        stats.cancelled = cancelled;
         if (stats.generated_tokens > 0 && stats.decode_ms > 0.0) {
             stats.decode_tok_s = (1000.0 * stats.generated_tokens) / stats.decode_ms;
         }
@@ -457,6 +472,12 @@ public:
         // 1. Prefill / Process prompt tokens (Phase 0: No LM head, no per-token host sync)
         const auto prefill_start = std::chrono::steady_clock::now();
         for (std::size_t pos = 0; pos < prompt.size() - 1; ++pos) {
+            if (g_shutdown_requested || (opt.should_cancel && opt.should_cancel())) {
+                stats.cancelled = true;
+                stats.total_ms = std::chrono::duration<double, std::milli>(
+                    std::chrono::steady_clock::now() - gen_start).count();
+                return stats;
+            }
             prefill_step(prompt[pos], pos);
         }
         if (prompt.size() > 1) {
@@ -475,6 +496,7 @@ public:
         if (!opt.stream && use_hip_graph_) {
             const std::size_t num_to_gen = std::min(opt.max_new_tokens, g_cache_capacity - pos);
             for (std::size_t i = 0; i < num_to_gen; ++i) {
+                if (g_shutdown_requested || (opt.should_cancel && opt.should_cancel())) { stats.cancelled = true; break; }
                 ensure_graph_captured(pos + i);
             }
             MIINFER_HIP_CHECK(hipMemcpyAsync(
@@ -512,7 +534,7 @@ public:
 
         const auto decode_start = std::chrono::steady_clock::now();
         for (std::size_t gen_idx = 0; gen_idx < opt.max_new_tokens && pos < g_cache_capacity; ++gen_idx) {
-            if (g_shutdown_requested) break;
+            if (g_shutdown_requested || (opt.should_cancel && opt.should_cancel())) { stats.cancelled = true; break; }
 
             const auto step_res = step(cur_token, pos);
             if (gen_idx == 0) {
@@ -1101,6 +1123,7 @@ int cmd_chat(int argc, char** argv) {
 // ---------------------------------------------------------------------------
 struct HttpRequest {
     int client_fd = -1;
+    std::uint64_t request_id = 0;
     std::string method;
     std::string path;
     std::string raw;
@@ -1255,12 +1278,29 @@ HttpReadResult read_http_request(int client_fd) {
     std::string path;
     request_line >> method >> path;
     if (method.empty() || path.empty()) return {std::nullopt, 400, "Bad Request"};
-    return {HttpRequest{client_fd, std::move(method), std::move(path), std::move(data), {}}, 0, {}};
+    return {HttpRequest{client_fd, 0, std::move(method), std::move(path), std::move(data), {}}, 0, {}};
 }
 
-void send_http_error(int client_fd, int status, std::string_view reason) {
-    const std::string body = "{\"error\":\"" + std::string(reason) + "\"}";
+void send_http_error(int client_fd, int status, std::string_view reason,
+                     std::string_view code_override = {}) {
+    const std::string code = status == 401 ? "authentication_error"
+        : status == 413 || status == 431 ? "request_too_large"
+        : status == 503 ? "server_unavailable"
+        : code_override.empty() ? "invalid_request_error" : std::string(code_override);
+    const std::string body = "{\"error\":{\"message\":\"" + json_escape(reason)
+        + "\",\"type\":\"" + code + "\",\"code\":\"" + code + "\"}}";
     (void)send_http_response(client_fd, status, reason, "application/json", body);
+}
+
+bool constant_time_equal(std::string_view left, std::string_view right) {
+    std::size_t difference = left.size() ^ right.size();
+    const std::size_t count = std::max(left.size(), right.size());
+    for (std::size_t i = 0; i < count; ++i) {
+        const unsigned char a = i < left.size() ? static_cast<unsigned char>(left[i]) : 0;
+        const unsigned char b = i < right.size() ? static_cast<unsigned char>(right[i]) : 0;
+        difference |= a ^ b;
+    }
+    return difference == 0;
 }
 
 int cmd_serve(int argc, char** argv) {
@@ -1269,6 +1309,8 @@ int cmd_serve(int argc, char** argv) {
     std::string host = "127.0.0.1";
     std::size_t context_length = 1024;
     bool experimental_context = false;
+    std::optional<std::filesystem::path> api_key_file;
+    bool allow_insecure = false;
 
     for (int i = 2; i < argc; ++i) {
         std::string_view arg = argv[i];
@@ -1285,10 +1327,14 @@ int cmd_serve(int argc, char** argv) {
             catch (...) { std::cerr << "context must be a positive integer\n"; return 2; }
         } else if (arg == "--experimental-context") {
             experimental_context = true;
+        } else if (arg == "--api-key-file" && i + 1 < argc) {
+            api_key_file = argv[++i];
+        } else if (arg == "--allow-insecure") {
+            allow_insecure = true;
         } else if (model_path.empty() && !arg.starts_with("--")) {
             model_path = arg;
         } else {
-            std::cerr << "usage: miinfer serve --model MODEL.gguf [--port PORT] [--host HOST] [--context N] [--experimental-context]\n"; return 2;
+            std::cerr << "usage: miinfer serve --model MODEL.gguf [--port PORT] [--host HOST] [--context N] [--experimental-context] [--api-key-file PATH] [--allow-insecure]\n"; return 2;
         }
     }
     if (model_path.empty()) { std::cerr << "missing model; use --model MODEL.gguf\n"; return 2; }
@@ -1300,12 +1346,30 @@ int cmd_serve(int argc, char** argv) {
     if (context_length > 1024 && !experimental_context) {
         std::cerr << "context values above 1024 require --experimental-context\n"; return 2;
     }
+    std::string api_key;
+    if (api_key_file) {
+        std::ifstream input(*api_key_file);
+        if (!input || !std::getline(input, api_key)) {
+            std::cerr << "cannot read API key file: " << *api_key_file << "\n"; return 2;
+        }
+        api_key = trim_ascii(api_key);
+        if (api_key.empty()) {
+            std::cerr << "API key file is empty: " << *api_key_file << "\n"; return 2;
+        }
+    } else if (const char* configured_key = std::getenv("MIINFER_API_KEY")) {
+        api_key = configured_key;
+    }
+    const bool loopback = host == "127.0.0.1" || host == "localhost" || host == "::1";
+    if (!loopback && api_key.empty() && !allow_insecure) {
+        std::cerr << "non-loopback serving requires MIINFER_API_KEY, --api-key-file, or --allow-insecure\n";
+        return 2;
+    }
     const std::string model_id = std::filesystem::path(model_path).stem().string();
 
     g_cache_capacity = context_length;
     std::cerr << "Initializing MIInfer gfx906 HTTP Server on " << host << ":" << port << " ...\n";
     std::cerr << "configured_context_length=" << context_length << "\n"
-              << "runtime_context_capacity=65536\n"
+              << "runtime_context_capacity=" << g_cache_capacity << "\n"
               << "qualified_context_length=1024\n"
               << "context_qualification=" << (context_length > 1024 ? "experimental" : "qualified") << "\n";
     Qwen35RuntimeEngine engine(model_path);
@@ -1364,6 +1428,11 @@ int cmd_serve(int argc, char** argv) {
     std::atomic<std::uint64_t> queue_wait_us = 0;
     std::atomic<std::uint64_t> request_duration_us = 0;
     std::atomic<std::uint64_t> ttft_us = 0;
+    std::atomic<std::uint64_t> tokenization_us = 0;
+    std::atomic<std::uint64_t> prefill_us = 0;
+    std::atomic<std::uint64_t> prefill_tokens_total = 0;
+    std::atomic<std::uint64_t> cancelled_requests = 0;
+    std::atomic<std::uint64_t> request_sequence = 0;
 
     auto handle_request = [&](const HttpRequest& request) {
         const auto started_at = std::chrono::steady_clock::now();
@@ -1372,30 +1441,60 @@ int cmd_serve(int argc, char** argv) {
         struct Guard { std::atomic<std::size_t>& active; ~Guard() { active.fetch_sub(1); } } guard{active_requests};
         const int client_fd = request.client_fd;
         ++inference_requests;
+        const auto state = [&](std::string_view value) {
+            std::cerr << "miinfer_request_state request_id=" << request.request_id
+                      << " state=" << value << '\n';
+        };
+        state("dequeued");
         const std::size_t body_start = request.raw.find("\r\n\r\n");
         const auto parsed = miinfer::parse_openai_chat_request(
             body_start == std::string::npos ? std::string_view{} : std::string_view(request.raw).substr(body_start + 4));
         if (!parsed.request) {
             ++http_errors;
             send_http_error(client_fd, 400, parsed.error);
+            state("rejected");
             return;
         }
+        state("parsed");
         const bool is_stream = parsed.request->stream;
         const std::size_t max_tokens = parsed.request->max_tokens;
         const std::string prompt = miinfer::build_chatml(*parsed.request);
+        const auto client_cancelled = [&] {
+            if (g_shutdown_requested) return true;
+            char byte = 0;
+            const ssize_t count = recv(client_fd, &byte, sizeof(byte), MSG_PEEK | MSG_DONTWAIT);
+            if (count == 0) return true;
+            if (count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)) return false;
+            return count < 0;
+        };
 
-        const auto prompt_tokens = engine.tokenizer().encode(prompt);
-        if (prompt_tokens.size() > context_length || prompt_tokens.size() + max_tokens > context_length) {
-            ++http_errors;
-            send_http_error(client_fd, 400, "prompt and max_tokens exceed configured context");
+        const auto tokenization_start = std::chrono::steady_clock::now();
+        if (client_cancelled()) {
+            ++cancelled_requests;
+            state("cancelled");
             return;
         }
+        const auto prompt_tokens = engine.tokenizer().encode(prompt);
+        const double tokenization_ms = std::chrono::duration<double, std::milli>(
+            std::chrono::steady_clock::now() - tokenization_start).count();
+        tokenization_us += static_cast<std::uint64_t>(tokenization_ms * 1000.0);
+        const double queue_wait_ms = std::chrono::duration<double, std::milli>(started_at - request.queued_at).count();
+        state("tokenized");
+        if (prompt_tokens.size() > context_length || prompt_tokens.size() + max_tokens > context_length) {
+            ++http_errors;
+            send_http_error(client_fd, 400, "prompt and max_tokens exceed configured context", "context_length_exceeded");
+            state("rejected");
+            return;
+        }
+        state("prefill_started");
         if (is_stream) {
             bool client_connected = send_all(
                 client_fd,
                 "HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nCache-Control: no-cache\r\nConnection: close\r\n\r\n");
             Qwen35RuntimeEngine::GenerateOptions opt;
             opt.max_new_tokens = max_tokens;
+            opt.should_cancel = client_cancelled;
+            bool request_cancelled = false;
             opt.on_token = [&](std::uint32_t /*token*/, std::string_view piece) {
                 if (!client_connected) return false;
                 const std::string sse = "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"delta\":{\"content\":\""
@@ -1405,10 +1504,40 @@ int cmd_serve(int argc, char** argv) {
             };
             try {
                 const auto stats = engine.generate(prompt_tokens, opt);
+                request_cancelled = stats.cancelled;
+                if (!stats.cancelled) {
+                    state("prefill_completed");
+                    if (stats.generated_tokens > 0) state("first_token");
+                }
                 prompt_tokens_total += stats.prompt_tokens;
+                prefill_tokens_total += stats.prompt_tokens;
+                prefill_us += static_cast<std::uint64_t>(stats.prefill_ms * 1000.0);
                 generated_tokens_total += stats.generated_tokens;
                 ttft_us += static_cast<std::uint64_t>(stats.first_token_ms * 1000.0);
                 request_duration_us += static_cast<std::uint64_t>(stats.total_ms * 1000.0);
+                const bool cancelled = stats.cancelled || !client_connected;
+                if (cancelled) { ++cancelled_requests; state("cancelled"); }
+                else state("completed");
+                std::cerr << "miinfer_request {\"request_id\":" << request.request_id
+                          << ",\"request_body_bytes\":" << request.raw.size()
+                          << ",\"message_count\":" << parsed.request->messages.size()
+                          << ",\"prompt_chars\":" << prompt.size()
+                          << ",\"prompt_tokens\":" << stats.prompt_tokens
+                          << ",\"tokenization_ms\":" << tokenization_ms
+                          << ",\"queue_wait_ms\":" << queue_wait_ms
+                          << ",\"prefill_ms\":" << stats.prefill_ms
+                          << ",\"prefill_tokens_per_second\":" << stats.prefill_tok_s
+                          << ",\"first_decode_token_ms\":" << stats.first_token_ms
+                          << ",\"time_to_first_token_ms\":" << stats.prefill_ms + stats.first_token_ms
+                          << ",\"generated_tokens\":" << stats.generated_tokens
+                          << ",\"decode_ms\":" << stats.decode_ms
+                          << ",\"decode_tokens_per_second\":" << stats.decode_tok_s
+                          << ",\"total_ms\":" << stats.total_ms
+                          << ",\"cancelled\":" << (cancelled ? "true" : "false")
+                          << ",\"finish_reason\":\"" << (cancelled ? "cancelled" : "stop") << "\""
+                          << ",\"error\":null"
+                          << ",\"configured_context\":" << context_length
+                          << ",\"runtime_context_capacity\":" << g_cache_capacity << "}\n";
             } catch (...) {
                 ++http_errors;
                 if (client_connected) {
@@ -1416,18 +1545,47 @@ int cmd_serve(int argc, char** argv) {
                 }
                 return;
             }
-            if (client_connected) (void)send_all(client_fd, "data: [DONE]\n\n");
+            if (client_connected && !request_cancelled) (void)send_all(client_fd, "data: [DONE]\n\n");
         } else {
             Qwen35RuntimeEngine::GenerateOptions opt;
             opt.max_new_tokens = max_tokens;
+            opt.should_cancel = client_cancelled;
             // Server requests must observe shutdown between tokens; the bulk
             // graph path intentionally does not provide that interruption point.
             opt.stream = true;
             const auto stats = engine.generate(prompt_tokens, opt);
+            if (!stats.cancelled) {
+                state("prefill_completed");
+                if (stats.generated_tokens > 0) state("first_token");
+            }
             prompt_tokens_total += stats.prompt_tokens;
+            prefill_tokens_total += stats.prompt_tokens;
+            prefill_us += static_cast<std::uint64_t>(stats.prefill_ms * 1000.0);
             generated_tokens_total += stats.generated_tokens;
             ttft_us += static_cast<std::uint64_t>(stats.first_token_ms * 1000.0);
             request_duration_us += static_cast<std::uint64_t>(stats.total_ms * 1000.0);
+            if (stats.cancelled) { ++cancelled_requests; state("cancelled"); }
+            else state("completed");
+            std::cerr << "miinfer_request {\"request_id\":" << request.request_id
+                      << ",\"request_body_bytes\":" << request.raw.size()
+                      << ",\"message_count\":" << parsed.request->messages.size()
+                      << ",\"prompt_chars\":" << prompt.size()
+                      << ",\"prompt_tokens\":" << stats.prompt_tokens
+                      << ",\"tokenization_ms\":" << tokenization_ms
+                      << ",\"queue_wait_ms\":" << queue_wait_ms
+                      << ",\"prefill_ms\":" << stats.prefill_ms
+                      << ",\"prefill_tokens_per_second\":" << stats.prefill_tok_s
+                      << ",\"first_decode_token_ms\":" << stats.first_token_ms
+                      << ",\"time_to_first_token_ms\":" << stats.prefill_ms + stats.first_token_ms
+                      << ",\"generated_tokens\":" << stats.generated_tokens
+                      << ",\"decode_ms\":" << stats.decode_ms
+                      << ",\"decode_tokens_per_second\":" << stats.decode_tok_s
+                      << ",\"total_ms\":" << stats.total_ms
+                      << ",\"cancelled\":" << (stats.cancelled ? "true" : "false")
+                      << ",\"finish_reason\":\"" << (stats.cancelled ? "cancelled" : "stop") << "\""
+                      << ",\"error\":null"
+                      << ",\"configured_context\":" << context_length
+                      << ",\"runtime_context_capacity\":" << g_cache_capacity << "}\n";
             const std::string body = "{\"id\":\"chatcmpl-1\",\"object\":\"chat.completion\",\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\""
                 + json_escape(stats.text) + "\"}}],\"usage\":{\"prompt_tokens\":"
                 + std::to_string(stats.prompt_tokens) + ",\"completion_tokens\":"
@@ -1447,10 +1605,11 @@ int cmd_serve(int argc, char** argv) {
                 std::unique_lock lock(queue_mutex);
                 queue_cv.wait(lock, [&] { return !pending_requests.empty() || !accepting; });
                 if (pending_requests.empty() && !accepting) return;
-                request = std::move(pending_requests.front());
+        request = std::move(pending_requests.front());
                 pending_requests.pop_front();
                 queue_depth.fetch_sub(1);
             }
+            std::cerr << "miinfer_request_state request_id=" << request.request_id << " state=queued\n";
             try {
                 handle_request(request);
             } catch (const std::exception& error) {
@@ -1487,7 +1646,9 @@ int cmd_serve(int argc, char** argv) {
         }
         ++http_requests;
         HttpRequest request = std::move(*result.request);
+        request.request_id = ++request_sequence;
         request.queued_at = std::chrono::steady_clock::now();
+        std::cerr << "miinfer_request_state request_id=" << request.request_id << " state=received\n";
 
         if (request.method == "GET" && request.path == "/") {
             constexpr std::string_view page = R"HTML(<!doctype html><meta charset="utf-8"><title>MIInfer</title><style>body{max-width:48rem;margin:2rem auto;font:16px system-ui}#chat{white-space:pre-wrap;border:1px solid #ccc;padding:1rem;min-height:20rem}textarea{width:100%;height:5rem}button{margin-top:.5rem}</style><h1>MIInfer <small id="model"></small></h1><div id="chat"></div><textarea id="prompt" placeholder="Message"></textarea><br><button onclick="send()">Send</button><script>const chat=document.querySelector('#chat'),prompt=document.querySelector('#prompt'),messages=[];fetch('/v1/models').then(r=>r.json()).then(x=>model.textContent=x.data?.[0]?.id||'');async function send(){const text=prompt.value.trim();if(!text)return;messages.push({role:'user',content:text});chat.textContent+='You: '+text+'\nMIInfer: ';prompt.value='';const r=await fetch('/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages,stream:true,max_tokens:512})});const reader=r.body.getReader(),d=new TextDecoder;let pending='',reply='';for(;;){const x=await reader.read();if(x.done)break;pending+=d.decode(x.value,{stream:true});const lines=pending.split('\n');pending=lines.pop();for(const line of lines)if(line.startsWith('data: {')){const piece=JSON.parse(line.slice(6)).choices[0].delta.content||'';reply+=piece;chat.textContent+=piece}}messages.push({role:'assistant',content:reply});chat.textContent+='\n\n'}</script>)HTML";
@@ -1502,8 +1663,18 @@ int cmd_serve(int argc, char** argv) {
             continue;
         }
         if (request.method == "GET" && request.path == "/metrics") {
+            if (!api_key.empty()) {
+                const auto headers_end = request.raw.find("\r\n\r\n");
+                const auto authorization = http_header(std::string_view(request.raw).substr(0, headers_end), "authorization");
+                if (!authorization || !authorization->starts_with("Bearer ")
+                    || !constant_time_equal(std::string_view(*authorization).substr(7), api_key)) {
+                    send_http_error(client_fd, 401, "missing or invalid bearer token"); close(client_fd); continue;
+                }
+            }
             const std::string body = "# TYPE miinfer_http_requests_total counter\n"
                 "miinfer_http_requests_total " + std::to_string(http_requests.load()) + "\n"
+                "# TYPE miinfer_requests_total counter\n"
+                "miinfer_requests_total " + std::to_string(http_requests.load()) + "\n"
                 "# TYPE miinfer_http_errors_total counter\n"
                 "miinfer_http_errors_total " + std::to_string(http_errors.load()) + "\n"
                 "# TYPE miinfer_inference_requests_total counter\n"
@@ -1520,8 +1691,18 @@ int cmd_serve(int argc, char** argv) {
                 "miinfer_queue_wait_seconds_sum " + std::to_string(queue_wait_us.load() / 1000000.0) + "\n"
                 "# TYPE miinfer_request_duration_seconds_sum counter\n"
                 "miinfer_request_duration_seconds_sum " + std::to_string(request_duration_us.load() / 1000000.0) + "\n"
+                "# TYPE miinfer_request_duration_seconds counter\n"
+                "miinfer_request_duration_seconds " + std::to_string(request_duration_us.load() / 1000000.0) + "\n"
                 "# TYPE miinfer_time_to_first_token_seconds_sum counter\n"
                 "miinfer_time_to_first_token_seconds_sum " + std::to_string(ttft_us.load() / 1000000.0) + "\n"
+                "# TYPE miinfer_tokenization_duration_seconds_sum counter\n"
+                "miinfer_tokenization_duration_seconds_sum " + std::to_string(tokenization_us.load() / 1000000.0) + "\n"
+                "# TYPE miinfer_prefill_duration_seconds_sum counter\n"
+                "miinfer_prefill_duration_seconds_sum " + std::to_string(prefill_us.load() / 1000000.0) + "\n"
+                "# TYPE miinfer_prefill_tokens_total counter\n"
+                "miinfer_prefill_tokens_total " + std::to_string(prefill_tokens_total.load()) + "\n"
+                "# TYPE miinfer_cancelled_requests_total counter\n"
+                "miinfer_cancelled_requests_total " + std::to_string(cancelled_requests.load()) + "\n"
                 "# TYPE miinfer_prompt_tokens_total counter\n"
                 "miinfer_prompt_tokens_total " + std::to_string(prompt_tokens_total.load()) + "\n"
                 "# TYPE miinfer_generated_tokens_total counter\n"
@@ -1531,6 +1712,14 @@ int cmd_serve(int argc, char** argv) {
             continue;
         }
         if (request.method == "GET" && request.path == "/v1/models") {
+            if (!api_key.empty()) {
+                const auto headers_end = request.raw.find("\r\n\r\n");
+                const auto authorization = http_header(std::string_view(request.raw).substr(0, headers_end), "authorization");
+                if (!authorization || !authorization->starts_with("Bearer ")
+                    || !constant_time_equal(std::string_view(*authorization).substr(7), api_key)) {
+                    send_http_error(client_fd, 401, "missing or invalid bearer token"); close(client_fd); continue;
+                }
+            }
             const std::string body = "{\"object\":\"list\",\"data\":[{\"id\":\""
                 + json_escape(model_id) + "\",\"object\":\"model\",\"owned_by\":\"miinfer\"}]}";
             (void)send_http_response(client_fd, 200, "OK", "application/json", body);
@@ -1542,6 +1731,14 @@ int cmd_serve(int argc, char** argv) {
             send_http_error(client_fd, 404, "Not Found");
             close(client_fd);
             continue;
+        }
+        if (!api_key.empty()) {
+            const auto headers_end = request.raw.find("\r\n\r\n");
+            const auto authorization = http_header(std::string_view(request.raw).substr(0, headers_end), "authorization");
+            if (!authorization || !authorization->starts_with("Bearer ")
+                || !constant_time_equal(std::string_view(*authorization).substr(7), api_key)) {
+                send_http_error(client_fd, 401, "missing or invalid bearer token"); close(client_fd); continue;
+            }
         }
 
         bool queued = false;
@@ -1595,7 +1792,8 @@ void print_usage() {
     std::cout << "  inspect <model.gguf>                     Inspect model metadata, quantization, and VRAM budget\n";
     std::cout << "  run <model.gguf> --prompt \"...\"         Generate text from a prompt with streaming output\n";
     std::cout << "  chat <model.gguf>                        Start an interactive multi-turn terminal chat REPL\n";
-    std::cout << "  serve --model MODEL.gguf [--port 8080]   Launch API and Web UI\n\n";
+    std::cout << "  serve --model MODEL.gguf [--port 8080] [--context N] [--experimental-context]\n"
+              << "        [--api-key-file PATH] [--allow-insecure]   Launch API and Web UI\n\n";
 }
 
 } // namespace
