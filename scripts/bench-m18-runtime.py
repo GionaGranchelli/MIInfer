@@ -104,6 +104,11 @@ def main():
     output = args.output / f"{stamp}-{os.getpid()}"
     output.mkdir(parents=True)
     model_sha256 = sha256(args.model)
+    tracked_environment = (
+        "HIP_VISIBLE_DEVICES", "HSA_OVERRIDE_GFX_VERSION", "ROCM_PATH",
+        "MIINFER_HIP_GRAPH", "MIINFER_PREFILL_LAYER_MAJOR",
+        "MIINFER_PREFILL_DENSE_PROJECTIONS", "MIINFER_PREFILL_DENSE_QKV",
+        "MIINFER_PREFILL_DENSE_FFN_DOWN")
     metadata = {
         "binary": str(args.binary.resolve()),
         "model": str(args.model.resolve()),
@@ -111,9 +116,7 @@ def main():
         "git_commit": command_output(["git", "rev-parse", "HEAD"]).strip(),
         "hostname": platform.node(),
         "platform": platform.platform(),
-        "environment": {key: os.environ[key] for key in (
-            "HIP_VISIBLE_DEVICES", "HSA_OVERRIDE_GFX_VERSION", "ROCM_PATH",
-            "MIINFER_HIP_GRAPH") if key in os.environ},
+        "environment": {key: os.environ[key] for key in tracked_environment if key in os.environ},
         "hardware_before": command_output(["rocm-smi"]),
     }
     (output / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")

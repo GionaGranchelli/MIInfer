@@ -1,0 +1,4 @@
+Initializing MIInfer gfx906 runtime engine for /home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf ...
+MIInfer HIP failure: out of memory
+  expression: hipMalloc(&data_, bytes)
+  location: /home/fedora-workstation/Development/mi50/tools/qwen35_gpu_pipeline.hpp:49

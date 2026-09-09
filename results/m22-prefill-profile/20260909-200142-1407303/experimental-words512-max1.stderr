@@ -1,0 +1,11 @@
+Initializing MIInfer gfx906 runtime engine for /home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf ...
+device_allocation_count=3404
+device_allocated_bytes=24977998164
+device_peak_allocated_bytes=24977998164
+model_context_length=262144
+Prompt tokens: 513 tokens
+Generating up to 1 tokens...
+---------------------------------------------------------
+MIInfer HIP failure: invalid resource handle
+  expression: hipEventElapsedTime(&elapsed, starts[stage], ends[stage])
+  location: /home/fedora-workstation/Development/mi50/tools/miinfer_cli.cpp:238

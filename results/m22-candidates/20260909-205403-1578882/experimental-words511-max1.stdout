@@ -1,0 +1,1120 @@
+hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello Prefill operator profile: prompt=512 chunks=8 wall_ms=11158.2 sampled_position=511 projection_batch_width=B4 (M12 batched4 GEMV) chunk_base=448 embedding_ms=7.96403
+  layer=0 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00928
+  layer=0 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=0 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=0 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.0216
+  layer=0 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01632
+  layer=0 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00896
+  layer=0 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=0 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=0 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=0 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=0 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=0 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=0 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=0 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=0 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=15.2724 total_ms=15.3367
+  layer=0 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=4.17506
+  layer=0 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=21.5737
+  layer=1 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=1 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=1 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=1 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02112
+  layer=1 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01616
+  layer=1 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00896
+  layer=1 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=1 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=1 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=1 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=1 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=1 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=1 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=1 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=1 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=15.3063 total_ms=15.3647
+  layer=1 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.93553
+  layer=1 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=21.3062
+  layer=2 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=2 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=2 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=2 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.0216
+  layer=2 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01648
+  layer=2 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00896
+  layer=2 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=2 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=2 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=2 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=2 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=2 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=2 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=2 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=2 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=15.2637 total_ms=15.3231
+  layer=2 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.93969
+  layer=2 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=21.267
+  layer=3 kind=attention family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=3 kind=attention family=q_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=3 kind=attention family=query_norm_rope stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.01232
+  layer=3 kind=attention family=k_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=3 kind=attention family=v_projection stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=3 kind=attention family=kv_store stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=3 kind=attention family=attention stage=6 timing=selected-token-stage recorded=1 gpu_ms=0.01216
+  layer=3 kind=attention family=attention_output_projection stage=7 timing=selected-token-stage recorded=1 gpu_ms=0.1712
+  layer=3 kind=attention family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=3 kind=attention family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=3 kind=attention family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=3 kind=attention family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=3 kind=attention family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=3 kind=attention family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=3 kind=attention family=residual stage=14 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=3 kind=attention family=deferred_prefill_tail timing=whole-tail gpu_ms=13.005 total_ms=13.2213
+  layer=3 kind=attention family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.54385
+  layer=3 kind=attention family=ordered_token_path recorded=1 gpu_ms=25.0919
+  layer=4 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=4 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=4 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=4 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02112
+  layer=4 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01648
+  layer=4 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.0088
+  layer=4 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=4 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=4 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=4 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=4 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=4 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=4 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=4 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=4 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=15.2433 total_ms=15.302
+  layer=4 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.93937
+  layer=4 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=21.2569
+  layer=5 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=5 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=5 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=5 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02192
+  layer=5 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01648
+  layer=5 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00896
+  layer=5 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=5 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=5 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=5 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=5 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=5 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=5 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=5 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=5 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=15.2556 total_ms=15.3153
+  layer=5 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.94641
+  layer=5 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=21.27
+  layer=6 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=6 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=6 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=6 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.0272
+  layer=6 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01648
+  layer=6 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00896
+  layer=6 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=6 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=6 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=6 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=6 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=6 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=6 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=6 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=6 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=15.2458 total_ms=15.3108
+  layer=6 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.93921
+  layer=6 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=21.2556
+  layer=7 kind=attention family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=7 kind=attention family=q_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=7 kind=attention family=query_norm_rope stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.01216
+  layer=7 kind=attention family=k_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=7 kind=attention family=v_projection stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=7 kind=attention family=kv_store stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=7 kind=attention family=attention stage=6 timing=selected-token-stage recorded=1 gpu_ms=0.012
+  layer=7 kind=attention family=attention_output_projection stage=7 timing=selected-token-stage recorded=1 gpu_ms=0.171041
+  layer=7 kind=attention family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=7 kind=attention family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=7 kind=attention family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=7 kind=attention family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=7 kind=attention family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=7 kind=attention family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=7 kind=attention family=residual stage=14 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=7 kind=attention family=deferred_prefill_tail timing=whole-tail gpu_ms=13.013 total_ms=13.229
+  layer=7 kind=attention family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.54545
+  layer=7 kind=attention family=ordered_token_path recorded=1 gpu_ms=25.0313
+  layer=8 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=8 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=8 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=8 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02144
+  layer=8 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01632
+  layer=8 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00912
+  layer=8 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=8 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=8 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=8 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=8 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=8 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=8 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=8 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=8 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=16.0564 total_ms=16.1154
+  layer=8 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.91873
+  layer=8 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=22.0401
+  layer=9 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=9 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=9 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=9 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02144
+  layer=9 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01648
+  layer=9 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00896
+  layer=9 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=9 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=9 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=9 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=9 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=9 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=9 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=9 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=9 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=16.0829 total_ms=16.1421
+  layer=9 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.91617
+  layer=9 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=22.062
+  layer=10 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=10 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=10 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=10 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02176
+  layer=10 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01616
+  layer=10 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00912
+  layer=10 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=10 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=10 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=10 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=10 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=10 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=10 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=10 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=10 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=15.2601 total_ms=15.3193
+  layer=10 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.93153
+  layer=10 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=21.2574
+  layer=11 kind=attention family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=11 kind=attention family=q_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=11 kind=attention family=query_norm_rope stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.01216
+  layer=11 kind=attention family=k_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=11 kind=attention family=v_projection stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=11 kind=attention family=kv_store stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00432
+  layer=11 kind=attention family=attention stage=6 timing=selected-token-stage recorded=1 gpu_ms=0.01216
+  layer=11 kind=attention family=attention_output_projection stage=7 timing=selected-token-stage recorded=1 gpu_ms=0.172801
+  layer=11 kind=attention family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=11 kind=attention family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=11 kind=attention family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=11 kind=attention family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=11 kind=attention family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=11 kind=attention family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=11 kind=attention family=residual stage=14 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=11 kind=attention family=deferred_prefill_tail timing=whole-tail gpu_ms=13.7836 total_ms=14.0017
+  layer=11 kind=attention family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.55841
+  layer=11 kind=attention family=ordered_token_path recorded=1 gpu_ms=25.8219
+  layer=12 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=12 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=12 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=12 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02144
+  layer=12 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01616
+  layer=12 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.0088
+  layer=12 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=12 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=12 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=12 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=12 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=12 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=12 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=12 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=12 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=16.0588 total_ms=16.1175
+  layer=12 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.91361
+  layer=12 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=22.0479
+  layer=13 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=13 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=13 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=13 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02208
+  layer=13 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01632
+  layer=13 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00864
+  layer=13 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=13 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=13 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=13 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=13 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=13 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=13 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=13 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=13 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=15.2689 total_ms=15.3282
+  layer=13 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.94257
+  layer=13 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=21.2852
+  layer=14 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=14 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=14 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=14 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.0224
+  layer=14 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01648
+  layer=14 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.0088
+  layer=14 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=14 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=14 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=14 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=14 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=14 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=14 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=14 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=14 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=16.0671 total_ms=16.1269
+  layer=14 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.92833
+  layer=14 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=22.061
+  layer=15 kind=attention family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=15 kind=attention family=q_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=15 kind=attention family=query_norm_rope stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.01216
+  layer=15 kind=attention family=k_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=15 kind=attention family=v_projection stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=15 kind=attention family=kv_store stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00432
+  layer=15 kind=attention family=attention stage=6 timing=selected-token-stage recorded=1 gpu_ms=0.01216
+  layer=15 kind=attention family=attention_output_projection stage=7 timing=selected-token-stage recorded=1 gpu_ms=0.172641
+  layer=15 kind=attention family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=15 kind=attention family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=15 kind=attention family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=15 kind=attention family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=15 kind=attention family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=15 kind=attention family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=15 kind=attention family=residual stage=14 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=15 kind=attention family=deferred_prefill_tail timing=whole-tail gpu_ms=13.7909 total_ms=14.0085
+  layer=15 kind=attention family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.53921
+  layer=15 kind=attention family=ordered_token_path recorded=1 gpu_ms=25.8628
+  layer=16 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=16 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=16 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=16 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02192
+  layer=16 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01632
+  layer=16 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00912
+  layer=16 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=16 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=16 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=16 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=16 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=16 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=16 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=16 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=16 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=15.2541 total_ms=15.3138
+  layer=16 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.93617
+  layer=16 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=21.2626
+  layer=17 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=17 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=17 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=17 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.0216
+  layer=17 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.016321
+  layer=17 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.0088
+  layer=17 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=17 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=17 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=17 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=17 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=17 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=17 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=17 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=17 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=16.0825 total_ms=16.1413
+  layer=17 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.92289
+  layer=17 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=22.0734
+  layer=18 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=18 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=18 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=18 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02192
+  layer=18 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01632
+  layer=18 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00896
+  layer=18 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=18 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=18 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=18 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=18 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=18 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=18 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=18 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=18 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=16.0405 total_ms=16.1001
+  layer=18 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.91634
+  layer=18 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=22.0193
+  layer=19 kind=attention family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=19 kind=attention family=q_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=19 kind=attention family=query_norm_rope stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.012
+  layer=19 kind=attention family=k_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=19 kind=attention family=v_projection stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=19 kind=attention family=kv_store stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=19 kind=attention family=attention stage=6 timing=selected-token-stage recorded=1 gpu_ms=0.012
+  layer=19 kind=attention family=attention_output_projection stage=7 timing=selected-token-stage recorded=1 gpu_ms=0.171841
+  layer=19 kind=attention family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=19 kind=attention family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=19 kind=attention family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=19 kind=attention family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=19 kind=attention family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=19 kind=attention family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=19 kind=attention family=residual stage=14 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=19 kind=attention family=deferred_prefill_tail timing=whole-tail gpu_ms=13.0055 total_ms=13.222
+  layer=19 kind=attention family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.55441
+  layer=19 kind=attention family=ordered_token_path recorded=1 gpu_ms=25.0378
+  layer=20 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=20 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=20 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=20 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02128
+  layer=20 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01648
+  layer=20 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00912
+  layer=20 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=20 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=20 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=20 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=20 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=20 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=20 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=20 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=20 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=16.0561 total_ms=16.1151
+  layer=20 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.93281
+  layer=20 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=22.0556
+  layer=21 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=21 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=21 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=21 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02208
+  layer=21 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01632
+  layer=21 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00896
+  layer=21 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=21 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=21 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=21 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=21 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=21 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=21 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=21 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=21 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=16.0783 total_ms=16.1378
+  layer=21 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.92145
+  layer=21 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=22.0721
+  layer=22 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=22 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=22 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=22 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02176
+  layer=22 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01648
+  layer=22 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.0088
+  layer=22 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=22 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=22 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=22 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=22 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=22 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=22 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=22 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=22 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=15.2525 total_ms=15.3117
+  layer=22 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.9437
+  layer=22 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=21.267
+  layer=23 kind=attention family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=23 kind=attention family=q_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=23 kind=attention family=query_norm_rope stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.01216
+  layer=23 kind=attention family=k_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=23 kind=attention family=v_projection stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=23 kind=attention family=kv_store stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=23 kind=attention family=attention stage=6 timing=selected-token-stage recorded=1 gpu_ms=0.012161
+  layer=23 kind=attention family=attention_output_projection stage=7 timing=selected-token-stage recorded=1 gpu_ms=0.17088
+  layer=23 kind=attention family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=23 kind=attention family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=23 kind=attention family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=23 kind=attention family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=23 kind=attention family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=23 kind=attention family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=23 kind=attention family=residual stage=14 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=23 kind=attention family=deferred_prefill_tail timing=whole-tail gpu_ms=13.7762 total_ms=13.9921
+  layer=23 kind=attention family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.54529
+  layer=23 kind=attention family=ordered_token_path recorded=1 gpu_ms=25.8443
+  layer=24 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=24 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=24 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=24 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02176
+  layer=24 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.016
+  layer=24 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00896
+  layer=24 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=24 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=24 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=24 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=24 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=24 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=24 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=24 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=24 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=16.0316 total_ms=16.0905
+  layer=24 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.91217
+  layer=24 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=22.0169
+  layer=25 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=25 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=25 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=25 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02176
+  layer=25 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01632
+  layer=25 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.008801
+  layer=25 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=25 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=25 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=25 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=25 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=25 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=25 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=25 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=25 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=15.2837 total_ms=15.3429
+  layer=25 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.93937
+  layer=25 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=21.2988
+  layer=26 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=26 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=26 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=26 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02192
+  layer=26 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01616
+  layer=26 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00896
+  layer=26 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=26 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=26 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=26 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=26 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=26 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=26 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=26 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=26 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=16.0511 total_ms=16.1103
+  layer=26 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.91585
+  layer=26 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=22.0369
+  layer=27 kind=attention family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=27 kind=attention family=q_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=27 kind=attention family=query_norm_rope stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.01216
+  layer=27 kind=attention family=k_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=27 kind=attention family=v_projection stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=27 kind=attention family=kv_store stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=27 kind=attention family=attention stage=6 timing=selected-token-stage recorded=1 gpu_ms=0.01184
+  layer=27 kind=attention family=attention_output_projection stage=7 timing=selected-token-stage recorded=1 gpu_ms=0.172801
+  layer=27 kind=attention family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=27 kind=attention family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=27 kind=attention family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=27 kind=attention family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=27 kind=attention family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=27 kind=attention family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=27 kind=attention family=residual stage=14 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=27 kind=attention family=deferred_prefill_tail timing=whole-tail gpu_ms=13.7912 total_ms=14.0084
+  layer=27 kind=attention family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.54177
+  layer=27 kind=attention family=ordered_token_path recorded=1 gpu_ms=25.8059
+  layer=28 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=28 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=28 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=28 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02176
+  layer=28 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01632
+  layer=28 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00896
+  layer=28 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=28 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=28 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=28 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=28 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=28 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=28 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=28 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=28 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=15.2724 total_ms=15.3314
+  layer=28 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.93025
+  layer=28 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=21.262
+  layer=29 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=29 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=29 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=29 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02176
+  layer=29 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.016
+  layer=29 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.009121
+  layer=29 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=29 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=29 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=29 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=29 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=29 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=29 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=29 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=29 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=16.0461 total_ms=16.1052
+  layer=29 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.92673
+  layer=29 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=22.0398
+  layer=30 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=30 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=30 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=30 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02192
+  layer=30 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01616
+  layer=30 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.0088
+  layer=30 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=30 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=30 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=30 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=30 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=30 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=30 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=30 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=30 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=16.0676 total_ms=16.1268
+  layer=30 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.92417
+  layer=30 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=22.0554
+  layer=31 kind=attention family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=31 kind=attention family=q_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=31 kind=attention family=query_norm_rope stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.01216
+  layer=31 kind=attention family=k_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=31 kind=attention family=v_projection stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=31 kind=attention family=kv_store stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=31 kind=attention family=attention stage=6 timing=selected-token-stage recorded=1 gpu_ms=0.012
+  layer=31 kind=attention family=attention_output_projection stage=7 timing=selected-token-stage recorded=1 gpu_ms=0.171201
+  layer=31 kind=attention family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=31 kind=attention family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=31 kind=attention family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=31 kind=attention family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=31 kind=attention family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=31 kind=attention family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=31 kind=attention family=residual stage=14 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=31 kind=attention family=deferred_prefill_tail timing=whole-tail gpu_ms=12.9816 total_ms=13.1978
+  layer=31 kind=attention family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.54641
+  layer=31 kind=attention family=ordered_token_path recorded=1 gpu_ms=25.0598
+  layer=32 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=32 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=32 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=32 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02144
+  layer=32 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01616
+  layer=32 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00896
+  layer=32 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=32 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=32 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=32 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=32 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=32 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=32 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=32 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=32 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=16.0735 total_ms=16.1322
+  layer=32 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.92657
+  layer=32 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=22.0722
+  layer=33 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=33 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=33 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=33 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02192
+  layer=33 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01648
+  layer=33 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00896
+  layer=33 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=33 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=33 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=33 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=33 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=33 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=33 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=33 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=33 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=16.0628 total_ms=16.1225
+  layer=33 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.91089
+  layer=33 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=22.0399
+  layer=34 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=34 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=34 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=34 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02176
+  layer=34 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.0168
+  layer=34 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.0088
+  layer=34 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=34 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=34 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=34 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=34 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=34 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=34 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=34 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=34 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=15.2657 total_ms=15.3253
+  layer=34 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.94337
+  layer=34 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=21.2738
+  layer=35 kind=attention family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=35 kind=attention family=q_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=35 kind=attention family=query_norm_rope stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.01232
+  layer=35 kind=attention family=k_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=35 kind=attention family=v_projection stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.00432
+  layer=35 kind=attention family=kv_store stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=35 kind=attention family=attention stage=6 timing=selected-token-stage recorded=1 gpu_ms=0.01216
+  layer=35 kind=attention family=attention_output_projection stage=7 timing=selected-token-stage recorded=1 gpu_ms=0.171361
+  layer=35 kind=attention family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=35 kind=attention family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=35 kind=attention family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=35 kind=attention family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=35 kind=attention family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=35 kind=attention family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=35 kind=attention family=residual stage=14 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=35 kind=attention family=deferred_prefill_tail timing=whole-tail gpu_ms=13.776 total_ms=13.9925
+  layer=35 kind=attention family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.55281
+  layer=35 kind=attention family=ordered_token_path recorded=1 gpu_ms=25.8239
+  layer=36 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=36 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=36 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=36 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02176
+  layer=36 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.0216
+  layer=36 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.0088
+  layer=36 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=36 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=36 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=36 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=36 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=36 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=36 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=36 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=36 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=16.0812 total_ms=16.1455
+  layer=36 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.92289
+  layer=36 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=22.0742
+  layer=37 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=37 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=37 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=37 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02752
+  layer=37 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.016321
+  layer=37 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00896
+  layer=37 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=37 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=37 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=37 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=37 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=37 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=37 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=37 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=37 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=15.3108 total_ms=15.3759
+  layer=37 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.93537
+  layer=37 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=21.3154
+  layer=38 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=38 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=38 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=38 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02224
+  layer=38 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01616
+  layer=38 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00896
+  layer=38 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=38 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=38 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=38 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=38 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=38 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=38 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=38 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=38 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=16.0613 total_ms=16.1212
+  layer=38 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.91505
+  layer=38 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=22.0414
+  layer=39 kind=attention family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=39 kind=attention family=q_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=39 kind=attention family=query_norm_rope stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.01216
+  layer=39 kind=attention family=k_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=39 kind=attention family=v_projection stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=39 kind=attention family=kv_store stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=39 kind=attention family=attention stage=6 timing=selected-token-stage recorded=1 gpu_ms=0.012
+  layer=39 kind=attention family=attention_output_projection stage=7 timing=selected-token-stage recorded=1 gpu_ms=0.16928
+  layer=39 kind=attention family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=39 kind=attention family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=39 kind=attention family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=39 kind=attention family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=39 kind=attention family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=39 kind=attention family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=39 kind=attention family=residual stage=14 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=39 kind=attention family=deferred_prefill_tail timing=whole-tail gpu_ms=13.7826 total_ms=13.9964
+  layer=39 kind=attention family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.54097
+  layer=39 kind=attention family=ordered_token_path recorded=1 gpu_ms=25.854
+  layer=40 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=40 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=40 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=40 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02176
+  layer=40 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01648
+  layer=40 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00896
+  layer=40 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=40 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=40 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=40 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=40 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=40 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=40 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=40 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=40 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=15.2617 total_ms=15.3212
+  layer=40 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.95441
+  layer=40 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=21.2796
+  layer=41 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=41 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=41 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=41 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.0216
+  layer=41 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01616
+  layer=41 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00864
+  layer=41 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=41 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=41 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=41 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=41 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=41 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=41 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=41 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=41 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=16.0426 total_ms=16.1013
+  layer=41 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.90529
+  layer=41 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=22.0412
+  layer=42 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=42 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=42 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=42 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02192
+  layer=42 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01616
+  layer=42 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.0088
+  layer=42 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=42 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=42 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=42 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=42 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=42 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=42 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=42 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=42 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=16.0492 total_ms=16.1084
+  layer=42 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.91249
+  layer=42 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=22.0289
+  layer=43 kind=attention family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00432
+  layer=43 kind=attention family=q_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=43 kind=attention family=query_norm_rope stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.012161
+  layer=43 kind=attention family=k_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=43 kind=attention family=v_projection stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=43 kind=attention family=kv_store stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=43 kind=attention family=attention stage=6 timing=selected-token-stage recorded=1 gpu_ms=0.01184
+  layer=43 kind=attention family=attention_output_projection stage=7 timing=selected-token-stage recorded=1 gpu_ms=0.16912
+  layer=43 kind=attention family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=43 kind=attention family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=43 kind=attention family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=43 kind=attention family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=43 kind=attention family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=43 kind=attention family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=43 kind=attention family=residual stage=14 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=43 kind=attention family=deferred_prefill_tail timing=whole-tail gpu_ms=13.0116 total_ms=13.2253
+  layer=43 kind=attention family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.54993
+  layer=43 kind=attention family=ordered_token_path recorded=1 gpu_ms=25.1135
+  layer=44 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=44 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=44 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=44 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.021761
+  layer=44 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01664
+  layer=44 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00944
+  layer=44 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=44 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=44 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=44 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=44 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=44 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=44 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=44 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=44 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=16.07 total_ms=16.13
+  layer=44 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.91153
+  layer=44 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=22.0687
+  layer=45 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=45 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=45 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=45 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.0216
+  layer=45 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01616
+  layer=45 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00896
+  layer=45 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=45 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=45 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=45 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=45 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=45 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=45 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=45 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=45 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=16.0537 total_ms=16.1127
+  layer=45 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.92897
+  layer=45 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=22.0521
+  layer=46 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=46 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=46 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=46 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02736
+  layer=46 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01648
+  layer=46 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.0088
+  layer=46 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=46 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=46 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=46 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=46 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=46 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=46 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=46 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=46 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=15.2689 total_ms=15.3338
+  layer=46 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.94289
+  layer=46 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=21.2982
+  layer=47 kind=attention family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=47 kind=attention family=q_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=47 kind=attention family=query_norm_rope stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.01696
+  layer=47 kind=attention family=k_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=47 kind=attention family=v_projection stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.00464
+  layer=47 kind=attention family=kv_store stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=47 kind=attention family=attention stage=6 timing=selected-token-stage recorded=1 gpu_ms=0.01216
+  layer=47 kind=attention family=attention_output_projection stage=7 timing=selected-token-stage recorded=1 gpu_ms=0.169281
+  layer=47 kind=attention family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=47 kind=attention family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=47 kind=attention family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=47 kind=attention family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=47 kind=attention family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=47 kind=attention family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=47 kind=attention family=residual stage=14 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=47 kind=attention family=deferred_prefill_tail timing=whole-tail gpu_ms=13.7962 total_ms=14.0157
+  layer=47 kind=attention family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.55537
+  layer=47 kind=attention family=ordered_token_path recorded=1 gpu_ms=25.8428
+  layer=48 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=48 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=48 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=48 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02192
+  layer=48 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01648
+  layer=48 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.0088
+  layer=48 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=48 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=48 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=48 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=48 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=48 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=48 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=48 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=48 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=16.0428 total_ms=16.1023
+  layer=48 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.91505
+  layer=48 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=22.023
+  layer=49 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=49 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=49 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=49 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.0216
+  layer=49 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01632
+  layer=49 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00896
+  layer=49 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=49 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=49 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=49 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=49 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=49 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=49 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=49 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=49 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=15.2919 total_ms=15.3508
+  layer=49 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.93201
+  layer=49 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=21.282
+  layer=50 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=50 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=50 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=50 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02176
+  layer=50 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01632
+  layer=50 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.008801
+  layer=50 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=50 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=50 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=50 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=50 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=50 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=50 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=50 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=50 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=16.0258 total_ms=16.0847
+  layer=50 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.92993
+  layer=50 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=22.0186
+  layer=51 kind=attention family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=51 kind=attention family=q_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=51 kind=attention family=query_norm_rope stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.01216
+  layer=51 kind=attention family=k_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.00432
+  layer=51 kind=attention family=v_projection stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=51 kind=attention family=kv_store stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=51 kind=attention family=attention stage=6 timing=selected-token-stage recorded=1 gpu_ms=0.012
+  layer=51 kind=attention family=attention_output_projection stage=7 timing=selected-token-stage recorded=1 gpu_ms=0.16976
+  layer=51 kind=attention family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=51 kind=attention family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=51 kind=attention family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=51 kind=attention family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=51 kind=attention family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=51 kind=attention family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=51 kind=attention family=residual stage=14 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=51 kind=attention family=deferred_prefill_tail timing=whole-tail gpu_ms=13.7972 total_ms=14.0119
+  layer=51 kind=attention family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.54241
+  layer=51 kind=attention family=ordered_token_path recorded=1 gpu_ms=25.8548
+  layer=52 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=52 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.004161
+  layer=52 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=52 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02192
+  layer=52 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01648
+  layer=52 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.0088
+  layer=52 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=52 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=52 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=52 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=52 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=52 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=52 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=52 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=52 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=15.2804 total_ms=15.3401
+  layer=52 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.94689
+  layer=52 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=21.2946
+  layer=53 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=53 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=53 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=53 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02176
+  layer=53 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01632
+  layer=53 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.0088
+  layer=53 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=53 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=53 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=53 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=53 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=53 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=53 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=53 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=53 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=16.0597 total_ms=16.1186
+  layer=53 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.90721
+  layer=53 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=22.0439
+  layer=54 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=54 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=54 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=54 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02176
+  layer=54 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.018721
+  layer=54 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00896
+  layer=54 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=54 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=54 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=54 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=54 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=54 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=54 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=54 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=54 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=16.0695 total_ms=16.1311
+  layer=54 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.93233
+  layer=54 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=22.0834
+  layer=55 kind=attention family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=55 kind=attention family=q_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=55 kind=attention family=query_norm_rope stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.01232
+  layer=55 kind=attention family=k_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=55 kind=attention family=v_projection stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.00432
+  layer=55 kind=attention family=kv_store stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=55 kind=attention family=attention stage=6 timing=selected-token-stage recorded=1 gpu_ms=0.01184
+  layer=55 kind=attention family=attention_output_projection stage=7 timing=selected-token-stage recorded=1 gpu_ms=0.171681
+  layer=55 kind=attention family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=55 kind=attention family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=55 kind=attention family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=55 kind=attention family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=55 kind=attention family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=55 kind=attention family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=55 kind=attention family=residual stage=14 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=55 kind=attention family=deferred_prefill_tail timing=whole-tail gpu_ms=13.0135 total_ms=13.2301
+  layer=55 kind=attention family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.54721
+  layer=55 kind=attention family=ordered_token_path recorded=1 gpu_ms=25.0407
+  layer=56 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=56 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=56 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=56 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02208
+  layer=56 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01616
+  layer=56 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.0088
+  layer=56 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=56 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=56 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=56 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=56 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=56 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=56 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=56 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=56 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=15.2901 total_ms=15.3495
+  layer=56 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.94002
+  layer=56 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=21.309
+  layer=57 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=57 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=57 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=57 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02192
+  layer=57 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.016481
+  layer=57 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.0088
+  layer=57 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=57 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=57 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=57 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=57 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=57 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=57 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=57 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=57 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=15.2713 total_ms=15.3306
+  layer=57 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.93681
+  layer=57 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=21.2692
+  layer=58 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=58 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=58 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=58 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02192
+  layer=58 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01648
+  layer=58 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00912
+  layer=58 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=58 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=58 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=58 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=58 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=58 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=58 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=58 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=58 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=15.2698 total_ms=15.3295
+  layer=58 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.93089
+  layer=58 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=21.2609
+  layer=59 kind=attention family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=59 kind=attention family=q_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=59 kind=attention family=query_norm_rope stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.01216
+  layer=59 kind=attention family=k_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=59 kind=attention family=v_projection stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=59 kind=attention family=kv_store stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=59 kind=attention family=attention stage=6 timing=selected-token-stage recorded=1 gpu_ms=0.012161
+  layer=59 kind=attention family=attention_output_projection stage=7 timing=selected-token-stage recorded=1 gpu_ms=0.17136
+  layer=59 kind=attention family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=59 kind=attention family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=59 kind=attention family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=59 kind=attention family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=59 kind=attention family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=59 kind=attention family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=59 kind=attention family=residual stage=14 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=59 kind=attention family=deferred_prefill_tail timing=whole-tail gpu_ms=13.0098 total_ms=13.2258
+  layer=59 kind=attention family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.54689
+  layer=59 kind=attention family=ordered_token_path recorded=1 gpu_ms=25.0308
+  layer=60 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=60 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=60 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=60 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02176
+  layer=60 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01632
+  layer=60 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00928
+  layer=60 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=60 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=60 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=60 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=60 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=60 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=60 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=60 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=60 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=15.2498 total_ms=15.3095
+  layer=60 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.94481
+  layer=60 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=21.2526
+  layer=61 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=61 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=61 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=61 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02208
+  layer=61 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01632
+  layer=61 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.0088
+  layer=61 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=61 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=61 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=61 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=61 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=61 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=61 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=61 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=61 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=15.2881 total_ms=15.3474
+  layer=61 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.95937
+  layer=61 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=21.3081
+  layer=62 kind=recurrent family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.004
+  layer=62 kind=recurrent family=qkv_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=62 kind=recurrent family=gate_projection stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=62 kind=recurrent family=recurrent_parameter_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.02128
+  layer=62 kind=recurrent family=conv_and_head_norm stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.01632
+  layer=62 kind=recurrent family=gdn_scan stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00896
+  layer=62 kind=recurrent family=recurrent_gate stage=6 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=62 kind=recurrent family=ssm_output_projection stage=7 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=62 kind=recurrent family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=62 kind=recurrent family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=62 kind=recurrent family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=62 kind=recurrent family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=62 kind=recurrent family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=62 kind=recurrent family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=62 kind=recurrent family=deferred_prefill_tail timing=whole-tail gpu_ms=15.2769 total_ms=15.3357
+  layer=62 kind=recurrent family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.94145
+  layer=62 kind=recurrent family=ordered_token_path recorded=1 gpu_ms=21.2878
+  layer=63 kind=attention family=normalization stage=0 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=63 kind=attention family=q_projection stage=1 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=63 kind=attention family=query_norm_rope stage=2 timing=selected-token-stage recorded=1 gpu_ms=0.01216
+  layer=63 kind=attention family=k_projection stage=3 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=63 kind=attention family=v_projection stage=4 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=63 kind=attention family=kv_store stage=5 timing=selected-token-stage recorded=1 gpu_ms=0.00416
+  layer=63 kind=attention family=attention stage=6 timing=selected-token-stage recorded=1 gpu_ms=0.012
+  layer=63 kind=attention family=attention_output_projection stage=7 timing=selected-token-stage recorded=1 gpu_ms=0.171521
+  layer=63 kind=attention family=residual_post_norm stage=8 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=63 kind=attention family=post_normalization stage=9 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=63 kind=attention family=ffn_gate_up_projection stage=10 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=63 kind=attention family=swiglu stage=11 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=63 kind=attention family=ffn_down_projection stage=12 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=63 kind=attention family=residual stage=13 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=63 kind=attention family=residual stage=14 timing=selected-token-stage recorded=0 gpu_ms=0
+  layer=63 kind=attention family=deferred_prefill_tail timing=whole-tail gpu_ms=12.748 total_ms=12.9645
+  layer=63 kind=attention family=prefill_batch_prepare batch=B64 projection_groups=B4 recorded=1 gpu_ms=3.54529
+  layer=63 kind=attention family=ordered_token_path recorded=1 gpu_ms=24.8618
+Top operator families (sampled position, summed layers):
+  rank=1 family=deferred_prefill_tail gpu_ms=965.997 share_of_sampled=78.7973
+  rank=2 family=prefill_batch_prepare gpu_ms=245.63 share_of_sampled=20.0363
+  rank=3 family=projection_or_attention_output gpu_ms=2.73777 share_of_sampled=0.223323
+  rank=4 family=projection_or_k gpu_ms=1.12688 share_of_sampled=0.0919208
+  rank=5 family=projection_or_v gpu_ms=0.858724 share_of_sampled=0.070047
+  rank=6 family=kv_or_head_norm gpu_ms=0.494883 share_of_sampled=0.0403681
+  rank=7 family=projection_or_rope gpu_ms=0.395041 share_of_sampled=0.0322239
+  rank=8 family=normalization gpu_ms=0.26688 share_of_sampled=0.0217697
+  rank=9 family=projection_or_norm gpu_ms=0.261921 share_of_sampled=0.0213652
+  rank=10 family=gdn_or_attention gpu_ms=0.192642 share_of_sampled=0.015714
+  ordered_token_path_gpu_ms=1447.14 note=gross layer-loop timing; excluded from component shares
+  sampled_layer_gpu_ms=1217.96 accounted_sample_ms=1225.93 estimated_full_prefill_ms=9807.41 estimated_full_chunks=8 wall_ms=11158.2 note=full-chunk extrapolation; use wall_ms for qualification
+
+

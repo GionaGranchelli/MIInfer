@@ -2364,15 +2364,15 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1788971830.4635005,
-    "seen": 1788974464.109074,
-    "ast_hash": "0b4f2d6eb7b2ab19c0898044ecc59567",
+    "mtime": 1788979926.9757771,
+    "seen": 1788981893.2156694,
+    "ast_hash": "e41d26246f3112fdf81b42dfa312a064",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1788940845.6953535,
-    "seen": 1788940875.1175463,
-    "ast_hash": "07ad3db703a73fcd944451dfb18613a1",
+    "mtime": 1788981129.0925786,
+    "seen": 1788981893.2156708,
+    "ast_hash": "47d95d5dbe4871eb28996efaad965dd2",
     "semantic_hash": ""
   },
   "docs/M9-AUTOREGRESSIVE-QUALIFICATION.md": {
@@ -3276,9 +3276,9 @@
     "semantic_hash": ""
   },
   "scripts/bench-m18-runtime.py": {
-    "mtime": 1788974363.318863,
-    "seen": 1788974464.108895,
-    "ast_hash": "464528b68f66868863f6049fc03a53b6",
+    "mtime": 1788981805.0366929,
+    "seen": 1788981893.2154794,
+    "ast_hash": "906fab1727062a64e2876070845619e1",
     "semantic_hash": ""
   },
   "experiments/EXP-0268-m18a-lifecycle-cancellation.md": {
@@ -4425,6 +4425,270 @@
     "mtime": 1788974381.425303,
     "seen": 1788974464.1097815,
     "ast_hash": "b6ac8f322f055699419218f7eabb2bcd",
+    "semantic_hash": ""
+  },
+  "results/m22-candidates/20260909-204151-1514411/metadata.json": {
+    "mtime": 1788979355.661203,
+    "seen": 1788979712.2786202,
+    "ast_hash": "a66d27c86af378d0dacf99f98b0a9205",
+    "semantic_hash": ""
+  },
+  "results/m22-candidates/20260909-204151-1514411/summary.json": {
+    "mtime": 1788979389.4487453,
+    "seen": 1788979712.2786224,
+    "ast_hash": "08bff712ca1781c713a3c0e525cd62d0",
+    "semantic_hash": ""
+  },
+  "results/m22-m13-quant-mm/20260909-b512.json": {
+    "mtime": 1788979493.1307821,
+    "seen": 1788979712.278624,
+    "ast_hash": "d88bb48cefe29f64c3116bccf942b226",
+    "semantic_hash": ""
+  },
+  "results/m22-m13-quant-mm/20260909.json": {
+    "mtime": 1788979185.1417856,
+    "seen": 1788979712.2786255,
+    "ast_hash": "feab167b138dd3b7fe723f909790e4f2",
+    "semantic_hash": ""
+  },
+  "results/m22-prefill-profile/20260909-200142-1407303/metadata.json": {
+    "mtime": 1788976946.37747,
+    "seen": 1788979712.278627,
+    "ast_hash": "c022cd1f12554dbd50f0878a8e28538e",
+    "semantic_hash": ""
+  },
+  "results/m22-prefill-profile/20260909-200142-1407303/summary.json": {
+    "mtime": 1788976982.8356981,
+    "seen": 1788979712.278628,
+    "ast_hash": "25bbdfc64024da27b3ebcf15694d703d",
+    "semantic_hash": ""
+  },
+  "results/m22-prefill-profile/20260909-200357-1428573/metadata.json": {
+    "mtime": 1788977082.0209908,
+    "seen": 1788979712.2786293,
+    "ast_hash": "8c4a7b77f84b719cfcbebc9cbd1ffc06",
+    "semantic_hash": ""
+  },
+  "results/m22-prefill-profile/20260909-200357-1428573/summary.json": {
+    "mtime": 1788977115.5216322,
+    "seen": 1788979712.2786307,
+    "ast_hash": "5287f5f4637f754769b8a1acfde88094",
+    "semantic_hash": ""
+  },
+  "results/m22-prefill-profile/20260909-200657-1449839/metadata.json": {
+    "mtime": 1788977261.1998687,
+    "seen": 1788979712.2786317,
+    "ast_hash": "a66d27c86af378d0dacf99f98b0a9205",
+    "semantic_hash": ""
+  },
+  "results/m22-prefill-profile/20260909-200657-1449839/summary.json": {
+    "mtime": 1788977294.5327919,
+    "seen": 1788979712.2786329,
+    "ast_hash": "b93de07d150a8105130165e930d4eeb7",
+    "semantic_hash": ""
+  },
+  "results/m22-prefill-profile/20260909-200942-1471120/metadata.json": {
+    "mtime": 1788977427.0069485,
+    "seen": 1788979712.278634,
+    "ast_hash": "d5b210d154df3eaf50cf01cf3989cb0f",
+    "semantic_hash": ""
+  },
+  "results/m22-prefill-profile/20260909-200942-1471120/summary.json": {
+    "mtime": 1788977460.803805,
+    "seen": 1788979712.2786353,
+    "ast_hash": "1803423f10e7eb22428e14032d801169",
+    "semantic_hash": ""
+  },
+  "results/m22-prefill-profile/20260909-201924-1492471/metadata.json": {
+    "mtime": 1788978008.323812,
+    "seen": 1788979712.2786362,
+    "ast_hash": "af159ef088671d057fc9f1ce9166823a",
+    "semantic_hash": ""
+  },
+  "results/m22-prefill-profile/20260909-201924-1492471/summary.json": {
+    "mtime": 1788978042.0620244,
+    "seen": 1788979712.2786376,
+    "ast_hash": "10d03b85f56e8b4106aba5347e266326",
+    "semantic_hash": ""
+  },
+  "results/m22-reference-repack/20260909-2019/pp.json": {
+    "mtime": 1788978509.9097931,
+    "seen": 1788979712.2786386,
+    "ast_hash": "e17fae165f867d7924b91d040d2dec81",
+    "semantic_hash": ""
+  },
+  "results/m22-reference-repack/20260909-2019/tg64-depth.json": {
+    "mtime": 1788979164.7617857,
+    "seen": 1788979712.2786398,
+    "ast_hash": "a5d2635c3c5cb4843d36a069b3ccb661",
+    "semantic_hash": ""
+  },
+  "results/m22-reference-repack/20260909-2019/tg64.json": {
+    "mtime": 1788978965.463788,
+    "seen": 1788979712.2786412,
+    "ast_hash": "3fbab8f3414fdfc78513a1ae128afcb1",
+    "semantic_hash": ""
+  },
+  "results/m22-regression/20260909-204658-1535930/metadata.json": {
+    "mtime": 1788979663.2262838,
+    "seen": 1788979712.2786424,
+    "ast_hash": "a66d27c86af378d0dacf99f98b0a9205",
+    "semantic_hash": ""
+  },
+  "results/m22-regression/20260909-204658-1535930/summary.json": {
+    "mtime": 1788979696.9307146,
+    "seen": 1788979712.2786434,
+    "ast_hash": "35e2edc6eb432f9aea7f2204119afe40",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0276-m22-prefill-operator-attribution.md": {
+    "mtime": 1788979285.4807844,
+    "seen": 1788979712.279291,
+    "ast_hash": "7f786899b6a416eca115661fc9d5ca03",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0277-m22-mx-repack-ab.md": {
+    "mtime": 1788979285.4807844,
+    "seen": 1788979712.279292,
+    "ast_hash": "3e26ce6cbdcf43152da6677780e4c329",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0278-m22-quant-mm-batch-width.md": {
+    "mtime": 1788979285.4807844,
+    "seen": 1788979712.2792935,
+    "ast_hash": "577ae23c269e41f3145ed61219e4796b",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0279-m22-dense-ffn-down-candidate.md": {
+    "mtime": 1788979532.9387815,
+    "seen": 1788979712.2792947,
+    "ast_hash": "663092ce85fc2f14caa01e2d3aa9752e",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0280-m22-m13-b512-mapping.md": {
+    "mtime": 1788979532.9387815,
+    "seen": 1788979712.279296,
+    "ast_hash": "6216ddf943a877a4153847c06aee6a9d",
+    "semantic_hash": ""
+  },
+  "results/m22-candidates/20260909-205227-1558020/metadata.json": {
+    "mtime": 1788979991.2699473,
+    "seen": 1788981893.215427,
+    "ast_hash": "c022cd1f12554dbd50f0878a8e28538e",
+    "semantic_hash": ""
+  },
+  "results/m22-candidates/20260909-205227-1558020/summary.json": {
+    "mtime": 1788980024.9701085,
+    "seen": 1788981893.2154293,
+    "ast_hash": "7d2a72b1a4a28985618e77eac9c83896",
+    "semantic_hash": ""
+  },
+  "results/m22-candidates/20260909-205403-1578882/metadata.json": {
+    "mtime": 1788980088.149281,
+    "seen": 1788981893.2154307,
+    "ast_hash": "8c4a7b77f84b719cfcbebc9cbd1ffc06",
+    "semantic_hash": ""
+  },
+  "results/m22-candidates/20260909-205403-1578882/summary.json": {
+    "mtime": 1788980121.7424266,
+    "seen": 1788981893.215432,
+    "ast_hash": "869af627d8256f1c790781443bc2de90",
+    "semantic_hash": ""
+  },
+  "results/m22-candidates/20260909-205929-1599967/metadata.json": {
+    "mtime": 1788980413.7470868,
+    "seen": 1788981893.2154331,
+    "ast_hash": "f65c53a4159f67f33cdb7dd9327a9509",
+    "semantic_hash": ""
+  },
+  "results/m22-candidates/20260909-205929-1599967/summary.json": {
+    "mtime": 1788980447.1794653,
+    "seen": 1788981893.2154346,
+    "ast_hash": "75c46cfa19d7f2c0ed35a7e2151ca59b",
+    "semantic_hash": ""
+  },
+  "results/m22-candidates/20260909-210058-1620832/metadata.json": {
+    "mtime": 1788980502.7273788,
+    "seen": 1788981893.2154357,
+    "ast_hash": "a66d27c86af378d0dacf99f98b0a9205",
+    "semantic_hash": ""
+  },
+  "results/m22-candidates/20260909-210058-1620832/summary.json": {
+    "mtime": 1788980536.1458411,
+    "seen": 1788981893.2154372,
+    "ast_hash": "fe18368f9ce9400e271c2206353097a7",
+    "semantic_hash": ""
+  },
+  "results/m22-candidates/20260909-210516-1686233/metadata.json": {
+    "mtime": 1788980761.0170043,
+    "seen": 1788981893.2154384,
+    "ast_hash": "c022cd1f12554dbd50f0878a8e28538e",
+    "semantic_hash": ""
+  },
+  "results/m22-candidates/20260909-210516-1686233/summary.json": {
+    "mtime": 1788980793.155799,
+    "seen": 1788981893.2154396,
+    "ast_hash": "822d9476cbe551bbbad9ec2b22b3db13",
+    "semantic_hash": ""
+  },
+  "results/m22-candidates/20260909-210657-1707087/metadata.json": {
+    "mtime": 1788980861.5660646,
+    "seen": 1788981893.2154408,
+    "ast_hash": "67da4b7274981e7ac44d26317425c540",
+    "semantic_hash": ""
+  },
+  "results/m22-candidates/20260909-210657-1707087/summary.json": {
+    "mtime": 1788980923.412761,
+    "seen": 1788981893.215442,
+    "ast_hash": "170aaa27c1a35514dea4904a2f5c9cf3",
+    "semantic_hash": ""
+  },
+  "results/m22-candidates/20260909-211229-1769810/metadata.json": {
+    "mtime": 1788981194.1173456,
+    "seen": 1788981893.2154431,
+    "ast_hash": "af159ef088671d057fc9f1ce9166823a",
+    "semantic_hash": ""
+  },
+  "results/m22-candidates/20260909-211229-1769810/summary.json": {
+    "mtime": 1788981226.157508,
+    "seen": 1788981893.2154443,
+    "ast_hash": "c912703cfcd0a7d03e5231e71080e44c",
+    "semantic_hash": ""
+  },
+  "results/m22-candidates/20260909-211710-1853172/metadata.json": {
+    "mtime": 1788981474.5669568,
+    "seen": 1788981893.2154455,
+    "ast_hash": "a66d27c86af378d0dacf99f98b0a9205",
+    "semantic_hash": ""
+  },
+  "results/m22-candidates/20260909-211710-1853172/summary.json": {
+    "mtime": 1788981499.0794518,
+    "seen": 1788981893.2154465,
+    "ast_hash": "22d08ca8136dfeb16b297d1337648b45",
+    "semantic_hash": ""
+  },
+  "results/m22-candidates/20260909-211856-1874034/metadata.json": {
+    "mtime": 1788981581.2746174,
+    "seen": 1788981893.215448,
+    "ast_hash": "c022cd1f12554dbd50f0878a8e28538e",
+    "semantic_hash": ""
+  },
+  "results/m22-candidates/20260909-211856-1874034/summary.json": {
+    "mtime": 1788981786.8739321,
+    "seen": 1788981893.2154489,
+    "ast_hash": "ae3c787f1e924a5ae9978f87a31e37ed",
+    "semantic_hash": ""
+  },
+  "results/m22-m13-quant-mm/m12-dense-stage.json": {
+    "mtime": 1788979773.2747788,
+    "seen": 1788981893.2154534,
+    "ast_hash": "bbb72568bda7de50b807866d9ee45fa0",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0281-m22-dense-ffn-prefill-candidate.md": {
+    "mtime": 1788981829.2735536,
+    "seen": 1788981893.2161324,
+    "ast_hash": "bd7d66f7e34d1ef2bba68f2b905c6302",
     "semantic_hash": ""
   }
 }

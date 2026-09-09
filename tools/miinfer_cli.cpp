@@ -16,6 +16,7 @@
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <limits>
 #include <mutex>
 #include <numeric>
 #include <optional>
@@ -132,7 +133,10 @@ public:
         std::array<hipEvent_t, 4> stage{};
         hipEvent_t embedding_start = nullptr;
         hipEvent_t embedding_end = nullptr;
-        std::array<std::array<double, 3>, 64> layer_ms{};
+        std::array<RecurrentLayer::StageProfile, 64> recurrent_layers{};
+        std::array<FullAttentionLayer::StageProfile, 64> attention_layers{};
+        std::size_t profile_position = 511;
+        std::size_t profile_chunk_base = 448;
         double embedding_ms = 0.0;
         std::size_t chunks = 0;
 
@@ -141,6 +145,26 @@ public:
             for (auto& event : stage) MIINFER_HIP_CHECK(hipEventCreate(&event));
             MIINFER_HIP_CHECK(hipEventCreate(&embedding_start));
             MIINFER_HIP_CHECK(hipEventCreate(&embedding_end));
+            for (auto& layer : recurrent_layers) {
+                for (auto& event : layer.start) MIINFER_HIP_CHECK(hipEventCreate(&event));
+                for (auto& event : layer.end) MIINFER_HIP_CHECK(hipEventCreate(&event));
+                MIINFER_HIP_CHECK(hipEventCreate(&layer.tail_start));
+                MIINFER_HIP_CHECK(hipEventCreate(&layer.tail_end));
+                MIINFER_HIP_CHECK(hipEventCreate(&layer.prepare_start));
+                MIINFER_HIP_CHECK(hipEventCreate(&layer.prepare_end));
+                MIINFER_HIP_CHECK(hipEventCreate(&layer.ordered_start));
+                MIINFER_HIP_CHECK(hipEventCreate(&layer.ordered_end));
+            }
+            for (auto& layer : attention_layers) {
+                for (auto& event : layer.start) MIINFER_HIP_CHECK(hipEventCreate(&event));
+                for (auto& event : layer.end) MIINFER_HIP_CHECK(hipEventCreate(&event));
+                MIINFER_HIP_CHECK(hipEventCreate(&layer.tail_start));
+                MIINFER_HIP_CHECK(hipEventCreate(&layer.tail_end));
+                MIINFER_HIP_CHECK(hipEventCreate(&layer.prepare_start));
+                MIINFER_HIP_CHECK(hipEventCreate(&layer.prepare_end));
+                MIINFER_HIP_CHECK(hipEventCreate(&layer.ordered_start));
+                MIINFER_HIP_CHECK(hipEventCreate(&layer.ordered_end));
+            }
         }
 
         void destroy() {
@@ -153,28 +177,180 @@ public:
             if (embedding_end != nullptr) (void)hipEventDestroy(embedding_end);
             embedding_start = nullptr;
             embedding_end = nullptr;
+            for (auto& layer : recurrent_layers) {
+                for (auto& event : layer.start) {
+                    if (event != nullptr) (void)hipEventDestroy(event);
+                    event = nullptr;
+                }
+                for (auto& event : layer.end) {
+                    if (event != nullptr) (void)hipEventDestroy(event);
+                    event = nullptr;
+                }
+                if (layer.tail_start != nullptr) (void)hipEventDestroy(layer.tail_start);
+                if (layer.tail_end != nullptr) (void)hipEventDestroy(layer.tail_end);
+                if (layer.prepare_start != nullptr) (void)hipEventDestroy(layer.prepare_start);
+                if (layer.prepare_end != nullptr) (void)hipEventDestroy(layer.prepare_end);
+                if (layer.ordered_start != nullptr) (void)hipEventDestroy(layer.ordered_start);
+                if (layer.ordered_end != nullptr) (void)hipEventDestroy(layer.ordered_end);
+                layer.tail_start = nullptr;
+                layer.tail_end = nullptr;
+                layer.prepare_start = nullptr;
+                layer.prepare_end = nullptr;
+                layer.ordered_start = nullptr;
+                layer.ordered_end = nullptr;
+            }
+            for (auto& layer : attention_layers) {
+                for (auto& event : layer.start) {
+                    if (event != nullptr) (void)hipEventDestroy(event);
+                    event = nullptr;
+                }
+                for (auto& event : layer.end) {
+                    if (event != nullptr) (void)hipEventDestroy(event);
+                    event = nullptr;
+                }
+                if (layer.tail_start != nullptr) (void)hipEventDestroy(layer.tail_start);
+                if (layer.tail_end != nullptr) (void)hipEventDestroy(layer.tail_end);
+                if (layer.prepare_start != nullptr) (void)hipEventDestroy(layer.prepare_start);
+                if (layer.prepare_end != nullptr) (void)hipEventDestroy(layer.prepare_end);
+                if (layer.ordered_start != nullptr) (void)hipEventDestroy(layer.ordered_start);
+                if (layer.ordered_end != nullptr) (void)hipEventDestroy(layer.ordered_end);
+                layer.tail_start = nullptr;
+                layer.tail_end = nullptr;
+                layer.prepare_start = nullptr;
+                layer.prepare_end = nullptr;
+                layer.ordered_start = nullptr;
+                layer.ordered_end = nullptr;
+            }
         }
 
         void report(double wall_ms, std::size_t prompt_tokens) const {
             if (!enabled) return;
-            double layer_total = 0.0;
-            std::cout << "Prefill profile: prompt=" << prompt_tokens
-                      << " chunks=" << chunks << " wall_ms=" << wall_ms
-                      << " embedding_ms=" << embedding_ms << '\n';
-            for (std::size_t layer = 0; layer < layer_ms.size(); ++layer) {
-                const double total = layer_ms[layer][0] + layer_ms[layer][1] + layer_ms[layer][2];
-                layer_total += total;
-                std::cout << "  layer=" << layer
-                          << " kind=" << (layer % 4 == 3 ? "attention" : "recurrent")
-                          << " prepare_ms=" << layer_ms[layer][0]
-                          << " ordered_ms=" << layer_ms[layer][1]
-                          << " tail_ms=" << layer_ms[layer][2]
-                          << " total_ms=" << total << '\n';
+            if (prompt_tokens <= profile_position) {
+                std::cout << "Prefill profile skipped: prompt=" << prompt_tokens
+                          << " profile_position=" << profile_position << '\n';
+                return;
             }
-            std::cout << "  layer_total_ms=" << layer_total
-                      << " accounted_ms=" << (layer_total + embedding_ms)
-                      << " unaccounted_wall_ms=" << (wall_ms - layer_total - embedding_ms)
-                      << '\n';
+            static constexpr std::array<const char*, 14> recurrent_names{
+                "normalization", "qkv_projection", "gate_projection",
+                "recurrent_parameter_projection", "conv_and_head_norm", "gdn_scan",
+                "recurrent_gate", "ssm_output_projection", "residual_post_norm",
+                "post_normalization", "ffn_gate_up_projection", "swiglu",
+                "ffn_down_projection", "residual"};
+            static constexpr std::array<const char*, 15> attention_names{
+                "normalization", "q_projection", "query_norm_rope", "k_projection",
+                "v_projection", "kv_store", "attention", "attention_output_projection",
+                "residual_post_norm", "post_normalization", "ffn_gate_up_projection",
+                "swiglu", "ffn_down_projection", "residual", "residual"};
+            std::array<double, 17> family_ms{};
+            double ordered_ms = 0.0;
+            double sampled_total = embedding_ms;
+            std::cout << "Prefill operator profile: prompt=" << prompt_tokens
+                      << " chunks=" << chunks << " wall_ms=" << wall_ms
+                      << " sampled_position=" << profile_position
+                      << " projection_batch_width=B4 (M12 batched4 GEMV)"
+                      << " chunk_base=" << profile_chunk_base
+                      << " embedding_ms=" << embedding_ms << '\n';
+            for (std::size_t layer = 0; layer < 64; ++layer) {
+                const bool attention = layer % 4 == 3;
+                const std::size_t stage_count = attention ? attention_names.size() : recurrent_names.size();
+                const hipEvent_t* starts = attention
+                    ? attention_layers[layer].start.data() : recurrent_layers[layer].start.data();
+                const hipEvent_t* ends = attention
+                    ? attention_layers[layer].end.data() : recurrent_layers[layer].end.data();
+                double layer_total = 0.0;
+                for (std::size_t stage = 0; stage < stage_count; ++stage) {
+                    float elapsed = 0.0F;
+                    const bool recorded = attention
+                        ? attention_layers[layer].stage_recorded[stage]
+                        : recurrent_layers[layer].stage_recorded[stage];
+                    if (recorded) {
+                        MIINFER_HIP_CHECK(hipEventElapsedTime(&elapsed, starts[stage], ends[stage]));
+                    }
+                    family_ms[stage] += elapsed;
+                    layer_total += elapsed;
+                    std::cout << "  layer=" << layer << " kind="
+                              << (attention ? "attention" : "recurrent")
+                              << " family=" << (attention ? attention_names[stage] : recurrent_names[stage])
+                              << " stage=" << stage
+                              << " timing=selected-token-stage recorded=" << recorded
+                              << " gpu_ms=" << elapsed << '\n';
+                }
+                float tail = 0.0F;
+                const hipEvent_t tail_start = attention
+                    ? attention_layers[layer].tail_start : recurrent_layers[layer].tail_start;
+                const hipEvent_t tail_end = attention
+                    ? attention_layers[layer].tail_end : recurrent_layers[layer].tail_end;
+                const bool tail_recorded = attention
+                    ? attention_layers[layer].tail_recorded : recurrent_layers[layer].tail_recorded;
+                if (tail_recorded) MIINFER_HIP_CHECK(hipEventElapsedTime(&tail, tail_start, tail_end));
+                family_ms[15] += tail;
+                layer_total += tail;
+                sampled_total += layer_total;
+                std::cout << "  layer=" << layer << " kind="
+                          << (attention ? "attention" : "recurrent")
+                          << " family=deferred_prefill_tail timing=whole-tail"
+                          << " gpu_ms=" << tail << " total_ms=" << layer_total << '\n';
+                const hipEvent_t prepare_start = attention
+                    ? attention_layers[layer].prepare_start : recurrent_layers[layer].prepare_start;
+                const hipEvent_t prepare_end = attention
+                    ? attention_layers[layer].prepare_end : recurrent_layers[layer].prepare_end;
+                const bool prepare_recorded = attention
+                    ? attention_layers[layer].prepare_recorded : recurrent_layers[layer].prepare_recorded;
+                float prepare = 0.0F;
+                if (prepare_recorded) {
+                    MIINFER_HIP_CHECK(hipEventElapsedTime(&prepare, prepare_start, prepare_end));
+                }
+                family_ms[16] += prepare;
+                sampled_total += prepare;
+                std::cout << "  layer=" << layer << " kind="
+                          << (attention ? "attention" : "recurrent")
+                          << " family=prefill_batch_prepare batch=B64 projection_groups=B4"
+                          << " recorded=" << prepare_recorded << " gpu_ms=" << prepare << '\n';
+                const hipEvent_t ordered_start = attention
+                    ? attention_layers[layer].ordered_start : recurrent_layers[layer].ordered_start;
+                const hipEvent_t ordered_end = attention
+                    ? attention_layers[layer].ordered_end : recurrent_layers[layer].ordered_end;
+                const bool ordered_recorded = attention
+                    ? attention_layers[layer].ordered_recorded : recurrent_layers[layer].ordered_recorded;
+                float ordered = 0.0F;
+                if (ordered_recorded) {
+                    MIINFER_HIP_CHECK(hipEventElapsedTime(&ordered, ordered_start, ordered_end));
+                }
+                ordered_ms += ordered;
+                std::cout << "  layer=" << layer << " kind="
+                          << (attention ? "attention" : "recurrent")
+                          << " family=ordered_token_path recorded=" << ordered_recorded
+                          << " gpu_ms=" << ordered << '\n';
+            }
+            std::cout << "Top operator families (sampled position, summed layers):\n";
+            std::vector<std::size_t> order(family_ms.size());
+            std::iota(order.begin(), order.end(), 0);
+            std::sort(order.begin(), order.end(), [&family_ms](std::size_t a, std::size_t b) {
+                return family_ms[a] > family_ms[b];
+            });
+            static constexpr std::array<const char*, 17> summary_names{
+                "normalization", "projection_or_norm", "projection_or_rope",
+                "projection_or_k", "projection_or_v", "kv_or_head_norm", "gdn_or_attention",
+                "projection_or_attention_output", "residual_post_norm", "post_normalization",
+                "ffn_gate_up_projection", "swiglu", "ffn_down_projection", "residual",
+                "attention_residual", "deferred_prefill_tail", "prefill_batch_prepare"};
+            for (std::size_t rank = 0; rank < 10; ++rank) {
+                const auto index = order[rank];
+                std::cout << "  rank=" << (rank + 1) << " family=" << summary_names[index]
+                          << " gpu_ms=" << family_ms[index]
+                          << " share_of_sampled=" << (sampled_total > 0.0
+                              ? 100.0 * family_ms[index] / sampled_total : 0.0) << '\n';
+            }
+            std::cout << "  ordered_token_path_gpu_ms=" << ordered_ms
+                      << " note=gross layer-loop timing; excluded from component shares\n";
+            const std::size_t full_chunks = profile_chunk_base / kPrefillBatch + 1;
+            const double estimated_full_ms = sampled_total * full_chunks;
+            std::cout << "  sampled_layer_gpu_ms=" << (sampled_total - embedding_ms)
+                      << " accounted_sample_ms=" << sampled_total
+                      << " estimated_full_prefill_ms=" << estimated_full_ms
+                      << " estimated_full_chunks=" << full_chunks
+                      << " wall_ms=" << wall_ms
+                      << " note=full-chunk extrapolation; use wall_ms for qualification\n";
         }
     };
 
@@ -311,17 +487,15 @@ public:
             // causal KV dependencies while keeping the full chunk at one layer.
             for (std::size_t layer = 0; layer < layer_span.size(); ++layer) {
                 if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
-                if (prefill_profile_.enabled) {
-                    MIINFER_HIP_CHECK(hipEventRecord(prefill_profile_.stage[0], hipStreamPerThread));
-                }
+                layer_span[layer].profile_ordered_start(
+                    prefill_profile_.enabled ? base : std::numeric_limits<std::size_t>::max());
                 const bool normalized_ready = layer > 0 && layer_span[layer - 1].fused_interlayer_norm();
-                const bool prepared = layer_span[layer].prepare_prefill_batch(current, count, normalized_ready);
+                const bool prepared = layer_span[layer].prepare_prefill_batch(
+                    current, count, normalized_ready,
+                    prefill_profile_.enabled ? base : std::numeric_limits<std::size_t>::max());
                 const bool full_m12_chunk = count % kPrefillBatch == 0;
                 const bool deferred_tail = prepared && layer_span[layer].prefill_tail_batch_supported()
                     && (!gdn_chunkwise_prefill_ || full_m12_chunk);
-                if (prefill_profile_.enabled) {
-                    MIINFER_HIP_CHECK(hipEventRecord(prefill_profile_.stage[1], hipStreamPerThread));
-                }
                 const bool fuse_next_norm = layer + 1 < layer_span.size()
                     && layer_span[layer].fused_interlayer_norm();
                 const float* next_norm_weight = fuse_next_norm
@@ -352,24 +526,13 @@ public:
                                               prepared_normalized);
                     }
                 }
-                if (prefill_profile_.enabled) {
-                    MIINFER_HIP_CHECK(hipEventRecord(prefill_profile_.stage[2], hipStreamPerThread));
-                }
                 if (deferred_tail) {
                     layer_span[layer].finish_prefill_batch(
-                        current, next, count, next_norm_weight, next_normalized_batch);
+                        current, next, count, next_norm_weight, next_normalized_batch,
+                        prefill_profile_.enabled ? base : std::numeric_limits<std::size_t>::max());
                 }
-                if (prefill_profile_.enabled) {
-                    MIINFER_HIP_CHECK(hipEventRecord(prefill_profile_.stage[3], hipStreamPerThread));
-                    MIINFER_HIP_CHECK(hipEventSynchronize(prefill_profile_.stage[3]));
-                    for (std::size_t stage = 0; stage < 3; ++stage) {
-                        float elapsed_ms = 0.0F;
-                        MIINFER_HIP_CHECK(hipEventElapsedTime(
-                            &elapsed_ms, prefill_profile_.stage[stage],
-                            prefill_profile_.stage[stage + 1]));
-                        prefill_profile_.layer_ms[layer][stage] += elapsed_ms;
-                    }
-                }
+                layer_span[layer].profile_ordered_end(
+                    prefill_profile_.enabled ? base : std::numeric_limits<std::size_t>::max());
                 std::swap(current, next);
             }
             final_hidden = current + (count - 1) * kHidden;
@@ -630,6 +793,9 @@ private:
         const char* dense_prefill_env = std::getenv("MIINFER_PREFILL_DENSE_FFN_DOWN");
         dense_prefill_ = layer_major_prefill_ && dense_prefill_env != nullptr
             && std::strcmp(dense_prefill_env, "0") != 0;
+        const char* dense_projection_env = std::getenv("MIINFER_PREFILL_DENSE_PROJECTIONS");
+        dense_projection_prefill_ = layer_major_prefill_ && dense_projection_env != nullptr
+            && std::strcmp(dense_projection_env, "0") != 0;
         const char* prefill_chunk_env = std::getenv("MIINFER_PREFILL_CHUNK");
         if (prefill_chunk_env != nullptr) {
             const auto requested = std::stoul(prefill_chunk_env);
@@ -644,6 +810,12 @@ private:
         const char* prefill_profile_env = std::getenv("MIINFER_PREFILL_PROFILE");
         prefill_profile_.enabled = layer_major_prefill_ && prefill_profile_env != nullptr
             && std::strcmp(prefill_profile_env, "0") != 0;
+        if (prefill_profile_.enabled) {
+            const char* position_env = std::getenv("MIINFER_PREFILL_PROFILE_POSITION");
+            if (position_env != nullptr) prefill_profile_.profile_position = std::stoull(position_env);
+            prefill_profile_.profile_chunk_base =
+                (prefill_profile_.profile_position / kPrefillBatch) * kPrefillBatch;
+        }
     }
 
     void init_layers() {
@@ -658,6 +830,19 @@ private:
             } else {
                 recurrent_layers_.push_back(std::make_unique<RecurrentLayer>(model_, i, empty_fixture));
                 layers_[i] = {recurrent_layers_.back().get(), nullptr};
+            }
+            if (prefill_profile_.enabled) {
+                if (layers_[i].recurrent != nullptr) {
+                    layers_[i].recurrent->stage_profile = &prefill_profile_.recurrent_layers[i];
+                    layers_[i].recurrent->stage_profile_position =
+                        static_cast<std::uint32_t>(prefill_profile_.profile_position);
+                    layers_[i].recurrent->stage_profile_chunk_base = prefill_profile_.profile_chunk_base;
+                } else {
+                    layers_[i].attention->stage_profile = &prefill_profile_.attention_layers[i];
+                    layers_[i].attention->stage_profile_position =
+                        static_cast<std::uint32_t>(prefill_profile_.profile_position);
+                    layers_[i].attention->stage_profile_chunk_base = prefill_profile_.profile_chunk_base;
+                }
             }
         }
     }
@@ -684,7 +869,7 @@ private:
     }
 
     void init_m12_dense_workspace() {
-        if (!dense_prefill_) return;
+        if (!dense_prefill_ && !dense_projection_prefill_) return;
         m12_dense_weights_ = allocate(kHidden * kFfnInner * sizeof(__half));
         m12_dense_input_ = allocate(kM12PrefillBatch * kFfnInner * sizeof(__half));
         std::string error;
@@ -824,6 +1009,7 @@ private:
     bool layer_major_prefill_ = false;
     bool gdn_chunkwise_prefill_ = false;
     bool dense_prefill_ = false;
+    bool dense_projection_prefill_ = false;
     std::size_t prefill_chunk_ = kPrefillBatch;
     PrefillProfile prefill_profile_;
     std::vector<hipGraphExec_t> decode_graphs_;

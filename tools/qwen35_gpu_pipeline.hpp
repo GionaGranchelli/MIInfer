@@ -23,6 +23,7 @@
 #include <initializer_list>
 #include <iostream>
 #include <memory>
+#include <limits>
 #include <numeric>
 #include <optional>
 #include <span>
@@ -704,10 +705,21 @@ struct RecurrentLayer {
     struct StageProfile {
         std::array<hipEvent_t, 14> start{};
         std::array<hipEvent_t, 14> end{};
+        hipEvent_t tail_start = nullptr;
+        hipEvent_t tail_end = nullptr;
+        hipEvent_t prepare_start = nullptr;
+        hipEvent_t prepare_end = nullptr;
+        hipEvent_t ordered_start = nullptr;
+        hipEvent_t ordered_end = nullptr;
+        mutable bool tail_recorded = false;
+        mutable bool prepare_recorded = false;
+        mutable bool ordered_recorded = false;
+        mutable std::array<bool, 14> stage_recorded{};
     };
     bool no_decay_store = false;
     StageProfile* stage_profile = nullptr;
     std::uint32_t stage_profile_position = 0;
+    std::size_t stage_profile_chunk_base = 0;
     bool reuse_projection_q8 = false;
     bool q5_q8_1_mmvq = false;
     bool q4_q8_1_mmvq = false;
@@ -744,6 +756,8 @@ struct RecurrentLayer {
     bool prefill_batch_enabled = false;
     bool prefill_recurrent_batch = false;
     bool prefill_recurrent_q8 = false;
+    bool dense_projection_prefill = false;
+    bool dense_qkv_prefill = false;
     bool prefill_gdn_chunkwise = false;
     bool prefill_dense_ffn_down = false;
     std::size_t prefill_capacity = kPrefillBatch;
@@ -880,6 +894,12 @@ struct RecurrentLayer {
         const char* prefill_dense_env = std::getenv("MIINFER_PREFILL_DENSE_FFN_DOWN");
         prefill_dense_ffn_down = prefill_batch_enabled
             && prefill_dense_env != nullptr && std::strcmp(prefill_dense_env, "0") != 0;
+        const char* dense_projection_env = std::getenv("MIINFER_PREFILL_DENSE_PROJECTIONS");
+        dense_projection_prefill = prefill_batch_enabled
+            && dense_projection_env != nullptr && std::strcmp(dense_projection_env, "0") != 0;
+        const char* dense_qkv_env = std::getenv("MIINFER_PREFILL_DENSE_QKV");
+        dense_qkv_prefill = dense_projection_prefill
+            && dense_qkv_env != nullptr && std::strcmp(dense_qkv_env, "0") != 0;
         prefill_capacity = (prefill_dense_ffn_down || prefill_gdn_chunkwise)
             ? kM12PrefillBatch
             : kPrefillBatch;
@@ -912,9 +932,15 @@ struct RecurrentLayer {
             if (!d_qkv_native) {
                 d_qkv = allocate(qkv_weight.byte_size);
             }
+            if (dense_qkv_prefill && !d_qkv) {
+                d_qkv = allocate(qkv_weight.byte_size);
+            }
             if (native_attn_gate_enabled() && gate_weight.type == miinfer::GgufTensorType::q4_k) {
                 d_attn_gate_native = copy_native_tensor(gate_weight);
             } else {
+                d_gate = allocate(gate_weight.byte_size);
+            }
+            if (dense_qkv_prefill && !d_gate) {
                 d_gate = allocate(gate_weight.byte_size);
             }
         }
@@ -936,6 +962,10 @@ struct RecurrentLayer {
             d_ffn_gate_native = copy_native_tensor(ffn_gate_weight);
             d_ffn_up_native = copy_native_tensor(ffn_up_weight);
         } else {
+            d_ffn_gate = allocate(ffn_gate_weight.byte_size);
+            d_ffn_up = allocate(ffn_up_weight.byte_size);
+        }
+        if (dense_projection_prefill && !d_ffn_gate) {
             d_ffn_gate = allocate(ffn_gate_weight.byte_size);
             d_ffn_up = allocate(ffn_up_weight.byte_size);
         }
@@ -1193,13 +1223,53 @@ struct RecurrentLayer {
 
     void stage_start(std::size_t stage, std::uint32_t position) const {
         if (stage_profile != nullptr && stage_profile_position == position) {
-            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->start[stage], nullptr));
+            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->start[stage], hipStreamPerThread));
         }
     }
 
     void stage_end(std::size_t stage, std::uint32_t position) const {
         if (stage_profile != nullptr && stage_profile_position == position) {
-            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->end[stage], nullptr));
+            stage_profile->stage_recorded[stage] = true;
+            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->end[stage], hipStreamPerThread));
+        }
+    }
+
+    void profile_tail_start(std::size_t chunk_base) const {
+        if (stage_profile != nullptr && stage_profile_chunk_base == chunk_base) {
+            stage_profile->tail_recorded = true;
+            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->tail_start, hipStreamPerThread));
+        }
+    }
+
+    void profile_tail_end(std::size_t chunk_base) const {
+        if (stage_profile != nullptr && stage_profile_chunk_base == chunk_base) {
+            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->tail_end, hipStreamPerThread));
+        }
+    }
+
+    void profile_prepare_start(std::size_t chunk_base) const {
+        if (stage_profile != nullptr && stage_profile_chunk_base == chunk_base) {
+            stage_profile->prepare_recorded = true;
+            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->prepare_start, hipStreamPerThread));
+        }
+    }
+
+    void profile_prepare_end(std::size_t chunk_base) const {
+        if (stage_profile != nullptr && stage_profile_chunk_base == chunk_base) {
+            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->prepare_end, hipStreamPerThread));
+        }
+    }
+
+    void profile_ordered_start(std::size_t chunk_base) const {
+        if (stage_profile != nullptr && stage_profile_chunk_base == chunk_base) {
+            stage_profile->ordered_recorded = true;
+            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->ordered_start, hipStreamPerThread));
+        }
+    }
+
+    void profile_ordered_end(std::size_t chunk_base) const {
+        if (stage_profile != nullptr && stage_profile_chunk_base == chunk_base) {
+            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->ordered_end, hipStreamPerThread));
         }
     }
 
@@ -1210,6 +1280,45 @@ struct RecurrentLayer {
         }
         auto* normalized_out = static_cast<float*>(prefill_normalized->get());
         auto* q8_out = static_cast<miinfer::Q8_1Block*>(prefill_q8_1->get());
+        if (dense_qkv_prefill && m12_dense_workspace_ready && d_qkv && d_gate
+            && !d_qkv_gate_combined && m12_dense_input != nullptr
+            && m12_dense_weights != nullptr && m12_dense_handle != nullptr) {
+            for (std::size_t i = 0; i < count; ++i) {
+                if (!normalized_ready) {
+                    miinfer::launch_qwen3_rms_norm(
+                        inputs + i * kHidden, static_cast<const float*>(d_attn_norm->get()),
+                        normalized_out + i * kHidden, kHidden, model.config().rms_epsilon);
+                }
+            }
+            miinfer::launch_m12_f32_to_fp16(
+                normalized_out, m12_dense_input, count * kHidden, hipStreamPerThread);
+            if (qkv_weight.type == miinfer::GgufTensorType::q4_k) {
+                miinfer::launch_m12_q4k_to_fp16(
+                    static_cast<const miinfer::Q4KDeviceBlock*>(d_qkv->get()),
+                    m12_dense_weights, kChannels, kHidden, hipStreamPerThread);
+            } else {
+                miinfer::launch_m12_q6k_to_fp16(
+                    static_cast<const miinfer::Q6KDeviceBlock*>(d_qkv->get()),
+                    m12_dense_weights, kChannels, kHidden, hipStreamPerThread);
+            }
+            std::string error;
+            if (!miinfer::launch_rocblas_gemm_fp16_batch(
+                    *m12_dense_handle, m12_dense_weights, m12_dense_input,
+                    static_cast<float*>(prefill_qkv->get()), kChannels, kHidden,
+                    static_cast<int>(count), error)) {
+                throw std::runtime_error(error);
+            }
+            miinfer::launch_m12_q4k_to_fp16(
+                static_cast<const miinfer::Q4KDeviceBlock*>(d_gate->get()),
+                m12_dense_weights, kInner, kHidden, hipStreamPerThread);
+            if (!miinfer::launch_rocblas_gemm_fp16_batch(
+                    *m12_dense_handle, m12_dense_weights, m12_dense_input,
+                    static_cast<float*>(prefill_gate->get()), kInner, kHidden,
+                    static_cast<int>(count), error)) {
+                throw std::runtime_error(error);
+            }
+            return true;
+        }
         for (std::size_t i = 0; i < count; ++i) {
             if (!normalized_ready) {
                 miinfer::launch_qwen3_rms_norm(
@@ -1295,7 +1404,8 @@ struct RecurrentLayer {
                                std::size_t offset,
                                const float* next_norm_weight = nullptr,
                                float* next_normalized = nullptr,
-                               bool defer_dense_down = false) {
+                               bool defer_dense_down = false,
+                               bool defer_dense_gate_up = false) {
         if (!prefill_tail_batch_supported() || inputs == nullptr || outputs == nullptr || count != 4) {
             throw std::runtime_error("invalid recurrent prefill batch tail");
         }
@@ -1402,6 +1512,7 @@ struct RecurrentLayer {
                 q8_batch + i * (kHidden / miinfer::kQ8_1BlockSize), kHidden,
                 hipStreamPerThread);
         }
+        if (defer_dense_gate_up) return;
         if (d_ffn_swiglu_native) {
             launch_q4k_wave_fused_gate_up_swiglu_paired_batched4(
                 static_cast<const Q4KWaveSwigluFusedTile*>(d_ffn_swiglu_native->get()),
@@ -1495,6 +1606,99 @@ struct RecurrentLayer {
         }
         const bool dense_batch = prefill_dense_ffn_down && m12_dense_workspace_ready
             && (count == kPrefillBatch || count == kM12PrefillBatch);
+        const bool dense_gate_up = dense_projection_prefill && m12_dense_workspace_ready
+            && d_ffn_gate && d_ffn_up && m12_dense_input != nullptr
+            && m12_dense_weights != nullptr && m12_dense_handle != nullptr;
+        if (dense_gate_up) {
+            for (std::size_t offset = 0; offset < count; offset += 4) {
+                finish_prefill_batch4(
+                    inputs + offset * kHidden, outputs + offset * kHidden, 4, offset,
+                    next_norm_weight, next_normalized, dense_batch, true);
+            }
+            miinfer::launch_m12_f32_to_fp16(
+                static_cast<const float*>(prefill_post_normalized->get()),
+                m12_dense_input, count * kHidden, hipStreamPerThread);
+            miinfer::launch_m12_q4k_to_fp16(
+                static_cast<const miinfer::Q4KDeviceBlock*>(d_ffn_gate->get()),
+                m12_dense_weights, kFfnInner, kHidden, hipStreamPerThread);
+            std::string error;
+            if (!miinfer::launch_rocblas_gemm_fp16_batch(
+                    *m12_dense_handle, m12_dense_weights, m12_dense_input,
+                    static_cast<float*>(prefill_ffn_gate->get()), kFfnInner, kHidden,
+                    static_cast<int>(count), error)) {
+                throw std::runtime_error(error);
+            }
+            miinfer::launch_m12_q4k_to_fp16(
+                static_cast<const miinfer::Q4KDeviceBlock*>(d_ffn_up->get()),
+                m12_dense_weights, kFfnInner, kHidden, hipStreamPerThread);
+            if (!miinfer::launch_rocblas_gemm_fp16_batch(
+                    *m12_dense_handle, m12_dense_weights, m12_dense_input,
+                    static_cast<float*>(prefill_ffn_up->get()), kFfnInner, kHidden,
+                    static_cast<int>(count), error)) {
+                throw std::runtime_error(error);
+            }
+            auto* activation = static_cast<float*>(prefill_ffn_activation->get());
+            auto* q8_batch = static_cast<miinfer::Q8_1Block*>(prefill_q8_1->get());
+            for (std::size_t i = 0; i < count; ++i) {
+                miinfer::launch_qwen3_silu_mul(
+                    static_cast<const float*>(prefill_ffn_gate->get()) + i * kFfnInner,
+                    static_cast<const float*>(prefill_ffn_up->get()) + i * kFfnInner,
+                    activation + i * kFfnInner, kFfnInner, hipStreamPerThread);
+                miinfer::launch_q8_1_quantize_f32(
+                    activation + i * kFfnInner,
+                    q8_batch + i * (kFfnInner / miinfer::kQ8_1BlockSize),
+                    kFfnInner, hipStreamPerThread);
+            }
+            if (dense_batch) {
+                miinfer::launch_m12_f32_to_fp16(
+                    activation, m12_dense_input, count * kFfnInner, hipStreamPerThread);
+                const auto* quantized = static_cast<const std::byte*>(d_ffn_down_dense_source->get());
+                if (ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
+                    miinfer::launch_m12_q4k_to_fp16(
+                        reinterpret_cast<const miinfer::Q4KDeviceBlock*>(quantized),
+                        m12_dense_weights, kHidden, kFfnInner, hipStreamPerThread);
+                } else {
+                    miinfer::launch_m12_q6k_to_fp16(
+                        reinterpret_cast<const miinfer::Q6KDeviceBlock*>(quantized),
+                        m12_dense_weights, kHidden, kFfnInner, hipStreamPerThread);
+                }
+                std::string down_error;
+                if (!miinfer::launch_rocblas_gemm_fp16_batch(
+                        *m12_dense_handle, m12_dense_weights, m12_dense_input,
+                        static_cast<float*>(prefill_projected->get()), kHidden, kFfnInner,
+                        static_cast<int>(count), down_error)) {
+                    throw std::runtime_error(down_error);
+                }
+            } else if (ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
+                launch_q4k_wave_gemv_batched4(
+                    static_cast<const Q4KWaveTile*>(d_ffn_down_native->get()), q8_batch,
+                    static_cast<float*>(prefill_projected->get()), kHidden, kFfnInner,
+                    hipStreamPerThread);
+            } else {
+                launch_q6k_wave_gemv_batched4(
+                    static_cast<const Q6KWaveTile*>(d_ffn_down_native->get()), q8_batch,
+                    static_cast<float*>(prefill_projected->get()), kHidden, kFfnInner,
+                    hipStreamPerThread);
+            }
+            auto* residual_batch = static_cast<float*>(prefill_residual->get());
+            auto* projected_batch = static_cast<float*>(prefill_projected->get());
+            auto* output_batch = outputs;
+            auto* next_norm = next_normalized;
+            for (std::size_t i = 0; i < count; ++i) {
+                if (next_norm_weight != nullptr && next_norm != nullptr) {
+                    miinfer::launch_qwen3_fused_add_rms_norm(
+                        residual_batch + i * kHidden, projected_batch + i * kHidden,
+                        next_norm_weight, output_batch + i * kHidden,
+                        next_norm + i * kHidden, kHidden, model.config().rms_epsilon,
+                        nullptr, nullptr);
+                } else {
+                    miinfer::launch_qwen3_add(
+                        residual_batch + i * kHidden, projected_batch + i * kHidden,
+                        output_batch + i * kHidden, kHidden, hipStreamPerThread);
+                }
+            }
+            return;
+        }
         if (dense_batch) {
             for (std::size_t offset = 0; offset < count; offset += 4) {
                 finish_prefill_batch4(
@@ -2116,9 +2320,20 @@ struct FullAttentionLayer {
     struct StageProfile {
         std::array<hipEvent_t, 15> start{};
         std::array<hipEvent_t, 15> end{};
+        hipEvent_t tail_start = nullptr;
+        hipEvent_t tail_end = nullptr;
+        hipEvent_t prepare_start = nullptr;
+        hipEvent_t prepare_end = nullptr;
+        hipEvent_t ordered_start = nullptr;
+        hipEvent_t ordered_end = nullptr;
+        mutable bool tail_recorded = false;
+        mutable bool prepare_recorded = false;
+        mutable bool ordered_recorded = false;
+        mutable std::array<bool, 15> stage_recorded{};
     };
     StageProfile* stage_profile = nullptr;
     std::uint32_t stage_profile_position = 0;
+    std::size_t stage_profile_chunk_base = 0;
 
     FullAttentionLayer(const miinfer::Qwen35Model& model_value, std::size_t layer)
         : model(model_value),
@@ -2328,13 +2543,53 @@ struct FullAttentionLayer {
 
     void stage_start(std::size_t stage, std::uint32_t position) const {
         if (stage_profile != nullptr && stage_profile_position == position) {
-            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->start[stage], nullptr));
+            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->start[stage], hipStreamPerThread));
         }
     }
 
     void stage_end(std::size_t stage, std::uint32_t position) const {
         if (stage_profile != nullptr && stage_profile_position == position) {
-            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->end[stage], nullptr));
+            stage_profile->stage_recorded[stage] = true;
+            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->end[stage], hipStreamPerThread));
+        }
+    }
+
+    void profile_tail_start(std::size_t chunk_base) const {
+        if (stage_profile != nullptr && stage_profile_chunk_base == chunk_base) {
+            stage_profile->tail_recorded = true;
+            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->tail_start, hipStreamPerThread));
+        }
+    }
+
+    void profile_tail_end(std::size_t chunk_base) const {
+        if (stage_profile != nullptr && stage_profile_chunk_base == chunk_base) {
+            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->tail_end, hipStreamPerThread));
+        }
+    }
+
+    void profile_prepare_start(std::size_t chunk_base) const {
+        if (stage_profile != nullptr && stage_profile_chunk_base == chunk_base) {
+            stage_profile->prepare_recorded = true;
+            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->prepare_start, hipStreamPerThread));
+        }
+    }
+
+    void profile_prepare_end(std::size_t chunk_base) const {
+        if (stage_profile != nullptr && stage_profile_chunk_base == chunk_base) {
+            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->prepare_end, hipStreamPerThread));
+        }
+    }
+
+    void profile_ordered_start(std::size_t chunk_base) const {
+        if (stage_profile != nullptr && stage_profile_chunk_base == chunk_base) {
+            stage_profile->ordered_recorded = true;
+            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->ordered_start, hipStreamPerThread));
+        }
+    }
+
+    void profile_ordered_end(std::size_t chunk_base) const {
+        if (stage_profile != nullptr && stage_profile_chunk_base == chunk_base) {
+            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->ordered_end, hipStreamPerThread));
         }
     }
 
@@ -2945,10 +3200,30 @@ struct GpuLayerRef {
         return false;
     }
 
+    void profile_ordered_start(std::size_t chunk_base) const {
+        if (recurrent != nullptr) recurrent->profile_ordered_start(chunk_base);
+        else if (attention != nullptr) attention->profile_ordered_start(chunk_base);
+    }
+
+    void profile_ordered_end(std::size_t chunk_base) const {
+        if (recurrent != nullptr) recurrent->profile_ordered_end(chunk_base);
+        else if (attention != nullptr) attention->profile_ordered_end(chunk_base);
+    }
+
     bool prepare_prefill_batch(const float* inputs, std::size_t count,
-                               bool normalized_ready = false) const {
-        if (recurrent != nullptr) return recurrent->prepare_prefill_batch(inputs, count, normalized_ready);
-        return attention != nullptr && attention->prepare_prefill_batch(inputs, count, normalized_ready);
+                               bool normalized_ready = false,
+                               std::size_t profile_chunk_base = std::numeric_limits<std::size_t>::max()) const {
+        if (recurrent != nullptr) {
+            recurrent->profile_prepare_start(profile_chunk_base);
+            const bool result = recurrent->prepare_prefill_batch(inputs, count, normalized_ready);
+            recurrent->profile_prepare_end(profile_chunk_base);
+            return result;
+        }
+        if (attention == nullptr) return false;
+        attention->profile_prepare_start(profile_chunk_base);
+        const bool result = attention->prepare_prefill_batch(inputs, count, normalized_ready);
+        attention->profile_prepare_end(profile_chunk_base);
+        return result;
     }
 
     const float* prefill_normalized_at(std::size_t index) const {
@@ -2979,11 +3254,16 @@ struct GpuLayerRef {
 
     void finish_prefill_batch(const float* inputs, float* outputs, std::size_t count,
                               const float* next_norm_weight = nullptr,
-                              float* next_normalized = nullptr) const {
+                              float* next_normalized = nullptr,
+                              std::size_t profile_chunk_base = std::numeric_limits<std::size_t>::max()) const {
         if (recurrent != nullptr) {
+            recurrent->profile_tail_start(profile_chunk_base);
             recurrent->finish_prefill_batch(inputs, outputs, count, next_norm_weight, next_normalized);
+            recurrent->profile_tail_end(profile_chunk_base);
         } else if (attention != nullptr) {
+            attention->profile_tail_start(profile_chunk_base);
             attention->finish_prefill_batch(inputs, outputs, count, next_norm_weight, next_normalized);
+            attention->profile_tail_end(profile_chunk_base);
         } else {
             throw std::runtime_error("empty qwen35 GPU layer reference");
         }

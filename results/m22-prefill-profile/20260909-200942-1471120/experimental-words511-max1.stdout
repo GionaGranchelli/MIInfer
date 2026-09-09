@@ -1,0 +1,1055 @@
+hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello Prefill operator profile: prompt=512 chunks=8 wall_ms=11146.7 sampled_position=511 batch_width=B4 (M12 batched4 GEMV) chunk_base=448 embedding_ms=7.7077
+  layer=0 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.009281
+  layer=0 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=0 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=0 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02112
+  layer=0 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01616
+  layer=0 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00896
+  layer=0 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=0 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=0 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=0 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=0 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=0 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=0 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=0 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=0 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.2204 total_ms=15.2839
+  layer=0 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=4.16817
+  layer=1 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=1 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=1 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=1 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0216
+  layer=1 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01632
+  layer=1 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00896
+  layer=1 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=1 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=1 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=1 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=1 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=1 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=1 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=1 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=1 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.2033 total_ms=15.2625
+  layer=1 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.94481
+  layer=2 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=2 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004001
+  layer=2 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=2 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02176
+  layer=2 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01616
+  layer=2 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00928
+  layer=2 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=2 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=2 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=2 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=2 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=2 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=2 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=2 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=2 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.2356 total_ms=15.2949
+  layer=2 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.92977
+  layer=3 kind=attention family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=3 kind=attention family=q_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=3 kind=attention family=query_norm_rope stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01216
+  layer=3 kind=attention family=k_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=3 kind=attention family=v_projection stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=3 kind=attention family=kv_store stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004161
+  layer=3 kind=attention family=attention stage=6 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.012
+  layer=3 kind=attention family=attention_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.17168
+  layer=3 kind=attention family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=3 kind=attention family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=3 kind=attention family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=3 kind=attention family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=3 kind=attention family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=3 kind=attention family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=3 kind=attention family=residual stage=14 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=3 kind=attention family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=13.0026 total_ms=13.2192
+  layer=3 kind=attention family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.54257
+  layer=4 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=4 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=4 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=4 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02144
+  layer=4 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01616
+  layer=4 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00896
+  layer=4 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=4 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=4 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=4 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=4 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=4 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=4 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=4 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=4 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.1962 total_ms=15.2551
+  layer=4 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.94145
+  layer=5 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=5 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=5 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=5 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02192
+  layer=5 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01648
+  layer=5 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0088
+  layer=5 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=5 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=5 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=5 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=5 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=5 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=5 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=5 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=5 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.214 total_ms=15.2735
+  layer=5 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.93361
+  layer=6 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=6 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=6 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=6 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02176
+  layer=6 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01648
+  layer=6 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0136
+  layer=6 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=6 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=6 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=6 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=6 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=6 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=6 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=6 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=6 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.2129 total_ms=15.277
+  layer=6 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.93601
+  layer=7 kind=attention family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=7 kind=attention family=q_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=7 kind=attention family=query_norm_rope stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.012
+  layer=7 kind=attention family=k_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=7 kind=attention family=v_projection stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=7 kind=attention family=kv_store stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=7 kind=attention family=attention stage=6 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01184
+  layer=7 kind=attention family=attention_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.171681
+  layer=7 kind=attention family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=7 kind=attention family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=7 kind=attention family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=7 kind=attention family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=7 kind=attention family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=7 kind=attention family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=7 kind=attention family=residual stage=14 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=7 kind=attention family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=13.0325 total_ms=13.2488
+  layer=7 kind=attention family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.54785
+  layer=8 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=8 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=8 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=8 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02176
+  layer=8 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01632
+  layer=8 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00864
+  layer=8 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=8 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=8 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=8 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=8 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=8 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=8 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=8 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=8 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=16.0111 total_ms=16.0701
+  layer=8 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.91569
+  layer=9 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=9 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=9 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=9 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02112
+  layer=9 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01632
+  layer=9 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0088
+  layer=9 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=9 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=9 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=9 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=9 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=9 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=9 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=9 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=9 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.9847 total_ms=16.0433
+  layer=9 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.92433
+  layer=10 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=10 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=10 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=10 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02192
+  layer=10 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0168
+  layer=10 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00928
+  layer=10 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=10 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=10 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=10 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=10 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=10 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=10 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=10 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=10 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.2409 total_ms=15.301
+  layer=10 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.94065
+  layer=11 kind=attention family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=11 kind=attention family=q_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=11 kind=attention family=query_norm_rope stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01216
+  layer=11 kind=attention family=k_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=11 kind=attention family=v_projection stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=11 kind=attention family=kv_store stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=11 kind=attention family=attention stage=6 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01184
+  layer=11 kind=attention family=attention_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.1712
+  layer=11 kind=attention family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=11 kind=attention family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=11 kind=attention family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=11 kind=attention family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=11 kind=attention family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=11 kind=attention family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=11 kind=attention family=residual stage=14 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=11 kind=attention family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=13.7983 total_ms=14.0143
+  layer=11 kind=attention family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.55425
+  layer=12 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=12 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=12 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=12 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0216
+  layer=12 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01616
+  layer=12 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00864
+  layer=12 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=12 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=12 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=12 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=12 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=12 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=12 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=12 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=12 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=16.0319 total_ms=16.0906
+  layer=12 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.91537
+  layer=13 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=13 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=13 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=13 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02176
+  layer=13 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01616
+  layer=13 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0088
+  layer=13 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=13 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=13 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=13 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=13 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=13 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=13 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=13 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=13 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.178 total_ms=15.2367
+  layer=13 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.94369
+  layer=14 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=14 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=14 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=14 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0216
+  layer=14 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01632
+  layer=14 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00864
+  layer=14 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=14 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=14 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=14 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=14 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=14 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=14 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=14 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=14 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=16.009 total_ms=16.0679
+  layer=14 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.92785
+  layer=15 kind=attention family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=15 kind=attention family=q_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=15 kind=attention family=query_norm_rope stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01216
+  layer=15 kind=attention family=k_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=15 kind=attention family=v_projection stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004321
+  layer=15 kind=attention family=kv_store stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=15 kind=attention family=attention stage=6 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01216
+  layer=15 kind=attention family=attention_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.17216
+  layer=15 kind=attention family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=15 kind=attention family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=15 kind=attention family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=15 kind=attention family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=15 kind=attention family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=15 kind=attention family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=15 kind=attention family=residual stage=14 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=15 kind=attention family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=13.8005 total_ms=14.0175
+  layer=15 kind=attention family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.54177
+  layer=16 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=16 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=16 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=16 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02224
+  layer=16 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01632
+  layer=16 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0088
+  layer=16 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=16 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=16 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=16 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=16 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=16 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=16 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=16 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=16 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.2266 total_ms=15.286
+  layer=16 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.93473
+  layer=17 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=17 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=17 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=17 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02176
+  layer=17 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01648
+  layer=17 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00928
+  layer=17 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=17 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=17 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=17 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=17 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=17 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=17 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=17 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=17 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=16.0338 total_ms=16.0937
+  layer=17 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.91841
+  layer=18 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=18 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=18 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=18 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02192
+  layer=18 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01664
+  layer=18 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0088
+  layer=18 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=18 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=18 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=18 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=18 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=18 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=18 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=18 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=18 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=16.0106 total_ms=16.0703
+  layer=18 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.91713
+  layer=19 kind=attention family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=19 kind=attention family=q_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=19 kind=attention family=query_norm_rope stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01216
+  layer=19 kind=attention family=k_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=19 kind=attention family=v_projection stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=19 kind=attention family=kv_store stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=19 kind=attention family=attention stage=6 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.012
+  layer=19 kind=attention family=attention_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.172961
+  layer=19 kind=attention family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=19 kind=attention family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=19 kind=attention family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=19 kind=attention family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=19 kind=attention family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=19 kind=attention family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=19 kind=attention family=residual stage=14 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=19 kind=attention family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=13.0031 total_ms=13.2207
+  layer=19 kind=attention family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.54513
+  layer=20 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=20 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=20 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=20 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02176
+  layer=20 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01616
+  layer=20 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0088
+  layer=20 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=20 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=20 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=20 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=20 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=20 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=20 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=20 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=20 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=16.0025 total_ms=16.0615
+  layer=20 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.92593
+  layer=21 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=21 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=21 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=21 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02144
+  layer=21 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01632
+  layer=21 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0088
+  layer=21 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=21 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=21 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=21 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=21 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=21 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=21 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=21 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=21 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=16.0153 total_ms=16.074
+  layer=21 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.92001
+  layer=22 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=22 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=22 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=22 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.022081
+  layer=22 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01616
+  layer=22 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0088
+  layer=22 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=22 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=22 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=22 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=22 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=22 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=22 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=22 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=22 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.2084 total_ms=15.2677
+  layer=22 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.94465
+  layer=23 kind=attention family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=23 kind=attention family=q_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=23 kind=attention family=query_norm_rope stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01232
+  layer=23 kind=attention family=k_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=23 kind=attention family=v_projection stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=23 kind=attention family=kv_store stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=23 kind=attention family=attention stage=6 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01184
+  layer=23 kind=attention family=attention_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.172961
+  layer=23 kind=attention family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=23 kind=attention family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=23 kind=attention family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=23 kind=attention family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=23 kind=attention family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=23 kind=attention family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=23 kind=attention family=residual stage=14 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=23 kind=attention family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=13.7656 total_ms=13.9832
+  layer=23 kind=attention family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.54481
+  layer=24 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=24 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=24 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=24 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0216
+  layer=24 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.016
+  layer=24 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0088
+  layer=24 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=24 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=24 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=24 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=24 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=24 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=24 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=24 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=24 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=16.0253 total_ms=16.0841
+  layer=24 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.92785
+  layer=25 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=25 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004001
+  layer=25 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=25 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02224
+  layer=25 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01616
+  layer=25 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0088
+  layer=25 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=25 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=25 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=25 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=25 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=25 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=25 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=25 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=25 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.2132 total_ms=15.2725
+  layer=25 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.93825
+  layer=26 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=26 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=26 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=26 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.021281
+  layer=26 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01616
+  layer=26 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0088
+  layer=26 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=26 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=26 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=26 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=26 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=26 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=26 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=26 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=26 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.9993 total_ms=16.0577
+  layer=26 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.92065
+  layer=27 kind=attention family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=27 kind=attention family=q_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=27 kind=attention family=query_norm_rope stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.012
+  layer=27 kind=attention family=k_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=27 kind=attention family=v_projection stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=27 kind=attention family=kv_store stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=27 kind=attention family=attention stage=6 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01216
+  layer=27 kind=attention family=attention_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.172001
+  layer=27 kind=attention family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=27 kind=attention family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=27 kind=attention family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=27 kind=attention family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=27 kind=attention family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=27 kind=attention family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=27 kind=attention family=residual stage=14 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=27 kind=attention family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=13.7746 total_ms=13.9912
+  layer=27 kind=attention family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.54593
+  layer=28 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=28 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=28 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=28 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02192
+  layer=28 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.016321
+  layer=28 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0088
+  layer=28 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=28 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=28 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=28 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=28 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=28 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=28 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=28 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=28 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.2047 total_ms=15.2641
+  layer=28 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.94577
+  layer=29 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=29 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=29 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=29 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02208
+  layer=29 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01616
+  layer=29 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00944
+  layer=29 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=29 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=29 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=29 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=29 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=29 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=29 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=29 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=29 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.9916 total_ms=16.0516
+  layer=29 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.92273
+  layer=30 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=30 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=30 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=30 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02192
+  layer=30 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01632
+  layer=30 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00912
+  layer=30 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=30 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=30 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=30 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=30 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=30 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=30 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=30 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=30 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=16.0153 total_ms=16.0749
+  layer=30 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.91729
+  layer=31 kind=attention family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=31 kind=attention family=q_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=31 kind=attention family=query_norm_rope stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01216
+  layer=31 kind=attention family=k_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=31 kind=attention family=v_projection stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=31 kind=attention family=kv_store stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=31 kind=attention family=attention stage=6 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01184
+  layer=31 kind=attention family=attention_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.17216
+  layer=31 kind=attention family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=31 kind=attention family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=31 kind=attention family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=31 kind=attention family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=31 kind=attention family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=31 kind=attention family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=31 kind=attention family=residual stage=14 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=31 kind=attention family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=12.9909 total_ms=13.2079
+  layer=31 kind=attention family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.54801
+  layer=32 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=32 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=32 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=32 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02192
+  layer=32 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01664
+  layer=32 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.008961
+  layer=32 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=32 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=32 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=32 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=32 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=32 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=32 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=32 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=32 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.9877 total_ms=16.0476
+  layer=32 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.91537
+  layer=33 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=33 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=33 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=33 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0216
+  layer=33 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01616
+  layer=33 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00896
+  layer=33 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=33 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=33 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=33 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=33 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=33 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=33 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=33 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=33 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.9991 total_ms=16.058
+  layer=33 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.91905
+  layer=34 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=34 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=34 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=34 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02176
+  layer=34 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01648
+  layer=34 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0088
+  layer=34 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=34 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=34 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=34 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=34 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=34 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=34 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=34 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=34 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.2359 total_ms=15.2951
+  layer=34 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.93857
+  layer=35 kind=attention family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=35 kind=attention family=q_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=35 kind=attention family=query_norm_rope stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.012
+  layer=35 kind=attention family=k_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=35 kind=attention family=v_projection stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=35 kind=attention family=kv_store stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=35 kind=attention family=attention stage=6 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01264
+  layer=35 kind=attention family=attention_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.16944
+  layer=35 kind=attention family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=35 kind=attention family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=35 kind=attention family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=35 kind=attention family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=35 kind=attention family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=35 kind=attention family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=35 kind=attention family=residual stage=14 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=35 kind=attention family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=13.793 total_ms=14.0079
+  layer=35 kind=attention family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.54529
+  layer=36 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=36 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=36 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=36 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0216
+  layer=36 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0216
+  layer=36 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00896
+  layer=36 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=36 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=36 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=36 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=36 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=36 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=36 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=36 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=36 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=16.0042 total_ms=16.0687
+  layer=36 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.91761
+  layer=37 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=37 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=37 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=37 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0216
+  layer=37 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01648
+  layer=37 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0088
+  layer=37 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=37 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=37 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=37 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=37 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=37 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=37 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=37 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=37 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.2137 total_ms=15.2729
+  layer=37 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.93969
+  layer=38 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=38 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=38 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=38 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02176
+  layer=38 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01648
+  layer=38 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0088
+  layer=38 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=38 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=38 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=38 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=38 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=38 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=38 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=38 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=38 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=16.0173 total_ms=16.0765
+  layer=38 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.92289
+  layer=39 kind=attention family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=39 kind=attention family=q_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=39 kind=attention family=query_norm_rope stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.012
+  layer=39 kind=attention family=k_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=39 kind=attention family=v_projection stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=39 kind=attention family=kv_store stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=39 kind=attention family=attention stage=6 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.012001
+  layer=39 kind=attention family=attention_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.16992
+  layer=39 kind=attention family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=39 kind=attention family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=39 kind=attention family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=39 kind=attention family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=39 kind=attention family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=39 kind=attention family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=39 kind=attention family=residual stage=14 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=39 kind=attention family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=13.7789 total_ms=13.9935
+  layer=39 kind=attention family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.54129
+  layer=40 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=40 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=40 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=40 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02128
+  layer=40 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01632
+  layer=40 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0088
+  layer=40 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=40 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=40 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=40 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=40 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=40 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=40 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=40 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=40 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.2287 total_ms=15.2874
+  layer=40 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.94881
+  layer=41 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=41 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=41 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=41 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02176
+  layer=41 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01632
+  layer=41 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0088
+  layer=41 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=41 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=41 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=41 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=41 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=41 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=41 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=41 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=41 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.9857 total_ms=16.0449
+  layer=41 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.91729
+  layer=42 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=42 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=42 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=42 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0216
+  layer=42 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01664
+  layer=42 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00896
+  layer=42 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=42 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=42 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=42 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=42 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=42 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=42 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=42 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=42 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=16.0207 total_ms=16.0802
+  layer=42 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.91569
+  layer=43 kind=attention family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=43 kind=attention family=q_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00432
+  layer=43 kind=attention family=query_norm_rope stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.012
+  layer=43 kind=attention family=k_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00432
+  layer=43 kind=attention family=v_projection stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=43 kind=attention family=kv_store stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=43 kind=attention family=attention stage=6 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01216
+  layer=43 kind=attention family=attention_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.169441
+  layer=43 kind=attention family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=43 kind=attention family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=43 kind=attention family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=43 kind=attention family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=43 kind=attention family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=43 kind=attention family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=43 kind=attention family=residual stage=14 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=43 kind=attention family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=13.0034 total_ms=13.218
+  layer=43 kind=attention family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.53889
+  layer=44 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=44 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=44 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=44 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0216
+  layer=44 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01632
+  layer=44 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00864
+  layer=44 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=44 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=44 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=44 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=44 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=44 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=44 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=44 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=44 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.9927 total_ms=16.0517
+  layer=44 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.92065
+  layer=45 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=45 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=45 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004001
+  layer=45 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02176
+  layer=45 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01648
+  layer=45 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00896
+  layer=45 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=45 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=45 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=45 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=45 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=45 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=45 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=45 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=45 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=16.0186 total_ms=16.0781
+  layer=45 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.91361
+  layer=46 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=46 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=46 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=46 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02176
+  layer=46 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01616
+  layer=46 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00896
+  layer=46 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=46 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=46 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=46 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=46 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=46 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=46 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=46 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=46 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.2229 total_ms=15.2823
+  layer=46 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.94081
+  layer=47 kind=attention family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=47 kind=attention family=q_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=47 kind=attention family=query_norm_rope stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.012
+  layer=47 kind=attention family=k_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=47 kind=attention family=v_projection stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=47 kind=attention family=kv_store stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=47 kind=attention family=attention stage=6 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01184
+  layer=47 kind=attention family=attention_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.169441
+  layer=47 kind=attention family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=47 kind=attention family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=47 kind=attention family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=47 kind=attention family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=47 kind=attention family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=47 kind=attention family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=47 kind=attention family=residual stage=14 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=47 kind=attention family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=13.8296 total_ms=14.0436
+  layer=47 kind=attention family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.54529
+  layer=48 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=48 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004001
+  layer=48 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=48 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02192
+  layer=48 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01616
+  layer=48 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00912
+  layer=48 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=48 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=48 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=48 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=48 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=48 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=48 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=48 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=48 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.9826 total_ms=16.042
+  layer=48 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.91537
+  layer=49 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=49 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=49 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=49 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02144
+  layer=49 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.016
+  layer=49 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00896
+  layer=49 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=49 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=49 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=49 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=49 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=49 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=49 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=49 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=49 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.2314 total_ms=15.2903
+  layer=49 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.94865
+  layer=50 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=50 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=50 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=50 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02176
+  layer=50 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0168
+  layer=50 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0088
+  layer=50 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=50 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=50 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=50 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=50 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=50 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=50 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=50 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=50 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.9597 total_ms=16.0193
+  layer=50 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.92849
+  layer=51 kind=attention family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=51 kind=attention family=q_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=51 kind=attention family=query_norm_rope stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01232
+  layer=51 kind=attention family=k_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=51 kind=attention family=v_projection stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=51 kind=attention family=kv_store stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=51 kind=attention family=attention stage=6 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.012
+  layer=51 kind=attention family=attention_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.171521
+  layer=51 kind=attention family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=51 kind=attention family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=51 kind=attention family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=51 kind=attention family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=51 kind=attention family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=51 kind=attention family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=51 kind=attention family=residual stage=14 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=51 kind=attention family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=13.8111 total_ms=14.0277
+  layer=51 kind=attention family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.56257
+  layer=52 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=52 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=52 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=52 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02688
+  layer=52 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01648
+  layer=52 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00896
+  layer=52 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=52 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=52 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=52 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=52 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=52 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=52 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=52 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=52 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.2045 total_ms=15.269
+  layer=52 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.93921
+  layer=53 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=53 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=53 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=53 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0216
+  layer=53 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01648
+  layer=53 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0088
+  layer=53 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=53 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=53 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=53 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=53 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=53 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=53 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=53 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=53 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.997 total_ms=16.0562
+  layer=53 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.92193
+  layer=54 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=54 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=54 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=54 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02224
+  layer=54 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01632
+  layer=54 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00896
+  layer=54 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=54 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=54 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=54 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=54 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=54 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=54 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=54 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=54 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.9957 total_ms=16.0556
+  layer=54 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.92577
+  layer=55 kind=attention family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=55 kind=attention family=q_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=55 kind=attention family=query_norm_rope stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01216
+  layer=55 kind=attention family=k_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=55 kind=attention family=v_projection stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00432
+  layer=55 kind=attention family=kv_store stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=55 kind=attention family=attention stage=6 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01232
+  layer=55 kind=attention family=attention_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.17088
+  layer=55 kind=attention family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=55 kind=attention family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=55 kind=attention family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=55 kind=attention family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=55 kind=attention family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=55 kind=attention family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=55 kind=attention family=residual stage=14 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=55 kind=attention family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=12.9992 total_ms=13.2156
+  layer=55 kind=attention family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.55281
+  layer=56 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=56 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=56 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=56 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02176
+  layer=56 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01632
+  layer=56 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.008801
+  layer=56 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=56 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=56 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=56 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=56 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=56 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=56 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=56 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=56 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.2287 total_ms=15.2877
+  layer=56 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.93985
+  layer=57 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=57 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=57 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=57 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02192
+  layer=57 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01664
+  layer=57 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.008961
+  layer=57 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=57 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=57 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=57 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=57 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=57 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=57 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=57 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=57 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.2148 total_ms=15.2746
+  layer=57 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.93857
+  layer=58 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=58 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=58 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=58 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02176
+  layer=58 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01632
+  layer=58 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00896
+  layer=58 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=58 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=58 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=58 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=58 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=58 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=58 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=58 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=58 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.2394 total_ms=15.2986
+  layer=58 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.93825
+  layer=59 kind=attention family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=59 kind=attention family=q_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=59 kind=attention family=query_norm_rope stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01216
+  layer=59 kind=attention family=k_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=59 kind=attention family=v_projection stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=59 kind=attention family=kv_store stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=59 kind=attention family=attention stage=6 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01184
+  layer=59 kind=attention family=attention_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.169121
+  layer=59 kind=attention family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=59 kind=attention family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=59 kind=attention family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=59 kind=attention family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=59 kind=attention family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=59 kind=attention family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=59 kind=attention family=residual stage=14 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=59 kind=attention family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=13.0079 total_ms=13.2216
+  layer=59 kind=attention family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.54529
+  layer=60 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=60 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=60 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=60 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0216
+  layer=60 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01616
+  layer=60 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0088
+  layer=60 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=60 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=60 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=60 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=60 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=60 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=60 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=60 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=60 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.189 total_ms=15.2481
+  layer=60 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.96401
+  layer=61 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=61 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=61 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=61 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02208
+  layer=61 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01648
+  layer=61 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.0088
+  layer=61 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=61 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=61 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=61 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=61 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=61 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=61 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=61 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=61 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.2162 total_ms=15.2759
+  layer=61 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.94417
+  layer=62 kind=recurrent family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=62 kind=recurrent family=qkv_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=62 kind=recurrent family=gate_projection stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=62 kind=recurrent family=recurrent_parameter_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.02208
+  layer=62 kind=recurrent family=conv_and_head_norm stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01616
+  layer=62 kind=recurrent family=gdn_scan stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00896
+  layer=62 kind=recurrent family=recurrent_gate stage=6 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=62 kind=recurrent family=ssm_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=62 kind=recurrent family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=62 kind=recurrent family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=62 kind=recurrent family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=62 kind=recurrent family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=62 kind=recurrent family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=62 kind=recurrent family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=62 kind=recurrent family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=15.2233 total_ms=15.2828
+  layer=62 kind=recurrent family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.94625
+  layer=63 kind=attention family=normalization stage=0 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=63 kind=attention family=q_projection stage=1 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=63 kind=attention family=query_norm_rope stage=2 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.01216
+  layer=63 kind=attention family=k_projection stage=3 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.004
+  layer=63 kind=attention family=v_projection stage=4 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=63 kind=attention family=kv_store stage=5 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.00416
+  layer=63 kind=attention family=attention stage=6 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.012
+  layer=63 kind=attention family=attention_output_projection stage=7 batch=B4 kernel=batched4_gemv recorded=1 gpu_ms=0.17024
+  layer=63 kind=attention family=residual_post_norm stage=8 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=63 kind=attention family=post_normalization stage=9 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=63 kind=attention family=ffn_gate_up_projection stage=10 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=63 kind=attention family=swiglu stage=11 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=63 kind=attention family=ffn_down_projection stage=12 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=63 kind=attention family=residual stage=13 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=63 kind=attention family=residual stage=14 batch=B4 kernel=batched4_gemv recorded=0 gpu_ms=0
+  layer=63 kind=attention family=deferred_prefill_tail batch=B4 kernel=batched4_gemv gpu_ms=12.7636 total_ms=12.9786
+  layer=63 kind=attention family=prefill_batch_prepare batch=B64 kernel=B4_gemv recorded=1 gpu_ms=3.53905
+Top operator families (sampled position, summed layers):
+  rank=1 family=deferred_prefill_tail gpu_ms=963.449 share_of_sampled=78.769
+  rank=2 family=prefill_batch_prepare gpu_ms=245.656 share_of_sampled=20.0842
+  rank=3 family=projection_or_attention_output gpu_ms=2.73681 share_of_sampled=0.223754
+  rank=4 family=projection_or_k gpu_ms=1.11456 share_of_sampled=0.0911237
+  rank=5 family=projection_or_v gpu_ms=0.856002 share_of_sampled=0.0699845
+  rank=6 family=kv_or_head_norm gpu_ms=0.497924 share_of_sampled=0.040709
+  rank=7 family=projection_or_rope gpu_ms=0.390081 share_of_sampled=0.031892
+  rank=8 family=normalization gpu_ms=0.268481 share_of_sampled=0.0219503
+  rank=9 family=projection_or_norm gpu_ms=0.262083 share_of_sampled=0.0214272
+  rank=10 family=gdn_or_attention gpu_ms=0.192481 share_of_sampled=0.0157367
+  sampled_layer_gpu_ms=1215.42 accounted_sample_ms=1223.13 estimated_full_prefill_ms=9785.05 estimated_full_chunks=8 wall_ms=11146.7 note=full-chunk extrapolation; use wall_ms for qualification
+
+
