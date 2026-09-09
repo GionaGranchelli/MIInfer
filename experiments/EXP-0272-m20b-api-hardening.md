@@ -7,6 +7,9 @@ Non-loopback binding requires a configured key unless `--allow-insecure` is
 explicitly provided. `/healthz` and `/readyz` remain public; `/v1/models`,
 `/v1/chat/completions`, and `/metrics` require Bearer authentication when a
 key is configured.
+The bundled Web UI is intended for local unauthenticated use; authenticated
+external serving should use an OpenAI-compatible client that sends the Bearer
+key.
 
 ## Verification
 

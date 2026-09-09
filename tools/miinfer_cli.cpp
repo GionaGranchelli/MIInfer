@@ -79,12 +79,15 @@ struct RuntimeGenerateOptions {
     bool stream = true;
     std::function<bool()> should_cancel = nullptr;
     std::function<bool(std::uint32_t token, std::string_view piece)> on_token = nullptr;
+    std::function<void()> on_prefill_complete = nullptr;
+    std::function<void()> on_first_token = nullptr;
 };
 
 struct RuntimeGenerateStats {
     std::vector<std::uint32_t> tokens;
     std::string text;
     std::size_t prompt_tokens = 0;
+    std::size_t prefill_processed_tokens = 0;
     std::size_t generated_tokens = 0;
     double prefill_ms = 0.0;
     double decode_ms = 0.0;
@@ -264,7 +267,8 @@ public:
     }
 
     const float* prefill_layer_major(std::span<const std::uint32_t> prompt,
-                                     const std::function<bool()>& should_cancel) {
+                                     const std::function<bool()>& should_cancel,
+                                     std::size_t& processed_tokens) {
         // A 128-token request with a non-128 tail would otherwise make the
         // final nearly-full chunk fall back to per-token recurrent execution.
         const bool matrix_prefill = gdn_chunkwise_prefill_ || dense_prefill_;
@@ -369,6 +373,7 @@ public:
                 std::swap(current, next);
             }
             final_hidden = current + (count - 1) * kHidden;
+            processed_tokens = base + count;
         }
         MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
         return final_hidden;
@@ -405,11 +410,12 @@ public:
         GenerateStats stats;
         stats.prompt_tokens = prompt.size();
         const auto prefill_start = std::chrono::steady_clock::now();
-        const float* final_hidden = prefill_layer_major(prompt, opt.should_cancel);
+        const float* final_hidden = prefill_layer_major(prompt, opt.should_cancel,
+                                                        stats.prefill_processed_tokens);
         const auto prefill_end = std::chrono::steady_clock::now();
         stats.prefill_ms = std::chrono::duration<double, std::milli>(prefill_end - prefill_start).count();
         stats.prefill_tok_s = stats.prefill_ms > 0.0
-            ? (1000.0 * prompt.size()) / stats.prefill_ms : 0.0;
+            ? (1000.0 * stats.prefill_processed_tokens) / stats.prefill_ms : 0.0;
         if (final_hidden == nullptr) {
             stats.cancelled = true;
             stats.total_ms = std::chrono::duration<double, std::milli>(
@@ -417,6 +423,7 @@ public:
             return stats;
         }
         prefill_profile_.report(stats.prefill_ms, prompt.size());
+        if (opt.on_prefill_complete) opt.on_prefill_complete();
         if (opt.max_new_tokens == 0) {
             stats.total_ms = std::chrono::duration<double, std::milli>(
                 std::chrono::steady_clock::now() - gen_start).count();
@@ -428,6 +435,7 @@ public:
         const auto first_end = std::chrono::steady_clock::now();
         stats.first_token_ms = std::chrono::duration<double, std::milli>(first_end - first_start).count();
         stats.tokens.push_back(cur_token);
+        if (opt.on_first_token) opt.on_first_token();
         bool cancelled = false;
         if (cur_token != tokenizer_.eos_id() && cur_token != 151643 && cur_token != 151645) {
             const std::string piece = tokenizer_.decode(std::span<const std::uint32_t>(&cur_token, 1));
@@ -479,6 +487,7 @@ public:
                 return stats;
             }
             prefill_step(prompt[pos], pos);
+            stats.prefill_processed_tokens = pos + 1;
         }
         if (prompt.size() > 1) {
             MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
@@ -488,6 +497,7 @@ public:
         if (prompt.size() > 1 && stats.prefill_ms > 0.0) {
             stats.prefill_tok_s = (1000.0 * (prompt.size() - 1)) / stats.prefill_ms;
         }
+        if (opt.on_prefill_complete) opt.on_prefill_complete();
 
         // 2. Decode generation loop
         std::uint32_t cur_token = prompt.back();
@@ -495,28 +505,39 @@ public:
 
         if (!opt.stream && use_hip_graph_) {
             const std::size_t num_to_gen = std::min(opt.max_new_tokens, g_cache_capacity - pos);
+            std::size_t captured_count = 0;
             for (std::size_t i = 0; i < num_to_gen; ++i) {
-                if (g_shutdown_requested || (opt.should_cancel && opt.should_cancel())) { stats.cancelled = true; break; }
+                if (g_shutdown_requested || (opt.should_cancel && opt.should_cancel())) {
+                    stats.cancelled = true;
+                    break;
+                }
                 ensure_graph_captured(pos + i);
+                ++captured_count;
+            }
+            if (stats.cancelled) {
+                stats.total_ms = std::chrono::duration<double, std::milli>(
+                    std::chrono::steady_clock::now() - gen_start).count();
+                return stats;
             }
             MIINFER_HIP_CHECK(hipMemcpyAsync(
                 static_cast<std::uint32_t*>(d_decode_tokens_->get()) + pos,
                 &cur_token, sizeof(cur_token), hipMemcpyHostToDevice, hipStreamPerThread));
 
             const auto decode_start = std::chrono::steady_clock::now();
-            for (std::size_t i = 0; i < num_to_gen; ++i) {
+            for (std::size_t i = 0; i < captured_count; ++i) {
                 MIINFER_HIP_CHECK(hipGraphLaunch(decode_graphs_[pos + i], hipStreamPerThread));
             }
-            std::vector<std::uint32_t> raw_tokens(num_to_gen);
+            std::vector<std::uint32_t> raw_tokens(captured_count);
             MIINFER_HIP_CHECK(hipMemcpy(raw_tokens.data(),
                                         static_cast<const std::uint32_t*>(d_decode_tokens_->get()) + pos + 1,
-                                        num_to_gen * sizeof(std::uint32_t),
+                                        captured_count * sizeof(std::uint32_t),
                                         hipMemcpyDeviceToHost));
             const auto decode_end = std::chrono::steady_clock::now();
             stats.decode_ms = std::chrono::duration<double, std::milli>(decode_end - decode_start).count();
 
             for (std::uint32_t next : raw_tokens) {
                 stats.tokens.push_back(next);
+                if (stats.tokens.size() == 1 && opt.on_first_token) opt.on_first_token();
                 if (next == tokenizer_.eos_id() || next == 151643 || next == 151645) {
                     break;
                 }
@@ -542,6 +563,7 @@ public:
             }
             const std::uint32_t next = step_res.token;
             stats.tokens.push_back(next);
+            if (gen_idx == 0 && opt.on_first_token) opt.on_first_token();
             cur_token = next;
             ++pos;
 
@@ -1505,6 +1527,8 @@ int cmd_serve(int argc, char** argv) {
             Qwen35RuntimeEngine::GenerateOptions opt;
             opt.max_new_tokens = max_tokens;
             opt.should_cancel = client_cancelled;
+            opt.on_prefill_complete = [&] { state("prefill_completed"); };
+            opt.on_first_token = [&] { state("first_token"); };
             bool request_cancelled = false;
             opt.on_token = [&](std::uint32_t /*token*/, std::string_view piece) {
                 if (!client_connected) return false;
@@ -1516,15 +1540,13 @@ int cmd_serve(int argc, char** argv) {
             try {
                 const auto stats = engine.generate(prompt_tokens, opt);
                 request_cancelled = stats.cancelled;
-                if (!stats.cancelled) {
-                    state("prefill_completed");
-                    if (stats.generated_tokens > 0) state("first_token");
-                }
                 prompt_tokens_total += stats.prompt_tokens;
-                prefill_tokens_total += stats.prompt_tokens;
+                prefill_tokens_total += stats.prefill_processed_tokens;
                 prefill_us += static_cast<std::uint64_t>(stats.prefill_ms * 1000.0);
                 generated_tokens_total += stats.generated_tokens;
-                ttft_us += static_cast<std::uint64_t>(stats.first_token_ms * 1000.0);
+                const double ttft_ms = stats.generated_tokens > 0
+                    ? stats.prefill_ms + stats.first_token_ms : 0.0;
+                ttft_us += static_cast<std::uint64_t>(ttft_ms * 1000.0);
                 request_duration_us += static_cast<std::uint64_t>(stats.total_ms * 1000.0);
                 const bool cancelled = stats.cancelled || !client_connected;
                 if (cancelled) { ++cancelled_requests; state("cancelled"); }
@@ -1537,6 +1559,7 @@ int cmd_serve(int argc, char** argv) {
                           << ",\"tokenization_ms\":" << tokenization_ms
                           << ",\"queue_wait_ms\":" << queue_wait_ms
                           << ",\"prefill_ms\":" << stats.prefill_ms
+                          << ",\"prefill_processed_tokens\":" << stats.prefill_processed_tokens
                           << ",\"prefill_tokens_per_second\":" << stats.prefill_tok_s
                           << ",\"first_decode_token_ms\":" << stats.first_token_ms
                           << ",\"time_to_first_token_ms\":" << stats.prefill_ms + stats.first_token_ms
@@ -1561,19 +1584,19 @@ int cmd_serve(int argc, char** argv) {
             Qwen35RuntimeEngine::GenerateOptions opt;
             opt.max_new_tokens = max_tokens;
             opt.should_cancel = client_cancelled;
+            opt.on_prefill_complete = [&] { state("prefill_completed"); };
+            opt.on_first_token = [&] { state("first_token"); };
             // Server requests must observe shutdown between tokens; the bulk
             // graph path intentionally does not provide that interruption point.
             opt.stream = true;
             const auto stats = engine.generate(prompt_tokens, opt);
-            if (!stats.cancelled) {
-                state("prefill_completed");
-                if (stats.generated_tokens > 0) state("first_token");
-            }
             prompt_tokens_total += stats.prompt_tokens;
-            prefill_tokens_total += stats.prompt_tokens;
+            prefill_tokens_total += stats.prefill_processed_tokens;
             prefill_us += static_cast<std::uint64_t>(stats.prefill_ms * 1000.0);
             generated_tokens_total += stats.generated_tokens;
-            ttft_us += static_cast<std::uint64_t>(stats.first_token_ms * 1000.0);
+            const double ttft_ms = stats.generated_tokens > 0
+                ? stats.prefill_ms + stats.first_token_ms : 0.0;
+            ttft_us += static_cast<std::uint64_t>(ttft_ms * 1000.0);
             request_duration_us += static_cast<std::uint64_t>(stats.total_ms * 1000.0);
             if (stats.cancelled) { ++cancelled_requests; state("cancelled"); }
             else state("completed");
@@ -1585,6 +1608,7 @@ int cmd_serve(int argc, char** argv) {
                       << ",\"tokenization_ms\":" << tokenization_ms
                       << ",\"queue_wait_ms\":" << queue_wait_ms
                       << ",\"prefill_ms\":" << stats.prefill_ms
+                      << ",\"prefill_processed_tokens\":" << stats.prefill_processed_tokens
                       << ",\"prefill_tokens_per_second\":" << stats.prefill_tok_s
                       << ",\"first_decode_token_ms\":" << stats.first_token_ms
                       << ",\"time_to_first_token_ms\":" << stats.prefill_ms + stats.first_token_ms
@@ -1621,7 +1645,6 @@ int cmd_serve(int argc, char** argv) {
                 pending_requests.pop_front();
                 queue_depth.fetch_sub(1);
             }
-            std::cerr << "miinfer_request_state request_id=" << request.request_id << " state=queued\n";
             try {
                 handle_request(request);
             } catch (const std::exception& error) {
@@ -1767,6 +1790,8 @@ int cmd_serve(int argc, char** argv) {
             if (accepting && pending_requests.size() < kQueueCapacity) {
                 pending_requests.push_back(std::move(request));
                 queue_depth.fetch_add(1);
+                std::cerr << "miinfer_request_state request_id=" << pending_requests.back().request_id
+                          << " state=queued\n";
                 queued = true;
             }
         }

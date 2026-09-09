@@ -2364,9 +2364,9 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1788949575.177401,
-    "seen": 1788951192.8924286,
-    "ast_hash": "f6ff384912b480bedd88908d548a2ceb",
+    "mtime": 1788956489.0664048,
+    "seen": 1788956878.2483315,
+    "ast_hash": "03dffe18824ae4ab65f2fe88f32c1bc5",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
@@ -3276,9 +3276,9 @@
     "semantic_hash": ""
   },
   "scripts/bench-m18-runtime.py": {
-    "mtime": 1788947086.7558842,
-    "seen": 1788947581.1134868,
-    "ast_hash": "116bf6cdd2c685db4e19ceb86f9d7aa0",
+    "mtime": 1788956522.5442173,
+    "seen": 1788956878.2481716,
+    "ast_hash": "238831962467663a4c5c70ce6b77d407",
     "semantic_hash": ""
   },
   "experiments/EXP-0268-m18a-lifecycle-cancellation.md": {
@@ -3300,15 +3300,15 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0271-m18-runtime-only-curve.md": {
-    "mtime": 1788946465.8624978,
-    "seen": 1788947581.114119,
-    "ast_hash": "69def26b19745b612fdae428e68db1f9",
+    "mtime": 1788956741.868988,
+    "seen": 1788956878.2488365,
+    "ast_hash": "5500543acd3cb2a3ad2233047c438076",
     "semantic_hash": ""
   },
   "experiments/EXP-0272-m20b-api-hardening.md": {
-    "mtime": 1788946378.4200068,
-    "seen": 1788946390.3590467,
-    "ast_hash": "be0a311b9ad3b1e8d10230526c01956a",
+    "mtime": 1788956571.7089417,
+    "seen": 1788956878.2488382,
+    "ast_hash": "7420c925dce057aea9d833d819aeb454",
     "semantic_hash": ""
   },
   "experiments/EXP-0273-m20a-hermes-qualification.md": {
@@ -3654,9 +3654,9 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0274-m18-m20-qualification-closure.md": {
-    "mtime": 1788951082.1907063,
-    "seen": 1788951192.8929157,
-    "ast_hash": "53cad357b4f58dca14aef56a944f671c",
+    "mtime": 1788956933.2049158,
+    "seen": 1788957609.9814873,
+    "ast_hash": "ddb554b931ac5439c0247c7291f28cbd",
     "semantic_hash": ""
   },
   "results/m19-context/20260909-context/16384-retry/hardware-after-request.txt": {
@@ -4016,6 +4016,30 @@
   "results/m19-context/20260909-context/8192-tg64/readyz.txt": {
     "mtime": 1788950157.2250135,
     "seen": 1788951192.8930626,
+    "ast_hash": "3362bf74ffeeccf2b79818d19df2d621",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/131072-functional/request.json": {
+    "mtime": 1788951394.6555257,
+    "seen": 1788956878.2481449,
+    "ast_hash": "8abc3cd7d4d0da1b922dc8167097349e",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/131072-functional/command.txt": {
+    "mtime": 1788951373.2004018,
+    "seen": 1788956878.2489545,
+    "ast_hash": "189c401e97943d0de24347624f2a540b",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/131072-functional/hardware-before.txt": {
+    "mtime": 1788951373.3304298,
+    "seen": 1788956878.248956,
+    "ast_hash": "ef9f1dd49293e01c32fbcf8d7e4e0826",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/131072-functional/readyz.txt": {
+    "mtime": 1788951394.6189554,
+    "seen": 1788956878.2489574,
     "ast_hash": "3362bf74ffeeccf2b79818d19df2d621",
     "semantic_hash": ""
   }

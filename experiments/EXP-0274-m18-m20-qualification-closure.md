@@ -23,7 +23,7 @@ comparison when the pinned competitor cannot load the exact model.
 |---|---|---|
 | lifecycle/cancellation | PASS | EXP-0268; `results/m18-lifecycle/` |
 | strict request limits | PASS | `scripts/test-serve.sh`; CTest |
-| runtime-only MIInfer PP/TG | PASS | EXP-0271; `results/m18-runtime/` |
+| runtime-only MIInfer PP/first-token | PASS | EXP-0271; `results/m18-runtime/` |
 | pinned llama.cpp PP/TG | BLOCKED | EXP-0269: exact model unsupported at pin; compatible supplemental curve retained |
 | dynamic allocation 1K–128K | PASS | EXP-0270; `results/m19-context/20260909-allocation-sweep/` |
 | 1K inference qualification | PASS | EXP-0270 |
@@ -37,16 +37,17 @@ comparison when the pinned competitor cannot load the exact model.
 
 The retained short curve uses one generated token per case:
 
-| path | P9 PP tok/s | P129 PP tok/s | P513 PP tok/s | TG tok/s |
-|---|---:|---:|---:|---:|
-| default | 32.36 | 33.15 | 32.44 | 27.26–28.17 |
-| M12 experimental | 32.22 | 47.15 | 45.94 | 613.31–635.51 |
+| path | P9 PP tok/s | P129 PP tok/s | P513 PP tok/s |
+|---|---:|---:|---:|
+| default | 32.36 | 33.15 | 32.44 |
+| M12 experimental | 32.22 | 47.15 | 45.94 |
 
-The comparison excludes HTTP, JSON, ChatML, and Hermes. The mandated pinned
-llama.cpp binary rejects the exact model, so the requested pinned ratio and
-HTTP-versus-GPU attribution remain unavailable. A compatible, newer local
-llama.cpp build measured PP8/128/512 at 33.4849/151.2700/191.3250 tok/s and
-TG64 at 22.2467 tok/s; it is explicitly supplemental, not the pinned claim.
+The comparison excludes HTTP, JSON, ChatML, and Hermes. These historical
+one-token runs qualify PP and first-token timing only; they do not qualify TG.
+The mandated pinned llama.cpp binary rejects the exact model, so the requested
+pinned ratio remains unavailable. A compatible, newer local llama.cpp build
+measured PP8/128/512 at 33.4849/151.2700/191.3250 tok/s and TG64 at 22.2467
+tok/s; it is explicitly supplemental, not the pinned claim.
 
 ## Architectural conclusion
 

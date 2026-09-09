@@ -26,29 +26,33 @@ def command_output(command):
         return "UNAVAILABLE\n"
 
 
-def run_case(binary, model, prompt_words, mode, output):
+def run_case(binary, model, prompt_words, mode, max_tokens, output):
     prompt = "hello " * prompt_words
     env = os.environ.copy()
     if mode == "experimental":
         env["MIINFER_PREFILL_LAYER_MAJOR"] = "1"
     began = time.monotonic()
     result = subprocess.run(
-        [str(binary), "run", str(model), "--prompt", prompt, "--max-tokens", "1"],
+        [str(binary), "run", str(model), "--prompt", prompt, "--max-tokens", str(max_tokens)],
         capture_output=True, text=True, env=env, timeout=900, check=False)
     elapsed_ms = (time.monotonic() - began) * 1000.0
-    (output / f"{mode}-words{prompt_words}.stdout").write_text(result.stdout)
-    (output / f"{mode}-words{prompt_words}.stderr").write_text(result.stderr)
+    suffix = f"{mode}-words{prompt_words}-max{max_tokens}"
+    (output / f"{suffix}.stdout").write_text(result.stdout)
+    (output / f"{suffix}.stderr").write_text(result.stderr)
     prefill = re.search(r"Prefill Tokens:.*?\(([0-9.]+) ms, ([0-9.]+) tok/s\)", result.stderr)
     decode = re.search(r"Decode Tokens:.*?\(([0-9.]+) ms, ([0-9.]+) tok/s\)", result.stderr)
     ttft = re.search(r"First Token TTFT:\s+([0-9.]+) ms", result.stderr)
     total = re.search(r"Total Latency:\s+([0-9.]+) ms", result.stderr)
     prompt_match = re.search(r"Prompt tokens:\s+(\d+)", result.stderr)
+    generated_match = re.search(r"Decode Tokens:\s+(\d+)\s+tokens", result.stderr)
     peak_vram = re.search(r"device_peak_allocated_bytes=(\d+)", result.stderr)
     return {
         "mode": mode,
+        "benchmark_kind": "pp" if max_tokens == 1 else "tg",
+        "max_tokens": max_tokens,
         "prompt_words": prompt_words,
         "prompt_tokens": None if prompt_match is None else int(prompt_match.group(1)),
-        "generated_tokens": 1 if decode else 0,
+        "generated_tokens": None if generated_match is None else int(generated_match.group(1)),
         "prefill_ms": None if prefill is None else float(prefill.group(1)),
         "prefill_tok_s": None if prefill is None else float(prefill.group(2)),
         "decode_ms": None if decode is None else float(decode.group(1)),
@@ -56,11 +60,22 @@ def run_case(binary, model, prompt_words, mode, output):
         "first_decode_token_ms": None if ttft is None else float(ttft.group(1)),
         "ttft_ms": None if prefill is None or ttft is None
             else float(prefill.group(1)) + float(ttft.group(1)),
+        "steady_decode_tokens": None if generated_match is None else max(int(generated_match.group(1)) - 1, 0),
+        "steady_decode_ms": None if decode is None or ttft is None
+            else max(float(decode.group(1)) - float(ttft.group(1)), 0.0),
         "total_ms": None if total is None else float(total.group(1)),
         "peak_vram_bytes": None if peak_vram is None else int(peak_vram.group(1)),
         "wall_ms": elapsed_ms,
         "returncode": result.returncode,
     }
+
+
+def add_steady_rate(case):
+    tokens = case["steady_decode_tokens"]
+    milliseconds = case["steady_decode_ms"]
+    case["steady_decode_tok_s"] = (1000.0 * tokens / milliseconds
+                                    if tokens is not None and milliseconds else None)
+    return case
 
 
 def main():
@@ -70,6 +85,8 @@ def main():
     parser.add_argument("--output", type=Path, default=Path("results/m18-runtime"))
     parser.add_argument("--prompts", default="8,128,512")
     parser.add_argument("--modes", default="default,experimental")
+    parser.add_argument("--max-tokens", type=int, default=1,
+                        help="1 for PP-only/first-token runs; use 64 or 128 for TG")
     args = parser.parse_args()
     stamp = time.strftime("%Y%m%d-%H%M%S")
     output = args.output / f"{stamp}-{os.getpid()}"
@@ -92,7 +109,8 @@ def main():
     for mode in args.modes.split(","):
         for words in (int(value) for value in args.prompts.split(",")):
             print(f"running mode={mode} prompt_words={words}", flush=True)
-            cases.append(run_case(args.binary, args.model, words, mode, output))
+            cases.append(add_steady_rate(
+                run_case(args.binary, args.model, words, mode, args.max_tokens, output)))
     (output / "summary.json").write_text(json.dumps({
         **metadata,
         "hardware_after": command_output(["rocm-smi"]),
