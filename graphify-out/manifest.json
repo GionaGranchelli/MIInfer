@@ -2364,15 +2364,15 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1788900229.620976,
-    "seen": 1788900541.9727097,
-    "ast_hash": "16671d744776112975a39c70dc882bfe",
+    "mtime": 1788940883.7471302,
+    "seen": 1788940889.7901926,
+    "ast_hash": "1f11af8fa71adb233a833b79ebeb5994",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1788859619.6564295,
-    "seen": 1788859871.7837186,
-    "ast_hash": "b9c91cb5189716e725b4a2e6d01f5d9b",
+    "mtime": 1788940845.6953535,
+    "seen": 1788940875.1175463,
+    "ast_hash": "07ad3db703a73fcd944451dfb18613a1",
     "semantic_hash": ""
   },
   "docs/M9-AUTOREGRESSIVE-QUALIFICATION.md": {
@@ -2904,21 +2904,21 @@
     "semantic_hash": ""
   },
   "include/miinfer/openai_api.hpp": {
-    "mtime": 1788895543.877486,
-    "seen": 1788895840.3417687,
-    "ast_hash": "52b65bf731a43dac36c44d0ee024a804",
+    "mtime": 1788940666.1004074,
+    "seen": 1788940682.1034195,
+    "ast_hash": "ccbe38d5b08319569ebf174fbd13bd0d",
     "semantic_hash": ""
   },
   "src/openai_api.cpp": {
-    "mtime": 1788895543.8784862,
-    "seen": 1788895840.3418794,
-    "ast_hash": "e4abc6a66a0185529cdbcf35ee1a5c25",
+    "mtime": 1788940666.1014073,
+    "seen": 1788940682.1035879,
+    "ast_hash": "7f8d04bf83e3238b73270d68faa61be7",
     "semantic_hash": ""
   },
   "tests/openai_api_test.cpp": {
-    "mtime": 1788895745.112629,
-    "seen": 1788895840.3419068,
-    "ast_hash": "974235486f66056d5b2f29e5b70bce67",
+    "mtime": 1788940666.1014073,
+    "seen": 1788940682.1036215,
+    "ast_hash": "1935d249b4b562fa69b46e43af09c0b4",
     "semantic_hash": ""
   },
   "experiments/EXP-0265-m16d-openai-request-contract.md": {

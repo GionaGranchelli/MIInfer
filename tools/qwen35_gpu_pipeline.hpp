@@ -34,7 +34,9 @@
 
 namespace {
 
-constexpr std::size_t kCacheCapacity = 65536;
+// Set once before constructing the runtime. All cache and graph allocations
+// in this translation unit use the selected model-load-time capacity.
+std::size_t g_cache_capacity = 65536;
 // The layer-major prefill schedule stages a causal chunk, then drains it in
 // ordered B=4 groups where recurrent state and KV writes require ordering.
 constexpr std::size_t kPrefillBatch = 64;
@@ -2267,12 +2269,12 @@ struct FullAttentionLayer {
         value = allocate(1024 * sizeof(float)); query_norm = allocate(6144 * sizeof(float));
         query_rope = allocate(6144 * sizeof(float)); key_rope = allocate(1024 * sizeof(float));
         const std::size_t kv_element_size = fp16_kv_cache ? sizeof(__half) : sizeof(float);
-        key_cache = allocate(4 * kCacheCapacity * 256 * kv_element_size);
-        value_cache = allocate(4 * kCacheCapacity * 256 * kv_element_size);
+        key_cache = allocate(4 * g_cache_capacity * 256 * kv_element_size);
+        value_cache = allocate(4 * g_cache_capacity * 256 * kv_element_size);
         attention = allocate(6144 * sizeof(float));
         if (!tiled_online_attention) {
-            scores = allocate(24 * kCacheCapacity * sizeof(float));
-            probabilities = allocate(24 * kCacheCapacity * sizeof(float));
+            scores = allocate(24 * g_cache_capacity * sizeof(float));
+            probabilities = allocate(24 * g_cache_capacity * sizeof(float));
         }
         gated_attention = allocate(6144 * sizeof(float)); projected = allocate(kHidden * sizeof(float));
         residual = allocate(kHidden * sizeof(float)); post_normalized = allocate(kHidden * sizeof(float));
@@ -2295,8 +2297,8 @@ struct FullAttentionLayer {
             prefill_ffn_activation = allocate(prefill_capacity * kFfnInner * sizeof(float));
             prefill_ffn_projected = allocate(prefill_capacity * kHidden * sizeof(float));
         }
-        MIINFER_HIP_CHECK(hipMemset(key_cache->get(), 0, 4 * kCacheCapacity * 256 * kv_element_size));
-        MIINFER_HIP_CHECK(hipMemset(value_cache->get(), 0, 4 * kCacheCapacity * 256 * kv_element_size));
+        MIINFER_HIP_CHECK(hipMemset(key_cache->get(), 0, 4 * g_cache_capacity * 256 * kv_element_size));
+        MIINFER_HIP_CHECK(hipMemset(value_cache->get(), 0, 4 * g_cache_capacity * 256 * kv_element_size));
     }
 
     static std::string prefix(std::size_t layer, const char* suffix) {
@@ -2311,17 +2313,17 @@ struct FullAttentionLayer {
     void poison() {
         const std::size_t kv_element_size = fp16_kv_cache ? sizeof(__half) : sizeof(float);
         MIINFER_HIP_CHECK(hipMemset(key_cache->get(), 0xA5,
-                                    4 * kCacheCapacity * 256 * kv_element_size));
+                                    4 * g_cache_capacity * 256 * kv_element_size));
         MIINFER_HIP_CHECK(hipMemset(value_cache->get(), 0xA5,
-                                    4 * kCacheCapacity * 256 * kv_element_size));
+                                    4 * g_cache_capacity * 256 * kv_element_size));
     }
 
     void reset() {
         const std::size_t kv_element_size = fp16_kv_cache ? sizeof(__half) : sizeof(float);
         MIINFER_HIP_CHECK(hipMemset(key_cache->get(), 0,
-                                    4 * kCacheCapacity * 256 * kv_element_size));
+                                    4 * g_cache_capacity * 256 * kv_element_size));
         MIINFER_HIP_CHECK(hipMemset(value_cache->get(), 0,
-                                    4 * kCacheCapacity * 256 * kv_element_size));
+                                    4 * g_cache_capacity * 256 * kv_element_size));
     }
 
     void stage_start(std::size_t stage, std::uint32_t position) const {
@@ -2661,7 +2663,7 @@ struct FullAttentionLayer {
                     static_cast<const float*>(d_k_norm->get()),
                     static_cast<__half*>(key_cache->get()),
                     static_cast<__half*>(value_cache->get()),
-                    4, 256, position, kCacheCapacity, model.config().rope_theta, model.config().rms_epsilon);
+                    4, 256, position, g_cache_capacity, model.config().rope_theta, model.config().rms_epsilon);
             } else {
                 miinfer::launch_qwen35_fused_k_norm_rope_kv_store(
                     key_dest,
@@ -2669,7 +2671,7 @@ struct FullAttentionLayer {
                     static_cast<const float*>(d_k_norm->get()),
                     static_cast<float*>(key_cache->get()),
                     static_cast<float*>(value_cache->get()),
-                    4, 256, position, kCacheCapacity, model.config().rope_theta, model.config().rms_epsilon);
+                    4, 256, position, g_cache_capacity, model.config().rope_theta, model.config().rms_epsilon);
             }
         } else {
             miinfer::launch_qwen35_rope_sections(static_cast<const float*>(query_norm->get()),
@@ -2679,11 +2681,11 @@ struct FullAttentionLayer {
             if (fp16_kv_cache) {
                 miinfer::launch_qwen3_kv_cache_store(static_cast<const float*>(key_rope->get()),
                     value_input, static_cast<__half*>(key_cache->get()),
-                    static_cast<__half*>(value_cache->get()), position, kCacheCapacity, 4, 256);
+                    static_cast<__half*>(value_cache->get()), position, g_cache_capacity, 4, 256);
             } else {
                 miinfer::launch_qwen3_kv_cache_store(static_cast<const float*>(key_rope->get()),
                     value_input, static_cast<float*>(key_cache->get()),
-                    static_cast<float*>(value_cache->get()), position, kCacheCapacity, 4, 256);
+                    static_cast<float*>(value_cache->get()), position, g_cache_capacity, 4, 256);
             }
         }
         stage_end(6, position);
@@ -2694,7 +2696,7 @@ struct FullAttentionLayer {
                     static_cast<const float*>(query_rope->get()),
                     static_cast<const __half*>(key_cache->get()),
                     static_cast<const __half*>(value_cache->get()),
-                    position + 1, kCacheCapacity,
+                    position + 1, g_cache_capacity,
                     static_cast<float*>(attention->get()),
                     static_cast<const float*>(gate->get()),
                     static_cast<float*>(gated_attention->get()),
@@ -2706,7 +2708,7 @@ struct FullAttentionLayer {
                     static_cast<const float*>(query_rope->get()),
                     static_cast<const float*>(key_cache->get()),
                     static_cast<const float*>(value_cache->get()),
-                    position + 1, kCacheCapacity,
+                    position + 1, g_cache_capacity,
                     static_cast<float*>(attention->get()),
                     static_cast<const float*>(gate->get()),
                     static_cast<float*>(gated_attention->get()),
@@ -2724,7 +2726,7 @@ struct FullAttentionLayer {
                 static_cast<const float*>(query_rope->get()),
                 static_cast<const float*>(key_cache->get()),
                 static_cast<const float*>(value_cache->get()),
-                position + 1, kCacheCapacity,
+                position + 1, g_cache_capacity,
                 static_cast<float*>(attention->get()),
                 static_cast<float*>(scores->get()),
                 static_cast<float*>(probabilities->get()),

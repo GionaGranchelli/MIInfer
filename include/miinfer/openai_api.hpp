@@ -25,6 +25,8 @@ struct OpenAiParseResult {
     std::string error;
 };
 
+constexpr std::size_t kMaxOutputTokens = 4096;
+
 OpenAiParseResult parse_openai_chat_request(std::string_view body);
 std::string build_chatml(const OpenAiChatRequest& request);
 

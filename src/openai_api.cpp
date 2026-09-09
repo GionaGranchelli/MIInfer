@@ -21,7 +21,10 @@ OpenAiParseResult parse_openai_chat_request(std::string_view body) {
         }
         if (json.contains("max_tokens")) {
             if (!json["max_tokens"].is_number_unsigned()) return {{}, "max_tokens must be an unsigned integer"};
-            request.max_tokens = std::min<std::size_t>(json["max_tokens"].get<std::size_t>(), 4096);
+            request.max_tokens = json["max_tokens"].get<std::size_t>();
+            if (request.max_tokens > kMaxOutputTokens) {
+                return {{}, "max_tokens must be at most 4096"};
+            }
         }
         for (const auto& message : json["messages"]) {
             if (!message.is_object() || !message.contains("role") || !message["role"].is_string()

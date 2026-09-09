@@ -41,10 +41,15 @@
 namespace {
 
 std::atomic<bool> g_shutdown_requested{false};
+int g_signal_wakeup_fd = -1;
 
 void signal_handler(int sig) {
     if (sig == SIGINT || sig == SIGTERM) {
         g_shutdown_requested = true;
+        if (g_signal_wakeup_fd >= 0) {
+            const unsigned char wake = 1;
+            (void)::write(g_signal_wakeup_fd, &wake, sizeof(wake));
+        }
     }
 }
 
@@ -181,8 +186,8 @@ public:
     };
 
     StepResult step(std::uint32_t input_token, std::size_t position) {
-        if (position >= kCacheCapacity) {
-            throw std::runtime_error("context length exceeded capacity " + std::to_string(kCacheCapacity));
+        if (position >= g_cache_capacity) {
+            throw std::runtime_error("context length exceeded capacity " + std::to_string(g_cache_capacity));
         }
         ensure_graph_captured(position);
 
@@ -237,8 +242,8 @@ public:
     }
 
     void prefill_step(std::uint32_t input_token, std::size_t position) {
-        if (position >= kCacheCapacity) {
-            throw std::runtime_error("context length exceeded capacity " + std::to_string(kCacheCapacity));
+        if (position >= g_cache_capacity) {
+            throw std::runtime_error("context length exceeded capacity " + std::to_string(g_cache_capacity));
         }
         MIINFER_HIP_CHECK(hipMemcpyAsync(
             static_cast<std::uint32_t*>(d_decode_tokens_->get()) + position,
@@ -417,7 +422,7 @@ public:
         }
 
         std::size_t pos = prompt.size();
-        for (std::size_t gen_idx = 1; !cancelled && gen_idx < opt.max_new_tokens && pos < kCacheCapacity; ++gen_idx) {
+        for (std::size_t gen_idx = 1; !cancelled && gen_idx < opt.max_new_tokens && pos < g_cache_capacity; ++gen_idx) {
             if (g_shutdown_requested) break;
             const auto step_res = step(cur_token, pos);
             cur_token = step_res.token;
@@ -468,7 +473,7 @@ public:
         std::size_t pos = prompt.size() - 1;
 
         if (!opt.stream && use_hip_graph_) {
-            const std::size_t num_to_gen = std::min(opt.max_new_tokens, kCacheCapacity - pos);
+            const std::size_t num_to_gen = std::min(opt.max_new_tokens, g_cache_capacity - pos);
             for (std::size_t i = 0; i < num_to_gen; ++i) {
                 ensure_graph_captured(pos + i);
             }
@@ -506,7 +511,7 @@ public:
         }
 
         const auto decode_start = std::chrono::steady_clock::now();
-        for (std::size_t gen_idx = 0; gen_idx < opt.max_new_tokens && pos < kCacheCapacity; ++gen_idx) {
+        for (std::size_t gen_idx = 0; gen_idx < opt.max_new_tokens && pos < g_cache_capacity; ++gen_idx) {
             if (g_shutdown_requested) break;
 
             const auto step_res = step(cur_token, pos);
@@ -672,13 +677,13 @@ private:
         final_q8_1_ = allocate((kHidden / 32) * sizeof(miinfer::Q8_1Block));
         logits_ = allocate(model_.config().vocab_size * sizeof(float));
         argmax_token_ = allocate(sizeof(std::uint32_t));
-        d_decode_tokens_ = allocate(kCacheCapacity * sizeof(std::uint32_t));
+        d_decode_tokens_ = allocate(g_cache_capacity * sizeof(std::uint32_t));
         const std::size_t prefill_capacity = (gdn_chunkwise_prefill_ || dense_prefill_)
             ? kM12PrefillBatch : kPrefillBatch;
         prefill_a_ = allocate(prefill_capacity * kHidden * sizeof(float));
         prefill_b_ = allocate(prefill_capacity * kHidden * sizeof(float));
 
-        decode_graphs_.resize(kCacheCapacity, nullptr);
+        decode_graphs_.resize(g_cache_capacity, nullptr);
         prefill_profile_.init();
     }
 
@@ -922,8 +927,10 @@ int cmd_config(int argc, char**) {
               << "hardware=AMD Instinct MI50 32GB\n"
               << "model=Qwen3.8-27B\n"
               << "quantization=Q4_K_M\n"
-              << "runtime_context_capacity=65536\n"
+              << "configured_context_length=1024\n"
+              << "runtime_context_capacity=" << g_cache_capacity << "\n"
               << "qualified_context_length=1024\n"
+              << "context_qualification=qualified\n"
               << "prefill_path=validated-default\n"
               << "m12_prefill=opt-in\n";
     return 0;
@@ -1260,6 +1267,8 @@ int cmd_serve(int argc, char** argv) {
     std::string model_path;
     int port = 8080;
     std::string host = "127.0.0.1";
+    std::size_t context_length = 1024;
+    bool experimental_context = false;
 
     for (int i = 2; i < argc; ++i) {
         std::string_view arg = argv[i];
@@ -1271,16 +1280,34 @@ int cmd_serve(int argc, char** argv) {
             port = *parsed;
         } else if (arg == "--host" && i + 1 < argc) {
             host = argv[++i];
+        } else if (arg == "--context" && i + 1 < argc) {
+            try { context_length = std::stoull(argv[++i]); }
+            catch (...) { std::cerr << "context must be a positive integer\n"; return 2; }
+        } else if (arg == "--experimental-context") {
+            experimental_context = true;
         } else if (model_path.empty() && !arg.starts_with("--")) {
             model_path = arg;
         } else {
-            std::cerr << "usage: miinfer serve --model MODEL.gguf [--port PORT] [--host HOST]\n"; return 2;
+            std::cerr << "usage: miinfer serve --model MODEL.gguf [--port PORT] [--host HOST] [--context N] [--experimental-context]\n"; return 2;
         }
     }
     if (model_path.empty()) { std::cerr << "missing model; use --model MODEL.gguf\n"; return 2; }
+    if (context_length != 1024 && context_length != 8192 && context_length != 16384
+        && context_length != 32768 && context_length != 65536 && context_length != 131072) {
+        std::cerr << "context must be one of 1024, 8192, 16384, 32768, 65536, 131072\n";
+        return 2;
+    }
+    if (context_length > 1024 && !experimental_context) {
+        std::cerr << "context values above 1024 require --experimental-context\n"; return 2;
+    }
     const std::string model_id = std::filesystem::path(model_path).stem().string();
 
+    g_cache_capacity = context_length;
     std::cerr << "Initializing MIInfer gfx906 HTTP Server on " << host << ":" << port << " ...\n";
+    std::cerr << "configured_context_length=" << context_length << "\n"
+              << "runtime_context_capacity=65536\n"
+              << "qualified_context_length=1024\n"
+              << "context_qualification=" << (context_length > 1024 ? "experimental" : "qualified") << "\n";
     Qwen35RuntimeEngine engine(model_path);
 
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -1322,6 +1349,10 @@ int cmd_serve(int argc, char** argv) {
     std::signal(SIGINT, signal_handler);
     std::signal(SIGTERM, signal_handler);
 
+    int wake_pipe[2]{};
+    if (pipe(wake_pipe) != 0) { std::cerr << "failed to create signal wake pipe\n"; close(server_fd); return 1; }
+    g_signal_wakeup_fd = wake_pipe[1];
+
     std::atomic<std::uint64_t> http_requests = 0;
     std::atomic<std::uint64_t> http_errors = 0;
     std::atomic<std::uint64_t> inference_requests = 0;
@@ -1354,6 +1385,11 @@ int cmd_serve(int argc, char** argv) {
         const std::string prompt = miinfer::build_chatml(*parsed.request);
 
         const auto prompt_tokens = engine.tokenizer().encode(prompt);
+        if (prompt_tokens.size() > context_length || prompt_tokens.size() + max_tokens > context_length) {
+            ++http_errors;
+            send_http_error(client_fd, 400, "prompt and max_tokens exceed configured context");
+            return;
+        }
         if (is_stream) {
             bool client_connected = send_all(
                 client_fd,
@@ -1431,9 +1467,11 @@ int cmd_serve(int argc, char** argv) {
     });
 
     while (!g_shutdown_requested) {
-        pollfd pfd{server_fd, POLLIN, 0};
-        int poll_res = poll(&pfd, 1, 1000);
+        pollfd pfds[2]{{server_fd, POLLIN, 0}, {wake_pipe[0], POLLIN, 0}};
+        int poll_res = poll(pfds, 2, -1);
         if (poll_res <= 0) continue;
+        if (pfds[1].revents & POLLIN) break;
+        if (!(pfds[0].revents & POLLIN)) continue;
 
         sockaddr_in client_addr{};
         socklen_t client_len = sizeof(client_addr);
@@ -1537,6 +1575,9 @@ int cmd_serve(int argc, char** argv) {
     }
     queue_cv.notify_one();
     close(server_fd);
+    g_signal_wakeup_fd = -1;
+    close(wake_pipe[0]);
+    close(wake_pipe[1]);
     worker.join();
 
     std::cerr << "Shutting down HTTP server...\n";
