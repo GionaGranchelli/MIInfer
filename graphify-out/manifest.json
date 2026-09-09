@@ -3276,9 +3276,9 @@
     "semantic_hash": ""
   },
   "scripts/bench-m18-runtime.py": {
-    "mtime": 1788956522.5442173,
-    "seen": 1788956878.2481716,
-    "ast_hash": "238831962467663a4c5c70ce6b77d407",
+    "mtime": 1788958276.2863889,
+    "seen": 1788958497.4974904,
+    "ast_hash": "63d510d4e4902ee3ccacd26cdbd4d750",
     "semantic_hash": ""
   },
   "experiments/EXP-0268-m18a-lifecycle-cancellation.md": {
@@ -3294,15 +3294,15 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0270-m19-context-capacity.md": {
-    "mtime": 1788951082.1897063,
-    "seen": 1788951192.8929098,
-    "ast_hash": "9b38f69d5626f6bad2fd61e55ab30cb2",
+    "mtime": 1788957808.5200102,
+    "seen": 1788958497.4981318,
+    "ast_hash": "d0b06bfd1de97e9a9fe7dc924ed24db3",
     "semantic_hash": ""
   },
   "experiments/EXP-0271-m18-runtime-only-curve.md": {
-    "mtime": 1788956741.868988,
-    "seen": 1788956878.2488365,
-    "ast_hash": "5500543acd3cb2a3ad2233047c438076",
+    "mtime": 1788958653.5012748,
+    "seen": 1788958676.8141737,
+    "ast_hash": "cbd42536c434d6bd08b262a599f443a1",
     "semantic_hash": ""
   },
   "experiments/EXP-0272-m20b-api-hardening.md": {
@@ -3654,9 +3654,9 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0274-m18-m20-qualification-closure.md": {
-    "mtime": 1788956933.2049158,
-    "seen": 1788957609.9814873,
-    "ast_hash": "ddb554b931ac5439c0247c7291f28cbd",
+    "mtime": 1788958481.7382374,
+    "seen": 1788958497.498138,
+    "ast_hash": "46d3884bc74d614e57fdfe645f572505",
     "semantic_hash": ""
   },
   "results/m19-context/20260909-context/16384-retry/hardware-after-request.txt": {
@@ -4041,6 +4041,48 @@
     "mtime": 1788951394.6189554,
     "seen": 1788956878.2489574,
     "ast_hash": "3362bf74ffeeccf2b79818d19df2d621",
+    "semantic_hash": ""
+  },
+  "results/m18-runtime-corrected/20260909-144617-516076/metadata.json": {
+    "mtime": 1788958022.1194737,
+    "seen": 1788958497.4974337,
+    "ast_hash": "cdfda133138883a37f82c39ab63f6dcf",
+    "semantic_hash": ""
+  },
+  "results/m18-runtime-corrected/20260909-144617-516076/summary.json": {
+    "mtime": 1788958118.444891,
+    "seen": 1788958497.497435,
+    "ast_hash": "e623fb7d557b24c83b4df330c0346670",
+    "semantic_hash": ""
+  },
+  "results/m18-runtime-corrected/20260909-144843-599298/metadata.json": {
+    "mtime": 1788958167.7319973,
+    "seen": 1788958497.497436,
+    "ast_hash": "0ada2dc05918b1a6bd638378a3e45677",
+    "semantic_hash": ""
+  },
+  "results/m18-runtime-corrected/20260909-145121-682535/metadata.json": {
+    "mtime": 1788958325.3376071,
+    "seen": 1788958497.4974375,
+    "ast_hash": "dd1b79097c166e8a8c70350eaa6cd30b",
+    "semantic_hash": ""
+  },
+  "results/m18-runtime-corrected/20260909-145121-682535/summary.json": {
+    "mtime": 1788958426.8793006,
+    "seen": 1788958497.4974387,
+    "ast_hash": "c57c19007a427e7a5c5fc6b0ab215f68",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/131072-functional/elapsed-seconds.txt": {
+    "mtime": 1788957768.4761608,
+    "seen": 1788958497.4982677,
+    "ast_hash": "5509cd29b8eb818fa6449ceb408b8a78",
+    "semantic_hash": ""
+  },
+  "results/m19-context/20260909-context/131072-functional/hardware-after.txt": {
+    "mtime": 1788957769.2503033,
+    "seen": 1788958497.498269,
+    "ast_hash": "22496360b47e822852501f9298ddacb1",
     "semantic_hash": ""
   }
 }

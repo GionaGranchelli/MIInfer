@@ -23,12 +23,12 @@ comparison when the pinned competitor cannot load the exact model.
 |---|---|---|
 | lifecycle/cancellation | PASS | EXP-0268; `results/m18-lifecycle/` |
 | strict request limits | PASS | `scripts/test-serve.sh`; CTest |
-| runtime-only MIInfer PP/first-token | PASS | EXP-0271; `results/m18-runtime/` |
+| runtime-only MIInfer PP/TG measurement | PASS | EXP-0271; `results/m18-runtime-corrected/` |
 | pinned llama.cpp PP/TG | BLOCKED | EXP-0269: exact model unsupported at pin; compatible supplemental curve retained |
 | dynamic allocation 1K–128K | PASS | EXP-0270; `results/m19-context/20260909-allocation-sweep/` |
 | 1K inference qualification | PASS | EXP-0270 |
 | 8K inference smoke | PASS | EXP-0270 |
-| 16K–128K correctness/steady-state decode | NOT QUALIFIED | 16K/32K/64K functional smoke and 8K/16K TG64 completed; replay/KV/deeper TG64 ladder remains open |
+| 16K–128K correctness/steady-state decode | NOT QUALIFIED | 16K/32K/64K/128K functional smoke and 8K/16K TG64 completed; replay/KV/deeper TG64 ladder remains open |
 | API authentication | PASS | EXP-0272; `results/m20-auth/` |
 | constrained Hermes submission | PARTIAL | EXP-0273; two completed ~8K requests plus controlled cancellation |
 | regression suite | PASS | 23/23 CTest tests |
@@ -44,6 +44,9 @@ The retained short curve uses one generated token per case:
 
 The comparison excludes HTTP, JSON, ChatML, and Hermes. These historical
 one-token runs qualify PP and first-token timing only; they do not qualify TG.
+The corrected TG64 rerun measured M12 at 32.39 tok/s after P9 and 31.79 tok/s
+after P129; the default P129 case stopped at one token on EOS. The raw
+corrected records are in `results/m18-runtime-corrected/`.
 The mandated pinned llama.cpp binary rejects the exact model, so the requested
 pinned ratio remains unavailable. A compatible, newer local llama.cpp build
 measured PP8/128/512 at 33.4849/151.2700/191.3250 tok/s and TG64 at 22.2467
@@ -55,9 +58,10 @@ The observed evidence supports retaining one serialized GPU worker, explicit
 host-boundary cancellation, and the opt-in M12 layer-major prefill path. It
 does not justify multiple workers, continuous batching, or automatic promotion
 of 128K. M12 is numerically functional through the measured 64K smoke path but
-its PP curve falls from 34.0826 tok/s at 32K to 28.3657 tok/s at 64K. The next
-valid performance step is an approved compatible pinned reference and a
-long-context correctness/replay campaign before changing prefill kernels.
+its PP curve falls from 34.0826 tok/s at 32K to 28.3657 tok/s at 64K and
+20.5548 tok/s at 128K. The next valid performance step is an approved
+compatible pinned reference and a long-context correctness/replay campaign
+before changing prefill kernels.
 
 ## Final decision
 

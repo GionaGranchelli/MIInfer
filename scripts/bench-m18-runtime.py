@@ -34,7 +34,8 @@ def run_case(binary, model, prompt_words, mode, max_tokens, output):
     began = time.monotonic()
     result = subprocess.run(
         [str(binary), "run", str(model), "--prompt", prompt, "--max-tokens", str(max_tokens)],
-        capture_output=True, text=True, env=env, timeout=900, check=False)
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
+        env=env, timeout=900, check=False)
     elapsed_ms = (time.monotonic() - began) * 1000.0
     suffix = f"{mode}-words{prompt_words}-max{max_tokens}"
     (output / f"{suffix}.stdout").write_text(result.stdout)
@@ -60,8 +61,9 @@ def run_case(binary, model, prompt_words, mode, max_tokens, output):
         "first_decode_token_ms": None if ttft is None else float(ttft.group(1)),
         "ttft_ms": None if prefill is None or ttft is None
             else float(prefill.group(1)) + float(ttft.group(1)),
-        "steady_decode_tokens": None if generated_match is None else max(int(generated_match.group(1)) - 1, 0),
-        "steady_decode_ms": None if decode is None or ttft is None
+        "steady_decode_tokens": None if max_tokens == 1 or generated_match is None
+            else max(int(generated_match.group(1)) - 1, 0),
+        "steady_decode_ms": None if max_tokens == 1 or decode is None or ttft is None
             else max(float(decode.group(1)) - float(ttft.group(1)), 0.0),
         "total_ms": None if total is None else float(total.group(1)),
         "peak_vram_bytes": None if peak_vram is None else int(peak_vram.group(1)),

@@ -44,12 +44,30 @@ the final-hidden-state LM-head path. A real 64-token generation must use
 The separate long-context TG64 HTTP measurements are recorded in EXP-0270:
 MIInfer measured 25.00 tok/s after P8K and 24.65 tok/s after P16K.
 
+Corrected short reruns are in `results/m18-runtime-corrected/20260909-144617-516076/`
+(PP-only) and `results/m18-runtime-corrected/20260909-145121-682535/` (TG64):
+
+| path | prompt tokens | PP tok/s | first decode ms | steady TG tok/s | generated |
+|---|---:|---:|---:|---:|---:|
+| default | 9 | 31.82 | 30.54 | 27.74 | 43 |
+| default | 129 | 33.15 | 31.22 | unavailable (EOS) | 1 |
+| M12 experimental | 9 | 32.47 | 1.60 | 32.39 | 43 |
+| M12 experimental | 129 | 47.01 | 1.58 | 31.79 | 64 |
+
+The TG64 rate is `(generated_tokens - 1) / (decode_ms - first_decode_ms)`;
+the one-token PP run intentionally reports no TG rate.
+
+The first TG64 attempt (`results/m18-runtime-corrected/20260909-144843-599298/`)
+stopped in the harness while decoding non-UTF-8 generated output; it produced
+no summary and is not used for results. The harness now decodes text with
+replacement while retaining the captured raw streams.
+
 The compatible supplemental llama.cpp reference measured PP8 33.48 tok/s,
 PP128 151.27 tok/s, PP512 191.33 tok/s, and TG64 22.25 tok/s. This is not the
 original pinned `125db33` checkout; it is recorded as the compatible R1
 reference candidate in EXP-0269.
 
-Raw results: `results/m18-runtime/20260909-105118-3881308/summary.json`.
+Historical raw results: `results/m18-runtime/20260909-105118-3881308/summary.json`.
 
 ## Decision
 

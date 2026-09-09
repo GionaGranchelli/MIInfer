@@ -45,6 +45,10 @@ dynamic allocation, not 128K inference correctness.
 * P65536: HTTP 200, 64,009 prompt tokens, one generated token, 2,256.570 s
   prefill and 28.3657 prompt tokens/s using M12. The first decode token took
   1.57063 ms; raw data are in `results/m19-context/20260909-context/65536/`.
+* P131072: model load succeeded and an HTTP request with 131,009 prompt tokens
+  returned HTTP 200 after 6,373.820 s. Prefill measured 20.5548 tok/s and the
+  runtime generated one continuation token. Raw data are in
+  `results/m19-context/20260909-context/131072-functional/`.
 * The 8K run completed prefill and generation; the same shape was also used
   to verify cancellation during prefill. The 8K TG64 run is recorded under
   `results/m19-context/20260909-context/8192-tg64/`.
@@ -55,12 +59,13 @@ dynamic allocation, not 128K inference correctness.
   contaminated evidence under `16384-tg64-retry/`.
 
 These are functional smoke measurements, not full correctness qualification:
-deterministic replay, KV/state agreement, and steady-state TG64 at every
-long-context rung remain open. The measured PP collapse from 34.0826 tok/s at
-32K to 28.3657 tok/s at 64K also rules out production promotion on this
-hardware. 128K remains allocation-only evidence.
+deterministic replay, KV/state agreement, zero-allocation decode, and
+steady-state TG64 at every long-context rung remain open. The measured PP
+collapse from 34.0826 tok/s at 32K to 28.3657 tok/s at 64K and 20.5548 tok/s at
+128K rules out practical production promotion on this hardware.
 
 ## Decision
 
-KEEP the dynamic capacity implementation. Do not advertise 128K as qualified;
-it is a working allocation ceiling pending long-context KV/state correctness.
+KEEP the dynamic capacity implementation. The 128K capacity and one-request
+functional smoke gates pass, but 128K correctness and practical serving fail
+qualification today; do not advertise it as a qualified context.

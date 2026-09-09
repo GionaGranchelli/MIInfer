@@ -12688,7 +12688,7 @@
       "file_type": "code",
       "norm_label": "add_steady_rate()",
       "source_file": "scripts/bench-m18-runtime.py",
-      "source_location": "L73"
+      "source_location": "L75"
     },
     {
       "id": "scripts_bench_m18_runtime_command_output",
@@ -12712,7 +12712,7 @@
       "file_type": "code",
       "norm_label": "main()",
       "source_file": "scripts/bench-m18-runtime.py",
-      "source_location": "L81"
+      "source_location": "L83"
     },
     {
       "id": "scripts_bench_m18_runtime_run_case",
@@ -48130,7 +48130,7 @@
       "node_kind": "heading",
       "norm_label": "architectural conclusion",
       "source_file": "experiments/EXP-0274-m18-m20-qualification-closure.md",
-      "source_location": "L52"
+      "source_location": "L55"
     },
     {
       "id": "experiments_exp_0274_m18_m20_qualification_closure_environment",
@@ -48166,7 +48166,7 @@
       "node_kind": "heading",
       "norm_label": "final decision",
       "source_file": "experiments/EXP-0274-m18-m20-qualification-closure.md",
-      "source_location": "L62"
+      "source_location": "L66"
     },
     {
       "id": "experiments_exp_0274_m18_m20_qualification_closure_gate_summary",
@@ -75884,7 +75884,7 @@
       "node_kind": "heading",
       "norm_label": "decision",
       "source_file": "experiments/EXP-0270-m19-context-capacity.md",
-      "source_location": "L63"
+      "source_location": "L67"
     },
     {
       "id": "experiments_exp_0270_m19_context_capacity_exp_0270_m19_dynamic_context_capacity_qualification",
@@ -76064,7 +76064,7 @@
       "node_kind": "heading",
       "norm_label": "decision",
       "source_file": "experiments/EXP-0271-m18-runtime-only-curve.md",
-      "source_location": "L54"
+      "source_location": "L72"
     },
     {
       "id": "experiments_exp_0271_m18_runtime_only_curve_environment",
@@ -82126,6 +82126,18 @@
     },
     {
       "source": "scripts_bench_m18_runtime_main",
+      "target": "scripts_bench_m18_runtime_command_output",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "scripts/bench-m18-runtime.py",
+      "source_location": "L101",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_bench_m18_runtime_main",
       "target": "scripts_bench_m18_runtime_add_steady_rate",
       "relation": "calls",
       "_origin": "ast",
@@ -82133,7 +82145,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "scripts/bench-m18-runtime.py",
-      "source_location": "L112",
+      "source_location": "L114",
       "weight": 1.0
     },
     {
@@ -82145,7 +82157,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "scripts/bench-m18-runtime.py",
-      "source_location": "L113",
+      "source_location": "L115",
       "weight": 1.0
     },
     {
@@ -82157,19 +82169,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "scripts/bench-m18-runtime.py",
-      "source_location": "L94",
-      "weight": 1.0
-    },
-    {
-      "source": "scripts_bench_m18_runtime_main",
-      "target": "scripts_bench_m18_runtime_command_output",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "scripts/bench-m18-runtime.py",
-      "source_location": "L99",
+      "source_location": "L96",
       "weight": 1.0
     },
     {
@@ -170216,7 +170216,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0270-m19-context-capacity.md",
-      "source_location": "L63",
+      "source_location": "L67",
       "weight": 1.0
     },
     {
@@ -170282,7 +170282,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0271-m18-runtime-only-curve.md",
-      "source_location": "L54",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
@@ -170436,7 +170436,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0274-m18-m20-qualification-closure.md",
-      "source_location": "L52",
+      "source_location": "L55",
       "weight": 1.0
     },
     {
@@ -170447,7 +170447,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0274-m18-m20-qualification-closure.md",
-      "source_location": "L62",
+      "source_location": "L66",
       "weight": 1.0
     },
     {
@@ -172537,7 +172537,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "scripts/bench-m18-runtime.py",
-      "source_location": "L73",
+      "source_location": "L75",
       "weight": 1.0
     },
     {
@@ -172548,7 +172548,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "scripts/bench-m18-runtime.py",
-      "source_location": "L81",
+      "source_location": "L83",
       "weight": 1.0
     },
     {
@@ -185849,5 +185849,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "037e231c5f356d7907ddeaeca30638bd1e930dfb"
+  "built_at_commit": "31ee063813c398dcca5a831b84b506dded01e8e0"
 }
