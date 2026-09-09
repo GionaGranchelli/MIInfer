@@ -1,0 +1,6 @@
+  Model:        qwen3.6-35b-a3b
+  Provider:     Custom endpoint
+  Telegram      ✗ not configured
+  Discord       ✗ not configured
+  Slack         ✓ configured
+◆ Gateway Service

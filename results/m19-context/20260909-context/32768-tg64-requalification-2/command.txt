@@ -1,0 +1,7 @@
+binary=build/mi50-release/miinfer
+model=/home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf
+model_sha256=7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169
+environment=MIINFER_PREFILL_LAYER_MAJOR=1 HIP_VISIBLE_DEVICES=0 HSA_OVERRIDE_GFX_VERSION=9.0.6
+server=miinfer serve --model MODEL --port 19412 --context 32768 --experimental-context
+request=replayed 32768-tg64-requalification/request.json; stream=false; max_tokens=64
+qualification=second independent server run; response body compared byte-for-byte

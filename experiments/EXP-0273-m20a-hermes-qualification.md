@@ -23,6 +23,13 @@ prompt tokens and generated 188 tokens. A third request was cancelled during
 prefill by the controlled stop. Raw Hermes/server logs are in
 `results/hermes/20260909-qualification-110554/`.
 
+The host-side Hermes status was captured after the run. It reports Telegram
+not configured, Discord not configured, and Slack configured; the bounded
+output is in
+`results/hermes/20260909-qualification-110554/external-channel-status.txt`.
+Telegram delivery therefore cannot be exercised without an external bot
+credential/configuration that is absent from this machine.
+
 This proves constrained Hermes submission and cancellation at a 64K-configured
 endpoint, but not Telegram delivery, restart/reset, or a clean multi-turn
 qualification. Hermes’ actual requests were approximately 8K tokens, not
@@ -31,5 +38,7 @@ qualification. Hermes’ actual requests were approximately 8K tokens, not
 ## Decision
 
 PARTIAL. The endpoint accepts constrained Hermes traffic and exposes the real
-latency/cancellation behavior. Production Hermes qualification remains open
-until the long-context performance and external delivery gates are completed.
+latency/cancellation behavior. Local Hermes request compatibility is proven,
+but production Hermes qualification remains open because 64K serving is
+practically too slow for the current prefill path and Telegram delivery cannot
+be tested without the missing channel configuration.

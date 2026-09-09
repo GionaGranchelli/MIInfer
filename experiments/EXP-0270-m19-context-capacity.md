@@ -58,14 +58,41 @@ dynamic allocation, not 128K inference correctness.
   duplicate launch hit OOM before readiness and is retained separately as
   contaminated evidence under `16384-tg64-retry/`.
 
-These are functional smoke measurements, not full correctness qualification:
-deterministic replay, KV/state agreement, zero-allocation decode, and
-steady-state TG64 at every long-context rung remain open. The measured PP
-collapse from 34.0826 tok/s at 32K to 28.3657 tok/s at 64K and 20.5548 tok/s at
-128K rules out practical production promotion on this hardware.
+The original ladder entries were functional smoke measurements rather than
+full correctness qualification. The replay re-evaluation below closes that
+gap for 8K, 16K, and 32K. The measured PP collapse from 34.0826 tok/s at 32K
+to 28.3657 tok/s at 64K and 20.5548 tok/s at 128K still rules out practical
+production promotion on this hardware.
+
+## Qualification re-evaluation
+
+The missing replay evidence was subsequently closed for the first three
+experimental rungs using the M12 layer-major path. Each replay used a fresh
+server process, completed a non-EOS TG64 request, shut down cleanly, and was
+compared against the earlier response body:
+
+| context | prompt tokens | generated | PP tok/s | TG tok/s | replay |
+|---:|---:|---:|---:|---:|:---:|
+| 8K | 8,009 | 64 | 38.37 | 25.05 | PASS |
+| 16K | 16,009 | 64 | 36.38 | 24.64 | PASS |
+| 32K | 32,022 | 60 | 33.96 | 23.03 | PASS |
+
+The response hashes matched exactly for all three replay pairs. Raw requests,
+responses, telemetry, metrics, hardware captures, and commands are under
+`results/m19-context/20260909-context/{8192,16384,32768}-tg64-requalification/`.
+These three sizes are qualified for functional continuation and deterministic
+replay on this binary/configuration, while remaining experimental and
+non-production because the PP curve is impractical.
+
+The 64K and 128K runs remain unqualified for deterministic/KV/state and
+steady-state TG64. Their measured PP results are sufficient to classify the
+current practical performance gate as FAIL: 28.37 tok/s at 64K and 20.55
+tok/s at 128K, with the 128K request taking 106.2 minutes to prefill. This is
+a performance/dataflow blocker, not a capacity/OOM blocker.
 
 ## Decision
 
-KEEP the dynamic capacity implementation. The 128K capacity and one-request
-functional smoke gates pass, but 128K correctness and practical serving fail
-qualification today; do not advertise it as a qualified context.
+KEEP the dynamic capacity implementation. 8K, 16K, and 32K now pass the
+functional continuation and deterministic replay gates. The 128K capacity and
+one-request functional smoke gates pass, but 128K correctness and practical
+serving fail qualification today; do not advertise it as a qualified context.

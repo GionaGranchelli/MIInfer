@@ -32,7 +32,7 @@ token-ID capture uses `MIINFER_DUMP_TOKENS=1`.
 | P512 | 32.49 | 45.85 | 222.64 | 0.146x | 0.206x |
 | P8K | — | 38.33 | 229.20 | — | 0.167x |
 | P16K | — | 36.18 | 219.91 | — | 0.165x |
-| P32K | — | 34.08 | 202.84 | — | 0.168x |
+| P32K | — | 33.96 | 202.84 | — | 0.167x |
 | P64K | — | 28.37 | 175.75 | — | 0.161x |
 | P128K | — | 20.55 | 138.39 | — | 0.149x |
 
@@ -73,9 +73,10 @@ Raw results, commands, compiler details, model hash, and hardware snapshots
 are in `results/m21-reference/20260909-mx-tg64-p8k/` and
 `results/m21-reference/20260909-mx-tg64-ladder/`. MIInfer has valid M12 TG64
 measurements at P8K (24.65 tok/s) and P16K (24.65 tok/s); its P32K/P64K
-one-token qualification runs stopped on EOS and therefore do not establish
-steady-state TG64. A non-EOS long-context prompt is still required before
-claiming those MIInfer decode points.
+one-token qualification runs stopped on EOS and therefore did not establish
+steady-state TG64. The new P32K non-EOS run measured 23.03 tok/s and replayed
+deterministically; P64K still needs a non-EOS run before claiming a steady
+decode point.
 
 ## Decision
 
@@ -88,5 +89,5 @@ profiled layer-major deferred-tail dataflow and re-run end-to-end correctness.
 The reference decode curve is healthy but declines from 25.54 tok/s at P128
 to 14.78 tok/s at P64K. M12 is approximately equal at P8K, so the remaining
 priority is prefill rather than decode. M19-C remains partially qualified:
-the MIInfer P8K/P16K TG64 points pass, while P32K/P64K require a prompt that
+the MIInfer P8K/P16K/P32K TG64 points pass, while P64K requires a prompt that
 does not terminate after the first generated token.
