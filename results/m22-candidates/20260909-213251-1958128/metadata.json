@@ -1,0 +1,14 @@
+{
+  "binary": "/home/fedora-workstation/Development/mi50/build/mi50-release/miinfer",
+  "model": "/home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf",
+  "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+  "git_commit": "2c90cc51d0d859fb4d18a31206f20081ccfa30af",
+  "hostname": "fedora",
+  "platform": "Linux-7.1.10-200.fc44.x86_64-x86_64-with-glibc2.43",
+  "environment": {
+    "MIINFER_PREFILL_LAYER_MAJOR": "1",
+    "MIINFER_PREFILL_DENSE_PROJECTIONS": "1",
+    "MIINFER_PREFILL_DENSE_SSM": "1"
+  },
+  "hardware_before": "\n\n============================================= ROCm System Management Interface =============================================\n======================================================= Concise Info =======================================================\nDevice  Node  IDs              Temp    Power     Partitions          SCLK     MCLK     Fan     Perf    PwrCap  VRAM%  GPU%  \n\u001b[3m              (DID,     GUID)  (Edge)  (Socket)  (Mem, Compute, ID)                                                         \u001b[0m\n============================================================================================================================\n0       2     0x66a1,   4670   35.0\u00b0C  30.0W     N/A, N/A, 0         1606Mhz  1000Mhz  14.51%  manual  225.0W  0%     0%    \n============================================================================================================================\n=================================================== End of ROCm SMI Log ====================================================\n"
+}
