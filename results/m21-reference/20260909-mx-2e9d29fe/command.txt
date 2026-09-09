@@ -1,0 +1,14 @@
+Reference checkout: /home/fedora-workstation/Development/mx-llama.cpp
+Reference commit: 2e9d29fe736969160f17476ec6f0a6298cee6966
+Model SHA-256: 7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169
+
+env HSA_OVERRIDE_GFX_VERSION=9.0.6 HIP_VISIBLE_DEVICES=0 \
+  LD_LIBRARY_PATH=/home/fedora-workstation/Development/mx-llama-build/bin:/usr/lib64/rocm/lib:/usr/lib64 \
+  /home/fedora-workstation/Development/mx-llama-build/bin/llama-bench \
+  -m /home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf \
+  -ngl 99 -fa on -ctk q8_0 -ctv f16 -b 2048 -ub 2048 \
+  -p 8,128,512,2048,8192,16384,32768,65536,131072 -n 0 -r 3 -o json
+
+Compiler: HIP version 7.1.52802-9999; clang 20.0.0.rocm
+GPU clocks: SCLK 1606 MHz; MCLK 1000 MHz
+Power state: manual performance profile; rocm-smi reports low-power warning despite fixed clocks

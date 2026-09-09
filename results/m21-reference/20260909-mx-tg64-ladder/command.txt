@@ -1,0 +1,9 @@
+reference=mx-llama.cpp
+commit=2e9d29fe736969160f17476ec6f0a6298cee6966
+model=/home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf
+model_sha256=7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169
+config=full GPU offload; Flash Attention; Q8_0 K; F16 V; batch 2048; ubatch 2048
+command=llama-bench -m /home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf -ngl 99 -fa on -ctk q8_0 -ctv f16 -b 2048 -ub 2048 -p 0 -n 64 -d 128,512,2048,16384,32768,65536 -r 3 -o json
+compiler=HIP version 7.1.52802-9999; clang 20.0.0.rocm
+gpu_clocks=SCLK 1606 MHz; MCLK 1000 MHz
+power_state=manual performance profile; rocm-smi reports low-power warning despite fixed clocks

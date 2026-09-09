@@ -2364,9 +2364,9 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1788956489.0664048,
-    "seen": 1788956878.2483315,
-    "ast_hash": "03dffe18824ae4ab65f2fe88f32c1bc5",
+    "mtime": 1788967319.8935628,
+    "seen": 1788967443.8803458,
+    "ast_hash": "23d9a4ff6b9cfbcf03270ce82e363995",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
@@ -4083,6 +4083,72 @@
     "mtime": 1788957769.2503033,
     "seen": 1788958497.498269,
     "ast_hash": "22496360b47e822852501f9298ddacb1",
+    "semantic_hash": ""
+  },
+  "results/m21-reference/20260909-mx-2e9d29fe/llama-bench.json": {
+    "mtime": 1788965906.3567297,
+    "seen": 1788967132.4688044,
+    "ast_hash": "440c5d5583fd34db1c7cb51fa6244537",
+    "semantic_hash": ""
+  },
+  "results/m21-reference/20260909-mx-tg64-ladder/llama-bench.json": {
+    "mtime": 1788967035.6272051,
+    "seen": 1788967132.4688065,
+    "ast_hash": "144ac17ceff14a876193da538bb601f9",
+    "semantic_hash": ""
+  },
+  "results/m21-reference/20260909-mx-tg64-p8k/llama-bench.json": {
+    "mtime": 1788966298.361465,
+    "seen": 1788967132.468819,
+    "ast_hash": "9fa83118f1c3160a7a00ddca5086aa8a",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0275-m21-prefill-gap-and-m12-correctness.md": {
+    "mtime": 1788967281.270786,
+    "seen": 1788967443.8808038,
+    "ast_hash": "7eda1eef1321e5d35462e3712261a26b",
+    "semantic_hash": ""
+  },
+  "results/m21-reference/20260909-mx-2e9d29fe/command.txt": {
+    "mtime": 1788965967.104379,
+    "seen": 1788967132.4696658,
+    "ast_hash": "3240ada36c95143464feffef254db73b",
+    "semantic_hash": ""
+  },
+  "results/m21-reference/20260909-mx-2e9d29fe/hardware-after.txt": {
+    "mtime": 1788965906.5439723,
+    "seen": 1788967132.4696674,
+    "ast_hash": "bc76466e37e505c7e52d6e954ef680e1",
+    "semantic_hash": ""
+  },
+  "results/m21-reference/20260909-mx-2e9d29fe/hardware-before.txt": {
+    "mtime": 1788959463.706333,
+    "seen": 1788967132.4696686,
+    "ast_hash": "03793d37377c4ed7073c389c0cb9c406",
+    "semantic_hash": ""
+  },
+  "results/m21-reference/20260909-mx-2e9d29fe/reference-commit.txt": {
+    "mtime": 1788959463.575735,
+    "seen": 1788967132.4696696,
+    "ast_hash": "ab729cdb9d53b79717ce8143af98bb2b",
+    "semantic_hash": ""
+  },
+  "results/m21-reference/20260909-mx-tg64-ladder/command.txt": {
+    "mtime": 1788967114.588749,
+    "seen": 1788967132.4696708,
+    "ast_hash": "846dae9acc704b0cb7ab282ec8d98379",
+    "semantic_hash": ""
+  },
+  "results/m21-reference/20260909-mx-tg64-p8k/command.txt": {
+    "mtime": 1788967114.587749,
+    "seen": 1788967132.4696722,
+    "ast_hash": "e0053168f7627d240fb6466f5f3b92fc",
+    "semantic_hash": ""
+  },
+  "results/m21-prefill-profile/20260909-p513/command.txt": {
+    "mtime": 1788967281.270786,
+    "seen": 1788967443.880996,
+    "ast_hash": "1a1d015d2843402b8f697c7933d9906f",
     "semantic_hash": ""
   }
 }

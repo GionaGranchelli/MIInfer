@@ -436,22 +436,25 @@ public:
         stats.first_token_ms = std::chrono::duration<double, std::milli>(first_end - first_start).count();
         stats.tokens.push_back(cur_token);
         if (opt.on_first_token) opt.on_first_token();
+        const bool stop_token = cur_token == tokenizer_.eos_id() || cur_token == 151643 || cur_token == 151645;
         bool cancelled = false;
-        if (cur_token != tokenizer_.eos_id() && cur_token != 151643 && cur_token != 151645) {
+        bool stopped = stop_token;
+        if (!stop_token) {
             const std::string piece = tokenizer_.decode(std::span<const std::uint32_t>(&cur_token, 1));
             stats.text += piece;
             cancelled = opt.on_token && !opt.on_token(cur_token, piece);
         }
 
         std::size_t pos = prompt.size();
-        for (std::size_t gen_idx = 1; !cancelled && gen_idx < opt.max_new_tokens && pos < g_cache_capacity; ++gen_idx) {
+        for (std::size_t gen_idx = 1; !cancelled && !stopped && gen_idx < opt.max_new_tokens && pos < g_cache_capacity; ++gen_idx) {
             if (g_shutdown_requested || (opt.should_cancel && opt.should_cancel())) { cancelled = true; break; }
             const auto step_res = step(cur_token, pos);
             cur_token = step_res.token;
             stats.tokens.push_back(cur_token);
             stats.decode_ms += step_res.latency_ms;
             ++pos;
-            if (cur_token == tokenizer_.eos_id() || cur_token == 151643 || cur_token == 151645) break;
+            stopped = cur_token == tokenizer_.eos_id() || cur_token == 151643 || cur_token == 151645;
+            if (stopped) break;
             const std::string piece = tokenizer_.decode(std::span<const std::uint32_t>(&cur_token, 1));
             stats.text += piece;
             if (opt.on_token && !opt.on_token(cur_token, piece)) break;
@@ -1078,6 +1081,12 @@ int cmd_run(int argc, char** argv) {
     const auto stats = engine.generate(prompt_tokens, opt);
     if (!stream) {
         std::cout << stats.text << std::flush;
+    }
+    if (const char* dump_tokens = std::getenv("MIINFER_DUMP_TOKENS");
+        dump_tokens != nullptr && std::strcmp(dump_tokens, "0") != 0) {
+        std::cerr << "Generated token IDs:";
+        for (const auto token : stats.tokens) std::cerr << ' ' << token;
+        std::cerr << '\n';
     }
     std::cout << "\n\n";
 
