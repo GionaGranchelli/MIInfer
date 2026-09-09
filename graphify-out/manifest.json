@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788900528.757644,
-    "seen": 1788900541.9727626,
-    "ast_hash": "204cfeb37c11e981c7bedc2487b42212",
+    "mtime": 1788984239.4746983,
+    "seen": 1788984340.0242527,
+    "ast_hash": "2e4cff9c4c4ae850dfca74acec1c96d4",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -2364,15 +2364,15 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1788979926.9757771,
-    "seen": 1788981893.2156694,
-    "ast_hash": "e41d26246f3112fdf81b42dfa312a064",
+    "mtime": 1788983470.4721189,
+    "seen": 1788984057.20668,
+    "ast_hash": "f3e1831c632a8a1945ffc9f8f65303c7",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1788981129.0925786,
-    "seen": 1788981893.2156708,
-    "ast_hash": "47d95d5dbe4871eb28996efaad965dd2",
+    "mtime": 1788983746.6135316,
+    "seen": 1788984057.2066815,
+    "ast_hash": "32e4fc13f954f40c8af8728fd2eeb317",
     "semantic_hash": ""
   },
   "docs/M9-AUTOREGRESSIVE-QUALIFICATION.md": {
@@ -2796,8 +2796,8 @@
     "semantic_hash": ""
   },
   "include/miinfer/m12_dense_stage.hpp": {
-    "mtime": 1788857668.9764493,
-    "seen": 1788858697.0318203,
+    "mtime": 1788982548.5864186,
+    "seen": 1788984057.206256,
     "ast_hash": "7af153c2cf2dc675cc7b1b4338f85d40",
     "semantic_hash": ""
   },
@@ -3276,8 +3276,8 @@
     "semantic_hash": ""
   },
   "scripts/bench-m18-runtime.py": {
-    "mtime": 1788981805.0366929,
-    "seen": 1788981893.2154794,
+    "mtime": 1788982511.7826302,
+    "seen": 1788984057.2064948,
     "ast_hash": "906fab1727062a64e2876070845619e1",
     "semantic_hash": ""
   },
@@ -4686,9 +4686,129 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0281-m22-dense-ffn-prefill-candidate.md": {
-    "mtime": 1788981829.2735536,
-    "seen": 1788981893.2161324,
-    "ast_hash": "bd7d66f7e34d1ef2bba68f2b905c6302",
+    "mtime": 1788981999.3655758,
+    "seen": 1788984057.2071447,
+    "ast_hash": "d0df2e61ac276b3de9f3c51832307ea3",
+    "semantic_hash": ""
+  },
+  "results/m22-candidates/20260909-212514-1895267/metadata.json": {
+    "mtime": 1788981958.2452502,
+    "seen": 1788984057.2064464,
+    "ast_hash": "1014cb0900996a1480a3f42462fc1d63",
+    "semantic_hash": ""
+  },
+  "results/m22-candidates/20260909-212514-1895267/summary.json": {
+    "mtime": 1788981990.1720133,
+    "seen": 1788984057.206448,
+    "ast_hash": "27aa849db7c3c8cc1cada584c7e4e44b",
+    "semantic_hash": ""
+  },
+  "results/m22-candidates/20260909-213035-1916447/metadata.json": {
+    "mtime": 1788982279.1789672,
+    "seen": 1788984057.2064495,
+    "ast_hash": "fdf40d1ee9acf199f0f5c08c1b94ab2e",
+    "semantic_hash": ""
+  },
+  "results/m22-candidates/20260909-213035-1916447/summary.json": {
+    "mtime": 1788982310.8950999,
+    "seen": 1788984057.2064505,
+    "ast_hash": "0c504a1008912479fa616a1215184af2",
+    "semantic_hash": ""
+  },
+  "results/m22-candidates/20260909-213251-1958128/metadata.json": {
+    "mtime": 1788982415.7868562,
+    "seen": 1788984057.2064517,
+    "ast_hash": "3f9363f2fb1ab0776088ad3b8b0d2664",
+    "semantic_hash": ""
+  },
+  "results/m22-candidates/20260909-213251-1958128/summary.json": {
+    "mtime": 1788982477.6397731,
+    "seen": 1788984057.206453,
+    "ast_hash": "07e57fe5e278cb2967cfbe0fed460752",
+    "semantic_hash": ""
+  },
+  "results/m22-candidates/20260909-214158-2000444/metadata.json": {
+    "mtime": 1788982962.767987,
+    "seen": 1788984057.206454,
+    "ast_hash": "a0131ceb4fca49eb6e18b4c3e2a84579",
+    "semantic_hash": ""
+  },
+  "results/m22-candidates/20260909-214158-2000444/summary.json": {
+    "mtime": 1788982999.0793917,
+    "seen": 1788984057.2064552,
+    "ast_hash": "b18121a036c9f74e783ea9b523ec5ca0",
+    "semantic_hash": ""
+  },
+  "results/m22-prefill-profile/20260909-213802-1979355/metadata.json": {
+    "mtime": 1788982726.2417696,
+    "seen": 1788984057.2064779,
+    "ast_hash": "a90966f276dc1570df527144c8cd4d65",
+    "semantic_hash": ""
+  },
+  "results/m22-prefill-profile/20260909-213802-1979355/summary.json": {
+    "mtime": 1788982758.2059999,
+    "seen": 1788984057.206479,
+    "ast_hash": "3d86c736c64e2736ef6d631265d70509",
+    "semantic_hash": ""
+  },
+  "results/m22-prefill-profile/20260909-215225-2022240/metadata.json": {
+    "mtime": 1788983589.157287,
+    "seen": 1788984057.2064805,
+    "ast_hash": "42bde253903cec2e4705b89453c57a6d",
+    "semantic_hash": ""
+  },
+  "results/m22-prefill-profile/20260909-215225-2022240/summary.json": {
+    "mtime": 1788983622.4093208,
+    "seen": 1788984057.2064815,
+    "ast_hash": "99712dc7af42ef3dc9540806d0f001f5",
+    "semantic_hash": ""
+  },
+  "results/m22-prefill-profile/20260909-215347-2043106/metadata.json": {
+    "mtime": 1788983671.2549648,
+    "seen": 1788984057.2064826,
+    "ast_hash": "9f73de78f1fae4d43ce28f979d4db12c",
+    "semantic_hash": ""
+  },
+  "results/m22-prefill-profile/20260909-215347-2043106/summary.json": {
+    "mtime": 1788983705.722739,
+    "seen": 1788984057.2064836,
+    "ast_hash": "bd469df5e97d57c8e234a58a92be1e3d",
+    "semantic_hash": ""
+  },
+  "results/m22-prefill-profile/20260909-215608-2064107/metadata.json": {
+    "mtime": 1788983812.5493507,
+    "seen": 1788984057.206485,
+    "ast_hash": "5f11ac6716dc49e4e494e52b17b1e868",
+    "semantic_hash": ""
+  },
+  "results/m22-prefill-profile/20260909-215608-2064107/summary.json": {
+    "mtime": 1788983844.8969827,
+    "seen": 1788984057.206486,
+    "ast_hash": "1aece2a5aea8c6b1fb21410836fdd874",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0282-m22-ssm-output-batch-candidate.md": {
+    "mtime": 1788982567.9113073,
+    "seen": 1788984057.2071462,
+    "ast_hash": "98cd94473a966bec4f68845254f60b13",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0283-m22-shared-dense-down-source.md": {
+    "mtime": 1788983085.507332,
+    "seen": 1788984057.2071474,
+    "ast_hash": "07e0b6d913851d475fb4848a7ac1d45f",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0284-m22-tail-family-profile.md": {
+    "mtime": 1788984351.1620562,
+    "seen": 1788984364.7171166,
+    "ast_hash": "a2b79867f0d382c2add569ae61d2b7f4",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0285-m22-prefill-parity-closure.md": {
+    "mtime": 1788984326.336199,
+    "seen": 1788984340.0246832,
+    "ast_hash": "7b5b8eec280b3c93a4a5c151631d61a2",
     "semantic_hash": ""
   }
 }

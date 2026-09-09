@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M17 — product experience**
+**M22 — prefill parity campaign**
 
 Milestone status:
 
@@ -32,7 +32,17 @@ M16-C: concurrency          PASS
 M16-D: JSON parsing         PASS
 M17-A: installation/doctor  PASS
 M17-B: local Web UI          PASS
+M22:   current B4 architecture hard ceiling; parity not reached
 ```
+
+M22 is recorded in EXP-0276 through EXP-0285. The pinned mx-llama reference
+reaches `222.64 tok/s` at P512, while the best measured MIInfer path reaches
+`55.72 tok/s` with opt-in dense recurrent FFN gate/up projections. That path
+preserves the measured TG replay, but remains experimental. The current
+causal B4 layer-major schedule is therefore not a parity implementation;
+further progress requires a new chunk/dataflow design rather than another
+local B4 projection variant. The final evidence and ratios are in
+`experiments/EXP-0285-m22-prefill-parity-closure.md`.
 
 M11-B is frozen at the qualified `46.22 tok/s` P513 packed-Q4 baseline.
 Native Qwen3.8-27B generation is operational and allocation-free. The

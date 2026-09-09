@@ -711,9 +711,12 @@ struct RecurrentLayer {
         hipEvent_t prepare_end = nullptr;
         hipEvent_t ordered_start = nullptr;
         hipEvent_t ordered_end = nullptr;
+        std::array<hipEvent_t, 4> tail_family_start{};
+        std::array<hipEvent_t, 4> tail_family_end{};
         mutable bool tail_recorded = false;
         mutable bool prepare_recorded = false;
         mutable bool ordered_recorded = false;
+        mutable std::array<bool, 4> tail_family_recorded{};
         mutable std::array<bool, 14> stage_recorded{};
     };
     bool no_decay_store = false;
@@ -1273,6 +1276,21 @@ struct RecurrentLayer {
         }
     }
 
+    void profile_tail_family_start(std::size_t family, std::size_t offset) const {
+        if (stage_profile != nullptr && family < stage_profile->tail_family_start.size()
+            && stage_profile_position == stage_profile_chunk_base + offset + 3) {
+            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->tail_family_start[family], hipStreamPerThread));
+        }
+    }
+
+    void profile_tail_family_end(std::size_t family, std::size_t offset) const {
+        if (stage_profile != nullptr && family < stage_profile->tail_family_end.size()
+            && stage_profile_position == stage_profile_chunk_base + offset + 3) {
+            stage_profile->tail_family_recorded[family] = true;
+            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->tail_family_end[family], hipStreamPerThread));
+        }
+    }
+
     bool prepare_prefill_batch(const float* inputs, std::size_t count, bool normalized_ready = false) {
         if (!prefill_batch_enabled || count == 0 || count > prefill_capacity || count % 4 != 0 || inputs == nullptr
             || (!d_qkv_gate_combined && !d_qkv_native)) {
@@ -1437,6 +1455,7 @@ struct RecurrentLayer {
         prefill_core_batch_active = recurrent_prefill_core_batch_supported()
             && !prefill_gdn_chunkwise;
         const bool core_q8_ready = prefill_core_batch_active && prefill_recurrent_q8 && batch_ssm_out;
+        profile_tail_family_start(0, offset);
         if (prefill_core_batch_active) {
             miinfer::launch_qwen35_deltanet_fused_recurrent_core_batched4(
                 core_query_batch,
@@ -1450,9 +1469,11 @@ struct RecurrentLayer {
                 kKHeads, kVHeads, kState, model.config().rms_epsilon,
                 hipStreamPerThread, core_q8_ready ? q8_batch : nullptr);
         }
+        profile_tail_family_end(0, offset);
 
         // The generic Q5 batch decoder regressed; this path uses the
         // shape-specific word-reuse kernel, with an opt-out for A/B control.
+        profile_tail_family_start(1, offset);
         if (batch_ssm_out) {
             if (!core_q8_ready) {
                 for (std::size_t i = 0; i < count; ++i) {
@@ -1505,6 +1526,7 @@ struct RecurrentLayer {
                     kHidden, model.config().rms_epsilon, nullptr, nullptr);
             }
         }
+        profile_tail_family_end(1, offset);
 
         for (std::size_t i = 0; i < count; ++i) {
             miinfer::launch_q8_1_quantize_f32(
@@ -1512,6 +1534,7 @@ struct RecurrentLayer {
                 q8_batch + i * (kHidden / miinfer::kQ8_1BlockSize), kHidden,
                 hipStreamPerThread);
         }
+        profile_tail_family_start(2, offset);
         if (defer_dense_gate_up) return;
         if (d_ffn_swiglu_native) {
             launch_q4k_wave_fused_gate_up_swiglu_paired_batched4(
@@ -1545,7 +1568,9 @@ struct RecurrentLayer {
                     hipStreamPerThread);
             }
         }
+        profile_tail_family_end(2, offset);
         if (defer_dense_down) return;
+        profile_tail_family_start(3, offset);
         if (ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
             launch_q4k_wave_gemv_batched4(
                 static_cast<const Q4KWaveTile*>(d_ffn_down_native->get()), q8_batch,
@@ -1572,6 +1597,7 @@ struct RecurrentLayer {
                     outputs + i * kHidden, kHidden, hipStreamPerThread);
             }
         }
+        profile_tail_family_end(3, offset);
     }
 
     void finish_prefill_batch(const float* inputs, float* outputs, std::size_t count,

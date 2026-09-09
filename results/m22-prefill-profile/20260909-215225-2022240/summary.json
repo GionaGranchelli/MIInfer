@@ -1,0 +1,36 @@
+{
+  "binary": "/home/fedora-workstation/Development/mi50/build/mi50-release/miinfer",
+  "model": "/home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf",
+  "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+  "git_commit": "0436334316381dcaf69fa239a8089537c995b04d",
+  "hostname": "fedora",
+  "platform": "Linux-7.1.10-200.fc44.x86_64-x86_64-with-glibc2.43",
+  "environment": {
+    "MIINFER_PREFILL_LAYER_MAJOR": "1"
+  },
+  "hardware_before": "\n\n============================================= ROCm System Management Interface =============================================\n======================================================= Concise Info =======================================================\nDevice  Node  IDs              Temp    Power     Partitions          SCLK     MCLK     Fan     Perf    PwrCap  VRAM%  GPU%  \n\u001b[3m              (DID,     GUID)  (Edge)  (Socket)  (Mem, Compute, ID)                                                         \u001b[0m\n============================================================================================================================\n0       2     0x66a1,   4670   33.0\u00b0C  31.0W     N/A, N/A, 0         1606Mhz  1000Mhz  14.51%  manual  225.0W  0%     0%    \n============================================================================================================================\n=================================================== End of ROCm SMI Log ====================================================\n",
+  "hardware_after": "\n\n============================================= ROCm System Management Interface =============================================\n======================================================= Concise Info =======================================================\nDevice  Node  IDs              Temp    Power     Partitions          SCLK     MCLK     Fan     Perf    PwrCap  VRAM%  GPU%  \n\u001b[3m              (DID,     GUID)  (Edge)  (Socket)  (Mem, Compute, ID)                                                         \u001b[0m\n============================================================================================================================\n0       2     0x66a1,   4670   42.0\u00b0C  35.0W     N/A, N/A, 0         1606Mhz  1000Mhz  14.51%  manual  225.0W  15%    0%    \n============================================================================================================================\n=================================================== End of ROCm SMI Log ====================================================\n",
+  "cases": [
+    {
+      "mode": "experimental",
+      "benchmark_kind": "pp",
+      "max_tokens": 1,
+      "prompt_words": 511,
+      "prompt_tokens": 512,
+      "generated_tokens": 1,
+      "prefill_ms": 11161.86,
+      "prefill_tok_s": 45.87,
+      "decode_ms": 1.61,
+      "decode_tok_s": 621.18,
+      "first_decode_token_ms": 1.61,
+      "ttft_ms": 11163.470000000001,
+      "steady_decode_tokens": null,
+      "steady_decode_ms": null,
+      "total_ms": 11164.92,
+      "peak_vram_bytes": 24977998164,
+      "wall_ms": 33065.67790696863,
+      "returncode": 0,
+      "steady_decode_tok_s": null
+    }
+  ]
+}

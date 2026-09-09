@@ -154,6 +154,8 @@ public:
                 MIINFER_HIP_CHECK(hipEventCreate(&layer.prepare_end));
                 MIINFER_HIP_CHECK(hipEventCreate(&layer.ordered_start));
                 MIINFER_HIP_CHECK(hipEventCreate(&layer.ordered_end));
+                for (auto& event : layer.tail_family_start) MIINFER_HIP_CHECK(hipEventCreate(&event));
+                for (auto& event : layer.tail_family_end) MIINFER_HIP_CHECK(hipEventCreate(&event));
             }
             for (auto& layer : attention_layers) {
                 for (auto& event : layer.start) MIINFER_HIP_CHECK(hipEventCreate(&event));
@@ -192,6 +194,14 @@ public:
                 if (layer.prepare_end != nullptr) (void)hipEventDestroy(layer.prepare_end);
                 if (layer.ordered_start != nullptr) (void)hipEventDestroy(layer.ordered_start);
                 if (layer.ordered_end != nullptr) (void)hipEventDestroy(layer.ordered_end);
+                for (auto& event : layer.tail_family_start) {
+                    if (event != nullptr) (void)hipEventDestroy(event);
+                    event = nullptr;
+                }
+                for (auto& event : layer.tail_family_end) {
+                    if (event != nullptr) (void)hipEventDestroy(event);
+                    event = nullptr;
+                }
                 layer.tail_start = nullptr;
                 layer.tail_end = nullptr;
                 layer.prepare_start = nullptr;
@@ -242,6 +252,7 @@ public:
                 "residual_post_norm", "post_normalization", "ffn_gate_up_projection",
                 "swiglu", "ffn_down_projection", "residual", "residual"};
             std::array<double, 17> family_ms{};
+            std::array<double, 4> recurrent_tail_family_ms{};
             double ordered_ms = 0.0;
             double sampled_total = embedding_ms;
             std::cout << "Prefill operator profile: prompt=" << prompt_tokens
@@ -290,6 +301,26 @@ public:
                           << (attention ? "attention" : "recurrent")
                           << " family=deferred_prefill_tail timing=whole-tail"
                           << " gpu_ms=" << tail << " total_ms=" << layer_total << '\n';
+                if (!attention) {
+                    static constexpr std::array<const char*, 4> tail_names{
+                        "gdn_core", "ssm_output_and_residual",
+                        "ffn_gate_up_and_swiglu", "ffn_down_and_residual"};
+                    for (std::size_t family = 0; family < tail_names.size(); ++family) {
+                        float family_elapsed = 0.0F;
+                        if (recurrent_layers[layer].tail_family_recorded[family]) {
+                            MIINFER_HIP_CHECK(hipEventElapsedTime(
+                                &family_elapsed,
+                                recurrent_layers[layer].tail_family_start[family],
+                                recurrent_layers[layer].tail_family_end[family]));
+                        }
+                        recurrent_tail_family_ms[family] += family_elapsed;
+                        std::cout << "  layer=" << layer << " kind=recurrent family="
+                                  << tail_names[family]
+                                  << " timing=selected-B4-tail recorded="
+                                  << recurrent_layers[layer].tail_family_recorded[family]
+                                  << " gpu_ms=" << family_elapsed << '\n';
+                    }
+                }
                 const hipEvent_t prepare_start = attention
                     ? attention_layers[layer].prepare_start : recurrent_layers[layer].prepare_start;
                 const hipEvent_t prepare_end = attention
@@ -321,6 +352,14 @@ public:
                           << (attention ? "attention" : "recurrent")
                           << " family=ordered_token_path recorded=" << ordered_recorded
                           << " gpu_ms=" << ordered << '\n';
+            }
+            std::cout << "Recurrent tail family profile (selected B4 group):\n";
+            static constexpr std::array<const char*, 4> tail_names{
+                "gdn_core", "ssm_output_and_residual",
+                "ffn_gate_up_and_swiglu", "ffn_down_and_residual"};
+            for (std::size_t family = 0; family < tail_names.size(); ++family) {
+                std::cout << "  family=" << tail_names[family]
+                          << " gpu_ms=" << recurrent_tail_family_ms[family] << '\n';
             }
             std::cout << "Top operator families (sampled position, summed layers):\n";
             std::vector<std::size_t> order(family_ms.size());
