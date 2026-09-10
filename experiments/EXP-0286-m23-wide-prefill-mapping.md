@@ -578,3 +578,12 @@ two runs, for a `58.24 tok/s` mean versus the fresh row-64 `50.58 tok/s`
 control. Allocation remained `23,156,230,484` bytes. **KEEP as an opt-in
 row-128 configuration**; do not make it the default until model-sized parity
 is qualified. The 222.64 tok/s target remains unmet.
+
+### Rejected experiment — row-128 activation reuse loop order — 2026-09-10
+
+The row-128 kernel was briefly reordered so each token's activation scale and
+cached affine sum were loaded once and reused across both 64-row halves. The
+focused varied-payload GPU parity test still passed, but exact P512 measured
+`56.28 tok/s` after the earlier `57.26`/`59.22 tok/s` launch-bounds pair
+(58.24 tok/s mean). The loop reorder is **REJECTED** and has been reverted;
+the independent row-128 launch-bounds candidate remains the opt-in KEEP.
