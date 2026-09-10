@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788900029.2678683,
-    "seen": 1788900541.9727306,
-    "ast_hash": "16c9571b7d5356c1b30004ccea2e7480",
+    "mtime": 1788986886.6984804,
+    "seen": 1788986948.0120213,
+    "ast_hash": "908cc167db8c8f73619d2e06cc30569f",
     "semantic_hash": ""
   },
   "README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1788984239.4746983,
-    "seen": 1788984340.0242527,
-    "ast_hash": "2e4cff9c4c4ae850dfca74acec1c96d4",
+    "mtime": 1789063632.7149389,
+    "seen": 1789063647.6052115,
+    "ast_hash": "a0346d4b97cfdf33cad8bd2515514a93",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1788847739.750404,
-    "seen": 1788847775.0746553,
-    "ast_hash": "8cc4019be5c42a81e46ec299f7bdcac2",
+    "mtime": 1789062527.1900144,
+    "seen": 1789062577.7921479,
+    "ast_hash": "d9f71d6b16c2a8c6fcff543d1f4850f7",
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_primitives.hpp": {
@@ -2040,9 +2040,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/kquant_wave_layout.hpp": {
-    "mtime": 1788872295.2453184,
-    "seen": 1788872356.411782,
-    "ast_hash": "8dd28b79700228b35792dd0aa2b07b7b",
+    "mtime": 1789022185.5055866,
+    "seen": 1789024667.370788,
+    "ast_hash": "4aa829610a29648cdaaa6e5943933e21",
     "semantic_hash": ""
   },
   "scripts/run-exp0177-attn-gate-ab.sh": {
@@ -2076,15 +2076,15 @@
     "semantic_hash": ""
   },
   "src/kquant_wave_layout.cpp": {
-    "mtime": 1788835847.274016,
-    "seen": 1788835901.4074748,
-    "ast_hash": "2a9196dfc739ff5e51797e76b78af13c",
+    "mtime": 1789054000.9710348,
+    "seen": 1789054906.9742317,
+    "ast_hash": "e450c4609b5a7c208783be6dce27ad9b",
     "semantic_hash": ""
   },
   "tests/kquant_wave_test.cpp": {
-    "mtime": 1788719037.1870651,
-    "seen": 1788721684.3027534,
-    "ast_hash": "053fbf7a1440424114d5aa10650bf362",
+    "mtime": 1789022168.9696915,
+    "seen": 1789024667.3711455,
+    "ast_hash": "67dc9e50c9f35c565179df3702a6b7de",
     "semantic_hash": ""
   },
   "docs/deltanet-ssm-fusion-design.md": {
@@ -2364,15 +2364,15 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1788983470.4721189,
-    "seen": 1788984057.20668,
-    "ast_hash": "f3e1831c632a8a1945ffc9f8f65303c7",
+    "mtime": 1789053445.0047715,
+    "seen": 1789053715.5001092,
+    "ast_hash": "afc252f81fcbbb20c72cdcc57d948590",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1788983746.6135316,
-    "seen": 1788984057.2066815,
-    "ast_hash": "32e4fc13f954f40c8af8728fd2eeb317",
+    "mtime": 1789053424.7668736,
+    "seen": 1789053715.5001106,
+    "ast_hash": "212daf980c478cbf244d86aed84263ab",
     "semantic_hash": ""
   },
   "docs/M9-AUTOREGRESSIVE-QUALIFICATION.md": {
@@ -2796,9 +2796,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/m12_dense_stage.hpp": {
-    "mtime": 1788982548.5864186,
-    "seen": 1788984057.206256,
-    "ast_hash": "7af153c2cf2dc675cc7b1b4338f85d40",
+    "mtime": 1788987646.7034166,
+    "seen": 1788987712.9171906,
+    "ast_hash": "85a779502bfe1ab2f9987ad4122d3212",
     "semantic_hash": ""
   },
   "bench/m12_gdn_oracle.cpp": {
@@ -4809,6 +4809,18 @@
     "mtime": 1788984326.336199,
     "seen": 1788984340.0246832,
     "ast_hash": "7b5b8eec280b3c93a4a5c151631d61a2",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0286-m23-wide-prefill-mapping.md": {
+    "mtime": 1789063632.715939,
+    "seen": 1789063647.6056595,
+    "ast_hash": "2e6e676ac55f17d4c839a81517154bb3",
+    "semantic_hash": ""
+  },
+  "tests/qwen35_conv_batch_test.cpp": {
+    "mtime": 1789062527.1970143,
+    "seen": 1789062577.7924716,
+    "ast_hash": "e9bedc92378f130835508d086af238fc",
     "semantic_hash": ""
   }
 }

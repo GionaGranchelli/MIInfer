@@ -44,6 +44,7 @@ namespace {
 
 std::atomic<bool> g_shutdown_requested{false};
 int g_signal_wakeup_fd = -1;
+constexpr std::size_t kFullPrefillCapacity = 512;
 
 void signal_handler(int sig) {
     if (sig == SIGINT || sig == SIGTERM) {
@@ -137,6 +138,7 @@ public:
         std::array<FullAttentionLayer::StageProfile, 64> attention_layers{};
         std::size_t profile_position = 511;
         std::size_t profile_chunk_base = 448;
+        std::size_t projection_batch_width = 4;
         double embedding_ms = 0.0;
         std::size_t chunks = 0;
 
@@ -258,7 +260,7 @@ public:
             std::cout << "Prefill operator profile: prompt=" << prompt_tokens
                       << " chunks=" << chunks << " wall_ms=" << wall_ms
                       << " sampled_position=" << profile_position
-                      << " projection_batch_width=B4 (M12 batched4 GEMV)"
+                      << " projection_batch_width=B" << projection_batch_width
                       << " chunk_base=" << profile_chunk_base
                       << " embedding_ms=" << embedding_ms << '\n';
             for (std::size_t layer = 0; layer < 64; ++layer) {
@@ -335,7 +337,7 @@ public:
                 sampled_total += prepare;
                 std::cout << "  layer=" << layer << " kind="
                           << (attention ? "attention" : "recurrent")
-                          << " family=prefill_batch_prepare batch=B64 projection_groups=B4"
+                          << " family=prefill_batch_prepare batch=B" << projection_batch_width
                           << " recorded=" << prepare_recorded << " gpu_ms=" << prepare << '\n';
                 const hipEvent_t ordered_start = attention
                     ? attention_layers[layer].ordered_start : recurrent_layers[layer].ordered_start;
@@ -484,9 +486,13 @@ public:
     const float* prefill_layer_major(std::span<const std::uint32_t> prompt,
                                      const std::function<bool()>& should_cancel,
                                      std::size_t& processed_tokens) {
+        if (full_layer_major_prefill_ && prompt.size() <= kFullPrefillCapacity
+            && prompt.size() % kM12PrefillBatch == 0) {
+            return prefill_full_layer_major(prompt, should_cancel, processed_tokens);
+        }
         // A 128-token request with a non-128 tail would otherwise make the
         // final nearly-full chunk fall back to per-token recurrent execution.
-        const bool matrix_prefill = gdn_chunkwise_prefill_ || dense_prefill_;
+        const bool matrix_prefill = gdn_chunkwise_prefill_ || dense_prefill_ || wide_prefill_;
         const std::size_t kChunk = (prefill_chunk_ > kPrefillBatch && matrix_prefill
             && prompt.size() % prefill_chunk_ != 0) ? kPrefillBatch : prefill_chunk_;
         float* current = static_cast<float*>(prefill_a_->get());
@@ -528,6 +534,15 @@ public:
                 if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
                 layer_span[layer].profile_ordered_start(
                     prefill_profile_.enabled ? base : std::numeric_limits<std::size_t>::max());
+                if (wide_prefill_ && count == kM12PrefillBatch
+                    && layer_span[layer].recurrent != nullptr) {
+                    layer_span[layer].recurrent->prefill_wide(current, next, base, count);
+                    layer_span[layer].profile_ordered_end(
+                        prefill_profile_.enabled ? base : std::numeric_limits<std::size_t>::max());
+                    layer_span[layer].release_m23_repacked();
+                    std::swap(current, next);
+                    continue;
+                }
                 const bool normalized_ready = layer > 0 && layer_span[layer - 1].fused_interlayer_norm();
                 const bool prepared = layer_span[layer].prepare_prefill_batch(
                     current, count, normalized_ready,
@@ -535,17 +550,20 @@ public:
                 const bool full_m12_chunk = count % kPrefillBatch == 0;
                 const bool deferred_tail = prepared && layer_span[layer].prefill_tail_batch_supported()
                     && (!gdn_chunkwise_prefill_ || full_m12_chunk);
+                const bool batched_attention = prepared && deferred_tail
+                    && count == kM12PrefillBatch
+                    && layer_span[layer].wide_attention_batch_ready();
                 const bool fuse_next_norm = layer + 1 < layer_span.size()
                     && layer_span[layer].fused_interlayer_norm();
                 const float* next_norm_weight = fuse_next_norm
                     ? layer_span[layer + 1].attn_norm_weight() : nullptr;
                 float* next_normalized_batch = fuse_next_norm
                     ? const_cast<float*>(layer_span[layer + 1].prefill_normalized_at(0)) : nullptr;
-                for (std::size_t i = 0; i < count; ++i) {
+                if (!batched_attention) for (std::size_t i = 0; i < count; ++i) {
                     if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
                     float* next_normalized = fuse_next_norm
                         ? next_normalized_batch + i * kHidden : nullptr;
-                    const float* prepared_normalized = normalized_ready
+                    const float* prepared_normalized = prepared
                         ? layer_span[layer].prefill_normalized_at(i) : nullptr;
                     if (prepared) {
                         layer_span[layer].run(
@@ -565,6 +583,10 @@ public:
                                               prepared_normalized);
                     }
                 }
+                if (batched_attention) {
+                    layer_span[layer].finish_prefill_attention(
+                        static_cast<std::uint32_t>(base), count);
+                }
                 if (deferred_tail) {
                     layer_span[layer].finish_prefill_batch(
                         current, next, count, next_norm_weight, next_normalized_batch,
@@ -572,6 +594,7 @@ public:
                 }
                 layer_span[layer].profile_ordered_end(
                     prefill_profile_.enabled ? base : std::numeric_limits<std::size_t>::max());
+                layer_span[layer].release_m23_repacked();
                 std::swap(current, next);
             }
             final_hidden = current + (count - 1) * kHidden;
@@ -579,6 +602,86 @@ public:
         }
         MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
         return final_hidden;
+    }
+
+    const float* prefill_full_layer_major(std::span<const std::uint32_t> prompt,
+                                          const std::function<bool()>& should_cancel,
+                                          std::size_t& processed_tokens) {
+        float* current = static_cast<float*>(prefill_a_->get());
+        float* next = static_cast<float*>(prefill_b_->get());
+        for (std::size_t i = 0; i < prompt.size(); ++i) {
+            if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
+            MIINFER_HIP_CHECK(hipMemcpyAsync(
+                static_cast<std::uint32_t*>(d_decode_tokens_->get()) + i,
+                &prompt[i], sizeof(std::uint32_t), hipMemcpyHostToDevice, hipStreamPerThread));
+            miinfer::launch_qwen35_q4_k_embedding_device_token(
+                static_cast<const miinfer::Q4KDeviceBlock*>(d_embedding_->get()),
+                static_cast<const std::uint32_t*>(d_decode_tokens_->get()) + i,
+                model_.config().vocab_size, kHidden, current + i * kHidden,
+                hipStreamPerThread);
+        }
+        const auto layer_span = std::span<const GpuLayerRef>(layers_);
+        for (std::size_t layer = 0; layer < layer_span.size(); ++layer) {
+            if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
+            layer_span[layer].profile_ordered_start(
+                prefill_profile_.enabled ? 0 : std::numeric_limits<std::size_t>::max());
+            for (std::size_t base = 0; base < prompt.size(); base += kM12PrefillBatch) {
+                if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
+                const auto count = static_cast<std::uint32_t>(
+                    std::min<std::size_t>(kM12PrefillBatch,
+                                          prompt.size() - base));
+                const float* chunk_input = current + base * kHidden;
+                float* chunk_output = next + base * kHidden;
+                if (wide_prefill_ && count == kM12PrefillBatch
+                    && layer_span[layer].recurrent != nullptr) {
+                    layer_span[layer].recurrent->prefill_wide(
+                        chunk_input, chunk_output, static_cast<std::uint32_t>(base), count);
+                    continue;
+                }
+                const bool prepared = layer_span[layer].prepare_prefill_batch(
+                    chunk_input, count, false,
+                    prefill_profile_.enabled ? base : std::numeric_limits<std::size_t>::max());
+                const bool full_m12_chunk = count % kPrefillBatch == 0;
+                const bool deferred_tail = prepared && layer_span[layer].prefill_tail_batch_supported()
+                    && (!gdn_chunkwise_prefill_ || full_m12_chunk);
+                const bool batched_attention = prepared && deferred_tail
+                    && count == kM12PrefillBatch
+                    && layer_span[layer].wide_attention_batch_ready();
+                if (!batched_attention) for (std::size_t i = 0; i < count; ++i) {
+                    if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
+                    if (prepared) {
+                        layer_span[layer].run(
+                            chunk_input + i * kHidden, static_cast<std::uint32_t>(base + i),
+                            chunk_output + i * kHidden, nullptr, nullptr, false, nullptr, false,
+                            layer_span[layer].prefill_qkv_at(i), layer_span[layer].prefill_gate_at(i),
+                            layer_span[layer].prefill_normalized_at(i), deferred_tail, i,
+                            layer_span[layer].prefill_qfull_at(i),
+                            layer_span[layer].prefill_value_at(i));
+                    } else {
+                        layer_span[layer].run(
+                            chunk_input + i * kHidden, static_cast<std::uint32_t>(base + i),
+                            chunk_output + i * kHidden, nullptr, nullptr, false, nullptr, false,
+                            nullptr, nullptr, nullptr);
+                    }
+                }
+                if (batched_attention) {
+                    layer_span[layer].finish_prefill_attention(
+                        static_cast<std::uint32_t>(base), count);
+                }
+                if (deferred_tail) {
+                    layer_span[layer].finish_prefill_batch(
+                        chunk_input, chunk_output, count, nullptr, nullptr,
+                        prefill_profile_.enabled ? base : std::numeric_limits<std::size_t>::max());
+                }
+            }
+            layer_span[layer].profile_ordered_end(
+                prefill_profile_.enabled ? prompt.size() - 1 : std::numeric_limits<std::size_t>::max());
+            layer_span[layer].release_m23_repacked();
+            std::swap(current, next);
+        }
+        MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+        processed_tokens = prompt.size();
+        return current + (prompt.size() - 1) * kHidden;
     }
 
     std::uint32_t next_token_from_hidden(const float* hidden, std::size_t position) {
@@ -835,11 +938,18 @@ private:
         const char* dense_projection_env = std::getenv("MIINFER_PREFILL_DENSE_PROJECTIONS");
         dense_projection_prefill_ = layer_major_prefill_ && dense_projection_env != nullptr
             && std::strcmp(dense_projection_env, "0") != 0;
+        const char* wide_prefill_env = std::getenv("MIINFER_PREFILL_WIDE_CHUNK");
+        wide_prefill_ = layer_major_prefill_ && wide_prefill_env != nullptr
+            && std::strcmp(wide_prefill_env, "0") != 0;
+        const char* full_layer_env = std::getenv("MIINFER_PREFILL_FULL_LAYER_MAJOR");
+        full_layer_major_prefill_ = wide_prefill_ && full_layer_env != nullptr
+            && std::strcmp(full_layer_env, "0") != 0;
+        gdn_chunkwise_prefill_ = gdn_chunkwise_prefill_ || wide_prefill_;
         const char* prefill_chunk_env = std::getenv("MIINFER_PREFILL_CHUNK");
         if (prefill_chunk_env != nullptr) {
             const auto requested = std::stoul(prefill_chunk_env);
             if (requested != 4 && requested != kPrefillBatch
-                && !((gdn_chunkwise_prefill_ || dense_prefill_)
+                && !((gdn_chunkwise_prefill_ || dense_prefill_ || wide_prefill_)
                      && requested == kM12PrefillBatch)) {
                 throw std::runtime_error(
                     "MIINFER_PREFILL_CHUNK must be 4 or 64; M12 also accepts 128");
@@ -850,10 +960,11 @@ private:
         prefill_profile_.enabled = layer_major_prefill_ && prefill_profile_env != nullptr
             && std::strcmp(prefill_profile_env, "0") != 0;
         if (prefill_profile_.enabled) {
+            prefill_profile_.projection_batch_width = wide_prefill_ ? kM12PrefillBatch : 4;
             const char* position_env = std::getenv("MIINFER_PREFILL_PROFILE_POSITION");
             if (position_env != nullptr) prefill_profile_.profile_position = std::stoull(position_env);
             prefill_profile_.profile_chunk_base =
-                (prefill_profile_.profile_position / kPrefillBatch) * kPrefillBatch;
+                (prefill_profile_.profile_position / prefill_chunk_) * prefill_chunk_;
         }
     }
 
@@ -887,7 +998,7 @@ private:
     }
 
     void init_m12_gdn_workspace() {
-        if (!gdn_chunkwise_prefill_) return;
+        if (!gdn_chunkwise_prefill_ && !wide_prefill_) return;
         const std::size_t bytes = kVHeads * 64 * kState * sizeof(float);
         m12_gdn_new_values_ = allocate(bytes);
         m12_gdn_decayed_keys_ = allocate(bytes);
@@ -908,7 +1019,7 @@ private:
     }
 
     void init_m12_dense_workspace() {
-        if (!dense_prefill_ && !dense_projection_prefill_) return;
+        if (!dense_prefill_ && !dense_projection_prefill_ && !wide_prefill_) return;
         m12_dense_weights_ = allocate(kHidden * kFfnInner * sizeof(__half));
         m12_dense_input_ = allocate(kM12PrefillBatch * kFfnInner * sizeof(__half));
         std::string error;
@@ -949,8 +1060,9 @@ private:
         logits_ = allocate(model_.config().vocab_size * sizeof(float));
         argmax_token_ = allocate(sizeof(std::uint32_t));
         d_decode_tokens_ = allocate(g_cache_capacity * sizeof(std::uint32_t));
-        const std::size_t prefill_capacity = (gdn_chunkwise_prefill_ || dense_prefill_)
-            ? kM12PrefillBatch : kPrefillBatch;
+        const std::size_t prefill_capacity = full_layer_major_prefill_ ? kFullPrefillCapacity
+            : ((gdn_chunkwise_prefill_ || dense_prefill_ || wide_prefill_)
+                ? kM12PrefillBatch : kPrefillBatch);
         prefill_a_ = allocate(prefill_capacity * kHidden * sizeof(float));
         prefill_b_ = allocate(prefill_capacity * kHidden * sizeof(float));
 
@@ -1049,6 +1161,8 @@ private:
     bool gdn_chunkwise_prefill_ = false;
     bool dense_prefill_ = false;
     bool dense_projection_prefill_ = false;
+    bool wide_prefill_ = false;
+    bool full_layer_major_prefill_ = false;
     std::size_t prefill_chunk_ = kPrefillBatch;
     PrefillProfile prefill_profile_;
     std::vector<hipGraphExec_t> decode_graphs_;
@@ -1262,6 +1376,12 @@ int cmd_run(int argc, char** argv) {
     std::optional<std::filesystem::path> prompt_file;
     std::size_t max_tokens = 128;
     bool stream = true;
+
+    if (const char* context_env = std::getenv("MIINFER_CONTEXT_CAPACITY")) {
+        const auto context = std::stoull(context_env);
+        if (context == 0) throw std::runtime_error("MIINFER_CONTEXT_CAPACITY must be positive");
+        g_cache_capacity = context;
+    }
 
     for (int i = 3; i < argc; ++i) {
         std::string_view arg = argv[i];

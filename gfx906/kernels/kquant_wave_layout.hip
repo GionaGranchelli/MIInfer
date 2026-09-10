@@ -1216,6 +1216,421 @@ static bool kquant_fast_arith_enabled() {
     return enabled;
 }
 
+static bool m23_repacked_row128_enabled() {
+    static const bool enabled = [] {
+        const char* env = std::getenv("MIINFER_M23_REPACKED_ROW128");
+        return env != nullptr && std::strcmp(env, "0") != 0
+            && std::strcmp(env, "OFF") != 0 && std::strcmp(env, "off") != 0;
+    }();
+    return enabled;
+}
+
+// Legacy 64-row fallback retained until the row-128 Q6 mapping passes GPU parity.
+[[maybe_unused]] __launch_bounds__(256, 1) __global__ void m23_q6k_repacked_mmq_kernel(
+    const Q6KMmqTile* __restrict__ weights,
+    const miinfer::M23Q8_1MmqBlock* __restrict__ input,
+    float* __restrict__ output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    std::uint32_t token_count) {
+    const std::uint32_t row_tile = blockIdx.x;
+    const std::uint32_t token_base = blockIdx.y * 128 + threadIdx.x;
+    const std::uint32_t row_base = row_tile * 64 + threadIdx.y * 16;
+    const std::uint32_t k_tiles = columns / 128;
+    const std::uint32_t tid = threadIdx.y * 64 + threadIdx.x;
+    __shared__ std::uint32_t expanded[2][4][64][4];
+    __shared__ miinfer::M23Q8_1MmqBlock activation_tile[128];
+    float accum[16][2] = {};
+
+    for (std::uint32_t k_tile = 0; k_tile < k_tiles; ++k_tile) {
+        const auto* source_activation = input + static_cast<std::size_t>(k_tile) * token_count;
+        constexpr std::uint32_t activation_words = sizeof(miinfer::M23Q8_1MmqBlock) / sizeof(uint4);
+        for (std::uint32_t index = tid; index < token_count * activation_words; index += 256) {
+            reinterpret_cast<uint4*>(activation_tile)[index] = reinterpret_cast<const uint4*>(source_activation)[index];
+        }
+        __syncthreads();
+        for (std::uint32_t index = tid; index < 2 * 4 * 64 * 4; index += 256) {
+            const std::uint32_t slab = index / (2 * 64 * 4);
+            const std::uint32_t rem = index % (2 * 64 * 4);
+            const std::uint32_t half = rem / (64 * 4);
+            const std::uint32_t row = (rem % (64 * 4)) / 4;
+            const std::uint32_t word = rem % 4;
+            const auto* source_weight = weights
+                + static_cast<std::size_t>(row_tile) * k_tiles + k_tile;
+            const std::uint32_t raw = source_weight->values[slab][row][word];
+            const std::uint64_t high = static_cast<std::uint64_t>(source_weight->high[slab][row][0])
+                | (static_cast<std::uint64_t>(source_weight->high[slab][row][1]) << 32);
+            std::uint32_t value = 0;
+            for (std::uint32_t byte = 0; byte < 4; ++byte) {
+                const std::uint32_t value_index = half * 16 + word * 4 + byte;
+                const int q = static_cast<int>((raw >> (4 * half + 8 * byte)) & 0x0fU)
+                    | static_cast<int>(((high >> (2 * value_index)) & 0x03U) << 4);
+                value |= static_cast<std::uint32_t>(static_cast<std::uint8_t>(q - 32)) << (8 * byte);
+            }
+            expanded[half][slab][row][word] = value;
+        }
+        __syncthreads();
+
+        float input_d[2][4] = {};
+        for (int output_column = 0; output_column < 2; ++output_column) {
+            const std::uint32_t token = token_base + output_column * 64;
+            if (token >= token_count) continue;
+            const auto& x = activation_tile[token];
+#pragma unroll
+            for (int slab = 0; slab < 4; ++slab) {
+                input_d[output_column][slab] = __half2float(__float2half_rn(x.d[slab]));
+            }
+        }
+
+#pragma unroll
+        for (int row_offset = 0; row_offset < 16; ++row_offset) {
+#pragma unroll
+            for (int slab = 0; slab < 4; ++slab) {
+                const auto* source_weight = weights
+                    + static_cast<std::size_t>(row_tile) * k_tiles + k_tile;
+                const std::uint32_t scale_d_lane = threadIdx.x == 0
+                    ? source_weight->scale_d[slab][threadIdx.y * 16 + row_offset]
+                    : 0;
+                const std::uint32_t scale_d = __shfl(scale_d_lane, 0, 64);
+                const std::uint16_t d_bits = static_cast<std::uint16_t>(scale_d >> 16);
+                const float weight_d = __half2float(*reinterpret_cast<const __half*>(&d_bits));
+                const int scales[2] = {static_cast<std::int8_t>(scale_d),
+                                       static_cast<std::int8_t>(scale_d >> 8)};
+#pragma unroll
+                for (int output_column = 0; output_column < 2; ++output_column) {
+                    const std::uint32_t token = token_base + output_column * 64;
+                    if (token >= token_count) continue;
+                    const auto& x = activation_tile[token];
+#pragma unroll
+                    for (int half = 0; half < 2; ++half) {
+                        int dot = 0;
+#pragma unroll
+                        for (int word = 0; word < 4; ++word) {
+                            const int x_word = static_cast<int>(*reinterpret_cast<const std::uint32_t*>(
+                                x.qs + slab * 32 + half * 16 + word * 4));
+                            dot = __builtin_amdgcn_sdot4(
+                                static_cast<int>(expanded[half][slab][threadIdx.y * 16 + row_offset][word]),
+                                x_word, dot, false);
+                        }
+                        accum[row_offset][output_column] += weight_d * input_d[output_column][slab]
+                            * static_cast<float>(scales[half] * dot);
+                    }
+                }
+            }
+        }
+        __syncthreads();
+    }
+#pragma unroll
+    for (int row_offset = 0; row_offset < 16; ++row_offset) {
+        const std::uint32_t row = row_base + row_offset;
+        if (token_base < token_count) output[static_cast<std::size_t>(token_base) * rows + row] = accum[row_offset][0];
+        if (token_base + 64 < token_count) output[static_cast<std::size_t>(token_base + 64) * rows + row] = accum[row_offset][1];
+    }
+}
+
+[[maybe_unused]] __launch_bounds__(256, 1) __global__ void m23_q6k_repacked_mmq_row128_kernel(
+    const Q6KMmqTile* __restrict__ weights,
+    const miinfer::M23Q8_1MmqBlock* __restrict__ input,
+    float* __restrict__ output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    std::uint32_t token_count) {
+    const std::uint32_t row_tile = blockIdx.x;
+    const std::uint32_t token_base = blockIdx.y * 64;
+    const std::uint32_t lane = threadIdx.x;
+    const std::uint32_t warp = threadIdx.y;
+    const std::uint32_t tid = warp * 64 + lane;
+    const std::uint32_t k_tiles = columns / 128;
+    // Keep only expanded weights in LDS; raw tiles are read coalesced from
+    // global memory during expansion so two resident workgroups fit on a CU.
+    __shared__ std::uint32_t expanded[2][2][4][64][4];
+    __shared__ miinfer::M23Q8_1MmqBlock activation_tile[64];
+    float accum[2][16] = {};
+
+    for (std::uint32_t k_tile = 0; k_tile < k_tiles; ++k_tile) {
+        constexpr std::uint32_t activation_words = sizeof(miinfer::M23Q8_1MmqBlock) / sizeof(uint4);
+        const auto* source_activation = input + static_cast<std::size_t>(k_tile) * token_count + token_base;
+        const std::uint32_t active_tokens = token_base < token_count
+            ? std::min<std::uint32_t>(64, token_count - token_base) : 0;
+        for (std::uint32_t index = tid; index < active_tokens * activation_words; index += 256) {
+            reinterpret_cast<uint4*>(activation_tile)[index] = reinterpret_cast<const uint4*>(source_activation)[index];
+        }
+        __syncthreads();
+        for (std::uint32_t index = tid; index < 2 * 2 * 4 * 64 * 4; index += 256) {
+            const std::uint32_t row_half = index / (2 * 4 * 64 * 4);
+            const std::uint32_t local_index = index % (2 * 4 * 64 * 4);
+            const std::uint32_t slab = local_index / (2 * 64 * 4);
+            const std::uint32_t rem = local_index % (2 * 64 * 4);
+            const std::uint32_t half = rem / (64 * 4);
+            const std::uint32_t row = (rem % (64 * 4)) / 4;
+            const std::uint32_t word = rem % 4;
+            const bool valid = row_tile * 128 + row_half * 64 < rows;
+            const auto* source_weight = weights
+                + static_cast<std::size_t>(row_tile * 2 + row_half) * k_tiles + k_tile;
+            const std::uint32_t raw = valid ? source_weight->values[slab][row][word] : 0;
+            const std::uint64_t high = valid
+                ? static_cast<std::uint64_t>(source_weight->high[slab][row][0])
+                    | (static_cast<std::uint64_t>(source_weight->high[slab][row][1]) << 32)
+                : 0;
+            std::uint32_t value = 0;
+            for (std::uint32_t byte = 0; byte < 4; ++byte) {
+                const std::uint32_t value_index = half * 16 + word * 4 + byte;
+                const int q = static_cast<int>((raw >> (4 * half + 8 * byte)) & 0x0fU)
+                    | static_cast<int>(((high >> (2 * value_index)) & 0x03U) << 4);
+                value |= static_cast<std::uint32_t>(static_cast<std::uint8_t>(q - 32)) << (8 * byte);
+            }
+            expanded[row_half][half][slab][row][word] = value;
+        }
+        __syncthreads();
+        for (std::uint32_t row_half = 0; row_half < 2; ++row_half) {
+            const std::uint32_t row = row_tile * 128 + row_half * 64 + lane;
+            if (row >= rows) continue;
+            for (int slab = 0; slab < 4; ++slab) {
+                const auto* source_weight = weights
+                    + static_cast<std::size_t>(row_tile * 2 + row_half) * k_tiles + k_tile;
+                const std::uint32_t scale_d = source_weight->scale_d[slab][lane];
+                const std::uint16_t d_bits = static_cast<std::uint16_t>(scale_d >> 16);
+                const float weight_d = __half2float(*reinterpret_cast<const __half*>(&d_bits));
+                const int scales[2] = {static_cast<std::int8_t>(scale_d),
+                                       static_cast<std::int8_t>(scale_d >> 8)};
+                for (int j0 = 0; j0 < 64; j0 += 4) {
+                    const std::uint32_t token = j0 + warp;
+                    if (token >= token_count - token_base) continue;
+                    const auto& x = activation_tile[token];
+                    const float input_d = __half2float(__float2half_rn(x.d[slab]));
+                    for (int half = 0; half < 2; ++half) {
+                        int dot = 0;
+                        for (int word = 0; word < 4; ++word) {
+                            const int x_word = static_cast<int>(*reinterpret_cast<const std::uint32_t*>(
+                                x.qs + slab * 32 + half * 16 + word * 4));
+                            dot = __builtin_amdgcn_sdot4(
+                                static_cast<int>(expanded[row_half][half][slab][lane][word]),
+                                x_word, dot, false);
+                        }
+                        accum[row_half][j0 / 4] += weight_d * input_d
+                            * static_cast<float>(scales[half] * dot);
+                    }
+                }
+            }
+        }
+        __syncthreads();
+    }
+    for (std::uint32_t row_half = 0; row_half < 2; ++row_half) {
+        const std::uint32_t row = row_tile * 128 + row_half * 64 + lane;
+        if (row >= rows) continue;
+        for (int j0 = 0; j0 < 64; j0 += 4) {
+            const std::uint32_t token = token_base + j0 + warp;
+            if (token < token_count) output[static_cast<std::size_t>(token) * rows + row] = accum[row_half][j0 / 4];
+        }
+    }
+}
+
+template <typename Tile>
+__launch_bounds__(256, 1)
+__global__ void m23_affine_repacked_mmq_kernel(
+    const Tile* __restrict__ weights,
+    const miinfer::M23Q8_1MmqBlock* __restrict__ input,
+    float* __restrict__ output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    std::uint32_t token_count) {
+    const std::uint32_t row_tile = blockIdx.x;
+    const std::uint32_t token_base = blockIdx.y * 128 + threadIdx.x;
+    const std::uint32_t row_base = row_tile * 64 + threadIdx.y * 16;
+    const std::uint32_t k_tiles = columns / 128;
+    const std::uint32_t tid = threadIdx.y * 64 + threadIdx.x;
+    __shared__ std::uint32_t expanded[2][4][64][4];
+    __shared__ miinfer::M23Q8_1MmqBlock activation_tile[128];
+    float accum[16][2] = {};
+
+    for (std::uint32_t k_tile = 0; k_tile < k_tiles; ++k_tile) {
+        const auto* source_activation = input + static_cast<std::size_t>(k_tile) * token_count;
+        constexpr std::uint32_t activation_words = sizeof(miinfer::M23Q8_1MmqBlock) / sizeof(uint4);
+        for (std::uint32_t index = tid; index < token_count * activation_words; index += 256) {
+            reinterpret_cast<uint4*>(activation_tile)[index] = reinterpret_cast<const uint4*>(source_activation)[index];
+        }
+        __syncthreads();
+        for (std::uint32_t index = tid; index < 2 * 4 * 64 * 4; index += 256) {
+            const std::uint32_t slab = index / (2 * 64 * 4);
+            const std::uint32_t rem = index % (2 * 64 * 4);
+            const std::uint32_t half = rem / (64 * 4);
+            const std::uint32_t row = (rem % (64 * 4)) / 4;
+            const std::uint32_t word = rem % 4;
+            const auto* source_weight = weights
+                + static_cast<std::size_t>(row_tile) * k_tiles + k_tile;
+            const std::uint32_t raw = source_weight->values[slab][row][word];
+            const std::uint32_t high = source_weight->high[slab][row][0];
+            std::uint32_t value = 0;
+            for (std::uint32_t byte = 0; byte < 4; ++byte) {
+                const std::uint32_t value_index = half * 16 + word * 4 + byte;
+                const std::uint32_t nibble = (raw >> (8 * byte)) >> (half ? 4 : 0) & 0x0fU;
+                const std::uint32_t q = nibble | (((high >> value_index) & 1U) << 4);
+                value |= q << (8 * byte);
+            }
+            expanded[half][slab][row][word] = value;
+        }
+        __syncthreads();
+
+        float input_d[2][4] = {};
+        for (int output_column = 0; output_column < 2; ++output_column) {
+            const std::uint32_t token = token_base + output_column * 64;
+            if (token >= token_count) continue;
+            const auto& x = activation_tile[token];
+#pragma unroll
+            for (int slab = 0; slab < 4; ++slab) {
+                input_d[output_column][slab] = __half2float(__float2half_rn(x.d[slab]));
+            }
+        }
+
+#pragma unroll
+        for (int row_offset = 0; row_offset < 16; ++row_offset) {
+#pragma unroll
+            for (int slab = 0; slab < 4; ++slab) {
+                const auto* source_weight = weights
+                    + static_cast<std::size_t>(row_tile) * k_tiles + k_tile;
+                const std::uint32_t scale_d_lane = threadIdx.x == 0
+                    ? source_weight->scale_d[slab][threadIdx.y * 16 + row_offset]
+                    : 0;
+                const std::uint32_t scale_d = __shfl(scale_d_lane, 0, 64);
+                const std::uint16_t d_bits = static_cast<std::uint16_t>(scale_d >> 16);
+                const std::uint16_t dmin_lane = threadIdx.x == 0
+                    ? static_cast<std::uint16_t>(source_weight->dmin[slab][threadIdx.y * 16 + row_offset])
+                    : 0;
+                const std::uint16_t dmin_bits = __shfl(dmin_lane, 0, 64);
+                const float d = __half2float(*reinterpret_cast<const __half*>(&d_bits));
+                const float dmin = __half2float(*reinterpret_cast<const __half*>(&dmin_bits));
+                const int scale = static_cast<int>(scale_d & 0xffU);
+                const int minimum = static_cast<int>((scale_d >> 8) & 0xffU);
+#pragma unroll
+                for (int output_column = 0; output_column < 2; ++output_column) {
+                    const std::uint32_t token = token_base + output_column * 64;
+                    if (token >= token_count) continue;
+                    const auto& x = activation_tile[token];
+                    int dot = 0;
+#pragma unroll
+                    for (int half = 0; half < 2; ++half) {
+#pragma unroll
+                        for (int word = 0; word < 4; ++word) {
+                            const int x_word = static_cast<int>(*reinterpret_cast<const std::uint32_t*>(
+                                x.qs + slab * 32 + half * 16 + word * 4));
+                            dot = __builtin_amdgcn_sdot4(
+                                static_cast<int>(expanded[half][slab][threadIdx.y * 16 + row_offset][word]),
+                                x_word, dot, false);
+                        }
+                    }
+                    accum[row_offset][output_column] += d * input_d[output_column][slab]
+                        * static_cast<float>(scale * dot)
+                        - dmin * static_cast<float>(minimum) * x.qsum_scaled[slab];
+                }
+            }
+        }
+        __syncthreads();
+    }
+#pragma unroll
+    for (int row_offset = 0; row_offset < 16; ++row_offset) {
+        const std::uint32_t row = row_base + row_offset;
+        if (token_base < token_count) output[static_cast<std::size_t>(token_base) * rows + row] = accum[row_offset][0];
+        if (token_base + 64 < token_count) output[static_cast<std::size_t>(token_base + 64) * rows + row] = accum[row_offset][1];
+    }
+}
+
+template <typename Tile>
+__launch_bounds__(256, 1)
+__global__ void m23_affine_repacked_mmq_row128_kernel(
+    const Tile* __restrict__ weights,
+    const miinfer::M23Q8_1MmqBlock* __restrict__ input,
+    float* __restrict__ output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    std::uint32_t token_count) {
+    const std::uint32_t row_tile = blockIdx.x;
+    const std::uint32_t token_base = blockIdx.y * 64;
+    const std::uint32_t lane = threadIdx.x;
+    const std::uint32_t warp = threadIdx.y;
+    const std::uint32_t tid = warp * 64 + lane;
+    const std::uint32_t k_tiles = columns / 128;
+    // Keep only expanded weights in LDS; raw tiles are read coalesced from
+    // global memory during expansion so two resident workgroups fit on a CU.
+    __shared__ std::uint32_t expanded[2][2][4][64][4];
+    __shared__ miinfer::M23Q8_1MmqBlock activation_tile[64];
+    float accum[2][16] = {};
+
+    for (std::uint32_t k_tile = 0; k_tile < k_tiles; ++k_tile) {
+        constexpr std::uint32_t activation_words = sizeof(miinfer::M23Q8_1MmqBlock) / sizeof(uint4);
+        const auto* source_activation = input + static_cast<std::size_t>(k_tile) * token_count + token_base;
+        const std::uint32_t active_tokens = token_base < token_count
+            ? std::min<std::uint32_t>(64, token_count - token_base) : 0;
+        for (std::uint32_t index = tid; index < active_tokens * activation_words; index += 256) {
+            reinterpret_cast<uint4*>(activation_tile)[index] = reinterpret_cast<const uint4*>(source_activation)[index];
+        }
+        __syncthreads();
+        for (std::uint32_t index = tid; index < 2 * 2 * 4 * 64 * 4; index += 256) {
+            const std::uint32_t row_half = index / (2 * 4 * 64 * 4);
+            const std::uint32_t local_index = index % (2 * 4 * 64 * 4);
+            const std::uint32_t slab = local_index / (2 * 64 * 4);
+            const std::uint32_t rem = local_index % (2 * 64 * 4);
+            const std::uint32_t half = rem / (64 * 4);
+            const std::uint32_t row = (rem % (64 * 4)) / 4;
+            const std::uint32_t word = rem % 4;
+            const bool valid = row_tile * 128 + row_half * 64 < rows;
+            const auto* source_weight = weights
+                + static_cast<std::size_t>(row_tile * 2 + row_half) * k_tiles + k_tile;
+            const std::uint32_t raw = valid ? source_weight->values[slab][row][word] : 0;
+            const std::uint32_t high = valid ? source_weight->high[slab][row][0] : 0;
+            std::uint32_t value = 0;
+            for (std::uint32_t byte = 0; byte < 4; ++byte) {
+                const std::uint32_t value_index = half * 16 + word * 4 + byte;
+                const std::uint32_t nibble = (raw >> (8 * byte)) >> (half ? 4 : 0) & 0x0fU;
+                const std::uint32_t q = nibble | (((high >> value_index) & 1U) << 4);
+                value |= q << (8 * byte);
+            }
+            expanded[row_half][half][slab][row][word] = value;
+        }
+        __syncthreads();
+        for (std::uint32_t row_half = 0; row_half < 2; ++row_half) {
+            const std::uint32_t row = row_tile * 128 + row_half * 64 + lane;
+            if (row >= rows) continue;
+            for (int slab = 0; slab < 4; ++slab) {
+                const auto* source_weight = weights
+                    + static_cast<std::size_t>(row_tile * 2 + row_half) * k_tiles + k_tile;
+                const std::uint32_t scale_d = source_weight->scale_d[slab][lane];
+                const std::uint16_t d_bits = static_cast<std::uint16_t>(scale_d >> 16);
+                const std::uint16_t dmin_bits = source_weight->dmin[slab][lane];
+                const float d = __half2float(*reinterpret_cast<const __half*>(&d_bits));
+                const float dmin = __half2float(*reinterpret_cast<const __half*>(&dmin_bits));
+                const int scale = static_cast<int>(scale_d & 0xffU);
+                const int minimum = static_cast<int>((scale_d >> 8) & 0xffU);
+                for (int j0 = 0; j0 < 64; j0 += 4) {
+                    const std::uint32_t token = j0 + warp;
+                    if (token >= token_count - token_base) continue;
+                    const auto& x = activation_tile[token];
+                    const float input_d = __half2float(__float2half_rn(x.d[slab]));
+                    int dot = 0;
+                    for (int half = 0; half < 2; ++half) {
+                        for (int word = 0; word < 4; ++word) {
+                            const int x_word = static_cast<int>(*reinterpret_cast<const std::uint32_t*>(
+                                x.qs + slab * 32 + half * 16 + word * 4));
+                            dot = __builtin_amdgcn_sdot4(
+                                static_cast<int>(expanded[row_half][half][slab][lane][word]), x_word, dot, false);
+                        }
+                    }
+                    accum[row_half][j0 / 4] += d * input_d * static_cast<float>(scale * dot)
+                        - dmin * static_cast<float>(minimum) * x.qsum_scaled[slab];
+                }
+            }
+        }
+        __syncthreads();
+    }
+    for (std::uint32_t row_half = 0; row_half < 2; ++row_half) {
+        const std::uint32_t row = row_tile * 128 + row_half * 64 + lane;
+        if (row >= rows) continue;
+        for (int j0 = 0; j0 < 64; j0 += 4) {
+            const std::uint32_t token = token_base + j0 + warp;
+            if (token < token_count) output[static_cast<std::size_t>(token) * rows + row] = accum[row_half][j0 / 4];
+        }
+    }
+}
+
 } // namespace
 
 void launch_q4k_wave_gemv(const Q4KWaveTile* w, const miinfer::Q8_1Block* x, float* y,
@@ -1440,6 +1855,63 @@ void launch_q6k_wave_gemv_batched4(const Q6KWaveTile* w, const miinfer::Q8_1Bloc
     case 12: hipLaunchKernelGGL((q6k_wave_gemv_batched4_reuse_kernel<12>), grid, block, 0, stream, w, x, y, rows, columns / 32); break;
     case 17: hipLaunchKernelGGL((q6k_wave_gemv_batched4_reuse_kernel<17>), grid, block, 0, stream, w, x, y, rows, columns / 32); break;
     default: throw std::runtime_error("unsupported batched Q6K NumTiles: " + std::to_string(columns / 1024));
+    }
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_m23_q6k_repacked_mmq(
+    const Q6KMmqTile* weights, const miinfer::M23Q8_1MmqBlock* input, float* output,
+    std::uint32_t rows, std::uint32_t columns, std::uint32_t token_count, hipStream_t stream) {
+    if (!weights || !input || !output || rows == 0 || rows % 64 != 0 || columns == 0
+        || columns % 128 != 0 || token_count == 0 || token_count > 128) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    if (m23_repacked_row128_enabled() && rows % 128 == 0) {
+        hipLaunchKernelGGL(m23_q6k_repacked_mmq_row128_kernel,
+                           dim3(rows / 128, (token_count + 63) / 64), dim3(64, 4), 0, stream,
+                           weights, input, output, rows, columns, token_count);
+    } else {
+        hipLaunchKernelGGL(m23_q6k_repacked_mmq_kernel,
+                           dim3((rows + 63) / 64, (token_count + 127) / 128), dim3(64, 4), 0, stream,
+                           weights, input, output, rows, columns, token_count);
+    }
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_m23_q4k_repacked_mmq(
+    const Q4KMmqTile* weights, const miinfer::M23Q8_1MmqBlock* input, float* output,
+    std::uint32_t rows, std::uint32_t columns, std::uint32_t token_count, hipStream_t stream) {
+    if (!weights || !input || !output || rows == 0 || rows % 64 != 0 || columns == 0
+        || columns % 128 != 0 || token_count == 0 || token_count > 128) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    if (m23_repacked_row128_enabled() && rows % 128 == 0) {
+        hipLaunchKernelGGL((m23_affine_repacked_mmq_row128_kernel<Q4KMmqTile>),
+                           dim3(rows / 128, (token_count + 63) / 64), dim3(64, 4), 0, stream,
+                           weights, input, output, rows, columns, token_count);
+    } else {
+        hipLaunchKernelGGL((m23_affine_repacked_mmq_kernel<Q4KMmqTile>),
+                           dim3((rows + 63) / 64, (token_count + 127) / 128), dim3(64, 4), 0, stream,
+                           weights, input, output, rows, columns, token_count);
+    }
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_m23_q5k_repacked_mmq(
+    const Q5KMmqTile* weights, const miinfer::M23Q8_1MmqBlock* input, float* output,
+    std::uint32_t rows, std::uint32_t columns, std::uint32_t token_count, hipStream_t stream) {
+    if (!weights || !input || !output || rows == 0 || rows % 64 != 0 || columns == 0
+        || columns % 128 != 0 || token_count == 0 || token_count > 128) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    if (m23_repacked_row128_enabled() && rows % 128 == 0) {
+        hipLaunchKernelGGL((m23_affine_repacked_mmq_row128_kernel<Q5KMmqTile>),
+                           dim3(rows / 128, (token_count + 63) / 64), dim3(64, 4), 0, stream,
+                           weights, input, output, rows, columns, token_count);
+    } else {
+        hipLaunchKernelGGL((m23_affine_repacked_mmq_kernel<Q5KMmqTile>),
+                           dim3((rows + 63) / 64, (token_count + 127) / 128), dim3(64, 4), 0, stream,
+                           weights, input, output, rows, columns, token_count);
     }
     MIINFER_HIP_CHECK(hipGetLastError());
 }

@@ -15,7 +15,7 @@ For long-term direction, see:
 
 # Current Phase
 
-**M22 — prefill parity campaign**
+**M23 — wide-prefill parity campaign**
 
 Milestone status:
 
@@ -33,6 +33,7 @@ M16-D: JSON parsing         PASS
 M17-A: installation/doctor  PASS
 M17-B: local Web UI          PASS
 M22:   current B4 architecture hard ceiling; parity not reached
+M23:   all-layer B128 wide-prefill prototype; exact P512 measured, target unmet
 ```
 
 M22 is recorded in EXP-0276 through EXP-0285. The pinned mx-llama reference
@@ -43,6 +44,44 @@ causal B4 layer-major schedule is therefore not a parity implementation;
 further progress requires a new chunk/dataflow design rather than another
 local B4 projection variant. The final evidence and ratios are in
 `experiments/EXP-0285-m22-prefill-parity-closure.md`.
+
+M23 starts from the explicit operation mapping in EXP-0286. Its opt-in path
+can execute every recurrent layer as one B128-wide complete layer (all
+token-local projections, causal convolution/GDN, SSM-out, and FFN); the
+existing B4 layer-major path and decode stay unchanged. The Q4/Q5/Q6 staging
+path now handles combined QKV/Z layouts, and the varied Q6 MMQ fixture passes
+canonical parity after fixing the repacked high-nibble unpack. Attention MMQ
+tiles use a layer-scoped scratch pool so the model-sized working set fits.
+Exact P512 measured 50.24 and 51.01 tok/s across repeated runs after caching
+the canonical half-rounded activation scale×integer-sum in each Q8_1 MMQ
+block, on top of the gfx906 `__launch_bounds__(256,1)` contract for Q4/Q6.
+This is a 12.8% mean gain over the prior 45.14/44.59 tok/s pair, with the
+same 23,156,230,484-byte allocation. The earlier Q4-only runs were 43.17 and
+39.68 tok/s; corrected pre-attribute controls were 32.21 and 32.94 tok/s.
+The row-128 mapping remains opt-in, but adding the same
+`__launch_bounds__(256,1)` contract now measures 57.26 and 59.22 tok/s
+(58.24 tok/s mean) on the exact prompt, above the fresh row-64 control. The
+best path is still far below the 222.64 tok/s mx-llama target, and model-sized
+numerical parity is still unqualified. See EXP-0286's latest re-evaluation.
+
+After restoring the rejected compact block experiment, a fresh exact P512
+revalidation measured `50.58 tok/s` (`10,123.01 ms`) with the active
+176-byte block and `23,156,230,484` allocated bytes. This confirms the
+cached-sum result is stable; it does not change the unmet target or parity
+status.
+
+An additional opt-in, `MIINFER_PREFILL_FULL_LAYER_MAJOR=1`, keeps each
+repacked recurrent layer resident while processing all B128 chunks. It is
+numerically stable and improves the exact P512 smoke to 35.66 tok/s, but the
+result remains far below the pinned 222.64 tok/s reference.
+
+The current M23 candidate adds mx-style BM64xBN128 Q4/Q5/Q6 MMQ mappings,
+the measured gfx906 launch-bounds contract, and removes the
+remaining full-attention token loop: Q+gate/K normalization, RoPE, KV stores,
+causal attention, and the O/FFN tail now have B128 batch-launch paths. Focused
+varied-payload GPU correctness passes. Exact P512 timing is now recorded, but
+the result is far below target and model-sized numerical parity remains
+unqualified; see EXP-0286.
 
 M11-B is frozen at the qualified `46.22 tok/s` P513 packed-Q4 baseline.
 Native Qwen3.8-27B generation is operational and allocation-free. The

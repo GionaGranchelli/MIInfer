@@ -27,6 +27,18 @@ struct Q8KDeviceBlock {
 
 static_assert(sizeof(Q8KDeviceBlock) == 292);
 
+// M23 wide-MMQ activation block: four Q8_1 groups for 128 contiguous input
+// values. `s` retains the original group sums; `qsum_scaled` caches the
+// canonical half-rounded d times the integer quantized sum for affine MMQ.
+struct M23Q8_1MmqBlock {
+    float d[4];
+    float s[4];
+    float qsum_scaled[4];
+    std::int8_t qs[128];
+};
+
+static_assert(sizeof(M23Q8_1MmqBlock) == 176);
+
 struct Q4KDeviceBlock {
     __half d;
     __half dmin;
@@ -90,6 +102,51 @@ void launch_qwen3_rms_norm(
     float epsilon,
     hipStream_t stream = nullptr);
 
+void launch_qwen3_rms_norm_batch(
+    const float* input,
+    const float* weights,
+    float* output,
+    std::uint32_t token_count,
+    std::uint32_t elements,
+    float epsilon,
+    hipStream_t stream = nullptr);
+
+void launch_m23_q8_1_mmq_quantize(
+    const float* input,
+    M23Q8_1MmqBlock* output,
+    std::uint32_t token_count,
+    std::uint32_t elements,
+    hipStream_t stream = nullptr);
+
+// M23 wide Q4_K MMQ prototype.  The launch uses the same 64-row x 128-token
+// tile shape as the pinned gfx906 reference; inputs stay in grouped Q8_1 form.
+void launch_m23_q4_k_q8_1_mmq(
+    const Q4KDeviceBlock* weights,
+    const M23Q8_1MmqBlock* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    std::uint32_t token_count,
+    hipStream_t stream = nullptr);
+
+void launch_m23_q6_k_q8_1_mmq(
+    const Q6KDeviceBlock* weights,
+    const M23Q8_1MmqBlock* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    std::uint32_t token_count,
+    hipStream_t stream = nullptr);
+
+void launch_m23_q5_k_q8_1_mmq(
+    const Q5KDeviceBlock* weights,
+    const M23Q8_1MmqBlock* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    std::uint32_t token_count,
+    hipStream_t stream = nullptr);
+
 // M7-H fused residual addition + RMS normalization:
 // Combines launch_qwen3_add and launch_qwen3_rms_norm into a single launch,
 // writing residual_out = residual_in + projection and computing
@@ -104,6 +161,17 @@ void launch_qwen3_fused_add_rms_norm(
     float epsilon,
     hipStream_t stream = nullptr,
     Q8_1Block* q8_out = nullptr);
+
+void launch_qwen3_fused_add_rms_norm_batch(
+    const float* residual_in,
+    const float* projection,
+    const float* weights,
+    float* residual_out,
+    float* normalized_out,
+    std::uint32_t token_count,
+    std::uint32_t elements,
+    float epsilon,
+    hipStream_t stream = nullptr);
 
 void launch_qwen3_rms_normalize(
     const float* input,
@@ -331,6 +399,23 @@ void launch_qwen35_conv_silu_split(
     std::uint32_t conv_kernel,
     hipStream_t stream = nullptr);
 
+// Apply the causal convolution to a token-major chunk in one launch.  Each
+// channel owns its token sequence, so the four-slot raw-input history is
+// updated in the same order as repeated single-token calls.
+void launch_qwen35_conv_silu_split_batch(
+    const float* qkv,
+    const float* conv_weights,
+    float* history,
+    float* query,
+    float* key,
+    float* value,
+    std::uint32_t base_position,
+    std::uint32_t token_count,
+    std::uint32_t history_capacity,
+    std::uint32_t channels,
+    std::uint32_t conv_kernel,
+    hipStream_t stream = nullptr);
+
 void launch_qwen35_head_l2_normalize(
     const float* input,
     float* output,
@@ -343,6 +428,16 @@ void launch_qwen35_dual_head_l2_normalize(
     const float* input_b,
     float* output_a,
     float* output_b,
+    std::uint32_t heads,
+    std::uint32_t head_dim,
+    hipStream_t stream = nullptr);
+
+void launch_qwen35_dual_head_l2_normalize_batch(
+    const float* input_a,
+    const float* input_b,
+    float* output_a,
+    float* output_b,
+    std::uint32_t token_count,
     std::uint32_t heads,
     std::uint32_t head_dim,
     hipStream_t stream = nullptr);
@@ -453,6 +548,84 @@ void launch_qwen35_tiled_online_attention_f16(
     float scale,
     hipStream_t stream = nullptr,
     Q8_1Block* gated_output_q8 = nullptr);
+
+// M23 wide-prefill attention: one Wave64 handles each token/query-head and
+// scans only the causal KV prefix for that token.
+void launch_qwen35_tiled_online_attention_batch(
+    const float* q,
+    const float* key_cache,
+    const float* value_cache,
+    const float* gate,
+    float* gated_output,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t cache_capacity,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float scale,
+    hipStream_t stream = nullptr);
+
+void launch_qwen35_tiled_online_attention_batch_f16(
+    const float* q,
+    const __half* key_cache,
+    const __half* value_cache,
+    const float* gate,
+    float* gated_output,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t cache_capacity,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float scale,
+    hipStream_t stream = nullptr);
+
+void launch_qwen35_fused_q_split_norm_rope_batch(
+    const float* qfull,
+    const float* q_norm_weight,
+    float* query_rope,
+    float* gate,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float theta,
+    float epsilon,
+    hipStream_t stream = nullptr);
+
+void launch_qwen35_fused_k_norm_rope_kv_store_batch(
+    const float* qfull,
+    const float* value,
+    const float* k_norm_weight,
+    float* key_cache,
+    float* value_cache,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t cache_capacity,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float theta,
+    float epsilon,
+    hipStream_t stream = nullptr);
+
+void launch_qwen35_fused_k_norm_rope_kv_store_batch_f16(
+    const float* qfull,
+    const float* value,
+    const float* k_norm_weight,
+    __half* key_cache,
+    __half* value_cache,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t cache_capacity,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float theta,
+    float epsilon,
+    hipStream_t stream = nullptr);
 
 inline void launch_qwen35_tiled_online_attention(
     const float* q,
@@ -743,6 +916,19 @@ void launch_qwen35_f32_dual_gemv(
     const float* input,
     float* output_a,
     float* output_b,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    hipStream_t stream = nullptr);
+
+// One dispatch computes both row-major [rows, columns] projections for every
+// token in a token-major input matrix.
+void launch_qwen35_f32_dual_gemm_batch(
+    const float* weights_a,
+    const float* weights_b,
+    const float* input,
+    float* output_a,
+    float* output_b,
+    std::uint32_t token_count,
     std::uint32_t rows,
     std::uint32_t columns,
     hipStream_t stream = nullptr);

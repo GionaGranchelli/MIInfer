@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <thread>
 #include <vector>
+#include <type_traits>
 
 namespace {
 
@@ -58,6 +59,40 @@ std::int8_t signed_q6_canonical(const miinfer::Q6KDeviceBlock& block, std::size_
     const std::uint8_t high = static_cast<std::uint8_t>(
         (block.qh[high_index] >> (2U * static_cast<unsigned>(quarter))) & 0x03U);
     return static_cast<std::int8_t>(static_cast<int>(low | (high << 4U)) - 32);
+}
+
+template <typename Block>
+std::uint8_t affine_q_canonical(const Block& block, std::size_t index) noexcept {
+    const std::size_t group = index / 32;
+    const std::size_t in_group = index % 32;
+    const std::size_t pair = group / 2;
+    const std::size_t part = group % 2;
+    const std::size_t half = in_group / 16;
+    const std::size_t in_half = in_group % 16;
+    const std::size_t byte = pair * 32 + (in_half / 4) * 4 + (half ? 16 : 0) + in_half % 4;
+    const std::uint8_t* ql = nullptr;
+    if constexpr (std::is_same_v<Block, miinfer::Q5KDeviceBlock>) ql = block.ql;
+    else ql = block.qs;
+    std::uint8_t value = static_cast<std::uint8_t>((ql[byte] >> (4 * part)) & 0x0fU);
+    if constexpr (std::is_same_v<Block, miinfer::Q5KDeviceBlock>) {
+        const std::size_t high_index = in_half + (half ? 16 : 0);
+        value = static_cast<std::uint8_t>(value | (((block.qh[high_index] >> (2 * pair + part)) & 1U) << 4));
+    }
+    return value;
+}
+
+template <typename Block>
+void decode_affine_scale_min(const Block& block, std::size_t group,
+                             std::uint8_t& scale, std::uint8_t& minimum) noexcept {
+    if (group < 4) {
+        scale = block.scales[group] & 63U;
+        minimum = block.scales[group + 4] & 63U;
+    } else {
+        scale = static_cast<std::uint8_t>((block.scales[group + 4] & 15U)
+                                           | ((block.scales[group - 4] >> 6U) << 4U));
+        minimum = static_cast<std::uint8_t>((block.scales[group + 4] >> 4U)
+                                             | ((block.scales[group] >> 6U) << 4U));
+    }
 }
 
 } // namespace
@@ -461,6 +496,127 @@ std::vector<Q6KWaveTile> pack_q6k_wave_tensor(const miinfer::GgufTensor& tensor)
         for (auto& w : workers) w.join();
     }
     return native;
+}
+
+std::vector<Q6KMmqTile> pack_q6k_mmq_tensor(const miinfer::GgufTensor& tensor) {
+    if (tensor.type != miinfer::GgufTensorType::q6_k || tensor.dimensions.size() != 2
+        || tensor.data == nullptr) {
+        throw std::runtime_error("pack_q6k_mmq_tensor requires 2D Q6_K tensor: " + tensor.name);
+    }
+    const std::size_t columns = tensor.dimensions[0];
+    const std::size_t rows = tensor.dimensions[1];
+    if (columns % 128 != 0 || rows % 64 != 0) {
+        throw std::runtime_error("pack_q6k_mmq_tensor requires columns % 128 == 0 and rows % 64 == 0: " + tensor.name);
+    }
+    const std::size_t blocks_per_row = columns / 256;
+    if (tensor.byte_size != rows * blocks_per_row * sizeof(miinfer::Q6KDeviceBlock)) {
+        throw std::runtime_error("pack_q6k_mmq_tensor byte size mismatch: " + tensor.name);
+    }
+    const auto* source = reinterpret_cast<const miinfer::Q6KDeviceBlock*>(tensor.data);
+    const std::size_t k_tiles = columns / 128;
+    std::vector<Q6KMmqTile> packed((rows / 64) * k_tiles);
+    for (std::size_t row = 0; row < rows; ++row) {
+        for (std::size_t tile_index = 0; tile_index < k_tiles; ++tile_index) {
+            auto& tile = packed[(row / 64) * k_tiles + tile_index];
+            const std::size_t local_row = row % 64;
+            for (std::size_t slab = 0; slab < 4; ++slab) {
+                const std::size_t global_slab = tile_index * 4 + slab;
+                const auto& src = source[row * blocks_per_row + global_slab / 8];
+                const std::size_t slab_in_block = global_slab % 8;
+                std::uint32_t raw[4]{};
+                std::uint64_t high = 0;
+                for (std::size_t in = 0; in < 16; ++in) {
+                    const int low = signed_q6_canonical(src, slab_in_block * 32 + in) + 32;
+                    const int upper = signed_q6_canonical(src, slab_in_block * 32 + in + 16) + 32;
+                    raw[in / 4] |= static_cast<std::uint32_t>((low & 0x0f) | ((upper & 0x0f) << 4))
+                        << (8 * (in % 4));
+                    high |= static_cast<std::uint64_t>((low >> 4) & 0x03) << (2 * in);
+                    high |= static_cast<std::uint64_t>((upper >> 4) & 0x03) << (2 * (in + 16));
+                }
+                for (std::size_t word = 0; word < 4; ++word) tile.values[slab][local_row][word] = raw[word];
+                tile.high[slab][local_row][0] = static_cast<std::uint32_t>(high);
+                tile.high[slab][local_row][1] = static_cast<std::uint32_t>(high >> 32);
+                const std::size_t scale = slab_in_block * 2;
+                std::uint16_t d_bits = 0;
+                std::memcpy(&d_bits, &src.d, sizeof(d_bits));
+                tile.scale_d[slab][local_row] = static_cast<std::uint8_t>(src.scales[scale])
+                    | (static_cast<std::uint32_t>(static_cast<std::uint8_t>(src.scales[scale + 1])) << 8)
+                    | (static_cast<std::uint32_t>(d_bits) << 16);
+            }
+        }
+    }
+    return packed;
+}
+
+template <typename Tile, typename Block>
+std::vector<Tile> pack_affine_mmq_tensor(const miinfer::GgufTensor& tensor,
+                                         miinfer::GgufTensorType expected,
+                                         const char* kind) {
+    if (tensor.type != expected || tensor.dimensions.size() != 2 || tensor.data == nullptr) {
+        throw std::runtime_error(std::string("pack_") + kind
+                                 + "_mmq_tensor requires 2D tensor: " + tensor.name);
+    }
+    const std::size_t columns = tensor.dimensions[0];
+    const std::size_t rows = tensor.dimensions[1];
+    if (columns % 128 != 0 || rows % 64 != 0) {
+        throw std::runtime_error(std::string("pack_") + kind
+                                 + "_mmq_tensor requires columns % 128 == 0 and rows % 64 == 0: "
+                                 + tensor.name);
+    }
+    const std::size_t blocks_per_row = columns / 256;
+    if (tensor.byte_size != rows * blocks_per_row * sizeof(Block)) {
+        throw std::runtime_error(std::string("pack_") + kind
+                                 + "_mmq_tensor byte size mismatch: " + tensor.name);
+    }
+    const auto* source = reinterpret_cast<const Block*>(tensor.data);
+    const std::size_t k_tiles = columns / 128;
+    std::vector<Tile> packed((rows / 64) * k_tiles);
+    for (std::size_t row = 0; row < rows; ++row) {
+        for (std::size_t tile_index = 0; tile_index < k_tiles; ++tile_index) {
+            auto& tile = packed[(row / 64) * k_tiles + tile_index];
+            const std::size_t local_row = row % 64;
+            for (std::size_t slab = 0; slab < 4; ++slab) {
+                const std::size_t global_slab = tile_index * 4 + slab;
+                const auto& src = source[row * blocks_per_row + global_slab / 8];
+                const std::size_t slab_in_block = global_slab % 8;
+                std::uint32_t raw[4]{};
+                std::uint32_t high = 0;
+                for (std::size_t in = 0; in < 16; ++in) {
+                    const auto low = affine_q_canonical(src, slab_in_block * 32 + in);
+                    const auto upper = affine_q_canonical(src, slab_in_block * 32 + in + 16);
+                    raw[in / 4] |= static_cast<std::uint32_t>((low & 0x0fU) | ((upper & 0x0fU) << 4))
+                        << (8 * (in % 4));
+                    if constexpr (std::is_same_v<Block, miinfer::Q5KDeviceBlock>) {
+                        high |= static_cast<std::uint32_t>((low >> 4) & 1U) << in;
+                        high |= static_cast<std::uint32_t>((upper >> 4) & 1U) << (in + 16);
+                    }
+                }
+                for (std::size_t word = 0; word < 4; ++word) tile.values[slab][local_row][word] = raw[word];
+                tile.high[slab][local_row][0] = high;
+                const std::size_t group = slab_in_block;
+                std::uint8_t scale = 0, minimum = 0;
+                decode_affine_scale_min(src, group, scale, minimum);
+                std::uint16_t d_bits = 0, dmin_bits = 0;
+                std::memcpy(&d_bits, &src.d, sizeof(d_bits));
+                std::memcpy(&dmin_bits, &src.dmin, sizeof(dmin_bits));
+                tile.scale_d[slab][local_row] = static_cast<std::uint32_t>(scale)
+                    | (static_cast<std::uint32_t>(minimum) << 8)
+                    | (static_cast<std::uint32_t>(d_bits) << 16);
+                tile.dmin[slab][local_row] = dmin_bits;
+            }
+        }
+    }
+    return packed;
+}
+
+std::vector<Q4KMmqTile> pack_q4k_mmq_tensor(const miinfer::GgufTensor& tensor) {
+    return pack_affine_mmq_tensor<Q4KMmqTile, miinfer::Q4KDeviceBlock>(
+        tensor, miinfer::GgufTensorType::q4_k, "q4k");
+}
+
+std::vector<Q5KMmqTile> pack_q5k_mmq_tensor(const miinfer::GgufTensor& tensor) {
+    return pack_affine_mmq_tensor<Q5KMmqTile, miinfer::Q5KDeviceBlock>(
+        tensor, miinfer::GgufTensorType::q5_k, "q5k");
 }
 
 void q4k_wave_tile_dequantize(const Q4KWaveTile& tile, float* output) {

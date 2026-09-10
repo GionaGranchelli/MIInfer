@@ -49,11 +49,61 @@ struct alignas(128) Q6KWaveTile {
 };
 static_assert(sizeof(Q6KWaveTile) == 896);
 
+// M23 resident Q6_K MMQ layout. One tile is 64 output rows by four 32-value
+// K slabs (128 K values). The global tile keeps packed low/high planes; the
+// reader expands them once into LDS, matching the pinned mx strategy.
+struct alignas(128) Q6KMmqTile {
+    std::uint32_t values[4][64][4];    // packed ql bytes, 16 bytes per 32-value slab
+    std::uint32_t high[4][64][2];      // two-bit high values, 8 bytes per slab
+    std::uint32_t scale_d[4][64];      // scale_lo | scale_hi<<8 | d_bits<<16
+};
+static_assert(sizeof(Q6KMmqTile) == 7168);
+
+// M23 resident affine K-quant tiles. Packed low nibbles remain resident and
+// are expanded to byte lanes in LDS; scale_d stores scale/minimum plus d.
+struct alignas(128) Q4KMmqTile {
+    std::uint32_t values[4][64][4];
+    std::uint32_t high[4][64][1];
+    std::uint32_t scale_d[4][64];
+    std::uint16_t dmin[4][64];
+};
+static_assert(sizeof(Q4KMmqTile) == 6656);
+
+using Q5KMmqTile = Q4KMmqTile;
+
 // Host repacking functions from canonical GGUF tensors
 std::vector<Q4KWaveTile> pack_q4k_wave_tensor(const miinfer::GgufTensor& tensor);
 std::vector<Q4KWaveTile> pack_q4k_wave_down(const miinfer::GgufTensor& tensor);
 std::vector<Q5KWaveTile> pack_q5k_wave_tensor(const miinfer::GgufTensor& tensor);
 std::vector<Q6KWaveTile> pack_q6k_wave_tensor(const miinfer::GgufTensor& tensor);
+std::vector<Q6KMmqTile> pack_q6k_mmq_tensor(const miinfer::GgufTensor& tensor);
+std::vector<Q4KMmqTile> pack_q4k_mmq_tensor(const miinfer::GgufTensor& tensor);
+std::vector<Q5KMmqTile> pack_q5k_mmq_tensor(const miinfer::GgufTensor& tensor);
+
+void launch_m23_q6k_repacked_mmq(
+    const Q6KMmqTile* weights,
+    const miinfer::M23Q8_1MmqBlock* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    std::uint32_t token_count,
+    hipStream_t stream = nullptr);
+void launch_m23_q4k_repacked_mmq(
+    const Q4KMmqTile* weights,
+    const miinfer::M23Q8_1MmqBlock* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    std::uint32_t token_count,
+    hipStream_t stream = nullptr);
+void launch_m23_q5k_repacked_mmq(
+    const Q5KMmqTile* weights,
+    const miinfer::M23Q8_1MmqBlock* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    std::uint32_t token_count,
+    hipStream_t stream = nullptr);
 std::vector<Q4KWaveSwigluFusedTile> pack_q4k_wave_swiglu_fused(
     const miinfer::GgufTensor& gate,
     const miinfer::GgufTensor& up);

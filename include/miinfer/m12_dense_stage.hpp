@@ -25,6 +25,13 @@ void launch_m12_q6k_to_fp16(
     std::uint32_t columns,
     hipStream_t stream = nullptr);
 
+void launch_m12_q5k_to_fp16(
+    const Q5KDeviceBlock* source,
+    __half* destination,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    hipStream_t stream = nullptr);
+
 void launch_m12_f32_to_fp16(
     const float* source,
     __half* destination,

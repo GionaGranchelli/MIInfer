@@ -210,6 +210,63 @@ int main() {
     }
 
     // -------------------------------------------------------------
+    // Test 4a: Q6_K M23 MMQ row/slab packing
+    // -------------------------------------------------------------
+    {
+        std::cout << "Test 4a: Q6_K M23 MMQ row/slab packing... ";
+        constexpr std::size_t rows = 64, cols = 1024, blocks = cols / 256;
+        std::vector<miinfer::Q6KDeviceBlock> raw(rows * blocks);
+        std::mt19937 rng(4242);
+        for (auto& block : raw) {
+            std::uint16_t d_bits = 0x3c00;
+            std::memcpy(&block.d, &d_bits, sizeof(d_bits));
+            for (auto& scale : block.scales) scale = static_cast<std::int8_t>((rng() % 31) - 15);
+            for (auto& value : block.ql) value = static_cast<std::uint8_t>(rng());
+            for (auto& value : block.qh) value = static_cast<std::uint8_t>(rng());
+        }
+        miinfer::GgufTensor tensor{};
+        tensor.name = "synthetic_q6k_mmq";
+        tensor.type = miinfer::GgufTensorType::q6_k;
+        tensor.dimensions = {cols, rows};
+        tensor.byte_size = raw.size() * sizeof(raw.front());
+        tensor.data = reinterpret_cast<const std::byte*>(raw.data());
+        try {
+            const auto packed = pack_q6k_mmq_tensor(tensor);
+            bool mismatch = packed.size() != cols / 128;
+            const auto signed_q6 = [](const miinfer::Q6KDeviceBlock& block, std::size_t element) {
+                const std::size_t group = element / 128;
+                const std::size_t lane = element % 128;
+                const std::size_t quarter = lane / 32;
+                const std::size_t in_quarter = lane % 32;
+                const std::size_t low_index = group * 64 + in_quarter
+                    + (quarter == 1 || quarter == 3 ? 32 : 0);
+                const int low = quarter < 2 ? block.ql[low_index] & 0x0f : block.ql[low_index] >> 4;
+                const int high = (block.qh[group * 32 + in_quarter] >> (2 * quarter)) & 0x03;
+                return (high << 4 | low) - 32;
+            };
+            for (std::size_t row = 0; row < rows && !mismatch; ++row) {
+                for (std::size_t col = 0; col < cols; ++col) {
+                    const auto& tile = packed[col / 128];
+                    const std::size_t slab = (col % 128) / 32;
+                    const std::size_t in = col % 32;
+                    const std::uint32_t word = tile.values[slab][row][(in % 16) / 4];
+                    const std::uint64_t high = tile.high[slab][row][0]
+                        | (static_cast<std::uint64_t>(tile.high[slab][row][1]) << 32);
+                    const int low = ((word >> (8 * (in % 4))) >> (in >= 16 ? 4 : 0)) & 0x0f;
+                    const int actual = low | (((high >> (2 * in)) & 0x03) << 4);
+                    const int expected = signed_q6(raw[row * blocks + col / 256], col % 256);
+                    if (actual - 32 != expected) { mismatch = true; break; }
+                }
+            }
+            if (mismatch) { std::cout << "FAIL\n"; all_passed = false; }
+            else std::cout << "PASS\n";
+        } catch (const std::exception& e) {
+            std::cout << "FAIL (" << e.what() << ")\n";
+            all_passed = false;
+        }
+    }
+
+    // -------------------------------------------------------------
     // Test 5: Synthetic Q4_K fused gate+up SwiGLU reference equivalence
     // -------------------------------------------------------------
     {

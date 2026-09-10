@@ -83,6 +83,31 @@ __global__ void m12_q6k_to_fp16_kernel(
         __float2half_rn(q6k_value_m12(quant, static_cast<int>(index)));
 }
 
+__device__ __forceinline__ float q5k_value_m12(
+    const miinfer::Q5KDeviceBlock& block, int index) {
+    const int group = index / 32;
+    const int q_index = (index / 64) * 32 + index % 32;
+    const int low = (group & 1) == 0 ? block.ql[q_index] & 0x0f : block.ql[q_index] >> 4;
+    const int high = (block.qh[index % 32] >> (index / 32)) & 1;
+    const int scale = group < 4 ? block.scales[group] & 63
+        : (block.scales[group + 4] & 0x0f) | ((block.scales[group - 4] >> 6) << 4);
+    const int minimum = group < 4 ? block.scales[group + 4] & 63
+        : (block.scales[group + 4] >> 4) | ((block.scales[group] >> 6) << 4);
+    return __half2float(block.d) * static_cast<float>(scale * (low | (high << 4)))
+           - __half2float(block.dmin) * static_cast<float>(minimum);
+}
+
+__global__ void m12_q5k_to_fp16_kernel(
+    const miinfer::Q5KDeviceBlock* source, __half* destination,
+    std::uint32_t rows, std::uint32_t columns) {
+    const std::uint32_t block = blockIdx.x;
+    const std::uint32_t row = block / (columns / 256);
+    const std::uint32_t block_in_row = block % (columns / 256);
+    if (row >= rows) return;
+    destination[static_cast<std::size_t>(row) * columns + block_in_row * 256 + threadIdx.x] =
+        __float2half_rn(q5k_value_m12(source[block], threadIdx.x));
+}
+
 __global__ void m12_f32_to_fp16_kernel(
     const float* source, __half* destination, std::uint32_t elements) {
     const std::uint32_t index = blockIdx.x * blockDim.x + threadIdx.x;
@@ -120,6 +145,17 @@ void launch_m12_q6k_to_fp16(
     const dim3 grid(rows * (columns / 256));
     const dim3 block(256);
     hipLaunchKernelGGL(m12_q6k_to_fp16_kernel, grid, block, 0, stream,
+                       source, destination, rows, columns);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_m12_q5k_to_fp16(
+    const Q5KDeviceBlock* source, __half* destination,
+    std::uint32_t rows, std::uint32_t columns, hipStream_t stream) {
+    if (source == nullptr || destination == nullptr || rows == 0 || columns == 0 || columns % 256 != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(m12_q5k_to_fp16_kernel, dim3(rows * (columns / 256)), dim3(256), 0, stream,
                        source, destination, rows, columns);
     MIINFER_HIP_CHECK(hipGetLastError());
 }

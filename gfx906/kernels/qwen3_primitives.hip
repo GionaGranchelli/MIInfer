@@ -229,6 +229,141 @@ __global__ void qwen3_rms_norm_vec4_kernel(
     }
 }
 
+__global__ void qwen3_rms_norm_batch_vec4_kernel(
+    const float* input, const float* weights, float* output,
+    std::uint32_t elements, float epsilon) {
+    __shared__ float wave_sums[4];
+    const std::uint32_t tid = threadIdx.x;
+    const std::uint32_t token = blockIdx.x;
+    const std::size_t base = static_cast<std::size_t>(token) * elements;
+    const float4* in = reinterpret_cast<const float4*>(input + base);
+    const float4* weight = reinterpret_cast<const float4*>(weights);
+    float4* out = reinterpret_cast<float4*>(output + base);
+    const std::uint32_t vec_count = elements / 4;
+    float sum = 0.0F;
+    for (std::uint32_t index = tid; index < vec_count; index += blockDim.x) {
+        const float4 value = in[index];
+        sum += value.x * value.x + value.y * value.y + value.z * value.z + value.w * value.w;
+    }
+    const float wave_sum = qwen3_wave_sum(sum);
+    if (tid % 64 == 0) wave_sums[tid / 64] = wave_sum;
+    __syncthreads();
+    const float inv_rms = rsqrtf((wave_sums[0] + wave_sums[1] + wave_sums[2] + wave_sums[3])
+                                 / static_cast<float>(elements) + epsilon);
+    for (std::uint32_t index = tid; index < vec_count; index += blockDim.x) {
+        const float4 value = in[index];
+        const float4 scale = weight[index];
+        out[index] = {value.x * inv_rms * scale.x, value.y * inv_rms * scale.y,
+                      value.z * inv_rms * scale.z, value.w * inv_rms * scale.w};
+    }
+}
+
+__global__ void m23_q8_1_mmq_quantize_kernel(
+    const float* input, miinfer::M23Q8_1MmqBlock* output, std::uint32_t elements) {
+    const std::uint32_t token = blockIdx.y;
+    const std::uint32_t block = blockIdx.x;
+    const std::uint32_t lane = threadIdx.x;
+    const std::size_t base = static_cast<std::size_t>(token) * elements + block * 128;
+    __shared__ float maxima[128];
+    __shared__ float sums[128];
+    __shared__ int q_sums[128];
+    const float value = input[base + lane];
+    maxima[lane] = fabsf(value);
+    sums[lane] = value;
+    __syncthreads();
+    const std::uint32_t group = lane / 32;
+    const std::uint32_t group_lane = lane % 32;
+    for (std::uint32_t stride = 16; stride > 0; stride /= 2) {
+        if (group_lane < stride) {
+            maxima[lane] = fmaxf(maxima[lane], maxima[lane + stride]);
+            sums[lane] += sums[lane + stride];
+        }
+        __syncthreads();
+    }
+    const float max_abs = maxima[group * 32];
+    const float d = max_abs == 0.0F ? 0.0F : max_abs / 127.0F;
+    const int quantized = d == 0.0F ? 0 : static_cast<int>(rintf(value / d));
+    const int clamped = max(-127, min(127, quantized));
+    q_sums[lane] = clamped;
+    __syncthreads();
+    for (std::uint32_t stride = 16; stride > 0; stride /= 2) {
+        if (group_lane < stride) q_sums[lane] += q_sums[lane + stride];
+        __syncthreads();
+    }
+    auto& dst = output[static_cast<std::size_t>(block) * gridDim.y + token];
+    dst.qs[lane] = static_cast<std::int8_t>(clamped);
+    if (group_lane == 0) {
+        dst.d[group] = d;
+        dst.s[group] = sums[group * 32];
+        dst.qsum_scaled[group] = __half2float(__float2half_rn(d)) * static_cast<float>(q_sums[group * 32]);
+    }
+}
+
+__device__ __forceinline__ float m23_q4_k_q8_1_dot(
+    const Q4KDeviceBlock& quant, const miinfer::M23Q8_1MmqBlock* input,
+    std::uint32_t token_count, std::uint32_t token, std::uint32_t weight_block, int iqs) {
+    const int q8_offset = 2 * ((iqs / 2) / 4);
+    const int ql_offset = 16 * q8_offset + 4 * ((iqs / 2) % 4);
+    const auto* ql = reinterpret_cast<const int*>(quant.qs + ql_offset);
+    const int vl[2] = {ql[0], ql[4]};
+    const int group = 2 * (iqs / 8);
+    int scales[2], minimums[2];
+    q4_k_scale_min(quant.scales, group, scales[0], minimums[0]);
+    q4_k_scale_min(quant.scales, group + 1, scales[1], minimums[1]);
+    float sum_d = 0.0F, sum_min = 0.0F;
+#pragma unroll
+    for (int part = 0; part < 2; ++part) {
+        const int q8_index = q8_offset + part;
+        const auto& q8 = input[static_cast<std::size_t>(weight_block * 2 + q8_index / 4)
+                               * token_count + token];
+        const int q8_word = 4 * ((iqs / 2) % 4);
+        const auto* q8_words = reinterpret_cast<const int*>(q8.qs + (q8_index % 4) * 32)
+                               + q8_word / 4;
+        const int q0 = (vl[0] >> (4 * part)) & 0x0F0F0F0F;
+        const int q1 = (vl[1] >> (4 * part)) & 0x0F0F0F0F;
+        const int dot = __builtin_amdgcn_sdot4(
+            q0, q8_words[0], __builtin_amdgcn_sdot4(q1, q8_words[4], 0, false), false);
+        const int q8_sum = __builtin_amdgcn_sdot4(
+            0x01010101, q8_words[0],
+            __builtin_amdgcn_sdot4(0x01010101, q8_words[4], 0, false), false);
+        const float d8 = half_to_float(__float2half_rn(q8.d[q8_index % 4]));
+        sum_d += d8 * static_cast<float>(dot * scales[part]);
+        sum_min += d8 * static_cast<float>(q8_sum * minimums[part]);
+    }
+    return half_to_float(quant.d) * sum_d - half_to_float(quant.dmin) * sum_min;
+}
+
+__global__ void m23_q4_k_q8_1_mmq_kernel(
+    const Q4KDeviceBlock* weights, const miinfer::M23Q8_1MmqBlock* input,
+    float* output, std::uint32_t rows, std::uint32_t columns, std::uint32_t token_count) {
+    const std::uint32_t row_base = blockIdx.x * 64 + threadIdx.y * 16;
+    const std::uint32_t token_base = blockIdx.y * 128 + threadIdx.x;
+    const std::uint32_t blocks_per_row = columns / 256;
+    float accum[16][2] = {};
+#pragma unroll
+    for (int row_offset = 0; row_offset < 16; ++row_offset) {
+        const std::uint32_t row = row_base + row_offset;
+        if (row >= rows) continue;
+        const auto* row_weights = weights + static_cast<std::size_t>(row) * blocks_per_row;
+#pragma unroll 1
+        for (std::uint32_t block = 0; block < blocks_per_row; ++block) {
+#pragma unroll
+            for (int iqs = 0; iqs < 32; iqs += 2) {
+                if (token_base < token_count) {
+                    accum[row_offset][0] += m23_q4_k_q8_1_dot(
+                        row_weights[block], input, token_count, token_base, block, iqs);
+                }
+                if (token_base + 64 < token_count) {
+                    accum[row_offset][1] += m23_q4_k_q8_1_dot(
+                        row_weights[block], input, token_count, token_base + 64, block, iqs);
+                }
+            }
+        }
+        if (token_base < token_count) output[static_cast<std::size_t>(token_base) * rows + row] = accum[row_offset][0];
+        if (token_base + 64 < token_count) output[static_cast<std::size_t>(token_base + 64) * rows + row] = accum[row_offset][1];
+    }
+}
+
 template <bool EmitQ8>
 __global__ void qwen3_fused_add_rms_norm_vec4_kernel(
     const float* __restrict__ residual_in,
@@ -365,6 +500,34 @@ __global__ void qwen3_fused_add_rms_norm_kernel(
     const float inverse_rms = rsqrtf(partials[0] / static_cast<float>(elements) + epsilon);
     for (std::uint32_t index = threadIdx.x; index < elements; index += blockDim.x) {
         normalized_out[index] = residual_out[index] * inverse_rms * weights[index];
+    }
+}
+
+__global__ void qwen3_fused_add_rms_norm_batch_kernel(
+    const float* __restrict__ residual_in,
+    const float* __restrict__ projection,
+    const float* __restrict__ weights,
+    float* __restrict__ residual_out,
+    float* __restrict__ normalized_out,
+    std::uint32_t elements,
+    float epsilon) {
+    const std::size_t offset = static_cast<std::size_t>(blockIdx.x) * elements;
+    __shared__ float partials[256];
+    float sum = 0.0F;
+    for (std::uint32_t index = threadIdx.x; index < elements; index += blockDim.x) {
+        const float val = residual_in[offset + index] + projection[offset + index];
+        residual_out[offset + index] = val;
+        sum += val * val;
+    }
+    partials[threadIdx.x] = sum;
+    __syncthreads();
+    for (std::uint32_t stride = blockDim.x / 2; stride > 0; stride /= 2) {
+        if (threadIdx.x < stride) partials[threadIdx.x] += partials[threadIdx.x + stride];
+        __syncthreads();
+    }
+    const float inverse_rms = rsqrtf(partials[0] / static_cast<float>(elements) + epsilon);
+    for (std::uint32_t index = threadIdx.x; index < elements; index += blockDim.x) {
+        normalized_out[offset + index] = residual_out[offset + index] * inverse_rms * weights[index];
     }
 }
 
@@ -644,6 +807,164 @@ __global__ void qwen35_fused_k_norm_rope_kv_store_f16_kernel(
         (static_cast<std::size_t>(head) * cache_capacity + position) * head_dim;
     key_cache[cache_base + tid] = __float2half_rn(final_k);
     value_cache[cache_base + tid] = __float2half_rn(value[base + tid]);
+}
+
+__global__ void qwen35_fused_q_split_norm_rope_batch_kernel(
+    const float* __restrict__ qfull,
+    const float* __restrict__ q_norm_weight,
+    float* __restrict__ query_rope,
+    float* __restrict__ gate,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float theta,
+    float epsilon) {
+    const std::uint32_t pair = blockIdx.x;
+    const std::uint32_t token = pair / heads;
+    const std::uint32_t head = pair % heads;
+    const std::uint32_t tid = threadIdx.x;
+    if (token >= token_count || head >= heads || tid >= head_dim || head_dim != 256
+        || kv_heads == 0) return;
+    __shared__ float partials[256];
+    __shared__ float rotated[64];
+    const std::size_t qfull_base =
+        static_cast<std::size_t>(token) * ((heads * 2 + kv_heads) * head_dim)
+        + head * (2 * head_dim);
+    const std::size_t output_base =
+        (static_cast<std::size_t>(token) * heads + head) * head_dim;
+    const float q_val = qfull[qfull_base + tid];
+    gate[output_base + tid] = qfull[qfull_base + head_dim + tid];
+    partials[tid] = q_val * q_val;
+    __syncthreads();
+    for (std::uint32_t stride = blockDim.x / 2; stride > 0; stride /= 2) {
+        if (tid < stride) partials[tid] += partials[tid + stride];
+        __syncthreads();
+    }
+    const float norm_val = q_val * rsqrtf(partials[0] / static_cast<float>(head_dim) + epsilon)
+        * q_norm_weight[tid];
+    if (tid < 64) rotated[tid] = norm_val;
+    __syncthreads();
+    float final_val = norm_val;
+    if (tid < 32) {
+        float out0, out1;
+        compute_qwen35_rope_pair(rotated[tid], rotated[tid + 32], tid,
+                                 base_position + token, theta, out0, out1);
+        final_val = out0;
+        rotated[tid + 32] = out1;
+    }
+    __syncthreads();
+    if (tid >= 32 && tid < 64) final_val = rotated[tid];
+    query_rope[output_base + tid] = final_val;
+}
+
+__global__ void qwen35_fused_k_norm_rope_kv_store_batch_kernel(
+    const float* __restrict__ qfull,
+    const float* __restrict__ value,
+    const float* __restrict__ k_norm_weight,
+    float* __restrict__ key_cache,
+    float* __restrict__ value_cache,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t cache_capacity,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float theta,
+    float epsilon) {
+    const std::uint32_t pair = blockIdx.x;
+    const std::uint32_t token = pair / kv_heads;
+    const std::uint32_t head = pair % kv_heads;
+    const std::uint32_t tid = threadIdx.x;
+    if (token >= token_count || head >= kv_heads || tid >= head_dim || head_dim != 256
+        || query_heads == 0) return;
+    __shared__ float partials[256];
+    __shared__ float rotated[64];
+    const std::size_t qfull_base = static_cast<std::size_t>(token)
+        * ((query_heads * 2 + kv_heads) * head_dim)
+        + query_heads * 2 * head_dim + head * head_dim;
+    const std::size_t value_base = static_cast<std::size_t>(token) * kv_heads * head_dim
+        + head * head_dim;
+    const float k_val = qfull[qfull_base + tid];
+    partials[tid] = k_val * k_val;
+    __syncthreads();
+    for (std::uint32_t stride = blockDim.x / 2; stride > 0; stride /= 2) {
+        if (tid < stride) partials[tid] += partials[tid + stride];
+        __syncthreads();
+    }
+    const float norm_val = k_val * rsqrtf(partials[0] / static_cast<float>(head_dim) + epsilon)
+        * k_norm_weight[tid];
+    if (tid < 64) rotated[tid] = norm_val;
+    __syncthreads();
+    float final_val = norm_val;
+    if (tid < 32) {
+        float out0, out1;
+        compute_qwen35_rope_pair(rotated[tid], rotated[tid + 32], tid,
+                                 base_position + token, theta, out0, out1);
+        final_val = out0;
+        rotated[tid + 32] = out1;
+    }
+    __syncthreads();
+    if (tid >= 32 && tid < 64) final_val = rotated[tid];
+    const std::size_t cache_base =
+        (static_cast<std::size_t>(head) * cache_capacity + base_position + token) * head_dim;
+    key_cache[cache_base + tid] = final_val;
+    value_cache[cache_base + tid] = value[value_base + tid];
+}
+
+__global__ void qwen35_fused_k_norm_rope_kv_store_batch_f16_kernel(
+    const float* __restrict__ qfull,
+    const float* __restrict__ value,
+    const float* __restrict__ k_norm_weight,
+    __half* __restrict__ key_cache,
+    __half* __restrict__ value_cache,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t cache_capacity,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float theta,
+    float epsilon) {
+    const std::uint32_t pair = blockIdx.x;
+    const std::uint32_t token = pair / kv_heads;
+    const std::uint32_t head = pair % kv_heads;
+    const std::uint32_t tid = threadIdx.x;
+    if (token >= token_count || head >= kv_heads || tid >= head_dim || head_dim != 256
+        || query_heads == 0) return;
+    __shared__ float partials[256];
+    __shared__ float rotated[64];
+    const std::size_t qfull_base = static_cast<std::size_t>(token)
+        * ((query_heads * 2 + kv_heads) * head_dim)
+        + query_heads * 2 * head_dim + head * head_dim;
+    const std::size_t value_base = static_cast<std::size_t>(token) * kv_heads * head_dim
+        + head * head_dim;
+    const float k_val = qfull[qfull_base + tid];
+    partials[tid] = k_val * k_val;
+    __syncthreads();
+    for (std::uint32_t stride = blockDim.x / 2; stride > 0; stride /= 2) {
+        if (tid < stride) partials[tid] += partials[tid + stride];
+        __syncthreads();
+    }
+    const float norm_val = k_val * rsqrtf(partials[0] / static_cast<float>(head_dim) + epsilon)
+        * k_norm_weight[tid];
+    if (tid < 64) rotated[tid] = norm_val;
+    __syncthreads();
+    float final_val = norm_val;
+    if (tid < 32) {
+        float out0, out1;
+        compute_qwen35_rope_pair(rotated[tid], rotated[tid + 32], tid,
+                                 base_position + token, theta, out0, out1);
+        final_val = out0;
+        rotated[tid + 32] = out1;
+    }
+    __syncthreads();
+    if (tid >= 32 && tid < 64) final_val = rotated[tid];
+    const std::size_t cache_base =
+        (static_cast<std::size_t>(head) * cache_capacity + base_position + token) * head_dim;
+    key_cache[cache_base + tid] = __float2half_rn(final_val);
+    value_cache[cache_base + tid] = __float2half_rn(value[value_base + tid]);
 }
 
 __global__ void qwen35_rope_sections_kernel(
@@ -1267,6 +1588,38 @@ __global__ void qwen35_conv_silu_split_kernel(
     else value[channel - q_size - k_size] = activated;
 }
 
+__global__ void qwen35_conv_silu_split_batch_kernel(
+    const float* qkv, const float* conv_weights, float* history,
+    float* query, float* key, float* value, std::uint32_t base_position,
+    std::uint32_t token_count, std::uint32_t history_capacity,
+    std::uint32_t channels, std::uint32_t conv_kernel) {
+    const std::uint32_t channel = blockIdx.x * blockDim.x + threadIdx.x;
+    if (channel >= channels) return;
+    const std::uint32_t q_size = channels / 5;
+    for (std::uint32_t token = 0; token < token_count; ++token) {
+        const std::uint32_t position = base_position + token;
+        const float current = qkv[static_cast<std::size_t>(token) * channels + channel];
+        float result = current * conv_weights[
+            static_cast<std::size_t>(channel) * conv_kernel + conv_kernel - 1];
+        for (std::uint32_t lag = 1; lag < conv_kernel; ++lag) {
+            if (position < lag) continue;
+            const std::uint32_t slot = (position - lag) % history_capacity;
+            result += history[static_cast<std::size_t>(slot) * channels + channel]
+                * conv_weights[static_cast<std::size_t>(channel) * conv_kernel
+                               + conv_kernel - 1 - lag];
+        }
+        history[static_cast<std::size_t>(position % history_capacity) * channels + channel] = current;
+        const float activated = result / (1.0F + expf(-result));
+        if (channel < q_size) {
+            query[static_cast<std::size_t>(token) * q_size + channel] = activated;
+        } else if (channel < 2 * q_size) {
+            key[static_cast<std::size_t>(token) * q_size + channel - q_size] = activated;
+        } else {
+            value[static_cast<std::size_t>(token) * (3 * q_size) + channel - 2 * q_size] = activated;
+        }
+    }
+}
+
 __global__ void qwen35_head_l2_normalize_kernel(
     const float* input, float* output, std::uint32_t heads, std::uint32_t head_dim) {
     const std::uint32_t head = blockIdx.x;
@@ -1321,6 +1674,34 @@ __global__ void qwen35_dual_head_l2_normalize_kernel(
     for (std::uint32_t index = threadIdx.x; index < head_dim; index += blockDim.x) {
         output_a[base + index] = input_a[base + index] * scale_a;
         output_b[base + index] = input_b[base + index] * scale_b;
+    }
+}
+
+__global__ void qwen35_dual_head_l2_normalize_batch_kernel(
+    const float* input_a, const float* input_b, float* output_a, float* output_b,
+    std::uint32_t heads, std::uint32_t head_dim) {
+    const std::uint32_t flat_head = blockIdx.x;
+    const std::uint32_t head = flat_head % heads;
+    const std::uint32_t token = flat_head / heads;
+    const std::size_t base = (static_cast<std::size_t>(token) * heads + head) * head_dim;
+    __shared__ float partials_a[128];
+    __shared__ float partials_b[128];
+    const std::uint32_t lane = threadIdx.x;
+    const float a = lane < head_dim ? input_a[base + lane] : 0.0F;
+    const float b = lane < head_dim ? input_b[base + lane] : 0.0F;
+    partials_a[lane] = a * a;
+    partials_b[lane] = b * b;
+    __syncthreads();
+    for (std::uint32_t stride = 64; stride > 0; stride /= 2) {
+        if (lane < stride) {
+            partials_a[lane] += partials_a[lane + stride];
+            partials_b[lane] += partials_b[lane + stride];
+        }
+        __syncthreads();
+    }
+    if (lane < head_dim) {
+        output_a[base + lane] = a * rsqrtf(fmaxf(partials_a[0], 1.0e-6F));
+        output_b[base + lane] = b * rsqrtf(fmaxf(partials_b[0], 1.0e-6F));
     }
 }
 
@@ -1843,6 +2224,152 @@ __global__ void qwen3_splitk_stage2_kernel(
     }
 }
 
+// M23 wide-prefill causal attention.  The cache already contains the complete
+// chunk when this launches, so one wave can serve each token/query-head pair
+// without dispatching the decode attention kernel once per token.
+__global__ void qwen35_tiled_online_attention_batch_f32_kernel(
+    const float* __restrict__ q,
+    const float* __restrict__ key_cache,
+    const float* __restrict__ value_cache,
+    const float* __restrict__ gate,
+    float* __restrict__ gated_output,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t cache_capacity,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float scale) {
+    const std::uint32_t pair = blockIdx.x;
+    const std::uint32_t token = pair / query_heads;
+    const std::uint32_t head = pair % query_heads;
+    const std::uint32_t lane = threadIdx.x;
+    if (token >= token_count || head >= query_heads || lane >= 64
+        || kv_heads == 0 || query_heads % kv_heads != 0 || head_dim != 256) return;
+
+    const std::uint32_t kv_head = head / (query_heads / kv_heads);
+    const std::size_t q_base =
+        (static_cast<std::size_t>(token) * query_heads + head) * head_dim;
+    const std::uint32_t cache_length = base_position + token + 1;
+    if (cache_length > cache_capacity) return;
+    const float4 q_vec = *reinterpret_cast<const float4*>(q + q_base + lane * 4);
+    float4 acc = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+    float running_max = -INFINITY;
+    float running_sum = 0.0f;
+    for (std::uint32_t position = 0; position < cache_length; ++position) {
+        const std::size_t cache_base =
+            (static_cast<std::size_t>(kv_head) * cache_capacity + position) * head_dim;
+        const float4 k_vec = *reinterpret_cast<const float4*>(key_cache + cache_base + lane * 4);
+        float score = qwen3_wave_sum(
+            q_vec.x * k_vec.x + q_vec.y * k_vec.y + q_vec.z * k_vec.z + q_vec.w * k_vec.w);
+        score = __shfl(score, 0, 64) * scale;
+        float alpha = 1.0f;
+        float weight = 0.0f;
+        if (lane == 0) {
+            if (score > running_max) {
+                alpha = expf(running_max - score);
+                running_sum = running_sum * alpha + 1.0f;
+                running_max = score;
+                weight = 1.0f;
+            } else {
+                weight = expf(score - running_max);
+                running_sum += weight;
+            }
+        }
+        alpha = __shfl(alpha, 0, 64);
+        weight = __shfl(weight, 0, 64);
+        const float4 v_vec = *reinterpret_cast<const float4*>(value_cache + cache_base + lane * 4);
+        acc.x = acc.x * alpha + weight * v_vec.x;
+        acc.y = acc.y * alpha + weight * v_vec.y;
+        acc.z = acc.z * alpha + weight * v_vec.z;
+        acc.w = acc.w * alpha + weight * v_vec.w;
+    }
+    const float denominator = __shfl(running_sum, 0, 64);
+    const float4 gate_vec = *reinterpret_cast<const float4*>(gate + q_base + lane * 4);
+    const std::size_t output_base = q_base;
+    gated_output[output_base + lane * 4 + 0] = (acc.x / denominator)
+        * (1.0f / (1.0f + expf(-gate_vec.x)));
+    gated_output[output_base + lane * 4 + 1] = (acc.y / denominator)
+        * (1.0f / (1.0f + expf(-gate_vec.y)));
+    gated_output[output_base + lane * 4 + 2] = (acc.z / denominator)
+        * (1.0f / (1.0f + expf(-gate_vec.z)));
+    gated_output[output_base + lane * 4 + 3] = (acc.w / denominator)
+        * (1.0f / (1.0f + expf(-gate_vec.w)));
+}
+
+__global__ void qwen35_tiled_online_attention_batch_f16_kernel(
+    const float* __restrict__ q,
+    const __half* __restrict__ key_cache,
+    const __half* __restrict__ value_cache,
+    const float* __restrict__ gate,
+    float* __restrict__ gated_output,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t cache_capacity,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float scale) {
+    const std::uint32_t pair = blockIdx.x;
+    const std::uint32_t token = pair / query_heads;
+    const std::uint32_t head = pair % query_heads;
+    const std::uint32_t lane = threadIdx.x;
+    if (token >= token_count || head >= query_heads || lane >= 64
+        || kv_heads == 0 || query_heads % kv_heads != 0 || head_dim != 256) return;
+
+    const std::uint32_t kv_head = head / (query_heads / kv_heads);
+    const std::size_t q_base =
+        (static_cast<std::size_t>(token) * query_heads + head) * head_dim;
+    const std::uint32_t cache_length = base_position + token + 1;
+    if (cache_length > cache_capacity) return;
+    const float4 q_vec = *reinterpret_cast<const float4*>(q + q_base + lane * 4);
+    float4 acc = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+    float running_max = -INFINITY;
+    float running_sum = 0.0f;
+    for (std::uint32_t position = 0; position < cache_length; ++position) {
+        const std::size_t cache_base =
+            (static_cast<std::size_t>(kv_head) * cache_capacity + position) * head_dim;
+        const auto k_raw = *reinterpret_cast<const uint64_t*>(key_cache + cache_base + lane * 4);
+        const auto* k_half = reinterpret_cast<const __half*>(&k_raw);
+        float score = qwen3_wave_sum(
+            q_vec.x * __half2float(k_half[0]) + q_vec.y * __half2float(k_half[1])
+            + q_vec.z * __half2float(k_half[2]) + q_vec.w * __half2float(k_half[3]));
+        score = __shfl(score, 0, 64) * scale;
+        float alpha = 1.0f;
+        float weight = 0.0f;
+        if (lane == 0) {
+            if (score > running_max) {
+                alpha = expf(running_max - score);
+                running_sum = running_sum * alpha + 1.0f;
+                running_max = score;
+                weight = 1.0f;
+            } else {
+                weight = expf(score - running_max);
+                running_sum += weight;
+            }
+        }
+        alpha = __shfl(alpha, 0, 64);
+        weight = __shfl(weight, 0, 64);
+        const auto v_raw = *reinterpret_cast<const uint64_t*>(value_cache + cache_base + lane * 4);
+        const auto* v_half = reinterpret_cast<const __half*>(&v_raw);
+        acc.x = acc.x * alpha + weight * __half2float(v_half[0]);
+        acc.y = acc.y * alpha + weight * __half2float(v_half[1]);
+        acc.z = acc.z * alpha + weight * __half2float(v_half[2]);
+        acc.w = acc.w * alpha + weight * __half2float(v_half[3]);
+    }
+    const float denominator = __shfl(running_sum, 0, 64);
+    const float4 gate_vec = *reinterpret_cast<const float4*>(gate + q_base + lane * 4);
+    const std::size_t output_base = q_base;
+    gated_output[output_base + lane * 4 + 0] = (acc.x / denominator)
+        * (1.0f / (1.0f + expf(-gate_vec.x)));
+    gated_output[output_base + lane * 4 + 1] = (acc.y / denominator)
+        * (1.0f / (1.0f + expf(-gate_vec.y)));
+    gated_output[output_base + lane * 4 + 2] = (acc.z / denominator)
+        * (1.0f / (1.0f + expf(-gate_vec.z)));
+    gated_output[output_base + lane * 4 + 3] = (acc.w / denominator)
+        * (1.0f / (1.0f + expf(-gate_vec.w)));
+}
+
 __global__ void qwen3_kv_cache_store_kernel(
     const float* keys, const float* values, float* key_cache, float* value_cache,
     std::uint32_t position, std::uint32_t cache_capacity,
@@ -2035,6 +2562,38 @@ __global__ void qwen35_f32_dual_gemv_kernel(
     }
 }
 
+__global__ void qwen35_f32_dual_gemm_batch_kernel(
+    const float* weights_a, const float* weights_b, const float* input,
+    float* output_a, float* output_b, std::uint32_t rows, std::uint32_t columns) {
+    const std::uint32_t flat_row = blockIdx.x;
+    const std::uint32_t row = flat_row % rows;
+    const std::uint32_t token = flat_row / rows;
+    __shared__ float partials_a[256];
+    __shared__ float partials_b[256];
+    float sum_a = 0.0F;
+    float sum_b = 0.0F;
+    for (std::uint32_t column = threadIdx.x; column < columns; column += blockDim.x) {
+        const float value = input[static_cast<std::size_t>(token) * columns + column];
+        const std::size_t index = static_cast<std::size_t>(row) * columns + column;
+        sum_a += weights_a[index] * value;
+        sum_b += weights_b[index] * value;
+    }
+    partials_a[threadIdx.x] = sum_a;
+    partials_b[threadIdx.x] = sum_b;
+    __syncthreads();
+    for (std::uint32_t stride = 128; stride > 0; stride /= 2) {
+        if (threadIdx.x < stride) {
+            partials_a[threadIdx.x] += partials_a[threadIdx.x + stride];
+            partials_b[threadIdx.x] += partials_b[threadIdx.x + stride];
+        }
+        __syncthreads();
+    }
+    if (threadIdx.x == 0) {
+        output_a[static_cast<std::size_t>(token) * rows + row] = partials_a[0];
+        output_b[static_cast<std::size_t>(token) * rows + row] = partials_b[0];
+    }
+}
+
 __global__ void qwen35_f32_dual_beta_decay_kernel(
     const float* beta_weights, const float* alpha_weights, const float* input,
     const float* dt, const float* a, float* beta, float* decay,
@@ -2076,10 +2635,14 @@ __global__ void qwen35_prepare_beta_decay_kernel(
     const float* a, float* beta, float* decay, std::uint32_t elements) {
     const std::uint32_t index = blockIdx.x * blockDim.x + threadIdx.x;
     if (index >= elements) return;
+    // Qwen3.5's recurrent beta/alpha projections have 48 heads.  `elements`
+    // is token-major for wide prefill, while dt/a remain one head vector.
+    constexpr std::uint32_t heads = 48;
+    const std::uint32_t head = index % heads;
     beta[index] = 1.0F / (1.0F + expf(-beta_raw[index]));
-    const float x = alpha_raw[index] + dt[index];
+    const float x = alpha_raw[index] + dt[head];
     const float softplus = x <= 20.0F ? log1pf(expf(x)) : x;
-    decay[index] = expf(softplus * a[index]);
+    decay[index] = expf(softplus * a[head]);
 }
 
 __global__ void qwen3_q8_k_quantize_kernel(
@@ -2312,6 +2875,66 @@ __global__ void qwen3_q6_k_q8_1_mmvq_kernel(
     if (tid == 0) output[row] = partials[0];
 }
 
+__device__ __forceinline__ float m23_q6_k_q8_1_dot(
+    const Q6KDeviceBlock& quant, const miinfer::M23Q8_1MmqBlock* input,
+    std::uint32_t token_count, std::uint32_t token, std::uint32_t weight_block, int iqs) {
+    constexpr int qi6_half = 16;
+    constexpr int qi6_quarter = 8;
+    constexpr int qi8_1 = 8;
+    const int q8_offset = 4 * (iqs / qi6_half) + (iqs % qi6_half) / qi8_1;
+    const int scale_offset = qi6_quarter * (iqs / qi6_half) + (iqs % qi6_half) / 4;
+    const int high_shift = 2 * ((iqs % qi6_half) / qi6_quarter);
+    const std::uint32_t low = qwen3_load_b2(quant.ql, iqs);
+    const std::uint32_t high = qwen3_load_b2(
+        quant.qh, qi6_quarter * (iqs / qi6_half) + iqs % qi6_quarter) >> high_shift;
+    float sum = 0.0F;
+#pragma unroll
+    for (int part = 0; part < 2; ++part) {
+        const int q8_index = q8_offset + 2 * part;
+        const auto& q8 = input[static_cast<std::size_t>(weight_block * 2 + q8_index / 4)
+                               * token_count + token];
+        const int q6 = qwen3_q6_mmvq_word(low, high, part);
+        const int q8_values = static_cast<int>(*reinterpret_cast<const std::uint32_t*>(
+            q8.qs + (q8_index % 4) * 32 + 4 * (iqs % qi8_1)));
+        const float d8 = half_to_float(__float2half_rn(q8.d[q8_index % 4]));
+        sum += d8 * static_cast<float>(
+            __builtin_amdgcn_sdot4(q6, q8_values, 0, false)
+            * quant.scales[scale_offset + 4 * part]);
+    }
+    return half_to_float(quant.d) * sum;
+}
+
+__global__ void m23_q6_k_q8_1_mmq_kernel(
+    const Q6KDeviceBlock* weights, const miinfer::M23Q8_1MmqBlock* input,
+    float* output, std::uint32_t rows, std::uint32_t columns, std::uint32_t token_count) {
+    const std::uint32_t row_base = blockIdx.x * 64 + threadIdx.y * 16;
+    const std::uint32_t token_base = blockIdx.y * 128 + threadIdx.x;
+    const std::uint32_t blocks_per_row = columns / 256;
+    float accum[16][2] = {};
+#pragma unroll
+    for (int row_offset = 0; row_offset < 16; ++row_offset) {
+        const std::uint32_t row = row_base + row_offset;
+        if (row >= rows) continue;
+        const auto* row_weights = weights + static_cast<std::size_t>(row) * blocks_per_row;
+#pragma unroll 1
+        for (std::uint32_t block = 0; block < blocks_per_row; ++block) {
+#pragma unroll
+            for (int iqs = 0; iqs < 32; ++iqs) {
+                if (token_base < token_count) {
+                    accum[row_offset][0] += m23_q6_k_q8_1_dot(
+                        row_weights[block], input, token_count, token_base, block, iqs);
+                }
+                if (token_base + 64 < token_count) {
+                    accum[row_offset][1] += m23_q6_k_q8_1_dot(
+                        row_weights[block], input, token_count, token_base + 64, block, iqs);
+                }
+            }
+        }
+        if (token_base < token_count) output[static_cast<std::size_t>(token_base) * rows + row] = accum[row_offset][0];
+        if (token_base + 64 < token_count) output[static_cast<std::size_t>(token_base + 64) * rows + row] = accum[row_offset][1];
+    }
+}
+
 __device__ __forceinline__ float qwen3_q5_k_q8_1_mmvq_dot(
     const Q5KDeviceBlock& quant, const Q8_1Block* input, int iqs) {
     // Q5_K's MMVQ VDR is 2: each logical lane handles two Q8_1 blocks.
@@ -2379,6 +3002,70 @@ __global__ void qwen3_q5_k_q8_1_mmvq_kernel(
         __syncthreads();
     }
     if (tid == 0) output[row] = partials[0];
+}
+
+__device__ __forceinline__ float m23_q5_k_q8_1_dot(
+    const Q5KDeviceBlock& quant, const miinfer::M23Q8_1MmqBlock* input,
+    std::uint32_t token_count, std::uint32_t token, std::uint32_t weight_block, int iqs) {
+    const int q8_offset = 2 * ((iqs / 2) / 4);
+    const int ql_offset = 16 * q8_offset + 4 * ((iqs / 2) % 4);
+    const auto* ql = reinterpret_cast<const int*>(quant.ql + ql_offset);
+    const auto* qh = reinterpret_cast<const int*>(quant.qh + 4 * ((iqs / 2) % 4));
+    const int vl[2] = {ql[0], ql[4]};
+    const int vh[2] = {qh[0] >> q8_offset, qh[4] >> q8_offset};
+    const int group = 2 * (iqs / 8);
+    int scales[2], minimums[2];
+    q5_k_scale_min(quant, group, scales[0], minimums[0]);
+    q5_k_scale_min(quant, group + 1, scales[1], minimums[1]);
+    float sum_d = 0.0F, sum_min = 0.0F;
+#pragma unroll
+    for (int part = 0; part < 2; ++part) {
+        const int q8_index = q8_offset + part;
+        const auto& q8 = input[static_cast<std::size_t>(weight_block * 2 + q8_index / 4)
+                               * token_count + token];
+        const auto* q8_words = reinterpret_cast<const int*>(q8.qs + (q8_index % 4) * 32)
+                               + ((iqs / 2) % 4);
+        const int q0 = ((vl[0] >> (4 * part)) & 0x0F0F0F0F)
+                       | (((vh[0] >> part) << 4) & 0x10101010);
+        const int q1 = ((vl[1] >> (4 * part)) & 0x0F0F0F0F)
+                       | (((vh[1] >> part) << 4) & 0x10101010);
+        const int dot = __builtin_amdgcn_sdot4(
+            q0, q8_words[0], __builtin_amdgcn_sdot4(q1, q8_words[4], 0, false), false);
+        const int q8_sum = __builtin_amdgcn_sdot4(
+            0x01010101, q8_words[0],
+            __builtin_amdgcn_sdot4(0x01010101, q8_words[4], 0, false), false);
+        const float d8 = half_to_float(__float2half_rn(q8.d[q8_index % 4]));
+        sum_d += d8 * static_cast<float>(dot * scales[part]);
+        sum_min += d8 * static_cast<float>(q8_sum * minimums[part]);
+    }
+    return half_to_float(quant.d) * sum_d - half_to_float(quant.dmin) * sum_min;
+}
+
+__global__ void m23_q5_k_q8_1_mmq_kernel(
+    const Q5KDeviceBlock* weights, const miinfer::M23Q8_1MmqBlock* input,
+    float* output, std::uint32_t rows, std::uint32_t columns, std::uint32_t token_count) {
+    const std::uint32_t row_base = blockIdx.x * 64 + threadIdx.y * 16;
+    const std::uint32_t token_base = blockIdx.y * 128 + threadIdx.x;
+    const std::uint32_t blocks_per_row = columns / 256;
+    float accum[16][2] = {};
+#pragma unroll
+    for (int row_offset = 0; row_offset < 16; ++row_offset) {
+        const std::uint32_t row = row_base + row_offset;
+        if (row >= rows) continue;
+        const auto* row_weights = weights + static_cast<std::size_t>(row) * blocks_per_row;
+#pragma unroll 1
+        for (std::uint32_t block = 0; block < blocks_per_row; ++block) {
+#pragma unroll
+            for (int iqs = 0; iqs < 32; iqs += 2) {
+                if (token_base < token_count) accum[row_offset][0] += m23_q5_k_q8_1_dot(
+                    row_weights[block], input, token_count, token_base, block, iqs);
+                if (token_base + 64 < token_count) accum[row_offset][1] += m23_q5_k_q8_1_dot(
+                    row_weights[block], input, token_count, token_base + 64, block, iqs);
+            }
+        }
+        if (token_base < token_count) output[static_cast<std::size_t>(token_base) * rows + row] = accum[row_offset][0];
+        if (token_base + 64 < token_count) output[static_cast<std::size_t>(token_base + 64) * rows + row] = accum[row_offset][1];
+    }
 }
 
 __device__ __forceinline__ float qwen3_q4_k_q8_1_mmvq_dot_impl(
@@ -2931,6 +3618,70 @@ void launch_qwen3_rms_norm(
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
+void launch_qwen3_rms_norm_batch(
+    const float* input, const float* weights, float* output, std::uint32_t token_count,
+    std::uint32_t elements, float epsilon, hipStream_t stream) {
+    if (input == nullptr || weights == nullptr || output == nullptr || token_count == 0
+        || token_count > 128 || elements == 0 || elements % 1024 != 0 || epsilon <= 0.0F) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen3_rms_norm_batch_vec4_kernel, dim3(token_count), dim3(256), 0, stream,
+                       input, weights, output, elements, epsilon);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_m23_q8_1_mmq_quantize(
+    const float* input, M23Q8_1MmqBlock* output, std::uint32_t token_count,
+    std::uint32_t elements, hipStream_t stream) {
+    if (input == nullptr || output == nullptr || token_count == 0 || token_count > 128
+        || elements == 0 || elements % 128 != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(m23_q8_1_mmq_quantize_kernel,
+                       dim3(elements / 128, token_count), dim3(128), 0, stream,
+                       input, output, elements);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_m23_q4_k_q8_1_mmq(
+    const Q4KDeviceBlock* weights, const M23Q8_1MmqBlock* input, float* output,
+    std::uint32_t rows, std::uint32_t columns, std::uint32_t token_count, hipStream_t stream) {
+    if (weights == nullptr || input == nullptr || output == nullptr || rows == 0 || columns == 0
+        || columns % 256 != 0 || token_count == 0 || token_count > 128) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(m23_q4_k_q8_1_mmq_kernel,
+                       dim3((rows + 63) / 64, (token_count + 127) / 128), dim3(64, 4), 0, stream,
+                       weights, input, output, rows, columns, token_count);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_m23_q6_k_q8_1_mmq(
+    const Q6KDeviceBlock* weights, const M23Q8_1MmqBlock* input, float* output,
+    std::uint32_t rows, std::uint32_t columns, std::uint32_t token_count, hipStream_t stream) {
+    if (weights == nullptr || input == nullptr || output == nullptr || rows == 0 || columns == 0
+        || columns % 256 != 0 || token_count == 0 || token_count > 128) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(m23_q6_k_q8_1_mmq_kernel,
+                       dim3((rows + 63) / 64, (token_count + 127) / 128), dim3(64, 4), 0, stream,
+                       weights, input, output, rows, columns, token_count);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_m23_q5_k_q8_1_mmq(
+    const Q5KDeviceBlock* weights, const M23Q8_1MmqBlock* input, float* output,
+    std::uint32_t rows, std::uint32_t columns, std::uint32_t token_count, hipStream_t stream) {
+    if (weights == nullptr || input == nullptr || output == nullptr || rows == 0 || columns == 0
+        || columns % 256 != 0 || token_count == 0 || token_count > 128) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(m23_q5_k_q8_1_mmq_kernel,
+                       dim3((rows + 63) / 64, (token_count + 127) / 128), dim3(64, 4), 0, stream,
+                       weights, input, output, rows, columns, token_count);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
 void launch_qwen3_fused_add_rms_norm(
     const float* residual_in,
     const float* projection,
@@ -2965,6 +3716,20 @@ void launch_qwen3_fused_add_rms_norm(
         hipLaunchKernelGGL(qwen3_fused_add_rms_norm_kernel, dim3(1), dim3(256), 0, stream,
                            residual_in, projection, weights, residual_out, normalized_out, elements, epsilon);
     }
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen3_fused_add_rms_norm_batch(
+    const float* residual_in, const float* projection, const float* weights,
+    float* residual_out, float* normalized_out, std::uint32_t token_count,
+    std::uint32_t elements, float epsilon, hipStream_t stream) {
+    if (residual_in == nullptr || projection == nullptr || weights == nullptr
+        || residual_out == nullptr || normalized_out == nullptr || token_count == 0
+        || token_count > 128 || elements == 0 || elements > 256U * 1024U || epsilon <= 0.0F) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen3_fused_add_rms_norm_batch_kernel, dim3(token_count), dim3(256), 0, stream,
+                       residual_in, projection, weights, residual_out, normalized_out, elements, epsilon);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
@@ -3371,6 +4136,24 @@ void launch_qwen35_conv_silu_split(
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
+void launch_qwen35_conv_silu_split_batch(
+    const float* qkv, const float* conv_weights, float* history,
+    float* query, float* key, float* value, std::uint32_t base_position,
+    std::uint32_t token_count, std::uint32_t history_capacity,
+    std::uint32_t channels, std::uint32_t conv_kernel, hipStream_t stream) {
+    if (qkv == nullptr || conv_weights == nullptr || history == nullptr || query == nullptr
+        || key == nullptr || value == nullptr || token_count == 0 || token_count > 128
+        || history_capacity == 0 || channels == 0 || channels % 5 != 0
+        || conv_kernel == 0 || conv_kernel > history_capacity) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen35_conv_silu_split_batch_kernel,
+                       dim3((channels + 255) / 256), dim3(256), 0, stream,
+                       qkv, conv_weights, history, query, key, value, base_position,
+                       token_count, history_capacity, channels, conv_kernel);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
 void launch_qwen35_head_l2_normalize(
     const float* input, float* output, std::uint32_t heads,
     std::uint32_t head_dim, hipStream_t stream) {
@@ -3393,6 +4176,20 @@ void launch_qwen35_dual_head_l2_normalize(
     }
     hipLaunchKernelGGL(qwen35_dual_head_l2_normalize_kernel,
                        dim3(heads), dim3(128), 0, stream,
+                       input_a, input_b, output_a, output_b, heads, head_dim);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_dual_head_l2_normalize_batch(
+    const float* input_a, const float* input_b, float* output_a, float* output_b,
+    std::uint32_t token_count, std::uint32_t heads, std::uint32_t head_dim,
+    hipStream_t stream) {
+    if (input_a == nullptr || input_b == nullptr || output_a == nullptr || output_b == nullptr
+        || token_count == 0 || token_count > 128 || heads == 0 || head_dim == 0 || head_dim > 128) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen35_dual_head_l2_normalize_batch_kernel,
+                       dim3(token_count * heads), dim3(128), 0, stream,
                        input_a, input_b, output_a, output_b, heads, head_dim);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
@@ -3542,6 +4339,108 @@ void launch_qwen35_tiled_online_attention_f16(
                        dim3(query_heads), dim3(head_dim), 0, stream,
                        output, gate, gated_output, query_heads, head_dim, splits,
                        gated_output_q8);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_tiled_online_attention_batch(
+    const float* q, const float* key_cache, const float* value_cache,
+    const float* gate, float* gated_output, std::uint32_t token_count,
+    std::uint32_t base_position, std::uint32_t cache_capacity,
+    std::uint32_t query_heads, std::uint32_t kv_heads, std::uint32_t head_dim,
+    float scale, hipStream_t stream) {
+    if (q == nullptr || key_cache == nullptr || value_cache == nullptr || gate == nullptr
+        || gated_output == nullptr || token_count == 0 || base_position > cache_capacity
+        || token_count > cache_capacity - base_position || cache_capacity == 0
+        || query_heads == 0 || kv_heads == 0 || head_dim != 256
+        || query_heads % kv_heads != 0 || !std::isfinite(scale)) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen35_tiled_online_attention_batch_f32_kernel,
+                       dim3(token_count * query_heads), dim3(64), 0, stream,
+                       q, key_cache, value_cache, gate, gated_output, token_count,
+                       base_position, cache_capacity, query_heads, kv_heads, head_dim, scale);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_tiled_online_attention_batch_f16(
+    const float* q, const __half* key_cache, const __half* value_cache,
+    const float* gate, float* gated_output, std::uint32_t token_count,
+    std::uint32_t base_position, std::uint32_t cache_capacity,
+    std::uint32_t query_heads, std::uint32_t kv_heads, std::uint32_t head_dim,
+    float scale, hipStream_t stream) {
+    if (q == nullptr || key_cache == nullptr || value_cache == nullptr || gate == nullptr
+        || gated_output == nullptr || token_count == 0 || base_position > cache_capacity
+        || token_count > cache_capacity - base_position || cache_capacity == 0
+        || query_heads == 0 || kv_heads == 0 || head_dim != 256
+        || query_heads % kv_heads != 0 || !std::isfinite(scale)) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen35_tiled_online_attention_batch_f16_kernel,
+                       dim3(token_count * query_heads), dim3(64), 0, stream,
+                       q, key_cache, value_cache, gate, gated_output, token_count,
+                       base_position, cache_capacity, query_heads, kv_heads, head_dim, scale);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_fused_q_split_norm_rope_batch(
+    const float* qfull, const float* q_norm_weight, float* query_rope, float* gate,
+    std::uint32_t token_count, std::uint32_t base_position, std::uint32_t heads,
+    std::uint32_t kv_heads, std::uint32_t head_dim, float theta, float epsilon,
+    hipStream_t stream) {
+    if (qfull == nullptr || q_norm_weight == nullptr || query_rope == nullptr || gate == nullptr
+        || token_count == 0 || heads == 0 || kv_heads == 0 || heads % kv_heads != 0
+        || head_dim != 256 || !std::isfinite(theta)
+        || !std::isfinite(epsilon)) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen35_fused_q_split_norm_rope_batch_kernel,
+                       dim3(token_count * heads), dim3(256), 0, stream,
+                       qfull, q_norm_weight, query_rope, gate, token_count, base_position,
+                       heads, kv_heads, head_dim, theta, epsilon);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_fused_k_norm_rope_kv_store_batch(
+    const float* qfull, const float* value, const float* k_norm_weight,
+    float* key_cache, float* value_cache, std::uint32_t token_count,
+    std::uint32_t base_position, std::uint32_t cache_capacity,
+    std::uint32_t query_heads, std::uint32_t kv_heads, std::uint32_t head_dim,
+    float theta, float epsilon, hipStream_t stream) {
+    if (qfull == nullptr || value == nullptr || k_norm_weight == nullptr
+        || key_cache == nullptr || value_cache == nullptr || token_count == 0
+        || cache_capacity == 0 || base_position > cache_capacity
+        || token_count > cache_capacity - base_position || query_heads == 0 || kv_heads == 0
+        || query_heads % kv_heads != 0
+        || head_dim != 256 || !std::isfinite(theta) || !std::isfinite(epsilon)) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen35_fused_k_norm_rope_kv_store_batch_kernel,
+                       dim3(token_count * kv_heads), dim3(256), 0, stream,
+                       qfull, value, k_norm_weight, key_cache, value_cache, token_count,
+                       base_position, cache_capacity, query_heads, kv_heads, head_dim,
+                       theta, epsilon);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_fused_k_norm_rope_kv_store_batch_f16(
+    const float* qfull, const float* value, const float* k_norm_weight,
+    __half* key_cache, __half* value_cache, std::uint32_t token_count,
+    std::uint32_t base_position, std::uint32_t cache_capacity,
+    std::uint32_t query_heads, std::uint32_t kv_heads, std::uint32_t head_dim,
+    float theta, float epsilon, hipStream_t stream) {
+    if (qfull == nullptr || value == nullptr || k_norm_weight == nullptr
+        || key_cache == nullptr || value_cache == nullptr || token_count == 0
+        || cache_capacity == 0 || base_position > cache_capacity
+        || token_count > cache_capacity - base_position || query_heads == 0 || kv_heads == 0
+        || query_heads % kv_heads != 0
+        || head_dim != 256 || !std::isfinite(theta) || !std::isfinite(epsilon)) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen35_fused_k_norm_rope_kv_store_batch_f16_kernel,
+                       dim3(token_count * kv_heads), dim3(256), 0, stream,
+                       qfull, value, k_norm_weight, key_cache, value_cache, token_count,
+                       base_position, cache_capacity, query_heads, kv_heads, head_dim,
+                       theta, epsilon);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
@@ -3863,6 +4762,20 @@ void launch_qwen35_f32_dual_gemv(
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     hipLaunchKernelGGL(qwen35_f32_dual_gemv_kernel, dim3(rows), dim3(256), 0, stream,
+                       weights_a, weights_b, input, output_a, output_b, rows, columns);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_f32_dual_gemm_batch(
+    const float* weights_a, const float* weights_b, const float* input,
+    float* output_a, float* output_b, std::uint32_t token_count,
+    std::uint32_t rows, std::uint32_t columns, hipStream_t stream) {
+    if (weights_a == nullptr || weights_b == nullptr || input == nullptr || output_a == nullptr
+        || output_b == nullptr || token_count == 0 || token_count > 128 || rows == 0 || columns == 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen35_f32_dual_gemm_batch_kernel,
+                       dim3(token_count * rows), dim3(256), 0, stream,
                        weights_a, weights_b, input, output_a, output_b, rows, columns);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
