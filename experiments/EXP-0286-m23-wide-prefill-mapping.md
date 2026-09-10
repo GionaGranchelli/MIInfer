@@ -606,3 +606,31 @@ generated gfx906 metadata remained unchanged (`99` VGPRs and `27.6 KiB` LDS,
 with one-wave occupancy still implied), so the request produced no distinct
 candidate. It is **REJECTED** and the pinned `__launch_bounds__(256,1)`
 contract remains active.
+
+### Candidate — opt-in dense FFN projections — 2026-09-10
+
+The row-128 path still spends most of its sampled time in recurrent FFN
+Gate/Up and Down. The existing M22 dense FFN approach was therefore exposed
+to the M23 wide path behind `MIINFER_PREFILL_WIDE_DENSE_FFN=1`: each recurrent
+layer converts its resident Q4/Q6 FFN weights into the shared FP16 workspace
+and uses the existing batched rocBLAS projections. The default repacked MMQ
+path is unchanged.
+
+Focused GPU parity passes with the switch enabled. Exact Qwen3.8-27B-Q4_K_M
+P512 runs, with all M23 switches and `MIINFER_M23_REPACKED_ROW128=1`, measured:
+
+| case | prefill | allocation |
+|---|---:|---:|
+| row-128 expanded control | 57.26, 59.22 tok/s | 23,156,230,484 bytes |
+| dense FFN candidate | 62.10, 59.76 tok/s | 30,927,161,684 bytes |
+
+The candidate mean is `60.93 tok/s`, a `+4.6%` improvement over the row-128
+control mean, at a cost of `7,770,931,200` additional bytes (~7.24 GiB).
+The context-512 run fits the 34.3-GB MI50, but this memory cost is likely to
+reduce usable context capacity. Full model-wide numerical validation was not
+run with the extra validation buffers; the focused kernel parity and the
+previous M22 dense-FFN greedy replay are the available correctness evidence.
+
+**KEEP as an opt-in experiment only**; do not enable by default or claim
+qualified M23 parity until model-wide validation is repeated. The 222.64
+tok/s target remains unmet.

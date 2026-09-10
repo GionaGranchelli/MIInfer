@@ -64,6 +64,13 @@ The row-128 mapping remains opt-in, but adding the same
 best path is still far below the 222.64 tok/s mx-llama target, and model-sized
 numerical parity is still unqualified. See EXP-0286's latest re-evaluation.
 
+The latest opt-in `MIINFER_PREFILL_WIDE_DENSE_FFN=1` candidate applies the
+existing M22 dense FFN projections to the row-128 wide path. It measures
+`62.10` and `59.76 tok/s` (mean `60.93`) on exact P512, versus the row-128
+control mean of `58.24 tok/s`, but raises allocation to
+`30,927,161,684` bytes from `23,156,230,484`. It is **KEEP as opt-in only**;
+model-wide numerical validation with the additional buffers remains pending.
+
 After restoring the rejected compact block experiment, a fresh exact P512
 revalidation measured `50.58 tok/s` (`10,123.01 ms`) with the active
 176-byte block and `23,156,230,484` allocated bytes. This confirms the
