@@ -597,3 +597,12 @@ focused varied-payload GPU parity test passed. Exact P512 measured
 row-128 launch-bounds pair at `58.24 tok/s` mean. The packed reader is
 **REJECTED** for this workload and has been removed; the expanded reader
 remains the opt-in KEEP.
+
+### Rejected experiment — row-128 occupancy-2 launch bounds — 2026-09-10
+
+The row-128 affine kernel was briefly changed to
+`__launch_bounds__(256,2)` to request two resident workgroups per CU. The
+generated gfx906 metadata remained unchanged (`99` VGPRs and `27.6 KiB` LDS,
+with one-wave occupancy still implied), so the request produced no distinct
+candidate. It is **REJECTED** and the pinned `__launch_bounds__(256,1)`
+contract remains active.
