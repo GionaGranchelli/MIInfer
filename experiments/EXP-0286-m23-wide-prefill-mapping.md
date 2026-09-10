@@ -587,3 +587,13 @@ focused varied-payload GPU parity test still passed, but exact P512 measured
 `56.28 tok/s` after the earlier `57.26`/`59.22 tok/s` launch-bounds pair
 (58.24 tok/s mean). The loop reorder is **REJECTED** and has been reverted;
 the independent row-128 launch-bounds candidate remains the opt-in KEEP.
+
+### Rejected experiment — packed-Q4 row-128 reader — 2026-09-10
+
+An opt-in Q4-only row-128 specialization kept packed nibbles in LDS and
+masked them at `sdot4` time, matching mx's direct packed-dot arithmetic. The
+focused varied-payload GPU parity test passed. Exact P512 measured
+`58.07 tok/s` and `52.24 tok/s` (mean `55.15 tok/s`) versus the expanded
+row-128 launch-bounds pair at `58.24 tok/s` mean. The packed reader is
+**REJECTED** for this workload and has been removed; the expanded reader
+remains the opt-in KEEP.
