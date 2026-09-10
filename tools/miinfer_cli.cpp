@@ -113,6 +113,7 @@ public:
           tokenizer_(miinfer::Qwen3Tokenizer::load(*model_.file())) {
         setup_environment();
         init_layers();
+        init_shared_wide_prefill_workspace();
         init_m12_gdn_workspace();
         init_m12_dense_workspace();
         init_buffers();
@@ -534,7 +535,7 @@ public:
                 if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
                 layer_span[layer].profile_ordered_start(
                     prefill_profile_.enabled ? base : std::numeric_limits<std::size_t>::max());
-                if (wide_prefill_ && count == kM12PrefillBatch
+                if (wide_prefill_ && count >= kM12PrefillBatch
                     && layer_span[layer].recurrent != nullptr) {
                     layer_span[layer].recurrent->prefill_wide(current, next, base, count);
                     layer_span[layer].profile_ordered_end(
@@ -551,7 +552,7 @@ public:
                 const bool deferred_tail = prepared && layer_span[layer].prefill_tail_batch_supported()
                     && (!gdn_chunkwise_prefill_ || full_m12_chunk);
                 const bool batched_attention = prepared && deferred_tail
-                    && count == kM12PrefillBatch
+                    && count >= kM12PrefillBatch
                     && layer_span[layer].wide_attention_batch_ready();
                 const bool fuse_next_norm = layer + 1 < layer_span.size()
                     && layer_span[layer].fused_interlayer_norm();
@@ -625,14 +626,15 @@ public:
             if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
             layer_span[layer].profile_ordered_start(
                 prefill_profile_.enabled ? 0 : std::numeric_limits<std::size_t>::max());
-            for (std::size_t base = 0; base < prompt.size(); base += kM12PrefillBatch) {
+            const std::size_t full_chunk = wide_prefill_ && prefill_chunk_ >= kM12PrefillBatch
+                ? prefill_chunk_ : kM12PrefillBatch;
+            for (std::size_t base = 0; base < prompt.size(); base += full_chunk) {
                 if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
                 const auto count = static_cast<std::uint32_t>(
-                    std::min<std::size_t>(kM12PrefillBatch,
-                                          prompt.size() - base));
+                    std::min<std::size_t>(full_chunk, prompt.size() - base));
                 const float* chunk_input = current + base * kHidden;
                 float* chunk_output = next + base * kHidden;
-                if (wide_prefill_ && count == kM12PrefillBatch
+                if (wide_prefill_ && count >= kM12PrefillBatch
                     && layer_span[layer].recurrent != nullptr) {
                     layer_span[layer].recurrent->prefill_wide(
                         chunk_input, chunk_output, static_cast<std::uint32_t>(base), count);
@@ -645,7 +647,7 @@ public:
                 const bool deferred_tail = prepared && layer_span[layer].prefill_tail_batch_supported()
                     && (!gdn_chunkwise_prefill_ || full_m12_chunk);
                 const bool batched_attention = prepared && deferred_tail
-                    && count == kM12PrefillBatch
+                    && count >= kM12PrefillBatch
                     && layer_span[layer].wide_attention_batch_ready();
                 if (!batched_attention) for (std::size_t i = 0; i < count; ++i) {
                     if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
@@ -948,11 +950,11 @@ private:
         const char* prefill_chunk_env = std::getenv("MIINFER_PREFILL_CHUNK");
         if (prefill_chunk_env != nullptr) {
             const auto requested = std::stoul(prefill_chunk_env);
-            if (requested != 4 && requested != kPrefillBatch
-                && !((gdn_chunkwise_prefill_ || dense_prefill_ || wide_prefill_)
-                     && requested == kM12PrefillBatch)) {
+            const bool wide_batch = wide_prefill_ && requested >= kM12PrefillBatch
+                && requested <= kMaxWidePrefillBatch && requested % kPrefillBatch == 0;
+            if (requested != 4 && requested != kPrefillBatch && !wide_batch) {
                 throw std::runtime_error(
-                    "MIINFER_PREFILL_CHUNK must be 4 or 64; M12 also accepts 128");
+                    "MIINFER_PREFILL_CHUNK must be 4 or 64; wide prefill accepts 128..512");
             }
             prefill_chunk_ = requested;
         }
@@ -960,11 +962,14 @@ private:
         prefill_profile_.enabled = layer_major_prefill_ && prefill_profile_env != nullptr
             && std::strcmp(prefill_profile_env, "0") != 0;
         if (prefill_profile_.enabled) {
-            prefill_profile_.projection_batch_width = wide_prefill_ ? kM12PrefillBatch : 4;
+            prefill_profile_.projection_batch_width = wide_prefill_
+                ? configured_wide_prefill_batch() : 4;
             const char* position_env = std::getenv("MIINFER_PREFILL_PROFILE_POSITION");
             if (position_env != nullptr) prefill_profile_.profile_position = std::stoull(position_env);
+            const std::size_t profile_width = wide_prefill_
+                ? configured_wide_prefill_batch() : prefill_chunk_;
             prefill_profile_.profile_chunk_base =
-                (prefill_profile_.profile_position / prefill_chunk_) * prefill_chunk_;
+                (prefill_profile_.profile_position / profile_width) * profile_width;
         }
     }
 
@@ -997,6 +1002,76 @@ private:
         }
     }
 
+    void init_shared_wide_prefill_workspace() {
+        if (!full_layer_major_prefill_) return;
+        const std::size_t batch = configured_wide_prefill_batch();
+        const auto f32 = [batch](std::size_t elements) {
+            return allocate(batch * elements * sizeof(float));
+        };
+        wide_prefill_workspace_.normalized = f32(kHidden);
+        wide_prefill_workspace_.qkv = f32(kChannels + kInner);
+        wide_prefill_workspace_.gate = f32(kInner);
+        wide_prefill_workspace_.q8_1 = allocate(batch * (kFfnInner / miinfer::kQ8_1BlockSize)
+                                                 * sizeof(miinfer::Q8_1Block));
+        wide_prefill_workspace_.mmq_q8 = allocate(batch * (kFfnInner / 128)
+                                                   * sizeof(miinfer::M23Q8_1MmqBlock));
+        wide_prefill_workspace_.gated = f32(kInner);
+        wide_prefill_workspace_.residual = f32(kHidden);
+        wide_prefill_workspace_.post_normalized = f32(kHidden);
+        wide_prefill_workspace_.projected = f32(kHidden);
+        wide_prefill_workspace_.ffn_gate = f32(kFfnInner);
+        wide_prefill_workspace_.ffn_up = f32(kFfnInner);
+        wide_prefill_workspace_.ffn_activation = f32(kFfnInner);
+        wide_prefill_workspace_.ffn_projected = f32(kHidden);
+        wide_prefill_workspace_.core_query = f32(kKHeads * kState);
+        wide_prefill_workspace_.core_key = f32(kKHeads * kState);
+        wide_prefill_workspace_.core_value = f32(kVHeads * kState);
+        wide_prefill_workspace_.core_beta = f32(kVHeads);
+        wide_prefill_workspace_.core_decay = f32(kVHeads);
+        wide_prefill_workspace_.core_gate = f32(kVHeads * kState);
+        wide_prefill_workspace_.qfull = f32(12288 + 1024);
+        wide_prefill_workspace_.value = f32(1024);
+        wide_prefill_workspace_.gated_attention = f32(kInner);
+        wide_prefill_workspace_.query_rope = f32(6144);
+        for (auto& layer : recurrent_layers_) {
+            layer->prefill_normalized = wide_prefill_workspace_.normalized;
+            layer->prefill_qkv = wide_prefill_workspace_.qkv;
+            layer->prefill_gate = wide_prefill_workspace_.gate;
+            layer->prefill_q8_1 = wide_prefill_workspace_.q8_1;
+            layer->prefill_mmq_q8 = wide_prefill_workspace_.mmq_q8;
+            layer->prefill_gated = wide_prefill_workspace_.gated;
+            layer->prefill_residual = wide_prefill_workspace_.residual;
+            layer->prefill_post_normalized = wide_prefill_workspace_.post_normalized;
+            layer->prefill_projected = wide_prefill_workspace_.projected;
+            layer->prefill_ffn_gate = wide_prefill_workspace_.ffn_gate;
+            layer->prefill_ffn_up = wide_prefill_workspace_.ffn_up;
+            layer->prefill_ffn_activation = wide_prefill_workspace_.ffn_activation;
+            layer->prefill_core_query = wide_prefill_workspace_.core_query;
+            layer->prefill_core_key = wide_prefill_workspace_.core_key;
+            layer->prefill_core_value = wide_prefill_workspace_.core_value;
+            layer->prefill_core_beta = wide_prefill_workspace_.core_beta;
+            layer->prefill_core_decay = wide_prefill_workspace_.core_decay;
+            layer->prefill_core_gate = wide_prefill_workspace_.core_gate;
+        }
+        for (auto& layer : attention_layers_) {
+            layer->prefill_normalized = wide_prefill_workspace_.normalized;
+            layer->prefill_qfull = wide_prefill_workspace_.qfull;
+            layer->prefill_value = wide_prefill_workspace_.value;
+            layer->prefill_q8_1 = wide_prefill_workspace_.q8_1;
+            layer->prefill_gated_attention = wide_prefill_workspace_.gated_attention;
+            layer->prefill_projected = wide_prefill_workspace_.projected;
+            layer->prefill_residual = wide_prefill_workspace_.residual;
+            layer->prefill_post_normalized = wide_prefill_workspace_.post_normalized;
+            layer->prefill_ffn_gate = wide_prefill_workspace_.ffn_gate;
+            layer->prefill_ffn_up = wide_prefill_workspace_.ffn_up;
+            layer->prefill_ffn_activation = wide_prefill_workspace_.ffn_activation;
+            layer->prefill_ffn_projected = wide_prefill_workspace_.ffn_projected;
+            layer->prefill_mmq_q8 = wide_prefill_workspace_.mmq_q8;
+            layer->prefill_query_rope = wide_prefill_workspace_.query_rope;
+            layer->prefill_gate = wide_prefill_workspace_.query_rope;
+        }
+    }
+
     void init_m12_gdn_workspace() {
         if (!gdn_chunkwise_prefill_ && !wide_prefill_) return;
         const std::size_t bytes = kVHeads * 64 * kState * sizeof(float);
@@ -1011,7 +1086,8 @@ private:
             static_cast<float*>(m12_gdn_solved_values_->get()),
             static_cast<float*>(m12_gdn_solved_keys_->get()),
             static_cast<float*>(m12_gdn_corrected_values_->get())};
-        m12_gdn_raw_output_ = allocate(kM12PrefillBatch * kVHeads * kState * sizeof(float));
+        const std::size_t wide_batch = wide_prefill_ ? configured_wide_prefill_batch() : kM12PrefillBatch;
+        m12_gdn_raw_output_ = allocate(wide_batch * kVHeads * kState * sizeof(float));
         for (auto& layer : recurrent_layers_) {
             layer->set_m12_gdn_workspace(
                 m12_gdn_workspace_, static_cast<float*>(m12_gdn_raw_output_->get()));
@@ -1021,7 +1097,8 @@ private:
     void init_m12_dense_workspace() {
         if (!dense_prefill_ && !dense_projection_prefill_ && !wide_prefill_) return;
         m12_dense_weights_ = allocate(kHidden * kFfnInner * sizeof(__half));
-        m12_dense_input_ = allocate(kM12PrefillBatch * kFfnInner * sizeof(__half));
+        const std::size_t wide_batch = wide_prefill_ ? configured_wide_prefill_batch() : kM12PrefillBatch;
+        m12_dense_input_ = allocate(wide_batch * kFfnInner * sizeof(__half));
         std::string error;
         if (!miinfer::create_rocblas_gemm_handle(m12_dense_gemm_,
                                                   hipStreamPerThread, error)) {
@@ -1062,7 +1139,7 @@ private:
         d_decode_tokens_ = allocate(g_cache_capacity * sizeof(std::uint32_t));
         const std::size_t prefill_capacity = full_layer_major_prefill_ ? kFullPrefillCapacity
             : ((gdn_chunkwise_prefill_ || dense_prefill_ || wide_prefill_)
-                ? kM12PrefillBatch : kPrefillBatch);
+                ? (wide_prefill_ ? configured_wide_prefill_batch() : kM12PrefillBatch) : kPrefillBatch);
         prefill_a_ = allocate(prefill_capacity * kHidden * sizeof(float));
         prefill_b_ = allocate(prefill_capacity * kHidden * sizeof(float));
 
@@ -1155,6 +1232,7 @@ private:
     miinfer::RocblasGemmHandle m12_dense_gemm_{};
     Buffer prefill_a_;
     Buffer prefill_b_;
+    WidePrefillWorkspace wide_prefill_workspace_;
 
     bool use_hip_graph_ = true;
     bool layer_major_prefill_ = false;

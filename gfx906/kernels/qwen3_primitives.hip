@@ -3622,7 +3622,7 @@ void launch_qwen3_rms_norm_batch(
     const float* input, const float* weights, float* output, std::uint32_t token_count,
     std::uint32_t elements, float epsilon, hipStream_t stream) {
     if (input == nullptr || weights == nullptr || output == nullptr || token_count == 0
-        || token_count > 128 || elements == 0 || elements % 1024 != 0 || epsilon <= 0.0F) {
+        || token_count > 512 || elements == 0 || elements % 1024 != 0 || epsilon <= 0.0F) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     hipLaunchKernelGGL(qwen3_rms_norm_batch_vec4_kernel, dim3(token_count), dim3(256), 0, stream,
@@ -3633,7 +3633,7 @@ void launch_qwen3_rms_norm_batch(
 void launch_m23_q8_1_mmq_quantize(
     const float* input, M23Q8_1MmqBlock* output, std::uint32_t token_count,
     std::uint32_t elements, hipStream_t stream) {
-    if (input == nullptr || output == nullptr || token_count == 0 || token_count > 128
+    if (input == nullptr || output == nullptr || token_count == 0 || token_count > 512
         || elements == 0 || elements % 128 != 0) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
@@ -3647,7 +3647,7 @@ void launch_m23_q4_k_q8_1_mmq(
     const Q4KDeviceBlock* weights, const M23Q8_1MmqBlock* input, float* output,
     std::uint32_t rows, std::uint32_t columns, std::uint32_t token_count, hipStream_t stream) {
     if (weights == nullptr || input == nullptr || output == nullptr || rows == 0 || columns == 0
-        || columns % 256 != 0 || token_count == 0 || token_count > 128) {
+        || columns % 256 != 0 || token_count == 0 || token_count > 512) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     hipLaunchKernelGGL(m23_q4_k_q8_1_mmq_kernel,
@@ -3660,7 +3660,7 @@ void launch_m23_q6_k_q8_1_mmq(
     const Q6KDeviceBlock* weights, const M23Q8_1MmqBlock* input, float* output,
     std::uint32_t rows, std::uint32_t columns, std::uint32_t token_count, hipStream_t stream) {
     if (weights == nullptr || input == nullptr || output == nullptr || rows == 0 || columns == 0
-        || columns % 256 != 0 || token_count == 0 || token_count > 128) {
+        || columns % 256 != 0 || token_count == 0 || token_count > 512) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     hipLaunchKernelGGL(m23_q6_k_q8_1_mmq_kernel,
@@ -3673,7 +3673,7 @@ void launch_m23_q5_k_q8_1_mmq(
     const Q5KDeviceBlock* weights, const M23Q8_1MmqBlock* input, float* output,
     std::uint32_t rows, std::uint32_t columns, std::uint32_t token_count, hipStream_t stream) {
     if (weights == nullptr || input == nullptr || output == nullptr || rows == 0 || columns == 0
-        || columns % 256 != 0 || token_count == 0 || token_count > 128) {
+        || columns % 256 != 0 || token_count == 0 || token_count > 512) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     hipLaunchKernelGGL(m23_q5_k_q8_1_mmq_kernel,
@@ -3725,7 +3725,7 @@ void launch_qwen3_fused_add_rms_norm_batch(
     std::uint32_t elements, float epsilon, hipStream_t stream) {
     if (residual_in == nullptr || projection == nullptr || weights == nullptr
         || residual_out == nullptr || normalized_out == nullptr || token_count == 0
-        || token_count > 128 || elements == 0 || elements > 256U * 1024U || epsilon <= 0.0F) {
+        || token_count > 512 || elements == 0 || elements > 256U * 1024U || epsilon <= 0.0F) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     hipLaunchKernelGGL(qwen3_fused_add_rms_norm_batch_kernel, dim3(token_count), dim3(256), 0, stream,
@@ -4142,7 +4142,7 @@ void launch_qwen35_conv_silu_split_batch(
     std::uint32_t token_count, std::uint32_t history_capacity,
     std::uint32_t channels, std::uint32_t conv_kernel, hipStream_t stream) {
     if (qkv == nullptr || conv_weights == nullptr || history == nullptr || query == nullptr
-        || key == nullptr || value == nullptr || token_count == 0 || token_count > 128
+        || key == nullptr || value == nullptr || token_count == 0 || token_count > 512
         || history_capacity == 0 || channels == 0 || channels % 5 != 0
         || conv_kernel == 0 || conv_kernel > history_capacity) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
@@ -4185,7 +4185,7 @@ void launch_qwen35_dual_head_l2_normalize_batch(
     std::uint32_t token_count, std::uint32_t heads, std::uint32_t head_dim,
     hipStream_t stream) {
     if (input_a == nullptr || input_b == nullptr || output_a == nullptr || output_b == nullptr
-        || token_count == 0 || token_count > 128 || heads == 0 || head_dim == 0 || head_dim > 128) {
+        || token_count == 0 || token_count > 512 || heads == 0 || head_dim == 0 || head_dim > 128) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     hipLaunchKernelGGL(qwen35_dual_head_l2_normalize_batch_kernel,
@@ -4771,7 +4771,7 @@ void launch_qwen35_f32_dual_gemm_batch(
     float* output_a, float* output_b, std::uint32_t token_count,
     std::uint32_t rows, std::uint32_t columns, hipStream_t stream) {
     if (weights_a == nullptr || weights_b == nullptr || input == nullptr || output_a == nullptr
-        || output_b == nullptr || token_count == 0 || token_count > 128 || rows == 0 || columns == 0) {
+        || output_b == nullptr || token_count == 0 || token_count > 512 || rows == 0 || columns == 0) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     hipLaunchKernelGGL(qwen35_f32_dual_gemm_batch_kernel,

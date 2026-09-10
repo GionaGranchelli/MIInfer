@@ -43,8 +43,24 @@ std::size_t g_cache_capacity = 65536;
 // ordered B=4 groups where recurrent state and KV writes require ordering.
 constexpr std::size_t kPrefillBatch = 64;
 constexpr std::size_t kM12PrefillBatch = 128;
+constexpr std::size_t kMaxWidePrefillBatch = 512;
 static_assert(kHidden % 128 == 0 && kInner % 128 == 0 && kFfnInner % 128 == 0,
               "M23 MMQ projections require 128-value K tiles");
+
+std::size_t configured_wide_prefill_batch() {
+    const char* env = std::getenv("MIINFER_PREFILL_CHUNK");
+    if (env == nullptr) return kM12PrefillBatch;
+    const auto requested = std::stoul(env);
+    return requested >= kM12PrefillBatch && requested <= kMaxWidePrefillBatch
+        && requested % kPrefillBatch == 0 ? requested : kM12PrefillBatch;
+}
+
+bool shared_wide_prefill_enabled() {
+    const char* wide = std::getenv("MIINFER_PREFILL_WIDE_CHUNK");
+    const char* full = std::getenv("MIINFER_PREFILL_FULL_LAYER_MAJOR");
+    return wide != nullptr && std::strcmp(wide, "0") != 0
+        && full != nullptr && std::strcmp(full, "0") != 0;
+}
 
 class DeviceBytes {
 public:
@@ -66,6 +82,14 @@ private:
 };
 
 using Buffer = std::shared_ptr<DeviceBytes>;
+
+struct WidePrefillWorkspace {
+    Buffer normalized, qkv, gate, q8_1, mmq_q8;
+    Buffer gated, residual, post_normalized, projected;
+    Buffer ffn_gate, ffn_up, ffn_activation, ffn_projected;
+    Buffer core_query, core_key, core_value, core_beta, core_decay, core_gate;
+    Buffer qfull, value, gated_attention, query_rope;
+};
 
 std::size_t g_device_allocations = 0;
 std::size_t g_device_bytes = 0;
@@ -953,7 +977,7 @@ struct RecurrentLayer {
         const char* trace_dispatch_env = std::getenv("MIINFER_PREFILL_TRACE_DISPATCH");
         m23_trace_dispatch = trace_dispatch_env != nullptr && std::strcmp(trace_dispatch_env, "0") != 0;
         prefill_capacity = (prefill_dense_ffn_down || prefill_gdn_chunkwise || wide_prefill)
-            ? kM12PrefillBatch
+            ? (wide_prefill ? configured_wide_prefill_batch() : kM12PrefillBatch)
             : kPrefillBatch;
         require_type(qkv_weight, {miinfer::GgufTensorType::q4_k,
                                    miinfer::GgufTensorType::q6_k});
@@ -1168,7 +1192,7 @@ struct RecurrentLayer {
         q8 = allocate((kFfnInner / 256) * sizeof(miinfer::Q8KDeviceBlock));
         q8_1 = allocate((kFfnInner / miinfer::kQ8_1BlockSize) * sizeof(miinfer::Q8_1Block));
 
-        if (prefill_batch_enabled) {
+        if (prefill_batch_enabled && !shared_wide_prefill_enabled()) {
             prefill_normalized = allocate(prefill_capacity * kHidden * sizeof(float));
             prefill_qkv = allocate(prefill_capacity * (kChannels + kInner) * sizeof(float));
             prefill_gate = allocate(prefill_capacity * kInner * sizeof(float));
@@ -1593,7 +1617,8 @@ struct RecurrentLayer {
                                      std::uint32_t base_position,
                                      std::uint32_t token_count) {
         if (projected_qkv == nullptr || projected_gate == nullptr || projected_beta == nullptr
-            || projected_decay == nullptr || token_count != kM12PrefillBatch
+            || projected_decay == nullptr || token_count < kM12PrefillBatch
+            || token_count > prefill_capacity || token_count % kPrefillBatch != 0
             || !m12_gdn_workspace_ready || m12_gdn_raw_output == nullptr
             || !prefill_core_query || !prefill_core_key || !prefill_core_value
             || !prefill_gated) {
@@ -1631,7 +1656,8 @@ struct RecurrentLayer {
 
     const float* prefill_wide_beta_decay(const float* inputs, std::uint32_t base_position,
                                          std::uint32_t token_count) {
-        if (inputs == nullptr || token_count != kM12PrefillBatch || !prefill_normalized
+        if (inputs == nullptr || token_count < kM12PrefillBatch || token_count > prefill_capacity
+            || token_count % kPrefillBatch != 0 || !prefill_normalized
             || !prefill_core_beta || !prefill_core_decay) {
             throw std::runtime_error("invalid M23 wide beta/decay inputs");
         }
@@ -1660,7 +1686,8 @@ struct RecurrentLayer {
 
     const float* prefill_wide_qkv_gate(const float* inputs, std::uint32_t base_position,
                                        std::uint32_t token_count) {
-        if (!prefill_wide_qkv || token_count != kM12PrefillBatch
+        if (!prefill_wide_qkv || token_count < kM12PrefillBatch || token_count > prefill_capacity
+            || token_count % kPrefillBatch != 0
             || ((!prefill_wide_repacked) && (wide_qkv_fp16 == nullptr || wide_gate_fp16 == nullptr))
             || m12_dense_input == nullptr || m12_dense_handle == nullptr) {
             throw std::runtime_error("invalid M23 wide QKV/Z inputs");
@@ -1747,7 +1774,8 @@ struct RecurrentLayer {
 
     const float* prefill_wide_ssm_out(const float* gated_batch, std::uint32_t base_position,
                                       std::uint32_t token_count) {
-        if (!prefill_wide_qkv || gated_batch == nullptr || token_count != kM12PrefillBatch
+        if (!prefill_wide_qkv || gated_batch == nullptr || token_count < kM12PrefillBatch
+            || token_count > prefill_capacity || token_count % kPrefillBatch != 0
             || ((!prefill_wide_repacked) && wide_ssm_out_fp16 == nullptr)
             || m12_dense_input == nullptr || m12_dense_handle == nullptr) {
             throw std::runtime_error("invalid M23 wide SSM-out inputs");
@@ -1792,7 +1820,8 @@ struct RecurrentLayer {
     void prefill_wide(const float* inputs, float* outputs, std::uint32_t base_position,
                       std::uint32_t token_count) {
         ensure_m23_repacked();
-        if (!prefill_wide_qkv || inputs == nullptr || outputs == nullptr || token_count != kM12PrefillBatch
+        if (!prefill_wide_qkv || inputs == nullptr || outputs == nullptr || token_count < kM12PrefillBatch
+            || token_count > prefill_capacity || token_count % kPrefillBatch != 0
             || ((!prefill_wide_repacked) && (!wide_ffn_gate_fp16 || !wide_ffn_up_fp16 || !wide_ffn_down_fp16))
             || m12_dense_input == nullptr || m12_dense_handle == nullptr) {
             throw std::runtime_error("invalid M23 wide prefill inputs");
@@ -3162,8 +3191,9 @@ struct FullAttentionLayer {
             && std::strcmp(wide_prefill_env, "0") != 0;
         prefill_capacity = prefill_batch_enabled && prefill_dense_env != nullptr
             && std::strcmp(prefill_dense_env, "0") != 0 ? kM12PrefillBatch
-            : (wide_prefill || (prefill_batch_enabled && prefill_gdn_env != nullptr
-               && std::strcmp(prefill_gdn_env, "0") != 0) ? kM12PrefillBatch : kPrefillBatch);
+            : (wide_prefill ? configured_wide_prefill_batch()
+               : (prefill_batch_enabled && prefill_gdn_env != nullptr
+                  && std::strcmp(prefill_gdn_env, "0") != 0) ? kM12PrefillBatch : kPrefillBatch);
         normalized = allocate(kHidden * sizeof(float));
         qfull = allocate((d_qk_combined ? (12288 + 1024) : 12288) * sizeof(float));
         query = allocate(6144 * sizeof(float)); gate = allocate(6144 * sizeof(float));
@@ -3187,7 +3217,7 @@ struct FullAttentionLayer {
         ffn_activation = allocate(kFfnInner * sizeof(float)); layer_output = allocate(kHidden * sizeof(float));
         q8 = allocate((kFfnInner / 256) * sizeof(miinfer::Q8KDeviceBlock));
         q8_1 = allocate((kFfnInner / miinfer::kQ8_1BlockSize) * sizeof(miinfer::Q8_1Block));
-        if (prefill_batch_enabled) {
+        if (prefill_batch_enabled && !shared_wide_prefill_enabled()) {
             prefill_normalized = allocate(prefill_capacity * kHidden * sizeof(float));
             prefill_qfull = allocate(prefill_capacity * (12288 + 1024) * sizeof(float));
             prefill_value = allocate(prefill_capacity * 1024 * sizeof(float));
@@ -3330,12 +3360,15 @@ struct FullAttentionLayer {
             || inputs == nullptr
             || d_qk_combined == nullptr
             || (d_v_native == nullptr
-                && !(wide_attn_prefill && count == kM12PrefillBatch && d_v_mmq && prefill_mmq_q8))) {
+                && !(wide_attn_prefill && count >= kM12PrefillBatch
+                     && count <= prefill_capacity && count % kPrefillBatch == 0
+                     && d_v_mmq && prefill_mmq_q8))) {
             return false;
         }
         auto* normalized_out = static_cast<float*>(prefill_normalized->get());
         auto* q8_out = static_cast<miinfer::Q8_1Block*>(prefill_q8_1->get());
-        if (wide_attn_prefill && count == kM12PrefillBatch && d_qk_mmq && d_v_mmq && prefill_mmq_q8) {
+        if (wide_attn_prefill && count >= kM12PrefillBatch && count <= prefill_capacity
+            && count % kPrefillBatch == 0 && d_qk_mmq && d_v_mmq && prefill_mmq_q8) {
             if (m23_trace_dispatch) m23_dispatch_counts.fill(0);
             if (!normalized_ready) {
                 miinfer::launch_qwen3_rms_norm_batch(
@@ -3347,11 +3380,14 @@ struct FullAttentionLayer {
             miinfer::launch_m23_q8_1_mmq_quantize(
                 normalized_out, mmq_q8, static_cast<std::uint32_t>(count), kHidden,
                 hipStreamPerThread);
+            stage_start(1, stage_profile_position);
             launch_m23_q4k_repacked_mmq(
                 static_cast<const Q4KMmqTile*>(d_qk_mmq->get()), mmq_q8,
                 static_cast<float*>(prefill_qfull->get()), 12288 + 1024, kHidden,
                 static_cast<std::uint32_t>(count), hipStreamPerThread);
+            stage_end(1, stage_profile_position);
             if (m23_trace_dispatch) ++m23_dispatch_counts[0];
+            stage_start(4, stage_profile_position);
             if (v_weight.type == miinfer::GgufTensorType::q4_k) {
                 launch_m23_q4k_repacked_mmq(
                     static_cast<const Q4KMmqTile*>(d_v_mmq->get()), mmq_q8,
@@ -3363,6 +3399,7 @@ struct FullAttentionLayer {
                     static_cast<float*>(prefill_value->get()), 1024, kHidden,
                     static_cast<std::uint32_t>(count), hipStreamPerThread);
             }
+            stage_end(4, stage_profile_position);
             if (m23_trace_dispatch) ++m23_dispatch_counts[1];
             return true;
         }
@@ -3438,12 +3475,16 @@ struct FullAttentionLayer {
         auto* output = static_cast<float*>(prefill_gated_attention->get());
         const auto* qfull = static_cast<const float*>(prefill_qfull->get());
         const auto* value = static_cast<const float*>(prefill_value->get());
+        const auto profile_position = base_position + count - 1;
+        stage_start(2, profile_position);
         miinfer::launch_qwen35_fused_q_split_norm_rope_batch(
             qfull, static_cast<const float*>(d_q_norm->get()),
             q, gate, count, base_position,
             24, 4, 256, model.config().rope_theta, model.config().rms_epsilon,
             hipStreamPerThread);
+        stage_end(2, profile_position);
         if (m23_trace_dispatch) ++m23_dispatch_counts[2];
+        stage_start(3, profile_position);
         if (fp16_kv_cache) {
             miinfer::launch_qwen35_fused_k_norm_rope_kv_store_batch_f16(
                 qfull, value, static_cast<const float*>(d_k_norm->get()),
@@ -3457,7 +3498,9 @@ struct FullAttentionLayer {
                 count, base_position, g_cache_capacity, 24, 4, 256,
                 model.config().rope_theta, model.config().rms_epsilon, hipStreamPerThread);
         }
+        stage_end(3, profile_position);
         if (m23_trace_dispatch) ++m23_dispatch_counts[3];
+        stage_start(6, profile_position);
         if (fp16_kv_cache) {
             miinfer::launch_qwen35_tiled_online_attention_batch_f16(
                 q, static_cast<const __half*>(key_cache->get()),
@@ -3471,6 +3514,7 @@ struct FullAttentionLayer {
                 base_position, g_cache_capacity, 24, 4, 256,
                 1.0F / std::sqrt(256.0F), hipStreamPerThread);
         }
+        stage_end(6, profile_position);
         if (m23_trace_dispatch) ++m23_dispatch_counts[4];
     }
 
@@ -3480,6 +3524,8 @@ struct FullAttentionLayer {
         auto* gated = static_cast<const float*>(prefill_gated_attention->get());
         miinfer::launch_m23_q8_1_mmq_quantize(
             gated, q8, static_cast<std::uint32_t>(count), kInner, hipStreamPerThread);
+        const auto profile_position = stage_profile_position;
+        stage_start(7, profile_position);
         if (o_weight.type == miinfer::GgufTensorType::q4_k) {
             launch_m23_q4k_repacked_mmq(
                 static_cast<const Q4KMmqTile*>(d_o_mmq->get()), q8,
@@ -3491,15 +3537,19 @@ struct FullAttentionLayer {
                 static_cast<float*>(prefill_projected->get()), kHidden, kInner,
                 static_cast<std::uint32_t>(count), hipStreamPerThread);
         }
+        stage_end(7, profile_position);
         if (m23_trace_dispatch) ++m23_dispatch_counts[5];
         auto* residual_batch = static_cast<float*>(prefill_residual->get());
         auto* normalized_batch = static_cast<float*>(prefill_post_normalized->get());
         auto* projected_batch = static_cast<float*>(prefill_projected->get());
+        stage_start(8, profile_position);
         miinfer::launch_qwen3_fused_add_rms_norm_batch(
             inputs, projected_batch, static_cast<const float*>(d_post->get()),
             residual_batch, normalized_batch, static_cast<std::uint32_t>(count), kHidden,
             model.config().rms_epsilon, hipStreamPerThread);
+        stage_end(8, profile_position);
 
+        stage_start(10, profile_position);
         miinfer::launch_m23_q8_1_mmq_quantize(
             normalized_batch, q8, static_cast<std::uint32_t>(count), kHidden,
             hipStreamPerThread);
@@ -3511,15 +3561,19 @@ struct FullAttentionLayer {
             static_cast<const Q4KMmqTile*>(d_ffn_up_mmq->get()), q8,
             static_cast<float*>(prefill_ffn_up->get()), kFfnInner, kHidden,
             static_cast<std::uint32_t>(count), hipStreamPerThread);
+        stage_end(10, profile_position);
         if (m23_trace_dispatch) {
             ++m23_dispatch_counts[6];
             ++m23_dispatch_counts[7];
         }
+        stage_start(11, profile_position);
         miinfer::launch_qwen3_silu_mul(
             static_cast<const float*>(prefill_ffn_gate->get()),
             static_cast<const float*>(prefill_ffn_up->get()),
             static_cast<float*>(prefill_ffn_activation->get()),
             static_cast<std::uint32_t>(count * kFfnInner), hipStreamPerThread);
+        stage_end(11, profile_position);
+        stage_start(12, profile_position);
         miinfer::launch_m23_q8_1_mmq_quantize(
             static_cast<const float*>(prefill_ffn_activation->get()), q8,
             static_cast<std::uint32_t>(count), kFfnInner, hipStreamPerThread);
@@ -3534,7 +3588,9 @@ struct FullAttentionLayer {
                 static_cast<float*>(prefill_ffn_projected->get()), kHidden, kFfnInner,
                 static_cast<std::uint32_t>(count), hipStreamPerThread);
         }
+        stage_end(12, profile_position);
         if (m23_trace_dispatch) ++m23_dispatch_counts[8];
+        stage_start(13, profile_position);
         if (next_norm_weight != nullptr && next_normalized != nullptr) {
             miinfer::launch_qwen3_fused_add_rms_norm_batch(
                 residual_batch, static_cast<const float*>(prefill_ffn_projected->get()),
@@ -3546,6 +3602,7 @@ struct FullAttentionLayer {
                 residual_batch, static_cast<const float*>(prefill_ffn_projected->get()),
                 outputs, static_cast<std::uint32_t>(count * kHidden), hipStreamPerThread);
         }
+        stage_end(13, profile_position);
         if (m23_trace_dispatch) {
             std::cerr << "M23 attention dispatches: qk=" << m23_dispatch_counts[0]
                       << " v=" << m23_dispatch_counts[1]

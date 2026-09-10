@@ -634,3 +634,28 @@ previous M22 dense-FFN greedy replay are the available correctness evidence.
 **KEEP as an opt-in experiment only**; do not enable by default or claim
 qualified M23 parity until model-wide validation is repeated. The 222.64
 tok/s target remains unmet.
+
+### Re-evaluation — shared wide scratch and B256/B512 sweep — 2026-09-10
+
+The initial B256/B512 attempt could not initialize because every layer owned a
+full wide activation set. Full layer-major execution is serial by layer, so the
+wide buffers were changed to one engine-owned shared scratch set, with each
+layer aliasing it only while that layer is active. This reduced the B512
+allocation from the prior OOM range to `19,348,785,492` bytes. The scheduler
+also now passes the configured width rather than silently slicing every launch
+back to B128.
+
+The exact P512 control (all M23 switches and row-128 reader enabled) measured:
+
+| chunk | prefill tok/s | allocation bytes | result |
+|---:|---:|---:|---|
+| B128 | 54.81 | 19,079,481,684 | fits |
+| B256 | 54.53 | 19,169,249,620 | fits |
+| B512 | 32.93 | 19,348,785,492 | fits, regression |
+
+Focused gfx906 primitive parity and the release build pass. A one-token
+generation smoke at B128/context 513 returned token `2` and completed at
+`341.30 tok/s` decode; a second attempt while stale benchmark processes held
+the GPU was contaminated and is not evidence. The B512 path is therefore a
+memory-feasible but currently slower candidate; keep the width switch opt-in
+for further kernel work and do not promote it or claim model-wide parity.

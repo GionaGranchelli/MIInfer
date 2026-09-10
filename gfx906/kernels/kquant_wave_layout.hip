@@ -1863,7 +1863,7 @@ void launch_m23_q6k_repacked_mmq(
     const Q6KMmqTile* weights, const miinfer::M23Q8_1MmqBlock* input, float* output,
     std::uint32_t rows, std::uint32_t columns, std::uint32_t token_count, hipStream_t stream) {
     if (!weights || !input || !output || rows == 0 || rows % 64 != 0 || columns == 0
-        || columns % 128 != 0 || token_count == 0 || token_count > 128) {
+        || columns % 128 != 0 || token_count == 0 || token_count > 512) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     if (m23_repacked_row128_enabled() && rows % 128 == 0) {
@@ -1882,7 +1882,7 @@ void launch_m23_q4k_repacked_mmq(
     const Q4KMmqTile* weights, const miinfer::M23Q8_1MmqBlock* input, float* output,
     std::uint32_t rows, std::uint32_t columns, std::uint32_t token_count, hipStream_t stream) {
     if (!weights || !input || !output || rows == 0 || rows % 64 != 0 || columns == 0
-        || columns % 128 != 0 || token_count == 0 || token_count > 128) {
+        || columns % 128 != 0 || token_count == 0 || token_count > 512) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     if (m23_repacked_row128_enabled() && rows % 128 == 0) {
@@ -1901,7 +1901,7 @@ void launch_m23_q5k_repacked_mmq(
     const Q5KMmqTile* weights, const miinfer::M23Q8_1MmqBlock* input, float* output,
     std::uint32_t rows, std::uint32_t columns, std::uint32_t token_count, hipStream_t stream) {
     if (!weights || !input || !output || rows == 0 || rows % 64 != 0 || columns == 0
-        || columns % 128 != 0 || token_count == 0 || token_count > 128) {
+        || columns % 128 != 0 || token_count == 0 || token_count > 512) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     if (m23_repacked_row128_enabled() && rows % 128 == 0) {
