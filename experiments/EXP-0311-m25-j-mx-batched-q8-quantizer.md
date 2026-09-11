@@ -66,8 +66,10 @@ candidate enabled:
 No full-generation correctness claim is made for this experiment. A fresh
 wide full-layer model smoke did not complete and was terminated after the
 GPU remained busy beyond the bounded diagnostic timeout; it produced no
-throughput result. The established M25-H/I full-model result remains the
-qualified generation result.
+throughput result. A matched `MIINFER_MX_Q8_BATCH=0` control diagnostic
+reproduced the same stall, so this is not attributed to the quantizer
+candidate. The established M25-H/I full-model result remains the qualified
+generation result.
 
 ## Results
 

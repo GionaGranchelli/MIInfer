@@ -76991,7 +76991,7 @@
       "node_kind": "heading",
       "norm_label": "decision",
       "source_file": "experiments/EXP-0311-m25-j-mx-batched-q8-quantizer.md",
-      "source_location": "L100"
+      "source_location": "L102"
     },
     {
       "id": "experiments_exp_0311_m25_j_mx_batched_q8_quantizer_environment",
@@ -77027,7 +77027,7 @@
       "node_kind": "heading",
       "norm_label": "follow-up",
       "source_file": "experiments/EXP-0311-m25-j-mx-batched-q8-quantizer.md",
-      "source_location": "L104"
+      "source_location": "L106"
     },
     {
       "id": "experiments_exp_0311_m25_j_mx_batched_q8_quantizer_hypothesis",
@@ -77051,7 +77051,7 @@
       "node_kind": "heading",
       "norm_label": "interpretation",
       "source_file": "experiments/EXP-0311-m25-j-mx-batched-q8-quantizer.md",
-      "source_location": "L93"
+      "source_location": "L95"
     },
     {
       "id": "experiments_exp_0311_m25_j_mx_batched_q8_quantizer_motivation",
@@ -77075,7 +77075,7 @@
       "node_kind": "heading",
       "norm_label": "profiling",
       "source_file": "experiments/EXP-0311-m25-j-mx-batched-q8-quantizer.md",
-      "source_location": "L86"
+      "source_location": "L88"
     },
     {
       "id": "experiments_exp_0311_m25_j_mx_batched_q8_quantizer_results",
@@ -77087,7 +77087,7 @@
       "node_kind": "heading",
       "norm_label": "results",
       "source_file": "experiments/EXP-0311-m25-j-mx-batched-q8-quantizer.md",
-      "source_location": "L72"
+      "source_location": "L74"
     },
     {
       "id": "experiments_exp_0245_m11b_q4k_mmq16_split4_rejection",
@@ -189115,7 +189115,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0311-m25-j-mx-batched-q8-quantizer.md",
-      "source_location": "L100",
+      "source_location": "L102",
       "weight": 1.0
     },
     {
@@ -189126,7 +189126,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0311-m25-j-mx-batched-q8-quantizer.md",
-      "source_location": "L104",
+      "source_location": "L106",
       "weight": 1.0
     },
     {
@@ -189203,7 +189203,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0311-m25-j-mx-batched-q8-quantizer.md",
-      "source_location": "L72",
+      "source_location": "L74",
       "weight": 1.0
     },
     {
@@ -189214,7 +189214,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0311-m25-j-mx-batched-q8-quantizer.md",
-      "source_location": "L86",
+      "source_location": "L88",
       "weight": 1.0
     },
     {
@@ -189236,7 +189236,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0311-m25-j-mx-batched-q8-quantizer.md",
-      "source_location": "L93",
+      "source_location": "L95",
       "weight": 1.0
     },
     {
@@ -206085,5 +206085,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "30b496f907eb0ba477756e6a1dd9f4a0328c549d"
+  "built_at_commit": "2a7074428de7aacb59b40ae16a30daa582dbc60d"
 }

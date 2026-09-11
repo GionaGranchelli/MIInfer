@@ -4986,9 +4986,9 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0311-m25-j-mx-batched-q8-quantizer.md": {
-    "mtime": 1789164521.6922,
-    "seen": 1789164619.895494,
-    "ast_hash": "02b1e7baa9d58fbfc3146bcfc5906308",
+    "mtime": 1789165233.4869637,
+    "seen": 1789165259.0472338,
+    "ast_hash": "c4f2989c5a748e69373d136905ddb6f8",
     "semantic_hash": ""
   },
   "experiments/EXP-0312-m25-k-mx-attention-qk.md": {
