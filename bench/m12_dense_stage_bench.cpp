@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <iomanip>
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -140,6 +141,7 @@ int main(int argc, char** argv) try {
     const std::size_t dense_bytes = static_cast<std::size_t>(kRows) * kColumns * sizeof(__half);
     const std::size_t max_input_bytes = static_cast<std::size_t>(kBatches.back()) * kColumns * sizeof(__half);
     const std::size_t max_output_bytes = static_cast<std::size_t>(kBatches.back()) * kRows * sizeof(__half);
+    const std::size_t mmq_blocks = kColumns / 128;
 
     Buffer source(canonical_bytes);
     Buffer dense(dense_bytes);
@@ -149,7 +151,14 @@ int main(int argc, char** argv) try {
     Buffer baseline_q8(static_cast<std::size_t>(kBatches.back())
                        * (kColumns / miinfer::kQ8_1BlockSize) * sizeof(miinfer::Q8_1Block));
     Buffer baseline_output(max_output_bytes * 2);
+    const auto mmq_packed = pack_q4k_mmq_tensor(*selected);
+    Buffer mmq_weights(mmq_packed.size() * sizeof(mmq_packed[0]));
+    Buffer mmq_output(max_output_bytes * 2);
+    std::array<std::unique_ptr<Buffer>, kBatches.size()> mmq_inputs;
     MIINFER_HIP_CHECK(hipMemcpy(source.pointer, tensor.data(), canonical_bytes,
+                                hipMemcpyHostToDevice));
+    MIINFER_HIP_CHECK(hipMemcpy(mmq_weights.pointer, mmq_packed.data(),
+                                mmq_packed.size() * sizeof(mmq_packed[0]),
                                 hipMemcpyHostToDevice));
 
     std::vector<__half> input_host(static_cast<std::size_t>(kBatches.back()) * kColumns);
@@ -178,6 +187,14 @@ int main(int argc, char** argv) try {
             input_f32.as<float>() + static_cast<std::size_t>(batch) * kColumns,
             baseline_q8.as<miinfer::Q8_1Block>() + static_cast<std::size_t>(batch) * q8_stride,
             kColumns, hipStreamPerThread);
+    }
+    for (std::size_t index = 0; index < kBatches.size(); ++index) {
+        const int batch = kBatches[index];
+        mmq_inputs[index] = std::make_unique<Buffer>(
+            static_cast<std::size_t>(batch) * mmq_blocks * sizeof(miinfer::M23Q8_1MmqBlock));
+        miinfer::launch_m23_q8_1_mmq_quantize(
+            input_f32.as<float>(), mmq_inputs[index]->as<miinfer::M23Q8_1MmqBlock>(),
+            batch, kColumns, hipStreamPerThread);
     }
     MIINFER_HIP_CHECK(hipDeviceSynchronize());
 
@@ -212,14 +229,24 @@ int main(int argc, char** argv) try {
               << "{\"tensor\":\"" << tensor.name() << "\",\"rows\":" << kRows
               << ",\"columns\":" << kColumns
               << ",\"dense_bytes\":" << dense_bytes
+              << ",\"mmq_packed_bytes\":"
+              << mmq_packed.size() * sizeof(mmq_packed[0])
               << ",\"repack_us\":" << repack_us
               << ",\"max_repack_error\":" << max_repack_error
               << ",\"batches\":[";
 
     bool first = true;
-    for (const int batch : kBatches) {
+    double max_mmq_vs_gemm_error = 0.0;
+    for (std::size_t batch_index = 0; batch_index < kBatches.size(); ++batch_index) {
+        const int batch = kBatches[batch_index];
         const double gemm_us = measure([&] {
             gemm(handle, dense.as<__half>(), input.as<__half>(), output.as<__half>(), batch);
+        });
+        const double mmq_us = measure([&] {
+            launch_m23_q4k_repacked_mmq(
+                mmq_weights.as<Q4KMmqTile>(),
+                mmq_inputs[batch_index]->as<miinfer::M23Q8_1MmqBlock>(),
+                mmq_output.as<float>(), kRows, kColumns, batch, hipStreamPerThread);
         });
         const double baseline_us = measure([&] {
             for (int offset = 0; offset < batch; offset += 4) {
@@ -234,8 +261,11 @@ int main(int argc, char** argv) try {
         first = false;
         std::cout << "{\"batch\":" << batch
                   << ",\"baseline_b4_us\":" << baseline_us
+                  << ",\"resident_mmq_us\":" << mmq_us
                   << ",\"gemm_us\":" << gemm_us
                   << ",\"repack_plus_gemm_us\":" << repack_us + gemm_us
+                  << ",\"resident_mmq_speedup_vs_repack_plus_gemm\":"
+                  << (repack_us + gemm_us) / mmq_us
                   << ",\"speedup_vs_b4\":" << baseline_us / (repack_us + gemm_us)
                   << '}';
     }
@@ -246,6 +276,22 @@ int main(int argc, char** argv) try {
     std::vector<__half> output_host(static_cast<std::size_t>(kBatches[0]) * kRows);
     MIINFER_HIP_CHECK(hipMemcpy(output_host.data(), output.pointer,
                                 output_host.size() * sizeof(__half), hipMemcpyDeviceToHost));
+    launch_m23_q4k_repacked_mmq(
+        mmq_weights.as<Q4KMmqTile>(), mmq_inputs[0]->as<miinfer::M23Q8_1MmqBlock>(),
+        mmq_output.as<float>(), kRows, kColumns, kBatches[0], hipStreamPerThread);
+    MIINFER_HIP_CHECK(hipDeviceSynchronize());
+    std::vector<float> mmq_output_host(static_cast<std::size_t>(kBatches[0]) * kRows);
+    MIINFER_HIP_CHECK(hipMemcpy(mmq_output_host.data(), mmq_output.pointer,
+                                mmq_output_host.size() * sizeof(float), hipMemcpyDeviceToHost));
+    for (std::size_t i = 0; i < mmq_output_host.size(); ++i) {
+        if (!std::isfinite(mmq_output_host[i])) {
+            throw std::runtime_error("resident MMQ produced non-finite output");
+        }
+    }
+    for (std::size_t i = 0; i < mmq_output_host.size(); ++i) {
+        max_mmq_vs_gemm_error = std::max(max_mmq_vs_gemm_error, static_cast<double>(std::abs(
+            mmq_output_host[i] - __half2float(output_host[i]))));
+    }
     double max_gemm_error = 0.0;
     double max_gemm_relative_error = 0.0;
     for (int batch = 0; batch < 2; ++batch) {
@@ -267,7 +313,8 @@ int main(int argc, char** argv) try {
     check_hipblas(hipblasDestroy(handle), "hipblasDestroy");
     std::cerr << "m12 correctness: max_repack_error=" << max_repack_error
               << " max_gemm_error=" << max_gemm_error
-              << " max_gemm_relative_error=" << max_gemm_relative_error << '\n';
+              << " max_gemm_relative_error=" << max_gemm_relative_error
+              << " max_mmq_vs_gemm_error=" << max_mmq_vs_gemm_error << '\n';
     if (max_repack_error > 0.02
         || (max_gemm_error > 2.0 && max_gemm_relative_error > 0.01)) {
         throw std::runtime_error("dense staging correctness check failed");

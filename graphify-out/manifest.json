@@ -2790,9 +2790,9 @@
     "semantic_hash": ""
   },
   "bench/m12_dense_stage_bench.cpp": {
-    "mtime": 1788852944.9539194,
-    "seen": 1788852957.3866177,
-    "ast_hash": "1a7c9a24a83b4c6993b94894cdd76721",
+    "mtime": 1789113261.1962626,
+    "seen": 1789113278.654096,
+    "ast_hash": "fe9b15330997b5ea81a68cfdf5da0437",
     "semantic_hash": ""
   },
   "include/miinfer/m12_dense_stage.hpp": {
@@ -4875,6 +4875,12 @@
     "mtime": 1789084185.0088055,
     "seen": 1789084197.0998483,
     "ast_hash": "d7b0f2ee1c4f38188210d18f03c994f2",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0296-m24-projection-architecture-bakeoff.md": {
+    "mtime": 1789113215.2615297,
+    "seen": 1789113227.1597598,
+    "ast_hash": "381b829b355c3b639561fd0a61909603",
     "semantic_hash": ""
   }
 }
