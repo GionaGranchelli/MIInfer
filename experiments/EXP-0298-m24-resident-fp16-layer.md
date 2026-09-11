@@ -42,20 +42,34 @@ canonical layer for every token.
 
 ## Results
 
-No qualified P512 timing is claimed yet. A non-validation P512 CLI run was
-stopped after several minutes while the process remained GPU-busy; this is a
-runtime scheduling investigation item, not a correctness failure. The
-projection-only bake-off remains the current timing evidence.
+The layer-local harness uses the exact row-128 MMQ mapping and times one
+recurrent layer without the 64-layer CLI scheduler or attention layers. Each
+cell is the median of three interleaved control/candidate runs; values are
+microseconds and the ratio is control/candidate.
+
+| batch | resident MMQ | direct resident FP16 | ratio | resident allocation |
+|---:|---:|---:|---:|---:|
+| 128 | 21,585.7 | 21,935.8 | 0.984× | 391,781,904 B |
+| 256 | 39,862.5 | 37,786.8 | 1.055× | 457,694,736 B |
+| 512 | 73,521.2 | 68,755.6 | 1.069× | 589,520,400 B |
+
+The direct path is therefore slightly slower at B128 and only about 1.07×
+faster at B512 for this complete recurrent layer. A non-validation full-model
+CLI run was stopped after several minutes while both the control and candidate
+schedules remained GPU-busy; this is pre-existing scheduler/attention
+overhead, not a projection correctness failure.
 
 ## Decision
 
-**KEEP as an integration prototype.** The layer correctness gate is passed,
-but the timing harness needs to be isolated from full-model CLI overhead before
-the branch can be compared against the 106.4 tok/s resident-all baseline.
+**KEEP as a measured reference, not yet as the default P512 architecture.**
+The direct path is correct and modestly faster at B256/B512, but the row-128
+MMQ path is already close enough that migrating all projections is unlikely to
+be a standalone 200 tok/s solution. Do not spend time on fusion until the
+attention/output-projection coverage is measured.
 
 ## Follow-up
 
-1. Add a layer-local event profile for the direct branches and MMQ control.
-2. Run a short non-validation B128/B512 A/B with continuous clock telemetry.
-3. Extend the same branch to FullAttention Q/K/V/O and FFN projections only
-   after the recurrent measurements are reproducible.
+1. Extend the same harness to FullAttention Q/K/V/O and FFN projections.
+2. Add continuous clock/power telemetry to the layer A/B runs.
+3. Revisit full-model integration only if attention and output projection show
+   a larger row-128 MMQ gap.

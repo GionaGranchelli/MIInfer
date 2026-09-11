@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1789117445.0039008,
-    "seen": 1789117714.3963964,
-    "ast_hash": "3a4a409edda7783d92fd9e15e01df4a7",
+    "mtime": 1789125023.8270578,
+    "seen": 1789125216.090156,
+    "ast_hash": "7cc5b38fbd93e817f0bec425c976a751",
     "semantic_hash": ""
   },
   "README.md": {
@@ -4896,9 +4896,15 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0298-m24-resident-fp16-layer.md": {
-    "mtime": 1789119266.9504297,
-    "seen": 1789119327.9359648,
-    "ast_hash": "815fbb87551086ee886cfcc235b6b238",
+    "mtime": 1789125194.8341382,
+    "seen": 1789125216.090646,
+    "ast_hash": "d798f053fe7456238bfc0634caa4e396",
+    "semantic_hash": ""
+  },
+  "bench/m24_recurrent_layer_bakeoff.cpp": {
+    "mtime": 1789125093.137685,
+    "seen": 1789125216.0896804,
+    "ast_hash": "a0cedb7cb94b5b6dffd4749efede166a",
     "semantic_hash": ""
   }
 }
