@@ -323,6 +323,10 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-m12-dense-stage-bench PRIVATE miinfer_hip miinfer_model)
     target_compile_options(miinfer-m12-dense-stage-bench PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-m24-projection-bakeoff bench/m24_projection_bakeoff.cpp)
+    target_link_libraries(miinfer-m24-projection-bakeoff PRIVATE miinfer_hip miinfer_model)
+    target_compile_options(miinfer-m24-projection-bakeoff PRIVATE -Wall -Wextra -Wpedantic)
+
     add_executable(miinfer-m13-quant-mm-bench bench/m13_quant_mm_bench.cpp)
     target_link_libraries(miinfer-m13-quant-mm-bench PRIVATE miinfer_hip miinfer_model)
     target_compile_options(miinfer-m13-quant-mm-bench PRIVATE -Wall -Wextra -Wpedantic)

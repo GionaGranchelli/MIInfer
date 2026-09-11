@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1788986886.6984804,
-    "seen": 1788986948.0120213,
-    "ast_hash": "908cc167db8c8f73619d2e06cc30569f",
+    "mtime": 1789117445.0039008,
+    "seen": 1789117714.3963964,
+    "ast_hash": "3a4a409edda7783d92fd9e15e01df4a7",
     "semantic_hash": ""
   },
   "README.md": {
@@ -4881,6 +4881,18 @@
     "mtime": 1789114431.487507,
     "seen": 1789114448.0080016,
     "ast_hash": "d7a4c67efe1836db95f69d5e02813b73",
+    "semantic_hash": ""
+  },
+  "bench/m24_projection_bakeoff.cpp": {
+    "mtime": 1789117582.9661067,
+    "seen": 1789117714.3959267,
+    "ast_hash": "ddeea28df167cb9123f36539bfa8adcf",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0297-m24-row128-projection-bakeoff.md": {
+    "mtime": 1789117697.2694488,
+    "seen": 1789117714.3969045,
+    "ast_hash": "27d91f82797a505b337463ebe2324a74",
     "semantic_hash": ""
   }
 }
