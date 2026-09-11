@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1789167477.36942,
-    "seen": 1789167596.0327392,
-    "ast_hash": "0576ea2693221f8ac3f4d8f8413fffc0",
+    "mtime": 1789169168.2543187,
+    "seen": 1789169180.784203,
+    "ast_hash": "0177e8330c8604d31240b1eade0d664f",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -4998,9 +4998,15 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0313-m25-review-hardening-and-p512-stall.md": {
-    "mtime": 1789167477.3684201,
-    "seen": 1789167596.0332146,
-    "ast_hash": "8cb4e59bc140c55d94eb9798a7971986",
+    "mtime": 1789167645.1275375,
+    "seen": 1789169180.784727,
+    "ast_hash": "2fc8f29b4d28d2ddefed3b30988491bd",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0314-m25-p512-cold-ab-retest.md": {
+    "mtime": 1789169168.2533188,
+    "seen": 1789169180.7847288,
+    "ast_hash": "8d2898b97ad956127365ae4e544e99f1",
     "semantic_hash": ""
   }
 }

@@ -1746,6 +1746,16 @@ was unavailable, so no source regression is attributed. M25-H/I remains
 **KEEP but opt-in** at the existing qualified `211.48 tok/s`; M25-J remains
 **RETEST**. See experiments/EXP-0313-m25-review-hardening-and-p512-stall.md.
 
+2026-09-12 — EXP-0314 repeated the P512 source-delta check after the MI50
+returned to a responsive state. Clean, clock-qualified H/I runs completed at
+`206.75 tok/s` on pre-J `3fbe0f1` and `202.57 tok/s` on current `08dc691`,
+with identical `18,472,649,044 B` allocation; current-main interleaved smoke
+medians were `212.86 tok/s` H/I and `177.30 tok/s` control. The exact P512
+plus one-token continuation returned `13477` (`brown`). The earlier stall is
+therefore not reproducible or attributable to M25-J. H/I remains opt-in until
+same-process repeat-P512 and longer-generation checks pass. See
+experiments/EXP-0314-m25-p512-cold-ab-retest.md.
+
 Update this document whenever:
 
 * active milestone changes
