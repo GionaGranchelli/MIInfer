@@ -4918,5 +4918,11 @@
     "seen": 1789135584.680346,
     "ast_hash": "3c43cc3ac0983901aec8be021515245a",
     "semantic_hash": ""
+  },
+  "experiments/EXP-0300-m25-a-mx-miinfer-kernel-differential.md": {
+    "mtime": 1789144149.4284346,
+    "seen": 1789144175.0665479,
+    "ast_hash": "669b330cf0dd142e7f7a9c38b84735c9",
+    "semantic_hash": ""
   }
 }
