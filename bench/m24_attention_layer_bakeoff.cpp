@@ -7,14 +7,18 @@
 
 #include <hip/hip_runtime.h>
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
+#include <filesystem>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace {
@@ -101,6 +105,27 @@ CompareMetrics compare_outputs(const std::vector<float>& actual,
     return result;
 }
 
+std::filesystem::path fixture_checkpoint(const std::filesystem::path& fixture,
+                                         std::size_t position, std::string_view name) {
+    const auto prefix = std::to_string(position) + "-" + std::string(name) + "-";
+    for (const auto& entry : std::filesystem::directory_iterator(fixture / "tensors")) {
+        if (entry.path().filename().string().starts_with(prefix)) return entry.path();
+    }
+    throw std::runtime_error("missing fixture checkpoint: " + prefix);
+}
+
+std::vector<float> read_fixture(const std::filesystem::path& path, std::size_t elements) {
+    std::ifstream input(path, std::ios::binary);
+    if (!input) throw std::runtime_error("cannot open fixture: " + path.string());
+    std::vector<float> result(elements);
+    input.read(reinterpret_cast<char*>(result.data()),
+               static_cast<std::streamsize>(elements * sizeof(float)));
+    if (input.gcount() != static_cast<std::streamsize>(elements * sizeof(float))) {
+        throw std::runtime_error("short fixture checkpoint: " + path.string());
+    }
+    return result;
+}
+
 void set_environment(std::uint32_t batch, const std::string& mode) {
     setenv("MIINFER_PREFILL_LAYER_MAJOR", "1", 1);
     setenv("MIINFER_PREFILL_WIDE_CHUNK", "1", 1);
@@ -127,10 +152,12 @@ void set_environment(std::uint32_t batch, const std::string& mode) {
 
 void run_layer(const miinfer::Qwen35Model& model, std::uint32_t batch,
                const std::string& mode,
+               const std::filesystem::path& fixture,
                double& milliseconds, StageEvents& events,
                std::array<double, 15>& stage_ms,
                std::array<double, 3>& phase_ms,
-               CompareMetrics& parity, std::size_t& tracked_bytes) {
+               CompareMetrics& parity, CompareMetrics& canonical,
+               std::size_t& tracked_bytes) {
     set_environment(batch, mode);
     g_cache_capacity = 1024;
     FullAttentionLayer layer(model, 3);
@@ -151,9 +178,19 @@ void run_layer(const miinfer::Qwen35Model& model, std::uint32_t batch,
     RawBuffer input(static_cast<std::size_t>(batch) * kHidden * sizeof(float));
     RawBuffer output(static_cast<std::size_t>(batch) * kHidden * sizeof(float));
     std::vector<float> host_input(static_cast<std::size_t>(batch) * kHidden);
-    for (std::size_t i = 0; i < host_input.size(); ++i) {
-        host_input[i] = std::sin(0.0017F * static_cast<float>(i % kHidden)
-                                  + 0.071F * static_cast<float>(i / kHidden));
+    if (!fixture.empty()) {
+        constexpr std::size_t fixture_positions = 9;
+        if (batch < fixture_positions) throw std::runtime_error("fixture requires BATCH >= 9");
+        for (std::size_t position = 0; position < fixture_positions; ++position) {
+            const auto values = read_fixture(
+                fixture_checkpoint(fixture, position, "l_out-2"), kHidden);
+            std::copy(values.begin(), values.end(), host_input.begin() + position * kHidden);
+        }
+    } else {
+        for (std::size_t i = 0; i < host_input.size(); ++i) {
+            host_input[i] = std::sin(0.0017F * static_cast<float>(i % kHidden)
+                                      + 0.071F * static_cast<float>(i / kHidden));
+        }
     }
     MIINFER_HIP_CHECK(hipMemcpy(input.pointer, host_input.data(),
                                 host_input.size() * sizeof(float), hipMemcpyHostToDevice));
@@ -215,6 +252,21 @@ void run_layer(const miinfer::Qwen35Model& model, std::uint32_t batch,
     std::vector<float> wide_output(static_cast<std::size_t>(batch) * kHidden);
     MIINFER_HIP_CHECK(hipMemcpy(wide_output.data(), output.pointer,
                                 wide_output.size() * sizeof(float), hipMemcpyDeviceToHost));
+    canonical = CompareMetrics{};
+    if (!fixture.empty()) {
+        constexpr std::size_t fixture_positions = 9;
+        std::vector<float> actual(wide_output.begin(), wide_output.begin() + fixture_positions * kHidden);
+        std::vector<float> expected(actual.size());
+        for (std::size_t position = 0; position < fixture_positions; ++position) {
+            const auto values = read_fixture(
+                fixture_checkpoint(fixture, position, "l_out-3"), kHidden);
+            std::copy(values.begin(), values.end(), expected.begin() + position * kHidden);
+        }
+        canonical = compare_outputs(actual, expected);
+        if (!canonical.finite || canonical.max_abs > 1.0F) {
+            throw std::runtime_error("wide attention candidate exceeds canonical fixture tolerance");
+        }
+    }
     FullAttentionLayer scalar_oracle(model, 3);
     scalar_oracle.reset();
     RawBuffer scalar_output(static_cast<std::size_t>(batch) * kHidden * sizeof(float));
@@ -238,15 +290,17 @@ void run_layer(const miinfer::Qwen35Model& model, std::uint32_t batch,
 } // namespace
 
 int main(int argc, char** argv) try {
-    if (argc != 3 && argc != 4) {
+    if (argc < 3 || argc > 5) {
         throw std::runtime_error(
-            "usage: miinfer-m24-attention-layer-bakeoff MODEL.gguf BATCH [control|qk|v|o]");
+            "usage: miinfer-m24-attention-layer-bakeoff MODEL.gguf BATCH [control|qk|v|o] [FIXTURE_DIR]");
     }
     const auto batch = static_cast<std::uint32_t>(std::stoul(argv[2]));
-    if (batch != 128 && batch != 256 && batch != 512) {
+    const std::string mode = argc >= 4 ? argv[3] : "control";
+    const std::filesystem::path fixture = argc == 5 ? argv[4] : "";
+    const bool standard_batch = batch == 128 || batch == 256 || batch == 512;
+    if (!standard_batch) {
         throw std::runtime_error("BATCH must be 128, 256, or 512");
     }
-    const std::string mode = argc == 4 ? argv[3] : "control";
     if (mode != "control" && mode != "qk" && mode != "v" && mode != "o") {
         throw std::runtime_error("mode must be control, qk, v, or o");
     }
@@ -259,8 +313,10 @@ int main(int argc, char** argv) try {
     std::array<double, 15> stage_ms{};
     std::array<double, 3> phase_ms{};
     CompareMetrics parity;
+    CompareMetrics canonical;
     std::size_t tracked_bytes = 0;
-    run_layer(model, batch, mode, milliseconds, events, stage_ms, phase_ms, parity, tracked_bytes);
+    run_layer(model, batch, mode, fixture, milliseconds, events, stage_ms, phase_ms,
+              parity, canonical, tracked_bytes);
 
     static constexpr std::array<const char*, 15> names{
         "normalization_unprofiled", "qk_projection", "query_norm_rope", "k_norm_rope_kv_store",
@@ -278,6 +334,11 @@ int main(int argc, char** argv) try {
               << "},\"scalar_control_parity\":{\"finite\":" << (parity.finite ? "true" : "false")
               << ",\"max_abs\":" << parity.max_abs
               << ",\"rmse\":" << parity.rmse
+              << "},\"canonical_fixture\":{\"present\":"
+              << (fixture.empty() ? "false" : "true")
+              << ",\"finite\":" << (canonical.finite ? "true" : "false")
+              << ",\"max_abs\":" << canonical.max_abs
+              << ",\"rmse\":" << canonical.rmse
               << "},\"stages\":{";
     for (std::size_t i = 0; i < stage_ms.size(); ++i) {
         if (i != 0) std::cout << ',';

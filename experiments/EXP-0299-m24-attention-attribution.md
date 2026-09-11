@@ -90,7 +90,8 @@ The independent M6-A13 layer validator was also run against the complete
 64-position Qwen3.8-27B fixture. It passed positions 0 through 8 with
 `max_attention_error=0.00294876`, `max_ffn_error=0.00272942`, and
 `max_layer_error=0.00379562`. This validates the resident scalar control
-against the canonical reference; it does not yet validate the FP16 candidate.
+against the canonical reference; the candidate fixture gate is recorded
+below.
 
 ## D3 — isolated resident-FP16 projection A/B
 
@@ -117,18 +118,36 @@ if the QK result carried unchanged through all 16 attention layers, it would
 remove only about 37 ms from the 4,838 ms P512 baseline. This is a useful
 candidate for later integration, not the 200 tok/s breakthrough.
 
+## D3 re-evaluation — canonical fixture gate
+
+The harness now accepts a fixture directory with a padded B128 run. The first
+9 positions use the canonical `l_out-2` inputs; later positions are zero-padded
+so the existing wide-prefill contract remains valid. Only positions 0 through
+8 are compared against canonical `l_out-3` outputs.
+
+| mode | fixture max abs | fixture RMSE | scalar-control max abs |
+|---|---:|---:|---:|
+| resident MMQ control | 0.222 | 0.003 | 0.000 |
+| QK FP16 + GEMM | 0.250 | 0.003 | 0.084 |
+
+Both paths pass the established `<1.0` layer tolerance. The wide control's
+`0.222` absolute error is the relevant baseline for this harness; the
+independent scalar M6-A13 validator remains the tighter oracle for the scalar
+path. QK adds about `0.028` max absolute error over the wide control on these
+fixture positions, so the candidate clears correctness but remains opt-in.
+
 ## Decision
 
-**KEEP as M24-D attribution infrastructure and reject V/O for now.** Retain
-QK FP16 + GEMM as a measured candidate, but do not integrate it into the full
-model until it passes the external canonical fixture. Continue targeting the
-largest measured post-attention/FFN work or prepare/materialization cost, with
-absolute milliseconds saved propagated to the 4,838 ms P512 baseline.
+**KEEP as M24-D attribution infrastructure and reject V/O for now.** QK FP16
+GEMM passes the external fixture gate and remains opt-in; do not make it the
+full-model default until an end-to-end A/B proves a meaningful saving. Continue
+targeting the largest measured post-attention/FFN work or
+prepare/materialization cost, with absolute milliseconds saved propagated to
+the 4,838 ms P512 baseline.
 
 ## Follow-up
 
-1. Add a canonical layer-output comparison for the QK candidate before full-model integration.
-2. Split full-model `deferred_prefill_tail` ownership into recurrent and
+1. Split full-model `deferred_prefill_tail` ownership into recurrent and
    attention counters (the report now emits both).
-3. Profile the remaining attention/FFN and deferred materialization costs; do
+2. Profile the remaining attention/FFN and deferred materialization costs; do
    not spend more time on V/O projection conversion without a new bottleneck.
