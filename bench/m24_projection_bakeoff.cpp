@@ -323,6 +323,11 @@ int run_case(
             gemm(handle, resident_dense.as<__half>(), input.as<__half>(), gemm_output.as<float>(),
                  rows, columns, batch);
         });
+        const double mx_quantize_us = measure([&] {
+            miinfer::launch_mx_q8_1_mmq_quantize(
+                input_f32.as<float>(), mx_inputs[index]->as<miinfer::MxQ8_1MmqBlock>(),
+                batch, columns, mx_affine, hipStreamPerThread);
+        });
         const double mx_us = measure([&] {
             mx_mmq(mx_resident.as<std::uint8_t>(),
                    mx_inputs[index]->as<miinfer::MxQ8_1MmqBlock>(), mx_output.as<float>(),
@@ -333,7 +338,9 @@ int run_case(
         std::cout << "{\"batch\":" << batch
                   << ",\"resident_mmq_us\":" << mmq_us
                   << ",\"gemm_us\":" << gemm_us
+                  << ",\"mx_q8_quantize_us\":" << mx_quantize_us
                   << ",\"mx_repacked_mmq_us\":" << mx_us
+                  << ",\"mx_total_us\":" << mx_quantize_us + mx_us
                   << ",\"resident_fp16_total_us\":" << resident_repack_us + gemm_us
                   << ",\"mmq_over_fp16_total\":"
                   << (mmq_us / (resident_repack_us + gemm_us)) << '}';

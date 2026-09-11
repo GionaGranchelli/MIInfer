@@ -1720,6 +1720,14 @@ new attention flags remain opt-in pending longer-generation qualification. See
 experiments/EXP-0309-m25-h-mx-attention-ffn.md and
 experiments/EXP-0310-m25-i-mx-attention-o.md.
 
+2026-09-12 — M25-J ported the pinned mx four-block MMQ Q8 activation quantizer
+behind `MIINFER_MX_Q8_BATCH=1`. Q4/Q5/Q6 model-sized projection contracts
+passed with maximum output errors below `1.7e-6`. At B512, quantizer events
+improved `21.5–56.8%`, but complete projection events were neutral within
+`0.2–0.9%` and the fresh wide full-model smoke did not complete. The branch
+remains opt-in and **RETEST**; no end-to-end throughput claim is added. See
+experiments/EXP-0311-m25-j-mx-batched-q8-quantizer.md.
+
 Update this document whenever:
 
 * active milestone changes

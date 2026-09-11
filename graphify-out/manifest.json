@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1789161933.2790534,
-    "seen": 1789161949.1126704,
-    "ast_hash": "080f48888e4ee3fa9af507e46009dc52",
+    "mtime": 1789164521.6932,
+    "seen": 1789164619.8950768,
+    "ast_hash": "8c6cae1444b3d20dec24b37b83ec6d05",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -4884,9 +4884,9 @@
     "semantic_hash": ""
   },
   "bench/m24_projection_bakeoff.cpp": {
-    "mtime": 1789152391.7458522,
-    "seen": 1789152660.0203774,
-    "ast_hash": "41d6cb45f6ef119fb3bfc731ec9086e2",
+    "mtime": 1789164059.9277303,
+    "seen": 1789164619.8945973,
+    "ast_hash": "a95608f931a60bcbff28c7f1cd969e90",
     "semantic_hash": ""
   },
   "experiments/EXP-0297-m24-row128-projection-bakeoff.md": {
@@ -4983,6 +4983,12 @@
     "mtime": 1789161915.2941387,
     "seen": 1789161949.1131134,
     "ast_hash": "dd447de832e380393787aae6b5402482",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0311-m25-j-mx-batched-q8-quantizer.md": {
+    "mtime": 1789164521.6922,
+    "seen": 1789164619.895494,
+    "ast_hash": "02b1e7baa9d58fbfc3146bcfc5906308",
     "semantic_hash": ""
   }
 }

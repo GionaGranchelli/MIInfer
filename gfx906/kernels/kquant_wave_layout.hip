@@ -2109,6 +2109,69 @@ bool mx_pipeline_enabled() {
     return env != nullptr && std::strcmp(env, "0") != 0;
 }
 
+// Port the pinned mx q8_repack quantizer's four-block workgroup contract. The
+// existing kernel remains the default control for isolated A/B measurements.
+template <bool AFFINE>
+__launch_bounds__(128, 1) __global__ void mx_q8_1_mmq_quantize_batch_kernel(
+    const float* input, miinfer::MxQ8_1MmqBlock* output,
+    std::uint32_t token_count, std::uint32_t elements) {
+    const std::uint32_t token = blockIdx.x;
+    const std::uint32_t i0 = (blockDim.x * blockIdx.y + threadIdx.x) * 4;
+    if (i0 >= elements) return;
+
+    const std::size_t base = static_cast<std::size_t>(token) * elements + i0;
+    const float4 xi = *reinterpret_cast<const float4*>(input + base);
+
+    float max_abs = fmaxf(fabsf(xi.x), fabsf(xi.y));
+    max_abs = fmaxf(max_abs, fabsf(xi.z));
+    max_abs = fmaxf(max_abs, fabsf(xi.w));
+    for (int offset = 4; offset > 0; offset >>= 1) {
+        max_abs = fmaxf(max_abs,
+                        __shfl_xor_sync(0xFFFFFFFFFFFFFFFFULL, max_abs, offset, 32));
+    }
+
+    float sum = 0.0F;
+    if constexpr (AFFINE) {
+        sum = xi.x + xi.y + xi.z + xi.w;
+        for (int offset = 4; offset > 0; offset >>= 1) {
+            sum += __shfl_xor_sync(0xFFFFFFFFFFFFFFFFULL, sum, offset, 32);
+        }
+    }
+
+    const float d_inv = max_abs == 0.0F ? 0.0F : 127.0F / max_abs;
+    const float d = d_inv == 0.0F ? 0.0F : 1.0F / d_inv;
+    const auto quantize = [d_inv](const float value) {
+        if (d_inv == 0.0F) return static_cast<std::int8_t>(0);
+        const int result = static_cast<int>(roundf(value * d_inv));
+        return static_cast<std::int8_t>(max(-127, min(127, result)));
+    };
+    const std::uint32_t k_block = i0 / 128;
+    const std::uint32_t iqs = i0 % 128;
+
+    auto& destination = output[static_cast<std::size_t>(k_block) * token_count + token];
+    auto* q = reinterpret_cast<char4*>(destination.qs);
+    char4 quantized;
+    quantized.x = quantize(xi.x);
+    quantized.y = quantize(xi.y);
+    quantized.z = quantize(xi.z);
+    quantized.w = quantize(xi.w);
+    q[iqs / 4] = quantized;
+    if (iqs % 32 == 0) {
+        const std::uint32_t group = (iqs / 32) % 4;
+        if constexpr (AFFINE) {
+            destination.ds4[group].x = __float2half_rn(d);
+            destination.ds4[group].y = __float2half_rn(sum);
+        } else {
+            destination.d4[group] = d;
+        }
+    }
+}
+
+bool mx_q8_batch_enabled() {
+    const char* env = std::getenv("MIINFER_MX_Q8_BATCH");
+    return env != nullptr && std::strcmp(env, "0") != 0;
+}
+
 template <bool AFFINE>
 __launch_bounds__(128, 1) __global__ void mx_q8_1_mmq_quantize_kernel(
     const float* input, miinfer::MxQ8_1MmqBlock* output, std::uint32_t elements) {
@@ -2156,7 +2219,18 @@ void miinfer::launch_mx_q8_1_mmq_quantize(
         || elements == 0 || elements % 128 != 0) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
-    if (affine) {
+    if (mx_q8_batch_enabled()) {
+        const dim3 grid(token_count, (elements + 511) / 512);
+        if (affine) {
+            hipLaunchKernelGGL((mx_q8_1_mmq_quantize_batch_kernel<true>),
+                               grid, dim3(128), 0, stream,
+                               input, output, token_count, elements);
+        } else {
+            hipLaunchKernelGGL((mx_q8_1_mmq_quantize_batch_kernel<false>),
+                               grid, dim3(128), 0, stream,
+                               input, output, token_count, elements);
+        }
+    } else if (affine) {
         hipLaunchKernelGGL((mx_q8_1_mmq_quantize_kernel<true>),
                            dim3(elements / 128, token_count), dim3(128), 0, stream,
                            input, output, elements);
