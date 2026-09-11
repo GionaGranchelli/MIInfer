@@ -268,6 +268,8 @@ void run_layer(const miinfer::Qwen35Model& model, std::uint32_t batch,
             throw std::runtime_error("wide attention candidate exceeds canonical fixture tolerance");
         }
     }
+    unsetenv("MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_FFN");
+    unsetenv("MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_O");
     FullAttentionLayer scalar_oracle(model, 3);
     scalar_oracle.reset();
     RawBuffer scalar_output(static_cast<std::size_t>(batch) * kHidden * sizeof(float));

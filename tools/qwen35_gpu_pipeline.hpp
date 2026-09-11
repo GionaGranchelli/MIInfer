@@ -3605,14 +3605,21 @@ struct FullAttentionLayer {
     Buffer resident_qk_mmq, resident_v_mmq, resident_o_mmq;
     Buffer d_ffn_gate_mmq, d_ffn_up_mmq, d_ffn_down_mmq;
     Buffer resident_ffn_gate_mmq, resident_ffn_up_mmq, resident_ffn_down_mmq;
+    Buffer d_mx_o_mmq;
+    Buffer d_mx_ffn_gate_mmq, d_mx_ffn_up_mmq, d_mx_ffn_down_mmq;
     Buffer decode_mmq_q8;
     bool resident_m23_ffn = false;
     bool resident_m23_all = false;
     std::vector<Q4KMmqTile> host_qk_mmq, host_v_q4_mmq, host_o_q4_mmq;
     std::vector<Q6KMmqTile> host_v_q6_mmq, host_o_q6_mmq;
+    std::vector<std::uint8_t> host_mx_o;
     std::vector<Q4KMmqTile> host_ffn_gate_mmq, host_ffn_up_mmq, host_ffn_down_q4_mmq;
     std::vector<Q6KMmqTile> host_ffn_down_q6_mmq;
+    std::vector<std::uint8_t> host_mx_ffn_gate, host_mx_ffn_up, host_mx_ffn_down;
     Buffer prefill_mmq_q8;
+    Buffer prefill_mx_q8;
+    bool prefill_mx_ffn = false;
+    bool prefill_mx_o = false;
     bool wide_attn_prefill = false;
     std::array<std::uint32_t, 9> m23_dispatch_counts{};
     bool m23_trace_dispatch = false;
@@ -3658,6 +3665,13 @@ struct FullAttentionLayer {
         const char* layer_major_env = std::getenv("MIINFER_PREFILL_LAYER_MAJOR");
         wide_attn_prefill = layer_major_env != nullptr && std::strcmp(layer_major_env, "0") != 0
             && wide_attn_env != nullptr && std::strcmp(wide_attn_env, "0") != 0;
+        const char* mx_ffn_env = std::getenv("MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_FFN");
+        prefill_mx_ffn = wide_attn_prefill && mx_ffn_env != nullptr
+            && std::strcmp(mx_ffn_env, "0") != 0;
+        const char* mx_o_env = std::getenv("MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_O");
+        prefill_mx_o = wide_attn_prefill && mx_o_env != nullptr
+            && std::strcmp(mx_o_env, "0") != 0
+            && o_weight.type == miinfer::GgufTensorType::q4_k;
         const char* wide_repacked_env = std::getenv("MIINFER_PREFILL_WIDE_REPACKED_MMQ");
         const char* resident_ffn_env = std::getenv("MIINFER_PREFILL_REPACKED_RESIDENT_ATTN_FFN");
         resident_m23_ffn = wide_attn_prefill
@@ -3730,6 +3744,7 @@ struct FullAttentionLayer {
         }
         if (wide_attn_prefill && o_weight.type == miinfer::GgufTensorType::q4_k) {
             host_o_q4_mmq = pack_q4k_mmq_tensor(o_weight);
+            if (prefill_mx_o) host_mx_o = pack_mx_q4k_repacked_tensor(o_weight);
         } else if (wide_attn_prefill && o_weight.type == miinfer::GgufTensorType::q6_k) {
             host_o_q6_mmq = pack_q6k_mmq_tensor(o_weight);
         }
@@ -3748,8 +3763,13 @@ struct FullAttentionLayer {
         }
         if (wide_attn_prefill && ffn_gate_weight.type == miinfer::GgufTensorType::q4_k
             && ffn_up_weight.type == miinfer::GgufTensorType::q4_k) {
-            host_ffn_gate_mmq = pack_q4k_mmq_tensor(ffn_gate_weight);
-            host_ffn_up_mmq = pack_q4k_mmq_tensor(ffn_up_weight);
+            if (prefill_mx_ffn) {
+                host_mx_ffn_gate = pack_mx_q4k_repacked_tensor(ffn_gate_weight);
+                host_mx_ffn_up = pack_mx_q4k_repacked_tensor(ffn_up_weight);
+            } else {
+                host_ffn_gate_mmq = pack_q4k_mmq_tensor(ffn_gate_weight);
+                host_ffn_up_mmq = pack_q4k_mmq_tensor(ffn_up_weight);
+            }
         }
         const char* expanded_down_env = std::getenv("MIINFER_Q4K_EXPANDED_DOWN");
         expanded_down = expanded_down_env == nullptr
@@ -3768,11 +3788,19 @@ struct FullAttentionLayer {
             d_ffn_down = copy_weight(ffn_down_weight);
         }
         if (wide_attn_prefill && ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
-            host_ffn_down_q4_mmq = pack_q4k_mmq_tensor(ffn_down_weight);
+            if (prefill_mx_ffn) {
+                host_mx_ffn_down = pack_mx_q4k_repacked_tensor(ffn_down_weight);
+            } else {
+                host_ffn_down_q4_mmq = pack_q4k_mmq_tensor(ffn_down_weight);
+            }
         } else if (wide_attn_prefill && ffn_down_weight.type == miinfer::GgufTensorType::q6_k) {
-            host_ffn_down_q6_mmq = pack_q6k_mmq_tensor(ffn_down_weight);
+            if (prefill_mx_ffn) {
+                host_mx_ffn_down = pack_mx_q6k_repacked_tensor(ffn_down_weight);
+            } else {
+                host_ffn_down_q6_mmq = pack_q6k_mmq_tensor(ffn_down_weight);
+            }
         }
-        resident_m23_ffn = resident_m23_ffn && !host_ffn_gate_mmq.empty()
+        resident_m23_ffn = resident_m23_ffn && !prefill_mx_ffn && !host_ffn_gate_mmq.empty()
             && !host_ffn_up_mmq.empty()
             && (!host_ffn_down_q4_mmq.empty() || !host_ffn_down_q6_mmq.empty());
         if (resident_m23_ffn) {
@@ -3786,6 +3814,21 @@ struct FullAttentionLayer {
             resident_ffn_down_mmq = ffn_down_weight.type == miinfer::GgufTensorType::q4_k
                 ? upload_resident(host_ffn_down_q4_mmq)
                 : upload_resident(host_ffn_down_q6_mmq);
+        }
+        if (prefill_mx_ffn) {
+            const auto upload_mx = [](const auto& packed) {
+                auto result = allocate(packed.size());
+                upload(packed.data(), result->get(), packed.size());
+                return result;
+            };
+            d_mx_ffn_gate_mmq = upload_mx(host_mx_ffn_gate);
+            d_mx_ffn_up_mmq = upload_mx(host_mx_ffn_up);
+            d_mx_ffn_down_mmq = upload_mx(host_mx_ffn_down);
+        }
+        if (prefill_mx_o) {
+            auto result = allocate(host_mx_o.size());
+            upload(host_mx_o.data(), result->get(), host_mx_o.size());
+            d_mx_o_mmq = result;
         }
         if (resident_m23_all) {
             const auto upload_resident = [](const auto& packed) {
@@ -3909,6 +3952,10 @@ struct FullAttentionLayer {
                 const std::size_t max_mmq_elements = std::max({kHidden, kInner, kFfnInner});
                 prefill_mmq_q8 = allocate(prefill_capacity * (max_mmq_elements / 128)
                                           * sizeof(miinfer::M23Q8_1MmqBlock));
+                if (prefill_mx_ffn || prefill_mx_o) {
+                    prefill_mx_q8 = allocate(prefill_capacity * (max_mmq_elements / 128)
+                                             * sizeof(miinfer::MxQ8_1MmqBlock));
+                }
                 prefill_query_rope = allocate(prefill_capacity * 6144 * sizeof(float));
                 prefill_gate = allocate(prefill_capacity * 6144 * sizeof(float));
             }
@@ -3918,8 +3965,10 @@ struct FullAttentionLayer {
     }
 
     void ensure_m23_repacked() {
-        if (!wide_attn_prefill || (d_qk_mmq && d_v_mmq && d_o_mmq
-                                   && d_ffn_gate_mmq && d_ffn_up_mmq && d_ffn_down_mmq)
+        const bool ffn_ready = prefill_mx_ffn
+            ? (d_mx_ffn_gate_mmq && d_mx_ffn_up_mmq && d_mx_ffn_down_mmq)
+            : (d_ffn_gate_mmq && d_ffn_up_mmq && d_ffn_down_mmq);
+        if (!wide_attn_prefill || (d_qk_mmq && d_v_mmq && d_o_mmq && ffn_ready)
             || host_qk_mmq.empty()) return;
         const auto upload_packed = [this](const auto& packed, std::size_t slot) -> Buffer {
             const std::size_t bytes = packed.size() * sizeof(packed.front());
@@ -3953,15 +4002,15 @@ struct FullAttentionLayer {
                 : (!host_o_q4_mmq.empty() ? upload_packed(host_o_q4_mmq, 2)
                                            : upload_packed(host_o_q6_mmq, 2));
         }
-        if (!d_ffn_gate_mmq) {
+        if (!prefill_mx_ffn && !d_ffn_gate_mmq) {
             d_ffn_gate_mmq = resident_m23_ffn ? resident_ffn_gate_mmq
                                               : upload_packed(host_ffn_gate_mmq, 3);
         }
-        if (!d_ffn_up_mmq) {
+        if (!prefill_mx_ffn && !d_ffn_up_mmq) {
             d_ffn_up_mmq = resident_m23_ffn ? resident_ffn_up_mmq
                                             : upload_packed(host_ffn_up_mmq, 4);
         }
-        if (!d_ffn_down_mmq) {
+        if (!prefill_mx_ffn && !d_ffn_down_mmq) {
             d_ffn_down_mmq = resident_m23_ffn ? resident_ffn_down_mmq
                                               : (!host_ffn_down_q4_mmq.empty()
                                                      ? upload_packed(host_ffn_down_q4_mmq, 5)
@@ -4216,8 +4265,10 @@ struct FullAttentionLayer {
     bool prefill_tail_batch_supported() const {
         const char* env = std::getenv("MIINFER_PREFILL_ATTN_TAIL");
         const bool enabled = env == nullptr || std::strcmp(env, "0") != 0;
-        if (enabled && wide_attn_prefill && d_o_mmq && d_ffn_gate_mmq && d_ffn_up_mmq
-            && d_ffn_down_mmq && prefill_mmq_q8) {
+        if (enabled && wide_attn_prefill && d_o_mmq && prefill_mmq_q8
+            && ((!prefill_mx_ffn && d_ffn_gate_mmq && d_ffn_up_mmq && d_ffn_down_mmq)
+                || (prefill_mx_ffn && d_mx_ffn_gate_mmq && d_mx_ffn_up_mmq
+                    && d_mx_ffn_down_mmq && prefill_mx_q8))) {
             return true;
         }
         return enabled && prefill_batch_enabled && d_o_native && d_ffn_down_native
@@ -4285,6 +4336,8 @@ struct FullAttentionLayer {
     void finish_prefill_wide(const float* inputs, float* outputs, std::size_t count,
                              const float* next_norm_weight, float* next_normalized) {
         auto* q8 = static_cast<miinfer::M23Q8_1MmqBlock*>(prefill_mmq_q8->get());
+        auto* mx_q8 = prefill_mx_ffn
+            ? static_cast<miinfer::MxQ8_1MmqBlock*>(prefill_mx_q8->get()) : nullptr;
         auto* gated = static_cast<const float*>(prefill_gated_attention->get());
         const auto profile_position = stage_profile_position;
         stage_start(7, profile_position);
@@ -4310,6 +4363,14 @@ struct FullAttentionLayer {
                     static_cast<std::uint32_t>(count), error)) {
                 throw std::runtime_error(error);
             }
+        } else if (prefill_mx_o && o_weight.type == miinfer::GgufTensorType::q4_k) {
+            miinfer::launch_mx_q8_1_mmq_quantize(
+                gated, mx_q8, static_cast<std::uint32_t>(count), kInner, true,
+                hipStreamPerThread);
+            launch_mx_q4k_repacked_mmq(
+                static_cast<const std::uint8_t*>(d_mx_o_mmq->get()), mx_q8,
+                static_cast<float*>(prefill_projected->get()), kHidden, kInner,
+                static_cast<std::uint32_t>(count), hipStreamPerThread);
         } else if (o_weight.type == miinfer::GgufTensorType::q4_k) {
             miinfer::launch_m23_q8_1_mmq_quantize(
                 gated, q8, static_cast<std::uint32_t>(count), kInner, hipStreamPerThread);
@@ -4338,17 +4399,31 @@ struct FullAttentionLayer {
         stage_end(8, profile_position);
 
         stage_start(10, profile_position);
-        miinfer::launch_m23_q8_1_mmq_quantize(
-            normalized_batch, q8, static_cast<std::uint32_t>(count), kHidden,
-            hipStreamPerThread);
-        launch_m23_q4k_repacked_mmq(
-            static_cast<const Q4KMmqTile*>(d_ffn_gate_mmq->get()), q8,
-            static_cast<float*>(prefill_ffn_gate->get()), kFfnInner, kHidden,
-            static_cast<std::uint32_t>(count), hipStreamPerThread);
-        launch_m23_q4k_repacked_mmq(
-            static_cast<const Q4KMmqTile*>(d_ffn_up_mmq->get()), q8,
-            static_cast<float*>(prefill_ffn_up->get()), kFfnInner, kHidden,
-            static_cast<std::uint32_t>(count), hipStreamPerThread);
+        if (prefill_mx_ffn) {
+            miinfer::launch_mx_q8_1_mmq_quantize(
+                normalized_batch, mx_q8, static_cast<std::uint32_t>(count), kHidden, true,
+                hipStreamPerThread);
+            launch_mx_q4k_repacked_mmq(
+                static_cast<const std::uint8_t*>(d_mx_ffn_gate_mmq->get()), mx_q8,
+                static_cast<float*>(prefill_ffn_gate->get()), kFfnInner, kHidden,
+                static_cast<std::uint32_t>(count), hipStreamPerThread);
+            launch_mx_q4k_repacked_mmq(
+                static_cast<const std::uint8_t*>(d_mx_ffn_up_mmq->get()), mx_q8,
+                static_cast<float*>(prefill_ffn_up->get()), kFfnInner, kHidden,
+                static_cast<std::uint32_t>(count), hipStreamPerThread);
+        } else {
+            miinfer::launch_m23_q8_1_mmq_quantize(
+                normalized_batch, q8, static_cast<std::uint32_t>(count), kHidden,
+                hipStreamPerThread);
+            launch_m23_q4k_repacked_mmq(
+                static_cast<const Q4KMmqTile*>(d_ffn_gate_mmq->get()), q8,
+                static_cast<float*>(prefill_ffn_gate->get()), kFfnInner, kHidden,
+                static_cast<std::uint32_t>(count), hipStreamPerThread);
+            launch_m23_q4k_repacked_mmq(
+                static_cast<const Q4KMmqTile*>(d_ffn_up_mmq->get()), q8,
+                static_cast<float*>(prefill_ffn_up->get()), kFfnInner, kHidden,
+                static_cast<std::uint32_t>(count), hipStreamPerThread);
+        }
         stage_end(10, profile_position);
         count_m23_dispatch(6);
         count_m23_dispatch(7);
@@ -4360,19 +4435,38 @@ struct FullAttentionLayer {
             static_cast<std::uint32_t>(count * kFfnInner), hipStreamPerThread);
         stage_end(11, profile_position);
         stage_start(12, profile_position);
-        miinfer::launch_m23_q8_1_mmq_quantize(
-            static_cast<const float*>(prefill_ffn_activation->get()), q8,
-            static_cast<std::uint32_t>(count), kFfnInner, hipStreamPerThread);
-        if (ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
-            launch_m23_q4k_repacked_mmq(
-                static_cast<const Q4KMmqTile*>(d_ffn_down_mmq->get()), q8,
-                static_cast<float*>(prefill_ffn_projected->get()), kHidden, kFfnInner,
-                static_cast<std::uint32_t>(count), hipStreamPerThread);
+        if (prefill_mx_ffn) {
+            miinfer::launch_mx_q8_1_mmq_quantize(
+                static_cast<const float*>(prefill_ffn_activation->get()), mx_q8,
+                static_cast<std::uint32_t>(count), kFfnInner,
+                ffn_down_weight.type != miinfer::GgufTensorType::q6_k,
+                hipStreamPerThread);
+            if (ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
+                launch_mx_q4k_repacked_mmq(
+                    static_cast<const std::uint8_t*>(d_mx_ffn_down_mmq->get()), mx_q8,
+                    static_cast<float*>(prefill_ffn_projected->get()), kHidden, kFfnInner,
+                    static_cast<std::uint32_t>(count), hipStreamPerThread);
+            } else {
+                launch_mx_q6k_repacked_mmq(
+                    static_cast<const std::uint8_t*>(d_mx_ffn_down_mmq->get()), mx_q8,
+                    static_cast<float*>(prefill_ffn_projected->get()), kHidden, kFfnInner,
+                    static_cast<std::uint32_t>(count), hipStreamPerThread);
+            }
         } else {
-            launch_m23_q6k_repacked_mmq(
-                static_cast<const Q6KMmqTile*>(d_ffn_down_mmq->get()), q8,
-                static_cast<float*>(prefill_ffn_projected->get()), kHidden, kFfnInner,
-                static_cast<std::uint32_t>(count), hipStreamPerThread);
+            miinfer::launch_m23_q8_1_mmq_quantize(
+                static_cast<const float*>(prefill_ffn_activation->get()), q8,
+                static_cast<std::uint32_t>(count), kFfnInner, hipStreamPerThread);
+            if (ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
+                launch_m23_q4k_repacked_mmq(
+                    static_cast<const Q4KMmqTile*>(d_ffn_down_mmq->get()), q8,
+                    static_cast<float*>(prefill_ffn_projected->get()), kHidden, kFfnInner,
+                    static_cast<std::uint32_t>(count), hipStreamPerThread);
+            } else {
+                launch_m23_q6k_repacked_mmq(
+                    static_cast<const Q6KMmqTile*>(d_ffn_down_mmq->get()), q8,
+                    static_cast<float*>(prefill_ffn_projected->get()), kHidden, kFfnInner,
+                    static_cast<std::uint32_t>(count), hipStreamPerThread);
+            }
         }
         stage_end(12, profile_position);
         count_m23_dispatch(8);
@@ -4507,8 +4601,10 @@ struct FullAttentionLayer {
             || count == 0 || count > prefill_capacity || count % 4 != 0) {
             throw std::runtime_error("invalid attention prefill batch tail");
         }
-        if (wide_attn_prefill && d_o_mmq && d_ffn_gate_mmq && d_ffn_up_mmq
-            && d_ffn_down_mmq && prefill_mmq_q8) {
+        if (wide_attn_prefill && d_o_mmq && prefill_mmq_q8
+            && ((!prefill_mx_ffn && d_ffn_gate_mmq && d_ffn_up_mmq && d_ffn_down_mmq)
+                || (prefill_mx_ffn && d_mx_ffn_gate_mmq && d_mx_ffn_up_mmq
+                    && d_mx_ffn_down_mmq && prefill_mx_q8))) {
             finish_prefill_wide(inputs, outputs, count, next_norm_weight, next_normalized);
             return;
         }

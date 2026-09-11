@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1789065759.4208636,
-    "seen": 1789065775.239692,
-    "ast_hash": "038acff4fe34a255f41681f02b10f477",
+    "mtime": 1789161933.2790534,
+    "seen": 1789161949.1126704,
+    "ast_hash": "080f48888e4ee3fa9af507e46009dc52",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -2364,15 +2364,15 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1789134965.7471824,
-    "seen": 1789135245.4854546,
-    "ast_hash": "481695ab79d99cbae0dcc98ed42a2be3",
+    "mtime": 1789161105.736964,
+    "seen": 1789161949.1126244,
+    "ast_hash": "f1f3091dbeb4dd6b015b46eb73223b45",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1789155563.3364823,
-    "seen": 1789156452.728234,
-    "ast_hash": "d8bb208a2ca5f8733dacc6f574a7ad50",
+    "mtime": 1789161105.7339642,
+    "seen": 1789161949.1126258,
+    "ast_hash": "0dfe2321d36af1e21870ffd47cd4db11",
     "semantic_hash": ""
   },
   "docs/M9-AUTOREGRESSIVE-QUALIFICATION.md": {
@@ -4908,9 +4908,9 @@
     "semantic_hash": ""
   },
   "bench/m24_attention_layer_bakeoff.cpp": {
-    "mtime": 1789135129.9253743,
-    "seen": 1789135245.4850063,
-    "ast_hash": "30c0045e00ab78b99ad9eabce9ae136e",
+    "mtime": 1789161105.738964,
+    "seen": 1789161949.1121664,
+    "ast_hash": "7db7905e418f99d254a9b813a6c0e4ef",
     "semantic_hash": ""
   },
   "experiments/EXP-0299-m24-attention-attribution.md": {
@@ -4971,6 +4971,18 @@
     "mtime": 1789158848.4624233,
     "seen": 1789158861.1123312,
     "ast_hash": "e095c96e351ba35f36054f347434b8ca",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0309-m25-h-mx-attention-ffn.md": {
+    "mtime": 1789161915.2941387,
+    "seen": 1789161949.1131117,
+    "ast_hash": "a559fc6a26ec96ddb2bc18780a52267a",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0310-m25-i-mx-attention-o.md": {
+    "mtime": 1789161915.2941387,
+    "seen": 1789161949.1131134,
+    "ast_hash": "dd447de832e380393787aae6b5402482",
     "semantic_hash": ""
   }
 }

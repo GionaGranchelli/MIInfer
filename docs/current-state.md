@@ -1709,6 +1709,17 @@ serial A/B regressed `-0.32%` at TG64 and `-0.28%` at TG128. The candidate was
 removed and rejected; the existing transposed no-decay-store path remains
 selected. See experiments/EXP-0142-m6b50-fused-recurrent-output.md.
 
+2026-09-11 — M25-H/I ported the existing Mx repacked MMQ path to the measured
+attention FFN and O projection tails. With Mx recurrent/GDN paths held fixed,
+the combined candidate reached a clock-qualified P512 median of `211.48
+tok/s` versus `158.59 tok/s` for the interleaved M23-O control, with candidate
+allocation `18,472,649,044 B` versus `19,108,282,708 B`. Layer-3 B512 attention
+FFN+O time fell from the M23 `48.65 ms` tail to `25.22 ms`; scalar parity stayed
+within the existing max-error tolerance and the focused GPU CTest passed. The
+new attention flags remain opt-in pending longer-generation qualification. See
+experiments/EXP-0309-m25-h-mx-attention-ffn.md and
+experiments/EXP-0310-m25-i-mx-attention-o.md.
+
 Update this document whenever:
 
 * active milestone changes

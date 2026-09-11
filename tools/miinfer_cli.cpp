@@ -1162,6 +1162,9 @@ private:
             layer->prefill_ffn_activation = wide_prefill_workspace_.ffn_activation;
             layer->prefill_ffn_projected = wide_prefill_workspace_.ffn_projected;
             layer->prefill_mmq_q8 = wide_prefill_workspace_.mmq_q8;
+            if (layer->prefill_mx_ffn || layer->prefill_mx_o) {
+                layer->prefill_mx_q8 = wide_prefill_workspace_.mmq_q8;
+            }
             layer->prefill_query_rope = wide_prefill_workspace_.query_rope;
             layer->prefill_gate = wide_prefill_workspace_.attention_gate;
         }
