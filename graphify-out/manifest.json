@@ -4942,5 +4942,11 @@
     "seen": 1789154046.4002783,
     "ast_hash": "462600e25842904c2b3aadab62bcf8db",
     "semantic_hash": ""
+  },
+  "experiments/EXP-0304-m25-c-mx-register-pipeline.md": {
+    "mtime": 1789154680.7485008,
+    "seen": 1789154693.1707253,
+    "ast_hash": "0cb996142105ab5e91716d5969541406",
+    "semantic_hash": ""
   }
 }
