@@ -1772,6 +1772,11 @@ struct MxInputSlice {
     float d, sum;
 };
 
+struct MxSharedInputRow {
+    uint4 q[4][2];
+    uint4 pad;
+};
+
 static __device__ __forceinline__ MxInputSlice mx_load_input(
     const miinfer::MxQ8_1MmqBlock* input, std::uint32_t token, std::uint32_t group,
     bool affine) {
@@ -1796,6 +1801,196 @@ __launch_bounds__(256, 1) __global__ void mx_repacked_mmq_kernel(
     std::uint32_t columns,
     std::uint32_t token_count) {
     static_assert(!(Q5 && Q6));
+    constexpr int kBm = 64;
+    constexpr int kBn = 128;
+    constexpr int kBk = 4;
+    constexpr int kTn = 2;
+    constexpr int kNrow = kBm / 4;
+    constexpr int kThreads = 256;
+    constexpr int kWeightElements = kBm * kBk;
+    constexpr int kInputElements = kBn * kBk;
+    constexpr int kWeightElementsPerThread = kWeightElements / kThreads;
+    constexpr int kInputElementsPerThread = kInputElements / kThreads;
+    static_assert(kWeightElementsPerThread == 1 && kInputElementsPerThread == 2);
+    const int tx = threadIdx.x;
+    const int ty = threadIdx.y;
+    const int tid = ty * 64 + tx;
+    const std::uint32_t row_base = blockIdx.x * kBm;
+    const std::uint32_t token_base = blockIdx.y * kBn;
+    const std::uint32_t n_sub = columns / 32;
+    const auto affine_geometry = MxAffineGeometry<Q5>(columns, rows);
+    const auto q6_geometry = MxQ6Geometry(columns, rows);
+
+    __shared__ uint4 weight_lo[64][4];
+    __shared__ uint4 weight_hi[64][4];
+    __shared__ uint2 weight_slot[4][64];
+    __shared__ MxSharedInputRow input_q[128];
+    __shared__ float input_d[128][5];
+    __shared__ float input_sum[Q6 ? 1 : 128][5];
+    float accum[kNrow][kTn] = {};
+    uint4 prefetched_weight_lo[1], prefetched_weight_hi[1];
+    uint2 prefetched_weight_slot[1];
+    MxInputSlice prefetched_input[2];
+
+    auto prefetch_weights_checked = [&](const std::uint32_t subblock_base) {
+        const int local_row = tid / kBk;
+        const int local_group = tid & (kBk - 1);
+        const std::uint32_t row = row_base + local_row;
+        const std::uint32_t subblock = subblock_base + local_group;
+        MxWeightWords loaded{make_uint4(0, 0, 0, 0), make_uint4(0, 0, 0, 0), make_uint2(0, 0)};
+        if (row < rows && subblock < n_sub) {
+            loaded = Q6
+                ? mx_load_q6(weights, q6_geometry, row, subblock)
+                : mx_load_affine<Q5>(weights, affine_geometry, row, subblock);
+        }
+        prefetched_weight_lo[0] = loaded.lo;
+        prefetched_weight_hi[0] = loaded.hi;
+        prefetched_weight_slot[0] = loaded.slot;
+    };
+
+    auto prefetch_weights_full = [&](const std::uint32_t subblock_base) {
+        const int local_row = tid / kBk;
+        const int local_group = tid & (kBk - 1);
+        MxWeightWords loaded = Q6
+            ? mx_load_q6(weights, q6_geometry, row_base + local_row,
+                         subblock_base + local_group)
+            : mx_load_affine<Q5>(weights, affine_geometry, row_base + local_row,
+                                 subblock_base + local_group);
+        prefetched_weight_lo[0] = loaded.lo;
+        prefetched_weight_hi[0] = loaded.hi;
+        prefetched_weight_slot[0] = loaded.slot;
+    };
+
+    auto prefetch_input_checked = [&](const std::uint32_t subblock_base) {
+        const auto* group = input + static_cast<std::size_t>(subblock_base / kBk) * token_count;
+        for (int i = 0; i < kInputElementsPerThread; ++i) {
+            const int element = tid + i * kThreads;
+            const int local_row = element / kBk;
+            const int local_group = element & (kBk - 1);
+            const std::uint32_t token = token_base + local_row;
+            MxInputSlice loaded{make_uint4(0, 0, 0, 0), make_uint4(0, 0, 0, 0), 0.0F, 0.0F};
+            if (token < token_count) loaded = mx_load_input(
+                group, token, local_group, !Q6);
+            prefetched_input[i] = loaded;
+        }
+    };
+
+    auto prefetch_input_full = [&](const std::uint32_t subblock_base) {
+        const auto* group = input + static_cast<std::size_t>(subblock_base / kBk) * token_count;
+        for (int i = 0; i < kInputElementsPerThread; ++i) {
+            const int element = tid + i * kThreads;
+            const int local_row = element / kBk;
+            const int local_group = element & (kBk - 1);
+            const auto loaded = mx_load_input(group, token_base + local_row,
+                                              local_group, !Q6);
+            prefetched_input[i] = loaded;
+        }
+    };
+
+    auto store_stage = [&]() {
+        const int local_row = tid / kBk;
+        const int local_group = tid & (kBk - 1);
+        weight_lo[local_row][local_group] = prefetched_weight_lo[0];
+        weight_hi[local_row][local_group] = prefetched_weight_hi[0];
+        weight_slot[local_group][local_row] = prefetched_weight_slot[0];
+        for (int i = 0; i < kInputElementsPerThread; ++i) {
+            const int element = tid + i * kThreads;
+            const int local_input_row = element / kBk;
+            const int local_input_group = element & (kBk - 1);
+            const int shared_row = mx_input_swizzle(local_input_row);
+            input_q[shared_row].q[local_input_group][0] = prefetched_input[i].q0;
+            input_q[shared_row].q[local_input_group][1] = prefetched_input[i].q1;
+            input_d[shared_row][local_input_group] = prefetched_input[i].d;
+            if constexpr (!Q6) input_sum[shared_row][local_input_group] = prefetched_input[i].sum;
+        }
+    };
+
+    auto compute_stage = [&]() {
+        for (int group = 0; group < kBk; ++group) {
+            const int local = ty * kNrow;
+            for (int offset = 0; offset < kNrow; ++offset) {
+                const auto lo = weight_lo[local + offset][group];
+                const auto hi = weight_hi[local + offset][group];
+                const auto slot = weight_slot[group][local + offset];
+                for (int column = 0; column < kTn; ++column) {
+                    const int shared_row = mx_input_swizzle(tx + column * 64);
+                    const auto& x = input_q[shared_row];
+                    const auto q0 = x.q[group][0];
+                    const auto q1 = x.q[group][1];
+                    const float dx = input_d[shared_row][group];
+                    const int dot_lo = mx_dp4a(lo.x, q0.x)
+                        + mx_dp4a(lo.y, q0.y) + mx_dp4a(lo.z, q0.z) + mx_dp4a(lo.w, q0.w);
+                    const int dot_hi = mx_dp4a(hi.x, q1.x)
+                        + mx_dp4a(hi.y, q1.y) + mx_dp4a(hi.z, q1.z) + mx_dp4a(hi.w, q1.w);
+                    if constexpr (Q6) {
+                        const std::uint16_t d_bits = static_cast<std::uint16_t>(slot.x >> 16);
+                        const float d = __half2float(*reinterpret_cast<const __half*>(&d_bits)) * 0.25F;
+                        const int scale_lo = static_cast<std::int8_t>(slot.x & 0xFFU);
+                        const int scale_hi = static_cast<std::int8_t>((slot.x >> 8) & 0xFFU);
+                        accum[offset][column] += d * dx
+                            * static_cast<float>(scale_lo * dot_lo + scale_hi * dot_hi);
+                    } else {
+                        const std::uint16_t d_bits = static_cast<std::uint16_t>(slot.y);
+                        const std::uint16_t dmin_bits = static_cast<std::uint16_t>(slot.y >> 16);
+                        const float d = __half2float(*reinterpret_cast<const __half*>(&d_bits));
+                        const float dmin = __half2float(*reinterpret_cast<const __half*>(&dmin_bits));
+                        const int scale = static_cast<int>(slot.x & 0xFFU);
+                        const int minimum = static_cast<int>((slot.x >> 8) & 0xFFU);
+                        accum[offset][column] += d * dx * static_cast<float>(scale * (dot_lo + dot_hi))
+                            - dmin * static_cast<float>(minimum) * input_sum[shared_row][group];
+                    }
+                }
+            }
+        }
+    };
+
+    const bool full_tile = row_base + kBm <= rows && token_base + kBn <= token_count
+        && (n_sub % kBk == 0);
+    if (full_tile) {
+        prefetch_weights_full(0);
+        prefetch_input_full(0);
+    } else {
+        prefetch_weights_checked(0);
+        prefetch_input_checked(0);
+    }
+    for (std::uint32_t subblock_base = 0; subblock_base < n_sub; subblock_base += kBk) {
+        store_stage();
+        __syncthreads();
+        if (subblock_base + kBk < n_sub) {
+            if (full_tile) {
+                prefetch_weights_full(subblock_base + kBk);
+                prefetch_input_full(subblock_base + kBk);
+            } else {
+                prefetch_weights_checked(subblock_base + kBk);
+                prefetch_input_checked(subblock_base + kBk);
+            }
+        }
+        compute_stage();
+        __syncthreads();
+    }
+
+    for (int offset = 0; offset < kNrow; ++offset) {
+        const std::uint32_t row = row_base + ty * kNrow + offset;
+        if (row >= rows) continue;
+        for (int column = 0; column < kTn; ++column) {
+            const std::uint32_t token = token_base + tx + column * 64;
+            if (token < token_count) output[static_cast<std::size_t>(token) * rows + row]
+                = accum[offset][column];
+        }
+    }
+}
+
+// The register-pipeline transplant is retained behind MIINFER_MX_PIPELINE for
+// isolated retests. The simpler staged kernel is the measured default.
+template <bool Q5, bool Q6>
+__launch_bounds__(256, 1) __global__ void mx_repacked_mmq_legacy_kernel(
+    const std::uint8_t* __restrict__ weights,
+    const miinfer::MxQ8_1MmqBlock* __restrict__ input,
+    float* __restrict__ output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    std::uint32_t token_count) {
+    static_assert(!(Q5 && Q6));
     const std::uint32_t tx = threadIdx.x;
     const std::uint32_t ty = threadIdx.y;
     const std::uint32_t tid = ty * 64 + tx;
@@ -1812,9 +2007,8 @@ __launch_bounds__(256, 1) __global__ void mx_repacked_mmq_kernel(
     float accum[16][2] = {};
 
     for (std::uint32_t subblock_base = 0; subblock_base < n_sub; subblock_base += 4) {
-        const std::uint32_t element = tid;
-        const std::uint32_t local_row = element / 4;
-        const std::uint32_t local_group = element & 3;
+        const std::uint32_t local_row = tid / 4;
+        const std::uint32_t local_group = tid & 3;
         const std::uint32_t row = row_base + local_row;
         MxWeightWords loaded{make_uint4(0, 0, 0, 0), make_uint4(0, 0, 0, 0), make_uint2(0, 0)};
         if (row < rows) {
@@ -1857,14 +2051,6 @@ __launch_bounds__(256, 1) __global__ void mx_repacked_mmq_kernel(
                 const auto hi = weight_hi[local + offset][group];
                 const auto slot = weight_slot[group][local + offset];
                 for (int column = 0; column < 2; ++column) {
-                    [[maybe_unused]] const int dot = mx_dp4a(lo.x, x[column].q0.x)
-                        + mx_dp4a(lo.y, x[column].q0.y)
-                        + mx_dp4a(lo.z, x[column].q0.z)
-                        + mx_dp4a(lo.w, x[column].q0.w)
-                        + mx_dp4a(hi.x, x[column].q1.x)
-                        + mx_dp4a(hi.y, x[column].q1.y)
-                        + mx_dp4a(hi.z, x[column].q1.z)
-                        + mx_dp4a(hi.w, x[column].q1.w);
                     if constexpr (Q6) {
                         const std::uint16_t d_bits = static_cast<std::uint16_t>(slot.x >> 16);
                         const float d = __half2float(*reinterpret_cast<const __half*>(&d_bits)) * 0.25F;
@@ -1887,6 +2073,14 @@ __launch_bounds__(256, 1) __global__ void mx_repacked_mmq_kernel(
                         const float dmin = __half2float(*reinterpret_cast<const __half*>(&dmin_bits));
                         const int scale = static_cast<int>(slot.x & 0xFFU);
                         const int minimum = static_cast<int>((slot.x >> 8) & 0xFFU);
+                        const int dot = mx_dp4a(lo.x, x[column].q0.x)
+                            + mx_dp4a(lo.y, x[column].q0.y)
+                            + mx_dp4a(lo.z, x[column].q0.z)
+                            + mx_dp4a(lo.w, x[column].q0.w)
+                            + mx_dp4a(hi.x, x[column].q1.x)
+                            + mx_dp4a(hi.y, x[column].q1.y)
+                            + mx_dp4a(hi.z, x[column].q1.z)
+                            + mx_dp4a(hi.w, x[column].q1.w);
                         accum[offset][column] += d * x[column].d * static_cast<float>(scale * dot)
                             - dmin * static_cast<float>(minimum) * x[column].sum;
                     }
@@ -1905,6 +2099,11 @@ __launch_bounds__(256, 1) __global__ void mx_repacked_mmq_kernel(
                 = accum[offset][column];
         }
     }
+}
+
+bool mx_pipeline_enabled() {
+    const char* env = std::getenv("MIINFER_MX_PIPELINE");
+    return env != nullptr && std::strcmp(env, "0") != 0;
 }
 
 template <bool AFFINE>
@@ -1973,9 +2172,15 @@ void launch_mx_q4k_repacked_mmq(
         || columns == 0 || columns % 128 != 0 || token_count == 0 || token_count > 512) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
-    hipLaunchKernelGGL((mx_repacked_mmq_kernel<false, false>),
-                       dim3((rows + 63) / 64, (token_count + 127) / 128), dim3(64, 4), 0,
-                       stream, weights, input, output, rows, columns, token_count);
+    if (mx_pipeline_enabled()) {
+        hipLaunchKernelGGL((mx_repacked_mmq_kernel<false, false>),
+                           dim3((rows + 63) / 64, (token_count + 127) / 128), dim3(64, 4), 0,
+                           stream, weights, input, output, rows, columns, token_count);
+    } else {
+        hipLaunchKernelGGL((mx_repacked_mmq_legacy_kernel<false, false>),
+                           dim3((rows + 63) / 64, (token_count + 127) / 128), dim3(64, 4), 0,
+                           stream, weights, input, output, rows, columns, token_count);
+    }
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
@@ -1986,9 +2191,15 @@ void launch_mx_q5k_repacked_mmq(
         || columns == 0 || columns % 128 != 0 || token_count == 0 || token_count > 512) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
-    hipLaunchKernelGGL((mx_repacked_mmq_kernel<true, false>),
-                       dim3((rows + 63) / 64, (token_count + 127) / 128), dim3(64, 4), 0,
-                       stream, weights, input, output, rows, columns, token_count);
+    if (mx_pipeline_enabled()) {
+        hipLaunchKernelGGL((mx_repacked_mmq_kernel<true, false>),
+                           dim3((rows + 63) / 64, (token_count + 127) / 128), dim3(64, 4), 0,
+                           stream, weights, input, output, rows, columns, token_count);
+    } else {
+        hipLaunchKernelGGL((mx_repacked_mmq_legacy_kernel<true, false>),
+                           dim3((rows + 63) / 64, (token_count + 127) / 128), dim3(64, 4), 0,
+                           stream, weights, input, output, rows, columns, token_count);
+    }
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
@@ -1999,9 +2210,15 @@ void launch_mx_q6k_repacked_mmq(
         || columns == 0 || columns % 128 != 0 || token_count == 0 || token_count > 512) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
-    hipLaunchKernelGGL((mx_repacked_mmq_kernel<false, true>),
-                       dim3((rows + 63) / 64, (token_count + 127) / 128), dim3(64, 4), 0,
-                       stream, weights, input, output, rows, columns, token_count);
+    if (mx_pipeline_enabled()) {
+        hipLaunchKernelGGL((mx_repacked_mmq_kernel<false, true>),
+                           dim3((rows + 63) / 64, (token_count + 127) / 128), dim3(64, 4), 0,
+                           stream, weights, input, output, rows, columns, token_count);
+    } else {
+        hipLaunchKernelGGL((mx_repacked_mmq_legacy_kernel<false, true>),
+                           dim3((rows + 63) / 64, (token_count + 127) / 128), dim3(64, 4), 0,
+                           stream, weights, input, output, rows, columns, token_count);
+    }
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
