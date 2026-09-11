@@ -127,6 +127,23 @@ std::vector<float> read_fixture(const std::filesystem::path& path, std::size_t e
 }
 
 void set_environment(std::uint32_t batch, const std::string& mode) {
+    for (const char* name : {
+             "MIINFER_MX_Q8_BATCH",
+             "MIINFER_PREFILL_MX_GDN",
+             "MIINFER_PREFILL_WIDE_MX_REPACKED_MMQ",
+             "MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_FFN",
+             "MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_O",
+             "MIINFER_PREFILL_WIDE_DENSE_FFN",
+             "MIINFER_PREFILL_WIDE_DENSE_ALL",
+             "MIINFER_PREFILL_DENSE_PROJECTIONS",
+             "MIINFER_PREFILL_DENSE_QKV",
+             "MIINFER_PREFILL_DENSE_FFN_DOWN",
+             "MIINFER_PREFILL_GDN_DIRECT",
+             "MIINFER_PREFILL_WIDE_VALIDATE",
+             "MIINFER_WIDE_VALIDATE",
+             "MIINFER_MX_PIPELINE"}) {
+        unsetenv(name);
+    }
     setenv("MIINFER_PREFILL_LAYER_MAJOR", "1", 1);
     setenv("MIINFER_PREFILL_WIDE_CHUNK", "1", 1);
     setenv("MIINFER_PREFILL_CHUNK", std::to_string(batch).c_str(), 1);
@@ -146,6 +163,14 @@ void set_environment(std::uint32_t batch, const std::string& mode) {
     setenv("MIINFER_PREFILL_WIDE_MMQ_QKV", "1", 1);
     setenv("MIINFER_PREFILL_WIDE_MMQ_SSM_OUT", "1", 1);
     setenv("MIINFER_PREFILL_WIDE_MMQ_FFN", "1", 1);
+    setenv("MIINFER_MX_Q8_BATCH", "0", 1);
+    setenv("MIINFER_MX_PIPELINE", "1", 1);
+    if (mode == "mx_ffn" || mode == "mx_ffn_o") {
+        setenv("MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_FFN", "1", 1);
+    }
+    if (mode == "mx_o" || mode == "mx_ffn_o") {
+        setenv("MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_O", "1", 1);
+    }
     setenv("MIINFER_FP16_KV_CACHE", "1", 1);
     setenv("MIINFER_TILED_ONLINE_ATTENTION", "1", 1);
 }
@@ -160,9 +185,9 @@ void run_layer(const miinfer::Qwen35Model& model, std::uint32_t batch,
                std::size_t& tracked_bytes) {
     set_environment(batch, mode);
     g_cache_capacity = 1024;
-    const std::size_t allocation_base = g_device_bytes;
+    const std::size_t allocation_base = g_live_device_bytes;
     FullAttentionLayer layer(model, 3);
-    tracked_bytes = g_device_bytes - allocation_base;
+    tracked_bytes = g_live_device_bytes - allocation_base;
     layer.stage_profile = &events.profile;
     layer.stage_profile_position = batch - 1;
     layer.stage_profile_chunk_base = 0;
@@ -295,7 +320,8 @@ void run_layer(const miinfer::Qwen35Model& model, std::uint32_t batch,
 int main(int argc, char** argv) try {
     if (argc < 3 || argc > 5) {
         throw std::runtime_error(
-            "usage: miinfer-m24-attention-layer-bakeoff MODEL.gguf BATCH [control|qk|v|o] [FIXTURE_DIR]");
+            "usage: miinfer-m24-attention-layer-bakeoff MODEL.gguf BATCH "
+            "[control|mx_ffn|mx_o|mx_ffn_o|qk|v|o] [FIXTURE_DIR]");
     }
     const auto batch = static_cast<std::uint32_t>(std::stoul(argv[2]));
     const std::string mode = argc >= 4 ? argv[3] : "control";
@@ -304,8 +330,9 @@ int main(int argc, char** argv) try {
     if (!standard_batch) {
         throw std::runtime_error("BATCH must be 128, 256, or 512");
     }
-    if (mode != "control" && mode != "qk" && mode != "v" && mode != "o") {
-        throw std::runtime_error("mode must be control, qk, v, or o");
+    if (mode != "control" && mode != "mx_ffn" && mode != "mx_o"
+        && mode != "mx_ffn_o" && mode != "qk" && mode != "v" && mode != "o") {
+        throw std::runtime_error("mode must be control, mx_ffn, mx_o, mx_ffn_o, qk, v, or o");
     }
     miinfer::DeviceInfo device;
     std::string error;

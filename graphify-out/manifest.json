@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1789164987.1594298,
-    "seen": 1789165073.3760686,
-    "ast_hash": "eb6b504f3c6a49965f8c2a9313cf5d45",
+    "mtime": 1789167477.36942,
+    "seen": 1789167596.0327392,
+    "ast_hash": "0576ea2693221f8ac3f4d8f8413fffc0",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -1332,9 +1332,9 @@
     "semantic_hash": ""
   },
   "tools/m6a21_qwen35_gpu_hybrid_block.cpp": {
-    "mtime": 1788944382.549623,
-    "seen": 1788945637.1623235,
-    "ast_hash": "0788c5e9f3dae044a6f69792a0d97753",
+    "mtime": 1789166802.2837884,
+    "seen": 1789167596.0326786,
+    "ast_hash": "62931a77c987be671fd7dd59cb36acc2",
     "semantic_hash": ""
   },
   "experiments/EXP-0065-m6a21-qwen35-gpu-hybrid-block.md": {
@@ -2364,15 +2364,15 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1789161105.736964,
-    "seen": 1789161949.1126244,
-    "ast_hash": "f1f3091dbeb4dd6b015b46eb73223b45",
+    "mtime": 1789167451.1885579,
+    "seen": 1789167596.0326931,
+    "ast_hash": "15277988608cb317900cc6c33219165c",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1789164952.3796368,
-    "seen": 1789165073.3760233,
-    "ast_hash": "0dfe2321d36af1e21870ffd47cd4db11",
+    "mtime": 1789166759.4700003,
+    "seen": 1789167596.0326948,
+    "ast_hash": "31b34f386e0c640137ac7efa78677223",
     "semantic_hash": ""
   },
   "docs/M9-AUTOREGRESSIVE-QUALIFICATION.md": {
@@ -4902,15 +4902,15 @@
     "semantic_hash": ""
   },
   "bench/m24_recurrent_layer_bakeoff.cpp": {
-    "mtime": 1789128794.4225912,
-    "seen": 1789128994.6999972,
-    "ast_hash": "b21fb5281dc04f91932dd90857f9b381",
+    "mtime": 1789166807.2927637,
+    "seen": 1789167596.032235,
+    "ast_hash": "fcb2af804b48fe0a0131239abc4342f3",
     "semantic_hash": ""
   },
   "bench/m24_attention_layer_bakeoff.cpp": {
-    "mtime": 1789164959.6475935,
-    "seen": 1789165073.3755653,
-    "ast_hash": "7db7905e418f99d254a9b813a6c0e4ef",
+    "mtime": 1789166823.7186825,
+    "seen": 1789167596.0322313,
+    "ast_hash": "f8ded490b531020a762632b08d5daa8c",
     "semantic_hash": ""
   },
   "experiments/EXP-0299-m24-attention-attribution.md": {
@@ -4995,6 +4995,12 @@
     "mtime": 1789164987.1584299,
     "seen": 1789165073.3765368,
     "ast_hash": "55b6779ee8a99dffd9ec00db26dfed68",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0313-m25-review-hardening-and-p512-stall.md": {
+    "mtime": 1789167477.3684201,
+    "seen": 1789167596.0332146,
+    "ast_hash": "8cb4e59bc140c55d94eb9798a7971986",
     "semantic_hash": ""
   }
 }

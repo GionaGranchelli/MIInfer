@@ -76,6 +76,19 @@ bool shared_wide_prefill_enabled() {
         && full != nullptr && std::strcmp(full, "0") != 0;
 }
 
+bool environment_flag(const char* name, bool default_value = false) {
+    const char* value = std::getenv(name);
+    if (value == nullptr) return default_value;
+    if (std::strcmp(value, "0") == 0) return false;
+    if (std::strcmp(value, "1") == 0) return true;
+    throw std::runtime_error(std::string(name) + " must be 0 or 1");
+}
+
+std::size_t g_device_allocations = 0;
+std::size_t g_total_device_bytes = 0;
+std::size_t g_live_device_bytes = 0;
+std::size_t g_peak_device_bytes = 0;
+
 class DeviceBytes {
 public:
     explicit DeviceBytes(std::size_t bytes) : bytes_(bytes) {
@@ -84,10 +97,18 @@ public:
             std::fprintf(stderr, "MIInfer device allocation failed: %zu bytes\n", bytes);
             miinfer::hip_check_failed(error, "hipMalloc(&data_, bytes)");
         }
+        g_total_device_bytes += bytes_;
+        g_live_device_bytes += bytes_;
+        g_peak_device_bytes = std::max(g_peak_device_bytes, g_live_device_bytes);
     }
     DeviceBytes(const DeviceBytes&) = delete;
     DeviceBytes& operator=(const DeviceBytes&) = delete;
-    ~DeviceBytes() { if (data_ != nullptr) (void)hipFree(data_); }
+    ~DeviceBytes() {
+        if (data_ != nullptr) {
+            (void)hipFree(data_);
+            g_live_device_bytes -= bytes_;
+        }
+    }
     void* get() const noexcept { return data_; }
 
 private:
@@ -105,17 +126,12 @@ struct WidePrefillWorkspace {
     Buffer qfull, value, gated_attention, query_rope, attention_gate;
 };
 
-std::size_t g_device_allocations = 0;
-std::size_t g_device_bytes = 0;
-std::size_t g_peak_device_bytes = 0;
 std::array<Buffer, 6> g_m23_repacked_scratch;
 std::array<std::size_t, 6> g_m23_repacked_scratch_bytes{};
 
 Buffer allocate(std::size_t bytes) {
     auto result = std::make_shared<DeviceBytes>(bytes);
     ++g_device_allocations;
-    g_device_bytes += bytes;
-    g_peak_device_bytes = std::max(g_peak_device_bytes, g_device_bytes);
     return result;
 }
 
@@ -3665,13 +3681,25 @@ struct FullAttentionLayer {
         const char* layer_major_env = std::getenv("MIINFER_PREFILL_LAYER_MAJOR");
         wide_attn_prefill = layer_major_env != nullptr && std::strcmp(layer_major_env, "0") != 0
             && wide_attn_env != nullptr && std::strcmp(wide_attn_env, "0") != 0;
-        const char* mx_ffn_env = std::getenv("MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_FFN");
-        prefill_mx_ffn = wide_attn_prefill && mx_ffn_env != nullptr
-            && std::strcmp(mx_ffn_env, "0") != 0;
-        const char* mx_o_env = std::getenv("MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_O");
-        prefill_mx_o = wide_attn_prefill && mx_o_env != nullptr
-            && std::strcmp(mx_o_env, "0") != 0
-            && o_weight.type == miinfer::GgufTensorType::q4_k;
+        const bool mx_ffn_requested = environment_flag(
+            "MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_FFN");
+        const bool mx_ffn_supported =
+            ffn_gate_weight.type == miinfer::GgufTensorType::q4_k
+            && ffn_up_weight.type == miinfer::GgufTensorType::q4_k
+            && (ffn_down_weight.type == miinfer::GgufTensorType::q4_k
+                || ffn_down_weight.type == miinfer::GgufTensorType::q6_k);
+        if (wide_attn_prefill && mx_ffn_requested && !mx_ffn_supported) {
+            throw std::runtime_error(
+                "Mx attention FFN requires Q4_K gate/up and Q4_K or Q6_K down");
+        }
+        prefill_mx_ffn = wide_attn_prefill && mx_ffn_requested;
+        const bool mx_o_requested = environment_flag(
+            "MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_O");
+        if (wide_attn_prefill && mx_o_requested
+            && o_weight.type != miinfer::GgufTensorType::q4_k) {
+            throw std::runtime_error("Mx attention O requires Q4_K weights");
+        }
+        prefill_mx_o = wide_attn_prefill && mx_o_requested;
         const char* wide_repacked_env = std::getenv("MIINFER_PREFILL_WIDE_REPACKED_MMQ");
         const char* resident_ffn_env = std::getenv("MIINFER_PREFILL_REPACKED_RESIDENT_ATTN_FFN");
         resident_m23_ffn = wide_attn_prefill
@@ -4336,8 +4364,14 @@ struct FullAttentionLayer {
     void finish_prefill_wide(const float* inputs, float* outputs, std::size_t count,
                              const float* next_norm_weight, float* next_normalized) {
         auto* q8 = static_cast<miinfer::M23Q8_1MmqBlock*>(prefill_mmq_q8->get());
-        auto* mx_q8 = prefill_mx_ffn
-            ? static_cast<miinfer::MxQ8_1MmqBlock*>(prefill_mx_q8->get()) : nullptr;
+        miinfer::MxQ8_1MmqBlock* mx_q8 = nullptr;
+        if (prefill_mx_ffn || prefill_mx_o) {
+            if (!prefill_mx_q8) {
+                throw std::runtime_error(
+                    "Mx attention prefill enabled without Mx Q8 workspace");
+            }
+            mx_q8 = static_cast<miinfer::MxQ8_1MmqBlock*>(prefill_mx_q8->get());
+        }
         auto* gated = static_cast<const float*>(prefill_gated_attention->get());
         const auto profile_position = stage_profile_position;
         stage_start(7, profile_position);

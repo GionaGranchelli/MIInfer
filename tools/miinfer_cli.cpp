@@ -46,6 +46,15 @@ std::atomic<bool> g_shutdown_requested{false};
 int g_signal_wakeup_fd = -1;
 constexpr std::size_t kFullPrefillCapacity = 512;
 
+void print_hip_memory(std::ostream& output) {
+    std::size_t free_bytes = 0;
+    std::size_t total_bytes = 0;
+    if (hipMemGetInfo(&free_bytes, &total_bytes) == hipSuccess) {
+        output << "device_vram_free_bytes=" << free_bytes << "\n"
+               << "device_vram_total_bytes=" << total_bytes << "\n";
+    }
+}
+
 void signal_handler(int sig) {
     if (sig == SIGINT || sig == SIGTERM) {
         g_shutdown_requested = true;
@@ -1604,8 +1613,10 @@ int cmd_run(int argc, char** argv) {
     std::cerr << "Initializing MIInfer gfx906 runtime engine for " << model_path << " ...\n";
     Qwen35RuntimeEngine engine(model_path);
     std::cerr << "device_allocation_count=" << g_device_allocations << "\n"
-              << "device_allocated_bytes=" << g_device_bytes << "\n"
+              << "device_allocated_bytes=" << g_live_device_bytes << "\n"
+              << "device_total_allocated_bytes=" << g_total_device_bytes << "\n"
               << "device_peak_allocated_bytes=" << g_peak_device_bytes << "\n";
+    print_hip_memory(std::cerr);
     std::cerr << "model_context_length=" << engine.model().config().context_length << "\n";
 
     const auto prompt_tokens = engine.tokenizer().encode(prompt_text);
@@ -1961,8 +1972,10 @@ int cmd_serve(int argc, char** argv) {
     Qwen35RuntimeEngine engine(model_path);
     std::cerr << "model_context_length=" << engine.model().config().context_length << "\n";
     std::cerr << "device_allocation_count=" << g_device_allocations << "\n"
-              << "device_allocated_bytes=" << g_device_bytes << "\n"
+              << "device_allocated_bytes=" << g_live_device_bytes << "\n"
+              << "device_total_allocated_bytes=" << g_total_device_bytes << "\n"
               << "device_peak_allocated_bytes=" << g_peak_device_bytes << "\n";
+    print_hip_memory(std::cerr);
 
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd < 0) {

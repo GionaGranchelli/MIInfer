@@ -1735,6 +1735,17 @@ allocation increased by `48,578,560 B`. The candidate passed scalar parity but
 was **REJECTED** and removed; M23 Q/K remains selected. See
 experiments/EXP-0312-m25-k-mx-attention-qk.md.
 
+2026-09-12 — M25 review hardening fixed independent Mx attention O-only
+workspace selection, added fail-fast tensor-type validation, separated live
+from cumulative device allocation telemetry, made the attention bakeoff
+hermetic, and added the B128 `00/10/01/11` H/I matrix. All four modes passed
+finite scalar parity and Release CTest passed `24/24`. A current full-model
+P512 control still stalled with and without Mx GDN; a matched B128 diagnostic
+also stalled on both pre-J `3fbe0f1` and current main. A privileged GPU reset
+was unavailable, so no source regression is attributed. M25-H/I remains
+**KEEP but opt-in** at the existing qualified `211.48 tok/s`; M25-J remains
+**RETEST**. See experiments/EXP-0313-m25-review-hardening-and-p512-stall.md.
+
 Update this document whenever:
 
 * active milestone changes

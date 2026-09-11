@@ -259,7 +259,7 @@ int main(int argc, char** argv) {
                 }
                 std::cout << "allocations_during_decode="
                           << (g_device_allocations - allocations_before_decode)
-                          << " device_bytes_after_setup=" << g_device_bytes
+                          << " device_bytes_after_setup=" << g_live_device_bytes
                           << " peak_device_bytes=" << g_peak_device_bytes << '\n'
                           << "M6-A26.2 qwen35 L30 recurrent-update provenance COMPLETE\n";
                 return 0;
@@ -326,7 +326,7 @@ int main(int argc, char** argv) {
             }
             std::cout << "allocations_during_decode="
                       << (g_device_allocations - allocations_before_decode)
-                      << " device_bytes_after_setup=" << g_device_bytes
+                      << " device_bytes_after_setup=" << g_live_device_bytes
                       << " peak_device_bytes=" << g_peak_device_bytes << '\n'
                       << "M6-A26.1 qwen35 L30 state localization COMPLETE\n";
             return 0;
@@ -860,7 +860,7 @@ int main(int argc, char** argv) {
                               << " replay=PASS"
                               << " allocations_during_decode="
                               << (g_device_allocations - allocations_before_generation)
-                              << " device_bytes_after_setup=" << g_device_bytes
+                              << " device_bytes_after_setup=" << g_live_device_bytes
                               << " peak_device_bytes=" << g_peak_device_bytes << '\n'
                               << "M6-B2 native qwen35 generation benchmark PASS\n";
                     cleanup_graphs();
@@ -891,7 +891,7 @@ int main(int argc, char** argv) {
                           << " state_fingerprint=" << first.state_hash
                           << " allocations_during_decode="
                           << (g_device_allocations - allocations_before_generation)
-                          << " device_bytes_after_setup=" << g_device_bytes
+                          << " device_bytes_after_setup=" << g_live_device_bytes
                           << " peak_device_bytes=" << g_peak_device_bytes << '\n'
                           << "M6-A28 qwen35 native autoregressive GPU generation PASS\n";
                 cleanup_graphs();
@@ -1869,7 +1869,7 @@ int main(int argc, char** argv) {
                       << " prefix_cpu_ms_per_position=" << prefix_cpu_ms / 65.0
                       << " allocations_during_decode="
                       << (g_device_allocations - allocations_before_decode)
-                      << " device_bytes_after_setup=" << g_device_bytes
+                      << " device_bytes_after_setup=" << g_live_device_bytes
                       << " peak_device_bytes=" << g_peak_device_bytes
                       << " dispatches=not-instrumented copies=not-instrumented\n"
                       << "poisoned_reset_replay=PASS\n"

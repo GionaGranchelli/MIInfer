@@ -2169,7 +2169,9 @@ __launch_bounds__(128, 1) __global__ void mx_q8_1_mmq_quantize_batch_kernel(
 
 bool mx_q8_batch_enabled() {
     const char* env = std::getenv("MIINFER_MX_Q8_BATCH");
-    return env != nullptr && std::strcmp(env, "0") != 0;
+    if (env == nullptr || std::strcmp(env, "0") == 0) return false;
+    if (std::strcmp(env, "1") == 0) return true;
+    throw std::runtime_error("MIINFER_MX_Q8_BATCH must be 0 or 1");
 }
 
 template <bool AFFINE>
