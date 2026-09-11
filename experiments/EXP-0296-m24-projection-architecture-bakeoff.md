@@ -77,3 +77,37 @@ clock-captured runs and model-level correctness.
 3. Wire one recurrent layer through FP16 scratch and compare intermediate
    tensors, logits, and continuation output against resident MMQ.
 4. If parity passes, measure the complete P512 path before any fusion work.
+
+## Re-evaluation — high-performance clocks
+
+The device was subsequently set by the user with:
+
+```text
+sudo rocm-smi --setperflevel high
+```
+
+Clock captures before and after the reruns reported `Performance Level: high`,
+`mclk=1000 MHz`, `sclk=1725 MHz`, and temperatures of 31–35 C. The ROCm
+low-power warning remained, but the requested clock state was active in both
+captures.
+
+Three independent benchmark runs produced these B512 medians:
+
+| run | resident MMQ | GPU dequant + GEMM | ratio |
+|---:|---:|---:|---:|
+| 1 | 18,614.54 us | 6,407.03 us | 2.91× |
+| 2 | 18,618.86 us | 6,341.27 us | 2.94× |
+| 3 | 18,619.34 us | 6,481.11 us | 2.87× |
+
+The high-clock series confirms the architecture signal: GPU dequantization
+plus FP16 GEMM is about 2.9× faster than resident Q4 MMQ for this B512
+projection, including the 1.02 ms GPU dequantization cost. This remains a
+kernel-level result, not an end-to-end model claim; the next gate is model
+intermediate/logit parity.
+
+## Updated decision
+
+**KEEP as the leading M24 prefill candidate.** Do not replace the production
+path until transposed Gate/Up and Q6/Q4 Down coverage plus model-level
+correctness are complete. Keep quantized MMQ for decode unless a separate
+decode measurement says otherwise.
