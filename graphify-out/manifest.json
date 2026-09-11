@@ -4908,15 +4908,15 @@
     "semantic_hash": ""
   },
   "bench/m24_attention_layer_bakeoff.cpp": {
-    "mtime": 1789128915.9669328,
-    "seen": 1789128994.6999931,
-    "ast_hash": "dfabf8c8841538ff951c63a8218fcc99",
+    "mtime": 1789129366.1645494,
+    "seen": 1789129396.9956129,
+    "ast_hash": "91409a7e1f58aed16052518f6f8a81ec",
     "semantic_hash": ""
   },
   "experiments/EXP-0299-m24-attention-attribution.md": {
-    "mtime": 1789129022.451356,
-    "seen": 1789129044.877335,
-    "ast_hash": "c7c4feb226f42eb2870bdeea62cf6fe0",
+    "mtime": 1789129294.7519207,
+    "seen": 1789129310.7885835,
+    "ast_hash": "702f6cf07c820ed194698fd89f88adc2",
     "semantic_hash": ""
   }
 }

@@ -79,6 +79,27 @@ struct EventPair {
     EventPair& operator=(const EventPair&) = delete;
 };
 
+struct CompareMetrics {
+    float max_abs = 0.0F;
+    float rmse = 0.0F;
+    bool finite = true;
+};
+
+CompareMetrics compare_outputs(const std::vector<float>& actual,
+                               const std::vector<float>& expected) {
+    if (actual.size() != expected.size()) throw std::runtime_error("attention output size mismatch");
+    CompareMetrics result;
+    double squared = 0.0;
+    for (std::size_t i = 0; i < actual.size(); ++i) {
+        if (!std::isfinite(actual[i]) || !std::isfinite(expected[i])) result.finite = false;
+        const float error = std::fabs(actual[i] - expected[i]);
+        result.max_abs = std::max(result.max_abs, error);
+        squared += static_cast<double>(error) * error;
+    }
+    if (!actual.empty()) result.rmse = static_cast<float>(std::sqrt(squared / actual.size()));
+    return result;
+}
+
 void set_environment(std::uint32_t batch) {
     setenv("MIINFER_PREFILL_LAYER_MAJOR", "1", 1);
     setenv("MIINFER_PREFILL_WIDE_CHUNK", "1", 1);
@@ -88,6 +109,8 @@ void set_environment(std::uint32_t batch) {
     setenv("MIINFER_PREFILL_WIDE_REPACKED_MMQ", "1", 1);
     setenv("MIINFER_M23_REPACKED_ROW128", "1", 1);
     setenv("MIINFER_PREFILL_REPACKED_RESIDENT_ALL", "1", 1);
+    unsetenv("MIINFER_PREFILL_REPACKED_FP16");
+    setenv("MIINFER_HIP_GRAPH", "0", 1);
     setenv("MIINFER_PREFILL_WIDE_MMQ_QKV", "1", 1);
     setenv("MIINFER_PREFILL_WIDE_MMQ_SSM_OUT", "1", 1);
     setenv("MIINFER_PREFILL_WIDE_MMQ_FFN", "1", 1);
@@ -98,10 +121,12 @@ void set_environment(std::uint32_t batch) {
 void run_layer(const miinfer::Qwen35Model& model, std::uint32_t batch,
                double& milliseconds, StageEvents& events,
                std::array<double, 15>& stage_ms,
-               std::array<double, 3>& phase_ms) {
+               std::array<double, 3>& phase_ms,
+               CompareMetrics& parity, std::size_t& tracked_bytes) {
     set_environment(batch);
     g_cache_capacity = 1024;
     FullAttentionLayer layer(model, 3);
+    tracked_bytes = g_device_bytes;
     layer.stage_profile = &events.profile;
     layer.stage_profile_position = batch - 1;
     layer.stage_profile_chunk_base = 0;
@@ -169,6 +194,24 @@ void run_layer(const miinfer::Qwen35Model& model, std::uint32_t batch,
                                               events.profile.end[stage]));
         stage_ms[stage] = stage_elapsed;
     }
+
+    std::vector<float> wide_output(static_cast<std::size_t>(batch) * kHidden);
+    MIINFER_HIP_CHECK(hipMemcpy(wide_output.data(), output.pointer,
+                                wide_output.size() * sizeof(float), hipMemcpyDeviceToHost));
+    FullAttentionLayer scalar_oracle(model, 3);
+    scalar_oracle.reset();
+    RawBuffer scalar_output(static_cast<std::size_t>(batch) * kHidden * sizeof(float));
+    for (std::size_t position = 0; position < batch; ++position) {
+        scalar_oracle.run(input.as<float>() + position * kHidden,
+                          static_cast<std::uint32_t>(position),
+                          scalar_output.as<float>() + position * kHidden);
+    }
+    MIINFER_HIP_CHECK(hipDeviceSynchronize());
+    std::vector<float> scalar_values(wide_output.size());
+    MIINFER_HIP_CHECK(hipMemcpy(scalar_values.data(), scalar_output.pointer,
+                                scalar_values.size() * sizeof(float), hipMemcpyDeviceToHost));
+    parity = compare_outputs(wide_output, scalar_values);
+    if (!parity.finite) throw std::runtime_error("non-finite wide/scalar attention parity output");
 }
 
 } // namespace
@@ -190,7 +233,9 @@ int main(int argc, char** argv) try {
     double milliseconds = 0.0;
     std::array<double, 15> stage_ms{};
     std::array<double, 3> phase_ms{};
-    run_layer(model, batch, milliseconds, events, stage_ms, phase_ms);
+    CompareMetrics parity;
+    std::size_t tracked_bytes = 0;
+    run_layer(model, batch, milliseconds, events, stage_ms, phase_ms, parity, tracked_bytes);
 
     static constexpr std::array<const char*, 15> names{
         "normalization_unprofiled", "qk_projection", "query_norm_rope", "k_norm_rope_kv_store",
@@ -201,10 +246,13 @@ int main(int argc, char** argv) try {
               << "{\"mode\":\"resident_mmq\",\"batch\":" << batch
               << ",\"layer\":3,\"gpu_us\":" << milliseconds * 1000.0
               << ",\"tok_s\":" << (1000.0 * batch / milliseconds)
-              << ",\"tracked_layer_bytes\":" << g_device_bytes
+              << ",\"tracked_layer_bytes\":" << tracked_bytes
               << ",\"phases\":{\"prepare\":" << phase_ms[0]
               << ",\"attention\":" << phase_ms[1]
               << ",\"post_attention_ffn\":" << phase_ms[2]
+              << "},\"scalar_parity\":{\"finite\":" << (parity.finite ? "true" : "false")
+              << ",\"max_abs\":" << parity.max_abs
+              << ",\"rmse\":" << parity.rmse
               << "},\"stages\":{";
     for (std::size_t i = 0; i < stage_ms.size(); ++i) {
         if (i != 0) std::cout << ',';

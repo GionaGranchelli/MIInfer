@@ -41,13 +41,21 @@ MMQ path for `FullAttentionLayer(model, 3)`, with one warmup and one timed
 repeat. Phase timings are `prepare` (normalization, quantization, QK/V
 projection), `attention` (Q postprocess, KV write, causal attention), and
 `post_attention_ffn` (O projection, residual/norm, FFN and residual). Internal
-stage events are also emitted. Values below are GPU milliseconds.
+stage events are also emitted. The harness also runs the same input sequence
+through the position-ordered scalar resident-MMQ path and reports output parity
+against that control. Values below are GPU milliseconds.
 
 | batch | whole layer | prepare | attention | post-attention + FFN | tracked layer bytes |
 |---:|---:|---:|---:|---:|---:|
 | 128 | 18.480 | 4.032 | 0.357 | 14.075 | 375,369,616 |
 | 256 | 32.865 | 6.417 | 0.866 | 25.566 | 437,563,280 |
 | 512 | 59.359 | 11.106 | 2.621 | 45.616 | 561,950,608 |
+
+Scalar parity was finite at every batch. Maximum absolute differences were
+`0.012` (B128), `0.026` (B256), and `0.033` (B512), with RMSE `0.001` in
+each case. These are scheduling-control results, not independent external
+reference validation. The reported allocation remains the timed wide layer;
+the temporary scalar control is not included.
 
 B512 internal stages were:
 
@@ -73,9 +81,10 @@ be assumed to move the end-to-end target materially.
 
 The existing focused suite passed all 24 tests, including GPU primitives,
 cached attention determinism, forward, decode and decode-sequence checks.
-The new harness is an attribution tool and does not claim canonical tensor
-parity; a reference-output gate is required before integrating any candidate
-path.
+The scalar parity gate is finite and bounded as reported above. The new
+harness still does not claim independent canonical tensor parity; the M6-A4
+external fixture remains the reference-output gate before integrating any
+candidate path.
 
 ## Decision
 
