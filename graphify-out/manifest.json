@@ -222,9 +222,9 @@
     "semantic_hash": ""
   },
   "docs/references.md": {
-    "mtime": 1787992825.5982163,
-    "seen": 1788003634.2733426,
-    "ast_hash": "0a72ff99d0ebc39c1484a5317c9b0e46",
+    "mtime": 1789154008.6595612,
+    "seen": 1789154046.3998618,
+    "ast_hash": "5cac7d8c06def2a3837dccb32a3e2050",
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1789152007.6545804,
-    "seen": 1789152660.0204313,
-    "ast_hash": "dfca788047569b607658862ced712761",
+    "mtime": 1789154017.0005233,
+    "seen": 1789154046.399378,
+    "ast_hash": "c495507b0e6a2f556ac318a0de74d963",
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_primitives.hpp": {
@@ -4935,6 +4935,12 @@
     "mtime": 1789151152.8244488,
     "seen": 1789151377.6210837,
     "ast_hash": "1ac9599cca197d512cbce72f245f2f46",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0303-m25-b-mx-repacked-mmq.md": {
+    "mtime": 1789154008.6605613,
+    "seen": 1789154046.4002783,
+    "ast_hash": "462600e25842904c2b3aadab62bcf8db",
     "semantic_hash": ""
   }
 }

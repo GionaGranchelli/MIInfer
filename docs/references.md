@@ -442,6 +442,15 @@ Important primarily for:
 * quantized execution
 * model-specific tuning
 
+The pinned intake revision for M25 is commit
+`2e9d29fe736969160f17476ec6f0a6298cee6966`. Its `cuda/q8_repack` contract was
+ported into the MIInfer primitive bakeoff and opt-in recurrent prefill path;
+the implementation remains MIInfer-owned rather than adding mx as a runtime
+dependency.
+
+The pinned checkout is MIT licensed, copyright `2023-2026 The ggml authors`.
+The required notice is retained in the source reference and this attribution.
+
 ---
 
 ## Weight repacking

@@ -39,8 +39,10 @@ struct M23Q8_1MmqBlock {
 
 static_assert(sizeof(M23Q8_1MmqBlock) == 176);
 
-// Pinned mx-llama.cpp MMQ contract: 16-byte scale/sum header followed by
-// four Q8 groups of 32 values. Q4_K/Q5_K use ds4; Q6_K uses d4.
+// Pinned mx-llama.cpp MMQ contract, adapted from commit
+// 2e9d29fe736969160f17476ec6f0a6298cee6966: 16-byte scale/sum header
+// followed by four Q8 groups of 32 values. Q4_K/Q5_K use ds4; Q6_K uses d4.
+// Upstream: MIT, Copyright (c) 2023-2026 The ggml authors.
 struct alignas(16) MxQ8_1MmqBlock {
     union {
         float d4[4];
