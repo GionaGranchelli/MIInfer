@@ -4966,5 +4966,11 @@
     "seen": 1789158612.0032883,
     "ast_hash": "5c943e5f0e7d1eb2ab9e4bc2e4199c40",
     "semantic_hash": ""
+  },
+  "experiments/EXP-0308-m25-g-mx-weight-row-prefetch.md": {
+    "mtime": 1789158848.4624233,
+    "seen": 1789158861.1123312,
+    "ast_hash": "e095c96e351ba35f36054f347434b8ca",
+    "semantic_hash": ""
   }
 }
