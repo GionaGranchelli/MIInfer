@@ -522,8 +522,8 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1789062527.1900144,
-    "seen": 1789062577.7921479,
+    "mtime": 1789151182.9373124,
+    "seen": 1789151377.6201837,
     "ast_hash": "d9f71d6b16c2a8c6fcff543d1f4850f7",
     "semantic_hash": ""
   },
@@ -2370,8 +2370,8 @@
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1789149500.9479227,
-    "seen": 1789149570.6550603,
+    "mtime": 1789151314.719715,
+    "seen": 1789151377.6205828,
     "ast_hash": "6321358c6195fd22433cf5c962261210",
     "semantic_hash": ""
   },
@@ -4818,8 +4818,8 @@
     "semantic_hash": ""
   },
   "tests/qwen35_conv_batch_test.cpp": {
-    "mtime": 1789114404.1596642,
-    "seen": 1789114448.0074384,
+    "mtime": 1789151314.7127151,
+    "seen": 1789151377.6205163,
     "ast_hash": "fbaa92f749a29edc7f25115fdc960bd1",
     "semantic_hash": ""
   },
@@ -4929,6 +4929,12 @@
     "mtime": 1789149555.6136763,
     "seen": 1789149570.655521,
     "ast_hash": "712b18974a731c0b993e1d37f77dbfaa",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0302-m25-e-wide-swiglu-q8.md": {
+    "mtime": 1789151152.8244488,
+    "seen": 1789151377.6210837,
+    "ast_hash": "1ac9599cca197d512cbce72f245f2f46",
     "semantic_hash": ""
   }
 }
