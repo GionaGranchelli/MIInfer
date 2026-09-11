@@ -125,16 +125,19 @@ The harness now accepts a fixture directory with a padded B128 run. The first
 so the existing wide-prefill contract remains valid. Only positions 0 through
 8 are compared against canonical `l_out-3` outputs.
 
-| mode | fixture max abs | fixture RMSE | scalar-control max abs |
-|---|---:|---:|---:|
-| resident MMQ control | 0.222 | 0.003 | 0.000 |
-| QK FP16 + GEMM | 0.250 | 0.003 | 0.084 |
+| mode | fixture max abs | fixture RMSE | scalar-control max abs | wide-control bound |
+|---|---:|---:|---:|---:|
+| resident MMQ control | 0.222 | 0.003 | 0.000 | — |
+| QK FP16 + GEMM | 0.250 | 0.003 | 0.084 | max `0.272`, RMSE `0.005` |
 
 Both paths pass the established `<1.0` layer tolerance. The wide control's
 `0.222` absolute error is the relevant baseline for this harness; the
 independent scalar M6-A13 validator remains the tighter oracle for the scalar
-path. QK adds about `0.028` max absolute error over the wide control on these
-fixture positions, so the candidate clears correctness but remains opt-in.
+path. Candidate fixture runs now execute a resident-MMQ control in the same
+process and enforce `candidate_max_abs <= control_max_abs + 0.05` and
+`candidate_RMSE <= max(0.005, 1.25 * control_RMSE)`. QK adds about `0.028` max
+absolute error over the wide control on these fixture positions, so the
+candidate clears both bounds but remains opt-in.
 
 ## Decision
 
@@ -145,9 +148,39 @@ targeting the largest measured post-attention/FFN work or
 prepare/materialization cost, with absolute milliseconds saved propagated to
 the 4,838 ms P512 baseline.
 
+## M24-E — qualified deferred-tail attribution
+
+The recurrent/attention ownership split already existed in the profiler; this
+run qualifies it under the complete resident-all switch set and adds whole
+`B512` phase events for the wide recurrent path. The command used continuous
+`rocm-smi` sampling for SCLK, MCLK, temperature, power and performance level.
+
+The final run completed with `5308.89 ms` P512 (`96.44 tok/s`) and zero
+hot-path repacked-weight uploads. MCLK stayed at `1000 MHz`, but SCLK was
+`925 MHz` for 192 of 211 samples and `1725 MHz` for only 19 samples. A prior
+complete-switch repeat measured `4942.79 ms`; this spread confirms that these
+runs are valid for attribution, not for clock-qualified throughput comparison.
+
+Whole-B512 recurrent tail totals across 48 layers were:
+
+| family | total GPU ms | ms/layer |
+|---|---:|---:|
+| GDN core | 864.534 | 18.011 |
+| SSM output + residual/post-norm | 271.288 | 5.652 |
+| FFN Gate/Up + SwiGLU | 1493.790 | 31.121 |
+| FFN Down + residual | 793.615 | 16.534 |
+| recurrent deferred tail | 3424.200 | 71.338 |
+
+The 16 attention deferred tails totalled `905.333 ms` (`56.583 ms/layer`),
+for `4329.53 ms` aggregate deferred work. These are whole-tail intervals;
+the selected-token stage rows remain diagnostic and must not be added to them.
+The recurrent tail is approximately 64.5% of this run's wall time, so the
+next optimization target is recurrent deferred execution/materialization, not
+another attention projection.
+
 ## Follow-up
 
-1. Split full-model `deferred_prefill_tail` ownership into recurrent and
-   attention counters (the report now emits both).
-2. Profile the remaining attention/FFN and deferred materialization costs; do
+1. Repeat M24-E with stable qualified SCLK telemetry before using the numbers
+   as a throughput claim.
+2. Profile recurrent tail materialization and synchronization boundaries; do
    not spend more time on V/O projection conversion without a new bottleneck.

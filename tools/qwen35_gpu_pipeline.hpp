@@ -773,11 +773,16 @@ struct RecurrentLayer {
         hipEvent_t ordered_end = nullptr;
         std::array<hipEvent_t, 4> tail_family_start{};
         std::array<hipEvent_t, 4> tail_family_end{};
+        std::array<hipEvent_t, 4> wide_tail_family_start{};
+        std::array<hipEvent_t, 4> wide_tail_family_end{};
         mutable bool tail_recorded = false;
+        mutable bool wide_tail_recorded = false;
         mutable bool prepare_recorded = false;
         mutable bool ordered_recorded = false;
         mutable std::array<bool, 4> tail_family_recorded{};
+        mutable std::array<bool, 4> wide_tail_family_recorded{};
         mutable std::array<bool, 14> stage_recorded{};
+        mutable std::uint32_t wide_tail_batch_count = 0;
     };
     bool no_decay_store = false;
     StageProfile* stage_profile = nullptr;
@@ -1521,6 +1526,37 @@ struct RecurrentLayer {
         }
     }
 
+    void profile_wide_tail_start(std::uint32_t position, std::uint32_t count) const {
+        if (stage_profile != nullptr && stage_profile_position == position) {
+            stage_profile->wide_tail_recorded = true;
+            stage_profile->wide_tail_batch_count = count;
+            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->tail_start, hipStreamPerThread));
+        }
+    }
+
+    void profile_wide_tail_end(std::uint32_t position) const {
+        if (stage_profile != nullptr && stage_profile_position == position) {
+            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->tail_end, hipStreamPerThread));
+        }
+    }
+
+    void profile_wide_tail_family_start(std::size_t family, std::uint32_t position) const {
+        if (stage_profile != nullptr && family < stage_profile->wide_tail_family_start.size()
+            && stage_profile_position == position) {
+            MIINFER_HIP_CHECK(hipEventRecord(
+                stage_profile->wide_tail_family_start[family], hipStreamPerThread));
+        }
+    }
+
+    void profile_wide_tail_family_end(std::size_t family, std::uint32_t position) const {
+        if (stage_profile != nullptr && family < stage_profile->wide_tail_family_end.size()
+            && stage_profile_position == position) {
+            stage_profile->wide_tail_family_recorded[family] = true;
+            MIINFER_HIP_CHECK(hipEventRecord(
+                stage_profile->wide_tail_family_end[family], hipStreamPerThread));
+        }
+    }
+
     bool prepare_prefill_batch(const float* inputs, std::size_t count, bool normalized_ready = false) {
         if (!prefill_batch_enabled || count == 0 || count > prefill_capacity || count % 4 != 0 || inputs == nullptr
             || (!d_qkv_gate_combined && !d_qkv_native)) {
@@ -2064,10 +2100,14 @@ struct RecurrentLayer {
         }
         const auto profile_position = base_position + token_count - 1;
         const float* qkv_batch = prefill_wide_qkv_gate(inputs, base_position, token_count);
+        profile_wide_tail_start(profile_position, token_count);
+        profile_wide_tail_family_start(0, profile_position);
         const float* gated_batch = prefill_wide_causal(
             qkv_batch, static_cast<const float*>(prefill_gate->get()),
             static_cast<const float*>(prefill_core_beta->get()),
             static_cast<const float*>(prefill_core_decay->get()), base_position, token_count);
+        profile_wide_tail_family_end(0, profile_position);
+        profile_wide_tail_family_start(1, profile_position);
         const float* ssm_out_batch = prefill_wide_ssm_out(gated_batch, base_position, token_count);
         auto* residual_batch = static_cast<float*>(prefill_residual->get());
         auto* post_normalized_batch = static_cast<float*>(prefill_post_normalized->get());
@@ -2076,6 +2116,7 @@ struct RecurrentLayer {
             inputs, ssm_out_batch, static_cast<const float*>(d_post_norm->get()), residual_batch,
             post_normalized_batch, token_count, kHidden, model.config().rms_epsilon, hipStreamPerThread);
         stage_end(8, profile_position);
+        profile_wide_tail_family_end(1, profile_position);
         std::string error;
         const char* ffm_env = std::getenv("MIINFER_PREFILL_WIDE_MMQ_FFN");
         const bool mmq_ffn = ffm_env != nullptr && std::strcmp(ffm_env, "0") != 0
@@ -2089,6 +2130,7 @@ struct RecurrentLayer {
         const bool resident_fp16_ffn = resident_fp16_prefill && d_ffn_gate_mmq && d_ffn_up_mmq
             && d_ffn_down_mmq && m12_dense_weights != nullptr && m12_dense_input != nullptr
             && m12_dense_handle != nullptr;
+        profile_wide_tail_family_start(2, profile_position);
         if (resident_fp16_ffn) {
             miinfer::launch_m12_f32_to_fp16(
                 post_normalized_batch, m12_dense_input, token_count * kHidden, hipStreamPerThread);
@@ -2188,6 +2230,8 @@ struct RecurrentLayer {
             static_cast<const float*>(prefill_ffn_gate->get()), static_cast<const float*>(prefill_ffn_up->get()),
             activation, token_count * kFfnInner, hipStreamPerThread);
         stage_end(11, profile_position);
+        profile_wide_tail_family_end(2, profile_position);
+        profile_wide_tail_family_start(3, profile_position);
         stage_start(12, profile_position);
         if (resident_fp16_ffn) {
             miinfer::launch_m12_f32_to_fp16(
@@ -2269,6 +2313,8 @@ struct RecurrentLayer {
         miinfer::launch_qwen3_add(residual_batch, static_cast<const float*>(prefill_projected->get()),
                                   outputs, token_count * kHidden, hipStreamPerThread);
         stage_end(13, profile_position);
+        profile_wide_tail_family_end(3, profile_position);
+        profile_wide_tail_end(profile_position);
         if (!validate) {
             trace_dispatch();
             return;

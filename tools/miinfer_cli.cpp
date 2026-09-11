@@ -160,6 +160,8 @@ public:
                 MIINFER_HIP_CHECK(hipEventCreate(&layer.ordered_end));
                 for (auto& event : layer.tail_family_start) MIINFER_HIP_CHECK(hipEventCreate(&event));
                 for (auto& event : layer.tail_family_end) MIINFER_HIP_CHECK(hipEventCreate(&event));
+                for (auto& event : layer.wide_tail_family_start) MIINFER_HIP_CHECK(hipEventCreate(&event));
+                for (auto& event : layer.wide_tail_family_end) MIINFER_HIP_CHECK(hipEventCreate(&event));
             }
             for (auto& layer : attention_layers) {
                 for (auto& event : layer.start) MIINFER_HIP_CHECK(hipEventCreate(&event));
@@ -203,6 +205,14 @@ public:
                     event = nullptr;
                 }
                 for (auto& event : layer.tail_family_end) {
+                    if (event != nullptr) (void)hipEventDestroy(event);
+                    event = nullptr;
+                }
+                for (auto& event : layer.wide_tail_family_start) {
+                    if (event != nullptr) (void)hipEventDestroy(event);
+                    event = nullptr;
+                }
+                for (auto& event : layer.wide_tail_family_end) {
                     if (event != nullptr) (void)hipEventDestroy(event);
                     event = nullptr;
                 }
@@ -257,6 +267,7 @@ public:
                 "swiglu", "ffn_down_projection", "residual", "residual"};
             std::array<double, 17> family_ms{};
             std::array<double, 4> recurrent_tail_family_ms{};
+            std::array<double, 4> recurrent_wide_tail_family_ms{};
             double recurrent_deferred_tail_ms = 0.0;
             double attention_deferred_tail_ms = 0.0;
             double ordered_ms = 0.0;
@@ -331,7 +342,10 @@ public:
                     ? attention_layers[layer].tail_end : recurrent_layers[layer].tail_end;
                 const bool tail_recorded = attention
                     ? attention_layers[layer].tail_recorded : recurrent_layers[layer].tail_recorded;
-                if (tail_recorded) MIINFER_HIP_CHECK(hipEventElapsedTime(&tail, tail_start, tail_end));
+                const bool wide_tail_recorded = !attention && recurrent_layers[layer].wide_tail_recorded;
+                if (tail_recorded || wide_tail_recorded) {
+                    MIINFER_HIP_CHECK(hipEventElapsedTime(&tail, tail_start, tail_end));
+                }
                 family_ms[15] += tail;
                 if (attention) attention_deferred_tail_ms += tail;
                 else recurrent_deferred_tail_ms += tail;
@@ -341,7 +355,28 @@ public:
                           << (attention ? "attention" : "recurrent")
                           << " family=deferred_prefill_tail timing=whole-tail"
                           << " gpu_ms=" << tail << " total_ms=" << layer_total << '\n';
-                if (!attention) {
+                if (!attention && wide_tail_recorded) {
+                    static constexpr std::array<const char*, 4> wide_tail_names{
+                        "gdn_core", "ssm_output_and_residual",
+                        "ffn_gate_up_and_swiglu", "ffn_down_and_residual"};
+                    for (std::size_t family = 0; family < wide_tail_names.size(); ++family) {
+                        float family_elapsed = 0.0F;
+                        if (recurrent_layers[layer].wide_tail_family_recorded[family]) {
+                            MIINFER_HIP_CHECK(hipEventElapsedTime(
+                                &family_elapsed,
+                                recurrent_layers[layer].wide_tail_family_start[family],
+                                recurrent_layers[layer].wide_tail_family_end[family]));
+                        }
+                        recurrent_wide_tail_family_ms[family] += family_elapsed;
+                        std::cout << "  layer=" << layer << " kind=recurrent family="
+                                  << wide_tail_names[family]
+                                  << " timing=whole-B"
+                                  << recurrent_layers[layer].wide_tail_batch_count
+                                  << "-tail recorded="
+                                  << recurrent_layers[layer].wide_tail_family_recorded[family]
+                                  << " gpu_ms=" << family_elapsed << '\n';
+                    }
+                } else if (!attention) {
                     static constexpr std::array<const char*, 4> tail_names{
                         "gdn_core", "ssm_output_and_residual",
                         "ffn_gate_up_and_swiglu", "ffn_down_and_residual"};
@@ -400,6 +435,11 @@ public:
             for (std::size_t family = 0; family < tail_names.size(); ++family) {
                 std::cout << "  family=" << tail_names[family]
                           << " gpu_ms=" << recurrent_tail_family_ms[family] << '\n';
+            }
+            std::cout << "Recurrent tail family profile (whole wide batch):\n";
+            for (std::size_t family = 0; family < tail_names.size(); ++family) {
+                std::cout << "  family=" << tail_names[family]
+                          << " gpu_ms=" << recurrent_wide_tail_family_ms[family] << '\n';
             }
             std::cout << "Deferred tail ownership (sampled layers):\n"
                       << "  recurrent_deferred_tail_ms=" << recurrent_deferred_tail_ms << '\n'

@@ -2364,15 +2364,15 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1789128809.0315123,
-    "seen": 1789128994.7004447,
-    "ast_hash": "ed105535e9d1fa15fd51bc960769dde9",
+    "mtime": 1789134965.7471824,
+    "seen": 1789135245.4854546,
+    "ast_hash": "481695ab79d99cbae0dcc98ed42a2be3",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1789130101.1947272,
-    "seen": 1789130270.4371996,
-    "ast_hash": "a7cf3c80af29ca096bcfa1f546b5bc1f",
+    "mtime": 1789135263.664716,
+    "seen": 1789135584.6798582,
+    "ast_hash": "6321358c6195fd22433cf5c962261210",
     "semantic_hash": ""
   },
   "docs/M9-AUTOREGRESSIVE-QUALIFICATION.md": {
@@ -4908,15 +4908,15 @@
     "semantic_hash": ""
   },
   "bench/m24_attention_layer_bakeoff.cpp": {
-    "mtime": 1789133242.0303411,
-    "seen": 1789133482.5089178,
-    "ast_hash": "4a69bf46afd6a6317131f5a823d64a5b",
+    "mtime": 1789135129.9253743,
+    "seen": 1789135245.4850063,
+    "ast_hash": "30c0045e00ab78b99ad9eabce9ae136e",
     "semantic_hash": ""
   },
   "experiments/EXP-0299-m24-attention-attribution.md": {
-    "mtime": 1789133373.5987277,
-    "seen": 1789133482.5098634,
-    "ast_hash": "97f1f583f628d587f7029ceeb2f48e86",
+    "mtime": 1789135430.509909,
+    "seen": 1789135584.680346,
+    "ast_hash": "3c43cc3ac0983901aec8be021515245a",
     "semantic_hash": ""
   }
 }

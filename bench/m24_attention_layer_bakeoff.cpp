@@ -160,8 +160,9 @@ void run_layer(const miinfer::Qwen35Model& model, std::uint32_t batch,
                std::size_t& tracked_bytes) {
     set_environment(batch, mode);
     g_cache_capacity = 1024;
+    const std::size_t allocation_base = g_device_bytes;
     FullAttentionLayer layer(model, 3);
-    tracked_bytes = g_device_bytes;
+    tracked_bytes = g_device_bytes - allocation_base;
     layer.stage_profile = &events.profile;
     layer.stage_profile_position = batch - 1;
     layer.stage_profile_chunk_base = 0;
@@ -317,6 +318,28 @@ int main(int argc, char** argv) try {
     std::size_t tracked_bytes = 0;
     run_layer(model, batch, mode, fixture, milliseconds, events, stage_ms, phase_ms,
               parity, canonical, tracked_bytes);
+    CompareMetrics wide_control;
+    bool control_checked = false;
+    float control_max_allowed = 0.0F;
+    float control_rmse_allowed = 0.0F;
+    if (mode != "control" && !fixture.empty()) {
+        StageEvents control_events;
+        double control_ms = 0.0;
+        std::array<double, 15> control_stage_ms{};
+        std::array<double, 3> control_phase_ms{};
+        CompareMetrics control_parity;
+        std::size_t control_bytes = 0;
+        run_layer(model, batch, "control", fixture, control_ms, control_events,
+                  control_stage_ms, control_phase_ms, control_parity, wide_control,
+                  control_bytes);
+        control_checked = true;
+        control_max_allowed = wide_control.max_abs + 0.05F;
+        control_rmse_allowed = std::max(0.005F, wide_control.rmse * 1.25F);
+        if (canonical.max_abs > control_max_allowed
+            || canonical.rmse > control_rmse_allowed) {
+            throw std::runtime_error("attention candidate regresses against wide control tolerance");
+        }
+    }
 
     static constexpr std::array<const char*, 15> names{
         "normalization_unprofiled", "qk_projection", "query_norm_rope", "k_norm_rope_kv_store",
@@ -339,6 +362,12 @@ int main(int argc, char** argv) try {
               << ",\"finite\":" << (canonical.finite ? "true" : "false")
               << ",\"max_abs\":" << canonical.max_abs
               << ",\"rmse\":" << canonical.rmse
+              << "},\"wide_control\":{\"checked\":"
+              << (control_checked ? "true" : "false")
+              << ",\"max_abs\":" << wide_control.max_abs
+              << ",\"rmse\":" << wide_control.rmse
+              << ",\"max_allowed\":" << control_max_allowed
+              << ",\"rmse_allowed\":" << control_rmse_allowed
               << "},\"stages\":{";
     for (std::size_t i = 0; i < stage_ms.size(); ++i) {
         if (i != 0) std::cout << ',';
