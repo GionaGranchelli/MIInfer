@@ -331,6 +331,10 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-m24-recurrent-layer-bakeoff PRIVATE miinfer_hip miinfer_model)
     target_compile_options(miinfer-m24-recurrent-layer-bakeoff PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-m24-attention-layer-bakeoff bench/m24_attention_layer_bakeoff.cpp)
+    target_link_libraries(miinfer-m24-attention-layer-bakeoff PRIVATE miinfer_hip miinfer_model)
+    target_compile_options(miinfer-m24-attention-layer-bakeoff PRIVATE -Wall -Wextra -Wpedantic)
+
     add_executable(miinfer-m13-quant-mm-bench bench/m13_quant_mm_bench.cpp)
     target_link_libraries(miinfer-m13-quant-mm-bench PRIVATE miinfer_hip miinfer_model)
     target_compile_options(miinfer-m13-quant-mm-bench PRIVATE -Wall -Wextra -Wpedantic)

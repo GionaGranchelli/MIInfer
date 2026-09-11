@@ -123,7 +123,7 @@ int main(int argc, char** argv) try {
               << "{\"mode\":\"" << mode << "\",\"batch\":" << batch
               << ",\"layer\":0,\"gpu_us\":" << microseconds
               << ",\"tok_s\":" << (1000000.0 * batch / microseconds)
-              << ",\"resident_bytes\":" << g_device_bytes << "}\n";
+              << ",\"tracked_layer_bytes\":" << g_device_bytes << "}\n";
     return 0;
 } catch (const std::exception& error) {
     std::cerr << error.what() << '\n';

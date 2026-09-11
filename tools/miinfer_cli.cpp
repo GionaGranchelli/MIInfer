@@ -257,6 +257,8 @@ public:
                 "swiglu", "ffn_down_projection", "residual", "residual"};
             std::array<double, 17> family_ms{};
             std::array<double, 4> recurrent_tail_family_ms{};
+            double recurrent_deferred_tail_ms = 0.0;
+            double attention_deferred_tail_ms = 0.0;
             double ordered_ms = 0.0;
             double sampled_total = embedding_ms;
             std::cout << "Prefill operator profile: prompt=" << prompt_tokens
@@ -331,6 +333,8 @@ public:
                     ? attention_layers[layer].tail_recorded : recurrent_layers[layer].tail_recorded;
                 if (tail_recorded) MIINFER_HIP_CHECK(hipEventElapsedTime(&tail, tail_start, tail_end));
                 family_ms[15] += tail;
+                if (attention) attention_deferred_tail_ms += tail;
+                else recurrent_deferred_tail_ms += tail;
                 layer_total += tail;
                 sampled_total += layer_total;
                 std::cout << "  layer=" << layer << " kind="
@@ -397,6 +401,11 @@ public:
                 std::cout << "  family=" << tail_names[family]
                           << " gpu_ms=" << recurrent_tail_family_ms[family] << '\n';
             }
+            std::cout << "Deferred tail ownership (sampled layers):\n"
+                      << "  recurrent_deferred_tail_ms=" << recurrent_deferred_tail_ms << '\n'
+                      << "  attention_deferred_tail_ms=" << attention_deferred_tail_ms << '\n'
+                      << "  aggregate_deferred_tail_ms="
+                      << (recurrent_deferred_tail_ms + attention_deferred_tail_ms) << '\n';
             std::cout << "Top operator families (sampled position, summed layers):\n";
             std::vector<std::size_t> order(family_ms.size());
             std::iota(order.begin(), order.end(), 0);
@@ -408,7 +417,7 @@ public:
                 "projection_or_k", "projection_or_v", "kv_or_head_norm", "gdn_or_attention",
                 "projection_or_attention_output", "residual_post_norm", "post_normalization",
                 "ffn_gate_up_projection", "swiglu", "ffn_down_projection", "residual",
-                "attention_residual", "deferred_prefill_tail", "prefill_batch_prepare"};
+                "attention_residual", "deferred_prefill_tail_total", "prefill_batch_prepare"};
             for (std::size_t rank = 0; rank < 10; ++rank) {
                 const auto index = order[rank];
                 std::cout << "  rank=" << (rank + 1) << " family=" << summary_names[index]
