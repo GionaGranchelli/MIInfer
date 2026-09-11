@@ -1637,6 +1637,376 @@ __global__ void m23_affine_repacked_mmq_row128_kernel(
     }
 }
 
+static __device__ __forceinline__ std::uint32_t mx_spread1(std::uint32_t value) {
+    return (value | (value << 7) | (value << 14) | (value << 21)) & 0x01010101U;
+}
+
+static __device__ __forceinline__ std::uint32_t mx_spread2(std::uint32_t value) {
+    return (value | (value << 6) | (value << 12) | (value << 18)) & 0x03030303U;
+}
+
+static __device__ __forceinline__ int mx_dp4a(
+    const std::uint32_t weight, const std::uint32_t input, int accumulator = 0) {
+    return __builtin_amdgcn_sdot4(static_cast<int>(weight), static_cast<int>(input),
+                                  accumulator, false);
+}
+
+static __device__ __forceinline__ int mx_input_swizzle(int row) {
+    int local = row & 63;
+    local ^= (local >> 5) << 4;
+    return (row & ~63) | local;
+}
+
+struct MxWeightWords {
+    uint4 lo, hi;
+    uint2 slot;
+};
+
+template <bool Q5>
+struct MxAffineGeometry {
+    std::uint32_t qs_stride, n_sub, superblocks;
+    std::size_t qs_offset, high_offset, scale_offset;
+
+    __host__ __device__ MxAffineGeometry(std::uint32_t columns, std::uint32_t rows)
+        : qs_stride(columns / 2 + (columns / 2 % 128 == 0 ? 16 : 0)),
+          n_sub(columns / 32), superblocks((n_sub + 7) / 8),
+          qs_offset(static_cast<std::size_t>(rows) * qs_stride),
+          high_offset(qs_offset + (Q5 ? static_cast<std::size_t>(rows) * n_sub * 4 : 0)),
+          scale_offset(high_offset + static_cast<std::size_t>(rows) * superblocks * 12) {}
+};
+
+template <bool Q5>
+static __device__ __forceinline__ MxWeightWords mx_load_affine(
+    const std::uint8_t* weights, const MxAffineGeometry<Q5>& geometry,
+    std::uint32_t row, std::uint32_t subblock) {
+    const auto packed = *reinterpret_cast<const uint4*>(weights
+        + static_cast<std::size_t>(row) * geometry.qs_stride + subblock * 16);
+    MxWeightWords result;
+    if constexpr (Q5) {
+        const auto high = *reinterpret_cast<const std::uint32_t*>(weights
+            + geometry.qs_offset + (static_cast<std::size_t>(row) * geometry.n_sub + subblock) * 4);
+        auto* lo = reinterpret_cast<std::uint32_t*>(&result.lo);
+        auto* hi = reinterpret_cast<std::uint32_t*>(&result.hi);
+        const auto* packed_words = reinterpret_cast<const std::uint32_t*>(&packed);
+        for (int word = 0; word < 4; ++word) {
+            lo[word] = (packed_words[word] & 0x0F0F0F0FU)
+                | (mx_spread1((high >> (4 * word)) & 0x0FU) << 4);
+            hi[word] = ((packed_words[word] >> 4) & 0x0F0F0F0FU)
+                | (mx_spread1((high >> (16 + 4 * word)) & 0x0FU) << 4);
+        }
+    } else {
+        result.lo = make_uint4(packed.x & 0x0F0F0F0FU, packed.y & 0x0F0F0F0FU,
+                               packed.z & 0x0F0F0F0FU, packed.w & 0x0F0F0F0FU);
+        result.hi = make_uint4((packed.x >> 4) & 0x0F0F0F0FU,
+                               (packed.y >> 4) & 0x0F0F0F0FU,
+                               (packed.z >> 4) & 0x0F0F0F0FU,
+                               (packed.w >> 4) & 0x0F0F0F0FU);
+    }
+
+    const std::size_t superblock = static_cast<std::size_t>(row) * geometry.superblocks
+                                   + subblock / 8;
+    const auto* scale_words = reinterpret_cast<const std::uint32_t*>(weights
+        + geometry.high_offset + superblock * 12);
+    const std::uint32_t s0 = scale_words[0], s1 = scale_words[1], s2 = scale_words[2];
+    const std::uint32_t index = subblock & 7;
+    std::uint32_t scale, minimum;
+    if (index < 4) {
+        scale = (s0 >> (8 * index)) & 63U;
+        minimum = (s1 >> (8 * index)) & 63U;
+    } else {
+        const std::uint32_t shift = 8 * (index - 4);
+        scale = ((s2 >> shift) & 0x0FU) | (((s0 >> (shift + 6)) & 3U) << 4);
+        minimum = ((s2 >> (shift + 4)) & 0x0FU) | (((s1 >> (shift + 6)) & 3U) << 4);
+    }
+    result.slot.x = scale | (minimum << 8);
+    result.slot.y = *reinterpret_cast<const std::uint32_t*>(weights
+        + geometry.scale_offset + superblock * 4);
+    return result;
+}
+
+struct MxQ6Geometry {
+    std::uint32_t qs_stride, n_sub, superblocks;
+    std::size_t qs_offset, high_offset, scale_offset;
+
+    __host__ __device__ MxQ6Geometry(std::uint32_t columns, std::uint32_t rows)
+        : qs_stride(columns / 2 + (columns / 2 % 128 == 0 ? 16 : 0)),
+          n_sub(columns / 32), superblocks((n_sub + 7) / 8),
+          qs_offset(static_cast<std::size_t>(rows) * qs_stride),
+          high_offset(qs_offset + static_cast<std::size_t>(rows) * n_sub * 8),
+          scale_offset(high_offset + static_cast<std::size_t>(rows) * n_sub * 2) {}
+};
+
+static __device__ __forceinline__ MxWeightWords mx_load_q6(
+    const std::uint8_t* weights, const MxQ6Geometry& geometry,
+    std::uint32_t row, std::uint32_t subblock) {
+    const auto packed = *reinterpret_cast<const uint4*>(weights
+        + static_cast<std::size_t>(row) * geometry.qs_stride + subblock * 16);
+    const auto high = *reinterpret_cast<const uint2*>(weights
+        + geometry.qs_offset + (static_cast<std::size_t>(row) * geometry.n_sub + subblock) * 8);
+    MxWeightWords result;
+    auto* lo = reinterpret_cast<std::uint32_t*>(&result.lo);
+    auto* hi = reinterpret_cast<std::uint32_t*>(&result.hi);
+    const auto* packed_words = reinterpret_cast<const std::uint32_t*>(&packed);
+    for (int word = 0; word < 4; ++word) {
+        const std::uint32_t low_high = (high.x >> (8 * word)) & 0xFFU;
+        const std::uint32_t high_high = (high.y >> (8 * word)) & 0xFFU;
+        const std::uint32_t low_values = (packed_words[word] & 0x0F0F0F0FU)
+            | (mx_spread2(low_high) << 4);
+        const std::uint32_t high_values = ((packed_words[word] >> 4) & 0x0F0F0F0FU)
+            | (mx_spread2(high_high) << 4);
+        lo[word] = ((low_values << 2) & 0xFCFCFCFCU) ^ 0x80808080U;
+        hi[word] = ((high_values << 2) & 0xFCFCFCFCU) ^ 0x80808080U;
+    }
+    const std::size_t index = static_cast<std::size_t>(row) * geometry.n_sub + subblock;
+    const std::uint32_t scales = *reinterpret_cast<const std::uint16_t*>(weights
+        + geometry.high_offset + index * 2);
+    const std::uint32_t d = *reinterpret_cast<const std::uint16_t*>(weights
+        + geometry.scale_offset + (static_cast<std::size_t>(row) * geometry.superblocks
+                                   + subblock / 8) * 2);
+    result.slot = make_uint2(scales | (d << 16), 0);
+    return result;
+}
+
+struct MxInputSlice {
+    uint4 q0, q1;
+    float d, sum;
+};
+
+static __device__ __forceinline__ MxInputSlice mx_load_input(
+    const miinfer::MxQ8_1MmqBlock* input, std::uint32_t token, std::uint32_t group,
+    bool affine) {
+    const auto& block = input[token];
+    const auto* quantized = reinterpret_cast<const uint4*>(block.qs + group * 32);
+    MxInputSlice result{quantized[0], quantized[1], 0.0F, 0.0F};
+    if (affine) {
+        result.d = __half2float(block.ds4[group].x);
+        result.sum = __half2float(block.ds4[group].y);
+    } else {
+        result.d = block.d4[group];
+    }
+    return result;
+}
+
+template <bool Q5, bool Q6>
+__launch_bounds__(256, 1) __global__ void mx_repacked_mmq_kernel(
+    const std::uint8_t* __restrict__ weights,
+    const miinfer::MxQ8_1MmqBlock* __restrict__ input,
+    float* __restrict__ output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    std::uint32_t token_count) {
+    static_assert(!(Q5 && Q6));
+    const std::uint32_t tx = threadIdx.x;
+    const std::uint32_t ty = threadIdx.y;
+    const std::uint32_t tid = ty * 64 + tx;
+    const std::uint32_t row_base = blockIdx.x * 64;
+    const std::uint32_t token_base = blockIdx.y * 128;
+    const std::uint32_t n_sub = columns / 32;
+    const auto affine_geometry = MxAffineGeometry<Q5>(columns, rows);
+    const auto q6_geometry = MxQ6Geometry(columns, rows);
+
+    __shared__ uint4 weight_lo[64][4];
+    __shared__ uint4 weight_hi[64][4];
+    __shared__ uint2 weight_slot[4][64];
+    __shared__ miinfer::MxQ8_1MmqBlock input_tile[128];
+    float accum[16][2] = {};
+
+    for (std::uint32_t subblock_base = 0; subblock_base < n_sub; subblock_base += 4) {
+        const std::uint32_t element = tid;
+        const std::uint32_t local_row = element / 4;
+        const std::uint32_t local_group = element & 3;
+        const std::uint32_t row = row_base + local_row;
+        MxWeightWords loaded{make_uint4(0, 0, 0, 0), make_uint4(0, 0, 0, 0), make_uint2(0, 0)};
+        if (row < rows) {
+            loaded = Q6
+                ? mx_load_q6(weights, q6_geometry, row, subblock_base + local_group)
+                : mx_load_affine<Q5>(weights, affine_geometry, row, subblock_base + local_group);
+        }
+        weight_lo[local_row][local_group] = loaded.lo;
+        weight_hi[local_row][local_group] = loaded.hi;
+        weight_slot[local_group][local_row] = loaded.slot;
+
+        constexpr std::uint32_t input_words = sizeof(miinfer::MxQ8_1MmqBlock) / sizeof(uint4);
+        for (std::uint32_t index = tid; index < 128 * input_words; index += 256) {
+            const std::uint32_t token = index / input_words;
+            const std::uint32_t word = index % input_words;
+            auto* destination = reinterpret_cast<uint4*>(input_tile + mx_input_swizzle(token));
+            if (token_base + token < token_count) {
+                const auto* source = reinterpret_cast<const uint4*>(input
+                    + static_cast<std::size_t>(subblock_base / 4) * token_count
+                    + token_base + token);
+                destination[word] = source[word];
+            } else {
+                destination[word] = make_uint4(0, 0, 0, 0);
+            }
+        }
+        __syncthreads();
+
+        for (int group = 0; group < 4; ++group) {
+            MxInputSlice x[2]{};
+            for (int column = 0; column < 2; ++column) {
+                const std::uint32_t token = token_base + tx + column * 64;
+                if (token < token_count) {
+                    x[column] = mx_load_input(input_tile, mx_input_swizzle(tx + column * 64),
+                                              group, !Q6);
+                }
+            }
+            const std::uint32_t local = ty * 16;
+            for (int offset = 0; offset < 16; ++offset) {
+                const auto lo = weight_lo[local + offset][group];
+                const auto hi = weight_hi[local + offset][group];
+                const auto slot = weight_slot[group][local + offset];
+                for (int column = 0; column < 2; ++column) {
+                    [[maybe_unused]] const int dot = mx_dp4a(lo.x, x[column].q0.x)
+                        + mx_dp4a(lo.y, x[column].q0.y)
+                        + mx_dp4a(lo.z, x[column].q0.z)
+                        + mx_dp4a(lo.w, x[column].q0.w)
+                        + mx_dp4a(hi.x, x[column].q1.x)
+                        + mx_dp4a(hi.y, x[column].q1.y)
+                        + mx_dp4a(hi.z, x[column].q1.z)
+                        + mx_dp4a(hi.w, x[column].q1.w);
+                    if constexpr (Q6) {
+                        const std::uint16_t d_bits = static_cast<std::uint16_t>(slot.x >> 16);
+                        const float d = __half2float(*reinterpret_cast<const __half*>(&d_bits)) * 0.25F;
+                        const int scale_lo = static_cast<std::int8_t>(slot.x & 0xFFU);
+                        const int scale_hi = static_cast<std::int8_t>((slot.x >> 8) & 0xFFU);
+                        const int dot_lo = mx_dp4a(lo.x, x[column].q0.x)
+                            + mx_dp4a(lo.y, x[column].q0.y)
+                            + mx_dp4a(lo.z, x[column].q0.z)
+                            + mx_dp4a(lo.w, x[column].q0.w);
+                        const int dot_hi = mx_dp4a(hi.x, x[column].q1.x)
+                            + mx_dp4a(hi.y, x[column].q1.y)
+                            + mx_dp4a(hi.z, x[column].q1.z)
+                            + mx_dp4a(hi.w, x[column].q1.w);
+                        accum[offset][column] += d * x[column].d
+                            * static_cast<float>(scale_lo * dot_lo + scale_hi * dot_hi);
+                    } else {
+                        const std::uint16_t d_bits = static_cast<std::uint16_t>(slot.y);
+                        const std::uint16_t dmin_bits = static_cast<std::uint16_t>(slot.y >> 16);
+                        const float d = __half2float(*reinterpret_cast<const __half*>(&d_bits));
+                        const float dmin = __half2float(*reinterpret_cast<const __half*>(&dmin_bits));
+                        const int scale = static_cast<int>(slot.x & 0xFFU);
+                        const int minimum = static_cast<int>((slot.x >> 8) & 0xFFU);
+                        accum[offset][column] += d * x[column].d * static_cast<float>(scale * dot)
+                            - dmin * static_cast<float>(minimum) * x[column].sum;
+                    }
+                }
+            }
+        }
+        __syncthreads();
+    }
+
+    for (int offset = 0; offset < 16; ++offset) {
+        const std::uint32_t row = row_base + ty * 16 + offset;
+        if (row >= rows) continue;
+        for (int column = 0; column < 2; ++column) {
+            const std::uint32_t token = token_base + tx + column * 64;
+            if (token < token_count) output[static_cast<std::size_t>(token) * rows + row]
+                = accum[offset][column];
+        }
+    }
+}
+
+template <bool AFFINE>
+__launch_bounds__(128, 1) __global__ void mx_q8_1_mmq_quantize_kernel(
+    const float* input, miinfer::MxQ8_1MmqBlock* output, std::uint32_t elements) {
+    const std::uint32_t token = blockIdx.y;
+    const std::uint32_t block = blockIdx.x;
+    const std::uint32_t lane = threadIdx.x;
+    const std::size_t base = static_cast<std::size_t>(token) * elements + block * 128;
+    __shared__ float maxima[128];
+    __shared__ float sums[128];
+    const float value = input[base + lane];
+    maxima[lane] = fabsf(value);
+    sums[lane] = value;
+    __syncthreads();
+    const std::uint32_t group = lane / 32;
+    const std::uint32_t group_lane = lane & 31;
+    for (std::uint32_t stride = 16; stride > 0; stride /= 2) {
+        if (group_lane < stride) {
+            maxima[lane] = fmaxf(maxima[lane], maxima[lane + stride]);
+            sums[lane] += sums[lane + stride];
+        }
+        __syncthreads();
+    }
+    const float max_abs = maxima[group * 32];
+    const float d = max_abs == 0.0F ? 0.0F : max_abs / 127.0F;
+    const int quantized = d == 0.0F ? 0 : static_cast<int>(roundf(value / d));
+    output[static_cast<std::size_t>(block) * gridDim.y + token].qs[lane]
+        = static_cast<std::int8_t>(max(-127, min(127, quantized)));
+    if (group_lane == 0) {
+        auto& destination = output[static_cast<std::size_t>(block) * gridDim.y + token];
+        if constexpr (AFFINE) {
+            destination.ds4[group].x = __float2half_rn(d);
+            destination.ds4[group].y = __float2half_rn(sums[group * 32]);
+        } else {
+            destination.d4[group] = d;
+        }
+    }
+}
+
+} // namespace
+
+void miinfer::launch_mx_q8_1_mmq_quantize(
+    const float* input, miinfer::MxQ8_1MmqBlock* output, std::uint32_t token_count,
+    std::uint32_t elements, bool affine, hipStream_t stream) {
+    if (input == nullptr || output == nullptr || token_count == 0 || token_count > 512
+        || elements == 0 || elements % 128 != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    if (affine) {
+        hipLaunchKernelGGL((mx_q8_1_mmq_quantize_kernel<true>),
+                           dim3(elements / 128, token_count), dim3(128), 0, stream,
+                           input, output, elements);
+    } else {
+        hipLaunchKernelGGL((mx_q8_1_mmq_quantize_kernel<false>),
+                           dim3(elements / 128, token_count), dim3(128), 0, stream,
+                           input, output, elements);
+    }
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_mx_q4k_repacked_mmq(
+    const std::uint8_t* weights, const miinfer::MxQ8_1MmqBlock* input, float* output,
+    std::uint32_t rows, std::uint32_t columns, std::uint32_t token_count, hipStream_t stream) {
+    if (weights == nullptr || input == nullptr || output == nullptr || rows == 0
+        || columns == 0 || columns % 128 != 0 || token_count == 0 || token_count > 512) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL((mx_repacked_mmq_kernel<false, false>),
+                       dim3((rows + 63) / 64, (token_count + 127) / 128), dim3(64, 4), 0,
+                       stream, weights, input, output, rows, columns, token_count);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_mx_q5k_repacked_mmq(
+    const std::uint8_t* weights, const miinfer::MxQ8_1MmqBlock* input, float* output,
+    std::uint32_t rows, std::uint32_t columns, std::uint32_t token_count, hipStream_t stream) {
+    if (weights == nullptr || input == nullptr || output == nullptr || rows == 0
+        || columns == 0 || columns % 128 != 0 || token_count == 0 || token_count > 512) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL((mx_repacked_mmq_kernel<true, false>),
+                       dim3((rows + 63) / 64, (token_count + 127) / 128), dim3(64, 4), 0,
+                       stream, weights, input, output, rows, columns, token_count);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_mx_q6k_repacked_mmq(
+    const std::uint8_t* weights, const miinfer::MxQ8_1MmqBlock* input, float* output,
+    std::uint32_t rows, std::uint32_t columns, std::uint32_t token_count, hipStream_t stream) {
+    if (weights == nullptr || input == nullptr || output == nullptr || rows == 0
+        || columns == 0 || columns % 128 != 0 || token_count == 0 || token_count > 512) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL((mx_repacked_mmq_kernel<false, true>),
+                       dim3((rows + 63) / 64, (token_count + 127) / 128), dim3(64, 4), 0,
+                       stream, weights, input, output, rows, columns, token_count);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+namespace {
+
 template <bool Q5>
 __launch_bounds__(256)
 __global__ void m24_affine_mmq_to_fp16_kernel(

@@ -619,6 +619,162 @@ std::vector<Q5KMmqTile> pack_q5k_mmq_tensor(const miinfer::GgufTensor& tensor) {
         tensor, miinfer::GgufTensorType::q5_k, "q5k");
 }
 
+std::size_t mx_qs_stride(std::size_t packed_columns) {
+    return packed_columns + (packed_columns % 128 == 0 ? 16 : 0);
+}
+
+template <typename Block, bool Q5>
+std::vector<std::uint8_t> pack_mx_affine_repacked_tensor(
+    const miinfer::GgufTensor& tensor, miinfer::GgufTensorType expected, const char* kind) {
+    if (tensor.type != expected || tensor.dimensions.size() != 2 || tensor.data == nullptr) {
+        throw std::runtime_error(std::string("pack_mx_") + kind
+                                 + "_repacked_tensor requires 2D tensor: " + tensor.name);
+    }
+    const std::size_t columns = tensor.dimensions[0];
+    const std::size_t rows = tensor.dimensions[1];
+    if (columns % 256 != 0) {
+        throw std::runtime_error(std::string("pack_mx_") + kind
+                                 + "_repacked_tensor requires columns % 256 == 0: " + tensor.name);
+    }
+    const std::size_t blocks_per_row = columns / 256;
+    if (tensor.byte_size != rows * blocks_per_row * sizeof(Block)) {
+        throw std::runtime_error(std::string("pack_mx_") + kind
+                                 + "_repacked_tensor byte size mismatch: " + tensor.name);
+    }
+
+    const auto* source = reinterpret_cast<const Block*>(tensor.data);
+    const std::size_t n_sub = columns / 32;
+    const std::size_t superblocks = (n_sub + 7) / 8;
+    const std::size_t qs_stride = mx_qs_stride(columns / 2);
+    const std::size_t qs_offset = rows * qs_stride;
+    const std::size_t high_offset = qs_offset + (Q5 ? rows * n_sub * 4 : 0);
+    const std::size_t scale_offset = high_offset + rows * superblocks * 12;
+    std::vector<std::uint8_t> packed(scale_offset + rows * superblocks * 4);
+
+    for (std::size_t row = 0; row < rows; ++row) {
+        const auto* row_source = source + row * blocks_per_row;
+        for (std::size_t sb = 0; sb < n_sub; ++sb) {
+            const auto& block = row_source[sb / 8];
+            const std::size_t in_block = sb % 8;
+            const auto* q = [&] {
+                if constexpr (Q5) return block.ql + 32 * (in_block / 2);
+                else return block.qs + 32 * (in_block / 2);
+            }();
+            const int shift = static_cast<int>((in_block & 1) * 4);
+            auto* lows = packed.data() + row * qs_stride + sb * 16;
+            for (int i = 0; i < 16; ++i) {
+                const auto low = static_cast<std::uint8_t>((q[i] >> shift) & 0x0fU);
+                const auto upper = static_cast<std::uint8_t>((q[i + 16] >> shift) & 0x0fU);
+                lows[i] = static_cast<std::uint8_t>(low | (upper << 4));
+            }
+            if constexpr (Q5) {
+                const int high_bit = 2 * static_cast<int>(in_block / 2)
+                                     + static_cast<int>(in_block & 1);
+                std::uint32_t high = 0;
+                for (int i = 0; i < 32; ++i) {
+                    high |= static_cast<std::uint32_t>((block.qh[i] >> high_bit) & 1U) << i;
+                }
+                std::memcpy(packed.data() + qs_offset + (row * n_sub + sb) * 4,
+                            &high, sizeof(high));
+            }
+            if (in_block == 0) {
+                const std::size_t superblock = row * superblocks + sb / 8;
+                std::memcpy(packed.data() + high_offset + superblock * 12,
+                            block.scales, 12);
+                std::memcpy(packed.data() + scale_offset + superblock * 4,
+                            &block, 4);
+            }
+        }
+    }
+    return packed;
+}
+
+std::vector<std::uint8_t> pack_mx_q4k_repacked_tensor(const miinfer::GgufTensor& tensor) {
+    return pack_mx_affine_repacked_tensor<miinfer::Q4KDeviceBlock, false>(
+        tensor, miinfer::GgufTensorType::q4_k, "q4k");
+}
+
+std::vector<std::uint8_t> pack_mx_q5k_repacked_tensor(const miinfer::GgufTensor& tensor) {
+    return pack_mx_affine_repacked_tensor<miinfer::Q5KDeviceBlock, true>(
+        tensor, miinfer::GgufTensorType::q5_k, "q5k");
+}
+
+std::vector<std::uint8_t> pack_mx_q6k_repacked_tensor(const miinfer::GgufTensor& tensor) {
+    if (tensor.type != miinfer::GgufTensorType::q6_k || tensor.dimensions.size() != 2
+        || tensor.data == nullptr) {
+        throw std::runtime_error("pack_mx_q6k_repacked_tensor requires 2D Q6_K tensor: " + tensor.name);
+    }
+    const std::size_t columns = tensor.dimensions[0];
+    const std::size_t rows = tensor.dimensions[1];
+    if (columns % 256 != 0) {
+        throw std::runtime_error("pack_mx_q6k_repacked_tensor requires columns % 256 == 0: " + tensor.name);
+    }
+    const std::size_t blocks_per_row = columns / 256;
+    if (tensor.byte_size != rows * blocks_per_row * sizeof(miinfer::Q6KDeviceBlock)) {
+        throw std::runtime_error("pack_mx_q6k_repacked_tensor byte size mismatch: " + tensor.name);
+    }
+    const auto* source = reinterpret_cast<const miinfer::Q6KDeviceBlock*>(tensor.data);
+    const std::size_t n_sub = columns / 32;
+    const std::size_t superblocks = (n_sub + 7) / 8;
+    const std::size_t qs_stride = mx_qs_stride(columns / 2);
+    const std::size_t qs_offset = rows * qs_stride;
+    const std::size_t high_offset = qs_offset + rows * n_sub * 8;
+    const std::size_t scale_offset = high_offset + rows * n_sub * 2;
+    std::vector<std::uint8_t> packed(scale_offset + rows * superblocks * 2);
+
+    for (std::size_t row = 0; row < rows; ++row) {
+        const auto* row_source = source + row * blocks_per_row;
+        for (std::size_t sb = 0; sb < n_sub; ++sb) {
+            const auto& block = row_source[sb / 8];
+            const int in_block = static_cast<int>(sb & 7);
+            std::uint8_t raw[32]{};
+            for (int i = 0; i < 32; ++i) {
+                const int value = in_block * 32 + i;
+                const int half = value >> 7;
+                const int local = value & 127;
+                const auto* ql = block.ql + 64 * half;
+                const auto* qh = block.qh + 32 * half;
+                if (local < 32) {
+                    raw[i] = static_cast<std::uint8_t>((ql[local] & 0x0fU)
+                        | (((qh[local] >> 0) & 3U) << 4));
+                } else if (local < 64) {
+                    raw[i] = static_cast<std::uint8_t>((ql[local] & 0x0fU)
+                        | (((qh[local - 32] >> 2) & 3U) << 4));
+                } else if (local < 96) {
+                    raw[i] = static_cast<std::uint8_t>((ql[local - 64] >> 4)
+                        | (((qh[local - 64] >> 4) & 3U) << 4));
+                } else {
+                    raw[i] = static_cast<std::uint8_t>((ql[local - 64] >> 4)
+                        | (((qh[local - 96] >> 6) & 3U) << 4));
+                }
+            }
+            auto* lows = packed.data() + row * qs_stride + sb * 16;
+            for (int i = 0; i < 16; ++i) {
+                lows[i] = static_cast<std::uint8_t>((raw[i] & 0x0fU)
+                    | ((raw[i + 16] & 0x0fU) << 4));
+            }
+            auto* highs = packed.data() + qs_offset + (row * n_sub + sb) * 8;
+            for (int i = 0; i < 8; ++i) {
+                const int base = (i & 3) * 4 + (i >> 2) * 16;
+                highs[i] = static_cast<std::uint8_t>(((raw[base + 0] >> 4) << 0)
+                    | ((raw[base + 1] >> 4) << 2)
+                    | ((raw[base + 2] >> 4) << 4)
+                    | ((raw[base + 3] >> 4) << 6));
+            }
+            const std::size_t index = row * n_sub + sb;
+            packed[high_offset + index * 2 + 0] = static_cast<std::uint8_t>(block.scales[2 * in_block]);
+            packed[high_offset + index * 2 + 1] = static_cast<std::uint8_t>(block.scales[2 * in_block + 1]);
+            if (in_block == 0) {
+                std::uint16_t d_bits = 0;
+                std::memcpy(&d_bits, &block.d, sizeof(d_bits));
+                std::memcpy(packed.data() + scale_offset + (row * superblocks + sb / 8) * 2,
+                            &d_bits, sizeof(d_bits));
+            }
+        }
+    }
+    return packed;
+}
+
 void q4k_wave_tile_dequantize(const Q4KWaveTile& tile, float* output) {
     for (int block = 0; block < 4; ++block) {
         const auto& m = tile.metadata[block];

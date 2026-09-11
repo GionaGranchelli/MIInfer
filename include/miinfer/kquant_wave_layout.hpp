@@ -79,6 +79,34 @@ std::vector<Q6KWaveTile> pack_q6k_wave_tensor(const miinfer::GgufTensor& tensor)
 std::vector<Q6KMmqTile> pack_q6k_mmq_tensor(const miinfer::GgufTensor& tensor);
 std::vector<Q4KMmqTile> pack_q4k_mmq_tensor(const miinfer::GgufTensor& tensor);
 std::vector<Q5KMmqTile> pack_q5k_mmq_tensor(const miinfer::GgufTensor& tensor);
+std::vector<std::uint8_t> pack_mx_q4k_repacked_tensor(const miinfer::GgufTensor& tensor);
+std::vector<std::uint8_t> pack_mx_q5k_repacked_tensor(const miinfer::GgufTensor& tensor);
+std::vector<std::uint8_t> pack_mx_q6k_repacked_tensor(const miinfer::GgufTensor& tensor);
+
+void launch_mx_q4k_repacked_mmq(
+    const std::uint8_t* weights,
+    const miinfer::MxQ8_1MmqBlock* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    std::uint32_t token_count,
+    hipStream_t stream = nullptr);
+void launch_mx_q5k_repacked_mmq(
+    const std::uint8_t* weights,
+    const miinfer::MxQ8_1MmqBlock* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    std::uint32_t token_count,
+    hipStream_t stream = nullptr);
+void launch_mx_q6k_repacked_mmq(
+    const std::uint8_t* weights,
+    const miinfer::MxQ8_1MmqBlock* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    std::uint32_t token_count,
+    hipStream_t stream = nullptr);
 
 void launch_m23_q6k_repacked_mmq(
     const Q6KMmqTile* weights,

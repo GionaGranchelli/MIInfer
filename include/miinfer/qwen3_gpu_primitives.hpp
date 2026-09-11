@@ -39,6 +39,19 @@ struct M23Q8_1MmqBlock {
 
 static_assert(sizeof(M23Q8_1MmqBlock) == 176);
 
+// Pinned mx-llama.cpp MMQ contract: 16-byte scale/sum header followed by
+// four Q8 groups of 32 values. Q4_K/Q5_K use ds4; Q6_K uses d4.
+struct alignas(16) MxQ8_1MmqBlock {
+    union {
+        float d4[4];
+        __half2 ds4[4];
+    };
+    std::int8_t qs[128];
+};
+
+static_assert(sizeof(MxQ8_1MmqBlock) == 144);
+static_assert(offsetof(MxQ8_1MmqBlock, qs) == 16);
+
 struct Q4KDeviceBlock {
     __half d;
     __half dmin;
@@ -116,6 +129,14 @@ void launch_m23_q8_1_mmq_quantize(
     M23Q8_1MmqBlock* output,
     std::uint32_t token_count,
     std::uint32_t elements,
+    hipStream_t stream = nullptr);
+
+void launch_mx_q8_1_mmq_quantize(
+    const float* input,
+    MxQ8_1MmqBlock* output,
+    std::uint32_t token_count,
+    std::uint32_t elements,
+    bool affine,
     hipStream_t stream = nullptr);
 
 // M23 wide Q4_K MMQ prototype.  The launch uses the same 64-row x 128-token
