@@ -86,16 +86,49 @@ harness still does not claim independent canonical tensor parity; the M6-A4
 external fixture remains the reference-output gate before integrating any
 candidate path.
 
+The independent M6-A13 layer validator was also run against the complete
+64-position Qwen3.8-27B fixture. It passed positions 0 through 8 with
+`max_attention_error=0.00294876`, `max_ffn_error=0.00272942`, and
+`max_layer_error=0.00379562`. This validates the resident scalar control
+against the canonical reference; it does not yet validate the FP16 candidate.
+
+## D3 — isolated resident-FP16 projection A/B
+
+The harness now accepts `control`, `qk`, `v`, or `o`. Candidate modes read the
+same resident row-128 MMQ tile, dequantize on-device into reusable FP16
+workspace, and call rocBLAS GEMM. No native/canonical weight copy is retained.
+The temporary workspace is excluded from `tracked_layer_bytes` so the
+resident allocation remains comparable: 178,257,920 B for the reusable weight
+scratch plus 17,825,792 B for B512 input scratch.
+
+The following interleaved B512 layer-3 measurements were taken after the
+candidate parity bound was enabled (`finite=true`, `max_abs <= 1.0`):
+
+| mode | whole layer (ms) | delta vs control | projection stage (ms) | scalar-control max abs |
+|---|---:|---:|---:|---:|
+| control | 59.349 | — | QK 9.696 / V 1.287 / O 4.903 | 0.033 |
+| QK FP16 + GEMM | 57.045 | -2.304 | QK 7.267 | 0.320 |
+| V FP16 + GEMM | 59.219 | -0.129 | V 1.125 | 0.192 |
+| O FP16 + GEMM | 58.911 | -0.438 | O 4.552 | 0.243 |
+
+QK is the only meaningful isolated win, at about 3.9% for this complete
+attention layer. V and O are within the noise floor at this granularity. Even
+if the QK result carried unchanged through all 16 attention layers, it would
+remove only about 37 ms from the 4,838 ms P512 baseline. This is a useful
+candidate for later integration, not the 200 tok/s breakthrough.
+
 ## Decision
 
-**KEEP as M24-D attribution infrastructure.** Do not optimize Q/K/V/O in
-isolation yet. The next candidate should target the largest measured
-post-attention/FFN work or reduce the unprofiled prepare/materialization cost,
-with absolute milliseconds saved propagated to the 4,838 ms P512 baseline.
+**KEEP as M24-D attribution infrastructure and reject V/O for now.** Retain
+QK FP16 + GEMM as a measured candidate, but do not integrate it into the full
+model until it passes the external canonical fixture. Continue targeting the
+largest measured post-attention/FFN work or prepare/materialization cost, with
+absolute milliseconds saved propagated to the 4,838 ms P512 baseline.
 
 ## Follow-up
 
-1. Add a canonical layer-output comparison to the layer harness.
+1. Add a canonical layer-output comparison for the QK candidate before full-model integration.
 2. Split full-model `deferred_prefill_tail` ownership into recurrent and
    attention counters (the report now emits both).
-3. Only then run one-projection FP16 A/B tests for QK, V and O.
+3. Profile the remaining attention/FFN and deferred materialization costs; do
+   not spend more time on V/O projection conversion without a new bottleneck.

@@ -1,5 +1,6 @@
 #include "miinfer/device_validation.hpp"
 #include "miinfer/hip_check.hpp"
+#include "miinfer/m12_dense_stage.hpp"
 #include "miinfer/qwen35_model.hpp"
 
 #include "../tools/qwen35_gpu_pipeline.hpp"
@@ -100,7 +101,7 @@ CompareMetrics compare_outputs(const std::vector<float>& actual,
     return result;
 }
 
-void set_environment(std::uint32_t batch) {
+void set_environment(std::uint32_t batch, const std::string& mode) {
     setenv("MIINFER_PREFILL_LAYER_MAJOR", "1", 1);
     setenv("MIINFER_PREFILL_WIDE_CHUNK", "1", 1);
     setenv("MIINFER_PREFILL_CHUNK", std::to_string(batch).c_str(), 1);
@@ -110,6 +111,12 @@ void set_environment(std::uint32_t batch) {
     setenv("MIINFER_M23_REPACKED_ROW128", "1", 1);
     setenv("MIINFER_PREFILL_REPACKED_RESIDENT_ALL", "1", 1);
     unsetenv("MIINFER_PREFILL_REPACKED_FP16");
+    unsetenv("MIINFER_PREFILL_REPACKED_FP16_ATTN_QK");
+    unsetenv("MIINFER_PREFILL_REPACKED_FP16_ATTN_V");
+    unsetenv("MIINFER_PREFILL_REPACKED_FP16_ATTN_O");
+    if (mode == "qk") setenv("MIINFER_PREFILL_REPACKED_FP16_ATTN_QK", "1", 1);
+    if (mode == "v") setenv("MIINFER_PREFILL_REPACKED_FP16_ATTN_V", "1", 1);
+    if (mode == "o") setenv("MIINFER_PREFILL_REPACKED_FP16_ATTN_O", "1", 1);
     setenv("MIINFER_HIP_GRAPH", "0", 1);
     setenv("MIINFER_PREFILL_WIDE_MMQ_QKV", "1", 1);
     setenv("MIINFER_PREFILL_WIDE_MMQ_SSM_OUT", "1", 1);
@@ -119,17 +126,27 @@ void set_environment(std::uint32_t batch) {
 }
 
 void run_layer(const miinfer::Qwen35Model& model, std::uint32_t batch,
+               const std::string& mode,
                double& milliseconds, StageEvents& events,
                std::array<double, 15>& stage_ms,
                std::array<double, 3>& phase_ms,
                CompareMetrics& parity, std::size_t& tracked_bytes) {
-    set_environment(batch);
+    set_environment(batch, mode);
     g_cache_capacity = 1024;
     FullAttentionLayer layer(model, 3);
     tracked_bytes = g_device_bytes;
     layer.stage_profile = &events.profile;
     layer.stage_profile_position = batch - 1;
     layer.stage_profile_chunk_base = 0;
+
+    RawBuffer dense_weights(static_cast<std::size_t>(kFfnInner) * kHidden * sizeof(__half));
+    RawBuffer dense_input(static_cast<std::size_t>(batch) * kFfnInner * sizeof(__half));
+    miinfer::RocblasGemmHandle gemm_handle{};
+    std::string gemm_error;
+    if (!miinfer::create_rocblas_gemm_handle(gemm_handle, hipStreamPerThread, gemm_error)) {
+        throw std::runtime_error(gemm_error);
+    }
+    layer.set_m12_dense_workspace(dense_weights.as<__half>(), dense_input.as<__half>(), &gemm_handle);
 
     RawBuffer input(static_cast<std::size_t>(batch) * kHidden * sizeof(float));
     RawBuffer output(static_cast<std::size_t>(batch) * kHidden * sizeof(float));
@@ -212,18 +229,26 @@ void run_layer(const miinfer::Qwen35Model& model, std::uint32_t batch,
                                 scalar_values.size() * sizeof(float), hipMemcpyDeviceToHost));
     parity = compare_outputs(wide_output, scalar_values);
     if (!parity.finite) throw std::runtime_error("non-finite wide/scalar attention parity output");
+    if (parity.max_abs > 1.0F) {
+        throw std::runtime_error("wide attention candidate exceeds scalar control tolerance");
+    }
+    miinfer::destroy_rocblas_gemm_handle(gemm_handle);
 }
 
 } // namespace
 
 int main(int argc, char** argv) try {
-    if (argc != 3) {
+    if (argc != 3 && argc != 4) {
         throw std::runtime_error(
-            "usage: miinfer-m24-attention-layer-bakeoff MODEL.gguf BATCH");
+            "usage: miinfer-m24-attention-layer-bakeoff MODEL.gguf BATCH [control|qk|v|o]");
     }
     const auto batch = static_cast<std::uint32_t>(std::stoul(argv[2]));
     if (batch != 128 && batch != 256 && batch != 512) {
         throw std::runtime_error("BATCH must be 128, 256, or 512");
+    }
+    const std::string mode = argc == 4 ? argv[3] : "control";
+    if (mode != "control" && mode != "qk" && mode != "v" && mode != "o") {
+        throw std::runtime_error("mode must be control, qk, v, or o");
     }
     miinfer::DeviceInfo device;
     std::string error;
@@ -235,7 +260,7 @@ int main(int argc, char** argv) try {
     std::array<double, 3> phase_ms{};
     CompareMetrics parity;
     std::size_t tracked_bytes = 0;
-    run_layer(model, batch, milliseconds, events, stage_ms, phase_ms, parity, tracked_bytes);
+    run_layer(model, batch, mode, milliseconds, events, stage_ms, phase_ms, parity, tracked_bytes);
 
     static constexpr std::array<const char*, 15> names{
         "normalization_unprofiled", "qk_projection", "query_norm_rope", "k_norm_rope_kv_store",
@@ -243,14 +268,14 @@ int main(int argc, char** argv) try {
         "residual_post_norm", "post_normalization", "ffn_gate_up_projection", "swiglu",
         "ffn_down_projection", "residual", "unused_stage_14"};
     std::cout << std::fixed << std::setprecision(3)
-              << "{\"mode\":\"resident_mmq\",\"batch\":" << batch
+              << "{\"mode\":\"" << mode << "\",\"batch\":" << batch
               << ",\"layer\":3,\"gpu_us\":" << milliseconds * 1000.0
               << ",\"tok_s\":" << (1000.0 * batch / milliseconds)
               << ",\"tracked_layer_bytes\":" << tracked_bytes
               << ",\"phases\":{\"prepare\":" << phase_ms[0]
               << ",\"attention\":" << phase_ms[1]
               << ",\"post_attention_ffn\":" << phase_ms[2]
-              << "},\"scalar_parity\":{\"finite\":" << (parity.finite ? "true" : "false")
+              << "},\"scalar_control_parity\":{\"finite\":" << (parity.finite ? "true" : "false")
               << ",\"max_abs\":" << parity.max_abs
               << ",\"rmse\":" << parity.rmse
               << "},\"stages\":{";
