@@ -33,6 +33,22 @@ void launch_m12_gdn_chunk(
     std::uint32_t chunk_size,
     hipStream_t stream = nullptr);
 
+// mx-style wide scan: one block owns a value-head/column tile and keeps the
+// recurrent state shard in registers across the complete token chunk.
+void launch_m12_gdn_direct(
+    const float* query,
+    const float* key,
+    const float* value,
+    const float* beta,
+    const float* decay,
+    float* state,
+    float* output,
+    std::uint32_t token_count,
+    std::uint32_t key_heads,
+    std::uint32_t value_heads,
+    std::uint32_t state_size,
+    hipStream_t stream = nullptr);
+
 void launch_m12_gdn_postprocess(
     const float* recurrent_output,
     const float* gate,

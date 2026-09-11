@@ -142,6 +142,7 @@ public:
         std::size_t projection_batch_width = 4;
         double embedding_ms = 0.0;
         std::size_t chunks = 0;
+        M23ProfileCounters m23{};
 
         void init() {
             if (!enabled) return;
@@ -262,8 +263,40 @@ public:
                       << " chunks=" << chunks << " wall_ms=" << wall_ms
                       << " sampled_position=" << profile_position
                       << " projection_batch_width=B" << projection_batch_width
+                      << " causal_chunk_width=B" << kM23CausalChunk
                       << " chunk_base=" << profile_chunk_base
                       << " embedding_ms=" << embedding_ms << '\n';
+            static constexpr std::array<const char*, 7> recurrent_dispatch_names{
+                "qkv", "gate", "beta_alpha", "ssm_out", "ffn_gate", "ffn_up", "ffn_down"};
+            static constexpr std::array<const char*, 9> attention_dispatch_names{
+                "qk", "v", "q_post", "k_post", "attention", "o", "ffn_gate", "ffn_up", "ffn_down"};
+            static constexpr std::array<const char*, 6> recurrent_weight_names{
+                "qkv", "gate", "ssm_out", "ffn_gate", "ffn_up", "ffn_down"};
+            static constexpr std::array<const char*, 6> attention_weight_names{
+                "qk", "v", "o", "ffn_gate", "ffn_up", "ffn_down"};
+            std::cout << "M23 invocation profile (whole prefill):\n";
+            for (std::size_t i = 0; i < recurrent_dispatch_names.size(); ++i) {
+                std::cout << "  recurrent=" << recurrent_dispatch_names[i]
+                          << " launches=" << m23.recurrent_dispatches[i] << '\n';
+            }
+            for (std::size_t i = 0; i < attention_dispatch_names.size(); ++i) {
+                std::cout << "  attention=" << attention_dispatch_names[i]
+                          << " launches=" << m23.attention_dispatches[i]
+                          << '\n';
+            }
+            std::cout << "M23 weight upload profile (whole prefill):\n";
+            for (std::size_t i = 0; i < recurrent_weight_names.size(); ++i) {
+                std::cout << "  recurrent=" << recurrent_weight_names[i]
+                          << " weight_upload_bytes=" << m23.recurrent_weight_upload_bytes[i]
+                          << " weight_upload_ms=" << m23.recurrent_weight_upload_ms[i] << '\n';
+            }
+            for (std::size_t i = 0; i < attention_weight_names.size(); ++i) {
+                std::cout << "  attention=" << attention_weight_names[i]
+                          << " weight_upload_bytes=" << m23.attention_weight_upload_bytes[i]
+                          << " weight_upload_ms=" << m23.attention_weight_upload_ms[i] << '\n';
+            }
+            std::cout << "  repacked_weight_upload_bytes=" << m23.weight_upload_bytes
+                      << " repacked_weight_upload_ms=" << m23.weight_upload_ms << '\n';
             for (std::size_t layer = 0; layer < 64; ++layer) {
                 const bool attention = layer % 4 == 3;
                 const std::size_t stage_count = attention ? attention_names.size() : recurrent_names.size();
@@ -677,7 +710,7 @@ public:
                 }
             }
             layer_span[layer].profile_ordered_end(
-                prefill_profile_.enabled ? prompt.size() - 1 : std::numeric_limits<std::size_t>::max());
+                prefill_profile_.enabled ? 0 : std::numeric_limits<std::size_t>::max());
             layer_span[layer].release_m23_repacked();
             std::swap(current, next);
         }
@@ -716,6 +749,16 @@ public:
                                        std::chrono::steady_clock::time_point gen_start) {
         GenerateStats stats;
         stats.prompt_tokens = prompt.size();
+        if (prefill_profile_.enabled) {
+            prefill_profile_.m23.recurrent_dispatches.fill(0);
+            prefill_profile_.m23.attention_dispatches.fill(0);
+            prefill_profile_.m23.recurrent_weight_upload_bytes.fill(0);
+            prefill_profile_.m23.attention_weight_upload_bytes.fill(0);
+            prefill_profile_.m23.recurrent_weight_upload_ms.fill(0.0);
+            prefill_profile_.m23.attention_weight_upload_ms.fill(0.0);
+            prefill_profile_.m23.weight_upload_bytes = 0;
+            prefill_profile_.m23.weight_upload_ms = 0.0;
+        }
         const auto prefill_start = std::chrono::steady_clock::now();
         const float* final_hidden = prefill_layer_major(prompt, opt.should_cancel,
                                                         stats.prefill_processed_tokens);
@@ -989,11 +1032,13 @@ private:
             if (prefill_profile_.enabled) {
                 if (layers_[i].recurrent != nullptr) {
                     layers_[i].recurrent->stage_profile = &prefill_profile_.recurrent_layers[i];
+                    layers_[i].recurrent->m23_profile_counters = &prefill_profile_.m23;
                     layers_[i].recurrent->stage_profile_position =
                         static_cast<std::uint32_t>(prefill_profile_.profile_position);
                     layers_[i].recurrent->stage_profile_chunk_base = prefill_profile_.profile_chunk_base;
                 } else {
                     layers_[i].attention->stage_profile = &prefill_profile_.attention_layers[i];
+                    layers_[i].attention->m23_profile_counters = &prefill_profile_.m23;
                     layers_[i].attention->stage_profile_position =
                         static_cast<std::uint32_t>(prefill_profile_.profile_position);
                     layers_[i].attention->stage_profile_chunk_base = prefill_profile_.profile_chunk_base;
@@ -1033,6 +1078,7 @@ private:
         wide_prefill_workspace_.value = f32(1024);
         wide_prefill_workspace_.gated_attention = f32(kInner);
         wide_prefill_workspace_.query_rope = f32(6144);
+        wide_prefill_workspace_.attention_gate = f32(6144);
         for (auto& layer : recurrent_layers_) {
             layer->prefill_normalized = wide_prefill_workspace_.normalized;
             layer->prefill_qkv = wide_prefill_workspace_.qkv;
@@ -1068,7 +1114,7 @@ private:
             layer->prefill_ffn_projected = wide_prefill_workspace_.ffn_projected;
             layer->prefill_mmq_q8 = wide_prefill_workspace_.mmq_q8;
             layer->prefill_query_rope = wide_prefill_workspace_.query_rope;
-            layer->prefill_gate = wide_prefill_workspace_.query_rope;
+            layer->prefill_gate = wide_prefill_workspace_.attention_gate;
         }
     }
 
@@ -1097,6 +1143,15 @@ private:
     void init_m12_dense_workspace() {
         if (!dense_prefill_ && !dense_projection_prefill_ && !wide_prefill_) return;
         m12_dense_weights_ = allocate(kHidden * kFfnInner * sizeof(__half));
+        const auto env_enabled = [](const char* name) {
+            const char* value = std::getenv(name);
+            return value != nullptr && std::strcmp(value, "0") != 0;
+        };
+        if (wide_prefill_ && (env_enabled("MIINFER_PREFILL_WIDE_DENSE_FFN")
+                              || env_enabled("MIINFER_PREFILL_WIDE_DENSE_ALL"))) {
+            m12_dense_source_ = allocate((kHidden * kFfnInner / 256)
+                                          * sizeof(miinfer::Q6KDeviceBlock));
+        }
         const std::size_t wide_batch = wide_prefill_ ? configured_wide_prefill_batch() : kM12PrefillBatch;
         m12_dense_input_ = allocate(wide_batch * kFfnInner * sizeof(__half));
         std::string error;
@@ -1109,6 +1164,10 @@ private:
                 static_cast<__half*>(m12_dense_weights_->get()),
                 static_cast<__half*>(m12_dense_input_->get()),
                 &m12_dense_gemm_);
+            if (m12_dense_source_) {
+                layer->set_m12_dense_source(
+                    static_cast<std::byte*>(m12_dense_source_->get()));
+            }
         }
     }
 
@@ -1228,7 +1287,7 @@ private:
     Buffer m12_gdn_solved_values_, m12_gdn_solved_keys_, m12_gdn_corrected_values_;
     Buffer m12_gdn_raw_output_;
     miinfer::M12GdnChunkWorkspace m12_gdn_workspace_{};
-    Buffer m12_dense_weights_, m12_dense_input_;
+    Buffer m12_dense_weights_, m12_dense_input_, m12_dense_source_;
     miinfer::RocblasGemmHandle m12_dense_gemm_{};
     Buffer prefill_a_;
     Buffer prefill_b_;

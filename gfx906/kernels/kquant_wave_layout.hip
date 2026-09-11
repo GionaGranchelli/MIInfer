@@ -1234,7 +1234,8 @@ static bool m23_repacked_row128_enabled() {
     std::uint32_t columns,
     std::uint32_t token_count) {
     const std::uint32_t row_tile = blockIdx.x;
-    const std::uint32_t token_base = blockIdx.y * 128 + threadIdx.x;
+    const std::uint32_t tile_base = blockIdx.y * 128;
+    const std::uint32_t token_base = tile_base + threadIdx.x;
     const std::uint32_t row_base = row_tile * 64 + threadIdx.y * 16;
     const std::uint32_t k_tiles = columns / 128;
     const std::uint32_t tid = threadIdx.y * 64 + threadIdx.x;
@@ -1243,9 +1244,11 @@ static bool m23_repacked_row128_enabled() {
     float accum[16][2] = {};
 
     for (std::uint32_t k_tile = 0; k_tile < k_tiles; ++k_tile) {
-        const auto* source_activation = input + static_cast<std::size_t>(k_tile) * token_count;
+        const auto* source_activation = input + static_cast<std::size_t>(k_tile) * token_count + tile_base;
         constexpr std::uint32_t activation_words = sizeof(miinfer::M23Q8_1MmqBlock) / sizeof(uint4);
-        for (std::uint32_t index = tid; index < token_count * activation_words; index += 256) {
+        const std::uint32_t active_tokens = tile_base < token_count
+            ? std::min<std::uint32_t>(128, token_count - tile_base) : 0;
+        for (std::uint32_t index = tid; index < active_tokens * activation_words; index += 256) {
             reinterpret_cast<uint4*>(activation_tile)[index] = reinterpret_cast<const uint4*>(source_activation)[index];
         }
         __syncthreads();
@@ -1275,7 +1278,7 @@ static bool m23_repacked_row128_enabled() {
         for (int output_column = 0; output_column < 2; ++output_column) {
             const std::uint32_t token = token_base + output_column * 64;
             if (token >= token_count) continue;
-            const auto& x = activation_tile[token];
+            const auto& x = activation_tile[threadIdx.x + output_column * 64];
 #pragma unroll
             for (int slab = 0; slab < 4; ++slab) {
                 input_d[output_column][slab] = __half2float(__float2half_rn(x.d[slab]));
@@ -1300,7 +1303,7 @@ static bool m23_repacked_row128_enabled() {
                 for (int output_column = 0; output_column < 2; ++output_column) {
                     const std::uint32_t token = token_base + output_column * 64;
                     if (token >= token_count) continue;
-                    const auto& x = activation_tile[token];
+                    const auto& x = activation_tile[threadIdx.x + output_column * 64];
 #pragma unroll
                     for (int half = 0; half < 2; ++half) {
                         int dot = 0;
@@ -1435,7 +1438,8 @@ __global__ void m23_affine_repacked_mmq_kernel(
     std::uint32_t columns,
     std::uint32_t token_count) {
     const std::uint32_t row_tile = blockIdx.x;
-    const std::uint32_t token_base = blockIdx.y * 128 + threadIdx.x;
+    const std::uint32_t tile_base = blockIdx.y * 128;
+    const std::uint32_t token_base = tile_base + threadIdx.x;
     const std::uint32_t row_base = row_tile * 64 + threadIdx.y * 16;
     const std::uint32_t k_tiles = columns / 128;
     const std::uint32_t tid = threadIdx.y * 64 + threadIdx.x;
@@ -1444,9 +1448,11 @@ __global__ void m23_affine_repacked_mmq_kernel(
     float accum[16][2] = {};
 
     for (std::uint32_t k_tile = 0; k_tile < k_tiles; ++k_tile) {
-        const auto* source_activation = input + static_cast<std::size_t>(k_tile) * token_count;
+        const auto* source_activation = input + static_cast<std::size_t>(k_tile) * token_count + tile_base;
         constexpr std::uint32_t activation_words = sizeof(miinfer::M23Q8_1MmqBlock) / sizeof(uint4);
-        for (std::uint32_t index = tid; index < token_count * activation_words; index += 256) {
+        const std::uint32_t active_tokens = tile_base < token_count
+            ? std::min<std::uint32_t>(128, token_count - tile_base) : 0;
+        for (std::uint32_t index = tid; index < active_tokens * activation_words; index += 256) {
             reinterpret_cast<uint4*>(activation_tile)[index] = reinterpret_cast<const uint4*>(source_activation)[index];
         }
         __syncthreads();
@@ -1475,7 +1481,7 @@ __global__ void m23_affine_repacked_mmq_kernel(
         for (int output_column = 0; output_column < 2; ++output_column) {
             const std::uint32_t token = token_base + output_column * 64;
             if (token >= token_count) continue;
-            const auto& x = activation_tile[token];
+            const auto& x = activation_tile[threadIdx.x + output_column * 64];
 #pragma unroll
             for (int slab = 0; slab < 4; ++slab) {
                 input_d[output_column][slab] = __half2float(__float2half_rn(x.d[slab]));
@@ -1505,7 +1511,7 @@ __global__ void m23_affine_repacked_mmq_kernel(
                 for (int output_column = 0; output_column < 2; ++output_column) {
                     const std::uint32_t token = token_base + output_column * 64;
                     if (token >= token_count) continue;
-                    const auto& x = activation_tile[token];
+                    const auto& x = activation_tile[threadIdx.x + output_column * 64];
                     int dot = 0;
 #pragma unroll
                     for (int half = 0; half < 2; ++half) {
@@ -1630,6 +1636,8 @@ __global__ void m23_affine_repacked_mmq_row128_kernel(
         }
     }
 }
+
+
 
 } // namespace
 

@@ -238,6 +238,90 @@ __global__ void m12_gdn_chunk_kernel(
     }
 }
 
+__device__ __forceinline__ float m12_gdn_direct_wave_sum(float value) {
+    for (std::uint32_t offset = 32; offset > 0; offset >>= 1) {
+        value += __shfl_down(value, offset, 64);
+    }
+    return value;
+}
+
+// Matches mx's register-resident scan while retaining MIInfer's canonical
+// state orientation: each wave owns two value rows and each lane two key
+// columns, so the state shard stays in registers across the complete chunk.
+__launch_bounds__(128, 2) __global__ void m12_gdn_direct_kernel(
+    const float* __restrict__ query,
+    const float* __restrict__ key,
+    const float* __restrict__ value,
+    const float* __restrict__ beta,
+    const float* __restrict__ decay,
+    float* __restrict__ state,
+    float* __restrict__ output,
+    std::uint32_t token_count,
+    std::uint32_t key_heads,
+    std::uint32_t value_heads,
+    std::uint32_t state_size) {
+    const std::uint32_t head = blockIdx.x;
+    constexpr std::uint32_t kWave = 64;
+    constexpr std::uint32_t kRowsPerWave = 2;
+    const std::uint32_t lane = threadIdx.x;
+    const std::uint32_t warp = threadIdx.y;
+    const std::uint32_t key_head = head % key_heads;
+    const std::uint32_t row_base = (blockIdx.y * blockDim.y + warp) * kRowsPerWave;
+    if (head >= value_heads || state_size != 128 || row_base >= state_size) return;
+
+    const std::size_t state_base = static_cast<std::size_t>(head) * state_size * state_size;
+    float shard[kRowsPerWave][2] = {};
+    for (std::uint32_t row = 0; row < kRowsPerWave; ++row) {
+        const std::uint32_t value_row = row_base + row;
+        if (value_row >= state_size) continue;
+        shard[row][0] = state[state_base + static_cast<std::size_t>(lane) * state_size + value_row];
+        shard[row][1] = state[state_base + static_cast<std::size_t>(lane + kWave) * state_size + value_row];
+    }
+
+    extern __shared__ float shared_inputs[];
+    float* shared_query = shared_inputs;
+    float* shared_key = shared_inputs + state_size;
+
+    for (std::uint32_t token = 0; token < token_count; ++token) {
+        const std::size_t qk_base = static_cast<std::size_t>(token) * key_heads * state_size
+            + static_cast<std::size_t>(key_head) * state_size;
+        shared_query[lane] = query[qk_base + lane];
+        shared_query[lane + kWave] = query[qk_base + lane + kWave];
+        shared_key[lane] = key[qk_base + lane];
+        shared_key[lane + kWave] = key[qk_base + lane + kWave];
+        __syncthreads();
+        const float beta_value = beta[static_cast<std::size_t>(token) * value_heads + head];
+        const float decay_value = decay[static_cast<std::size_t>(token) * value_heads + head];
+        const std::size_t value_base = static_cast<std::size_t>(token) * value_heads * state_size
+            + static_cast<std::size_t>(head) * state_size;
+        for (std::uint32_t row = 0; row < kRowsPerWave; ++row) {
+            const std::uint32_t value_row = row_base + row;
+            if (value_row >= state_size) continue;
+            const float key_partial = shard[row][0] * shared_key[lane]
+                + shard[row][1] * shared_key[lane + kWave];
+            const float key_dot = __shfl(decay_value * m12_gdn_direct_wave_sum(key_partial), 0, 64);
+            const float delta = (value[value_base + value_row] - key_dot) * beta_value;
+            shard[row][0] = shard[row][0] * decay_value + delta * shared_key[lane];
+            shard[row][1] = shard[row][1] * decay_value + delta * shared_key[lane + kWave];
+            const float query_partial = shard[row][0] * shared_query[lane]
+                + shard[row][1] * shared_query[lane + kWave];
+            const float query_dot = __shfl(m12_gdn_direct_wave_sum(query_partial), 0, 64);
+            if (lane == 0) {
+                output[(static_cast<std::size_t>(token) * value_heads + head) * state_size + value_row] =
+                    query_dot * rsqrtf(static_cast<float>(state_size));
+            }
+        }
+        __syncthreads();
+    }
+
+    for (std::uint32_t row = 0; row < kRowsPerWave; ++row) {
+        const std::uint32_t value_row = row_base + row;
+        if (value_row >= state_size) continue;
+        state[state_base + static_cast<std::size_t>(lane) * state_size + value_row] = shard[row][0];
+        state[state_base + static_cast<std::size_t>(lane + kWave) * state_size + value_row] = shard[row][1];
+    }
+}
+
 } // namespace
 
 namespace miinfer {
@@ -264,6 +348,25 @@ void launch_m12_gdn_chunk(
     hipLaunchKernelGGL(m12_gdn_chunk_kernel, dim3(value_heads), dim3(kThreads), shared_bytes, stream,
                        query, key, value, beta, decay, state, output, workspace,
                        token_count, chunk_start, key_heads, value_heads, state_size, chunk_size);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_m12_gdn_direct(
+    const float* query, const float* key, const float* value,
+    const float* beta, const float* decay, float* state, float* output,
+    std::uint32_t token_count, std::uint32_t key_heads,
+    std::uint32_t value_heads, std::uint32_t state_size, hipStream_t stream) {
+    if (query == nullptr || key == nullptr || value == nullptr || beta == nullptr
+        || decay == nullptr || state == nullptr || output == nullptr
+        || token_count == 0 || token_count > 512 || key_heads == 0 || value_heads == 0
+        || state_size != 128 || value_heads % key_heads != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(m12_gdn_direct_kernel,
+                       dim3(value_heads, (state_size + 3) / 4), dim3(64, 2),
+                       2 * state_size * sizeof(float), stream,
+                       query, key, value, beta, decay, state, output, token_count,
+                       key_heads, value_heads, state_size);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

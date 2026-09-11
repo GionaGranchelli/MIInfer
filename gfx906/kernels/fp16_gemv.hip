@@ -342,26 +342,27 @@ bool launch_rocblas_gemm_fp16_batch(
     const float beta = 0.0F;
 
     // Row-major input[B,K], weights[M,K], output[B,M] are exposed as
-    // column-major KxB, KxM, and MxB matrices respectively.
+    // column-major KxB, KxM, and MxB matrices respectively.  Compute
+    // weights^T * input so C's column-major MxB storage is token-major.
     return check_hipblas(
         hipblasGemmEx(
             *hipblas_handle,
+            HIPBLAS_OP_T,
             HIPBLAS_OP_N,
-            HIPBLAS_OP_N,
-            batch,
             m,
+            batch,
             k,
             &alpha,
-            input,
-            HIP_R_16F,
-            batch,
             weights,
+            HIP_R_16F,
+            k,
+            input,
             HIP_R_16F,
             k,
             &beta,
             output,
             HIP_R_32F,
-            batch,
+            m,
             HIPBLAS_COMPUTE_32F,
             HIPBLAS_GEMM_DEFAULT),
         "hipblasGemmEx batch",

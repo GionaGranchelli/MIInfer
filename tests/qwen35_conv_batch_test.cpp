@@ -323,6 +323,62 @@ int main() {
             return 1;
         }
     }
+    const auto check_mmq_range = [&](std::uint32_t tokens) {
+        std::vector<float> input(static_cast<std::size_t>(tokens) * kMmqColumns);
+        for (std::size_t i = 0; i < input.size(); ++i) {
+            input[i] = static_cast<float>(static_cast<int>(i % 29) - 14) * 0.0625F;
+        }
+        DeviceBuffer<float> d_input(input.size());
+        DeviceBuffer<miinfer::M23Q8_1MmqBlock> d_q8(tokens * (kMmqColumns / 128));
+        DeviceBuffer<miinfer::Q8_1Block> d_q8_canonical(tokens * (kMmqColumns / miinfer::kQ8_1BlockSize));
+        DeviceBuffer<float> d_q4(tokens * kMmqRows), d_q4_canonical(tokens * kMmqRows);
+        DeviceBuffer<float> d_q6(tokens * kMmqRows), d_q6_canonical(tokens * kMmqRows);
+        DeviceBuffer<float> d_q4_generic(tokens * kMmqRows), d_q6_generic(tokens * kMmqRows);
+        MIINFER_HIP_CHECK(hipMemcpy(d_input.get(), input.data(), d_input.bytes(), hipMemcpyHostToDevice));
+        miinfer::launch_m23_q8_1_mmq_quantize(d_input.get(), d_q8.get(), tokens, kMmqColumns);
+        launch_m23_q4k_repacked_mmq(d_mmq_q4_repacked.get(), d_q8.get(), d_q4.get(),
+                                    kMmqRows, kMmqColumns, tokens);
+        launch_m23_q6k_repacked_mmq(d_mmq_q6_repacked.get(), d_q8.get(), d_q6.get(),
+                                    kMmqRows, kMmqColumns, tokens);
+        miinfer::launch_m23_q4_k_q8_1_mmq(
+            d_mmq_weights.get(), d_q8.get(), d_q4_generic.get(),
+            kMmqRows, kMmqColumns, tokens);
+        miinfer::launch_m23_q6_k_q8_1_mmq(
+            d_mmq_q6_weights.get(), d_q8.get(), d_q6_generic.get(),
+            kMmqRows, kMmqColumns, tokens);
+        for (std::uint32_t token = 0; token < tokens; ++token) {
+            miinfer::launch_q8_1_quantize_f32(d_input.get() + token * kMmqColumns,
+                d_q8_canonical.get() + token * (kMmqColumns / miinfer::kQ8_1BlockSize), kMmqColumns);
+            miinfer::launch_qwen3_q4_k_q8_1_mmvq(d_mmq_weights.get(),
+                d_q8_canonical.get() + token * (kMmqColumns / miinfer::kQ8_1BlockSize),
+                d_q4_canonical.get() + token * kMmqRows, kMmqRows, kMmqColumns);
+            miinfer::launch_qwen3_q6_k_q8_1_mmvq(d_mmq_q6_weights.get(),
+                d_q8_canonical.get() + token * (kMmqColumns / miinfer::kQ8_1BlockSize),
+                d_q6_canonical.get() + token * kMmqRows, kMmqRows, kMmqColumns);
+        }
+        MIINFER_HIP_CHECK(hipDeviceSynchronize());
+        std::vector<float> q4(tokens * kMmqRows), q4_canonical(tokens * kMmqRows);
+        std::vector<float> q6(tokens * kMmqRows), q6_canonical(tokens * kMmqRows);
+        std::vector<float> q4_generic(tokens * kMmqRows), q6_generic(tokens * kMmqRows);
+        MIINFER_HIP_CHECK(hipMemcpy(q4.data(), d_q4.get(), d_q4.bytes(), hipMemcpyDeviceToHost));
+        MIINFER_HIP_CHECK(hipMemcpy(q4_canonical.data(), d_q4_canonical.get(), d_q4_canonical.bytes(), hipMemcpyDeviceToHost));
+        MIINFER_HIP_CHECK(hipMemcpy(q6.data(), d_q6.get(), d_q6.bytes(), hipMemcpyDeviceToHost));
+        MIINFER_HIP_CHECK(hipMemcpy(q6_canonical.data(), d_q6_canonical.get(), d_q6_canonical.bytes(), hipMemcpyDeviceToHost));
+        MIINFER_HIP_CHECK(hipMemcpy(q4_generic.data(), d_q4_generic.get(), d_q4_generic.bytes(), hipMemcpyDeviceToHost));
+        MIINFER_HIP_CHECK(hipMemcpy(q6_generic.data(), d_q6_generic.get(), d_q6_generic.bytes(), hipMemcpyDeviceToHost));
+        for (std::size_t i = 0; i < q4.size(); ++i) {
+            if (!close_mmq(q4[i], q4_canonical[i]) || !close_q6_mmq(q6[i], q6_canonical[i])
+                || !close_mmq(q4_generic[i], q4_canonical[i])
+                || !close_q6_mmq(q6_generic[i], q6_canonical[i])) {
+                std::cerr << "MMQ range mismatch tokens=" << tokens << " index=" << i << '\n';
+                return false;
+            }
+        }
+        return true;
+    };
+    for (const auto tokens : {128U, 129U, 256U, 512U}) {
+        if (!check_mmq_range(tokens)) return 1;
+    }
     constexpr std::uint32_t kPostTokens = 3;
     constexpr std::uint32_t kPostBase = 1;
     constexpr std::uint32_t kPostCapacity = 8;
