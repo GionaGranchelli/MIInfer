@@ -2040,9 +2040,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/kquant_wave_layout.hpp": {
-    "mtime": 1789079984.4743552,
-    "seen": 1789080061.3380678,
-    "ast_hash": "4aa829610a29648cdaaa6e5943933e21",
+    "mtime": 1789114163.3520498,
+    "seen": 1789114448.0070825,
+    "ast_hash": "703da5e10fd38c956f31e2236973c16b",
     "semantic_hash": ""
   },
   "scripts/run-exp0177-attn-gate-ab.sh": {
@@ -2790,9 +2790,9 @@
     "semantic_hash": ""
   },
   "bench/m12_dense_stage_bench.cpp": {
-    "mtime": 1789113261.1962626,
-    "seen": 1789113278.654096,
-    "ast_hash": "fe9b15330997b5ea81a68cfdf5da0437",
+    "mtime": 1789114205.707806,
+    "seen": 1789114448.0070434,
+    "ast_hash": "f2632605521f2c6dbfcd27d56304733f",
     "semantic_hash": ""
   },
   "include/miinfer/m12_dense_stage.hpp": {
@@ -4818,9 +4818,9 @@
     "semantic_hash": ""
   },
   "tests/qwen35_conv_batch_test.cpp": {
-    "mtime": 1789081510.5737495,
-    "seen": 1789082506.1346216,
-    "ast_hash": "b57bdaef0627787a5b35616f2ce6a6d4",
+    "mtime": 1789114404.1596642,
+    "seen": 1789114448.0074384,
+    "ast_hash": "fbaa92f749a29edc7f25115fdc960bd1",
     "semantic_hash": ""
   },
   "experiments/EXP-0287-m23-shared-dense-oracle.md": {
@@ -4878,9 +4878,9 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0296-m24-projection-architecture-bakeoff.md": {
-    "mtime": 1789113612.8282177,
-    "seen": 1789113624.489146,
-    "ast_hash": "fb92748dc697fd9bd1297fcd484d0e78",
+    "mtime": 1789114431.487507,
+    "seen": 1789114448.0080016,
+    "ast_hash": "d7a4c67efe1836db95f69d5e02813b73",
     "semantic_hash": ""
   }
 }

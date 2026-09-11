@@ -1,6 +1,7 @@
 #include "miinfer/hip_check.hpp"
 #include "miinfer/device_validation.hpp"
 #include "miinfer/kquant_wave_layout.hpp"
+#include "miinfer/m12_dense_stage.hpp"
 #include "miinfer/qwen3_gpu_primitives.hpp"
 
 #include <hip/hip_runtime.h>
@@ -106,6 +107,8 @@ int main() {
     const auto mmq_q4_repacked = pack_q4k_mmq_tensor(mmq_q4_tensor);
     DeviceBuffer<Q4KMmqTile> d_mmq_q4_repacked(mmq_q4_repacked.size());
     DeviceBuffer<float> d_mmq_q4_repacked_output(kTokens * kMmqRows);
+    DeviceBuffer<__half> d_mmq_q4_fp16(kMmqRows * kMmqColumns);
+    DeviceBuffer<__half> d_mmq_q4_fp16_canonical(kMmqRows * kMmqColumns);
     std::vector<miinfer::Q6KDeviceBlock> mmq_q6_weights(kMmqRows * (kMmqColumns / 256));
     for (std::size_t i = 0; i < mmq_q6_weights.size(); ++i) {
         auto& block = mmq_q6_weights[i];
@@ -129,6 +132,32 @@ int main() {
     DeviceBuffer<float> d_mmq_q6_output(kTokens * kMmqRows), d_mmq_q6_output_canonical(kTokens * kMmqRows);
     DeviceBuffer<Q6KMmqTile> d_mmq_q6_repacked(mmq_q6_repacked.size());
     DeviceBuffer<float> d_mmq_q6_repacked_output(kTokens * kMmqRows);
+    DeviceBuffer<__half> d_mmq_q6_fp16(kMmqRows * kMmqColumns);
+    DeviceBuffer<__half> d_mmq_q6_fp16_canonical(kMmqRows * kMmqColumns);
+    std::vector<miinfer::Q5KDeviceBlock> mmq_q5_weights(kMmqRows * (kMmqColumns / 256));
+    for (std::size_t i = 0; i < mmq_q5_weights.size(); ++i) {
+        auto& block = mmq_q5_weights[i];
+        block.d = __float2half(0.09375F);
+        block.dmin = __float2half(0.0F);
+        std::fill(std::begin(block.scales), std::end(block.scales), static_cast<std::uint8_t>(1));
+        for (std::size_t q = 0; q < std::size(block.qh); ++q) {
+            block.qh[q] = static_cast<std::uint8_t>(q * 13U + i * 5U + 7U);
+        }
+        for (std::size_t q = 0; q < std::size(block.ql); ++q) {
+            block.ql[q] = static_cast<std::uint8_t>(q * 29U + i * 3U + 11U);
+        }
+    }
+    miinfer::GgufTensor mmq_q5_tensor{};
+    mmq_q5_tensor.name = "synthetic_m23_q5";
+    mmq_q5_tensor.type = miinfer::GgufTensorType::q5_k;
+    mmq_q5_tensor.dimensions = {kMmqColumns, kMmqRows};
+    mmq_q5_tensor.byte_size = mmq_q5_weights.size() * sizeof(mmq_q5_weights.front());
+    mmq_q5_tensor.data = reinterpret_cast<const std::byte*>(mmq_q5_weights.data());
+    const auto mmq_q5_repacked = pack_q5k_mmq_tensor(mmq_q5_tensor);
+    DeviceBuffer<miinfer::Q5KDeviceBlock> d_mmq_q5_weights(mmq_q5_weights.size());
+    DeviceBuffer<Q5KMmqTile> d_mmq_q5_repacked(mmq_q5_repacked.size());
+    DeviceBuffer<__half> d_mmq_q5_fp16(kMmqRows * kMmqColumns);
+    DeviceBuffer<__half> d_mmq_q5_fp16_canonical(kMmqRows * kMmqColumns);
     DeviceBuffer<miinfer::Q8_1Block> d_mmq_q8_canonical(kTokens * (kMmqColumns / miinfer::kQ8_1BlockSize));
     DeviceBuffer<float> d_mmq_output_canonical(kTokens * kMmqRows);
     MIINFER_HIP_CHECK(hipMemcpy(d_qkv.get(), qkv.data(), d_qkv.bytes(), hipMemcpyHostToDevice));
@@ -144,6 +173,22 @@ int main() {
     MIINFER_HIP_CHECK(hipMemcpy(d_mmq_q6_weights.get(), mmq_q6_weights.data(), d_mmq_q6_weights.bytes(), hipMemcpyHostToDevice));
     MIINFER_HIP_CHECK(hipMemcpy(d_mmq_q6_repacked.get(), mmq_q6_repacked.data(),
                                 d_mmq_q6_repacked.bytes(), hipMemcpyHostToDevice));
+    MIINFER_HIP_CHECK(hipMemcpy(d_mmq_q5_weights.get(), mmq_q5_weights.data(),
+                                d_mmq_q5_weights.bytes(), hipMemcpyHostToDevice));
+    MIINFER_HIP_CHECK(hipMemcpy(d_mmq_q5_repacked.get(), mmq_q5_repacked.data(),
+                                d_mmq_q5_repacked.bytes(), hipMemcpyHostToDevice));
+    launch_m24_q4k_mmq_to_fp16(
+        d_mmq_q4_repacked.get(), d_mmq_q4_fp16.get(), kMmqRows, kMmqColumns);
+    miinfer::launch_m12_q4k_to_fp16(
+        d_mmq_weights.get(), d_mmq_q4_fp16_canonical.get(), kMmqRows, kMmqColumns);
+    launch_m24_q6k_mmq_to_fp16(
+        d_mmq_q6_repacked.get(), d_mmq_q6_fp16.get(), kMmqRows, kMmqColumns);
+    miinfer::launch_m12_q6k_to_fp16(
+        d_mmq_q6_weights.get(), d_mmq_q6_fp16_canonical.get(), kMmqRows, kMmqColumns);
+    launch_m24_q5k_mmq_to_fp16(
+        d_mmq_q5_repacked.get(), d_mmq_q5_fp16.get(), kMmqRows, kMmqColumns);
+    miinfer::launch_m12_q5k_to_fp16(
+        d_mmq_q5_weights.get(), d_mmq_q5_fp16_canonical.get(), kMmqRows, kMmqColumns);
     MIINFER_HIP_CHECK(hipMemcpy(d_projection.get(), d_norm_input.get(), d_norm_input.bytes(), hipMemcpyDeviceToDevice));
     MIINFER_HIP_CHECK(hipMemset(d_history_single.get(), 0, d_history_single.bytes()));
     MIINFER_HIP_CHECK(hipMemset(d_history_batch.get(), 0, d_history_batch.bytes()));
@@ -217,6 +262,41 @@ int main() {
             d_mmq_q6_output_canonical.get() + token * kMmqRows, kMmqRows, kMmqColumns);
     }
     MIINFER_HIP_CHECK(hipDeviceSynchronize());
+
+    std::vector<__half> mmq_q4_fp16(kMmqRows * kMmqColumns);
+    std::vector<__half> mmq_q4_fp16_canonical(mmq_q4_fp16.size());
+    std::vector<__half> mmq_q6_fp16(kMmqRows * kMmqColumns);
+    std::vector<__half> mmq_q6_fp16_canonical(mmq_q6_fp16.size());
+    std::vector<__half> mmq_q5_fp16(kMmqRows * kMmqColumns);
+    std::vector<__half> mmq_q5_fp16_canonical(mmq_q5_fp16.size());
+    MIINFER_HIP_CHECK(hipMemcpy(mmq_q4_fp16.data(), d_mmq_q4_fp16.get(),
+                                d_mmq_q4_fp16.bytes(), hipMemcpyDeviceToHost));
+    MIINFER_HIP_CHECK(hipMemcpy(mmq_q4_fp16_canonical.data(), d_mmq_q4_fp16_canonical.get(),
+                                d_mmq_q4_fp16_canonical.bytes(), hipMemcpyDeviceToHost));
+    MIINFER_HIP_CHECK(hipMemcpy(mmq_q6_fp16.data(), d_mmq_q6_fp16.get(),
+                                d_mmq_q6_fp16.bytes(), hipMemcpyDeviceToHost));
+    MIINFER_HIP_CHECK(hipMemcpy(mmq_q6_fp16_canonical.data(), d_mmq_q6_fp16_canonical.get(),
+                                d_mmq_q6_fp16_canonical.bytes(), hipMemcpyDeviceToHost));
+    MIINFER_HIP_CHECK(hipMemcpy(mmq_q5_fp16.data(), d_mmq_q5_fp16.get(),
+                                d_mmq_q5_fp16.bytes(), hipMemcpyDeviceToHost));
+    MIINFER_HIP_CHECK(hipMemcpy(mmq_q5_fp16_canonical.data(), d_mmq_q5_fp16_canonical.get(),
+                                d_mmq_q5_fp16_canonical.bytes(), hipMemcpyDeviceToHost));
+    for (std::size_t i = 0; i < mmq_q4_fp16.size(); ++i) {
+        if (!close(__half2float(mmq_q4_fp16[i]), __half2float(mmq_q4_fp16_canonical[i]))) {
+            std::cerr << "Q4 resident FP16 expansion mismatch index=" << i << '\n';
+            return 1;
+        }
+        if (!close(__half2float(mmq_q6_fp16[i]), __half2float(mmq_q6_fp16_canonical[i]))) {
+            std::cerr << "Q6 resident FP16 expansion mismatch index=" << i
+                      << " actual=" << __half2float(mmq_q6_fp16[i])
+                      << " expected=" << __half2float(mmq_q6_fp16_canonical[i]) << '\n';
+            return 1;
+        }
+        if (!close(__half2float(mmq_q5_fp16[i]), __half2float(mmq_q5_fp16_canonical[i]))) {
+            std::cerr << "Q5 resident FP16 expansion mismatch index=" << i << '\n';
+            return 1;
+        }
+    }
 
     std::vector<float> single(kTokens * kChannels), batch(kTokens * kChannels);
     auto copy_result = [&](float* query, float* key, float* value, std::vector<float>& out) {

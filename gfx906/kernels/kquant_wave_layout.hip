@@ -1637,6 +1637,81 @@ __global__ void m23_affine_repacked_mmq_row128_kernel(
     }
 }
 
+template <bool Q5>
+__launch_bounds__(256)
+__global__ void m24_affine_mmq_to_fp16_kernel(
+    const Q4KMmqTile* __restrict__ weights,
+    __half* __restrict__ output,
+    std::uint32_t rows,
+    std::uint32_t columns) {
+    const std::uint64_t index = static_cast<std::uint64_t>(blockIdx.x) * blockDim.x
+        + threadIdx.x;
+    const std::uint64_t elements = static_cast<std::uint64_t>(rows) * columns;
+    if (index >= elements) return;
+
+    const std::uint32_t row = static_cast<std::uint32_t>(index / columns);
+    const std::uint32_t column = static_cast<std::uint32_t>(index % columns);
+    const std::uint32_t k_tiles = columns / 128;
+    const std::uint32_t slab = (column % 128) / 32;
+    const std::uint32_t local = column % 32;
+    const std::uint32_t half = local / 16;
+    const std::uint32_t position = local % 16;
+    const std::uint32_t word = position / 4;
+    const std::uint32_t byte = position % 4;
+    const auto& tile = weights[(row / 64) * k_tiles + column / 128];
+    const std::uint32_t raw = tile.values[slab][row % 64][word];
+    const std::uint32_t low = (raw >> (8 * byte + 4 * half)) & 0x0fU;
+    const std::uint32_t high = tile.high[slab][row % 64][0];
+    const std::uint32_t high_bit = Q5
+        ? ((high >> (half * 16 + position)) & 1U) << 4 : 0U;
+    const std::uint32_t scale_d = tile.scale_d[slab][row % 64];
+    const std::uint16_t d_bits = static_cast<std::uint16_t>(scale_d >> 16);
+    const std::uint16_t dmin_bits = tile.dmin[slab][row % 64];
+    const float d = __half2float(*reinterpret_cast<const __half*>(&d_bits));
+    const float dmin = __half2float(*reinterpret_cast<const __half*>(&dmin_bits));
+    const float scale = static_cast<float>(scale_d & 0xffU);
+    const float minimum = static_cast<float>((scale_d >> 8) & 0xffU);
+    const float value = d * scale * static_cast<float>(low | high_bit)
+        - dmin * minimum;
+    output[index] = __float2half_rn(value);
+}
+
+__launch_bounds__(256)
+__global__ void m24_q6k_mmq_to_fp16_kernel(
+    const Q6KMmqTile* __restrict__ weights,
+    __half* __restrict__ output,
+    std::uint32_t rows,
+    std::uint32_t columns) {
+    const std::uint64_t index = static_cast<std::uint64_t>(blockIdx.x) * blockDim.x
+        + threadIdx.x;
+    const std::uint64_t elements = static_cast<std::uint64_t>(rows) * columns;
+    if (index >= elements) return;
+
+    const std::uint32_t row = static_cast<std::uint32_t>(index / columns);
+    const std::uint32_t column = static_cast<std::uint32_t>(index % columns);
+    const std::uint32_t k_tiles = columns / 128;
+    const std::uint32_t slab = (column % 128) / 32;
+    const std::uint32_t local = column % 32;
+    const std::uint32_t half = local / 16;
+    const std::uint32_t position = local % 16;
+    const std::uint32_t word = position / 4;
+    const std::uint32_t byte = position % 4;
+    const auto& tile = weights[(row / 64) * k_tiles + column / 128];
+    const std::uint32_t raw = tile.values[slab][row % 64][word];
+    const std::uint32_t low = (raw >> (8 * byte + 4 * half)) & 0x0fU;
+    const std::uint32_t bit_index = 2 * (half * 16 + position);
+    const std::uint64_t high = static_cast<std::uint64_t>(tile.high[slab][row % 64][0])
+        | (static_cast<std::uint64_t>(tile.high[slab][row % 64][1]) << 32);
+    const std::uint32_t quantized = low | (((high >> bit_index) & 0x03U) << 4);
+    const std::uint32_t scale_d = tile.scale_d[slab][row % 64];
+    const std::uint16_t d_bits = static_cast<std::uint16_t>(scale_d >> 16);
+    const float d = __half2float(*reinterpret_cast<const __half*>(&d_bits));
+    const int scale = static_cast<std::int8_t>(scale_d >> (8 * half));
+    const int signed_quantized = static_cast<int>(quantized) - 32;
+    output[index] = __float2half_rn(
+        d * static_cast<float>(scale) * static_cast<float>(signed_quantized));
+}
+
 
 
 } // namespace
@@ -1921,6 +1996,47 @@ void launch_m23_q5k_repacked_mmq(
                            dim3((rows + 63) / 64, (token_count + 127) / 128), dim3(64, 4), 0, stream,
                            weights, input, output, rows, columns, token_count);
     }
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+template <bool Q5>
+void launch_m24_affine_mmq_to_fp16(
+    const Q4KMmqTile* weights, __half* output, std::uint32_t rows,
+    std::uint32_t columns, hipStream_t stream) {
+    if (weights == nullptr || output == nullptr || rows == 0 || rows % 64 != 0
+        || columns == 0 || columns % 128 != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    const auto elements = static_cast<std::uint64_t>(rows) * columns;
+    const auto blocks = static_cast<unsigned>((elements + 255) / 256);
+    hipLaunchKernelGGL((m24_affine_mmq_to_fp16_kernel<Q5>), dim3(blocks), dim3(256), 0,
+                       stream, weights, output, rows, columns);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_m24_q4k_mmq_to_fp16(
+    const Q4KMmqTile* weights, __half* output, std::uint32_t rows,
+    std::uint32_t columns, hipStream_t stream) {
+    launch_m24_affine_mmq_to_fp16<false>(weights, output, rows, columns, stream);
+}
+
+void launch_m24_q5k_mmq_to_fp16(
+    const Q5KMmqTile* weights, __half* output, std::uint32_t rows,
+    std::uint32_t columns, hipStream_t stream) {
+    launch_m24_affine_mmq_to_fp16<true>(weights, output, rows, columns, stream);
+}
+
+void launch_m24_q6k_mmq_to_fp16(
+    const Q6KMmqTile* weights, __half* output, std::uint32_t rows,
+    std::uint32_t columns, hipStream_t stream) {
+    if (weights == nullptr || output == nullptr || rows == 0 || rows % 64 != 0
+        || columns == 0 || columns % 128 != 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    const auto elements = static_cast<std::uint64_t>(rows) * columns;
+    const auto blocks = static_cast<unsigned>((elements + 255) / 256);
+    hipLaunchKernelGGL(m24_q6k_mmq_to_fp16_kernel, dim3(blocks), dim3(256), 0,
+                       stream, weights, output, rows, columns);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

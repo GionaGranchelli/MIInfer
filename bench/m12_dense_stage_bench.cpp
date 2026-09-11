@@ -145,6 +145,7 @@ int main(int argc, char** argv) try {
 
     Buffer source(canonical_bytes);
     Buffer dense(dense_bytes);
+    Buffer resident_dense(dense_bytes);
     Buffer input(max_input_bytes);
     Buffer output(max_output_bytes);
     Buffer input_f32(static_cast<std::size_t>(kBatches.back()) * kColumns * sizeof(float));
@@ -203,9 +204,15 @@ int main(int argc, char** argv) try {
             source.as<miinfer::Q4KDeviceBlock>(), dense.as<__half>(), kRows, kColumns,
             hipStreamPerThread);
     }, 2, 7);
+    const double resident_repack_us = measure([&] {
+        launch_m24_q4k_mmq_to_fp16(
+            mmq_weights.as<Q4KMmqTile>(), resident_dense.as<__half>(), kRows, kColumns,
+            hipStreamPerThread);
+    }, 2, 7);
 
     std::vector<__half> dense_rows(static_cast<std::size_t>(kColumns) * 3);
     double max_repack_error = 0.0;
+    double max_resident_repack_error = 0.0;
     for (int sample = 0; sample < 3; ++sample) {
         const int row = sample == 0 ? 0 : sample == 1 ? 37 : kRows - 1;
         MIINFER_HIP_CHECK(hipMemcpy(
@@ -217,6 +224,18 @@ int main(int argc, char** argv) try {
                                            + column / kQ4BlockSize];
             max_repack_error = std::max(max_repack_error, static_cast<double>(std::abs(
                 __half2float(dense_rows[static_cast<std::size_t>(sample) * kColumns + column])
+                - q4_value(block, column % kQ4BlockSize))));
+        }
+        std::vector<__half> resident_row(kColumns);
+        MIINFER_HIP_CHECK(hipMemcpy(
+            resident_row.data(),
+            resident_dense.as<__half>() + static_cast<std::size_t>(row) * kColumns,
+            static_cast<std::size_t>(kColumns) * sizeof(__half), hipMemcpyDeviceToHost));
+        for (int column = 0; column < kColumns; ++column) {
+            const auto& block = source_host[static_cast<std::size_t>(row) * kBlocksPerRow
+                                           + column / kQ4BlockSize];
+            max_resident_repack_error = std::max(max_resident_repack_error, static_cast<double>(std::abs(
+                __half2float(resident_row[column])
                 - q4_value(block, column % kQ4BlockSize))));
         }
     }
@@ -232,7 +251,9 @@ int main(int argc, char** argv) try {
               << ",\"mmq_packed_bytes\":"
               << mmq_packed.size() * sizeof(mmq_packed[0])
               << ",\"repack_us\":" << repack_us
+              << ",\"resident_repack_us\":" << resident_repack_us
               << ",\"max_repack_error\":" << max_repack_error
+              << ",\"max_resident_repack_error\":" << max_resident_repack_error
               << ",\"batches\":[";
 
     bool first = true;
@@ -240,7 +261,7 @@ int main(int argc, char** argv) try {
     for (std::size_t batch_index = 0; batch_index < kBatches.size(); ++batch_index) {
         const int batch = kBatches[batch_index];
         const double gemm_us = measure([&] {
-            gemm(handle, dense.as<__half>(), input.as<__half>(), output.as<__half>(), batch);
+            gemm(handle, resident_dense.as<__half>(), input.as<__half>(), output.as<__half>(), batch);
         });
         const double mmq_us = measure([&] {
             launch_m23_q4k_repacked_mmq(
@@ -263,15 +284,15 @@ int main(int argc, char** argv) try {
                   << ",\"baseline_b4_us\":" << baseline_us
                   << ",\"resident_mmq_us\":" << mmq_us
                   << ",\"gemm_us\":" << gemm_us
-                  << ",\"repack_plus_gemm_us\":" << repack_us + gemm_us
+                  << ",\"repack_plus_gemm_us\":" << resident_repack_us + gemm_us
                   << ",\"resident_mmq_speedup_vs_repack_plus_gemm\":"
-                  << (repack_us + gemm_us) / mmq_us
-                  << ",\"speedup_vs_b4\":" << baseline_us / (repack_us + gemm_us)
+                  << (resident_repack_us + gemm_us) / mmq_us
+                  << ",\"speedup_vs_b4\":" << baseline_us / (resident_repack_us + gemm_us)
                   << '}';
     }
     std::cout << "]}\n";
 
-    gemm(handle, dense.as<__half>(), input.as<__half>(), output.as<__half>(), kBatches[0]);
+    gemm(handle, resident_dense.as<__half>(), input.as<__half>(), output.as<__half>(), kBatches[0]);
     MIINFER_HIP_CHECK(hipDeviceSynchronize());
     std::vector<__half> output_host(static_cast<std::size_t>(kBatches[0]) * kRows);
     MIINFER_HIP_CHECK(hipMemcpy(output_host.data(), output.pointer,
@@ -312,6 +333,7 @@ int main(int argc, char** argv) try {
     }
     check_hipblas(hipblasDestroy(handle), "hipblasDestroy");
     std::cerr << "m12 correctness: max_repack_error=" << max_repack_error
+              << " max_resident_repack_error=" << max_resident_repack_error
               << " max_gemm_error=" << max_gemm_error
               << " max_gemm_relative_error=" << max_gemm_relative_error
               << " max_mmq_vs_gemm_error=" << max_mmq_vs_gemm_error << '\n';

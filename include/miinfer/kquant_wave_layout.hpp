@@ -104,6 +104,27 @@ void launch_m23_q5k_repacked_mmq(
     std::uint32_t columns,
     std::uint32_t token_count,
     hipStream_t stream = nullptr);
+
+// M24 prefill staging: expand resident MMQ tiles directly into row-major FP16
+// scratch without retaining a second canonical quantized device copy.
+void launch_m24_q4k_mmq_to_fp16(
+    const Q4KMmqTile* weights,
+    __half* output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    hipStream_t stream = nullptr);
+void launch_m24_q5k_mmq_to_fp16(
+    const Q5KMmqTile* weights,
+    __half* output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    hipStream_t stream = nullptr);
+void launch_m24_q6k_mmq_to_fp16(
+    const Q6KMmqTile* weights,
+    __half* output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    hipStream_t stream = nullptr);
 std::vector<Q4KWaveSwigluFusedTile> pack_q4k_wave_swiglu_fused(
     const miinfer::GgufTensor& gate,
     const miinfer::GgufTensor& up);

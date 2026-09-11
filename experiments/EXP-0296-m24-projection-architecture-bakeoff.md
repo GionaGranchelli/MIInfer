@@ -6,7 +6,7 @@ At B512, resident quantized MMQ may be slower than expanding one projection
 to reusable FP16 scratch on the GPU and using rocBLAS GEMM. The bake-off must
 include the GPU dequantization cost, but not host transfers or model loading.
 
-## Candidate
+## Candidate (initial bake-off)
 
 Compare the current resident M23 Q4_K MMQ path with:
 
@@ -111,3 +111,29 @@ intermediate/logit parity.
 path until transposed Gate/Up and Q6/Q4 Down coverage plus model-level
 correctness are complete. Keep quantized MMQ for decode unless a separate
 decode measurement says otherwise.
+
+## Re-evaluation — direct resident-MMQ expansion
+
+The production constraint was then made explicit: resident-all does not retain
+canonical GPU weight buffers. The benchmark was changed to expand the resident
+`Q4KMmqTile` directly with `launch_m24_q4k_mmq_to_fp16`, and the resulting
+FP16 scratch feeds rocBLAS. The canonical copy remains only as a host-side
+reference for the benchmark.
+
+The direct resident expansion passed against canonical GPU dequantization with
+`max_resident_repack_error=1.52588e-05`. On the high-clock MI50 run:
+
+```text
+resident_repack_us=1270.56
+B512 resident MMQ=18627.34 us
+B512 direct-resident FP16 dequant + GEMM=6649.27 us
+```
+
+The direct path is therefore still about `2.80×` faster at B512 after paying
+for conversion from the actual resident tile representation. The focused GPU
+fixture now validates direct Q4, Q5, and Q6 resident expansion against the
+canonical GPU dequantizer.
+
+This resolves C3 for the tested Q4 shape: no second canonical device copy is
+needed. Gate/Up's transposed geometry and model Q6/Q4 Down tensors remain
+separate measurements.
