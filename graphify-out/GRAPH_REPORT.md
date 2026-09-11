@@ -1,16 +1,16 @@
 # Graph Report - mi50  (2026-09-11)
 
 ## Corpus Check
-- 661 files · ~737,034 words
+- 662 files · ~737,595 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 7394 nodes · 10145 edges · 612 communities (554 shown, 58 thin omitted)
+- 7407 nodes · 10157 edges · 619 communities (560 shown, 59 thin omitted)
 - Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 320 edges (avg confidence: 0.83)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `88ae0e37`
+- Built from commit: `0dbea825`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -51,7 +51,7 @@
 - WidePrefillWorkspace
 - 4. Candidate Optimization Roadmap for M8
 - 32. Codex task behavior
-- model_plan.cpp
+- Qwen3GpuPlan
 - graphify reference: query, path, explain
 - 43. Initial MIInfer Benchmark Matrix
 - Qwen3-8B Dense Control Model
@@ -156,7 +156,7 @@
 - Qwen3LayerTrace
 - EXP-0074 — M6-A26.4 L30 production operand attribution
 - EXP-0041 — M5-C15 optimization closure and parity decision gate
-- Q6KHostBlock
+- vector
 - EXP-0100 — M6-B7 Q5_K paired-nibble decoding
 - qwen3_layer_host_impl
 - M4-C1 — Deterministic first generated token
@@ -165,7 +165,7 @@
 - EXP-0110 — M6-B17 Q5_K×Q8_1 MMVQ recurrent projection
 - M4-B — Full Qwen3 single-token forward
 - m4b-single-token-legacy/README.md
-- fail
+- gguf.cpp
 - m4b-single-token/README.md
 - EXP-0026 — M5-C8c Down long-K bottleneck attribution
 - run-m4c1-acceptance.sh
@@ -299,7 +299,7 @@
 - EXP-0080 — M6-A27 Qwen3.8 sixty-four-layer GPU composition
 - EXP-0085 — M6-A27.5 Qwen3.8 P2 drift localization
 - EXP-0070 — M6-A26 Qwen3.8 thirty-two-layer stateful GPU prefix
-- GgufTensor
+- Metadata
 - EXP-0124 — M6-B32 transposed recurrent no-decay store
 - EXP-0156 — M6-B64 post-B62 stage profile
 - EXP-0137 — M6-B45 Q4_K×Q8_1 inner-loop differential
@@ -331,7 +331,7 @@
 - EXP-0102 — M6-B9 Q6_K LM-head index hoisting
 - m6a263_qwen35_recurrent_contract.cpp
 - EXP-0094 — M6-B2 direct layer-output handoff
-- main
+- require_match
 - EXP-0129 — M6-B37 Q4_K×Q8_1 Down weight staging
 - EXP-0149 — M6-B57 direct layer output
 - EXP-0116 — M6-B24 full-attention stage attribution
@@ -353,7 +353,7 @@
 - EXP-0112 — M6-B19 Q4_K×Q8_1 MMVQ FFN Gate/Up
 - EXP-0246 — M11-B Q4_K MMQ64 split-4 rejection
 - EXP-0121 — M6-B29 recurrent stage attribution
-- run_case
+- m13_quant_mm_bench.cpp
 - EXP-0180 — M7 gfx906 Performance Frontier Benchmark
 - EXP-0216 — M11-B Recurrent Q5_K `ssm_out` B=4 Projection
 - EXP-0135 — M6-B43 Q6_K×Q8_1 LM-head metadata staging
@@ -420,7 +420,7 @@
 - Milestone M9 Primary Gate Qualification Report
 - EXP-0194 — Vectorized Q4_K and Q5_K Fast Tile Arithmetic Optimization
 - EXP-0185 — Tiled Online-Softmax Attention with Gate Sigmoid Fusion
-- GemvShape
+- fp16_gemv.hpp
 - run-m7-frontier-benchmark.sh
 - EXP-0222 — M11-B Final Chunk Pointer Correction
 - Architectural Design: DeltaNet Recurrent SSM Core Fusion
@@ -480,7 +480,7 @@
 - Milestone M9 — Context Scaling Qualification (TG64 → TG1024)
 - EXP-0227 — M11-B Q4_K token-parallel row tile
 - EXP-0241 — M11-B Q4_K row-major 16-token tile rejection
-- run
+- Q6KWaveTile
 - EXP-0214 — M11-B Native Q4_K Split-K Batched GEMM
 - run-exp0194-kquant-fast-arith-ab.sh
 - run-exp0196-combined-projections-ab.sh
@@ -489,7 +489,7 @@
 - run-m9-gate-telemetry.sh
 - run-m9-qualification.sh
 - bench_m10_latency_curve.py
-- Qwen3GpuPlan
+- model_plan.cpp
 - EXP-0212 — M11-B B=8 Accumulator GEMV Rejection
 - EXP-0219 — M11-B Q4_K LDS Tile-Reuse Rejection
 - EXP-0244 — M11-B final qualification and measured ceiling
@@ -502,7 +502,7 @@
 - hip_check.hpp
 - EXP-0221 — M11-B Direct Consumption of Batched Prefill Workspace
 - EXP-0208 — Full-Attention Projection Batching
-- m13_quant_mm_bench.cpp
+- find_tensor
 - EXP-0207 — B=8 LDS Weight-Reuse Prefill
 - EXP-0223 — M11-B Q4_K B=4 Two-Wave Row Rejection
 - EXP-0220 — M11-B Q4_K B=4 Compact Arithmetic Rejection
@@ -518,7 +518,7 @@
 - EXP-0229 — M11-B Q4_K token-microtile wave decomposition
 - EXP-0225 — M11-B Q4_K B=4 Full Row-Tile LDS Rejection
 - EXP-0238 — M11-B causal 64-token prefill chunk
-- qwen3_kv_cache_test.cpp
+- Qwen3Layer0KvCache
 - EXP-0248 — M11-B operator-major recurrent tail rejection
 - Qwen3LayerWeights
 - EXP-0275 — M21 prefill gap and M12 continuation correctness
@@ -568,7 +568,7 @@
 - test-package.sh
 - EXP-0269 — M18-B pinned llama.cpp-gfx906 qualification
 - HttpRequest
-- M23ProfileCounters
+- StageProfile
 - bench-serve-concurrency.py
 - FfnTailReplay
 - EXP-0267 — M17 Local Appliance Qualification
@@ -585,17 +585,17 @@
 - bench-m18-runtime.py
 - EXP-0281 — M22 dense FFN prefill candidate
 - Checkpoint
-- vector
-- StageProfile
+- GgufFile
+- run_layer
 - Re-evaluation — full layer-major scheduling — 2026-09-10
-- fp16_gemv.hpp
+- Fp16GemvMetrics
 - M4 — First Correct End-to-End Generation
 - EXP-0298 — M24 direct resident-FP16 recurrent layer
-- gguf.cpp
-- span
+- kquant_wave_layout.cpp
+- Qwen3ForwardTrace
 - EXP-0295 — M23 resident-all projection path
 - EXP-0291 — Fused wide FFN Gate/Up MMQ
-- recurrent_block
+- array
 - Qwen35TensorView
 - EXP-0299 — M24 full-attention attribution
 - qwen3_primitives_test.cpp
@@ -603,23 +603,30 @@
 - EXP-0292 — Resident attention FFN MMQ weights
 - Qwen35Model
 - Q5KDeviceBlock
-- require_tensor
-- Event
+- Group
+- EXP-0307 — M25-F mx affine DP4A ordering
 - run_ladder
 - EXP-0302 — M25-E wide SwiGLU to MMQ-Q8 producer
-- run_case
+- pack_affine_mmq_tensor
 - 17. Highest-Priority Research Ideas
-- gguf_tensor_byte_size
-- qwen3_generate.cpp
+- vector
+- 1. ggml-org/llama.cpp
 - LayerPathCapture
 - Metrics
-- OutputProjectionPathCapture
-- GatePathCapture
-- KeyPathCapture
+- main
+- Qwen3FfnProbeTrace
+- fp16_gemv_reference.cpp
 - Q8ExactBlock
 - Buffer
+- HostQ8Block
+- 15. Research Classification
 - Buffer
 - Event
+- Current Project Status
+- 11. joe2gaan/localaiservers
+- 13. Prefill vs Decode
+- Current Scope
+- kquant_wave_test.cpp
 
 ## God Nodes (most connected - your core abstractions)
 1. `RecurrentLayer` - 250 edges
@@ -640,23 +647,23 @@
   tests/qwen3_kv_cache_gpu_test.cpp → include/miinfer/qwen3_gpu_layer.hpp
 - `run_sequence()` --calls--> `snapshot_values`  [INFERRED]
   tests/qwen3_kv_cache_gpu_test.cpp → include/miinfer/qwen3_gpu_layer.hpp
-- `run()` --calls--> `reset`  [INFERRED]
-  tests/qwen3_decode_gpu_test.cpp → include/miinfer/qwen3_layer.hpp
 - `run_q6k_benchmark()` --calls--> `pack_q6k_wave_tensor()`  [INFERRED]
+  bench/kquant_layout_bench.cpp → src/kquant_wave_layout.cpp
+- `run_q5k_benchmark()` --calls--> `pack_q5k_wave_tensor()`  [INFERRED]
   bench/kquant_layout_bench.cpp → src/kquant_wave_layout.cpp
 
 ## Import Cycles
 - None detected.
 
-## Communities (612 total, 58 thin omitted)
+## Communities (619 total, 59 thin omitted)
 
 ### Community 0 - "hardware.md"
 Cohesion: 0.04
 Nodes (46): 10. Candidate Quantized Execution Path, 11. FP16 Behavior, 12. BF16, 13. Memory Bandwidth, 14. HBM vs Cache, 15. Weight Compression, 16. HBM Clock, 17. GPU Clock (+38 more)
 
 ### Community 1 - "architecture.md"
-Cohesion: 0.05
-Nodes (36): 10. Memory Architecture, 11. Weight Residency, 12. Tensor Layout, 13. Prefill vs Decode, 14. Context-Length Sensitivity, 15. Attention Architecture, 16. MoE Architecture, 17. Static Model Knowledge (+28 more)
+Cohesion: 0.06
+Nodes (33): 10. Memory Architecture, 11. Weight Residency, 12. Tensor Layout, 14. Context-Length Sensitivity, 15. Attention Architecture, 16. MoE Architecture, 17. Static Model Knowledge, 18. Kernel Configuration (+25 more)
 
 ### Community 2 - "benchmarking.md"
 Cohesion: 0.05
@@ -675,8 +682,8 @@ Cohesion: 0.05
 Nodes (39): Architecture direction, Benchmark philosophy, Building, Contributing, Core hypothesis, Correctness before performance, Design principles, Development roadmap (+31 more)
 
 ### Community 6 - "current-state.md"
-Cohesion: 0.07
-Nodes (26): Completed, Completed in Task 3, Current Benchmark Priority, Current Build Direction, Current Correctness Policy, Current Dependency Policy, Current Experiment Queue, Current Hardware Observation Requirements (+18 more)
+Cohesion: 0.10
+Nodes (19): Current Benchmark Priority, Current Build Direction, Current Correctness Policy, Current Dependency Policy, Current Experiment Queue, Current Hardware Observation Requirements, Current Hardware Target, Current Performance Policy (+11 more)
 
 ### Community 7 - "AGENTS.md"
 Cohesion: 0.07
@@ -723,8 +730,8 @@ Cohesion: 0.13
 Nodes (14): Baseline, Benchmark, Candidate, Correctness, Decision, Environment, EXP-NNNN — Title, Follow-up (+6 more)
 
 ### Community 18 - "references.md"
-Cohesion: 0.06
-Nodes (33): 10. nick413-bit/gfx906-fa-vllm, 11. joe2gaan/localaiservers, 12. AMD gfx906 ISA Documentation, 13. AMD HIP / ROCm Documentation, 14. rocBLAS / hipBLAS, 15. Research Classification, 16. Current Research Synthesis, 18. Research Intake Checklist (+25 more)
+Cohesion: 0.10
+Nodes (18): 10. nick413-bit/gfx906-fa-vllm, 12. AMD gfx906 ISA Documentation, 13. AMD HIP / ROCm Documentation, 14. rocBLAS / hipBLAS, 16. Current Research Synthesis, 18. Research Intake Checklist, 19. External Code Policy, 20. Research Notes vs Decisions (+10 more)
 
 ### Community 19 - "decisions.md"
 Cohesion: 0.15
@@ -779,8 +786,8 @@ Cohesion: 0.29
 Nodes (7): 2.1 Primitive benchmarks, 2.2 Kernel benchmarks, 2.3 Model-component benchmarks, 2.4 End-to-end benchmarks, 2. Benchmark Targets, Prompt processing / prefill, Token generation / decode
 
 ### Community 32 - "size_t"
-Cohesion: 0.06
-Nodes (12): DeviceBytes, bytes_, data_, GpuLayerRef, attention, recurrent, size_t, string (+4 more)
+Cohesion: 0.05
+Nodes (13): DeviceBytes, bytes_, data_, GpuLayerRef, attention, recurrent, size_t, string (+5 more)
 
 ### Community 33 - "WidePrefillWorkspace"
 Cohesion: 0.08
@@ -794,9 +801,9 @@ Nodes (18): 1. Executive Summary, 2.1 Model Weight and Memory Inventory, 2.2 Exe
 Cohesion: 0.33
 Nodes (6): 32. Codex task behavior, Before adding abstractions, Before adding fallback behavior, Before declaring a performance win, Before modifying code, Before removing apparently strange gfx906 code
 
-### Community 36 - "model_plan.cpp"
+### Community 36 - "Qwen3GpuPlan"
 Cohesion: 0.07
-Nodes (36): GpuWeightArena, allocate, release, upload, GgufTensorType, size_t, string, uint64_t (+28 more)
+Nodes (39): GpuWeightArena, allocate, release, upload, GgufTensorType, size_t, string, uint64_t (+31 more)
 
 ### Community 37 - "graphify reference: query, path, explain"
 Cohesion: 0.33
@@ -879,8 +886,8 @@ Cohesion: 0.11
 Nodes (18): 10. Test Matrix, 11. Correctness Method, 12. Benchmark, 13. Acceptance, 14. Explicit Exclusions, 15. Results, 16. Decision, 17. Follow-up (+10 more)
 
 ### Community 57 - "qwen3_layer35_external_test.cpp"
-Cohesion: 0.16
-Nodes (39): AccumulationContract, RmsReduction, compare_q8_blocks(), int16_t, int8_t, path, size_t, span (+31 more)
+Cohesion: 0.21
+Nodes (33): AccumulationContract, RmsReduction, compare_q8_blocks(), path, size_t, span, vector, dequantize_q8_exact() (+25 more)
 
 ### Community 58 - "qwen3_forward_gpu_test.cpp"
 Cohesion: 0.25
@@ -1095,8 +1102,8 @@ Cohesion: 0.13
 Nodes (15): 10. Reference ISA and resources, 11. Architectural differences relevant to K/V, 12. M2 decision, 13.1 Re-evaluation after EXP-0009, 13. Next experiment, 1. Question, 2. Hypothesis and motivation, 3. Reference path (+7 more)
 
 ### Community 121 - "qwen35_gpu_pipeline.hpp"
-Cohesion: 0.07
-Nodes (63): pack_q4k_mmq_tensor(), main(), allocate(), ByteMismatch, count, first, combined_attn_qk_enabled(), combined_qkv_gate_enabled() (+55 more)
+Cohesion: 0.10
+Nodes (43): GgufTensor, byte_size, data, dimensions, name, offset, type, GgufTensorType (+35 more)
 
 ### Community 122 - "qwen3_layer0_gpu_test.cpp"
 Cohesion: 0.25
@@ -1178,17 +1185,17 @@ Nodes (10): Baseline and method, Decision, Environment and command, EXP-0074 —
 Cohesion: 0.15
 Nodes (12): 1. Question, 2. Authoritative production result, 3. M5 optimization record, 4. Experimentally eliminated explanations, 5. M5 result, 6. Architectural decision gate, 7. Decision, Accepted (+4 more)
 
-### Community 143 - "Q6KHostBlock"
-Cohesion: 0.14
-Nodes (16): int16_t, int8_t, uint16_t, uint8_t, Q4_0HostBlock, d_bits, qs, Q6KHostBlock (+8 more)
+### Community 143 - "vector"
+Cohesion: 0.11
+Nodes (18): vector, span, int16_t, int8_t, uint16_t, uint8_t, Q4_0HostBlock, d_bits (+10 more)
 
 ### Community 144 - "EXP-0100 — M6-B7 Q5_K paired-nibble decoding"
 Cohesion: 0.17
 Nodes (11): Baseline, Candidate, Commands, Correctness and resources, Decision, Environment, EXP-0100 — M6-B7 Q5_K paired-nibble decoding, Follow-up (+3 more)
 
 ### Community 145 - "qwen3_layer_host_impl"
-Cohesion: 0.13
-Nodes (30): byte, GgufTensorType, Qwen3TensorView, source, add_in_place(), int8_t, size_t, span (+22 more)
+Cohesion: 0.16
+Nodes (27): byte, GgufTensorType, Qwen3TensorView, source, add_in_place(), size_t, span, uint32_t (+19 more)
 
 ### Community 146 - "M4-C1 — Deterministic first generated token"
 Cohesion: 0.12
@@ -1206,17 +1213,17 @@ Nodes (11): Baseline and candidate, Commands, Correctness, Decision, Environment
 Cohesion: 0.07
 Nodes (29): Acceptance target, Current evidence, Implemented slice, Independent reference, M4-B10 layer-35 Gate/Up projection isolation, M4-B11 Q8 identity and CPU accumulation contract, M4-B12 pre-FFN residual and RMSNorm isolation, M4-B13 attention RMSNorm, V, and position-zero GQA isolation (+21 more)
 
-### Community 152 - "fail"
-Cohesion: 0.24
-Nodes (16): align_up(), checked_add(), checked_size(), byte, GgufScalar, shared_ptr, size_t, uint32_t (+8 more)
+### Community 152 - "gguf.cpp"
+Cohesion: 0.08
+Nodes (55): GgufError, GgufValue, value, GgufScalar, unordered_map, runtime_error, align_up(), checked_add() (+47 more)
 
 ### Community 154 - "EXP-0026 — M5-C8c Down long-K bottleneck attribution"
 Cohesion: 0.17
 Nodes (11): 10. Follow-up, 1. Question, 2. Hypothesis, 3. Motivation and prior evidence, 4. Method, 5. Results, 6. Static gfx906 evidence, 7. Interpretation (+3 more)
 
 ### Community 158 - "Q8BoundaryDiff"
-Cohesion: 0.22
-Nodes (9): uint16_t, Q8BoundaryDiff, different_lane_values, different_scale_blocks, different_sum_blocks, first_block, first_lane, max_scale_bits_delta (+1 more)
+Cohesion: 0.13
+Nodes (15): int16_t, int8_t, uint16_t, Q8BoundaryDiff, different_lane_values, different_scale_blocks, different_sum_blocks, first_block (+7 more)
 
 ### Community 160 - "EXP-0046 — M6-A4 Qwen3.8-27B full-attention layer"
 Cohesion: 0.20
@@ -1267,7 +1274,7 @@ Cohesion: 0.07
 Nodes (32): as(), at(), Buffer, pointer, Fn, hipEvent_t, size_t, T (+24 more)
 
 ### Community 173 - "hip_smoke_bench.cpp"
-Cohesion: 0.16
+Cohesion: 0.20
 Nodes (15): size_t, string, json_escape(), main(), Options, device, elements, iterations (+7 more)
 
 ### Community 174 - "qwen3_attention_ab_bench.cpp"
@@ -1412,7 +1419,7 @@ Nodes (10): Baseline, Candidate, Checks, Correctness, Decision, EXP-0057 — M6-
 
 ### Community 217 - "half"
 Cohesion: 0.18
-Nodes (32): tensor, path, recurrent_inputs(), checkpoint(), compare(), conv_output(), array, kChannels (+24 more)
+Nodes (33): checkpoint(), compare(), conv_output(), array, kChannels, path, size_t, span (+25 more)
 
 ### Community 218 - "EXP-0029 — M5-C9c Gate/Up activation-Q8 reuse"
 Cohesion: 0.20
@@ -1499,7 +1506,7 @@ Cohesion: 0.22
 Nodes (8): Baseline and candidate, Command, Correctness contract, Decision, EXP-0048 — M6-A6 Qwen3.8-27B full 64-layer forward, Follow-up, Question, Result
 
 ### Community 243 - "string"
-Cohesion: 0.14
+Cohesion: 0.11
 Nodes (13): DeviceInfo, architecture, index, name, total_vram_bytes, size_t, string, ostream (+5 more)
 
 ### Community 244 - "EXP-0050 — M6-B0 Qwen3.8-27B llama.cpp MI50 baseline"
@@ -1519,8 +1526,8 @@ Cohesion: 0.18
 Nodes (10): Baseline and candidate, Command, Correctness contract, Decision, Environment, EXP-0049 — M6-A7 Qwen3.8-27B stateful generation, Follow-up, Hypothesis (+2 more)
 
 ### Community 248 - "qwen3_layer_gpu_impl"
-Cohesion: 0.15
-Nodes (20): AttentionKernel, size_t, Qwen3Layer0GpuKvCache, append, keys_, reset, snapshot_keys, snapshot_values (+12 more)
+Cohesion: 0.13
+Nodes (21): AttentionKernel, size_t, Qwen3Layer0GpuKvCache, append, keys_, reset, snapshot_keys, snapshot_values (+13 more)
 
 ### Community 249 - "EXP-0252 — Repacked MMQ64 retest on the production Q4_K down shape"
 Cohesion: 0.14
@@ -1559,11 +1566,11 @@ Cohesion: 0.20
 Nodes (9): Baseline, Candidate, Checks, Decision, EXP-0055 — M6-A11 Qwen3.8-27B composed attention prefix, Follow-up, Question, Result (+1 more)
 
 ### Community 258 - "qwen3_trace_compare.cpp"
-Cohesion: 0.09
-Nodes (31): set, argmax(), compare(), path, size_t, vector, main(), Metrics (+23 more)
+Cohesion: 0.12
+Nodes (28): argmax(), size_t, string, uint32_t, vector, main(), parse_count(), parse_id() (+20 more)
 
 ### Community 259 - "UpdateProvenance"
-Cohesion: 0.13
+Cohesion: 0.12
 Nodes (15): UpdateProvenance, beta, candidate, column, decay, decayed, delta, head (+7 more)
 
 ### Community 260 - "EXP-0079 — M6-A26.9 Qwen3.8 external recurrent-state contract"
@@ -1619,8 +1626,8 @@ Cohesion: 0.17
 Nodes (11): Artifact and reference, Candidate, Checks, Command, Decision, EXP-0066 — M6-A22 Qwen3.8-27B GPU hybrid position audit, Follow-up, Interpretation (+3 more)
 
 ### Community 273 - "m6a18_qwen35_deltanet_state_gpu.cpp"
-Cohesion: 0.25
-Nodes (11): size_t, span, T, vector, DeviceBuffer, data_, logical_state(), main() (+3 more)
+Cohesion: 0.23
+Nodes (13): path, size_t, span, T, vector, DeviceBuffer, data_, logical_state() (+5 more)
 
 ### Community 274 - "EXP-0141 — M6-B49 recurrent state-update/head-RMS fusion"
 Cohesion: 0.20
@@ -1674,9 +1681,9 @@ Nodes (10): Decision, EXP-0085 — M6-A27.5 Qwen3.8 P2 drift localization, Follo
 Cohesion: 0.20
 Nodes (9): Candidate, Decision, Environment and command, EXP-0070 — M6-A26 Qwen3.8 thirty-two-layer stateful GPU prefix, Follow-up, Interpretation, Question, Results (+1 more)
 
-### Community 288 - "GgufTensor"
-Cohesion: 0.05
-Nodes (83): GgufTensor, byte_size, data, dimensions, name, offset, type, GgufTensorType (+75 more)
+### Community 288 - "Metadata"
+Cohesion: 0.11
+Nodes (20): int8_t, uint64_t, uint8_t, Metadata, d, dmin, minimums, pad (+12 more)
 
 ### Community 289 - "EXP-0124 — M6-B32 transposed recurrent no-decay store"
 Cohesion: 0.17
@@ -1695,8 +1702,8 @@ Cohesion: 0.20
 Nodes (9): Decision, Environment and command, EXP-0075 — M6-A26.5 L30 K-path provenance, Follow-up, Interpretation, Method, Question, Results — L30 P19 (+1 more)
 
 ### Community 293 - "m24_projection_bakeoff.cpp"
-Cohesion: 0.29
-Nodes (10): as(), Buffer, pointer, Block, size_t, T, mx_affine_quant(), mx_expected_value() (+2 more)
+Cohesion: 0.10
+Nodes (28): as(), Buffer, pointer, check_hipblas(), Block, Fn, GgufTensorType, hipblasHandle_t (+20 more)
 
 ### Community 294 - "EXP-0076 — M6-A26.6 L29 output provenance"
 Cohesion: 0.20
@@ -1802,9 +1809,9 @@ Nodes (16): apply_external(), checkpoint(), compare(), path, size_t, span, strin
 Cohesion: 0.18
 Nodes (10): Baseline, Candidate, Decision, Environment and workload, EXP-0094 — M6-B2 direct layer-output handoff, Follow-up, Hypothesis, Interpretation (+2 more)
 
-### Community 320 - "main"
+### Community 320 - "require_match"
 Cohesion: 0.20
-Nodes (14): check_device(), check_values(), Metrics, path, size_t, span, T, uint32_t (+6 more)
+Nodes (15): check_device(), check_values(), Metrics, path, size_t, span, T, uint32_t (+7 more)
 
 ### Community 321 - "EXP-0129 — M6-B37 Q4_K×Q8_1 Down weight staging"
 Cohesion: 0.18
@@ -1890,9 +1897,9 @@ Nodes (11): Baseline, Benchmark, Candidate, Correctness, Decision, Environment, 
 Cohesion: 0.22
 Nodes (8): Decision, Environment, EXP-0121 — M6-B29 recurrent stage attribution, Follow-up, Question, Ranking, Results, Scope
 
-### Community 342 - "run_case"
-Cohesion: 0.25
-Nodes (8): Fn, string, vector, measure(), run_case(), Launch4, LaunchMm, Pack
+### Community 342 - "m13_quant_mm_bench.cpp"
+Cohesion: 0.11
+Nodes (16): as(), Buffer, pointer, Fn, hipEvent_t, size_t, string, T (+8 more)
 
 ### Community 343 - "EXP-0180 — M7 gfx906 Performance Frontier Benchmark"
 Cohesion: 0.17
@@ -2031,8 +2038,8 @@ Cohesion: 0.33
 Nodes (5): Candidate, Decision, EXP-0160 — M6-B68 DeltaNet ordered row-wave reduction, Question, Results
 
 ### Community 378 - "kquant_layout_bench.cpp"
-Cohesion: 0.16
-Nodes (12): as(), Buffer, p, hipEvent_t, size_t, string, T, Event (+4 more)
+Cohesion: 0.24
+Nodes (9): as(), hipEvent_t, string, T, Event, p, main(), run_q5k_benchmark() (+1 more)
 
 ### Community 379 - "EXP-0166 — M6-B70 column-tiled DeltaNet state update"
 Cohesion: 0.33
@@ -2055,8 +2062,8 @@ Cohesion: 0.29
 Nodes (6): Candidate, Correctness, Decision, Environment, EXP-0158 — M6-B66 expanded Q4_K FFN Gate/Up, Question
 
 ### Community 384 - "Qwen3GpuDecodeCache"
-Cohesion: 0.11
-Nodes (19): validate_cache(), unique_ptr, vector, Qwen3FfnProbeTrace, ffn_output, gate, layer_output, swiglu (+11 more)
+Cohesion: 0.16
+Nodes (12): validate_cache(), unique_ptr, vector, Qwen3GpuDecodeCache, caches_, length, prepare, workspace_ (+4 more)
 
 ### Community 385 - "EXP-0155 — M6-B63 post-B62 production baseline"
 Cohesion: 0.25
@@ -2154,9 +2161,9 @@ Nodes (12): Baseline, Benchmark, Candidate, Correctness, Decision, Environment, 
 Cohesion: 0.12
 Nodes (15): 1. TG64 (64 tokens), 2. TG128 (128 tokens), 3. Hardware State & Telemetry, Baseline, Benchmark Methodology, Candidate, Correctness, Decision (+7 more)
 
-### Community 409 - "GemvShape"
-Cohesion: 0.27
-Nodes (9): GemvShape, id, k, m, projection, check_output(), vector, main() (+1 more)
+### Community 409 - "fp16_gemv.hpp"
+Cohesion: 0.15
+Nodes (15): GemvKernelResources, local_bytes, max_threads_per_block, registers, shared_bytes, GemvShape, id, k (+7 more)
 
 ### Community 410 - "run-m7-frontier-benchmark.sh"
 Cohesion: 0.83
@@ -2247,8 +2254,8 @@ Cohesion: 0.14
 Nodes (13): 1. Executive Summary, 2. Real-World Latency Curve Across Production Modes, 3. Hybrid Architecture Context Scaling Analysis (128 -> 65,536 tokens), 4. Key Architectural Findings & Bottlenecks, 5. M10 Implementation Roadmap, Finding 1: The DeltaNet $O(1)$ Recurrent State Advantage, Finding 2: The Attention Bandwidth Roofline at 64K Context, Finding 3: The Current Attention Kernel Bottleneck at Long Context (+5 more)
 
 ### Community 453 - ".generate"
-Cohesion: 0.15
-Nodes (17): GenerateOptions, GenerateStats, function, size_t, span, uint32_t, RuntimeGenerateOptions, max_new_tokens (+9 more)
+Cohesion: 0.18
+Nodes (16): GenerateOptions, GenerateStats, function, size_t, span, uint32_t, RuntimeGenerateOptions, max_new_tokens (+8 more)
 
 ### Community 454 - "EXP-0253 — Repacked MMQ64 with exact Q8 side sums"
 Cohesion: 0.18
@@ -2267,8 +2274,8 @@ Cohesion: 0.17
 Nodes (11): Baseline, Candidate, Correctness, Decision, Environment, EXP-0213 — M11-B FP16 GEMM with On-Device K-Quant Dequantization, Follow-up, Hypothesis (+3 more)
 
 ### Community 458 - ".get"
-Cohesion: 0.09
-Nodes (19): download(), download_bytes(), Q8_1Block, uint32_t, vector, project_native_down(), project_native_q6k_down(), project_q4_q8_1() (+11 more)
+Cohesion: 0.13
+Nodes (10): Q8_1Block, uint32_t, project(), project_native_down(), project_native_q6k_down(), project_q4_q8_1(), project_q4_q8_1_expanded(), project_q4_q8_1_prequantized() (+2 more)
 
 ### Community 459 - "EXP-0202 — FP32 vs FP16 KV Cache Numerical & Performance Investigation"
 Cohesion: 0.20
@@ -2318,9 +2325,9 @@ Nodes (11): Baseline, Candidate, Correctness, Decision, Environment, EXP-0227 �
 Cohesion: 0.20
 Nodes (9): Baseline, Candidate, Correctness, Decision, Environment, EXP-0241 — M11-B Q4_K row-major 16-token tile rejection, Follow-up, Hypothesis (+1 more)
 
-### Community 471 - "run"
-Cohesion: 0.38
-Nodes (9): argmax(), cache_lengths(), size_t, string, vector, exact(), finite(), main() (+1 more)
+### Community 471 - "Q6KWaveTile"
+Cohesion: 0.13
+Nodes (16): uint16_t, uint32_t, Q4KMmqTile, dmin, high, scale_d, values, Q6KMmqTile (+8 more)
 
 ### Community 472 - "EXP-0214 — M11-B Native Q4_K Split-K Batched GEMM"
 Cohesion: 0.20
@@ -2330,9 +2337,9 @@ Nodes (9): Candidate, Correctness, Decision, Environment, EXP-0214 — M11-B Nat
 Cohesion: 0.42
 Nodes (8): get_vram_mib(), main(), make_prompt(), parse_cli_stderr(), run_cold_request(), run_http_second_turn(), run_http_warm_request(), wait_for_server()
 
-### Community 480 - "Qwen3GpuPlan"
-Cohesion: 0.17
-Nodes (20): Qwen3GpuPlan, buffers_, build, device_, device_tensor_data, kernel_for, model_, tensors_ (+12 more)
+### Community 480 - "model_plan.cpp"
+Cohesion: 0.21
+Nodes (15): Q4GemvKernel, align_up(), checked_add(), byte, hipError_t, size_t, string, GpuWeightArena::allocate() (+7 more)
 
 ### Community 481 - "EXP-0212 — M11-B B=8 Accumulator GEMV Rejection"
 Cohesion: 0.22
@@ -2378,9 +2385,9 @@ Nodes (8): Candidate, Correctness, Decision, Environment, EXP-0221 — M11-B Dir
 Cohesion: 0.20
 Nodes (9): Baseline, Candidate, Correctness, Decision, Environment, EXP-0208 — Full-Attention Projection Batching, Follow-up, Hypothesis (+1 more)
 
-### Community 493 - "m13_quant_mm_bench.cpp"
-Cohesion: 0.20
-Nodes (16): as(), GgufTensorType, T, uint64_t, find_tensor(), main(), size_t, string (+8 more)
+### Community 493 - "find_tensor"
+Cohesion: 0.31
+Nodes (13): GgufTensorType, uint64_t, find_tensor(), size_t, string, uint32_t, uint64_t, narrow() (+5 more)
 
 ### Community 494 - "EXP-0207 — B=8 LDS Weight-Reuse Prefill"
 Cohesion: 0.22
@@ -2442,9 +2449,9 @@ Nodes (6): Candidate, Correctness, Decision, EXP-0225 — M11-B Q4_K B=4 Full Ro
 Cohesion: 0.18
 Nodes (10): Baseline, Candidate, Correctness, Decision, Environment, EXP-0238 — M11-B causal 64-token prefill chunk, Follow-up, Hypothesis (+2 more)
 
-### Community 509 - "qwen3_kv_cache_test.cpp"
-Cohesion: 0.29
-Nodes (12): checkpoint_tolerance(), checkpoints(), path, size_t, span, vector, equal_vectors(), external_checkpoint() (+4 more)
+### Community 509 - "Qwen3Layer0KvCache"
+Cohesion: 0.17
+Nodes (19): size_t, Qwen3Layer0KvCache, append, reset, Qwen3DecodeCache::reset(), cache_contract_test(), checkpoint_tolerance(), checkpoints() (+11 more)
 
 ### Community 510 - "EXP-0248 — M11-B operator-major recurrent tail rejection"
 Cohesion: 0.22
@@ -2519,8 +2526,8 @@ Cohesion: 0.33
 Nodes (6): AttentionPathReplay, attention_output, ffn_input, ffn_norm, layer_output, v
 
 ### Community 528 - "qwen3_gpu_layer.cpp"
-Cohesion: 0.07
-Nodes (41): capture_qwen3_head_norm(), Function, hipEvent_t, Q8_1Block, Qwen3BoundaryProfileStage, Qwen3FfnProfileStage, Qwen3ProfileCategory, launch_projection() (+33 more)
+Cohesion: 0.08
+Nodes (41): capture_qwen3_head_norm(), Function, hipEvent_t, Q8_1Block, Qwen3BoundaryProfileStage, Qwen3FfnProfileStage, Qwen3ProfileCategory, uint32_t (+33 more)
 
 ### Community 529 - "EXP-0293 — Async next-layer repacked-weight prefetch"
 Cohesion: 0.29
@@ -2531,8 +2538,8 @@ Cohesion: 0.22
 Nodes (8): Baseline and candidate, Correctness, Decision, Environment, EXP-0242 — M11-B recurrent fused normalization/Q8 rejection, Follow-up, Hypothesis, Results
 
 ### Community 531 - "m12_dense_stage_bench.cpp"
-Cohesion: 0.12
-Nodes (22): as(), check_hipblas(), Fn, hipblasHandle_t, hipblasStatus_t, hipEvent_t, T, vector (+14 more)
+Cohesion: 0.15
+Nodes (19): as(), check_hipblas(), Fn, hipblasHandle_t, hipblasStatus_t, T, vector, gemm() (+11 more)
 
 ### Community 532 - "EXP-0276 — M22 P512 operator-family attribution"
 Cohesion: 0.20
@@ -2555,8 +2562,8 @@ Cohesion: 0.33
 Nodes (5): Candidate, Decision, EXP-0283 — M22 shared dense FFN-down source, Hypothesis, Result
 
 ### Community 537 - "m6a19_qwen35_conv_gpu.cpp"
-Cohesion: 0.33
-Nodes (6): size_t, T, DeviceBuffer, data_, main(), upload()
+Cohesion: 0.29
+Nodes (7): size_t, T, DeviceBuffer, data_, main(), upload(), silu()
 
 ### Community 538 - "m12_gdn_oracle.cpp"
 Cohesion: 0.57
@@ -2623,7 +2630,7 @@ Cohesion: 0.20
 Nodes (9): Candidates, Correctness, capacity, and serving, Decision, EXP-0285 — M22 prefill parity closure, Final best MIInfer PP ladder, Fixed comparison, Original P512 attribution and Amdahl evidence, Reference repack A/B (+1 more)
 
 ### Community 556 - "size_t"
-Cohesion: 0.13
+Cohesion: 0.12
 Nodes (26): Qwen3DownProjectionContractTrace, current_s_correction, direct_signed_oracle, exact_sum_correction, Qwen3Projection, Qwen3ProjectionPrecision, capture(), copy_to_host() (+18 more)
 
 ### Community 558 - "EXP-0269 — M18-B pinned llama.cpp-gfx906 qualification"
@@ -2634,9 +2641,9 @@ Nodes (6): Baseline, Decision, EXP-0269 — M18-B pinned llama.cpp-gfx906 qualif
 Cohesion: 0.22
 Nodes (9): time_point, uint64_t, HttpRequest, client_fd, method, path, queued_at, raw (+1 more)
 
-### Community 560 - "M23ProfileCounters"
-Cohesion: 0.20
-Nodes (10): array, M23ProfileCounters, attention_dispatches, attention_weight_upload_bytes, attention_weight_upload_ms, recurrent_dispatches, recurrent_weight_upload_bytes, recurrent_weight_upload_ms (+2 more)
+### Community 560 - "StageProfile"
+Cohesion: 0.06
+Nodes (31): array, hipEvent_t, M23ProfileCounters, attention_dispatches, attention_weight_upload_bytes, attention_weight_upload_ms, recurrent_dispatches, recurrent_weight_upload_bytes (+23 more)
 
 ### Community 561 - "bench-serve-concurrency.py"
 Cohesion: 0.57
@@ -2698,21 +2705,21 @@ Nodes (10): Baseline, Benchmark, Correctness, Decision, Environment, EXP-0281 �
 Cohesion: 0.40
 Nodes (5): Checkpoint, file, miinfer, name, tolerance
 
-### Community 577 - "vector"
-Cohesion: 0.07
-Nodes (25): GgufFile, file_descriptor_, mapping_, metadata, metadata_array_is_string, metadata_array_size, metadata_float, metadata_string (+17 more)
+### Community 577 - "GgufFile"
+Cohesion: 0.12
+Nodes (16): GgufFile, file_descriptor_, mapping_, metadata, metadata_array_is_string, metadata_array_size, metadata_float, metadata_string (+8 more)
 
-### Community 578 - "StageProfile"
-Cohesion: 0.05
-Nodes (48): as(), compare_outputs(), CompareMetrics, finite, max_abs, rmse, array, hipEvent_t (+40 more)
+### Community 578 - "run_layer"
+Cohesion: 0.10
+Nodes (27): as(), compare_outputs(), CompareMetrics, finite, max_abs, rmse, array, hipEvent_t (+19 more)
 
 ### Community 579 - "Re-evaluation — full layer-major scheduling — 2026-09-10"
 Cohesion: 0.04
 Nodes (44): B128 convolution contract, Baseline, Candidate — B128 attention Q/K/V projection — 2026-09-10, Candidate — batched causal attention launch — 2026-09-10, Candidate — cached Q8_1 affine sum — 2026-09-10, Candidate — gfx906 affine MMQ launch bounds — 2026-09-10, Candidate — gfx906 Q6 MMQ launch bounds — 2026-09-10, Candidate — MMQ activation-scale hoist — 2026-09-10 (+36 more)
 
-### Community 580 - "fp16_gemv.hpp"
-Cohesion: 0.11
-Nodes (19): Fp16GemvMetrics, cosine_similarity, inf_detected, max_abs_error, max_relative_error, mean_abs_error, nan_detected, pass (+11 more)
+### Community 580 - "Fp16GemvMetrics"
+Cohesion: 0.25
+Nodes (8): Fp16GemvMetrics, cosine_similarity, inf_detected, max_abs_error, max_relative_error, mean_abs_error, nan_detected, pass
 
 ### Community 581 - "M4 — First Correct End-to-End Generation"
 Cohesion: 0.33
@@ -2722,13 +2729,13 @@ Nodes (6): Correctness validation, Exit criteria, Goal, Initial inference mode, 
 Cohesion: 0.22
 Nodes (8): Candidate, Correctness, Decision, Environment, EXP-0298 — M24 direct resident-FP16 recurrent layer, Follow-up, Hypothesis, Results
 
-### Community 583 - "gguf.cpp"
-Cohesion: 0.27
-Nodes (11): GgufError, runtime_error, string, T, GgufFile::metadata(), GgufFile::metadata_array_is_string(), GgufFile::metadata_array_size(), GgufFile::metadata_float() (+3 more)
+### Community 583 - "kquant_wave_layout.cpp"
+Cohesion: 0.32
+Nodes (15): Q4KWaveTile, metadata, words, Q8_1Block, uint32_t, half_to_float(), pack_q5k_wave_tensor(), q4k_wave_fused_gate_up_swiglu_reference() (+7 more)
 
-### Community 584 - "span"
-Cohesion: 0.12
-Nodes (21): size_t, span, vector, Qwen3DecodeCache, caches_, length, reset, Qwen3ForwardTrace (+13 more)
+### Community 584 - "Qwen3ForwardTrace"
+Cohesion: 0.13
+Nodes (20): reset, vector, Qwen3DecodeCache, caches_, length, reset, Qwen3ForwardTrace, embedding (+12 more)
 
 ### Community 585 - "EXP-0295 — M23 resident-all projection path"
 Cohesion: 0.22
@@ -2738,9 +2745,9 @@ Nodes (8): Candidate, Correctness, Decision, Environment, EXP-0295 — M23 resid
 Cohesion: 0.33
 Nodes (5): Candidate, Correctness, Decision, EXP-0291 — Fused wide FFN Gate/Up MMQ, Hypothesis
 
-### Community 587 - "recurrent_block"
+### Community 587 - "array"
 Cohesion: 0.11
-Nodes (29): RuntimeState, path, uint32_t, vector, main(), run_combined(), string_view, require_match() (+21 more)
+Nodes (27): tensor, array, RuntimeState, path, uint32_t, vector, main(), run_combined() (+19 more)
 
 ### Community 588 - "Qwen35TensorView"
 Cohesion: 0.22
@@ -2763,64 +2770,64 @@ Cohesion: 0.22
 Nodes (8): Candidate, Correctness, Decision, Environment, EXP-0292 — Resident attention FFN MMQ weights, Follow-up, Hypothesis, Results
 
 ### Community 593 - "Qwen35Model"
-Cohesion: 0.20
-Nodes (10): GgufTensorType, find_projection(), main(), shared_ptr, string, Qwen35Model, artifact_path_, config_ (+2 more)
+Cohesion: 0.29
+Nodes (7): shared_ptr, string, Qwen35Model, artifact_path_, config_, load, model_name_
 
 ### Community 594 - "Q5KDeviceBlock"
 Cohesion: 0.15
 Nodes (13): uint8_t, Q4KExpandedDeviceBlock, d, dmin, minimums, qs, scales, Q5KDeviceBlock (+5 more)
 
-### Community 595 - "require_tensor"
-Cohesion: 0.33
-Nodes (12): add_bytes(), GgufTensorType, initializer_list, size_t, string, uint32_t, uint64_t, narrow_u32() (+4 more)
+### Community 595 - "Group"
+Cohesion: 0.20
+Nodes (13): set, size_t, string, uint64_t, vector, Group, bytes, count (+5 more)
 
-### Community 596 - "Event"
-Cohesion: 0.50
-Nodes (3): hipEvent_t, Event, value
+### Community 596 - "EXP-0307 — M25-F mx affine DP4A ordering"
+Cohesion: 0.15
+Nodes (12): Baseline, Benchmark, Candidate, Correctness, Decision, Environment, EXP-0307 — M25-F mx affine DP4A ordering, Follow-up (+4 more)
 
 ### Community 597 - "run_ladder"
-Cohesion: 0.28
-Nodes (12): argmax(), path, size_t, span, uint32_t, is_boundary(), is_full_attention_layer(), main() (+4 more)
+Cohesion: 0.35
+Nodes (10): argmax(), path, size_t, span, uint32_t, is_boundary(), is_full_attention_layer(), main() (+2 more)
 
 ### Community 598 - "EXP-0302 — M25-E wide SwiGLU to MMQ-Q8 producer"
 Cohesion: 0.22
 Nodes (8): Baseline and candidate, Correctness, Decision, Environment, EXP-0302 — M25-E wide SwiGLU to MMQ-Q8 producer, Follow-up, Hypothesis, Measurements
 
-### Community 599 - "run_case"
-Cohesion: 0.18
-Nodes (12): check_hipblas(), Fn, hipblasHandle_t, hipblasStatus_t, string, Tile, uint32_t, uint8_t (+4 more)
+### Community 599 - "pack_affine_mmq_tensor"
+Cohesion: 0.23
+Nodes (13): affine_q_canonical(), Block, GgufTensorType, size_t, Tile, uint8_t, decode_affine_scale_min(), mx_qs_stride() (+5 more)
 
 ### Community 600 - "17. Highest-Priority Research Ideas"
 Cohesion: 0.40
 Nodes (5): 17. Highest-Priority Research Ideas, Later, P0, P1, P2
 
-### Community 601 - "gguf_tensor_byte_size"
+### Community 601 - "vector"
 Cohesion: 0.25
-Nodes (11): checked_mul(), GgufTensorType, uint64_t, vector, elements(), gguf_tensor_byte_size(), gguf_tensor_type_name(), layout() (+3 more)
+Nodes (11): main(), int8_t, Q5KMmqTile, vector, pack_q4k_wave_down(), pack_q4k_wave_swiglu_fused(), pack_q4k_wave_tensor(), pack_q5k_mmq_tensor() (+3 more)
 
-### Community 602 - "qwen3_generate.cpp"
-Cohesion: 0.40
-Nodes (10): argmax(), size_t, string, uint32_t, vector, main(), parse_count(), parse_id() (+2 more)
+### Community 602 - "1. ggml-org/llama.cpp"
+Cohesion: 0.33
+Nodes (6): 1. ggml-org/llama.cpp, Do not inherit automatically, Important lessons, MIInfer question, Potentially reusable knowledge, Role
 
 ### Community 603 - "LayerPathCapture"
-Cohesion: 0.20
-Nodes (10): LayerPathCapture, attention_residual, ffn_output, gated, input, layer_output, normalized, post_normalized (+2 more)
+Cohesion: 0.11
+Nodes (17): GatePathCapture, gate, gated, head_norm, head_scaled, normalized, recurrent_output, LayerPathCapture (+9 more)
 
 ### Community 604 - "Metrics"
 Cohesion: 0.25
 Nodes (8): Metrics, actual_at_max, expected_at_max, max_abs, max_index, max_rel, mean_abs, rmse
 
-### Community 605 - "OutputProjectionPathCapture"
-Cohesion: 0.25
-Nodes (7): byte, OutputProjectionPathCapture, gated, input, projected, q8_input, residual
+### Community 605 - "main"
+Cohesion: 0.05
+Nodes (52): main(), ByteMismatch, first, compare_bytes(), cosine_similarity(), detailed_compare(), detailed_device_error(), DetailedError (+44 more)
 
-### Community 606 - "GatePathCapture"
-Cohesion: 0.29
-Nodes (7): GatePathCapture, gate, gated, head_norm, head_scaled, normalized, recurrent_output
-
-### Community 607 - "KeyPathCapture"
+### Community 606 - "Qwen3FfnProbeTrace"
 Cohesion: 0.33
-Nodes (6): KeyPathCapture, input, key, key_norm, normalized, qkv
+Nodes (6): Qwen3FfnProbeTrace, ffn_output, gate, layer_output, swiglu, up
+
+### Community 607 - "fp16_gemv_reference.cpp"
+Cohesion: 0.47
+Nodes (5): uint32_t, vector, evaluate_fp16_gemv(), fp16_gemv_cpu_reference(), generate_fp16_gemv_data()
 
 ### Community 608 - "Q8ExactBlock"
 Cohesion: 0.40
@@ -2830,33 +2837,57 @@ Nodes (5): int16_t, Q8ExactBlock, d, qs, sum
 Cohesion: 0.50
 Nodes (3): Buffer, pointer, size_t
 
-### Community 610 - "Buffer"
-Cohesion: 0.50
-Nodes (3): Buffer, pointer, size_t
+### Community 610 - "HostQ8Block"
+Cohesion: 0.33
+Nodes (6): int8_t, uint16_t, HostQ8Block, d_bits, qs, s_bits
 
-### Community 611 - "Event"
+### Community 611 - "15. Research Classification"
+Cohesion: 0.40
+Nodes (5): 15. Research Classification, Category A — Architecture lessons, Category B — Kernel hypotheses, Category C — Failure lessons, Category D — Runtime features
+
+### Community 612 - "Buffer"
+Cohesion: 0.50
+Nodes (3): Buffer, p, size_t
+
+### Community 613 - "Event"
 Cohesion: 0.50
 Nodes (3): hipEvent_t, Event, value
 
+### Community 614 - "Current Project Status"
+Cohesion: 0.50
+Nodes (4): Completed, Completed in Task 3, Current Project Status, Not implemented
+
+### Community 615 - "11. joe2gaan/localaiservers"
+Cohesion: 0.50
+Nodes (4): 11. joe2gaan/localaiservers, Important dot-product lesson, MIInfer implication, Role
+
+### Community 616 - "13. Prefill vs Decode"
+Cohesion: 0.67
+Nodes (3): 13. Prefill vs Decode, Decode, Prefill
+
+### Community 617 - "Current Scope"
+Cohesion: 0.67
+Nodes (3): Current Scope, In scope now, Not in scope now
+
 ## Knowledge Gaps
-- **4550 isolated node(s):** `experiment`, `shape`, `implementation`, `cache_regime`, `custom_label` (+4545 more)
+- **4561 isolated node(s):** `experiment`, `shape`, `implementation`, `cache_regime`, `custom_label` (+4556 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **58 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **59 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `FullAttentionLayer` connect `FullAttentionLayer` to `GgufTensor`, `size_t`, `StageProfile`, `half`, `.get`, `Qwen35RuntimeEngine`, `M23ProfileCounters`, `Qwen35Model`, `qwen35_gpu_pipeline.hpp`?**
+- **Why does `FullAttentionLayer` connect `FullAttentionLayer` to `size_t`, `half`, `.get`, `Qwen35RuntimeEngine`, `StageProfile`, `Qwen35Model`, `Q6KWaveTile`, `qwen35_gpu_pipeline.hpp`, `main`?**
   _High betweenness centrality (0.028) - this node is a cross-community bridge._
-- **Why does `RecurrentLayer` connect `RecurrentLayer` to `size_t`, `GgufTensor`, `StageProfile`, `UpdateProvenance`, `half`, `.get`, `m12_gdn_chunk_bench.cpp`, `Qwen35RuntimeEngine`, `FullAttentionLayer`, `Qwen35Model`, `M23ProfileCounters`, `miinfer_cli.cpp`, `qwen35_gpu_pipeline.hpp`, `LayerPathCapture`, `OutputProjectionPathCapture`, `GatePathCapture`, `KeyPathCapture`?**
+- **Why does `RecurrentLayer` connect `RecurrentLayer` to `size_t`, `UpdateProvenance`, `half`, `.get`, `m12_gdn_chunk_bench.cpp`, `Qwen35RuntimeEngine`, `FullAttentionLayer`, `Qwen35Model`, `StageProfile`, `miinfer_cli.cpp`, `Q6KWaveTile`, `qwen35_gpu_pipeline.hpp`, `LayerPathCapture`, `main`?**
   _High betweenness centrality (0.028) - this node is a cross-community bridge._
-- **Why does `GgufTensor` connect `GgufTensor` to `main`, `vector`, `size_t`, `half`, `Qwen35TensorView`, `m13_quant_mm_bench.cpp`, `RecurrentLayer`, `FullAttentionLayer`, `Qwen35Model`, `qwen3_layer_host_impl`, `run_case`, `run_case`, `qwen35_gpu_pipeline.hpp`?**
+- **Why does `GgufTensor` connect `qwen35_gpu_pipeline.hpp` to `require_match`, `GgufFile`, `half`, `m24_projection_bakeoff.cpp`, `kquant_wave_layout.cpp`, `.get`, `Qwen35TensorView`, `find_tensor`, `vector`, `FullAttentionLayer`, `qwen3_layer_host_impl`, `RecurrentLayer`, `m13_quant_mm_bench.cpp`, `pack_affine_mmq_tensor`, `gguf.cpp`, `vector`?**
   _High betweenness centrality (0.017) - this node is a cross-community bridge._
 - **What connects `experiment`, `shape`, `implementation` to the rest of the system?**
-  _4550 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _4561 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `hardware.md` be split into smaller, more focused modules?**
   _Cohesion score 0.0425531914893617 - nodes in this community are weakly interconnected._
 - **Should `architecture.md` be split into smaller, more focused modules?**
-  _Cohesion score 0.05405405405405406 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.058823529411764705 - nodes in this community are weakly interconnected._
 - **Should `benchmarking.md` be split into smaller, more focused modules?**
   _Cohesion score 0.045454545454545456 - nodes in this community are weakly interconnected._

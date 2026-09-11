@@ -4960,5 +4960,11 @@
     "seen": 1789157181.7472975,
     "ast_hash": "9f7fc99f4abb3bfbc3534fc6f1483352",
     "semantic_hash": ""
+  },
+  "experiments/EXP-0307-m25-f-mx-affine-dp4a-order.md": {
+    "mtime": 1789158599.6085675,
+    "seen": 1789158612.0032883,
+    "ast_hash": "5c943e5f0e7d1eb2ab9e4bc2e4199c40",
+    "semantic_hash": ""
   }
 }
