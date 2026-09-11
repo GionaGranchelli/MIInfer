@@ -33,9 +33,27 @@ void launch_m12_gdn_chunk(
     std::uint32_t chunk_size,
     hipStream_t stream = nullptr);
 
-// mx-style wide scan: one block owns a value-head/column tile and keeps the
-// recurrent state shard in registers across the complete token chunk.
+// mx-style wide scan: one block owns a value-head/value tile and keeps the
+// recurrent state shard in registers across the complete token chunk. The
+// public state remains MIInfer's [head][key][value] layout.
 void launch_m12_gdn_direct(
+    const float* query,
+    const float* key,
+    const float* value,
+    const float* beta,
+    const float* decay,
+    float* state,
+    float* output,
+    std::uint32_t token_count,
+    std::uint32_t key_heads,
+    std::uint32_t value_heads,
+    std::uint32_t state_size,
+    hipStream_t stream = nullptr);
+
+// Adapted from mxxm-t/mx-llama.cpp @ 2e9d29fe, gated_delta_net_chunk.cu.
+// The fixed Qwen3.8 path keeps the transposed state shard in registers across
+// the complete token sequence and uses one 64x2 Wave64 block per column tile.
+void launch_mx_gdn_chunk(
     const float* query,
     const float* key,
     const float* value,

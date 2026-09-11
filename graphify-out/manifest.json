@@ -2370,9 +2370,9 @@
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1789153131.277522,
-    "seen": 1789153942.6778471,
-    "ast_hash": "c6a39ddec9a9b5dbd94b51b7cb2afabd",
+    "mtime": 1789155563.3364823,
+    "seen": 1789156452.728234,
+    "ast_hash": "d8bb208a2ca5f8733dacc6f574a7ad50",
     "semantic_hash": ""
   },
   "docs/M9-AUTOREGRESSIVE-QUALIFICATION.md": {
@@ -2820,15 +2820,15 @@
     "semantic_hash": ""
   },
   "bench/m12_gdn_chunk_bench.cpp": {
-    "mtime": 1788873943.8994954,
-    "seen": 1788873958.487901,
-    "ast_hash": "e569d99905dfd9e76b98c3c60d299882",
+    "mtime": 1789155549.9835432,
+    "seen": 1789156452.7277877,
+    "ast_hash": "0b6f665e68cf6bde047eaf3dc3024cb5",
     "semantic_hash": ""
   },
   "include/miinfer/m12_gdn_chunk.hpp": {
-    "mtime": 1789149500.9439228,
-    "seen": 1789149570.6546352,
-    "ast_hash": "6791f5706335cab1a58941d4ecb24dd8",
+    "mtime": 1789156519.9901147,
+    "seen": 1789156534.682256,
+    "ast_hash": "4459bd0f0082965f30960ecb181a152b",
     "semantic_hash": ""
   },
   "experiments/EXP-0257-m12-gdn-gpu-chunk-prototype.md": {
@@ -4947,6 +4947,12 @@
     "mtime": 1789154680.7485008,
     "seen": 1789154693.1707253,
     "ast_hash": "0cb996142105ab5e91716d5969541406",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0305-m25-d-mx-gdn-register-scan.md": {
+    "mtime": 1789156519.9901147,
+    "seen": 1789156534.683157,
+    "ast_hash": "79e0a0d92aec4830367db7c65b309a4f",
     "semantic_hash": ""
   }
 }

@@ -252,9 +252,19 @@ int main() try {
                 kState, hipStreamPerThread);
         }
     };
+    auto run_mx = [&] {
+        reset_state();
+        miinfer::launch_mx_gdn_chunk(
+            query_token_device.as<float>(), key_token_device.as<float>(),
+            value_token_device.as<float>(), beta_token_device.as<float>(),
+            decay_token_device.as<float>(), state_device.as<float>(),
+            output_device.as<float>(), kTokens, kKeyHeads, kValueHeads, kState,
+            hipStreamPerThread);
+    };
 
     const double chunk_us = measure(run_chunk);
     const double token_us = measure(run_token);
+    const double mx_us = measure(run_mx);
     run_chunk();
     MIINFER_HIP_CHECK(hipDeviceSynchronize());
     miinfer::launch_m12_gdn_postprocess(
@@ -264,33 +274,52 @@ int main() try {
     MIINFER_HIP_CHECK(hipDeviceSynchronize());
     std::vector<float> actual_output(expected_output.size());
     std::vector<float> actual_state(initial_state.size());
+    std::vector<float> mx_output(expected_output.size());
+    std::vector<float> mx_state(initial_state.size());
     MIINFER_HIP_CHECK(hipMemcpy(actual_output.data(), output_device.pointer,
                                 actual_output.size() * sizeof(float), hipMemcpyDeviceToHost));
     MIINFER_HIP_CHECK(hipMemcpy(actual_state.data(), state_device.pointer,
                                 actual_state.size() * sizeof(float), hipMemcpyDeviceToHost));
-    double output_error = 0.0;
-    for (std::size_t token = 0; token < kTokens; ++token) {
-        for (std::size_t head = 0; head < kValueHeads; ++head) {
-            for (std::size_t dimension = 0; dimension < kState; ++dimension) {
-                const std::size_t device_index =
-                    (token * kValueHeads + head) * kState + dimension;
-                const std::size_t expected_index = at(head, token, dimension, kTokens, kState);
-                output_error = std::max(output_error, static_cast<double>(std::abs(
-                    actual_output[device_index] - expected_output[expected_index])));
+    run_mx();
+    MIINFER_HIP_CHECK(hipDeviceSynchronize());
+    MIINFER_HIP_CHECK(hipMemcpy(mx_output.data(), output_device.pointer,
+                                mx_output.size() * sizeof(float), hipMemcpyDeviceToHost));
+    MIINFER_HIP_CHECK(hipMemcpy(mx_state.data(), state_device.pointer,
+                                mx_state.size() * sizeof(float), hipMemcpyDeviceToHost));
+    auto output_error_for = [&](const std::vector<float>& actual) {
+        double result = 0.0;
+        for (std::size_t token = 0; token < kTokens; ++token) {
+            for (std::size_t head = 0; head < kValueHeads; ++head) {
+                for (std::size_t dimension = 0; dimension < kState; ++dimension) {
+                    const std::size_t device_index =
+                        (token * kValueHeads + head) * kState + dimension;
+                    const std::size_t expected_index = at(head, token, dimension, kTokens, kState);
+                    result = std::max(result, static_cast<double>(std::abs(
+                        actual[device_index] - expected_output[expected_index])));
+                }
             }
         }
-    }
+        return result;
+    };
+    const double output_error = output_error_for(actual_output);
+    const double mx_output_error = output_error_for(mx_output);
     const double state_error = max_error(actual_state, expected_state);
+    const double mx_state_error = max_error(mx_state, expected_state);
     std::cout << std::fixed << std::setprecision(9)
               << "{\"tokens\":" << kTokens << ",\"chunk\":" << kChunk
               << ",\"key_heads\":" << kKeyHeads << ",\"value_heads\":" << kValueHeads
               << ",\"state_size\":" << kState
               << ",\"chunk_us\":" << chunk_us << ",\"token_us\":" << token_us
+              << ",\"mx_us\":" << mx_us
               << ",\"speedup_vs_token\":" << token_us / chunk_us
+              << ",\"speedup_mx_vs_token\":" << token_us / mx_us
               << ",\"max_output_error\":" << output_error
-              << ",\"max_state_error\":" << state_error << "}\n";
-    if (output_error > 1.0e-3 || state_error > 1.0e-3) {
-        throw std::runtime_error("M12 GPU chunkwise oracle mismatch");
+              << ",\"max_state_error\":" << state_error
+              << ",\"mx_max_output_error\":" << mx_output_error
+              << ",\"mx_max_state_error\":" << mx_state_error << "}\n";
+    if (output_error > 1.0e-3 || state_error > 1.0e-3
+        || mx_output_error > 1.0e-3 || mx_state_error > 1.0e-3) {
+        throw std::runtime_error("GDN GPU oracle mismatch");
     }
     return 0;
 } catch (const std::exception& error) {

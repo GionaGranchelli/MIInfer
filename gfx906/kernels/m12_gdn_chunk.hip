@@ -245,6 +245,163 @@ __device__ __forceinline__ float m12_gdn_direct_wave_sum(float value) {
     return value;
 }
 
+// Adapted from mxxm-t/mx-llama.cpp @ 2e9d29fe, ggml/src/ggml-cuda/
+// gated_delta_net_chunk.cu. The MIT-licensed source is reduced here to the
+// fixed Qwen3.8 non-KDA, single-sequence contract. The local state remains
+// MIInfer's key x value layout; only the register shard is transposed.
+#if defined(__HIP_DEVICE_COMPILE__) && defined(__gfx906__)
+#define MIINFER_MX_GDN_DPP_ADD(name, barrier, dpp_ctrl)                         \
+    static __device__ __forceinline__ float name(const float x) {               \
+        float r;                                                                \
+        asm volatile(                                                           \
+            barrier                                                             \
+            "v_add_f32_dpp %0, %1, %1 " dpp_ctrl " row_mask:0xf bank_mask:0xf" \
+            : "=v"(r) : "v"(x) : "memory");                                   \
+        return r;                                                               \
+    }
+
+MIINFER_MX_GDN_DPP_ADD(mx_gdn_dpp_add_xor1, "s_nop 4\n", "quad_perm:[1,0,3,2]")
+MIINFER_MX_GDN_DPP_ADD(mx_gdn_dpp_add_xor2, "s_nop 1\n", "quad_perm:[2,3,0,1]")
+MIINFER_MX_GDN_DPP_ADD(mx_gdn_dpp_add_xor8, "s_nop 1\n", "row_ror:8")
+
+#undef MIINFER_MX_GDN_DPP_ADD
+
+static __device__ __forceinline__ float mx_gdn_dpp_xfer_xor4(const float x) {
+    int d;
+    asm volatile("v_mov_b32 %0, %1\n"
+                 "s_nop 1\n"
+                 "v_mov_b32_dpp %0, %1 row_shl:4 row_mask:0xf bank_mask:0x5\n"
+                 "v_mov_b32_dpp %0, %1 row_shr:4 row_mask:0xf bank_mask:0xa\n"
+                 : "=v"(d) : "v"(__float_as_int(x)) : "memory");
+    return __int_as_float(d);
+}
+
+static __device__ __forceinline__ float mx_gdn_dpp_xfer_xor16(const float x) {
+    int d;
+    asm volatile("ds_swizzle_b32 %0, %1 offset:swizzle(SWAP,16)\n"
+                 "s_waitcnt lgkmcnt(0)\n"
+                 : "=v"(d) : "v"(__float_as_int(x)) : "memory");
+    return __int_as_float(d);
+}
+#endif
+
+template <int width>
+static __device__ __forceinline__ float mx_gdn_wave_sum(const float x) {
+    static_assert(width >= 1 && (width & (width - 1)) == 0,
+                  "wave reduction width must be a power of two");
+    float result = x;
+#if defined(__HIP_DEVICE_COMPILE__) && defined(__gfx906__)
+    if constexpr (width >= 2) result = mx_gdn_dpp_add_xor1(result);
+    if constexpr (width >= 4) result = mx_gdn_dpp_add_xor2(result);
+    if constexpr (width >= 8) result += mx_gdn_dpp_xfer_xor4(result);
+    if constexpr (width >= 16) result = mx_gdn_dpp_add_xor8(result);
+    if constexpr (width >= 32) result += mx_gdn_dpp_xfer_xor16(result);
+    if constexpr (width >= 64) {
+        result += __shfl_xor_sync(0xffffffffffffffffULL, result, 32, 64);
+    }
+#else
+    for (int offset = width / 2; offset > 0; offset >>= 1) {
+        result += __shfl_xor(result, offset, width);
+    }
+#endif
+    return result;
+}
+
+template <int StateSize, int ChunkSize, int ColumnsPerWave>
+__launch_bounds__(128, 2) __global__ void mx_gdn_chunk_kernel(
+    const float* __restrict__ query,
+    const float* __restrict__ key,
+    const float* __restrict__ value,
+    const float* __restrict__ beta,
+    const float* __restrict__ decay,
+    float* __restrict__ state,
+    float* __restrict__ output,
+    std::uint32_t token_count,
+    std::uint32_t key_heads,
+    std::uint32_t value_heads) {
+    constexpr int kWaveSize = 64;
+    constexpr int kRowsPerLane = StateSize / kWaveSize;
+    const std::uint32_t value_head = blockIdx.x;
+    const std::uint32_t lane = threadIdx.x;
+    const std::uint32_t wave = threadIdx.y;
+    const std::uint32_t base_column =
+        (blockIdx.z * blockDim.y + wave) * ColumnsPerWave;
+    if (value_head >= value_heads) return;
+
+    const std::uint32_t key_head = value_head % key_heads;
+    const std::size_t state_base = static_cast<std::size_t>(value_head)
+        * StateSize * StateSize;
+    float shard[kRowsPerLane][ColumnsPerWave] = {};
+    for (int column_offset = 0; column_offset < ColumnsPerWave; ++column_offset) {
+        const std::uint32_t column = base_column + column_offset;
+        for (int row = 0; row < kRowsPerLane; ++row) {
+            const std::uint32_t index = row * kWaveSize + lane;
+            if (column < StateSize) {
+                shard[row][column_offset] = state[state_base
+                    + static_cast<std::size_t>(index) * StateSize + column];
+            }
+        }
+    }
+
+    constexpr float kScale = 0.08838834764831843F;
+    const std::uint32_t chunk_count = (token_count + ChunkSize - 1) / ChunkSize;
+    for (std::uint32_t chunk = 0; chunk < chunk_count; ++chunk) {
+        const std::uint32_t chunk_start = chunk * ChunkSize;
+        const std::uint32_t local_tokens =
+            min(ChunkSize, token_count - chunk_start);
+        for (std::uint32_t local = 0; local < local_tokens; ++local) {
+            const std::uint32_t token = chunk_start + local;
+            const std::size_t qk_base =
+                (static_cast<std::size_t>(token) * key_heads + key_head) * StateSize;
+            const std::size_t value_base =
+                (static_cast<std::size_t>(token) * value_heads + value_head) * StateSize;
+            float key_shard[kRowsPerLane];
+            float query_shard[kRowsPerLane];
+            for (int row = 0; row < kRowsPerLane; ++row) {
+                const std::uint32_t index = row * kWaveSize + lane;
+                key_shard[row] = key[qk_base + index];
+                query_shard[row] = query[qk_base + index];
+            }
+            const float beta_value = beta[static_cast<std::size_t>(token) * value_heads
+                                          + value_head];
+            const float decay_value = decay[static_cast<std::size_t>(token) * value_heads
+                                            + value_head];
+
+            for (int column_offset = 0; column_offset < ColumnsPerWave; ++column_offset) {
+                const std::uint32_t column = base_column + column_offset;
+                if (column >= StateSize) break;
+                float key_state_dot = 0.0F;
+                for (int row = 0; row < kRowsPerLane; ++row) {
+                    key_state_dot += shard[row][column_offset] * key_shard[row];
+                }
+                const float delta = (value[value_base + column]
+                    - decay_value * mx_gdn_wave_sum<kWaveSize>(key_state_dot)) * beta_value;
+                float query_state_dot = 0.0F;
+                for (int row = 0; row < kRowsPerLane; ++row) {
+                    shard[row][column_offset] = decay_value * shard[row][column_offset]
+                        + key_shard[row] * delta;
+                    query_state_dot += shard[row][column_offset] * query_shard[row];
+                }
+                const float attention = mx_gdn_wave_sum<kWaveSize>(query_state_dot);
+                if (lane == 0) {
+                    output[(static_cast<std::size_t>(token) * value_heads + value_head)
+                        * StateSize + column] = attention * kScale;
+                }
+            }
+        }
+    }
+
+    for (int column_offset = 0; column_offset < ColumnsPerWave; ++column_offset) {
+        const std::uint32_t column = base_column + column_offset;
+        if (column >= StateSize) break;
+        for (int row = 0; row < kRowsPerLane; ++row) {
+            const std::uint32_t index = row * kWaveSize + lane;
+            state[state_base + static_cast<std::size_t>(index) * StateSize + column] =
+                shard[row][column_offset];
+        }
+    }
+}
+
 // Matches mx's register-resident scan while retaining MIInfer's canonical
 // state orientation: each wave owns two value rows and each lane two key
 // columns, so the state shard stays in registers across the complete chunk.
@@ -367,6 +524,25 @@ void launch_m12_gdn_direct(
                        2 * state_size * sizeof(float), stream,
                        query, key, value, beta, decay, state, output, token_count,
                        key_heads, value_heads, state_size);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_mx_gdn_chunk(
+    const float* query, const float* key, const float* value,
+    const float* beta, const float* decay, float* state, float* output,
+    std::uint32_t token_count, std::uint32_t key_heads,
+    std::uint32_t value_heads, std::uint32_t state_size, hipStream_t stream) {
+    if (query == nullptr || key == nullptr || value == nullptr || beta == nullptr
+        || decay == nullptr || state == nullptr || output == nullptr
+        || token_count == 0 || token_count > 512 || token_count % 64 != 0
+        || key_heads == 0 || value_heads == 0 || value_heads % key_heads != 0
+        || state_size != 128) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL((mx_gdn_chunk_kernel<128, 64, 2>),
+                       dim3(value_heads, 1, (state_size + 3) / 4), dim3(64, 2),
+                       0, stream, query, key, value, beta, decay, state, output,
+                       token_count, key_heads, value_heads);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
