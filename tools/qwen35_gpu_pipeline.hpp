@@ -853,6 +853,7 @@ struct RecurrentLayer {
     Buffer decode_mmq_q8;
     bool resident_m23_ffn = false;
     bool resident_m23_all = false;
+    bool resident_fp16_prefill = false;
     std::vector<Q4KMmqTile> host_qkv_q4_mmq, host_gate_mmq, host_ffn_gate_mmq, host_ffn_up_mmq;
     std::vector<Q5KMmqTile> host_ssm_out_mmq;
     std::vector<Q4KMmqTile> host_ffn_down_q4_mmq;
@@ -1014,6 +1015,9 @@ struct RecurrentLayer {
             && !wide_dense_ffn && !dense_projection_prefill && !dense_qkv_prefill
             && !prefill_dense_ffn_down;
         if (resident_m23_all) resident_m23_ffn = true;
+        const char* resident_fp16_env = std::getenv("MIINFER_PREFILL_REPACKED_FP16");
+        resident_fp16_prefill = prefill_wide_repacked && resident_fp16_env != nullptr
+            && std::strcmp(resident_fp16_env, "0") != 0;
         const char* trace_dispatch_env = std::getenv("MIINFER_PREFILL_TRACE_DISPATCH");
         m23_trace_dispatch = trace_dispatch_env != nullptr && std::strcmp(trace_dispatch_env, "0") != 0;
         prefill_capacity = (prefill_dense_ffn_down || prefill_gdn_chunkwise || wide_prefill)
@@ -1803,6 +1807,39 @@ struct RecurrentLayer {
         const auto profile_position = base_position + token_count - 1;
         const float* normalized_batch = prefill_wide_beta_decay(inputs, base_position, token_count);
         stage_start(1, profile_position);
+        if (resident_fp16_prefill && d_qkv_mmq && d_gate_mmq) {
+            miinfer::launch_m12_f32_to_fp16(
+                normalized_batch, m12_dense_input, token_count * kHidden, hipStreamPerThread);
+            std::string error;
+            if (qkv_weight.type == miinfer::GgufTensorType::q4_k) {
+                launch_m24_q4k_mmq_to_fp16(
+                    static_cast<const Q4KMmqTile*>(d_qkv_mmq->get()), m12_dense_weights,
+                    kChannels, kHidden, hipStreamPerThread);
+            } else {
+                launch_m24_q6k_mmq_to_fp16(
+                    static_cast<const Q6KMmqTile*>(d_qkv_mmq->get()), m12_dense_weights,
+                    kChannels, kHidden, hipStreamPerThread);
+            }
+            if (!miinfer::launch_rocblas_gemm_fp16_batch(
+                    *m12_dense_handle, m12_dense_weights, m12_dense_input,
+                    static_cast<float*>(prefill_qkv->get()), kChannels, kHidden,
+                    token_count, error)) {
+                throw std::runtime_error(error);
+            }
+            stage_end(1, profile_position);
+            stage_start(2, profile_position);
+            launch_m24_q4k_mmq_to_fp16(
+                static_cast<const Q4KMmqTile*>(d_gate_mmq->get()), m12_dense_weights,
+                kInner, kHidden, hipStreamPerThread);
+            if (!miinfer::launch_rocblas_gemm_fp16_batch(
+                    *m12_dense_handle, m12_dense_weights, m12_dense_input,
+                    static_cast<float*>(prefill_gate->get()), kInner, kHidden,
+                    token_count, error)) {
+                throw std::runtime_error(error);
+            }
+            stage_end(2, profile_position);
+            return static_cast<const float*>(prefill_qkv->get());
+        }
         if (wide_dense_all) {
             if (m12_dense_source == nullptr) {
                 throw std::runtime_error("wide dense source workspace is missing");
@@ -1928,6 +1965,22 @@ struct RecurrentLayer {
         }
         const auto profile_position = base_position + token_count - 1;
         stage_start(7, profile_position);
+        if (resident_fp16_prefill && d_ssm_out_mmq) {
+            miinfer::launch_m12_f32_to_fp16(
+                gated_batch, m12_dense_input, token_count * kInner, hipStreamPerThread);
+            launch_m24_q5k_mmq_to_fp16(
+                static_cast<const Q5KMmqTile*>(d_ssm_out_mmq->get()), m12_dense_weights,
+                kHidden, kInner, hipStreamPerThread);
+            std::string error;
+            if (!miinfer::launch_rocblas_gemm_fp16_batch(
+                    *m12_dense_handle, m12_dense_weights, m12_dense_input,
+                    static_cast<float*>(prefill_projected->get()), kHidden, kInner,
+                    token_count, error)) {
+                throw std::runtime_error(error);
+            }
+            stage_end(7, profile_position);
+            return static_cast<const float*>(prefill_projected->get());
+        }
         if (wide_dense_all) {
             if (m12_dense_source == nullptr) {
                 throw std::runtime_error("wide dense source workspace is missing");
@@ -2033,7 +2086,33 @@ struct RecurrentLayer {
             && ffn_up_weight.type == miinfer::GgufTensorType::q4_k;
         const char* repacked_env = std::getenv("MIINFER_PREFILL_WIDE_REPACKED_MMQ");
         const bool repacked_ffn = repacked_env != nullptr && std::strcmp(repacked_env, "0") != 0;
-        if (mmq_ffn) {
+        const bool resident_fp16_ffn = resident_fp16_prefill && d_ffn_gate_mmq && d_ffn_up_mmq
+            && d_ffn_down_mmq && m12_dense_weights != nullptr && m12_dense_input != nullptr
+            && m12_dense_handle != nullptr;
+        if (resident_fp16_ffn) {
+            miinfer::launch_m12_f32_to_fp16(
+                post_normalized_batch, m12_dense_input, token_count * kHidden, hipStreamPerThread);
+            stage_start(10, profile_position);
+            launch_m24_q4k_mmq_to_fp16(
+                static_cast<const Q4KMmqTile*>(d_ffn_gate_mmq->get()), m12_dense_weights,
+                kFfnInner, kHidden, hipStreamPerThread);
+            if (!miinfer::launch_rocblas_gemm_fp16_batch(
+                    *m12_dense_handle, m12_dense_weights, m12_dense_input,
+                    static_cast<float*>(prefill_ffn_gate->get()), kFfnInner, kHidden,
+                    token_count, error)) {
+                throw std::runtime_error(error);
+            }
+            launch_m24_q4k_mmq_to_fp16(
+                static_cast<const Q4KMmqTile*>(d_ffn_up_mmq->get()), m12_dense_weights,
+                kFfnInner, kHidden, hipStreamPerThread);
+            if (!miinfer::launch_rocblas_gemm_fp16_batch(
+                    *m12_dense_handle, m12_dense_weights, m12_dense_input,
+                    static_cast<float*>(prefill_ffn_up->get()), kFfnInner, kHidden,
+                    token_count, error)) {
+                throw std::runtime_error(error);
+            }
+            stage_end(10, profile_position);
+        } else if (mmq_ffn) {
             auto* q8 = static_cast<miinfer::M23Q8_1MmqBlock*>(prefill_mmq_q8->get());
             miinfer::launch_m23_q8_1_mmq_quantize(post_normalized_batch, q8, token_count, kHidden,
                                                    hipStreamPerThread);
@@ -2110,7 +2189,25 @@ struct RecurrentLayer {
             activation, token_count * kFfnInner, hipStreamPerThread);
         stage_end(11, profile_position);
         stage_start(12, profile_position);
-        if (mmq_ffn) {
+        if (resident_fp16_ffn) {
+            miinfer::launch_m12_f32_to_fp16(
+                activation, m12_dense_input, token_count * kFfnInner, hipStreamPerThread);
+            if (ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
+                launch_m24_q4k_mmq_to_fp16(
+                    static_cast<const Q4KMmqTile*>(d_ffn_down_mmq->get()), m12_dense_weights,
+                    kHidden, kFfnInner, hipStreamPerThread);
+            } else {
+                launch_m24_q6k_mmq_to_fp16(
+                    static_cast<const Q6KMmqTile*>(d_ffn_down_mmq->get()), m12_dense_weights,
+                    kHidden, kFfnInner, hipStreamPerThread);
+            }
+            if (!miinfer::launch_rocblas_gemm_fp16_batch(
+                    *m12_dense_handle, m12_dense_weights, m12_dense_input,
+                    static_cast<float*>(prefill_projected->get()), kHidden, kFfnInner,
+                    token_count, error)) {
+                throw std::runtime_error(error);
+            }
+        } else if (mmq_ffn) {
             auto* q8 = static_cast<miinfer::M23Q8_1MmqBlock*>(prefill_mmq_q8->get());
             miinfer::launch_m23_q8_1_mmq_quantize(activation, q8, token_count, kFfnInner, hipStreamPerThread);
             if (ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
