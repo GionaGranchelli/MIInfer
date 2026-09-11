@@ -2370,8 +2370,8 @@
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1789135263.664716,
-    "seen": 1789135584.6798582,
+    "mtime": 1789149500.9479227,
+    "seen": 1789149570.6550603,
     "ast_hash": "6321358c6195fd22433cf5c962261210",
     "semantic_hash": ""
   },
@@ -2826,8 +2826,8 @@
     "semantic_hash": ""
   },
   "include/miinfer/m12_gdn_chunk.hpp": {
-    "mtime": 1789068984.5286715,
-    "seen": 1789069052.3626113,
+    "mtime": 1789149500.9439228,
+    "seen": 1789149570.6546352,
     "ast_hash": "6791f5706335cab1a58941d4ecb24dd8",
     "semantic_hash": ""
   },
@@ -4920,9 +4920,15 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0300-m25-a-mx-miinfer-kernel-differential.md": {
-    "mtime": 1789144149.4284346,
-    "seen": 1789144175.0665479,
-    "ast_hash": "669b330cf0dd142e7f7a9c38b84735c9",
+    "mtime": 1789144256.1769507,
+    "seen": 1789149570.6555192,
+    "ast_hash": "0659eb3b4d95abe4e16d2776c99a1701",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0301-m25-d-gdn-mx-state-tiling.md": {
+    "mtime": 1789149555.6136763,
+    "seen": 1789149570.655521,
+    "ast_hash": "712b18974a731c0b993e1d37f77dbfaa",
     "semantic_hash": ""
   }
 }
