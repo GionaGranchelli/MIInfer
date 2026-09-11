@@ -1728,6 +1728,13 @@ improved `21.5–56.8%`, but complete projection events were neutral within
 remains opt-in and **RETEST**; no end-to-end throughput claim is added. See
 experiments/EXP-0311-m25-j-mx-batched-q8-quantizer.md.
 
+2026-09-12 — M25-K tested the pinned Mx Q4 repacked MMQ path for the combined
+attention Q/K projection. Layer-3 B512 Q/K time regressed from `10.328 ms` to
+`13.785 ms`, total attention-layer time regressed `5.5%`, and tracked layer
+allocation increased by `48,578,560 B`. The candidate passed scalar parity but
+was **REJECTED** and removed; M23 Q/K remains selected. See
+experiments/EXP-0312-m25-k-mx-attention-qk.md.
+
 Update this document whenever:
 
 * active milestone changes
