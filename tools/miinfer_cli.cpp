@@ -1574,6 +1574,7 @@ int cmd_run(int argc, char** argv) {
     std::optional<std::filesystem::path> prompt_file;
     std::size_t max_tokens = 128;
     bool stream = true;
+    bool repeat_p512_check = false;
 
     if (const char* context_env = std::getenv("MIINFER_CONTEXT_CAPACITY")) {
         const auto context = std::stoull(context_env);
@@ -1591,6 +1592,8 @@ int cmd_run(int argc, char** argv) {
             max_tokens = std::stoull(argv[++i]);
         } else if (arg == "--no-stream") {
             stream = false;
+        } else if (arg == "--repeat-p512-check") {
+            repeat_p512_check = true;
         }
     }
 
@@ -1621,6 +1624,32 @@ int cmd_run(int argc, char** argv) {
 
     const auto prompt_tokens = engine.tokenizer().encode(prompt_text);
     std::cerr << "Prompt tokens: " << prompt_tokens.size() << " tokens\n";
+
+    if (repeat_p512_check) {
+        if (prompt_tokens.size() != kFullPrefillCapacity) {
+            throw std::runtime_error("--repeat-p512-check requires exactly 512 prompt tokens");
+        }
+        Qwen35RuntimeEngine::GenerateOptions continuation;
+        continuation.max_new_tokens = 1;
+        continuation.stream = false;
+        const auto first = engine.generate(prompt_tokens, continuation);
+
+        Qwen35RuntimeEngine::GenerateOptions repeat;
+        repeat.max_new_tokens = 0;
+        repeat.stream = false;
+        const auto second = engine.generate(prompt_tokens, repeat);
+
+        if (first.generated_tokens != 1 || first.tokens.front() != 13477
+            || second.prefill_processed_tokens != kFullPrefillCapacity) {
+            throw std::runtime_error("same-process P512 check failed");
+        }
+        std::cout << "same_process_p512_check=PASS first_token=13477(brown)"
+                  << " first_prefill_ms=" << first.prefill_ms
+                  << " continuation_ms=" << first.first_token_ms
+                  << " repeat_prefill_ms=" << second.prefill_ms << '\n';
+        return 0;
+    }
+
     std::cerr << "Generating up to " << max_tokens << " tokens...\n";
     std::cerr << "---------------------------------------------------------\n";
 
@@ -2406,6 +2435,7 @@ void print_usage() {
     std::cout << "  models [directory]                     List GGUF model artifacts\n";
     std::cout << "  inspect <model.gguf>                     Inspect model metadata, quantization, and VRAM budget\n";
     std::cout << "  run <model.gguf> --prompt \"...\"         Generate text from a prompt with streaming output\n";
+    std::cout << "       --repeat-p512-check                 Check P512, one-token continuation, and repeat P512\n";
     std::cout << "  chat <model.gguf>                        Start an interactive multi-turn terminal chat REPL\n";
     std::cout << "  serve --model MODEL.gguf [--port 8080] [--context N] [--experimental-context]\n"
               << "        [--api-key-file PATH] [--allow-insecure]   Launch API and Web UI\n\n";

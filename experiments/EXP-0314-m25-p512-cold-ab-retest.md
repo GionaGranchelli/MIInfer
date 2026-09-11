@@ -106,3 +106,25 @@ same-process repeat-P512 checks are added.
 Add the same-process `P512 → one-token continuation → P512` test and run the
 H/I `00/10/01/11` matrix at P512 before default promotion. Continue source
 differential work only after those gates pass.
+
+## Re-evaluation — same-process repeat check — 2026-09-12
+
+The CLI now exposes the minimal specialized check:
+
+```text
+--repeat-p512-check
+```
+
+On current main it passed with:
+
+```text
+same_process_p512_check=PASS
+first_token=13477(brown)
+first_prefill_ms=2467.63
+continuation_ms=2.80049
+repeat_prefill_ms=2554.99
+```
+
+The check uses the existing engine reset path between the first generation
+and repeat prefill, and keeps the same process and allocation pool alive.
+The P512 H/I `00/10/01/11` matrix remains a P512 qualification follow-up.

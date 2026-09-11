@@ -1756,6 +1756,12 @@ therefore not reproducible or attributable to M25-J. H/I remains opt-in until
 same-process repeat-P512 and longer-generation checks pass. See
 experiments/EXP-0314-m25-p512-cold-ab-retest.md.
 
+2026-09-12 — The specialized `--repeat-p512-check` gate passed on current
+main: P512 plus one-token continuation plus a second same-process P512, with
+first token `13477` (`brown`), `2.80 ms` continuation, and `2554.99 ms`
+repeat prefill. The P512 H/I `00/10/01/11` matrix and longer-generation
+qualification remain before default promotion.
+
 Update this document whenever:
 
 * active milestone changes
