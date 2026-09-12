@@ -4,6 +4,10 @@
 
 #include <hip/hip_runtime.h>
 
+#include <cstdlib>
+#include <cstring>
+#include <stdexcept>
+
 namespace {
 
 constexpr unsigned kThreads = 1024;
@@ -539,10 +543,23 @@ void launch_mx_gdn_chunk(
         || state_size != 128) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
-    hipLaunchKernelGGL((mx_gdn_chunk_kernel<128, 64, 2>),
-                       dim3(value_heads, 1, (state_size + 3) / 4), dim3(64, 2),
-                       0, stream, query, key, value, beta, decay, state, output,
-                       token_count, key_heads, value_heads);
+    const char* tc4_env = std::getenv("MIINFER_MX_GDN_TC4");
+    const bool tc4 = [&] {
+        if (tc4_env == nullptr || std::strcmp(tc4_env, "0") == 0) return false;
+        if (std::strcmp(tc4_env, "1") == 0) return true;
+        throw std::runtime_error("MIINFER_MX_GDN_TC4 must be 0 or 1");
+    }();
+    if (tc4) {
+        hipLaunchKernelGGL((mx_gdn_chunk_kernel<128, 64, 4>),
+                           dim3(value_heads, 1, (state_size + 7) / 8), dim3(64, 2),
+                           0, stream, query, key, value, beta, decay, state, output,
+                           token_count, key_heads, value_heads);
+    } else {
+        hipLaunchKernelGGL((mx_gdn_chunk_kernel<128, 64, 2>),
+                           dim3(value_heads, 1, (state_size + 3) / 4), dim3(64, 2),
+                           0, stream, query, key, value, beta, decay, state, output,
+                           token_count, key_heads, value_heads);
+    }
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

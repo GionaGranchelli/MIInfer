@@ -1844,6 +1844,15 @@ workload, and the native dual path remains selected. The stretch investigation
 returns to recurrent FFN Gate/Up and Down work. See
 experiments/EXP-0325-m25-beta-alpha-batched-rocblas.md.
 
+Re-evaluation: EXP-0326 matched the pinned GDN kernel's four-column Wave64
+register shard against MIInfer's state-correct two-column Mx scan. The isolated
+kernel improved from `1029.917 us` to `893.119 us`. Exact-fox production pairs
+improved from `202.91` to `211.60 tok/s` and, with continuous `1606/1000 MHz`
+telemetry, from `209.39` to `215.85 tok/s`, always with identical allocation.
+The candidate passes the exact continuation/repeat-P512 gate but remains
+opt-in until an interleaved clock-qualified series supports preset promotion. See
+experiments/EXP-0326-m25-d-gdn-tc4-wave-columns.md.
+
 Update this document whenever:
 
 * active milestone changes
