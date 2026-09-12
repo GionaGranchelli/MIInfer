@@ -36,25 +36,26 @@ M22:   current B4 architecture hard ceiling; parity not reached
 M23:   all-layer B128 wide-prefill prototype; exact P512 measured, target unmet
 M25-A: pinned mx-llama differential recorded; source audit complete
 M25-B/D: Mx MMQ and GDN ports retained as opt-in candidates
-M25-H/I: 211.48 tok/s P512 prefill candidate; not default
+M25-H/I: 204.75 tok/s repaired P512 qualification; qualified opt-in
 M25-J/K: J quantizer and Q/K candidate rejected
-M25-continuation: source repair committed; cold-state retest pending
+M25-continuation: source repair and repeat/long-generation gates PASS
 ```
 
 The current performance target is the exact Qwen3.8-27B-Q4_K_M P512 prefill
 on one MI50 at SCLK/MCLK 1606/1000 MHz. The pinned mx-llama reference is
-approximately 220.9 tok/s; the best valid MIInfer H/I prefill result is
-211.48 tok/s. H/I remains opt-in because the first real continuation exposed
-an absent resident-M23 FFN buffer; `1bce8cb` repairs that source defect, but
-the repaired path still requires a privileged cold-state runtime qualification
-before promotion. See EXP-0319, EXP-0320, and EXP-0321.
+approximately 220.9 tok/s; the repaired MIInfer H/I path measures a six-sample
+median of 204.75 tok/s. The historical 211.48 tok/s result remains valid only
+as pre-repair evidence. H/I now passes the independent matrix, same-process
+repeat, CTest, and 128-token generation gates, but remains opt-in until the
+versioned preset prints a hermetic configuration vector. See EXP-0319,
+EXP-0320, EXP-0321, and EXP-0322.
 
 The pinned-source audit found no missing Q4_K/Q5_K/Q6_K repack or GDN contract
 whose unmeasured transplant should replace the current paths. The external
 register-prefetch MMQ variant remains rejected on MI50, and M25-J remains
-disabled after its matched retest. The next runtime decision is therefore the
-cold `3fbe0f1` versus `f38745e` P512 A/B, followed by real continuation and
-long-generation checks.
+disabled after its matched retest. The repaired H/I profile points to
+recurrent FFN gate/up and down execution as the next measured target; another
+GDN or attention micro-tuning pass is not currently justified.
 
 ## Historical context before M25
 

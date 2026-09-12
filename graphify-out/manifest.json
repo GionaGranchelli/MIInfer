@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1789173346.2042987,
-    "seen": 1789173358.8499181,
-    "ast_hash": "1b5dde84d6be18e9f274896ac93f2929",
+    "mtime": 1789175179.1361673,
+    "seen": 1789175195.3869057,
+    "ast_hash": "ec80a9e605b7aa382280fe7b3412789a",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -5034,9 +5034,9 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0319-m25-hi-configuration-matrix.md": {
-    "mtime": 1789171263.6695561,
-    "seen": 1789172314.5944326,
-    "ast_hash": "7a0ab55e192c33c6b4d1a06f74a46316",
+    "mtime": 1789175179.1351674,
+    "seen": 1789175195.3873992,
+    "ast_hash": "7a3b9e619feddc7833bcbe0dc5775b46",
     "semantic_hash": ""
   },
   "experiments/EXP-0320-m25-p512-continuation-crash.md": {
@@ -5049,6 +5049,12 @@
     "mtime": 1789172949.3031886,
     "seen": 1789172963.289585,
     "ast_hash": "d5ad2f0f45a6ed2ffd5eaa20b393e9b8",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0322-m25-hi-post-repair-qualification.md": {
+    "mtime": 1789175179.1341672,
+    "seen": 1789175195.387404,
+    "ast_hash": "f3e620b5115b891f8901bb22e4e9bd16",
     "semantic_hash": ""
   }
 }

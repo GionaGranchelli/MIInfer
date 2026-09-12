@@ -52,3 +52,17 @@ functional/configuration gate, not an end-to-end throughput qualification.
 **KEEP** independent H/I operation. The O-only workspace bug is covered by the
 `mx_o` rows. H/I remains opt-in until long-generation behavior and the
 versioned preset are finalized.
+
+## Re-evaluation — post-repair runtime gate — 2026-09-12
+
+The O-only workspace and FFN tensor-contract repairs are present on current
+main. The matrix was rerun as part of EXP-0322 and all four states still
+completed with finite output at B128 and B512. The real same-process
+`P512 → continuation → P512` check passed, Release CTest passed `24/24`, and a
+128-token generation completed without a delayed state failure.
+
+The repaired H/I path measured a six-sample median of `204.75 tok/s` at P512
+with valid `1606/1000 MHz` clocks. H/I is therefore a qualified opt-in path;
+the historical `211.48 tok/s` result remains pre-repair evidence, not the
+repaired-path claim. The remaining promotion work is the versioned preset and
+its printed configuration vector.
