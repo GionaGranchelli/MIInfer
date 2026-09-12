@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1789193260.171233,
-    "seen": 1789193276.0516503,
-    "ast_hash": "7dbb431a52badddc47a86745f68c3f36",
+    "mtime": 1789193950.223376,
+    "seen": 1789194001.835369,
+    "ast_hash": "9f4a89852b3bf6c2d64cd88256593fb8",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -2040,8 +2040,8 @@
     "semantic_hash": ""
   },
   "include/miinfer/kquant_wave_layout.hpp": {
-    "mtime": 1789192028.310079,
-    "seen": 1789193276.0511851,
+    "mtime": 1789193979.95621,
+    "seen": 1789194001.8349066,
     "ast_hash": "e6555872888dfcd1b89da54edc1b8263",
     "semantic_hash": ""
   },
@@ -2370,8 +2370,8 @@
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1789192028.315079,
-    "seen": 1789193276.0516071,
+    "mtime": 1789193979.9642098,
+    "seen": 1789194001.8353248,
     "ast_hash": "3ad91e771a3782677f6c21f69a81a44d",
     "semantic_hash": ""
   },
@@ -4884,8 +4884,8 @@
     "semantic_hash": ""
   },
   "bench/m24_projection_bakeoff.cpp": {
-    "mtime": 1789164059.9277303,
-    "seen": 1789164619.8945973,
+    "mtime": 1789193979.96621,
+    "seen": 1789194001.8348734,
     "ast_hash": "a95608f931a60bcbff28c7f1cd969e90",
     "semantic_hash": ""
   },
@@ -5133,6 +5133,12 @@
     "mtime": 1789193260.1692328,
     "seen": 1789193276.0521555,
     "ast_hash": "c084bbae57606e19951147e5aea1b1a2",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0336-m25-pinned-mx-ffn-isolation-rejection.md": {
+    "mtime": 1789193950.2213762,
+    "seen": 1789194001.835907,
+    "ast_hash": "5733ae1bcde9e1ae3537094b30c0f3ea",
     "semantic_hash": ""
   }
 }

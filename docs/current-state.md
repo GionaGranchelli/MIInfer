@@ -57,6 +57,9 @@ register-prefetch MMQ variant remains rejected on MI50, and M25-J remains
 disabled after its matched retest. The repaired H/I profile points to
 recurrent FFN gate/up and down execution as the next measured target; another
 GDN or attention micro-tuning pass is not currently justified.
+EXP-0336 isolated the already-ported pinned MMQ contract to those recurrent FFN
+projections and still measured an 11.98% end-to-end P512 regression, so that
+contract is rejected there as well.
 
 ## Historical context before M25
 
