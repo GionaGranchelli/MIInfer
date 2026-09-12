@@ -1892,6 +1892,12 @@ exact-P512 bounds checks. Candidate samples ranged from `2420.50` to
 so the specialization was removed and the checked staged kernel remains
 selected. See experiments/EXP-0332-m25-mx-full-tile-rejection.md.
 
+Re-evaluation: EXP-0333 screened the pinned two-block occupancy annotation
+only for Q4/Q5, retaining one block for Q6. The candidate measured
+`2533.39 ms` (`202.10 tok/s`) in a fresh P512 screen and did not beat the
+established one-block control range. It was removed; all Mx MMQ types retain
+the one-block annotation. See experiments/EXP-0333-m25-mx-q4-occupancy-rejection.md.
+
 Update this document whenever:
 
 * active milestone changes

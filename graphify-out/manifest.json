@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1789189386.9817343,
-    "seen": 1789189460.9248886,
-    "ast_hash": "7f894549722472ee96cbc5f4af2a822f",
+    "mtime": 1789189629.1683965,
+    "seen": 1789189658.2068095,
+    "ast_hash": "584ee088f1b24d99434863f09027b1a4",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -5115,6 +5115,12 @@
     "mtime": 1789189386.9807343,
     "seen": 1789189460.9253647,
     "ast_hash": "7abd57f250c876d4784fefd9e5647e5f",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0333-m25-mx-q4-occupancy-rejection.md": {
+    "mtime": 1789189629.1653965,
+    "seen": 1789189658.2073138,
+    "ast_hash": "fbf2f81d7f08bb0f19108a5f510fdf6f",
     "semantic_hash": ""
   }
 }
