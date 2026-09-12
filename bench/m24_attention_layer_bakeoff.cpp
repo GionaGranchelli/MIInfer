@@ -144,6 +144,7 @@ void set_environment(std::uint32_t batch, const std::string& mode) {
              "MIINFER_PREFILL_WIDE_MX_REPACKED_MMQ",
              "MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_FFN",
              "MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_O",
+             "MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_DECODE",
              "MIINFER_PREFILL_WIDE_DENSE_FFN",
              "MIINFER_PREFILL_WIDE_DENSE_ALL",
              "MIINFER_PREFILL_DENSE_PROJECTIONS",
