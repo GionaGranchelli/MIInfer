@@ -26,6 +26,7 @@ The benchmark target is Qwen3.8-27B-Q4_K_M on one AMD Instinct MI50
 | MIInfer H/I, repaired qualified | current accepted path, opt-in | 2500.62 median | 204.75 | 21,993,242,964 B |
 | MIInfer H/I, current requalification | six-pair clock-qualified screen | 2499.345 median | 204.854 | 21,993,242,964 B |
 | MIInfer H/I + pinned QKV MMQ | three-pair opt-in screen; not qualified | 2492.25 median | 205.44 | 21,993,242,964 B |
+| MIInfer H/I + pinned Q6 FFN-down | three-pair opt-in screen; rejected | 2490.39 median | 205.590 | 21,993,242,964 B |
 | MIInfer H/I + Mx attention decode reuse | interleaved opt-in screen; promotion pending | 2412.24 median | 212.25 | 18,472,649,044 B |
 | MIInfer H/I + persistent oracle GDN state | three-pair opt-in screen; rejected | 2502.69 median | 204.58 | 21,993,242,964 B |
 | MIInfer matched control | current comparison | — | — | 19,108,282,708 B |
@@ -48,7 +49,8 @@ The current best accepted P512 configuration is the printed
 - M25-H Mx attention Gate/Up/Down projections;
 - M25-I Mx attention O projection;
 - the pinned large-batch Q6 MMQ contract remains disabled for the qualified
-  preset; `MIINFER_MX_PINNED_QKV=1` is an isolated QKV-only retest selector;
+  preset; `MIINFER_MX_PINNED_QKV=1` and `MIINFER_MX_PINNED_FFN_DOWN=1` are
+  isolated retest selectors;
 - resident M23 copies retained where scalar decode requires them;
 - static full-layer-major B512 prefill orchestration.
 
@@ -88,6 +90,7 @@ compatible. The following complete or isolated ports were measured on MI50:
 | Mx GDN persistent oracle state layout | `+0.331%` P512 median; no extra allocation | reject; retain opt-in |
 | parallel recurrent QKV/Z + beta/alpha branches | `+0.16%` P512 median | reject |
 | parallel QKV/Gate composition, Q6 layers | timed out before a valid sample; shared-workspace contract incomplete | reject |
+| pinned Mx Q6 recurrent FFN-down only | `-10.53%` isolated B512; `+0.502%` P512 median | reject |
 
 The evidence says the remaining stretch is not explained by a missing literal
 Q4/Q5/Q6, Q8, or GDN source transplant. The static HIP graph was slower, so
@@ -192,6 +195,14 @@ stretch remains open but does not identify a new kernel target. The external
 synthetic-token limitation and the retained `2841.29 ms` and `2700.75 ms`
 MIInfer samples are documented in the experiment record.
 
+EXP-0349 then isolated the pinned Mx Q6_K FFN-down contract after the current
+oracle trace showed a possible differential at the exact recurrent shape. The
+kernel improved the layer-60 B512 projection from `8144.632` to `7286.712 us`
+(`-10.53%`) with `6.0e-7` maximum contract error, but three fresh full-vector
+P512 pairs regressed from a `2477.94 ms` control median to `2490.39 ms`
+(`+0.502%`). The selector is retained only as an opt-in forensic comparison;
+the qualified preset is unchanged.
+
 ## Reproducibility and promotion rules
 
 Every performance claim must use clean processes, the exact model hash and
@@ -203,4 +214,4 @@ transient device/runtime or harness state: the exact pre-J/current-main A/B
 did not reproduce it with M25-J disabled.
 
 Detailed evidence is indexed in [`current-state.md`](current-state.md) and
-the M25 records `EXP-0300` through `EXP-0348`.
+the M25 records `EXP-0300` through `EXP-0349`.

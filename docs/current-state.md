@@ -54,6 +54,8 @@ M25-L/QKV-Gate: Q6-only overlap timed out with incomplete shared-workspace
                 ownership; candidate removed
 M25-L/requalification: current six-pair screen is 204.854 tok/s versus
                         pinned mx at 221.418 tok/s; stretch remains open
+M25-L/Q6-down: isolated pinned Q6 FFN-down was 10.53% faster, but the
+               three-pair P512 median regressed 0.502%; rejected
 ```
 
 The current performance target is the exact Qwen3.8-27B-Q4_K_M P512 prefill
@@ -123,6 +125,12 @@ with a `2499.345 ms` median (`204.854 tok/s`). The oracle median was
 gap. The synthetic-token oracle limitation and retained outliers are recorded
 in the experiment; no optimization or preset change follows from this
 measurement.
+
+EXP-0349 isolated the pinned Mx Q6_K FFN-down contract at the exact layer-60
+B512 shape. The kernel moved `8144.632` to `7286.712 us` (`-10.53%`) with
+`6.0e-7` maximum contract error, but the three-pair full-vector P512 median
+moved from `2477.94 ms` to `2490.39 ms` (`+0.502%`). The narrow selector is
+retained for oracle comparison only and is not part of `m25_hi_qualified`.
 
 EXP-0338 adds an opt-in attention decode reuse path. It routes attention O
 and FFN decode through the existing H/I Mx weights, removes the duplicate M23

@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1789220365.089703,
-    "seen": 1789220386.3004055,
-    "ast_hash": "2b9ce6554c527662757fee3ff81b6d71",
+    "mtime": 1789223670.0904675,
+    "seen": 1789223700.8125725,
+    "ast_hash": "61140e97b88b4e815db4c0cad1d55af6",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -2370,9 +2370,9 @@
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1789219745.9245055,
-    "seen": 1789220386.3003597,
-    "ast_hash": "8aaba78a33204e21b448bc21fc0afe1f",
+    "mtime": 1789223043.4729266,
+    "seen": 1789223700.812522,
+    "ast_hash": "43661a8c332c35cb51ece059fc0d0cdf",
     "semantic_hash": ""
   },
   "docs/M9-AUTOREGRESSIVE-QUALIFICATION.md": {
@@ -5142,9 +5142,9 @@
     "semantic_hash": ""
   },
   "docs/current-state-of-the-art.md": {
-    "mtime": 1789220365.0877032,
-    "seen": 1789220386.3004043,
-    "ast_hash": "0335e048a72ee1b14a5c14674db6442f",
+    "mtime": 1789223685.6354094,
+    "seen": 1789223700.8125653,
+    "ast_hash": "36d50b7feb16ea4cff6a95ef650c1946",
     "semantic_hash": ""
   },
   "experiments/EXP-0337-m25-prefill-hip-graph-rejection.md": {
@@ -5211,6 +5211,18 @@
     "mtime": 1789220306.076963,
     "seen": 1789220386.3009527,
     "ast_hash": "356c333d80accc4faae47c3d256f2751",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0348-m25-current-oracle-requalification.md": {
+    "mtime": 1789221805.8603613,
+    "seen": 1789223700.813102,
+    "ast_hash": "0da69a2ce5b99fffa3a2a275b5937b35",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0349-m25-pinned-q6-ffn-down-rejection.md": {
+    "mtime": 1789223648.840547,
+    "seen": 1789223700.8131037,
+    "ast_hash": "a5757371d9f1e39ea80f07d042de2043",
     "semantic_hash": ""
   }
 }

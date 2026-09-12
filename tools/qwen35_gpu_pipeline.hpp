@@ -849,6 +849,7 @@ struct RecurrentLayer {
     bool prefill_wide_repacked = false;
     bool prefill_mx_repacked = false;
     bool prefill_mx_qkv_pinned = false;
+    bool prefill_mx_ffn_down_pinned = false;
     bool prefill_mx_gdn = false;
     bool prefill_mx_external_state = false;
     bool wide_dense_ffn = false;
@@ -1037,6 +1038,14 @@ struct RecurrentLayer {
             && std::strcmp(mx_repacked_env, "0") != 0;
         prefill_mx_qkv_pinned = prefill_mx_repacked
             && environment_flag("MIINFER_MX_PINNED_QKV");
+        const bool mx_ffn_down_pinned_requested = environment_flag(
+            "MIINFER_MX_PINNED_FFN_DOWN");
+        if (mx_ffn_down_pinned_requested && !prefill_mx_repacked) {
+            throw std::runtime_error(
+                "pinned Mx FFN down requires wide Mx prefill");
+        }
+        prefill_mx_ffn_down_pinned = mx_ffn_down_pinned_requested
+            && ffn_down_weight.type == miinfer::GgufTensorType::q6_k;
         const char* mx_gdn_env = std::getenv("MIINFER_PREFILL_MX_GDN");
         prefill_mx_gdn = wide_prefill && mx_gdn_env != nullptr
             && std::strcmp(mx_gdn_env, "0") != 0;
@@ -2440,10 +2449,17 @@ struct RecurrentLayer {
                     static_cast<float*>(prefill_projected->get()), kHidden, kFfnInner, token_count,
                     hipStreamPerThread);
             } else {
-                launch_mx_q6k_repacked_mmq(
-                    static_cast<const std::uint8_t*>(d_ffn_down_mmq->get()), q8,
-                    static_cast<float*>(prefill_projected->get()), kHidden, kFfnInner, token_count,
-                    hipStreamPerThread);
+                if (prefill_mx_ffn_down_pinned) {
+                    launch_mx_q6k_repacked_mmq_pinned(
+                        static_cast<const std::uint8_t*>(d_ffn_down_mmq->get()), q8,
+                        static_cast<float*>(prefill_projected->get()), kHidden, kFfnInner,
+                        token_count, hipStreamPerThread);
+                } else {
+                    launch_mx_q6k_repacked_mmq(
+                        static_cast<const std::uint8_t*>(d_ffn_down_mmq->get()), q8,
+                        static_cast<float*>(prefill_projected->get()), kHidden, kFfnInner,
+                        token_count, hipStreamPerThread);
+                }
             }
             count_m23_dispatch(6);
         } else if (resident_fp16_ffn) {
