@@ -1878,6 +1878,13 @@ repeat-P512 check, but a matched screening run regressed from `2540.09 ms`
 The candidate was removed; separate Gate/Up launches remain selected and the
 stretch remains open. See experiments/EXP-0330-m25-mx-ffn-pair-rejection.md.
 
+Re-evaluation: EXP-0331 screened the pinned MMQ kernel's next-row register
+prefetch schedule in three interleaved fresh-process pairs. The control median
+was `2437.66 ms` (`210.04 tok/s`) versus `2446.21 ms` (`209.30 tok/s`) for the
+candidate, with identical allocation. Pair deltas were inconsistent, so the
+candidate was removed and the direct LDS-load schedule remains selected. See
+experiments/EXP-0331-m25-mx-register-prefetch-rejection.md.
+
 Update this document whenever:
 
 * active milestone changes
