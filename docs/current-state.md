@@ -44,6 +44,7 @@ M25-J/K: J quantizer and Q/K candidate rejected
 M25-continuation: source repair and repeat/long-generation gates PASS
 M25-prefill graph: static HIP graph screen rejected; host submission retained
 M25-L: fresh oracle comparison and recurrent FFN differential; measurement only
+M25-L/QKV: oracle-backed fork/join screen rejected; no runtime branch retained
 ```
 
 The current performance target is the exact Qwen3.8-27B-Q4_K_M P512 prefill
@@ -82,6 +83,16 @@ Combined with the existing Mx MMV decode path, a 128-token screen reached
 16.98 tok/s with finite expected output. The candidate is KEEP opt-in pending
 clock-qualified A/B, long-context, and power/thermal validation. The selector
 now fails closed unless resident-all attention weights are active.
+
+EXP-0341 screened the pinned oracle's attention-branch concurrency with a
+temporary MIInfer fork/join path. Two nonblocking streams overlapped the
+existing combined Q/K projection with V, but four fresh 512-token shape-control
+samples measured only a 0.836% median improvement (2491.625 versus 2512.635
+ms). A two-token continuation was byte-identical; the branch was removed and
+rejected. The same run identified the earlier apparent stall as an orphaned
+511-token benchmark still holding about 22.9 GB through `/dev/kfd`; after
+termination, the valid 512-token control completed. See
+`experiments/EXP-0341-m25-attention-fork-join-rejection.md`.
 
 ## Historical context before M25
 

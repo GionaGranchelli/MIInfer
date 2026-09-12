@@ -73,6 +73,7 @@ compatible. The following complete or isolated ports were measured on MI50:
 | M25-J four-block Q8 quantizer | no qualified gain; kept disabled | reject |
 | Mx attention Q/K | slower or outside parity tolerance | reject |
 | Mx attention O/FFN decode reuse | `~3.28 GiB` less allocation; `16.98 tok/s` in a 128-token decode screen with Mx MMV | keep opt-in |
+| attention QKV fork/join | `0.836%` median P512 improvement; no qualified gain | reject |
 
 The evidence says the remaining stretch is not explained by a missing literal
 Q4/Q5/Q6, Q8, or GDN source transplant. The static HIP graph was slower, so
@@ -108,6 +109,18 @@ profile measures recurrent layer 60's whole-B512 FFN tail at `22.2694 ms`, but
 there is not yet a like-for-like oracle stage boundary. No M25-L optimization
 has been written.
 
+EXP-0341 tested the remaining oracle-backed orchestration mechanism: two
+nonblocking streams overlapped MIInfer's combined Q/K projection with V. Four
+fresh 512-token shape-control samples measured medians of `2512.635 ms` for
+the control and `2491.625 ms` for the candidate, a `0.836%` improvement. A
+two-token continuation was byte-identical, but the result was below run-to-run
+spread and the temporary branch was removed. The same investigation explained
+an apparent stall: a timed-out 511-token benchmark left an orphan attached to
+`/dev/kfd` holding about 22.9 GB of VRAM. Terminating it released the device and
+the valid 512-token control completed. Future timeout harnesses must verify
+child cleanup and `/dev/kfd` ownership before classifying a run as a code
+regression.
+
 ## Reproducibility and promotion rules
 
 Every performance claim must use clean processes, the exact model hash and
@@ -119,4 +132,4 @@ transient device/runtime or harness state: the exact pre-J/current-main A/B
 did not reproduce it with M25-J disabled.
 
 Detailed evidence is indexed in [`current-state.md`](current-state.md) and
-the M25 records `EXP-0300` through `EXP-0340`.
+the M25 records `EXP-0300` through `EXP-0341`.
