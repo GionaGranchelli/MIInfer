@@ -94,6 +94,14 @@ provenance and possible future retest, but leave MIInfer's staged one-block
 kernel selected by default. Do not pursue more isolated transplants of this
 MMQ contract without a new measured production-shape reason.
 
+## Re-evaluation
+
+A one-screen rescue test changed only the candidate's launch annotation to
+`__launch_bounds__(256, 1)`, leaving the complete schedule unchanged. It
+measured `2980.35 ms` (`171.79 tok/s`) on the same exact P512 path, so the
+regression is not explained by the pinned two-block occupancy request. That
+temporary isolation hook was removed.
+
 ## Follow-up
 
 Return the stretch investigation to the measured recurrent FFN tail and its

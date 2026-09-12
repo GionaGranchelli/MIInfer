@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1789191451.055294,
-    "seen": 1789191464.3063529,
-    "ast_hash": "800f343a1faf3a77938f5302637162aa",
+    "mtime": 1789193260.171233,
+    "seen": 1789193276.0516503,
+    "ast_hash": "7dbb431a52badddc47a86745f68c3f36",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -2040,8 +2040,8 @@
     "semantic_hash": ""
   },
   "include/miinfer/kquant_wave_layout.hpp": {
-    "mtime": 1789187710.7629607,
-    "seen": 1789187805.4962492,
+    "mtime": 1789192028.310079,
+    "seen": 1789193276.0511851,
     "ast_hash": "e6555872888dfcd1b89da54edc1b8263",
     "semantic_hash": ""
   },
@@ -2370,8 +2370,8 @@
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1789187710.7609606,
-    "seen": 1789187805.496661,
+    "mtime": 1789192028.315079,
+    "seen": 1789193276.0516071,
     "ast_hash": "3ad91e771a3782677f6c21f69a81a44d",
     "semantic_hash": ""
   },
@@ -5124,9 +5124,15 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0334-m25-pinned-mx-mmq-contract-rejection.md": {
-    "mtime": 1789191442.8903394,
-    "seen": 1789191464.3068984,
-    "ast_hash": "1269fe2167cca4b1486855a3888e2148",
+    "mtime": 1789192037.9470253,
+    "seen": 1789193276.0521538,
+    "ast_hash": "c74cdf124a8156b6527b45e9da2c89bd",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0335-m25-mx-single-token-mmv.md": {
+    "mtime": 1789193260.1692328,
+    "seen": 1789193276.0521555,
+    "ast_hash": "c084bbae57606e19951147e5aea1b1a2",
     "semantic_hash": ""
   }
 }

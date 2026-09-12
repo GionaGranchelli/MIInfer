@@ -1909,6 +1909,20 @@ selected. The pinned contract has now been tested both component-by-component
 and as a complete port, so further MMQ transplant work needs a new measured
 reason. See experiments/EXP-0334-m25-pinned-mx-mmq-contract-rejection.md.
 
+The one-screen follow-up changed only that candidate's launch annotation to
+the MI50 one-block setting and measured `2980.35 ms` (`171.79 tok/s`), so the
+complete-contract rejection is not attributable to the external occupancy
+request. The temporary isolation hook was removed.
+
+Re-evaluation: EXP-0335 added an opt-in Mx single-token MMV kernel for
+resident-all decode, avoiding the 128-token MMQ tile when `token_count=1`.
+Five repeated P512/continuation/repeat-P512 pairs all returned the expected
+`13477 → 37550` tokens. Continuation median fell from `514.626 ms` to
+`122.986 ms` (`4.19x`), and a 128-token generation averaged `189.362 ms/token`
+versus `583.756 ms/token` control. P512 median changed only from `2505.06 ms`
+to `2488.66 ms`, so the selector remains opt-in and is not part of the
+qualified prefill preset. See experiments/EXP-0335-m25-mx-single-token-mmv.md.
+
 Update this document whenever:
 
 * active milestone changes

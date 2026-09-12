@@ -1792,6 +1792,78 @@ static __device__ __forceinline__ MxInputSlice mx_load_input(
     return result;
 }
 
+// Adapted from the pinned q8_repack single-token MMV path. This is separate
+// from the large-batch contract above because token_count=1 should not stage a
+// 128-token tile merely to compute one decode vector.
+template <bool Q5, bool Q6>
+__launch_bounds__(1024, 1) __global__ void mx_repacked_mmv_kernel(
+    const std::uint8_t* __restrict__ weights,
+    const miinfer::MxQ8_1MmqBlock* __restrict__ input,
+    float* __restrict__ output,
+    std::uint32_t rows,
+    std::uint32_t columns) {
+    static_assert(!(Q5 && Q6));
+    constexpr int kRowsPerBlock = 16;
+    constexpr int kLanes = 64;
+    const int thread = threadIdx.x;
+    const int lane = thread & (kLanes - 1);
+    const int row = static_cast<int>(blockIdx.x) * kRowsPerBlock + thread / kLanes;
+    if (row >= static_cast<int>(rows)) return;
+
+    const std::uint32_t n_sub = columns / 32;
+    const auto affine_geometry = MxAffineGeometry<Q5>(columns, rows);
+    const auto q6_geometry = MxQ6Geometry(columns, rows);
+    float total = 0.0F;
+    for (std::uint32_t subblock = lane; subblock < n_sub; subblock += kLanes) {
+        MxWeightWords weight;
+        if constexpr (Q6) {
+            weight = mx_load_q6(weights, q6_geometry, row, subblock);
+        } else {
+            weight = mx_load_affine<Q5>(weights, affine_geometry, row, subblock);
+        }
+        const auto x = mx_load_input(
+            input + static_cast<std::size_t>(subblock / 4), 0, subblock & 3, !Q6);
+        const int dot_lo = mx_dp4a(weight.lo.x, x.q0.x)
+            + mx_dp4a(weight.lo.y, x.q0.y)
+            + mx_dp4a(weight.lo.z, x.q0.z)
+            + mx_dp4a(weight.lo.w, x.q0.w);
+        const int dot_hi = mx_dp4a(weight.hi.x, x.q1.x)
+            + mx_dp4a(weight.hi.y, x.q1.y)
+            + mx_dp4a(weight.hi.z, x.q1.z)
+            + mx_dp4a(weight.hi.w, x.q1.w);
+        if constexpr (Q6) {
+            const std::uint16_t d_bits = static_cast<std::uint16_t>(weight.slot.x >> 16);
+            const float d = __half2float(*reinterpret_cast<const __half*>(&d_bits)) * 0.25F;
+            const int scale_lo = static_cast<std::int8_t>(weight.slot.x & 0xFFU);
+            const int scale_hi = static_cast<std::int8_t>((weight.slot.x >> 8) & 0xFFU);
+            total += d * x.d * static_cast<float>(scale_lo * dot_lo + scale_hi * dot_hi);
+        } else {
+            int dot = 0;
+            dot = mx_dp4a(weight.lo.x, x.q0.x, dot);
+            dot = mx_dp4a(weight.hi.x, x.q1.x, dot);
+            dot = mx_dp4a(weight.lo.y, x.q0.y, dot);
+            dot = mx_dp4a(weight.hi.y, x.q1.y, dot);
+            dot = mx_dp4a(weight.lo.z, x.q0.z, dot);
+            dot = mx_dp4a(weight.hi.z, x.q1.z, dot);
+            dot = mx_dp4a(weight.lo.w, x.q0.w, dot);
+            dot = mx_dp4a(weight.hi.w, x.q1.w, dot);
+            const std::uint16_t d_bits = static_cast<std::uint16_t>(weight.slot.y);
+            const std::uint16_t dmin_bits = static_cast<std::uint16_t>(weight.slot.y >> 16);
+            const float d = __half2float(*reinterpret_cast<const __half*>(&d_bits));
+            const float dmin = __half2float(*reinterpret_cast<const __half*>(&dmin_bits));
+            const int scale = static_cast<int>(weight.slot.x & 0xFFU);
+            const int minimum = static_cast<int>((weight.slot.x >> 8) & 0xFFU);
+            total += d * x.d * static_cast<float>(scale * dot)
+                - dmin * static_cast<float>(minimum) * x.sum;
+        }
+    }
+
+    for (int offset = 32; offset > 0; offset >>= 1) {
+        total += __shfl_xor_sync(0xffffffffffffffffULL, total, offset, 64);
+    }
+    if (lane == 0) output[row] = total;
+}
+
 template <bool Q5, bool Q6>
 __launch_bounds__(256, 1) __global__ void mx_repacked_mmq_kernel(
     const std::uint8_t* __restrict__ weights,
@@ -2357,6 +2429,11 @@ bool mx_pipeline_enabled() {
     return env != nullptr && std::strcmp(env, "0") != 0;
 }
 
+bool mx_mmv_enabled() {
+    const char* env = std::getenv("MIINFER_MX_MMV");
+    return env != nullptr && std::strcmp(env, "0") != 0;
+}
+
 bool mx_pinned_enabled() {
     const char* env = std::getenv("MIINFER_MX_PINNED");
     return env != nullptr && std::strcmp(env, "0") != 0;
@@ -2504,7 +2581,11 @@ void launch_mx_q4k_repacked_mmq(
         || columns == 0 || columns % 128 != 0 || token_count == 0 || token_count > 512) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
-    if (mx_pinned_enabled()) {
+    if (token_count == 1 && mx_mmv_enabled()) {
+        hipLaunchKernelGGL((mx_repacked_mmv_kernel<false, false>),
+                           dim3((rows + 15) / 16), dim3(1024), 0,
+                           stream, weights, input, output, rows, columns);
+    } else if (mx_pinned_enabled()) {
         hipLaunchKernelGGL((mx_repacked_mmq_pinned_kernel<false, false>),
                            dim3((rows + 63) / 64, (token_count + 127) / 128), dim3(64, 4), 0,
                            stream, weights, input, output, rows, columns, token_count);
@@ -2527,7 +2608,11 @@ void launch_mx_q5k_repacked_mmq(
         || columns == 0 || columns % 128 != 0 || token_count == 0 || token_count > 512) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
-    if (mx_pinned_enabled()) {
+    if (token_count == 1 && mx_mmv_enabled()) {
+        hipLaunchKernelGGL((mx_repacked_mmv_kernel<true, false>),
+                           dim3((rows + 15) / 16), dim3(1024), 0,
+                           stream, weights, input, output, rows, columns);
+    } else if (mx_pinned_enabled()) {
         hipLaunchKernelGGL((mx_repacked_mmq_pinned_kernel<true, false>),
                            dim3((rows + 63) / 64, (token_count + 127) / 128), dim3(64, 4), 0,
                            stream, weights, input, output, rows, columns, token_count);
@@ -2550,7 +2635,11 @@ void launch_mx_q6k_repacked_mmq(
         || columns == 0 || columns % 128 != 0 || token_count == 0 || token_count > 512) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
-    if (mx_pinned_enabled()) {
+    if (token_count == 1 && mx_mmv_enabled()) {
+        hipLaunchKernelGGL((mx_repacked_mmv_kernel<false, true>),
+                           dim3((rows + 15) / 16), dim3(1024), 0,
+                           stream, weights, input, output, rows, columns);
+    } else if (mx_pinned_enabled()) {
         hipLaunchKernelGGL((mx_repacked_mmq_pinned_kernel<false, true>),
                            dim3((rows + 63) / 64, (token_count + 127) / 128), dim3(64, 4), 0,
                            stream, weights, input, output, rows, columns, token_count);
