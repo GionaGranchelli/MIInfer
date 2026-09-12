@@ -1853,6 +1853,13 @@ The candidate passes the exact continuation/repeat-P512 gate but remains
 opt-in until an interleaved clock-qualified series supports preset promotion. See
 experiments/EXP-0326-m25-d-gdn-tc4-wave-columns.md.
 
+Re-evaluation: EXP-0327 completed that interleaved series with six fresh
+clock-qualified processes. Tc2 measured `2412.10, 2500.43, 2449.30 ms`
+(median `209.04 tok/s`); Tc4 measured `2489.16, 2473.73, 2489.42 ms`
+(median `205.69 tok/s`). Tc4 is rejected for default promotion and remains
+opt-in. The stretch therefore remains open without a justified new kernel
+target. See experiments/EXP-0327-m25-d-gdn-tc4-interleaved-retest.md.
+
 Update this document whenever:
 
 * active milestone changes

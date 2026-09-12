@@ -92,3 +92,14 @@ versioned H/I preset stays on Tc2 until that series is collected.
 Run an interleaved exact-fox A/B with continuous SCLK/MCLK telemetry, then
 re-run the long-generation and repeated-P512 gates before adding Tc4 to the
 qualified preset.
+
+## Re-evaluation — interleaved qualification — 2026-09-12
+
+EXP-0327 completed the requested six-process exact-fox A/B in `0, 1, 0, 1,
+0, 1` order with clean `env -i` processes and continuous telemetry. All runs
+held SCLK/MCLK at `1606/1000 MHz`, but Tc2 measured a median `209.04 tok/s`
+versus `205.69 tok/s` for Tc4. The isolated speedup and earlier favorable pair
+therefore do not justify preset promotion. Tc4 remains a numerically validated
+opt-in experiment; the qualified preset stays on Tc2.
+
+See experiments/EXP-0327-m25-d-gdn-tc4-interleaved-retest.md.
