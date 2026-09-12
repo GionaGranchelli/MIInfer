@@ -2370,8 +2370,8 @@
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1789212648.7164032,
-    "seen": 1789213839.3292055,
+    "mtime": 1789214665.107049,
+    "seen": 1789214794.7566917,
     "ast_hash": "24debf9ef6e512c6f3a641a8a623d5d0",
     "semantic_hash": ""
   },
@@ -2820,14 +2820,14 @@
     "semantic_hash": ""
   },
   "bench/m12_gdn_chunk_bench.cpp": {
-    "mtime": 1789212432.889513,
-    "seen": 1789213839.3287647,
+    "mtime": 1789214657.2190895,
+    "seen": 1789214794.7562032,
     "ast_hash": "b11ffefc2ccbd29bad635e6070a9cb3d",
     "semantic_hash": ""
   },
   "include/miinfer/m12_gdn_chunk.hpp": {
-    "mtime": 1789156519.9901147,
-    "seen": 1789156534.682256,
+    "mtime": 1789214641.7871687,
+    "seen": 1789214794.756251,
     "ast_hash": "4459bd0f0082965f30960ecb181a152b",
     "semantic_hash": ""
   },
@@ -5142,9 +5142,9 @@
     "semantic_hash": ""
   },
   "docs/current-state-of-the-art.md": {
-    "mtime": 1789213637.1653264,
-    "seen": 1789213839.3292482,
-    "ast_hash": "ac2528d281c4585a29a1b8615eeaa192",
+    "mtime": 1789214777.9974694,
+    "seen": 1789214794.7567377,
+    "ast_hash": "5152ad7808cace37d78595f6994271a8",
     "semantic_hash": ""
   },
   "experiments/EXP-0337-m25-prefill-hip-graph-rejection.md": {
@@ -5181,6 +5181,12 @@
     "mtime": 1789213660.597206,
     "seen": 1789213839.329762,
     "ast_hash": "38a4e280b5f46cb62b5088aa0ba28363",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0343-m25-gdn-state-contract-rejection.md": {
+    "mtime": 1789214749.240617,
+    "seen": 1789214794.7572637,
+    "ast_hash": "beb86b5d36f11f8bdb744203ba2b1888",
     "semantic_hash": ""
   }
 }

@@ -77,6 +77,7 @@ compatible. The following complete or isolated ports were measured on MI50:
 | Mx attention Q/K | slower or outside parity tolerance | reject |
 | Mx attention O/FFN decode reuse | `~3.28 GiB` less allocation; `16.98 tok/s` in a 128-token decode screen with Mx MMV | keep opt-in |
 | attention QKV fork/join | `0.836%` median P512 improvement; no qualified gain | reject |
+| Mx GDN separate state input/output contract | `+0.31%` standalone B512; `+3 MiB` state scratch per recurrent layer | reject |
 
 The evidence says the remaining stretch is not explained by a missing literal
 Q4/Q5/Q6, Q8, or GDN source transplant. The static HIP graph was slower, so
@@ -113,8 +114,9 @@ source-labelled oracle trace measures the corresponding FFN contract at about
 `22.117 ms`, so FFN is not the missing `~3.8 ms/layer`. The same trace shows
 oracle QKV MMQ at about `3.96 ms` versus MIInfer's `4.64 ms`, and oracle GDN at
 about `1.92 ms` versus MIInfer's `3.58 ms` whole GDN-core event. These
-boundaries are diagnostic rather than a complete like-for-like layer proof,
-but they redirect M25-L toward QKV/GDN composition.
+boundaries are diagnostic rather than a complete like-for-like layer proof;
+the current isolated MIInfer Mx GDN primitive is `2.83–2.84 ms` at B512.
+They redirect M25-L toward QKV/GDN composition.
 
 The QKV-only pinned contract is retained as opt-in after an exact layer-60
 B512 primitive screen improved Q6 MMQ from `4.517 ms` to `4.032 ms` with
@@ -138,8 +140,12 @@ EXP-0342 then tested the pinned Q6 MMQ contract only on recurrent QKV and
 re-ran GDN at B512. The QKV primitive win did not survive as a qualified
 end-to-end improvement; the GDN unroll/mask retest was rejected after a
 `0.08%` standalone change and the HIP mask variant failed the current
-64-bit-mask compile contract. The next implementation target is therefore a
-full QKV/GDN execution-contract differential, not another global kernel swap.
+64-bit-mask compile contract. EXP-0343 then tested the oracle's separate
+read-only state-input/write-only state-output contract faithfully. It preserved
+the tight recurrent errors but was `0.31%` slower in the standalone B512
+median, before its `3 MiB` per-layer device copy; the extra state workspace was
+removed. The next implementation target is therefore a full QKV/GDN
+execution-contract differential, not another global kernel swap.
 
 ## Reproducibility and promotion rules
 
@@ -152,4 +158,4 @@ transient device/runtime or harness state: the exact pre-J/current-main A/B
 did not reproduce it with M25-J disabled.
 
 Detailed evidence is indexed in [`current-state.md`](current-state.md) and
-the M25 records `EXP-0300` through `EXP-0342`.
+the M25 records `EXP-0300` through `EXP-0343`.
