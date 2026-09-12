@@ -2424,19 +2424,23 @@ __launch_bounds__(256, 2) __global__ void mx_repacked_mmq_pinned_kernel(
     }
 }
 
+bool mx_environment_flag(const char* name) {
+    const char* env = std::getenv(name);
+    if (env == nullptr || std::strcmp(env, "0") == 0) return false;
+    if (std::strcmp(env, "1") == 0) return true;
+    throw std::runtime_error(std::string(name) + " must be 0 or 1");
+}
+
 bool mx_pipeline_enabled() {
-    const char* env = std::getenv("MIINFER_MX_PIPELINE");
-    return env != nullptr && std::strcmp(env, "0") != 0;
+    return mx_environment_flag("MIINFER_MX_PIPELINE");
 }
 
 bool mx_mmv_enabled() {
-    const char* env = std::getenv("MIINFER_MX_MMV");
-    return env != nullptr && std::strcmp(env, "0") != 0;
+    return mx_environment_flag("MIINFER_MX_MMV");
 }
 
 bool mx_pinned_enabled() {
-    const char* env = std::getenv("MIINFER_MX_PINNED");
-    return env != nullptr && std::strcmp(env, "0") != 0;
+    return mx_environment_flag("MIINFER_MX_PINNED");
 }
 
 // Port the pinned mx q8_repack quantizer's four-block workgroup contract. The
