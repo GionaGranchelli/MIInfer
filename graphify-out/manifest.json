@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1789193950.223376,
-    "seen": 1789194001.835369,
-    "ast_hash": "9f4a89852b3bf6c2d64cd88256593fb8",
+    "mtime": 1789196120.6682768,
+    "seen": 1789196133.0561712,
+    "ast_hash": "76d7882fdbfefabb4560cee71bfbebf0",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -2364,8 +2364,8 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1789175545.8182244,
-    "seen": 1789175563.5145295,
+    "mtime": 1789196073.4585412,
+    "seen": 1789196133.0561187,
     "ast_hash": "8712b6aef23927510ab3e00e02ecf232",
     "semantic_hash": ""
   },
@@ -5139,6 +5139,18 @@
     "mtime": 1789193950.2213762,
     "seen": 1789194001.835907,
     "ast_hash": "5733ae1bcde9e1ae3537094b30c0f3ea",
+    "semantic_hash": ""
+  },
+  "docs/current-state-of-the-art.md": {
+    "mtime": 1789196105.78936,
+    "seen": 1789196133.0561697,
+    "ast_hash": "2cd75273617d2ee53d29c6db7a4a9429",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0337-m25-prefill-hip-graph-rejection.md": {
+    "mtime": 1789196105.78836,
+    "seen": 1789196133.0567193,
+    "ast_hash": "feaaea44f0b2c82e75f2ecd7df1acaf2",
     "semantic_hash": ""
   }
 }

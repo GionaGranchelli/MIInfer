@@ -11,6 +11,9 @@ For long-term direction, see:
 * [`benchmarking.md`](benchmarking.md)
 * [`hardware.md`](hardware.md)
 
+For the measured leaderboard and current stretch boundary, see
+[`current-state-of-the-art.md`](current-state-of-the-art.md).
+
 ---
 
 # Current Phase
@@ -39,6 +42,7 @@ M25-B/D: Mx MMQ and GDN ports retained as opt-in candidates
 M25-H/I: 204.75 tok/s repaired P512 qualification; qualified opt-in
 M25-J/K: J quantizer and Q/K candidate rejected
 M25-continuation: source repair and repeat/long-generation gates PASS
+M25-prefill graph: static HIP graph screen rejected; host submission retained
 ```
 
 The current performance target is the exact Qwen3.8-27B-Q4_K_M P512 prefill
@@ -60,6 +64,9 @@ GDN or attention micro-tuning pass is not currently justified.
 EXP-0336 isolated the already-ported pinned MMQ contract to those recurrent FFN
 projections and still measured an 11.98% end-to-end P512 regression, so that
 contract is rejected there as well.
+EXP-0337 screened a static HIP graph for the exact resident Mx P512 body; it
+passed continuation correctness but was 0.44% slower and used about 8 MiB
+more reported VRAM, so the candidate was removed.
 
 ## Historical context before M25
 
