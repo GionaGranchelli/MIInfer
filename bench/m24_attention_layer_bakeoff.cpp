@@ -90,6 +90,17 @@ struct CompareMetrics {
     bool finite = true;
 };
 
+struct VramSample {
+    std::size_t free_bytes = 0;
+    std::size_t total_bytes = 0;
+};
+
+VramSample sample_vram() {
+    VramSample sample;
+    MIINFER_HIP_CHECK(hipMemGetInfo(&sample.free_bytes, &sample.total_bytes));
+    return sample;
+}
+
 CompareMetrics compare_outputs(const std::vector<float>& actual,
                                const std::vector<float>& expected) {
     if (actual.size() != expected.size()) throw std::runtime_error("attention output size mismatch");
@@ -181,8 +192,12 @@ void run_layer(const miinfer::Qwen35Model& model, std::uint32_t batch,
                std::array<double, 15>& stage_ms,
                std::array<double, 3>& phase_ms,
                CompareMetrics& parity, CompareMetrics& canonical,
-               std::size_t& tracked_bytes) {
+               std::size_t& tracked_bytes,
+               VramSample& vram_before,
+               VramSample& vram_after_setup,
+               VramSample& vram_after_execute) {
     set_environment(batch, mode);
+    vram_before = sample_vram();
     g_cache_capacity = 1024;
     const std::size_t allocation_base = g_live_device_bytes;
     FullAttentionLayer layer(model, 3);
@@ -199,6 +214,7 @@ void run_layer(const miinfer::Qwen35Model& model, std::uint32_t batch,
         throw std::runtime_error(gemm_error);
     }
     layer.set_m12_dense_workspace(dense_weights.as<__half>(), dense_input.as<__half>(), &gemm_handle);
+    vram_after_setup = sample_vram();
 
     RawBuffer input(static_cast<std::size_t>(batch) * kHidden * sizeof(float));
     RawBuffer output(static_cast<std::size_t>(batch) * kHidden * sizeof(float));
@@ -228,6 +244,7 @@ void run_layer(const miinfer::Qwen35Model& model, std::uint32_t batch,
         layer.finish_prefill_wide(input.as<float>(), output.as<float>(), batch, nullptr, nullptr);
     };
     execute();
+    vram_after_execute = sample_vram();
     MIINFER_HIP_CHECK(hipDeviceSynchronize());
 
     events.clear();
@@ -344,8 +361,12 @@ int main(int argc, char** argv) try {
     CompareMetrics parity;
     CompareMetrics canonical;
     std::size_t tracked_bytes = 0;
+    VramSample vram_before;
+    VramSample vram_after_setup;
+    VramSample vram_after_execute;
     run_layer(model, batch, mode, fixture, milliseconds, events, stage_ms, phase_ms,
-              parity, canonical, tracked_bytes);
+              parity, canonical, tracked_bytes, vram_before, vram_after_setup,
+              vram_after_execute);
     CompareMetrics wide_control;
     bool control_checked = false;
     float control_max_allowed = 0.0F;
@@ -357,9 +378,13 @@ int main(int argc, char** argv) try {
         std::array<double, 3> control_phase_ms{};
         CompareMetrics control_parity;
         std::size_t control_bytes = 0;
+        VramSample control_before;
+        VramSample control_after_setup;
+        VramSample control_after_execute;
         run_layer(model, batch, "control", fixture, control_ms, control_events,
                   control_stage_ms, control_phase_ms, control_parity, wide_control,
-                  control_bytes);
+                  control_bytes, control_before, control_after_setup,
+                  control_after_execute);
         control_checked = true;
         control_max_allowed = wide_control.max_abs + 0.05F;
         control_rmse_allowed = std::max(0.005F, wide_control.rmse * 1.25F);
@@ -379,6 +404,10 @@ int main(int argc, char** argv) try {
               << ",\"layer\":3,\"gpu_us\":" << milliseconds * 1000.0
               << ",\"tok_s\":" << (1000.0 * batch / milliseconds)
               << ",\"tracked_layer_bytes\":" << tracked_bytes
+              << ",\"vram_free_before_bytes\":" << vram_before.free_bytes
+              << ",\"vram_free_after_setup_bytes\":" << vram_after_setup.free_bytes
+              << ",\"vram_free_after_execute_bytes\":" << vram_after_execute.free_bytes
+              << ",\"vram_total_bytes\":" << vram_after_execute.total_bytes
               << ",\"phases\":{\"prepare\":" << phase_ms[0]
               << ",\"attention\":" << phase_ms[1]
               << ",\"post_attention_ffn\":" << phase_ms[2]

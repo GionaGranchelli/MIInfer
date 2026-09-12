@@ -4908,9 +4908,9 @@
     "semantic_hash": ""
   },
   "bench/m24_attention_layer_bakeoff.cpp": {
-    "mtime": 1789171161.0350769,
-    "seen": 1789172314.593444,
-    "ast_hash": "89983932476f8e1820ac234afefb5607",
+    "mtime": 1789173049.6857107,
+    "seen": 1789173073.5075843,
+    "ast_hash": "9c495795820c67d56b3964c7c8fd31e4",
     "semantic_hash": ""
   },
   "experiments/EXP-0299-m24-attention-attribution.md": {
