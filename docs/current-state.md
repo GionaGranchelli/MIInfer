@@ -1835,6 +1835,15 @@ candidate was rejected and the scalar epilogue restored. The remaining
 stretch gap has no measured justification for another inner-loop transplant.
 See experiments/EXP-0324-m25-mx-vector-epilogue.md.
 
+Re-evaluation: EXP-0325 tested the pinned oracle's two FP32 beta/alpha GEMM
+launches against MIInfer's custom dual projection at the exact recurrent P512
+shape. The native dual dispatch plus preparation was about `999 us` per layer;
+the two hipBLAS dispatches plus preparation were about `1265 us`, a `26.7%`
+regression. The oracle contract is therefore not a useful port for this
+workload, and the native dual path remains selected. The stretch investigation
+returns to recurrent FFN Gate/Up and Down work. See
+experiments/EXP-0325-m25-beta-alpha-batched-rocblas.md.
+
 Update this document whenever:
 
 * active milestone changes

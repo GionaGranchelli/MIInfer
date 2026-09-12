@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1789178451.1016088,
-    "seen": 1789178631.9421756,
-    "ast_hash": "c7146643efdbd380c8267a4b257da510",
+    "mtime": 1789180935.4603198,
+    "seen": 1789180958.2703207,
+    "ast_hash": "990dec7c095e065948d379c2dea6156f",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -324,8 +324,8 @@
     "semantic_hash": ""
   },
   "include/miinfer/fp16_gemv.hpp": {
-    "mtime": 1788857716.1032555,
-    "seen": 1788858697.0318139,
+    "mtime": 1789180763.7622633,
+    "seen": 1789180958.269863,
     "ast_hash": "7f13230fa105256c718a2ae38b6ce097",
     "semantic_hash": ""
   },
@@ -2370,8 +2370,8 @@
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1789172302.2523348,
-    "seen": 1789172314.5939238,
+    "mtime": 1789180763.7682633,
+    "seen": 1789180958.2702765,
     "ast_hash": "3ad91e771a3782677f6c21f69a81a44d",
     "semantic_hash": ""
   },
@@ -5067,6 +5067,12 @@
     "mtime": 1789178435.551691,
     "seen": 1789178631.9426703,
     "ast_hash": "b8dd0622a2ac313d340d515475d0f03e",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0325-m25-beta-alpha-batched-rocblas.md": {
+    "mtime": 1789180935.45832,
+    "seen": 1789180958.2708168,
+    "ast_hash": "f737eb617e6e359aeca1b6d839e7740e",
     "semantic_hash": ""
   }
 }
