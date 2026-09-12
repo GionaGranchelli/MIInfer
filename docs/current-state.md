@@ -49,6 +49,7 @@ as pre-repair evidence. H/I now passes the independent matrix, same-process
 repeat, CTest, and 128-token generation gates. Use the opt-in
 `MIINFER_PRESET=m25_hi_qualified` for a hermetic, printed configuration
 vector. See EXP-0319, EXP-0320, EXP-0321, and EXP-0322.
+The exact pre-J versus M25-J source-delta retest is recorded in EXP-0323.
 
 The pinned-source audit found no missing Q4_K/Q5_K/Q6_K repack or GDN contract
 whose unmeasured transplant should replace the current paths. The external
@@ -1815,6 +1816,17 @@ resident decode needs them, validates the resident type contract, and the
 repeat check requires the second token. See
 experiments/EXP-0320-m25-p512-continuation-crash.md. Runtime revalidation is
 pending a privileged MI50 reset after the crash contaminated the ROCm session.
+
+Re-evaluation: EXP-0322 completed that runtime revalidation, including the
+real continuation, repeat-P512, H/I matrix, CTest, and long-generation gates.
+EXP-0323 then ran the exact three-by-three pre-J versus `f38745e` source-delta
+A/B for control and H/I with J disabled. Both commits completed all six P512
+runs without the old stall; H/I medians were `207.34` and `207.94 tok/s`,
+respectively, with all 1541 telemetry samples at `1606/1000 MHz`. The stall is
+not a reproducible M25-J regression. The primary gate remains passed at
+`204.75 tok/s` repaired H/I, while the pinned `220.9 tok/s` stretch remains
+open. Do not reopen kernel work without a new measured production-shape
+differential.
 
 Update this document whenever:
 

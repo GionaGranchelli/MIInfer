@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1789175517.9983718,
-    "seen": 1789175531.0053391,
-    "ast_hash": "5de1166e916bbe7b53712d78f0a3ca2f",
+    "mtime": 1789177292.7297313,
+    "seen": 1789177305.4084795,
+    "ast_hash": "620a33e96ce9c6a1f4063aa76671d2b8",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -5055,6 +5055,12 @@
     "mtime": 1789175517.9963717,
     "seen": 1789175531.0058424,
     "ast_hash": "026749bfe6b2e74f87da5746f8cb6647",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0323-m25-p512-exact-source-delta-ab.md": {
+    "mtime": 1789177292.7267313,
+    "seen": 1789177305.4090044,
+    "ast_hash": "5a03911f6174c5764bf4c12ae2003237",
     "semantic_hash": ""
   }
 }
