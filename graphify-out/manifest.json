@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1789185266.819587,
-    "seen": 1789185321.8219242,
-    "ast_hash": "397998f568915b96e0bf02c6a230c984",
+    "mtime": 1789187787.8195267,
+    "seen": 1789187805.4967055,
+    "ast_hash": "e03d6df10b4883384859ab3dc42c1069",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -2040,8 +2040,8 @@
     "semantic_hash": ""
   },
   "include/miinfer/kquant_wave_layout.hpp": {
-    "mtime": 1789185030.7189245,
-    "seen": 1789185321.8214216,
+    "mtime": 1789187710.7629607,
+    "seen": 1789187805.4962492,
     "ast_hash": "e6555872888dfcd1b89da54edc1b8263",
     "semantic_hash": ""
   },
@@ -2370,8 +2370,8 @@
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1789185195.2359927,
-    "seen": 1789185321.82188,
+    "mtime": 1789187710.7609606,
+    "seen": 1789187805.496661,
     "ast_hash": "3ad91e771a3782677f6c21f69a81a44d",
     "semantic_hash": ""
   },
@@ -5097,6 +5097,12 @@
     "mtime": 1789185266.818587,
     "seen": 1789185321.8224156,
     "ast_hash": "96d71f72d471b174458fa9204d4210c5",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0330-m25-mx-ffn-pair-rejection.md": {
+    "mtime": 1789187787.8165267,
+    "seen": 1789187805.4971728,
+    "ast_hash": "cd82dc33cfa688e7d4de343d252f0aa6",
     "semantic_hash": ""
   }
 }

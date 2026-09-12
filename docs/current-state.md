@@ -1871,6 +1871,13 @@ accepted. The fused M23 Q/K path remains selected and the stretch remains
 open. See experiments/EXP-0328-m25-e-split-m23-attention-qk.md and
 experiments/EXP-0329-m25-e-mx-attention-qk-contract.md.
 
+Re-evaluation: EXP-0330 tested a fused recurrent Mx Q4_K Gate/Up launch that
+staged the shared Q8 activation once. It passed the real continuation and
+repeat-P512 check, but a matched screening run regressed from `2540.09 ms`
+(`201.57 tok/s`) to `2747.92 ms` (`186.32 tok/s`) with unchanged allocation.
+The candidate was removed; separate Gate/Up launches remain selected and the
+stretch remains open. See experiments/EXP-0330-m25-mx-ffn-pair-rejection.md.
+
 Update this document whenever:
 
 * active milestone changes
