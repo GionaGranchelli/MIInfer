@@ -1860,6 +1860,17 @@ clock-qualified processes. Tc2 measured `2412.10, 2500.43, 2449.30 ms`
 opt-in. The stretch therefore remains open without a justified new kernel
 target. See experiments/EXP-0327-m25-d-gdn-tc4-interleaved-retest.md.
 
+Re-evaluation: EXP-0328 tested the pinned Q/K split geometry against the
+current fused M23 row-128 path. The three-run B512 layer-3 medians were
+`63.3639 ms` control and `68.3307 ms` split, a `7.84%` regression, with
+identical finite scalar parity and `55,377,920 B` more tracked layer memory.
+The partial port was removed. EXP-0329 then tried the complete existing Mx
+Q8/Q4_K format and kernel for separate Q/K; all three candidates failed the
+existing scalar parity gate with `max_abs > 1.0`, so no performance result was
+accepted. The fused M23 Q/K path remains selected and the stretch remains
+open. See experiments/EXP-0328-m25-e-split-m23-attention-qk.md and
+experiments/EXP-0329-m25-e-mx-attention-qk-contract.md.
+
 Update this document whenever:
 
 * active milestone changes

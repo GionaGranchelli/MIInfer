@@ -152,7 +152,8 @@ void set_environment(std::uint32_t batch, const std::string& mode) {
              "MIINFER_PREFILL_GDN_DIRECT",
              "MIINFER_PREFILL_WIDE_VALIDATE",
              "MIINFER_WIDE_VALIDATE",
-             "MIINFER_MX_PIPELINE"}) {
+             "MIINFER_MX_PIPELINE",
+             "MIINFER_MX_Q8_BATCH"}) {
         unsetenv(name);
     }
     setenv("MIINFER_PREFILL_LAYER_MAJOR", "1", 1);
