@@ -1885,6 +1885,13 @@ candidate, with identical allocation. Pair deltas were inconsistent, so the
 candidate was removed and the direct LDS-load schedule remains selected. See
 experiments/EXP-0331-m25-mx-register-prefetch-rejection.md.
 
+Re-evaluation: EXP-0332 screened the pinned MMQ full-tile branch that removes
+exact-P512 bounds checks. Candidate samples ranged from `2420.50` to
+`2735.09 ms` and paired deltas were inconsistent; one control sample at
+`2842.74 ms` was contaminated. No stable five-plus-sample gain was established,
+so the specialization was removed and the checked staged kernel remains
+selected. See experiments/EXP-0332-m25-mx-full-tile-rejection.md.
+
 Update this document whenever:
 
 * active milestone changes

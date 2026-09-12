@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1789188701.8184896,
-    "seen": 1789188715.8067656,
-    "ast_hash": "c82de6c8ae73ec8750043d16311a8e33",
+    "mtime": 1789189386.9817343,
+    "seen": 1789189460.9248886,
+    "ast_hash": "7f894549722472ee96cbc5f4af2a822f",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -5109,6 +5109,12 @@
     "mtime": 1789188701.8174896,
     "seen": 1789188715.8072314,
     "ast_hash": "669f7fca461204875b4bdeb2b295f520",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0332-m25-mx-full-tile-rejection.md": {
+    "mtime": 1789189386.9807343,
+    "seen": 1789189460.9253647,
+    "ast_hash": "7abd57f250c876d4784fefd9e5647e5f",
     "semantic_hash": ""
   }
 }
