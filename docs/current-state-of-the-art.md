@@ -21,8 +21,10 @@ The benchmark target is Qwen3.8-27B-Q4_K_M on one AMD Instinct MI50
 | --- | --- | ---: | ---: | ---: |
 | `mx-llama.cpp` repacked | historical external oracle | 2317.872 | 220.892 | external |
 | `mx-llama.cpp` `llama-bench` fresh screen | current external comparison | 2307.634 median | 221.872 | external |
+| `mx-llama.cpp` `llama-bench` requalification | current six-pair screen | 2312.370 median | 221.418 | external |
 | MIInfer H/I, pre-repair best | historical, not qualification | 2421.07 | 211.48 | 18,472,649,044 B |
 | MIInfer H/I, repaired qualified | current accepted path, opt-in | 2500.62 median | 204.75 | 21,993,242,964 B |
+| MIInfer H/I, current requalification | six-pair clock-qualified screen | 2499.345 median | 204.854 | 21,993,242,964 B |
 | MIInfer H/I + pinned QKV MMQ | three-pair opt-in screen; not qualified | 2492.25 median | 205.44 | 21,993,242,964 B |
 | MIInfer H/I + Mx attention decode reuse | interleaved opt-in screen; promotion pending | 2412.24 median | 212.25 | 18,472,649,044 B |
 | MIInfer H/I + persistent oracle GDN state | three-pair opt-in screen; rejected | 2502.69 median | 204.58 | 21,993,242,964 B |
@@ -30,8 +32,9 @@ The benchmark target is Qwen3.8-27B-Q4_K_M on one AMD Instinct MI50
 
 The H/I path clears the primary gate but is not the default. The external
 stretch gap is `182.748 ms/P512` at the historical qualified medians. The
-latest fresh no-profiler screen measures a `166.976 ms` gap against the pinned
-synthetic-token `llama-bench` path.
+latest six-pair no-profiler requalification measures a `186.975 ms` gap
+(`8.086%`) against the pinned synthetic-token `llama-bench` path. The earlier
+`166.976 ms` screen remains historical run-to-run evidence.
 
 ## Retained MIInfer path
 
@@ -110,13 +113,16 @@ with the real continuation and repeat-P512 state gate passing. Its main
 benefit remains the lower VRAM footprint; long-context and decode promotion
 checks are still open. The `220.892 tok/s` stretch target remains open.
 
-M25-L is now measurement-only. A fresh six-pair, no-profiler screen measured
-the pinned `llama-bench` path at `2307.634 ms` / `221.872 tok/s` median and
-MIInfer H/I at `2474.610 ms` / `206.901 tok/s` median, a `166.976 ms` or
-`7.236%` latency gap. The oracle benchmark does not accept the exact text
-prompt, so it uses the same model and P512 benchmark shape but synthetic
-benchmark tokens; that limitation is recorded in EXP-0340. The current MIInfer
-profile measures recurrent layer 60's whole-B512 FFN tail at `22.2694 ms`. A
+M25-L is now measurement-only. EXP-0348 reran the six-pair, no-profiler
+comparison: the pinned `llama-bench` path measured `2312.370 ms` /
+`221.418 tok/s` median and MIInfer H/I measured `2499.345 ms` /
+`204.854 tok/s` median, a `186.975 ms` or `8.086%` latency gap. The earlier
+EXP-0340 screen measured `166.976 ms`; both screens are retained because the
+remaining difference is now comparable to run-to-run variation. The oracle
+benchmark does not accept the exact text prompt, so it uses the same model and
+P512 benchmark shape but synthetic benchmark tokens; that limitation is
+recorded in EXP-0340 and EXP-0348. The current MIInfer profile measures
+recurrent layer 60's whole-B512 FFN tail at `22.2694 ms`. A
 source-labelled oracle trace measures the corresponding FFN contract at about
 `22.117 ms`, so FFN is not the missing `~3.8 ms/layer`. The same trace shows
 oracle QKV MMQ at about `3.96 ms` versus MIInfer's `4.64 ms`, and oracle GDN at
@@ -178,6 +184,14 @@ ms` for the same-build H/I control (`+0.331%`). It is retained only as an
 opt-in contract probe; the qualified state layout and decode path remain
 unchanged.
 
+EXP-0348 requalified the current pinned oracle and MIInfer H/I under one clean
+six-pair session. All 1,405 telemetry samples held `1606/1000 MHz`; the oracle
+median was `2312.370 ms` / `221.418 tok/s`, and MIInfer was `2499.345 ms` /
+`204.854 tok/s`. The resulting `186.975 ms` (`8.086%`) gap confirms that the
+stretch remains open but does not identify a new kernel target. The external
+synthetic-token limitation and the retained `2841.29 ms` and `2700.75 ms`
+MIInfer samples are documented in the experiment record.
+
 ## Reproducibility and promotion rules
 
 Every performance claim must use clean processes, the exact model hash and
@@ -189,4 +203,4 @@ transient device/runtime or harness state: the exact pre-J/current-main A/B
 did not reproduce it with M25-J disabled.
 
 Detailed evidence is indexed in [`current-state.md`](current-state.md) and
-the M25 records `EXP-0300` through `EXP-0347`.
+the M25 records `EXP-0300` through `EXP-0348`.

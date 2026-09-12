@@ -52,6 +52,8 @@ M25-L/input graph: recurrent QKV/Z + beta/alpha overlap rejected; serialized
                    input path retained
 M25-L/QKV-Gate: Q6-only overlap timed out with incomplete shared-workspace
                 ownership; candidate removed
+M25-L/requalification: current six-pair screen is 204.854 tok/s versus
+                        pinned mx at 221.418 tok/s; stretch remains open
 ```
 
 The current performance target is the exact Qwen3.8-27B-Q4_K_M P512 prefill
@@ -67,9 +69,11 @@ The exact pre-J versus M25-J source-delta retest is recorded in EXP-0323.
 The pinned-source audit found no missing Q4_K/Q5_K/Q6_K repack or GDN contract
 whose unmeasured transplant should replace the current paths. The external
 register-prefetch MMQ variant remains rejected on MI50, and M25-J remains
-disabled after its matched retest. M25-L's fresh
-six-pair screen narrows the current no-profiler `llama-bench` comparison to
-`166.976 ms` (`7.236%`). Its source-labelled recurrent trace puts the whole
+disabled after its matched retest. M25-L's latest six-pair requalification in
+EXP-0348 measures the current no-profiler `llama-bench` comparison at a
+`186.975 ms` (`8.086%`) gap: `221.418 tok/s` for the pinned oracle and
+`204.854 tok/s` for MIInfer H/I. The earlier `166.976 ms` screen remains
+historical run-to-run evidence. Its source-labelled recurrent trace puts the whole
 FFN tail within about `0.15 ms/layer` of the oracle, so FFN is not the missing
 differential. See
 `experiments/EXP-0340-m25-l-recurrent-ffn-contract-differential.md`.
@@ -110,6 +114,15 @@ and repeat-P512 state gate and added no allocation, but the three-pair screen
 was `2502.69 ms` versus `2494.44 ms` for the same-build H/I control. It is
 rejected for qualification and retained only as an opt-in contract probe; no
 further isolated GDN state-layout work is justified without new evidence.
+
+EXP-0348 requalified the pinned oracle and MIInfer H/I in six fresh
+interleaved pairs. All 1,405 telemetry samples held `1606/1000 MHz`; MIInfer
+latencies were `2418.69, 2841.29, 2431.74, 2473.60, 2525.09, 2700.75 ms`,
+with a `2499.345 ms` median (`204.854 tok/s`). The oracle median was
+`221.418 tok/s` (`2312.370 ms`), leaving a `186.975 ms` (`8.086%`) latency
+gap. The synthetic-token oracle limitation and retained outliers are recorded
+in the experiment; no optimization or preset change follows from this
+measurement.
 
 EXP-0338 adds an opt-in attention decode reuse path. It routes attention O
 and FFN decode through the existing H/I Mx weights, removes the duplicate M23
