@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1789177292.7297313,
-    "seen": 1789177305.4084795,
-    "ast_hash": "620a33e96ce9c6a1f4063aa76671d2b8",
+    "mtime": 1789178451.1016088,
+    "seen": 1789178631.9421756,
+    "ast_hash": "c7146643efdbd380c8267a4b257da510",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -5061,6 +5061,12 @@
     "mtime": 1789177292.7267313,
     "seen": 1789177305.4090044,
     "ast_hash": "5a03911f6174c5764bf4c12ae2003237",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0324-m25-mx-vector-epilogue.md": {
+    "mtime": 1789178435.551691,
+    "seen": 1789178631.9426703,
+    "ast_hash": "b8dd0622a2ac313d340d515475d0f03e",
     "semantic_hash": ""
   }
 }

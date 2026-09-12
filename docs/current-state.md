@@ -1828,6 +1828,13 @@ not a reproducible M25-J regression. The primary gate remains passed at
 open. Do not reopen kernel work without a new measured production-shape
 differential.
 
+Re-evaluation: EXP-0324 tested the pinned MMQ kernel's vectorized four-row
+output epilogue against the MIInfer staged default. Q4, Q5, and Q6 production
+shapes regressed by `8.4–10.4%` with unchanged numerical parity, so the
+candidate was rejected and the scalar epilogue restored. The remaining
+stretch gap has no measured justification for another inner-loop transplant.
+See experiments/EXP-0324-m25-mx-vector-epilogue.md.
+
 Update this document whenever:
 
 * active milestone changes
