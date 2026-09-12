@@ -1898,6 +1898,17 @@ only for Q4/Q5, retaining one block for Q6. The candidate measured
 established one-block control range. It was removed; all Mx MMQ types retain
 the one-block annotation. See experiments/EXP-0333-m25-mx-q4-occupancy-rejection.md.
 
+Re-evaluation: EXP-0334 ported the pinned large-batch Mx MMQ contract as one
+complete opt-in kernel, including its register/LDS schedule, metadata grouping,
+full-tile path, launch bounds, and vectorized epilogue. It passed finite P512
+output and the real continuation/repeat-P512 gate, but five clock-qualified
+fresh pairs measured `2498.36 ms` (`204.93 tok/s`) for the staged control versus
+`2859.98 ms` (`179.02 tok/s`) for the complete pinned contract. The candidate
+used the same allocation and was rejected; the staged one-block kernel remains
+selected. The pinned contract has now been tested both component-by-component
+and as a complete port, so further MMQ transplant work needs a new measured
+reason. See experiments/EXP-0334-m25-pinned-mx-mmq-contract-rejection.md.
+
 Update this document whenever:
 
 * active milestone changes
