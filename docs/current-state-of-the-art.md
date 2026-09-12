@@ -78,6 +78,7 @@ compatible. The following complete or isolated ports were measured on MI50:
 | Mx attention O/FFN decode reuse | `~3.28 GiB` less allocation; `16.98 tok/s` in a 128-token decode screen with Mx MMV | keep opt-in |
 | attention QKV fork/join | `0.836%` median P512 improvement; no qualified gain | reject |
 | Mx GDN separate state input/output contract | `+0.31%` standalone B512; `+3 MiB` state scratch per recurrent layer | reject |
+| Mx GDN oracle launch bounds | `+3.63%` standalone B512 | reject |
 
 The evidence says the remaining stretch is not explained by a missing literal
 Q4/Q5/Q6, Q8, or GDN source transplant. The static HIP graph was slower, so
@@ -158,4 +159,4 @@ transient device/runtime or harness state: the exact pre-J/current-main A/B
 did not reproduce it with M25-J disabled.
 
 Detailed evidence is indexed in [`current-state.md`](current-state.md) and
-the M25 records `EXP-0300` through `EXP-0343`.
+the M25 records `EXP-0300` through `EXP-0344`.

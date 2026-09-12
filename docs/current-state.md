@@ -45,6 +45,8 @@ M25-continuation: source repair and repeat/long-generation gates PASS
 M25-prefill graph: static HIP graph screen rejected; host submission retained
 M25-L: fresh oracle comparison and recurrent FFN differential; measurement only
 M25-L/QKV: oracle-backed fork/join screen rejected; no runtime branch retained
+M25-L/GDN: oracle launch-bounds retest rejected; MIInfer retains the faster
+           `__launch_bounds__(128, 2)` declaration
 ```
 
 The current performance target is the exact Qwen3.8-27B-Q4_K_M P512 prefill
@@ -73,6 +75,11 @@ contract is rejected there as well.
 EXP-0337 screened a static HIP graph for the exact resident Mx P512 body; it
 passed continuation correctness but was 0.44% slower and used about 8 MiB
 more reported VRAM, so the candidate was removed.
+
+EXP-0344 tested the pinned oracle's `__launch_bounds__(256, 2)` declaration on
+the actual MIInfer 128-thread Mx GDN launch. It preserved correctness but was
+3.63% slower than MIInfer's `__launch_bounds__(128, 2)` control, so it was
+removed.
 
 EXP-0338 adds an opt-in attention decode reuse path. It routes attention O
 and FFN decode through the existing H/I Mx weights, removes the duplicate M23

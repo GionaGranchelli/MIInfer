@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1789210727.077402,
-    "seen": 1789213839.3292499,
-    "ast_hash": "045f7bb99a17ba90a061eda5984e52a6",
+    "mtime": 1789215208.4153802,
+    "seen": 1789215222.5023115,
+    "ast_hash": "0ba3c57e03c5a45097a1d76ad36f8079",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -5142,9 +5142,9 @@
     "semantic_hash": ""
   },
   "docs/current-state-of-the-art.md": {
-    "mtime": 1789214777.9974694,
-    "seen": 1789214794.7567377,
-    "ast_hash": "5152ad7808cace37d78595f6994271a8",
+    "mtime": 1789215202.0374095,
+    "seen": 1789215222.5023093,
+    "ast_hash": "aeb3043bfaa763fa0617e848fc5a9d28",
     "semantic_hash": ""
   },
   "experiments/EXP-0337-m25-prefill-hip-graph-rejection.md": {
@@ -5187,6 +5187,12 @@
     "mtime": 1789214749.240617,
     "seen": 1789214794.7572637,
     "ast_hash": "beb86b5d36f11f8bdb744203ba2b1888",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0344-m25-gdn-launch-bounds-rejection.md": {
+    "mtime": 1789215194.7074435,
+    "seen": 1789215222.5028605,
+    "ast_hash": "d3472bbe80c200be4a226b4bc246a222",
     "semantic_hash": ""
   }
 }
