@@ -22,6 +22,7 @@ The benchmark target is Qwen3.8-27B-Q4_K_M on one AMD Instinct MI50
 | `mx-llama.cpp` repacked | external oracle | 2317.872 | 220.892 | external |
 | MIInfer H/I, pre-repair best | historical, not qualification | 2421.07 | 211.48 | 18,472,649,044 B |
 | MIInfer H/I, repaired qualified | current accepted path, opt-in | 2500.62 median | 204.75 | 21,993,242,964 B |
+| MIInfer H/I + Mx attention decode reuse | fresh opt-in screen, not qualification | 2485.77 median | 205.97 | 18,472,649,044 B |
 | MIInfer matched control | current comparison | — | — | 19,108,282,708 B |
 
 The H/I path clears the primary gate but is not the default. The external
@@ -40,6 +41,13 @@ The current best accepted P512 configuration is the printed
 - M25-I Mx attention O projection;
 - resident M23 copies retained where scalar decode requires them;
 - static full-layer-major B512 prefill orchestration.
+
+An additional opt-in candidate,
+`MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_DECODE=1`, reuses the H/I Mx O and FFN
+weights for attention decode and removes the duplicate M23 attention-FFN
+representation. It saves `3,520,753,920 B` in the measured Q4_K_M layout. The
+qualified preset still retains the M23 decode copies until the candidate has
+completed a full promotion run.
 
 H/I has passed finite scalar parity, the `00/10/01/11` configuration matrix,
 real continuation, repeat-P512, CTest, and the long-generation gate. Its
@@ -62,6 +70,7 @@ compatible. The following complete or isolated ports were measured on MI50:
 | pinned four-column GDN, Tc4 | slower in six-process qualification | reject for default |
 | M25-J four-block Q8 quantizer | no qualified gain; kept disabled | reject |
 | Mx attention Q/K | slower or outside parity tolerance | reject |
+| Mx attention O/FFN decode reuse | `~3.28 GiB` less allocation; `16.98 tok/s` in a 128-token decode screen with Mx MMV | keep opt-in |
 
 The evidence says the remaining stretch is not explained by a missing literal
 Q4/Q5/Q6, Q8, or GDN source transplant. The likely difference is the wider
@@ -79,7 +88,10 @@ opt-in static HIP graph. The graph passed continuation correctness but was
 reported VRAM, so it was removed.
 
 The remaining stretch gap therefore still requires a different execution
-contract or a materially different measured scheduling opportunity.
+The new attention decode reuse candidate is not that stretch contract: its
+fresh P512 screen is `2485.77 ms` / `205.97 tok/s`, near the qualified H/I
+result, while its main benefit is lower VRAM and faster opt-in decode. The
+`220.892 tok/s` stretch target remains open.
 
 ## Reproducibility and promotion rules
 
@@ -92,4 +104,4 @@ transient device/runtime or harness state: the exact pre-J/current-main A/B
 did not reproduce it with M25-J disabled.
 
 Detailed evidence is indexed in [`current-state.md`](current-state.md) and
-the M25 records `EXP-0300` through `EXP-0337`.
+the M25 records `EXP-0300` through `EXP-0338`.

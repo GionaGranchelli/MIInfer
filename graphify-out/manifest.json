@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1789196203.9288106,
-    "seen": 1789197852.1900616,
-    "ast_hash": "0f96339e0d8a5f650678719e93cac6cb",
+    "mtime": 1789197912.6643357,
+    "seen": 1789197926.0987444,
+    "ast_hash": "53996c9f7ab03fb436b8ec5dc6943aaa",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -5142,15 +5142,21 @@
     "semantic_hash": ""
   },
   "docs/current-state-of-the-art.md": {
-    "mtime": 1789196105.78936,
-    "seen": 1789196133.0561697,
-    "ast_hash": "2cd75273617d2ee53d29c6db7a4a9429",
+    "mtime": 1789197912.6623356,
+    "seen": 1789197926.0987425,
+    "ast_hash": "d6b21445ae49c8898e82dba2a0fad9b2",
     "semantic_hash": ""
   },
   "experiments/EXP-0337-m25-prefill-hip-graph-rejection.md": {
     "mtime": 1789196105.78836,
     "seen": 1789196133.0567193,
     "ast_hash": "feaaea44f0b2c82e75f2ecd7df1acaf2",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0338-m25-mx-attention-decode-reuse.md": {
+    "mtime": 1789197912.6613357,
+    "seen": 1789197926.0992463,
+    "ast_hash": "b32a6c017616a470b59c30d73abe1c15",
     "semantic_hash": ""
   }
 }

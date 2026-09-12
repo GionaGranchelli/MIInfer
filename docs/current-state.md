@@ -68,6 +68,15 @@ EXP-0337 screened a static HIP graph for the exact resident Mx P512 body; it
 passed continuation correctness but was 0.44% slower and used about 8 MiB
 more reported VRAM, so the candidate was removed.
 
+EXP-0338 adds an opt-in attention decode reuse path. It routes attention O
+and FFN decode through the existing H/I Mx weights, removes the duplicate M23
+attention-FFN representation, and saves 3,520,753,920 bytes in the tested
+Q4_K_M layout. A fresh three-sample P512 screen measured a 2485.77 ms median
+(205.97 tok/s), within H/I variation, so the qualified preset is unchanged.
+Combined with the existing Mx MMV decode path, a 128-token screen reached
+16.98 tok/s with finite expected output. The candidate is KEEP opt-in pending
+clock-qualified A/B, long-context, and power/thermal validation.
+
 ## Historical context before M25
 
 M22 is recorded in EXP-0276 through EXP-0285. The pinned mx-llama reference
