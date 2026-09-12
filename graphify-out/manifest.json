@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1789197912.6643357,
-    "seen": 1789197926.0987444,
-    "ast_hash": "53996c9f7ab03fb436b8ec5dc6943aaa",
+    "mtime": 1789202284.9153478,
+    "seen": 1789202448.6204376,
+    "ast_hash": "e958633bb3dc3051b0743a1fe5b349e6",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -5142,9 +5142,9 @@
     "semantic_hash": ""
   },
   "docs/current-state-of-the-art.md": {
-    "mtime": 1789199284.618786,
-    "seen": 1789199307.4543707,
-    "ast_hash": "b3f94a64139fec9616330188caaec525",
+    "mtime": 1789202432.6765392,
+    "seen": 1789202448.6204355,
+    "ast_hash": "980a90b9c83dadd1465eaea159f1f49b",
     "semantic_hash": ""
   },
   "experiments/EXP-0337-m25-prefill-hip-graph-rejection.md": {
@@ -5163,6 +5163,12 @@
     "mtime": 1789199284.6197863,
     "seen": 1789199307.4548917,
     "ast_hash": "a50b4f9191680e211f781ecdbfd8c6cf",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0340-m25-l-recurrent-ffn-contract-differential.md": {
+    "mtime": 1789202432.675539,
+    "seen": 1789202448.6209517,
+    "ast_hash": "215e1915f9a250dfcee3ddb186d8e6ff",
     "semantic_hash": ""
   }
 }

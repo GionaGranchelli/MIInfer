@@ -43,6 +43,7 @@ M25-H/I: 204.75 tok/s repaired P512 qualification; qualified opt-in
 M25-J/K: J quantizer and Q/K candidate rejected
 M25-continuation: source repair and repeat/long-generation gates PASS
 M25-prefill graph: static HIP graph screen rejected; host submission retained
+M25-L: fresh oracle comparison and recurrent FFN differential; measurement only
 ```
 
 The current performance target is the exact Qwen3.8-27B-Q4_K_M P512 prefill
@@ -60,7 +61,11 @@ whose unmeasured transplant should replace the current paths. The external
 register-prefetch MMQ variant remains rejected on MI50, and M25-J remains
 disabled after its matched retest. The repaired H/I profile points to
 recurrent FFN gate/up and down execution as the next measured target; another
-GDN or attention micro-tuning pass is not currently justified.
+GDN or attention micro-tuning pass is not currently justified. M25-L's fresh
+six-pair screen narrows the current no-profiler `llama-bench` comparison to
+`166.976 ms` (`7.236%`) while leaving the FFN share of that differential
+unproven. No M25-L optimization has been written; see
+`experiments/EXP-0340-m25-l-recurrent-ffn-contract-differential.md`.
 EXP-0336 isolated the already-ported pinned MMQ contract to those recurrent FFN
 projections and still measured an 11.98% end-to-end P512 regression, so that
 contract is rejected there as well.
@@ -75,7 +80,8 @@ Q4_K_M layout. A fresh three-sample P512 screen measured a 2485.77 ms median
 (205.97 tok/s), within H/I variation, so the qualified preset is unchanged.
 Combined with the existing Mx MMV decode path, a 128-token screen reached
 16.98 tok/s with finite expected output. The candidate is KEEP opt-in pending
-clock-qualified A/B, long-context, and power/thermal validation.
+clock-qualified A/B, long-context, and power/thermal validation. The selector
+now fails closed unless resident-all attention weights are active.
 
 ## Historical context before M25
 

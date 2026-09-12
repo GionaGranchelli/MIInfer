@@ -19,7 +19,8 @@ The benchmark target is Qwen3.8-27B-Q4_K_M on one AMD Instinct MI50
 
 | implementation | status | P512 ms | prompt tok/s | allocation |
 | --- | --- | ---: | ---: | ---: |
-| `mx-llama.cpp` repacked | external oracle | 2317.872 | 220.892 | external |
+| `mx-llama.cpp` repacked | historical external oracle | 2317.872 | 220.892 | external |
+| `mx-llama.cpp` `llama-bench` fresh screen | current external comparison | 2307.634 median | 221.872 | external |
 | MIInfer H/I, pre-repair best | historical, not qualification | 2421.07 | 211.48 | 18,472,649,044 B |
 | MIInfer H/I, repaired qualified | current accepted path, opt-in | 2500.62 median | 204.75 | 21,993,242,964 B |
 | MIInfer H/I + Mx attention decode reuse | interleaved opt-in screen; promotion pending | 2412.24 median | 212.25 | 18,472,649,044 B |
@@ -46,6 +47,7 @@ An additional opt-in candidate,
 `MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_DECODE=1`, reuses the H/I Mx O and FFN
 weights for attention decode and removes the duplicate M23 attention-FFN
 representation. It saves `3,520,753,920 B` in the measured Q4_K_M layout. The
+selector now fails closed unless resident-all attention weights are active. The
 qualified preset still retains the M23 decode copies until the candidate has
 completed a full promotion run.
 
@@ -73,9 +75,11 @@ compatible. The following complete or isolated ports were measured on MI50:
 | Mx attention O/FFN decode reuse | `~3.28 GiB` less allocation; `16.98 tok/s` in a 128-token decode screen with Mx MMV | keep opt-in |
 
 The evidence says the remaining stretch is not explained by a missing literal
-Q4/Q5/Q6, Q8, or GDN source transplant. The likely difference is the wider
-execution contract around those primitives: launch ordering, fusion, and
-runtime scheduling.
+Q4/Q5/Q6, Q8, or GDN source transplant. The static HIP graph was slower, so
+generic host submission overhead is not currently supported as the explanation.
+The unresolved question is the GPU execution contract around the primitives:
+materialization boundaries, operation composition, and the exact recurrent FFN
+schedule.
 
 ## Measured remaining work
 
@@ -94,6 +98,16 @@ with the real continuation and repeat-P512 state gate passing. Its main
 benefit remains the lower VRAM footprint; long-context and decode promotion
 checks are still open. The `220.892 tok/s` stretch target remains open.
 
+M25-L is now measurement-only. A fresh six-pair, no-profiler screen measured
+the pinned `llama-bench` path at `2307.634 ms` / `221.872 tok/s` median and
+MIInfer H/I at `2474.610 ms` / `206.901 tok/s` median, a `166.976 ms` or
+`7.236%` latency gap. The oracle benchmark does not accept the exact text
+prompt, so it uses the same model and P512 benchmark shape but synthetic
+benchmark tokens; that limitation is recorded in EXP-0340. The current MIInfer
+profile measures recurrent layer 60's whole-B512 FFN tail at `22.2694 ms`, but
+there is not yet a like-for-like oracle stage boundary. No M25-L optimization
+has been written.
+
 ## Reproducibility and promotion rules
 
 Every performance claim must use clean processes, the exact model hash and
@@ -105,4 +119,4 @@ transient device/runtime or harness state: the exact pre-J/current-main A/B
 did not reproduce it with M25-J disabled.
 
 Detailed evidence is indexed in [`current-state.md`](current-state.md) and
-the M25 records `EXP-0300` through `EXP-0339`.
+the M25 records `EXP-0300` through `EXP-0340`.
