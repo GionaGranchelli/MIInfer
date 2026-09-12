@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1789216621.3350866,
-    "seen": 1789216638.9298398,
-    "ast_hash": "2d956daa740e6a64836cdb3d3f1d57fa",
+    "mtime": 1789218257.470048,
+    "seen": 1789218290.0316927,
+    "ast_hash": "211b8c287aa8b6ca9ba520455c98bbf9",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -2370,8 +2370,8 @@
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1789216537.404443,
-    "seen": 1789216638.929794,
+    "mtime": 1789218107.5944135,
+    "seen": 1789218290.0316455,
     "ast_hash": "24debf9ef6e512c6f3a641a8a623d5d0",
     "semantic_hash": ""
   },
@@ -5142,9 +5142,9 @@
     "semantic_hash": ""
   },
   "docs/current-state-of-the-art.md": {
-    "mtime": 1789216602.1201682,
-    "seen": 1789216638.9298387,
-    "ast_hash": "eef67c3584aed236aed79831c4ac6183",
+    "mtime": 1789218232.2551095,
+    "seen": 1789218290.0316913,
+    "ast_hash": "df8e2b1a6930e2732b14436f5d6c9e40",
     "semantic_hash": ""
   },
   "experiments/EXP-0337-m25-prefill-hip-graph-rejection.md": {
@@ -5199,6 +5199,12 @@
     "mtime": 1789216578.4332688,
     "seen": 1789216638.9303327,
     "ast_hash": "6fe69e82e565d00ff1747d419a4371e6",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0346-m25-parallel-qkv-gate-rejection.md": {
+    "mtime": 1789218219.2991412,
+    "seen": 1789218290.0321884,
+    "ast_hash": "fd6335669bdd7e9155aeb9244629acae",
     "semantic_hash": ""
   }
 }

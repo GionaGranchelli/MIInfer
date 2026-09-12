@@ -80,6 +80,7 @@ compatible. The following complete or isolated ports were measured on MI50:
 | Mx GDN separate state input/output contract | `+0.31%` standalone B512; `+3 MiB` state scratch per recurrent layer | reject |
 | Mx GDN oracle launch bounds | `+3.63%` standalone B512 | reject |
 | parallel recurrent QKV/Z + beta/alpha branches | `+0.16%` P512 median | reject |
+| parallel QKV/Gate composition, Q6 layers | timed out before a valid sample; shared-workspace contract incomplete | reject |
 
 The evidence says the remaining stretch is not explained by a missing literal
 Q4/Q5/Q6, Q8, or GDN source transplant. The static HIP graph was slower, so
@@ -153,6 +154,16 @@ and beta/alpha branches ran on separate streams, but the candidate was `0.16%`
 slower by three-pair P512 median and had a retained `2857.58 ms` outlier. The
 selector and auxiliary stream were removed after the candidate passed the
 same-process continuation gate.
+
+EXP-0346 then attempted a narrower Q6-only QKV/Gate overlap. Its first screen
+was discarded because the hermetic preset cleared the experimental selector.
+With the complete vector supplied explicitly, the control completed at
+`2525.97 ms`, but the active candidate timed out during prefill without a
+latency or correctness result. The candidate also allocated its second Q8
+workspace only in the per-layer path even though the qualified run uses shared
+wide-prefill workspace ownership. The stream, events, selector, and candidate
+workspace were removed; this is a rejected implementation contract, not a
+performance conclusion about independent QKV/Gate execution.
 
 ## Reproducibility and promotion rules
 

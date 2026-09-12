@@ -49,6 +49,8 @@ M25-L/GDN: oracle launch-bounds retest rejected; MIInfer retains the faster
            `__launch_bounds__(128, 2)` declaration
 M25-L/input graph: recurrent QKV/Z + beta/alpha overlap rejected; serialized
                    input path retained
+M25-L/QKV-Gate: Q6-only overlap timed out with incomplete shared-workspace
+                ownership; candidate removed
 ```
 
 The current performance target is the exact Qwen3.8-27B-Q4_K_M P512 prefill
@@ -89,6 +91,16 @@ continuation/repeat-P512 gate but was 0.16% slower by three-pair median, with
 one retained 2857.58 ms candidate sample. The selector and auxiliary stream
 were removed; the next stretch step still requires a positive exact-shape
 differential or a more complete pinned graph contract.
+
+EXP-0346 attempted a narrower Q6-only QKV/Gate overlap. Its first screen was
+discarded because `m25_hi_qualified` clears unknown selectors. The corrected
+full-vector trial completed the control at `2525.97 ms`, but the candidate
+timed out during prefill without a latency or correctness result. The candidate
+also failed to wire its second Q8 buffer into shared wide-prefill ownership.
+The stream, events, selector, and workspace were removed; this is an
+implementation-contract rejection, not evidence that the oracle schedule is
+unprofitable. See
+`experiments/EXP-0346-m25-parallel-qkv-gate-rejection.md`.
 
 EXP-0338 adds an opt-in attention decode reuse path. It routes attention O
 and FFN decode through the existing H/I Mx weights, removes the duplicate M23
