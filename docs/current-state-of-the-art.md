@@ -22,7 +22,7 @@ The benchmark target is Qwen3.8-27B-Q4_K_M on one AMD Instinct MI50
 | `mx-llama.cpp` repacked | external oracle | 2317.872 | 220.892 | external |
 | MIInfer H/I, pre-repair best | historical, not qualification | 2421.07 | 211.48 | 18,472,649,044 B |
 | MIInfer H/I, repaired qualified | current accepted path, opt-in | 2500.62 median | 204.75 | 21,993,242,964 B |
-| MIInfer H/I + Mx attention decode reuse | fresh opt-in screen, not qualification | 2485.77 median | 205.97 | 18,472,649,044 B |
+| MIInfer H/I + Mx attention decode reuse | interleaved opt-in screen; promotion pending | 2412.24 median | 212.25 | 18,472,649,044 B |
 | MIInfer matched control | current comparison | — | — | 19,108,282,708 B |
 
 The H/I path clears the primary gate but is not the default. The external
@@ -88,10 +88,11 @@ opt-in static HIP graph. The graph passed continuation correctness but was
 reported VRAM, so it was removed.
 
 The remaining stretch gap therefore still requires a different execution
-The new attention decode reuse candidate is not that stretch contract: its
-fresh P512 screen is `2485.77 ms` / `205.97 tok/s`, near the qualified H/I
-result, while its main benefit is lower VRAM and faster opt-in decode. The
-`220.892 tok/s` stretch target remains open.
+contract. The new attention decode reuse candidate is not that stretch
+contract: its three-pair interleaved screen is `2412.24 ms` / `212.25 tok/s`,
+with the real continuation and repeat-P512 state gate passing. Its main
+benefit remains the lower VRAM footprint; long-context and decode promotion
+checks are still open. The `220.892 tok/s` stretch target remains open.
 
 ## Reproducibility and promotion rules
 
@@ -104,4 +105,4 @@ transient device/runtime or harness state: the exact pre-J/current-main A/B
 did not reproduce it with M25-J disabled.
 
 Detailed evidence is indexed in [`current-state.md`](current-state.md) and
-the M25 records `EXP-0300` through `EXP-0338`.
+the M25 records `EXP-0300` through `EXP-0339`.

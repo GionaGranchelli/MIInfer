@@ -5142,9 +5142,9 @@
     "semantic_hash": ""
   },
   "docs/current-state-of-the-art.md": {
-    "mtime": 1789197912.6623356,
-    "seen": 1789197926.0987425,
-    "ast_hash": "d6b21445ae49c8898e82dba2a0fad9b2",
+    "mtime": 1789199284.618786,
+    "seen": 1789199307.4543707,
+    "ast_hash": "b3f94a64139fec9616330188caaec525",
     "semantic_hash": ""
   },
   "experiments/EXP-0337-m25-prefill-hip-graph-rejection.md": {
@@ -5157,6 +5157,12 @@
     "mtime": 1789197912.6613357,
     "seen": 1789197926.0992463,
     "ast_hash": "b32a6c017616a470b59c30d73abe1c15",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0339-m25-mx-attention-decode-reuse-qualification.md": {
+    "mtime": 1789199284.6197863,
+    "seen": 1789199307.4548917,
+    "ast_hash": "a50b4f9191680e211f781ecdbfd8c6cf",
     "semantic_hash": ""
   }
 }
