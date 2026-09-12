@@ -141,6 +141,19 @@ std::string json_escape(std::string_view value) {
     return escaped;
 }
 
+std::string openai_tool_calls_json(const std::vector<miinfer::ChatToolCall>& calls) {
+    std::string result = "[";
+    for (std::size_t i = 0; i < calls.size(); ++i) {
+        if (i != 0) result += ',';
+        const auto& call = calls[i];
+        result += "{\"id\":\"" + json_escape(call.id)
+            + "\",\"type\":\"function\",\"function\":{\"name\":\""
+            + json_escape(call.name) + "\",\"arguments\":\""
+            + json_escape(call.arguments) + "\"}}";
+    }
+    return result + "]";
+}
+
 std::optional<int> parse_port(std::string_view value) {
     int port = 0;
     const auto [end, error] = std::from_chars(value.data(), value.data() + value.size(), port);
@@ -2166,6 +2179,8 @@ int cmd_serve(int argc, char** argv) {
         state("parsed");
         const bool is_stream = parsed.request->stream;
         const std::size_t max_tokens = parsed.request->max_tokens;
+        const bool defer_tool_output = !parsed.request->tools.empty()
+            && parsed.request->tool_choice != "none";
         const std::string prompt = miinfer::build_chatml(*parsed.request);
         const auto client_cancelled = [&] {
             if (g_shutdown_requested) return true;
@@ -2207,13 +2222,17 @@ int cmd_serve(int argc, char** argv) {
             bool request_cancelled = false;
             opt.on_token = [&](std::uint32_t /*token*/, std::string_view piece) {
                 if (!client_connected) return false;
+                if (defer_tool_output) return true;
                 const std::string sse = "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"delta\":{\"content\":\""
                     + json_escape(piece) + "\"}}]}\n\n";
                 client_connected = send_all(client_fd, sse);
                 return client_connected;
             };
+            Qwen35RuntimeEngine::GenerateStats stats;
+            miinfer::OpenAiGeneratedToolCalls tool_calls;
             try {
-                const auto stats = engine.generate(prompt_tokens, opt);
+                stats = engine.generate(prompt_tokens, opt);
+                if (defer_tool_output) tool_calls = miinfer::parse_generated_tool_calls(stats.text);
                 request_cancelled = stats.cancelled;
                 prompt_tokens_total += stats.prompt_tokens;
                 prefill_tokens_total += stats.prefill_processed_tokens;
@@ -2243,7 +2262,8 @@ int cmd_serve(int argc, char** argv) {
                           << ",\"decode_tokens_per_second\":" << stats.decode_tok_s
                           << ",\"total_ms\":" << stats.total_ms
                           << ",\"cancelled\":" << (cancelled ? "true" : "false")
-                          << ",\"finish_reason\":\"" << (cancelled ? "cancelled" : "stop") << "\""
+                          << ",\"finish_reason\":\"" << (cancelled ? "cancelled"
+                              : !tool_calls.calls.empty() ? "tool_calls" : "stop") << "\""
                           << ",\"error\":null"
                           << ",\"configured_context\":" << context_length
                           << ",\"runtime_context_capacity\":" << g_cache_capacity << "}\n";
@@ -2254,7 +2274,32 @@ int cmd_serve(int argc, char** argv) {
                 }
                 return;
             }
-            if (client_connected && !request_cancelled) (void)send_all(client_fd, "data: [DONE]\n\n");
+            if (client_connected && !request_cancelled) {
+                if (defer_tool_output) {
+                    if (tool_calls.calls.empty()) {
+                        const std::string sse = "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"delta\":{\"content\":\""
+                            + json_escape(stats.text) + "\"}}]}\n\n";
+                        client_connected = send_all(client_fd, sse);
+                    } else {
+                        for (std::size_t i = 0; i < tool_calls.calls.size() && client_connected; ++i) {
+                            const auto& call = tool_calls.calls[i];
+                            const std::string sse = "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"delta\":{\"tool_calls\":[{\"index\":"
+                                + std::to_string(i) + ",\"id\":\"" + json_escape(call.id)
+                                + "\",\"type\":\"function\",\"function\":{\"name\":\""
+                                + json_escape(call.name) + "\",\"arguments\":\""
+                                + json_escape(call.arguments) + "\"}}]}}]}\n\n";
+                            client_connected = send_all(client_fd, sse);
+                        }
+                    }
+                }
+                const std::string finish = defer_tool_output && !tool_calls.calls.empty()
+                    ? "tool_calls" : "stop";
+                if (client_connected) {
+                    (void)send_all(client_fd, "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"delta\":{},\"finish_reason\":\""
+                        + finish + "\"}]}\n\n");
+                    (void)send_all(client_fd, "data: [DONE]\n\n");
+                }
+            }
         } else {
             Qwen35RuntimeEngine::GenerateOptions opt;
             opt.max_new_tokens = max_tokens;
@@ -2275,6 +2320,13 @@ int cmd_serve(int argc, char** argv) {
             request_duration_us += static_cast<std::uint64_t>(stats.total_ms * 1000.0);
             if (stats.cancelled) { ++cancelled_requests; state("cancelled"); }
             else state("completed");
+            const auto tool_calls = defer_tool_output
+                ? miinfer::parse_generated_tool_calls(stats.text)
+                : miinfer::OpenAiGeneratedToolCalls{};
+            const bool has_tool_calls = !tool_calls.calls.empty();
+            const std::string message = has_tool_calls
+                ? "\"content\":null,\"tool_calls\":" + openai_tool_calls_json(tool_calls.calls)
+                : "\"content\":\"" + json_escape(stats.text) + "\"";
             std::cerr << "miinfer_request {\"request_id\":" << request.request_id
                       << ",\"request_body_bytes\":" << request.raw.size()
                       << ",\"message_count\":" << parsed.request->messages.size()
@@ -2292,13 +2344,13 @@ int cmd_serve(int argc, char** argv) {
                       << ",\"decode_tokens_per_second\":" << stats.decode_tok_s
                       << ",\"total_ms\":" << stats.total_ms
                       << ",\"cancelled\":" << (stats.cancelled ? "true" : "false")
-                      << ",\"finish_reason\":\"" << (stats.cancelled ? "cancelled" : "stop") << "\""
+                      << ",\"finish_reason\":\"" << (stats.cancelled ? "cancelled" : has_tool_calls ? "tool_calls" : "stop") << "\""
                       << ",\"error\":null"
                       << ",\"configured_context\":" << context_length
                       << ",\"runtime_context_capacity\":" << g_cache_capacity << "}\n";
-            const std::string body = "{\"id\":\"chatcmpl-1\",\"object\":\"chat.completion\",\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\""
-                + json_escape(stats.text) + "\"},\"finish_reason\":\""
-                + std::string(stats.cancelled ? "cancelled" : "stop") + "\"}],\"usage\":{\"prompt_tokens\":"
+            const std::string body = "{\"id\":\"chatcmpl-1\",\"object\":\"chat.completion\",\"choices\":[{\"message\":{\"role\":\"assistant\","
+                + message + "},\"finish_reason\":\""
+                + std::string(stats.cancelled ? "cancelled" : has_tool_calls ? "tool_calls" : "stop") + "\"}],\"usage\":{\"prompt_tokens\":"
                 + std::to_string(stats.prompt_tokens) + ",\"completion_tokens\":"
                 + std::to_string(stats.generated_tokens) + "}}";
             (void)send_http_response(client_fd, 200, "OK", "application/json", body);

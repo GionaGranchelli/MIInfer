@@ -2364,9 +2364,9 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1789219745.9205053,
-    "seen": 1789220386.300358,
-    "ast_hash": "4395f4b7224e10a0bb12178a8848aff0",
+    "mtime": 1789226413.3429,
+    "seen": 1789226468.0136213,
+    "ast_hash": "3e632f3571c714e482ef6b849c2b85a8",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
@@ -2406,9 +2406,9 @@
     "semantic_hash": ""
   },
   "docs/M9-RUNTIME-SURFACE.md": {
-    "mtime": 1788893174.0995805,
-    "seen": 1788893264.1814685,
-    "ast_hash": "dc658e75260020ddd3c1ec56e5ac0c6c",
+    "mtime": 1789226413.3449,
+    "seen": 1789226468.0136669,
+    "ast_hash": "29b9a551950d43ac64a59cc804e5bbce",
     "semantic_hash": ""
   },
   "experiments/EXP-0194-kquant-fast-tile-arith.md": {
@@ -2904,21 +2904,21 @@
     "semantic_hash": ""
   },
   "include/miinfer/openai_api.hpp": {
-    "mtime": 1788940666.1004074,
-    "seen": 1788940682.1034195,
-    "ast_hash": "ccbe38d5b08319569ebf174fbd13bd0d",
+    "mtime": 1789226268.970541,
+    "seen": 1789226468.013144,
+    "ast_hash": "c197d0cb8ed8e9d98b851086a988a487",
     "semantic_hash": ""
   },
   "src/openai_api.cpp": {
-    "mtime": 1788940666.1014073,
-    "seen": 1788940682.1035879,
-    "ast_hash": "7f8d04bf83e3238b73270d68faa61be7",
+    "mtime": 1789226413.3399,
+    "seen": 1789226468.0135128,
+    "ast_hash": "64d8405e422559b5cb49a069d1f9e455",
     "semantic_hash": ""
   },
   "tests/openai_api_test.cpp": {
-    "mtime": 1788940666.1014073,
-    "seen": 1788940682.1036215,
-    "ast_hash": "1935d249b4b562fa69b46e43af09c0b4",
+    "mtime": 1789226268.971541,
+    "seen": 1789226468.0135431,
+    "ast_hash": "de3e4cf55a144255041cc4d35aa05966",
     "semantic_hash": ""
   },
   "experiments/EXP-0265-m16d-openai-request-contract.md": {

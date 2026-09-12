@@ -65,8 +65,39 @@ queue implementing an OpenAI-compatible chat-completions subset. It binds to
 - **HTTP framing**: Reads bounded `Content-Length` bodies up to 4 MiB, with
   a 10-second absolute request deadline; all transfer encodings are rejected.
 - **Generation bound**: Requests are capped at 4096 generated tokens.
-- **Payload Parsing**: The current release accepts the first string `content`
-  field as a chat prompt. Full multi-message JSON parsing remains open work.
+- **Payload Parsing**: Accepts OpenAI string content, text content parts,
+  `system`, `developer`, `user`, `assistant`, and `tool` messages, plus
+  function tool definitions and assistant tool-call history. Qwen3.5 XML tool
+  calls are translated to OpenAI `tool_calls` responses so tool-enabled agents
+  can execute their own tools. Images and non-function tool types are rejected
+  explicitly because this MI50 runtime has no vision input path.
+
+#### Pi / OpenAI tool clients
+
+The server accepts the request shape emitted by Pi’s OpenAI-compatible provider:
+
+```json
+{
+  "messages": [
+    {"role": "user", "content": "Read README.md"}
+  ],
+  "tools": [
+    {"type": "function", "function": {
+      "name": "read_file",
+      "description": "Read a file",
+      "parameters": {"type": "object", "properties": {
+        "path": {"type": "string"}
+      }, "required": ["path"]}
+    }}
+  ],
+  "stream": true
+}
+```
+
+Start a freshly built server after updating MIInfer, then configure Pi’s
+`llama.cpp` provider to use `http://127.0.0.1:8080/v1`. The server may be
+started without authentication on loopback; if authentication is enabled, Pi’s
+API key must match the configured bearer key.
 
 ---
 
