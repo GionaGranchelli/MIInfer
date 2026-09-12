@@ -88,6 +88,19 @@ sample attributes approximately:
 The next candidate must target the recurrent FFN execution contract; another
 GDN or attention micro-tuning pass is not justified by this profile.
 
+## Preset verification
+
+`MIINFER_PRESET=m25_hi_qualified` now clears ambient `MIINFER_*` selectors
+(preserving `MIINFER_API_KEY`), applies the vector above, and prints the
+resolved values at startup. A clean preset run passed the same-process check:
+
+```text
+same_process_p512_check=PASS first_token=13477(brown) continuation_token=37550
+first_prefill_ms=2476.79 continuation_ms=516.59 repeat_prefill_ms=2454.05
+```
+
+An unknown preset fails before model loading with exit status 2.
+
 ## Decision
 
 **KEEP** H/I as the qualified opt-in path. The primary performance and
@@ -96,6 +109,6 @@ stretch match: it remains below the pinned reference.
 
 ## Follow-up
 
-Add the versioned `m25_hi_qualified` preset and print its resolved vector at
-startup. Then choose one recurrent FFN differential experiment with a measured
+Use the versioned `m25_hi_qualified` preset for future qualification runs. Then
+choose one recurrent FFN differential experiment with a measured
 production-shape baseline; do not add another speculative kernel.

@@ -7,6 +7,7 @@
 #include <condition_variable>
 #include <cerrno>
 #include <csignal>
+#include <cstdlib>
 #include <cstdint>
 #include <cstring>
 #include <deque>
@@ -40,11 +41,72 @@
 #include "miinfer/build_info.hpp"
 #include "miinfer/openai_api.hpp"
 
+extern char** environ;
+
 namespace {
 
 std::atomic<bool> g_shutdown_requested{false};
 int g_signal_wakeup_fd = -1;
 constexpr std::size_t kFullPrefillCapacity = 512;
+
+struct PresetFlag {
+    const char* name;
+    const char* value;
+};
+
+bool apply_runtime_preset() {
+    const char* preset = std::getenv("MIINFER_PRESET");
+    if (preset == nullptr) return true;
+    if (std::strcmp(preset, "m25_hi_qualified") != 0) {
+        std::cerr << "unsupported MIINFER_PRESET: " << preset
+                  << " (expected m25_hi_qualified)\n";
+        return false;
+    }
+
+    // Clear every MIINFER_* override before applying the versioned vector;
+    // preserve the server credential, which is not a runtime selector.
+    std::vector<std::string> names;
+    for (char** entry = environ; entry != nullptr && *entry != nullptr; ++entry) {
+        const std::string_view value(*entry);
+        if (value.rfind("MIINFER_", 0) == 0
+            && value.rfind("MIINFER_API_KEY=", 0) != 0
+            && value.rfind("MIINFER_PRESET=", 0) != 0) {
+            names.emplace_back(value.substr(0, value.find('=')));
+        }
+    }
+    for (const auto& name : names) unsetenv(name.c_str());
+
+    static constexpr std::array flags{
+        PresetFlag{"MIINFER_CONTEXT_CAPACITY", "1024"},
+        PresetFlag{"MIINFER_PREFILL_LAYER_MAJOR", "1"},
+        PresetFlag{"MIINFER_PREFILL_WIDE_CHUNK", "1"},
+        PresetFlag{"MIINFER_PREFILL_FULL_LAYER_MAJOR", "1"},
+        PresetFlag{"MIINFER_PREFILL_WIDE_ATTN", "1"},
+        PresetFlag{"MIINFER_PREFILL_WIDE_REPACKED_MMQ", "1"},
+        PresetFlag{"MIINFER_PREFILL_WIDE_MX_REPACKED_MMQ", "1"},
+        PresetFlag{"MIINFER_PREFILL_WIDE_MMQ_QKV", "1"},
+        PresetFlag{"MIINFER_PREFILL_WIDE_MMQ_SSM_OUT", "1"},
+        PresetFlag{"MIINFER_PREFILL_WIDE_MMQ_FFN", "1"},
+        PresetFlag{"MIINFER_M23_REPACKED_ROW128", "1"},
+        PresetFlag{"MIINFER_PREFILL_REPACKED_RESIDENT_ALL", "1"},
+        PresetFlag{"MIINFER_PREFILL_CHUNK", "512"},
+        PresetFlag{"MIINFER_PREFILL_MX_GDN", "1"},
+        PresetFlag{"MIINFER_MX_Q8_BATCH", "0"},
+        PresetFlag{"MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_FFN", "1"},
+        PresetFlag{"MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_O", "1"},
+    };
+    for (const auto [name, value] : flags) {
+        if (setenv(name, value, 1) != 0) {
+            std::cerr << "unable to set " << name << " for MIINFER_PRESET\n";
+            return false;
+        }
+    }
+    g_cache_capacity = 1024;
+    std::cerr << "preset=m25_hi_qualified\n"
+              << "  MIINFER_MX_PIPELINE=unset\n";
+    for (const auto [name, value] : flags) std::cerr << "  " << name << "=" << value << '\n';
+    return true;
+}
 
 void print_hip_memory(std::ostream& output) {
     std::size_t free_bytes = 0;
@@ -2438,6 +2500,7 @@ void print_usage() {
     std::cout << "  inspect <model.gguf>                     Inspect model metadata, quantization, and VRAM budget\n";
     std::cout << "  run <model.gguf> --prompt \"...\"         Generate text from a prompt with streaming output\n";
     std::cout << "       --repeat-p512-check                 Check P512, real continuation, and repeat P512\n";
+    std::cout << "       MIINFER_PRESET=m25_hi_qualified     Use the hermetic qualified MI50 P512 vector\n";
     std::cout << "  chat <model.gguf>                        Start an interactive multi-turn terminal chat REPL\n";
     std::cout << "  serve --model MODEL.gguf [--port 8080] [--context N] [--experimental-context]\n"
               << "        [--api-key-file PATH] [--allow-insecure]   Launch API and Web UI\n\n";
@@ -2452,6 +2515,7 @@ int main(int argc, char** argv) {
     }
 
     const std::string_view cmd = argv[1];
+    if ((cmd == "run" || cmd == "chat" || cmd == "serve") && !apply_runtime_preset()) return 2;
     if (cmd == "inspect") {
         return cmd_inspect(argc, argv);
     } else if (cmd == "config") {

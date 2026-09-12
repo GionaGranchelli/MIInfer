@@ -46,9 +46,9 @@ on one MI50 at SCLK/MCLK 1606/1000 MHz. The pinned mx-llama reference is
 approximately 220.9 tok/s; the repaired MIInfer H/I path measures a six-sample
 median of 204.75 tok/s. The historical 211.48 tok/s result remains valid only
 as pre-repair evidence. H/I now passes the independent matrix, same-process
-repeat, CTest, and 128-token generation gates, but remains opt-in until the
-versioned preset prints a hermetic configuration vector. See EXP-0319,
-EXP-0320, EXP-0321, and EXP-0322.
+repeat, CTest, and 128-token generation gates. Use the opt-in
+`MIINFER_PRESET=m25_hi_qualified` for a hermetic, printed configuration
+vector. See EXP-0319, EXP-0320, EXP-0321, and EXP-0322.
 
 The pinned-source audit found no missing Q4_K/Q5_K/Q6_K repack or GDN contract
 whose unmeasured transplant should replace the current paths. The external
