@@ -2632,18 +2632,19 @@ void launch_mx_q5k_repacked_mmq(
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
-void launch_mx_q6k_repacked_mmq(
+void launch_mx_q6k_repacked_mmq_impl(
     const std::uint8_t* weights, const miinfer::MxQ8_1MmqBlock* input, float* output,
-    std::uint32_t rows, std::uint32_t columns, std::uint32_t token_count, hipStream_t stream) {
+    std::uint32_t rows, std::uint32_t columns, std::uint32_t token_count,
+    hipStream_t stream, bool force_pinned) {
     if (weights == nullptr || input == nullptr || output == nullptr || rows == 0
         || columns == 0 || columns % 128 != 0 || token_count == 0 || token_count > 512) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
-    if (token_count == 1 && mx_mmv_enabled()) {
+    if (token_count == 1 && mx_mmv_enabled() && !force_pinned) {
         hipLaunchKernelGGL((mx_repacked_mmv_kernel<false, true>),
                            dim3((rows + 15) / 16), dim3(1024), 0,
                            stream, weights, input, output, rows, columns);
-    } else if (mx_pinned_enabled()) {
+    } else if (force_pinned || mx_pinned_enabled()) {
         hipLaunchKernelGGL((mx_repacked_mmq_pinned_kernel<false, true>),
                            dim3((rows + 63) / 64, (token_count + 127) / 128), dim3(64, 4), 0,
                            stream, weights, input, output, rows, columns, token_count);
@@ -2657,6 +2658,20 @@ void launch_mx_q6k_repacked_mmq(
                            stream, weights, input, output, rows, columns, token_count);
     }
     MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_mx_q6k_repacked_mmq(
+    const std::uint8_t* weights, const miinfer::MxQ8_1MmqBlock* input, float* output,
+    std::uint32_t rows, std::uint32_t columns, std::uint32_t token_count, hipStream_t stream) {
+    launch_mx_q6k_repacked_mmq_impl(
+        weights, input, output, rows, columns, token_count, stream, false);
+}
+
+void launch_mx_q6k_repacked_mmq_pinned(
+    const std::uint8_t* weights, const miinfer::MxQ8_1MmqBlock* input, float* output,
+    std::uint32_t rows, std::uint32_t columns, std::uint32_t token_count, hipStream_t stream) {
+    launch_mx_q6k_repacked_mmq_impl(
+        weights, input, output, rows, columns, token_count, stream, true);
 }
 
 namespace {

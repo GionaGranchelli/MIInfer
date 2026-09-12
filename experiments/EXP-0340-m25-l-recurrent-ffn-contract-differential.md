@@ -150,3 +150,45 @@ the decomposition trace can then be used only as a secondary diagnostic.
 3. Only if the oracle-to-MIInfer FFN delta is about `3.5 ms/layer` or more,
    evaluate a complete contract port. Otherwise redirect the stretch work to
    the measured differential family.
+
+## Re-evaluation — 2026-09-12
+
+The pinned oracle was temporarily instrumented at source level, with graphs
+disabled so HIP events were not recorded during graph capture. The trace was
+labelled by tensor name for recurrent layer 60 and compared with MIInfer's
+existing layer-60 B512 profile:
+
+| contract stage | mx oracle (ms) | MIInfer (ms) | observation |
+|---|---:|---:|---|
+| QKV projection | 3.958 | 4.643 | concrete Q6 MMQ differential |
+| GDN core | 1.924 | 3.579 | source-labelled event boundaries differ; retest |
+| FFN Gate/Up + SwiGLU | about 14.5 | 13.828 | not slower in MIInfer |
+| FFN Down + residual | about 7.6 | 8.442 | near-tie at this boundary |
+| whole recurrent FFN | 22.117 | 22.269 | only about `0.15 ms/layer` |
+
+The oracle trace is not a qualification: it uses synthetic benchmark tokens,
+disabled graphs, and per-node diagnostic events. It is nevertheless sufficient
+to reject the original FFN localization hypothesis. A faithful pinned Q6 MMQ
+selector was added only for recurrent prefill QKV as
+`MIINFER_MX_PINNED_QKV=1`. At the exact layer-60 QKV B512 shape, the isolated
+MMQ median moved from `4516.955 us` to `4032.155 us`, with maximum absolute
+contract error `3.6e-7`. Three fresh-process end-to-end pairs measured:
+
+```text
+control:    2486.07, 2500.70, 2761.63 ms  (median 2500.70 ms)
+pinned QKV: 2455.94, 2516.61, 2492.25 ms  (median 2492.25 ms)
+```
+
+The `2761.63 ms` control is retained as an outlier rather than silently
+discarded. The `0.34%` median improvement is below qualification confidence,
+so the selector remains opt-in and the qualified preset explicitly sets it to
+`0`. A B512 GDN standalone retest of explicit loop unrolling changed
+`2834.876 us` to `2832.636 us` (`0.08%`) with unchanged numerical parity and
+was rejected. A direct 32-bit HIP shuffle mask copied from the oracle does not
+compile under the current HIP headers, which require a 64-bit mask.
+
+## Re-evaluation decision
+
+**RETEST / REDIRECT.** The FFN candidate is rejected as unjustified. Keep the
+QKV pinned port available for future interleaved qualification, and make the
+next measurement a like-for-like QKV/GDN execution-contract differential.

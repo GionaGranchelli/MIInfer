@@ -108,6 +108,15 @@ void launch_mx_q6k_repacked_mmq(
     std::uint32_t token_count,
     hipStream_t stream = nullptr);
 
+void launch_mx_q6k_repacked_mmq_pinned(
+    const std::uint8_t* weights,
+    const miinfer::MxQ8_1MmqBlock* input,
+    float* output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    std::uint32_t token_count,
+    hipStream_t stream = nullptr);
+
 void launch_m23_q6k_repacked_mmq(
     const Q6KMmqTile* weights,
     const miinfer::M23Q8_1MmqBlock* input,

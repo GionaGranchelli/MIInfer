@@ -848,6 +848,7 @@ struct RecurrentLayer {
     std::size_t prefill_capacity = kPrefillBatch;
     bool prefill_wide_repacked = false;
     bool prefill_mx_repacked = false;
+    bool prefill_mx_qkv_pinned = false;
     bool prefill_mx_gdn = false;
     bool wide_dense_ffn = false;
     bool wide_dense_all = false;
@@ -1033,6 +1034,8 @@ struct RecurrentLayer {
         const char* mx_repacked_env = std::getenv("MIINFER_PREFILL_WIDE_MX_REPACKED_MMQ");
         prefill_mx_repacked = wide_prefill && mx_repacked_env != nullptr
             && std::strcmp(mx_repacked_env, "0") != 0;
+        prefill_mx_qkv_pinned = prefill_mx_repacked
+            && environment_flag("MIINFER_MX_PINNED_QKV");
         const char* mx_gdn_env = std::getenv("MIINFER_PREFILL_MX_GDN");
         prefill_mx_gdn = wide_prefill && mx_gdn_env != nullptr
             && std::strcmp(mx_gdn_env, "0") != 0;
@@ -1950,10 +1953,17 @@ struct RecurrentLayer {
             if (qkv_weight.type == miinfer::GgufTensorType::q6_k) {
                 miinfer::launch_mx_q8_1_mmq_quantize(
                     normalized_batch, q8, token_count, kHidden, false, hipStreamPerThread);
-                launch_mx_q6k_repacked_mmq(
-                    static_cast<const std::uint8_t*>(d_qkv_mmq->get()), q8,
-                    static_cast<float*>(prefill_qkv->get()), kChannels, kHidden, token_count,
-                    hipStreamPerThread);
+                if (prefill_mx_qkv_pinned) {
+                    launch_mx_q6k_repacked_mmq_pinned(
+                        static_cast<const std::uint8_t*>(d_qkv_mmq->get()), q8,
+                        static_cast<float*>(prefill_qkv->get()), kChannels, kHidden, token_count,
+                        hipStreamPerThread);
+                } else {
+                    launch_mx_q6k_repacked_mmq(
+                        static_cast<const std::uint8_t*>(d_qkv_mmq->get()), q8,
+                        static_cast<float*>(prefill_qkv->get()), kChannels, kHidden, token_count,
+                        hipStreamPerThread);
+                }
                 miinfer::launch_mx_q8_1_mmq_quantize(
                     normalized_batch, q8, token_count, kHidden, true, hipStreamPerThread);
             } else {

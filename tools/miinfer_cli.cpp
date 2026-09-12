@@ -92,6 +92,7 @@ bool apply_runtime_preset() {
         PresetFlag{"MIINFER_PREFILL_CHUNK", "512"},
         PresetFlag{"MIINFER_PREFILL_MX_GDN", "1"},
         PresetFlag{"MIINFER_MX_Q8_BATCH", "0"},
+        PresetFlag{"MIINFER_MX_PINNED_QKV", "0"},
         PresetFlag{"MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_FFN", "1"},
         PresetFlag{"MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_O", "1"},
     };

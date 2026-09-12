@@ -23,6 +23,7 @@ The benchmark target is Qwen3.8-27B-Q4_K_M on one AMD Instinct MI50
 | `mx-llama.cpp` `llama-bench` fresh screen | current external comparison | 2307.634 median | 221.872 | external |
 | MIInfer H/I, pre-repair best | historical, not qualification | 2421.07 | 211.48 | 18,472,649,044 B |
 | MIInfer H/I, repaired qualified | current accepted path, opt-in | 2500.62 median | 204.75 | 21,993,242,964 B |
+| MIInfer H/I + pinned QKV MMQ | three-pair opt-in screen; not qualified | 2492.25 median | 205.44 | 21,993,242,964 B |
 | MIInfer H/I + Mx attention decode reuse | interleaved opt-in screen; promotion pending | 2412.24 median | 212.25 | 18,472,649,044 B |
 | MIInfer matched control | current comparison | — | — | 19,108,282,708 B |
 
@@ -40,6 +41,8 @@ The current best accepted P512 configuration is the printed
 - the state-correct Mx GDN scan with the Tc2 mapping;
 - M25-H Mx attention Gate/Up/Down projections;
 - M25-I Mx attention O projection;
+- the pinned large-batch Q6 MMQ contract remains disabled for the qualified
+  preset; `MIINFER_MX_PINNED_QKV=1` is an isolated QKV-only retest selector;
 - resident M23 copies retained where scalar decode requires them;
 - static full-layer-major B512 prefill orchestration.
 
@@ -79,8 +82,8 @@ The evidence says the remaining stretch is not explained by a missing literal
 Q4/Q5/Q6, Q8, or GDN source transplant. The static HIP graph was slower, so
 generic host submission overhead is not currently supported as the explanation.
 The unresolved question is the GPU execution contract around the primitives:
-materialization boundaries, operation composition, and the exact recurrent FFN
-schedule.
+materialization boundaries, operation composition, and the exact recurrent
+QKV/GDN schedule.
 
 ## Measured remaining work
 
@@ -105,9 +108,19 @@ MIInfer H/I at `2474.610 ms` / `206.901 tok/s` median, a `166.976 ms` or
 `7.236%` latency gap. The oracle benchmark does not accept the exact text
 prompt, so it uses the same model and P512 benchmark shape but synthetic
 benchmark tokens; that limitation is recorded in EXP-0340. The current MIInfer
-profile measures recurrent layer 60's whole-B512 FFN tail at `22.2694 ms`, but
-there is not yet a like-for-like oracle stage boundary. No M25-L optimization
-has been written.
+profile measures recurrent layer 60's whole-B512 FFN tail at `22.2694 ms`. A
+source-labelled oracle trace measures the corresponding FFN contract at about
+`22.117 ms`, so FFN is not the missing `~3.8 ms/layer`. The same trace shows
+oracle QKV MMQ at about `3.96 ms` versus MIInfer's `4.64 ms`, and oracle GDN at
+about `1.92 ms` versus MIInfer's `3.58 ms` whole GDN-core event. These
+boundaries are diagnostic rather than a complete like-for-like layer proof,
+but they redirect M25-L toward QKV/GDN composition.
+
+The QKV-only pinned contract is retained as opt-in after an exact layer-60
+B512 primitive screen improved Q6 MMQ from `4.517 ms` to `4.032 ms` with
+`3.6e-7` maximum absolute error. Its three-pair end-to-end screen was only
+`0.34%` faster and included a `2761.63 ms` control outlier, so it is not
+qualified or added to `m25_hi_qualified`.
 
 EXP-0341 tested the remaining oracle-backed orchestration mechanism: two
 nonblocking streams overlapped MIInfer's combined Q/K projection with V. Four
@@ -121,6 +134,13 @@ the valid 512-token control completed. Future timeout harnesses must verify
 child cleanup and `/dev/kfd` ownership before classifying a run as a code
 regression.
 
+EXP-0342 then tested the pinned Q6 MMQ contract only on recurrent QKV and
+re-ran GDN at B512. The QKV primitive win did not survive as a qualified
+end-to-end improvement; the GDN unroll/mask retest was rejected after a
+`0.08%` standalone change and the HIP mask variant failed the current
+64-bit-mask compile contract. The next implementation target is therefore a
+full QKV/GDN execution-contract differential, not another global kernel swap.
+
 ## Reproducibility and promotion rules
 
 Every performance claim must use clean processes, the exact model hash and
@@ -132,4 +152,4 @@ transient device/runtime or harness state: the exact pre-J/current-main A/B
 did not reproduce it with M25-J disabled.
 
 Detailed evidence is indexed in [`current-state.md`](current-state.md) and
-the M25 records `EXP-0300` through `EXP-0341`.
+the M25 records `EXP-0300` through `EXP-0342`.

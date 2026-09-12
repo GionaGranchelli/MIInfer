@@ -11,6 +11,8 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
+#include <cstring>
 #include <iomanip>
 #include <iostream>
 #include <memory>
@@ -22,6 +24,13 @@
 namespace {
 
 constexpr std::array<std::uint32_t, 4> kBatches{64, 128, 256, 512};
+
+bool pinned_qkv_requested() {
+    const char* value = std::getenv("MIINFER_MX_PINNED_QKV");
+    if (value == nullptr || std::strcmp(value, "0") == 0) return false;
+    if (std::strcmp(value, "1") == 0) return true;
+    throw std::runtime_error("MIINFER_MX_PINNED_QKV must be 0 or 1");
+}
 
 struct Buffer {
     void* pointer = nullptr;
@@ -388,7 +397,7 @@ int run_case(
 
 int main(int argc, char** argv) try {
     if (argc < 4 || argc > 5) throw std::runtime_error(
-        "usage: miinfer-m24-projection-bakeoff MODEL.gguf gate|up|down|ssm_out q4|q5|q6 [layer]");
+        "usage: miinfer-m24-projection-bakeoff MODEL.gguf gate|up|down|ssm_out|qkv q4|q5|q6 [layer]");
     const std::string projection = argv[2];
     const std::string type_name = argv[3];
     const int layer = argc == 5 ? std::stoi(argv[4]) : -1;
@@ -397,14 +406,15 @@ int main(int argc, char** argv) try {
         : type_name == "q6" ? miinfer::GgufTensorType::q6_k
         : throw std::runtime_error("type must be q4, q5, or q6");
     if (projection != "gate" && projection != "up" && projection != "down"
-        && projection != "ssm_out") {
-        throw std::runtime_error("projection must be gate, up, down, or ssm_out");
+        && projection != "ssm_out" && projection != "qkv") {
+        throw std::runtime_error("projection must be gate, up, down, ssm_out, or qkv");
     }
     miinfer::DeviceInfo device;
     std::string error;
     if (!miinfer::validate_gfx906_device(-1, device, error)) throw std::runtime_error(error);
     const auto model = miinfer::Qwen35Model::load(argv[1]);
-    const std::string tensor_projection = projection == "ssm_out" ? projection : "ffn_" + projection;
+    const std::string tensor_projection = projection == "ssm_out" || projection == "qkv"
+        ? (projection == "qkv" ? "attn_qkv" : projection) : "ffn_" + projection;
     const auto* tensor = find_projection(model, tensor_projection, type, layer);
     if (tensor == nullptr) throw std::runtime_error("requested projection tensor not found");
 
@@ -423,7 +433,10 @@ int main(int argc, char** argv) try {
     return run_case<miinfer::Q6KDeviceBlock, Q6KMmqTile>(
         *tensor, "q6", pack_q6k_mmq_tensor, launch_m24_q6k_mmq_to_fp16,
         miinfer::launch_m12_q6k_to_fp16, launch_m23_q6k_repacked_mmq,
-        pack_mx_q6k_repacked_tensor, launch_mx_q6k_repacked_mmq, false);
+        pack_mx_q6k_repacked_tensor,
+        projection == "qkv" && pinned_qkv_requested()
+            ? launch_mx_q6k_repacked_mmq_pinned : launch_mx_q6k_repacked_mmq,
+        false);
 } catch (const std::exception& error) {
     std::cerr << error.what() << '\n';
     return 1;

@@ -20,7 +20,7 @@ namespace {
 constexpr std::size_t kKeyHeads = 16;
 constexpr std::size_t kValueHeads = 48;
 constexpr std::size_t kState = 128;
-constexpr std::size_t kTokens = 128;
+constexpr std::size_t kTokens = 512;
 constexpr std::size_t kChunk = 64;
 
 std::size_t at(std::size_t head, std::size_t token, std::size_t dimension,
