@@ -47,6 +47,8 @@ M25-L: fresh oracle comparison and recurrent FFN differential; measurement only
 M25-L/QKV: oracle-backed fork/join screen rejected; no runtime branch retained
 M25-L/GDN: oracle launch-bounds retest rejected; MIInfer retains the faster
            `__launch_bounds__(128, 2)` declaration
+M25-L/input graph: recurrent QKV/Z + beta/alpha overlap rejected; serialized
+                   input path retained
 ```
 
 The current performance target is the exact Qwen3.8-27B-Q4_K_M P512 prefill
@@ -62,12 +64,11 @@ The exact pre-J versus M25-J source-delta retest is recorded in EXP-0323.
 The pinned-source audit found no missing Q4_K/Q5_K/Q6_K repack or GDN contract
 whose unmeasured transplant should replace the current paths. The external
 register-prefetch MMQ variant remains rejected on MI50, and M25-J remains
-disabled after its matched retest. The repaired H/I profile points to
-recurrent FFN gate/up and down execution as the next measured target; another
-GDN or attention micro-tuning pass is not currently justified. M25-L's fresh
+disabled after its matched retest. M25-L's fresh
 six-pair screen narrows the current no-profiler `llama-bench` comparison to
-`166.976 ms` (`7.236%`) while leaving the FFN share of that differential
-unproven. No M25-L optimization has been written; see
+`166.976 ms` (`7.236%`). Its source-labelled recurrent trace puts the whole
+FFN tail within about `0.15 ms/layer` of the oracle, so FFN is not the missing
+differential. See
 `experiments/EXP-0340-m25-l-recurrent-ffn-contract-differential.md`.
 EXP-0336 isolated the already-ported pinned MMQ contract to those recurrent FFN
 projections and still measured an 11.98% end-to-end P512 regression, so that
@@ -80,6 +81,14 @@ EXP-0344 tested the pinned oracle's `__launch_bounds__(256, 2)` declaration on
 the actual MIInfer 128-thread Mx GDN launch. It preserved correctness but was
 3.63% slower than MIInfer's `__launch_bounds__(128, 2)` control, so it was
 removed.
+
+EXP-0345 tested the oracle-inspired recurrent input graph: beta/alpha
+preparation ran on a nonblocking auxiliary stream while unchanged Mx QKV/Z
+projections ran on the main stream. The candidate passed the same-process
+continuation/repeat-P512 gate but was 0.16% slower by three-pair median, with
+one retained 2857.58 ms candidate sample. The selector and auxiliary stream
+were removed; the next stretch step still requires a positive exact-shape
+differential or a more complete pinned graph contract.
 
 EXP-0338 adds an opt-in attention decode reuse path. It routes attention O
 and FFN decode through the existing H/I Mx weights, removes the duplicate M23
