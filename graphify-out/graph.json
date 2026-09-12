@@ -1106,7 +1106,7 @@
       "file_type": "code",
       "norm_label": "gpulayerref",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5180"
+      "source_location": "L5184"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_recurrenttrace",
@@ -3152,7 +3152,7 @@
       "file_type": "code",
       "norm_label": ".copy_weight()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4093"
+      "source_location": "L4097"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_ensure_m23_repacked",
@@ -3164,7 +3164,7 @@
       "file_type": "code",
       "norm_label": ".ensure_m23_repacked()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4015"
+      "source_location": "L4019"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_fullattentionlayer",
@@ -3368,7 +3368,7 @@
       "file_type": "code",
       "norm_label": "read_external_operands()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5349"
+      "source_location": "L5353"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_recurrentlayer_ensure_m23_repacked",
@@ -3464,7 +3464,7 @@
       "file_type": "code",
       "norm_label": "replay_state()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5365"
+      "source_location": "L5369"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_require_type",
@@ -8516,7 +8516,7 @@
       "file_type": "code",
       "norm_label": ".finish_prefill_attention()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4331"
+      "source_location": "L4335"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_finish_prefill_batch",
@@ -8528,7 +8528,7 @@
       "file_type": "code",
       "norm_label": ".finish_prefill_batch()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4651"
+      "source_location": "L4655"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_finish_prefill_batch4",
@@ -8540,7 +8540,7 @@
       "file_type": "code",
       "norm_label": ".finish_prefill_batch4()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4553"
+      "source_location": "L4557"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_finish_prefill_wide",
@@ -8552,7 +8552,7 @@
       "file_type": "code",
       "norm_label": ".finish_prefill_wide()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4384"
+      "source_location": "L4388"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_poison",
@@ -8564,7 +8564,7 @@
       "file_type": "code",
       "norm_label": ".poison()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4099"
+      "source_location": "L4103"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_prefill_normalized_at",
@@ -8576,7 +8576,7 @@
       "file_type": "code",
       "norm_label": ".prefill_normalized_at()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4301"
+      "source_location": "L4305"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_prefill_qfull_at",
@@ -8588,7 +8588,7 @@
       "file_type": "code",
       "norm_label": ".prefill_qfull_at()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4305"
+      "source_location": "L4309"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_prefill_value_at",
@@ -8600,7 +8600,7 @@
       "file_type": "code",
       "norm_label": ".prefill_value_at()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4309"
+      "source_location": "L4313"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_prefix",
@@ -8612,7 +8612,7 @@
       "file_type": "code",
       "norm_label": ".prefix()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4090"
+      "source_location": "L4094"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_prepare_prefill_batch",
@@ -8624,7 +8624,7 @@
       "file_type": "code",
       "norm_label": ".prepare_prefill_batch()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4167"
+      "source_location": "L4171"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_profile_ordered_end",
@@ -8636,7 +8636,7 @@
       "file_type": "code",
       "norm_label": ".profile_ordered_end()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4161"
+      "source_location": "L4165"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_profile_ordered_start",
@@ -8648,7 +8648,7 @@
       "file_type": "code",
       "norm_label": ".profile_ordered_start()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4154"
+      "source_location": "L4158"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_profile_prepare_end",
@@ -8660,7 +8660,7 @@
       "file_type": "code",
       "norm_label": ".profile_prepare_end()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4148"
+      "source_location": "L4152"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_profile_prepare_start",
@@ -8672,7 +8672,7 @@
       "file_type": "code",
       "norm_label": ".profile_prepare_start()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4141"
+      "source_location": "L4145"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_profile_tail_end",
@@ -8684,7 +8684,7 @@
       "file_type": "code",
       "norm_label": ".profile_tail_end()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4135"
+      "source_location": "L4139"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_profile_tail_start",
@@ -8696,7 +8696,7 @@
       "file_type": "code",
       "norm_label": ".profile_tail_start()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4128"
+      "source_location": "L4132"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_run",
@@ -8708,7 +8708,7 @@
       "file_type": "code",
       "norm_label": ".run()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4671"
+      "source_location": "L4675"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_stage_end",
@@ -8720,7 +8720,7 @@
       "file_type": "code",
       "norm_label": ".stage_end()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4121"
+      "source_location": "L4125"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_stage_start",
@@ -8732,7 +8732,7 @@
       "file_type": "code",
       "norm_label": ".stage_start()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4115"
+      "source_location": "L4119"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_finish_prefill_attention",
@@ -8744,7 +8744,7 @@
       "file_type": "code",
       "norm_label": ".finish_prefill_attention()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5269"
+      "source_location": "L5273"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_finish_prefill_batch",
@@ -8756,7 +8756,7 @@
       "file_type": "code",
       "norm_label": ".finish_prefill_batch()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5274"
+      "source_location": "L5278"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_prefill_gate_at",
@@ -8768,7 +8768,7 @@
       "file_type": "code",
       "norm_label": ".prefill_gate_at()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5243"
+      "source_location": "L5247"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_prefill_normalized_at",
@@ -8780,7 +8780,7 @@
       "file_type": "code",
       "norm_label": ".prefill_normalized_at()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5234"
+      "source_location": "L5238"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_prefill_qfull_at",
@@ -8792,7 +8792,7 @@
       "file_type": "code",
       "norm_label": ".prefill_qfull_at()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5247"
+      "source_location": "L5251"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_prefill_qkv_at",
@@ -8804,7 +8804,7 @@
       "file_type": "code",
       "norm_label": ".prefill_qkv_at()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5239"
+      "source_location": "L5243"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_prefill_tail_batch_supported",
@@ -8816,7 +8816,7 @@
       "file_type": "code",
       "norm_label": ".prefill_tail_batch_supported()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5255"
+      "source_location": "L5259"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_prefill_value_at",
@@ -8828,7 +8828,7 @@
       "file_type": "code",
       "norm_label": ".prefill_value_at()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5251"
+      "source_location": "L5255"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_prepare_prefill_batch",
@@ -8840,7 +8840,7 @@
       "file_type": "code",
       "norm_label": ".prepare_prefill_batch()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5218"
+      "source_location": "L5222"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_profile_ordered_end",
@@ -8852,7 +8852,7 @@
       "file_type": "code",
       "norm_label": ".profile_ordered_end()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5213"
+      "source_location": "L5217"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_profile_ordered_start",
@@ -8864,7 +8864,7 @@
       "file_type": "code",
       "norm_label": ".profile_ordered_start()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5208"
+      "source_location": "L5212"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_q8_1_buffer",
@@ -8876,7 +8876,7 @@
       "file_type": "code",
       "norm_label": ".q8_1_buffer()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5196"
+      "source_location": "L5200"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_release_m23_repacked",
@@ -8888,7 +8888,7 @@
       "file_type": "code",
       "norm_label": ".release_m23_repacked()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5264"
+      "source_location": "L5268"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_run",
@@ -8900,7 +8900,7 @@
       "file_type": "code",
       "norm_label": ".run()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5291"
+      "source_location": "L5295"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_wide_attention_batch_ready",
@@ -8912,7 +8912,7 @@
       "file_type": "code",
       "norm_label": ".wide_attention_batch_ready()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5260"
+      "source_location": "L5264"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_project",
@@ -9428,7 +9428,7 @@
       "file_type": "code",
       "norm_label": "run_hybrid_block()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5170"
+      "source_location": "L5174"
     },
     {
       "id": "tools_m6a20_qwen35_recurrent_layer_gpu_check_device",
@@ -10652,7 +10652,7 @@
       "file_type": "code",
       "norm_label": ".attn_norm_weight()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5184"
+      "source_location": "L5188"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_fused_interlayer_norm",
@@ -10664,7 +10664,7 @@
       "file_type": "code",
       "norm_label": ".fused_interlayer_norm()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5202"
+      "source_location": "L5206"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_normalized_buffer",
@@ -10676,7 +10676,7 @@
       "file_type": "code",
       "norm_label": ".normalized_buffer()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5190"
+      "source_location": "L5194"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_run_prefix",
@@ -10688,7 +10688,7 @@
       "file_type": "code",
       "norm_label": "run_prefix()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5319"
+      "source_location": "L5323"
     },
     {
       "id": "tools_miinfer_cli_apply_runtime_preset",
@@ -11084,7 +11084,7 @@
       "file_type": "code",
       "norm_label": ".prefill_tail_batch_supported()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4313"
+      "source_location": "L4317"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_release_m23_repacked",
@@ -11096,7 +11096,7 @@
       "file_type": "code",
       "norm_label": ".release_m23_repacked()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4077"
+      "source_location": "L4081"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_reset",
@@ -11108,7 +11108,7 @@
       "file_type": "code",
       "norm_label": ".reset()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4107"
+      "source_location": "L4111"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_set_m12_dense_workspace",
@@ -11120,7 +11120,7 @@
       "file_type": "code",
       "norm_label": ".set_m12_dense_workspace()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4069"
+      "source_location": "L4073"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_wide_attention_batch_ready",
@@ -11132,7 +11132,7 @@
       "file_type": "code",
       "norm_label": ".wide_attention_batch_ready()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4326"
+      "source_location": "L4330"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_recurrentlayer_release_m23_repacked",
@@ -47928,7 +47928,7 @@
       "file_type": "code",
       "norm_label": "attention",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5182"
+      "source_location": "L5186"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_recurrent",
@@ -47939,7 +47939,7 @@
       "file_type": "code",
       "norm_label": "recurrent",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5181"
+      "source_location": "L5185"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_hpp_q8_1block",
@@ -104070,7 +104070,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4094",
+      "source_location": "L4098",
       "weight": 1.0
     },
     {
@@ -104082,7 +104082,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4095",
+      "source_location": "L4099",
       "weight": 1.0
     },
     {
@@ -104094,7 +104094,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4024",
+      "source_location": "L4028",
       "weight": 1.0
     },
     {
@@ -104106,7 +104106,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4028",
+      "source_location": "L4032",
       "weight": 1.0
     },
     {
@@ -104118,7 +104118,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4028",
+      "source_location": "L4032",
       "weight": 1.0
     },
     {
@@ -104130,7 +104130,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4029",
+      "source_location": "L4033",
       "weight": 1.0
     },
     {
@@ -104142,7 +104142,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4332",
+      "source_location": "L4336",
       "weight": 1.0
     },
     {
@@ -104154,7 +104154,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4336",
+      "source_location": "L4340",
       "weight": 1.0
     },
     {
@@ -104166,7 +104166,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4342",
+      "source_location": "L4346",
       "weight": 1.0
     },
     {
@@ -104178,7 +104178,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4348",
+      "source_location": "L4352",
       "weight": 1.0
     },
     {
@@ -104190,7 +104190,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4349",
+      "source_location": "L4353",
       "weight": 1.0
     },
     {
@@ -104202,7 +104202,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4654",
+      "source_location": "L4658",
       "weight": 1.0
     },
     {
@@ -104214,7 +104214,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4662",
+      "source_location": "L4666",
       "weight": 1.0
     },
     {
@@ -104226,7 +104226,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4666",
+      "source_location": "L4670",
       "weight": 1.0
     },
     {
@@ -104238,7 +104238,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4557",
+      "source_location": "L4561",
       "weight": 1.0
     },
     {
@@ -104250,7 +104250,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4561",
+      "source_location": "L4565",
       "weight": 1.0
     },
     {
@@ -104262,7 +104262,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4386",
+      "source_location": "L4390",
       "weight": 1.0
     },
     {
@@ -104274,7 +104274,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4397",
+      "source_location": "L4401",
       "weight": 1.0
     },
     {
@@ -104286,7 +104286,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4443",
+      "source_location": "L4447",
       "weight": 1.0
     },
     {
@@ -104298,7 +104298,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4444",
+      "source_location": "L4448",
       "weight": 1.0
     },
     {
@@ -104322,7 +104322,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L3723",
+      "source_location": "L3721",
       "weight": 1.0
     },
     {
@@ -104334,7 +104334,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L3738",
+      "source_location": "L3742",
       "weight": 1.0
     },
     {
@@ -104346,7 +104346,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L3741",
+      "source_location": "L3745",
       "weight": 1.0
     },
     {
@@ -104358,7 +104358,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L3745",
+      "source_location": "L3749",
       "weight": 1.0
     },
     {
@@ -104370,7 +104370,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L3750",
+      "source_location": "L3754",
       "weight": 1.0
     },
     {
@@ -104382,7 +104382,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L3754",
+      "source_location": "L3758",
       "weight": 1.0
     },
     {
@@ -104394,7 +104394,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L3755",
+      "source_location": "L3759",
       "weight": 1.0
     },
     {
@@ -104406,7 +104406,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L3759",
+      "source_location": "L3763",
       "weight": 1.0
     },
     {
@@ -104418,7 +104418,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L3765",
+      "source_location": "L3769",
       "weight": 1.0
     },
     {
@@ -104430,7 +104430,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L3769",
+      "source_location": "L3773",
       "weight": 1.0
     },
     {
@@ -104442,7 +104442,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L3780",
+      "source_location": "L3784",
       "weight": 1.0
     },
     {
@@ -104454,7 +104454,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L3793",
+      "source_location": "L3797",
       "weight": 1.0
     },
     {
@@ -104466,7 +104466,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L3795",
+      "source_location": "L3799",
       "weight": 1.0
     },
     {
@@ -104478,7 +104478,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L3796",
+      "source_location": "L3800",
       "weight": 1.0
     },
     {
@@ -104490,7 +104490,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L3819",
+      "source_location": "L3823",
       "weight": 1.0
     },
     {
@@ -104502,7 +104502,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L3820",
+      "source_location": "L3824",
       "weight": 1.0
     },
     {
@@ -104514,7 +104514,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L3822",
+      "source_location": "L3826",
       "weight": 1.0
     },
     {
@@ -104526,7 +104526,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L3827",
+      "source_location": "L3831",
       "weight": 1.0
     },
     {
@@ -104538,7 +104538,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L3856",
+      "source_location": "L3860",
       "weight": 1.0
     },
     {
@@ -104550,7 +104550,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L3857",
+      "source_location": "L3861",
       "weight": 1.0
     },
     {
@@ -104562,7 +104562,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L3857",
+      "source_location": "L3861",
       "weight": 1.0
     },
     {
@@ -104574,7 +104574,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L3957",
+      "source_location": "L3961",
       "weight": 1.0
     },
     {
@@ -104586,7 +104586,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L3984",
+      "source_location": "L3988",
       "weight": 1.0
     },
     {
@@ -104598,7 +104598,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4101",
+      "source_location": "L4105",
       "weight": 1.0
     },
     {
@@ -104610,7 +104610,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4302",
+      "source_location": "L4306",
       "weight": 1.0
     },
     {
@@ -104622,7 +104622,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4306",
+      "source_location": "L4310",
       "weight": 1.0
     },
     {
@@ -104634,7 +104634,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4310",
+      "source_location": "L4314",
       "weight": 1.0
     },
     {
@@ -104646,7 +104646,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4169",
+      "source_location": "L4173",
       "weight": 1.0
     },
     {
@@ -104658,7 +104658,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4180",
+      "source_location": "L4184",
       "weight": 1.0
     },
     {
@@ -104670,7 +104670,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4201",
+      "source_location": "L4205",
       "weight": 1.0
     },
     {
@@ -104682,7 +104682,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4228",
+      "source_location": "L4232",
       "weight": 1.0
     },
     {
@@ -104694,7 +104694,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4229",
+      "source_location": "L4233",
       "weight": 1.0
     },
     {
@@ -104706,7 +104706,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4079",
+      "source_location": "L4083",
       "weight": 1.0
     },
     {
@@ -104718,7 +104718,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4109",
+      "source_location": "L4113",
       "weight": 1.0
     },
     {
@@ -104730,7 +104730,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4683",
+      "source_location": "L4687",
       "weight": 1.0
     },
     {
@@ -104742,7 +104742,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4686",
+      "source_location": "L4690",
       "weight": 1.0
     },
     {
@@ -104754,7 +104754,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4691",
+      "source_location": "L4695",
       "weight": 1.0
     },
     {
@@ -104766,7 +104766,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4730",
+      "source_location": "L4734",
       "weight": 1.0
     },
     {
@@ -104778,7 +104778,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4924",
+      "source_location": "L4928",
       "weight": 1.0
     },
     {
@@ -104790,7 +104790,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5058",
+      "source_location": "L5062",
       "weight": 1.0
     },
     {
@@ -104802,7 +104802,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5118",
+      "source_location": "L5122",
       "weight": 1.0
     },
     {
@@ -104814,7 +104814,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5123",
+      "source_location": "L5127",
       "weight": 1.0
     },
     {
@@ -104826,7 +104826,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5129",
+      "source_location": "L5133",
       "weight": 1.0
     },
     {
@@ -104838,7 +104838,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5134",
+      "source_location": "L5138",
       "weight": 1.0
     },
     {
@@ -104850,7 +104850,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5185",
+      "source_location": "L5189",
       "weight": 1.0
     },
     {
@@ -104862,7 +104862,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5279",
+      "source_location": "L5283",
       "weight": 1.0
     },
     {
@@ -104874,7 +104874,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5281",
+      "source_location": "L5285",
       "weight": 1.0
     },
     {
@@ -104886,7 +104886,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5191",
+      "source_location": "L5195",
       "weight": 1.0
     },
     {
@@ -104898,7 +104898,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5222",
+      "source_location": "L5226",
       "weight": 1.0
     },
     {
@@ -104910,7 +104910,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5224",
+      "source_location": "L5228",
       "weight": 1.0
     },
     {
@@ -104922,7 +104922,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5197",
+      "source_location": "L5201",
       "weight": 1.0
     },
     {
@@ -106494,7 +106494,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5366",
+      "source_location": "L5370",
       "weight": 1.0
     },
     {
@@ -106506,7 +106506,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5373",
+      "source_location": "L5377",
       "weight": 1.0
     },
     {
@@ -106518,7 +106518,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5373",
+      "source_location": "L5377",
       "weight": 1.0
     },
     {
@@ -106530,7 +106530,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5385",
+      "source_location": "L5389",
       "weight": 1.0
     },
     {
@@ -106554,7 +106554,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5174",
+      "source_location": "L5178",
       "weight": 1.0
     },
     {
@@ -106566,7 +106566,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5331",
+      "source_location": "L5335",
       "weight": 1.0
     },
     {
@@ -106578,7 +106578,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5333",
+      "source_location": "L5337",
       "weight": 1.0
     },
     {
@@ -106590,7 +106590,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5334",
+      "source_location": "L5338",
       "weight": 1.0
     },
     {
@@ -106602,7 +106602,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5335",
+      "source_location": "L5339",
       "weight": 1.0
     },
     {
@@ -106614,7 +106614,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5342",
+      "source_location": "L5346",
       "weight": 1.0
     },
     {
@@ -117186,7 +117186,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5181",
+      "source_location": "L5185",
       "weight": 1.0
     },
     {
@@ -117198,7 +117198,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5182",
+      "source_location": "L5186",
       "weight": 1.0
     },
     {
@@ -124038,7 +124038,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5181",
+      "source_location": "L5185",
       "weight": 1.0
     },
     {
@@ -124050,7 +124050,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5182",
+      "source_location": "L5186",
       "weight": 1.0
     },
     {
@@ -126654,7 +126654,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5319",
+      "source_location": "L5323",
       "weight": 1.0
     },
     {
@@ -142470,7 +142470,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4093",
+      "source_location": "L4097",
       "weight": 1.0
     },
     {
@@ -142494,7 +142494,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4331",
+      "source_location": "L4335",
       "weight": 1.0
     },
     {
@@ -142506,7 +142506,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4651",
+      "source_location": "L4655",
       "weight": 1.0
     },
     {
@@ -142518,7 +142518,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4553",
+      "source_location": "L4557",
       "weight": 1.0
     },
     {
@@ -142530,7 +142530,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4384",
+      "source_location": "L4388",
       "weight": 1.0
     },
     {
@@ -142566,7 +142566,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4301",
+      "source_location": "L4305",
       "weight": 1.0
     },
     {
@@ -142578,7 +142578,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4305",
+      "source_location": "L4309",
       "weight": 1.0
     },
     {
@@ -142590,7 +142590,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4309",
+      "source_location": "L4313",
       "weight": 1.0
     },
     {
@@ -142602,7 +142602,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4090",
+      "source_location": "L4094",
       "weight": 1.0
     },
     {
@@ -142614,7 +142614,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4167",
+      "source_location": "L4171",
       "weight": 1.0
     },
     {
@@ -142626,7 +142626,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4161",
+      "source_location": "L4165",
       "weight": 1.0
     },
     {
@@ -142638,7 +142638,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4154",
+      "source_location": "L4158",
       "weight": 1.0
     },
     {
@@ -142650,7 +142650,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4148",
+      "source_location": "L4152",
       "weight": 1.0
     },
     {
@@ -142662,7 +142662,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4141",
+      "source_location": "L4145",
       "weight": 1.0
     },
     {
@@ -142674,7 +142674,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4135",
+      "source_location": "L4139",
       "weight": 1.0
     },
     {
@@ -142686,7 +142686,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4128",
+      "source_location": "L4132",
       "weight": 1.0
     },
     {
@@ -142698,7 +142698,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4671",
+      "source_location": "L4675",
       "weight": 1.0
     },
     {
@@ -142710,7 +142710,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4069",
+      "source_location": "L4073",
       "weight": 1.0
     },
     {
@@ -142722,7 +142722,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4069",
+      "source_location": "L4073",
       "weight": 1.0
     },
     {
@@ -142734,7 +142734,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4121",
+      "source_location": "L4125",
       "weight": 1.0
     },
     {
@@ -142746,7 +142746,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4121",
+      "source_location": "L4125",
       "weight": 1.0
     },
     {
@@ -142758,7 +142758,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4115",
+      "source_location": "L4119",
       "weight": 1.0
     },
     {
@@ -142770,7 +142770,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4115",
+      "source_location": "L4119",
       "weight": 1.0
     },
     {
@@ -142782,7 +142782,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5269",
+      "source_location": "L5273",
       "weight": 1.0
     },
     {
@@ -142794,7 +142794,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5274",
+      "source_location": "L5278",
       "weight": 1.0
     },
     {
@@ -142806,7 +142806,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5243",
+      "source_location": "L5247",
       "weight": 1.0
     },
     {
@@ -142818,7 +142818,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5234",
+      "source_location": "L5238",
       "weight": 1.0
     },
     {
@@ -142830,7 +142830,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5247",
+      "source_location": "L5251",
       "weight": 1.0
     },
     {
@@ -142842,7 +142842,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5239",
+      "source_location": "L5243",
       "weight": 1.0
     },
     {
@@ -142854,7 +142854,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5251",
+      "source_location": "L5255",
       "weight": 1.0
     },
     {
@@ -142866,7 +142866,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5218",
+      "source_location": "L5222",
       "weight": 1.0
     },
     {
@@ -142878,7 +142878,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5213",
+      "source_location": "L5217",
       "weight": 1.0
     },
     {
@@ -142890,7 +142890,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5208",
+      "source_location": "L5212",
       "weight": 1.0
     },
     {
@@ -142902,7 +142902,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5291",
+      "source_location": "L5295",
       "weight": 1.0
     },
     {
@@ -143262,7 +143262,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5349",
+      "source_location": "L5353",
       "weight": 1.0
     },
     {
@@ -143898,7 +143898,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5365",
+      "source_location": "L5369",
       "weight": 1.0
     },
     {
@@ -143934,7 +143934,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5170",
+      "source_location": "L5174",
       "weight": 1.0
     },
     {
@@ -143946,7 +143946,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5170",
+      "source_location": "L5174",
       "weight": 1.0
     },
     {
@@ -143958,7 +143958,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5170",
+      "source_location": "L5174",
       "weight": 1.0
     },
     {
@@ -143970,7 +143970,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5319",
+      "source_location": "L5323",
       "weight": 1.0
     },
     {
@@ -143982,7 +143982,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5319",
+      "source_location": "L5323",
       "weight": 1.0
     },
     {
@@ -147390,7 +147390,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4093",
+      "source_location": "L4097",
       "weight": 1.0
     },
     {
@@ -147402,7 +147402,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4090",
+      "source_location": "L4094",
       "weight": 1.0
     },
     {
@@ -147414,7 +147414,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5196",
+      "source_location": "L5200",
       "weight": 1.0
     },
     {
@@ -147462,7 +147462,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5349",
+      "source_location": "L5353",
       "weight": 1.0
     },
     {
@@ -147522,7 +147522,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5365",
+      "source_location": "L5369",
       "weight": 1.0
     },
     {
@@ -205900,7 +205900,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5170",
+      "source_location": "L5174",
       "weight": 1.0
     },
     {
@@ -205911,7 +205911,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5180",
+      "source_location": "L5184",
       "weight": 1.0
     },
     {
@@ -205955,7 +205955,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5319",
+      "source_location": "L5323",
       "weight": 1.0
     },
     {
@@ -205966,7 +205966,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5349",
+      "source_location": "L5353",
       "weight": 1.0
     },
     {
@@ -205977,7 +205977,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5365",
+      "source_location": "L5369",
       "weight": 1.0
     },
     {
@@ -207781,7 +207781,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4015",
+      "source_location": "L4019",
       "weight": 1.0
     },
     {
@@ -207792,7 +207792,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4069",
+      "source_location": "L4073",
       "weight": 1.0
     },
     {
@@ -207803,7 +207803,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4077",
+      "source_location": "L4081",
       "weight": 1.0
     },
     {
@@ -207814,7 +207814,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4090",
+      "source_location": "L4094",
       "weight": 1.0
     },
     {
@@ -207825,7 +207825,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4093",
+      "source_location": "L4097",
       "weight": 1.0
     },
     {
@@ -207836,7 +207836,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4099",
+      "source_location": "L4103",
       "weight": 1.0
     },
     {
@@ -207847,7 +207847,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4107",
+      "source_location": "L4111",
       "weight": 1.0
     },
     {
@@ -207858,7 +207858,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4115",
+      "source_location": "L4119",
       "weight": 1.0
     },
     {
@@ -207869,7 +207869,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4121",
+      "source_location": "L4125",
       "weight": 1.0
     },
     {
@@ -207880,7 +207880,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4128",
+      "source_location": "L4132",
       "weight": 1.0
     },
     {
@@ -207891,7 +207891,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4135",
+      "source_location": "L4139",
       "weight": 1.0
     },
     {
@@ -207902,7 +207902,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4141",
+      "source_location": "L4145",
       "weight": 1.0
     },
     {
@@ -207913,7 +207913,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4148",
+      "source_location": "L4152",
       "weight": 1.0
     },
     {
@@ -207924,7 +207924,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4154",
+      "source_location": "L4158",
       "weight": 1.0
     },
     {
@@ -207935,7 +207935,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4161",
+      "source_location": "L4165",
       "weight": 1.0
     },
     {
@@ -207946,7 +207946,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4167",
+      "source_location": "L4171",
       "weight": 1.0
     },
     {
@@ -207957,7 +207957,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4301",
+      "source_location": "L4305",
       "weight": 1.0
     },
     {
@@ -207968,7 +207968,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4305",
+      "source_location": "L4309",
       "weight": 1.0
     },
     {
@@ -207979,7 +207979,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4309",
+      "source_location": "L4313",
       "weight": 1.0
     },
     {
@@ -207990,7 +207990,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4313",
+      "source_location": "L4317",
       "weight": 1.0
     },
     {
@@ -208001,7 +208001,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4326",
+      "source_location": "L4330",
       "weight": 1.0
     },
     {
@@ -208012,7 +208012,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4331",
+      "source_location": "L4335",
       "weight": 1.0
     },
     {
@@ -208023,7 +208023,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4384",
+      "source_location": "L4388",
       "weight": 1.0
     },
     {
@@ -208034,7 +208034,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4553",
+      "source_location": "L4557",
       "weight": 1.0
     },
     {
@@ -208045,7 +208045,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4651",
+      "source_location": "L4655",
       "weight": 1.0
     },
     {
@@ -208056,7 +208056,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4671",
+      "source_location": "L4675",
       "weight": 1.0
     },
     {
@@ -208067,7 +208067,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5184",
+      "source_location": "L5188",
       "weight": 1.0
     },
     {
@@ -208078,7 +208078,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5190",
+      "source_location": "L5194",
       "weight": 1.0
     },
     {
@@ -208089,7 +208089,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5196",
+      "source_location": "L5200",
       "weight": 1.0
     },
     {
@@ -208100,7 +208100,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5202",
+      "source_location": "L5206",
       "weight": 1.0
     },
     {
@@ -208111,7 +208111,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5208",
+      "source_location": "L5212",
       "weight": 1.0
     },
     {
@@ -208122,7 +208122,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5213",
+      "source_location": "L5217",
       "weight": 1.0
     },
     {
@@ -208133,7 +208133,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5218",
+      "source_location": "L5222",
       "weight": 1.0
     },
     {
@@ -208144,7 +208144,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5234",
+      "source_location": "L5238",
       "weight": 1.0
     },
     {
@@ -208155,7 +208155,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5239",
+      "source_location": "L5243",
       "weight": 1.0
     },
     {
@@ -208166,7 +208166,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5243",
+      "source_location": "L5247",
       "weight": 1.0
     },
     {
@@ -208177,7 +208177,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5247",
+      "source_location": "L5251",
       "weight": 1.0
     },
     {
@@ -208188,7 +208188,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5251",
+      "source_location": "L5255",
       "weight": 1.0
     },
     {
@@ -208199,7 +208199,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5255",
+      "source_location": "L5259",
       "weight": 1.0
     },
     {
@@ -208210,7 +208210,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5260",
+      "source_location": "L5264",
       "weight": 1.0
     },
     {
@@ -208221,7 +208221,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5264",
+      "source_location": "L5268",
       "weight": 1.0
     },
     {
@@ -208232,7 +208232,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5269",
+      "source_location": "L5273",
       "weight": 1.0
     },
     {
@@ -208243,7 +208243,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5274",
+      "source_location": "L5278",
       "weight": 1.0
     },
     {
@@ -208254,7 +208254,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5291",
+      "source_location": "L5295",
       "weight": 1.0
     },
     {
@@ -212846,7 +212846,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L3747",
+      "source_location": "L3751",
       "weight": 1.0
     },
     {
@@ -212858,7 +212858,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L3778",
+      "source_location": "L3782",
       "weight": 1.0
     },
     {
@@ -212870,7 +212870,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L3787",
+      "source_location": "L3791",
       "weight": 1.0
     },
     {
@@ -212882,7 +212882,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L3844",
+      "source_location": "L3848",
       "weight": 1.0
     },
     {
@@ -212959,5 +212959,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "260ccb4c6dfaa72507c0fc94b25b46468af7ac3f"
+  "built_at_commit": "775373fe5dc996351f8ebf20139dd8f841e10170"
 }

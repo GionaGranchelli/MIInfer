@@ -3709,8 +3709,6 @@ struct FullAttentionLayer {
             throw std::runtime_error(
                 "Mx attention decode requires Mx attention FFN or O prefill");
         }
-        decode_mx_ffn = mx_decode_requested && prefill_mx_ffn;
-        decode_mx_o = mx_decode_requested && prefill_mx_o;
         const char* wide_repacked_env = std::getenv("MIINFER_PREFILL_WIDE_REPACKED_MMQ");
         const char* resident_ffn_env = std::getenv("MIINFER_PREFILL_REPACKED_RESIDENT_ATTN_FFN");
         resident_m23_ffn = wide_attn_prefill
@@ -3724,6 +3722,12 @@ struct FullAttentionLayer {
             && q_weight.type == miinfer::GgufTensorType::q4_k
             && k_weight.type == miinfer::GgufTensorType::q4_k
             && mx_ffn_supported;
+        if (wide_attn_prefill && mx_decode_requested && !resident_m23_all) {
+            throw std::runtime_error(
+                "Mx attention decode requires resident-all attention weights");
+        }
+        decode_mx_ffn = mx_decode_requested && prefill_mx_ffn;
+        decode_mx_o = mx_decode_requested && prefill_mx_o;
         if (resident_m23_all) resident_m23_ffn = !decode_mx_ffn;
         const char* fp16_qk_env = std::getenv("MIINFER_PREFILL_REPACKED_FP16_ATTN_QK");
         const char* fp16_v_env = std::getenv("MIINFER_PREFILL_REPACKED_FP16_ATTN_V");
