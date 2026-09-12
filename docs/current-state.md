@@ -1751,16 +1751,47 @@ returned to a responsive state. Clean, clock-qualified H/I runs completed at
 `206.75 tok/s` on pre-J `3fbe0f1` and `202.57 tok/s` on current `08dc691`,
 with identical `18,472,649,044 B` allocation; current-main interleaved smoke
 medians were `212.86 tok/s` H/I and `177.30 tok/s` control. The exact P512
-plus one-token continuation returned `13477` (`brown`). The earlier stall is
+first LM-head token returned `13477` (`brown`). The earlier stall is
 therefore not reproducible or attributable to M25-J. H/I remains opt-in until
-same-process repeat-P512 and longer-generation checks pass. See
+a real continuation and longer-generation checks pass. See
 experiments/EXP-0314-m25-p512-cold-ab-retest.md.
 
 2026-09-12 — The specialized `--repeat-p512-check` gate passed on current
-main: P512 plus one-token continuation plus a second same-process P512, with
-first token `13477` (`brown`), `2.80 ms` continuation, and `2554.99 ms`
-repeat prefill. The P512 H/I `00/10/01/11` matrix and longer-generation
-qualification remain before default promotion.
+main: P512 plus a first LM-head token plus a second same-process P512, with
+first token `13477` (`brown`), `2.80 ms` first-token latency, and `2554.99 ms`
+repeat prefill. The check did not execute a continuation layer; that omission
+was corrected and is recorded in EXP-0320.
+
+2026-09-12 — Three source-differential screens produced no retained
+optimization. Matching the pinned MMQ `__launch_bounds__(256, 2)` regressed
+P512 from `210.20` to `191.08 tok/s`; the M25-J four-block quantizer remained
+within run noise but had a three-run median of `207.52 tok/s` versus `212.93
+tok/s` for fresh control; and scale-hoisting measured `202.01 tok/s`. Explicit
+unrolling was a hard regression at `35.13 tok/s`. The production staged MMQ
+kernel is unchanged. See experiments/EXP-0315-m25-mx-occupancy-annotation.md,
+EXP-0316-m25-j-qualified-kernel-retest.md, and
+EXP-0317-m25-mx-staged-loop-lowering.md.
+
+The attention bakeoff also had a stale selector that re-enabled the rejected
+`MIINFER_MX_PIPELINE=1` path after clearing it. EXP-0318 removes that
+unconditional enable; the bakeoff now uses the qualified staged MMQ kernel
+unless a pipeline comparison opts in explicitly.
+
+EXP-0319 reran the H/I `00/10/01/11` matrix through the corrected bakeoff at
+B128 and B512. All eight runs completed with finite outputs and scalar parity;
+the O-only mode completed independently. The matrix is now a functional gate,
+while long-generation behavior and the versioned preset remain promotion
+requirements.
+
+Re-evaluation: the earlier `--repeat-p512-check` result did not execute a
+continuation layer; `max_new_tokens=1` only ran the post-prefill LM head. A
+real two-token check exposed a decode crash in H/I. `resident_m23_all` caused
+decode to use `resident_ffn_gate_mmq`, while Mx FFN prefill had suppressed its
+M23 packing and upload. The runtime now dual-packs M23 FFN weights whenever
+resident decode needs them, validates the resident type contract, and the
+repeat check requires the second token. See
+experiments/EXP-0320-m25-p512-continuation-crash.md. Runtime revalidation is
+pending a privileged MI50 reset after the crash contaminated the ROCm session.
 
 Update this document whenever:
 

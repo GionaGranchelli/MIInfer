@@ -1630,7 +1630,7 @@ int cmd_run(int argc, char** argv) {
             throw std::runtime_error("--repeat-p512-check requires exactly 512 prompt tokens");
         }
         Qwen35RuntimeEngine::GenerateOptions continuation;
-        continuation.max_new_tokens = 1;
+        continuation.max_new_tokens = 2;
         continuation.stream = false;
         const auto first = engine.generate(prompt_tokens, continuation);
 
@@ -1639,13 +1639,15 @@ int cmd_run(int argc, char** argv) {
         repeat.stream = false;
         const auto second = engine.generate(prompt_tokens, repeat);
 
-        if (first.generated_tokens != 1 || first.tokens.front() != 13477
+        if (first.generated_tokens != 2 || first.tokens.front() != 13477
             || second.prefill_processed_tokens != kFullPrefillCapacity) {
             throw std::runtime_error("same-process P512 check failed");
         }
+        const double continuation_ms = first.decode_ms - first.first_token_ms;
         std::cout << "same_process_p512_check=PASS first_token=13477(brown)"
+                  << " continuation_token=" << first.tokens[1]
                   << " first_prefill_ms=" << first.prefill_ms
-                  << " continuation_ms=" << first.first_token_ms
+                  << " continuation_ms=" << continuation_ms
                   << " repeat_prefill_ms=" << second.prefill_ms << '\n';
         return 0;
     }
@@ -2435,7 +2437,7 @@ void print_usage() {
     std::cout << "  models [directory]                     List GGUF model artifacts\n";
     std::cout << "  inspect <model.gguf>                     Inspect model metadata, quantization, and VRAM budget\n";
     std::cout << "  run <model.gguf> --prompt \"...\"         Generate text from a prompt with streaming output\n";
-    std::cout << "       --repeat-p512-check                 Check P512, one-token continuation, and repeat P512\n";
+    std::cout << "       --repeat-p512-check                 Check P512, real continuation, and repeat P512\n";
     std::cout << "  chat <model.gguf>                        Start an interactive multi-turn terminal chat REPL\n";
     std::cout << "  serve --model MODEL.gguf [--port 8080] [--context N] [--experimental-context]\n"
               << "        [--api-key-file PATH] [--allow-insecure]   Launch API and Web UI\n\n";

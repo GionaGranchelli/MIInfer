@@ -3711,7 +3711,8 @@ struct FullAttentionLayer {
             && resident_all_env != nullptr && std::strcmp(resident_all_env, "0") != 0
             && combined_attn_qk_enabled()
             && q_weight.type == miinfer::GgufTensorType::q4_k
-            && k_weight.type == miinfer::GgufTensorType::q4_k;
+            && k_weight.type == miinfer::GgufTensorType::q4_k
+            && mx_ffn_supported;
         if (resident_m23_all) resident_m23_ffn = true;
         const char* fp16_qk_env = std::getenv("MIINFER_PREFILL_REPACKED_FP16_ATTN_QK");
         const char* fp16_v_env = std::getenv("MIINFER_PREFILL_REPACKED_FP16_ATTN_V");
@@ -3791,12 +3792,14 @@ struct FullAttentionLayer {
         }
         if (wide_attn_prefill && ffn_gate_weight.type == miinfer::GgufTensorType::q4_k
             && ffn_up_weight.type == miinfer::GgufTensorType::q4_k) {
+            // Mx changes the wide-prefill representation; resident decode still uses M23.
+            if (resident_m23_all || !prefill_mx_ffn) {
+                host_ffn_gate_mmq = pack_q4k_mmq_tensor(ffn_gate_weight);
+                host_ffn_up_mmq = pack_q4k_mmq_tensor(ffn_up_weight);
+            }
             if (prefill_mx_ffn) {
                 host_mx_ffn_gate = pack_mx_q4k_repacked_tensor(ffn_gate_weight);
                 host_mx_ffn_up = pack_mx_q4k_repacked_tensor(ffn_up_weight);
-            } else {
-                host_ffn_gate_mmq = pack_q4k_mmq_tensor(ffn_gate_weight);
-                host_ffn_up_mmq = pack_q4k_mmq_tensor(ffn_up_weight);
             }
         }
         const char* expanded_down_env = std::getenv("MIINFER_Q4K_EXPANDED_DOWN");
@@ -3816,21 +3819,27 @@ struct FullAttentionLayer {
             d_ffn_down = copy_weight(ffn_down_weight);
         }
         if (wide_attn_prefill && ffn_down_weight.type == miinfer::GgufTensorType::q4_k) {
-            if (prefill_mx_ffn) {
-                host_mx_ffn_down = pack_mx_q4k_repacked_tensor(ffn_down_weight);
-            } else {
+            if (resident_m23_all || !prefill_mx_ffn) {
                 host_ffn_down_q4_mmq = pack_q4k_mmq_tensor(ffn_down_weight);
             }
-        } else if (wide_attn_prefill && ffn_down_weight.type == miinfer::GgufTensorType::q6_k) {
             if (prefill_mx_ffn) {
-                host_mx_ffn_down = pack_mx_q6k_repacked_tensor(ffn_down_weight);
-            } else {
+                host_mx_ffn_down = pack_mx_q4k_repacked_tensor(ffn_down_weight);
+            }
+        } else if (wide_attn_prefill && ffn_down_weight.type == miinfer::GgufTensorType::q6_k) {
+            if (resident_m23_all || !prefill_mx_ffn) {
                 host_ffn_down_q6_mmq = pack_q6k_mmq_tensor(ffn_down_weight);
             }
+            if (prefill_mx_ffn) {
+                host_mx_ffn_down = pack_mx_q6k_repacked_tensor(ffn_down_weight);
+            }
         }
-        resident_m23_ffn = resident_m23_ffn && !prefill_mx_ffn && !host_ffn_gate_mmq.empty()
+        const bool m23_ffn_packed = !host_ffn_gate_mmq.empty()
             && !host_ffn_up_mmq.empty()
             && (!host_ffn_down_q4_mmq.empty() || !host_ffn_down_q6_mmq.empty());
+        if (resident_m23_all && !m23_ffn_packed) {
+            throw std::runtime_error("resident M23 attention requires packed FFN weights");
+        }
+        resident_m23_ffn = (resident_m23_all || resident_m23_ffn) && m23_ffn_packed;
         if (resident_m23_ffn) {
             const auto upload_resident = [](const auto& packed) {
                 auto result = allocate(packed.size() * sizeof(packed.front()));

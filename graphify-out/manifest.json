@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1789169402.0700238,
-    "seen": 1789169418.7699,
-    "ast_hash": "5206da266d648789db441f67c53587e7",
+    "mtime": 1789172246.2676153,
+    "seen": 1789172314.5939665,
+    "ast_hash": "2ceefddf178291ee7111151e960ceefc",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -2364,15 +2364,15 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1789169299.9025896,
-    "seen": 1789169418.7698355,
-    "ast_hash": "e8d628fe2c3eb37c6d3cb08bcbcf17fe",
+    "mtime": 1789172246.2656152,
+    "seen": 1789172314.5939224,
+    "ast_hash": "9fc859852c6f7da369eb679166d7419b",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1789166759.4700003,
-    "seen": 1789167596.0326948,
-    "ast_hash": "31b34f386e0c640137ac7efa78677223",
+    "mtime": 1789172302.2523348,
+    "seen": 1789172314.5939238,
+    "ast_hash": "3ad91e771a3782677f6c21f69a81a44d",
     "semantic_hash": ""
   },
   "docs/M9-AUTOREGRESSIVE-QUALIFICATION.md": {
@@ -4908,9 +4908,9 @@
     "semantic_hash": ""
   },
   "bench/m24_attention_layer_bakeoff.cpp": {
-    "mtime": 1789166823.7186825,
-    "seen": 1789167596.0322313,
-    "ast_hash": "f8ded490b531020a762632b08d5daa8c",
+    "mtime": 1789171161.0350769,
+    "seen": 1789172314.593444,
+    "ast_hash": "89983932476f8e1820ac234afefb5607",
     "semantic_hash": ""
   },
   "experiments/EXP-0299-m24-attention-attribution.md": {
@@ -5007,6 +5007,42 @@
     "mtime": 1789169402.0680237,
     "seen": 1789169418.7703147,
     "ast_hash": "06dfa9ccff07aa37932cca83f3f8f126",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0315-m25-mx-occupancy-annotation.md": {
+    "mtime": 1789171042.1906798,
+    "seen": 1789171081.873162,
+    "ast_hash": "86e5b1e951e77698750dce760f9acd95",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0316-m25-j-qualified-kernel-retest.md": {
+    "mtime": 1789171042.19168,
+    "seen": 1789171081.8731635,
+    "ast_hash": "90886d9d96dcff6a74b42acd98e9d8fb",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0317-m25-mx-staged-loop-lowering.md": {
+    "mtime": 1789171042.19168,
+    "seen": 1789171081.873165,
+    "ast_hash": "43440457873a0ee88e3c35853e437577",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0318-m25-attention-bakeoff-hermetic-pipeline.md": {
+    "mtime": 1789171172.6990178,
+    "seen": 1789172314.5944307,
+    "ast_hash": "7a6081b9a3998fabb4fc4a1375e7eb98",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0319-m25-hi-configuration-matrix.md": {
+    "mtime": 1789171263.6695561,
+    "seen": 1789172314.5944326,
+    "ast_hash": "7a0ab55e192c33c6b4d1a06f74a46316",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0320-m25-p512-continuation-crash.md": {
+    "mtime": 1789172181.3359408,
+    "seen": 1789172314.5944338,
+    "ast_hash": "a2ed27a7bc385101af4b07b490ad739f",
     "semantic_hash": ""
   }
 }

@@ -164,7 +164,6 @@ void set_environment(std::uint32_t batch, const std::string& mode) {
     setenv("MIINFER_PREFILL_WIDE_MMQ_SSM_OUT", "1", 1);
     setenv("MIINFER_PREFILL_WIDE_MMQ_FFN", "1", 1);
     setenv("MIINFER_MX_Q8_BATCH", "0", 1);
-    setenv("MIINFER_MX_PIPELINE", "1", 1);
     if (mode == "mx_ffn" || mode == "mx_ffn_o") {
         setenv("MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_FFN", "1", 1);
     }
