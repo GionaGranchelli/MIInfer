@@ -311,7 +311,7 @@ static __device__ __forceinline__ float mx_gdn_wave_sum(const float x) {
     return result;
 }
 
-template <int StateSize, int ChunkSize, int ColumnsPerWave>
+template <int StateSize, int ChunkSize, int ColumnsPerWave, bool ExternalState>
 __launch_bounds__(128, 2) __global__ void mx_gdn_chunk_kernel(
     const float* __restrict__ query,
     const float* __restrict__ key,
@@ -341,8 +341,13 @@ __launch_bounds__(128, 2) __global__ void mx_gdn_chunk_kernel(
         for (int row = 0; row < kRowsPerLane; ++row) {
             const std::uint32_t index = row * kWaveSize + lane;
             if (column < StateSize) {
-                shard[row][column_offset] = state[state_base
-                    + static_cast<std::size_t>(index) * StateSize + column];
+                if constexpr (ExternalState) {
+                    shard[row][column_offset] = state[state_base
+                        + static_cast<std::size_t>(column) * StateSize + index];
+                } else {
+                    shard[row][column_offset] = state[state_base
+                        + static_cast<std::size_t>(index) * StateSize + column];
+                }
             }
         }
     }
@@ -400,8 +405,13 @@ __launch_bounds__(128, 2) __global__ void mx_gdn_chunk_kernel(
         if (column >= StateSize) break;
         for (int row = 0; row < kRowsPerLane; ++row) {
             const std::uint32_t index = row * kWaveSize + lane;
-            state[state_base + static_cast<std::size_t>(index) * StateSize + column] =
-                shard[row][column_offset];
+            if constexpr (ExternalState) {
+                state[state_base + static_cast<std::size_t>(column) * StateSize + index] =
+                    shard[row][column_offset];
+            } else {
+                state[state_base + static_cast<std::size_t>(index) * StateSize + column] =
+                    shard[row][column_offset];
+            }
         }
     }
 }
@@ -531,7 +541,8 @@ void launch_m12_gdn_direct(
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
-void launch_mx_gdn_chunk(
+template <bool ExternalState>
+void launch_mx_gdn_chunk_impl(
     const float* query, const float* key, const float* value,
     const float* beta, const float* decay, float* state, float* output,
     std::uint32_t token_count, std::uint32_t key_heads,
@@ -550,17 +561,37 @@ void launch_mx_gdn_chunk(
         throw std::runtime_error("MIINFER_MX_GDN_TC4 must be 0 or 1");
     }();
     if (tc4) {
-        hipLaunchKernelGGL((mx_gdn_chunk_kernel<128, 64, 4>),
+        hipLaunchKernelGGL((mx_gdn_chunk_kernel<128, 64, 4, ExternalState>),
                            dim3(value_heads, 1, (state_size + 7) / 8), dim3(64, 2),
                            0, stream, query, key, value, beta, decay, state, output,
                            token_count, key_heads, value_heads);
     } else {
-        hipLaunchKernelGGL((mx_gdn_chunk_kernel<128, 64, 2>),
+        hipLaunchKernelGGL((mx_gdn_chunk_kernel<128, 64, 2, ExternalState>),
                            dim3(value_heads, 1, (state_size + 3) / 4), dim3(64, 2),
                            0, stream, query, key, value, beta, decay, state, output,
                            token_count, key_heads, value_heads);
     }
     MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_mx_gdn_chunk(
+    const float* query, const float* key, const float* value,
+    const float* beta, const float* decay, float* state, float* output,
+    std::uint32_t token_count, std::uint32_t key_heads,
+    std::uint32_t value_heads, std::uint32_t state_size, hipStream_t stream) {
+    launch_mx_gdn_chunk_impl<false>(
+        query, key, value, beta, decay, state, output, token_count, key_heads,
+        value_heads, state_size, stream);
+}
+
+void launch_mx_gdn_chunk_external_state(
+    const float* query, const float* key, const float* value,
+    const float* beta, const float* decay, float* state, float* output,
+    std::uint32_t token_count, std::uint32_t key_heads,
+    std::uint32_t value_heads, std::uint32_t state_size, hipStream_t stream) {
+    launch_mx_gdn_chunk_impl<true>(
+        query, key, value, beta, decay, state, output, token_count, key_heads,
+        value_heads, state_size, stream);
 }
 
 void launch_m12_gdn_postprocess(

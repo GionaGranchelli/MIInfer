@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1789218257.470048,
-    "seen": 1789218290.0316927,
-    "ast_hash": "211b8c287aa8b6ca9ba520455c98bbf9",
+    "mtime": 1789220365.089703,
+    "seen": 1789220386.3004055,
+    "ast_hash": "2b9ce6554c527662757fee3ff81b6d71",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -2364,15 +2364,15 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1789213595.368541,
-    "seen": 1789213839.3292043,
-    "ast_hash": "89ea400fad5f63691f60283a02cc0bec",
+    "mtime": 1789219745.9205053,
+    "seen": 1789220386.300358,
+    "ast_hash": "4395f4b7224e10a0bb12178a8848aff0",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1789218107.5944135,
-    "seen": 1789218290.0316455,
-    "ast_hash": "24debf9ef6e512c6f3a641a8a623d5d0",
+    "mtime": 1789219745.9245055,
+    "seen": 1789220386.3003597,
+    "ast_hash": "8aaba78a33204e21b448bc21fc0afe1f",
     "semantic_hash": ""
   },
   "docs/M9-AUTOREGRESSIVE-QUALIFICATION.md": {
@@ -2826,9 +2826,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/m12_gdn_chunk.hpp": {
-    "mtime": 1789214641.7871687,
-    "seen": 1789214794.756251,
-    "ast_hash": "4459bd0f0082965f30960ecb181a152b",
+    "mtime": 1789220443.3973584,
+    "seen": 1789220477.9528124,
+    "ast_hash": "cb977bcb0c416eedd1fd79c8e318db91",
     "semantic_hash": ""
   },
   "experiments/EXP-0257-m12-gdn-gpu-chunk-prototype.md": {
@@ -5142,9 +5142,9 @@
     "semantic_hash": ""
   },
   "docs/current-state-of-the-art.md": {
-    "mtime": 1789218232.2551095,
-    "seen": 1789218290.0316913,
-    "ast_hash": "df8e2b1a6930e2732b14436f5d6c9e40",
+    "mtime": 1789220365.0877032,
+    "seen": 1789220386.3004043,
+    "ast_hash": "0335e048a72ee1b14a5c14674db6442f",
     "semantic_hash": ""
   },
   "experiments/EXP-0337-m25-prefill-hip-graph-rejection.md": {
@@ -5205,6 +5205,12 @@
     "mtime": 1789218219.2991412,
     "seen": 1789218290.0321884,
     "ast_hash": "fd6335669bdd7e9155aeb9244629acae",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0347-m25-gdn-persistent-oracle-state-layout.md": {
+    "mtime": 1789220306.076963,
+    "seen": 1789220386.3009527,
+    "ast_hash": "356c333d80accc4faae47c3d256f2751",
     "semantic_hash": ""
   }
 }

@@ -1110,6 +1110,17 @@ private:
         const char* full_layer_env = std::getenv("MIINFER_PREFILL_FULL_LAYER_MAJOR");
         full_layer_major_prefill_ = wide_prefill_ && full_layer_env != nullptr
             && std::strcmp(full_layer_env, "0") != 0;
+        const char* state_layout_env = std::getenv("MIINFER_DELTA_TRANSPOSED_STATE");
+        const bool external_state_layout = state_layout_env != nullptr
+            && std::strcmp(state_layout_env, "0") == 0;
+        if (environment_flag("MIINFER_PREFILL_MX_GDN_EXTERNAL_STATE")
+            && (!wide_prefill_ || !full_layer_major_prefill_
+                || !environment_flag("MIINFER_PREFILL_MX_GDN")
+                || !external_state_layout)) {
+            throw std::runtime_error(
+                "external Mx GDN state requires wide full-layer prefill and "
+                "MIINFER_DELTA_TRANSPOSED_STATE=0");
+        }
         gdn_chunkwise_prefill_ = gdn_chunkwise_prefill_ || wide_prefill_;
         const char* prefill_chunk_env = std::getenv("MIINFER_PREFILL_CHUNK");
         if (prefill_chunk_env != nullptr) {

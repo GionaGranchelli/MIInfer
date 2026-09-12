@@ -25,10 +25,13 @@ The benchmark target is Qwen3.8-27B-Q4_K_M on one AMD Instinct MI50
 | MIInfer H/I, repaired qualified | current accepted path, opt-in | 2500.62 median | 204.75 | 21,993,242,964 B |
 | MIInfer H/I + pinned QKV MMQ | three-pair opt-in screen; not qualified | 2492.25 median | 205.44 | 21,993,242,964 B |
 | MIInfer H/I + Mx attention decode reuse | interleaved opt-in screen; promotion pending | 2412.24 median | 212.25 | 18,472,649,044 B |
+| MIInfer H/I + persistent oracle GDN state | three-pair opt-in screen; rejected | 2502.69 median | 204.58 | 21,993,242,964 B |
 | MIInfer matched control | current comparison | — | — | 19,108,282,708 B |
 
 The H/I path clears the primary gate but is not the default. The external
-stretch gap is `182.748 ms/P512` at the qualified medians.
+stretch gap is `182.748 ms/P512` at the historical qualified medians. The
+latest fresh no-profiler screen measures a `166.976 ms` gap against the pinned
+synthetic-token `llama-bench` path.
 
 ## Retained MIInfer path
 
@@ -79,6 +82,7 @@ compatible. The following complete or isolated ports were measured on MI50:
 | attention QKV fork/join | `0.836%` median P512 improvement; no qualified gain | reject |
 | Mx GDN separate state input/output contract | `+0.31%` standalone B512; `+3 MiB` state scratch per recurrent layer | reject |
 | Mx GDN oracle launch bounds | `+3.63%` standalone B512 | reject |
+| Mx GDN persistent oracle state layout | `+0.331%` P512 median; no extra allocation | reject; retain opt-in |
 | parallel recurrent QKV/Z + beta/alpha branches | `+0.16%` P512 median | reject |
 | parallel QKV/Gate composition, Q6 layers | timed out before a valid sample; shared-workspace contract incomplete | reject |
 
@@ -165,6 +169,15 @@ wide-prefill workspace ownership. The stream, events, selector, and candidate
 workspace were removed; this is a rejected implementation contract, not a
 performance conclusion about independent QKV/Gate execution.
 
+EXP-0347 then made the pinned oracle's `[value][key]` GDN state layout
+persistent, selecting MIInfer's existing non-transposed decode state kernels
+so the prefill scan needed no state transposes. The candidate passed the
+same-process continuation/repeat-P512 gate and used the existing state
+allocation, but its three-pair P512 median was `2502.69 ms` versus `2494.44
+ms` for the same-build H/I control (`+0.331%`). It is retained only as an
+opt-in contract probe; the qualified state layout and decode path remain
+unchanged.
+
 ## Reproducibility and promotion rules
 
 Every performance claim must use clean processes, the exact model hash and
@@ -176,4 +189,4 @@ transient device/runtime or harness state: the exact pre-J/current-main A/B
 did not reproduce it with M25-J disabled.
 
 Detailed evidence is indexed in [`current-state.md`](current-state.md) and
-the M25 records `EXP-0300` through `EXP-0345`.
+the M25 records `EXP-0300` through `EXP-0347`.

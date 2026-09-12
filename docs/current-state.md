@@ -47,6 +47,7 @@ M25-L: fresh oracle comparison and recurrent FFN differential; measurement only
 M25-L/QKV: oracle-backed fork/join screen rejected; no runtime branch retained
 M25-L/GDN: oracle launch-bounds retest rejected; MIInfer retains the faster
            `__launch_bounds__(128, 2)` declaration
+M25-L/GDN-layout: persistent oracle state layout rejected at +0.331% P512
 M25-L/input graph: recurrent QKV/Z + beta/alpha overlap rejected; serialized
                    input path retained
 M25-L/QKV-Gate: Q6-only overlap timed out with incomplete shared-workspace
@@ -101,6 +102,14 @@ The stream, events, selector, and workspace were removed; this is an
 implementation-contract rejection, not evidence that the oracle schedule is
 unprofitable. See
 `experiments/EXP-0346-m25-parallel-qkv-gate-rejection.md`.
+
+EXP-0347 ported the pinned oracle's persistent `[value][key]` GDN state layout
+and selected the existing non-transposed decode state kernels so prefill did
+not need two full-state transposes. The candidate passed the real continuation
+and repeat-P512 state gate and added no allocation, but the three-pair screen
+was `2502.69 ms` versus `2494.44 ms` for the same-build H/I control. It is
+rejected for qualification and retained only as an opt-in contract probe; no
+further isolated GDN state-layout work is justified without new evidence.
 
 EXP-0338 adds an opt-in attention decode reuse path. It routes attention O
 and FFN decode through the existing H/I Mx weights, removes the duplicate M23

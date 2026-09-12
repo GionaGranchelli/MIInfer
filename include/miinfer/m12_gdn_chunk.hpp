@@ -67,6 +67,22 @@ void launch_mx_gdn_chunk(
     std::uint32_t state_size,
     hipStream_t stream = nullptr);
 
+// Same scan with the pinned oracle's persistent [value][key] recurrent-state
+// layout. The caller must use that layout for all state consumers.
+void launch_mx_gdn_chunk_external_state(
+    const float* query,
+    const float* key,
+    const float* value,
+    const float* beta,
+    const float* decay,
+    float* state,
+    float* output,
+    std::uint32_t token_count,
+    std::uint32_t key_heads,
+    std::uint32_t value_heads,
+    std::uint32_t state_size,
+    hipStream_t stream = nullptr);
+
 void launch_m12_gdn_postprocess(
     const float* recurrent_output,
     const float* gate,

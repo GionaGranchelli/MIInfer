@@ -850,6 +850,7 @@ struct RecurrentLayer {
     bool prefill_mx_repacked = false;
     bool prefill_mx_qkv_pinned = false;
     bool prefill_mx_gdn = false;
+    bool prefill_mx_external_state = false;
     bool wide_dense_ffn = false;
     bool wide_dense_all = false;
     bool prefill_wide_validate = false;
@@ -1039,6 +1040,16 @@ struct RecurrentLayer {
         const char* mx_gdn_env = std::getenv("MIINFER_PREFILL_MX_GDN");
         prefill_mx_gdn = wide_prefill && mx_gdn_env != nullptr
             && std::strcmp(mx_gdn_env, "0") != 0;
+        prefill_mx_external_state = environment_flag(
+            "MIINFER_PREFILL_MX_GDN_EXTERNAL_STATE");
+        if (prefill_mx_external_state && !prefill_mx_gdn) {
+            throw std::runtime_error(
+                "external Mx GDN state requires MIINFER_PREFILL_MX_GDN=1");
+        }
+        if (prefill_mx_external_state && transposed_state) {
+            throw std::runtime_error(
+                "external Mx GDN state requires MIINFER_DELTA_TRANSPOSED_STATE=0");
+        }
         prefill_wide_repacked = prefill_wide_repacked || prefill_mx_repacked;
         const char* resident_ffn_env = std::getenv("MIINFER_PREFILL_REPACKED_RESIDENT_FFN");
         resident_m23_ffn = prefill_wide_repacked && resident_ffn_env != nullptr
@@ -1879,10 +1890,17 @@ struct RecurrentLayer {
         const char* direct_env = std::getenv("MIINFER_PREFILL_GDN_DIRECT");
         const bool direct = direct_env != nullptr && std::strcmp(direct_env, "0") != 0;
         if (prefill_mx_gdn) {
-            miinfer::launch_mx_gdn_chunk(
-                query_batch, key_batch, value_batch, projected_beta, projected_decay,
-                static_cast<float*>(state->get()), m12_gdn_raw_output,
-                token_count, kKHeads, kVHeads, kState, hipStreamPerThread);
+            if (prefill_mx_external_state) {
+                miinfer::launch_mx_gdn_chunk_external_state(
+                    query_batch, key_batch, value_batch, projected_beta, projected_decay,
+                    static_cast<float*>(state->get()), m12_gdn_raw_output,
+                    token_count, kKHeads, kVHeads, kState, hipStreamPerThread);
+            } else {
+                miinfer::launch_mx_gdn_chunk(
+                    query_batch, key_batch, value_batch, projected_beta, projected_decay,
+                    static_cast<float*>(state->get()), m12_gdn_raw_output,
+                    token_count, kKHeads, kVHeads, kState, hipStreamPerThread);
+            }
         } else if (direct) {
             miinfer::launch_m12_gdn_direct(
                 query_batch, key_batch, value_batch, projected_beta, projected_decay,
