@@ -1,6 +1,26 @@
-# EXP-0351 — M26 real-context decode curve
+# EXP-0351 — M26 real-context decode floor and context penalty
 
-Status: RETEST — baseline curve complete; attribution pending.
+Status: ACTIVE — context attribution complete; fixed-floor regression audit next.
+
+## Revised question
+
+Why is the fixed decode floor approximately `59 ms/token` in the current
+serving path when earlier MIInfer work qualified approximately `33 ms/token`,
+and which fixed-cost families can recover the missing `18–24 ms/token`?
+
+M26 has two independent objectives: reduce the 512-context floor toward
+`35–37 ms/token`, and reduce the 12K context penalty to `<=2 ms/token`. The
+primary gate remains `<=40 ms/token` at 12–16K (`>=25 tok/s`).
+
+## Revised gates
+
+| Gate | Requirement |
+| --- | --- |
+| M26-A | 12K context penalty `<=2 ms/token` |
+| M26-B | 512 fixed floor `<=50 ms/token` (`>=20 tok/s`) |
+| M26-C | 512 fixed floor `<=44 ms/token` (`>=22.7 tok/s`) |
+| M26-D | 512 fixed floor `<=37–38 ms/token` |
+| M26-E | 12K wall time `<=40 ms/token` (`>=25 tok/s`) |
 
 ## Hypothesis
 
@@ -37,6 +57,10 @@ The five-run median curve is relatively flat: 57.50 ms/token at 512 versus
 that context-scaled attention alone explains the missing 25 tok/s. It does not
 yet provide the required operator attribution, because the current curve mode
 reports only aggregate decode timing.
+
+The fixed floor is now the dominant M26 problem: removing the context penalty
+alone would still leave the runtime near 17 tok/s. Attention is the measured
+context-scaling bottleneck, not the general decode bottleneck.
 
 ## Attribution decision boundary
 
@@ -80,7 +104,13 @@ context-dependent component.
 
 ## Follow-up
 
-Validate the decode boundary profiler at one sampled token, then compare
-recurrent and attention whole-layer timings at 512 and 12288. Count dispatches,
-synchronizations, and allocations per token. Optimize recurrent deferred
-materialization only after those decode measurements reconcile with wall time.
+Audit the historical M8/M9 `~33 ms/token` result against the current M25
+serving path with identical model, clocks, context, graph state, generation
+length, and sampling. Break the fixed floor into recurrent/attention layers,
+QKV/GDN/state update, FFN, normalization, conversion/quantization, LM head,
+sampling, and graph/runtime overhead. Rank by absolute ms/token and pursue
+only candidates with a credible `>=1 ms/token` end-to-end saving.
+
+Keep the attention output/KV investigation capped at its expected `4–6
+ms/token` recovery. Do not start another generic FFN experiment until the
+approximately `24.5 ms/token` historical difference is explained.
