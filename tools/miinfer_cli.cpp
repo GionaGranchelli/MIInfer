@@ -249,6 +249,7 @@ public:
         std::size_t profile_position = 511;
         std::size_t profile_chunk_base = 448;
         std::size_t projection_batch_width = 4;
+        bool decode_mode = false;
         double embedding_ms = 0.0;
         std::size_t chunks = 0;
         M23ProfileCounters m23{};
@@ -358,7 +359,7 @@ public:
 
         void report(double wall_ms, std::size_t prompt_tokens) const {
             if (!enabled) return;
-            if (prompt_tokens <= profile_position) {
+            if (!decode_mode && prompt_tokens <= profile_position) {
                 std::cout << "Prefill profile skipped: prompt=" << prompt_tokens
                           << " profile_position=" << profile_position << '\n';
                 return;
@@ -381,7 +382,8 @@ public:
             double attention_deferred_tail_ms = 0.0;
             double ordered_ms = 0.0;
             double sampled_total = embedding_ms;
-            std::cout << "Prefill operator profile: prompt=" << prompt_tokens
+            std::cout << (decode_mode ? "Decode operator profile: sampled_token_position="
+                                      : "Prefill operator profile: prompt=") << prompt_tokens
                       << " chunks=" << chunks << " wall_ms=" << wall_ms
                       << " sampled_position=" << profile_position
                       << " projection_batch_width=B" << projection_batch_width
@@ -1076,6 +1078,9 @@ public:
         }
         stats.total_ms = std::chrono::duration<double, std::milli>(
             std::chrono::steady_clock::now() - gen_start).count();
+        if (prefill_profile_.decode_mode) {
+            prefill_profile_.report(stats.decode_ms, prefill_profile_.profile_position);
+        }
         return stats;
     }
 
@@ -1309,12 +1314,18 @@ private:
             prefill_chunk_ = requested;
         }
         const char* prefill_profile_env = std::getenv("MIINFER_PREFILL_PROFILE");
-        prefill_profile_.enabled = layer_major_prefill_ && prefill_profile_env != nullptr
-            && std::strcmp(prefill_profile_env, "0") != 0;
+        const char* decode_profile_env = std::getenv("MIINFER_DECODE_PROFILE");
+        prefill_profile_.decode_mode = decode_profile_env != nullptr
+            && std::strcmp(decode_profile_env, "0") != 0;
+        prefill_profile_.enabled = layer_major_prefill_
+            && ((prefill_profile_env != nullptr && std::strcmp(prefill_profile_env, "0") != 0)
+                || prefill_profile_.decode_mode);
         if (prefill_profile_.enabled) {
             prefill_profile_.projection_batch_width = wide_prefill_
                 ? configured_wide_prefill_batch() : 4;
-            const char* position_env = std::getenv("MIINFER_PREFILL_PROFILE_POSITION");
+            const char* position_env = prefill_profile_.decode_mode
+                ? std::getenv("MIINFER_DECODE_PROFILE_POSITION")
+                : std::getenv("MIINFER_PREFILL_PROFILE_POSITION");
             if (position_env != nullptr) prefill_profile_.profile_position = std::stoull(position_env);
             const std::size_t profile_width = wide_prefill_
                 ? configured_wide_prefill_batch() : prefill_chunk_;

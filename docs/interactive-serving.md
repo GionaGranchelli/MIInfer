@@ -63,6 +63,22 @@ This is decode-only timing; prefill and model loading are excluded from the
 reported decode values. Keep GPU clocks and the preset fixed when comparing
 runs.
 
+For one sampled long-context token, disable graphs and enable the existing
+stage-event attribution:
+
+```bash
+MIINFER_PRESET=m25_interactive \
+MIINFER_DECODE_PROFILE=1 MIINFER_DECODE_PROFILE_POSITION=12288 \
+MIINFER_HIP_GRAPH=0 \
+build/mi50-release/miinfer run \
+  /home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf \
+  --context 16384 --decode-curve --curve-iterations 1 --no-stream
+```
+
+The output reports sampled recurrent and attention stage timings. Profiling is
+diagnostic and synchronizing; do not use its throughput as a qualification
+number.
+
 Decode step latency includes graph capture. The legacy
 `time_to_first_token_ms` field remains an internal prefill-plus-first-decode
 measurement; use `TTFT_wall_ms` for interactive comparisons. Prometheus TTFT
