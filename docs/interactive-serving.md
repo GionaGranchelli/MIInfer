@@ -72,7 +72,8 @@ MIINFER_DECODE_PROFILE=1 MIINFER_DECODE_PROFILE_POSITION=12288 \
 MIINFER_HIP_GRAPH=0 \
 build/mi50-release/miinfer run \
   /home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf \
-  --context 16384 --decode-curve --curve-iterations 1 --no-stream
+  --context 16384 --decode-curve --curve-context 12288 \
+  --curve-iterations 1 --no-stream
 ```
 
 The output reports sampled recurrent and attention stage timings. Profiling is

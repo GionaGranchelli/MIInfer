@@ -75,7 +75,10 @@ bool apply_runtime_preset() {
         if (value.rfind("MIINFER_", 0) == 0
             && value.rfind("MIINFER_API_KEY=", 0) != 0
             && value.rfind("MIINFER_PRESET=", 0) != 0
-            && value.rfind("MIINFER_SESSION_REUSE=", 0) != 0) {
+            && value.rfind("MIINFER_SESSION_REUSE=", 0) != 0
+            && value.rfind("MIINFER_DECODE_PROFILE=", 0) != 0
+            && value.rfind("MIINFER_DECODE_PROFILE_POSITION=", 0) != 0
+            && value.rfind("MIINFER_HIP_GRAPH=", 0) != 0) {
             names.emplace_back(value.substr(0, value.find('=')));
         }
     }
@@ -1853,6 +1856,7 @@ int cmd_run(int argc, char** argv) {
     bool check_session = false;
     bool decode_curve = false;
     std::size_t curve_iterations = 1;
+    std::optional<std::size_t> curve_context;
 
     if (const char* context_env = std::getenv("MIINFER_CONTEXT_CAPACITY")) {
         const auto context = std::stoull(context_env);
@@ -1879,6 +1883,9 @@ int cmd_run(int argc, char** argv) {
         } else if (arg == "--curve-iterations" && i + 1 < argc) {
             curve_iterations = std::stoull(argv[++i]);
             if (curve_iterations == 0) throw std::runtime_error("curve iterations must be positive");
+        } else if (arg == "--curve-context" && i + 1 < argc) {
+            curve_context = std::stoull(argv[++i]);
+            if (*curve_context == 0) throw std::runtime_error("curve context must be positive");
         } else if (arg == "--context" && i + 1 < argc) {
             g_cache_capacity = std::stoull(argv[++i]);
             if (g_cache_capacity == 0) throw std::runtime_error("context must be positive");
@@ -1918,6 +1925,7 @@ int cmd_run(int argc, char** argv) {
         constexpr std::size_t generated_tokens = 128;
         std::cout << "context_tokens,iterations,median_decode_ms,median_ms_per_token,median_decode_tok_s\n";
         for (const std::size_t context : contexts) {
+            if (curve_context && context != *curve_context) continue;
             if (context + generated_tokens >= g_cache_capacity) continue;
             std::vector<double> decode_ms;
             decode_ms.reserve(curve_iterations);

@@ -1,6 +1,6 @@
 # EXP-0351 — M26 real-context decode curve
 
-Status: RETEST — reconnaissance only; no optimization decision.
+Status: RETEST — baseline curve complete; attribution pending.
 
 ## Hypothesis
 
@@ -14,27 +14,32 @@ then measures 128 generated tokens. It reports decode-only wall time and
 throughput. The production `m25_interactive` flags were used with a 4096
 position HIP-graph capture limit.
 
-## Initial reconnaissance
+## Five-run baseline
 
-MI50/gfx906, Qwen3.8-27B-Q4_K_M, context capacity 16384, one sample per point.
-The 16384 point was skipped because the benchmark reserves 128 output tokens.
+MI50/gfx906, Qwen3.8-27B-Q4_K_M, context capacity 32768, five fresh samples
+per point, fixed 128-token generation, and `m25_interactive` flags. GPU clocks
+were allowed to run at the installed performance state. The benchmark reserves
+128 output tokens, so capacity was set above the 16K point.
 
 | Existing context | Decode ms / 128 | ms/token | tok/s |
 | ---: | ---: | ---: | ---: |
-| 512 | 8267.95 | 64.593 | 15.48 |
-| 2048 | 8420.44 | 65.785 | 15.20 |
-| 4096 | 10266.4 | 80.206 | 12.47 |
-| 8192 | 7821.55 | 61.106 | 16.37 |
-| 12288 | 8116.29 | 63.409 | 15.77 |
+| 512 | 7360.14 | 57.501 | 17.39 |
+| 2048 | 7413.98 | 57.922 | 17.26 |
+| 4096 | 7753.75 | 60.576 | 16.51 |
+| 8192 | 7714.80 | 60.272 | 16.59 |
+| 12288 | 8106.56 | 63.333 | 15.79 |
+| 16384 | 7973.68 | 62.294 | 16.05 |
 
 ## Interpretation
 
-The single-pass curve is internally non-monotonic and therefore contaminated
-or insufficiently sampled for attribution. It does not prove or reject the
-attention/KV hypothesis. No kernel change is accepted from this result.
+The five-run median curve is relatively flat: 57.50 ms/token at 512 versus
+62.29 ms/token at 16K, an increase of 4.79 ms/token. This rejects the claim
+that context-scaled attention alone explains the missing 25 tok/s. It does not
+yet provide the required operator attribution, because the current curve mode
+reports only aggregate decode timing.
 
 ## Follow-up
 
-Repeat with at least five interleaved samples, context capacity above 16K, and
-hardware-state capture. Add per-operator GPU timing and dispatch/synchronization
-counts before choosing an optimization target.
+Run the single-context decode attribution mode at 12288 with graphs disabled,
+then classify fixed versus context-dependent stage costs and count dispatches
+and synchronizations before choosing an optimization target.

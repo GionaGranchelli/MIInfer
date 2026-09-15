@@ -1596,6 +1596,19 @@ struct RecurrentLayer {
         }
     }
 
+    void profile_decode_layer_start(std::uint32_t position) const {
+        if (stage_profile != nullptr && stage_profile_position == position) {
+            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->ordered_start, hipStreamPerThread));
+        }
+    }
+
+    void profile_decode_layer_end(std::uint32_t position) const {
+        if (stage_profile != nullptr && stage_profile_position == position) {
+            stage_profile->ordered_recorded = true;
+            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->ordered_end, hipStreamPerThread));
+        }
+    }
+
     void profile_tail_family_start(std::size_t family, std::size_t offset) const {
         if (stage_profile != nullptr && family < stage_profile->tail_family_start.size()
             && stage_profile_position == stage_profile_chunk_base + offset + 3) {
@@ -4213,6 +4226,19 @@ struct FullAttentionLayer {
         }
     }
 
+    void profile_decode_layer_start(std::uint32_t position) const {
+        if (stage_profile != nullptr && stage_profile_position == position) {
+            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->ordered_start, hipStreamPerThread));
+        }
+    }
+
+    void profile_decode_layer_end(std::uint32_t position) const {
+        if (stage_profile != nullptr && stage_profile_position == position) {
+            stage_profile->ordered_recorded = true;
+            MIINFER_HIP_CHECK(hipEventRecord(stage_profile->ordered_end, hipStreamPerThread));
+        }
+    }
+
     bool prepare_prefill_batch(const float* inputs, std::size_t count,
                                bool normalized_ready = false) {
         ensure_m23_repacked();
@@ -5214,6 +5240,7 @@ struct FullAttentionLayer {
         }
         stage_end(14, position);
     }
+
 };
 
 void run_hybrid_block(RecurrentLayer& recurrent0, RecurrentLayer& recurrent1,
@@ -5363,6 +5390,16 @@ struct GpuLayerRef {
             throw std::runtime_error("empty qwen35 GPU layer reference");
         }
     }
+
+    void profile_decode_layer_start(std::uint32_t position) const {
+        if (recurrent != nullptr) recurrent->profile_decode_layer_start(position);
+        else if (attention != nullptr) attention->profile_decode_layer_start(position);
+    }
+
+    void profile_decode_layer_end(std::uint32_t position) const {
+        if (recurrent != nullptr) recurrent->profile_decode_layer_end(position);
+        else if (attention != nullptr) attention->profile_decode_layer_end(position);
+    }
 };
 
 void run_prefix(std::span<const GpuLayerRef> layers, std::span<float* const> outputs,
@@ -5388,7 +5425,9 @@ void run_prefix(std::span<const GpuLayerRef> layers, std::span<float* const> out
                 next_q8 = final_q8_1_out;
             }
         }
+        layers[layer].profile_decode_layer_start(position);
         layers[layer].run(current, position, outputs[layer], next_weight, next_norm, precomputed, next_q8, precomputed_q8);
+        layers[layer].profile_decode_layer_end(position);
         current = outputs[layer];
         precomputed = (next_weight != nullptr && next_norm != nullptr);
         precomputed_q8 = precomputed && (next_q8 != nullptr);
