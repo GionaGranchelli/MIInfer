@@ -40,6 +40,18 @@ reports only aggregate decode timing.
 
 ## Attribution decision boundary
 
+The corrected decode profiler was validated at the first post-prompt token
+(`position=512`) with graphs disabled. It reported `58.789 ms` of summed
+operator timing and `62.627 ms` of gross whole-layer timing for a token whose
+decode wall measurement was `59.124 ms`. The component accounting therefore
+reconciles at the operator level; the gross layer interval is intentionally
+not summed with its component events.
+
+At this short-context point, the largest fixed-cost families were projection
+or norm (`13.420 ms`), FFN Gate/Up (`10.842 ms`), KV or head norm
+(`10.732 ms`), FFN Down (`5.735 ms`), and projection or attention output
+(`4.104 ms`). The causal attention work is not the dominant fixed cost.
+
 The existing qualified M24-E whole-tail measurement provides the current
 best operator evidence: recurrent deferred execution accounted for
 `3424.200 ms` across 48 layers, versus `905.333 ms` for the 16 attention

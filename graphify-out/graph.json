@@ -77526,7 +77526,7 @@
       "node_kind": "heading",
       "norm_label": "follow-up",
       "source_file": "experiments/EXP-0351-m26-real-context-decode-curve.md",
-      "source_location": "L58"
+      "source_location": "L70"
     },
     {
       "id": "experiments_exp_0351_m26_real_context_decode_curve_hypothesis",
@@ -200732,7 +200732,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0351-m26-real-context-decode-curve.md",
-      "source_location": "L58",
+      "source_location": "L70",
       "weight": 1.0
     },
     {
@@ -217837,5 +217837,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "4b0e600bfa8d6cccadac5820cf7ba65831209797"
+  "built_at_commit": "b5d008d4e9c8e1cb8de3e0d8ee4713ce141fe4e2"
 }
