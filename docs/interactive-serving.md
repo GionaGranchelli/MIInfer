@@ -49,6 +49,20 @@ Pi generations use normal decode after that point, avoiding per-position graph
 preparation overhead. Override `MIINFER_HIP_GRAPH_MAX_POSITION` only for
 benchmarking.
 
+For the M26 real-context decode curve, use the built-in Qwen3.8 runtime
+benchmark. It measures 128 decode tokens after each fresh context and reports
+median decode milliseconds and tokens per second:
+
+```bash
+MIINFER_PRESET=m25_interactive build/mi50-release/miinfer run \
+  /home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf \
+  --context 16384 --decode-curve --curve-iterations 5 --no-stream
+```
+
+This is decode-only timing; prefill and model loading are excluded from the
+reported decode values. Keep GPU clocks and the preset fixed when comparing
+runs.
+
 Decode step latency includes graph capture. The legacy
 `time_to_first_token_ms` field remains an internal prefill-plus-first-decode
 measurement; use `TTFT_wall_ms` for interactive comparisons. Prometheus TTFT

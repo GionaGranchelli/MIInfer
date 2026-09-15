@@ -1840,6 +1840,8 @@ int cmd_run(int argc, char** argv) {
     bool stream = true;
     bool repeat_p512_check = false;
     bool check_session = false;
+    bool decode_curve = false;
+    std::size_t curve_iterations = 1;
 
     if (const char* context_env = std::getenv("MIINFER_CONTEXT_CAPACITY")) {
         const auto context = std::stoull(context_env);
@@ -1861,6 +1863,11 @@ int cmd_run(int argc, char** argv) {
             repeat_p512_check = true;
         } else if (arg == "--check-session") {
             check_session = true;
+        } else if (arg == "--decode-curve") {
+            decode_curve = true;
+        } else if (arg == "--curve-iterations" && i + 1 < argc) {
+            curve_iterations = std::stoull(argv[++i]);
+            if (curve_iterations == 0) throw std::runtime_error("curve iterations must be positive");
         } else if (arg == "--context" && i + 1 < argc) {
             g_cache_capacity = std::stoull(argv[++i]);
             if (g_cache_capacity == 0) throw std::runtime_error("context must be positive");
@@ -1894,6 +1901,35 @@ int cmd_run(int argc, char** argv) {
 
     const auto prompt_tokens = engine.tokenizer().encode(prompt_text);
     std::cerr << "Prompt tokens: " << prompt_tokens.size() << " tokens\n";
+
+    if (decode_curve) {
+        constexpr std::array<std::size_t, 6> contexts{512, 2048, 4096, 8192, 12288, 16384};
+        constexpr std::size_t generated_tokens = 128;
+        std::cout << "context_tokens,iterations,median_decode_ms,median_ms_per_token,median_decode_tok_s\n";
+        for (const std::size_t context : contexts) {
+            if (context + generated_tokens >= g_cache_capacity) continue;
+            std::vector<double> decode_ms;
+            decode_ms.reserve(curve_iterations);
+            std::vector<std::uint32_t> tokens(context);
+            for (std::size_t i = 0; i < context; ++i) tokens[i] = prompt_tokens[i % prompt_tokens.size()];
+            for (std::size_t iteration = 0; iteration < curve_iterations; ++iteration) {
+                RuntimeGenerateOptions options;
+                options.max_new_tokens = generated_tokens;
+                options.stream = false;
+                const auto stats = engine.generate(tokens, options);
+                if (stats.cancelled || stats.generated_tokens != generated_tokens) {
+                    throw std::runtime_error("decode curve generation did not complete");
+                }
+                decode_ms.push_back(stats.decode_ms);
+            }
+            std::sort(decode_ms.begin(), decode_ms.end());
+            const double median = decode_ms[decode_ms.size() / 2];
+            std::cout << context << ',' << curve_iterations << ',' << median << ','
+                      << median / generated_tokens << ','
+                      << (1000.0 * generated_tokens / median) << '\n';
+        }
+        return 0;
+    }
 
     if (check_session) {
         // Reuse only a completed B512 prefill checkpoint, then compare its
