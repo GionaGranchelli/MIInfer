@@ -1517,7 +1517,8 @@ private:
     }
 
     void ensure_graph_captured(std::size_t position) {
-        if (!use_hip_graph_ || decode_graphs_[position] != nullptr) return;
+        if (!use_hip_graph_ || position >= hip_graph_max_position_
+            || decode_graphs_[position] != nullptr) return;
         const auto capture_start = std::chrono::steady_clock::now();
 
         hipGraph_t graph = nullptr;
