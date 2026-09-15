@@ -1036,7 +1036,9 @@ public:
                 std::chrono::steady_clock::now() - gen_start).count();
             return stats;
         }
-        prefill_profile_.report(stats.prefill_ms, prompt.size());
+        if (!prefill_profile_.decode_mode) {
+            prefill_profile_.report(stats.prefill_ms, prompt.size());
+        }
         if (opt.on_prefill_complete) opt.on_prefill_complete();
         if (opt.max_new_tokens == 0) {
             stats.total_ms = std::chrono::duration<double, std::milli>(
