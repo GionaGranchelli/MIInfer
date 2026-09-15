@@ -52,6 +52,17 @@ or norm (`13.420 ms`), FFN Gate/Up (`10.842 ms`), KV or head norm
 (`10.732 ms`), FFN Down (`5.735 ms`), and projection or attention output
 (`4.104 ms`). The causal attention work is not the dominant fixed cost.
 
+The same diagnostic was then run at `position=12288` with the same runtime
+vector and graph state. It reported `64.179 ms` of accounted operator timing,
+`68.009 ms` gross whole-layer timing, and `63.669 ms` wall ms/token. Relative
+to 512, the accounted total increased by `5.390 ms/token`. The largest family
+delta was projection or attention output (`4.104 -> 10.457 ms`, `+6.353 ms`);
+projection/norm (`13.420 -> 13.277 ms`), FFN Gate/Up (`10.842 -> 10.705 ms`),
+KV/head norm (`10.732 -> 10.695 ms`), and FFN Down (`5.735 -> 5.653 ms`)
+were effectively constant. This is evidence that context-dependent work is
+localized to the full-attention output/KV path, while the recurrent fixed
+floor remains the primary short-context cost.
+
 The existing qualified M24-E whole-tail measurement provides the current
 best operator evidence: recurrent deferred execution accounted for
 `3424.200 ms` across 48 layers, versus `905.333 ms` for the 16 attention
