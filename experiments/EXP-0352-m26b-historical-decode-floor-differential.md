@@ -150,3 +150,28 @@ qualified 1606/1000 MHz state. No historical/current differential, regression
 classification, or M26-C target is claimed from this audit.
 
 **Audit decision:** M26-B RETEST — differential not sufficiently explained.
+
+## Reconstructed-fixture probe — 2026-09-16
+
+The original `/tmp/m6a273-reference-p12` bundle could not be recovered. Since
+the absence was confirmed, a separately named replacement was generated from
+llama.cpp commit `c0bc8591e8815c63cb01dd3f051a8b0df02501c` using the tracked
+fixture exporter. Validation passed; this is not claimed to be byte-identical
+to the historical `-p12` bundle.
+
+| Variant | Result | Correctness/runtime evidence |
+| --- | --- | --- |
+| `HISTORICAL_LEGACY` — `ff7aeff` + reconstructed fixture | `33.227 ms/token`, `30.096 tok/s` | replay PASS; allocations 0 |
+| `CURRENT_LEGACY` — current HEAD + same reconstructed fixture | no timing result | abort: HIP invalid argument at `tools/qwen35_gpu_pipeline.hpp:626` during device-to-host fingerprint copy |
+
+The historical harness reproduces the expected 30.29 tok/s result within 5%.
+The current legacy harness is not comparable yet because it aborts before
+reporting a measurement against this replacement fixture. This failure is
+recorded as an execution/fixture compatibility issue, not classified as a
+performance regression.
+
+The required original `-p12` fixture remains the next prerequisite for closing
+the historical/current differential. No kernel or quantization changes were
+made.
+
+**Probe decision:** M26-B RETEST — differential not sufficiently explained.
