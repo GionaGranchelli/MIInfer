@@ -129,3 +129,24 @@ only from this differential.
 | contract/other | pending | pending | pending | pending | pending |
 
 **Decision:** RETEST — diagnostic gate open; optimization prohibited.
+
+## Audit execution — 2026-09-15
+
+| Item | Evidence | Result |
+| --- | --- | --- |
+| Current HEAD | `dd7b469647693cb46caacf8aa3e7bf31333805a4` | recorded |
+| Worktree | clean before this diagnostic update | recorded |
+| Model SHA-256 | `7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169` | PASS |
+| Required fixture | `/tmp/m6a273-reference-p12` absent; `/tmp/m6a273-reference` also absent | BLOCKED |
+| Historical worktree | `/tmp/miinfer-m26b-m8` at `ff7aefffbe33ea386aeef0e12d1a8623fc6ff58d` | PASS |
+| Historical legacy Release build | `miinfer-m6a21-qwen35-gpu-hybrid-block` | PASS |
+| HIP toolchain | HIP `7.1.52802-9999`, clang `20.0.0.rocm`; GCC `16.2.1` | recorded |
+| GPU | MI50 / gfx906 / 60 CU | recorded |
+| Audit clocks | SCLK `930 MHz`, MCLK `350 MHz`; power cap `225 W` | INVALID for qualification |
+
+The required historical/current `--bench64` A/B was not run because the
+fixture is absent and the audited clock state is not comparable to the
+qualified 1606/1000 MHz state. No historical/current differential, regression
+classification, or M26-C target is claimed from this audit.
+
+**Audit decision:** M26-B RETEST — differential not sufficiently explained.
