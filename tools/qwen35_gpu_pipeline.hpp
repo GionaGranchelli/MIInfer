@@ -1063,7 +1063,8 @@ struct RecurrentLayer {
         const char* resident_ffn_env = std::getenv("MIINFER_PREFILL_REPACKED_RESIDENT_FFN");
         resident_m23_ffn = prefill_wide_repacked && resident_ffn_env != nullptr
             && std::strcmp(resident_ffn_env, "0") != 0;
-        prefill_wide_validate = prefill_wide_repacked && !prefill_mx_repacked
+        prefill_wide_validate = prefill_wide_repacked
+            && (!prefill_mx_repacked || environment_flag("MIINFER_WIDE_VALIDATE_MX"))
             && std::getenv("MIINFER_WIDE_VALIDATE") != nullptr && index == 0;
         const char* resident_all_env = std::getenv("MIINFER_PREFILL_REPACKED_RESIDENT_ALL");
         resident_repacked_all = prefill_wide_repacked && resident_all_env != nullptr

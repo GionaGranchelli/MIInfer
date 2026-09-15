@@ -57,20 +57,25 @@ struct PresetFlag {
 bool apply_runtime_preset() {
     const char* preset = std::getenv("MIINFER_PRESET");
     if (preset == nullptr) return true;
-    if (std::strcmp(preset, "m25_hi_qualified") != 0) {
+    const bool interactive = std::strcmp(preset, "m25_interactive") == 0;
+    const bool interactive_validate = interactive
+        && std::getenv("MIINFER_INTERACTIVE_VALIDATE") != nullptr
+        && std::strcmp(std::getenv("MIINFER_INTERACTIVE_VALIDATE"), "0") != 0;
+    if (!interactive && std::strcmp(preset, "m25_hi_qualified") != 0) {
         std::cerr << "unsupported MIINFER_PRESET: " << preset
-                  << " (expected m25_hi_qualified)\n";
+                  << " (expected m25_hi_qualified or m25_interactive)\n";
         return false;
     }
 
     // Clear every MIINFER_* override before applying the versioned vector;
-    // preserve the server credential, which is not a runtime selector.
+    // Preserve server controls, which are not runtime selectors.
     std::vector<std::string> names;
     for (char** entry = environ; entry != nullptr && *entry != nullptr; ++entry) {
         const std::string_view value(*entry);
         if (value.rfind("MIINFER_", 0) == 0
             && value.rfind("MIINFER_API_KEY=", 0) != 0
-            && value.rfind("MIINFER_PRESET=", 0) != 0) {
+            && value.rfind("MIINFER_PRESET=", 0) != 0
+            && value.rfind("MIINFER_SESSION_REUSE=", 0) != 0) {
             names.emplace_back(value.substr(0, value.find('=')));
         }
     }
@@ -103,9 +108,23 @@ bool apply_runtime_preset() {
         }
     }
     g_cache_capacity = 1024;
-    std::cerr << "preset=m25_hi_qualified\n"
+    std::cerr << "preset=" << preset << '\n'
               << "  MIINFER_MX_PIPELINE=unset\n";
     for (const auto [name, value] : flags) std::cerr << "  " << name << "=" << value << '\n';
+    if (interactive) {
+        for (const char* name : {"MIINFER_MX_MMV", "MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_DECODE"}) {
+            if (setenv(name, "1", 1) != 0) return false;
+            std::cerr << "  " << name << "=1\n";
+        }
+        (void)setenv("MIINFER_HIP_GRAPH_MAX_POSITION", "4096", 1);
+        std::cerr << "  MIINFER_HIP_GRAPH_MAX_POSITION=4096\n";
+        if (interactive_validate) {
+            (void)setenv("MIINFER_WIDE_VALIDATE", "1", 1);
+            (void)setenv("MIINFER_WIDE_VALIDATE_MX", "1", 1);
+            std::cerr << "  MIINFER_WIDE_VALIDATE=1\n";
+            std::cerr << "  MIINFER_WIDE_VALIDATE_MX=1\n";
+        }
+    }
     return true;
 }
 
@@ -164,10 +183,12 @@ std::optional<int> parse_port(std::string_view value) {
 struct RuntimeGenerateOptions {
     std::size_t max_new_tokens = 256;
     bool stream = true;
+    bool reuse_session = false;
     std::function<bool()> should_cancel = nullptr;
     std::function<bool(std::uint32_t token, std::string_view piece)> on_token = nullptr;
     std::function<void()> on_prefill_complete = nullptr;
     std::function<void()> on_first_token = nullptr;
+    std::function<void(std::size_t token_count)> on_prefill_checkpoint = nullptr;
 };
 
 struct RuntimeGenerateStats {
@@ -176,6 +197,9 @@ struct RuntimeGenerateStats {
     std::size_t prompt_tokens = 0;
     std::size_t prefill_processed_tokens = 0;
     std::size_t generated_tokens = 0;
+    std::size_t reused_prefix_tokens = 0;
+    std::size_t common_prefix_tokens = 0;
+    double graph_capture_ms = 0.0;
     double prefill_ms = 0.0;
     double decode_ms = 0.0;
     double first_token_ms = 0.0;
@@ -571,6 +595,91 @@ public:
         MIINFER_HIP_CHECK(hipDeviceSynchronize());
     }
 
+    // A checkpoint is deliberately limited to a completed B512 prefill batch.
+    // Restoring it then replays the remaining suffix under the identical wide
+    // schedule as a fresh request; scalar decode state is never reused.
+    void capture_session_checkpoint(std::span<const std::uint32_t> tokens) {
+        if (tokens.empty() || tokens.size() % kFullPrefillCapacity != 0) return;
+        if (tokens.size() > session_checkpoint_.capacity_tokens) {
+            session_checkpoint_ = {};
+            session_checkpoint_.capacity_tokens = tokens.size();
+        }
+        const std::size_t recurrent_state_bytes = kVHeads * kState * kState * sizeof(float);
+        const std::size_t recurrent_history_bytes = 4 * kChannels * sizeof(float);
+        const std::size_t kv_elements = 4 * tokens.size() * 256;
+        for (std::size_t i = 0; i < layers_.size(); ++i) {
+            const auto& layer = layers_[i];
+            if (layer.recurrent != nullptr) {
+                if (!session_checkpoint_.recurrent_state[i]) {
+                    session_checkpoint_.recurrent_state[i] = allocate(recurrent_state_bytes);
+                    session_checkpoint_.recurrent_history[i] = allocate(recurrent_history_bytes);
+                }
+                MIINFER_HIP_CHECK(hipMemcpyAsync(session_checkpoint_.recurrent_state[i]->get(),
+                    layer.recurrent->state->get(), recurrent_state_bytes,
+                    hipMemcpyDeviceToDevice, hipStreamPerThread));
+                MIINFER_HIP_CHECK(hipMemcpyAsync(session_checkpoint_.recurrent_history[i]->get(),
+                    layer.recurrent->history->get(), recurrent_history_bytes,
+                    hipMemcpyDeviceToDevice, hipStreamPerThread));
+            } else {
+                const std::size_t element_size = layer.attention->fp16_kv_cache
+                    ? sizeof(__half) : sizeof(float);
+                const std::size_t bytes_per_head = tokens.size() * 256 * element_size;
+                if (!session_checkpoint_.key_cache[i]) {
+                    session_checkpoint_.key_cache[i] = allocate(kv_elements * element_size);
+                    session_checkpoint_.value_cache[i] = allocate(kv_elements * element_size);
+                }
+                for (std::size_t head = 0; head < 4; ++head) {
+                    const std::size_t source = head * g_cache_capacity * 256 * element_size;
+                    const std::size_t destination = head * bytes_per_head;
+                    MIINFER_HIP_CHECK(hipMemcpyAsync(
+                        static_cast<std::byte*>(session_checkpoint_.key_cache[i]->get()) + destination,
+                        static_cast<std::byte*>(layer.attention->key_cache->get()) + source,
+                        bytes_per_head, hipMemcpyDeviceToDevice, hipStreamPerThread));
+                    MIINFER_HIP_CHECK(hipMemcpyAsync(
+                        static_cast<std::byte*>(session_checkpoint_.value_cache[i]->get()) + destination,
+                        static_cast<std::byte*>(layer.attention->value_cache->get()) + source,
+                        bytes_per_head, hipMemcpyDeviceToDevice, hipStreamPerThread));
+                }
+            }
+        }
+        session_checkpoint_.tokens.assign(tokens.begin(), tokens.end());
+    }
+
+    void restore_session_checkpoint() {
+        reset();
+        const std::size_t recurrent_state_bytes = kVHeads * kState * kState * sizeof(float);
+        const std::size_t recurrent_history_bytes = 4 * kChannels * sizeof(float);
+        const std::size_t bytes_per_head = session_checkpoint_.tokens.size() * 256;
+        for (std::size_t i = 0; i < layers_.size(); ++i) {
+            const auto& layer = layers_[i];
+            if (layer.recurrent != nullptr) {
+                MIINFER_HIP_CHECK(hipMemcpyAsync(layer.recurrent->state->get(),
+                    session_checkpoint_.recurrent_state[i]->get(), recurrent_state_bytes,
+                    hipMemcpyDeviceToDevice, hipStreamPerThread));
+                MIINFER_HIP_CHECK(hipMemcpyAsync(layer.recurrent->history->get(),
+                    session_checkpoint_.recurrent_history[i]->get(), recurrent_history_bytes,
+                    hipMemcpyDeviceToDevice, hipStreamPerThread));
+            } else {
+                const std::size_t element_size = layer.attention->fp16_kv_cache
+                    ? sizeof(__half) : sizeof(float);
+                const std::size_t head_bytes = bytes_per_head * element_size;
+                for (std::size_t head = 0; head < 4; ++head) {
+                    const std::size_t destination = head * g_cache_capacity * 256 * element_size;
+                    const std::size_t source = head * head_bytes;
+                    MIINFER_HIP_CHECK(hipMemcpyAsync(
+                        static_cast<std::byte*>(layer.attention->key_cache->get()) + destination,
+                        static_cast<std::byte*>(session_checkpoint_.key_cache[i]->get()) + source,
+                        head_bytes, hipMemcpyDeviceToDevice, hipStreamPerThread));
+                    MIINFER_HIP_CHECK(hipMemcpyAsync(
+                        static_cast<std::byte*>(layer.attention->value_cache->get()) + destination,
+                        static_cast<std::byte*>(session_checkpoint_.value_cache[i]->get()) + source,
+                        head_bytes, hipMemcpyDeviceToDevice, hipStreamPerThread));
+                }
+            }
+        }
+        MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+    }
+
     struct StepResult {
         std::uint32_t token;
         double latency_ms;
@@ -580,9 +689,8 @@ public:
         if (position >= g_cache_capacity) {
             throw std::runtime_error("context length exceeded capacity " + std::to_string(g_cache_capacity));
         }
-        ensure_graph_captured(position);
-
         const auto t0 = std::chrono::steady_clock::now();
+        ensure_graph_captured(position);
         MIINFER_HIP_CHECK(hipMemcpyAsync(
             static_cast<std::uint32_t*>(d_decode_tokens_->get()) + position,
             &input_token, sizeof(input_token), hipMemcpyHostToDevice, hipStreamPerThread));
@@ -653,23 +761,37 @@ public:
 
     const float* prefill_layer_major(std::span<const std::uint32_t> prompt,
                                      const std::function<bool()>& should_cancel,
-                                     std::size_t& processed_tokens) {
-        if (full_layer_major_prefill_ && prompt.size() <= kFullPrefillCapacity
-            && prompt.size() % kM12PrefillBatch == 0) {
-            return prefill_full_layer_major(prompt, should_cancel, processed_tokens);
-        }
-        // A 128-token request with a non-128 tail would otherwise make the
-        // final nearly-full chunk fall back to per-token recurrent execution.
+                                     std::size_t& processed_tokens,
+                                     std::size_t start_position = 0) {
         const bool matrix_prefill = gdn_chunkwise_prefill_ || dense_prefill_ || wide_prefill_;
-        const std::size_t kChunk = (prefill_chunk_ > kPrefillBatch && matrix_prefill
-            && prompt.size() % prefill_chunk_ != 0) ? kPrefillBatch : prefill_chunk_;
         float* current = static_cast<float*>(prefill_a_->get());
         float* next = static_cast<float*>(prefill_b_->get());
         const float* final_hidden = nullptr;
         const auto layer_span = std::span<const GpuLayerRef>(layers_);
-        for (std::size_t base = 0; base < prompt.size(); base += kChunk) {
+        for (std::size_t base = start_position; base < prompt.size();) {
             if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
-            const std::size_t count = std::min(kChunk, prompt.size() - base);
+            const std::size_t requested = std::min(prefill_chunk_, prompt.size() - base);
+            // Keep complete wide batches and isolate only the unaligned tail.
+            // A whole-request fallback to 64 tokens throws away the useful
+            // B512 work for normal API prompts.
+            std::size_t count = requested;
+            if (wide_prefill_ && matrix_prefill && count >= kM12PrefillBatch
+                && count % kPrefillBatch != 0) {
+                count -= count % kPrefillBatch;
+            }
+            if (full_layer_major_prefill_ && count >= kM12PrefillBatch
+                && count <= kFullPrefillCapacity && count % kPrefillBatch == 0) {
+                final_hidden = prefill_full_layer_major_chunk(
+                    prompt.subspan(base, count), should_cancel, base);
+                if (final_hidden == nullptr) return nullptr;
+                processed_tokens += count;
+                base += count;
+                if (opt_prefill_checkpoint_ && base % kFullPrefillCapacity == 0) {
+                    opt_prefill_checkpoint_(base);
+                }
+                continue;
+            }
+            if (count > kPrefillBatch && count < kM12PrefillBatch) count = kPrefillBatch;
             if (prefill_profile_.enabled) {
                 MIINFER_HIP_CHECK(hipEventRecord(prefill_profile_.embedding_start, hipStreamPerThread));
             }
@@ -766,25 +888,26 @@ public:
                 std::swap(current, next);
             }
             final_hidden = current + (count - 1) * kHidden;
-            processed_tokens = base + count;
+            processed_tokens += count;
+            base += count;
         }
         MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
         return final_hidden;
     }
 
-    const float* prefill_full_layer_major(std::span<const std::uint32_t> prompt,
+    const float* prefill_full_layer_major_chunk(std::span<const std::uint32_t> prompt,
                                           const std::function<bool()>& should_cancel,
-                                          std::size_t& processed_tokens) {
+                                          std::size_t base_position) {
         float* current = static_cast<float*>(prefill_a_->get());
         float* next = static_cast<float*>(prefill_b_->get());
         for (std::size_t i = 0; i < prompt.size(); ++i) {
             if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
             MIINFER_HIP_CHECK(hipMemcpyAsync(
-                static_cast<std::uint32_t*>(d_decode_tokens_->get()) + i,
+                static_cast<std::uint32_t*>(d_decode_tokens_->get()) + base_position + i,
                 &prompt[i], sizeof(std::uint32_t), hipMemcpyHostToDevice, hipStreamPerThread));
             miinfer::launch_qwen35_q4_k_embedding_device_token(
                 static_cast<const miinfer::Q4KDeviceBlock*>(d_embedding_->get()),
-                static_cast<const std::uint32_t*>(d_decode_tokens_->get()) + i,
+                static_cast<const std::uint32_t*>(d_decode_tokens_->get()) + base_position + i,
                 model_.config().vocab_size, kHidden, current + i * kHidden,
                 hipStreamPerThread);
         }
@@ -792,7 +915,7 @@ public:
         for (std::size_t layer = 0; layer < layer_span.size(); ++layer) {
             if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
             layer_span[layer].profile_ordered_start(
-                prefill_profile_.enabled ? 0 : std::numeric_limits<std::size_t>::max());
+                prefill_profile_.enabled ? base_position : std::numeric_limits<std::size_t>::max());
             const std::size_t full_chunk = wide_prefill_ && prefill_chunk_ >= kM12PrefillBatch
                 ? prefill_chunk_ : kM12PrefillBatch;
             for (std::size_t base = 0; base < prompt.size(); base += full_chunk) {
@@ -804,7 +927,7 @@ public:
                 if (wide_prefill_ && count >= kM12PrefillBatch
                     && layer_span[layer].recurrent != nullptr) {
                     layer_span[layer].recurrent->prefill_wide(
-                        chunk_input, chunk_output, static_cast<std::uint32_t>(base), count);
+                        chunk_input, chunk_output, static_cast<std::uint32_t>(base_position + base), count);
                     continue;
                 }
                 const bool prepared = layer_span[layer].prepare_prefill_batch(
@@ -820,7 +943,7 @@ public:
                     if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
                     if (prepared) {
                         layer_span[layer].run(
-                            chunk_input + i * kHidden, static_cast<std::uint32_t>(base + i),
+                            chunk_input + i * kHidden, static_cast<std::uint32_t>(base_position + base + i),
                             chunk_output + i * kHidden, nullptr, nullptr, false, nullptr, false,
                             layer_span[layer].prefill_qkv_at(i), layer_span[layer].prefill_gate_at(i),
                             layer_span[layer].prefill_normalized_at(i), deferred_tail, i,
@@ -828,14 +951,14 @@ public:
                             layer_span[layer].prefill_value_at(i));
                     } else {
                         layer_span[layer].run(
-                            chunk_input + i * kHidden, static_cast<std::uint32_t>(base + i),
+                            chunk_input + i * kHidden, static_cast<std::uint32_t>(base_position + base + i),
                             chunk_output + i * kHidden, nullptr, nullptr, false, nullptr, false,
                             nullptr, nullptr, nullptr);
                     }
                 }
                 if (batched_attention) {
                     layer_span[layer].finish_prefill_attention(
-                        static_cast<std::uint32_t>(base), count);
+                        static_cast<std::uint32_t>(base_position + base), count);
                 }
                 if (deferred_tail) {
                     layer_span[layer].finish_prefill_batch(
@@ -844,12 +967,11 @@ public:
                 }
             }
             layer_span[layer].profile_ordered_end(
-                prefill_profile_.enabled ? 0 : std::numeric_limits<std::size_t>::max());
+                prefill_profile_.enabled ? base_position : std::numeric_limits<std::size_t>::max());
             layer_span[layer].release_m23_repacked();
             std::swap(current, next);
         }
         MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
-        processed_tokens = prompt.size();
         return current + (prompt.size() - 1) * kHidden;
     }
 
@@ -880,7 +1002,8 @@ public:
 
     GenerateStats generate_layer_major(std::span<const std::uint32_t> prompt,
                                        const GenerateOptions& opt,
-                                       std::chrono::steady_clock::time_point gen_start) {
+                                       std::chrono::steady_clock::time_point gen_start,
+                                       std::size_t start_position = 0) {
         GenerateStats stats;
         stats.prompt_tokens = prompt.size();
         if (prefill_profile_.enabled) {
@@ -894,8 +1017,10 @@ public:
             prefill_profile_.m23.weight_upload_ms = 0.0;
         }
         const auto prefill_start = std::chrono::steady_clock::now();
+        opt_prefill_checkpoint_ = opt.on_prefill_checkpoint;
         const float* final_hidden = prefill_layer_major(prompt, opt.should_cancel,
-                                                        stats.prefill_processed_tokens);
+                                                        stats.prefill_processed_tokens, start_position);
+        opt_prefill_checkpoint_ = nullptr;
         const auto prefill_end = std::chrono::steady_clock::now();
         stats.prefill_ms = std::chrono::duration<double, std::milli>(prefill_end - prefill_start).count();
         stats.prefill_tok_s = stats.prefill_ms > 0.0
@@ -941,7 +1066,7 @@ public:
             if (stopped) break;
             const std::string piece = tokenizer_.decode(std::span<const std::uint32_t>(&cur_token, 1));
             stats.text += piece;
-            if (opt.on_token && !opt.on_token(cur_token, piece)) break;
+            if (opt.on_token && !opt.on_token(cur_token, piece)) { cancelled = true; break; }
         }
         stats.decode_ms += stats.first_token_ms;
         stats.generated_tokens = stats.tokens.size();
@@ -955,6 +1080,39 @@ public:
     }
 
     GenerateStats generate(std::span<const std::uint32_t> prompt, const GenerateOptions& opt = GenerateOptions()) {
+        const auto started = std::chrono::steady_clock::now();
+        std::size_t common = 0;
+        while (common < prompt.size() && common < session_checkpoint_.tokens.size()
+               && prompt[common] == session_checkpoint_.tokens[common]) ++common;
+        const std::size_t reused = opt.reuse_session && layer_major_prefill_
+            && common == session_checkpoint_.tokens.size() && common < prompt.size()
+            ? common : 0;
+        if (!layer_major_prefill_) {
+            const double capture_start = graph_capture_ms_;
+            auto stats = generate_fresh(prompt, opt);
+            stats.graph_capture_ms = graph_capture_ms_ - capture_start;
+            return stats;
+        }
+        if (prompt.empty()) return {};
+        if (prompt.size() > g_cache_capacity) throw std::runtime_error("prompt exceeds context capacity");
+        const double capture_start = graph_capture_ms_;
+        if (reused == 0) reset();
+        else restore_session_checkpoint();
+        GenerateOptions actual = opt;
+        if (opt.reuse_session) {
+            actual.on_prefill_checkpoint = [this, prompt, callback = opt.on_prefill_checkpoint](std::size_t tokens) {
+                capture_session_checkpoint(prompt.first(tokens));
+                if (callback) callback(tokens);
+            };
+        }
+        auto stats = generate_layer_major(prompt, actual, started, reused);
+        stats.reused_prefix_tokens = reused;
+        stats.common_prefix_tokens = common;
+        stats.graph_capture_ms = graph_capture_ms_ - capture_start;
+        return stats;
+    }
+
+    GenerateStats generate_fresh(std::span<const std::uint32_t> prompt, const GenerateOptions& opt) {
         reset();
         GenerateStats stats;
         stats.prompt_tokens = prompt.size();
@@ -990,7 +1148,8 @@ public:
         std::uint32_t cur_token = prompt.back();
         std::size_t pos = prompt.size() - 1;
 
-        if (!opt.stream && use_hip_graph_) {
+        if (!opt.stream && use_hip_graph_ && pos + std::min(opt.max_new_tokens, g_cache_capacity - pos)
+                <= hip_graph_max_position_) {
             const std::size_t num_to_gen = std::min(opt.max_new_tokens, g_cache_capacity - pos);
             std::size_t captured_count = 0;
             for (std::size_t i = 0; i < num_to_gen; ++i) {
@@ -1106,6 +1265,9 @@ private:
 
         const char* graph_env = std::getenv("MIINFER_HIP_GRAPH");
         use_hip_graph_ = graph_env == nullptr || std::strcmp(graph_env, "0") != 0;
+        const char* graph_max_env = std::getenv("MIINFER_HIP_GRAPH_MAX_POSITION");
+        hip_graph_max_position_ = graph_max_env == nullptr
+            ? std::numeric_limits<std::size_t>::max() : std::stoull(graph_max_env);
         const char* layer_major_env = std::getenv("MIINFER_PREFILL_LAYER_MAJOR");
         layer_major_prefill_ = layer_major_env != nullptr && std::strcmp(layer_major_env, "0") != 0;
         const char* gdn_chunkwise_env = std::getenv("MIINFER_PREFILL_GDN_CHUNKWISE");
@@ -1356,6 +1518,7 @@ private:
 
     void ensure_graph_captured(std::size_t position) {
         if (!use_hip_graph_ || decode_graphs_[position] != nullptr) return;
+        const auto capture_start = std::chrono::steady_clock::now();
 
         hipGraph_t graph = nullptr;
         MIINFER_HIP_CHECK(hipStreamBeginCapture(hipStreamPerThread, hipStreamCaptureModeRelaxed));
@@ -1400,6 +1563,8 @@ private:
         MIINFER_HIP_CHECK(hipStreamEndCapture(hipStreamPerThread, &graph));
         MIINFER_HIP_CHECK(hipGraphInstantiate(&decode_graphs_[position], graph, nullptr, nullptr, 0));
         MIINFER_HIP_CHECK(hipGraphDestroy(graph));
+        graph_capture_ms_ += std::chrono::duration<double, std::milli>(
+            std::chrono::steady_clock::now() - capture_start).count();
     }
 
     void cleanup_graphs() {
@@ -1412,6 +1577,16 @@ private:
     }
 
     miinfer::Qwen35Model model_;
+    struct SessionCheckpoint {
+        std::vector<std::uint32_t> tokens;
+        std::size_t capacity_tokens = 0;
+        std::array<Buffer, 64> recurrent_state{};
+        std::array<Buffer, 64> recurrent_history{};
+        std::array<Buffer, 64> key_cache{};
+        std::array<Buffer, 64> value_cache{};
+    } session_checkpoint_;
+    std::function<void(std::size_t)> opt_prefill_checkpoint_;
+    double graph_capture_ms_ = 0.0;
     miinfer::Qwen3Tokenizer tokenizer_;
 
     std::vector<std::unique_ptr<RecurrentLayer>> recurrent_layers_;
@@ -1442,6 +1617,7 @@ private:
     WidePrefillWorkspace wide_prefill_workspace_;
 
     bool use_hip_graph_ = true;
+    std::size_t hip_graph_max_position_ = std::numeric_limits<std::size_t>::max();
     bool layer_major_prefill_ = false;
     bool gdn_chunkwise_prefill_ = false;
     bool dense_prefill_ = false;
@@ -1662,6 +1838,7 @@ int cmd_run(int argc, char** argv) {
     std::size_t max_tokens = 128;
     bool stream = true;
     bool repeat_p512_check = false;
+    bool check_session = false;
 
     if (const char* context_env = std::getenv("MIINFER_CONTEXT_CAPACITY")) {
         const auto context = std::stoull(context_env);
@@ -1681,6 +1858,11 @@ int cmd_run(int argc, char** argv) {
             stream = false;
         } else if (arg == "--repeat-p512-check") {
             repeat_p512_check = true;
+        } else if (arg == "--check-session") {
+            check_session = true;
+        } else if (arg == "--context" && i + 1 < argc) {
+            g_cache_capacity = std::stoull(argv[++i]);
+            if (g_cache_capacity == 0) throw std::runtime_error("context must be positive");
         }
     }
 
@@ -1711,6 +1893,51 @@ int cmd_run(int argc, char** argv) {
 
     const auto prompt_tokens = engine.tokenizer().encode(prompt_text);
     std::cerr << "Prompt tokens: " << prompt_tokens.size() << " tokens\n";
+
+    if (check_session) {
+        // Reuse only a completed B512 prefill checkpoint, then compare its
+        // suffix replay with a reset/full replay.
+        for (const std::size_t length : {512U, 640U, 3991U, 8192U, 16000U}) {
+            if (length + 160 >= g_cache_capacity) continue;
+            for (const std::size_t seed_count : {1U, 4U}) {
+            std::vector<std::uint32_t> tokens(length);
+            for (std::size_t i = 0; i < length; ++i) tokens[i] = prompt_tokens[i % prompt_tokens.size()];
+            RuntimeGenerateOptions options;
+            options.max_new_tokens = seed_count;
+            options.reuse_session = true;
+            const auto seed = engine.generate(tokens, options);
+            options.max_new_tokens = 4;
+            tokens.insert(tokens.end(), seed.tokens.begin(), seed.tokens.end());
+            for (std::size_t i = 0; i < 151; ++i) tokens.push_back(prompt_tokens[i % prompt_tokens.size()]);
+            const auto appended = engine.generate(tokens, options);
+            options.reuse_session = false;
+            const auto replay = engine.generate(tokens, options);
+            if (seed.cancelled || appended.cancelled || replay.cancelled
+                || appended.reused_prefix_tokens != (length / kFullPrefillCapacity) * kFullPrefillCapacity
+                || appended.tokens != replay.tokens) {
+                std::cerr << "session_check=FAIL length=" << length
+                          << " retained=" << appended.reused_prefix_tokens
+                          << " new=" << appended.prefill_processed_tokens << " seed=";
+                for (auto token : seed.tokens) std::cerr << token << ',';
+                std::cerr << " append=";
+                for (auto token : appended.tokens) std::cerr << token << ',';
+                std::cerr << " replay=";
+                for (auto token : replay.tokens) std::cerr << token << ',';
+                std::cerr << std::endl;
+                return 1;
+            }
+            std::cout << "session_check=PASS prompt_tokens=" << length
+                      << " seed_generated=" << seed_count
+                      << " reused_prefix_tokens=" << appended.reused_prefix_tokens
+                      << " new_prefill_tokens=" << appended.prefill_processed_tokens
+                      << " seed_prefill_ms=" << seed.prefill_ms
+                      << " append_prefill_ms=" << appended.prefill_ms
+                      << " replay_prefill_ms=" << replay.prefill_ms
+                      << " decode_tok_s=" << replay.decode_tok_s << std::endl;
+            }
+        }
+        return 0;
+    }
 
     if (repeat_p512_check) {
         if (prompt_tokens.size() != kFullPrefillCapacity) {
@@ -2080,13 +2307,17 @@ int cmd_serve(int argc, char** argv) {
         return 2;
     }
     const std::string model_id = std::filesystem::path(model_path).stem().string();
+    const char* session_reuse_env = std::getenv("MIINFER_SESSION_REUSE");
+    const bool session_reuse = session_reuse_env != nullptr
+        && std::strcmp(session_reuse_env, "0") != 0;
 
     g_cache_capacity = context_length;
     std::cerr << "Initializing MIInfer gfx906 HTTP Server on " << host << ":" << port << " ...\n";
     std::cerr << "configured_context_length=" << context_length << "\n"
               << "runtime_context_capacity=" << g_cache_capacity << "\n"
               << "qualified_context_length=1024\n"
-              << "context_qualification=" << (context_length > 1024 ? "experimental" : "qualified") << "\n";
+              << "context_qualification=" << (context_length > 1024 ? "experimental" : "qualified") << "\n"
+              << "session_reuse=" << (session_reuse ? "experimental" : "disabled") << "\n";
     Qwen35RuntimeEngine engine(model_path);
     std::cerr << "model_context_length=" << engine.model().config().context_length << "\n";
     std::cerr << "device_allocation_count=" << g_device_allocations << "\n"
@@ -2210,12 +2441,40 @@ int cmd_serve(int argc, char** argv) {
             return;
         }
         state("prefill_started");
+        std::optional<double> first_delta_ms;
+        const auto mark_first_delta = [&] {
+            if (!first_delta_ms) {
+                first_delta_ms = std::chrono::duration<double, std::milli>(
+                    std::chrono::steady_clock::now() - request.queued_at).count();
+                ttft_us += static_cast<std::uint64_t>(*first_delta_ms * 1000.0);
+            }
+        };
+        const auto log_latency = [&](const RuntimeGenerateStats& stats) {
+            const double wall_ms = std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - request.queued_at).count();
+            request_duration_us += static_cast<std::uint64_t>(wall_ms * 1000.0);
+            const double steady_ms = stats.decode_ms - stats.first_token_ms;
+            std::cerr << "miinfer_request_latency {\"request_id\":" << request.request_id
+                      << ",\"prompt_tokens\":" << stats.prompt_tokens
+                      << ",\"common_prefix_tokens\":" << stats.common_prefix_tokens
+                      << ",\"reused_prefix_tokens\":" << stats.reused_prefix_tokens
+                      << ",\"new_prefill_tokens\":" << stats.prefill_processed_tokens
+                      << ",\"prefill_ms\":" << stats.prefill_ms
+                      << ",\"graph_capture_ms\":" << stats.graph_capture_ms
+                      << ",\"first_decode_token_ms\":" << stats.first_token_ms
+                      << ",\"TTFT_wall_ms\":" << (first_delta_ms ? std::to_string(*first_delta_ms) : "null")
+                      << ",\"steady_decode_tok_s\":" << (steady_ms > 0 && stats.generated_tokens > 1
+                          ? 1000.0 * (stats.generated_tokens - 1) / steady_ms : 0.0)
+                      << ",\"total_request_ms\":" << wall_ms
+                      << ",\"cache_hit\":" << (stats.reused_prefix_tokens > 0 ? "true" : "false") << "}\n";
+        };
         if (is_stream) {
             bool client_connected = send_all(
                 client_fd,
                 "HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nCache-Control: no-cache\r\nConnection: close\r\n\r\n");
             Qwen35RuntimeEngine::GenerateOptions opt;
             opt.max_new_tokens = max_tokens;
+            opt.reuse_session = session_reuse;
             opt.should_cancel = client_cancelled;
             opt.on_prefill_complete = [&] { state("prefill_completed"); };
             opt.on_first_token = [&] { state("first_token"); };
@@ -2226,6 +2485,7 @@ int cmd_serve(int argc, char** argv) {
                 const std::string sse = "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"delta\":{\"content\":\""
                     + json_escape(piece) + "\"}}]}\n\n";
                 client_connected = send_all(client_fd, sse);
+                if (client_connected && !piece.empty()) mark_first_delta();
                 return client_connected;
             };
             Qwen35RuntimeEngine::GenerateStats stats;
@@ -2238,10 +2498,6 @@ int cmd_serve(int argc, char** argv) {
                 prefill_tokens_total += stats.prefill_processed_tokens;
                 prefill_us += static_cast<std::uint64_t>(stats.prefill_ms * 1000.0);
                 generated_tokens_total += stats.generated_tokens;
-                const double ttft_ms = stats.generated_tokens > 0
-                    ? stats.prefill_ms + stats.first_token_ms : 0.0;
-                ttft_us += static_cast<std::uint64_t>(ttft_ms * 1000.0);
-                request_duration_us += static_cast<std::uint64_t>(stats.total_ms * 1000.0);
                 const bool cancelled = stats.cancelled || !client_connected;
                 if (cancelled) { ++cancelled_requests; state("cancelled"); }
                 else state("completed");
@@ -2280,6 +2536,7 @@ int cmd_serve(int argc, char** argv) {
                         const std::string sse = "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"delta\":{\"content\":\""
                             + json_escape(stats.text) + "\"}}]}\n\n";
                         client_connected = send_all(client_fd, sse);
+                        if (client_connected && !stats.text.empty()) mark_first_delta();
                     } else {
                         for (std::size_t i = 0; i < tool_calls.calls.size() && client_connected; ++i) {
                             const auto& call = tool_calls.calls[i];
@@ -2289,6 +2546,7 @@ int cmd_serve(int argc, char** argv) {
                                 + json_escape(call.name) + "\",\"arguments\":\""
                                 + json_escape(call.arguments) + "\"}}]}}]}\n\n";
                             client_connected = send_all(client_fd, sse);
+                            if (client_connected) mark_first_delta();
                         }
                     }
                 }
@@ -2300,9 +2558,11 @@ int cmd_serve(int argc, char** argv) {
                     (void)send_all(client_fd, "data: [DONE]\n\n");
                 }
             }
+            log_latency(stats);
         } else {
             Qwen35RuntimeEngine::GenerateOptions opt;
             opt.max_new_tokens = max_tokens;
+            opt.reuse_session = session_reuse;
             opt.should_cancel = client_cancelled;
             opt.on_prefill_complete = [&] { state("prefill_completed"); };
             opt.on_first_token = [&] { state("first_token"); };
@@ -2314,10 +2574,6 @@ int cmd_serve(int argc, char** argv) {
             prefill_tokens_total += stats.prefill_processed_tokens;
             prefill_us += static_cast<std::uint64_t>(stats.prefill_ms * 1000.0);
             generated_tokens_total += stats.generated_tokens;
-            const double ttft_ms = stats.generated_tokens > 0
-                ? stats.prefill_ms + stats.first_token_ms : 0.0;
-            ttft_us += static_cast<std::uint64_t>(ttft_ms * 1000.0);
-            request_duration_us += static_cast<std::uint64_t>(stats.total_ms * 1000.0);
             if (stats.cancelled) { ++cancelled_requests; state("cancelled"); }
             else state("completed");
             const auto tool_calls = defer_tool_output
@@ -2353,7 +2609,8 @@ int cmd_serve(int argc, char** argv) {
                 + std::string(stats.cancelled ? "cancelled" : has_tool_calls ? "tool_calls" : "stop") + "\"}],\"usage\":{\"prompt_tokens\":"
                 + std::to_string(stats.prompt_tokens) + ",\"completion_tokens\":"
                 + std::to_string(stats.generated_tokens) + "}}";
-            (void)send_http_response(client_fd, 200, "OK", "application/json", body);
+            if (send_http_response(client_fd, 200, "OK", "application/json", body)) mark_first_delta();
+            log_latency(stats);
         }
     };
 
@@ -2564,7 +2821,9 @@ void print_usage() {
     std::cout << "  inspect <model.gguf>                     Inspect model metadata, quantization, and VRAM budget\n";
     std::cout << "  run <model.gguf> --prompt \"...\"         Generate text from a prompt with streaming output\n";
     std::cout << "       --repeat-p512-check                 Check P512, real continuation, and repeat P512\n";
+    std::cout << "       --context N --check-session        Check live append against full replay\n";
     std::cout << "       MIINFER_PRESET=m25_hi_qualified     Use the hermetic qualified MI50 P512 vector\n";
+    std::cout << "       MIINFER_PRESET=m25_interactive      Use experimental wide-prefill/Mx-decode serving\n";
     std::cout << "  chat <model.gguf>                        Start an interactive multi-turn terminal chat REPL\n";
     std::cout << "  serve --model MODEL.gguf [--port 8080] [--context N] [--experimental-context]\n"
               << "        [--api-key-file PATH] [--allow-insecure]   Launch API and Web UI\n\n";
@@ -2572,7 +2831,7 @@ void print_usage() {
 
 } // namespace
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv) try {
     if (argc < 2) {
         print_usage();
         return 1;
@@ -2605,4 +2864,7 @@ int main(int argc, char** argv) {
         print_usage();
         return 1;
     }
+} catch (const std::exception& error) {
+    std::cerr << "MIInfer: " << error.what() << '\n';
+    return 1;
 }

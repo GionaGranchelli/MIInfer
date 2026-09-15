@@ -66,6 +66,10 @@ as pre-repair evidence. H/I now passes the independent matrix, same-process
 repeat, CTest, and 128-token generation gates. Use the opt-in
 `MIINFER_PRESET=m25_hi_qualified` for a hermetic, printed configuration
 vector. See EXP-0319, EXP-0320, EXP-0321, and EXP-0322.
+This is the P512 benchmark preset, not an interactive-serving qualification.
+The `m25_interactive` candidate and live-continuation validation are tracked in
+[EXP-0350](../experiments/EXP-0350-m25-interactive-serving.md) and
+[interactive serving](interactive-serving.md).
 The exact pre-J versus M25-J source-delta retest is recorded in EXP-0323.
 
 The pinned-source audit found no missing Q4_K/Q5_K/Q6_K repack or GDN contract
