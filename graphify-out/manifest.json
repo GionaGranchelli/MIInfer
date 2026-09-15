@@ -5238,9 +5238,15 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0351-m26-real-context-decode-curve.md": {
-    "mtime": 1789482981.9679615,
-    "seen": 1789483004.1349072,
-    "ast_hash": "405a921f9af7cceaa5b842e16cad573d",
+    "mtime": 1789487033.43317,
+    "seen": 1789487052.1670763,
+    "ast_hash": "24b0bdec1f17e3b65edb9d4e125229a8",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0352-m26b-historical-decode-floor-differential.md": {
+    "mtime": 1789487026.422198,
+    "seen": 1789487052.1670783,
+    "ast_hash": "043a6b9c0a4ec2b5b3ef320eaf58a67d",
     "semantic_hash": ""
   }
 }

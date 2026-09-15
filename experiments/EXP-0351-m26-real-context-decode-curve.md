@@ -104,6 +104,7 @@ context-dependent component.
 
 ## Follow-up
 
+The historical/current differential is now tracked as [EXP-0352](EXP-0352-m26b-historical-decode-floor-differential.md).
 Audit the historical M8/M9 `~33 ms/token` result against the current M25
 serving path with identical model, clocks, context, graph state, generation
 length, and sampling. Break the fixed floor into recurrent/attention layers,
