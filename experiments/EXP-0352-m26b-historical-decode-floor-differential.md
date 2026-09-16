@@ -200,3 +200,24 @@ This is not yet subdivided into route, graph, timing, and runtime components.
 
 **Updated decision:** M26-B RETEST — shared-pipeline regression ruled out;
 runtime/route differential still requires attribution.
+
+## Runtime route isolation — 2026-09-16
+
+With manual 1606/1000 MHz clocks and the same 512-context, 128-token curve
+semantics:
+
+| Current runtime route | Median ms/token | Throughput |
+| --- | ---: | ---: |
+| `m25_hi_qualified` | `532.856` | `1.877 tok/s` |
+| `m25_interactive` | `83.759` | `11.939 tok/s` |
+| current legacy harness | `31.385` | `31.863 tok/s` |
+
+The interactive Mx route saves `449.097 ms/token` versus the non-Mx serving
+route, confirming that route selection is a material performance factor. It
+still trails the current legacy harness by `52.374 ms/token`. The curve's
+`decode_ms` excludes graph-capture bookkeeping but includes the first token;
+no conclusion is made yet about the remaining graph, runtime, or timing-boundary
+components.
+
+**Route-isolation decision:** M26-B RETEST — Mx route is necessary but does
+not explain the complete legacy/runtime differential.
