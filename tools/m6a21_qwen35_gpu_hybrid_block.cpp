@@ -820,10 +820,12 @@ int main(int argc, char** argv) {
                         if (layer.recurrent != nullptr) {
                             state_hash ^= layer.recurrent->state_fingerprint();
                         } else {
+                            const std::size_t kv_element_size =
+                                layer.attention->fp16_kv_cache ? sizeof(__half) : sizeof(float);
                             state_hash ^= fingerprint(layer.attention->key_cache->get(),
-                                4 * g_cache_capacity * 256 * sizeof(float));
+                                4 * g_cache_capacity * 256 * kv_element_size);
                             state_hash ^= fingerprint(layer.attention->value_cache->get(),
-                                4 * g_cache_capacity * 256 * sizeof(float));
+                                4 * g_cache_capacity * 256 * kv_element_size);
                         }
                     }
                     return GenerationResult{

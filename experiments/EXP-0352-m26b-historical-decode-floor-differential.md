@@ -175,3 +175,28 @@ the historical/current differential. No kernel or quantization changes were
 made.
 
 **Probe decision:** M26-B RETEST — differential not sufficiently explained.
+
+## Current legacy rerun — 2026-09-16
+
+The comparison harness fingerprint was corrected to use the actual current KV
+element size. This changes diagnostic copying only; it does not alter model
+execution or timing semantics.
+
+| Variant | Median | Throughput | Replay | Decode allocations |
+| --- | ---: | ---: | --- | ---: |
+| `HISTORICAL_LEGACY` — `ff7aeff` + reconstructed fixture | `33.227 ms/token` | `30.096 tok/s` | PASS | 0 |
+| `CURRENT_LEGACY` — current HEAD + reconstructed fixture | `31.385 ms/token` | `31.863 tok/s` | PASS | 0 |
+
+Both runs used the M8 flag vector, `MIINFER_DEVICE_TOKEN_CHAIN=0`, one warmup,
+five measured samples, the same model, reconstructed fixture, and manual
+1606/1000 MHz clocks. The current legacy path is `1.842 ms/token` faster than
+the historical path. Therefore the shared legacy GPU pipeline does not contain
+the approximately 24.5 ms/token loss seen in the current M25 runtime result.
+
+The remaining differential is in the current runtime contract and/or route
+selection. The current M25 P512 result is `57.50 ms/token`; compared with the
+current legacy result, the observed gap is approximately `26.12 ms/token`.
+This is not yet subdivided into route, graph, timing, and runtime components.
+
+**Updated decision:** M26-B RETEST — shared-pipeline regression ruled out;
+runtime/route differential still requires attribution.
