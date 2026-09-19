@@ -177,3 +177,44 @@ unqualified; cache stays experimental and single-session only.
 reset invalidation, and a serialized HTTP tool-result turn all pass. Keep reuse
 experimental until real Pi session identity/tool-loop behavior is qualified.
 Cold P512 remains a separate track; none of this changes its benchmark claim.
+
+## Current HEAD 4K append and real Pi tool loop — 2026-09-19
+
+### Same-prompt append versus replay
+
+An OpenAI-compatible two-request tool conversation was run on one server at
+context 8192. The second request was then sent unchanged to a fresh server
+process for the replay control. Both requests tokenized to 3705 tokens:
+
+| route | total tokens | reused | processed | prefill ms | cache hit |
+|---|---:|---:|---:|---:|---|
+| checkpoint append | 3705 | 3584 | 121 | 7600.32 | yes |
+| fresh-process replay | 3705 | 0 | 3705 | 26193.7 | no |
+
+These are one sample per route, with no continuous clock/thermal capture. They
+show that 96.7% of the identical request's prompt tokens were not reprocessed;
+the raw latency readings are diagnostic only (about 3.45x in this pair), not a
+qualified serving-speed claim.
+
+### Pi coding-agent tool cycle
+
+Pi CLI `0.85.1` was pointed at the MIInfer server through an isolated temporary
+`PI_CODING_AGENT_DIR`; the existing Pi settings and credentials were not
+changed. The run explicitly attached this repository's `AGENTS.md`, enabled
+the built-in `read` tool, and asked Pi to read a local fixture containing the
+exact strings `MI50` and `amber-cedar`. Pi made the tool call, consumed the
+result, and returned both exact values.
+
+With `MIINFER_PRESET=m25_interactive`, `MIINFER_SESSION_REUSE=1`, context 8192,
+and one MIInfer server process, the server logged:
+
+| request | prompt tokens | reused prefix | new prefill | cache hit | outcome |
+|---|---:|---:|---:|---|---|
+| initial Pi turn with project context | 6053 | 0 | 6053 | no | tool call emitted |
+| Pi tool-result continuation | 6129 | 5632 | 497 | yes | correct summary returned |
+
+This is a real Pi tool round trip with project context, rather than a synthetic
+OpenAI client transcript. It demonstrates that the agent's serialized tool
+history preserves a long exact prefix across requests. These timings were not
+captured as a controlled performance comparison. Real interactive Pi session
+resume/restart, cancellation, and full multi-turn coding tasks remain open.

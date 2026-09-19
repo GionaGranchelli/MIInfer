@@ -99,8 +99,11 @@ and 16000 tokens for one- and four-token generated seeds. It reused 512, 512,
 live HTTP tool-call/result continuation reused an exact 512-token prefix, and
 cancellation plus generation-exception checks both invalidate checkpoint
 identity. Mismatch and explicit reset now also force replay. Timing was not
-qualified; real Pi session identity/tool-loop behavior remains open. See
-EXP-0350.
+qualified. A real Pi 0.85.1 tool cycle with project `AGENTS.md` context reused
+5632/6129 tokens on its tool-result continuation. An identical 3705-token
+request pair reused 3584 and processed 121 tokens; raw timing is diagnostic,
+not qualified. Real Pi session resume/restart and broader coding tasks remain
+open. See EXP-0350.
 
 The pinned-source audit found no missing Q4_K/Q5_K/Q6_K repack or GDN contract
 whose unmeasured transplant should replace the current paths. The external
