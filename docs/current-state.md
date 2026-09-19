@@ -92,6 +92,16 @@ streaming continues to use the synchronized direct route pending end-to-end
 measurement. See
 [EXP-0353](../experiments/EXP-0353-m27-reusable-decode-graph.md).
 
+The separate M25 interactive single-session checkpoint reuse path now passes
+its current-HEAD exact append-versus-replay matrix at 512, 640, 3991, 8192,
+and 16000 tokens for one- and four-token generated seeds. It reused 512, 512,
+3584, 8192, and 15872 prompt tokens respectively. Timing was not qualified;
+live HTTP tool-call/result continuation reused an exact 512-token prefix, and
+cancellation plus generation-exception checks both invalidate checkpoint
+identity. Mismatch and explicit reset now also force replay. Timing was not
+qualified; real Pi session identity/tool-loop behavior remains open. See
+EXP-0350.
+
 The pinned-source audit found no missing Q4_K/Q5_K/Q6_K repack or GDN contract
 whose unmeasured transplant should replace the current paths. The external
 register-prefetch MMQ variant remains rejected on MI50, and M25-J remains

@@ -599,6 +599,11 @@ public:
     };
 
     void reset() {
+        session_checkpoint_.tokens.clear();
+        reset_device_state();
+    }
+
+    void reset_device_state() {
         for (const auto& layer : layers_) {
             if (layer.recurrent != nullptr) layer.recurrent->reset();
             if (layer.attention != nullptr) layer.attention->reset();
@@ -657,7 +662,7 @@ public:
     }
 
     void restore_session_checkpoint() {
-        reset();
+        reset_device_state();
         const std::size_t recurrent_state_bytes = kVHeads * kState * kState * sizeof(float);
         const std::size_t recurrent_history_bytes = 4 * kChannels * sizeof(float);
         const std::size_t bytes_per_head = session_checkpoint_.tokens.size() * 256;
@@ -1152,11 +1157,17 @@ public:
                 if (callback) callback(tokens);
             };
         }
-        auto stats = generate_layer_major(prompt, actual, started, reused);
-        stats.reused_prefix_tokens = reused;
-        stats.common_prefix_tokens = common;
-        stats.graph_capture_ms = graph_capture_ms_ - capture_start;
-        return stats;
+        try {
+            auto stats = generate_layer_major(prompt, actual, started, reused);
+            if (stats.cancelled) session_checkpoint_.tokens.clear();
+            stats.reused_prefix_tokens = reused;
+            stats.common_prefix_tokens = common;
+            stats.graph_capture_ms = graph_capture_ms_ - capture_start;
+            return stats;
+        } catch (...) {
+            session_checkpoint_.tokens.clear();
+            throw;
+        }
     }
 
     std::vector<std::byte> snapshot_decode_buffers(std::size_t positions) const {
@@ -2139,6 +2150,49 @@ int cmd_run(int argc, char** argv) {
                       << " decode_tok_s=" << replay.decode_tok_s << std::endl;
             }
         }
+        std::vector<std::uint32_t> cancelled_prompt(kFullPrefillCapacity);
+        for (std::size_t i = 0; i < cancelled_prompt.size(); ++i)
+            cancelled_prompt[i] = prompt_tokens[i % prompt_tokens.size()];
+        RuntimeGenerateOptions lifecycle;
+        lifecycle.max_new_tokens = 1;
+        lifecycle.reuse_session = true;
+        if (engine.generate(cancelled_prompt, lifecycle).cancelled)
+            throw std::runtime_error("session lifecycle seed was cancelled");
+        cancelled_prompt.resize(kFullPrefillCapacity + 8, prompt_tokens.front());
+        lifecycle.max_new_tokens = 2;
+        lifecycle.on_token = [](std::uint32_t, std::string_view) { return false; };
+        const auto cancelled = engine.generate(cancelled_prompt, lifecycle);
+        lifecycle.on_token = {};
+        lifecycle.max_new_tokens = 0;
+        const auto after_cancel = engine.generate(cancelled_prompt, lifecycle);
+        if (!cancelled.cancelled || cancelled.reused_prefix_tokens != kFullPrefillCapacity
+            || after_cancel.reused_prefix_tokens != 0)
+            throw std::runtime_error("cancelled session checkpoint was not invalidated");
+        std::cout << "session_invalidation=PASS cause=cancellation reused_before=512"
+                     " reused_after=0\n";
+        lifecycle.max_new_tokens = 2;
+        lifecycle.on_token = [](std::uint32_t, std::string_view) -> bool {
+            throw std::runtime_error("injected generation failure");
+        };
+        bool generation_failed = false;
+        try { (void)engine.generate(cancelled_prompt, lifecycle); }
+        catch (const std::runtime_error&) { generation_failed = true; }
+        lifecycle.on_token = {};
+        lifecycle.max_new_tokens = 0;
+        const auto after_failure = engine.generate(cancelled_prompt, lifecycle);
+        if (!generation_failed || after_failure.reused_prefix_tokens != 0)
+            throw std::runtime_error("failed session checkpoint was not invalidated");
+        std::cout << "session_invalidation=PASS cause=generation_failure reused_after=0\n";
+        auto mismatched_prompt = cancelled_prompt;
+        mismatched_prompt.front() ^= 1U;
+        const auto after_mismatch = engine.generate(mismatched_prompt, lifecycle);
+        if (after_mismatch.reused_prefix_tokens != 0)
+            throw std::runtime_error("mismatched session prefix was reused");
+        engine.reset();
+        const auto after_reset = engine.generate(cancelled_prompt, lifecycle);
+        if (after_reset.reused_prefix_tokens != 0)
+            throw std::runtime_error("reset session checkpoint was reused");
+        std::cout << "session_invalidation=PASS causes=mismatch,reset reused_after=0\n";
         return 0;
     }
 

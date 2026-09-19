@@ -105,3 +105,75 @@ See [interactive-serving.md](../docs/interactive-serving.md) for the exact
 command, preset and metric definitions. Run correctness before any repeated
 performance comparison. Pi acceptance includes structured tool-call round
 trips, disconnect/cancellation, mismatch replay and real content-delta TTFT.
+
+## Current HEAD recheck — 2026-09-19
+
+Re-ran the existing `--check-session` against current HEAD `3165479` on the
+MI50 with the Q4_K_M artifact and `MIINFER_PRESET=m25_interactive`, context
+16384, and experimental-context enabled. The harness checks one- and
+four-token generated seeds and compares appended output tokens with a fresh
+full replay at all requested lengths. All ten cases passed:
+
+| prompt | generated seed | reused tokens | new tokens on append | append ms | replay ms | result |
+|---:|---:|---:|---:|---:|---:|---|
+| 512 | 1 | 512 | 152 | 5568.21 | 8057.47 | PASS |
+| 512 | 4 | 512 | 155 | 5852.23 | 8283.12 | PASS |
+| 640 | 1 | 512 | 280 | 9461.33 | 12190.8 | PASS |
+| 640 | 4 | 512 | 283 | 9957.15 | 12255.4 | PASS |
+| 3991 | 1 | 3584 | 559 | 5864.27 | 24619.6 | PASS |
+| 3991 | 4 | 3584 | 562 | 6172.41 | 25348.9 | PASS |
+| 8192 | 1 | 8192 | 152 | 6290.92 | 57241.7 | PASS |
+| 8192 | 4 | 8192 | 155 | 6354.21 | 56372.6 | PASS |
+| 16000 | 1 | 15872 | 280 | 12790 | 134990 | PASS |
+| 16000 | 4 | 15872 | 283 | 12506 | 134837 | PASS |
+
+The timing run was not clock/thermal qualified, and the 16000-token one-seed
+case showed a substantial seed-prefill timing outlier. Treat these as
+correctness and savings-shape evidence only. At this point the implemented
+single-checkpoint length/seed matrix was complete; later lifecycle and HTTP
+checks are recorded below. Multi-checkpoint lookup remains unimplemented.
+
+## Cancellation/failure invalidation and tool-turn reuse — 2026-09-19
+
+The current `generate()` path retained the old checkpoint identity after a
+cancelled or throwing appended generation. It now clears the stored prefix
+identity on either outcome while retaining the allocated GPU buffers. This
+makes the next request replay rather than restoring a checkpoint associated
+with an interrupted request.
+
+Built `miinfer` in `build/mi50-release` and ran the live-model `--check-session`
+at context 1024. The 512/640 one- and four-token append/replay cases passed.
+Then the same diagnostic cancelled an appended generation, injected a
+generation exception, supplied a mismatching prefix, and explicitly reset the
+engine. All invalidation assertions passed:
+
+```text
+session_invalidation=PASS cause=cancellation reused_before=512 reused_after=0
+session_invalidation=PASS cause=generation_failure reused_after=0
+session_invalidation=PASS causes=mismatch,reset reused_after=0
+```
+
+An HTTP smoke used one server process with `MIINFER_PRESET=m25_interactive`,
+`MIINFER_SESSION_REUSE=1`, and context 1024. The first OpenAI request contained
+a 700-word user prompt and a `read_file` tool schema; it returned HTTP 200 with
+930 prompt tokens. The second request extended that conversation with an
+assistant `read_file` tool call, a tool result, and a follow-up user message;
+it returned HTTP 200 with 1001 prompt tokens. Server telemetry showed:
+
+```text
+request 1: reused=0 new=930 cache_hit=false
+request 2: common_prefix=512 reused=512 new=489 cache_hit=true
+```
+
+This proves request parsing, tool-call/result ChatML serialization, and exact
+512-token prefix matching through the real server path. These were functional
+checks at the current device state, not throughput qualification. Multi-session
+isolation and persistent model/runtime contract identifiers remain
+unqualified; cache stays experimental and single-session only.
+
+## Decision update
+
+**RETEST.** The 512–16000 length/seed matrix, cancellation/failure/mismatch/
+reset invalidation, and a serialized HTTP tool-result turn all pass. Keep reuse
+experimental until real Pi session identity/tool-loop behavior is qualified.
+Cold P512 remains a separate track; none of this changes its benchmark claim.
