@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1789852465.0833542,
-    "seen": 1789852475.3231282,
-    "ast_hash": "a6e5ef6d316ba6bd65e9df0df3cab421",
+    "mtime": 1789853346.350165,
+    "seen": 1789853356.7356186,
+    "ast_hash": "1a90a8a37642e04a3fed2d467b597bce",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -5259,6 +5259,12 @@
     "mtime": 1789848349.2823787,
     "seen": 1789848390.6804562,
     "ast_hash": "6b07599db6135d7f43fb53a4027c2417",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0354-m27-current-p512-control-requalification.md": {
+    "mtime": 1789853346.3201652,
+    "seen": 1789853356.7361367,
+    "ast_hash": "7602ca0789a9c7ebc5841384ecb42031",
     "semantic_hash": ""
   }
 }

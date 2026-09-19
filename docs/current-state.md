@@ -56,6 +56,9 @@ M25-L/requalification: current six-pair screen is 204.854 tok/s versus
                         pinned mx at 221.418 tok/s; stretch remains open
 M25-L/Q6-down: isolated pinned Q6 FFN-down was 10.53% faster, but the
                three-pair P512 median regressed 0.502%; rejected
+M27 P512 current control: six clean interleaved pairs at current HEAD
+                          measured 205.897 tok/s, 179.879 ms behind mx;
+                          lower-footprint candidate qualification next
 M26-recovery: default no-preset Qwen35RuntimeEngine measures 32.2948 ms/token
               at P512/TG128 and 1606/1000 MHz; Release CTest 24/24 passes
 M26:   recovery gate met; no sub-30 ms tuning authorized
