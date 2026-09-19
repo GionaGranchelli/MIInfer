@@ -27,6 +27,15 @@ struct Q8KDeviceBlock {
 
 static_assert(sizeof(Q8KDeviceBlock) == 292);
 
+struct alignas(64) DeviceDecodeState {
+    std::uint32_t current_token;
+    std::uint32_t position;
+    std::uint32_t generated;
+    std::uint32_t stop;
+    std::uint32_t max_generated;
+};
+static_assert(sizeof(DeviceDecodeState) == 64);
+
 // M23 wide-MMQ activation block: four Q8_1 groups for 128 contiguous input
 // values. `s` retains the original group sums; `qsum_scaled` caches the
 // canonical half-rounded d times the integer quantized sum for affine MMQ.
@@ -422,6 +431,13 @@ void launch_qwen35_conv_silu_split(
     std::uint32_t conv_kernel,
     hipStream_t stream = nullptr);
 
+void launch_qwen35_conv_silu_split_dynamic(
+    const float* current_qkv, const float* conv_weights, float* history,
+    float* query, float* key, float* value,
+    const DeviceDecodeState* decode_state, std::uint32_t history_capacity,
+    std::uint32_t channels, std::uint32_t conv_kernel,
+    hipStream_t stream = nullptr);
+
 // Apply the causal convolution to a token-major chunk in one launch.  Each
 // channel owns its token sequence, so the four-slot raw-input history is
 // updated in the same order as repeated single-token calls.
@@ -572,6 +588,14 @@ void launch_qwen35_tiled_online_attention_f16(
     hipStream_t stream = nullptr,
     Q8_1Block* gated_output_q8 = nullptr);
 
+void launch_qwen35_tiled_online_attention_f16_dynamic(
+    const float* q, const __half* key_cache, const __half* value_cache,
+    const DeviceDecodeState* decode_state, std::uint32_t cache_capacity,
+    float* output, const float* gate, float* gated_output,
+    std::uint32_t query_heads, std::uint32_t kv_heads,
+    std::uint32_t head_dim, float scale, hipStream_t stream = nullptr,
+    Q8_1Block* gated_output_q8 = nullptr);
+
 // M23 wide-prefill attention: one Wave64 handles each token/query-head and
 // scans only the causal KV prefix for that token.
 void launch_qwen35_tiled_online_attention_batch(
@@ -685,6 +709,12 @@ void launch_qwen35_fused_q_split_norm_rope(
     float epsilon,
     hipStream_t stream = nullptr);
 
+void launch_qwen35_fused_q_split_norm_rope_dynamic(
+    const float* qfull, const float* q_norm_weight, float* query_rope,
+    float* gate, std::uint32_t heads, std::uint32_t head_dim,
+    const DeviceDecodeState* decode_state, float theta, float epsilon,
+    hipStream_t stream = nullptr);
+
 // M7-G fused K RMS norm + scale + RoPE + KV cache store:
 // Combines launch_qwen3_head_rms_normalize, launch_qwen3_head_mul,
 // launch_qwen35_rope_sections, and launch_qwen3_kv_cache_store into a single launch.
@@ -714,6 +744,13 @@ void launch_qwen35_fused_k_norm_rope_kv_store_f16(
     std::uint32_t cache_capacity,
     float theta,
     float epsilon,
+    hipStream_t stream = nullptr);
+
+void launch_qwen35_fused_k_norm_rope_kv_store_f16_dynamic(
+    const float* key, const float* value, const float* k_norm_weight,
+    __half* key_cache, __half* value_cache, std::uint32_t heads,
+    std::uint32_t head_dim, const DeviceDecodeState* decode_state,
+    std::uint32_t cache_capacity, float theta, float epsilon,
     hipStream_t stream = nullptr);
 
 inline void launch_qwen35_fused_k_norm_rope_kv_store(
@@ -985,5 +1022,9 @@ void launch_qwen3_argmax(
     std::uint32_t* output,
     std::uint32_t elements,
     hipStream_t stream = nullptr);
+
+void launch_qwen35_decode_state_advance(
+    DeviceDecodeState* state, std::uint32_t* token_output,
+    std::uint32_t capacity, hipStream_t stream = nullptr);
 
 }  // namespace miinfer

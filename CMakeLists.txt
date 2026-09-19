@@ -408,6 +408,10 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-qwen3-fast-decode-bench PRIVATE miinfer_hip)
     target_compile_options(miinfer-qwen3-fast-decode-bench PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-qwen3-token-observer-bench bench/qwen3_token_observer_bench.cpp)
+    target_link_libraries(miinfer-qwen3-token-observer-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-qwen3-token-observer-bench PRIVATE -Wall -Wextra -Wpedantic)
+
     add_executable(miinfer-qwen3-attention-ab-bench bench/qwen3_attention_ab_bench.cpp)
     target_link_libraries(miinfer-qwen3-attention-ab-bench PRIVATE miinfer_hip)
     target_compile_options(miinfer-qwen3-attention-ab-bench PRIVATE -Wall -Wextra -Wpedantic)

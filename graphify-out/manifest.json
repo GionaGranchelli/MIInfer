@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1789128794.4215913,
-    "seen": 1789128994.700462,
-    "ast_hash": "c2123198fca46ba7fa246b5d89c9ab8c",
+    "mtime": 1789848292.986661,
+    "seen": 1789848390.6809304,
+    "ast_hash": "a7915018dc26e098d9fe12705a97b65c",
     "semantic_hash": ""
   },
   "README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1789418477.1245215,
-    "seen": 1789419177.3275082,
-    "ast_hash": "58f7cfda9bc7b567ad1b878cdf73553e",
+    "mtime": 1789849347.3804028,
+    "seen": 1789849480.376242,
+    "ast_hash": "036b265e20fe0afb04200c5393d77b5b",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1789154017.0005233,
-    "seen": 1789154046.399378,
-    "ast_hash": "c495507b0e6a2f556ac318a0de74d963",
+    "mtime": 1789844221.3185728,
+    "seen": 1789844930.7828112,
+    "ast_hash": "b6704686d0dc6ff510a678a0aa719e3f",
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_primitives.hpp": {
@@ -1332,9 +1332,9 @@
     "semantic_hash": ""
   },
   "tools/m6a21_qwen35_gpu_hybrid_block.cpp": {
-    "mtime": 1789166802.2837884,
-    "seen": 1789167596.0326786,
-    "ast_hash": "62931a77c987be671fd7dd59cb36acc2",
+    "mtime": 1789545461.657534,
+    "seen": 1789545620.140089,
+    "ast_hash": "01b924303a2a9fe1a875a0e75e6cc48d",
     "semantic_hash": ""
   },
   "experiments/EXP-0065-m6a21-qwen35-gpu-hybrid-block.md": {
@@ -2364,15 +2364,15 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1789474496.3664374,
-    "seen": 1789482251.844684,
-    "ast_hash": "95d7cd54ee401f67f7bd34d02a3115a4",
+    "mtime": 1789849358.0073528,
+    "seen": 1789849480.3761942,
+    "ast_hash": "f07e83ded94d516d756586cb1be9ba15",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1789461557.976785,
-    "seen": 1789461598.8166971,
-    "ast_hash": "aa1b9ca7ab2d813e087f59e6e25f4def",
+    "mtime": 1789844856.3803883,
+    "seen": 1789844930.783203,
+    "ast_hash": "35a98292e4d907cba2116464e237583e",
     "semantic_hash": ""
   },
   "docs/M9-AUTOREGRESSIVE-QUALIFICATION.md": {
@@ -5244,9 +5244,21 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0352-m26b-historical-decode-floor-differential.md": {
-    "mtime": 1789487026.422198,
-    "seen": 1789487052.1670783,
-    "ast_hash": "043a6b9c0a4ec2b5b3ef320eaf58a67d",
+    "mtime": 1789843465.6173615,
+    "seen": 1789843570.0224273,
+    "ast_hash": "868f553c0c40d7d4d26789d37f5e8226",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0353-m27-reusable-decode-graph.md": {
+    "mtime": 1789849467.0208397,
+    "seen": 1789849480.3768246,
+    "ast_hash": "ccb7c815b1f8d030b73447424c448693",
+    "semantic_hash": ""
+  },
+  "bench/qwen3_token_observer_bench.cpp": {
+    "mtime": 1789848349.2823787,
+    "seen": 1789848390.6804562,
+    "ast_hash": "6b07599db6135d7f43fb53a4027c2417",
     "semantic_hash": ""
   }
 }

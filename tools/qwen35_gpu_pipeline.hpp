@@ -2989,7 +2989,8 @@ struct RecurrentLayer {
              const float* prepared_gate = nullptr,
              const float* prepared_normalized = nullptr,
              bool defer_prefill_tail = false,
-             std::size_t prefill_index = 0) {
+             std::size_t prefill_index = 0,
+             const miinfer::DeviceDecodeState* decode_state = nullptr) {
         const float* normalized_input = prepared_normalized != nullptr
             ? prepared_normalized : static_cast<const float*>(normalized->get());
         if (prepared_normalized != nullptr) precomputed_norm = true;
@@ -3164,11 +3165,19 @@ struct RecurrentLayer {
         }
         stage_end(3, position);
         stage_start(4, position);
-        miinfer::launch_qwen35_conv_silu_split(
-            qkv_dest, static_cast<const float*>(d_conv->get()),
-            static_cast<float*>(history->get()), static_cast<float*>(query->get()),
-            static_cast<float*>(key->get()), static_cast<float*>(value->get()),
-            position, 4, kChannels, 4);
+        if (decode_state != nullptr) {
+            miinfer::launch_qwen35_conv_silu_split_dynamic(
+                qkv_dest, static_cast<const float*>(d_conv->get()),
+                static_cast<float*>(history->get()), static_cast<float*>(query->get()),
+                static_cast<float*>(key->get()), static_cast<float*>(value->get()),
+                decode_state, 4, kChannels, 4);
+        } else {
+            miinfer::launch_qwen35_conv_silu_split(
+                qkv_dest, static_cast<const float*>(d_conv->get()),
+                static_cast<float*>(history->get()), static_cast<float*>(query->get()),
+                static_cast<float*>(key->get()), static_cast<float*>(value->get()),
+                position, 4, kChannels, 4);
+        }
         if (dual_head_normalize) {
             miinfer::launch_qwen35_dual_head_l2_normalize(
                 static_cast<const float*>(query->get()), static_cast<const float*>(key->get()),
@@ -4753,7 +4762,8 @@ struct FullAttentionLayer {
              const float* prepared_qfull = nullptr,
              const float* prepared_value = nullptr,
              bool defer_prefill_tail = false,
-             std::size_t prefill_index = 0) {
+             std::size_t prefill_index = 0,
+             const miinfer::DeviceDecodeState* decode_state = nullptr) {
         const float* normalized_input = prepared_normalized != nullptr
             ? prepared_normalized : static_cast<const float*>(normalized->get());
         if (prepared_normalized != nullptr) precomputed_norm = true;
@@ -4807,7 +4817,12 @@ struct FullAttentionLayer {
         }
         stage_end(1, position);
         stage_start(2, position);
-        if (fused_rope_norm) {
+        if (fused_rope_norm && decode_state != nullptr) {
+            miinfer::launch_qwen35_fused_q_split_norm_rope_dynamic(
+                qfull_dest, static_cast<const float*>(d_q_norm->get()),
+                static_cast<float*>(query_rope->get()), static_cast<float*>(gate->get()),
+                24, 256, decode_state, model.config().rope_theta, model.config().rms_epsilon);
+        } else if (fused_rope_norm) {
             miinfer::launch_qwen35_fused_q_split_norm_rope(
                 qfull_dest,
                 static_cast<const float*>(d_q_norm->get()),
@@ -4911,7 +4926,13 @@ struct FullAttentionLayer {
         }
         stage_end(5, position);
         stage_start(6, position);
-        if (fused_rope_norm) {
+        if (fused_rope_norm && decode_state != nullptr && fp16_kv_cache) {
+            miinfer::launch_qwen35_fused_k_norm_rope_kv_store_f16_dynamic(
+                key_dest, value_input, static_cast<const float*>(d_k_norm->get()),
+                static_cast<__half*>(key_cache->get()), static_cast<__half*>(value_cache->get()),
+                4, 256, decode_state, g_cache_capacity,
+                model.config().rope_theta, model.config().rms_epsilon);
+        } else if (fused_rope_norm) {
             if (fp16_kv_cache) {
                 miinfer::launch_qwen35_fused_k_norm_rope_kv_store(
                     key_dest,
@@ -4947,7 +4968,17 @@ struct FullAttentionLayer {
         stage_end(6, position);
         stage_start(7, position);
         if (tiled_online_attention) {
-            if (fp16_kv_cache) {
+            if (decode_state != nullptr && fp16_kv_cache) {
+                miinfer::launch_qwen35_tiled_online_attention_f16_dynamic(
+                    static_cast<const float*>(query_rope->get()),
+                    static_cast<const __half*>(key_cache->get()),
+                    static_cast<const __half*>(value_cache->get()), decode_state,
+                    g_cache_capacity, static_cast<float*>(attention->get()),
+                    static_cast<const float*>(gate->get()),
+                    static_cast<float*>(gated_attention->get()),
+                    24, 4, 256, 1.0F / std::sqrt(256.0F), nullptr,
+                    (fused_core_q8 && d_o_native) ? static_cast<miinfer::Q8_1Block*>(q8_1->get()) : nullptr);
+            } else if (fp16_kv_cache) {
                 miinfer::launch_qwen35_tiled_online_attention(
                     static_cast<const float*>(query_rope->get()),
                     static_cast<const __half*>(key_cache->get()),
@@ -5376,16 +5407,18 @@ struct GpuLayerRef {
              bool defer_prefill_tail = false,
              std::size_t prefill_index = 0,
              const float* prepared_qfull = nullptr,
-             const float* prepared_value = nullptr) const {
+             const float* prepared_value = nullptr,
+             const miinfer::DeviceDecodeState* decode_state = nullptr) const {
         if (recurrent != nullptr) {
             recurrent->run(input, position, output, next_norm_weight, next_normalized,
                            precomputed_norm, next_q8_1, precomputed_q8,
                            prepared_qkv, prepared_gate, prepared_normalized,
-                           defer_prefill_tail, prefill_index);
+                           defer_prefill_tail, prefill_index, decode_state);
         } else if (attention != nullptr) {
             attention->run(input, position, output, next_norm_weight, next_normalized,
                            precomputed_norm, next_q8_1, precomputed_q8, prepared_normalized,
-                           prepared_qfull, prepared_value, defer_prefill_tail, prefill_index);
+                           prepared_qfull, prepared_value, defer_prefill_tail, prefill_index,
+                           decode_state);
         } else {
             throw std::runtime_error("empty qwen35 GPU layer reference");
         }
@@ -5406,7 +5439,8 @@ void run_prefix(std::span<const GpuLayerRef> layers, std::span<float* const> out
                 const float* input, std::uint32_t position,
                 const float* final_norm_weight = nullptr,
                 float* final_norm_out = nullptr,
-                miinfer::Q8_1Block* final_q8_1_out = nullptr) {
+                miinfer::Q8_1Block* final_q8_1_out = nullptr,
+                const miinfer::DeviceDecodeState* decode_state = nullptr) {
     const float* current = input;
     bool precomputed = false;
     bool precomputed_q8 = false;
@@ -5426,7 +5460,9 @@ void run_prefix(std::span<const GpuLayerRef> layers, std::span<float* const> out
             }
         }
         layers[layer].profile_decode_layer_start(position);
-        layers[layer].run(current, position, outputs[layer], next_weight, next_norm, precomputed, next_q8, precomputed_q8);
+        layers[layer].run(current, position, outputs[layer], next_weight, next_norm,
+                          precomputed, next_q8, precomputed_q8, nullptr, nullptr,
+                          nullptr, false, 0, nullptr, nullptr, decode_state);
         layers[layer].profile_decode_layer_end(position);
         current = outputs[layer];
         precomputed = (next_weight != nullptr && next_norm != nullptr);

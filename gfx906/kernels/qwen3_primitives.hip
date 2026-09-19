@@ -649,11 +649,13 @@ __global__ void qwen35_fused_q_split_norm_rope_kernel(
     std::uint32_t head_dim,
     std::uint32_t position,
     float theta,
-    float epsilon) {
+    float epsilon,
+    const miinfer::DeviceDecodeState* decode_state = nullptr) {
 
     const std::uint32_t head = blockIdx.x;
     const std::uint32_t tid = threadIdx.x;
     if (head >= heads || tid >= head_dim) return;
+    if (decode_state != nullptr) position = decode_state->position;
 
     __shared__ float s_partials[256];
     __shared__ float s_rot[64];
@@ -694,6 +696,7 @@ __global__ void qwen35_fused_q_split_norm_rope_kernel(
 
     query_rope[head * head_dim + tid] = final_val;
 }
+
 
 __global__ void qwen35_fused_k_norm_rope_kv_store_kernel(
     const float* __restrict__ key,
@@ -763,11 +766,13 @@ __global__ void qwen35_fused_k_norm_rope_kv_store_f16_kernel(
     std::uint32_t position,
     std::uint32_t cache_capacity,
     float theta,
-    float epsilon) {
+    float epsilon,
+    const miinfer::DeviceDecodeState* decode_state = nullptr) {
 
     const std::uint32_t head = blockIdx.x;
     const std::uint32_t tid = threadIdx.x;
     if (head >= heads || tid >= head_dim) return;
+    if (decode_state != nullptr) position = decode_state->position;
 
     __shared__ float s_partials[256];
     __shared__ float s_rot[64];
@@ -808,6 +813,7 @@ __global__ void qwen35_fused_k_norm_rope_kv_store_f16_kernel(
     key_cache[cache_base + tid] = __float2half_rn(final_k);
     value_cache[cache_base + tid] = __float2half_rn(value[base + tid]);
 }
+
 
 __global__ void qwen35_fused_q_split_norm_rope_batch_kernel(
     const float* __restrict__ qfull,
@@ -1565,9 +1571,11 @@ __global__ void qwen35_conv_silu_split_kernel(
     const float* current_qkv, const float* conv_weights, float* history,
     float* query, float* key, float* value, std::uint32_t position,
     std::uint32_t history_capacity, std::uint32_t channels,
-    std::uint32_t conv_kernel) {
+    std::uint32_t conv_kernel,
+    const miinfer::DeviceDecodeState* decode_state = nullptr) {
     const std::uint32_t channel = blockIdx.x * blockDim.x + threadIdx.x;
     if (channel >= channels || history_capacity == 0 || conv_kernel == 0) return;
+    if (decode_state != nullptr) position = decode_state->position;
 
     float result = current_qkv[channel] *
         conv_weights[static_cast<std::size_t>(channel) * conv_kernel + conv_kernel - 1];
@@ -1587,6 +1595,7 @@ __global__ void qwen35_conv_silu_split_kernel(
     else if (channel < q_size + k_size) key[channel - q_size] = activated;
     else value[channel - q_size - k_size] = activated;
 }
+
 
 __global__ void qwen35_conv_silu_split_batch_kernel(
     const float* qkv, const float* conv_weights, float* history,
@@ -1961,6 +1970,11 @@ __global__ void qwen3_cached_attention_history_parallel_kernel(
 constexpr std::uint32_t kMaxAttentionSplits = 64;
 constexpr std::uint32_t kMaxAttentionHeads = 24;
 
+__device__ static std::uint32_t attention_splits_for_length(std::uint32_t length) {
+    return length <= 512 ? 4 : length <= 2048 ? 8 : length <= 8192 ? 16
+         : length <= 16384 ? 32 : 64;
+}
+
 __device__ static float s_attn_split_acc[kMaxAttentionSplits * kMaxAttentionHeads * 256];
 __device__ static float s_attn_split_max[kMaxAttentionSplits * kMaxAttentionHeads];
 __device__ static float s_attn_split_sum[kMaxAttentionSplits * kMaxAttentionHeads];
@@ -2058,12 +2072,19 @@ __global__ void qwen3_wave64_splitk_stage1_f16_kernel(
     std::uint32_t kv_heads,
     std::uint32_t head_dim,
     float scale,
-    std::uint32_t num_splits) {
+    std::uint32_t num_splits,
+    const miinfer::DeviceDecodeState* decode_state = nullptr,
+    std::uint32_t fixed_splits = 0) {
 
     const std::uint32_t head = blockIdx.x;
     const std::uint32_t split = blockIdx.y;
     const std::uint32_t lane = threadIdx.x; // 0 .. 63 (Wave64)
     if (head >= query_heads || lane >= 64) return;
+    if (decode_state != nullptr) {
+        cache_length = decode_state->position + 1;
+        num_splits = fixed_splits == 0 ? attention_splits_for_length(cache_length) : fixed_splits;
+        if (split >= num_splits) return;
+    }
 
     const std::uint32_t kv_head = head / (query_heads / kv_heads);
     const std::uint32_t q_base = head * head_dim;
@@ -2145,11 +2166,17 @@ __global__ void qwen3_splitk_stage2_kernel(
     std::uint32_t query_heads,
     std::uint32_t head_dim,
     std::uint32_t num_splits,
-    miinfer::Q8_1Block* __restrict__ gated_output_q8) {
+    miinfer::Q8_1Block* __restrict__ gated_output_q8,
+    const miinfer::DeviceDecodeState* decode_state = nullptr,
+    std::uint32_t fixed_splits = 0) {
 
     const std::uint32_t head = blockIdx.x;
     const std::uint32_t tid = threadIdx.x;
     if (head >= query_heads || tid >= head_dim) return;
+    if (decode_state != nullptr) {
+        const auto length = decode_state->position + 1;
+        num_splits = fixed_splits == 0 ? attention_splits_for_length(length) : fixed_splits;
+    }
 
     __shared__ float s_global_sum;
     __shared__ float s_alphas[kMaxAttentionSplits];
@@ -3542,6 +3569,18 @@ __global__ void qwen3_argmax_kernel(
     if (threadIdx.x == 0) output[0] = indices[0];
 }
 
+__global__ void qwen35_decode_state_advance_kernel(
+    miinfer::DeviceDecodeState* state, std::uint32_t* token_output,
+    std::uint32_t capacity) {
+    if (blockIdx.x != 0 || threadIdx.x != 0) return;
+    const std::uint32_t generated = state->generated;
+    if (generated < capacity) token_output[generated] = state->current_token;
+    state->stop = state->stop || state->current_token == 151643
+        || state->current_token == 151645 || generated + 1 >= state->max_generated;
+    state->position += 1;
+    state->generated = generated + 1;
+}
+
 }  // namespace
 
 void launch_qwen3_q4_embedding(
@@ -3827,6 +3866,22 @@ void launch_qwen35_fused_q_split_norm_rope(
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
+void launch_qwen35_fused_q_split_norm_rope_dynamic(
+    const float* qfull, const float* q_norm_weight, float* query_rope,
+    float* gate, std::uint32_t heads, std::uint32_t head_dim,
+    const DeviceDecodeState* decode_state, float theta, float epsilon,
+    hipStream_t stream) {
+    if (qfull == nullptr || q_norm_weight == nullptr || query_rope == nullptr
+        || gate == nullptr || decode_state == nullptr || heads == 0
+        || head_dim == 0 || head_dim > 256 || theta <= 0.0F || epsilon <= 0.0F) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen35_fused_q_split_norm_rope_kernel,
+        dim3(heads), dim3(head_dim), 0, stream, qfull, q_norm_weight,
+        query_rope, gate, heads, head_dim, 0, theta, epsilon, decode_state);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
 void launch_qwen35_fused_k_norm_rope_kv_store(
     const float* key,
     const float* value,
@@ -3876,6 +3931,23 @@ void launch_qwen35_fused_k_norm_rope_kv_store_f16(
                        dim3(heads), dim3(head_dim), 0, stream,
                        key, value, k_norm_weight, key_cache, value_cache,
                        heads, head_dim, position, cache_capacity, theta, epsilon);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_fused_k_norm_rope_kv_store_f16_dynamic(
+    const float* key, const float* value, const float* k_norm_weight,
+    __half* key_cache, __half* value_cache, std::uint32_t heads,
+    std::uint32_t head_dim, const DeviceDecodeState* decode_state,
+    std::uint32_t cache_capacity, float theta, float epsilon,
+    hipStream_t stream) {
+    if (key == nullptr || value == nullptr || k_norm_weight == nullptr
+        || key_cache == nullptr || value_cache == nullptr || decode_state == nullptr
+        || heads == 0 || head_dim == 0 || head_dim > 256 || cache_capacity == 0
+        || theta <= 0.0F || epsilon <= 0.0F) MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    hipLaunchKernelGGL(qwen35_fused_k_norm_rope_kv_store_f16_kernel,
+        dim3(heads), dim3(head_dim), 0, stream, key, value, k_norm_weight,
+        key_cache, value_cache, heads, head_dim, 0, cache_capacity, theta,
+        epsilon, decode_state);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
@@ -4136,6 +4208,22 @@ void launch_qwen35_conv_silu_split(
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
+void launch_qwen35_conv_silu_split_dynamic(
+    const float* current_qkv, const float* conv_weights, float* history,
+    float* query, float* key, float* value,
+    const DeviceDecodeState* decode_state, std::uint32_t history_capacity,
+    std::uint32_t channels, std::uint32_t conv_kernel, hipStream_t stream) {
+    if (current_qkv == nullptr || conv_weights == nullptr || history == nullptr
+        || query == nullptr || key == nullptr || value == nullptr || decode_state == nullptr
+        || history_capacity == 0 || channels == 0 || channels % 5 != 0
+        || conv_kernel == 0 || conv_kernel > history_capacity) MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    hipLaunchKernelGGL(qwen35_conv_silu_split_kernel,
+        dim3((channels + 255) / 256), dim3(256), 0, stream, current_qkv,
+        conv_weights, history, query, key, value, 0, history_capacity,
+        channels, conv_kernel, decode_state);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
 void launch_qwen35_conv_silu_split_batch(
     const float* qkv, const float* conv_weights, float* history,
     float* query, float* key, float* value, std::uint32_t base_position,
@@ -4339,6 +4427,32 @@ void launch_qwen35_tiled_online_attention_f16(
                        dim3(query_heads), dim3(head_dim), 0, stream,
                        output, gate, gated_output, query_heads, head_dim, splits,
                        gated_output_q8);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_tiled_online_attention_f16_dynamic(
+    const float* q, const __half* key_cache, const __half* value_cache,
+    const DeviceDecodeState* decode_state, std::uint32_t cache_capacity,
+    float* output, const float* gate, float* gated_output,
+    std::uint32_t query_heads, std::uint32_t kv_heads,
+    std::uint32_t head_dim, float scale, hipStream_t stream,
+    Q8_1Block* gated_output_q8) {
+    if (q == nullptr || key_cache == nullptr || value_cache == nullptr
+        || decode_state == nullptr || cache_capacity == 0 || query_heads == 0
+        || kv_heads == 0 || query_heads % kv_heads != 0 || head_dim != 256
+        || (output == nullptr && gated_output == nullptr && gated_output_q8 == nullptr)
+        || !std::isfinite(scale)) MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    const char* split_override = std::getenv("MIINFER_ATTENTION_SPLITS");
+    const std::uint32_t fixed_splits = split_override == nullptr
+        ? 0 : select_attention_splits(cache_capacity);
+    hipLaunchKernelGGL(qwen3_wave64_splitk_stage1_f16_kernel,
+        dim3(query_heads, kMaxAttentionSplits), dim3(64), 0, stream, q, key_cache,
+        value_cache, 1, cache_capacity, query_heads, kv_heads, head_dim,
+        scale, kMaxAttentionSplits, decode_state, fixed_splits);
+    hipLaunchKernelGGL(qwen3_splitk_stage2_kernel,
+        dim3(query_heads), dim3(head_dim), 0, stream, output, gate,
+        gated_output, query_heads, head_dim, kMaxAttentionSplits, gated_output_q8,
+        decode_state, fixed_splits);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
@@ -4830,6 +4944,17 @@ void launch_qwen3_argmax(
         hipLaunchKernelGGL(qwen3_argmax_stage2_kernel, dim3(1), dim3(256), 0, stream,
                            output, kPartials);
     }
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_decode_state_advance(
+    DeviceDecodeState* state, std::uint32_t* token_output,
+    std::uint32_t capacity, hipStream_t stream) {
+    if (state == nullptr || token_output == nullptr || capacity == 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen35_decode_state_advance_kernel, dim3(1), dim3(1), 0, stream,
+                       state, token_output, capacity);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

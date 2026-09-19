@@ -58,12 +58,13 @@ bool apply_runtime_preset() {
     const char* preset = std::getenv("MIINFER_PRESET");
     if (preset == nullptr) return true;
     const bool interactive = std::strcmp(preset, "m25_interactive") == 0;
+    const bool m26_mx_mmq = std::strcmp(preset, "m26_mx_mmq") == 0;
     const bool interactive_validate = interactive
         && std::getenv("MIINFER_INTERACTIVE_VALIDATE") != nullptr
         && std::strcmp(std::getenv("MIINFER_INTERACTIVE_VALIDATE"), "0") != 0;
-    if (!interactive && std::strcmp(preset, "m25_hi_qualified") != 0) {
+    if (!interactive && !m26_mx_mmq && std::strcmp(preset, "m25_hi_qualified") != 0) {
         std::cerr << "unsupported MIINFER_PRESET: " << preset
-                  << " (expected m25_hi_qualified or m25_interactive)\n";
+                  << " (expected m25_hi_qualified, m25_interactive, or m26_mx_mmq)\n";
         return false;
     }
 
@@ -114,13 +115,15 @@ bool apply_runtime_preset() {
     std::cerr << "preset=" << preset << '\n'
               << "  MIINFER_MX_PIPELINE=unset\n";
     for (const auto [name, value] : flags) std::cerr << "  " << name << "=" << value << '\n';
-    if (interactive) {
-        for (const char* name : {"MIINFER_MX_MMV", "MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_DECODE"}) {
+    if (interactive || m26_mx_mmq) {
+        for (const char* name : {"MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_DECODE"}) {
             if (setenv(name, "1", 1) != 0) return false;
             std::cerr << "  " << name << "=1\n";
         }
-        (void)setenv("MIINFER_HIP_GRAPH_MAX_POSITION", "4096", 1);
-        std::cerr << "  MIINFER_HIP_GRAPH_MAX_POSITION=4096\n";
+        if (interactive) {
+            if (setenv("MIINFER_MX_MMV", "1", 1) != 0) return false;
+            std::cerr << "  MIINFER_MX_MMV=1\n";
+        }
         if (interactive_validate) {
             (void)setenv("MIINFER_WIDE_VALIDATE", "1", 1);
             (void)setenv("MIINFER_WIDE_VALIDATE_MX", "1", 1);
@@ -209,6 +212,9 @@ struct RuntimeGenerateStats {
     double total_ms = 0.0;
     double prefill_tok_s = 0.0;
     double decode_tok_s = 0.0;
+    std::size_t decode_graph_launches = 0;
+    std::size_t decode_h2d_bytes = 0;
+    std::size_t decode_d2h_bytes = 0;
     bool cancelled = false;
 };
 
@@ -695,45 +701,39 @@ public:
             throw std::runtime_error("context length exceeded capacity " + std::to_string(g_cache_capacity));
         }
         const auto t0 = std::chrono::steady_clock::now();
-        ensure_graph_captured(position);
         MIINFER_HIP_CHECK(hipMemcpyAsync(
             static_cast<std::uint32_t*>(d_decode_tokens_->get()) + position,
             &input_token, sizeof(input_token), hipMemcpyHostToDevice, hipStreamPerThread));
 
-        if (use_hip_graph_ && decode_graphs_[position] != nullptr) {
-            MIINFER_HIP_CHECK(hipGraphLaunch(decode_graphs_[position], hipStreamPerThread));
-        } else {
-            miinfer::launch_qwen35_q4_k_embedding_device_token(
-                static_cast<const miinfer::Q4KDeviceBlock*>(d_embedding_->get()),
-                static_cast<const std::uint32_t*>(d_decode_tokens_->get()) + position,
-                model_.config().vocab_size, kHidden,
-                static_cast<float*>(input_->get()), hipStreamPerThread);
-            run_prefix(std::span<const GpuLayerRef>(layers_),
+        miinfer::launch_qwen35_q4_k_embedding_device_token(
+            static_cast<const miinfer::Q4KDeviceBlock*>(d_embedding_->get()),
+            static_cast<const std::uint32_t*>(d_decode_tokens_->get()) + position,
+            model_.config().vocab_size, kHidden,
+            static_cast<float*>(input_->get()), hipStreamPerThread);
+        run_prefix(std::span<const GpuLayerRef>(layers_),
                        std::span<float* const>(output_pointers_),
                        static_cast<const float*>(input_->get()), position,
                        static_cast<const float*>(d_final_norm_weight_->get()),
                        static_cast<float*>(final_norm_->get()),
                        static_cast<miinfer::Q8_1Block*>(final_q8_1_->get()));
-            miinfer::launch_qwen3_rms_norm(
+        miinfer::launch_qwen3_rms_norm(
                 output_pointers_[63],
                 static_cast<const float*>(d_final_norm_weight_->get()),
                 static_cast<float*>(final_norm_->get()), kHidden,
                 model_.config().rms_epsilon);
-            miinfer::launch_q8_1_quantize_f32(
+        miinfer::launch_q8_1_quantize_f32(
                 static_cast<const float*>(final_norm_->get()),
                 static_cast<miinfer::Q8_1Block*>(final_q8_1_->get()), kHidden,
                 hipStreamPerThread);
-            launch_q6k_wave_gemv(
+        launch_q6k_wave_gemv(
                 static_cast<const Q6KWaveTile*>(d_output_weight_->get()),
                 static_cast<const miinfer::Q8_1Block*>(final_q8_1_->get()),
                 static_cast<float*>(logits_->get()), model_.config().vocab_size, kHidden,
                 hipStreamPerThread);
-            miinfer::launch_qwen3_argmax(
-                static_cast<const float*>(logits_->get()),
-                static_cast<std::uint32_t*>(d_decode_tokens_->get()) + (position + 1),
-                model_.config().vocab_size);
-        }
-
+        miinfer::launch_qwen3_argmax(
+            static_cast<const float*>(logits_->get()),
+            static_cast<std::uint32_t*>(d_decode_tokens_->get()) + (position + 1),
+            model_.config().vocab_size);
         std::uint32_t next_token = 0;
         MIINFER_HIP_CHECK(hipMemcpyAsync(&next_token,
                                         static_cast<const std::uint32_t*>(d_decode_tokens_->get()) + (position + 1),
@@ -1062,6 +1062,43 @@ public:
         }
 
         std::size_t pos = prompt.size();
+        // Keep prefill selection independent from the decode execution contract.
+        // The queued graph chain is the qualified no-stream decode path.
+        if (!stopped && !opt.stream && use_hip_graph_ && opt.max_new_tokens > 1
+            && pos < g_cache_capacity) {
+            const std::size_t num_to_gen = std::min(opt.max_new_tokens - 1, g_cache_capacity - pos);
+            ensure_graph_captured(pos);
+            stats.decode_graph_launches = num_to_gen;
+            stats.decode_h2d_bytes = sizeof(miinfer::DeviceDecodeState);
+            stats.decode_d2h_bytes = num_to_gen * sizeof(std::uint32_t);
+            initialize_decode_state(cur_token, pos, num_to_gen);
+            const auto decode_start = std::chrono::steady_clock::now();
+            for (std::size_t i = 0; i < num_to_gen; ++i)
+                MIINFER_HIP_CHECK(hipGraphLaunch(decode_graph_, hipStreamPerThread));
+            std::vector<std::uint32_t> raw_tokens(num_to_gen);
+            MIINFER_HIP_CHECK(hipMemcpy(raw_tokens.data(),
+                static_cast<const std::uint32_t*>(d_decode_tokens_->get()),
+                num_to_gen * sizeof(std::uint32_t), hipMemcpyDeviceToHost));
+            stats.decode_ms = std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - decode_start).count();
+            stats.decode_ms += stats.first_token_ms;
+            for (std::uint32_t next : raw_tokens) {
+                stats.tokens.push_back(next);
+                if (stats.tokens.size() == 1 && opt.on_first_token) opt.on_first_token();
+                if (next == tokenizer_.eos_id() || next == 151643 || next == 151645) break;
+                stats.text += tokenizer_.decode(std::span<const std::uint32_t>(&next, 1));
+            }
+            stats.generated_tokens = stats.tokens.size();
+            stats.total_ms = std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - gen_start).count();
+            stats.decode_tok_s = stats.decode_ms > 0.0
+                ? (1000.0 * stats.generated_tokens) / stats.decode_ms : 0.0;
+            if (prefill_profile_.decode_mode) {
+                prefill_profile_.report(stats.decode_ms, prefill_profile_.profile_position);
+            }
+            return stats;
+        }
+
         for (std::size_t gen_idx = 1; !cancelled && !stopped && gen_idx < opt.max_new_tokens && pos < g_cache_capacity; ++gen_idx) {
             if (g_shutdown_requested || (opt.should_cancel && opt.should_cancel())) { cancelled = true; break; }
             const auto step_res = step(cur_token, pos);
@@ -1122,6 +1159,38 @@ public:
         return stats;
     }
 
+    std::vector<std::byte> snapshot_decode_buffers(std::size_t positions) const {
+        if (positions > g_cache_capacity) throw std::runtime_error("snapshot exceeds cache capacity");
+        MIINFER_HIP_CHECK(hipDeviceSynchronize());
+        std::vector<std::byte> snapshot;
+        const auto append = [&snapshot](const void* device, std::size_t bytes) {
+            const std::size_t offset = snapshot.size();
+            snapshot.resize(offset + bytes);
+            MIINFER_HIP_CHECK(hipMemcpy(snapshot.data() + offset, device, bytes,
+                                        hipMemcpyDeviceToHost));
+        };
+        constexpr std::size_t recurrent_state_bytes = kVHeads * kState * kState * sizeof(float);
+        constexpr std::size_t recurrent_history_bytes = 4 * kChannels * sizeof(float);
+        for (const auto& layer : layers_) {
+            if (layer.recurrent != nullptr) {
+                append(layer.recurrent->state->get(), recurrent_state_bytes);
+                append(layer.recurrent->history->get(), recurrent_history_bytes);
+            } else if (layer.attention != nullptr) {
+                const std::size_t element_size = layer.attention->fp16_kv_cache
+                    ? sizeof(__half) : sizeof(float);
+                const std::size_t head_bytes = positions * 256 * element_size;
+                const auto* keys = static_cast<const std::byte*>(layer.attention->key_cache->get());
+                const auto* values = static_cast<const std::byte*>(layer.attention->value_cache->get());
+                for (std::size_t head = 0; head < 4; ++head) {
+                    const std::size_t offset = head * g_cache_capacity * 256 * element_size;
+                    append(keys + offset, head_bytes);
+                    append(values + offset, head_bytes);
+                }
+            }
+        }
+        return snapshot;
+    }
+
     GenerateStats generate_fresh(std::span<const std::uint32_t> prompt, const GenerateOptions& opt) {
         reset();
         GenerateStats stats;
@@ -1158,35 +1227,22 @@ public:
         std::uint32_t cur_token = prompt.back();
         std::size_t pos = prompt.size() - 1;
 
-        if (!opt.stream && use_hip_graph_ && pos + std::min(opt.max_new_tokens, g_cache_capacity - pos)
-                <= hip_graph_max_position_) {
+        if (!opt.stream && use_hip_graph_ && opt.max_new_tokens > 0
+            && pos < g_cache_capacity) {
             const std::size_t num_to_gen = std::min(opt.max_new_tokens, g_cache_capacity - pos);
-            std::size_t captured_count = 0;
-            for (std::size_t i = 0; i < num_to_gen; ++i) {
-                if (g_shutdown_requested || (opt.should_cancel && opt.should_cancel())) {
-                    stats.cancelled = true;
-                    break;
-                }
-                ensure_graph_captured(pos + i);
-                ++captured_count;
-            }
-            if (stats.cancelled) {
-                stats.total_ms = std::chrono::duration<double, std::milli>(
-                    std::chrono::steady_clock::now() - gen_start).count();
-                return stats;
-            }
-            MIINFER_HIP_CHECK(hipMemcpyAsync(
-                static_cast<std::uint32_t*>(d_decode_tokens_->get()) + pos,
-                &cur_token, sizeof(cur_token), hipMemcpyHostToDevice, hipStreamPerThread));
+            ensure_graph_captured(pos);
+            initialize_decode_state(cur_token, pos, num_to_gen);
+            stats.decode_graph_launches = num_to_gen;
+            stats.decode_h2d_bytes = sizeof(miinfer::DeviceDecodeState);
+            stats.decode_d2h_bytes = num_to_gen * sizeof(std::uint32_t);
 
             const auto decode_start = std::chrono::steady_clock::now();
-            for (std::size_t i = 0; i < captured_count; ++i) {
-                MIINFER_HIP_CHECK(hipGraphLaunch(decode_graphs_[pos + i], hipStreamPerThread));
-            }
-            std::vector<std::uint32_t> raw_tokens(captured_count);
+            for (std::size_t i = 0; i < num_to_gen; ++i)
+                MIINFER_HIP_CHECK(hipGraphLaunch(decode_graph_, hipStreamPerThread));
+            std::vector<std::uint32_t> raw_tokens(num_to_gen);
             MIINFER_HIP_CHECK(hipMemcpy(raw_tokens.data(),
-                                        static_cast<const std::uint32_t*>(d_decode_tokens_->get()) + pos + 1,
-                                        captured_count * sizeof(std::uint32_t),
+                                        static_cast<const std::uint32_t*>(d_decode_tokens_->get()),
+                                        num_to_gen * sizeof(std::uint32_t),
                                         hipMemcpyDeviceToHost));
             const auto decode_end = std::chrono::steady_clock::now();
             stats.decode_ms = std::chrono::duration<double, std::milli>(decode_end - decode_start).count();
@@ -1273,11 +1329,10 @@ private:
         setenv("MIINFER_FUSED_ROPE_NORM", "1", 0);
         setenv("MIINFER_FUSED_ADD_RMS_NORM", "1", 0);
 
+        // M27 reusable-graph correctness is validated, but sustained performance
+        // is still unqualified; MIINFER_HIP_GRAPH=0 selects direct decode.
         const char* graph_env = std::getenv("MIINFER_HIP_GRAPH");
         use_hip_graph_ = graph_env == nullptr || std::strcmp(graph_env, "0") != 0;
-        const char* graph_max_env = std::getenv("MIINFER_HIP_GRAPH_MAX_POSITION");
-        hip_graph_max_position_ = graph_max_env == nullptr
-            ? std::numeric_limits<std::size_t>::max() : std::stoull(graph_max_env);
         const char* layer_major_env = std::getenv("MIINFER_PREFILL_LAYER_MAJOR");
         layer_major_prefill_ = layer_major_env != nullptr && std::strcmp(layer_major_env, "0") != 0;
         const char* gdn_chunkwise_env = std::getenv("MIINFER_PREFILL_GDN_CHUNKWISE");
@@ -1528,20 +1583,39 @@ private:
         prefill_a_ = allocate(prefill_capacity * kHidden * sizeof(float));
         prefill_b_ = allocate(prefill_capacity * kHidden * sizeof(float));
 
-        decode_graphs_.resize(g_cache_capacity, nullptr);
+        d_decode_state_ = allocate(sizeof(miinfer::DeviceDecodeState));
         prefill_profile_.init();
     }
 
+    void initialize_decode_state(std::uint32_t token, std::size_t position,
+                                 std::size_t max_generated) {
+        miinfer::DeviceDecodeState state{};
+        state.current_token = token;
+        state.position = static_cast<std::uint32_t>(position);
+        state.max_generated = static_cast<std::uint32_t>(max_generated);
+        MIINFER_HIP_CHECK(hipMemcpyAsync(d_decode_state_->get(), &state, sizeof(state),
+                                         hipMemcpyHostToDevice, hipStreamPerThread));
+    }
+
     void ensure_graph_captured(std::size_t position) {
-        if (!use_hip_graph_ || position >= hip_graph_max_position_
-            || decode_graphs_[position] != nullptr) return;
+        if (!use_hip_graph_ || decode_graph_ != nullptr) return;
+        for (const auto& layer : layers_) {
+            if (layer.attention != nullptr
+                && (!layer.attention->fused_rope_norm
+                    || !layer.attention->fp16_kv_cache
+                    || !layer.attention->tiled_online_attention)) {
+                throw std::runtime_error(
+                    "reusable decode graph requires fused RoPE, FP16 KV, and tiled attention; "
+                    "set MIINFER_HIP_GRAPH=0 for this configuration");
+            }
+        }
         const auto capture_start = std::chrono::steady_clock::now();
 
         hipGraph_t graph = nullptr;
         MIINFER_HIP_CHECK(hipStreamBeginCapture(hipStreamPerThread, hipStreamCaptureModeRelaxed));
 
-        const auto* token_device_ptr = static_cast<const std::uint32_t*>(d_decode_tokens_->get()) + position;
-        auto* next_token_device_ptr = static_cast<std::uint32_t*>(d_decode_tokens_->get()) + (position + 1);
+        auto* decode_state = static_cast<miinfer::DeviceDecodeState*>(d_decode_state_->get());
+        const auto* token_device_ptr = &decode_state->current_token;
 
         miinfer::launch_qwen35_q4_k_embedding_device_token(
             static_cast<const miinfer::Q4KDeviceBlock*>(d_embedding_->get()),
@@ -1553,7 +1627,7 @@ private:
                    static_cast<const float*>(input_->get()), position,
                    static_cast<const float*>(d_final_norm_weight_->get()),
                    static_cast<float*>(final_norm_->get()),
-                   static_cast<miinfer::Q8_1Block*>(final_q8_1_->get()));
+                   static_cast<miinfer::Q8_1Block*>(final_q8_1_->get()), decode_state);
 
         miinfer::launch_qwen3_rms_norm(
             output_pointers_[63],
@@ -1574,22 +1648,24 @@ private:
 
         miinfer::launch_qwen3_argmax(
             static_cast<const float*>(logits_->get()),
-            next_token_device_ptr,
+            &decode_state->current_token,
             model_.config().vocab_size);
 
+        miinfer::launch_qwen35_decode_state_advance(
+            decode_state, static_cast<std::uint32_t*>(d_decode_tokens_->get()),
+            static_cast<std::uint32_t>(g_cache_capacity));
+
         MIINFER_HIP_CHECK(hipStreamEndCapture(hipStreamPerThread, &graph));
-        MIINFER_HIP_CHECK(hipGraphInstantiate(&decode_graphs_[position], graph, nullptr, nullptr, 0));
+        MIINFER_HIP_CHECK(hipGraphInstantiate(&decode_graph_, graph, nullptr, nullptr, 0));
         MIINFER_HIP_CHECK(hipGraphDestroy(graph));
         graph_capture_ms_ += std::chrono::duration<double, std::milli>(
             std::chrono::steady_clock::now() - capture_start).count();
     }
 
     void cleanup_graphs() {
-        for (auto& g : decode_graphs_) {
-            if (g != nullptr) {
-                (void)hipGraphExecDestroy(g);
-                g = nullptr;
-            }
+        if (decode_graph_ != nullptr) {
+            (void)hipGraphExecDestroy(decode_graph_);
+            decode_graph_ = nullptr;
         }
     }
 
@@ -1623,6 +1699,7 @@ private:
     Buffer logits_;
     Buffer argmax_token_;
     Buffer d_decode_tokens_;
+    Buffer d_decode_state_;
     Buffer m12_gdn_new_values_, m12_gdn_decayed_keys_;
     Buffer m12_gdn_solved_values_, m12_gdn_solved_keys_, m12_gdn_corrected_values_;
     Buffer m12_gdn_raw_output_;
@@ -1634,7 +1711,6 @@ private:
     WidePrefillWorkspace wide_prefill_workspace_;
 
     bool use_hip_graph_ = true;
-    std::size_t hip_graph_max_position_ = std::numeric_limits<std::size_t>::max();
     bool layer_major_prefill_ = false;
     bool gdn_chunkwise_prefill_ = false;
     bool dense_prefill_ = false;
@@ -1643,7 +1719,7 @@ private:
     bool full_layer_major_prefill_ = false;
     std::size_t prefill_chunk_ = kPrefillBatch;
     PrefillProfile prefill_profile_;
-    std::vector<hipGraphExec_t> decode_graphs_;
+    hipGraphExec_t decode_graph_ = nullptr;
 };
 
 // ---------------------------------------------------------------------------
@@ -1856,6 +1932,8 @@ int cmd_run(int argc, char** argv) {
     bool stream = true;
     bool repeat_p512_check = false;
     bool check_session = false;
+    bool check_graph_state = false;
+    std::optional<std::size_t> check_graph_state_context;
     bool decode_curve = false;
     std::size_t curve_iterations = 1;
     std::optional<std::size_t> curve_context;
@@ -1880,6 +1958,13 @@ int cmd_run(int argc, char** argv) {
             repeat_p512_check = true;
         } else if (arg == "--check-session") {
             check_session = true;
+        } else if (arg == "--check-graph-state") {
+            check_graph_state = true;
+        } else if (arg == "--check-graph-state-context" && i + 1 < argc) {
+            check_graph_state_context = std::stoull(argv[++i]);
+            if (*check_graph_state_context == 0) {
+                throw std::runtime_error("graph-state context must be positive");
+            }
         } else if (arg == "--decode-curve") {
             decode_curve = true;
         } else if (arg == "--curve-iterations" && i + 1 < argc) {
@@ -1919,8 +2004,66 @@ int cmd_run(int argc, char** argv) {
     print_hip_memory(std::cerr);
     std::cerr << "model_context_length=" << engine.model().config().context_length << "\n";
 
-    const auto prompt_tokens = engine.tokenizer().encode(prompt_text);
+    auto prompt_tokens = engine.tokenizer().encode(prompt_text);
+    if (check_graph_state_context) {
+        if (!check_graph_state || prompt_tokens.empty()
+            || *check_graph_state_context > g_cache_capacity) {
+            throw std::runtime_error(
+                "--check-graph-state-context requires --check-graph-state and must fit context");
+        }
+        const auto seed = prompt_tokens;
+        prompt_tokens.resize(*check_graph_state_context);
+        for (std::size_t i = seed.size(); i < prompt_tokens.size(); ++i) {
+            prompt_tokens[i] = seed[i % seed.size()];
+        }
+    }
     std::cerr << "Prompt tokens: " << prompt_tokens.size() << " tokens\n";
+
+    if (check_graph_state) {
+        if (max_tokens < 2 || prompt_tokens.size() + max_tokens - 1 > g_cache_capacity) {
+            throw std::runtime_error("--check-graph-state requires --max-tokens >= 2 and room in context");
+        }
+        RuntimeGenerateOptions options;
+        options.max_new_tokens = max_tokens;
+        options.stream = false;
+        const auto graph = engine.generate(prompt_tokens, options);
+        const auto graph_eos = std::find_if(graph.tokens.begin(), graph.tokens.end(),
+            [&](std::uint32_t token) {
+                return token == engine.tokenizer().eos_id() || token == 151643 || token == 151645;
+            });
+        const auto graph_active_tokens = static_cast<std::size_t>(graph_eos - graph.tokens.begin())
+            + (graph_eos == graph.tokens.end() ? 0 : 1);
+        if (graph_active_tokens < 2) {
+            std::cerr << "graph_state_check=FAIL too few graph tokens before EOS to compare state\n";
+            return 1;
+        }
+        const auto active_positions = prompt_tokens.size() + graph_active_tokens - 1;
+        const auto graph_state = engine.snapshot_decode_buffers(active_positions);
+        options.stream = true;
+        const auto direct = engine.generate(prompt_tokens, options);
+        const auto direct_state = engine.snapshot_decode_buffers(active_positions);
+        if (graph.decode_graph_launches == 0 || graph.tokens != direct.tokens
+            || graph_active_tokens > direct.generated_tokens) {
+            std::cerr << "graph_state_check=FAIL token parity or common active length mismatch"
+                      << " graph_tokens=" << graph.generated_tokens
+                      << " direct_tokens=" << direct.generated_tokens
+                      << " graph_launches=" << graph.decode_graph_launches << '\n';
+            return 1;
+        }
+        const auto mismatch = std::mismatch(graph_state.begin(), graph_state.end(),
+                                            direct_state.begin(), direct_state.end());
+        if (graph_state.size() != direct_state.size() || mismatch.first != graph_state.end()) {
+            std::cerr << "graph_state_check=FAIL graph_bytes=" << graph_state.size()
+                      << " direct_bytes=" << direct_state.size()
+                      << " mismatch_offset=" << (mismatch.first - graph_state.begin()) << '\n';
+            return 1;
+        }
+        std::cout << "graph_state_check=PASS tokens=" << max_tokens
+                  << " positions=" << active_positions
+                  << " active_tokens=" << graph_active_tokens
+                  << " state_bytes=" << graph_state.size() << '\n';
+        return 0;
+    }
 
     if (decode_curve) {
         constexpr std::array<std::size_t, 6> contexts{512, 2048, 4096, 8192, 12288, 16384};
@@ -1963,12 +2106,14 @@ int cmd_run(int argc, char** argv) {
             RuntimeGenerateOptions options;
             options.max_new_tokens = seed_count;
             options.reuse_session = true;
+            options.stream = false;
             const auto seed = engine.generate(tokens, options);
             options.max_new_tokens = 4;
             tokens.insert(tokens.end(), seed.tokens.begin(), seed.tokens.end());
             for (std::size_t i = 0; i < 151; ++i) tokens.push_back(prompt_tokens[i % prompt_tokens.size()]);
             const auto appended = engine.generate(tokens, options);
             options.reuse_session = false;
+            options.stream = true;
             const auto replay = engine.generate(tokens, options);
             if (seed.cancelled || appended.cancelled || replay.cancelled
                 || appended.reused_prefix_tokens != (length / kFullPrefillCapacity) * kFullPrefillCapacity
@@ -2062,6 +2207,9 @@ int cmd_run(int argc, char** argv) {
     std::cerr << "  Average Decode:   " << std::fixed << std::setprecision(3)
               << (stats.generated_tokens > 0 ? stats.decode_ms / stats.generated_tokens : 0.0) << " ms/token\n";
     std::cerr << "  Total Latency:    " << std::fixed << std::setprecision(2) << stats.total_ms << " ms\n";
+    std::cerr << "  Decode contract:  graph_launches=" << stats.decode_graph_launches
+              << " H2D_bytes=" << stats.decode_h2d_bytes
+              << " D2H_bytes=" << stats.decode_d2h_bytes << '\n';
     std::cerr << "---------------------------------------------------------\n";
 
     return 0;
@@ -2880,6 +3028,8 @@ void print_usage() {
     std::cout << "  run <model.gguf> --prompt \"...\"         Generate text from a prompt with streaming output\n";
     std::cout << "       --repeat-p512-check                 Check P512, real continuation, and repeat P512\n";
     std::cout << "       --context N --check-session        Check live append against full replay\n";
+    std::cout << "       --max-tokens N --check-graph-state Compare graph/direct recurrent and KV bytes\n";
+    std::cout << "       --check-graph-state-context N Repeat prompt tokens to context N for parity checks\n";
     std::cout << "       MIINFER_PRESET=m25_hi_qualified     Use the hermetic qualified MI50 P512 vector\n";
     std::cout << "       MIINFER_PRESET=m25_interactive      Use experimental wide-prefill/Mx-decode serving\n";
     std::cout << "  chat <model.gguf>                        Start an interactive multi-turn terminal chat REPL\n";

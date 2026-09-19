@@ -18,7 +18,7 @@ For the measured leaderboard and current stretch boundary, see
 
 # Current Phase
 
-**M25 — pinned gfx906 differential and P512 qualification**
+**M27 — static unified decode engine**
 
 Milestone status:
 
@@ -56,21 +56,41 @@ M25-L/requalification: current six-pair screen is 204.854 tok/s versus
                         pinned mx at 221.418 tok/s; stretch remains open
 M25-L/Q6-down: isolated pinned Q6 FFN-down was 10.53% faster, but the
                three-pair P512 median regressed 0.502%; rejected
+M26-recovery: default no-preset Qwen35RuntimeEngine measures 32.2948 ms/token
+              at P512/TG128 and 1606/1000 MHz; Release CTest 24/24 passes
+M26:   recovery gate met; no sub-30 ms tuning authorized
+M26-B: default-vs-wide/Mx route contrast measured; historical detail retained
+M27:   reusable graph/device-state prototype; 128-token exact token + persistent
+       buffer and 512/2K/8K split-boundary parity pass; P512/TG128 performance
+       requalification remains open
 ```
 
-The current performance target is the exact Qwen3.8-27B-Q4_K_M P512 prefill
-on one MI50 at SCLK/MCLK 1606/1000 MHz. The pinned mx-llama reference is
-approximately 220.9 tok/s; the repaired MIInfer H/I path measures a six-sample
-median of 204.75 tok/s. The historical 211.48 tok/s result remains valid only
-as pre-repair evidence. H/I now passes the independent matrix, same-process
-repeat, CTest, and 128-token generation gates. Use the opt-in
-`MIINFER_PRESET=m25_hi_qualified` for a hermetic, printed configuration
-vector. See EXP-0319, EXP-0320, EXP-0321, and EXP-0322.
-This is the P512 benchmark preset, not an interactive-serving qualification.
-The `m25_interactive` candidate and live-continuation validation are tracked in
-[EXP-0350](../experiments/EXP-0350-m25-interactive-serving.md) and
-[interactive serving](interactive-serving.md).
-The exact pre-J versus M25-J source-delta retest is recorded in EXP-0323.
+The M26 recovery latency gate is met by the ordinary no-preset
+`Qwen35RuntimeEngine` route: five P512/TG128 curve iterations measured
+`32.2948 ms/token` at manual SCLK/MCLK `1606/1000 MHz`, and Release CTest
+passed `24/24`. Stop M26 tuning at this gate. The `m25_hi_qualified` P512
+prefill vector and experimental `m25_interactive` wide/Mx decode route remain
+separate configurations; neither is implied qualified for this decode result.
+The measured M26-B route contrast is retained as non-gating evidence in
+[EXP-0352](../experiments/EXP-0352-m26b-historical-decode-floor-differential.md).
+The M27 implementation replaces the per-position graph vector with one
+reusable graph over a persistent device state. Graph and direct decode match
+128 token IDs and all 168,034,304 bytes of recurrent state, convolution
+history, and active K/V state. Exact graph/direct state parity also passes
+across attention split transitions 512→513, 2048→2049, and 8192→8193. Those
+boundary checks use repeated-token synthetic prefixes; the 8K case used the
+qualified wide-prefill preset. Graph-based checkpoint append also matches a
+fresh direct replay. Five paced P512/TG128 samples had a `32.1368 ms/token`
+median, but every telemetry capture contained some SCLK drops and reported
+power above the 225 W cap; they remain diagnostic, not qualified. The host's
+fan is at 15%, and raising it requires sudo. The graph still queues its full
+window after EOS. A separate one-node state-advance observer microbenchmark
+measured mapped host-visible output at 18.147 us/token versus async D2H to a
+pinned ring at 21.840 us/token (20 interleaved samples, 128 tokens). This
+includes graph launch and per-token synchronization and is not full decode;
+streaming continues to use the synchronized direct route pending end-to-end
+measurement. See
+[EXP-0353](../experiments/EXP-0353-m27-reusable-decode-graph.md).
 
 The pinned-source audit found no missing Q4_K/Q5_K/Q6_K repack or GDN contract
 whose unmeasured transplant should replace the current paths. The external
@@ -1133,48 +1153,31 @@ all work. The gfx802 isolation remains an operational platform prerequisite.
 * HIP graph capture
 * HTTP server
 
-The C++20/HIP infrastructure, model loader/planner, accepted single-token
-full-model MI50 execution, persistent multi-token decode, text-facing Qwen3
-tokenizer/generator, M5-A baseline, M5-B profile, M5-C0 trace-free control,
-and M5-C1 position-scaled audit
-are present. Sampling, serving, and generic runtime expansion remain outside
-scope. The immediate performance question is context scaling and execution
-overhead relative to the pinned gfx906 llama.cpp control.
+The C++20/HIP infrastructure, model loader/planner, full-model MI50 execution,
+persistent multi-token decode, text-facing Qwen3 tokenizer/generator, serving
+stack, and prior M5/M25 measurements are present. M27 is limited to the decode
+graph/device-state contract; sampling, batching, and broader runtime expansion
+remain outside this task. The qualified M25 prefill comparison remains tracked
+separately from the M26 decode-recovery result.
 
 ---
 
 # Immediate Objective
 
-The immediate technical objective is:
-
-> M6-A3: implement and externally validate one stateful Gated DeltaNet layer
-> at positions 0, 1, 2, 4, and 8. Do not begin full-model execution or
-> performance optimization before the single-layer state contract passes.
-
-The initial eight-token fixture matches the independent MI50 reference through
-position 2. Release passes the complete fixture and Debug remains a
-finite/cache/determinism diagnostic that selects `419` instead of reference/
-host token `470` at position 3. M4-C2 is closed under this build contract.
-The fixed-prefix diagnostic localizes the first build-sensitive state to
-position 1, where outputs first differ at layer 20; position-3 outputs first
-differ at layer 21 and then grow gradually. Serialized Debug is unchanged,
-while RelWithDebInfo follows Release, pointing to unoptimized HIP code
-generation rather than a cache-ordering race.
-
-M0 is closed under the documented gfx802-isolated configuration. The
-repository-side infrastructure, physical MI50 validation, model artifact, and
-reference baseline are recorded. The gfx802-isolation requirement remains a
-documented platform prerequisite for M1 GPU execution.
-
-The current C3 implementation owns a model-backed Qwen2 byte-level BPE
-tokenizer for the embedded `gpt2`/`qwen2` GGUF contract. The Release CLI
-acceptance uses prompt `hello`, which encodes to `14990`, runs the existing
-persistent 36-layer MI50 decode for eight greedy steps, and detokenizes the
-pinned IDs to `) {\n        return "Hello, "`. Sampling, chat templates, streaming,
-and performance benchmarking is now recorded by M5-A; the cooperative
-attention, workspace, residency, copy-cleanup, FFN characterization, and
-normalization/conversion attribution slices are recorded by M5-C, with the
-isolated C10c FFN normalization-to-shared-Q8 candidate next.
+M27: qualify one reusable HIP graph queued repeatedly over persistent device
+decode state, keeping the CPU outside the token dependency chain. Dynamic
+position now drives token embedding, attention RoPE/KV append/causal length,
+and recurrent convolution history. Exact token and bytewise persistent-state
+parity pass for 128 tokens at P512 and across split transitions 512→513,
+2048→2049, and 8192→8193; exact graph/direct append parity passes for 1- and
+4-token restored prefixes. Remaining correctness gaps include the 16384 split
+transition and full regression suite. EOS trims returned output, though the
+graph still executes the queued tail. An earlier P2048 performance smoke
+measured 33.4689 ms/token, but it was not hardware-qualified. The observer
+microbenchmark favors mapped host memory in its narrow setup, but production
+streaming remains unmeasured. Repeated P512/TG128 performance remains
+diagnostic because captured runs have clock dips and above-cap reported power.
+Preserve the 32.2948 ms/token M26 default-route baseline.
 
 ---
 
@@ -1590,14 +1593,12 @@ These do not help answer the current project question.
 
 # Next Implementation Task
 
-The current Codex task is:
-
-> Characterize the trace-free decode path against the retained llama.cpp
-> comparison, with particular attention to context-dependent attention/KV
-> cost, dispatch count, and materialization/copy overhead. Then evaluate one
-> measured performance hypothesis at a time. Keep prompt ingestion and decode
-> separate; sampling, serving, batching, and unrelated runtime expansion
-> remain out of scope.
+Complete M27 correctness and performance qualification for the reusable
+`DeviceDecodeState` graph. Keep the established per-position-free design,
+compare sustained token IDs and state/KV behavior against direct stepping, and
+measure repeatable throughput with hardware state captured. Do not add a
+persistent GPU scheduler or device-side graph launch; retain host-queued
+launches of the same graph.
 
 The M0 evidence gates are complete under the documented gfx802-isolated
 configuration. The M2 gate is satisfied by EXP-0009, M3 is closed by the
@@ -1636,6 +1637,11 @@ gfx906 reference without broadening the project into a generic runtime.
 ---
 
 # Last Updated
+
+2026-09-19 — M26 default production runtime passes the P512/TG128 recovery
+screen at `32.2948 ms/token`, with locked 1606/1000 MHz clocks and Release
+CTest 24/24. The experimental wide/Mx route remains slower; M26-B attribution
+is still active. See EXP-0352.
 
 2026-09-05 — M6-B32 selects the transposed recurrent no-decay-store path,
 improving stable-peak native TG64/TG128 by 1.71%/1.63% to 12.0637/11.8983
