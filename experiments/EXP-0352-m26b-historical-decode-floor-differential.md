@@ -219,5 +219,241 @@ still trails the current legacy harness by `52.374 ms/token`. The curve's
 no conclusion is made yet about the remaining graph, runtime, or timing-boundary
 components.
 
+## Route-contract recovery probe — 2026-09-16
+
+`generate_layer_major()` now uses the existing queued no-stream HIP graph chain
+after layer-major prefill, matching the decode contract already used by
+`generate_fresh()`. Streaming and graph-disabled generation retain the
+per-token `step()` path. The MIInfer target builds successfully.
+
+No runtime result is claimed: no Qwen3.8-27B GGUF is present in the workspace
+for a MI50 run. The next measurement is the same reconstructed-fixture curve
+with `MIINFER_PRESET=m25_interactive`, followed by correctness comparison.
+
+**Probe decision:** M26-B RETEST — implementation landed; performance and
+execution-contract differential remain unverified.
+
 **Route-isolation decision:** M26-B RETEST — Mx route is necessary but does
 not explain the complete legacy/runtime differential.
+
+## Hardware readiness check — 2026-09-16
+
+`miinfer doctor` passes on the available accelerator: AMD Instinct MI60 / MI50,
+gfx906, 31.96 GiB free VRAM, ROCm HIP PASS. The exact Qwen3.8-27B-Q4_K_M
+artifact is absent; available Qwen3-8B artifacts are rejected by the explicit
+Qwen35 configuration guard. No substitute benchmark is valid for M26.
+
+## Exact-model route A/B — 2026-09-16
+
+Hardware state was valid: MI60/MI50 gfx906 at 1606/1000 MHz. The exact
+Qwen3.8-27B-Q4_K_M model was used with the `m25_interactive` preset, P512,
+TG128, five iterations, and `--no-stream`.
+
+| Route | Median ms/token | tok/s |
+| --- | ---: | ---: |
+| Layer-major prefill + queued HIP graph decode | 60.5365 | 16.5189 |
+| Layer-major prefill + graph-disabled `step()` decode | 83.2347 | 12.0142 |
+
+Queued graph decode saves 22.6982 ms/token (27.3%) relative to the same
+runtime with graphs disabled. This validates the route recovery change, but
+the result remains above the M26 recovery gate of 33 ms/token. The remaining
+gap is not attributed to kernels by this experiment.
+
+**A/B decision:** KEEP the unified no-stream graph route; M26-B remains open.
+
+## Qualified route rerun — 2026-09-16
+
+With `Performance Level=manual`, SCLK `1606 MHz`, and MCLK `1000 MHz`, the
+exact-model command was repeated at P512/TG128 for five iterations:
+
+| Route | Median ms/token | tok/s |
+| --- | ---: | ---: |
+| Layer-major prefill + queued HIP graph decode | 59.8578 | 16.7063 |
+
+This is the current qualified route result, but it remains above the M26
+recovery gate of 33 ms/token. The idle post-run power reading is not used as a
+qualification failure because the required manual clock levels were present
+during the run; power-state telemetry should be captured during future runs.
+
+## Corrected legacy comparison — 2026-09-16
+
+The earlier attempted legacy comparison was invalid because `m25_interactive`
+reapplies the layer-major preset after clearing overrides. Running without the
+preset, with `MIINFER_PREFILL_LAYER_MAJOR=0`, produced a true legacy route
+under the same manual 1606/1000 MHz clock state:
+
+| Route | Median ms/token | tok/s |
+| --- | ---: | ---: |
+| Legacy prefill + queued HIP graph decode | 32.3865 | 30.877 |
+| Interactive layer-major prefill + queued HIP graph decode | 59.8578 | 16.7063 |
+
+The legacy route meets the M26 recovery gate. The interactive production route
+does not; the remaining 27.4713 ms/token differential is attributable to the
+layer-major execution contract and requires further isolation. This is not a
+frontier or end-to-end production qualification result.
+
+## Mx decode-flag isolation — REJECT, 2026-09-16
+
+Removing `MIINFER_MX_MMV=1` and
+`MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_DECODE=1` from the interactive preset
+was tested at P512/TG128 for five iterations under manual 1606/1000 MHz
+clocks. It degraded to `510.448 ms/token` (`1.959 tok/s`) and increased the
+runtime allocation footprint. The flags are therefore required by the current
+layer-major execution contract; this experiment does not identify them as the
+source of the 27.4713 ms/token gap.
+
+**Decision:** REJECT flag removal; restore the interactive preset unchanged.
+
+## Mx MMV isolation — REJECT, 2026-09-16
+
+Keeping `MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_DECODE=1` but removing
+`MIINFER_MX_MMV=1` was tested at P512/TG128 for five iterations under manual
+1606/1000 MHz clocks. It degraded to `529.903 ms/token` (`1.887 tok/s`). The
+MMV flag is required by the current wide layer-major allocation/dispatch
+contract. It was restored; no performance conclusion is drawn from the
+contaminated candidate beyond rejecting this flag removal.
+
+**Decision:** REJECT `MIINFER_MX_MMV` removal.
+
+## Wide Mx attention-decode isolation — REJECT, 2026-09-16
+
+Keeping `MIINFER_MX_MMV=1` but removing
+`MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_DECODE=1` was tested at P512/TG128 for
+five iterations under manual 1606/1000 MHz clocks. It degraded to
+`130.566 ms/token` (`7.659 tok/s`). The flag was restored.
+
+**Decision:** REJECT attention-decode flag removal; both Mx flags remain part
+of the current wide layer-major contract.
+
+## Profile-boundary check — 2026-09-16
+
+The one-sample `MIINFER_DECODE_PROFILE=1` P512 run reported 60.058 ms/token,
+but its operator events were inherited from the wide-prefill pass. The report
+showed deferred-prefill-tail work as 40.8% of sampled events; it does not
+profile the kernels executed inside the queued decode graphs. Therefore this
+output is not a decode bottleneck attribution and must not be used to select a
+kernel optimization.
+
+**Decision:** RETEST — add graph-compatible decode instrumentation before
+classifying the remaining 27.5 ms/token gap.
+
+## Instrumented rerun — invalid, 2026-09-16
+
+The first run after adding contract counters measured `117.466 ms/token` at
+P512/TG128, compared with `60.5365 ms/token` for the prior valid run. The
+post-run hardware query reported the GPU in a low-power state at 30 W, despite
+the displayed clock targets. This run is contaminated and is not classified as
+an instrumentation regression or an M26 performance result.
+
+## Five-iteration decode-curve rerun — 2026-09-16
+
+The exact interactive command was rerun with `--max-tokens 128` (the decode
+curve requires 128 generated tokens) under manual 1606/1000 MHz clocks:
+
+| Route | Context | Iterations | Median ms/token | tok/s |
+| --- | ---: | ---: | ---: | ---: |
+| Layer-major prefill + queued HIP graph decode | 512 | 5 | 59.2225 | 16.8855 |
+
+This confirms the queued graph path is repeatable, but the production
+layer-major route remains above the 33 ms/token M26 recovery gate.
+
+## Native-buffer substitution — REJECT, 2026-09-16
+
+An opt-in probe set `MIINFER_PREFILL_REPACKED_RESIDENT_ALL=0` while retaining
+the wide layer-major prefill. A short eight-token check completed at 27.428
+ms/token, but the sustained 128-token generation emitted only 15 tokens and
+measured 345.185 ms/token. This fails the exact-generation requirement and is
+not a valid performance candidate.
+
+**Decision:** REJECT. Native buffers cannot be selected independently of the
+wide-prefill state/layout contract; the probe switch was removed.
+
+## Mx single-token MMV selector isolation — diagnostic, 2026-09-19
+
+Added `MIINFER_PRESET=m26_mx_mmq` as a reproducible control vector. It is
+identical to `m25_interactive` except that it leaves `MIINFER_MX_MMV` unset;
+resident weights, Mx attention decode, graph settings, prompt, context, and
+generation length are unchanged. Runs used the exact model hash recorded
+above, manual SCLK/MCLK 1606/1000 MHz, P512, TG128, five curve iterations.
+The four runs were interleaved A/B/A/B:
+
+| Arm | Preset | Median ms/token | tok/s |
+| --- | --- | ---: | ---: |
+| A | `m26_mx_mmq` (MMQ control) | 544.431 | 1.8368 |
+| B | `m25_interactive` (MMV) | 72.2632 | 13.8383 |
+| A | `m26_mx_mmq` (MMQ control) | 528.178 | 1.8933 |
+| B | `m25_interactive` (MMV) | 56.8187 | 17.5998 |
+
+The two MMQ medians average 536.3045 ms/token; the two MMV medians average
+64.5410 ms/token, an 8.31x selector-level speedup. Both arms completed all
+128 tokens in each of five iterations. Clock and power spot-checks during the
+runs showed SCLK/MCLK 1606/1000 MHz and approximately 126 W under load.
+
+An eight-token direct-generation smoke emitted different text between the two
+arms (`7,168 stream processors` vs. `56 compute units (CUs`). Therefore this
+measurement establishes a large execution-cost difference, not token parity
+or numerical correctness for the full layer-major route. Existing EXP-0335
+correctness evidence remains scoped to its own P512 continuation checks.
+
+**Decision:** KEEP MMV in the interactive route; reject MMQ as the decode
+recovery path. Neither arm meets the M26 `<=33 ms/token` gate, and the
+MMV-versus-MMQ output difference requires a numerical/logit oracle before any
+correctness claim. This selector isolation does not close the historical
+M26-B differential gate.
+
+## Synchronous decode operator profile — 2026-09-19
+
+To avoid the queued-graph profiler boundary, the existing stage profiler was
+run with HIP graphs disabled and the MMV production selector enabled. This
+was one `--decode-curve` iteration at context 512, generating 128 tokens, with
+the sampled token at absolute position 512. The run completed at
+`60.7138 ms/token` (`7771.36 ms` decode total). Profiled GPU stage time for
+the selected token was `61.2578 ms`; the aggregate layer-loop timer was
+`65.2396 ms` and is gross timing, not additive to the stage family totals.
+
+```bash
+MIINFER_PRESET=m25_interactive MIINFER_HIP_GRAPH=0 \
+MIINFER_DECODE_PROFILE=1 MIINFER_DECODE_PROFILE_POSITION=512 \
+build/mi50-release/miinfer run \
+  /home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf \
+  --context 16384 --decode-curve --curve-context 512 \
+  --curve-iterations 1 --no-stream --max-tokens 128
+```
+
+| Sampled family | GPU ms | Share |
+| --- | ---: | ---: |
+| projection or norm | 14.0758 | 22.98% |
+| FFN gate/up projection | 11.3611 | 18.55% |
+| KV or head normalization | 11.2577 | 18.38% |
+| FFN down projection | 5.8165 | 9.50% |
+| projection or attention output | 4.2773 | 6.98% |
+| SwiGLU | 4.1573 | 6.79% |
+| residual | 2.6963 | 4.40% |
+| projection or RoPE | 2.6886 | 4.39% |
+| residual/post norm | 1.4254 | 2.33% |
+| projection or K | 1.2197 | 1.99% |
+
+The stage sum nearly matches the measured per-token decode latency. This
+supports classifying the current route as GPU-operator dominated rather than
+host synchronization dominated. These broad profiler families do not yet
+identify resolved kernel choices or explain the historical 33 ms/token route;
+the M26-B gate remains open.
+
+## Default production runtime recovery screen — 2026-09-19
+
+With no `MIINFER_*` variables inherited and no preset selected, the ordinary
+CLI/server `Qwen35RuntimeEngine` route ran the built-in curve at P512/TG128.
+Hardware was in manual mode at SCLK/MCLK 1606/1000 MHz; in-run telemetry
+showed the same clocks under load. The exact model hash is recorded in the
+audit above. Five iterations each completed all 128 generated tokens:
+
+| Route | Median decode ms/token | tok/s | Result |
+| --- | ---: | ---: | --- |
+| Default runtime (legacy prefill + queued graph decode) | 32.2948 | 30.9647 | <=33 gate PASS |
+
+The full `mi50-release` CTest suite then passed 24/24 tests, including the GPU
+decode-sequence and forward tests. The measured default runtime route
+therefore meets the M26 recovery latency gate with current-tree correctness
+tests passing. This does not qualify `m25_hi_qualified` or the experimental
+wide/Mx route, and does not close the separate M26-B historical route
+attribution. No sub-30 ms optimization is authorized by this result.
