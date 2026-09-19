@@ -27,15 +27,22 @@ The benchmark target is Qwen3.8-27B-Q4_K_M on one AMD Instinct MI50
 | MIInfer H/I, current requalification | six-pair clock-qualified screen | 2499.345 median | 204.854 | 21,993,242,964 B |
 | MIInfer H/I + pinned QKV MMQ | three-pair opt-in screen; not qualified | 2492.25 median | 205.44 | 21,993,242,964 B |
 | MIInfer H/I + pinned Q6 FFN-down | three-pair opt-in screen; rejected | 2490.39 median | 205.590 | 21,993,242,964 B |
-| MIInfer H/I + Mx attention decode reuse | interleaved opt-in screen; promotion pending | 2412.24 median | 212.25 | 18,472,649,044 B |
+| MIInfer H/I + Mx attention decode reuse | six-pair matched opt-in; experimental | 2394.35 median | 213.84 | 18,472,649,108 B |
 | MIInfer H/I + persistent oracle GDN state | three-pair opt-in screen; rejected | 2502.69 median | 204.58 | 21,993,242,964 B |
 | MIInfer matched control | current comparison | — | — | 19,108,282,708 B |
 
 The H/I path clears the primary gate but is not the default. The external
 stretch gap is `182.748 ms/P512` at the historical qualified medians. The
-latest six-pair no-profiler requalification measures a `186.975 ms` gap
-(`8.086%`) against the pinned synthetic-token `llama-bench` path. The earlier
-`166.976 ms` screen remains historical run-to-run evidence.
+latest six-pair no-profiler control requalification (EXP-0354) measures
+`205.897 tok/s`, with a `179.879 ms` (`7.798%`) gap against the pinned
+synthetic-token `llama-bench` path. The prior `186.975 ms` screen remains
+historical run-to-run evidence.
+
+The decode-reuse candidate separately beat the current H/I control by a
+`99.065 ms` paired median in EXP-0355 and clears the 210 tok/s progress
+threshold. This is not a direct comparison to mx: llama-bench uses synthetic
+prompt tokens, and the reason the decode-reuse selector changes cold P512
+latency is not yet known.
 
 ## Retained MIInfer path
 
@@ -59,8 +66,8 @@ An additional opt-in candidate,
 weights for attention decode and removes the duplicate M23 attention-FFN
 representation. It saves `3,520,753,920 B` in the measured Q4_K_M layout. The
 selector now fails closed unless resident-all attention weights are active. The
-qualified preset still retains the M23 decode copies until the candidate has
-completed a full promotion run.
+qualified preset still retains the M23 decode copies; EXP-0355 keeps this
+candidate experimental pending causal attribution and promotion.
 
 H/I has passed finite scalar parity, the `00/10/01/11` configuration matrix,
 real continuation, repeat-P512, CTest, and the long-generation gate. Its

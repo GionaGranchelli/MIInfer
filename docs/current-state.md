@@ -58,7 +58,8 @@ M25-L/Q6-down: isolated pinned Q6 FFN-down was 10.53% faster, but the
                three-pair P512 median regressed 0.502%; rejected
 M27 P512 current control: six clean interleaved pairs at current HEAD
                           measured 205.897 tok/s, 179.879 ms behind mx;
-                          lower-footprint candidate qualification next
+                          lower-footprint attention decode-reuse candidate
+                          measured 213.837 tok/s, 99.065 ms faster; experimental
 M26-recovery: default no-preset Qwen35RuntimeEngine measures 32.2948 ms/token
               at P512/TG128 and 1606/1000 MHz; Release CTest 24/24 passes
 M26:   recovery gate met; no sub-30 ms tuning authorized
@@ -108,13 +109,24 @@ request pair reused 3584 and processed 121 tokens; raw timing is diagnostic,
 not qualified. Real Pi session resume/restart and broader coding tasks remain
 open. See EXP-0350.
 
+M27 retested the attention O/FFN decode-reuse selector in six matched
+no-profiler P512 pairs. The candidate median was 2394.35 ms (213.837 tok/s),
+99.065 ms faster than the 2495.91 ms control median, and saved 3.52 GB of
+persistent allocation. It remains experimental: the mechanism explaining a
+cold-prefill change is unknown, and long-context checks through 8002 tokens
+were single-run sanity measurements with variable clocks. Event profiles are
+diagnostic only. See EXP-0355. The recurrent QKV→GDN contract attribution is
+still open; no additional cold-prefill optimization should be stacked before
+that measurement.
+
 The pinned-source audit found no missing Q4_K/Q5_K/Q6_K repack or GDN contract
 whose unmeasured transplant should replace the current paths. The external
 register-prefetch MMQ variant remains rejected on MI50, and M25-J remains
-disabled after its matched retest. M25-L's latest six-pair requalification in
-EXP-0348 measures the current no-profiler `llama-bench` comparison at a
-`186.975 ms` (`8.086%`) gap: `221.418 tok/s` for the pinned oracle and
-`204.854 tok/s` for MIInfer H/I. The earlier `166.976 ms` screen remains
+disabled after its matched retest. The earlier EXP-0348 six-pair
+no-profiler `llama-bench` comparison measured a `186.975 ms` (`8.086%`) gap:
+`221.418 tok/s` for the pinned oracle and `204.854 tok/s` for MIInfer H/I.
+EXP-0354 requalified the current M27 control at `205.897 tok/s` and a
+`179.879 ms` (`7.798%`) gap. The earlier `166.976 ms` screen remains
 historical run-to-run evidence. Its source-labelled recurrent trace puts the whole
 FFN tail within about `0.15 ms/layer` of the oracle, so FFN is not the missing
 differential. See

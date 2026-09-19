@@ -1,6 +1,6 @@
 # EXP-0354 — Current HEAD P512 control requalification
 
-**Status:** baseline established; candidate gate pending
+**Status:** control baseline retained for EXP-0355
 **Milestone:** M27 cold-prefill continuation
 **Date:** 2026-09-19
 **Baseline commit:** `12fc127` (`exp: qualify live Pi prefix reuse path`)
@@ -57,14 +57,9 @@ reported VRAM use was `22,945,673,216 B`. MIInfer setup allocation and free
 memory were constant across all six runs: `21,993,243,028 B` allocated and
 `11,484,004,352 B` free.
 
-## Interpretation and decision
+## Interpretation
 
 The current control is slightly faster than EXP-0348's `2499.345 ms` median,
-but still below 210 tok/s. The clean six-pair baseline is valid for the
-upcoming same-binary candidate comparison. The oracle uses synthetic prompt
-tokens, so the absolute cross-runtime differential retains that known caveat.
-
-**RETEST candidate.** Continue immediately with the required six-pair
-interleaved control/candidate gate for
-`MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_DECODE=1`. Do not promote it based on
-EXP-0339's earlier three-pair screen.
+but still below 210 tok/s. EXP-0355 contains the matched six-pair test of the
+lower-footprint candidate. The oracle uses synthetic prompt tokens, so the
+absolute cross-runtime differential retains that known caveat.
