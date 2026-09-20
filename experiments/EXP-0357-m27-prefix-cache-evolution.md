@@ -47,23 +47,37 @@ Raw correctness output: `/tmp/m27-check-multicache-pinned-16k.log`.
 
 ## Real Pi results
 
-Using one local server process with session reuse enabled and the temporary
-isolated Pi profile:
+Pi CLI 0.85.1 used the built-in `read` tool against the local fixture, first
+with ~3.6K tokens of attached project material, then with the larger attached
+context variants. One local server process held the cache:
 
-| request | prompt tokens | reused | prefilled | entries / state bytes |
+| conversation size / request | prompt tokens | reused | prefilled | entries / state bytes |
 |---|---:|---:|---:|---:|
-| fixture tool turn | 6514 | 0 | 6514 | 1 / 1,051,154,432 |
-| tool-result continuation | 6589 | 6144 | 445 | 1 / 1,051,154,432 |
-| ~15K attached-context turn | 15030 | 5632 | 9398 | 2 / 3,002,073,088 |
-| ~15K continuation | 15106 | 14848 | 258 | 2 / 3,002,073,088 |
-| next ~15K continuation | 15311 | 14848 | 463 | 2 / 3,002,073,088 |
-| ~7.7K divergent attached-context turn | 7605 | 5632 | 1973 | 2 / 1,995,440,128 |
+| ~3.6K cold tool-call turn | 3642 | 0 | 3642 | 5 / 2,740,453,376 |
+| ~3.6K tool-result continuation | 3718 | 3584 | 134 | 5 / 2,740,453,376 |
+| ~4K next user turn | 4009 | 3584 | 425 | 5 / 2,740,453,376 |
+| ~4K following continuation | 4085 | 3584 | 501 | 5 / 2,740,453,376 |
+| ~7.6K divergent tool-call turn | 7605 | 5632 | 1973 | 2 / 1,995,440,128 |
 | ~7.7K tool-result continuation | 7681 | 7168 | 513 | 3 / 3,160,932,352 |
+| ~15K attached-context tool-call turn | 15030 | 5632 | 9398 | 2 / 3,002,073,088 |
+| ~15K tool-result continuation | 15106 | 14848 | 258 | 2 / 3,002,073,088 |
+| next ~15K continuation | 15311 | 14848 | 463 | 2 / 3,002,073,088 |
+| ~4.4K temporary code-edit task after read | 4428 | 4096 | 332 | 6 / 2,966,421,504 |
+| ~4.6K temporary code-edit task after edit | 4594 | 4096 | 498 | 6 / 2,966,421,504 |
+| ~4.7K task after verification read | 4700 | 4096 | 604 | 6 / 3,100,639,232 |
 
-Each Pi turn called the local read tool and returned the fixture values
-`MI50` and `amber-cedar`. Raw server telemetry:
+Each tool cycle returned the fixture values `MI50` and `amber-cedar`. Raw
+server telemetry:
 `/tmp/m27-pi-multicache-pinned-server.log`; temporary Pi session records are
-under `/tmp/miinfer-pi-agent-m27-sessions/`.
+under `/tmp/miinfer-pi-agent-m27-sessions/`, including
+`m27-final-3k.jsonl` for the 3.6K continuation.
+
+A separate Pi coding task in `/tmp/miinfer-pi-coding-task` used `read`, `edit`,
+and `read` tools to change a temporary Python token-limit function. The first
+4354-token request was cold; subsequent 4428-, 4594-, and 4700-token requests
+each reused the exact 4096-token prefix. A local assertion check of the edited
+function passed, including both negative-input errors. The code stayed under
+`/tmp`; the Pi session record is `m27-real-edit.jsonl`.
 
 Before the restore-point touch was added, the ~15K branch evicted its 6144
 checkpoint, and the later ~7.5K branch replayed all 7566 tokens. After the
@@ -75,6 +89,7 @@ its tool-result continuation reused 7168.
 
 KEEP for opt-in single-process serving. Exact branch reuse is demonstrated;
 request telemetry proves avoided prefill work, not a qualified latency win.
-Process restart/resume, concurrent sessions, and broad coding-agent workloads
-remain unqualified. The M27 cold-P512 stop remains as recorded in EXP-0356;
-M26 decode work remains paused.
+The tested multi-turn Pi read and code-edit flows cover the stated 3K/8K/16K
+conversation sizes; process restart/resume, concurrent sessions, and more
+complex coding tasks remain unqualified. The M27 cold-P512 stop remains as
+recorded in EXP-0356; M26 decode work remains paused.

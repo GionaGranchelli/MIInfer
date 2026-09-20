@@ -43,12 +43,11 @@ cancellation, or generation failure clears the cache. A prompt shorter than 512
 tokens has no reusable checkpoint. The server reports `cache_hit`, reused/new
 token counts, and current cache entries/bytes for every request.
 
-The multi-checkpoint cache is still experimental and opt-in. A real Pi sequence
-retained a useful older boundary through a ~15K request; a later ~7.6K branch
-turn reused 5632 tokens and its tool-result continuation reused 7168/7681.
-Full replay equivalence passed through 16K, including branch return and
-invalidation checks. Cache timing is diagnostic, not a speed qualification.
-See EXP-0350 and EXP-0357.
+The multi-checkpoint cache is still experimental and opt-in. Real Pi 0.85.1
+read-tool continuations reused 3584/3718 tokens at ~3.7K context, 7168/7681 at
+~7.7K, and 14848/15106 at ~15K. Full replay equivalence passed through 16K,
+including branch return and invalidation checks. Cache timing is diagnostic,
+not a speed qualification. See EXP-0350 and EXP-0357.
 
 `miinfer_request_latency` is emitted after response output, alongside the existing
 engine diagnostics. It records prompt/common-prefix/reused/new-prefill counts,
