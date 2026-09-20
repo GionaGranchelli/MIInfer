@@ -40,6 +40,13 @@ falls back to full replay. A prompt shorter than 512 tokens has no reusable
 checkpoint. The server reports `cache_hit` and reused/new token counts for every
 request.
 
+The single-checkpoint cache is the current measured scope: a real Pi tool
+call/result cycle reused 5632 of 6129 prompt tokens, and an identical 3705-token
+request reused 3584. Multi-checkpoint branching is deferred until a real agent
+trace demonstrates that the latest checkpoint misses a useful older boundary;
+each 16K snapshot costs about 1.05 GiB of GPU memory. A radix tree is deferred
+until lookup cost matters at a measured cache size. See EXP-0350.
+
 `miinfer_request_latency` is emitted after response output, alongside the existing
 engine diagnostics. It records prompt/common-prefix/reused/new-prefill counts,
 prefill and graph-capture time, first decode computation time, `TTFT_wall_ms`,

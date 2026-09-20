@@ -117,6 +117,15 @@ execution-contract version 1; the 512/640 cases and invalidations passed again
 after that guard was added. Real Pi session resume/restart and broader coding
 tasks remain open. See EXP-0350.
 
+M27 prefix reuse is closed at the current exact single-checkpoint scope: the
+current build passes the full length/seed and invalidation matrix, and the real
+Pi tool-result continuation reused 5632/6129 tokens. P1 multi-checkpoint and
+P2 longest-prefix lookup are deferred because no measured branching request
+needs an older checkpoint; a 16K snapshot costs about 1.05 GiB. P3 radix-tree
+lookup is not justified at one entry. Reuse remains opt-in; restart/resume and
+cross-session behavior remain open. M26 decode remains paused, not abandoned.
+See EXP-0350.
+
 Cold-prefill contract attribution is recorded in EXP-0356. Equivalent outer
 event spans found `+16.029 ms` MIInfer recurrent overhead across 47 non-first
 layers, below the 40 ms gate. The matched attention span was `+101.979 ms`

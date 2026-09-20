@@ -258,3 +258,30 @@ metadata guard. After the guard was added, the 512/640 one- and four-token
 cases plus cancellation, generation-failure, mismatch and reset invalidation
 were rerun at context 1024; all passed. Raw output:
 `/tmp/m27-context-smoke/session-check-version.log`.
+
+## M27 prefix-reuse closure — 2026-09-20
+
+**KEEP for opt-in, single-session serving.** The current build passes exact
+append-versus-replay token checks at 512, 640, 3991, 8192, and 16000 tokens
+with one- and four-token generated seeds; it also passes cancellation,
+generation-failure, mismatch, reset, and execution-contract-version checks.
+The real Pi 0.85.1 tool-call/result cycle reused 5632 of 6129 tokens on the
+second request. A repeated 3705-token serialized request reused 3584 tokens
+and processed 121. Together these establish functional multi-turn tool-history
+reuse and that large repeated prefixes avoid full replay. The timing data is
+not a serving-speed qualification.
+
+P1/P2/P3 are deferred: the measured agent flow is linear and already reuses
+its latest exact B512 checkpoint. No observed request has missed a useful
+older checkpoint. At 16K one checkpoint costs approximately 1.05 GiB of
+additional GPU memory, so retaining multiple snapshots trades context
+headroom for an unmeasured branch benefit. Add a small multi-checkpoint cache
+with longest-prefix scan only after a captured real-agent trace shows a
+divergent request whose reusable prefix predates the latest checkpoint. A
+radix tree has no demonstrated lookup need at the current one-entry scale.
+
+This closes the M27 prefix-reuse objective at the existing exact single-
+checkpoint scope; it does not qualify reuse across process restart or across
+sessions. Keep `MIINFER_SESSION_REUSE=1` opt-in until those serving lifecycle
+requirements are addressed. Cold P512 remains stopped per EXP-0356; M26 decode
+work remains paused with its evidence intact.
