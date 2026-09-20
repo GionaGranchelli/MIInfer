@@ -10,134 +10,44 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M18–M20 qualification closure**
+**Current phase: M26 — Decode Contract Recovery**
 
-Immediate objective:
+The active question is why the historical/legacy execution contract runs near
+`31–33 ms/token` while the experimental M25 interactive layer-major route is
+near `59 ms/token` at short context. Resume the existing historical decode-floor
+differential in
+[`EXP-0352`](../experiments/EXP-0352-m26b-historical-decode-floor-differential.md);
+do not draft a new architecture or select a decode kernel yet.
 
-> Close lifecycle, context-capacity, reference-benchmark, and constrained
-> Hermes gates with durable evidence; keep unqualified long-context paths
-> explicitly experimental.
+M26's attribution gate is explicit: reproduce the historical result or prove
+it non-comparable, classify the material execution-contract differences, and
+attribute at least 90% of the measured wall-time differential. No M26-C decode
+kernel work begins before that gate is met. The default no-preset runtime's
+`32.2948 ms/token` P512/TG128 recovery result meets the existing `<=33 ms/token`
+recovery screen; it does not qualify the separate interactive route or close
+the historical/interactive differential. See
+[`EXP-0351`](../experiments/EXP-0351-m26-real-context-decode-curve.md) and
+EXP-0352.
 
-M11-B's current-family search is closed by EXP-0244 through EXP-0254.
-EXP-0255 is the first M12 feasibility result: whole-matrix Q4_K→FP16 staging
-plus hipBLAS GEMM is 1.364x at B64 and 2.724x–5.806x at B128–B512. It is
-retained as a lab primitive, not yet a production backend. EXP-0256 validates
-the chunkwise Gated DeltaNet WY oracle at chunk 64 with `1.4e-8` output error
-and `1.5e-7` final-state error. EXP-0257 passes the gfx906 correctness gate
-but reaches only 1.112x over the existing token core, so it is not yet a
-production prefill backend. Profile or simplify that prototype before any
-dense projection integration; stop the branch if it cannot expose a material
-B128+ schedule.
+M27 cold P512 work is stopped. The current control is `205.897 tok/s`; the
+`213.837 tok/s` attention decode-reuse candidate remains experimental because
+its cold-prefill effect is unexplained. Equivalent contract attribution found
+`+16.029 ms` for recurrent work and `+101.979 ms` for attention, but the
+technically motivated FP16 Q/K candidate failed the exact-context screen at
+`-1.49 ms` median. Do not promote the candidate or reopen cold tuning without a
+new measured hypothesis. See EXP-0355 and EXP-0356.
 
-The corrected geometry is 16 key heads / 48 value heads / state 128. The
-standalone chunkwise kernel reaches 3.17x over the token core, and EXP-0258
-composes it into an opt-in runtime path. Exact P512 scheduling at 128 tokens
-is neutral against 64, so 128 remains an experiment rather than a production
-prefill backend; keep dense projection integration isolated.
-EXP-0259 fulfills that isolation with a reusable opt-in FFN-down backend:
-exact-P512 repeated runs reach 51.56 tok/s versus 46.60 tok/s control. The
-gain is real but below the aspirational 60 tok/s gate; B256 is not memory-safe
-in the current per-layer allocation, so further projection expansion requires
-a new memory plan.
-EXP-0260 combines the independently measured paths at 52.99 P512 tok/s.
-Keep that composition opt-in; the next experiment must target another measured
-tail rather than broadening the default runtime.
+M27 exact prefix reuse is frozen at the current opt-in scope: sparse exact
+B512 checkpoints, longest-prefix radix lookup, and a 3 GiB payload cap. Real
+Pi read/edit/read flows reused the complete cached prefix at ~3.7K, ~7.7K, and
+~15K conversation sizes. Do not add persistence, cross-session policy,
+additional cache tiers, or NVMe without new evidence. See EXP-0350 and EXP-0357.
 
-M13 then tested direct quantized multi-token projection while keeping Q4_K/Q6_K
-weight tiles resident. EXP-0261's exact Q4 FFN-down candidate reached only
-0.860–0.863x of repeated B4 at B64–B2048; the compatible Q6 candidate reached
-0.695–0.717x. B64 outputs matched exactly, so this is a performance rejection
-rather than a correctness failure. The combined M12 path was re-profiled at
-51.73 tok/s P512. M13 is closed: do not integrate the slower kernel or reopen
-the same single-GPU projection family without a materially different mapping.
-
-M14 is complete at `v0.1.0` (`c7b3737`): release, packaging, hardware
-detection, extracted-model inference, and OpenAI endpoint smoke all pass. The
-focused CPack
-archive now ships the runtime CLI, gfx906 device probe, and operational docs;
-serving/UI and
-multi-MI50 work follow release hygiene; single-MI50 prefill remains frozen at
-the opt-in M12 result.
-
-EXP-0262 is the first M14 promotion gate. EXP-0263 fixes the GDN decay
-contract and missing barrier; the dense FFN-down path still changes the P128
-greedy token from baseline EOS 248046 to 271. M12 remains opt-in until a
-numerically qualified dense replacement exists.
-
-M15 provides stable `miinfer --version`, `miinfer config`, and
-`miinfer models [directory]` contracts. M16 adds dependency-free serving
-metrics, a parsed bounded single-worker request queue, proper multi-turn JSON
-parsing, and qualified concurrent-client behavior while retaining serialized
-GPU execution. M17 must keep that runtime path unchanged: it adds only the
-release installer, `miinfer doctor`, `serve --model`, and a browser UI that
-uses `/v1/models` and `/v1/chat/completions`.
-
-EXP-0267 closes M17: the fresh package install, diagnostics, model discovery,
-server/Web UI route, and qualified-MI50 serving gate all pass.
-
-EXP-0268 closes the implementable M18-A lifecycle contract: self-pipe signal
-wakeup, host-boundary cancellation, queue shutdown responses, strict context
-and output limits, and structured request telemetry. EXP-0269 records the
-M18-B reference blocker: the mandated pinned llama.cpp-gfx906 commit cannot
-load the exact Qwen3.8 GGUF because it predates Qwen3.5 support. EXP-0270
-proves model-load-time allocation from 1K through 128K, while only 1K is
-qualified and 8K has a successful real request. EXP-0271 retains the M12
-runtime-only PP/TG curve. EXP-0272 closes the optional API-key hardening gate.
-EXP-0273 records constrained Hermes submission and the remaining usability
-blocker: Hermes requires 64K and its long prefill/retry behavior is not yet a
-production qualification.
-
-The complete M18–M20 evidence summary is
-`experiments/EXP-0274-m18-m20-qualification-closure.md`.
-
-M5 closed with a reproducible local optimization result, but whole-runtime
-parity with the strongest gfx906 llama.cpp control was not demonstrated. See
-`experiments/EXP-0041-m5c15-optimization-closure-parity-gate.md`. M6-A0 audited
-the Qwen3.8-27B artifact, M6-A1 provides a pinned llama.cpp reference fixture,
-and M6-A2 maps the reusable and missing projection contracts. See
-`experiments/EXP-0043-m6a1-qwen38-reference-fixture.md` and
-`experiments/EXP-0044-m6a2-qwen38-projection-compatibility.md`.
-
-Current work should focus on:
-
-* preserving the M6-B30 transposed recurrent-state layout and its row-major
-  control flag for reproducible A/B comparisons
-* refreshing the post-B30 profile before selecting the next optimization
-* preserving EXP-0091's margin-aware observable closure: exact teacher-forced
-  agreement remains a `62/64` diagnostic, while P2/P12 are low-margin,
-  top-5-preserving flips
-* not reopening the cleared L3/P2 or Q5_K investigations without new evidence
-* retaining the accepted external state contract and the strict `0.05`
-  recurrent-state check as diagnostic-only
-* preserving GPU-resident recurrent/KV state and zero steady-state allocations
-* state fingerprints, reset/replay checks, and external checkpoints through P64
-* per-layer telemetry and the evolving VRAM ledger
-* preserving the M6-A1 external correctness authority
-* keeping the old qwen3 production path unchanged
-* retaining EXP-0092's A28 result: 16/64/128 native runs pass exact replay,
-  with zero decode-loop allocations and stable device usage
-* retaining EXP-0122's result: native TG64/TG128 improve by about 3.4%/3.6%
-  with unchanged logical state behavior and no additional VRAM
-* retaining EXP-0124's result: native TG64/TG128 improve by about 1.71%/1.63%
-  with the transposed state layout and no-decay-store recurrent update
-* retaining EXP-0125's profile: total GPU work is about 84.6–84.7 ms/token and
-  recurrent FFN projection work remains the largest repeated family
-* retaining EXP-0126's rejection: fused SiLU/Q8_1 passed external correctness
-  but was throughput-neutral at TG64/TG128 and was removed
-* retaining EXP-0127's result: Q4_K×Q8_1 LDS activation reuse improves native
-  TG64/TG128 by about 2.98%/3.01% with unchanged device usage
-* retaining EXP-0128's profile: total GPU work is 82.1223 ms/token and long-K
-  Q4_K×Q8_1 FFN Down remains the largest repeated projection family
-
-Do not treat CPU hidden-state identity through all 36 layers as a universal
-GPU requirement. B23 characterized the pinned external implementation's
-distinct CPU Q4_0×Q8_0 and single-token gfx906 Q8_1/MMVQ execution contracts;
-B24 closed M4-B using a measured final-output and behavioral envelope while
-retaining strict semantic invariants.
-
-Do not start model serving, generic model support, speculative decoding, or
-multi-GPU work. Do not report M6-B1 performance until a real qwen35 HIP path
-exists; see `experiments/EXP-0051-m6b1-qwen38-miinfer-gpu-readiness.md`.
+M26 decode attribution is now the highest project priority. Preserve M26
+recovery and M27 evidence; use the historical/legacy differential to identify
+and measure route, state preparation, graph coverage, fixed operator, timing,
+and synchronization differences. Keep the default, qualified prefill, and
+experimental interactive execution contracts distinct.
 
 ---
 
@@ -903,158 +813,34 @@ M7
 
 # Current Execution Order
 
-The project has passed M2 and M3, and M4-A is complete. Work should proceed
-from the accepted model plan and layer-state correctness evidence:
-
-1. Preserve the M0 platform contract and pinned reference.
-2. Maintain the accepted FP16 and Q4/Q8 kernel controls.
-3. Localize M4-B full-depth numerical drift with teacher-forced replay.
-4. Resolve the layer-6 FFN projection precision discontinuity without
-   widening numerical tolerances.
-5. Preserve the proven exact Q4_0 × Q8 zero-point correction for Down and
-   isolate the remaining upstream/late-depth numerical drift.
-6. Establish external layer-6 trace repeatability and use exact-Q8
-   F16/F32 projection probes to separate GPU precision boundaries from the
-   remaining host/reference contract.
-7. Canonicalize the full-depth external CPU fixture, verify host replay, and
-   validate the minimum causal-path precision correction before proceeding
-   to token generation.
-8. Use the M4-B9 terminal layer-35 internal trace to resolve the shared
-   host/reference FFN-tail numerical contract before changing production
-   precision.
-9. Use M4-B10 host Gate/Up hybrid SwiGLU attribution to identify which
-   projection contract feeds the remaining terminal-layer discrepancy, then
-   compare pinned Q8 quantization and accumulation semantics.
-10. Use M4-B11 Q8 identity and external-conditioned projection replay to
-    locate the earlier FFN-input/attention-output contract that produces the
-    differing terminal-layer `ffn_norm`.
-11. Apply the proven attention-output FP16 boundary to production host and
-    MI50 execution, then preserve it as the accepted M4-B14 contract.
-12. Localize remaining full-forward host drift with sequential-versus-isolated
-    layer traces and verify the full-forward entry point has no independent
-    orchestration divergence (M4-B15).
-13. Trace layer-0 against the independent 28-checkpoint fixture and reject
-    an unsupported extra layer-output FP16 materialization (M4-B16).
-14. Use external attention-output injection to separate the causal V/attention
-    perturbation from downstream O/FFN variance (M4-B17).
-15. Test exact-Q8 V input/output precision policies and replay each through
-    GQA, attention materialization, and the causal O/FFN tail (M4-B18).
-16. Compare attention materialization, Q8 codes, dequantized values, and an
-    external-attention GPU control before changing V precision (M4-B19).
-17. Characterize O/FFN GPU arithmetic with identical external inputs and Q8
-    metadata before defining a full-layer backend-equivalence policy (M4-B20).
-18. Test the minimum full-model F32-output policy and compare it with the
-    combined F32 input/output diagnostic policy (M4-B21).
-19. Compare the canonical external CPU trace with the independent offloaded
-    gfx906 trace, and characterize backend-specific full-depth variance before
-    changing precision or acceptance thresholds (M4-B22).
-20. Define the measured MI50 final-output/behavioral envelope and run the
-    non-vacuous Debug/Release physical acceptance gate (M4-B24).
-21. M4-C1: execute the accepted 36-layer path incrementally with persistent
-    per-layer KV state and produce the first deterministic generated token.
-22. M4-C2: validate four to sixteen deterministic greedy decode steps before
-    adding tokenizer or sampling behavior.
-
-Do not broaden M4 into a general-purpose runtime.
+1. Preserve the clean, pushed M27 closure and the default-runtime M26 recovery
+   result. Keep the experimental `213.837 tok/s` P512 candidate and M27 prefix
+   cache frozen at their documented scopes.
+2. Resume B1–B5 in EXP-0352: recover historical benchmark source/flags and
+   timing semantics, normalize the historical and current workloads, and run
+   the required comparison matrix with model/hash, clocks, graph, state, LM
+   head, sampling, allocation, and compiler recorded.
+3. Produce a matched per-family wall-time decomposition and fast-path audit.
+   Close M26-B only after at least 90% of the delta is explained or the
+   historical result is proven non-comparable.
+4. Only after that gate, select one measured decode hypothesis and its
+   end-to-end correctness/performance screen. Do not begin with a new kernel.
 
 ---
 
 # Immediate Next Milestone
 
-The current milestone is:
-
 ```text
-M4-C3 — tokenizer/detokenizer and minimal text-facing greedy decode
+M26-B — Historical decode-floor differential (diagnostic only)
 ```
 
-M4-B is closed by B24. The canonical physical gate now runs the real pinned
-model through MI50 Debug and Release, compares final norm and logits against
-the independently measured external CPU↔gfx906 envelope, verifies finite and
-bitwise-deterministic repeated output, and requires matching argmax and
-baseline top-5 overlap. M4-A's strict four-position layer-0/KV-cache gates
-remain prerequisite evidence. The detailed B8–B24 record is preserved in
-[`m4b-forward.md`](m4b-forward.md).
-
-M4-C1 is closed. It combines the accepted 36-layer single-token path with
-the proven incremental KV-cache semantics, selects token `8` from prompt token
-`14990`, and consumes that generated token at position `1` using persistent
-per-layer state. Debug and Release physical acceptance pass, as do the
-artifact-free `18/18` regression suites. M4-C2 validated the pinned eight-
-token explicit-ID greedy sequence through persistent per-layer KV state.
-Release matches all eight reference IDs and deterministic replay. The
-unoptimized Debug build remains a finite/cache/determinism diagnostic and
-reports `419` where the independent reference selects `470` at position 3.
-The fixed-prefix Debug/Release dump localizes the first output difference to
-layer 20 during position 1; serialized Debug is unchanged and RelWithDebInfo
-follows Release, pointing to unoptimized HIP code generation rather than a
-cache-ordering race. Optimized-HIP Debug (`-O2 -g`) matches Release. M4-C2 is
-closed; tokenizer, sampling, serving, batching, and performance work remain
-out of scope except for the minimal tokenizer/detokenizer work in M4-C3.
-
-M4-C3 is closed as a narrow text-facing layer. `Qwen3Tokenizer` consumes
-the pinned GGUF `gpt2`/`qwen2` vocabulary and merges, while
-`miinfer-qwen3-generate` runs prompt tokenization, persistent MI50 greedy
-decode, EOS handling, and detokenization. Its real-model Release acceptance
-uses prompt `hello` and the pinned eight-token continuation. Sampling,
-streaming, and batching remain deferred. The next task is to establish the
-first reproducible MI50 prefill/decode baseline before optimization.
-
-M4-B8 established a canonical full-depth CPU fixture from two byte-identical
-runs of the pinned reference with explicit `-t 24 -tb 24` settings. M4-B9
-added a terminal layer-35 internal trace from the same independent reference
-and proved the external layer-output tensor is identical to the input of
-final RMSNorm. M4-B10 added host Gate/Up hybrid attribution: external Gate
-plus Up is within `7.62939e-06`, while replacing either input with the host
-projection reproduces most of the `0.105103` discrepancy. M4-B11 then
-replayed the pinned x86 AVX Q8 contract and Gate/Up accumulation with
-external `ffn_norm`; all Q8 blocks matched and Gate/Up were within
-`7.62939e-06`/`1.52588e-05`. The remaining failure therefore enters before
-`ffn_norm`, and M4-B was still open at that point. M4-B12 then showed that externally
-conditioned O and residual replay are within `9.15527e-05`/`3.05176e-05`,
-while all tested RMSNorm reductions produce a layer-35 tail within
-`0.000488281`. The remaining normal-path difference therefore enters
-upstream in the attention output that feeds O. M4-B13 then showed that V and
-GQA replay are exact or near-exact, while the external attention output is
-exactly `FP16(expanded V)`; applying that boundary reduces the layer-35 tail
-to `0.000488281`. The remaining precision hypothesis is the attention-output
-materialization before O, and M4-B remained open at that point. M4-B14
-applied that boundary
-to production host and MI50 execution. Focused layer-35 host parity and the
-full MI50 GPU gate pass, but host full-forward parity first fails at layer 2
-(`max_abs=0.117966`). M4-B15 shows the host full-forward entry point is
-bitwise identical to a reconstructed sequential chain: the first inherited
-sequential difference is layer 1 input, and layer 2 is the first strict
-threshold crossing. M4-B remained open without any tolerance widening at
-that point. Exact
-experiment ordering may change only when supported by the resulting evidence.
-M4-B16 then found the first layer-0 mismatch at `q_projection`, while the
-position-zero causal V/FFN path drifted gradually; an additional layer-output
-FP16 round-trip worsened the error and was not accepted.
-M4-B17 then showed that external attention injection reduces host layer-0
-error from `0.00548154` to `1.90735e-06` and MI50 error from `0.00704432` to
-`0.00282186`, proving the causal V/attention perturbation dominates.
-M4-B18 then showed that F32->Q8Exact->F32 gives near-exact local V parity
-(`1.90735e-06`), but downstream materialization and quantized O sensitivity
-still leave approximately `0.204956` layer-output error; no production
-precision change is accepted yet.
-M4-B19 then showed that external attention quantizes bitwise-identically to the
-host Q8 contract and that the external-attention GPU control itself retains
-`0.204956` layer-35 error, identifying a downstream GPU arithmetic floor.
-M4-B20 then showed that identical-input F32-output GPU projections remain
-within `0.000244141` of the external CPU outputs, while F16-output controls
-produce materially larger direct errors; full-layer parity remains open.
-M4-B21 then rejected output-only F32 as a complete policy: it reaches
-`21.8325` layer-35 error, while the combined diagnostic policy reaches
-`12.5605` and `0.131546` logits error. No production precision change is
-accepted.
-M4-B22 then added a threshold-free trace comparator and compared the pinned
-external CPU and offloaded gfx906 traces. They differ by `121.013` at layer 35,
-`0.811852` at final norm, and `0.488072` at logits while both select argmax
-`8`. M4-B23 explained that split as distinct backend contracts. M4-B24 then
-made the measured final-output/behavioral envelope the MI50 acceptance gate:
-Debug and Release are finite and deterministic, MIInfer stays within the
-external final-norm/logit split, top-5 overlap is at least the measured
-baseline, and argmax remains `8`. M4-B is closed; M4-C is next.
+The current no-preset runtime recovery screen is `32.2948 ms/token` at
+P512/TG128. The separate experimental interactive route measures about
+`57.5–59 ms/token`, while the historical M8/M9 route is around `31–33
+ms/token`. EXP-0352 has not yet attributed at least 90% of that route
+differential. Recover the historical benchmark contract and complete its B1–B5
+comparison before proposing decode changes. The existing recovery result is
+not authorization for sub-30 ms tuning.
 
 ---
 
