@@ -49,6 +49,14 @@ Keep the default, qualified prefill, and experimental interactive execution
 contracts distinct, and preserve the M26-B non-comparability finding and M27
 evidence.
 
+The post-M26 performance path is now explicitly conditional. After M26-C,
+MIInfer will quantify removable cost before authorizing further implementation:
+M26-D may apply one evidence-backed current-route fix, M26-E qualifies the
+context curve, and M26-F estimates the decode ceiling before any substantial
+M27 runtime rewrite. See
+[`docs/post-m26-performance-roadmap.md`](post-m26-performance-roadmap.md) and
+[`docs/performance-research-strategy.md`](performance-research-strategy.md).
+
 ---
 
 # Roadmap Principles
@@ -56,6 +64,23 @@ evidence.
 ## Evidence before architecture
 
 Do not design large runtime abstractions before benchmark and kernel work establishes what the runtime actually needs.
+
+## Headroom before implementation
+
+Do not authorize substantial performance work until measurement and a cost
+model quantify the maximum plausible end-to-end gain. A compiler, runtime
+rewrite, fusion campaign, or kernel campaign is a mechanism for applying a
+proven optimization; it is not evidence that the optimization exists.
+
+For post-M26 work, use
+[`docs/performance-research-strategy.md`](performance-research-strategy.md).
+
+## Freeze near-floor paths
+
+When a qualified path is close to its measured plausible floor, freeze it.
+Reopen it only when new profiling evidence, a new algorithm, a changed
+execution contract, or a materially better same-contract external result
+demonstrates new headroom.
 
 ## Narrow before broad
 
@@ -813,32 +838,45 @@ M7
 
 # Current Execution Order
 
-1. Preserve the clean, pushed M27 closure and the default-runtime M26 recovery
-   result. Keep the experimental `213.837 tok/s` P512 candidate and M27 prefix
-   cache frozen at their documented scopes.
-2. Preserve EXP-0352's closure and its raw artifacts; do not use historical
-   M8/M9 timing as a regression baseline for the interactive route.
-3. If decode performance work resumes, measure the current layer-major versus
-   legacy P512/TG128 route delta under interleaved A/B with continuous clock
-   telemetry and per-family attribution.
-4. Consider a decode hypothesis only when that current-route bottleneck is
-   measured. No kernel has been selected by the completed M26-B comparison.
+1. Finish M26-C / EXP-0358. Attribute the current layer-major versus legacy
+   decode-route differential from an equivalent semantic state. Preserve
+   EXP-0352's historical non-comparability finding.
+2. Open M26-D only if M26-C identifies at least 3 ms/token of removable
+   runtime/execution cost or a correctness/contract issue that must be fixed.
+   Attack only that attributed cost.
+3. Run M26-E to establish one qualified P512–P16K decode context curve and
+   separate fixed cost from context-dependent cost. Do not derive targets from
+   historical non-comparable timings.
+4. Run M26-F before a large decode-runtime rewrite. Build an operator/runtime
+   ceiling model from measured time, bytes, effective bandwidth, arithmetic,
+   launch/synchronization behavior, host critical-path time, transfers, and
+   memory/state footprint.
+5. Start a substantial M27 device-resident/unified-decode rewrite for
+   performance only if M26-F identifies at least 3 ms/token that the proposed
+   architecture can plausibly remove. Otherwise freeze decode.
+6. Move research effort to M28 algorithmic prefill reformulation, then M29
+   context architecture, M30 real agent-runtime advantage, and M31 frontier
+   qualification as defined in
+   [`docs/post-m26-performance-roadmap.md`](post-m26-performance-roadmap.md).
 
 ---
 
 # Immediate Next Milestone
 
 ```text
-M26 — Current-runtime route attribution (diagnostic only)
+M26-C — Current-runtime route attribution
 ```
 
-EXP-0352 B1–B5 is closed: the historical and interactive contracts are
-non-comparable, and no historical kernel regression is claimed. The current
-no-preset P512/TG128 route has a qualified `32.2948 ms/token` result; the
-experimental layer-major route remains around `57–59 ms/token`. Recover the
-current-runtime route differential with matched workload and clock telemetry
-before proposing decode changes. The existing recovery result is not
-authorization for sub-30 ms tuning.
+EXP-0358 is the active contract. Close its state-equivalence and attribution
+gate before selecting any optimization. The historical M8/M9 timing remains
+non-comparable to the current interactive route, and the qualified no-preset
+result is not authorization for speculative sub-30 ms tuning.
+
+The next work is decision-driven rather than linear: M26-D exists only for an
+evidence-backed removable cost; M26-E establishes the current context curve;
+M26-F determines how much decode optimization surface remains; M27 is
+conditional on that evidence. See
+[`docs/post-m26-performance-roadmap.md`](post-m26-performance-roadmap.md).
 
 ---
 
