@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1789893211.4252784,
-    "seen": 1789893231.591505,
-    "ast_hash": "ac78e75d3d21e74d7472982c75666cb2",
+    "mtime": 1789899674.4650798,
+    "seen": 1789899694.968487,
+    "ast_hash": "4119a363122f37f904591ca4f4cae131",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -2364,9 +2364,9 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1789893080.6909823,
-    "seen": 1789893231.5914493,
-    "ast_hash": "415346c38aa9e9e8d09061fa345effc2",
+    "mtime": 1789896918.356828,
+    "seen": 1789898801.3260438,
+    "ast_hash": "bc6a46ec7b40953143576bd34bc6382a",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
@@ -5226,15 +5226,15 @@
     "semantic_hash": ""
   },
   "docs/interactive-serving.md": {
-    "mtime": 1789893103.195861,
-    "seen": 1789893231.5915132,
-    "ast_hash": "80a4f68831ae30be793ec957eace11dc",
+    "mtime": 1789899286.930442,
+    "seen": 1789899427.6193933,
+    "ast_hash": "593b992a7bc7c3a3dbef71867b661cae",
     "semantic_hash": ""
   },
   "experiments/EXP-0350-m25-interactive-serving.md": {
-    "mtime": 1789893183.8814268,
-    "seen": 1789893231.5920486,
-    "ast_hash": "86d0022552570578727ed27676f9a0b0",
+    "mtime": 1789898819.3842783,
+    "seen": 1789899427.619931,
+    "ast_hash": "ea5464e5c26861e80e6af513226ac9f8",
     "semantic_hash": ""
   },
   "experiments/EXP-0351-m26-real-context-decode-curve.md": {
@@ -5277,6 +5277,12 @@
     "mtime": 1789892739.5938184,
     "seen": 1789893231.592057,
     "ast_hash": "9acef0b79e90ff7751444ed2c31c36e4",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0357-m27-prefix-cache-evolution.md": {
+    "mtime": 1789899658.1541371,
+    "seen": 1789899694.9690323,
+    "ast_hash": "8478a2ffad28691157209a2a7380d5a8",
     "semantic_hash": ""
   }
 }
