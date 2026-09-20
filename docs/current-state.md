@@ -60,9 +60,14 @@ M27 P512 current control: six clean interleaved pairs at current HEAD
                           measured 205.897 tok/s, 179.879 ms behind mx;
                           lower-footprint attention decode-reuse candidate
                           measured 213.837 tok/s, 99.065 ms faster; experimental
+M27 contract attribution: recurrent delta +16.0 ms across 47 warm layers;
+                          attention delta +102.0 ms across 16 layers; existing
+                          FP16 Q/K path rejected by 3-pair exact-context screen;
+                          cold tuning stopped pending prefix-reuse work
 M26-recovery: default no-preset Qwen35RuntimeEngine measures 32.2948 ms/token
               at P512/TG128 and 1606/1000 MHz; Release CTest 24/24 passes
-M26:   recovery gate met; no sub-30 ms tuning authorized
+M26:   recovery gate met; paused with reproducible results; no sub-30 ms tuning
+       authorized
 M26-B: default-vs-wide/Mx route contrast measured; historical detail retained
 M27:   reusable graph/device-state prototype; 128-token exact token + persistent
        buffer and 512/2K/8K split-boundary parity pass; P512/TG128 performance
@@ -106,8 +111,19 @@ identity. Mismatch and explicit reset now also force replay. Timing was not
 qualified. A real Pi 0.85.1 tool cycle with project `AGENTS.md` context reused
 5632/6129 tokens on its tool-result continuation. An identical 3705-token
 request pair reused 3584 and processed 121 tokens; raw timing is diagnostic,
-not qualified. Real Pi session resume/restart and broader coding tasks remain
-open. See EXP-0350.
+not qualified. The current-build matrix was rerun on 2026-09-20 and all ten
+append/replay cases plus lifecycle invalidation passed. Checkpoints now carry
+execution-contract version 1; the 512/640 cases and invalidations passed again
+after that guard was added. Real Pi session resume/restart and broader coding
+tasks remain open. See EXP-0350.
+
+Cold-prefill contract attribution is recorded in EXP-0356. Equivalent outer
+event spans found `+16.029 ms` MIInfer recurrent overhead across 47 non-first
+layers, below the 40 ms gate. The matched attention span was `+101.979 ms`
+across 16 layers, but the existing FP16 Q/K route had a `-1.49 ms` paired
+median at the accepted 1K context (three pairs, all retained). It is rejected
+for cold P512. No new kernel or selector is retained; the cold track is
+stopped and M27 effort redirects to exact single-session prefix reuse.
 
 M27 retested the attention O/FFN decode-reuse selector in six matched
 no-profiler P512 pairs. The candidate median was 2394.35 ms (213.837 tok/s),
@@ -115,9 +131,9 @@ no-profiler P512 pairs. The candidate median was 2394.35 ms (213.837 tok/s),
 persistent allocation. It remains experimental: the mechanism explaining a
 cold-prefill change is unknown, and long-context checks through 8002 tokens
 were single-run sanity measurements with variable clocks. Event profiles are
-diagnostic only. See EXP-0355. The recurrent QKV→GDN contract attribution is
-still open; no additional cold-prefill optimization should be stacked before
-that measurement.
+diagnostic only. See EXP-0355 and EXP-0356. No further cold-prefill candidate
+is authorized without a new measurement that identifies a technically
+justified end-to-end improvement.
 
 The pinned-source audit found no missing Q4_K/Q5_K/Q6_K repack or GDN contract
 whose unmeasured transplant should replace the current paths. The external

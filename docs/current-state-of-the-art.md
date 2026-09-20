@@ -1,6 +1,7 @@
 # MIInfer Current State of the Art
 
-Status: active M25 stretch investigation, 2026-09-12
+Status: M27 exact-prefix reuse qualification; cold P512 tuning stopped after
+EXP-0356, 2026-09-20
 
 ## Target
 
@@ -28,6 +29,7 @@ The benchmark target is Qwen3.8-27B-Q4_K_M on one AMD Instinct MI50
 | MIInfer H/I + pinned QKV MMQ | three-pair opt-in screen; not qualified | 2492.25 median | 205.44 | 21,993,242,964 B |
 | MIInfer H/I + pinned Q6 FFN-down | three-pair opt-in screen; rejected | 2490.39 median | 205.590 | 21,993,242,964 B |
 | MIInfer H/I + Mx attention decode reuse | six-pair matched opt-in; experimental | 2394.35 median | 213.84 | 18,472,649,108 B |
+| MIInfer H/I + Mx decode reuse + FP16 attention Q/K | 3-pair exact-context screen; rejected | 2500.12 median | 204.79 | 18,472,649,108 B |
 | MIInfer H/I + persistent oracle GDN state | three-pair opt-in screen; rejected | 2502.69 median | 204.58 | 21,993,242,964 B |
 | MIInfer matched control | current comparison | — | — | 19,108,282,708 B |
 
@@ -43,6 +45,14 @@ The decode-reuse candidate separately beat the current H/I control by a
 threshold. This is not a direct comparison to mx: llama-bench uses synthetic
 prompt tokens, and the reason the decode-reuse selector changes cold P512
 latency is not yet known.
+
+EXP-0356 measured equivalent outer spans around the recurrent and attention
+input contracts. The recurrent contract was `16.029 ms` slower across 47 warm
+layers; the attention contract was `101.979 ms` slower across 16 layers. The
+existing FP16 Q/K path was the only candidate screened: at context 1024 its
+three paired savings were `-66.87, +47.82, -1.49 ms` (median `-1.49 ms`). It
+is rejected for cold P512. Cold optimization is stopped and the next work is
+exact agent prefix/state reuse; the decode-reuse result remains experimental.
 
 ## Retained MIInfer path
 
@@ -116,12 +126,11 @@ opt-in static HIP graph. The graph passed continuation correctness but was
 `0.44%` slower by three-process median and consumed about `8 MiB` of extra
 reported VRAM, so it was removed.
 
-The remaining stretch gap therefore still requires a different execution
-contract. The new attention decode reuse candidate is not that stretch
-contract: its three-pair interleaved screen is `2412.24 ms` / `212.25 tok/s`,
-with the real continuation and repeat-P512 state gate passing. Its main
-benefit remains the lower VRAM footprint; long-context and decode promotion
-checks are still open. The `220.892 tok/s` stretch target remains open.
+The cold benchmark has not reached the pinned mx median. EXP-0356 supplies a
+measured attention-family differential, but the existing Q/K route did not
+convert it into a repeatable end-to-end P512 gain at the accepted context.
+No further cold implementation work is active. The decode-reuse candidate's
+long-context and decode promotion checks remain open, and it stays opt-in.
 
 M25-L is now measurement-only. EXP-0348 reran the six-pair, no-profiler
 comparison: the pinned `llama-bench` path measured `2312.370 ms` /

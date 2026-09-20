@@ -27,6 +27,13 @@ KV prefix. A matching later request restores that checkpoint and replays only
 the suffix. It does not retain scalar-decoded state, which is known not to be
 token-equivalent when handed to wide prefill.
 
+Each in-memory checkpoint stores the exact token prefix, whose length is the
+absolute boundary, and execution-contract version 1 alongside the recurrent
+state, convolution history, and attention KV prefix. Increment the version when
+the saved-state layout or wide-prefill numerical contract changes. The cache
+lives only inside its model/runtime engine; changing model, quantization, or
+preset requires a new engine and cannot reuse the old checkpoint.
+
 When enabled, reuse requires the incoming token sequence to strictly extend the
 single checkpoint prefix. Mismatch, reset, cancellation, or generation failure
 falls back to full replay. A prompt shorter than 512 tokens has no reusable

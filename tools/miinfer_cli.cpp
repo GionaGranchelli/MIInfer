@@ -48,6 +48,8 @@ namespace {
 std::atomic<bool> g_shutdown_requested{false};
 int g_signal_wakeup_fd = -1;
 constexpr std::size_t kFullPrefillCapacity = 512;
+// Bump when the checkpoint state layout or wide-prefill numerical contract changes.
+constexpr std::uint32_t kSessionExecutionContractVersion = 1;
 
 struct PresetFlag {
     const char* name;
@@ -547,6 +549,26 @@ public:
                           << (attention ? "attention" : "recurrent")
                           << " family=ordered_token_path recorded=" << ordered_recorded
                           << " gpu_ms=" << ordered << '\n';
+                const std::size_t contract_end_stage = attention ? 7 : 6;
+                const auto& contract_start = attention
+                    ? attention_layers[layer].prepare_start : recurrent_layers[layer].start[0];
+                const auto& contract_end = attention
+                    ? attention_layers[layer].end[contract_end_stage]
+                    : recurrent_layers[layer].end[contract_end_stage];
+                const bool contract_recorded = attention
+                    ? attention_layers[layer].prepare_recorded
+                        && attention_layers[layer].stage_recorded[contract_end_stage]
+                    : recurrent_layers[layer].stage_recorded[0]
+                        && recurrent_layers[layer].stage_recorded[contract_end_stage];
+                if (contract_recorded) {
+                    float contract_ms = 0.0F;
+                    MIINFER_HIP_CHECK(hipEventElapsedTime(&contract_ms, contract_start, contract_end));
+                    std::cout << "  layer=" << layer
+                              << " kind=" << (attention ? "attention" : "recurrent")
+                              << " family=" << (attention ? "attention_input_contract" : "recurrent_input_contract")
+                              << " timing=" << (attention ? "norm_to_attention_output" : "norm_to_gdn_output_gate")
+                              << " gpu_ms=" << contract_ms << '\n';
+                }
             }
             std::cout << "Recurrent tail family profile (selected B4 group):\n";
             static constexpr std::array<const char*, 4> tail_names{
@@ -616,9 +638,11 @@ public:
     // schedule as a fresh request; scalar decode state is never reused.
     void capture_session_checkpoint(std::span<const std::uint32_t> tokens) {
         if (tokens.empty() || tokens.size() % kFullPrefillCapacity != 0) return;
-        if (tokens.size() > session_checkpoint_.capacity_tokens) {
+        if (tokens.size() > session_checkpoint_.capacity_tokens
+            || session_checkpoint_.execution_contract_version != kSessionExecutionContractVersion) {
             session_checkpoint_ = {};
             session_checkpoint_.capacity_tokens = tokens.size();
+            session_checkpoint_.execution_contract_version = kSessionExecutionContractVersion;
         }
         const std::size_t recurrent_state_bytes = kVHeads * kState * kState * sizeof(float);
         const std::size_t recurrent_history_bytes = 4 * kChannels * sizeof(float);
@@ -662,6 +686,10 @@ public:
     }
 
     void restore_session_checkpoint() {
+        if (session_checkpoint_.execution_contract_version != kSessionExecutionContractVersion
+            || session_checkpoint_.tokens.empty()) {
+            throw std::runtime_error("session checkpoint execution contract mismatch");
+        }
         reset_device_state();
         const std::size_t recurrent_state_bytes = kVHeads * kState * kState * sizeof(float);
         const std::size_t recurrent_history_bytes = 4 * kChannels * sizeof(float);
@@ -1133,6 +1161,10 @@ public:
 
     GenerateStats generate(std::span<const std::uint32_t> prompt, const GenerateOptions& opt = GenerateOptions()) {
         const auto started = std::chrono::steady_clock::now();
+        if (!session_checkpoint_.tokens.empty()
+            && session_checkpoint_.execution_contract_version != kSessionExecutionContractVersion) {
+            session_checkpoint_.tokens.clear();
+        }
         std::size_t common = 0;
         while (common < prompt.size() && common < session_checkpoint_.tokens.size()
                && prompt[common] == session_checkpoint_.tokens[common]) ++common;
@@ -1684,6 +1716,7 @@ private:
     struct SessionCheckpoint {
         std::vector<std::uint32_t> tokens;
         std::size_t capacity_tokens = 0;
+        std::uint32_t execution_contract_version = 0;
         std::array<Buffer, 64> recurrent_state{};
         std::array<Buffer, 64> recurrent_history{};
         std::array<Buffer, 64> key_cache{};

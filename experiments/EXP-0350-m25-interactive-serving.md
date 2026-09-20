@@ -218,3 +218,43 @@ OpenAI client transcript. It demonstrates that the agent's serialized tool
 history preserves a long exact prefix across requests. These timings were not
 captured as a controlled performance comparison. Real interactive Pi session
 resume/restart, cancellation, and full multi-turn coding tasks remain open.
+
+## Current build exact checkpoint recheck — 2026-09-20
+
+After the M27 cold-contract stop, reran the built-in append-versus-replay
+matrix from the current build (`ab88603` plus profiling-only changes), with
+`MIINFER_PRESET=m25_interactive`, context 16384, and experimental context
+enabled. Each case compared generated token IDs against a fresh full replay.
+All ten cases passed:
+
+| prompt tokens | generated seed | reused | appended prefill tokens | append ms | full replay ms |
+|---:|---:|---:|---:|---:|---:|
+| 512 | 1 | 512 | 152 | 5467.92 | 8059.73 |
+| 512 | 4 | 512 | 155 | 5745.77 | 8258.19 |
+| 640 | 1 | 512 | 280 | 9387.86 | 12056.7 |
+| 640 | 4 | 512 | 283 | 9317.09 | 12062.6 |
+| 3991 | 1 | 3584 | 559 | 5842.51 | 25038.7 |
+| 3991 | 4 | 3584 | 562 | 6218.90 | 24979.5 |
+| 8192 | 1 | 8192 | 152 | 6211.62 | 56197.9 |
+| 8192 | 4 | 8192 | 155 | 6244.57 | 56329.1 |
+| 16000 | 1 | 15872 | 280 | 11960.6 | 134188 |
+| 16000 | 4 | 15872 | 283 | 12322.6 | 134578 |
+
+The same run passed cancellation, injected generation failure, prefix mismatch,
+and explicit reset invalidation. The raw run is
+`/tmp/m27-context-smoke/session-check-current.log`. This rechecks correctness,
+not serving performance: no continuous telemetry was captured and the device
+was not clock-qualified for these long cases. It closes the single-checkpoint
+exactness gate for the current runtime, while real Pi restart/resume and
+cross-session isolation remain open.
+
+## Execution-contract version tag — 2026-09-20
+
+Each in-memory checkpoint now records execution-contract version 1 beside the
+exact token prefix and hybrid recurrent/history/KV state. Restore fails loudly
+on a version mismatch; the runtime falls back to full replay before attempting
+restore. The full 512–16000-token matrix above ran immediately before this
+metadata guard. After the guard was added, the 512/640 one- and four-token
+cases plus cancellation, generation-failure, mismatch and reset invalidation
+were rerun at context 1024; all passed. Raw output:
+`/tmp/m27-context-smoke/session-check-version.log`.

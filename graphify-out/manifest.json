@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1789853346.350165,
-    "seen": 1789853356.7356186,
-    "ast_hash": "1a90a8a37642e04a3fed2d467b597bce",
+    "mtime": 1789893211.4252784,
+    "seen": 1789893231.591505,
+    "ast_hash": "ac78e75d3d21e74d7472982c75666cb2",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -2364,14 +2364,14 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1789851367.5943646,
-    "seen": 1789851569.6251314,
-    "ast_hash": "548099ff16479bacf01f73bbab5d1216",
+    "mtime": 1789893080.6909823,
+    "seen": 1789893231.5914493,
+    "ast_hash": "415346c38aa9e9e8d09061fa345effc2",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1789844856.3803883,
-    "seen": 1789844930.783203,
+    "mtime": 1789884298.265346,
+    "seen": 1789891250.5068011,
     "ast_hash": "35a98292e4d907cba2116464e237583e",
     "semantic_hash": ""
   },
@@ -5142,9 +5142,9 @@
     "semantic_hash": ""
   },
   "docs/current-state-of-the-art.md": {
-    "mtime": 1789223685.6354094,
-    "seen": 1789223700.8125653,
-    "ast_hash": "36d50b7feb16ea4cff6a95ef650c1946",
+    "mtime": 1789893216.3902519,
+    "seen": 1789893231.5915039,
+    "ast_hash": "3442b86a533cec6d8649fbfc277a18b8",
     "semantic_hash": ""
   },
   "experiments/EXP-0337-m25-prefill-hip-graph-rejection.md": {
@@ -5226,15 +5226,15 @@
     "semantic_hash": ""
   },
   "docs/interactive-serving.md": {
-    "mtime": 1789461010.2024803,
-    "seen": 1789461598.8167505,
-    "ast_hash": "4d8272a6935cad089205c5897769b480",
+    "mtime": 1789893103.195861,
+    "seen": 1789893231.5915132,
+    "ast_hash": "80a4f68831ae30be793ec957eace11dc",
     "semantic_hash": ""
   },
   "experiments/EXP-0350-m25-interactive-serving.md": {
-    "mtime": 1789852465.0733542,
-    "seen": 1789852475.3236601,
-    "ast_hash": "43c12b98cf413baf024d7be1d63d968a",
+    "mtime": 1789893183.8814268,
+    "seen": 1789893231.5920486,
+    "ast_hash": "86d0022552570578727ed27676f9a0b0",
     "semantic_hash": ""
   },
   "experiments/EXP-0351-m26-real-context-decode-curve.md": {
@@ -5262,9 +5262,21 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0354-m27-current-p512-control-requalification.md": {
-    "mtime": 1789853346.3201652,
-    "seen": 1789853356.7361367,
-    "ast_hash": "7602ca0789a9c7ebc5841384ecb42031",
+    "mtime": 1789855375.2515404,
+    "seen": 1789891250.5073411,
+    "ast_hash": "13edbaf57de6092a6767752ba16490c9",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0355-m27-mx-attention-decode-reuse-p512-ab.md": {
+    "mtime": 1789855553.2606845,
+    "seen": 1789891250.5073426,
+    "ast_hash": "6cbe87bf098bcfcf05ae09d9f515b75c",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0356-m27-prefill-contract-attribution.md": {
+    "mtime": 1789892739.5938184,
+    "seen": 1789893231.592057,
+    "ast_hash": "9acef0b79e90ff7751444ed2c31c36e4",
     "semantic_hash": ""
   }
 }
