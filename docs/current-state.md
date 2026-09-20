@@ -10,6 +10,8 @@ For long-term direction, see:
 * [`architecture.md`](architecture.md)
 * [`benchmarking.md`](benchmarking.md)
 * [`hardware.md`](hardware.md)
+* [`performance-research-strategy.md`](performance-research-strategy.md)
+* [`post-m26-performance-roadmap.md`](post-m26-performance-roadmap.md)
 
 For the measured leaderboard and current stretch boundary, see
 [`current-state-of-the-art.md`](current-state-of-the-art.md).
@@ -18,7 +20,7 @@ For the measured leaderboard and current stretch boundary, see
 
 # Current Phase
 
-**M27 — static unified decode engine**
+**M26-C — current decode-route attribution; M27 prototype frozen pending evidence**
 
 Milestone status:
 
@@ -69,10 +71,25 @@ M26-recovery: default no-preset Qwen35RuntimeEngine measures 32.2948 ms/token
 M26:   recovery gate met; paused with reproducible results; no sub-30 ms tuning
        authorized
 M26-B: default-vs-wide/Mx route contrast measured; historical detail retained
-M27:   reusable graph/device-state prototype; 128-token exact token + persistent
-       buffer and 512/2K/8K split-boundary parity pass; P512/TG128 performance
-       requalification remains open
+M26-C: ACTIVE in EXP-0358; compare current legacy and interactive routes from
+       equivalent semantic state; >=90% attribution or no >=3 ms removable
+       family is the stop gate; no kernel/selector tuning authorized
+M26-D/E/F: PLANNED decision gates only; targeted fix if justified, qualified
+           context curve, then decode ceiling study before any large rewrite
+M27:   reusable graph/device-state prototype exists but performance expansion is
+       frozen; substantial device-resident/unified-decode work requires M26-F
+       evidence of >=3 ms/token removable runtime/execution cost or a separate
+       correctness/serving requirement
 ```
+
+The active performance question is now M26-C, not further speculative decode
+tuning. EXP-0358 must first close the current legacy-versus-interactive route
+differential from an equivalent semantic state. After that, the roadmap is
+conditional: M26-D opens only for an attributed material cost, M26-E establishes
+the current P512–P16K context curve, and M26-F quantifies the plausible decode
+floor before a substantial M27 runtime rewrite can be authorized. See
+[`post-m26-performance-roadmap.md`](post-m26-performance-roadmap.md) and
+[`performance-research-strategy.md`](performance-research-strategy.md).
 
 The M26 recovery latency gate is met by the ordinary no-preset
 `Qwen35RuntimeEngine` route: five P512/TG128 curve iterations measured
