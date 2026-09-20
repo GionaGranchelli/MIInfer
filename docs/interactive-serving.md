@@ -21,31 +21,34 @@ For example, 3991 tokens use 7 x 512 + 384 + 23; 9317 use 18 x 512 + 64 + 37.
 Attention KV, recurrent state and convolution history persist between chunks.
 
 The HTTP server enables experimental single-session reuse only with
-`MIINFER_SESSION_REUSE=1`. It retains one GPU checkpoint at the largest completed
-512-token wide-prefill boundary: recurrent state, convolution history, and the
-KV prefix. A matching later request restores that checkpoint and replays only
-the suffix. It does not retain scalar-decoded state, which is known not to be
-token-equivalent when handed to wide prefill.
+`MIINFER_SESSION_REUSE=1`. It retains up to eight GPU checkpoints at sparse
+512-token wide-prefill boundaries, within a 3 GiB payload cap: recurrent state,
+convolution history, and the KV prefix. A radix trie selects the longest exact
+token prefix; the request restores that checkpoint and replays only the suffix.
+The selected checkpoint is kept recent during capture so a long divergent
+branch does not immediately evict its useful restore point. It does not retain
+scalar-decoded state, which is known not to be token-equivalent when handed to
+wide prefill.
 
-Each in-memory checkpoint stores the exact token prefix, whose length is the
-absolute boundary, and execution-contract version 1 alongside the recurrent
-state, convolution history, and attention KV prefix. Increment the version when
-the saved-state layout or wide-prefill numerical contract changes. The cache
-lives only inside its model/runtime engine; changing model, quantization, or
-preset requires a new engine and cannot reuse the old checkpoint.
+Each in-memory checkpoint stores the exact token prefix, absolute boundary,
+execution-contract version, model/config identity, and quantization identity
+alongside the recurrent state, convolution history, and attention KV prefix.
+Increment the version when the saved-state layout or wide-prefill numerical
+contract changes. The cache lives only inside its model/runtime engine;
+changing model, quantization, or preset requires a new engine and cannot reuse
+the old checkpoint.
 
-When enabled, reuse requires the incoming token sequence to strictly extend the
-single checkpoint prefix. Mismatch, reset, cancellation, or generation failure
-falls back to full replay. A prompt shorter than 512 tokens has no reusable
-checkpoint. The server reports `cache_hit` and reused/new token counts for every
-request.
+When enabled, reuse requires an exact prefix match. Mismatch, reset,
+cancellation, or generation failure clears the cache. A prompt shorter than 512
+tokens has no reusable checkpoint. The server reports `cache_hit`, reused/new
+token counts, and current cache entries/bytes for every request.
 
-The single-checkpoint cache is the current measured scope: a real Pi tool
-call/result cycle reused 5632 of 6129 prompt tokens, and an identical 3705-token
-request reused 3584. Multi-checkpoint branching is deferred until a real agent
-trace demonstrates that the latest checkpoint misses a useful older boundary;
-each 16K snapshot costs about 1.05 GiB of GPU memory. A radix tree is deferred
-until lookup cost matters at a measured cache size. See EXP-0350.
+The multi-checkpoint cache is still experimental and opt-in. A real Pi sequence
+retained a useful older boundary through a ~15K request; a later ~7.6K branch
+turn reused 5632 tokens and its tool-result continuation reused 7168/7681.
+Full replay equivalence passed through 16K, including branch return and
+invalidation checks. Cache timing is diagnostic, not a speed qualification.
+See EXP-0350 and EXP-0357.
 
 `miinfer_request_latency` is emitted after response output, alongside the existing
 engine diagnostics. It records prompt/common-prefix/reused/new-prefill counts,

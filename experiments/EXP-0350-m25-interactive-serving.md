@@ -259,29 +259,63 @@ cases plus cancellation, generation-failure, mismatch and reset invalidation
 were rerun at context 1024; all passed. Raw output:
 `/tmp/m27-context-smoke/session-check-version.log`.
 
-## M27 prefix-reuse closure — 2026-09-20
+## M27 prefix-cache evolution — 2026-09-20
 
-**KEEP for opt-in, single-session serving.** The current build passes exact
-append-versus-replay token checks at 512, 640, 3991, 8192, and 16000 tokens
-with one- and four-token generated seeds; it also passes cancellation,
-generation-failure, mismatch, reset, and execution-contract-version checks.
-The real Pi 0.85.1 tool-call/result cycle reused 5632 of 6129 tokens on the
-second request. A repeated 3705-token serialized request reused 3584 tokens
-and processed 121. Together these establish functional multi-turn tool-history
-reuse and that large repeated prefixes avoid full replay. The timing data is
-not a serving-speed qualification.
+**Hypothesis.** Preserve useful exact prefix checkpoints across divergent
+requests without allowing cache growth to consume unbounded MI50 memory.
 
-P1/P2/P3 are deferred: the measured agent flow is linear and already reuses
-its latest exact B512 checkpoint. No observed request has missed a useful
-older checkpoint. At 16K one checkpoint costs approximately 1.05 GiB of
-additional GPU memory, so retaining multiple snapshots trades context
-headroom for an unmeasured branch benefit. Add a small multi-checkpoint cache
-with longest-prefix scan only after a captured real-agent trace shows a
-divergent request whose reusable prefix predates the latest checkpoint. A
-radix tree has no demonstrated lookup need at the current one-entry scale.
+**Change.** The single checkpoint became a sparse portfolio of up to eight
+snapshots under a fixed 3 GiB state payload budget. Exact token boundaries are
+indexed with a radix trie; lookup chooses the longest matching prefix. The
+restored checkpoint is touched before suffix capture so it survives eviction
+pressure. Snapshots include recurrent state, convolution history, attention
+KV, absolute token boundary, execution-contract version, model/config,
+quantization, and runtime identity. Full cache invalidation remains the rule
+for mismatch, cancellation, generation failure, and reset.
 
-This closes the M27 prefix-reuse objective at the existing exact single-
-checkpoint scope; it does not qualify reuse across process restart or across
-sessions. Keep `MIINFER_SESSION_REUSE=1` opt-in until those serving lifecycle
-requirements are addressed. Cold P512 remains stopped per EXP-0356; M26 decode
+**Baseline.** `abc4158` had one latest-boundary checkpoint and a real ~7.5K Pi
+branch after a ~15K request replayed all 7566 tokens despite a 6051-token common
+prefix. The 16K snapshot size was about 2.1 GB, so replacing one checkpoint
+with many unbounded snapshots was not acceptable.
+
+**Environment.** MI50 gfx906, Qwen3.8-27B-Q4_K_M (SHA256
+`7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169`),
+ROCm 7.1.52802, HIP Clang 20, `m25_interactive`, context 16384, one local Pi
+0.85.1 client and one server process. Model allocation before checkpoint use
+was ~19.48 GB; server telemetry captured current checkpoint bytes separately.
+Long request timings are diagnostic and the full run was not clock-qualified.
+
+**Correctness.** Built-in current-binary append/replay checks passed at 512,
+640, 3991, 8192, and 16000 tokens with one- and four-token seeds. It also
+passed branch return (`older_prefix_reuse=2048`,
+`return_branch_reuse=3584`, five entries, 2,203,582,464 bytes) and cancellation,
+generation-failure, mismatch, and reset invalidation. All 24 CTest tests passed.
+Raw output: `/tmp/m27-check-multicache-pinned-16k.log`.
+
+**Real Pi cache-pressure result.** Using the same isolated Pi profile and
+fixture, the new server produced:
+
+| request | prompt tokens | reused | processed | entries / bytes | result |
+|---|---:|---:|---:|---:|---|
+| seed Pi tool turn | 6514 | 0 | 6514 | 1 / 1,051,154,432 | correct fixture values |
+| seed tool-result turn | 6589 | 6144 | 445 | 1 / 1,051,154,432 | correct fixture values |
+| ~15K attached-context turn | 15030 | 5632 | 9398 | 2 / 3,002,073,088 | tool call emitted |
+| ~15K continuation | 15106 | 14848 | 258 | 2 / 3,002,073,088 | correct fixture values |
+| ~15K second-turn continuation | 15311 | 14848 | 463 | 2 / 3,002,073,088 | correct fixture values |
+| ~7.7K divergent attached-context turn | 7605 | 5632 | 1973 | 2 / 1,995,440,128 | tool call emitted |
+| ~7.7K tool-result continuation | 7681 | 7168 | 513 | 3 / 3,160,932,352 | correct fixture values |
+
+Raw server telemetry is in `/tmp/m27-pi-multicache-pinned-server.log`; Pi
+session files are under `/tmp/miinfer-pi-agent-m27-sessions/`. An initial
+pre-pin run retained only the newest ~15K checkpoint and the later ~7.5K Pi
+branch reused zero of 7566 tokens. After touching the restore point before
+capture, the ~15K request retained the useful 6144 boundary under the cap. The
+first ~7.7K branch turn reused 5632, then its tool-result continuation reused
+7168. This attributes the pin update to a real agent trace.
+
+**Decision: KEEP, experimental and opt-in.** Exact prefix/state reuse now works
+for long linear continuations and divergent Pi branches within the measured
+memory cap. The telemetry demonstrates avoided prefill work, not a qualified
+latency improvement. Process restart/resume, concurrent sessions, and broader
+coding tasks remain open. Cold P512 remains stopped per EXP-0356; M26 decode
 work remains paused with its evidence intact.

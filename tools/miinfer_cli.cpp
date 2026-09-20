@@ -26,6 +26,7 @@
 #include <string>
 #include <string_view>
 #include <thread>
+#include <unordered_map>
 #include <vector>
 
 #include <arpa/inet.h>
@@ -49,7 +50,9 @@ std::atomic<bool> g_shutdown_requested{false};
 int g_signal_wakeup_fd = -1;
 constexpr std::size_t kFullPrefillCapacity = 512;
 // Bump when the checkpoint state layout or wide-prefill numerical contract changes.
-constexpr std::uint32_t kSessionExecutionContractVersion = 1;
+constexpr std::uint32_t kSessionExecutionContractVersion = 2;
+constexpr std::size_t kMaxSessionCheckpoints = 8;
+constexpr std::size_t kSessionCheckpointBudgetBytes = 3ULL * 1024 * 1024 * 1024;
 
 struct PresetFlag {
     const char* name;
@@ -207,6 +210,8 @@ struct RuntimeGenerateStats {
     std::size_t generated_tokens = 0;
     std::size_t reused_prefix_tokens = 0;
     std::size_t common_prefix_tokens = 0;
+    std::size_t session_checkpoint_count = 0;
+    std::size_t session_checkpoint_bytes = 0;
     double graph_capture_ms = 0.0;
     double prefill_ms = 0.0;
     double decode_ms = 0.0;
@@ -233,6 +238,7 @@ public:
           tokenizer_(miinfer::Qwen3Tokenizer::load(*model_.file())) {
         setup_environment();
         init_layers();
+        initialize_session_identity();
         init_shared_wide_prefill_workspace();
         init_m12_gdn_workspace();
         init_m12_dense_workspace();
@@ -621,7 +627,7 @@ public:
     };
 
     void reset() {
-        session_checkpoint_.tokens.clear();
+        clear_session_checkpoints();
         reset_device_state();
     }
 
@@ -633,75 +639,295 @@ public:
         MIINFER_HIP_CHECK(hipDeviceSynchronize());
     }
 
-    // A checkpoint is deliberately limited to a completed B512 prefill batch.
-    // Restoring it then replays the remaining suffix under the identical wide
-    // schedule as a fresh request; scalar decode state is never reused.
-    void capture_session_checkpoint(std::span<const std::uint32_t> tokens) {
-        if (tokens.empty() || tokens.size() % kFullPrefillCapacity != 0) return;
-        if (tokens.size() > session_checkpoint_.capacity_tokens
-            || session_checkpoint_.execution_contract_version != kSessionExecutionContractVersion) {
-            session_checkpoint_ = {};
-            session_checkpoint_.capacity_tokens = tokens.size();
-            session_checkpoint_.execution_contract_version = kSessionExecutionContractVersion;
+    void initialize_session_identity() {
+        session_model_identity_ = model_.artifact_path() + "|" + model_.model_name();
+        const auto& config = model_.config();
+        session_model_identity_ += "|" + std::to_string(config.block_count)
+            + ":" + std::to_string(config.hidden_size)
+            + ":" + std::to_string(config.context_length);
+
+        std::vector<std::pair<int, std::size_t>> quantization_types;
+        for (const auto& tensor : model_.tensors()) {
+            const int type = static_cast<int>(tensor.type);
+            auto found = std::find_if(quantization_types.begin(), quantization_types.end(),
+                [type](const auto& entry) { return entry.first == type; });
+            if (found == quantization_types.end()) quantization_types.emplace_back(type, 1);
+            else ++found->second;
         }
+        std::sort(quantization_types.begin(), quantization_types.end());
+        for (const auto& [type, count] : quantization_types) {
+            session_quantization_identity_ += std::to_string(type) + ":"
+                + std::to_string(count) + ";";
+        }
+
+        const char* preset = std::getenv("MIINFER_PRESET");
+        session_runtime_identity_ = preset == nullptr ? "default" : preset;
+        session_runtime_identity_ += layer_major_prefill_ ? "|layer-major" : "|batch-major";
+        session_runtime_identity_ += wide_prefill_ ? "|wide" : "|narrow";
+        session_runtime_identity_ += full_layer_major_prefill_ ? "|full-layer" : "|partial-layer";
+        session_runtime_identity_ += "|chunk:" + std::to_string(prefill_chunk_);
+        for (const auto& layer : layers_) {
+            if (layer.attention != nullptr) {
+                session_runtime_identity_ += layer.attention->fp16_kv_cache ? "|kv-f16" : "|kv-f32";
+                break;
+            }
+        }
+    }
+
+    struct SessionCheckpoint {
+        std::vector<std::uint32_t> tokens;
+        std::size_t boundary_position = 0;
+        std::size_t storage_bytes = 0;
+        std::size_t last_used = 0;
+        std::uint32_t execution_contract_version = 0;
+        std::string model_identity;
+        std::string quantization_identity;
+        std::string runtime_identity;
+        std::array<Buffer, 64> recurrent_state{};
+        std::array<Buffer, 64> recurrent_history{};
+        std::array<Buffer, 64> key_cache{};
+        std::array<Buffer, 64> value_cache{};
+    };
+
+    struct SessionPrefixNode {
+        std::vector<std::uint32_t> edge;
+        std::unordered_map<std::uint32_t, std::unique_ptr<SessionPrefixNode>> children;
+        std::optional<std::size_t> checkpoint_index;
+    };
+
+    void clear_session_checkpoints() {
+        session_checkpoints_.clear();
+        session_prefix_root_ = {};
+        session_checkpoint_bytes_ = 0;
+        session_use_clock_ = 0;
+    }
+
+    bool session_checkpoint_compatible(const SessionCheckpoint& checkpoint) const {
+        return checkpoint.boundary_position == checkpoint.tokens.size()
+            && checkpoint.execution_contract_version == kSessionExecutionContractVersion
+            && checkpoint.model_identity == session_model_identity_
+            && checkpoint.quantization_identity == session_quantization_identity_
+            && checkpoint.runtime_identity == session_runtime_identity_;
+    }
+
+    static void insert_session_prefix(SessionPrefixNode& parent,
+                                      std::span<const std::uint32_t> tokens,
+                                      std::size_t position,
+                                      std::size_t checkpoint_index) {
+        auto& slot = parent.children[tokens[position]];
+        if (!slot) {
+            slot = std::make_unique<SessionPrefixNode>();
+            slot->edge.assign(tokens.begin() + position, tokens.end());
+            slot->checkpoint_index = checkpoint_index;
+            return;
+        }
+
+        auto& child = *slot;
+        std::size_t shared = 0;
+        while (shared < child.edge.size() && position + shared < tokens.size()
+               && child.edge[shared] == tokens[position + shared]) ++shared;
+        if (shared == child.edge.size()) {
+            position += shared;
+            if (position == tokens.size()) child.checkpoint_index = checkpoint_index;
+            else insert_session_prefix(child, tokens, position, checkpoint_index);
+            return;
+        }
+
+        auto old_child = std::move(slot);
+        auto branch = std::make_unique<SessionPrefixNode>();
+        branch->edge.assign(old_child->edge.begin(), old_child->edge.begin() + shared);
+        old_child->edge.erase(old_child->edge.begin(), old_child->edge.begin() + shared);
+        branch->children.emplace(old_child->edge.front(), std::move(old_child));
+        position += shared;
+        if (position == tokens.size()) branch->checkpoint_index = checkpoint_index;
+        else {
+            auto leaf = std::make_unique<SessionPrefixNode>();
+            leaf->edge.assign(tokens.begin() + position, tokens.end());
+            leaf->checkpoint_index = checkpoint_index;
+            branch->children.emplace(leaf->edge.front(), std::move(leaf));
+        }
+        slot = std::move(branch);
+    }
+
+    void rebuild_session_prefix_index() {
+        session_prefix_root_ = {};
+        for (std::size_t i = 0; i < session_checkpoints_.size(); ++i) {
+            const auto& checkpoint = session_checkpoints_[i];
+            if (session_checkpoint_compatible(checkpoint)) {
+                insert_session_prefix(session_prefix_root_, checkpoint.tokens, 0, i);
+            }
+        }
+    }
+
+    std::optional<std::size_t> longest_session_checkpoint(
+        std::span<const std::uint32_t> prompt, std::size_t& common) const {
+        common = 0;
+        std::optional<std::size_t> best;
+        const SessionPrefixNode* node = &session_prefix_root_;
+        std::size_t position = 0;
+        while (position < prompt.size()) {
+            std::size_t shared = 0;
+            const auto found = node->children.find(prompt[position]);
+            if (found == node->children.end()) break;
+            const auto* child = found->second.get();
+            while (shared < child->edge.size() && position + shared < prompt.size()
+                   && child->edge[shared] == prompt[position + shared]) ++shared;
+            common = std::max(common, position + shared);
+            if (shared != child->edge.size()) break;
+            position += shared;
+            node = child;
+            if (node->checkpoint_index && position < prompt.size()) best = node->checkpoint_index;
+        }
+        return best;
+    }
+
+    std::size_t session_checkpoint_storage_bytes(std::size_t tokens) const {
         const std::size_t recurrent_state_bytes = kVHeads * kState * kState * sizeof(float);
         const std::size_t recurrent_history_bytes = 4 * kChannels * sizeof(float);
-        const std::size_t kv_elements = 4 * tokens.size() * 256;
+        std::size_t bytes = 0;
+        for (const auto& layer : layers_) {
+            if (layer.recurrent != nullptr) bytes += recurrent_state_bytes + recurrent_history_bytes;
+            else {
+                const std::size_t element_size = layer.attention->fp16_kv_cache
+                    ? sizeof(__half) : sizeof(float);
+                bytes += 2 * 4 * tokens * 256 * element_size * 2;
+            }
+        }
+        return bytes;
+    }
+
+    void evict_oldest_session_checkpoint() {
+        if (session_checkpoints_.empty()) return;
+        const auto oldest = std::min_element(session_checkpoints_.begin(), session_checkpoints_.end(),
+            [](const auto& left, const auto& right) { return left.last_used < right.last_used; });
+        session_checkpoint_bytes_ -= oldest->storage_bytes;
+        session_checkpoints_.erase(oldest);
+        rebuild_session_prefix_index();
+    }
+
+    void touch_session_checkpoint(std::span<const std::uint32_t> tokens) {
+        const auto checkpoint = std::find_if(session_checkpoints_.begin(), session_checkpoints_.end(),
+            [&](const auto& entry) {
+                return entry.tokens.size() == tokens.size()
+                    && std::equal(entry.tokens.begin(), entry.tokens.end(), tokens.begin());
+            });
+        if (checkpoint != session_checkpoints_.end()) checkpoint->last_used = ++session_use_clock_;
+    }
+
+    // ponytail: cap eight GPU snapshots at 3 GiB; raise only when measured branch reuse justifies the VRAM cost.
+    void capture_session_checkpoint(std::span<const std::uint32_t> tokens) {
+        if (tokens.empty() || tokens.size() % kFullPrefillCapacity != 0) return;
+        const auto existing = std::find_if(session_checkpoints_.begin(), session_checkpoints_.end(),
+            [&](const auto& checkpoint) {
+                return checkpoint.tokens.size() == tokens.size()
+                    && std::equal(checkpoint.tokens.begin(), checkpoint.tokens.end(), tokens.begin());
+            });
+        if (existing != session_checkpoints_.end()) {
+            existing->last_used = ++session_use_clock_;
+            existing->model_identity = session_model_identity_;
+            existing->quantization_identity = session_quantization_identity_;
+            existing->runtime_identity = session_runtime_identity_;
+            existing->execution_contract_version = kSessionExecutionContractVersion;
+            copy_session_checkpoint(*existing, tokens);
+            return;
+        }
+
+        const std::size_t bytes = session_checkpoint_storage_bytes(tokens.size());
+        if (bytes > kSessionCheckpointBudgetBytes) return;
+        while (!session_checkpoints_.empty()
+               && (session_checkpoints_.size() >= kMaxSessionCheckpoints
+                   || session_checkpoint_bytes_ + bytes > kSessionCheckpointBudgetBytes)) {
+            evict_oldest_session_checkpoint();
+        }
+
+        session_checkpoints_.emplace_back();
+        auto& checkpoint = session_checkpoints_.back();
+        checkpoint.tokens.assign(tokens.begin(), tokens.end());
+        checkpoint.boundary_position = tokens.size();
+        checkpoint.storage_bytes = bytes;
+        checkpoint.last_used = ++session_use_clock_;
+        checkpoint.execution_contract_version = kSessionExecutionContractVersion;
+        checkpoint.model_identity = session_model_identity_;
+        checkpoint.quantization_identity = session_quantization_identity_;
+        checkpoint.runtime_identity = session_runtime_identity_;
+        try {
+            allocate_session_checkpoint(checkpoint, tokens.size());
+        } catch (const std::exception&) {
+            session_checkpoints_.pop_back();
+            return;
+        }
+        session_checkpoint_bytes_ += bytes;
+        copy_session_checkpoint(checkpoint, tokens);
+        rebuild_session_prefix_index();
+    }
+
+    void allocate_session_checkpoint(SessionCheckpoint& checkpoint, std::size_t tokens) {
+        const std::size_t recurrent_state_bytes = kVHeads * kState * kState * sizeof(float);
+        const std::size_t recurrent_history_bytes = 4 * kChannels * sizeof(float);
+        const std::size_t kv_elements = 4 * tokens * 256;
         for (std::size_t i = 0; i < layers_.size(); ++i) {
             const auto& layer = layers_[i];
             if (layer.recurrent != nullptr) {
-                if (!session_checkpoint_.recurrent_state[i]) {
-                    session_checkpoint_.recurrent_state[i] = allocate(recurrent_state_bytes);
-                    session_checkpoint_.recurrent_history[i] = allocate(recurrent_history_bytes);
-                }
-                MIINFER_HIP_CHECK(hipMemcpyAsync(session_checkpoint_.recurrent_state[i]->get(),
+                checkpoint.recurrent_state[i] = allocate(recurrent_state_bytes);
+                checkpoint.recurrent_history[i] = allocate(recurrent_history_bytes);
+            } else {
+                const std::size_t element_size = layer.attention->fp16_kv_cache
+                    ? sizeof(__half) : sizeof(float);
+                checkpoint.key_cache[i] = allocate(kv_elements * element_size);
+                checkpoint.value_cache[i] = allocate(kv_elements * element_size);
+            }
+        }
+    }
+
+    void copy_session_checkpoint(SessionCheckpoint& checkpoint,
+                                 std::span<const std::uint32_t> tokens) {
+        const std::size_t recurrent_state_bytes = kVHeads * kState * kState * sizeof(float);
+        const std::size_t recurrent_history_bytes = 4 * kChannels * sizeof(float);
+        for (std::size_t i = 0; i < layers_.size(); ++i) {
+            const auto& layer = layers_[i];
+            if (layer.recurrent != nullptr) {
+                MIINFER_HIP_CHECK(hipMemcpyAsync(checkpoint.recurrent_state[i]->get(),
                     layer.recurrent->state->get(), recurrent_state_bytes,
                     hipMemcpyDeviceToDevice, hipStreamPerThread));
-                MIINFER_HIP_CHECK(hipMemcpyAsync(session_checkpoint_.recurrent_history[i]->get(),
+                MIINFER_HIP_CHECK(hipMemcpyAsync(checkpoint.recurrent_history[i]->get(),
                     layer.recurrent->history->get(), recurrent_history_bytes,
                     hipMemcpyDeviceToDevice, hipStreamPerThread));
             } else {
                 const std::size_t element_size = layer.attention->fp16_kv_cache
                     ? sizeof(__half) : sizeof(float);
                 const std::size_t bytes_per_head = tokens.size() * 256 * element_size;
-                if (!session_checkpoint_.key_cache[i]) {
-                    session_checkpoint_.key_cache[i] = allocate(kv_elements * element_size);
-                    session_checkpoint_.value_cache[i] = allocate(kv_elements * element_size);
-                }
                 for (std::size_t head = 0; head < 4; ++head) {
                     const std::size_t source = head * g_cache_capacity * 256 * element_size;
                     const std::size_t destination = head * bytes_per_head;
                     MIINFER_HIP_CHECK(hipMemcpyAsync(
-                        static_cast<std::byte*>(session_checkpoint_.key_cache[i]->get()) + destination,
+                        static_cast<std::byte*>(checkpoint.key_cache[i]->get()) + destination,
                         static_cast<std::byte*>(layer.attention->key_cache->get()) + source,
                         bytes_per_head, hipMemcpyDeviceToDevice, hipStreamPerThread));
                     MIINFER_HIP_CHECK(hipMemcpyAsync(
-                        static_cast<std::byte*>(session_checkpoint_.value_cache[i]->get()) + destination,
+                        static_cast<std::byte*>(checkpoint.value_cache[i]->get()) + destination,
                         static_cast<std::byte*>(layer.attention->value_cache->get()) + source,
                         bytes_per_head, hipMemcpyDeviceToDevice, hipStreamPerThread));
                 }
             }
         }
-        session_checkpoint_.tokens.assign(tokens.begin(), tokens.end());
     }
 
-    void restore_session_checkpoint() {
-        if (session_checkpoint_.execution_contract_version != kSessionExecutionContractVersion
-            || session_checkpoint_.tokens.empty()) {
+    void restore_session_checkpoint(SessionCheckpoint& checkpoint) {
+        if (!session_checkpoint_compatible(checkpoint) || checkpoint.tokens.empty()) {
             throw std::runtime_error("session checkpoint execution contract mismatch");
         }
         reset_device_state();
         const std::size_t recurrent_state_bytes = kVHeads * kState * kState * sizeof(float);
         const std::size_t recurrent_history_bytes = 4 * kChannels * sizeof(float);
-        const std::size_t bytes_per_head = session_checkpoint_.tokens.size() * 256;
+        const std::size_t bytes_per_head = checkpoint.boundary_position * 256;
         for (std::size_t i = 0; i < layers_.size(); ++i) {
             const auto& layer = layers_[i];
             if (layer.recurrent != nullptr) {
                 MIINFER_HIP_CHECK(hipMemcpyAsync(layer.recurrent->state->get(),
-                    session_checkpoint_.recurrent_state[i]->get(), recurrent_state_bytes,
+                    checkpoint.recurrent_state[i]->get(), recurrent_state_bytes,
                     hipMemcpyDeviceToDevice, hipStreamPerThread));
                 MIINFER_HIP_CHECK(hipMemcpyAsync(layer.recurrent->history->get(),
-                    session_checkpoint_.recurrent_history[i]->get(), recurrent_history_bytes,
+                    checkpoint.recurrent_history[i]->get(), recurrent_history_bytes,
                     hipMemcpyDeviceToDevice, hipStreamPerThread));
             } else {
                 const std::size_t element_size = layer.attention->fp16_kv_cache
@@ -712,11 +938,11 @@ public:
                     const std::size_t source = head * head_bytes;
                     MIINFER_HIP_CHECK(hipMemcpyAsync(
                         static_cast<std::byte*>(layer.attention->key_cache->get()) + destination,
-                        static_cast<std::byte*>(session_checkpoint_.key_cache[i]->get()) + source,
+                        static_cast<std::byte*>(checkpoint.key_cache[i]->get()) + source,
                         head_bytes, hipMemcpyDeviceToDevice, hipStreamPerThread));
                     MIINFER_HIP_CHECK(hipMemcpyAsync(
                         static_cast<std::byte*>(layer.attention->value_cache->get()) + destination,
-                        static_cast<std::byte*>(session_checkpoint_.value_cache[i]->get()) + source,
+                        static_cast<std::byte*>(checkpoint.value_cache[i]->get()) + source,
                         head_bytes, hipMemcpyDeviceToDevice, hipStreamPerThread));
                 }
             }
@@ -1161,16 +1387,6 @@ public:
 
     GenerateStats generate(std::span<const std::uint32_t> prompt, const GenerateOptions& opt = GenerateOptions()) {
         const auto started = std::chrono::steady_clock::now();
-        if (!session_checkpoint_.tokens.empty()
-            && session_checkpoint_.execution_contract_version != kSessionExecutionContractVersion) {
-            session_checkpoint_.tokens.clear();
-        }
-        std::size_t common = 0;
-        while (common < prompt.size() && common < session_checkpoint_.tokens.size()
-               && prompt[common] == session_checkpoint_.tokens[common]) ++common;
-        const std::size_t reused = opt.reuse_session && layer_major_prefill_
-            && common == session_checkpoint_.tokens.size() && common < prompt.size()
-            ? common : 0;
         if (!layer_major_prefill_) {
             const double capture_start = graph_capture_ms_;
             auto stats = generate_fresh(prompt, opt);
@@ -1180,24 +1396,51 @@ public:
         if (prompt.empty()) return {};
         if (prompt.size() > g_cache_capacity) throw std::runtime_error("prompt exceeds context capacity");
         const double capture_start = graph_capture_ms_;
-        if (reused == 0) reset();
-        else restore_session_checkpoint();
+        if (!opt.reuse_session) clear_session_checkpoints();
+        std::erase_if(session_checkpoints_, [&](const auto& checkpoint) {
+            return !session_checkpoint_compatible(checkpoint);
+        });
+        session_checkpoint_bytes_ = 0;
+        for (const auto& checkpoint : session_checkpoints_) {
+            session_checkpoint_bytes_ += checkpoint.storage_bytes;
+        }
+        rebuild_session_prefix_index();
+        std::size_t common = 0;
+        const auto selected = opt.reuse_session
+            ? longest_session_checkpoint(prompt, common) : std::nullopt;
+        const std::size_t reused = selected
+            ? session_checkpoints_[*selected].boundary_position : 0;
+        if (reused == 0) reset_device_state();
+        else {
+            auto& checkpoint = session_checkpoints_[*selected];
+            restore_session_checkpoint(checkpoint);
+            checkpoint.last_used = ++session_use_clock_;
+        }
         GenerateOptions actual = opt;
         if (opt.reuse_session) {
-            actual.on_prefill_checkpoint = [this, prompt, callback = opt.on_prefill_checkpoint](std::size_t tokens) {
-                capture_session_checkpoint(prompt.first(tokens));
+            actual.on_prefill_checkpoint = [this, prompt, reused, callback = opt.on_prefill_checkpoint](std::size_t tokens) {
+                if (reused != 0) touch_session_checkpoint(prompt.first(reused));
+                const std::size_t batches = tokens / kFullPrefillCapacity;
+                const bool power_of_two = batches != 0 && (batches & (batches - 1)) == 0;
+                const std::size_t latest_boundary =
+                    (prompt.size() / kFullPrefillCapacity) * kFullPrefillCapacity;
+                if (power_of_two || tokens == latest_boundary) {
+                    capture_session_checkpoint(prompt.first(tokens));
+                }
                 if (callback) callback(tokens);
             };
         }
         try {
             auto stats = generate_layer_major(prompt, actual, started, reused);
-            if (stats.cancelled) session_checkpoint_.tokens.clear();
+            if (stats.cancelled) clear_session_checkpoints();
             stats.reused_prefix_tokens = reused;
             stats.common_prefix_tokens = common;
+            stats.session_checkpoint_count = session_checkpoints_.size();
+            stats.session_checkpoint_bytes = session_checkpoint_bytes_;
             stats.graph_capture_ms = graph_capture_ms_ - capture_start;
             return stats;
         } catch (...) {
-            session_checkpoint_.tokens.clear();
+            clear_session_checkpoints();
             throw;
         }
     }
@@ -1713,15 +1956,13 @@ private:
     }
 
     miinfer::Qwen35Model model_;
-    struct SessionCheckpoint {
-        std::vector<std::uint32_t> tokens;
-        std::size_t capacity_tokens = 0;
-        std::uint32_t execution_contract_version = 0;
-        std::array<Buffer, 64> recurrent_state{};
-        std::array<Buffer, 64> recurrent_history{};
-        std::array<Buffer, 64> key_cache{};
-        std::array<Buffer, 64> value_cache{};
-    } session_checkpoint_;
+    std::vector<SessionCheckpoint> session_checkpoints_;
+    SessionPrefixNode session_prefix_root_;
+    std::size_t session_checkpoint_bytes_ = 0;
+    std::size_t session_use_clock_ = 0;
+    std::string session_model_identity_;
+    std::string session_quantization_identity_;
+    std::string session_runtime_identity_;
     std::function<void(std::size_t)> opt_prefill_checkpoint_;
     double graph_capture_ms_ = 0.0;
     miinfer::Qwen3Tokenizer tokenizer_;
@@ -2140,8 +2381,7 @@ int cmd_run(int argc, char** argv) {
     }
 
     if (check_session) {
-        // Reuse only a completed B512 prefill checkpoint, then compare its
-        // suffix replay with a reset/full replay.
+        // Compare sparse multi-checkpoint longest-prefix restore with full replay.
         for (const std::size_t length : {512U, 640U, 3991U, 8192U, 16000U}) {
             if (length + 160 >= g_cache_capacity) continue;
             for (const std::size_t seed_count : {1U, 4U}) {
@@ -2183,6 +2423,48 @@ int cmd_run(int argc, char** argv) {
                       << " decode_tok_s=" << replay.decode_tok_s << std::endl;
             }
         }
+
+        if (g_cache_capacity > 3992) {
+            engine.reset();
+            std::vector<std::uint32_t> branch_a(3991);
+            for (std::size_t i = 0; i < branch_a.size(); ++i) {
+                branch_a[i] = prompt_tokens[i % prompt_tokens.size()];
+            }
+            RuntimeGenerateOptions branch_options;
+            branch_options.max_new_tokens = 0;
+            branch_options.reuse_session = true;
+            branch_options.stream = false;
+            (void)engine.generate(branch_a, branch_options);
+
+            auto branch_b = branch_a;
+            const auto alternate = std::find_if(prompt_tokens.begin(), prompt_tokens.end(),
+                [&](std::uint32_t token) { return token != branch_b[kFullPrefillCapacity * 4]; });
+            if (alternate == prompt_tokens.end())
+                throw std::runtime_error("session branch check needs two distinct prompt tokens");
+            branch_b[kFullPrefillCapacity * 4] = *alternate;
+            branch_options.max_new_tokens = 1;
+            const auto branch_b_append = engine.generate(branch_b, branch_options);
+
+            auto branch_a_extended = branch_a;
+            branch_a_extended.insert(branch_a_extended.end(), prompt_tokens.begin(), prompt_tokens.begin() + 8);
+            const auto branch_a_append = engine.generate(branch_a_extended, branch_options);
+            branch_options.reuse_session = false;
+            branch_options.stream = true;
+            const auto branch_b_replay = engine.generate(branch_b, branch_options);
+            const auto branch_a_replay = engine.generate(branch_a_extended, branch_options);
+            if (branch_b_append.reused_prefix_tokens != kFullPrefillCapacity * 4
+                || branch_a_append.reused_prefix_tokens != (branch_a.size() / kFullPrefillCapacity) * kFullPrefillCapacity
+                || branch_b_append.tokens != branch_b_replay.tokens
+                || branch_a_append.tokens != branch_a_replay.tokens) {
+                throw std::runtime_error("multi-checkpoint longest-prefix branch check failed");
+            }
+            std::cout << "session_branch_check=PASS older_prefix_reuse="
+                      << branch_b_append.reused_prefix_tokens
+                      << " return_branch_reuse=" << branch_a_append.reused_prefix_tokens
+                      << " cached_entries=" << branch_a_append.session_checkpoint_count
+                      << " cached_bytes=" << branch_a_append.session_checkpoint_bytes << '\n';
+        }
+
         std::vector<std::uint32_t> cancelled_prompt(kFullPrefillCapacity);
         for (std::size_t i = 0; i < cancelled_prompt.size(); ++i)
             cancelled_prompt[i] = prompt_tokens[i % prompt_tokens.size()];
@@ -2751,6 +3033,8 @@ int cmd_serve(int argc, char** argv) {
                       << ",\"prompt_tokens\":" << stats.prompt_tokens
                       << ",\"common_prefix_tokens\":" << stats.common_prefix_tokens
                       << ",\"reused_prefix_tokens\":" << stats.reused_prefix_tokens
+                      << ",\"session_checkpoint_count\":" << stats.session_checkpoint_count
+                      << ",\"session_checkpoint_bytes\":" << stats.session_checkpoint_bytes
                       << ",\"new_prefill_tokens\":" << stats.prefill_processed_tokens
                       << ",\"prefill_ms\":" << stats.prefill_ms
                       << ",\"graph_capture_ms\":" << stats.graph_capture_ms
