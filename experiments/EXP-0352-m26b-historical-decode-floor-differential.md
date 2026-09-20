@@ -1,6 +1,6 @@
 # EXP-0352 — M26-B historical decode-floor differential
 
-**Status:** ACTIVE — diagnostic entry gate; no optimization authorized
+**Status:** CLOSED — historical comparison proven non-comparable; no kernel selected
 
 ## Question
 
@@ -119,16 +119,16 @@ only from this differential.
 
 | Family | Historical | Current | Delta | Share | Classification |
 | --- | ---: | ---: | ---: | ---: | --- |
-| recurrent QKV | pending | pending | pending | pending | pending |
-| GDN/state | pending | pending | pending | pending | pending |
-| FFN | pending | pending | pending | pending | pending |
-| attention/KV | pending | pending | pending | pending | pending |
-| quantization/conversion | pending | pending | pending | pending | pending |
-| graph/runtime/sync | pending | pending | pending | pending | pending |
-| LM head/sampling | pending | pending | pending | pending | pending |
-| contract/other | pending | pending | pending | pending | pending |
+| recurrent QKV | N/A | N/A | N/A | N/A | no matched historical/current interactive workload |
+| GDN/state | N/A | N/A | N/A | N/A | no matched historical/current interactive workload |
+| FFN | N/A | N/A | N/A | N/A | no matched historical/current interactive workload |
+| attention/KV | N/A | N/A | N/A | N/A | no matched historical/current interactive workload |
+| quantization/conversion | N/A | N/A | N/A | N/A | no matched historical/current interactive workload |
+| graph/runtime/sync | N/A | N/A | N/A | N/A | no matched historical/current interactive workload |
+| LM head/sampling | N/A | N/A | N/A | N/A | no matched historical/current interactive workload |
+| contract/other | `33.324` historical vs `31.247` current legacy diagnostic | — | `-2.077 ms/token` observed | N/A | same reconstructed-fixture workload; current timing has isolated 1485 MHz telemetry samples and is not a clock-qualified speedup |
 
-**Decision:** RETEST — diagnostic gate open; optimization prohibited.
+**Decision:** CLOSED — historical M8/M9 and current interactive timing values are non-comparable; the matched legacy harness shows current code is faster. This closes the historical regression claim only. It does not select or authorize a decode kernel.
 
 ## Audit execution — 2026-09-15
 
@@ -457,3 +457,98 @@ therefore meets the M26 recovery latency gate with current-tree correctness
 tests passing. This does not qualify `m25_hi_qualified` or the experimental
 wide/Mx route, and does not close the separate M26-B historical route
 attribution. No sub-30 ms optimization is authorized by this result.
+
+## Historical timing-boundary reconstruction — 2026-09-20
+
+Source inspection of `/tmp/miinfer-m26b-m8` at
+`ff7aefffbe33ea386aeef0e12d1a8623fc6ff58d` resolves the largest open B1
+contract fields:
+
+| Field | Historical `--bench64` | Current interactive decode curve | Classification |
+| --- | --- | --- | --- |
+| State/workload | Loads the fixture, starts `run_generation()` with `prompt.front()`, and generates from decode position 0; no 512-token prompt prefill occurs in the timed loop | Constructs a repeated-token 512-token prompt and calls `engine.generate()`; each curve iteration resets/rebuilds runtime state | NON-COMPARABLE workload |
+| Decode length | 64 generated positions | 128 generated positions | DIFFERENT |
+| Per-position execution | Embedding, full layer prefix, LM head and argmax; per-position HIP graph when enabled | Current M25 route uses layer-major prefill followed by queued decode-graph replays when eligible | DIFFERENT route |
+| Synchronization / token transfer | `hipDeviceSynchronize()` and one-token D2H argmax copy inside every generated-token iteration | Queued graph chain followed by bulk D2H token copy; decode curve's measured `stats.decode_ms` includes first-token work | DIFFERENT boundary |
+| Timed interval | `CLOCK_MONOTONIC_RAW` around the generation loop, including its host synchronization and token transfers; graph capture occurs before timing | Runtime's decode timer starts after prefill; queued graph setup/capture is excluded from `decode_ms` | DIFFERENT boundary |
+| Warmup / samples | One warmup followed by five reset-state measurements; median is reported | Five curve iterations; median is reported; runtime generation resets its state for each run | PARTLY SAME |
+| Token choice | Greedy device argmax each position | Greedy path in this no-stream graph route; graph-state parity is independently checked | SAME INTENT; output sequence not proven identical here |
+
+On the reconstructed fixture, the prior historical rerun measured
+`33.227 ms/token`; the fresh retained run measured `33.324 ms/token`. Current
+code measured `31.2473 ms/token` on the same harness shape, though isolated
+1485 MHz samples mean this latest current-code result is not a clock-qualified
+speedup. Historical code cannot consume the current runtime's 512-token
+prefetched-state contract through this harness: it accepts a fixture directory,
+not a prompt/context state. Thus the historical-to-interactive comparison is
+non-comparable by workload and timing contract; it is not a valid
+24.5 ms/token kernel-regression measurement.
+
+Raw commands and logs: [EXP-0352 artifacts](../bench/results/exp0352-historical/20260920/README.md).
+
+Recovered comparison matrix. All arms used model SHA-256
+`7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169`. The two
+fixture-harness arms used the reconstructed fixture, manual 1606/1000 MHz
+targets, one warmup, and five measured samples. The CLI curve arms used five
+iterations and had no separate warmup.
+
+| Code / workload | Command contract | Median | Interpretation |
+| --- | --- | ---: | --- |
+| Historical `ff7aefff` / fixture-state TG64 | `miinfer-m6a21-qwen35-gpu-hybrid-block MODEL FIXTURE --bench64`; M8 kept flag vector; `MIINFER_DEVICE_TOKEN_CHAIN=0` | `33.324 ms/token` fresh (`33.227` prior) | Reproduces recorded `33.01` within 1%; fixture starts at decode position 0 |
+| Current code / same legacy fixture-state TG64 | Same harness contract and flag vector | `31.2473 ms/token` observed (`31.385` prior) | `-2.0767 ms/token` observed; current raw attempt had isolated 1485 MHz samples, so not a qualified A/B win |
+| Current `m25_interactive` / repeated-token P512 TG128 | `MIINFER_PRESET=m25_interactive build/mi50-release/miinfer run MODEL --context 16384 --decode-curve --curve-context 512 --curve-iterations 5 --no-stream --max-tokens 128` | `57.2007 ms/token` fresh (`59.8578` prior qualified) | Different prefilled state, route, and timing boundary; not comparable to the first two rows |
+| Current default legacy route / repeated-token P512 TG128 | Same CLI curve command with no preset and `MIINFER_PREFILL_LAYER_MAJOR=0` | `32.2948 ms/token` qualified prior | Meets M26 latency screen; fresh raw attempts were clock-contaminated and are retained below |
+
+Raw command output and the current-run telemetry are retained under
+`bench/results/exp0352-historical/20260920/`. The kept-flag vector is recorded in
+`scripts/run-exp0193-q6k-simd-unpack-ab.sh`: native Q4/Q5/Q6 paths, HIP graph,
+fused recurrent core, fused Gate+Up/SwiGLU, Wave64 Q8, fused core Q8,
+online attention, fused RoPE/norm and inter-layer norm; fused norm Q8 is
+explicitly disabled. `MIINFER_SWIGLU_SHUFFLE` and
+`MIINFER_Q6K_SIMD_UNPACK` default to enabled in the historical source, and the
+script explicitly sets both for the kept configuration (the Q6 selector is
+tested as an A/B override). The original `/tmp/m6a273-reference-p12` fixture
+is absent, so the matrix uses the separately validated reconstructed fixture
+and does not claim byte identity with the historical fixture.
+
+The historical 33-vs-59 comparison is not a valid regression claim. This does
+not attribute the separate current layer-major P512 premium over current
+legacy P512. Existing
+same-runtime evidence measures `60.5365 ms/token` for layer-major plus queued
+graphs and `32.3865 ms/token` for legacy prefill plus queued graphs, a
+`28.1500 ms/token` route delta. The synchronous stage profile places roughly
+`61.2578 ms` in GPU stages for a selected token, but its broad stage groups do
+not map the route delta to the B4 families. No family attribution or kernel
+selection is inferred from that profile.
+
+Historical fast-path audit from the exact `ff7aefff` benchmark source, M8/M9
+experiment records, and current source:
+
+| M8/M9 item | Status | Evidence / limit |
+| --- | --- | --- |
+| Wave64 Q8 quantization | ACTIVE | M8 benchmark vector sets `MIINFER_WAVE64_Q8=1`; EXP-0189 records the kept Wave64 quantizer; current code retains Q8_1 paths |
+| Recurrent/attention core Q8 epilogues | ACTIVE | `MIINFER_FUSED_CORE_Q8=1` in the historical run; current source keeps the selector enabled by default |
+| Residual/RMSNorm Q8 epilogue | DISABLED | `MIINFER_FUSED_NORM_Q8=0`; EXP-0191 rejected this fusion for decode |
+| SwiGLU shuffle reduction | ACTIVE | Historical and current `MIINFER_SWIGLU_SHUFFLE` dispatch defaults to the Wave64 shuffle variant; M8 vector explicitly sets it to `1` |
+| SIMD Q6_K unpack | ACTIVE | Historical source defaults `MIINFER_Q6K_SIMD_UNPACK` on; M9/EXP-0193 keeps it; current runtime setup enables it |
+| Native Q4/Q5/Q6 GEMV | ACTIVE | Historical flag vector explicitly enables native Q4 projections, Q5 recurrent output, Q6 down and Q6 LM head; current code retains gfx906-native paths |
+| Resident weights | ACTIVE | Both harnesses upload/copy weights before the timed loop; their packed layouts differ by route |
+| Persistent buffers | ACTIVE | Both paths allocate decode/state work buffers before timing and report zero decode allocations |
+| Full decode graph coverage | REPLACED | Historical harness captures a per-position full graph then synchronizes each step; current runtime queues graph replay and bulk-copies token output |
+
+### B1–B5 closure audit
+
+| Gate | Result | Evidence |
+| --- | --- | --- |
+| B1 historical contract | PASS | Historical source at `ff7aefff`; fresh reconstructed-fixture result `33.324 ms/token`, within 1% of the recorded `33.01 ms/token` claim; prior rerun was `33.227` |
+| B2 current contract | PASS | Current layer-major P512/TG128 curve and no-preset legacy route commands/results are recorded above; workload, graph, sync, and timing boundaries are classified |
+| B3 comparison matrix | PASS — historical/current interactive pair is non-comparable | Historical code accepts fixture state and starts at position 0; it has no prompt or prefilled-context input. Historical/current fixture-workload raw arms are retained; current code's observed `31.2473 ms/token` has isolated clock dips and is not used as a qualified speedup |
+| B4 differential | PASS by non-comparability | No valid historical-to-interactive wall delta or per-family regression share exists. The current layer-major-vs-legacy route premium (`28.150 ms/token` in the cited A/B) is a distinct same-runtime question and is not attributed to historical regression |
+| B5 fast-path audit | PASS | All required M8/M9 items are classified in the audit table; no UNKNOWN remains |
+
+**Final decision:** CLOSE M26-B historical decode-floor recovery as
+NON-COMPARABLE. Do not claim a historical kernel regression and do not select a
+decode kernel from this comparison. The current layer-major route premium may
+be investigated under a separately scoped diagnostic with its own matched
+contract; no such work is bundled into this closure. M27 cold-prefill and
+prefix-cache conclusions are unchanged.

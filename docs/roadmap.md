@@ -10,24 +10,25 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M26 — Decode Contract Recovery**
+**Current phase: M26 — Decode Route Attribution**
 
-The active question is why the historical/legacy execution contract runs near
-`31–33 ms/token` while the experimental M25 interactive layer-major route is
-near `59 ms/token` at short context. Resume the existing historical decode-floor
-differential in
-[`EXP-0352`](../experiments/EXP-0352-m26b-historical-decode-floor-differential.md);
-do not draft a new architecture or select a decode kernel yet.
+M26-B historical decode-floor contract recovery is closed as non-comparable in
+[`EXP-0352`](../experiments/EXP-0352-m26b-historical-decode-floor-differential.md).
+The historical benchmark starts from fixture state at decode position 0 and
+synchronizes/copies one token each step. The current M25 interactive result
+starts after a 512-token prefill and uses queued graph replay with bulk token
+transfer. These are different workloads and timing boundaries, so the
+historical `31–33 ms/token` result is not a regression baseline for the
+interactive `57–59 ms/token` route. The same-fixture current-code control shows
+no shared-pipeline regression; its fresh run had isolated clock dips and is
+retained as diagnostic evidence only.
 
-M26's attribution gate is explicit: reproduce the historical result or prove
-it non-comparable, classify the material execution-contract differences, and
-attribute at least 90% of the measured wall-time differential. No M26-C decode
-kernel work begins before that gate is met. The default no-preset runtime's
-`32.2948 ms/token` P512/TG128 recovery result meets the existing `<=33 ms/token`
-recovery screen; it does not qualify the separate interactive route or close
-the historical/interactive differential. See
-[`EXP-0351`](../experiments/EXP-0351-m26-real-context-decode-curve.md) and
-EXP-0352.
+The separate current layer-major versus legacy P512 decode premium remains
+unattributed. The qualified no-preset runtime result `32.2948 ms/token` meets
+the `<=33 ms/token` recovery screen but does not qualify the interactive route.
+Continue only with a matched diagnostic for that current-runtime route delta;
+do not select a decode kernel from the historical comparison or broad stage
+profiles. See EXP-0351 and EXP-0352.
 
 M27 cold P512 work is stopped. The current control is `205.897 tok/s`; the
 `213.837 tok/s` attention decode-reuse candidate remains experimental because
@@ -43,11 +44,10 @@ Pi read/edit/read flows reused the complete cached prefix at ~3.7K, ~7.7K, and
 ~15K conversation sizes. Do not add persistence, cross-session policy,
 additional cache tiers, or NVMe without new evidence. See EXP-0350 and EXP-0357.
 
-M26 decode attribution is now the highest project priority. Preserve M26
-recovery and M27 evidence; use the historical/legacy differential to identify
-and measure route, state preparation, graph coverage, fixed operator, timing,
-and synchronization differences. Keep the default, qualified prefill, and
-experimental interactive execution contracts distinct.
+Current-runtime decode route attribution remains the highest project priority.
+Keep the default, qualified prefill, and experimental interactive execution
+contracts distinct, and preserve the M26-B non-comparability finding and M27
+evidence.
 
 ---
 
@@ -816,31 +816,29 @@ M7
 1. Preserve the clean, pushed M27 closure and the default-runtime M26 recovery
    result. Keep the experimental `213.837 tok/s` P512 candidate and M27 prefix
    cache frozen at their documented scopes.
-2. Resume B1–B5 in EXP-0352: recover historical benchmark source/flags and
-   timing semantics, normalize the historical and current workloads, and run
-   the required comparison matrix with model/hash, clocks, graph, state, LM
-   head, sampling, allocation, and compiler recorded.
-3. Produce a matched per-family wall-time decomposition and fast-path audit.
-   Close M26-B only after at least 90% of the delta is explained or the
-   historical result is proven non-comparable.
-4. Only after that gate, select one measured decode hypothesis and its
-   end-to-end correctness/performance screen. Do not begin with a new kernel.
+2. Preserve EXP-0352's closure and its raw artifacts; do not use historical
+   M8/M9 timing as a regression baseline for the interactive route.
+3. If decode performance work resumes, measure the current layer-major versus
+   legacy P512/TG128 route delta under interleaved A/B with continuous clock
+   telemetry and per-family attribution.
+4. Consider a decode hypothesis only when that current-route bottleneck is
+   measured. No kernel has been selected by the completed M26-B comparison.
 
 ---
 
 # Immediate Next Milestone
 
 ```text
-M26-B — Historical decode-floor differential (diagnostic only)
+M26 — Current-runtime route attribution (diagnostic only)
 ```
 
-The current no-preset runtime recovery screen is `32.2948 ms/token` at
-P512/TG128. The separate experimental interactive route measures about
-`57.5–59 ms/token`, while the historical M8/M9 route is around `31–33
-ms/token`. EXP-0352 has not yet attributed at least 90% of that route
-differential. Recover the historical benchmark contract and complete its B1–B5
-comparison before proposing decode changes. The existing recovery result is
-not authorization for sub-30 ms tuning.
+EXP-0352 B1–B5 is closed: the historical and interactive contracts are
+non-comparable, and no historical kernel regression is claimed. The current
+no-preset P512/TG128 route has a qualified `32.2948 ms/token` result; the
+experimental layer-major route remains around `57–59 ms/token`. Recover the
+current-runtime route differential with matched workload and clock telemetry
+before proposing decode changes. The existing recovery result is not
+authorization for sub-30 ms tuning.
 
 ---
 

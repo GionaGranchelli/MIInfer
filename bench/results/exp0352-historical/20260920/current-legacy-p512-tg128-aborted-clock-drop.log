@@ -1,0 +1,10 @@
+No prompt provided. Defaulting to: "The AMD Instinct MI50 is a high-performance GPU featuring"
+Initializing MIInfer gfx906 runtime engine for /home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf ...
+device_allocation_count=2397
+device_allocated_bytes=19825492372
+device_total_allocated_bytes=19825492372
+device_peak_allocated_bytes=19825492372
+device_vram_free_bytes=13893632000
+device_vram_total_bytes=34342961152
+model_context_length=262144
+Prompt tokens: 13 tokens

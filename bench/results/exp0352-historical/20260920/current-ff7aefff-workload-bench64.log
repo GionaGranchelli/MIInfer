@@ -1,0 +1,2 @@
+benchmark_tokens=64 warmup_ms=2003.59 samples_ms=1998.04,1999.1,1999.83,2025.83,2032.84 median_ms=1999.83 median_tok_s=32.0028 replay=PASS allocations_during_decode=0 device_bytes_after_setup=23044031064 peak_device_bytes=23044031064
+M6-B2 native qwen35 generation benchmark PASS

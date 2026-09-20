@@ -1,0 +1,34 @@
+preset=m25_interactive
+  MIINFER_MX_PIPELINE=unset
+  MIINFER_CONTEXT_CAPACITY=1024
+  MIINFER_PREFILL_LAYER_MAJOR=1
+  MIINFER_PREFILL_WIDE_CHUNK=1
+  MIINFER_PREFILL_FULL_LAYER_MAJOR=1
+  MIINFER_PREFILL_WIDE_ATTN=1
+  MIINFER_PREFILL_WIDE_REPACKED_MMQ=1
+  MIINFER_PREFILL_WIDE_MX_REPACKED_MMQ=1
+  MIINFER_PREFILL_WIDE_MMQ_QKV=1
+  MIINFER_PREFILL_WIDE_MMQ_SSM_OUT=1
+  MIINFER_PREFILL_WIDE_MMQ_FFN=1
+  MIINFER_M23_REPACKED_ROW128=1
+  MIINFER_PREFILL_REPACKED_RESIDENT_ALL=1
+  MIINFER_PREFILL_CHUNK=512
+  MIINFER_PREFILL_MX_GDN=1
+  MIINFER_MX_Q8_BATCH=0
+  MIINFER_MX_PINNED_QKV=0
+  MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_FFN=1
+  MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_O=1
+  MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_DECODE=1
+  MIINFER_MX_MMV=1
+No prompt provided. Defaulting to: "The AMD Instinct MI50 is a high-performance GPU featuring"
+Initializing MIInfer gfx906 runtime engine for /home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf ...
+device_allocation_count=2637
+device_allocated_bytes=19479343508
+device_total_allocated_bytes=19479343508
+device_peak_allocated_bytes=19479343508
+device_vram_free_bytes=14050918400
+device_vram_total_bytes=34342961152
+model_context_length=262144
+Prompt tokens: 13 tokens
+context_tokens,iterations,median_decode_ms,median_ms_per_token,median_decode_tok_s
+512,5,7321.7,57.2007,17.4823
