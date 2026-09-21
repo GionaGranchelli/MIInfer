@@ -1,8 +1,10 @@
 # EXP-0358 — M26-C current decode-route differential
 
-**Status:** ACTIVE — route contract mapped; state-equivalent decode harness and measurements open
+**Status:** ACTIVE — route mapping complete; measurement gate open
 **Date opened:** 2026-09-20
 **Starting commit:** `9180e6f5b41c6ece62d68a2f4c153a4a480429af`
+**Route scaffold commit:** `1b5c0d497c378f4b2bd00d14bbc2fe2a5225d3a4`
+**Measurement implementation base HEAD:** `7bca95720521be6d8cd17b3961d4b5580eedfa96`
 **Scope:** Current code only. M27 remains untouched.
 
 ## Question
@@ -103,6 +105,12 @@ No M26-C A/B measurements have been collected yet. No route delta is claimed.
 M26-B closed at commit `9180e6f5b41c6ece62d68a2f4c153a4a480429af` after
 proving its historical comparison non-comparable; its result is not a current
 route baseline.
+
+The route mapping/documentation scaffold was committed separately at
+`1b5c0d497c378f4b2bd00d14bbc2fe2a5225d3a4`. The measurement implementation
+started from the subsequent clean documentation commit
+`7bca95720521be6d8cd17b3961d4b5580eedfa96`; no harness or performance-candidate
+changes were included in either starting commit.
 
 ## Decision
 
