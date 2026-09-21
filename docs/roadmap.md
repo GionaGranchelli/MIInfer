@@ -10,7 +10,7 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M26 — Decode Route Attribution**
+**Current phase: M26-E — Canonical Decode Context Qualification**
 
 M26-B historical decode-floor contract recovery is closed as non-comparable in
 [`EXP-0352`](../experiments/EXP-0352-m26b-historical-decode-floor-differential.md).
@@ -23,12 +23,15 @@ interactive `57–59 ms/token` route. The same-fixture current-code control show
 no shared-pipeline regression; its fresh run had isolated clock dips and is
 retained as diagnostic evidence only.
 
-The separate current layer-major versus legacy P512 decode premium remains
-unattributed. The qualified no-preset runtime result `32.2948 ms/token` meets
-the `<=33 ms/token` recovery screen but does not qualify the interactive route.
-Continue only with a matched diagnostic for that current-runtime route delta;
-do not select a decode kernel from the historical comparison or broad stage
-profiles. See EXP-0351 and EXP-0352.
+M26-C is closed as `ROUTES_NOT_COMPARABLE` in
+[`EXP-0359`](../experiments/EXP-0359-m26cq-decode-semantic-equivalence.md).
+Identical teacher-forced inputs produce route-state drift and a near-tie greedy
+flip, but no accepted pairwise P512 tolerance exists to establish either
+equivalence or a correctness bug. The investigation made no timing
+qualification. The qualified no-preset route remains canonical; the interactive
+`57–59 ms/token` route is non-qualifying evidence, not a performance target or
+baseline. M26-D was not opened because no valid same-contract >=3 ms/token
+removable cost or required correctness fix was established. M26-E is next.
 
 M27 cold P512 work is stopped. The current control is `205.897 tok/s`; the
 `213.837 tok/s` attention decode-reuse candidate remains experimental because
@@ -44,16 +47,14 @@ Pi read/edit/read flows reused the complete cached prefix at ~3.7K, ~7.7K, and
 ~15K conversation sizes. Do not add persistence, cross-session policy,
 additional cache tiers, or NVMe without new evidence. See EXP-0350 and EXP-0357.
 
-Current-runtime decode route attribution remains the highest project priority.
-Keep the default, qualified prefill, and experimental interactive execution
-contracts distinct, and preserve the M26-B non-comparability finding and M27
-evidence.
+M26-CQ route attribution is closed. Keep the default, qualified prefill, and
+experimental interactive execution contracts distinct, and preserve the
+M26-B/M26-C non-comparability findings and M27 evidence. The qualified
+no-preset route is canonical for M26-E.
 
-The post-M26 performance path is now explicitly conditional. After M26-C,
-MIInfer will quantify removable cost before authorizing further implementation:
-M26-D may apply one evidence-backed current-route fix, M26-E qualifies the
-context curve, and M26-F estimates the decode ceiling before any substantial
-M27 runtime rewrite. See
+The post-M26 performance path is now explicitly conditional. M26-D was not
+opened; M26-E qualifies the canonical route's context curve, and M26-F
+estimates the decode ceiling before any substantial M27 runtime rewrite. See
 [`docs/post-m26-performance-roadmap.md`](post-m26-performance-roadmap.md) and
 [`docs/performance-research-strategy.md`](performance-research-strategy.md).
 
@@ -838,15 +839,13 @@ M7
 
 # Current Execution Order
 
-1. Finish M26-C / EXP-0358. Attribute the current layer-major versus legacy
-   decode-route differential from an equivalent semantic state. Preserve
-   EXP-0352's historical non-comparability finding.
-2. Open M26-D only if M26-C identifies at least 3 ms/token of removable
-   runtime/execution cost or a correctness/contract issue that must be fixed.
-   Attack only that attributed cost.
-3. Run M26-E to establish one qualified P512–P16K decode context curve and
-   separate fixed cost from context-dependent cost. Do not derive targets from
-   historical non-comparable timings.
+1. Preserve M26-C/EXP-0358/EXP-0359 closure and EXP-0352's historical
+   non-comparability finding.
+2. M26-D was not opened. Reconsider it only if new evidence identifies a
+   qualifying same-contract cost or a required correctness fix.
+3. Run M26-E to establish the qualified P512/P2K/P4K/P8K/P12K/P16K context
+   curve and separate fixed from context-dependent cost. Do not derive targets
+   from historical non-comparable timings.
 4. Run M26-F before a large decode-runtime rewrite. Build an operator/runtime
    ceiling model from measured time, bytes, effective bandwidth, arithmetic,
    launch/synchronization behavior, host critical-path time, transfers, and
@@ -864,18 +863,17 @@ M7
 # Immediate Next Milestone
 
 ```text
-M26-C — Current-runtime route attribution
+M26-E — Canonical decode context qualification (not started)
 ```
 
-EXP-0358 is the active contract. Close its state-equivalence and attribution
-gate before selecting any optimization. The historical M8/M9 timing remains
-non-comparable to the current interactive route, and the qualified no-preset
-result is not authorization for speculative sub-30 ms tuning.
+EXP-0359 closes M26-C as `ROUTES_NOT_COMPARABLE`; it establishes neither a
+correctness bug nor a timing result. M26-D was not opened. The qualified
+no-preset route remains canonical. M26-E will establish its context curve at
+P512, P2K, P4K, P8K, P12K, and P16K; M26-F will quantify the ceiling before M27.
 
-The next work is decision-driven rather than linear: M26-D exists only for an
-evidence-backed removable cost; M26-E establishes the current context curve;
-M26-F determines how much decode optimization surface remains; M27 is
-conditional on that evidence. See
+The next work is decision-driven rather than linear: M26-D was not opened;
+M26-F determines how much decode optimization surface remains after M26-E;
+M27 is conditional on that evidence. See
 [`docs/post-m26-performance-roadmap.md`](post-m26-performance-roadmap.md).
 
 ---

@@ -1,8 +1,8 @@
 # Post-M26 Performance Roadmap
 
-This document defines the decision tree that begins when M26-C route
-attribution closes. It does not change the active M26-C experiment and does not
-assume its result.
+This document records the decision tree after M26-C route attribution closed.
+EXP-0359 closes M26-C as `ROUTES_NOT_COMPARABLE`; M26-D was not opened. M26-E
+on the qualified no-preset route is next.
 
 See:
 
@@ -13,6 +13,8 @@ See:
 ---
 
 ## M26-C — Close current route attribution
+
+**Status: CLOSED — `ROUTES_NOT_COMPARABLE` (EXP-0359).**
 
 ### Goal
 
@@ -30,12 +32,19 @@ Use the existing EXP-0358 stop gate:
 
 Do not infer a post-M26 optimization from historical M8/M9 timing.
 
+Identical teacher-forced inputs expose route-state drift and a near-tie greedy
+flip, but no accepted pairwise P512 tolerance establishes equivalence or a
+correctness bug. No timing qualification was made. The qualified no-preset
+route remains canonical; the interactive route is non-qualifying evidence, not
+a performance target or baseline.
+
 ---
 
 ## M26-D — One evidence-backed floor reduction
 
-M26-D exists only if M26-C identifies a concrete current-route cost worth
-removing.
+**Status: NOT OPENED.** M26-C did not establish a valid same-contract
+>=3 ms/token removable cost or a required correctness fix. Do not open M26-D
+based on the interactive route's non-comparable timing.
 
 ### Authorization gate
 
@@ -76,6 +85,7 @@ one qualified execution contract.
 Required points:
 
 - P512
+- P2K
 - P4K
 - P8K
 - P12K
@@ -91,13 +101,20 @@ context-dependent cost
 
 Report:
 
-- ms/token
-- tok/s
-- active KV/state bytes
-- context-dependent operator cost
-- launch/synchronization counts
-- hardware telemetry
-- correctness
+| Measurement | Purpose |
+|---|---|
+| Wall ms/token and tok/s | Primary decode latency and throughput |
+| GPU-event time/token | Separate measured GPU work from wall time |
+| Context-dependent attention time | Measure the context scaling slope |
+| Recurrent/GDN time | Check the expected near-constant cost |
+| FFN and QKV/O time | Attribute the fixed floor and context contribution |
+| LM-head time | Isolate fixed output cost |
+| Kernel launches and synchronizations/token | Quantify runtime orchestration |
+| H2D/D2H bytes and time/token | Quantify host involvement |
+| Active KV bytes and recurrent-state bytes | Track context and fixed state footprint |
+| VRAM use | Establish long-context feasibility |
+| SCLK/HBM clocks, temperature, power and cap | Qualify hardware state |
+| Correctness result | Confirm generated outputs and state remain valid |
 
 M26-E must not invent a target from historical non-comparable results. Its job
 is to establish the current qualified curve.
@@ -162,13 +179,13 @@ is a research-prioritization tool.
 ## Decision gate after M26-F
 
 ```text
-M26-C route attribution
+M26-C — CLOSED: ROUTES_NOT_COMPARABLE
         │
         ▼
-M26-D targeted fix, only if authorized
+M26-D — NOT OPENED
         │
         ▼
-M26-E qualified context curve
+M26-E qualified context curve (P512/P2K/P4K/P8K/P12K/P16K)
         │
         ▼
 M26-F decode ceiling study

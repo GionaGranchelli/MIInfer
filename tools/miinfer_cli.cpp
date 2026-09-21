@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <atomic>
 #include <array>
 #include <cctype>
@@ -41,6 +42,7 @@
 #include "miinfer/qwen35_model.hpp"
 #include "miinfer/build_info.hpp"
 #include "miinfer/openai_api.hpp"
+#include "miinfer/sha256.hpp"
 
 extern char** environ;
 
@@ -389,9 +391,9 @@ public:
                 "ffn_down_projection", "residual"};
             static constexpr std::array<const char*, 15> attention_names{
                 "normalization", "q_projection", "query_norm_rope", "k_projection",
-                "v_projection", "kv_store", "attention", "attention_output_projection",
-                "residual_post_norm", "post_normalization", "ffn_gate_up_projection",
-                "swiglu", "ffn_down_projection", "residual", "residual"};
+                "key_norm", "v_projection", "kv_store", "attention",
+                "attention_output_projection", "residual_post_norm", "post_normalization",
+                "ffn_gate_up_projection", "swiglu", "ffn_down_projection", "residual"};
             std::array<double, 17> family_ms{};
             std::array<double, 4> recurrent_tail_family_ms{};
             std::array<double, 4> recurrent_wide_tail_family_ms{};
@@ -666,6 +668,19 @@ public:
         session_runtime_identity_ += wide_prefill_ ? "|wide" : "|narrow";
         session_runtime_identity_ += full_layer_major_prefill_ ? "|full-layer" : "|partial-layer";
         session_runtime_identity_ += "|chunk:" + std::to_string(prefill_chunk_);
+        if (environment_flag("MIINFER_M26C_RECURRENT_QKV_M23")) {
+            session_runtime_identity_ += "|recurrent-qkv-m23";
+        }
+        if (environment_flag("MIINFER_M26C_SSM_OUT_NATIVE")) {
+            session_runtime_identity_ += "|ssm-out-native";
+        }
+        for (const auto& layer : layers_) {
+            if (layer.recurrent != nullptr) {
+                session_runtime_identity_ += layer.recurrent->transposed_state
+                    ? "|gdn-state-transposed" : "|gdn-state-logical";
+                break;
+            }
+        }
         for (const auto& layer : layers_) {
             if (layer.attention != nullptr) {
                 session_runtime_identity_ += layer.attention->fp16_kv_cache ? "|kv-f16" : "|kv-f32";
@@ -955,14 +970,52 @@ public:
         double latency_ms;
     };
 
-    StepResult step(std::uint32_t input_token, std::size_t position) {
+    struct StepTransferMetrics {
+        double h2d_device_ms = 0.0;
+        double d2h_device_ms = 0.0;
+        double blocking_sync_ms = 0.0;
+        std::size_t sync_calls = 0;
+    };
+
+    struct StepTransferEvents {
+        hipEvent_t h2d_start = nullptr;
+        hipEvent_t h2d_end = nullptr;
+        hipEvent_t d2h_start = nullptr;
+        hipEvent_t d2h_end = nullptr;
+
+        StepTransferEvents() {
+            MIINFER_HIP_CHECK(hipEventCreate(&h2d_start));
+            MIINFER_HIP_CHECK(hipEventCreate(&h2d_end));
+            MIINFER_HIP_CHECK(hipEventCreate(&d2h_start));
+            MIINFER_HIP_CHECK(hipEventCreate(&d2h_end));
+        }
+        ~StepTransferEvents() {
+            if (d2h_end != nullptr) (void)hipEventDestroy(d2h_end);
+            if (d2h_start != nullptr) (void)hipEventDestroy(d2h_start);
+            if (h2d_end != nullptr) (void)hipEventDestroy(h2d_end);
+            if (h2d_start != nullptr) (void)hipEventDestroy(h2d_start);
+        }
+        StepTransferEvents(const StepTransferEvents&) = delete;
+        StepTransferEvents& operator=(const StepTransferEvents&) = delete;
+    };
+
+    StepResult step(std::uint32_t input_token, std::size_t position,
+                    StepTransferEvents* transfer_events = nullptr,
+                    StepTransferMetrics* transfer_metrics = nullptr,
+                    DecodeLayerCapture* layer_capture = nullptr) {
         if (position >= g_cache_capacity) {
             throw std::runtime_error("context length exceeded capacity " + std::to_string(g_cache_capacity));
         }
         const auto t0 = std::chrono::steady_clock::now();
+        if (transfer_events != nullptr) {
+            MIINFER_HIP_CHECK(hipEventRecord(transfer_events->h2d_start, hipStreamPerThread));
+        }
         MIINFER_HIP_CHECK(hipMemcpyAsync(
             static_cast<std::uint32_t*>(d_decode_tokens_->get()) + position,
             &input_token, sizeof(input_token), hipMemcpyHostToDevice, hipStreamPerThread));
+        if (transfer_events != nullptr) {
+            MIINFER_HIP_CHECK(hipEventRecord(transfer_events->h2d_end, hipStreamPerThread));
+        }
 
         miinfer::launch_qwen35_q4_k_embedding_device_token(
             static_cast<const miinfer::Q4KDeviceBlock*>(d_embedding_->get()),
@@ -974,7 +1027,8 @@ public:
                        static_cast<const float*>(input_->get()), position,
                        static_cast<const float*>(d_final_norm_weight_->get()),
                        static_cast<float*>(final_norm_->get()),
-                       static_cast<miinfer::Q8_1Block*>(final_q8_1_->get()));
+                       static_cast<miinfer::Q8_1Block*>(final_q8_1_->get()),
+                       nullptr, layer_capture);
         miinfer::launch_qwen3_rms_norm(
                 output_pointers_[63],
                 static_cast<const float*>(d_final_norm_weight_->get()),
@@ -994,10 +1048,30 @@ public:
             static_cast<std::uint32_t*>(d_decode_tokens_->get()) + (position + 1),
             model_.config().vocab_size);
         std::uint32_t next_token = 0;
+        if (transfer_events != nullptr) {
+            MIINFER_HIP_CHECK(hipEventRecord(transfer_events->d2h_start, hipStreamPerThread));
+        }
         MIINFER_HIP_CHECK(hipMemcpyAsync(&next_token,
                                         static_cast<const std::uint32_t*>(d_decode_tokens_->get()) + (position + 1),
                                         sizeof(next_token), hipMemcpyDeviceToHost, hipStreamPerThread));
+        if (transfer_events != nullptr) {
+            MIINFER_HIP_CHECK(hipEventRecord(transfer_events->d2h_end, hipStreamPerThread));
+        }
+        const auto sync_start = std::chrono::steady_clock::now();
         MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+        const auto sync_end = std::chrono::steady_clock::now();
+        if (transfer_events != nullptr && transfer_metrics != nullptr) {
+            float h2d_ms = 0.0F, d2h_ms = 0.0F;
+            MIINFER_HIP_CHECK(hipEventElapsedTime(
+                &h2d_ms, transfer_events->h2d_start, transfer_events->h2d_end));
+            MIINFER_HIP_CHECK(hipEventElapsedTime(
+                &d2h_ms, transfer_events->d2h_start, transfer_events->d2h_end));
+            transfer_metrics->h2d_device_ms += h2d_ms;
+            transfer_metrics->d2h_device_ms += d2h_ms;
+            transfer_metrics->blocking_sync_ms +=
+                std::chrono::duration<double, std::milli>(sync_end - sync_start).count();
+            ++transfer_metrics->sync_calls;
+        }
         const auto t1 = std::chrono::steady_clock::now();
         const double ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
 
@@ -1477,6 +1551,596 @@ public:
         return snapshot;
     }
 
+    std::uint32_t prepare_m26c_state(std::span<const std::uint32_t> prompt,
+                                     const std::filesystem::path& path) {
+        if (prompt.size() != 512) {
+            throw std::runtime_error("M26-C canonical snapshot requires exactly 512 prompt tokens");
+        }
+        reset();
+        for (std::size_t pos = 0; pos + 1 < prompt.size(); ++pos) prefill_step(prompt[pos], pos);
+        MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+        const auto first = step(prompt.back(), prompt.size() - 1).token;
+        write_m26c_state(path, prompt, prompt.size(), first);
+        return first;
+    }
+
+    struct M26CDecodeResult {
+        std::vector<std::uint32_t> tokens;
+        double restore_ms = 0.0;
+        double graph_capture_ms = 0.0;
+        double decode_ms = 0.0;
+        double total_ms = 0.0;
+        double direct_h2d_device_ms = 0.0;
+        double direct_d2h_device_ms = 0.0;
+        double direct_blocking_sync_ms = 0.0;
+        std::size_t direct_sync_calls = 0;
+        double graph_state_sync_ms = 0.0;
+        double graph_replay_enqueue_ms = 0.0;
+        double graph_bulk_copy_wait_ms = 0.0;
+        std::size_t graph_nodes = 0;
+        std::size_t restore_h2d_bytes = 0;
+        std::size_t decode_h2d_bytes = 0;
+        std::size_t decode_d2h_bytes = 0;
+    };
+
+    std::size_t snapshot_decode_bytes(std::size_t positions) const {
+        std::size_t bytes = 0;
+        for (const auto& layer : layers_) {
+            if (layer.recurrent != nullptr) {
+                bytes += kVHeads * kState * kState * sizeof(float) + 4 * kChannels * sizeof(float);
+            } else if (layer.attention != nullptr) {
+                const std::size_t element_size = layer.attention->fp16_kv_cache
+                    ? sizeof(__half) : sizeof(float);
+                bytes += 2 * 4 * positions * 256 * element_size;
+            }
+        }
+        return bytes;
+    }
+
+    std::string runtime_selector_identity() const {
+        std::vector<std::string> selectors;
+        for (char** entry = environ; entry != nullptr && *entry != nullptr; ++entry) {
+            const std::string_view value(*entry);
+            if (value.rfind("MIINFER_", 0) == 0 && value.rfind("MIINFER_API_KEY=", 0) != 0) {
+                selectors.emplace_back(value);
+            }
+        }
+        std::sort(selectors.begin(), selectors.end());
+        std::string identity;
+        for (const auto& selector : selectors) identity += selector + "\n";
+        return identity;
+    }
+
+    void write_m26c_state(const std::filesystem::path& path,
+                          std::span<const std::uint32_t> history,
+                          std::size_t position, std::uint32_t current_token,
+                          std::span<const std::uint32_t> output_tokens = {}) const {
+        if (position != history.size() || position > g_cache_capacity
+            || position > std::numeric_limits<std::uint32_t>::max()
+            || current_token >= model_.config().vocab_size) {
+            throw std::runtime_error("invalid M26-C semantic position/history: position="
+                + std::to_string(position) + " history=" + std::to_string(history.size())
+                + " capacity=" + std::to_string(g_cache_capacity) + " token="
+                + std::to_string(current_token) + " vocab="
+                + std::to_string(model_.config().vocab_size));
+        }
+        std::ofstream output(path, std::ios::binary | std::ios::trunc);
+        if (!output) throw std::runtime_error("unable to create M26-C state: " + path.string());
+        const auto write = [&output](const void* data, std::size_t bytes) {
+            if (bytes == 0) return;
+            output.write(static_cast<const char*>(data), static_cast<std::streamsize>(bytes));
+            if (!output) throw std::runtime_error("failed writing M26-C state snapshot");
+        };
+        const auto write_string = [&write](std::string_view value) {
+            const auto size = static_cast<std::uint64_t>(value.size());
+            write(&size, sizeof(size));
+            write(value.data(), value.size());
+        };
+        const std::array<char, 8> magic{'M','2','6','C','S','T','A','T'};
+        constexpr std::uint32_t version = 1;
+        const auto block_count = static_cast<std::uint32_t>(model_.config().block_count);
+        const auto hidden_size = static_cast<std::uint32_t>(model_.config().hidden_size);
+        const auto state_size = static_cast<std::uint32_t>(kState);
+        const auto model_context_length = static_cast<std::uint64_t>(model_.config().context_length);
+        const auto saved_position = static_cast<std::uint64_t>(position);
+        const auto layer_count = static_cast<std::uint32_t>(layers_.size());
+        const auto token_count = static_cast<std::uint64_t>(history.size());
+        const auto output_count = static_cast<std::uint64_t>(output_tokens.size());
+        write(magic.data(), magic.size());
+        write(&version, sizeof(version));
+        write(&block_count, sizeof(block_count));
+        write(&hidden_size, sizeof(hidden_size));
+        write(&state_size, sizeof(state_size));
+        write(&model_context_length, sizeof(model_context_length));
+        write(&saved_position, sizeof(saved_position));
+        write(&current_token, sizeof(current_token));
+        write(&layer_count, sizeof(layer_count));
+        write(&token_count, sizeof(token_count));
+        write(&output_count, sizeof(output_count));
+        write_string(m26c_model_hash());
+        write_string(session_quantization_identity_);
+        write_string(session_runtime_identity_ + "\nselectors:\n" + runtime_selector_identity());
+        write(history.data(), history.size_bytes());
+        write(output_tokens.data(), output_tokens.size_bytes());
+        constexpr std::size_t recurrent_state_elements = kVHeads * kState * kState;
+        constexpr std::size_t recurrent_history_elements = 4 * kChannels;
+        for (const auto& layer : layers_) {
+            const std::uint8_t kind = layer.recurrent != nullptr ? 1 : 2;
+            write(&kind, sizeof(kind));
+            if (layer.recurrent != nullptr) {
+                const auto state = layer.recurrent->logical_state();
+                const auto* device_history = layer.recurrent->history->get();
+                std::vector<float> conv_history(recurrent_history_elements);
+                MIINFER_HIP_CHECK(hipMemcpy(conv_history.data(), device_history,
+                    conv_history.size() * sizeof(float), hipMemcpyDeviceToHost));
+                if (state.size() != recurrent_state_elements) {
+                    throw std::runtime_error("unexpected M26-C recurrent state size");
+                }
+                const auto state_count = static_cast<std::uint64_t>(state.size());
+                const auto history_count = static_cast<std::uint64_t>(conv_history.size());
+                write(&state_count, sizeof(state_count));
+                write(&history_count, sizeof(history_count));
+                write(state.data(), state.size() * sizeof(float));
+                write(conv_history.data(), conv_history.size() * sizeof(float));
+                continue;
+            }
+            const auto& attention = *layer.attention;
+            const std::size_t element_size = attention.fp16_kv_cache ? sizeof(__half) : sizeof(float);
+            const std::size_t elements = position * 256;
+            const auto* keys = static_cast<const std::byte*>(attention.key_cache->get());
+            const auto* values = static_cast<const std::byte*>(attention.value_cache->get());
+            const auto head_count = std::uint32_t{4};
+            const auto element_count = static_cast<std::uint64_t>(elements);
+            write(&head_count, sizeof(head_count));
+            write(&element_count, sizeof(element_count));
+            for (std::size_t head = 0; head < 4; ++head) {
+                std::vector<float> host_keys(elements), host_values(elements);
+                const std::size_t source_offset = head * g_cache_capacity * 256 * element_size;
+                if (attention.fp16_kv_cache) {
+                    std::vector<__half> half_keys(elements), half_values(elements);
+                    MIINFER_HIP_CHECK(hipMemcpy(half_keys.data(), keys + source_offset,
+                        elements * sizeof(__half), hipMemcpyDeviceToHost));
+                    MIINFER_HIP_CHECK(hipMemcpy(half_values.data(), values + source_offset,
+                        elements * sizeof(__half), hipMemcpyDeviceToHost));
+                    std::transform(half_keys.begin(), half_keys.end(), host_keys.begin(),
+                        [](const __half& value) { return __half2float(value); });
+                    std::transform(half_values.begin(), half_values.end(), host_values.begin(),
+                        [](const __half& value) { return __half2float(value); });
+                } else {
+                    MIINFER_HIP_CHECK(hipMemcpy(host_keys.data(), keys + source_offset,
+                        elements * sizeof(float), hipMemcpyDeviceToHost));
+                    MIINFER_HIP_CHECK(hipMemcpy(host_values.data(), values + source_offset,
+                        elements * sizeof(float), hipMemcpyDeviceToHost));
+                }
+                write(host_keys.data(), host_keys.size() * sizeof(float));
+                write(host_values.data(), host_values.size() * sizeof(float));
+            }
+        }
+    }
+
+    std::string m26c_model_hash() const {
+        if (m26c_model_hash_.empty()) m26c_model_hash_ = miinfer::sha256_file(model_.artifact_path());
+        return m26c_model_hash_;
+    }
+
+    M26CDecodeResult decode_m26c_state(const std::filesystem::path& input_path,
+                                       const std::filesystem::path& output_path,
+                                       bool graph, std::size_t token_count,
+                                       const std::optional<std::filesystem::path>& logits_output = {},
+                                       const std::optional<std::filesystem::path>& layer_path_prefix = {},
+                                       const std::optional<std::vector<std::uint32_t>>& forced_inputs = {},
+                                       const std::optional<std::filesystem::path>& checkpoint_dir = {},
+                                       const std::optional<std::size_t>& layer_path_position = {}) {
+        M26CDecodeResult result;
+        const auto total_start = std::chrono::steady_clock::now();
+        std::ifstream input(input_path, std::ios::binary);
+        if (!input) throw std::runtime_error("unable to open M26-C state: " + input_path.string());
+        const auto read = [&input](void* data, std::size_t bytes) {
+            if (bytes == 0) return;
+            input.read(static_cast<char*>(data), static_cast<std::streamsize>(bytes));
+            if (!input) throw std::runtime_error("truncated M26-C state snapshot");
+        };
+        const auto read_string = [&read]() {
+            std::uint64_t size = 0;
+            read(&size, sizeof(size));
+            if (size > 65536) throw std::runtime_error("invalid M26-C identity length");
+            std::string value(static_cast<std::size_t>(size), '\0');
+            read(value.data(), value.size());
+            return value;
+        };
+        std::array<char, 8> magic{};
+        std::uint32_t version = 0, block_count = 0, hidden_size = 0, state_size = 0;
+        std::uint64_t model_context_length = 0;
+        std::uint32_t current_token = 0, layer_count = 0;
+        std::uint64_t position = 0, token_count_in_state = 0, output_count = 0;
+        read(magic.data(), magic.size());
+        read(&version, sizeof(version));
+        read(&block_count, sizeof(block_count));
+        read(&hidden_size, sizeof(hidden_size));
+        read(&state_size, sizeof(state_size));
+        read(&model_context_length, sizeof(model_context_length));
+        read(&position, sizeof(position));
+        read(&current_token, sizeof(current_token));
+        read(&layer_count, sizeof(layer_count));
+        read(&token_count_in_state, sizeof(token_count_in_state));
+        read(&output_count, sizeof(output_count));
+        const auto model_hash = read_string();
+        const auto quantization_identity = read_string();
+        const auto source_runtime_identity = read_string();
+        if (magic != std::array<char, 8>{'M','2','6','C','S','T','A','T'} || version != 1
+            || block_count != model_.config().block_count
+            || hidden_size != model_.config().hidden_size || state_size != kState
+            || model_context_length != model_.config().context_length
+            || layer_count != layers_.size() || token_count_in_state != position
+            || model_hash != m26c_model_hash()
+            || quantization_identity != session_quantization_identity_
+            || position >= g_cache_capacity || current_token >= model_.config().vocab_size) {
+            throw std::runtime_error("M26-C state identity/layout mismatch");
+        }
+        std::cerr << "m26c_source_contract=" << source_runtime_identity
+                  << "\nm26c_target_contract=" << session_runtime_identity_ << '\n';
+        if (token_count > g_cache_capacity
+            || token_count > g_cache_capacity - position) {
+            throw std::runtime_error("M26-C decode exceeds cache capacity");
+        }
+        std::vector<std::uint32_t> history(static_cast<std::size_t>(token_count_in_state));
+        read(history.data(), history.size() * sizeof(std::uint32_t));
+        if (std::any_of(history.begin(), history.end(), [&](std::uint32_t token) {
+                return token >= model_.config().vocab_size;
+            })) {
+            throw std::runtime_error("invalid token in M26-C semantic history");
+        }
+        if (output_count > g_cache_capacity) throw std::runtime_error("invalid M26-C output token count");
+        std::vector<std::uint32_t> prior_output(static_cast<std::size_t>(output_count));
+        read(prior_output.data(), prior_output.size() * sizeof(std::uint32_t));
+        if (std::any_of(prior_output.begin(), prior_output.end(), [&](std::uint32_t token) {
+                return token >= model_.config().vocab_size;
+            })) {
+            throw std::runtime_error("invalid token in M26-C diagnostic output");
+        }
+
+        const auto restore_start = std::chrono::steady_clock::now();
+        for (std::size_t i = 0; i < layers_.size(); ++i) {
+            std::uint8_t kind = 0;
+            read(&kind, sizeof(kind));
+            const auto& layer = layers_[i];
+            if (layer.recurrent != nullptr && kind == 1) {
+                constexpr std::size_t state_elements = kVHeads * kState * kState;
+                constexpr std::size_t history_elements = 4 * kChannels;
+                std::uint64_t state_count = 0, conv_history_count = 0;
+                read(&state_count, sizeof(state_count));
+                read(&conv_history_count, sizeof(conv_history_count));
+                if (state_count != state_elements || conv_history_count != history_elements) {
+                    throw std::runtime_error("M26-C recurrent record size mismatch");
+                }
+                std::vector<float> state(state_elements), conv_history(history_elements);
+                read(state.data(), state.size() * sizeof(float));
+                read(conv_history.data(), conv_history.size() * sizeof(float));
+                layer.recurrent->upload_state(state);
+                MIINFER_HIP_CHECK(hipMemcpy(layer.recurrent->history->get(), conv_history.data(),
+                    conv_history.size() * sizeof(float), hipMemcpyHostToDevice));
+            } else if (layer.attention != nullptr && kind == 2) {
+                std::uint32_t head_count = 0;
+                std::uint64_t element_count = 0;
+                read(&head_count, sizeof(head_count));
+                const std::size_t elements = static_cast<std::size_t>(position) * 256;
+                read(&element_count, sizeof(element_count));
+                if (head_count != 4 || element_count != elements) {
+                    throw std::runtime_error("M26-C attention record size mismatch");
+                }
+                const std::size_t target_element_size = layer.attention->fp16_kv_cache
+                    ? sizeof(__half) : sizeof(float);
+                auto* key_base = static_cast<std::byte*>(layer.attention->key_cache->get());
+                auto* value_base = static_cast<std::byte*>(layer.attention->value_cache->get());
+                for (std::size_t head = 0; head < 4; ++head) {
+                    std::vector<float> keys(elements), values(elements);
+                    read(keys.data(), keys.size() * sizeof(float));
+                    read(values.data(), values.size() * sizeof(float));
+                    const std::size_t target_offset = head * g_cache_capacity * 256 * target_element_size;
+                    if (layer.attention->fp16_kv_cache) {
+                        std::vector<__half> half_keys(elements), half_values(elements);
+                        std::transform(keys.begin(), keys.end(), half_keys.begin(),
+                            [](float value) { return __float2half(value); });
+                        std::transform(values.begin(), values.end(), half_values.begin(),
+                            [](float value) { return __float2half(value); });
+                        MIINFER_HIP_CHECK(hipMemcpy(key_base + target_offset, half_keys.data(),
+                            elements * sizeof(__half), hipMemcpyHostToDevice));
+                        MIINFER_HIP_CHECK(hipMemcpy(value_base + target_offset, half_values.data(),
+                            elements * sizeof(__half), hipMemcpyHostToDevice));
+                    } else {
+                        MIINFER_HIP_CHECK(hipMemcpy(key_base + target_offset, keys.data(),
+                            elements * sizeof(float), hipMemcpyHostToDevice));
+                        MIINFER_HIP_CHECK(hipMemcpy(value_base + target_offset, values.data(),
+                            elements * sizeof(float), hipMemcpyHostToDevice));
+                    }
+                }
+            } else {
+                throw std::runtime_error("M26-C snapshot layer topology mismatch at layer "
+                                         + std::to_string(i));
+            }
+        }
+        if (input.peek() != std::char_traits<char>::eof()) {
+            throw std::runtime_error("unexpected trailing bytes in M26-C snapshot");
+        }
+        MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+        result.restore_ms = std::chrono::duration<double, std::milli>(
+            std::chrono::steady_clock::now() - restore_start).count();
+        result.restore_h2d_bytes = snapshot_decode_bytes(position);
+        const auto first_input_token = current_token;
+
+        if (forced_inputs && (graph || forced_inputs->size() != token_count
+            || forced_inputs->empty() || forced_inputs->front() != current_token)) {
+            throw std::runtime_error("M26-C teacher forcing requires direct route and a token vector "
+                                     "matching max-tokens and the snapshot's pending token");
+        }
+        if (checkpoint_dir) std::filesystem::create_directories(*checkpoint_dir);
+
+        if (token_count == 0) {
+            write_m26c_state(output_path, history, static_cast<std::size_t>(position), current_token);
+            result.total_ms = std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - total_start).count();
+            return result;
+        }
+
+        std::array<LayerPathCapture, 2> layer_path_captures;
+        std::array<GatePathCapture, 2> gate_path_captures;
+        constexpr std::array<std::size_t, 2> captured_layers{0, 1};
+        if (layer_path_prefix && !layer_path_position) {
+            if (graph || token_count != 1) {
+                throw std::runtime_error(
+                    "M26-C layer-path capture requires one direct decode token");
+            }
+            for (std::size_t i = 0; i < captured_layers.size(); ++i) {
+                const auto index = captured_layers[i];
+                if (index >= layers_.size() || layers_[index].recurrent == nullptr) {
+                    throw std::runtime_error(
+                        "M26-C layer-path capture requires recurrent layers 0 and 1");
+                }
+                auto* recurrent = layers_[index].recurrent;
+                recurrent->layer_path_capture = &layer_path_captures[i];
+                recurrent->layer_path_capture_position = static_cast<std::uint32_t>(position);
+                recurrent->gate_path_capture = &gate_path_captures[i];
+                recurrent->gate_path_capture_position = static_cast<std::uint32_t>(position);
+            }
+        }
+
+        if (graph) {
+            if (prefill_profile_.decode_mode) {
+                throw std::runtime_error(
+                    "M26-C event profiling requires direct decode; graph event capture is unsupported");
+            }
+            if (!use_hip_graph_) throw std::runtime_error("M26-C graph route disabled by MIINFER_HIP_GRAPH=0");
+            const double capture_before = graph_capture_ms_;
+            ensure_graph_captured(static_cast<std::size_t>(position));
+            result.graph_capture_ms = graph_capture_ms_ - capture_before;
+            result.graph_nodes = decode_graph_node_count_;
+            initialize_decode_state(current_token, static_cast<std::size_t>(position), token_count);
+            const auto state_sync_start = std::chrono::steady_clock::now();
+            MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+            result.graph_state_sync_ms = std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - state_sync_start).count();
+            result.tokens.resize(token_count);
+            const auto decode_start = std::chrono::steady_clock::now();
+            const auto replay_start = std::chrono::steady_clock::now();
+            for (std::size_t i = 0; i < token_count; ++i)
+                MIINFER_HIP_CHECK(hipGraphLaunch(decode_graph_, hipStreamPerThread));
+            result.graph_replay_enqueue_ms = std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - replay_start).count();
+            const auto copy_start = std::chrono::steady_clock::now();
+            MIINFER_HIP_CHECK(hipMemcpy(result.tokens.data(), d_decode_tokens_->get(),
+                token_count * sizeof(std::uint32_t), hipMemcpyDeviceToHost));
+            result.graph_bulk_copy_wait_ms = std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - copy_start).count();
+            result.decode_ms = std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - decode_start).count();
+            result.decode_h2d_bytes = sizeof(miinfer::DeviceDecodeState);
+            result.decode_d2h_bytes = token_count * sizeof(std::uint32_t);
+            current_token = result.tokens.back();
+            position += token_count;
+        } else {
+            result.tokens.reserve(token_count);
+            StepTransferEvents transfer_events;
+            StepTransferMetrics transfer_metrics;
+            std::vector<LayerPathCapture> teacher_layer_captures(layers_.size());
+            std::vector<GatePathCapture> teacher_gate_captures(layers_.size());
+            DecodeLayerCapture teacher_hidden_capture;
+            teacher_hidden_capture.inputs.resize(layers_.size());
+            teacher_hidden_capture.outputs.resize(layers_.size());
+            constexpr std::array<std::size_t, 12> kTeacherLayerPositions{
+                512, 519, 527, 543, 559, 564, 565, 566, 567, 568, 569, 575};
+            auto token = current_token;
+            const auto decode_start = std::chrono::steady_clock::now();
+            for (std::size_t i = 0; i < token_count; ++i) {
+                const auto absolute_position = static_cast<std::size_t>(position + i);
+                const bool capture_layer_path = layer_path_position
+                    && (absolute_position == *layer_path_position
+                        || std::find(kTeacherLayerPositions.begin(), kTeacherLayerPositions.end(),
+                                     absolute_position) != kTeacherLayerPositions.end());
+                if (capture_layer_path) {
+                    for (std::size_t layer_index = 0; layer_index < layers_.size(); ++layer_index) {
+                        if (auto* recurrent = layers_[layer_index].recurrent) {
+                            recurrent->layer_path_capture = &teacher_layer_captures[layer_index];
+                            recurrent->layer_path_capture_position = static_cast<std::uint32_t>(absolute_position);
+                            recurrent->gate_path_capture = &teacher_gate_captures[layer_index];
+                            recurrent->gate_path_capture_position = static_cast<std::uint32_t>(absolute_position);
+                        }
+                    }
+                }
+                const auto input_token = forced_inputs ? (*forced_inputs)[i] : token;
+                token = step(input_token, static_cast<std::size_t>(position + i),
+                             &transfer_events, &transfer_metrics,
+                             capture_layer_path ? &teacher_hidden_capture : nullptr).token;
+                result.tokens.push_back(token);
+                if (capture_layer_path) {
+                    if (!layer_path_prefix) throw std::runtime_error("layer-path position requires output prefix");
+                    const auto write_capture = [&layer_path_prefix, absolute_position](
+                        std::size_t layer_index, std::string_view field, const std::vector<float>& values) {
+                        if (values.empty()) return;
+                        auto path = *layer_path_prefix;
+                        path += ".pos-" + std::to_string(absolute_position) + ".layer"
+                            + std::to_string(layer_index) + "." + std::string(field) + ".f32";
+                        std::ofstream output(path, std::ios::binary | std::ios::trunc);
+                        if (!output) throw std::runtime_error("unable to create M26-C layer capture: " + path.string());
+                        output.write(reinterpret_cast<const char*>(values.data()),
+                            static_cast<std::streamsize>(values.size() * sizeof(float)));
+                        if (!output) throw std::runtime_error("failed writing M26-C layer capture: " + path.string());
+                    };
+                    for (std::size_t layer_index = 0; layer_index < layers_.size(); ++layer_index) {
+                        const auto& capture = teacher_layer_captures[layer_index];
+                        const auto& gate = teacher_gate_captures[layer_index];
+                        write_capture(layer_index, "input_hidden", teacher_hidden_capture.inputs[layer_index]);
+                        write_capture(layer_index, "output_hidden", teacher_hidden_capture.outputs[layer_index]);
+                        write_capture(layer_index, "input", capture.input);
+                        write_capture(layer_index, "normalized", capture.normalized);
+                        write_capture(layer_index, "qkv", capture.qkv);
+                        write_capture(layer_index, "recurrent_output", capture.recurrent_output);
+                        write_capture(layer_index, "gated", capture.gated);
+                        write_capture(layer_index, "attention_residual", capture.attention_residual);
+                        write_capture(layer_index, "post_normalized", capture.post_normalized);
+                        write_capture(layer_index, "ffn_output", capture.ffn_output);
+                        write_capture(layer_index, "layer_output", capture.layer_output);
+                        write_capture(layer_index, "gate.projection", gate.gate);
+                        write_capture(layer_index, "gate.gated", gate.gated);
+                        if (layers_[layer_index].recurrent != nullptr) {
+                            layers_[layer_index].recurrent->layer_path_capture = nullptr;
+                            layers_[layer_index].recurrent->gate_path_capture = nullptr;
+                        }
+                    }
+                }
+                if (forced_inputs && logits_output) {
+                    std::vector<float> host_logits(model_.config().vocab_size);
+                    std::vector<float> host_final_norm(kHidden);
+                    MIINFER_HIP_CHECK(hipMemcpy(host_logits.data(), logits_->get(),
+                        host_logits.size() * sizeof(float), hipMemcpyDeviceToHost));
+                    MIINFER_HIP_CHECK(hipMemcpy(host_final_norm.data(), final_norm_->get(),
+                        host_final_norm.size() * sizeof(float), hipMemcpyDeviceToHost));
+                    auto path = *logits_output;
+                    path += ".pos-" + std::to_string(position + i) + ".f32";
+                    std::ofstream logits_file(path, std::ios::binary | std::ios::trunc);
+                    if (!logits_file) throw std::runtime_error("unable to create M26-C logits: " + path.string());
+                    logits_file.write(reinterpret_cast<const char*>(host_logits.data()),
+                        static_cast<std::streamsize>(host_logits.size() * sizeof(float)));
+                    if (!logits_file) throw std::runtime_error("failed writing M26-C logits");
+                    path = *logits_output;
+                    path += ".pos-" + std::to_string(position + i) + ".final-norm.f32";
+                    std::ofstream norm_file(path, std::ios::binary | std::ios::trunc);
+                    if (!norm_file) throw std::runtime_error("unable to create M26-C final norm: " + path.string());
+                    norm_file.write(reinterpret_cast<const char*>(host_final_norm.data()),
+                        static_cast<std::streamsize>(host_final_norm.size() * sizeof(float)));
+                    if (!norm_file) throw std::runtime_error("failed writing M26-C final norm");
+                }
+                if (forced_inputs && checkpoint_dir) {
+                    const auto absolute_position = static_cast<std::size_t>(position + i);
+                    const bool checkpoint = absolute_position == 512 || absolute_position == 519
+                        || absolute_position == 527 || absolute_position == 543
+                        || absolute_position == 559 || absolute_position == 564
+                        || absolute_position == 565 || absolute_position == 566
+                        || absolute_position == 567 || absolute_position == 568
+                        || absolute_position == 569 || absolute_position == 575;
+                    if (checkpoint) {
+                        auto checkpoint_history = history;
+                        checkpoint_history.insert(checkpoint_history.end(), forced_inputs->begin(),
+                            forced_inputs->begin() + static_cast<std::ptrdiff_t>(i + 1));
+                        const auto pending = i + 1 < token_count ? (*forced_inputs)[i + 1] : token;
+                        auto path = *checkpoint_dir;
+                        path /= "position-" + std::to_string(absolute_position + 1) + ".state";
+                        write_m26c_state(path, checkpoint_history, absolute_position + 1, pending,
+                            std::span<const std::uint32_t>(result.tokens.data(), result.tokens.size()));
+                    }
+                }
+            }
+            result.direct_h2d_device_ms = transfer_metrics.h2d_device_ms;
+            result.direct_d2h_device_ms = transfer_metrics.d2h_device_ms;
+            result.direct_blocking_sync_ms = transfer_metrics.blocking_sync_ms;
+            result.direct_sync_calls = transfer_metrics.sync_calls;
+            result.decode_ms = std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - decode_start).count();
+            if (prefill_profile_.decode_mode) {
+                prefill_profile_.report(result.decode_ms, static_cast<std::size_t>(position));
+            }
+            result.decode_h2d_bytes = token_count * sizeof(std::uint32_t);
+            result.decode_d2h_bytes = token_count * sizeof(std::uint32_t);
+            // Each returned token except the final one is consumed into the saved state.
+            current_token = token;
+            position += token_count;
+            if (forced_inputs) {
+                history.insert(history.end(), forced_inputs->begin(), forced_inputs->end());
+            }
+        }
+        if (layer_path_prefix && !layer_path_position) {
+            const auto write_capture = [this, &layer_path_prefix](
+                std::size_t layer_index, std::string_view field, const std::vector<float>& values) {
+                if (values.empty()) return;
+                auto path = *layer_path_prefix;
+                path += ".layer" + std::to_string(layer_index) + "."
+                    + std::string(field) + ".f32";
+                std::ofstream output(path, std::ios::binary | std::ios::trunc);
+                if (!output) throw std::runtime_error("unable to create M26-C layer capture: "
+                                                     + path.string());
+                output.write(reinterpret_cast<const char*>(values.data()),
+                    static_cast<std::streamsize>(values.size() * sizeof(float)));
+                if (!output) throw std::runtime_error("failed writing M26-C layer capture: "
+                                                     + path.string());
+            };
+            for (std::size_t i = 0; i < captured_layers.size(); ++i) {
+                const auto layer = captured_layers[i];
+                const auto& path = layer_path_captures[i];
+                const auto& gate = gate_path_captures[i];
+                write_capture(layer, "input", path.input);
+                write_capture(layer, "normalized", path.normalized);
+                write_capture(layer, "qkv", path.qkv);
+                write_capture(layer, "recurrent_output", path.recurrent_output);
+                write_capture(layer, "gated", path.gated);
+                write_capture(layer, "attention_residual", path.attention_residual);
+                write_capture(layer, "post_normalized", path.post_normalized);
+                write_capture(layer, "ffn_output", path.ffn_output);
+                write_capture(layer, "layer_output", path.layer_output);
+                write_capture(layer, "gate.normalized", gate.normalized);
+                write_capture(layer, "gate.projection", gate.gate);
+                write_capture(layer, "gate.recurrent_output", gate.recurrent_output);
+                write_capture(layer, "gate.head_norm", gate.head_norm);
+                write_capture(layer, "gate.head_scaled", gate.head_scaled);
+                write_capture(layer, "gate.gated", gate.gated);
+                auto manifest_path = *layer_path_prefix;
+                manifest_path += ".layer" + std::to_string(layer) + ".manifest";
+                std::ofstream manifest(manifest_path, std::ios::trunc);
+                if (!manifest) throw std::runtime_error("unable to create M26-C layer manifest: "
+                                                       + manifest_path.string());
+                manifest << "model_sha256=" << m26c_model_hash() << '\n'
+                         << "position=" << (position - token_count) << '\n'
+                         << "input_token=" << first_input_token << '\n'
+                         << "output_token=" << result.tokens.front() << '\n'
+                         << "source_contract=" << source_runtime_identity << '\n'
+                         << "target_contract=" << session_runtime_identity_ << '\n';
+                if (!manifest) throw std::runtime_error("failed writing M26-C layer manifest: "
+                                                       + manifest_path.string());
+                layers_[layer].recurrent->layer_path_capture = nullptr;
+                layers_[layer].recurrent->gate_path_capture = nullptr;
+            }
+        }
+        if (!forced_inputs) {
+            history.push_back(first_input_token);
+            history.insert(history.end(), result.tokens.begin(), result.tokens.end() - 1);
+        }
+        if (history.size() != position) throw std::runtime_error("invalid M26-C output history length");
+        if (logits_output && !forced_inputs) {
+            std::vector<float> host_logits(model_.config().vocab_size);
+            MIINFER_HIP_CHECK(hipMemcpy(host_logits.data(), logits_->get(),
+                host_logits.size() * sizeof(float), hipMemcpyDeviceToHost));
+            std::ofstream logits_file(*logits_output, std::ios::binary | std::ios::trunc);
+            if (!logits_file) throw std::runtime_error("unable to create M26-C logits: "
+                                                       + logits_output->string());
+            logits_file.write(reinterpret_cast<const char*>(host_logits.data()),
+                static_cast<std::streamsize>(host_logits.size() * sizeof(float)));
+            if (!logits_file) throw std::runtime_error("failed writing M26-C logits");
+        }
+        write_m26c_state(output_path, history, static_cast<std::size_t>(position), current_token,
+                         result.tokens);
+        result.total_ms = std::chrono::duration<double, std::milli>(
+            std::chrono::steady_clock::now() - total_start).count();
+        return result;
+    }
+
     GenerateStats generate_fresh(std::span<const std::uint32_t> prompt, const GenerateOptions& opt) {
         reset();
         GenerateStats stats;
@@ -1663,9 +2327,9 @@ private:
         const char* decode_profile_env = std::getenv("MIINFER_DECODE_PROFILE");
         prefill_profile_.decode_mode = decode_profile_env != nullptr
             && std::strcmp(decode_profile_env, "0") != 0;
-        prefill_profile_.enabled = layer_major_prefill_
-            && ((prefill_profile_env != nullptr && std::strcmp(prefill_profile_env, "0") != 0)
-                || prefill_profile_.decode_mode);
+        prefill_profile_.enabled = prefill_profile_.decode_mode
+            || (layer_major_prefill_ && prefill_profile_env != nullptr
+                && std::strcmp(prefill_profile_env, "0") != 0);
         if (prefill_profile_.enabled) {
             prefill_profile_.projection_batch_width = wide_prefill_
                 ? configured_wide_prefill_batch() : 4;
@@ -1942,6 +2606,7 @@ private:
             static_cast<std::uint32_t>(g_cache_capacity));
 
         MIINFER_HIP_CHECK(hipStreamEndCapture(hipStreamPerThread, &graph));
+        MIINFER_HIP_CHECK(hipGraphGetNodes(graph, nullptr, &decode_graph_node_count_));
         MIINFER_HIP_CHECK(hipGraphInstantiate(&decode_graph_, graph, nullptr, nullptr, 0));
         MIINFER_HIP_CHECK(hipGraphDestroy(graph));
         graph_capture_ms_ += std::chrono::duration<double, std::milli>(
@@ -1963,8 +2628,10 @@ private:
     std::string session_model_identity_;
     std::string session_quantization_identity_;
     std::string session_runtime_identity_;
+    mutable std::string m26c_model_hash_;
     std::function<void(std::size_t)> opt_prefill_checkpoint_;
     double graph_capture_ms_ = 0.0;
+    std::size_t decode_graph_node_count_ = 0;
     miinfer::Qwen3Tokenizer tokenizer_;
 
     std::vector<std::unique_ptr<RecurrentLayer>> recurrent_layers_;
@@ -2210,6 +2877,8 @@ int cmd_run(int argc, char** argv) {
         std::cerr << "usage: miinfer run <model.gguf> (--prompt \"...\" | --prompt-file PATH) [--max-tokens N]\n";
         return 1;
     }
+    (void)unsetenv("MIINFER_M26C_RECURRENT_QKV_M23");
+    (void)unsetenv("MIINFER_M26C_SSM_OUT_NATIVE");
     const std::string model_path = argv[2];
     std::string prompt_text;
     std::optional<std::filesystem::path> prompt_file;
@@ -2219,6 +2888,19 @@ int cmd_run(int argc, char** argv) {
     bool check_session = false;
     bool check_graph_state = false;
     std::optional<std::size_t> check_graph_state_context;
+    std::optional<std::filesystem::path> m26c_export_state;
+    std::optional<std::filesystem::path> m26c_import_state;
+    std::optional<std::filesystem::path> m26c_output_state;
+    std::optional<std::filesystem::path> m26c_logits_output;
+    std::optional<std::filesystem::path> m26c_layer_path_prefix;
+    std::optional<std::filesystem::path> m26c_teacher_inputs_path;
+    std::optional<std::filesystem::path> m26c_checkpoints_dir;
+    std::optional<std::size_t> m26c_layer_path_position;
+    std::optional<std::string> m26c_decode_route;
+    std::optional<std::size_t> m26c_state_context;
+    bool m26c_restore_only = false;
+    bool m26c_recurrent_qkv_m23 = false;
+    bool m26c_ssm_out_native = false;
     bool decode_curve = false;
     std::size_t curve_iterations = 1;
     std::optional<std::size_t> curve_context;
@@ -2250,6 +2932,33 @@ int cmd_run(int argc, char** argv) {
             if (*check_graph_state_context == 0) {
                 throw std::runtime_error("graph-state context must be positive");
             }
+        } else if (arg == "--m26c-export-state" && i + 1 < argc) {
+            m26c_export_state = argv[++i];
+        } else if (arg == "--m26c-import-state" && i + 1 < argc) {
+            m26c_import_state = argv[++i];
+        } else if (arg == "--m26c-output-state" && i + 1 < argc) {
+            m26c_output_state = argv[++i];
+        } else if (arg == "--m26c-logits-output" && i + 1 < argc) {
+            m26c_logits_output = argv[++i];
+        } else if (arg == "--m26c-layer-path-prefix" && i + 1 < argc) {
+            m26c_layer_path_prefix = argv[++i];
+        } else if (arg == "--m26c-teacher-forced-inputs" && i + 1 < argc) {
+            m26c_teacher_inputs_path = argv[++i];
+        } else if (arg == "--m26c-checkpoints-dir" && i + 1 < argc) {
+            m26c_checkpoints_dir = argv[++i];
+        } else if (arg == "--m26c-layer-path-position" && i + 1 < argc) {
+            m26c_layer_path_position = std::stoull(argv[++i]);
+        } else if (arg == "--m26c-decode-route" && i + 1 < argc) {
+            m26c_decode_route = argv[++i];
+        } else if (arg == "--m26c-state-context" && i + 1 < argc) {
+            m26c_state_context = std::stoull(argv[++i]);
+            if (*m26c_state_context == 0) throw std::runtime_error("M26-C state context must be positive");
+        } else if (arg == "--m26c-restore-only") {
+            m26c_restore_only = true;
+        } else if (arg == "--m26c-recurrent-qkv-m23") {
+            m26c_recurrent_qkv_m23 = true;
+        } else if (arg == "--m26c-ssm-out-native") {
+            m26c_ssm_out_native = true;
         } else if (arg == "--decode-curve") {
             decode_curve = true;
         } else if (arg == "--curve-iterations" && i + 1 < argc) {
@@ -2280,6 +2989,24 @@ int cmd_run(int argc, char** argv) {
         std::cerr << "No prompt provided. Defaulting to: \"" << prompt_text << "\"\n";
     }
 
+    if (m26c_recurrent_qkv_m23) {
+        if (!m26c_import_state) {
+            throw std::runtime_error("--m26c-recurrent-qkv-m23 requires --m26c-import-state");
+        }
+        if (setenv("MIINFER_M26C_RECURRENT_QKV_M23", "1", 1) != 0) {
+            throw std::runtime_error("unable to enable M26-C M23 recurrent QKV diagnostic");
+        }
+        std::cerr << "m26c_recurrent_qkv_m23=1\n";
+    }
+    if (m26c_ssm_out_native) {
+        if (!m26c_import_state) {
+            throw std::runtime_error("--m26c-ssm-out-native requires --m26c-import-state");
+        }
+        if (setenv("MIINFER_M26C_SSM_OUT_NATIVE", "1", 1) != 0) {
+            throw std::runtime_error("unable to enable M26-C native SSM-output diagnostic");
+        }
+        std::cerr << "m26c_ssm_out_native=1\n";
+    }
     std::cerr << "Initializing MIInfer gfx906 runtime engine for " << model_path << " ...\n";
     Qwen35RuntimeEngine engine(model_path);
     std::cerr << "device_allocation_count=" << g_device_allocations << "\n"
@@ -2290,6 +3017,16 @@ int cmd_run(int argc, char** argv) {
     std::cerr << "model_context_length=" << engine.model().config().context_length << "\n";
 
     auto prompt_tokens = engine.tokenizer().encode(prompt_text);
+    if (m26c_state_context) {
+        if (!m26c_export_state || *m26c_state_context != 512 || prompt_tokens.empty()) {
+            throw std::runtime_error("--m26c-state-context currently requires a 512-token export prompt");
+        }
+        const auto seed = prompt_tokens;
+        prompt_tokens.resize(*m26c_state_context);
+        for (std::size_t i = seed.size(); i < prompt_tokens.size(); ++i) {
+            prompt_tokens[i] = seed[i % seed.size()];
+        }
+    }
     if (check_graph_state_context) {
         if (!check_graph_state || prompt_tokens.empty()
             || *check_graph_state_context > g_cache_capacity) {
@@ -2303,6 +3040,93 @@ int cmd_run(int argc, char** argv) {
         }
     }
     std::cerr << "Prompt tokens: " << prompt_tokens.size() << " tokens\n";
+
+        if (m26c_export_state) {
+            if (m26c_import_state || m26c_decode_route || m26c_output_state || m26c_logits_output
+            || m26c_layer_path_prefix || m26c_teacher_inputs_path || m26c_checkpoints_dir
+            || m26c_layer_path_position || m26c_ssm_out_native
+            || m26c_restore_only || prompt_tokens.size() != 512) {
+            throw std::runtime_error("M26-C export requires one 512-token prompt and no import options");
+        }
+        const auto next = engine.prepare_m26c_state(prompt_tokens, *m26c_export_state);
+        std::cout << "m26c_export=PASS position=512 current_token=" << next
+                  << " path=" << m26c_export_state->string() << '\n';
+        return 0;
+    }
+    if (m26c_import_state) {
+        std::optional<std::vector<std::uint32_t>> teacher_inputs;
+        if (m26c_teacher_inputs_path) {
+            std::ifstream tokens_file(*m26c_teacher_inputs_path);
+            if (!tokens_file) throw std::runtime_error("unable to open teacher-forced token file");
+            teacher_inputs.emplace();
+            std::uint64_t token = 0;
+            while (tokens_file >> token) {
+                if (token >= engine.model().config().vocab_size) {
+                    throw std::runtime_error("teacher-forced token is outside the model vocabulary");
+                }
+                teacher_inputs->push_back(static_cast<std::uint32_t>(token));
+            }
+            if (!tokens_file.eof() || teacher_inputs->empty() || teacher_inputs->size() != max_tokens) {
+                throw std::runtime_error("teacher-forced token file must contain exactly --max-tokens integers");
+            }
+        }
+        if (!m26c_decode_route || !m26c_output_state || m26c_state_context
+            || (*m26c_decode_route != "direct" && *m26c_decode_route != "graph")
+            || (m26c_logits_output && max_tokens != 1 && !teacher_inputs)
+            || (m26c_layer_path_prefix
+                && ((*m26c_decode_route != "direct")
+                    || (max_tokens != 1 && (!teacher_inputs || !m26c_layer_path_position))))
+            || (m26c_layer_path_position && (!m26c_layer_path_prefix || !teacher_inputs))
+            || ((m26c_checkpoints_dir || m26c_layer_path_position || teacher_inputs)
+                && *m26c_decode_route != "direct")
+            || (max_tokens == 0 && !m26c_restore_only)
+            || (max_tokens != 0 && m26c_restore_only)) {
+            throw std::runtime_error("M26-C import requires --m26c-decode-route direct|graph, "
+                                     "--m26c-output-state and positive --max-tokens "
+                                     "(or --m26c-restore-only with zero tokens)");
+        }
+        const auto result = engine.decode_m26c_state(*m26c_import_state, *m26c_output_state,
+            *m26c_decode_route == "graph", max_tokens, m26c_logits_output,
+            m26c_layer_path_prefix, teacher_inputs, m26c_checkpoints_dir,
+            m26c_layer_path_position);
+        std::cout << std::fixed << std::setprecision(6)
+                  << "m26c_route=" << *m26c_decode_route
+                  << " tokens=" << result.tokens.size()
+                  << " restore_ms=" << result.restore_ms
+                  << " graph_capture_ms=" << result.graph_capture_ms
+                  << " graph_nodes=" << result.graph_nodes
+                  << " graph_replays=" << (*m26c_decode_route == "graph" ? result.tokens.size() : 0)
+                  << " decode_ms=" << result.decode_ms
+                  << " direct_h2d_device_ms=" << result.direct_h2d_device_ms
+                  << " direct_d2h_device_ms=" << result.direct_d2h_device_ms
+                  << " direct_blocking_sync_ms=" << result.direct_blocking_sync_ms
+                  << " direct_sync_calls=" << result.direct_sync_calls
+                  << " graph_state_sync_ms=" << result.graph_state_sync_ms
+                  << " graph_replay_enqueue_ms=" << result.graph_replay_enqueue_ms
+                  << " graph_bulk_copy_wait_ms=" << result.graph_bulk_copy_wait_ms
+                  << " ms_per_token=" << (result.tokens.empty() ? 0.0
+                      : result.decode_ms / result.tokens.size())
+                  << " restore_h2d_bytes=" << result.restore_h2d_bytes
+                  << " decode_h2d_bytes=" << result.decode_h2d_bytes
+                  << " decode_d2h_bytes=" << result.decode_d2h_bytes
+                  << " output_state=" << m26c_output_state->string() << '\n'
+                  << "m26c_logits_output="
+                  << (m26c_logits_output ? m26c_logits_output->string() : "disabled") << '\n'
+                  << "m26c_layer_path_prefix="
+                  << (m26c_layer_path_prefix ? m26c_layer_path_prefix->string() : "disabled") << '\n'
+                  << "m26c_teacher_forced=" << (teacher_inputs ? "1" : "0") << '\n'
+                  << "m26c_token_ids=";
+        for (std::size_t i = 0; i < result.tokens.size(); ++i) {
+            if (i != 0) std::cout << ',';
+            std::cout << result.tokens[i];
+        }
+        std::cout << '\n';
+        return 0;
+    }
+    if (m26c_decode_route || m26c_output_state || m26c_logits_output || m26c_layer_path_prefix
+        || m26c_ssm_out_native || m26c_state_context || m26c_restore_only) {
+        throw std::runtime_error("incomplete M26-C diagnostic options");
+    }
 
     if (check_graph_state) {
         if (max_tokens < 2 || prompt_tokens.size() + max_tokens - 1 > g_cache_capacity) {
@@ -3401,6 +4225,14 @@ void print_usage() {
     std::cout << "       --context N --check-session        Check live append against full replay\n";
     std::cout << "       --max-tokens N --check-graph-state Compare graph/direct recurrent and KV bytes\n";
     std::cout << "       --check-graph-state-context N Repeat prompt tokens to context N for parity checks\n";
+    std::cout << "       --m26c-state-context 512 --m26c-export-state FILE Create canonical decode snapshot\n";
+    std::cout << "       --m26c-import-state FILE --m26c-decode-route direct|graph --m26c-output-state FILE\n";
+    std::cout << "       --m26c-logits-output FILE            Export position logits for a one-token probe\n";
+    std::cout << "       --m26c-layer-path-prefix PREFIX      Capture layers 0 and 1 at one direct token\n";
+    std::cout << "       --m26c-restore-only                 Verify route-specific snapshot import without decoding\n";
+    std::cout << "       --m26c-recurrent-qkv-m23            Use M23 only for recurrent QKV during imported decode\n";
+    std::cout << "       --m26c-ssm-out-native                Use native Q5_K only for SSM output during imported decode\n";
+    std::cout << "       scripts/compare-m26c-state.py LEGACY.bin INTERACTIVE.bin Compare route outputs/state\n";
     std::cout << "       MIINFER_PRESET=m25_hi_qualified     Use the hermetic qualified MI50 P512 vector\n";
     std::cout << "       MIINFER_PRESET=m25_interactive      Use experimental wide-prefill/Mx-decode serving\n";
     std::cout << "  chat <model.gguf>                        Start an interactive multi-turn terminal chat REPL\n";

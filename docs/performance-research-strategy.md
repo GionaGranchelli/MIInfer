@@ -1,14 +1,15 @@
 # Performance Research Strategy
 
 This document defines the performance-research method MIInfer should use after
-M26-C. It is a change in decision process, not a claim that a new optimization
-has already been found.
+M26-C closed as `ROUTES_NOT_COMPARABLE`. M26-D was not opened; M26-E on the
+qualified no-preset route is next. This is a change in decision process, not a
+claim that a new optimization has already been found.
 
-The immediate context is
-[`EXP-0358`](../experiments/EXP-0358-m26c-current-decode-route-differential.md):
-the current layer-major and legacy decode routes must first be compared from an
-equivalent semantic state. Historical M8/M9 decode timings remain
-non-comparable to the current interactive route, as recorded in
+[`EXP-0359`](../experiments/EXP-0359-m26cq-decode-semantic-equivalence.md)
+records that teacher-forced comparison. It establishes neither a correctness
+bug nor a route-equivalence tolerance, and makes no timing qualification.
+Historical M8/M9 decode timings remain non-comparable to the current
+interactive route, as recorded in
 [`EXP-0352`](../experiments/EXP-0352-m26b-historical-decode-floor-differential.md).
 
 ---
@@ -138,12 +139,13 @@ possible outcome is already known to be marginal.
 
 ## 4. Decode ceiling study
 
-After the M26 route differential is understood and any evidence-backed current
-route fix is applied, MIInfer should perform an explicit decode-ceiling study.
+After M26-E qualifies the canonical no-preset route, MIInfer should perform an
+explicit decode-ceiling study.
 
 Required workloads:
 
 - P512 steady decode
+- P2K
 - P4K
 - P8K
 - P12K

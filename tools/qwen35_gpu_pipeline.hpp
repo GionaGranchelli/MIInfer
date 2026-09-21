@@ -546,6 +546,11 @@ struct LayerPathCapture {
     std::vector<float> layer_output;
 };
 
+struct DecodeLayerCapture {
+    std::vector<std::vector<float>> inputs;
+    std::vector<std::vector<float>> outputs;
+};
+
 struct OutputProjectionPathCapture {
     std::vector<float> gated;
     std::vector<std::byte> q8_input;
@@ -849,6 +854,8 @@ struct RecurrentLayer {
     bool prefill_wide_repacked = false;
     bool prefill_mx_repacked = false;
     bool prefill_mx_qkv_pinned = false;
+    bool m26c_recurrent_qkv_m23 = false;
+    bool m26c_ssm_out_native = false;
     bool prefill_mx_ffn_down_pinned = false;
     bool prefill_mx_gdn = false;
     bool prefill_mx_external_state = false;
@@ -1071,6 +1078,16 @@ struct RecurrentLayer {
             && std::strcmp(resident_all_env, "0") != 0 && !prefill_wide_validate
             && !wide_dense_ffn && !dense_projection_prefill && !dense_qkv_prefill
             && !prefill_dense_ffn_down;
+        m26c_recurrent_qkv_m23 = environment_flag("MIINFER_M26C_RECURRENT_QKV_M23");
+        if (m26c_recurrent_qkv_m23 && (!prefill_mx_repacked || !resident_repacked_all)) {
+            throw std::runtime_error(
+                "M26-C M23 recurrent QKV control requires Mx resident-all decode");
+        }
+        m26c_ssm_out_native = environment_flag("MIINFER_M26C_SSM_OUT_NATIVE");
+        if (m26c_ssm_out_native && (!prefill_mx_repacked || !resident_repacked_all)) {
+            throw std::runtime_error(
+                "M26-C native SSM-output control requires Mx resident-all decode");
+        }
         resident_m23_all = resident_repacked_all && !prefill_mx_repacked;
         if (resident_m23_all) resident_m23_ffn = true;
         if (prefill_mx_repacked && resident_repacked_all) resident_m23_ffn = true;
@@ -1128,9 +1145,17 @@ struct RecurrentLayer {
             if (!d_qkv && (!prefill_wide_repacked || prefill_wide_validate)) d_qkv = allocate(qkv_weight.byte_size);
             if (!d_gate && (!prefill_wide_repacked || prefill_wide_validate)) d_gate = allocate(gate_weight.byte_size);
             if (prefill_mx_repacked) {
-                host_mx_qkv = qkv_weight.type == miinfer::GgufTensorType::q6_k
-                    ? pack_mx_q6k_repacked_tensor(qkv_weight)
-                    : pack_mx_q4k_repacked_tensor(qkv_weight);
+                if (m26c_recurrent_qkv_m23) {
+                    if (qkv_weight.type == miinfer::GgufTensorType::q6_k) {
+                        host_qkv_q6_mmq = pack_q6k_mmq_tensor(qkv_weight);
+                    } else {
+                        host_qkv_q4_mmq = pack_q4k_mmq_tensor(qkv_weight);
+                    }
+                } else {
+                    host_mx_qkv = qkv_weight.type == miinfer::GgufTensorType::q6_k
+                        ? pack_mx_q6k_repacked_tensor(qkv_weight)
+                        : pack_mx_q4k_repacked_tensor(qkv_weight);
+                }
                 host_mx_gate = pack_mx_q4k_repacked_tensor(gate_weight);
             } else {
                 if (qkv_weight.type == miinfer::GgufTensorType::q6_k) {
@@ -1145,7 +1170,9 @@ struct RecurrentLayer {
         d_alpha = allocate(alpha_weight.byte_size);
         d_conv = allocate(conv_weight.byte_size);
         d_ssm_norm = allocate(ssm_norm_weight.byte_size);
-        if (!resident_repacked_all && native_ssm_out_enabled() && ssm_out_weight.type == miinfer::GgufTensorType::q5_k) {
+        if ((m26c_ssm_out_native
+             || (!resident_repacked_all && native_ssm_out_enabled()))
+            && ssm_out_weight.type == miinfer::GgufTensorType::q5_k) {
             d_ssm_out_native = copy_native_q5k_tensor(ssm_out_weight);
         } else if (!resident_repacked_all) {
             d_ssm_out = allocate(ssm_out_weight.byte_size);
@@ -1225,7 +1252,9 @@ struct RecurrentLayer {
                 upload_tensor(ssm_out_weight, d_ssm_out);
             }
             if (prefill_mx_repacked) {
-                host_mx_ssm_out = pack_mx_q5k_repacked_tensor(ssm_out_weight);
+                if (!m26c_ssm_out_native) {
+                    host_mx_ssm_out = pack_mx_q5k_repacked_tensor(ssm_out_weight);
+                }
             } else {
                 host_ssm_out_mmq = pack_q5k_mmq_tensor(ssm_out_weight);
             }
@@ -1278,18 +1307,23 @@ struct RecurrentLayer {
                     upload(packed.data(), result->get(), packed.size() * sizeof(packed.front()));
                     return result;
                 };
-                resident_qkv_mmq = prefill_mx_repacked
+                resident_qkv_mmq = prefill_mx_repacked && !m26c_recurrent_qkv_m23
                     ? upload_resident(host_mx_qkv)
                     : (qkv_weight.type == miinfer::GgufTensorType::q4_k
                         ? upload_resident(host_qkv_q4_mmq)
                         : upload_resident(host_qkv_q6_mmq));
                 resident_gate_mmq = prefill_mx_repacked
                     ? upload_resident(host_mx_gate) : upload_resident(host_gate_mmq);
-                resident_ssm_out_mmq = prefill_mx_repacked
-                    ? upload_resident(host_mx_ssm_out) : upload_resident(host_ssm_out_mmq);
-                decode_mmq_q8 = allocate((kFfnInner / 128)
-                    * (prefill_mx_repacked ? sizeof(miinfer::MxQ8_1MmqBlock)
-                                           : sizeof(miinfer::M23Q8_1MmqBlock)));
+                if (!m26c_ssm_out_native) {
+                    resident_ssm_out_mmq = prefill_mx_repacked
+                        ? upload_resident(host_mx_ssm_out) : upload_resident(host_ssm_out_mmq);
+                }
+                const std::size_t q8_block_bytes = m26c_recurrent_qkv_m23
+                    ? std::max(sizeof(miinfer::MxQ8_1MmqBlock),
+                               sizeof(miinfer::M23Q8_1MmqBlock))
+                    : (prefill_mx_repacked ? sizeof(miinfer::MxQ8_1MmqBlock)
+                                           : sizeof(miinfer::M23Q8_1MmqBlock));
+                decode_mmq_q8 = allocate((kFfnInner / 128) * q8_block_bytes);
             }
             if (!prefill_wide_repacked) {
                 wide_ffn_gate_fp16 = allocate(kFfnInner * kHidden * sizeof(__half));
@@ -3016,7 +3050,7 @@ struct RecurrentLayer {
         if (precomputed_projection) {
             // The batch path already populated qkv/gate with the native B=4 kernel.
         } else if (resident_repacked_all) {
-            if (prefill_mx_repacked) {
+            if (prefill_mx_repacked && !m26c_recurrent_qkv_m23) {
                 auto* q8 = static_cast<miinfer::MxQ8_1MmqBlock*>(decode_mmq_q8->get());
                 miinfer::launch_mx_q8_1_mmq_quantize(
                     normalized_input, q8, 1, kHidden,
@@ -3097,6 +3131,13 @@ struct RecurrentLayer {
         if (!d_qkv_gate_combined && !precomputed_projection) {
             if (resident_repacked_all) {
                 if (prefill_mx_repacked) {
+                    if (m26c_recurrent_qkv_m23) {
+                        // QKV used M23 Q8 above; the resident gate expects Mx Q8 layout.
+                        miinfer::launch_mx_q8_1_mmq_quantize(
+                            normalized_input,
+                            static_cast<miinfer::MxQ8_1MmqBlock*>(decode_mmq_q8->get()),
+                            1, kHidden, true);
+                    }
                     launch_mx_q4k_repacked_mmq(
                         static_cast<const std::uint8_t*>(resident_gate_mmq->get()),
                         static_cast<const miinfer::MxQ8_1MmqBlock*>(decode_mmq_q8->get()),
@@ -3352,7 +3393,7 @@ struct RecurrentLayer {
             gate_path_capture->gated = download(gated->get(), kVHeads * kState);
         }
         stage_start(7, position);
-        if (resident_repacked_all) {
+        if (resident_repacked_all && !m26c_ssm_out_native) {
             if (prefill_mx_repacked) {
                 auto* q8 = static_cast<miinfer::MxQ8_1MmqBlock*>(decode_mmq_q8->get());
                 miinfer::launch_mx_q8_1_mmq_quantize(
@@ -5440,7 +5481,8 @@ void run_prefix(std::span<const GpuLayerRef> layers, std::span<float* const> out
                 const float* final_norm_weight = nullptr,
                 float* final_norm_out = nullptr,
                 miinfer::Q8_1Block* final_q8_1_out = nullptr,
-                const miinfer::DeviceDecodeState* decode_state = nullptr) {
+                const miinfer::DeviceDecodeState* decode_state = nullptr,
+                DecodeLayerCapture* layer_capture = nullptr) {
     const float* current = input;
     bool precomputed = false;
     bool precomputed_q8 = false;
@@ -5460,9 +5502,15 @@ void run_prefix(std::span<const GpuLayerRef> layers, std::span<float* const> out
             }
         }
         layers[layer].profile_decode_layer_start(position);
+        if (layer_capture != nullptr) {
+            layer_capture->inputs[layer] = download(current, kHidden);
+        }
         layers[layer].run(current, position, outputs[layer], next_weight, next_norm,
                           precomputed, next_q8, precomputed_q8, nullptr, nullptr,
                           nullptr, false, 0, nullptr, nullptr, decode_state);
+        if (layer_capture != nullptr) {
+            layer_capture->outputs[layer] = download(outputs[layer], kHidden);
+        }
         layers[layer].profile_decode_layer_end(position);
         current = outputs[layer];
         precomputed = (next_weight != nullptr && next_norm != nullptr);
