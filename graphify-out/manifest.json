@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1790083363.5288818,
-    "seen": 1790083403.033698,
-    "ast_hash": "8af564c4ddbfba3bbee4287b6f7def3c",
+    "mtime": 1790087303.6670098,
+    "seen": 1790087357.489393,
+    "ast_hash": "787f12c1f0b591bfaffc58ddcdb916df",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -2364,15 +2364,15 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1789943779.5371141,
-    "seen": 1789944748.376218,
-    "ast_hash": "2e5423c53b56b44e71b8e4c4c8336669",
+    "mtime": 1790086109.4376516,
+    "seen": 1790087357.489343,
+    "ast_hash": "289ed08c028285aa65bfab160edd47be",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1790069306.6083362,
-    "seen": 1790069396.4064784,
-    "ast_hash": "2420f346f3669e7f5dcc87545b06660a",
+    "mtime": 1790086109.4416516,
+    "seen": 1790087357.4893448,
+    "ast_hash": "946d0c4d41e066846c3709771521b6e9",
     "semantic_hash": ""
   },
   "docs/M9-AUTOREGRESSIVE-QUALIFICATION.md": {
@@ -5394,9 +5394,9 @@
     "semantic_hash": ""
   },
   "docs/performance-research-protocol.md": {
-    "mtime": 1790083363.5258818,
-    "seen": 1790083403.0337205,
-    "ast_hash": "c32d9f32f4e404fe130431f11932a674",
+    "mtime": 1790087295.066051,
+    "seen": 1790087357.4894142,
+    "ast_hash": "0ec7df60a2ea884bc59ad51ba8616c6e",
     "semantic_hash": ""
   },
   "experiments/EXP-0364-full-model-prefill-bottleneck-attribution.md": {
@@ -5409,6 +5409,12 @@
     "mtime": 1790083327.4980452,
     "seen": 1790083403.0342388,
     "ast_hash": "3aa2f44ee10af955c853a54be2062ad6",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0366-partial-tail-prefill-contract.md": {
+    "mtime": 1790087281.878114,
+    "seen": 1790087357.4899602,
+    "ast_hash": "f96248d5e708375ca8d8aabeb923c15a",
     "semantic_hash": ""
   }
 }
