@@ -90,6 +90,7 @@ bool apply_runtime_preset() {
             && value.rfind("MIINFER_PREFILL_PROFILE_POSITION=", 0) != 0
             && value.rfind("MIINFER_EXP0366_PARTIAL_TAIL=", 0) != 0
             && value.rfind("MIINFER_EXP0368_SCALAR_ORACLE=", 0) != 0
+            && value.rfind("MIINFER_EXP0369_TRACE_ROUTE=", 0) != 0
             && value.rfind("MIINFER_HIP_GRAPH=", 0) != 0) {
             names.emplace_back(value.substr(0, value.find('=')));
         }
@@ -1120,6 +1121,8 @@ public:
         float* next = static_cast<float*>(prefill_b_->get());
         const float* final_hidden = nullptr;
         const auto layer_span = std::span<const GpuLayerRef>(layers_);
+        const bool trace_exp0369 = std::getenv("MIINFER_EXP0369_TRACE_ROUTE") != nullptr
+            && std::strcmp(std::getenv("MIINFER_EXP0369_TRACE_ROUTE"), "0") != 0;
         for (std::size_t base = start_position; base < prompt.size();) {
             if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
             const std::size_t requested = std::min(prefill_chunk_, prompt.size() - base);
@@ -1189,6 +1192,11 @@ public:
                     prefill_profile_.enabled ? base : std::numeric_limits<std::size_t>::max());
                 if (wide_prefill_ && count >= kM12PrefillBatch
                     && layer_span[layer].recurrent != nullptr) {
+                    if (trace_exp0369) {
+                        std::cout << "EXP0369 route base=" << base << " count=" << count
+                                  << " absolute=" << base << " layer=" << layer
+                                  << " kind=recurrent prepared=0 deferred=0 batched=0 wide=1\n";
+                    }
                     layer_span[layer].recurrent->prefill_wide(current, next, base, count);
                     layer_span[layer].profile_ordered_end(
                         prefill_profile_.enabled ? base : std::numeric_limits<std::size_t>::max());
@@ -1206,6 +1214,13 @@ public:
                 const bool batched_attention = prepared && deferred_tail
                     && count >= kM12PrefillBatch
                     && layer_span[layer].wide_attention_batch_ready();
+                if (trace_exp0369) {
+                    std::cout << "EXP0369 route base=" << base << " count=" << count
+                              << " absolute=" << base << " layer=" << layer
+                              << " kind=attention prepared=" << prepared
+                              << " deferred=" << deferred_tail
+                              << " batched=" << batched_attention << " wide=0\n";
+                }
                 const bool fuse_next_norm = layer + 1 < layer_span.size()
                     && layer_span[layer].fused_interlayer_norm();
                 const float* next_norm_weight = fuse_next_norm
@@ -1281,6 +1296,8 @@ public:
                 hipStreamPerThread);
         }
         const auto layer_span = std::span<const GpuLayerRef>(layers_);
+        const bool trace_exp0369 = std::getenv("MIINFER_EXP0369_TRACE_ROUTE") != nullptr
+            && std::strcmp(std::getenv("MIINFER_EXP0369_TRACE_ROUTE"), "0") != 0;
         for (std::size_t layer = 0; layer < layer_span.size(); ++layer) {
             if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
             layer_span[layer].profile_ordered_start(
@@ -1295,6 +1312,11 @@ public:
                 float* chunk_output = next + base * kHidden;
                 if (wide_prefill_ && count >= kM12PrefillBatch
                     && layer_span[layer].recurrent != nullptr) {
+                    if (trace_exp0369) {
+                        std::cout << "EXP0369 route base=" << base << " count=" << count
+                                  << " absolute=" << (base_position + base) << " layer=" << layer
+                                  << " kind=recurrent prepared=0 deferred=0 batched=0 wide=1\n";
+                    }
                     layer_span[layer].recurrent->prefill_wide(
                         chunk_input, chunk_output, static_cast<std::uint32_t>(base_position + base), count);
                     continue;
@@ -1308,6 +1330,13 @@ public:
                 const bool batched_attention = prepared && deferred_tail
                     && count >= kM12PrefillBatch
                     && layer_span[layer].wide_attention_batch_ready();
+                if (trace_exp0369) {
+                    std::cout << "EXP0369 route base=" << base << " count=" << count
+                              << " absolute=" << (base_position + base) << " layer=" << layer
+                              << " kind=attention prepared=" << prepared
+                              << " deferred=" << deferred_tail
+                              << " batched=" << batched_attention << " wide=1\n";
+                }
                 if (!batched_attention) for (std::size_t i = 0; i < count; ++i) {
                     if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
                     if (prepared) {

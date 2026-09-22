@@ -184,8 +184,9 @@ EXP-0364 completed the first attribution pass as `LEARN`, EXP-0365 confirmed
 the partial-tail route defect, and EXP-0366 rejected the first opt-in bounded
 contract. EXP-0367/0368 added a reusable state snapshot oracle and classified
 the P640 L3 K/V delta as expected batched numerical drift: qualified B512
-versus scalar P512 showed substantially larger K/V error envelopes. The P1664
-comparison diverges at the next partial-tail boundary (position 768), so the
-current frontier is causal/prefix and stage-contract qualification for P640
-and P1664; no K/V fix, tail geometry, or performance kernel is authorized until
-those checks pass.
+versus scalar P512 showed substantially larger K/V error envelopes. EXP-0369
+corrected the P1664 comparison indexing: the first divergence is at the actual
+partial-tail boundary, position 1536, where the selector changes the route
+from scalar `run()` to batched partial attention. The current frontier is
+stage-level qualification of that route; no K/V fix, tail geometry, or
+performance kernel is authorized until it passes.

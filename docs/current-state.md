@@ -14,8 +14,9 @@ causal/prefix qualification for the full-attention layer-3 partial K/V contract
 at P640 and one later base position. EXP-0366's opt-in `384 + 64 + 62`
 contract was rejected, and EXP-0367/0368 localized the first observable
 difference while adding a reusable state-level oracle; the `0.00195312` delta
-is within the larger qualified-B512-vs-scalar numerical envelope, but P1664
-diverges at the next partial-tail boundary (position 768), and is
+is within the larger qualified-B512-vs-scalar numerical envelope. EXP-0369
+corrected the P1664 state-index mapping: it diverges at the actual partial-tail
+boundary (position 1536), where the selector changes the route, and is
 classified as expected batched drift.
 EXP-0360 through EXP-0363 rejected the tested
 attention families; they did not authorize an optimization candidate or imply

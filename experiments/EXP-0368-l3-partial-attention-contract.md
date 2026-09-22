@@ -83,7 +83,7 @@ Static path audit found the following contracts in the implementation:
 | batched KV write position | `finish_prefill_attention(base_position, count)` passes the same base/count to the fused store |
 | scalar KV write position | `run()` passes `position` to the fused K/V store |
 | scalar causal bound | tiled and untiled attention receive `position + 1` |
-| prior prefix preservation | P640 serialized prefix `[0,512)` had no large overwrite; P1664 prefix `[0,768)` was identical |
+| prior prefix preservation | P640 serialized prefix `[0,512)` had no large overwrite; P1664 prefix `[0,1536)` was identical |
 
 This is a source-level contract audit, not proof of every generated kernel
 bound. The snapshot format does not capture per-query causal upper bounds or
@@ -100,14 +100,17 @@ context capacity 2048 and the same model and qualified preset. Both runs
 completed at exactly 1664 prompt tokens. The candidate prefill was `9,187.32
 ms` (`181.12 tok/s`); the default was `21,430.93 ms` (`77.64 tok/s`).
 
-The candidate and default matched byte-for-byte through recurrent layers 0--2
-and attention layer 3. Every attention-cache prefix position `[0,768)` was
-identical. The first divergence was at attention layer 7, position 768, the
-next partial-tail boundary; later attention layers accumulated large K/V
-differences (up to `6.30353` K and `4.94727` V in the serialized snapshots).
-This is not sufficient to qualify the later base as ordinary bounded drift.
-No continuation was promoted from this state, and no causal violation was
-asserted from cache comparison alone.
+The original analysis mapped serialized K/V index `1536 * 256` using
+`2 * head_dim` and incorrectly reported position 768. Each serialized head is
+`[all K positions][all V positions]`; correcting the mapping puts the first
+difference at position **1536**, the actual P1664 partial-tail start. The
+candidate and default matched the attention-cache prefix `[0,1536)`; the
+first differing attention record was L7 K, position 1536, dimension 0, with
+absolute delta `0.0078125`. L7 K/V later reached maxima `0.111328` each.
+
+This is a route difference, not evidence of an internal 256-token boundary at
+768. No continuation was promoted from this state, and no causal violation
+was asserted from cache comparison alone.
 
 ## Stage localization status
 
@@ -117,8 +120,8 @@ this size of drift is already normal for the existing batched contract.
 Projection, normalization, RoPE, write-input, and cache-storage boundaries
 were not separately captured. P640 showed no causal-bound violation or prefix
 overwrite in the tested continuation. P1664 preserves its prefix through
-position 768 but diverges at that later partial-tail boundary, so the causal
-and multi-boundary contract remains unqualified.
+position 1536 but diverges when the partial-tail route begins, so the causal
+and stage-level contract remains unqualified.
 
 ## Decision
 
@@ -126,7 +129,6 @@ and multi-boundary contract remains unqualified.
 
 ## Next PRIMARY frontier
 
-Complete causal/prefix state qualification for P640 and explain the P1664
-position-768 divergence using stage-level tensors or an equivalent contract
-oracle. Until then, do not promote the partial-tail route, fix K/V numerics,
-or start another attention geometry experiment.
+Capture the L7 partial-tail stage and causal-read contract at position 1536
+before promotion. Until then, do not promote the partial-tail route, fix K/V
+numerics, or start another attention geometry experiment.
