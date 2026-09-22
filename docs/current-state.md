@@ -9,11 +9,11 @@ Qwen3.8-27B-Q4_K_M prefill bottleneck attribution on one MI50/gfx906 before
 choosing the next optimization. EXP-0364 completed that first pass as
 measurement-only `LEARN`, and EXP-0365 confirmed the ~P2K–P8K discrepancy is a
 partial-tail route defect: non-empty remainders fall from the B512
-full-layer-major path into per-token layer execution. The next frontier is to
-identify the exact remaining partial-tail stage and qualify a state-level
-correctness oracle before any implementation. EXP-0366's opt-in
-`384 + 64 + 62` contract was rejected: it
-changed routing but did not improve P1022. EXP-0360 through EXP-0363 rejected the tested
+full-layer-major path into per-token layer execution. The next frontier is the
+full-attention layer-3 active-K/V write contract at the partial-tail boundary.
+EXP-0366's opt-in `384 + 64 + 62` contract was rejected, and EXP-0367
+localized its first numerical divergence there while adding a reusable
+state-level oracle. EXP-0360 through EXP-0363 rejected the tested
 attention families; they did not authorize an optimization candidate or imply
 that attention is still the dominant end-to-end gap. The current qualified decode path is
 preserved, while 128K context architecture, Tail-Replay/agent runtime,

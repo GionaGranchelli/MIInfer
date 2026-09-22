@@ -86,6 +86,9 @@ bool apply_runtime_preset() {
             && value.rfind("MIINFER_SESSION_REUSE=", 0) != 0
             && value.rfind("MIINFER_DECODE_PROFILE=", 0) != 0
             && value.rfind("MIINFER_DECODE_PROFILE_POSITION=", 0) != 0
+            && value.rfind("MIINFER_PREFILL_PROFILE=", 0) != 0
+            && value.rfind("MIINFER_PREFILL_PROFILE_POSITION=", 0) != 0
+            && value.rfind("MIINFER_EXP0366_PARTIAL_TAIL=", 0) != 0
             && value.rfind("MIINFER_HIP_GRAPH=", 0) != 0) {
             names.emplace_back(value.substr(0, value.find('=')));
         }
@@ -200,6 +203,7 @@ struct RuntimeGenerateOptions {
     std::function<bool()> should_cancel = nullptr;
     std::function<bool(std::uint32_t token, std::string_view piece)> on_token = nullptr;
     std::function<void()> on_prefill_complete = nullptr;
+    std::function<void(const float*, std::size_t)> on_prefill_state = nullptr;
     std::function<void()> on_first_token = nullptr;
     std::function<void(std::size_t token_count)> on_prefill_checkpoint = nullptr;
 };
@@ -273,6 +277,8 @@ public:
         std::size_t chunks = 0;
         std::size_t partial_tail_batched_chunks = 0;
         std::size_t partial_tail_scalar_tokens = 0;
+        std::size_t partial_tail_layer_run_calls = 0;
+        std::size_t partial_tail_layer_run_tokens = 0;
         M23ProfileCounters m23{};
 
         void init() {
@@ -413,7 +419,9 @@ public:
                       << " embedding_ms=" << embedding_ms << '\n';
             std::cout << "EXP-0366 partial-tail counters: batched_chunks="
                       << partial_tail_batched_chunks
-                      << " scalar_tokens=" << partial_tail_scalar_tokens << '\n';
+                      << " scalar_tokens=" << partial_tail_scalar_tokens
+                      << " layer_run_calls=" << partial_tail_layer_run_calls
+                      << " layer_run_tokens=" << partial_tail_layer_run_tokens << '\n';
             static constexpr std::array<const char*, 7> recurrent_dispatch_names{
                 "qkv", "gate", "beta_alpha", "ssm_out", "ffn_gate", "ffn_up", "ffn_down"};
             static constexpr std::array<const char*, 9> attention_dispatch_names{
@@ -1203,7 +1211,12 @@ public:
                     ? layer_span[layer + 1].attn_norm_weight() : nullptr;
                 float* next_normalized_batch = fuse_next_norm
                     ? const_cast<float*>(layer_span[layer + 1].prefill_normalized_at(0)) : nullptr;
-                if (!batched_attention) for (std::size_t i = 0; i < count; ++i) {
+                if (!batched_attention) {
+                    if (partial_tail_contract && full_layer_major_prefill_ && base >= kFullPrefillCapacity) {
+                        ++prefill_profile_.partial_tail_layer_run_calls;
+                        prefill_profile_.partial_tail_layer_run_tokens += count;
+                    }
+                    for (std::size_t i = 0; i < count; ++i) {
                     if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
                     float* next_normalized = fuse_next_norm
                         ? next_normalized_batch + i * kHidden : nullptr;
@@ -1225,6 +1238,7 @@ public:
                                               next_normalized, false,
                                               nullptr, false, nullptr, nullptr,
                                               prepared_normalized);
+                    }
                     }
                 }
                 if (batched_attention) {
@@ -1388,6 +1402,7 @@ public:
         if (!prefill_profile_.decode_mode) {
             prefill_profile_.report(stats.prefill_ms, prompt.size());
         }
+        if (opt.on_prefill_state) opt.on_prefill_state(final_hidden, prompt.size());
         if (opt.on_prefill_complete) opt.on_prefill_complete();
         if (opt.max_new_tokens == 0) {
             stats.total_ms = std::chrono::duration<double, std::milli>(
@@ -2267,6 +2282,24 @@ public:
         return stats;
     }
 
+public:
+    void write_exp0367_prefill_state(const std::filesystem::path& path,
+                                     std::span<const std::uint32_t> prompt,
+                                     const float* final_hidden) const {
+        if (prompt.empty() || final_hidden == nullptr) {
+            throw std::runtime_error("EXP-0367 state export requires a non-empty prompt and hidden state");
+        }
+        write_m26c_state(path, prompt, prompt.size(), prompt.back());
+        std::vector<float> hidden(model_.config().hidden_size);
+        MIINFER_HIP_CHECK(hipMemcpy(hidden.data(), final_hidden,
+            hidden.size() * sizeof(float), hipMemcpyDeviceToHost));
+        std::ofstream output(path.string() + ".final-hidden.f32", std::ios::binary | std::ios::trunc);
+        if (!output) throw std::runtime_error("unable to create EXP-0367 final hidden dump");
+        output.write(reinterpret_cast<const char*>(hidden.data()),
+            static_cast<std::streamsize>(hidden.size() * sizeof(float)));
+        if (!output) throw std::runtime_error("failed writing EXP-0367 final hidden dump");
+    }
+
 private:
     void setup_environment() {
         // Enforce gfx906 production performance environment
@@ -2911,6 +2944,7 @@ int cmd_run(int argc, char** argv) {
     std::optional<std::filesystem::path> m26c_layer_path_prefix;
     std::optional<std::filesystem::path> m26c_teacher_inputs_path;
     std::optional<std::filesystem::path> m26c_checkpoints_dir;
+    std::optional<std::filesystem::path> exp0367_state_output;
     std::optional<std::size_t> m26c_layer_path_position;
     std::optional<std::string> m26c_decode_route;
     std::optional<std::size_t> m26c_state_context;
@@ -2962,6 +2996,8 @@ int cmd_run(int argc, char** argv) {
             m26c_teacher_inputs_path = argv[++i];
         } else if (arg == "--m26c-checkpoints-dir" && i + 1 < argc) {
             m26c_checkpoints_dir = argv[++i];
+        } else if (arg == "--exp0367-state-output" && i + 1 < argc) {
+            exp0367_state_output = argv[++i];
         } else if (arg == "--m26c-layer-path-position" && i + 1 < argc) {
             m26c_layer_path_position = std::stoull(argv[++i]);
         } else if (arg == "--m26c-decode-route" && i + 1 < argc) {
@@ -3387,6 +3423,11 @@ int cmd_run(int argc, char** argv) {
     Qwen35RuntimeEngine::GenerateOptions opt;
     opt.max_new_tokens = max_tokens;
     opt.stream = stream;
+    if (exp0367_state_output) {
+        opt.on_prefill_state = [&](const float* hidden, std::size_t) {
+            engine.write_exp0367_prefill_state(*exp0367_state_output, prompt_tokens, hidden);
+        };
+    }
     if (stream) {
         opt.on_token = [](std::uint32_t /*token*/, std::string_view piece) {
             std::cout << piece << std::flush;
@@ -4244,6 +4285,7 @@ void print_usage() {
     std::cout << "       --m26c-state-context 512 --m26c-export-state FILE Create canonical decode snapshot\n";
     std::cout << "       --m26c-import-state FILE --m26c-decode-route direct|graph --m26c-output-state FILE\n";
     std::cout << "       --m26c-logits-output FILE            Export position logits for a one-token probe\n";
+    std::cout << "       --exp0367-state-output FILE         Opt-in partial-tail prefill state snapshot\n";
     std::cout << "       --m26c-layer-path-prefix PREFIX      Capture layers 0 and 1 at one direct token\n";
     std::cout << "       --m26c-restore-only                 Verify route-specific snapshot import without decoding\n";
     std::cout << "       --m26c-recurrent-qkv-m23            Use M23 only for recurrent QKV during imported decode\n";

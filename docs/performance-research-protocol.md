@@ -182,7 +182,8 @@ No performance implementation is authorized by this section. The missing evidenc
 
 EXP-0364 completed the first attribution pass as `LEARN`, EXP-0365 confirmed
 the partial-tail route defect, and EXP-0366 rejected the first opt-in bounded
-contract: `384 + 64 + 62` changed routing but did not improve P1022 and did
-not yet have a state-level correctness oracle. The current frontier is exact
-stage attribution plus that oracle for aligned partial tails. No new tail
-geometry or performance kernel is authorized until the evidence exists.
+contract. EXP-0367 added a reusable state snapshot oracle and localized the
+first aligned-tail divergence to full-attention layer 3 active K/V at the
+partial-tail boundary. The current frontier is that exact K/V-write/causal
+contract; no new tail geometry or performance kernel is authorized until it is
+accepted or repaired.
