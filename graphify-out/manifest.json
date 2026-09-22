@@ -2364,9 +2364,9 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1790104005.2968297,
-    "seen": 1790104078.281488,
-    "ast_hash": "f41b4f7d4fdfc4cfbae81870b04a4c0d",
+    "mtime": 1790104208.3918564,
+    "seen": 1790104504.1034327,
+    "ast_hash": "f54f1e6fa8a9b6be9e87122588541c17",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
@@ -5424,9 +5424,9 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0368-l3-partial-attention-contract.md": {
-    "mtime": 1790103956.3380644,
-    "seen": 1790104078.282125,
-    "ast_hash": "afbbc06a9296fbb15e3c6ebcc6dc851a",
+    "mtime": 1790104465.067626,
+    "seen": 1790104504.1040661,
+    "ast_hash": "b554d60b09988ba874493aa867b4794f",
     "semantic_hash": ""
   }
 }
