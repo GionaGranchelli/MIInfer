@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1790069282.7534704,
-    "seen": 1790069396.4060502,
-    "ast_hash": "d23f48209c43ac7ffe433f3e61a6e3b6",
+    "mtime": 1790076022.9134133,
+    "seen": 1790076282.0309505,
+    "ast_hash": "223c6adac5e71553f08ca30442b203be",
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_primitives.hpp": {
@@ -5370,15 +5370,21 @@
     "semantic_hash": ""
   },
   "bench/qwen35_gqa_prefill_bench.cpp": {
-    "mtime": 1790069516.7071536,
-    "seen": 1790069648.940783,
-    "ast_hash": "a31cf7041f1327f045d174c275152eb0",
+    "mtime": 1790076022.9204133,
+    "seen": 1790076282.0309083,
+    "ast_hash": "bc85b0893c986ae6f75f1f055e3fd95e",
     "semantic_hash": ""
   },
   "experiments/EXP-0361-wave64-attention-architecture-analysis.md": {
-    "mtime": 1790071054.8106923,
-    "seen": 1790071078.2021878,
-    "ast_hash": "bdbf9b48ef252d2e8b11768a40d92a79",
+    "mtime": 1790075577.5378554,
+    "seen": 1790075592.2866714,
+    "ast_hash": "f0e2054ee73207748dd184594ea1c590",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0362-query-tiled-gqa2-prefill.md": {
+    "mtime": 1790076744.000427,
+    "seen": 1790076761.0427902,
+    "ast_hash": "0175b6feec828d4ad35bcdcb49ae1cd4",
     "semantic_hash": ""
   }
 }
