@@ -182,8 +182,10 @@ No performance implementation is authorized by this section. The missing evidenc
 
 EXP-0364 completed the first attribution pass as `LEARN`, EXP-0365 confirmed
 the partial-tail route defect, and EXP-0366 rejected the first opt-in bounded
-contract. EXP-0367 added a reusable state snapshot oracle and localized the
-first aligned-tail divergence to full-attention layer 3 active K/V at the
-partial-tail boundary. The current frontier is that exact K/V-write/causal
-contract; no new tail geometry or performance kernel is authorized until it is
-accepted or repaired.
+contract. EXP-0367/0368 added a reusable state snapshot oracle and localized
+the first aligned-tail difference to full-attention layer 3 active K/V. The
+required qualified-B512-vs-scalar numerical envelope is not yet available:
+the diagnostic scalar route faults or rejects its M23 contract. The current
+frontier is a focused safe baseline and tensor-level comparison; no K/V fix,
+tail geometry, or performance kernel is authorized until `0.00195312` is
+classified.

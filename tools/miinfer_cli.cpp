@@ -89,6 +89,7 @@ bool apply_runtime_preset() {
             && value.rfind("MIINFER_PREFILL_PROFILE=", 0) != 0
             && value.rfind("MIINFER_PREFILL_PROFILE_POSITION=", 0) != 0
             && value.rfind("MIINFER_EXP0366_PARTIAL_TAIL=", 0) != 0
+            && value.rfind("MIINFER_EXP0368_SCALAR_ORACLE=", 0) != 0
             && value.rfind("MIINFER_HIP_GRAPH=", 0) != 0) {
             names.emplace_back(value.substr(0, value.find('=')));
         }
@@ -2361,12 +2362,18 @@ private:
                 "MIINFER_DELTA_TRANSPOSED_STATE=0");
         }
         gdn_chunkwise_prefill_ = gdn_chunkwise_prefill_ || wide_prefill_;
+        const bool exp0368_scalar_oracle = std::getenv("MIINFER_EXP0368_SCALAR_ORACLE") != nullptr
+            && std::strcmp(std::getenv("MIINFER_EXP0368_SCALAR_ORACLE"), "0") != 0;
+        if (exp0368_scalar_oracle) {
+            full_layer_major_prefill_ = false;
+            prefill_chunk_ = kPrefillBatch;
+        }
         const char* prefill_chunk_env = std::getenv("MIINFER_PREFILL_CHUNK");
         if (prefill_chunk_env != nullptr) {
             const auto requested = std::stoul(prefill_chunk_env);
             const bool wide_batch = wide_prefill_ && requested >= kM12PrefillBatch
                 && requested <= kMaxWidePrefillBatch && requested % kPrefillBatch == 0;
-            if (requested != 4 && requested != kPrefillBatch && !wide_batch) {
+            if (!exp0368_scalar_oracle && requested != 4 && requested != kPrefillBatch && !wide_batch) {
                 throw std::runtime_error(
                     "MIINFER_PREFILL_CHUNK must be 4 or 64; wide prefill accepts 128..512");
             }
@@ -4286,6 +4293,7 @@ void print_usage() {
     std::cout << "       --m26c-import-state FILE --m26c-decode-route direct|graph --m26c-output-state FILE\n";
     std::cout << "       --m26c-logits-output FILE            Export position logits for a one-token probe\n";
     std::cout << "       --exp0367-state-output FILE         Opt-in partial-tail prefill state snapshot\n";
+    std::cout << "       MIINFER_EXP0368_SCALAR_ORACLE=1    Diagnostic ordered P512 baseline selector\n";
     std::cout << "       --m26c-layer-path-prefix PREFIX      Capture layers 0 and 1 at one direct token\n";
     std::cout << "       --m26c-restore-only                 Verify route-specific snapshot import without decoding\n";
     std::cout << "       --m26c-recurrent-qkv-m23            Use M23 only for recurrent QKV during imported decode\n";
