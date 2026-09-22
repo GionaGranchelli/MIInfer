@@ -1,56 +1,60 @@
 # EXP-0366 — Partial-tail prefill execution contract
 
-## Hypothesis
+## Question and hypothesis
 
-After a complete B512 full-layer-major prefill, a remainder can be decomposed
-into existing aligned batches plus a minimal scalar residue without fake
-padding or a new math kernel. For `R=510`, the bounded contract is
-`384 + 64 + 62`.
+Can a remainder after complete B512 full-layer-major chunks use existing batched operators plus only a genuinely unsupported residue, without fake padding or a new math kernel? For `R=510`, the tested bounded contract was `384 + 64 + 62`.
 
-## Scope and baseline
+## EXP-0365 evidence and baseline
 
-This is an opt-in execution-contract experiment only. The qualified/default
-path is unchanged. EXP-0365 measured fixed-capacity `P1022 = 80,973.89 ms`;
-the B512 control at this build measured `2,514.36 ms`.
+The qualified/default route is unchanged. EXP-0365 measured fixed-capacity `P1022 = 80,973.89 ms` versus a B512 control near `2.49 s`; the pathological excess was approximately `78.48 s` (`96.9%` of the excess over P512).
 
-## Source support matrix
+## Existing primitive support matrix
 
-| Stage | Existing count contract | EXP-0366 status |
-|---|---|---|
-| Embedding/copy | Per-token path | Preserved |
-| Recurrent `prepare_prefill_batch` | `1..capacity`, divisible by 4 | Existing fallback |
-| Recurrent wide QKV, beta/decay, GDN/SSM, FFN | At least 128, divisible by 64 | Reused for aligned chunks |
-| Full-attention `prepare_prefill_batch` | Default exactly 64 or 512 | Opt-in widened to aligned `128..512` |
-| Full-attention finish | Any prepared positive count within capacity | Reused after preparation |
-| `finish_prefill_batch` | Positive count divisible by 4 | Reused |
-| Layer-major dispatcher | Complete B512 fast path; smaller counts may call `layer.run` | Opt-in decomposition |
+| Stage | Existing implementation | Valid counts/alignment | State/causal requirement | Partial behavior/evidence |
+|---|---|---|---|---|
+| Embedding/copy | Per-token embedding/staging | Per-token | absolute position | Per-token; source path |
+| Normalization | Fused/batched preparation and finish | Caller-dependent; normal path is 4-aligned | normalized activation | Batched only after caller reaches batch path |
+| Recurrent QKV/Z, convolution, GDN/transition, SSM output | `prefill_wide` family | `>=128`, `<=capacity`, divisible by 64; normal preparation is 4-aligned | recurrent/convolution history and `base_position` | Wide for eligible chunks; otherwise normal or `run`; guards in `prefill_wide_*` |
+| Recurrent FFN gate/up, SwiGLU, down, residual, next norm | `prefill_wide` / `finish_prefill_batch` | Wide `>=128` and 64-aligned; finish is 4-aligned | recurrent continuation | Deferred batch or B4 chunks; otherwise `run` |
+| Full-attention Q/K/V/gate preparation, Q/K norm, RoPE, KV write | `prepare_prefill_batch` plus attention finish | Default exactly 64 or 512; opt-in aligned `128..512` | active KV, causal bounds, absolute RoPE | Unsupported counts reject and caller uses `run`; guard in `FullAttentionLayer::prepare_prefill_batch` |
+| Full-attention causal attention and O projection | `finish_prefill_attention` | Positive prepared count within capacity | active K/V and causal positions | Batched only after preparation |
+| Full-attention FFN gate/up, SwiGLU, down, residual, next norm | `finish_prefill_batch` / batch4 fallback | 4-aligned; wide when ready | layer continuation | Deferred batch/B4 or `run` |
+| Layer-major dispatcher | `prefill_layer_major` / `prefill_full_layer_major_chunk` | Complete B512 fast path; partial route is stage-dependent | `base_position`, state/cache offsets | Route selection does not prove batched work |
 
-The relevant source contracts are `prefill_layer_major`,
-`prepare_prefill_batch`, `prefill_wide`, `finish_prefill_attention`, and
-`finish_prefill_batch` in `tools/miinfer_cli.cpp` and
-`tools/qwen35_gpu_pipeline.hpp`. Recurrent wide support is not evidence that
-full attention has an equivalent partial-count schedule.
+The relevant source contracts are `prefill_layer_major`, `prepare_prefill_batch`, `prefill_wide`, `finish_prefill_attention`, and `finish_prefill_batch` in `tools/miinfer_cli.cpp` and `tools/qwen35_gpu_pipeline.hpp`. The classifications are: A only for selected generic APIs, B for normal preparation/finish, C/D for the wide recurrent family, E for default full-attention preparation, F for the `layer.run` fallback, and G for rejected preparation requests. A `count` parameter is not treated as proof that the complete stage is batched.
 
-## Candidate
+## EXP-0365 slow-path execution map for a 510-token tail
 
-`MIINFER_EXP0366_PARTIAL_TAIL=1` preserves complete B512 chunks, decomposes
-the post-B512 remainder into aligned chunks, and leaves the smallest residue
-on the existing scalar route. The full-attention preparation guard is widened
-only under this selector. No padding, new allocation, or new math kernel is
-used; the default and qualified selectors do not enable it.
+After the complete B512 chunk, the existing dispatcher aligns the first remainder portion to 448. Recurrent layers can enter `prefill_wide` for that portion, but default full-attention preparation rejects 448. The attention layer therefore calls per-token `layer.run`, and its deferred attention finish is not reached. The subsequent 64-token portion is below the wide threshold and is handled through per-token `run` at the layer-major call site. The final 62 tokens are also per-token.
 
-## Resource and correctness gate
+| Tail portion | Recurrent family | Full-attention family | Classification |
+|---|---|---|---|
+| 448 | `prefill_wide` | `run` because preparation rejects 448 | mixed; attention loses batching |
+| 64 | `run` because wide threshold is not met | `run` because batched-attention gate requires wide count | per-token |
+| 62 | `run` | `run` | per-token |
 
-The MIinfer release build completed successfully. P1022 allocation remained
-`22,463,033,748` bytes; no new workspace was added.
+The opt-in candidate changes the first portion to the aligned experimental contract. Its diagnostic profile recorded two aligned partial chunks and 62 scalar tokens, but that decomposition counter is not an exhaustive per-token dispatch counter.
 
-P513 candidate and oracle continuation runs both completed, but the current
-CLI has no comparable recurrent/KV state dump for an arbitrary partial prompt.
-Generated token identity and intermediate state were therefore not
-independently compared. The correctness gate is incomplete, so this candidate
-is not qualified for promotion.
+## Candidate contract
 
-## Measurements
+`MIINFER_EXP0366_PARTIAL_TAIL=1` preserves complete B512 chunks, decomposes the post-B512 remainder into aligned chunks, and leaves the smallest residue on the existing scalar route. The full-attention preparation guard is widened only under this selector. No fake tokens, new allocation, duplicate weights, decode change, layout change, or new math kernel is used. The default and qualified selectors do not enable it.
+
+## Oracle and correctness/state matrix
+
+The existing fallback is the semantic oracle. The current CLI has no arbitrary-tail export for recurrent state, convolution history, active K/V, final hidden/logits, or token IDs. The required matrix is therefore recorded as not run rather than inferred from process exit:
+
+| Tails | Recurrent state | Conv/history | Active K/V | Hidden/logits | 8–16 token continuation | Status |
+|---|---|---|---|---|---|---|
+| 1,2,3,4,63,64,65,127,128,129 | not run | not run | not run | not run | not run | blocked by oracle instrumentation |
+| 255,256,257,447,448,449,510,511 | not run | not run | not run | not run | P513/P1022 process completion only | incomplete |
+
+P513 candidate and default continuation both exited successfully, but token identity and semantic state were not exposed, so this is not equivalence. No numerical tolerance was weakened. Base positions after 0, 1, and 3 complete B512 chunks were not state-compared; P1022 covers one complete chunk only as a timing/counter observation.
+
+## Resource and allocation gate
+
+The release build completed. P1022 allocation remained `22,463,033,748` bytes. No new workspace, model representation, or transfer path was added. Since no new GPU kernel was introduced, VGPR/SGPR qualification does not apply to this routing experiment.
+
+## Performance results
 
 | Case | Result |
 |---|---:|
@@ -60,36 +64,16 @@ is not qualified for promotion.
 | P1022 candidate, opt-in | 82,260.50 ms |
 | P1022 EXP-0365 baseline | 80,973.89 ms |
 
-The P1022 profile recorded `2` aligned partial chunks and `62` scalar tokens.
-The selector changed the route but did not recover end-to-end performance; the
-clean P1022 result regressed by about 1.29 seconds. Profiled timing is not an
-A/B claim because instrumentation changes synchronization and timing behavior.
+P1023, a representative medium tail, approximately P2K, and approximately P4K candidate comparisons were not run: correctness was incomplete and the candidate had already failed the clean P1022 screen. This is an intentional stop, not a passing result. Profiled timing is not an A/B claim because instrumentation changes synchronization and timing behavior.
 
-## Interpretation
-
-The first missing contract was real: by default, aligned partial counts above
-64 were rejected by full-attention preparation, so attention layers could fall
-back to per-token `layer.run` while recurrent layers had a wide path. Widening
-that guard and decomposing the tail is not sufficient. The remaining
-pathological stage/dataflow has not been isolated with non-double-counted
-timing, and the available continuation check is not a state-level oracle.
-
-This is not evidence to tune another tail geometry. The next action is to
-measure the exact stage that remains serial or pathological for an aligned
-partial tail and add the missing state/continuation oracle before another
-candidate is written.
+The clean P1022 candidate regressed by about 1.29 seconds. Recovered share of the EXP-0365 pathological excess is therefore not positive; the experiment did not demonstrate removal of the excess. The context curve is not smooth.
 
 ## Decision
 
-**REJECT** — primary repository disposition. The candidate fails correctness
-and performance gates.
+**REJECT** — primary repository disposition. The candidate fails correctness and performance gates.
 
-**LEARN** — narrative result. The aligned route removes much of the obvious
-scalar remainder but does not qualify the contract.
+**LEARN** — narrative result. Route selection changed, but the required state contract, exhaustive per-token counter, and end-to-end recovery were not established.
 
-## Next frontier
+## Next PRIMARY frontier
 
-Refresh exact stage attribution for an aligned partial tail, starting with
-full-attention partial preparation/finish stages, using exclusive timing and a
-state/continuation oracle. Do not tune the `384 + 64 + 62` decomposition or
-claim partial-tail promotion until that evidence exists.
+Add non-invasive exclusive stage timing and a focused state/continuation oracle for an aligned partial tail. Identify the exact remaining serial stage or single missing primitive/count contract. If an existing primitive cannot express the required state-preserving partial count, record that operator and stop; do not tune another tail geometry or broadly optimize “partial prefill”.
