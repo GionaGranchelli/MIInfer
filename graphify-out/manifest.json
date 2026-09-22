@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1790078888.822008,
-    "seen": 1790078914.6494696,
-    "ast_hash": "ccbca1ca5722b9088b2e0832fa281e16",
+    "mtime": 1790081411.3866456,
+    "seen": 1790081430.592969,
+    "ast_hash": "1293b0ebe1468614b181708eb06e7578",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -5394,9 +5394,15 @@
     "semantic_hash": ""
   },
   "docs/performance-research-protocol.md": {
-    "mtime": 1790078888.8200078,
-    "seen": 1790078914.6494899,
-    "ast_hash": "df508d7a52096f85c5ef73516a9801d4",
+    "mtime": 1790081403.663686,
+    "seen": 1790081430.5929906,
+    "ast_hash": "030cf0b6388e0cd67a6f80eb3f689edf",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0364-full-model-prefill-bottleneck-attribution.md": {
+    "mtime": 1790081359.291918,
+    "seen": 1790081430.593555,
+    "ast_hash": "ba5f512818e6c558e8b4ff57b5d39de4",
     "semantic_hash": ""
   }
 }
