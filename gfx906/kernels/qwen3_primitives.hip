@@ -2324,6 +2324,95 @@ __global__ void qwen35_tiled_online_attention_batch_f32_kernel(
         * (1.0f / (1.0f + expf(-gate_vec.w)));
 }
 
+// Candidate 1: one workgroup owns one token/KV-head pair.  Its six waves
+// compute the six GQA query heads while sharing one BK=32 F16 K/V tile.
+__global__ void qwen35_gqa_tiled_online_attention_batch_f16_kernel(
+    const float* __restrict__ q, const __half* __restrict__ key_cache,
+    const __half* __restrict__ value_cache, const float* __restrict__ gate,
+    float* __restrict__ gated_output, std::uint32_t token_count,
+    std::uint32_t base_position, std::uint32_t cache_capacity,
+    std::uint32_t query_heads, std::uint32_t kv_heads,
+    std::uint32_t head_dim, float scale) {
+    constexpr std::uint32_t kBlockK = 32;
+    constexpr std::uint32_t kGroupSize = 6;
+    extern __shared__ __half tile[];
+    const std::uint32_t lane = threadIdx.x & 63;
+    const std::uint32_t wave = threadIdx.x >> 6;
+    const std::uint32_t group = blockIdx.x;
+    const std::uint32_t token = group / kv_heads;
+    const std::uint32_t kv_head = group % kv_heads;
+    if (token >= token_count || kv_head >= kv_heads || wave >= kGroupSize
+        || query_heads != 24 || kv_heads != 4 || head_dim != 256) return;
+    const std::uint32_t head = kv_head * kGroupSize + wave;
+    const std::size_t q_base =
+        (static_cast<std::size_t>(token) * query_heads + head) * head_dim;
+    const std::uint32_t cache_length = base_position + token + 1;
+    if (cache_length > cache_capacity) return;
+
+    float4 q_vec = *reinterpret_cast<const float4*>(q + q_base + lane * 4);
+    float4 acc = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+    float running_max = -INFINITY;
+    float running_sum = 0.0f;
+    for (std::uint32_t tile_start = 0; tile_start < cache_length; tile_start += kBlockK) {
+        for (std::uint32_t element = threadIdx.x; element < kBlockK * head_dim;
+             element += blockDim.x) {
+            const std::uint32_t position = element / head_dim;
+            const std::uint32_t dimension = element % head_dim;
+            const std::uint32_t cache_position = tile_start + position;
+            const std::size_t tile_index = static_cast<std::size_t>(element);
+            if (cache_position < cache_length) {
+                const std::size_t cache_base =
+                    (static_cast<std::size_t>(kv_head) * cache_capacity + cache_position)
+                    * head_dim + dimension;
+                tile[tile_index] = key_cache[cache_base];
+                tile[kBlockK * head_dim + tile_index] = value_cache[cache_base];
+            } else {
+                tile[tile_index] = __float2half(0.0f);
+                tile[kBlockK * head_dim + tile_index] = __float2half(0.0f);
+            }
+        }
+        __syncthreads();
+        const std::uint32_t valid = min(kBlockK, cache_length - tile_start);
+        for (std::uint32_t position = 0; position < valid; ++position) {
+            const std::size_t tile_base = static_cast<std::size_t>(position) * head_dim;
+            const auto* k = tile + tile_base + lane * 4;
+            float score = qwen3_wave_sum(
+                q_vec.x * __half2float(k[0]) + q_vec.y * __half2float(k[1])
+                + q_vec.z * __half2float(k[2]) + q_vec.w * __half2float(k[3]));
+            score = __shfl(score, 0, 64) * scale;
+            float alpha = 1.0f;
+            float weight = 0.0f;
+            if (lane == 0) {
+                if (score > running_max) {
+                    alpha = expf(running_max - score);
+                    running_sum = running_sum * alpha + 1.0f;
+                    running_max = score;
+                    weight = 1.0f;
+                } else {
+                    weight = expf(score - running_max);
+                    running_sum += weight;
+                }
+            }
+            alpha = __shfl(alpha, 0, 64);
+            weight = __shfl(weight, 0, 64);
+            const auto* v = tile + kBlockK * head_dim + tile_base + lane * 4;
+            acc.x = acc.x * alpha + weight * __half2float(v[0]);
+            acc.y = acc.y * alpha + weight * __half2float(v[1]);
+            acc.z = acc.z * alpha + weight * __half2float(v[2]);
+            acc.w = acc.w * alpha + weight * __half2float(v[3]);
+        }
+        __syncthreads();
+    }
+    const float denominator = __shfl(running_sum, 0, 64);
+    const float4 gate_vec = *reinterpret_cast<const float4*>(gate + q_base + lane * 4);
+    const float4 result = make_float4(
+        acc.x / denominator, acc.y / denominator, acc.z / denominator, acc.w / denominator);
+    gated_output[q_base + lane * 4 + 0] = result.x * (1.0f / (1.0f + expf(-gate_vec.x)));
+    gated_output[q_base + lane * 4 + 1] = result.y * (1.0f / (1.0f + expf(-gate_vec.y)));
+    gated_output[q_base + lane * 4 + 2] = result.z * (1.0f / (1.0f + expf(-gate_vec.z)));
+    gated_output[q_base + lane * 4 + 3] = result.w * (1.0f / (1.0f + expf(-gate_vec.w)));
+}
+
 __global__ void qwen35_tiled_online_attention_batch_f16_kernel(
     const float* __restrict__ q,
     const __half* __restrict__ key_cache,
@@ -4493,6 +4582,25 @@ void launch_qwen35_tiled_online_attention_batch_f16(
                        dim3(token_count * query_heads), dim3(64), 0, stream,
                        q, key_cache, value_cache, gate, gated_output, token_count,
                        base_position, cache_capacity, query_heads, kv_heads, head_dim, scale);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_gqa_tiled_online_attention_batch_f16(
+    const float* q, const __half* key_cache, const __half* value_cache,
+    const float* gate, float* gated_output, std::uint32_t token_count,
+    std::uint32_t base_position, std::uint32_t cache_capacity,
+    std::uint32_t query_heads, std::uint32_t kv_heads, std::uint32_t head_dim,
+    float scale, hipStream_t stream) {
+    if (q == nullptr || key_cache == nullptr || value_cache == nullptr || gate == nullptr
+        || gated_output == nullptr || token_count == 0 || base_position > cache_capacity
+        || token_count > cache_capacity - base_position || cache_capacity == 0
+        || query_heads != 24 || kv_heads != 4 || head_dim != 256 || !std::isfinite(scale)) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen35_gqa_tiled_online_attention_batch_f16_kernel,
+        dim3(token_count * kv_heads), dim3(384), 32 * 256 * sizeof(__half) * 2,
+        stream, q, key_cache, value_cache, gate, gated_output, token_count,
+        base_position, cache_capacity, query_heads, kv_heads, head_dim, scale);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

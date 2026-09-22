@@ -416,6 +416,10 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-qwen3-attention-ab-bench PRIVATE miinfer_hip)
     target_compile_options(miinfer-qwen3-attention-ab-bench PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-qwen35-gqa-prefill-bench bench/qwen35_gqa_prefill_bench.cpp)
+    target_link_libraries(miinfer-qwen35-gqa-prefill-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-qwen35-gqa-prefill-bench PRIVATE -Wall -Wextra -Wpedantic)
+
     add_executable(miinfer-qwen3-swiglu-q8-bench bench/qwen3_swiglu_q8_bench.cpp)
     target_link_libraries(miinfer-qwen3-swiglu-q8-bench PRIVATE miinfer_hip)
     target_compile_options(miinfer-qwen3-swiglu-q8-bench PRIVATE -Wall -Wextra -Wpedantic)

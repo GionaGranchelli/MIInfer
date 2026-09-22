@@ -598,8 +598,8 @@ int main() {
     constexpr std::uint32_t kAttentionTokens = 8;
     constexpr std::uint32_t kAttentionBase = 3;
     constexpr std::uint32_t kAttentionCapacity = 16;
-    constexpr std::uint32_t kQueryHeads = 2;
-    constexpr std::uint32_t kKvHeads = 1;
+    constexpr std::uint32_t kQueryHeads = 24;
+    constexpr std::uint32_t kKvHeads = 4;
     constexpr std::uint32_t kHeadDim = 256;
     std::vector<float> attention_q(kAttentionTokens * kQueryHeads * kHeadDim);
     std::vector<float> attention_gate(attention_q.size());
@@ -640,7 +640,9 @@ int main() {
             float maximum = -1.0e30F;
             for (std::uint32_t position = 0; position < cache_length; ++position) {
                 float score = 0.0F;
-                const std::size_t cache_base = static_cast<std::size_t>(position) * kHeadDim;
+                const std::size_t cache_base =
+                    (static_cast<std::size_t>(head / (kQueryHeads / kKvHeads))
+                     * kAttentionCapacity + position) * kHeadDim;
                 for (std::uint32_t dim = 0; dim < kHeadDim; ++dim) {
                     score += attention_q[query_base + dim] * attention_keys[cache_base + dim];
                 }
@@ -655,8 +657,11 @@ int main() {
             for (std::uint32_t dim = 0; dim < kHeadDim; ++dim) {
                 float expected = 0.0F;
                 for (std::uint32_t position = 0; position < cache_length; ++position) {
+                    const std::size_t value_base =
+                        (static_cast<std::size_t>(head / (kQueryHeads / kKvHeads))
+                         * kAttentionCapacity + position) * kHeadDim;
                     expected += (scores[position] / denominator)
-                        * attention_values[static_cast<std::size_t>(position) * kHeadDim + dim];
+                        * attention_values[value_base + dim];
                 }
                 const float gate = attention_gate[query_base + dim];
                 expected /= 1.0F + std::exp(-gate);
@@ -697,6 +702,25 @@ int main() {
             > 6.0e-3F * std::fmax(1.0F, std::fabs(attention_expected[i]))) {
             std::cerr << "wide attention FP16 KV mismatch index=" << i
                       << " actual=" << attention_output_f16[i]
+                      << " expected=" << attention_expected[i] << '\n';
+            return 1;
+        }
+    }
+    DeviceBuffer<float> d_attention_output_gqa(attention_q.size());
+    miinfer::launch_qwen35_gqa_tiled_online_attention_batch_f16(
+        d_attention_q.get(), d_attention_keys_f16.get(), d_attention_values_f16.get(),
+        d_attention_gate.get(), d_attention_output_gqa.get(), kAttentionTokens,
+        kAttentionBase, kAttentionCapacity, kQueryHeads, kKvHeads, kHeadDim,
+        attention_scale);
+    MIINFER_HIP_CHECK(hipDeviceSynchronize());
+    std::vector<float> attention_output_gqa(attention_q.size());
+    MIINFER_HIP_CHECK(hipMemcpy(attention_output_gqa.data(), d_attention_output_gqa.get(),
+                                d_attention_output_gqa.bytes(), hipMemcpyDeviceToHost));
+    for (std::size_t i = 0; i < attention_output_gqa.size(); ++i) {
+        if (std::fabs(attention_output_gqa[i] - attention_expected[i])
+            > 6.0e-3F * std::fmax(1.0F, std::fabs(attention_expected[i]))) {
+            std::cerr << "GQA tiled FP16 KV mismatch index=" << i
+                      << " actual=" << attention_output_gqa[i]
                       << " expected=" << attention_expected[i] << '\n';
             return 1;
         }

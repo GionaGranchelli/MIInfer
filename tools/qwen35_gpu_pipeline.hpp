@@ -3747,6 +3747,7 @@ struct FullAttentionLayer {
     bool decode_mx_ffn = false;
     bool decode_mx_o = false;
     bool wide_attn_prefill = false;
+    bool gqa_tiled_attn_prefill = false;
     std::array<std::uint32_t, 9> m23_dispatch_counts{};
     bool m23_trace_dispatch = false;
     M23ProfileCounters* m23_profile_counters = nullptr;
@@ -3791,6 +3792,9 @@ struct FullAttentionLayer {
         const char* layer_major_env = std::getenv("MIINFER_PREFILL_LAYER_MAJOR");
         wide_attn_prefill = layer_major_env != nullptr && std::strcmp(layer_major_env, "0") != 0
             && wide_attn_env != nullptr && std::strcmp(wide_attn_env, "0") != 0;
+        const char* gqa_tiled_env = std::getenv("MIINFER_PREFILL_GQA_TILED_ATTN");
+        gqa_tiled_attn_prefill = wide_attn_prefill
+            && gqa_tiled_env != nullptr && std::strcmp(gqa_tiled_env, "0") != 0;
         const bool mx_ffn_requested = environment_flag(
             "MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_FFN");
         const bool mx_ffn_supported =
@@ -4489,7 +4493,17 @@ struct FullAttentionLayer {
         stage_end(3, profile_position);
         count_m23_dispatch(3);
         stage_start(6, profile_position);
-        if (fp16_kv_cache) {
+        if (gqa_tiled_attn_prefill) {
+            if (!fp16_kv_cache) {
+                throw std::runtime_error(
+                    "MIINFER_PREFILL_GQA_TILED_ATTN requires FP16 KV cache");
+            }
+            miinfer::launch_qwen35_gqa_tiled_online_attention_batch_f16(
+                q, static_cast<const __half*>(key_cache->get()),
+                static_cast<const __half*>(value_cache->get()), gate, output, count,
+                base_position, g_cache_capacity, 24, 4, 256,
+                1.0F / std::sqrt(256.0F), hipStreamPerThread);
+        } else if (fp16_kv_cache) {
             miinfer::launch_qwen35_tiled_online_attention_batch_f16(
                 q, static_cast<const __half*>(key_cache->get()),
                 static_cast<const __half*>(value_cache->get()), gate, output, count,
