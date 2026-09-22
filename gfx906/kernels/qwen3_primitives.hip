@@ -2413,6 +2413,134 @@ __global__ void qwen35_gqa_tiled_online_attention_batch_f16_kernel(
     gated_output[q_base + lane * 4 + 3] = result.w * (1.0f / (1.0f + expf(-gate_vec.w)));
 }
 
+// EXP-0362: one 256-thread workgroup covers 16 query tokens and two Q heads
+// per KV head. Each Wave64 handles eight query rows while sharing the staged
+// 32-row K/V tile with the other waves.
+__global__ void qwen35_query_tiled_online_attention_batch_f16_kernel(
+    const float* __restrict__ q, const __half* __restrict__ key_cache,
+    const __half* __restrict__ value_cache, const float* __restrict__ gate,
+    float* __restrict__ gated_output, std::uint32_t token_count,
+    std::uint32_t base_position, std::uint32_t cache_capacity,
+    std::uint32_t query_heads, std::uint32_t kv_heads,
+    std::uint32_t head_dim, float scale) {
+    constexpr std::uint32_t kBlockTokens = 16;
+    constexpr std::uint32_t kGroupHeads = 2;
+    constexpr std::uint32_t kRowsPerWave = 8;
+    constexpr std::uint32_t kTileK = 32;
+    extern __shared__ __half tile[];
+
+    const std::uint32_t wave = threadIdx.x / 64;
+    const std::uint32_t lane = threadIdx.x % 64;
+    const std::uint32_t block = blockIdx.x;
+    const std::uint32_t token_block = block / (kv_heads * (query_heads / kv_heads / kGroupHeads));
+    const std::uint32_t group = block % (kv_heads * (query_heads / kv_heads / kGroupHeads));
+    const std::uint32_t kv_head = group % kv_heads;
+    const std::uint32_t head_group = group / kv_heads;
+    if (wave >= 4 || token_block * kBlockTokens >= token_count
+        || query_heads != 24 || kv_heads != 4 || head_dim != 256) return;
+
+    float4 qv[kRowsPerWave];
+    float4 acc[kRowsPerWave];
+    float running_max[kRowsPerWave];
+    float running_sum[kRowsPerWave];
+    std::uint32_t tokens[kRowsPerWave];
+    std::uint32_t heads[kRowsPerWave];
+    #pragma unroll
+    for (std::uint32_t row = 0; row < kRowsPerWave; ++row) {
+        const std::uint32_t local_row = wave * kRowsPerWave + row;
+        const std::uint32_t local_token = local_row / kGroupHeads;
+        const std::uint32_t local_head = local_row % kGroupHeads;
+        tokens[row] = token_block * kBlockTokens + local_token;
+        heads[row] = kv_head * 6 + head_group * kGroupHeads + local_head;
+        if (tokens[row] >= token_count) {
+            qv[row] = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+            acc[row] = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+            running_max[row] = -INFINITY;
+            running_sum[row] = 0.0f;
+            continue;
+        }
+        const std::size_t q_base =
+            (static_cast<std::size_t>(tokens[row]) * query_heads + heads[row]) * head_dim;
+        qv[row] = *reinterpret_cast<const float4*>(q + q_base + lane * 4);
+        acc[row] = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+        running_max[row] = -INFINITY;
+        running_sum[row] = 0.0f;
+    }
+
+    const std::uint32_t max_length = base_position + token_block * kBlockTokens + kBlockTokens;
+    for (std::uint32_t tile_start = 0; tile_start < max_length; tile_start += kTileK) {
+        for (std::uint32_t element = threadIdx.x; element < kTileK * head_dim;
+             element += blockDim.x) {
+            const std::uint32_t position = element / head_dim;
+            const std::uint32_t dimension = element % head_dim;
+            const std::uint32_t cache_position = tile_start + position;
+            const std::size_t tile_index = static_cast<std::size_t>(element);
+            if (cache_position < cache_capacity) {
+                const std::size_t cache_base =
+                    (static_cast<std::size_t>(kv_head) * cache_capacity + cache_position) * head_dim
+                    + dimension;
+                tile[tile_index] = key_cache[cache_base];
+                tile[kTileK * head_dim + tile_index] = value_cache[cache_base];
+            } else {
+                tile[tile_index] = __float2half(0.0f);
+                tile[kTileK * head_dim + tile_index] = __float2half(0.0f);
+            }
+        }
+        __syncthreads();
+        #pragma unroll
+        for (std::uint32_t row = 0; row < kRowsPerWave; ++row) {
+            if (tokens[row] >= token_count) continue;
+            const std::uint32_t row_length = base_position + tokens[row] + 1;
+            if (tile_start >= row_length) continue;
+            const std::uint32_t valid = min(kTileK, row_length - tile_start);
+            for (std::uint32_t position = 0; position < valid; ++position) {
+                const std::size_t tile_base = static_cast<std::size_t>(position) * head_dim;
+                const auto* k = tile + tile_base + lane * 4;
+                float score = qwen3_wave_sum(
+                    qv[row].x * __half2float(k[0]) + qv[row].y * __half2float(k[1])
+                    + qv[row].z * __half2float(k[2]) + qv[row].w * __half2float(k[3]));
+                score = __shfl(score, 0, 64) * scale;
+                float alpha = 1.0f;
+                float weight = 0.0f;
+                if (lane == 0) {
+                    if (score > running_max[row]) {
+                        alpha = expf(running_max[row] - score);
+                        running_sum[row] = running_sum[row] * alpha + 1.0f;
+                        running_max[row] = score;
+                        weight = 1.0f;
+                    } else {
+                        weight = expf(score - running_max[row]);
+                        running_sum[row] += weight;
+                    }
+                }
+                alpha = __shfl(alpha, 0, 64);
+                weight = __shfl(weight, 0, 64);
+                const auto* v = tile + kTileK * head_dim + tile_base + lane * 4;
+                acc[row].x = acc[row].x * alpha + weight * __half2float(v[0]);
+                acc[row].y = acc[row].y * alpha + weight * __half2float(v[1]);
+                acc[row].z = acc[row].z * alpha + weight * __half2float(v[2]);
+                acc[row].w = acc[row].w * alpha + weight * __half2float(v[3]);
+            }
+        }
+        __syncthreads();
+    }
+
+    #pragma unroll
+    for (std::uint32_t row = 0; row < kRowsPerWave; ++row) {
+        if (tokens[row] >= token_count) continue;
+        const std::size_t output_base =
+            (static_cast<std::size_t>(tokens[row]) * query_heads + heads[row]) * head_dim;
+        const float denominator = __shfl(running_sum[row], 0, 64);
+        const float4 gate_vec = *reinterpret_cast<const float4*>(gate + output_base + lane * 4);
+        const float4 result = make_float4(acc[row].x / denominator, acc[row].y / denominator,
+                                          acc[row].z / denominator, acc[row].w / denominator);
+        gated_output[output_base + lane * 4 + 0] = result.x * (1.0f / (1.0f + expf(-gate_vec.x)));
+        gated_output[output_base + lane * 4 + 1] = result.y * (1.0f / (1.0f + expf(-gate_vec.y)));
+        gated_output[output_base + lane * 4 + 2] = result.z * (1.0f / (1.0f + expf(-gate_vec.z)));
+        gated_output[output_base + lane * 4 + 3] = result.w * (1.0f / (1.0f + expf(-gate_vec.w)));
+    }
+}
+
 __global__ void qwen35_tiled_online_attention_batch_f16_kernel(
     const float* __restrict__ q,
     const __half* __restrict__ key_cache,
@@ -4601,6 +4729,27 @@ void launch_qwen35_gqa_tiled_online_attention_batch_f16(
         dim3(token_count * kv_heads), dim3(384), 32 * 256 * sizeof(__half) * 2,
         stream, q, key_cache, value_cache, gate, gated_output, token_count,
         base_position, cache_capacity, query_heads, kv_heads, head_dim, scale);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_query_tiled_online_attention_batch_f16(
+    const float* q, const __half* key_cache, const __half* value_cache,
+    const float* gate, float* gated_output, std::uint32_t token_count,
+    std::uint32_t base_position, std::uint32_t cache_capacity,
+    std::uint32_t query_heads, std::uint32_t kv_heads, std::uint32_t head_dim,
+    float scale, hipStream_t stream) {
+    if (q == nullptr || key_cache == nullptr || value_cache == nullptr || gate == nullptr
+        || gated_output == nullptr || token_count == 0 || base_position > cache_capacity
+        || token_count > cache_capacity - base_position || query_heads != 24
+        || kv_heads != 4 || head_dim != 256 || !std::isfinite(scale)) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    const std::uint32_t groups = kv_heads * (query_heads / kv_heads / 2);
+    const std::uint32_t blocks = (token_count + 15) / 16;
+    hipLaunchKernelGGL(qwen35_query_tiled_online_attention_batch_f16_kernel,
+        dim3(blocks * groups), dim3(256), 2 * 32 * 256 * sizeof(__half), stream,
+        q, key_cache, value_cache, gate, gated_output, token_count, base_position,
+        cache_capacity, query_heads, kv_heads, head_dim, scale);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

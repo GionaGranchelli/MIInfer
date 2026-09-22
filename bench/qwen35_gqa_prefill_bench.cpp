@@ -25,15 +25,19 @@ float elapsed(hipEvent_t start, hipEvent_t stop) {
     return ms;
 }
 
-float time_path(bool candidate, const float* q, const __half* key, const __half* value,
+float time_path(int path, const float* q, const __half* key, const __half* value,
                 const float* gate, float* output, std::uint32_t tokens,
                 std::uint32_t capacity, int iterations) {
     hipEvent_t start{}, stop{};
     hipEventCreate(&start);
     hipEventCreate(&stop);
     for (int i = 0; i < 2; ++i) {
-        if (candidate) {
+        if (path == 1) {
             miinfer::launch_qwen35_gqa_tiled_online_attention_batch_f16(
+                q, key, value, gate, output, tokens, 0, capacity, 24, 4, 256,
+                1.0F / std::sqrt(256.0F));
+        } else if (path == 2) {
+            miinfer::launch_qwen35_query_tiled_online_attention_batch_f16(
                 q, key, value, gate, output, tokens, 0, capacity, 24, 4, 256,
                 1.0F / std::sqrt(256.0F));
         } else {
@@ -46,8 +50,12 @@ float time_path(bool candidate, const float* q, const __half* key, const __half*
     float total = 0.0F;
     for (int i = 0; i < iterations; ++i) {
         hipEventRecord(start);
-        if (candidate) {
+        if (path == 1) {
             miinfer::launch_qwen35_gqa_tiled_online_attention_batch_f16(
+                q, key, value, gate, output, tokens, 0, capacity, 24, 4, 256,
+                1.0F / std::sqrt(256.0F));
+        } else if (path == 2) {
+            miinfer::launch_qwen35_query_tiled_online_attention_batch_f16(
                 q, key, value, gate, output, tokens, 0, capacity, 24, 4, 256,
                 1.0F / std::sqrt(256.0F));
         } else {
@@ -88,9 +96,11 @@ int main() {
     hipMemcpy(d_key.ptr, key.data(), key.size() * sizeof(__half), hipMemcpyHostToDevice);
     hipMemcpy(d_value.ptr, value.data(), value.size() * sizeof(__half), hipMemcpyHostToDevice);
     for (const std::uint32_t tokens : {512U, 2048U, 4096U, 8192U, 16384U}) {
-        const float control = time_path(false, d_q.ptr, d_key.ptr, d_value.ptr, d_gate.ptr,
+        const float control = time_path(0, d_q.ptr, d_key.ptr, d_value.ptr, d_gate.ptr,
                                         d_control.ptr, tokens, kCapacity, 5);
-        const float candidate = time_path(true, d_q.ptr, d_key.ptr, d_value.ptr, d_gate.ptr,
+        const float rejected = time_path(1, d_q.ptr, d_key.ptr, d_value.ptr, d_gate.ptr,
+                                         d_candidate.ptr, tokens, kCapacity, 5);
+        const float candidate = time_path(2, d_q.ptr, d_key.ptr, d_value.ptr, d_gate.ptr,
                                           d_candidate.ptr, tokens, kCapacity, 5);
         std::vector<float> control_output(static_cast<std::size_t>(tokens) * kHeads * kDim);
         std::vector<float> candidate_output(control_output.size());
@@ -101,7 +111,8 @@ int main() {
             max_error = std::max(max_error, std::fabs(control_output[i] - candidate_output[i]));
         }
         std::cout << "tokens=" << tokens << " control_ms=" << control
-                  << " candidate_ms=" << candidate << " speedup=" << control / candidate
+                  << " rejected_ms=" << rejected << " candidate_ms=" << candidate
+                  << " speedup=" << control / candidate
                   << " max_abs_error=" << max_error << '\n';
     }
 }

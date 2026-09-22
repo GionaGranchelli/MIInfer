@@ -644,6 +644,14 @@ void launch_qwen35_gqa_tiled_online_attention_batch_f16(
     float scale,
     hipStream_t stream = nullptr);
 
+// EXP-0362: source-shaped BQ16/GQA2 tiled prefill attention.
+void launch_qwen35_query_tiled_online_attention_batch_f16(
+    const float* q, const __half* key_cache, const __half* value_cache,
+    const float* gate, float* gated_output, std::uint32_t token_count,
+    std::uint32_t base_position, std::uint32_t cache_capacity,
+    std::uint32_t query_heads, std::uint32_t kv_heads, std::uint32_t head_dim,
+    float scale, hipStream_t stream = nullptr);
+
 void launch_qwen35_fused_q_split_norm_rope_batch(
     const float* qfull,
     const float* q_norm_weight,

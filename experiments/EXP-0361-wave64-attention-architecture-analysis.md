@@ -58,6 +58,11 @@ The `ncols2=2` and `ncols1=16` values are source-derived for long prefill,
 not a benchmark claim. Exact runtime selection should be confirmed with mx’s
 verbose dispatch logging or a trace on the same model and prompt.
 
+Terminology matters here: `nbatch_fa=32` is the number of K/V rows handled
+per attention iteration. `nbatch_K=128` is the Q·K head-dimension chunk, so
+head dimension 256 is reduced in two 128-wide chunks. It is not equivalent to
+a single `BK=32` LDS tile.
+
 ## Architectural difference
 
 The important difference is not simply “FlashAttention” or six-way GQA
@@ -101,7 +106,8 @@ Confirmed from source:
 Not yet confirmed:
 
 * exact internal tile-kernel dispatch geometry in the verbose benchmark output;
-* compiled VGPR/SGPR/scratch counts for mx and MIInfer;
+* compiled VGPR/SGPR/LDS/scratch characteristics for the selected mx tile
+  specialization;
 * whether mx’s `grid.y` uses multiple KV splits at P4K/P8K;
 * whether Q8 K conversion cost is amortized or dominates.
 
@@ -129,8 +135,19 @@ trace or more selective verbose dispatch log is captured.
 
 ## Decision
 
-Do not write a new MIInfer attention kernel yet. The first justified follow-up
-is a matched runtime trace/resource comparison of the existing MIInfer control
-and mx’s selected tile configuration. The first portable hypothesis, if that
-comparison confirms the source path, is bounded query-token blocking with
-independent Wave64/subwave work—not explicit six-wave GQA cooperation.
+The evidence changes the hypothesis from “LDS and barriers are bad on gfx906”
+to “synchronization must be amortized across enough useful query rows.” The
+next isolated candidate should therefore be source-shaped rather than another
+one-token/six-head design:
+
+```text
+16 query tokens × 2 Q heads per KV head = 32 query rows/workgroup
+256 threads = 4 physical Wave64s on gfx906
+nbatch_fa = 32 K/V rows per iteration
+nbatch_K = 128 head-dimension chunk
+shared K/V staging, online softmax, causal semantics, F16 KV first
+```
+
+This is a bounded multi-wave design with synchronization amortized across many
+query rows and limited GQA grouping. It is the EXP-0362 hypothesis, not yet a
+production change or a claim that these parameters are optimal for MI50.
