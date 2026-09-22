@@ -5374,5 +5374,11 @@
     "seen": 1790069648.940783,
     "ast_hash": "a31cf7041f1327f045d174c275152eb0",
     "semantic_hash": ""
+  },
+  "experiments/EXP-0361-wave64-attention-architecture-analysis.md": {
+    "mtime": 1790071054.8106923,
+    "seen": 1790071078.2021878,
+    "ast_hash": "bdbf9b48ef252d2e8b11768a40d92a79",
+    "semantic_hash": ""
   }
 }
