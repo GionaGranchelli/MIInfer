@@ -144,9 +144,9 @@
     "semantic_hash": ""
   },
   "AGENTS.md": {
-    "mtime": 1788002505.6937299,
-    "seen": 1788003634.273326,
-    "ast_hash": "3b6b20144b2289a54e748dd61af398fa",
+    "mtime": 1790078888.821008,
+    "seen": 1790078914.6494384,
+    "ast_hash": "d4f216e3f9ffe5f3103957d1b3a58328",
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1790066066.2956035,
-    "seen": 1790069396.4065397,
-    "ast_hash": "e6c747a04aa6bb3055d97728f5f6267c",
+    "mtime": 1790078888.822008,
+    "seen": 1790078914.6494696,
+    "ast_hash": "ccbca1ca5722b9088b2e0832fa281e16",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -5391,6 +5391,12 @@
     "mtime": 1790078245.4642725,
     "seen": 1790078262.0716114,
     "ast_hash": "8e91c8bdcf93924b6ef4f8ed7a9be3b4",
+    "semantic_hash": ""
+  },
+  "docs/performance-research-protocol.md": {
+    "mtime": 1790078888.8200078,
+    "seen": 1790078914.6494899,
+    "ast_hash": "df508d7a52096f85c5ef73516a9801d4",
     "semantic_hash": ""
   }
 }
