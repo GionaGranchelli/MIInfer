@@ -39,6 +39,58 @@ The P640 partial-tail delta (`0.00195312`) is below both qualified B512 state-en
 
 Classification: **EXPECTED_BATCH_NUMERICAL_DRIFT** for the observed P640 K/V delta, subject to causal and prefix checks. This does not promote the partial route.
 
+## Three-way route comparison
+
+The available state-level matrix is:
+
+| Route | Logical count | Base | Evidence | Result |
+|---|---:|---:|---|---|
+| Scalar/ordered M26-C export | 512 | 0 | qualified P512 state | L3 K/V envelope above |
+| Qualified batched fallback | 512 | 0 | qualified P512 state | compared against scalar |
+| Qualified fallback | 128 tail | 512 | P640 state | first L3 difference at 515 |
+| Partial aligned candidate | 128 tail | 512 | P640 state | `0.00195312` K/V maximum |
+| Scalar/ordered | 128 | 0 or 512 | not available as a matching prefill snapshot | not run |
+
+The exact scalar/ordered P640 cell cannot be produced by the existing M26-C
+export because that export has a pending-token snapshot convention and its
+route selector is invalid on this model (ROCm memory fault or `invalid M23
+wide beta/decay inputs`). The scalar P512 envelope is therefore the accepted
+semantic baseline, not a claim of a complete four-cell matrix.
+
+## Per-stage and K/V localization
+
+No intermediate tensor dump exists for the P640 run at the normalized-input,
+projection, post-normalization, post-RoPE, or pre-write boundaries. The first
+observable state-level boundary is the serialized L3 active K/V cache. K and V
+were separated in the B512 baseline: K max `0.215332`, V max `0.078125`.
+Consequently, the evidence classifies the P640 delta but does not prove a
+narrower projection, normalization, RoPE, or KV-store substage. V is not
+RoPE-processed, so a future stage oracle must keep its path separate from K.
+
+The original `position 515` is absolute position `512 + 3`, the fourth token
+of the B128 tail. Serialized cache offset `64` is head 0, dimension 64 in the
+head-major K record (not a cache byte offset or a separate head). A periodic
+per-position/per-lane error scan was not captured by the existing snapshot
+format.
+
+## Position, causal, and prefix audit
+
+Static path audit found the following contracts in the implementation:
+
+| Contract | Evidence |
+|---|---|
+| absolute token position | scalar loop passes `base + i`; full-layer chunk passes `base_position + base + i` |
+| batched KV write position | `finish_prefill_attention(base_position, count)` passes the same base/count to the fused store |
+| scalar KV write position | `run()` passes `position` to the fused K/V store |
+| scalar causal bound | tiled and untiled attention receive `position + 1` |
+| prior prefix preservation | P640 serialized prefix `[0,512)` had no large overwrite; P1664 prefix `[0,768)` was identical |
+
+This is a source-level contract audit, not proof of every generated kernel
+bound. The snapshot format does not capture per-query causal upper bounds or
+attention outputs for positions 512--516, so a tensor-level causal audit is
+still required before promotion. No evidence currently demonstrates a future
+read or prefix overwrite.
+
 The separate `MIINFER_EXP0368_SCALAR_ORACLE=1` production routing selector remains rejected: disabling all wide execution caused a ROCm memory fault, while reduced variants failed with `invalid M23 wide beta/decay inputs`. It is retained only as documented failed diagnostic evidence.
 
 ## Later-base qualification attempt
