@@ -9,12 +9,14 @@ Qwen3.8-27B-Q4_K_M prefill bottleneck attribution on one MI50/gfx906 before
 choosing the next optimization. EXP-0364 completed that first pass as
 measurement-only `LEARN`, and EXP-0365 confirmed the ~P2K–P8K discrepancy is a
 partial-tail route defect: non-empty remainders fall from the B512
-full-layer-major path into per-token layer execution. The next frontier is a
-safe qualified-B512-vs-scalar numerical baseline for the full-attention layer-3
-partial K/V contract. EXP-0366's opt-in `384 + 64 + 62` contract was rejected,
-and EXP-0367/0368 localized the first observable difference there while adding
-a reusable state-level oracle; the `0.00195312` delta remains unclassified
-because the scalar diagnostic route faulted/rejected its M23 contract.
+full-layer-major path into per-token layer execution. The next frontier is
+causal/prefix qualification for the full-attention layer-3 partial K/V contract
+at P640 and one later base position. EXP-0366's opt-in `384 + 64 + 62`
+contract was rejected, and EXP-0367/0368 localized the first observable
+difference while adding a reusable state-level oracle; the `0.00195312` delta
+is within the larger qualified-B512-vs-scalar numerical envelope, but P1664
+diverges at the next partial-tail boundary (position 768), and is
+classified as expected batched drift.
 EXP-0360 through EXP-0363 rejected the tested
 attention families; they did not authorize an optimization candidate or imply
 that attention is still the dominant end-to-end gap. The current qualified decode path is

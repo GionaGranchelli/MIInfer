@@ -182,10 +182,10 @@ No performance implementation is authorized by this section. The missing evidenc
 
 EXP-0364 completed the first attribution pass as `LEARN`, EXP-0365 confirmed
 the partial-tail route defect, and EXP-0366 rejected the first opt-in bounded
-contract. EXP-0367/0368 added a reusable state snapshot oracle and localized
-the first aligned-tail difference to full-attention layer 3 active K/V. The
-required qualified-B512-vs-scalar numerical envelope is not yet available:
-the diagnostic scalar route faults or rejects its M23 contract. The current
-frontier is a focused safe baseline and tensor-level comparison; no K/V fix,
-tail geometry, or performance kernel is authorized until `0.00195312` is
-classified.
+contract. EXP-0367/0368 added a reusable state snapshot oracle and classified
+the P640 L3 K/V delta as expected batched numerical drift: qualified B512
+versus scalar P512 showed substantially larger K/V error envelopes. The P1664
+comparison diverges at the next partial-tail boundary (position 768), so the
+current frontier is causal/prefix and stage-contract qualification for P640
+and P1664; no K/V fix, tail geometry, or performance kernel is authorized until
+those checks pass.

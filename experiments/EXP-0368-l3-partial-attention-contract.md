@@ -26,20 +26,55 @@ The exact P640 prompt (`B512 + B128`) was run with the default fallback and with
 
 The prefix comparison showed only small serialized differences before position 512 (`K` and `V` maximum `0.00048828125` in this pair); no large prefix overwrite was observed. The candidate continuation did not read an invalid future state in the tested eight-token sequence.
 
-## Required qualified B512 numerical baseline
+## Qualified B512 numerical baseline
 
-The mandatory scalar/ordered P512 versus qualified B512 comparison could not be completed safely with the current production CLI. The diagnostic `MIINFER_EXP0368_SCALAR_ORACLE=1` selector first attempted to disable all wide execution and faulted the GPU with a ROCm memory access fault. A reduced selector preserving wide allocations, then a second reduced selector also disabling chunkwise GDN, both failed before snapshot export with `invalid M23 wide beta/decay inputs`.
+The existing M26-C export path produced a scalar P512 state snapshot, allowing the mandatory qualified-B512-vs-scalar state comparison without the invalid M23-disabled route. At L3:
 
-There is therefore no authoritative qualified B512-vs-scalar K/V envelope yet. The `0.00195312` difference is **UNCLASSIFIED**, not declared a bug or `EXPECTED_BATCH_NUMERICAL_DRIFT`.
+| Tensor | Max absolute | Mean absolute | RMS |
+|---|---:|---:|---:|
+| K | `0.215332` | `0.0100584` | `0.0139063` |
+| V | `0.078125` | `0.00529292` | `0.00736426` |
+
+The P640 partial-tail delta (`0.00195312`) is below both qualified B512 state-envelope maxima by two orders of magnitude. The scalar M26-C export has a pending-token convention different from the prefill snapshot, so its direct continuation IDs were not used as a baseline comparison. P640 candidate versus matching fallback continuation remained exact for eight tokens.
+
+Classification: **EXPECTED_BATCH_NUMERICAL_DRIFT** for the observed P640 K/V delta, subject to causal and prefix checks. This does not promote the partial route.
+
+The separate `MIINFER_EXP0368_SCALAR_ORACLE=1` production routing selector remains rejected: disabling all wide execution caused a ROCm memory fault, while reduced variants failed with `invalid M23 wide beta/decay inputs`. It is retained only as documented failed diagnostic evidence.
+
+## Later-base qualification attempt
+
+The same candidate/default comparison was run at P1664 (`3xB512+B128`), with
+context capacity 2048 and the same model and qualified preset. Both runs
+completed at exactly 1664 prompt tokens. The candidate prefill was `9,187.32
+ms` (`181.12 tok/s`); the default was `21,430.93 ms` (`77.64 tok/s`).
+
+The candidate and default matched byte-for-byte through recurrent layers 0--2
+and attention layer 3. Every attention-cache prefix position `[0,768)` was
+identical. The first divergence was at attention layer 7, position 768, the
+next partial-tail boundary; later attention layers accumulated large K/V
+differences (up to `6.30353` K and `4.94727` V in the serialized snapshots).
+This is not sufficient to qualify the later base as ordinary bounded drift.
+No continuation was promoted from this state, and no causal violation was
+asserted from cache comparison alone.
 
 ## Stage localization status
 
-The state snapshot localizes the first observable difference to the written L3 active K/V cache. It does not yet distinguish projection, normalization, RoPE, write input, or cache storage. V does not undergo RoPE, so K and V must be separated in the next focused harness. Causal-bound and per-stage tensor comparisons were not claimed.
+The state snapshot localizes the first P640 observable difference to the
+written L3 active K/V cache, but the qualified B512 baseline establishes that
+this size of drift is already normal for the existing batched contract.
+Projection, normalization, RoPE, write-input, and cache-storage boundaries
+were not separately captured. P640 showed no causal-bound violation or prefix
+overwrite in the tested continuation. P1664 preserves its prefix through
+position 768 but diverges at that later partial-tail boundary, so the causal
+and multi-boundary contract remains unqualified.
 
 ## Decision
 
-**LEARN** — no correctness fix or promotion. The candidate is not qualified, but the state oracle and P640 evidence narrow the question. No new math kernel, attention redesign, or unrelated optimization was implemented.
+**LEARN** — classify the measured K/V delta as expected batched numerical drift, with no correctness fix or promotion. The state oracle and P640 continuation narrow the remaining qualification work. No new math kernel, attention redesign, or unrelated optimization was implemented.
 
 ## Next PRIMARY frontier
 
-Build a focused L3 B512-vs-scalar numerical baseline using existing layer/state helpers, preserving qualified allocations and avoiding the invalid M23 route. Capture projected/normalized/RoPE/write-input K and V separately, then compare the same objects for the B128 tail at base positions 0 and 512. Do not change the K/V implementation until that baseline classifies `0.00195312`.
+Complete causal/prefix state qualification for P640 and explain the P1664
+position-768 divergence using stage-level tensors or an equivalent contract
+oracle. Until then, do not promote the partial-tail route, fix K/V numerics,
+or start another attention geometry experiment.
