@@ -2541,6 +2541,261 @@ __global__ void qwen35_query_tiled_online_attention_batch_f16_kernel(
     }
 }
 
+// EXP-0363 schedule proof.  The logical block is 8x32 (eight logical
+// wave32s); gfx906 executes it as four Wave64s. Q and KQ live in LDS, while
+// the 32x128 half workspace is reused for K and V. Only one output float4 is
+// live per logical row during the V phase.
+__global__ void qwen35_spillfree_query_tiled_attention_batch_f16_kernel(
+    const float* __restrict__ q, const __half* __restrict__ key_cache,
+    const __half* __restrict__ value_cache, const float* __restrict__ gate,
+    float* __restrict__ gated_output, std::uint32_t token_count,
+    std::uint32_t base_position, std::uint32_t cache_capacity,
+    std::uint32_t query_heads, std::uint32_t kv_heads,
+    std::uint32_t head_dim, float scale) {
+    constexpr std::uint32_t kRows = 32;
+    constexpr std::uint32_t kTileRows = 32;
+    constexpr std::uint32_t kChunk = 128;
+    constexpr std::uint32_t kRowsPerLogicalWave = 4;
+    constexpr std::uint32_t kLogicalWaves = 8;
+    extern __shared__ unsigned char shared[];
+    __half* q_tmp = reinterpret_cast<__half*>(shared);
+    __half* kv_tmp = q_tmp + kRows * 256;
+    float* kq = reinterpret_cast<float*>(kv_tmp + kTileRows * kChunk);
+
+    const std::uint32_t x = threadIdx.x;
+    const std::uint32_t y = threadIdx.y;
+    const std::uint32_t tid = y * 32 + x;
+    const std::uint32_t groups = kv_heads * (query_heads / kv_heads / 2);
+    const std::uint32_t token_block = blockIdx.x / groups;
+    const std::uint32_t group = blockIdx.x % groups;
+    const std::uint32_t kv_head = group % kv_heads;
+    const std::uint32_t head_group = group / kv_heads;
+    if (x >= 32 || y >= kLogicalWaves || query_heads != 24 || kv_heads != 4
+        || head_dim != 256 || token_block * 16 >= token_count) return;
+
+    for (std::uint32_t i = tid; i < kRows * 256; i += 256) {
+        const std::uint32_t row = i / 256;
+        const std::uint32_t dim = i % 256;
+        const std::uint32_t token = token_block * 16 + row / 2;
+        const std::uint32_t head = kv_head * 6 + head_group * 2 + row % 2;
+        const std::size_t base =
+            (static_cast<std::size_t>(token) * query_heads + head) * 256 + dim;
+        q_tmp[i] = token < token_count ? __float2half(q[base]) : __float2half(0.0f);
+    }
+    for (std::uint32_t i = tid; i < kRows * kTileRows; i += 256) kq[i] = 0.0f;
+    __syncthreads();
+
+    const std::uint32_t max_length = base_position + token_block * 16 + 16;
+    for (std::uint32_t tile_start = 0; tile_start < max_length; tile_start += kTileRows) {
+        for (std::uint32_t chunk = 0; chunk < 2; ++chunk) {
+            for (std::uint32_t i = tid; i < kTileRows * kChunk; i += 256) {
+                const std::uint32_t position = i / kChunk;
+                const std::uint32_t dim = chunk * kChunk + i % kChunk;
+                const std::uint32_t cache_position = tile_start + position;
+                const std::size_t base =
+                    (static_cast<std::size_t>(kv_head) * cache_capacity + cache_position) * 256 + dim;
+                kv_tmp[i] = cache_position < cache_capacity ? key_cache[base] : __float2half(0.0f);
+            }
+            __syncthreads();
+            for (std::uint32_t position = 0; position < kTileRows; ++position) {
+                const std::uint32_t cache_position = tile_start + position;
+                if (cache_position >= max_length) continue;
+                float score0 = 0.0f;
+                float score1 = 0.0f;
+                float score2 = 0.0f;
+                float score3 = 0.0f;
+                const std::uint32_t row0 = y * kRowsPerLogicalWave;
+                for (std::uint32_t d = x; d < kChunk; d += 32) {
+                    const __half kval = kv_tmp[position * kChunk + d];
+                    score0 += __half2float(q_tmp[(row0 + 0) * 256 + chunk * kChunk + d]) * __half2float(kval);
+                    score1 += __half2float(q_tmp[(row0 + 1) * 256 + chunk * kChunk + d]) * __half2float(kval);
+                    score2 += __half2float(q_tmp[(row0 + 2) * 256 + chunk * kChunk + d]) * __half2float(kval);
+                    score3 += __half2float(q_tmp[(row0 + 3) * 256 + chunk * kChunk + d]) * __half2float(kval);
+                }
+                for (int offset = 16; offset > 0; offset /= 2) {
+                    score0 += __shfl_down(score0, offset, 32);
+                    score1 += __shfl_down(score1, offset, 32);
+                    score2 += __shfl_down(score2, offset, 32);
+                    score3 += __shfl_down(score3, offset, 32);
+                }
+                if (x == 0) {
+                    kq[(row0 + 0) * kTileRows + position] += chunk == 0 ? score0 : score0;
+                    kq[(row0 + 1) * kTileRows + position] += chunk == 0 ? score1 : score1;
+                    kq[(row0 + 2) * kTileRows + position] += chunk == 0 ? score2 : score2;
+                    kq[(row0 + 3) * kTileRows + position] += chunk == 0 ? score3 : score3;
+                }
+            }
+            __syncthreads();
+        }
+    }
+
+    for (std::uint32_t row = y * kRowsPerLogicalWave; row < (y + 1) * kRowsPerLogicalWave; ++row) {
+        const std::uint32_t token = token_block * 16 + row / 2;
+        if (token >= token_count) continue;
+        const std::uint32_t row_length = base_position + token + 1;
+        float row_max = -INFINITY;
+        for (std::uint32_t position = 0; position < row_length; ++position) row_max = fmaxf(row_max, kq[row * kTileRows + position]);
+        float row_sum = 0.0f;
+        for (std::uint32_t position = 0; position < row_length; ++position) row_sum += expf(kq[row * kTileRows + position] - row_max);
+        for (std::uint32_t tile_start = 0; tile_start < row_length; tile_start += kTileRows) {
+            for (std::uint32_t i = tid; i < kTileRows * kChunk; i += 256) {
+                const std::uint32_t position = tile_start + i / kChunk;
+                const std::uint32_t dim = i % kChunk;
+                const std::size_t base =
+                    (static_cast<std::size_t>(kv_head) * cache_capacity + position) * 256 + dim;
+                kv_tmp[i] = position < row_length ? value_cache[base] : __float2half(0.0f);
+            }
+            __syncthreads();
+            for (std::uint32_t chunk = 0; chunk < 2; ++chunk) {
+                const std::uint32_t dim = chunk * kChunk + x * 4;
+                float4 output = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+                for (std::uint32_t position = 0; position < kTileRows && tile_start + position < row_length; ++position) {
+                    const float weight = expf(kq[row * kTileRows + tile_start + position] - row_max) / row_sum;
+                    const __half* v = kv_tmp + position * kChunk + dim;
+                    output.x += weight * __half2float(v[0]);
+                    output.y += weight * __half2float(v[1]);
+                    output.z += weight * __half2float(v[2]);
+                    output.w += weight * __half2float(v[3]);
+                }
+                const std::uint32_t head = kv_head * 6 + head_group * 2 + row % 2;
+                const std::size_t base = (static_cast<std::size_t>(token) * query_heads + head) * 256 + dim;
+                const float4 g = *reinterpret_cast<const float4*>(gate + base);
+                *reinterpret_cast<float4*>(gated_output + base) = make_float4(
+                    output.x / (1.0f + expf(-g.x)), output.y / (1.0f + expf(-g.y)),
+                    output.z / (1.0f + expf(-g.z)), output.w / (1.0f + expf(-g.w)));
+            }
+            __syncthreads();
+        }
+    }
+}
+
+// EXP-0363 v2: tile-local KQ with online state carried across KV tiles.
+__launch_bounds__(256, 1) __global__ void qwen35_spillfree_query_tiled_attention_v2_batch_f16_kernel(
+    const float* __restrict__ q, const __half* __restrict__ key_cache,
+    const __half* __restrict__ value_cache, const float* __restrict__ gate,
+    float* __restrict__ gated_output, std::uint32_t token_count,
+    std::uint32_t base_position, std::uint32_t cache_capacity,
+    std::uint32_t query_heads, std::uint32_t kv_heads,
+    std::uint32_t head_dim, float scale) {
+    constexpr std::uint32_t kRows = 32;
+    constexpr std::uint32_t kTile = 32;
+    constexpr std::uint32_t kChunk = 128;
+    extern __shared__ unsigned char shared[];
+    __half* q_tmp = reinterpret_cast<__half*>(shared);
+    __half* kv_tmp = q_tmp + kRows * 256;
+    float* kq = reinterpret_cast<float*>(kv_tmp + kTile * kChunk);
+    const std::uint32_t x = threadIdx.x;
+    const std::uint32_t y = threadIdx.y;
+    const std::uint32_t tid = y * 32 + x;
+    const std::uint32_t groups = kv_heads * (query_heads / kv_heads / 2);
+    const std::uint32_t token_block = blockIdx.x / groups;
+    const std::uint32_t group = blockIdx.x % groups;
+    const std::uint32_t kv_head = group % kv_heads;
+    const std::uint32_t head_group = group / kv_heads;
+    if (x >= 32 || y >= 8 || token_block * 16 >= token_count
+        || query_heads != 24 || kv_heads != 4 || head_dim != 256) return;
+
+    for (std::uint32_t i = tid; i < kRows * 256; i += 256) {
+        const std::uint32_t row = i / 256;
+        const std::uint32_t dim = i % 256;
+        const std::uint32_t token = token_block * 16 + row / 2;
+        const std::uint32_t head = kv_head * 6 + head_group * 2 + row % 2;
+        const std::size_t base = (static_cast<std::size_t>(token) * query_heads + head) * 256 + dim;
+        q_tmp[i] = token < token_count ? __float2half(q[base] * scale) : __float2half(0.0f);
+    }
+    __syncthreads();
+
+    for (std::uint32_t row_group = 0; row_group < 4; ++row_group) {
+        const std::uint32_t row = y + row_group * 8;
+        const std::uint32_t token = token_block * 16 + row / 2;
+        if (token >= token_count) continue;
+        const std::uint32_t row_length = base_position + token + 1;
+        float running_max = -INFINITY;
+        float running_sum = 0.0f;
+        const std::uint32_t head = kv_head * 6 + head_group * 2 + row % 2;
+        const std::size_t output_base =
+            (static_cast<std::size_t>(token) * query_heads + head) * 256;
+        for (std::uint32_t chunk = 0; chunk < 2; ++chunk) {
+            *reinterpret_cast<float4*>(gated_output + output_base + chunk * kChunk + x * 4)
+                = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+        }
+
+        for (std::uint32_t tile_start = 0; tile_start < row_length; tile_start += kTile) {
+            const std::uint32_t valid = min(kTile, row_length - tile_start);
+            for (std::uint32_t position = 0; position < kTile; ++position) {
+                float score = 0.0f;
+                for (std::uint32_t chunk = 0; chunk < 2; ++chunk) {
+                    for (std::uint32_t i = tid; i < kTile * kChunk; i += 256) {
+                        const std::uint32_t p = i / kChunk;
+                        const std::uint32_t d = i % kChunk;
+                        const std::uint32_t cache_position = tile_start + p;
+                        const std::size_t base =
+                            (static_cast<std::size_t>(kv_head) * cache_capacity + cache_position) * 256
+                            + chunk * kChunk + d;
+                        kv_tmp[i] = key_cache[base];
+                    }
+                    __syncthreads();
+                    if (position < valid) {
+                        float partial = 0.0f;
+                        for (std::uint32_t d = x; d < kChunk; d += 32) {
+                            partial += __half2float(q_tmp[row * 256 + chunk * kChunk + d])
+                                * __half2float(kv_tmp[position * kChunk + d]);
+                        }
+                        for (int offset = 16; offset > 0; offset /= 2) partial += __shfl_down(partial, offset, 32);
+                        score += partial;
+                    }
+                    __syncthreads();
+                }
+                if (x == 0 && position < valid) kq[y * kTile + position] = score * scale;
+            }
+            __syncthreads();
+
+            float tile_max = -INFINITY;
+            for (std::uint32_t position = 0; position < valid; ++position) tile_max = fmaxf(tile_max, kq[y * kTile + position]);
+            const float alpha = running_sum == 0.0f ? 0.0f : expf(running_max - tile_max);
+            float tile_sum = 0.0f;
+            for (std::uint32_t position = 0; position < valid; ++position) tile_sum += expf(kq[y * kTile + position] - tile_max);
+            running_sum = running_sum * alpha + tile_sum;
+            running_max = tile_max;
+
+            for (std::uint32_t chunk = 0; chunk < 2; ++chunk) {
+                float4 output = *reinterpret_cast<float4*>(gated_output + output_base + chunk * kChunk + x * 4);
+                output.x *= alpha; output.y *= alpha; output.z *= alpha; output.w *= alpha;
+                for (std::uint32_t i = tid; i < kTile * kChunk; i += 256) {
+                    const std::uint32_t p = i / kChunk;
+                    const std::uint32_t d = i % kChunk;
+                    const std::uint32_t cache_position = tile_start + p;
+                    const std::size_t base =
+                        (static_cast<std::size_t>(kv_head) * cache_capacity + cache_position) * 256
+                        + chunk * kChunk + d;
+                    kv_tmp[i] = value_cache[base];
+                }
+                __syncthreads();
+                for (std::uint32_t position = 0; position < valid; ++position) {
+                    const float weight = expf(kq[y * kTile + position] - running_max);
+                    const __half* v = kv_tmp + position * kChunk + x * 4;
+                    output.x += weight * __half2float(v[0]);
+                    output.y += weight * __half2float(v[1]);
+                    output.z += weight * __half2float(v[2]);
+                    output.w += weight * __half2float(v[3]);
+                }
+                *reinterpret_cast<float4*>(gated_output + output_base + chunk * kChunk + x * 4) = output;
+            }
+            __syncthreads();
+        }
+        const float denom = running_sum > 0.0f ? running_sum : 1.0f;
+        for (std::uint32_t chunk = 0; chunk < 2; ++chunk) {
+            const std::uint32_t dim = chunk * kChunk + x * 4;
+            const std::size_t base = output_base + dim;
+            const float4 output = *reinterpret_cast<const float4*>(gated_output + base);
+            const float4 g = *reinterpret_cast<const float4*>(gate + base);
+            *reinterpret_cast<float4*>(gated_output + base) = make_float4(
+                output.x / denom / (1.0f + expf(-g.x)), output.y / denom / (1.0f + expf(-g.y)),
+                output.z / denom / (1.0f + expf(-g.z)), output.w / denom / (1.0f + expf(-g.w)));
+        }
+    }
+}
+
 __global__ void qwen35_tiled_online_attention_batch_f16_kernel(
     const float* __restrict__ q,
     const __half* __restrict__ key_cache,
@@ -4748,6 +5003,48 @@ void launch_qwen35_query_tiled_online_attention_batch_f16(
     const std::uint32_t blocks = (token_count + 15) / 16;
     hipLaunchKernelGGL(qwen35_query_tiled_online_attention_batch_f16_kernel,
         dim3(blocks * groups), dim3(256), 2 * 32 * 256 * sizeof(__half), stream,
+        q, key_cache, value_cache, gate, gated_output, token_count, base_position,
+        cache_capacity, query_heads, kv_heads, head_dim, scale);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_spillfree_query_tiled_attention_batch_f16(
+    const float* q, const __half* key_cache, const __half* value_cache,
+    const float* gate, float* gated_output, std::uint32_t token_count,
+    std::uint32_t base_position, std::uint32_t cache_capacity,
+    std::uint32_t query_heads, std::uint32_t kv_heads, std::uint32_t head_dim,
+    float scale, hipStream_t stream) {
+    if (q == nullptr || key_cache == nullptr || value_cache == nullptr || gate == nullptr
+        || gated_output == nullptr || token_count == 0 || base_position > cache_capacity
+        || token_count > cache_capacity - base_position || query_heads != 24
+        || kv_heads != 4 || head_dim != 256 || !std::isfinite(scale)) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    const std::uint32_t groups = kv_heads * (query_heads / kv_heads / 2);
+    const std::uint32_t blocks = (token_count + 15) / 16;
+    hipLaunchKernelGGL(qwen35_spillfree_query_tiled_attention_batch_f16_kernel,
+        dim3(blocks * groups), dim3(32, 8), 28 * 1024, stream,
+        q, key_cache, value_cache, gate, gated_output, token_count, base_position,
+        cache_capacity, query_heads, kv_heads, head_dim, scale);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_spillfree_query_tiled_attention_v2_batch_f16(
+    const float* q, const __half* key_cache, const __half* value_cache,
+    const float* gate, float* gated_output, std::uint32_t token_count,
+    std::uint32_t base_position, std::uint32_t cache_capacity,
+    std::uint32_t query_heads, std::uint32_t kv_heads, std::uint32_t head_dim,
+    float scale, hipStream_t stream) {
+    if (q == nullptr || key_cache == nullptr || value_cache == nullptr || gate == nullptr
+        || gated_output == nullptr || token_count == 0 || base_position > cache_capacity
+        || token_count > cache_capacity - base_position || query_heads != 24
+        || kv_heads != 4 || head_dim != 256 || !std::isfinite(scale)) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    const std::uint32_t groups = kv_heads * (query_heads / kv_heads / 2);
+    const std::uint32_t blocks = (token_count + 15) / 16;
+    hipLaunchKernelGGL(qwen35_spillfree_query_tiled_attention_v2_batch_f16_kernel,
+        dim3(blocks * groups), dim3(32, 8), 25 * 1024, stream,
         q, key_cache, value_cache, gate, gated_output, token_count, base_position,
         cache_capacity, query_heads, kv_heads, head_dim, scale);
     MIINFER_HIP_CHECK(hipGetLastError());

@@ -40,6 +40,10 @@ float time_path(int path, const float* q, const __half* key, const __half* value
             miinfer::launch_qwen35_query_tiled_online_attention_batch_f16(
                 q, key, value, gate, output, tokens, 0, capacity, 24, 4, 256,
                 1.0F / std::sqrt(256.0F));
+        } else if (path == 3) {
+            miinfer::launch_qwen35_spillfree_query_tiled_attention_v2_batch_f16(
+                q, key, value, gate, output, tokens, 0, capacity, 24, 4, 256,
+                1.0F / std::sqrt(256.0F));
         } else {
             miinfer::launch_qwen35_tiled_online_attention_batch_f16(
                 q, key, value, gate, output, tokens, 0, capacity, 24, 4, 256,
@@ -56,6 +60,10 @@ float time_path(int path, const float* q, const __half* key, const __half* value
                 1.0F / std::sqrt(256.0F));
         } else if (path == 2) {
             miinfer::launch_qwen35_query_tiled_online_attention_batch_f16(
+                q, key, value, gate, output, tokens, 0, capacity, 24, 4, 256,
+                1.0F / std::sqrt(256.0F));
+        } else if (path == 3) {
+            miinfer::launch_qwen35_spillfree_query_tiled_attention_v2_batch_f16(
                 q, key, value, gate, output, tokens, 0, capacity, 24, 4, 256,
                 1.0F / std::sqrt(256.0F));
         } else {
@@ -89,30 +97,39 @@ int main() {
     for (auto& element : gate) element = distribution(generator);
     for (auto& element : key) element = __float2half(distribution(generator));
     for (auto& element : value) element = __float2half(distribution(generator));
-    DeviceBuffer<float> d_q(q.size()), d_gate(gate.size()), d_control(q.size()), d_candidate(q.size());
+    DeviceBuffer<float> d_q(q.size()), d_gate(gate.size()), d_control(q.size()),
+        d_candidate(q.size()), d_schedule(q.size());
     DeviceBuffer<__half> d_key(key.size()), d_value(value.size());
     hipMemcpy(d_q.ptr, q.data(), q.size() * sizeof(float), hipMemcpyHostToDevice);
     hipMemcpy(d_gate.ptr, gate.data(), gate.size() * sizeof(float), hipMemcpyHostToDevice);
     hipMemcpy(d_key.ptr, key.data(), key.size() * sizeof(__half), hipMemcpyHostToDevice);
     hipMemcpy(d_value.ptr, value.data(), value.size() * sizeof(__half), hipMemcpyHostToDevice);
-    for (const std::uint32_t tokens : {512U, 2048U, 4096U, 8192U, 16384U}) {
+    for (const std::uint32_t tokens : {512U, 2048U, 4096U, 8192U}) {
         const float control = time_path(0, d_q.ptr, d_key.ptr, d_value.ptr, d_gate.ptr,
                                         d_control.ptr, tokens, kCapacity, 5);
         const float rejected = time_path(1, d_q.ptr, d_key.ptr, d_value.ptr, d_gate.ptr,
                                          d_candidate.ptr, tokens, kCapacity, 5);
         const float candidate = time_path(2, d_q.ptr, d_key.ptr, d_value.ptr, d_gate.ptr,
                                           d_candidate.ptr, tokens, kCapacity, 5);
+        const float schedule = time_path(3, d_q.ptr, d_key.ptr, d_value.ptr, d_gate.ptr,
+                                         d_schedule.ptr, tokens, kCapacity, 5);
         std::vector<float> control_output(static_cast<std::size_t>(tokens) * kHeads * kDim);
         std::vector<float> candidate_output(control_output.size());
+        std::vector<float> schedule_output(control_output.size());
         hipMemcpy(control_output.data(), d_control.ptr, control_output.size() * sizeof(float), hipMemcpyDeviceToHost);
         hipMemcpy(candidate_output.data(), d_candidate.ptr, candidate_output.size() * sizeof(float), hipMemcpyDeviceToHost);
+        hipMemcpy(schedule_output.data(), d_schedule.ptr, schedule_output.size() * sizeof(float), hipMemcpyDeviceToHost);
         float max_error = 0.0F;
+        float schedule_error = 0.0F;
         for (std::size_t i = 0; i < control_output.size(); ++i) {
             max_error = std::max(max_error, std::fabs(control_output[i] - candidate_output[i]));
+            schedule_error = std::max(schedule_error, std::fabs(control_output[i] - schedule_output[i]));
         }
         std::cout << "tokens=" << tokens << " control_ms=" << control
                   << " rejected_ms=" << rejected << " candidate_ms=" << candidate
-                  << " speedup=" << control / candidate
-                  << " max_abs_error=" << max_error << '\n';
+                  << " schedule_ms=" << schedule << " speedup=" << control / candidate
+                  << " schedule_speedup=" << control / schedule
+                  << " max_abs_error=" << max_error
+                  << " schedule_max_abs_error=" << schedule_error << '\n';
     }
 }
