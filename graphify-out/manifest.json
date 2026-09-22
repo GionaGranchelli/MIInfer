@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1790103997.9178653,
-    "seen": 1790104078.2815468,
-    "ast_hash": "d0a2e51894090ef5ec2e5961eee3a68d",
+    "mtime": 1790107080.4018984,
+    "seen": 1790107114.1403508,
+    "ast_hash": "7dba2d3a5b167121ac81811b975abe42",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -5394,9 +5394,9 @@
     "semantic_hash": ""
   },
   "docs/performance-research-protocol.md": {
-    "mtime": 1790103997.916865,
-    "seen": 1790104078.2815683,
-    "ast_hash": "1e8dfda8abb2c84af4904d1f5d2552b9",
+    "mtime": 1790107080.3998985,
+    "seen": 1790107114.1404004,
+    "ast_hash": "dc5392c27b641362f09d00bb3b0cae30",
     "semantic_hash": ""
   },
   "experiments/EXP-0364-full-model-prefill-bottleneck-attribution.md": {
@@ -5424,9 +5424,9 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0368-l3-partial-attention-contract.md": {
-    "mtime": 1790104465.067626,
-    "seen": 1790104504.1040661,
-    "ast_hash": "b554d60b09988ba874493aa867b4794f",
+    "mtime": 1790107080.3998985,
+    "seen": 1790107114.1414032,
+    "ast_hash": "956a40d5005935e04119daf741414b6b",
     "semantic_hash": ""
   }
 }
