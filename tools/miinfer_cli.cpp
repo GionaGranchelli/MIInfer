@@ -2366,6 +2366,7 @@ private:
             && std::strcmp(std::getenv("MIINFER_EXP0368_SCALAR_ORACLE"), "0") != 0;
         if (exp0368_scalar_oracle) {
             full_layer_major_prefill_ = false;
+            gdn_chunkwise_prefill_ = false;
             prefill_chunk_ = kPrefillBatch;
         }
         const char* prefill_chunk_env = std::getenv("MIINFER_PREFILL_CHUNK");

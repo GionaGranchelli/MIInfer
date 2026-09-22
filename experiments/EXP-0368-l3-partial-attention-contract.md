@@ -28,7 +28,7 @@ The prefix comparison showed only small serialized differences before position 5
 
 ## Required qualified B512 numerical baseline
 
-The mandatory scalar/ordered P512 versus qualified B512 comparison could not be completed safely with the current production CLI. The diagnostic `MIINFER_EXP0368_SCALAR_ORACLE=1` selector first attempted to disable all wide execution and faulted the GPU with a ROCm memory access fault. A reduced selector preserving wide allocations then failed before snapshot export with `invalid M23 wide beta/decay inputs`.
+The mandatory scalar/ordered P512 versus qualified B512 comparison could not be completed safely with the current production CLI. The diagnostic `MIINFER_EXP0368_SCALAR_ORACLE=1` selector first attempted to disable all wide execution and faulted the GPU with a ROCm memory access fault. A reduced selector preserving wide allocations, then a second reduced selector also disabling chunkwise GDN, both failed before snapshot export with `invalid M23 wide beta/decay inputs`.
 
 There is therefore no authoritative qualified B512-vs-scalar K/V envelope yet. The `0.00195312` difference is **UNCLASSIFIED**, not declared a bug or `EXPECTED_BATCH_NUMERICAL_DRIFT`.
 
