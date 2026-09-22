@@ -180,13 +180,11 @@ Keep performance commits focused and bisectable. Preserve rejected experiment re
 
 No performance implementation is authorized by this section. The missing evidence is a refreshed full-model prefill attribution on the current qualified MI50 setup, including phase/operator timing, dispatch count, context scaling, and an Amdahl ceiling against the current mx comparison. EXP-0360–0363 show that attention geometry/state-placement guesses are not sufficient; they do not prove attention remains the dominant current gap.
 
-EXP-0364 completed the first attribution pass as `LEARN`: it found a severe
-MIInfer ~P2K–P8K scaling discrepancy, but larger-context phase timings did not
-reconcile and continuous telemetry was not retained. The next action is
-therefore measurement-only: reconcile ~P2K/~P4K/~P8K phase timing and isolate
-whether the jump is route/dispatch/orchestration or required operator work.
-Only after that evidence passes should **B — reconstruct one exact mx
-hot-kernel dataflow** be considered for a measured attention differential. If
-the baseline remains incomparable, perform **C — qualify the missing baseline**
-first. No new performance kernel should be written until one of these evidence
-paths selects a bounded, one-variable objective.
+EXP-0364 completed the first attribution pass as `LEARN`, and EXP-0365
+confirmed that the ~P2K–P8K jump is caused by a non-empty partial tail falling
+from the B512 full-layer-major path into per-token `layer.run` execution. The
+next action is measurement/contract work: define and qualify a correct bounded
+partial-tail contract before any implementation. Only after that evidence gate
+passes should a production change be considered. No new performance kernel
+should be written until the contract, correctness, and clean-vs-diagnostic
+timing gates are explicit.

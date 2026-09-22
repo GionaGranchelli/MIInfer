@@ -7,9 +7,11 @@ The mandatory process for new performance work is
 There is exactly one active performance frontier: refresh the full-model
 Qwen3.8-27B-Q4_K_M prefill bottleneck attribution on one MI50/gfx906 before
 choosing the next optimization. EXP-0364 completed that first pass as
-measurement-only `LEARN`; the next frontier is to reconcile the unresolved
-~P2K–P8K phase/scaling discrepancy with continuous telemetry before choosing a
-kernel target. EXP-0360 through EXP-0363 rejected the tested
+measurement-only `LEARN`, and EXP-0365 confirmed the ~P2K–P8K discrepancy is a
+partial-tail route defect: non-empty remainders fall from the B512
+full-layer-major path into per-token layer execution. The next frontier is to
+define and qualify a correct bounded partial-tail contract before any
+implementation. EXP-0360 through EXP-0363 rejected the tested
 attention families; they did not authorize an optimization candidate or imply
 that attention is still the dominant end-to-end gap. The current qualified decode path is
 preserved, while 128K context architecture, Tail-Replay/agent runtime,
