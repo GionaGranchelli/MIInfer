@@ -180,11 +180,9 @@ Keep performance commits focused and bisectable. Preserve rejected experiment re
 
 No performance implementation is authorized by this section. The missing evidence is a refreshed full-model prefill attribution on the current qualified MI50 setup, including phase/operator timing, dispatch count, context scaling, and an Amdahl ceiling against the current mx comparison. EXP-0360–0363 show that attention geometry/state-placement guesses are not sufficient; they do not prove attention remains the dominant current gap.
 
-EXP-0364 completed the first attribution pass as `LEARN`, and EXP-0365
-confirmed that the ~P2K–P8K jump is caused by a non-empty partial tail falling
-from the B512 full-layer-major path into per-token `layer.run` execution. The
-next action is measurement/contract work: define and qualify a correct bounded
-partial-tail contract before any implementation. Only after that evidence gate
-passes should a production change be considered. No new performance kernel
-should be written until the contract, correctness, and clean-vs-diagnostic
-timing gates are explicit.
+EXP-0364 completed the first attribution pass as `LEARN`, EXP-0365 confirmed
+the partial-tail route defect, and EXP-0366 rejected the first opt-in bounded
+contract: `384 + 64 + 62` changed routing but did not improve P1022 and did
+not yet have a state-level correctness oracle. The current frontier is exact
+stage attribution plus that oracle for aligned partial tails. No new tail
+geometry or performance kernel is authorized until the evidence exists.

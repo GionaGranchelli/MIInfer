@@ -271,6 +271,8 @@ public:
         bool decode_mode = false;
         double embedding_ms = 0.0;
         std::size_t chunks = 0;
+        std::size_t partial_tail_batched_chunks = 0;
+        std::size_t partial_tail_scalar_tokens = 0;
         M23ProfileCounters m23{};
 
         void init() {
@@ -409,6 +411,9 @@ public:
                       << " causal_chunk_width=B" << kM23CausalChunk
                       << " chunk_base=" << profile_chunk_base
                       << " embedding_ms=" << embedding_ms << '\n';
+            std::cout << "EXP-0366 partial-tail counters: batched_chunks="
+                      << partial_tail_batched_chunks
+                      << " scalar_tokens=" << partial_tail_scalar_tokens << '\n';
             static constexpr std::array<const char*, 7> recurrent_dispatch_names{
                 "qkv", "gate", "beta_alpha", "ssm_out", "ffn_gate", "ffn_up", "ffn_down"};
             static constexpr std::array<const char*, 9> attention_dispatch_names{
@@ -1116,6 +1121,17 @@ public:
             if (wide_prefill_ && matrix_prefill && count >= kM12PrefillBatch
                 && count % kPrefillBatch != 0) {
                 count -= count % kPrefillBatch;
+            }
+            const bool partial_tail_contract = std::getenv("MIINFER_EXP0366_PARTIAL_TAIL") != nullptr
+                && std::strcmp(std::getenv("MIINFER_EXP0366_PARTIAL_TAIL"), "0") != 0;
+            if (partial_tail_contract && full_layer_major_prefill_
+                && base >= kFullPrefillCapacity && count < prefill_chunk_ && count > kPrefillBatch) {
+                count = (count / kM12PrefillBatch) * kM12PrefillBatch;
+                if (count == 0) count = kPrefillBatch;
+                if (prefill_profile_.enabled) ++prefill_profile_.partial_tail_batched_chunks;
+            } else if (partial_tail_contract && full_layer_major_prefill_
+                       && base >= kFullPrefillCapacity && count <= kPrefillBatch) {
+                if (prefill_profile_.enabled) prefill_profile_.partial_tail_scalar_tokens += count;
             }
             if (full_layer_major_prefill_ && count >= kM12PrefillBatch
                 && count <= kFullPrefillCapacity && count % kPrefillBatch == 0) {

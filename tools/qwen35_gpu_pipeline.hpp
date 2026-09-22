@@ -4296,8 +4296,12 @@ struct FullAttentionLayer {
     bool prepare_prefill_batch(const float* inputs, std::size_t count,
                                bool normalized_ready = false) {
         ensure_m23_repacked();
+        const bool exp0366_partial_tail = std::getenv("MIINFER_EXP0366_PARTIAL_TAIL") != nullptr
+            && std::strcmp(std::getenv("MIINFER_EXP0366_PARTIAL_TAIL"), "0") != 0;
         if (!prefill_batch_enabled
-            || (count != kPrefillBatch && count != prefill_capacity)
+            || ((count != kPrefillBatch && count != prefill_capacity)
+                && !(exp0366_partial_tail && count >= kM12PrefillBatch
+                     && count <= prefill_capacity && count % kPrefillBatch == 0))
             || inputs == nullptr
             || (d_qk_combined == nullptr && d_qk_mmq == nullptr)
             || (d_v_native == nullptr
