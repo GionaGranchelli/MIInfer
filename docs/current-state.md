@@ -1,5 +1,18 @@
 # MIInfer Current State
 
+## Performance research frontier
+
+The mandatory process for new performance work is
+[`performance-research-protocol.md`](performance-research-protocol.md).
+There is exactly one active performance frontier: refresh the full-model
+Qwen3.8-27B-Q4_K_M prefill bottleneck attribution on one MI50/gfx906 before
+choosing the next optimization. EXP-0360 through EXP-0363 rejected the tested
+attention families; they do not authorize EXP-0364 or imply that attention is
+still the dominant end-to-end gap. The current qualified decode path is
+preserved, while 128K context architecture, Tail-Replay/agent runtime,
+production server optimization, UI/installer, multi-GPU, and other non-critical
+features remain deferred.
+
 This document describes the **current implementation state** of MIInfer.
 
 It is intentionally operational and should be updated whenever the active milestone, immediate target, or project constraints change.

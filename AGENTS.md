@@ -1100,6 +1100,20 @@ Return an explicit error.
 
 Provide evidence.
 
+### Mandatory performance research protocol
+
+Before modifying performance-sensitive code, read
+[`docs/performance-research-protocol.md`](docs/performance-research-protocol.md),
+identify the single current `PRIMARY` frontier, and read the relevant rejected
+experiment records. Prove the current full-model bottleneck, study the
+reference implementation, state the one independent variable, and define the
+compiler-resource, correctness, performance, kill, and success gates before
+writing code. Do not start speculative performance work, silently reopen a
+rejected architecture family, benchmark a kernel with unexpected spills, mix
+unrelated optimization dimensions, claim a win from an isolated kernel result,
+or continue after its maximum Amdahl impact is negligible. Source-level
+similarity is not machine-level equivalence.
+
 ### Before removing apparently strange gfx906 code
 
 Find out why it exists.
