@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1790076022.9134133,
-    "seen": 1790076282.0309505,
-    "ast_hash": "223c6adac5e71553f08ca30442b203be",
+    "mtime": 1790077504.7772214,
+    "seen": 1790077774.7475517,
+    "ast_hash": "8cdd36f887330b358beaea99e48b0394",
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_primitives.hpp": {
@@ -5370,9 +5370,9 @@
     "semantic_hash": ""
   },
   "bench/qwen35_gqa_prefill_bench.cpp": {
-    "mtime": 1790076022.9204133,
-    "seen": 1790076282.0309083,
-    "ast_hash": "bc85b0893c986ae6f75f1f055e3fd95e",
+    "mtime": 1790077603.7146745,
+    "seen": 1790077774.7475088,
+    "ast_hash": "2e7540e8ec9ba397274986d6266c778b",
     "semantic_hash": ""
   },
   "experiments/EXP-0361-wave64-attention-architecture-analysis.md": {
@@ -5385,6 +5385,12 @@
     "mtime": 1790076744.000427,
     "seen": 1790076761.0427902,
     "ast_hash": "0175b6feec828d4ad35bcdcb49ae1cd4",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0363-spillfree-attention-state-schedule.md": {
+    "mtime": 1790078245.4642725,
+    "seen": 1790078262.0716114,
+    "ast_hash": "8e91c8bdcf93924b6ef4f8ed7a9be3b4",
     "semantic_hash": ""
   }
 }
