@@ -10,8 +10,6 @@ For long-term direction, see:
 * [`architecture.md`](architecture.md)
 * [`benchmarking.md`](benchmarking.md)
 * [`hardware.md`](hardware.md)
-* [`performance-research-strategy.md`](performance-research-strategy.md)
-* [`post-m26-performance-roadmap.md`](post-m26-performance-roadmap.md)
 
 For the measured leaderboard and current stretch boundary, see
 [`current-state-of-the-art.md`](current-state-of-the-art.md).
@@ -20,7 +18,7 @@ For the measured leaderboard and current stretch boundary, see
 
 # Current Phase
 
-**M26-E — canonical decode context qualification (not started)**
+**M27 — static unified decode engine**
 
 Milestone status:
 
@@ -71,28 +69,10 @@ M26-recovery: default no-preset Qwen35RuntimeEngine measures 32.2948 ms/token
 M26:   recovery gate met; paused with reproducible results; no sub-30 ms tuning
        authorized
 M26-B: default-vs-wide/Mx route contrast measured; historical detail retained
-M26-C: CLOSED — EXP-0359 `ROUTES_NOT_COMPARABLE`; teacher-forced semantic
-       investigation found route-state drift but no accepted P512 pairwise
-       tolerance; no timing qualification
-M26-D: NOT OPENED — M26-C did not establish a valid >=3 ms/token removable
-       same-contract cost or a correctness fix requirement
-M26-E: NEXT — qualify the canonical no-preset route at P512/P2K/P4K/P8K/P12K/P16K
-M26-F: PLANNED — measure the decode ceiling after M26-E
-M27:   reusable graph/device-state prototype exists but performance expansion is
-       frozen; substantial device-resident/unified-decode work requires M26-F
-       evidence of >=3 ms/token removable runtime/execution cost or a separate
-       correctness/serving requirement
+M27:   reusable graph/device-state prototype; 128-token exact token + persistent
+       buffer and 512/2K/8K split-boundary parity pass; P512/TG128 performance
+       requalification remains open
 ```
-
-EXP-0359 closes the current legacy-versus-interactive semantic comparison as
-`ROUTES_NOT_COMPARABLE`; it made no timing qualification. The qualified
-no-preset route is canonical, and M26-D was not opened because no qualifying
-same-contract removable cost or required correctness fix was established. M26-E
-will establish its P512–P16K context curve, then M26-F will quantify the
-plausible decode floor before a substantial M27 runtime rewrite can be
-authorized. See
-[`post-m26-performance-roadmap.md`](post-m26-performance-roadmap.md) and
-[`performance-research-strategy.md`](performance-research-strategy.md).
 
 The M26 recovery latency gate is met by the ordinary no-preset
 `Qwen35RuntimeEngine` route: five P512/TG128 curve iterations measured
@@ -103,12 +83,13 @@ separate configurations; neither is implied qualified for this decode result.
 The measured M26-B route contrast is retained as non-gating evidence in
 [EXP-0352](../experiments/EXP-0352-m26b-historical-decode-floor-differential.md).
 
-The M26-CQ teacher-forced semantic investigation closes M26-C as
-`ROUTES_NOT_COMPARABLE`: the routes drift under identical inputs, while no
-accepted pairwise P512 tolerance establishes either equivalence or a correctness
-bug. The interactive `57–59 ms/token` route is non-qualifying evidence, not a
-performance target or baseline. EXP-0359 records the evidence; M26-D was not
-opened. M26-E is the next milestone on the qualified no-preset route.
+EXP-0359 closed the current legacy-versus-interactive route comparison as
+`ROUTES_NOT_COMPARABLE`: teacher-forced state drift accumulates under identical
+inputs, while no accepted pairwise P512 numerical tolerance exists for the
+recurrent, convolution-history, KV, final-norm, and logit fields. The qualified
+no-preset route remains canonical. Do not qualify interactive-route timing;
+subsequent M26-E/M26-F work should use the qualified route. See
+[EXP-0359](../experiments/EXP-0359-m26cq-decode-semantic-equivalence.md).
 The M27 implementation replaces the per-position graph vector with one
 reusable graph over a persistent device state. Graph and direct decode match
 128 token IDs and all 168,034,304 bytes of recurrent state, convolution
