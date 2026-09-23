@@ -93,6 +93,11 @@ int exp0380_probe_stage() {
     return value == nullptr ? 0 : std::atoi(value);
 }
 
+int exp0380_probe_layer() {
+    const char* value = std::getenv("MIINFER_EXP0380_LAYER");
+    return value == nullptr ? 3 : std::atoi(value);
+}
+
 [[noreturn]] void exp0380_probe_complete(const char* stage) {
     std::cerr << "EXP0380 " << stage << " GPU_EVENT BEGIN\n" << std::flush;
     MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
@@ -4574,20 +4579,20 @@ struct FullAttentionLayer {
         stage_start(2, profile_position);
         const bool exp0380_probe = exp0380_b64_probe_enabled() && count == kPrefillBatch
             && base_position == 896;
-        if (exp0380_probe) std::cerr << "EXP0380 L3 Q_SPLIT_NORM_ROPE HOST_BEGIN\n" << std::flush;
+        if (exp0380_probe) std::cerr << "EXP0380 ATTN layer=" << index << " Q HOST_BEGIN\n" << std::flush;
         miinfer::launch_qwen35_fused_q_split_norm_rope_batch(
             qfull, static_cast<const float*>(d_q_norm->get()),
             q, gate, count, base_position,
             24, 4, 256, model.config().rope_theta, model.config().rms_epsilon,
             hipStreamPerThread);
         if (exp0380_probe) {
-            std::cerr << "EXP0380 L3 Q_SPLIT_NORM_ROPE HOST_RETURN\n" << std::flush;
+            std::cerr << "EXP0380 ATTN layer=" << index << " Q HOST_RETURN\n" << std::flush;
             if (exp0380_probe_stage() == 1) exp0380_probe_complete("L3 Q_SPLIT_NORM_ROPE");
         }
         stage_end(2, profile_position);
         count_m23_dispatch(2);
         stage_start(3, profile_position);
-        if (exp0380_probe) std::cerr << "EXP0380 L3 K_NORM_ROPE_KV HOST_BEGIN\n" << std::flush;
+        if (exp0380_probe) std::cerr << "EXP0380 ATTN layer=" << index << " K HOST_BEGIN\n" << std::flush;
         if (fp16_kv_cache) {
             miinfer::launch_qwen35_fused_k_norm_rope_kv_store_batch_f16(
                 qfull, value, static_cast<const float*>(d_k_norm->get()),
@@ -4602,13 +4607,13 @@ struct FullAttentionLayer {
                 model.config().rope_theta, model.config().rms_epsilon, hipStreamPerThread);
         }
         if (exp0380_probe) {
-            std::cerr << "EXP0380 L3 K_NORM_ROPE_KV HOST_RETURN\n" << std::flush;
+            std::cerr << "EXP0380 ATTN layer=" << index << " K HOST_RETURN\n" << std::flush;
             if (exp0380_probe_stage() == 2) exp0380_probe_complete("L3 K_NORM_ROPE_KV");
         }
         stage_end(3, profile_position);
         count_m23_dispatch(3);
         stage_start(6, profile_position);
-        if (exp0380_probe) std::cerr << "EXP0380 L3 CAUSAL HOST_BEGIN\n" << std::flush;
+        if (exp0380_probe) std::cerr << "EXP0380 ATTN layer=" << index << " CAUSAL HOST_BEGIN\n" << std::flush;
         if (gqa_tiled_attn_prefill) {
             if (!fp16_kv_cache) {
                 throw std::runtime_error(
@@ -4634,7 +4639,7 @@ struct FullAttentionLayer {
                 1.0F / std::sqrt(256.0F), hipStreamPerThread);
         }
         if (exp0380_probe) {
-            std::cerr << "EXP0380 L3 CAUSAL HOST_RETURN\n" << std::flush;
+            std::cerr << "EXP0380 ATTN layer=" << index << " CAUSAL HOST_RETURN\n" << std::flush;
             if (exp0380_probe_stage() == 3) exp0380_probe_complete("L3 CAUSAL");
         }
         stage_end(6, profile_position);
@@ -4643,7 +4648,8 @@ struct FullAttentionLayer {
 
     void finish_prefill_wide(const float* inputs, float* outputs, std::size_t count,
                              const float* next_norm_weight, float* next_normalized) {
-        const bool exp0380_probe = exp0380_b64_probe_enabled() && index == 3
+        const bool exp0380_probe = exp0380_b64_probe_enabled()
+            && index == static_cast<std::size_t>(exp0380_probe_layer())
             && count == kPrefillBatch;
         if (exp0380_probe) std::cerr << "EXP0380 L3 FINISH_PREFILL_WIDE ENTER\n" << std::flush;
         const auto exp0380_stage = [&](const char* name, int stage) {

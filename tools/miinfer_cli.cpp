@@ -100,6 +100,7 @@ bool apply_runtime_preset() {
             && value.rfind("MIINFER_EXP0377_B64_RESIDUAL=", 0) != 0
             && value.rfind("MIINFER_EXP0380_B64_ATTN_PROBE=", 0) != 0
             && value.rfind("MIINFER_EXP0380_STAGE=", 0) != 0
+            && value.rfind("MIINFER_EXP0380_LAYER=", 0) != 0
             && value.rfind("MIINFER_HIP_GRAPH=", 0) != 0) {
             names.emplace_back(value.substr(0, value.find('=')));
         }
@@ -1179,6 +1180,10 @@ public:
             }
             const bool partial_tail_contract = std::getenv("MIINFER_EXP0366_PARTIAL_TAIL") != nullptr
                 && std::strcmp(std::getenv("MIINFER_EXP0366_PARTIAL_TAIL"), "0") != 0;
+            if (exp0380_probe) {
+                std::cerr << "EXP0380 OUTER_CHUNK_BEGIN base=" << base
+                          << " count=" << count << "\n" << std::flush;
+            }
             if (exp0374_scheduler && full_layer_major_prefill_
                 && base >= kFullPrefillCapacity && count < prefill_chunk_ && count >= kM12PrefillBatch) {
                 count = kM12PrefillBatch;

@@ -48,12 +48,16 @@ first attention layer=L3
 | Q split/norm/RoPE | yes | yes | PASS |
 | K norm/RoPE/KV store | yes | yes | PASS |
 | causal attention | yes | yes | PASS |
-| O projection | no O marker | no | bounded timeout before O boundary |
-| post-attention norm | not attempted | not attempted | STOP |
-| FFN gate/up | not attempted | not attempted | STOP |
-| SwiGLU | not attempted | not attempted | STOP |
-| FFN down | not attempted | not attempted | STOP |
-| final output | not attempted | not attempted | STOP |
+| O projection | yes | yes | PASS |
+| post-attention norm | yes | yes | PASS |
+| FFN gate/up | yes | yes | PASS |
+| SwiGLU | yes | yes | PASS |
+| FFN down | yes | yes | PASS |
+| final output | yes | yes | PASS |
+
+Sparse checkpoints also passed the complete attention path at L7, L11, and
+L15. L3, L7, L11, and L15 therefore all completed Q/K/causal plus O/norm/FFN
+and final output in the exact composed state.
 
 Stage 0 emitted:
 
@@ -81,8 +85,8 @@ EXP0380 L3 K_NORM_ROPE_KV GPU_EVENT END
 ```
 
 The bounded causal rerun emitted matching host-return and GPU-event markers.
-The O-stage run did not emit any EXP-0380 marker and was stopped after 120
-seconds, so it does not prove that O projection was entered.
+The O, norm, FFN, and final-output probes likewise emitted host-return and
+synchronized GPU-event markers.
 
 ## Host wait evidence
 
@@ -100,8 +104,8 @@ temperature: edge 39 C, junction 41 C, memory 39 C
 ```
 
 Therefore the failure is not explained by thermal or clock throttling. The
-failure class remains **UNKNOWN / pre-O host or HIP-runtime wait**; a GPU
-kernel noncompletion is not proven.
+earlier whole-model failure class remains **UNKNOWN / runtime composition
+wait**; a GPU kernel noncompletion is not proven.
 
 The follow-up run with explicit `B64 CHUNK_BEGIN`, `L3 PREP_HOST_BEGIN`,
 `FINISH_PREFILL_BATCH`, and `FINISH_PREFILL_WIDE ENTER` markers also emitted no
@@ -129,29 +133,28 @@ probe's pre-marker boundary is instrumented more precisely.
 
 ## Decision
 
-**LEARN / INCOMPLETE LOCALIZATION.** Preparation, Q split/norm/RoPE, K/RoPE/KV,
-and causal attention are proven to complete in the exact composed state. The
-first unresolved boundary is after L3 causal attention and before the O marker;
-the current evidence is insufficient to name O projection itself as the
-failing operation.
+**LEARN.** No individual B64 attention operation is the first failing
+operation. L3, L7, L11, and L15 all pass the complete attention path in the
+exact composed state. The earlier whole-model hang therefore depends on
+composition outside an individual attention layer.
 
 ## Exact next PRIMARY
 
-First isolate the prefix boundary that prevents some O-stage runs from
-reaching `GENERIC_B64_CHUNK_BEGIN`; compare the last completed B512/B128
-chunk and layer marker across one bounded run. Only after stable B64 entry is
-re-established should `finish_prefill_wide()` and the O host-call boundary be
-probed. Capture a user-space debugger/backtrace if the process remains in
-`wchan=0`; `/proc/<pid>/stack` is unavailable under the current permissions.
+The next PRIMARY is whole-model B64 inter-layer/resource composition after
+individual attention execution: compare the first failing layer handoff,
+state/workspace lifetime, and release/swap ordering after the last passing
+attention checkpoint. Do not attribute the hang to Q/K/causal/O/FFN kernels,
+and do not run B4 or whole-model qualification until that composition contract
+is proven.
 Do not run FFN, B4, or whole-model qualification.
 
 Is B64 scheduler work authorized? **NO.**
 
 Is B4 work authorized? **NO.**
 
-Experiment SHA: `9e1259b083e96915344e4992e0d56b6cc35408cd` (record commit before provenance amendment).
+Experiment SHA: `69f2c9fed6477c8d822e9001585b5521300a7cec` (record commit before provenance amendment).
 
-Graph SHA: `763f9362fe344c6ae5270464441dade43f8ffa9e` (`graphify-out/graph.json` blob).
+Graph SHA: `74d94bbb6895394fe22284978e5f035d3a894579` (`graphify-out/graph.json` blob).
 
 Working-tree status: clean after commit and graph refresh.
 
