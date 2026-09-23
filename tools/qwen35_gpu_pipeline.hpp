@@ -88,6 +88,15 @@ bool exp0380_b64_probe_enabled() {
     return environment_flag("MIINFER_EXP0380_B64_ATTN_PROBE");
 }
 
+bool exp0381_wrapper_probe_enabled() {
+    return environment_flag("MIINFER_EXP0381_WRAPPER_PROBE");
+}
+
+void exp0381_marker(const char* name) {
+    if (exp0381_wrapper_probe_enabled())
+        std::cerr << "EXP0381 " << name << "\n" << std::flush;
+}
+
 int exp0380_probe_stage() {
     const char* value = std::getenv("MIINFER_EXP0380_STAGE");
     return value == nullptr ? 0 : std::atoi(value);

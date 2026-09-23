@@ -2364,15 +2364,15 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1790194204.3533962,
-    "seen": 1790194385.2316601,
-    "ast_hash": "53e428ea368169946a70617a04669028",
+    "mtime": 1790203063.0646622,
+    "seen": 1790203310.6560857,
+    "ast_hash": "82c76d3fc45cf7051976ee731eb5b033",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1790190970.8107345,
-    "seen": 1790191159.5044007,
-    "ast_hash": "f17f37e4748531fcdd3acfe4c205779e",
+    "mtime": 1790202246.7422297,
+    "seen": 1790203310.6560874,
+    "ast_hash": "6fbcc1aa79d729a45857634251072e35",
     "semantic_hash": ""
   },
   "docs/M9-AUTOREGRESSIVE-QUALIFICATION.md": {
@@ -5496,9 +5496,15 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0380-b64-first-hang-localization.md": {
-    "mtime": 1790194367.984667,
-    "seen": 1790194385.2323065,
-    "ast_hash": "b1383e094d21d265e2ded5630fcc26bd",
+    "mtime": 1790194406.0324974,
+    "seen": 1790203310.656737,
+    "ast_hash": "a279b69325b614faab0d568378896a10",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0381-b64-wrapper-runtime-reproduction.md": {
+    "mtime": 1790203291.6634657,
+    "seen": 1790203310.656739,
+    "ast_hash": "1cad803d0382311caf22553277eb4fed",
     "semantic_hash": ""
   }
 }

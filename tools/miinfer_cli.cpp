@@ -101,6 +101,7 @@ bool apply_runtime_preset() {
             && value.rfind("MIINFER_EXP0380_B64_ATTN_PROBE=", 0) != 0
             && value.rfind("MIINFER_EXP0380_STAGE=", 0) != 0
             && value.rfind("MIINFER_EXP0380_LAYER=", 0) != 0
+            && value.rfind("MIINFER_EXP0381_WRAPPER_PROBE=", 0) != 0
             && value.rfind("MIINFER_HIP_GRAPH=", 0) != 0) {
             names.emplace_back(value.substr(0, value.find('=')));
         }
@@ -1164,6 +1165,7 @@ public:
             && std::getenv("MIINFER_EXP0377_B64_RESIDUAL") != nullptr
             && std::strcmp(std::getenv("MIINFER_EXP0377_B64_RESIDUAL"), "0") != 0;
         const bool exp0380_probe = exp0374_scheduler && exp0380_b64_probe_enabled();
+        const bool exp0381_probe = exp0374_scheduler && exp0381_wrapper_probe_enabled();
         const int exp0380_stage = exp0380_probe ? exp0380_probe_stage() : -1;
         exp0376_chunk_timings_.clear();
         remainder_scheduler_counters_ = {};
@@ -1184,6 +1186,7 @@ public:
                 std::cerr << "EXP0380 OUTER_CHUNK_BEGIN base=" << base
                           << " count=" << count << "\n" << std::flush;
             }
+            if (exp0381_probe && base == 0) exp0381_marker("B512_BEGIN");
             if (exp0374_scheduler && full_layer_major_prefill_
                 && base >= kFullPrefillCapacity && count < prefill_chunk_ && count >= kM12PrefillBatch) {
                 count = kM12PrefillBatch;
@@ -1607,27 +1610,47 @@ public:
     }
 
     std::uint32_t next_token_from_hidden(const float* hidden, std::size_t position) {
+        exp0381_marker("FIRST_TOKEN_BEGIN");
+        exp0381_marker("FINAL_NORM_BEGIN");
         miinfer::launch_qwen3_rms_norm(
             hidden, static_cast<const float*>(d_final_norm_weight_->get()),
             static_cast<float*>(final_norm_->get()), kHidden, model_.config().rms_epsilon);
+        exp0381_marker("FINAL_NORM_RETURN");
+        MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+        exp0381_marker("FINAL_NORM_GPU_COMPLETE");
+        exp0381_marker("FINAL_QUANT_BEGIN");
         miinfer::launch_q8_1_quantize_f32(
             static_cast<const float*>(final_norm_->get()),
             static_cast<miinfer::Q8_1Block*>(final_q8_1_->get()), kHidden,
             hipStreamPerThread);
+        exp0381_marker("FINAL_QUANT_RETURN");
+        MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+        exp0381_marker("FINAL_QUANT_GPU_COMPLETE");
+        exp0381_marker("LM_HEAD_BEGIN");
         launch_q6k_wave_gemv(
             static_cast<const Q6KWaveTile*>(d_output_weight_->get()),
             static_cast<const miinfer::Q8_1Block*>(final_q8_1_->get()),
             static_cast<float*>(logits_->get()), model_.config().vocab_size, kHidden,
             hipStreamPerThread);
+        exp0381_marker("LM_HEAD_RETURN");
+        MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+        exp0381_marker("LM_HEAD_GPU_COMPLETE");
+        exp0381_marker("ARGMAX_BEGIN");
         miinfer::launch_qwen3_argmax(
             static_cast<const float*>(logits_->get()),
             static_cast<std::uint32_t*>(d_decode_tokens_->get()) + position + 1,
             model_.config().vocab_size);
+        exp0381_marker("ARGMAX_RETURN");
+        MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+        exp0381_marker("ARGMAX_GPU_COMPLETE");
+        exp0381_marker("TOKEN_COPY_READ_BEGIN");
         std::uint32_t result = 0;
         MIINFER_HIP_CHECK(hipMemcpyAsync(
             &result, static_cast<const std::uint32_t*>(d_decode_tokens_->get()) + position + 1,
             sizeof(result), hipMemcpyDeviceToHost, hipStreamPerThread));
         MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+        exp0381_marker("TOKEN_COPY_READ_END");
+        exp0381_marker("FIRST_TOKEN_END");
         return result;
     }
 
@@ -1651,6 +1674,7 @@ public:
         opt_prefill_checkpoint_ = opt.on_prefill_checkpoint;
         const float* final_hidden = prefill_layer_major(prompt, opt.should_cancel,
                                                         stats.prefill_processed_tokens, start_position);
+        exp0381_marker("PREFILL_RETURNED");
         opt_prefill_checkpoint_ = nullptr;
         const auto prefill_end = std::chrono::steady_clock::now();
         stats.prefill_ms = std::chrono::duration<double, std::milli>(prefill_end - prefill_start).count();
@@ -1677,6 +1701,7 @@ public:
         }
         if (opt.on_prefill_state) opt.on_prefill_state(final_hidden, prompt.size());
         if (opt.on_prefill_complete) opt.on_prefill_complete();
+        exp0381_marker("PREFILL_CALLBACKS_RETURNED");
         if (exp0380_b64_probe_enabled()
             && std::getenv("MIINFER_EXP0374_REMAINDER_SCHED") != nullptr
             && exp0380_probe_stage() == 13 && prompt.size() == 960) {
@@ -1686,8 +1711,10 @@ public:
             std::exit(0);
         }
         if (opt.max_new_tokens == 0) {
+            exp0381_marker("ZERO_TOKEN_RETURN_BEGIN");
             stats.total_ms = std::chrono::duration<double, std::milli>(
                 std::chrono::steady_clock::now() - gen_start).count();
+            exp0381_marker("ZERO_TOKEN_RETURN_END");
             return stats;
         }
 
@@ -1696,7 +1723,11 @@ public:
         const auto first_end = std::chrono::steady_clock::now();
         stats.first_token_ms = std::chrono::duration<double, std::milli>(first_end - first_start).count();
         stats.tokens.push_back(cur_token);
+        if (exp0381_wrapper_probe_enabled())
+            std::cerr << "EXP0381 FIRST_TOKEN_ID=" << cur_token << "\n" << std::flush;
+        exp0381_marker("ON_FIRST_TOKEN_BEGIN");
         if (opt.on_first_token) opt.on_first_token();
+        exp0381_marker("ON_FIRST_TOKEN_END");
         const bool stop_token = cur_token == tokenizer_.eos_id() || cur_token == 151643 || cur_token == 151645;
         bool cancelled = false;
         bool stopped = stop_token;
@@ -1746,8 +1777,12 @@ public:
 
         for (std::size_t gen_idx = 1; !cancelled && !stopped && gen_idx < opt.max_new_tokens && pos < g_cache_capacity; ++gen_idx) {
             if (g_shutdown_requested || (opt.should_cancel && opt.should_cancel())) { cancelled = true; break; }
+            exp0381_marker("STEP_BEGIN");
             const auto step_res = step(cur_token, pos);
+            exp0381_marker("STEP_RETURN");
             cur_token = step_res.token;
+            if (exp0381_wrapper_probe_enabled())
+                std::cerr << "EXP0381 STEP_TOKEN_ID=" << cur_token << "\n" << std::flush;
             stats.tokens.push_back(cur_token);
             stats.decode_ms += step_res.latency_ms;
             ++pos;
@@ -1755,7 +1790,9 @@ public:
             if (stopped) break;
             const std::string piece = tokenizer_.decode(std::span<const std::uint32_t>(&cur_token, 1));
             stats.text += piece;
+            exp0381_marker("TOKEN_CALLBACK_BEGIN");
             if (opt.on_token && !opt.on_token(cur_token, piece)) { cancelled = true; break; }
+            exp0381_marker("TOKEN_CALLBACK_END");
         }
         stats.decode_ms += stats.first_token_ms;
         stats.generated_tokens = stats.tokens.size();
@@ -1824,6 +1861,7 @@ public:
             stats.session_checkpoint_count = session_checkpoints_.size();
             stats.session_checkpoint_bytes = session_checkpoint_bytes_;
             stats.graph_capture_ms = graph_capture_ms_ - capture_start;
+            exp0381_marker("GENERATE_RETURN");
             return stats;
         } catch (...) {
             clear_session_checkpoints();
@@ -3353,6 +3391,7 @@ int cmd_run(int argc, char** argv) {
     }
     std::cerr << "Initializing MIInfer gfx906 runtime engine for " << model_path << " ...\n";
     Qwen35RuntimeEngine engine(model_path);
+    exp0381_marker("MODEL_INIT_END");
     std::cerr << "device_allocation_count=" << g_device_allocations << "\n"
               << "device_allocated_bytes=" << g_live_device_bytes << "\n"
               << "device_total_allocated_bytes=" << g_total_device_bytes << "\n"
@@ -3360,6 +3399,7 @@ int cmd_run(int argc, char** argv) {
     print_hip_memory(std::cerr);
     std::cerr << "model_context_length=" << engine.model().config().context_length << "\n";
 
+    exp0381_marker("PROMPT_BEGIN");
     auto prompt_tokens = engine.tokenizer().encode(prompt_text);
     if (m26c_state_context) {
         if (!m26c_export_state || *m26c_state_context != 512 || prompt_tokens.empty()) {
@@ -3728,6 +3768,7 @@ int cmd_run(int argc, char** argv) {
     }
 
     const auto stats = engine.generate(prompt_tokens, opt);
+    exp0381_marker("CLI_WRAPPER_RETURN");
     if (!stream) {
         std::cout << stats.text << std::flush;
     }
