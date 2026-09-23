@@ -145,6 +145,23 @@ Not run as a new probe. Existing EXP-0375 evidence proves the matched B128
 route completes. A fresh B128 operation comparison is deferred until the
 probe's pre-marker boundary is instrumented more precisely.
 
+## Extended sparse-ladder evidence
+
+L35 and L39 passed the complete target attention path. A valid 960-token L43
+run established this prefix boundary:
+
+```text
+B512       base=0   entered and completed
+B128 #1    base=512 entered and completed
+B128 #2    base=640 entered and completed
+B128 #3    base=768 entered, no completion marker before watchdog
+B64       base=896 not entered
+```
+
+The follow-up with per-layer B128 markers did not reach the prefix, so it does
+not identify a B128 layer. The durable attribution is the repeated-B128 chunk
+at absolute base 768, not a B64 attention operation.
+
 ## Decision
 
 **LEARN.** No individual B64 attention operation has failed in the qualified
@@ -155,9 +172,11 @@ composition/runtime issue outside the tested individual attention stages.
 
 ## Exact next PRIMARY
 
-The next PRIMARY is the repeated pre-B64 prefix-runtime boundary that prevents
-some exact P960 probes from reaching B64 at all. Isolate the last completed
-B512/B128 full-layer-major chunk and its host/driver wait before resuming L31.
+The next PRIMARY is the repeated-B128 runtime boundary at absolute base 768:
+isolate its first incomplete layer handoff/resource wait, then resume the
+L31+ attention ladder. Do not attribute the hang to Q/K/causal/O/FFN kernels,
+and do not run B4 or whole-model qualification until that B128 composition
+contract is proven.
 Do not attribute the hang to Q/K/causal/O/FFN kernels, and do not run B4 or
 whole-model qualification until that composition contract is proven.
 Do not run FFN, B4, or whole-model qualification.

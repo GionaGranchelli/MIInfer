@@ -1438,6 +1438,9 @@ public:
             && std::strcmp(std::getenv("MIINFER_EXP0369_TRACE_ROUTE"), "0") != 0;
         for (std::size_t layer = 0; layer < layer_span.size(); ++layer) {
             if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
+            if (exp0380_probe && base_position == 768 && prompt.size() == kM12PrefillBatch) {
+                std::cerr << "EXP0380 PREFIX_B128 layer=" << layer << " BEGIN\n" << std::flush;
+            }
             layer_span[layer].profile_ordered_start(
                 prefill_profile_.enabled ? base_position : std::numeric_limits<std::size_t>::max());
             const std::size_t full_chunk = wide_prefill_ && prefill_chunk_ >= kM12PrefillBatch
@@ -1535,6 +1538,9 @@ public:
                 prefill_profile_.enabled ? base_position : std::numeric_limits<std::size_t>::max());
             layer_span[layer].release_m23_repacked();
             std::swap(current, next);
+            if (exp0380_probe && base_position == 768 && prompt.size() == kM12PrefillBatch) {
+                std::cerr << "EXP0380 PREFIX_B128 layer=" << layer << " END\n" << std::flush;
+            }
         }
         if (!exp0376_chunk_timing_) MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
         if (exp0380_probe) {
