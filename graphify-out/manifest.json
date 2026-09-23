@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1790156172.011878,
-    "seen": 1790156191.4755123,
-    "ast_hash": "70f7e03fd8069d8ce4955a5afe342df2",
+    "mtime": 1790166606.9728796,
+    "seen": 1790166652.1111803,
+    "ast_hash": "3a19d258822a5c11aa92c31be8b48785",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -2364,9 +2364,9 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1790151607.008379,
-    "seen": 1790152619.3569794,
-    "ast_hash": "87ab212c2e6a36809514a6e7d9a26020",
+    "mtime": 1790163611.1118317,
+    "seen": 1790166652.1111295,
+    "ast_hash": "488ac840ecdb59dfd888788348958808",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
@@ -5394,9 +5394,9 @@
     "semantic_hash": ""
   },
   "docs/performance-research-protocol.md": {
-    "mtime": 1790156172.012878,
-    "seen": 1790156191.4755356,
-    "ast_hash": "31957c2c8b62659d624d41a3428ecc2f",
+    "mtime": 1790166606.9738796,
+    "seen": 1790166652.111202,
+    "ast_hash": "cf9952776855d270183dab59e126010c",
     "semantic_hash": ""
   },
   "experiments/EXP-0364-full-model-prefill-bottleneck-attribution.md": {
@@ -5457,6 +5457,12 @@
     "mtime": 1790156172.009878,
     "seen": 1790156191.476137,
     "ast_hash": "26aa31e02f9d5cc409ada2767f1e7737",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0374-repeated-b128-remainder-scheduler.md": {
+    "mtime": 1790166606.9708796,
+    "seen": 1790166652.1117792,
+    "ast_hash": "dac4d66a21ada9106ad785a1c60dbd89",
     "semantic_hash": ""
   }
 }
