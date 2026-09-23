@@ -170,6 +170,20 @@ operation can be named from this evidence. This is consistent with repeated
 B128 workspace/resource/runtime state, not a stable B64 attention-kernel
 failure.
 
+The allocation audit added to the same layer markers showed no allocation
+churn before a valid run stalled at layer 47 `BEGIN`:
+
+```text
+device allocations: 2685
+total device bytes: 21,993,243,028
+live device bytes: 21,993,243,028
+```
+
+Those values were unchanged across every completed base-768 B128 layer. The
+failure is therefore not an unexpected per-layer allocation, free, or model
+repack operation. The remaining likely class is stream/workspace/driver state,
+but no kernel noncompletion is proven.
+
 ## Decision
 
 **LEARN.** No individual B64 attention operation has failed in the qualified
@@ -180,11 +194,12 @@ composition/runtime issue outside the tested individual attention stages.
 
 ## Exact next PRIMARY
 
-The next PRIMARY is repeated-B128 runtime/resource-state attribution at
-absolute base 768: compare workspace/resource preparation, allocation/free,
-stream synchronization, and state lifetime across repeated invocations. Do not
-attribute the hang to a specific Q/K/causal/O/FFN kernel, and do not run B4 or
-whole-model qualification until that runtime contract is proven.
+The next PRIMARY is repeated-B128 stream/workspace/driver-state attribution at
+absolute base 768. Allocation churn is falsified by the constant counters;
+next inspect explicit stream synchronization, workspace reuse, and driver
+wait state across repeated invocations. Do not attribute the hang to a
+specific Q/K/causal/O/FFN kernel, and do not run B4 or whole-model
+qualification until that runtime contract is proven.
 Do not attribute the hang to Q/K/causal/O/FFN kernels, and do not run B4 or
 whole-model qualification until that composition contract is proven.
 Do not run FFN, B4, or whole-model qualification.

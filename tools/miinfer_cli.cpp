@@ -1439,7 +1439,9 @@ public:
         for (std::size_t layer = 0; layer < layer_span.size(); ++layer) {
             if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
             if (exp0380_probe && base_position == 768 && prompt.size() == kM12PrefillBatch) {
-                std::cerr << "EXP0380 PREFIX_B128 layer=" << layer << " BEGIN\n" << std::flush;
+                std::cerr << "EXP0380 PREFIX_B128 layer=" << layer << " BEGIN alloc="
+                          << g_device_allocations << " total=" << g_total_device_bytes
+                          << " live=" << g_live_device_bytes << "\n" << std::flush;
             }
             layer_span[layer].profile_ordered_start(
                 prefill_profile_.enabled ? base_position : std::numeric_limits<std::size_t>::max());
@@ -1539,7 +1541,9 @@ public:
             layer_span[layer].release_m23_repacked();
             std::swap(current, next);
             if (exp0380_probe && base_position == 768 && prompt.size() == kM12PrefillBatch) {
-                std::cerr << "EXP0380 PREFIX_B128 layer=" << layer << " END\n" << std::flush;
+                std::cerr << "EXP0380 PREFIX_B128 layer=" << layer << " END alloc="
+                          << g_device_allocations << " total=" << g_total_device_bytes
+                          << " live=" << g_live_device_bytes << "\n" << std::flush;
             }
         }
         if (!exp0376_chunk_timing_) MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
