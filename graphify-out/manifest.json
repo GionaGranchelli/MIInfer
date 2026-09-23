@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1790152567.9482393,
-    "seen": 1790152619.3570266,
-    "ast_hash": "660ea2725835924fdb65618df38bf06b",
+    "mtime": 1790156172.011878,
+    "seen": 1790156191.4755123,
+    "ast_hash": "70f7e03fd8069d8ce4955a5afe342df2",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -5394,9 +5394,9 @@
     "semantic_hash": ""
   },
   "docs/performance-research-protocol.md": {
-    "mtime": 1790152567.9502392,
-    "seen": 1790152619.3570461,
-    "ast_hash": "e1ccf6b50c8b350a06e12a2461f1c846",
+    "mtime": 1790156172.012878,
+    "seen": 1790156191.4755356,
+    "ast_hash": "31957c2c8b62659d624d41a3428ecc2f",
     "semantic_hash": ""
   },
   "experiments/EXP-0364-full-model-prefill-bottleneck-attribution.md": {
@@ -5451,6 +5451,12 @@
     "mtime": 1790152567.9472394,
     "seen": 1790152619.3575976,
     "ast_hash": "8b3efe43497c7fdba2d944ddeac34d01",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0373-full-model-partial-tail-materiality.md": {
+    "mtime": 1790156172.009878,
+    "seen": 1790156191.476137,
+    "ast_hash": "26aa31e02f9d5cc409ada2767f1e7737",
     "semantic_hash": ""
   }
 }
