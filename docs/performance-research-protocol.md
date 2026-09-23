@@ -190,6 +190,9 @@ partial-tail boundary, position 1536, where the selector changes the route
 from scalar `run()` to batched partial attention. The current frontier is
 stage-level qualification of that route. EXP-0370 localized divergence before
 cache storage, and EXP-0371 localized the first unique difference to L7 input
-hidden before attention normalization. The current frontier is the L6→L7
-inter-layer output contract; no KV-write fix, tail geometry, or performance
-kernel is authorized until that upstream contract is qualified.
+hidden before attention normalization. EXP-0372 found that L6 input already
+differs, alongside earlier L5/L6 recurrent state/history differences, so the
+L6→L7 handoff is not the origin. The next PRIMARY is refreshed full-model
+prefill attribution, followed only if justified by L5→L6 contract
+qualification. No KV-write fix, tail geometry, or performance kernel is
+authorized until that upstream contract is qualified.

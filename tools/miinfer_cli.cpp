@@ -94,6 +94,7 @@ bool apply_runtime_preset() {
             && value.rfind("MIINFER_EXP0370_TRACE_CAUSAL=", 0) != 0
             && value.rfind("MIINFER_EXP0370_CAPTURE_PREFIX=", 0) != 0
             && value.rfind("MIINFER_EXP0371_CAPTURE_PREFIX=", 0) != 0
+            && value.rfind("MIINFER_EXP0372_CAPTURE_PREFIX=", 0) != 0
             && value.rfind("MIINFER_HIP_GRAPH=", 0) != 0) {
             names.emplace_back(value.substr(0, value.find('=')));
         }

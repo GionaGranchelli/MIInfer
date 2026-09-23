@@ -19,7 +19,10 @@ corrected the P1664 state-index mapping: it diverges at the actual partial-tail
 boundary (position 1536), where the selector changes the route. EXP-0370
 EXP-0370 localized the first L7 K/V divergence before cache storage, and
 EXP-0371 localized the first unique difference to L7 input hidden before
-attention normalization. The original P640 delta remains classified as
+attention normalization. EXP-0372 found that L6 input already differs, with
+earlier L5/L6 recurrent state/history differences. The L6→L7 handoff is not
+the origin; the next evidence target is L5→L6 only after refreshed full-model
+attribution. The original P640 delta remains classified as
 expected batched drift.
 EXP-0360 through EXP-0363 rejected the tested
 attention families; they did not authorize an optimization candidate or imply

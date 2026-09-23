@@ -2301,6 +2301,18 @@ struct RecurrentLayer {
         return static_cast<const float*>(prefill_projected->get());
     }
 
+    void capture_exp0372_rows(const char* suffix, const float* device,
+                              std::size_t count, std::size_t stride,
+                              bool append = false) const {
+        const char* prefix = std::getenv("MIINFER_EXP0372_CAPTURE_PREFIX");
+        if (prefix == nullptr || index != 6 || count == 0 || device == nullptr) return;
+        const auto mode = append ? std::ios::app : std::ios::trunc;
+        const auto host = download(device, count * stride);
+        std::ofstream out(std::string(prefix) + suffix, std::ios::binary | mode);
+        out.write(reinterpret_cast<const char*>(host.data()),
+                  static_cast<std::streamsize>(4 * stride * sizeof(float)));
+    }
+
     void prefill_wide(const float* inputs, float* outputs, std::uint32_t base_position,
                       std::uint32_t token_count) {
         if (prefill_mx_repacked) ensure_mx_repacked();
@@ -2592,6 +2604,10 @@ struct RecurrentLayer {
         stage_end(13, profile_position);
         profile_wide_tail_family_end(3, profile_position);
         profile_wide_tail_end(profile_position);
+        if (base_position == 1536) {
+            capture_exp0372_rows(".l6.input.f32", inputs, token_count, kHidden);
+            capture_exp0372_rows(".l6.output.f32", outputs, token_count, kHidden);
+        }
         if (!validate) {
             trace_dispatch();
             return;
@@ -3666,6 +3682,12 @@ struct RecurrentLayer {
                                             hipMemcpyDeviceToDevice, hipStreamPerThread));
         }
         stage_end(13, position);
+        if (index == 6 && position >= 1536 && position < 1540) {
+            capture_exp0372_rows(".l6.input.f32", input, 1, kHidden,
+                                  position != 1536);
+            capture_exp0372_rows(".l6.output.f32", completed_output, 1, kHidden,
+                                 position != 1536);
+        }
     }
 };
 
