@@ -41942,7 +41942,7 @@
       "node_kind": "heading",
       "norm_label": "b128 comparison",
       "source_file": "experiments/EXP-0380-b64-first-hang-localization.md",
-      "source_location": "L140"
+      "source_location": "L142"
     },
     {
       "id": "experiments_exp_0380_b64_first_hang_localization_decision",
@@ -41954,7 +41954,7 @@
       "node_kind": "heading",
       "norm_label": "decision",
       "source_file": "experiments/EXP-0380-b64-first-hang-localization.md",
-      "source_location": "L146"
+      "source_location": "L148"
     },
     {
       "id": "experiments_exp_0380_b64_first_hang_localization_exact_next_primary",
@@ -41966,7 +41966,7 @@
       "node_kind": "heading",
       "norm_label": "exact next primary",
       "source_file": "experiments/EXP-0380-b64-first-hang-localization.md",
-      "source_location": "L154"
+      "source_location": "L156"
     },
     {
       "id": "experiments_exp_0380_b64_first_hang_localization_exp_0379_evidence",
@@ -42002,7 +42002,7 @@
       "node_kind": "heading",
       "norm_label": "host wait evidence",
       "source_file": "experiments/EXP-0380-b64-first-hang-localization.md",
-      "source_location": "L103"
+      "source_location": "L105"
     },
     {
       "id": "experiments_exp_0380_b64_first_hang_localization_probe_design",
@@ -215544,7 +215544,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0380-b64-first-hang-localization.md",
-      "source_location": "L103",
+      "source_location": "L105",
       "weight": 1.0
     },
     {
@@ -215566,7 +215566,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0380-b64-first-hang-localization.md",
-      "source_location": "L140",
+      "source_location": "L142",
       "weight": 1.0
     },
     {
@@ -215577,7 +215577,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0380-b64-first-hang-localization.md",
-      "source_location": "L146",
+      "source_location": "L148",
       "weight": 1.0
     },
     {
@@ -215588,7 +215588,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0380-b64-first-hang-localization.md",
-      "source_location": "L154",
+      "source_location": "L156",
       "weight": 1.0
     },
     {
@@ -233636,5 +233636,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "1a674e9157c65d290d7ab67cde4f1a5e275b7a5f"
+  "built_at_commit": "750949b098d3aeddc5469d0e580b4d8fde42438d"
 }

@@ -68,8 +68,10 @@ Memory access fault by GPU node-2
 Reason: Page not present or supervisor privilege
 ```
 
-This is hardware/runtime contamination, not evidence against L31. The ladder
-was stopped and no later layer was run.
+This is hardware/runtime contamination, not evidence against L31. After
+telemetry returned to normal, one clean-runtime L31 retry also emitted no
+probe marker and timed out before B64; it did not test L31. No later layer was
+run.
 
 Stage 0 emitted:
 
@@ -147,18 +149,17 @@ probe's pre-marker boundary is instrumented more precisely.
 
 **LEARN.** No individual B64 attention operation has failed in the qualified
 ladder. L3, L7, L11, L15, L19, L23, and L27 all pass the complete attention
-path in the exact composed state. The L31 result is invalid because ROCm
-aborted before probe entry. The earlier whole-model hang therefore remains a
+path in the exact composed state. L31 remains untested because both attempts
+failed before probe entry. The earlier whole-model hang therefore remains a
 composition/runtime issue outside the tested individual attention stages.
 
 ## Exact next PRIMARY
 
-The next PRIMARY is to restore a clean ROCm/GPU runtime after the page fault,
-then resume the sparse ladder at L31. If the clean runtime reaches L31, compare
-the first failing layer handoff, state/workspace lifetime, and release/swap
-ordering after the last passing checkpoint. Do not attribute the hang to
-Q/K/causal/O/FFN kernels, and do not run B4 or whole-model qualification until
-that composition contract is proven.
+The next PRIMARY is the repeated pre-B64 prefix-runtime boundary that prevents
+some exact P960 probes from reaching B64 at all. Isolate the last completed
+B512/B128 full-layer-major chunk and its host/driver wait before resuming L31.
+Do not attribute the hang to Q/K/causal/O/FFN kernels, and do not run B4 or
+whole-model qualification until that composition contract is proven.
 Do not run FFN, B4, or whole-model qualification.
 
 Is B64 scheduler work authorized? **NO.**
