@@ -1507,9 +1507,15 @@ public:
                         static_cast<std::uint32_t>(base_position + base), count);
                 }
                 if (deferred_tail) {
+                    if (exp0380_probe && layer == 3 && count == kPrefillBatch) {
+                        std::cerr << "EXP0380 L3 FINISH_PREFILL_BATCH HOST_BEGIN\n" << std::flush;
+                    }
                     layer_span[layer].finish_prefill_batch(
                         chunk_input, chunk_output, count, nullptr, nullptr,
                         prefill_profile_.enabled ? base : std::numeric_limits<std::size_t>::max());
+                    if (exp0380_probe && layer == 3 && count == kPrefillBatch) {
+                        std::cerr << "EXP0380 L3 FINISH_PREFILL_BATCH HOST_RETURN\n" << std::flush;
+                    }
                 }
             }
             layer_span[layer].profile_ordered_end(

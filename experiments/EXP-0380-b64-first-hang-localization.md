@@ -103,6 +103,12 @@ Therefore the failure is not explained by thermal or clock throttling. The
 failure class remains **UNKNOWN / pre-O host or HIP-runtime wait**; a GPU
 kernel noncompletion is not proven.
 
+The follow-up run with explicit `B64 CHUNK_BEGIN`, `L3 PREP_HOST_BEGIN`,
+`FINISH_PREFILL_BATCH`, and `FINISH_PREFILL_WIDE ENTER` markers also emitted no
+marker before the 120-second stop. This means the O-stage probe can still stop
+before reaching L3 in the full prefix; it does not justify attributing the
+failure to the O projection itself.
+
 ## B128 comparison
 
 Not run as a new probe. Existing EXP-0375 evidence proves the matched B128

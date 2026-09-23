@@ -911,7 +911,7 @@
       "file_type": "code",
       "norm_label": "gpulayerref",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5500"
+      "source_location": "L5501"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_recurrenttrace",
@@ -1405,7 +1405,7 @@
       "file_type": "code",
       "norm_label": "httpreadresult",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3730"
+      "source_location": "L3736"
     },
     {
       "id": "tools_miinfer_cli_presetflag",
@@ -1470,7 +1470,7 @@
       "file_type": "code",
       "norm_label": "m26cdecoderesult",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1786"
+      "source_location": "L1792"
     },
     {
       "id": "tools_m6a3_qwen35_layer_q4k",
@@ -1834,7 +1834,7 @@
       "file_type": "code",
       "norm_label": "httprequest",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3721"
+      "source_location": "L3727"
     },
     {
       "id": "include_miinfer_qwen35_model_qwen35tensorview",
@@ -7293,7 +7293,7 @@
       "file_type": "code",
       "norm_label": ".finish_prefill_batch()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4925"
+      "source_location": "L4926"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_finish_prefill_batch4",
@@ -7305,7 +7305,7 @@
       "file_type": "code",
       "norm_label": ".finish_prefill_batch4()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4827"
+      "source_location": "L4828"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_finish_prefill_wide",
@@ -7521,7 +7521,7 @@
       "file_type": "code",
       "norm_label": ".attn_norm_weight()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5504"
+      "source_location": "L5505"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_finish_prefill_attention",
@@ -7533,7 +7533,7 @@
       "file_type": "code",
       "norm_label": ".finish_prefill_attention()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5589"
+      "source_location": "L5590"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_finish_prefill_batch",
@@ -7545,7 +7545,7 @@
       "file_type": "code",
       "norm_label": ".finish_prefill_batch()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5594"
+      "source_location": "L5595"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_fused_interlayer_norm",
@@ -7557,7 +7557,7 @@
       "file_type": "code",
       "norm_label": ".fused_interlayer_norm()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5522"
+      "source_location": "L5523"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_normalized_buffer",
@@ -7569,7 +7569,7 @@
       "file_type": "code",
       "norm_label": ".normalized_buffer()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5510"
+      "source_location": "L5511"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_prefill_gate_at",
@@ -7581,7 +7581,7 @@
       "file_type": "code",
       "norm_label": ".prefill_gate_at()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5563"
+      "source_location": "L5564"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_prefill_normalized_at",
@@ -7593,7 +7593,7 @@
       "file_type": "code",
       "norm_label": ".prefill_normalized_at()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5554"
+      "source_location": "L5555"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_prefill_qfull_at",
@@ -7605,7 +7605,7 @@
       "file_type": "code",
       "norm_label": ".prefill_qfull_at()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5567"
+      "source_location": "L5568"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_prefill_qkv_at",
@@ -7617,7 +7617,7 @@
       "file_type": "code",
       "norm_label": ".prefill_qkv_at()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5559"
+      "source_location": "L5560"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_prefill_tail_batch_supported",
@@ -7629,7 +7629,7 @@
       "file_type": "code",
       "norm_label": ".prefill_tail_batch_supported()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5575"
+      "source_location": "L5576"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_prefill_value_at",
@@ -7641,7 +7641,7 @@
       "file_type": "code",
       "norm_label": ".prefill_value_at()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5571"
+      "source_location": "L5572"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_prepare_prefill_batch",
@@ -7653,7 +7653,7 @@
       "file_type": "code",
       "norm_label": ".prepare_prefill_batch()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5538"
+      "source_location": "L5539"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_profile_decode_layer_end",
@@ -7665,7 +7665,7 @@
       "file_type": "code",
       "norm_label": ".profile_decode_layer_end()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5645"
+      "source_location": "L5646"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_profile_decode_layer_start",
@@ -7677,7 +7677,7 @@
       "file_type": "code",
       "norm_label": ".profile_decode_layer_start()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5640"
+      "source_location": "L5641"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_profile_ordered_end",
@@ -7689,7 +7689,7 @@
       "file_type": "code",
       "norm_label": ".profile_ordered_end()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5533"
+      "source_location": "L5534"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_profile_ordered_start",
@@ -7701,7 +7701,7 @@
       "file_type": "code",
       "norm_label": ".profile_ordered_start()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5528"
+      "source_location": "L5529"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_q8_1_buffer",
@@ -7713,7 +7713,7 @@
       "file_type": "code",
       "norm_label": ".q8_1_buffer()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5516"
+      "source_location": "L5517"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_release_m23_repacked",
@@ -7725,7 +7725,7 @@
       "file_type": "code",
       "norm_label": ".release_m23_repacked()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5584"
+      "source_location": "L5585"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_run",
@@ -7737,7 +7737,7 @@
       "file_type": "code",
       "norm_label": ".run()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5611"
+      "source_location": "L5612"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_wide_attention_batch_ready",
@@ -7749,7 +7749,7 @@
       "file_type": "code",
       "norm_label": ".wide_attention_batch_ready()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5580"
+      "source_location": "L5581"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_project_q5_q8_1",
@@ -8289,7 +8289,7 @@
       "file_type": "code",
       "norm_label": "run_prefix()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5651"
+      "source_location": "L5652"
     },
     {
       "id": "bench_m13_quant_mm_bench_as",
@@ -8661,7 +8661,7 @@
       "file_type": "code",
       "norm_label": ".init_layers()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2592"
+      "source_location": "L2598"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_rebuild_session_prefix_index",
@@ -9249,7 +9249,7 @@
       "file_type": "code",
       "norm_label": ".init_buffers()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2750"
+      "source_location": "L2756"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_init_m12_dense_workspace",
@@ -9261,7 +9261,7 @@
       "file_type": "code",
       "norm_label": ".init_m12_dense_workspace()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2719"
+      "source_location": "L2725"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_init_m12_gdn_workspace",
@@ -9273,7 +9273,7 @@
       "file_type": "code",
       "norm_label": ".init_m12_gdn_workspace()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2697"
+      "source_location": "L2703"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_init_shared_wide_prefill_workspace",
@@ -9285,7 +9285,7 @@
       "file_type": "code",
       "norm_label": ".init_shared_wide_prefill_workspace()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2623"
+      "source_location": "L2629"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_initialize_session_identity",
@@ -9321,7 +9321,7 @@
       "file_type": "code",
       "norm_label": ".setup_environment()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2492"
+      "source_location": "L2498"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_allocate",
@@ -9513,7 +9513,7 @@
       "file_type": "code",
       "norm_label": ".run()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4945"
+      "source_location": "L4946"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_native_attn_gate_enabled",
@@ -10761,7 +10761,7 @@
       "file_type": "code",
       "norm_label": ".decode_m26c_state()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1945"
+      "source_location": "L1951"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_ensure_graph_captured",
@@ -10773,7 +10773,7 @@
       "file_type": "code",
       "norm_label": ".ensure_graph_captured()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2795"
+      "source_location": "L2801"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_generate",
@@ -10785,7 +10785,7 @@
       "file_type": "code",
       "norm_label": ".generate()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1681"
+      "source_location": "L1687"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_generate_fresh",
@@ -10797,7 +10797,7 @@
       "file_type": "code",
       "norm_label": ".generate_fresh()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2363"
+      "source_location": "L2369"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_generate_layer_major",
@@ -10809,7 +10809,7 @@
       "file_type": "code",
       "norm_label": ".generate_layer_major()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1549"
+      "source_location": "L1555"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_initialize_decode_state",
@@ -10821,7 +10821,7 @@
       "file_type": "code",
       "norm_label": ".initialize_decode_state()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2785"
+      "source_location": "L2791"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_insert_session_prefix",
@@ -10857,7 +10857,7 @@
       "file_type": "code",
       "norm_label": ".m26c_model_hash()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1940"
+      "source_location": "L1946"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_next_token_from_hidden",
@@ -10869,7 +10869,7 @@
       "file_type": "code",
       "norm_label": ".next_token_from_hidden()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1524"
+      "source_location": "L1530"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_prefill_full_layer_major_chunk",
@@ -10917,7 +10917,7 @@
       "file_type": "code",
       "norm_label": ".prepare_m26c_state()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1773"
+      "source_location": "L1779"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_runtime_selector_identity",
@@ -10929,7 +10929,7 @@
       "file_type": "code",
       "norm_label": ".runtime_selector_identity()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1819"
+      "source_location": "L1825"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_snapshot_decode_bytes",
@@ -10941,7 +10941,7 @@
       "file_type": "code",
       "norm_label": ".snapshot_decode_bytes()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1805"
+      "source_location": "L1811"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_step",
@@ -10977,7 +10977,7 @@
       "file_type": "code",
       "norm_label": ".write_exp0367_prefill_state()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2474"
+      "source_location": "L2480"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_write_m26c_state",
@@ -10989,7 +10989,7 @@
       "file_type": "code",
       "norm_label": ".write_m26c_state()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1833"
+      "source_location": "L1839"
     },
     {
       "id": "tools_miinfer_cli_apply_runtime_preset",
@@ -11013,7 +11013,7 @@
       "file_type": "code",
       "norm_label": "cmd_chat()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3670"
+      "source_location": "L3676"
     },
     {
       "id": "tools_miinfer_cli_cmd_config",
@@ -11025,7 +11025,7 @@
       "file_type": "code",
       "norm_label": "cmd_config()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3063"
+      "source_location": "L3069"
     },
     {
       "id": "tools_miinfer_cli_cmd_doctor",
@@ -11037,7 +11037,7 @@
       "file_type": "code",
       "norm_label": "cmd_doctor()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3082"
+      "source_location": "L3088"
     },
     {
       "id": "tools_miinfer_cli_cmd_inspect",
@@ -11049,7 +11049,7 @@
       "file_type": "code",
       "norm_label": "cmd_inspect()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2928"
+      "source_location": "L2934"
     },
     {
       "id": "tools_miinfer_cli_cmd_models",
@@ -11061,7 +11061,7 @@
       "file_type": "code",
       "norm_label": "cmd_models()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3035"
+      "source_location": "L3041"
     },
     {
       "id": "tools_miinfer_cli_cmd_run",
@@ -11073,7 +11073,7 @@
       "file_type": "code",
       "norm_label": "cmd_run()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3123"
+      "source_location": "L3129"
     },
     {
       "id": "tools_miinfer_cli_cmd_serve",
@@ -11085,7 +11085,7 @@
       "file_type": "code",
       "norm_label": "cmd_serve()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3903"
+      "source_location": "L3909"
     },
     {
       "id": "tools_miinfer_cli_constant_time_equal",
@@ -11097,7 +11097,7 @@
       "file_type": "code",
       "norm_label": "constant_time_equal()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3892"
+      "source_location": "L3898"
     },
     {
       "id": "tools_miinfer_cli_http_header",
@@ -11109,7 +11109,7 @@
       "file_type": "code",
       "norm_label": "http_header()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3786"
+      "source_location": "L3792"
     },
     {
       "id": "tools_miinfer_cli_json_escape",
@@ -11133,7 +11133,7 @@
       "file_type": "code",
       "norm_label": "lowercase_ascii()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3771"
+      "source_location": "L3777"
     },
     {
       "id": "tools_miinfer_cli_main",
@@ -11145,7 +11145,7 @@
       "file_type": "code",
       "norm_label": "main()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L4503"
+      "source_location": "L4509"
     },
     {
       "id": "tools_miinfer_cli_openai_tool_calls_json",
@@ -11193,7 +11193,7 @@
       "file_type": "code",
       "norm_label": "print_usage()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L4470"
+      "source_location": "L4476"
     },
     {
       "id": "tools_miinfer_cli_read_http_request",
@@ -11205,7 +11205,7 @@
       "file_type": "code",
       "norm_label": "read_http_request()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3805"
+      "source_location": "L3811"
     },
     {
       "id": "tools_miinfer_cli_send_all",
@@ -11217,7 +11217,7 @@
       "file_type": "code",
       "norm_label": "send_all()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3741"
+      "source_location": "L3747"
     },
     {
       "id": "tools_miinfer_cli_send_http_error",
@@ -11229,7 +11229,7 @@
       "file_type": "code",
       "norm_label": "send_http_error()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3881"
+      "source_location": "L3887"
     },
     {
       "id": "tools_miinfer_cli_send_http_response",
@@ -11241,7 +11241,7 @@
       "file_type": "code",
       "norm_label": "send_http_response()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3762"
+      "source_location": "L3768"
     },
     {
       "id": "tools_miinfer_cli_set_client_timeouts",
@@ -11253,7 +11253,7 @@
       "file_type": "code",
       "norm_label": "set_client_timeouts()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3756"
+      "source_location": "L3762"
     },
     {
       "id": "tools_miinfer_cli_signal_handler",
@@ -11277,7 +11277,7 @@
       "file_type": "code",
       "norm_label": "trim_ascii()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3778"
+      "source_location": "L3784"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_recurrentlayer_prefill_tail_batch_supported",
@@ -11913,7 +11913,7 @@
       "file_type": "code",
       "norm_label": ".cleanup_graphs()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2861"
+      "source_location": "L2867"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_compare_bytes",
@@ -12057,7 +12057,7 @@
       "file_type": "code",
       "norm_label": "read_external_operands()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5693"
+      "source_location": "L5694"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_recurrentlayer_set_m12_dense_source",
@@ -12105,7 +12105,7 @@
       "file_type": "code",
       "norm_label": "run_hybrid_block()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5490"
+      "source_location": "L5491"
     },
     {
       "id": "tests_openai_api_test_main",
@@ -14589,7 +14589,7 @@
       "file_type": "code",
       "norm_label": "replay_state()",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5709"
+      "source_location": "L5710"
     },
     {
       "id": "tools_m6a19_qwen35_conv_gpu_devicebuffer_devicebuffer",
@@ -15369,7 +15369,7 @@
       "file_type": "code",
       "norm_label": ".snapshot_decode_buffers()",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1741"
+      "source_location": "L1747"
     },
     {
       "id": "tests_qwen3_primitives_test_close_enough",
@@ -40251,7 +40251,7 @@
       "file_type": "code",
       "norm_label": "attention",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5502"
+      "source_location": "L5503"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_recurrent",
@@ -40262,7 +40262,7 @@
       "file_type": "code",
       "norm_label": "recurrent",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5501"
+      "source_location": "L5502"
     },
     {
       "id": "tools_qwen35_gpu_pipeline_hpp_size_t",
@@ -42289,7 +42289,7 @@
       "node_kind": "heading",
       "norm_label": "b128 comparison",
       "source_file": "experiments/EXP-0380-b64-first-hang-localization.md",
-      "source_location": "L106"
+      "source_location": "L112"
     },
     {
       "id": "experiments_exp_0380_b64_first_hang_localization_decision",
@@ -42301,7 +42301,7 @@
       "node_kind": "heading",
       "norm_label": "decision",
       "source_file": "experiments/EXP-0380-b64-first-hang-localization.md",
-      "source_location": "L112"
+      "source_location": "L118"
     },
     {
       "id": "experiments_exp_0380_b64_first_hang_localization_exact_next_primary",
@@ -42313,7 +42313,7 @@
       "node_kind": "heading",
       "norm_label": "exact next primary",
       "source_file": "experiments/EXP-0380-b64-first-hang-localization.md",
-      "source_location": "L120"
+      "source_location": "L126"
     },
     {
       "id": "experiments_exp_0380_b64_first_hang_localization_exp_0379_evidence",
@@ -42942,7 +42942,7 @@
       "file_type": "code",
       "norm_label": "argmax_token_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2897"
+      "source_location": "L2903"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_attention_layers",
@@ -42953,7 +42953,7 @@
       "file_type": "code",
       "norm_label": "attention_layers_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2883"
+      "source_location": "L2889"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_d_decode_state",
@@ -42964,7 +42964,7 @@
       "file_type": "code",
       "norm_label": "d_decode_state_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2899"
+      "source_location": "L2905"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_d_decode_tokens",
@@ -42975,7 +42975,7 @@
       "file_type": "code",
       "norm_label": "d_decode_tokens_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2898"
+      "source_location": "L2904"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_d_embedding",
@@ -42986,7 +42986,7 @@
       "file_type": "code",
       "norm_label": "d_embedding_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2891"
+      "source_location": "L2897"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_d_final_norm_weight",
@@ -42997,7 +42997,7 @@
       "file_type": "code",
       "norm_label": "d_final_norm_weight_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2889"
+      "source_location": "L2895"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_d_output_weight",
@@ -43008,7 +43008,7 @@
       "file_type": "code",
       "norm_label": "d_output_weight_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2890"
+      "source_location": "L2896"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_decode_graph",
@@ -43019,7 +43019,7 @@
       "file_type": "code",
       "norm_label": "decode_graph_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2922"
+      "source_location": "L2928"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_decode_graph_node_count",
@@ -43030,7 +43030,7 @@
       "file_type": "code",
       "norm_label": "decode_graph_node_count_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2879"
+      "source_location": "L2885"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_dense_prefill",
@@ -43041,7 +43041,7 @@
       "file_type": "code",
       "norm_label": "dense_prefill_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2913"
+      "source_location": "L2919"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_dense_projection_prefill",
@@ -43052,7 +43052,7 @@
       "file_type": "code",
       "norm_label": "dense_projection_prefill_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2914"
+      "source_location": "L2920"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_exp0376_chunk_timing",
@@ -43063,7 +43063,7 @@
       "file_type": "code",
       "norm_label": "exp0376_chunk_timing_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2917"
+      "source_location": "L2923"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_exp0376_chunk_timings",
@@ -43074,7 +43074,7 @@
       "file_type": "code",
       "norm_label": "exp0376_chunk_timings_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2918"
+      "source_location": "L2924"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_final_norm",
@@ -43085,7 +43085,7 @@
       "file_type": "code",
       "norm_label": "final_norm_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2893"
+      "source_location": "L2899"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_final_q8",
@@ -43096,7 +43096,7 @@
       "file_type": "code",
       "norm_label": "final_q8_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2894"
+      "source_location": "L2900"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_final_q8_1",
@@ -43107,7 +43107,7 @@
       "file_type": "code",
       "norm_label": "final_q8_1_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2895"
+      "source_location": "L2901"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_full_layer_major_prefill",
@@ -43118,7 +43118,7 @@
       "file_type": "code",
       "norm_label": "full_layer_major_prefill_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2916"
+      "source_location": "L2922"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_gdn_chunkwise_prefill",
@@ -43129,7 +43129,7 @@
       "file_type": "code",
       "norm_label": "gdn_chunkwise_prefill_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2912"
+      "source_location": "L2918"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_graph_capture_ms",
@@ -43140,7 +43140,7 @@
       "file_type": "code",
       "norm_label": "graph_capture_ms_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2878"
+      "source_location": "L2884"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_input",
@@ -43151,7 +43151,7 @@
       "file_type": "code",
       "norm_label": "input_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2892"
+      "source_location": "L2898"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_layer_major_prefill",
@@ -43162,7 +43162,7 @@
       "file_type": "code",
       "norm_label": "layer_major_prefill_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2911"
+      "source_location": "L2917"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_layers",
@@ -43173,7 +43173,7 @@
       "file_type": "code",
       "norm_label": "layers_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2884"
+      "source_location": "L2890"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_logits",
@@ -43184,7 +43184,7 @@
       "file_type": "code",
       "norm_label": "logits_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2896"
+      "source_location": "L2902"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_m12_dense_gemm",
@@ -43195,7 +43195,7 @@
       "file_type": "code",
       "norm_label": "m12_dense_gemm_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2905"
+      "source_location": "L2911"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_m12_dense_input",
@@ -43206,7 +43206,7 @@
       "file_type": "code",
       "norm_label": "m12_dense_input_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2904"
+      "source_location": "L2910"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_m12_dense_source",
@@ -43217,7 +43217,7 @@
       "file_type": "code",
       "norm_label": "m12_dense_source_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2904"
+      "source_location": "L2910"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_m12_dense_weights",
@@ -43228,7 +43228,7 @@
       "file_type": "code",
       "norm_label": "m12_dense_weights_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2904"
+      "source_location": "L2910"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_m12_gdn_corrected_values",
@@ -43239,7 +43239,7 @@
       "file_type": "code",
       "norm_label": "m12_gdn_corrected_values_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2901"
+      "source_location": "L2907"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_m12_gdn_decayed_keys",
@@ -43250,7 +43250,7 @@
       "file_type": "code",
       "norm_label": "m12_gdn_decayed_keys_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2900"
+      "source_location": "L2906"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_m12_gdn_new_values",
@@ -43261,7 +43261,7 @@
       "file_type": "code",
       "norm_label": "m12_gdn_new_values_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2900"
+      "source_location": "L2906"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_m12_gdn_raw_output",
@@ -43272,7 +43272,7 @@
       "file_type": "code",
       "norm_label": "m12_gdn_raw_output_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2902"
+      "source_location": "L2908"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_m12_gdn_solved_keys",
@@ -43283,7 +43283,7 @@
       "file_type": "code",
       "norm_label": "m12_gdn_solved_keys_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2901"
+      "source_location": "L2907"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_m12_gdn_solved_values",
@@ -43294,7 +43294,7 @@
       "file_type": "code",
       "norm_label": "m12_gdn_solved_values_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2901"
+      "source_location": "L2907"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_m12_gdn_workspace",
@@ -43305,7 +43305,7 @@
       "file_type": "code",
       "norm_label": "m12_gdn_workspace_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2903"
+      "source_location": "L2909"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_model",
@@ -43316,7 +43316,7 @@
       "file_type": "code",
       "norm_label": "model_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2868"
+      "source_location": "L2874"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_output_pointers",
@@ -43327,7 +43327,7 @@
       "file_type": "code",
       "norm_label": "output_pointers_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2887"
+      "source_location": "L2893"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_outputs",
@@ -43338,7 +43338,7 @@
       "file_type": "code",
       "norm_label": "outputs_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2886"
+      "source_location": "L2892"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_prefill_a",
@@ -43349,7 +43349,7 @@
       "file_type": "code",
       "norm_label": "prefill_a_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2906"
+      "source_location": "L2912"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_prefill_b",
@@ -43360,7 +43360,7 @@
       "file_type": "code",
       "norm_label": "prefill_b_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2907"
+      "source_location": "L2913"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_prefill_chunk",
@@ -43371,7 +43371,7 @@
       "file_type": "code",
       "norm_label": "prefill_chunk_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2919"
+      "source_location": "L2925"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_prefill_profile",
@@ -43382,7 +43382,7 @@
       "file_type": "code",
       "norm_label": "prefill_profile_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2920"
+      "source_location": "L2926"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_recurrent_layers",
@@ -43393,7 +43393,7 @@
       "file_type": "code",
       "norm_label": "recurrent_layers_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2882"
+      "source_location": "L2888"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_remainder_scheduler_counters",
@@ -43404,7 +43404,7 @@
       "file_type": "code",
       "norm_label": "remainder_scheduler_counters_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2921"
+      "source_location": "L2927"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_session_checkpoint_bytes",
@@ -43415,7 +43415,7 @@
       "file_type": "code",
       "norm_label": "session_checkpoint_bytes_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2871"
+      "source_location": "L2877"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_session_checkpoints",
@@ -43426,7 +43426,7 @@
       "file_type": "code",
       "norm_label": "session_checkpoints_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2869"
+      "source_location": "L2875"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_session_model_identity",
@@ -43437,7 +43437,7 @@
       "file_type": "code",
       "norm_label": "session_model_identity_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2873"
+      "source_location": "L2879"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_session_prefix_root",
@@ -43448,7 +43448,7 @@
       "file_type": "code",
       "norm_label": "session_prefix_root_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2870"
+      "source_location": "L2876"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_session_quantization_identity",
@@ -43459,7 +43459,7 @@
       "file_type": "code",
       "norm_label": "session_quantization_identity_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2874"
+      "source_location": "L2880"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_session_runtime_identity",
@@ -43470,7 +43470,7 @@
       "file_type": "code",
       "norm_label": "session_runtime_identity_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2875"
+      "source_location": "L2881"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_session_use_clock",
@@ -43481,7 +43481,7 @@
       "file_type": "code",
       "norm_label": "session_use_clock_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2872"
+      "source_location": "L2878"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_tokenizer",
@@ -43492,7 +43492,7 @@
       "file_type": "code",
       "norm_label": "tokenizer_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2880"
+      "source_location": "L2886"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_use_hip_graph",
@@ -43503,7 +43503,7 @@
       "file_type": "code",
       "norm_label": "use_hip_graph_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2910"
+      "source_location": "L2916"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_wide_prefill",
@@ -43514,7 +43514,7 @@
       "file_type": "code",
       "norm_label": "wide_prefill_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2915"
+      "source_location": "L2921"
     },
     {
       "id": "tools_miinfer_cli_qwen35runtimeengine_wide_prefill_workspace",
@@ -43525,7 +43525,7 @@
       "file_type": "code",
       "norm_label": "wide_prefill_workspace_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2908"
+      "source_location": "L2914"
     },
     {
       "id": "experiments_exp_0066_m6a22_qwen35_gpu_hybrid_position_audit",
@@ -67047,7 +67047,7 @@
       "file_type": "code",
       "norm_label": "opt_prefill_checkpoint_",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2877"
+      "source_location": "L2883"
     },
     {
       "id": "tools_miinfer_cli_runtimegenerateoptions_max_new_tokens",
@@ -68854,7 +68854,7 @@
       "file_type": "code",
       "norm_label": "reason",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3733"
+      "source_location": "L3739"
     },
     {
       "id": "tools_miinfer_cli_httpreadresult_request",
@@ -68865,7 +68865,7 @@
       "file_type": "code",
       "norm_label": "request",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3731"
+      "source_location": "L3737"
     },
     {
       "id": "tools_miinfer_cli_httpreadresult_status",
@@ -68876,7 +68876,7 @@
       "file_type": "code",
       "norm_label": "status",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3732"
+      "source_location": "L3738"
     },
     {
       "id": "tools_miinfer_cli_presetflag_name",
@@ -73270,7 +73270,7 @@
       "file_type": "code",
       "norm_label": "decode_d2h_bytes",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1802"
+      "source_location": "L1808"
     },
     {
       "id": "tools_miinfer_cli_m26cdecoderesult_decode_h2d_bytes",
@@ -73281,7 +73281,7 @@
       "file_type": "code",
       "norm_label": "decode_h2d_bytes",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1801"
+      "source_location": "L1807"
     },
     {
       "id": "tools_miinfer_cli_m26cdecoderesult_decode_ms",
@@ -73292,7 +73292,7 @@
       "file_type": "code",
       "norm_label": "decode_ms",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1790"
+      "source_location": "L1796"
     },
     {
       "id": "tools_miinfer_cli_m26cdecoderesult_direct_blocking_sync_ms",
@@ -73303,7 +73303,7 @@
       "file_type": "code",
       "norm_label": "direct_blocking_sync_ms",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1794"
+      "source_location": "L1800"
     },
     {
       "id": "tools_miinfer_cli_m26cdecoderesult_direct_d2h_device_ms",
@@ -73314,7 +73314,7 @@
       "file_type": "code",
       "norm_label": "direct_d2h_device_ms",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1793"
+      "source_location": "L1799"
     },
     {
       "id": "tools_miinfer_cli_m26cdecoderesult_direct_h2d_device_ms",
@@ -73325,7 +73325,7 @@
       "file_type": "code",
       "norm_label": "direct_h2d_device_ms",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1792"
+      "source_location": "L1798"
     },
     {
       "id": "tools_miinfer_cli_m26cdecoderesult_direct_sync_calls",
@@ -73336,7 +73336,7 @@
       "file_type": "code",
       "norm_label": "direct_sync_calls",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1795"
+      "source_location": "L1801"
     },
     {
       "id": "tools_miinfer_cli_m26cdecoderesult_graph_bulk_copy_wait_ms",
@@ -73347,7 +73347,7 @@
       "file_type": "code",
       "norm_label": "graph_bulk_copy_wait_ms",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1798"
+      "source_location": "L1804"
     },
     {
       "id": "tools_miinfer_cli_m26cdecoderesult_graph_capture_ms",
@@ -73358,7 +73358,7 @@
       "file_type": "code",
       "norm_label": "graph_capture_ms",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1789"
+      "source_location": "L1795"
     },
     {
       "id": "tools_miinfer_cli_m26cdecoderesult_graph_nodes",
@@ -73369,7 +73369,7 @@
       "file_type": "code",
       "norm_label": "graph_nodes",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1799"
+      "source_location": "L1805"
     },
     {
       "id": "tools_miinfer_cli_m26cdecoderesult_graph_replay_enqueue_ms",
@@ -73380,7 +73380,7 @@
       "file_type": "code",
       "norm_label": "graph_replay_enqueue_ms",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1797"
+      "source_location": "L1803"
     },
     {
       "id": "tools_miinfer_cli_m26cdecoderesult_graph_state_sync_ms",
@@ -73391,7 +73391,7 @@
       "file_type": "code",
       "norm_label": "graph_state_sync_ms",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1796"
+      "source_location": "L1802"
     },
     {
       "id": "tools_miinfer_cli_m26cdecoderesult_restore_h2d_bytes",
@@ -73402,7 +73402,7 @@
       "file_type": "code",
       "norm_label": "restore_h2d_bytes",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1800"
+      "source_location": "L1806"
     },
     {
       "id": "tools_miinfer_cli_m26cdecoderesult_restore_ms",
@@ -73413,7 +73413,7 @@
       "file_type": "code",
       "norm_label": "restore_ms",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1788"
+      "source_location": "L1794"
     },
     {
       "id": "tools_miinfer_cli_m26cdecoderesult_tokens",
@@ -73424,7 +73424,7 @@
       "file_type": "code",
       "norm_label": "tokens",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1787"
+      "source_location": "L1793"
     },
     {
       "id": "tools_miinfer_cli_m26cdecoderesult_total_ms",
@@ -73435,7 +73435,7 @@
       "file_type": "code",
       "norm_label": "total_ms",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1791"
+      "source_location": "L1797"
     },
     {
       "id": "experiments_exp_0212_m11b_batched8_accumulator_gemv",
@@ -88726,7 +88726,7 @@
       "file_type": "code",
       "norm_label": "client_fd",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3722"
+      "source_location": "L3728"
     },
     {
       "id": "tools_miinfer_cli_httprequest_method",
@@ -88737,7 +88737,7 @@
       "file_type": "code",
       "norm_label": "method",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3724"
+      "source_location": "L3730"
     },
     {
       "id": "tools_miinfer_cli_httprequest_path",
@@ -88748,7 +88748,7 @@
       "file_type": "code",
       "norm_label": "path",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3725"
+      "source_location": "L3731"
     },
     {
       "id": "tools_miinfer_cli_httprequest_queued_at",
@@ -88759,7 +88759,7 @@
       "file_type": "code",
       "norm_label": "queued_at",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3727"
+      "source_location": "L3733"
     },
     {
       "id": "tools_miinfer_cli_httprequest_raw",
@@ -88770,7 +88770,7 @@
       "file_type": "code",
       "norm_label": "raw",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3726"
+      "source_location": "L3732"
     },
     {
       "id": "tools_miinfer_cli_httprequest_request_id",
@@ -88781,7 +88781,7 @@
       "file_type": "code",
       "norm_label": "request_id",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3723"
+      "source_location": "L3729"
     },
     {
       "id": "tests_qwen3_generate",
@@ -112609,7 +112609,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3707",
+      "source_location": "L3713",
       "weight": 1.0
     },
     {
@@ -112621,7 +112621,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3089",
+      "source_location": "L3095",
       "weight": 1.0
     },
     {
@@ -112633,7 +112633,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3101",
+      "source_location": "L3107",
       "weight": 1.0
     },
     {
@@ -112645,7 +112645,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3051",
+      "source_location": "L3057",
       "weight": 1.0
     },
     {
@@ -112657,7 +112657,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3059",
+      "source_location": "L3065",
       "weight": 1.0
     },
     {
@@ -112669,7 +112669,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3267",
+      "source_location": "L3273",
       "weight": 1.0
     },
     {
@@ -112681,7 +112681,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3302",
+      "source_location": "L3308",
       "weight": 1.0
     },
     {
@@ -112693,7 +112693,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3304",
+      "source_location": "L3310",
       "weight": 1.0
     },
     {
@@ -112705,7 +112705,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3339",
+      "source_location": "L3345",
       "weight": 1.0
     },
     {
@@ -112717,7 +112717,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3389",
+      "source_location": "L3395",
       "weight": 1.0
     },
     {
@@ -112729,7 +112729,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3401",
+      "source_location": "L3407",
       "weight": 1.0
     },
     {
@@ -112741,7 +112741,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3503",
+      "source_location": "L3509",
       "weight": 1.0
     },
     {
@@ -112753,7 +112753,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3627",
+      "source_location": "L3633",
       "weight": 1.0
     },
     {
@@ -112765,7 +112765,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3917",
+      "source_location": "L3923",
       "weight": 1.0
     },
     {
@@ -112777,7 +112777,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3952",
+      "source_location": "L3958",
       "weight": 1.0
     },
     {
@@ -112789,7 +112789,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3964",
+      "source_location": "L3970",
       "weight": 1.0
     },
     {
@@ -112801,7 +112801,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3982",
+      "source_location": "L3988",
       "weight": 1.0
     },
     {
@@ -112813,7 +112813,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L4046",
+      "source_location": "L4052",
       "weight": 1.0
     },
     {
@@ -112825,7 +112825,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L4058",
+      "source_location": "L4064",
       "weight": 1.0
     },
     {
@@ -112837,7 +112837,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L4061",
+      "source_location": "L4067",
       "weight": 1.0
     },
     {
@@ -112849,7 +112849,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L4129",
+      "source_location": "L4135",
       "weight": 1.0
     },
     {
@@ -112861,7 +112861,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L4143",
+      "source_location": "L4149",
       "weight": 1.0
     },
     {
@@ -112873,7 +112873,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L4151",
+      "source_location": "L4157",
       "weight": 1.0
     },
     {
@@ -112885,7 +112885,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L4241",
+      "source_location": "L4247",
       "weight": 1.0
     },
     {
@@ -112897,7 +112897,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L4269",
+      "source_location": "L4275",
       "weight": 1.0
     },
     {
@@ -112909,7 +112909,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L4316",
+      "source_location": "L4322",
       "weight": 1.0
     },
     {
@@ -112921,7 +112921,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L4344",
+      "source_location": "L4350",
       "weight": 1.0
     },
     {
@@ -112933,7 +112933,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L4346",
+      "source_location": "L4352",
       "weight": 1.0
     },
     {
@@ -112945,7 +112945,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3787",
+      "source_location": "L3793",
       "weight": 1.0
     },
     {
@@ -112957,7 +112957,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3796",
+      "source_location": "L3802",
       "weight": 1.0
     },
     {
@@ -112969,7 +112969,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L4505",
+      "source_location": "L4511",
       "weight": 1.0
     },
     {
@@ -112981,7 +112981,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L4510",
+      "source_location": "L4516",
       "weight": 1.0
     },
     {
@@ -112993,7 +112993,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L4512",
+      "source_location": "L4518",
       "weight": 1.0
     },
     {
@@ -113005,7 +113005,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L4514",
+      "source_location": "L4520",
       "weight": 1.0
     },
     {
@@ -113017,7 +113017,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L4516",
+      "source_location": "L4522",
       "weight": 1.0
     },
     {
@@ -113029,7 +113029,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L4518",
+      "source_location": "L4524",
       "weight": 1.0
     },
     {
@@ -113041,7 +113041,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L4520",
+      "source_location": "L4526",
       "weight": 1.0
     },
     {
@@ -113053,7 +113053,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L4522",
+      "source_location": "L4528",
       "weight": 1.0
     },
     {
@@ -113065,7 +113065,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L4524",
+      "source_location": "L4530",
       "weight": 1.0
     },
     {
@@ -113149,7 +113149,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1956",
+      "source_location": "L1962",
       "weight": 1.0
     },
     {
@@ -113161,7 +113161,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1994",
+      "source_location": "L2000",
       "weight": 1.0
     },
     {
@@ -113173,7 +113173,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2085",
+      "source_location": "L2091",
       "weight": 1.0
     },
     {
@@ -113185,7 +113185,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2087",
+      "source_location": "L2093",
       "weight": 1.0
     },
     {
@@ -113197,7 +113197,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2098",
+      "source_location": "L2104",
       "weight": 1.0
     },
     {
@@ -113209,7 +113209,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2133",
+      "source_location": "L2139",
       "weight": 1.0
     },
     {
@@ -113221,7 +113221,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2136",
+      "source_location": "L2142",
       "weight": 1.0
     },
     {
@@ -113233,7 +113233,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2189",
+      "source_location": "L2195",
       "weight": 1.0
     },
     {
@@ -113245,7 +113245,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2278",
+      "source_location": "L2284",
       "weight": 1.0
     },
     {
@@ -113257,7 +113257,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2857",
+      "source_location": "L2863",
       "weight": 1.0
     },
     {
@@ -113281,7 +113281,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1685",
+      "source_location": "L1691",
       "weight": 1.0
     },
     {
@@ -113293,7 +113293,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1692",
+      "source_location": "L1698",
       "weight": 1.0
     },
     {
@@ -113305,7 +113305,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1694",
+      "source_location": "L1700",
       "weight": 1.0
     },
     {
@@ -113317,7 +113317,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1700",
+      "source_location": "L1706",
       "weight": 1.0
     },
     {
@@ -113329,7 +113329,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1703",
+      "source_location": "L1709",
       "weight": 1.0
     },
     {
@@ -113341,7 +113341,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1706",
+      "source_location": "L1712",
       "weight": 1.0
     },
     {
@@ -113353,7 +113353,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1709",
+      "source_location": "L1715",
       "weight": 1.0
     },
     {
@@ -113365,7 +113365,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1715",
+      "source_location": "L1721",
       "weight": 1.0
     },
     {
@@ -113377,7 +113377,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1721",
+      "source_location": "L1727",
       "weight": 1.0
     },
     {
@@ -113389,7 +113389,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1727",
+      "source_location": "L1733",
       "weight": 1.0
     },
     {
@@ -113401,7 +113401,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2364",
+      "source_location": "L2370",
       "weight": 1.0
     },
     {
@@ -113413,36 +113413,12 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2371",
+      "source_location": "L2377",
       "weight": 1.0
     },
     {
       "source": "tools_miinfer_cli_qwen35runtimeengine_generate_fresh",
       "target": "tools_miinfer_cli_runtimegenerateoptions_should_cancel",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2376",
-      "weight": 1.0
-    },
-    {
-      "source": "tools_miinfer_cli_qwen35runtimeengine_generate_fresh",
-      "target": "tools_miinfer_cli_exp0376chunktiming_count",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2378",
-      "weight": 1.0
-    },
-    {
-      "source": "tools_miinfer_cli_qwen35runtimeengine_generate_fresh",
-      "target": "tools_miinfer_cli_qwen35runtimeengine_prefill_step",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -113454,6 +113430,30 @@
     },
     {
       "source": "tools_miinfer_cli_qwen35runtimeengine_generate_fresh",
+      "target": "tools_miinfer_cli_exp0376chunktiming_count",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "tools/miinfer_cli.cpp",
+      "source_location": "L2384",
+      "weight": 1.0
+    },
+    {
+      "source": "tools_miinfer_cli_qwen35runtimeengine_generate_fresh",
+      "target": "tools_miinfer_cli_qwen35runtimeengine_prefill_step",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "tools/miinfer_cli.cpp",
+      "source_location": "L2388",
+      "weight": 1.0
+    },
+    {
+      "source": "tools_miinfer_cli_qwen35runtimeengine_generate_fresh",
       "target": "tools_miinfer_cli_runtimegenerateoptions_on_prefill_complete",
       "relation": "calls",
       "_origin": "ast",
@@ -113461,7 +113461,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2393",
+      "source_location": "L2399",
       "weight": 1.0
     },
     {
@@ -113473,7 +113473,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2402",
+      "source_location": "L2408",
       "weight": 1.0
     },
     {
@@ -113485,7 +113485,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2403",
+      "source_location": "L2409",
       "weight": 1.0
     },
     {
@@ -113497,7 +113497,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2421",
+      "source_location": "L2427",
       "weight": 1.0
     },
     {
@@ -113509,7 +113509,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2441",
+      "source_location": "L2447",
       "weight": 1.0
     },
     {
@@ -113521,7 +113521,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2459",
+      "source_location": "L2465",
       "weight": 1.0
     },
     {
@@ -113533,7 +113533,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1567",
+      "source_location": "L1573",
       "weight": 1.0
     },
     {
@@ -113545,7 +113545,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1571",
+      "source_location": "L1577",
       "weight": 1.0
     },
     {
@@ -113557,7 +113557,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1581",
+      "source_location": "L1587",
       "weight": 1.0
     },
     {
@@ -113569,7 +113569,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1593",
+      "source_location": "L1599",
       "weight": 1.0
     },
     {
@@ -113581,7 +113581,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1594",
+      "source_location": "L1600",
       "weight": 1.0
     },
     {
@@ -113593,7 +113593,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1602",
+      "source_location": "L1608",
       "weight": 1.0
     },
     {
@@ -113605,7 +113605,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1606",
+      "source_location": "L1612",
       "weight": 1.0
     },
     {
@@ -113617,7 +113617,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1613",
+      "source_location": "L1619",
       "weight": 1.0
     },
     {
@@ -113629,7 +113629,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1622",
+      "source_location": "L1628",
       "weight": 1.0
     },
     {
@@ -113641,7 +113641,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1626",
+      "source_location": "L1632",
       "weight": 1.0
     },
     {
@@ -113653,7 +113653,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1655",
+      "source_location": "L1661",
       "weight": 1.0
     },
     {
@@ -113665,7 +113665,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1656",
+      "source_location": "L1662",
       "weight": 1.0
     },
     {
@@ -113677,7 +113677,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2782",
+      "source_location": "L2788",
       "weight": 1.0
     },
     {
@@ -113749,7 +113749,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1778",
+      "source_location": "L1784",
       "weight": 1.0
     },
     {
@@ -113761,7 +113761,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1779",
+      "source_location": "L1785",
       "weight": 1.0
     },
     {
@@ -113773,7 +113773,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1781",
+      "source_location": "L1787",
       "weight": 1.0
     },
     {
@@ -113785,7 +113785,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1782",
+      "source_location": "L1788",
       "weight": 1.0
     },
     {
@@ -113989,7 +113989,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2480",
+      "source_location": "L2486",
       "weight": 1.0
     },
     {
@@ -114001,7 +114001,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2484",
+      "source_location": "L2490",
       "weight": 1.0
     },
     {
@@ -114013,7 +114013,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1847",
+      "source_location": "L1853",
       "weight": 1.0
     },
     {
@@ -114025,7 +114025,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1879",
+      "source_location": "L1885",
       "weight": 1.0
     },
     {
@@ -114037,7 +114037,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1881",
+      "source_location": "L1887",
       "weight": 1.0
     },
     {
@@ -114049,7 +114049,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3806",
+      "source_location": "L3812",
       "weight": 1.0
     },
     {
@@ -114061,7 +114061,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3819",
+      "source_location": "L3825",
       "weight": 1.0
     },
     {
@@ -114073,7 +114073,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3845",
+      "source_location": "L3851",
       "weight": 1.0
     },
     {
@@ -114085,7 +114085,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3886",
+      "source_location": "L3892",
       "weight": 1.0
     },
     {
@@ -114097,7 +114097,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3887",
+      "source_location": "L3893",
       "weight": 1.0
     },
     {
@@ -114109,7 +114109,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3889",
+      "source_location": "L3895",
       "weight": 1.0
     },
     {
@@ -114121,7 +114121,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3765",
+      "source_location": "L3771",
       "weight": 1.0
     },
     {
@@ -114133,7 +114133,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3768",
+      "source_location": "L3774",
       "weight": 1.0
     },
     {
@@ -114145,7 +114145,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3783",
+      "source_location": "L3789",
       "weight": 1.0
     },
     {
@@ -114697,7 +114697,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4928",
+      "source_location": "L4929",
       "weight": 1.0
     },
     {
@@ -114709,7 +114709,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4936",
+      "source_location": "L4937",
       "weight": 1.0
     },
     {
@@ -114721,7 +114721,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4940",
+      "source_location": "L4941",
       "weight": 1.0
     },
     {
@@ -114733,7 +114733,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4831",
+      "source_location": "L4832",
       "weight": 1.0
     },
     {
@@ -114745,7 +114745,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4835",
+      "source_location": "L4836",
       "weight": 1.0
     },
     {
@@ -114769,7 +114769,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4651",
+      "source_location": "L4652",
       "weight": 1.0
     },
     {
@@ -114781,7 +114781,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4651",
+      "source_location": "L4652",
       "weight": 1.0
     },
     {
@@ -114793,7 +114793,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4653",
+      "source_location": "L4654",
       "weight": 1.0
     },
     {
@@ -114805,7 +114805,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4664",
+      "source_location": "L4665",
       "weight": 1.0
     },
     {
@@ -114817,7 +114817,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4710",
+      "source_location": "L4711",
       "weight": 1.0
     },
     {
@@ -114829,7 +114829,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4712",
+      "source_location": "L4713",
       "weight": 1.0
     },
     {
@@ -115285,7 +115285,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4958",
+      "source_location": "L4959",
       "weight": 1.0
     },
     {
@@ -115297,7 +115297,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4961",
+      "source_location": "L4962",
       "weight": 1.0
     },
     {
@@ -115309,7 +115309,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4966",
+      "source_location": "L4967",
       "weight": 1.0
     },
     {
@@ -115321,7 +115321,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5005",
+      "source_location": "L5006",
       "weight": 1.0
     },
     {
@@ -115333,7 +115333,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5123",
+      "source_location": "L5124",
       "weight": 1.0
     },
     {
@@ -115345,7 +115345,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5243",
+      "source_location": "L5244",
       "weight": 1.0
     },
     {
@@ -115357,7 +115357,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5377",
+      "source_location": "L5378",
       "weight": 1.0
     },
     {
@@ -115369,7 +115369,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5437",
+      "source_location": "L5438",
       "weight": 1.0
     },
     {
@@ -115381,7 +115381,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5442",
+      "source_location": "L5443",
       "weight": 1.0
     },
     {
@@ -115393,7 +115393,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5448",
+      "source_location": "L5449",
       "weight": 1.0
     },
     {
@@ -115405,7 +115405,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5453",
+      "source_location": "L5454",
       "weight": 1.0
     },
     {
@@ -115417,7 +115417,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5505",
+      "source_location": "L5506",
       "weight": 1.0
     },
     {
@@ -115429,7 +115429,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5599",
+      "source_location": "L5600",
       "weight": 1.0
     },
     {
@@ -115441,7 +115441,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5601",
+      "source_location": "L5602",
       "weight": 1.0
     },
     {
@@ -115453,7 +115453,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5511",
+      "source_location": "L5512",
       "weight": 1.0
     },
     {
@@ -115465,7 +115465,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5542",
+      "source_location": "L5543",
       "weight": 1.0
     },
     {
@@ -115477,7 +115477,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5544",
+      "source_location": "L5545",
       "weight": 1.0
     },
     {
@@ -115489,7 +115489,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5517",
+      "source_location": "L5518",
       "weight": 1.0
     },
     {
@@ -117181,7 +117181,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5710",
+      "source_location": "L5711",
       "weight": 1.0
     },
     {
@@ -117193,7 +117193,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5717",
+      "source_location": "L5718",
       "weight": 1.0
     },
     {
@@ -117205,7 +117205,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5717",
+      "source_location": "L5718",
       "weight": 1.0
     },
     {
@@ -117217,7 +117217,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5729",
+      "source_location": "L5730",
       "weight": 1.0
     },
     {
@@ -117241,7 +117241,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5494",
+      "source_location": "L5495",
       "weight": 1.0
     },
     {
@@ -117253,7 +117253,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5665",
+      "source_location": "L5666",
       "weight": 1.0
     },
     {
@@ -117265,7 +117265,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5667",
+      "source_location": "L5668",
       "weight": 1.0
     },
     {
@@ -117277,7 +117277,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5668",
+      "source_location": "L5669",
       "weight": 1.0
     },
     {
@@ -117289,7 +117289,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5669",
+      "source_location": "L5670",
       "weight": 1.0
     },
     {
@@ -117301,7 +117301,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5676",
+      "source_location": "L5677",
       "weight": 1.0
     },
     {
@@ -117313,7 +117313,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5678",
+      "source_location": "L5679",
       "weight": 1.0
     },
     {
@@ -117325,7 +117325,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5680",
+      "source_location": "L5681",
       "weight": 1.0
     },
     {
@@ -117337,7 +117337,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5686",
+      "source_location": "L5687",
       "weight": 1.0
     },
     {
@@ -125521,7 +125521,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3731",
+      "source_location": "L3737",
       "weight": 1.0
     },
     {
@@ -125533,7 +125533,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3732",
+      "source_location": "L3738",
       "weight": 1.0
     },
     {
@@ -125545,7 +125545,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3733",
+      "source_location": "L3739",
       "weight": 1.0
     },
     {
@@ -125557,7 +125557,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3722",
+      "source_location": "L3728",
       "weight": 1.0
     },
     {
@@ -125569,7 +125569,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3723",
+      "source_location": "L3729",
       "weight": 1.0
     },
     {
@@ -125581,7 +125581,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3724",
+      "source_location": "L3730",
       "weight": 1.0
     },
     {
@@ -125593,7 +125593,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3725",
+      "source_location": "L3731",
       "weight": 1.0
     },
     {
@@ -125605,7 +125605,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3726",
+      "source_location": "L3732",
       "weight": 1.0
     },
     {
@@ -125617,7 +125617,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3727",
+      "source_location": "L3733",
       "weight": 1.0
     },
     {
@@ -125629,7 +125629,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1787",
+      "source_location": "L1793",
       "weight": 1.0
     },
     {
@@ -125641,7 +125641,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1788",
+      "source_location": "L1794",
       "weight": 1.0
     },
     {
@@ -125653,7 +125653,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1789",
+      "source_location": "L1795",
       "weight": 1.0
     },
     {
@@ -125665,7 +125665,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1790",
+      "source_location": "L1796",
       "weight": 1.0
     },
     {
@@ -125677,7 +125677,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1791",
+      "source_location": "L1797",
       "weight": 1.0
     },
     {
@@ -125689,7 +125689,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1792",
+      "source_location": "L1798",
       "weight": 1.0
     },
     {
@@ -125701,7 +125701,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1793",
+      "source_location": "L1799",
       "weight": 1.0
     },
     {
@@ -125713,7 +125713,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1794",
+      "source_location": "L1800",
       "weight": 1.0
     },
     {
@@ -125725,7 +125725,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1795",
+      "source_location": "L1801",
       "weight": 1.0
     },
     {
@@ -125737,7 +125737,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1796",
+      "source_location": "L1802",
       "weight": 1.0
     },
     {
@@ -125749,7 +125749,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1797",
+      "source_location": "L1803",
       "weight": 1.0
     },
     {
@@ -125761,7 +125761,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1798",
+      "source_location": "L1804",
       "weight": 1.0
     },
     {
@@ -125773,7 +125773,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1799",
+      "source_location": "L1805",
       "weight": 1.0
     },
     {
@@ -125785,7 +125785,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1800",
+      "source_location": "L1806",
       "weight": 1.0
     },
     {
@@ -125797,7 +125797,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1801",
+      "source_location": "L1807",
       "weight": 1.0
     },
     {
@@ -125809,7 +125809,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1802",
+      "source_location": "L1808",
       "weight": 1.0
     },
     {
@@ -126049,7 +126049,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2868",
+      "source_location": "L2874",
       "weight": 1.0
     },
     {
@@ -126061,7 +126061,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2869",
+      "source_location": "L2875",
       "weight": 1.0
     },
     {
@@ -126073,7 +126073,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2870",
+      "source_location": "L2876",
       "weight": 1.0
     },
     {
@@ -126085,7 +126085,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2871",
+      "source_location": "L2877",
       "weight": 1.0
     },
     {
@@ -126097,7 +126097,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2872",
+      "source_location": "L2878",
       "weight": 1.0
     },
     {
@@ -126109,7 +126109,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2873",
+      "source_location": "L2879",
       "weight": 1.0
     },
     {
@@ -126121,7 +126121,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2874",
+      "source_location": "L2880",
       "weight": 1.0
     },
     {
@@ -126133,7 +126133,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2875",
+      "source_location": "L2881",
       "weight": 1.0
     },
     {
@@ -126145,7 +126145,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2877",
+      "source_location": "L2883",
       "weight": 1.0
     },
     {
@@ -126157,7 +126157,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2878",
+      "source_location": "L2884",
       "weight": 1.0
     },
     {
@@ -126169,7 +126169,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2879",
+      "source_location": "L2885",
       "weight": 1.0
     },
     {
@@ -126181,7 +126181,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2880",
+      "source_location": "L2886",
       "weight": 1.0
     },
     {
@@ -126193,7 +126193,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2882",
+      "source_location": "L2888",
       "weight": 1.0
     },
     {
@@ -126205,7 +126205,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2883",
+      "source_location": "L2889",
       "weight": 1.0
     },
     {
@@ -126217,7 +126217,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2884",
+      "source_location": "L2890",
       "weight": 1.0
     },
     {
@@ -126229,7 +126229,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2886",
+      "source_location": "L2892",
       "weight": 1.0
     },
     {
@@ -126241,7 +126241,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2887",
+      "source_location": "L2893",
       "weight": 1.0
     },
     {
@@ -126253,7 +126253,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2889",
+      "source_location": "L2895",
       "weight": 1.0
     },
     {
@@ -126265,7 +126265,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2890",
+      "source_location": "L2896",
       "weight": 1.0
     },
     {
@@ -126277,7 +126277,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2891",
+      "source_location": "L2897",
       "weight": 1.0
     },
     {
@@ -126289,7 +126289,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2892",
+      "source_location": "L2898",
       "weight": 1.0
     },
     {
@@ -126301,7 +126301,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2893",
+      "source_location": "L2899",
       "weight": 1.0
     },
     {
@@ -126313,7 +126313,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2894",
+      "source_location": "L2900",
       "weight": 1.0
     },
     {
@@ -126325,7 +126325,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2895",
+      "source_location": "L2901",
       "weight": 1.0
     },
     {
@@ -126337,7 +126337,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2896",
+      "source_location": "L2902",
       "weight": 1.0
     },
     {
@@ -126349,7 +126349,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2897",
+      "source_location": "L2903",
       "weight": 1.0
     },
     {
@@ -126361,7 +126361,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2898",
+      "source_location": "L2904",
       "weight": 1.0
     },
     {
@@ -126373,7 +126373,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2899",
+      "source_location": "L2905",
       "weight": 1.0
     },
     {
@@ -126385,7 +126385,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2900",
+      "source_location": "L2906",
       "weight": 1.0
     },
     {
@@ -126397,7 +126397,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2900",
+      "source_location": "L2906",
       "weight": 1.0
     },
     {
@@ -126409,7 +126409,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2901",
+      "source_location": "L2907",
       "weight": 1.0
     },
     {
@@ -126421,7 +126421,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2901",
+      "source_location": "L2907",
       "weight": 1.0
     },
     {
@@ -126433,7 +126433,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2901",
+      "source_location": "L2907",
       "weight": 1.0
     },
     {
@@ -126445,7 +126445,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2902",
+      "source_location": "L2908",
       "weight": 1.0
     },
     {
@@ -126457,7 +126457,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2903",
+      "source_location": "L2909",
       "weight": 1.0
     },
     {
@@ -126469,7 +126469,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2904",
+      "source_location": "L2910",
       "weight": 1.0
     },
     {
@@ -126481,7 +126481,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2904",
+      "source_location": "L2910",
       "weight": 1.0
     },
     {
@@ -126493,7 +126493,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2904",
+      "source_location": "L2910",
       "weight": 1.0
     },
     {
@@ -126505,7 +126505,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2905",
+      "source_location": "L2911",
       "weight": 1.0
     },
     {
@@ -126517,7 +126517,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2906",
+      "source_location": "L2912",
       "weight": 1.0
     },
     {
@@ -126529,7 +126529,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2907",
+      "source_location": "L2913",
       "weight": 1.0
     },
     {
@@ -126541,7 +126541,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2908",
+      "source_location": "L2914",
       "weight": 1.0
     },
     {
@@ -126553,7 +126553,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2910",
+      "source_location": "L2916",
       "weight": 1.0
     },
     {
@@ -126565,7 +126565,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2911",
+      "source_location": "L2917",
       "weight": 1.0
     },
     {
@@ -126577,7 +126577,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2912",
+      "source_location": "L2918",
       "weight": 1.0
     },
     {
@@ -126589,7 +126589,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2913",
+      "source_location": "L2919",
       "weight": 1.0
     },
     {
@@ -126601,7 +126601,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2914",
+      "source_location": "L2920",
       "weight": 1.0
     },
     {
@@ -126613,7 +126613,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2915",
+      "source_location": "L2921",
       "weight": 1.0
     },
     {
@@ -126625,7 +126625,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2916",
+      "source_location": "L2922",
       "weight": 1.0
     },
     {
@@ -126637,7 +126637,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2917",
+      "source_location": "L2923",
       "weight": 1.0
     },
     {
@@ -126649,7 +126649,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2918",
+      "source_location": "L2924",
       "weight": 1.0
     },
     {
@@ -126661,7 +126661,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2919",
+      "source_location": "L2925",
       "weight": 1.0
     },
     {
@@ -126673,7 +126673,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2920",
+      "source_location": "L2926",
       "weight": 1.0
     },
     {
@@ -126685,7 +126685,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2921",
+      "source_location": "L2927",
       "weight": 1.0
     },
     {
@@ -126697,7 +126697,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2922",
+      "source_location": "L2928",
       "weight": 1.0
     },
     {
@@ -129217,7 +129217,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5501",
+      "source_location": "L5502",
       "weight": 1.0
     },
     {
@@ -129229,7 +129229,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5502",
+      "source_location": "L5503",
       "weight": 1.0
     },
     {
@@ -132985,7 +132985,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1940",
+      "source_location": "L1946",
       "weight": 1.0
     },
     {
@@ -135817,7 +135817,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3731",
+      "source_location": "L3737",
       "weight": 1.0
     },
     {
@@ -135829,7 +135829,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3733",
+      "source_location": "L3739",
       "weight": 1.0
     },
     {
@@ -135841,7 +135841,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3723",
+      "source_location": "L3729",
       "weight": 1.0
     },
     {
@@ -135853,7 +135853,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3726",
+      "source_location": "L3732",
       "weight": 1.0
     },
     {
@@ -135865,7 +135865,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3727",
+      "source_location": "L3733",
       "weight": 1.0
     },
     {
@@ -135877,7 +135877,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1787",
+      "source_location": "L1793",
       "weight": 1.0
     },
     {
@@ -135889,7 +135889,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1802",
+      "source_location": "L1808",
       "weight": 1.0
     },
     {
@@ -135949,7 +135949,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2868",
+      "source_location": "L2874",
       "weight": 1.0
     },
     {
@@ -135961,7 +135961,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2876",
+      "source_location": "L2882",
       "weight": 1.0
     },
     {
@@ -135973,7 +135973,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2877",
+      "source_location": "L2883",
       "weight": 1.0
     },
     {
@@ -135985,7 +135985,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2880",
+      "source_location": "L2886",
       "weight": 1.0
     },
     {
@@ -135997,7 +135997,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2887",
+      "source_location": "L2893",
       "weight": 1.0
     },
     {
@@ -136009,7 +136009,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2903",
+      "source_location": "L2909",
       "weight": 1.0
     },
     {
@@ -136021,7 +136021,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2905",
+      "source_location": "L2911",
       "weight": 1.0
     },
     {
@@ -136033,7 +136033,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2907",
+      "source_location": "L2913",
       "weight": 1.0
     },
     {
@@ -136045,7 +136045,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2908",
+      "source_location": "L2914",
       "weight": 1.0
     },
     {
@@ -136057,7 +136057,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2918",
+      "source_location": "L2924",
       "weight": 1.0
     },
     {
@@ -136069,7 +136069,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2919",
+      "source_location": "L2925",
       "weight": 1.0
     },
     {
@@ -136081,7 +136081,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2922",
+      "source_location": "L2928",
       "weight": 1.0
     },
     {
@@ -136453,7 +136453,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5501",
+      "source_location": "L5502",
       "weight": 1.0
     },
     {
@@ -136465,7 +136465,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5502",
+      "source_location": "L5503",
       "weight": 1.0
     },
     {
@@ -138805,7 +138805,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3786",
+      "source_location": "L3792",
       "weight": 1.0
     },
     {
@@ -138817,7 +138817,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3731",
+      "source_location": "L3737",
       "weight": 1.0
     },
     {
@@ -138829,7 +138829,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1787",
+      "source_location": "L1793",
       "weight": 1.0
     },
     {
@@ -138865,7 +138865,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2882",
+      "source_location": "L2888",
       "weight": 1.0
     },
     {
@@ -138877,7 +138877,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2883",
+      "source_location": "L2889",
       "weight": 1.0
     },
     {
@@ -138889,7 +138889,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2883",
+      "source_location": "L2889",
       "weight": 1.0
     },
     {
@@ -138901,7 +138901,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2884",
+      "source_location": "L2890",
       "weight": 1.0
     },
     {
@@ -138937,7 +138937,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1681",
+      "source_location": "L1687",
       "weight": 1.0
     },
     {
@@ -138949,7 +138949,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2363",
+      "source_location": "L2369",
       "weight": 1.0
     },
     {
@@ -138961,7 +138961,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1549",
+      "source_location": "L1555",
       "weight": 1.0
     },
     {
@@ -139021,7 +139021,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1773",
+      "source_location": "L1779",
       "weight": 1.0
     },
     {
@@ -139033,7 +139033,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1741",
+      "source_location": "L1747",
       "weight": 1.0
     },
     {
@@ -139057,7 +139057,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2474",
+      "source_location": "L2480",
       "weight": 1.0
     },
     {
@@ -139297,7 +139297,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5651",
+      "source_location": "L5652",
       "weight": 1.0
     },
     {
@@ -155017,7 +155017,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3892",
+      "source_location": "L3898",
       "weight": 1.0
     },
     {
@@ -155029,7 +155029,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3786",
+      "source_location": "L3792",
       "weight": 1.0
     },
     {
@@ -155053,7 +155053,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3771",
+      "source_location": "L3777",
       "weight": 1.0
     },
     {
@@ -155173,7 +155173,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1945",
+      "source_location": "L1951",
       "weight": 1.0
     },
     {
@@ -155185,7 +155185,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1945",
+      "source_location": "L1951",
       "weight": 1.0
     },
     {
@@ -155197,7 +155197,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2795",
+      "source_location": "L2801",
       "weight": 1.0
     },
     {
@@ -155209,7 +155209,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1681",
+      "source_location": "L1687",
       "weight": 1.0
     },
     {
@@ -155221,7 +155221,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2363",
+      "source_location": "L2369",
       "weight": 1.0
     },
     {
@@ -155233,7 +155233,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2363",
+      "source_location": "L2369",
       "weight": 1.0
     },
     {
@@ -155245,7 +155245,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1549",
+      "source_location": "L1555",
       "weight": 1.0
     },
     {
@@ -155257,7 +155257,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1549",
+      "source_location": "L1555",
       "weight": 1.0
     },
     {
@@ -155269,7 +155269,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1549",
+      "source_location": "L1555",
       "weight": 1.0
     },
     {
@@ -155281,7 +155281,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2785",
+      "source_location": "L2791",
       "weight": 1.0
     },
     {
@@ -155293,7 +155293,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2785",
+      "source_location": "L2791",
       "weight": 1.0
     },
     {
@@ -155365,7 +155365,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1524",
+      "source_location": "L1530",
       "weight": 1.0
     },
     {
@@ -155473,7 +155473,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1773",
+      "source_location": "L1779",
       "weight": 1.0
     },
     {
@@ -155485,7 +155485,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1773",
+      "source_location": "L1779",
       "weight": 1.0
     },
     {
@@ -155545,7 +155545,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1741",
+      "source_location": "L1747",
       "weight": 1.0
     },
     {
@@ -155557,7 +155557,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1805",
+      "source_location": "L1811",
       "weight": 1.0
     },
     {
@@ -155605,7 +155605,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2474",
+      "source_location": "L2480",
       "weight": 1.0
     },
     {
@@ -155617,7 +155617,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2474",
+      "source_location": "L2480",
       "weight": 1.0
     },
     {
@@ -155629,7 +155629,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1833",
+      "source_location": "L1839",
       "weight": 1.0
     },
     {
@@ -155641,7 +155641,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1833",
+      "source_location": "L1839",
       "weight": 1.0
     },
     {
@@ -155653,7 +155653,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1833",
+      "source_location": "L1839",
       "weight": 1.0
     },
     {
@@ -155665,7 +155665,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1833",
+      "source_location": "L1839",
       "weight": 1.0
     },
     {
@@ -155677,7 +155677,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3741",
+      "source_location": "L3747",
       "weight": 1.0
     },
     {
@@ -155689,7 +155689,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3881",
+      "source_location": "L3887",
       "weight": 1.0
     },
     {
@@ -155701,7 +155701,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3762",
+      "source_location": "L3768",
       "weight": 1.0
     },
     {
@@ -155713,7 +155713,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3778",
+      "source_location": "L3784",
       "weight": 1.0
     },
     {
@@ -156001,7 +156001,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4925",
+      "source_location": "L4926",
       "weight": 1.0
     },
     {
@@ -156013,7 +156013,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4827",
+      "source_location": "L4828",
       "weight": 1.0
     },
     {
@@ -156217,7 +156217,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4945",
+      "source_location": "L4946",
       "weight": 1.0
     },
     {
@@ -156301,7 +156301,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5589",
+      "source_location": "L5590",
       "weight": 1.0
     },
     {
@@ -156313,7 +156313,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5594",
+      "source_location": "L5595",
       "weight": 1.0
     },
     {
@@ -156325,7 +156325,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5563",
+      "source_location": "L5564",
       "weight": 1.0
     },
     {
@@ -156337,7 +156337,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5554",
+      "source_location": "L5555",
       "weight": 1.0
     },
     {
@@ -156349,7 +156349,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5567",
+      "source_location": "L5568",
       "weight": 1.0
     },
     {
@@ -156361,7 +156361,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5559",
+      "source_location": "L5560",
       "weight": 1.0
     },
     {
@@ -156373,7 +156373,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5571",
+      "source_location": "L5572",
       "weight": 1.0
     },
     {
@@ -156385,7 +156385,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5538",
+      "source_location": "L5539",
       "weight": 1.0
     },
     {
@@ -156397,7 +156397,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5645",
+      "source_location": "L5646",
       "weight": 1.0
     },
     {
@@ -156409,7 +156409,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5640",
+      "source_location": "L5641",
       "weight": 1.0
     },
     {
@@ -156421,7 +156421,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5533",
+      "source_location": "L5534",
       "weight": 1.0
     },
     {
@@ -156433,7 +156433,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5528",
+      "source_location": "L5529",
       "weight": 1.0
     },
     {
@@ -156445,7 +156445,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5611",
+      "source_location": "L5612",
       "weight": 1.0
     },
     {
@@ -156805,7 +156805,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5693",
+      "source_location": "L5694",
       "weight": 1.0
     },
     {
@@ -157477,7 +157477,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5709",
+      "source_location": "L5710",
       "weight": 1.0
     },
     {
@@ -157513,7 +157513,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5490",
+      "source_location": "L5491",
       "weight": 1.0
     },
     {
@@ -157525,7 +157525,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5490",
+      "source_location": "L5491",
       "weight": 1.0
     },
     {
@@ -157537,7 +157537,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5490",
+      "source_location": "L5491",
       "weight": 1.0
     },
     {
@@ -157549,7 +157549,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5651",
+      "source_location": "L5652",
       "weight": 1.0
     },
     {
@@ -157561,7 +157561,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5651",
+      "source_location": "L5652",
       "weight": 1.0
     },
     {
@@ -160717,7 +160717,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3786",
+      "source_location": "L3792",
       "weight": 1.0
     },
     {
@@ -160741,7 +160741,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3771",
+      "source_location": "L3777",
       "weight": 1.0
     },
     {
@@ -160777,7 +160777,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1945",
+      "source_location": "L1951",
       "weight": 1.0
     },
     {
@@ -160789,7 +160789,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1681",
+      "source_location": "L1687",
       "weight": 1.0
     },
     {
@@ -160801,7 +160801,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2363",
+      "source_location": "L2369",
       "weight": 1.0
     },
     {
@@ -160813,7 +160813,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1549",
+      "source_location": "L1555",
       "weight": 1.0
     },
     {
@@ -160837,7 +160837,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1940",
+      "source_location": "L1946",
       "weight": 1.0
     },
     {
@@ -160849,7 +160849,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1524",
+      "source_location": "L1530",
       "weight": 1.0
     },
     {
@@ -160861,7 +160861,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1819",
+      "source_location": "L1825",
       "weight": 1.0
     },
     {
@@ -160873,7 +160873,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1741",
+      "source_location": "L1747",
       "weight": 1.0
     },
     {
@@ -160897,7 +160897,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3805",
+      "source_location": "L3811",
       "weight": 1.0
     },
     {
@@ -161137,7 +161137,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5516",
+      "source_location": "L5517",
       "weight": 1.0
     },
     {
@@ -161185,7 +161185,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5693",
+      "source_location": "L5694",
       "weight": 1.0
     },
     {
@@ -161245,7 +161245,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5709",
+      "source_location": "L5710",
       "weight": 1.0
     },
     {
@@ -215520,7 +215520,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0380-b64-first-hang-localization.md",
-      "source_location": "L106",
+      "source_location": "L112",
       "weight": 1.0
     },
     {
@@ -215531,7 +215531,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0380-b64-first-hang-localization.md",
-      "source_location": "L112",
+      "source_location": "L118",
       "weight": 1.0
     },
     {
@@ -215542,7 +215542,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/EXP-0380-b64-first-hang-localization.md",
-      "source_location": "L120",
+      "source_location": "L126",
       "weight": 1.0
     },
     {
@@ -225024,7 +225024,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2928",
+      "source_location": "L2934",
       "weight": 1.0
     },
     {
@@ -225035,7 +225035,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3035",
+      "source_location": "L3041",
       "weight": 1.0
     },
     {
@@ -225046,7 +225046,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3063",
+      "source_location": "L3069",
       "weight": 1.0
     },
     {
@@ -225057,7 +225057,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3082",
+      "source_location": "L3088",
       "weight": 1.0
     },
     {
@@ -225068,7 +225068,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3123",
+      "source_location": "L3129",
       "weight": 1.0
     },
     {
@@ -225079,7 +225079,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3670",
+      "source_location": "L3676",
       "weight": 1.0
     },
     {
@@ -225090,7 +225090,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3721",
+      "source_location": "L3727",
       "weight": 1.0
     },
     {
@@ -225101,7 +225101,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3730",
+      "source_location": "L3736",
       "weight": 1.0
     },
     {
@@ -225112,7 +225112,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3741",
+      "source_location": "L3747",
       "weight": 1.0
     },
     {
@@ -225123,7 +225123,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3756",
+      "source_location": "L3762",
       "weight": 1.0
     },
     {
@@ -225134,7 +225134,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3762",
+      "source_location": "L3768",
       "weight": 1.0
     },
     {
@@ -225145,7 +225145,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3771",
+      "source_location": "L3777",
       "weight": 1.0
     },
     {
@@ -225156,7 +225156,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3778",
+      "source_location": "L3784",
       "weight": 1.0
     },
     {
@@ -225167,7 +225167,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3786",
+      "source_location": "L3792",
       "weight": 1.0
     },
     {
@@ -225178,7 +225178,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3805",
+      "source_location": "L3811",
       "weight": 1.0
     },
     {
@@ -225189,7 +225189,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3881",
+      "source_location": "L3887",
       "weight": 1.0
     },
     {
@@ -225200,7 +225200,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3892",
+      "source_location": "L3898",
       "weight": 1.0
     },
     {
@@ -225211,7 +225211,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3903",
+      "source_location": "L3909",
       "weight": 1.0
     },
     {
@@ -225222,7 +225222,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L4470",
+      "source_location": "L4476",
       "weight": 1.0
     },
     {
@@ -225233,7 +225233,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L4503",
+      "source_location": "L4509",
       "weight": 1.0
     },
     {
@@ -225299,7 +225299,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1786",
+      "source_location": "L1792",
       "weight": 1.0
     },
     {
@@ -225838,7 +225838,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5490",
+      "source_location": "L5491",
       "weight": 1.0
     },
     {
@@ -225849,7 +225849,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5500",
+      "source_location": "L5501",
       "weight": 1.0
     },
     {
@@ -225882,7 +225882,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5651",
+      "source_location": "L5652",
       "weight": 1.0
     },
     {
@@ -225893,7 +225893,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5693",
+      "source_location": "L5694",
       "weight": 1.0
     },
     {
@@ -225915,7 +225915,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5709",
+      "source_location": "L5710",
       "weight": 1.0
     },
     {
@@ -227543,7 +227543,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1524",
+      "source_location": "L1530",
       "weight": 1.0
     },
     {
@@ -227554,7 +227554,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1549",
+      "source_location": "L1555",
       "weight": 1.0
     },
     {
@@ -227565,7 +227565,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1681",
+      "source_location": "L1687",
       "weight": 1.0
     },
     {
@@ -227576,7 +227576,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1741",
+      "source_location": "L1747",
       "weight": 1.0
     },
     {
@@ -227587,7 +227587,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1773",
+      "source_location": "L1779",
       "weight": 1.0
     },
     {
@@ -227598,7 +227598,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1805",
+      "source_location": "L1811",
       "weight": 1.0
     },
     {
@@ -227609,7 +227609,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1819",
+      "source_location": "L1825",
       "weight": 1.0
     },
     {
@@ -227620,7 +227620,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1833",
+      "source_location": "L1839",
       "weight": 1.0
     },
     {
@@ -227631,7 +227631,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1945",
+      "source_location": "L1951",
       "weight": 1.0
     },
     {
@@ -227642,7 +227642,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2363",
+      "source_location": "L2369",
       "weight": 1.0
     },
     {
@@ -227653,7 +227653,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2474",
+      "source_location": "L2480",
       "weight": 1.0
     },
     {
@@ -227664,7 +227664,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2492",
+      "source_location": "L2498",
       "weight": 1.0
     },
     {
@@ -227675,7 +227675,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2592",
+      "source_location": "L2598",
       "weight": 1.0
     },
     {
@@ -227686,7 +227686,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2623",
+      "source_location": "L2629",
       "weight": 1.0
     },
     {
@@ -227708,7 +227708,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2697",
+      "source_location": "L2703",
       "weight": 1.0
     },
     {
@@ -227719,7 +227719,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2719",
+      "source_location": "L2725",
       "weight": 1.0
     },
     {
@@ -227730,7 +227730,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2750",
+      "source_location": "L2756",
       "weight": 1.0
     },
     {
@@ -227741,7 +227741,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2785",
+      "source_location": "L2791",
       "weight": 1.0
     },
     {
@@ -227752,7 +227752,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2795",
+      "source_location": "L2801",
       "weight": 1.0
     },
     {
@@ -227763,7 +227763,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2861",
+      "source_location": "L2867",
       "weight": 1.0
     },
     {
@@ -228280,7 +228280,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4827",
+      "source_location": "L4828",
       "weight": 1.0
     },
     {
@@ -228291,7 +228291,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4925",
+      "source_location": "L4926",
       "weight": 1.0
     },
     {
@@ -228302,7 +228302,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L4945",
+      "source_location": "L4946",
       "weight": 1.0
     },
     {
@@ -228313,7 +228313,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5504",
+      "source_location": "L5505",
       "weight": 1.0
     },
     {
@@ -228324,7 +228324,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5510",
+      "source_location": "L5511",
       "weight": 1.0
     },
     {
@@ -228335,7 +228335,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5516",
+      "source_location": "L5517",
       "weight": 1.0
     },
     {
@@ -228346,7 +228346,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5522",
+      "source_location": "L5523",
       "weight": 1.0
     },
     {
@@ -228357,7 +228357,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5528",
+      "source_location": "L5529",
       "weight": 1.0
     },
     {
@@ -228368,7 +228368,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5533",
+      "source_location": "L5534",
       "weight": 1.0
     },
     {
@@ -228379,7 +228379,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5538",
+      "source_location": "L5539",
       "weight": 1.0
     },
     {
@@ -228390,7 +228390,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5554",
+      "source_location": "L5555",
       "weight": 1.0
     },
     {
@@ -228401,7 +228401,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5559",
+      "source_location": "L5560",
       "weight": 1.0
     },
     {
@@ -228412,7 +228412,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5563",
+      "source_location": "L5564",
       "weight": 1.0
     },
     {
@@ -228423,7 +228423,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5567",
+      "source_location": "L5568",
       "weight": 1.0
     },
     {
@@ -228434,7 +228434,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5571",
+      "source_location": "L5572",
       "weight": 1.0
     },
     {
@@ -228445,7 +228445,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5575",
+      "source_location": "L5576",
       "weight": 1.0
     },
     {
@@ -228456,7 +228456,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5580",
+      "source_location": "L5581",
       "weight": 1.0
     },
     {
@@ -228467,7 +228467,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5584",
+      "source_location": "L5585",
       "weight": 1.0
     },
     {
@@ -228478,7 +228478,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5589",
+      "source_location": "L5590",
       "weight": 1.0
     },
     {
@@ -228489,7 +228489,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5594",
+      "source_location": "L5595",
       "weight": 1.0
     },
     {
@@ -228500,7 +228500,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5611",
+      "source_location": "L5612",
       "weight": 1.0
     },
     {
@@ -228511,7 +228511,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5640",
+      "source_location": "L5641",
       "weight": 1.0
     },
     {
@@ -228522,7 +228522,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tools/qwen35_gpu_pipeline.hpp",
-      "source_location": "L5645",
+      "source_location": "L5646",
       "weight": 1.0
     },
     {
@@ -230812,7 +230812,7 @@
       "confidence_score": 0.8,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3773",
+      "source_location": "L3779",
       "weight": 1.0
     },
     {
@@ -230824,7 +230824,7 @@
       "confidence_score": 0.8,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2036",
+      "source_location": "L2042",
       "weight": 1.0
     },
     {
@@ -230836,7 +230836,7 @@
       "confidence_score": 0.8,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1895",
+      "source_location": "L1901",
       "weight": 1.0
     },
     {
@@ -233092,7 +233092,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L3115",
+      "source_location": "L3121",
       "weight": 1.0
     },
     {
@@ -233104,7 +233104,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L4000",
+      "source_location": "L4006",
       "weight": 1.0
     },
     {
@@ -233116,7 +233116,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L4055",
+      "source_location": "L4061",
       "weight": 1.0
     },
     {
@@ -233140,7 +233140,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1964",
+      "source_location": "L1970",
       "weight": 1.0
     },
     {
@@ -233152,7 +233152,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2820",
+      "source_location": "L2826",
       "weight": 1.0
     },
     {
@@ -233164,7 +233164,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L1723",
+      "source_location": "L1729",
       "weight": 1.0
     },
     {
@@ -233176,7 +233176,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2752",
+      "source_location": "L2758",
       "weight": 1.0
     },
     {
@@ -233188,7 +233188,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2756",
+      "source_location": "L2762",
       "weight": 1.0
     },
     {
@@ -233200,7 +233200,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2761",
+      "source_location": "L2767",
       "weight": 1.0
     },
     {
@@ -233212,7 +233212,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2763",
+      "source_location": "L2769",
       "weight": 1.0
     },
     {
@@ -233224,7 +233224,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2777",
+      "source_location": "L2783",
       "weight": 1.0
     },
     {
@@ -233236,7 +233236,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2721",
+      "source_location": "L2727",
       "weight": 1.0
     },
     {
@@ -233248,7 +233248,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2731",
+      "source_location": "L2737",
       "weight": 1.0
     },
     {
@@ -233260,7 +233260,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2700",
+      "source_location": "L2706",
       "weight": 1.0
     },
     {
@@ -233272,7 +233272,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2711",
+      "source_location": "L2717",
       "weight": 1.0
     },
     {
@@ -233284,7 +233284,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2625",
+      "source_location": "L2631",
       "weight": 1.0
     },
     {
@@ -233296,7 +233296,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2627",
+      "source_location": "L2633",
       "weight": 1.0
     },
     {
@@ -233380,7 +233380,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2543",
+      "source_location": "L2549",
       "weight": 1.0
     },
     {
@@ -233392,7 +233392,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "tools/miinfer_cli.cpp",
-      "source_location": "L2580",
+      "source_location": "L2586",
       "weight": 1.0
     },
     {
@@ -233601,5 +233601,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "df673daeb929076f466277cb8917388a9a9a6d34"
+  "built_at_commit": "99b4e100df8e06a4363226ea63e9e51f57edebf0"
 }

@@ -4645,6 +4645,7 @@ struct FullAttentionLayer {
                              const float* next_norm_weight, float* next_normalized) {
         const bool exp0380_probe = exp0380_b64_probe_enabled() && index == 3
             && count == kPrefillBatch;
+        if (exp0380_probe) std::cerr << "EXP0380 L3 FINISH_PREFILL_WIDE ENTER\n" << std::flush;
         const auto exp0380_stage = [&](const char* name, int stage) {
             if (!exp0380_probe) return;
             std::cerr << "EXP0380 L3 " << name << " HOST_RETURN\n" << std::flush;
