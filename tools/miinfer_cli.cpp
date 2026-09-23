@@ -1291,6 +1291,9 @@ public:
                 if (wide_prefill_ && (count >= kM12PrefillBatch
                                       || (exp0380_probe && count == kPrefillBatch))
                     && layer_span[layer].recurrent != nullptr) {
+                    if (exp0380_probe && base == 768 && count == kM12PrefillBatch) {
+                        std::cerr << "EXP0380 PREFIX_B128 layer=" << layer << " REC_BEGIN\n" << std::flush;
+                    }
                     if (exp0380_probe && count == kPrefillBatch && layer < 3) {
                         std::cerr << "EXP0380 L" << layer << " REC HOST_BEGIN\n" << std::flush;
                     }
@@ -1466,6 +1469,9 @@ public:
                     }
                     layer_span[layer].recurrent->prefill_wide(
                         chunk_input, chunk_output, static_cast<std::uint32_t>(base_position + base), count);
+                    if (exp0380_probe && base_position == 768 && prompt.size() == kM12PrefillBatch) {
+                        std::cerr << "EXP0380 PREFIX_B128 layer=" << layer << " REC_RETURN\n" << std::flush;
+                    }
                     if (exp0380_probe && count == kPrefillBatch && layer < 3) {
                         std::cerr << "EXP0380 L" << layer << " REC HOST_RETURN\n" << std::flush;
                         MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
@@ -1476,9 +1482,15 @@ public:
                 if (exp0380_probe && layer == 3 && count == kPrefillBatch) {
                     std::cerr << "EXP0380 L3 PREP_HOST_BEGIN\n" << std::flush;
                 }
+                if (exp0380_probe && base_position == 768 && prompt.size() == kM12PrefillBatch) {
+                    std::cerr << "EXP0380 PREFIX_B128 layer=" << layer << " PREP_BEGIN\n" << std::flush;
+                }
                 const bool prepared = layer_span[layer].prepare_prefill_batch(
                     chunk_input, count, false,
                     prefill_profile_.enabled ? base : std::numeric_limits<std::size_t>::max());
+                if (exp0380_probe && base_position == 768 && prompt.size() == kM12PrefillBatch) {
+                    std::cerr << "EXP0380 PREFIX_B128 layer=" << layer << " PREP_RETURN\n" << std::flush;
+                }
                 if (exp0380_probe && layer == 3 && count == kPrefillBatch) {
                     std::cerr << "EXP0380 L3 PREP HOST_RETURN\n" << std::flush;
                 }
@@ -1514,6 +1526,9 @@ public:
                     }
                 }
                 if (batched_attention) {
+                    if (exp0380_probe && base_position == 768 && prompt.size() == kM12PrefillBatch) {
+                        std::cerr << "EXP0380 PREFIX_B128 layer=" << layer << " ATTN_BEGIN\n" << std::flush;
+                    }
                     if (exp0380_probe && layer == 3 && count == kPrefillBatch
                         && exp0380_probe_stage() == 0) {
                         std::cerr << "EXP0380 L3 PREP HOST_RETURN\n" << std::flush;
@@ -1523,6 +1538,9 @@ public:
                     }
                     layer_span[layer].finish_prefill_attention(
                         static_cast<std::uint32_t>(base_position + base), count);
+                    if (exp0380_probe && base_position == 768 && prompt.size() == kM12PrefillBatch) {
+                        std::cerr << "EXP0380 PREFIX_B128 layer=" << layer << " ATTN_RETURN\n" << std::flush;
+                    }
                 }
                 if (deferred_tail) {
                     if (exp0380_probe && layer == 3 && count == kPrefillBatch) {
@@ -1538,7 +1556,13 @@ public:
             }
             layer_span[layer].profile_ordered_end(
                 prefill_profile_.enabled ? base_position : std::numeric_limits<std::size_t>::max());
+            if (exp0380_probe && base_position == 768 && prompt.size() == kM12PrefillBatch) {
+                std::cerr << "EXP0380 PREFIX_B128 layer=" << layer << " RELEASE_BEGIN\n" << std::flush;
+            }
             layer_span[layer].release_m23_repacked();
+            if (exp0380_probe && base_position == 768 && prompt.size() == kM12PrefillBatch) {
+                std::cerr << "EXP0380 PREFIX_B128 layer=" << layer << " RELEASE_END\n" << std::flush;
+            }
             std::swap(current, next);
             if (exp0380_probe && base_position == 768 && prompt.size() == kM12PrefillBatch) {
                 std::cerr << "EXP0380 PREFIX_B128 layer=" << layer << " END alloc="

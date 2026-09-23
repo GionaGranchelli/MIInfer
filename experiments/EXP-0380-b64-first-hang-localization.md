@@ -184,6 +184,16 @@ failure is therefore not an unexpected per-layer allocation, free, or model
 repack operation. The remaining likely class is stream/workspace/driver state,
 but no kernel noncompletion is proven.
 
+## Lifecycle follow-up
+
+The test-only probe now emits flushed markers around the repeated base-768
+B128 lifecycle: `REC_BEGIN/REC_RETURN`, `PREP_BEGIN/PREP_RETURN`,
+`ATTN_BEGIN/ATTN_RETURN`, and `RELEASE_BEGIN/RELEASE_END`. The corrected
+binary built successfully. A further bounded P960 attempt did not emit prompt
+or chunk-entry output before termination, so it supplies no new operation-level
+attribution. The prior valid per-layer and allocation runs remain the evidence
+used for the decision below.
+
 ## Decision
 
 **LEARN.** No individual B64 attention operation has failed in the qualified
@@ -200,17 +210,15 @@ next inspect explicit stream synchronization, workspace reuse, and driver
 wait state across repeated invocations. Do not attribute the hang to a
 specific Q/K/causal/O/FFN kernel, and do not run B4 or whole-model
 qualification until that runtime contract is proven.
-Do not attribute the hang to Q/K/causal/O/FFN kernels, and do not run B4 or
-whole-model qualification until that composition contract is proven.
 Do not run FFN, B4, or whole-model qualification.
 
 Is B64 scheduler work authorized? **NO.**
 
 Is B4 work authorized? **NO.**
 
-Experiment SHA: `69f2c9fed6477c8d822e9001585b5521300a7cec` (record commit before provenance amendment).
+Experiment SHA: `2e08485a5eb85e97210f558df14f21ac60b478b1`.
 
-Graph SHA: `74d94bbb6895394fe22284978e5f035d3a894579` (`graphify-out/graph.json` blob).
+Graph SHA: `db07567deaad14c424bb410d35faced86b4acc55` (`graphify-out/graph.json` blob).
 
 Working-tree status: clean after commit and graph refresh.
 
