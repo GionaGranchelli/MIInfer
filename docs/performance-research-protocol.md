@@ -203,6 +203,9 @@ validated B128 route; do not continue L5→L6 forensics without contradictory
 model-boundary evidence.
 EXP-0374 implemented the bounded repeated-B128 remainder scheduler behind an
 opt-in selector. Exact P768 passed with zero scalar work and identical final
-hidden/16-token continuation; P1022 reduced scalar coverage to 126 tokens but
-remained residual-dominated. The scheduler is `QUALIFIED_OPT_IN`; the next
-PRIMARY is qualifying the smallest existing sub-128 residual contract.
+hidden/16-token continuation, but source review found that authored B128 chunks
+failed the full-layer-major dispatch gate. EXP-0375 corrected the explicit
+B512/B128 dispatch contract and proved the authored routes at P640/P768/P896/
+P1022. Corrected timing shows approximately 13–15 seconds per B128 chunk,
+making repeated-B128 state/runtime attribution the PRIMARY. Sub-128 residual
+work remains blocked.

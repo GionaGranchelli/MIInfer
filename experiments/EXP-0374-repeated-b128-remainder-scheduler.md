@@ -44,7 +44,7 @@ optional token-dump selector, so those two checks are recorded as decoded-text
 parity rather than fresh token-ID lists. No material final-model divergence
 was observed. No KV prefix mutation or non-finite state was observed.
 
-## Timing
+## Timing (pre-correction; repeated-B128 route not qualified)
 
 Clean non-profiled scheduler/control timing was collected for the bounded
 structural points:
@@ -57,10 +57,12 @@ structural points:
 | P1788 scheduler | — | `85,288.18 ms` | structural only |
 
 Peak tracked allocation was unchanged at `22,060,355,988 B`. The P1022
-comparison shows the scheduler itself does not collapse for three B128 chunks;
-the remaining 126-token fallback dominates the result. For the old R=510
-shape, structural scalar coverage falls from 510 tokens to 126, a 75.29%
-reduction, but this is not yet a wall-time win.
+comparison is not conclusive: source review found that the EXP-0374 dispatcher
+did not route `count == 128` through `prefill_full_layer_major_chunk()` because
+its divisibility condition also required divisibility by 512. These timings do
+not qualify repeated-B128 performance or prove `<128` residual dominance.
+EXP-0374 semantic and structural results remain valid; dispatch and performance
+are requalified by EXP-0375.
 
 Hardware remained at the qualified 1606 MHz SCLK / 1000 MHz MCLK policy; the
 external fan is physically fixed at full speed and ROCm fan telemetry was not
@@ -68,15 +70,14 @@ used.
 
 ## Decision
 
-**QUALIFIED_OPT_IN** — repeated B128 execution is structurally correct and
-passes the exact P768 semantic gate. It is not production-default because
-large `<128` residuals remain materially expensive and P1022 is slower than the
-fallback comparison.
+**SEMANTICS_QUALIFIED_ONLY** — scheduler decomposition and exact P768 semantics
+passed, but repeated-B128 performance was not qualified because the authored
+B128 chunks were dispatched through the wrong route. It is not production-
+default pending EXP-0375.
 
 ## Next PRIMARY
 
-EXP-0375: qualify the smallest already-existing batched residual contract,
-starting with existing B64/B4 machinery. Do not change the repeated-B128
-scheduler or introduce a new math kernel in that work.
+EXP-0375: correct and remeasure repeated-B128 dispatch. Do not begin B64/B4
+residual work until corrected repeated-B128 timing and P1022 attribution exist.
 
 No new GPU math kernel was implemented.

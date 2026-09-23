@@ -96,6 +96,7 @@ bool apply_runtime_preset() {
             && value.rfind("MIINFER_EXP0371_CAPTURE_PREFIX=", 0) != 0
             && value.rfind("MIINFER_EXP0372_CAPTURE_PREFIX=", 0) != 0
             && value.rfind("MIINFER_EXP0374_REMAINDER_SCHED=", 0) != 0
+            && value.rfind("MIINFER_EXP0376_CHUNK_TIMING=", 0) != 0
             && value.rfind("MIINFER_HIP_GRAPH=", 0) != 0) {
             names.emplace_back(value.substr(0, value.find('=')));
         }
@@ -648,6 +649,22 @@ public:
         }
     };
 
+    struct Exp0376ChunkTiming {
+        std::size_t index = 0;
+        std::size_t base = 0;
+        std::size_t count = 0;
+        std::chrono::steady_clock::time_point host_start;
+        std::chrono::steady_clock::time_point host_end;
+        hipEvent_t gpu_start = nullptr;
+        hipEvent_t gpu_end = nullptr;
+        std::size_t allocations_before = 0;
+        std::size_t allocations_after = 0;
+        std::size_t total_bytes_before = 0;
+        std::size_t total_bytes_after = 0;
+        std::size_t live_bytes_before = 0;
+        std::size_t live_bytes_after = 0;
+    };
+
     struct RemainderSchedulerCounters {
         std::size_t complete_b512_chunks = 0;
         std::size_t partial_b128_chunks = 0;
@@ -1138,6 +1155,7 @@ public:
             && std::strcmp(std::getenv("MIINFER_EXP0369_TRACE_ROUTE"), "0") != 0;
         const bool exp0374_scheduler = std::getenv("MIINFER_EXP0374_REMAINDER_SCHED") != nullptr
             && std::strcmp(std::getenv("MIINFER_EXP0374_REMAINDER_SCHED"), "0") != 0;
+        exp0376_chunk_timings_.clear();
         remainder_scheduler_counters_ = {};
         for (std::size_t base = start_position; base < prompt.size();) {
             if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
@@ -1168,13 +1186,39 @@ public:
                        && base >= kFullPrefillCapacity && count <= kPrefillBatch) {
                 if (prefill_profile_.enabled) prefill_profile_.partial_tail_scalar_tokens += count;
             }
-            const bool complete_or_exp0374_b128 = count % kM12PrefillBatch == 0
-                && count % kFullPrefillCapacity == 0;
+            const bool qualified_full_layer_major_count = count == kFullPrefillCapacity
+                || (exp0374_scheduler && count == kM12PrefillBatch);
             if (full_layer_major_prefill_ && count >= kM12PrefillBatch
-                && count <= kFullPrefillCapacity && complete_or_exp0374_b128) {
+                && count <= kFullPrefillCapacity && qualified_full_layer_major_count) {
                 if (count == kFullPrefillCapacity) ++remainder_scheduler_counters_.complete_b512_chunks;
+                if (trace_exp0369) {
+                    std::cout << "EXP0375 route base=" << base << " count=" << count
+                              << " path=prefill_full_layer_major_chunk\n";
+                }
+                Exp0376ChunkTiming* timing = nullptr;
+                if (exp0376_chunk_timing_) {
+                    exp0376_chunk_timings_.push_back({});
+                    timing = &exp0376_chunk_timings_.back();
+                    timing->index = exp0376_chunk_timings_.size() - 1;
+                    timing->base = base;
+                    timing->count = count;
+                    timing->host_start = std::chrono::steady_clock::now();
+                    timing->allocations_before = g_device_allocations;
+                    timing->total_bytes_before = g_total_device_bytes;
+                    timing->live_bytes_before = g_live_device_bytes;
+                    MIINFER_HIP_CHECK(hipEventCreate(&timing->gpu_start));
+                    MIINFER_HIP_CHECK(hipEventCreate(&timing->gpu_end));
+                    MIINFER_HIP_CHECK(hipEventRecord(timing->gpu_start, hipStreamPerThread));
+                }
                 final_hidden = prefill_full_layer_major_chunk(
                     prompt.subspan(base, count), should_cancel, base);
+                if (timing != nullptr) {
+                    timing->host_end = std::chrono::steady_clock::now();
+                    timing->allocations_after = g_device_allocations;
+                    timing->total_bytes_after = g_total_device_bytes;
+                    timing->live_bytes_after = g_live_device_bytes;
+                    MIINFER_HIP_CHECK(hipEventRecord(timing->gpu_end, hipStreamPerThread));
+                }
                 if (final_hidden == nullptr) return nullptr;
                 processed_tokens += count;
                 base += count;
@@ -1307,6 +1351,25 @@ public:
             base += count;
         }
         MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+        if (exp0376_chunk_timing_) {
+            for (auto& timing : exp0376_chunk_timings_) {
+                float gpu_ms = 0.0F;
+                MIINFER_HIP_CHECK(hipEventElapsedTime(&gpu_ms, timing.gpu_start, timing.gpu_end));
+                const double host_ms = std::chrono::duration<double, std::milli>(
+                    timing.host_end - timing.host_start).count();
+                std::cout << "EXP0376 chunk index=" << timing.index
+                          << " base=" << timing.base << " count=" << timing.count
+                          << " gpu_ms=" << gpu_ms << " host_ms=" << host_ms
+                          << " gap_ms=" << (host_ms - gpu_ms)
+                          << " alloc_delta=" << (timing.allocations_after - timing.allocations_before)
+                          << " total_bytes_delta=" << (timing.total_bytes_after - timing.total_bytes_before)
+                          << " live_bytes_delta=" << (timing.live_bytes_after - timing.live_bytes_before)
+                          << '\n';
+                (void)hipEventDestroy(timing.gpu_start);
+                (void)hipEventDestroy(timing.gpu_end);
+            }
+            exp0376_chunk_timings_.clear();
+        }
         return final_hidden;
     }
 
@@ -1400,7 +1463,7 @@ public:
             layer_span[layer].release_m23_repacked();
             std::swap(current, next);
         }
-        MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+        if (!exp0376_chunk_timing_) MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
         return current + (prompt.size() - 1) * kHidden;
     }
 
@@ -2450,6 +2513,7 @@ private:
             prefill_chunk_ = requested;
         }
         const char* prefill_profile_env = std::getenv("MIINFER_PREFILL_PROFILE");
+        exp0376_chunk_timing_ = environment_flag("MIINFER_EXP0376_CHUNK_TIMING");
         const char* decode_profile_env = std::getenv("MIINFER_DECODE_PROFILE");
         prefill_profile_.decode_mode = decode_profile_env != nullptr
             && std::strcmp(decode_profile_env, "0") != 0;
@@ -2795,6 +2859,8 @@ private:
     bool dense_projection_prefill_ = false;
     bool wide_prefill_ = false;
     bool full_layer_major_prefill_ = false;
+    bool exp0376_chunk_timing_ = false;
+    std::vector<Exp0376ChunkTiming> exp0376_chunk_timings_;
     std::size_t prefill_chunk_ = kPrefillBatch;
     PrefillProfile prefill_profile_;
     RemainderSchedulerCounters remainder_scheduler_counters_;
