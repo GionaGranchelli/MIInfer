@@ -59,6 +59,18 @@ Sparse checkpoints also passed the complete attention path at L7, L11, and
 L15. L3, L7, L11, and L15 therefore all completed Q/K/causal plus O/norm/FFN
 and final output in the exact composed state.
 
+The continued sparse ladder passed L19, L23, and L27 with the same complete
+tail. The L31 attempt did not enter the probe: ROCm aborted during model
+initialization with:
+
+```text
+Memory access fault by GPU node-2
+Reason: Page not present or supervisor privilege
+```
+
+This is hardware/runtime contamination, not evidence against L31. The ladder
+was stopped and no later layer was run.
+
 Stage 0 emitted:
 
 ```text
@@ -133,19 +145,20 @@ probe's pre-marker boundary is instrumented more precisely.
 
 ## Decision
 
-**LEARN.** No individual B64 attention operation is the first failing
-operation. L3, L7, L11, and L15 all pass the complete attention path in the
-exact composed state. The earlier whole-model hang therefore depends on
-composition outside an individual attention layer.
+**LEARN.** No individual B64 attention operation has failed in the qualified
+ladder. L3, L7, L11, L15, L19, L23, and L27 all pass the complete attention
+path in the exact composed state. The L31 result is invalid because ROCm
+aborted before probe entry. The earlier whole-model hang therefore remains a
+composition/runtime issue outside the tested individual attention stages.
 
 ## Exact next PRIMARY
 
-The next PRIMARY is whole-model B64 inter-layer/resource composition after
-individual attention execution: compare the first failing layer handoff,
-state/workspace lifetime, and release/swap ordering after the last passing
-attention checkpoint. Do not attribute the hang to Q/K/causal/O/FFN kernels,
-and do not run B4 or whole-model qualification until that composition contract
-is proven.
+The next PRIMARY is to restore a clean ROCm/GPU runtime after the page fault,
+then resume the sparse ladder at L31. If the clean runtime reaches L31, compare
+the first failing layer handoff, state/workspace lifetime, and release/swap
+ordering after the last passing checkpoint. Do not attribute the hang to
+Q/K/causal/O/FFN kernels, and do not run B4 or whole-model qualification until
+that composition contract is proven.
 Do not run FFN, B4, or whole-model qualification.
 
 Is B64 scheduler work authorized? **NO.**
