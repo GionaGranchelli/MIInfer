@@ -1275,6 +1275,9 @@ public:
 
             // Bounded chunk storage; layer order preserves recurrent state and
             // causal KV dependencies while keeping the full chunk at one layer.
+            if (exp0380_probe && base == 896 && count == kPrefillBatch) {
+                std::cerr << "EXP0380 GENERIC_B64_CHUNK_BEGIN\n" << std::flush;
+            }
             for (std::size_t layer = 0; layer < layer_span.size(); ++layer) {
                 if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
                 layer_span[layer].profile_ordered_start(

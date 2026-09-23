@@ -109,6 +109,12 @@ marker before the 120-second stop. This means the O-stage probe can still stop
 before reaching L3 in the full prefix; it does not justify attributing the
 failure to the O projection itself.
 
+The subsequent run added `GENERIC_B64_CHUNK_BEGIN` before the B64 layer loop
+and again emitted no marker before the watchdog stop. That run therefore did
+not reach B64 at all. The full P960 prefix is not a stable prerequisite for
+the later-stage probe under repeated execution; this is a separate runtime
+boundary that must be isolated before interpreting O/FFN stages.
+
 ## B128 comparison
 
 Not run as a new probe. Existing EXP-0375 evidence proves the matched B128
@@ -125,11 +131,13 @@ failing operation.
 
 ## Exact next PRIMARY
 
-Add a flushed marker immediately on entry to `finish_prefill_wide()` and around
-the existing O host-call boundary. Capture a user-space debugger/backtrace if
-the process remains in `wchan=0`; `/proc/<pid>/stack` is unavailable under the
-current permissions. Do not run FFN, B4, or whole-model qualification until
-the post-causal/pre-O boundary is proven.
+First isolate the prefix boundary that prevents some O-stage runs from
+reaching `GENERIC_B64_CHUNK_BEGIN`; compare the last completed B512/B128
+chunk and layer marker across one bounded run. Only after stable B64 entry is
+re-established should `finish_prefill_wide()` and the O host-call boundary be
+probed. Capture a user-space debugger/backtrace if the process remains in
+`wchan=0`; `/proc/<pid>/stack` is unavailable under the current permissions.
+Do not run FFN, B4, or whole-model qualification.
 
 Is B64 scheduler work authorized? **NO.**
 
