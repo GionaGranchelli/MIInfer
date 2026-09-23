@@ -2370,9 +2370,9 @@
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1790189010.7812696,
-    "seen": 1790189027.7922971,
-    "ast_hash": "b6a36b826d6d511fa3513c32f457aeb2",
+    "mtime": 1790190970.8107345,
+    "seen": 1790191159.5044007,
+    "ast_hash": "f17f37e4748531fcdd3acfe4c205779e",
     "semantic_hash": ""
   },
   "docs/M9-AUTOREGRESSIVE-QUALIFICATION.md": {
@@ -5496,9 +5496,9 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0380-b64-first-hang-localization.md": {
-    "mtime": 1790190727.576807,
-    "seen": 1790190745.4472625,
-    "ast_hash": "a5d82ddcef044dc51519386a11424062",
+    "mtime": 1790191142.5399773,
+    "seen": 1790191159.505057,
+    "ast_hash": "4ac3096b62adf32203d5a70a29707510",
     "semantic_hash": ""
   }
 }

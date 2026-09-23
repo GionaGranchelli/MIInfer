@@ -162,6 +162,14 @@ The follow-up with per-layer B128 markers did not reach the prefix, so it does
 not identify a B128 layer. The durable attribution is the repeated-B128 chunk
 at absolute base 768, not a B64 attention operation.
 
+The added per-layer probe then showed runtime-state variability: one valid
+base-768 run completed layers 0–62 and stalled after layer-63 `BEGIN`; a later
+bounded run stalled at layer 7 `BEGIN`. Because the first incomplete layer
+changes between otherwise equivalent runs, no deterministic layer or attention
+operation can be named from this evidence. This is consistent with repeated
+B128 workspace/resource/runtime state, not a stable B64 attention-kernel
+failure.
+
 ## Decision
 
 **LEARN.** No individual B64 attention operation has failed in the qualified
@@ -172,11 +180,11 @@ composition/runtime issue outside the tested individual attention stages.
 
 ## Exact next PRIMARY
 
-The next PRIMARY is the repeated-B128 runtime boundary at absolute base 768:
-isolate its first incomplete layer handoff/resource wait, then resume the
-L31+ attention ladder. Do not attribute the hang to Q/K/causal/O/FFN kernels,
-and do not run B4 or whole-model qualification until that B128 composition
-contract is proven.
+The next PRIMARY is repeated-B128 runtime/resource-state attribution at
+absolute base 768: compare workspace/resource preparation, allocation/free,
+stream synchronization, and state lifetime across repeated invocations. Do not
+attribute the hang to a specific Q/K/causal/O/FFN kernel, and do not run B4 or
+whole-model qualification until that runtime contract is proven.
 Do not attribute the hang to Q/K/causal/O/FFN kernels, and do not run B4 or
 whole-model qualification until that composition contract is proven.
 Do not run FFN, B4, or whole-model qualification.

@@ -4577,8 +4577,10 @@ struct FullAttentionLayer {
             }
         }
         stage_start(2, profile_position);
-        const bool exp0380_probe = exp0380_b64_probe_enabled() && count == kPrefillBatch
-            && base_position == 896;
+        const bool exp0380_probe = exp0380_b64_probe_enabled()
+            && index == static_cast<std::size_t>(exp0380_probe_layer())
+            && ((count == kPrefillBatch && base_position == 896)
+                || (count == kM12PrefillBatch && base_position == 768));
         if (exp0380_probe) std::cerr << "EXP0380 ATTN layer=" << index << " Q HOST_BEGIN\n" << std::flush;
         miinfer::launch_qwen35_fused_q_split_norm_rope_batch(
             qfull, static_cast<const float*>(d_q_norm->get()),
