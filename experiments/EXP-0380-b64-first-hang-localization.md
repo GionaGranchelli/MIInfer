@@ -194,31 +194,56 @@ or chunk-entry output before termination, so it supplies no new operation-level
 attribution. The prior valid per-layer and allocation runs remain the evidence
 used for the decision below.
 
+## Clean exact-P960 sparse-ladder reruns
+
+After the prefix had completed normally, the same probe was run with
+`MIINFER_EXP0380_STAGE=9`, which exits after the target layer's final-output
+GPU event. The following exact B64 compositions all returned through Q/K,
+causal attention, O, post-attention norm, FFN gate/up, SwiGLU, FFN down, and a
+completed final-output event:
+
+```text
+L3   PASS
+L31  PASS
+L43  PASS
+L47  PASS
+L63  PASS
+```
+
+Together with the earlier clean probes at L7, L11, L15, L19, L23, L27, L35,
+and L39, this covers the first, middle, and final attention layers. The L31
+run that previously failed before probe entry is now explicitly qualified.
+The L63 attempt initially sat in model initialization (`D`,
+`blk_mq_get_tag`) with no prompt marker, then completed after the existing
+bounded process remained alive; that initialization wait is not attributed to
+B64 attention.
+
 ## Decision
 
 **LEARN.** No individual B64 attention operation has failed in the qualified
-ladder. L3, L7, L11, L15, L19, L23, and L27 all pass the complete attention
-path in the exact composed state. L31 remains untested because both attempts
-failed before probe entry. The earlier whole-model hang therefore remains a
-composition/runtime issue outside the tested individual attention stages.
+ladder. The exact P960 composition passes the complete attention path at
+L3/L7/L11/L15/L19/L23/L27/L31/L35/L39/L43/L47/L63. The earlier whole-model
+hang therefore remains a composition/runtime issue outside the tested
+individual attention stages; no first hanging operation has been proven.
 
 ## Exact next PRIMARY
 
-The next PRIMARY is repeated-B128 stream/workspace/driver-state attribution at
-absolute base 768. Allocation churn is falsified by the constant counters;
-next inspect explicit stream synchronization, workspace reuse, and driver
-wait state across repeated invocations. Do not attribute the hang to a
-specific Q/K/causal/O/FFN kernel, and do not run B4 or whole-model
-qualification until that runtime contract is proven.
+The next PRIMARY is runtime composition after the qualified B64 attention
+stage: isolate the first post-layer handoff/release or later-layer operation
+without running the remaining whole-model B64 workload. Keep repeated-B128
+stream/workspace/driver-state attribution in scope because its variable
+prefix behavior remains the only reproduced runtime instability. Do not
+attribute the hang to a specific Q/K/causal/O/FFN kernel, and do not run B4
+or whole-model qualification until that runtime contract is proven.
 Do not run FFN, B4, or whole-model qualification.
 
 Is B64 scheduler work authorized? **NO.**
 
 Is B4 work authorized? **NO.**
 
-Experiment SHA: `2e08485a5eb85e97210f558df14f21ac60b478b1`.
+Experiment SHA: `19e374e40f150d741e441856cd6480296ebde9c0`.
 
-Graph SHA: `db07567deaad14c424bb410d35faced86b4acc55` (`graphify-out/graph.json` blob).
+Graph SHA: `dbd29f50b6d5a10d1ea103da0198d37aa8788e3b` (`graphify-out/graph.json` blob).
 
 Working-tree status: clean after commit and graph refresh.
 
