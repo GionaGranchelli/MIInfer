@@ -250,6 +250,20 @@ hang, including the complete B64 chunk boundary. The earlier Candidate-B
 whole-model stop is not attributable to a specific attention operation from
 this evidence.
 
+## Terminal prefill boundary
+
+The final bounded probe continued through the caller after the B64 chunk:
+`prefill_layer_major()` returned, prefill-state and prefill-complete callbacks
+ran, and the existing stream synchronized. It emitted:
+
+```text
+EXP0380 PREFILL_COMPLETE GPU_EVENT BEGIN
+EXP0380 PREFILL_COMPLETE GPU_EVENT END
+```
+
+No logits or decode work was executed. The exact P960 B64 composition is
+therefore clean through terminal prefill completion under the current build.
+
 ## Decision
 
 **LEARN.** No individual B64 attention operation has failed in the qualified
@@ -261,20 +275,21 @@ operation can be named because none occurs in the bounded execution.
 
 ## Exact next PRIMARY
 
-The next PRIMARY is reproducing the original whole-model Candidate-B stop
-outside the now-qualified B64 chunk boundary, using only a bounded outer
-request/termination probe. Do not attribute the historical stop to a specific
-Q/K/causal/O/FFN kernel, and do not run B4 or production whole-model
-qualification until that runtime contract is proven.
+The next PRIMARY is a clean current-HEAD comparison of the historical
+Candidate-B wrapper/runtime state, not a B64 attention kernel. The bounded
+P960 path is qualified through terminal prefill completion; if the historical
+stop must be reopened, isolate only the caller boundary that follows this
+checkpoint. Do not run B4 or production whole-model qualification until that
+runtime contract is proven.
 Do not run FFN, B4, or whole-model qualification.
 
 Is B64 scheduler work authorized? **NO.**
 
 Is B4 work authorized? **NO.**
 
-Experiment SHA: `25024abd61e905f29cb1ca66c16b7559508c4e69`.
+Experiment SHA: `f84c747a6206e448148291f5e09705f64c7936ce`.
 
-Graph SHA: `784906a87faeaa43c707964ebed66176a6399797` (`graphify-out/graph.json` blob).
+Graph SHA: `189c5c6bc0558349e0f1785a1588d0cb05dbb725` (`graphify-out/graph.json` blob).
 
 Working-tree status: clean after commit and graph refresh.
 

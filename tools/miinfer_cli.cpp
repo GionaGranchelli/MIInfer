@@ -1677,6 +1677,14 @@ public:
         }
         if (opt.on_prefill_state) opt.on_prefill_state(final_hidden, prompt.size());
         if (opt.on_prefill_complete) opt.on_prefill_complete();
+        if (exp0380_b64_probe_enabled()
+            && std::getenv("MIINFER_EXP0374_REMAINDER_SCHED") != nullptr
+            && exp0380_probe_stage() == 13 && prompt.size() == 960) {
+            std::cerr << "EXP0380 PREFILL_COMPLETE GPU_EVENT BEGIN\n" << std::flush;
+            MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+            std::cerr << "EXP0380 PREFILL_COMPLETE GPU_EVENT END\n" << std::flush;
+            std::exit(0);
+        }
         if (opt.max_new_tokens == 0) {
             stats.total_ms = std::chrono::duration<double, std::milli>(
                 std::chrono::steady_clock::now() - gen_start).count();
