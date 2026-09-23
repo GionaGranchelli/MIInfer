@@ -1401,6 +1401,13 @@ public:
             final_hidden = current + (count - 1) * kHidden;
             processed_tokens += count;
             base += count;
+            if (exp0380_probe && count == kPrefillBatch && base == 960
+                && exp0380_stage == 11) {
+                std::cerr << "EXP0380 B64 CHUNK_COMPLETE GPU_EVENT BEGIN\n" << std::flush;
+                MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+                std::cerr << "EXP0380 B64 CHUNK_COMPLETE GPU_EVENT END\n" << std::flush;
+                std::exit(0);
+            }
         }
         MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
         if (exp0376_chunk_timing_) {

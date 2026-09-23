@@ -234,32 +234,47 @@ Thus the exact L3 attention composition and its immediate release/swap
 handoff both complete in the real P960 state. The same is true at L63. The
 whole-model B64 collapse is not localized to those boundaries.
 
+## Complete bounded B64 chunk
+
+Stage 11 ran the exact P960 B64 chunk through all layers, assigned
+`final_hidden`, advanced the outer chunk accounting, and synchronized the
+existing stream before exiting. It emitted:
+
+```text
+EXP0380 B64 CHUNK_COMPLETE GPU_EVENT BEGIN
+EXP0380 B64 CHUNK_COMPLETE GPU_EVENT END
+```
+
+Therefore the corrected current-HEAD probe does not reproduce a B64 operation
+hang, including the complete B64 chunk boundary. The earlier Candidate-B
+whole-model stop is not attributable to a specific attention operation from
+this evidence.
+
 ## Decision
 
 **LEARN.** No individual B64 attention operation has failed in the qualified
-ladder. The exact P960 composition passes the complete attention path at
-L3/L7/L11/L15/L19/L23/L27/L31/L35/L39/L43/L47/L63. The earlier whole-model
-hang therefore remains a composition/runtime issue outside the tested
-individual attention stages; no first hanging operation has been proven.
+ladder. The exact P960 composition passes the complete attention path at all
+16 attention layers, and the complete bounded B64 chunk now passes its final
+GPU synchronization. The earlier Candidate-B whole-model stop is not
+reproduced by the corrected bounded current-HEAD probe; no first hanging
+operation can be named because none occurs in the bounded execution.
 
 ## Exact next PRIMARY
 
-The next PRIMARY is a bounded later-layer B64 composition ladder, beginning
-with the first layer after the qualified L3 boundary and stopping after one
-target layer's handoff. Keep repeated-B128 stream/workspace/driver-state
-attribution in scope because its variable prefix behavior remains the only
-reproduced runtime instability. Do not attribute the hang to a specific
-Q/K/causal/O/FFN kernel, and do not run B4 or whole-model qualification until
-that runtime contract is proven.
+The next PRIMARY is reproducing the original whole-model Candidate-B stop
+outside the now-qualified B64 chunk boundary, using only a bounded outer
+request/termination probe. Do not attribute the historical stop to a specific
+Q/K/causal/O/FFN kernel, and do not run B4 or production whole-model
+qualification until that runtime contract is proven.
 Do not run FFN, B4, or whole-model qualification.
 
 Is B64 scheduler work authorized? **NO.**
 
 Is B4 work authorized? **NO.**
 
-Experiment SHA: `19e374e40f150d741e441856cd6480296ebde9c0`.
+Experiment SHA: `25024abd61e905f29cb1ca66c16b7559508c4e69`.
 
-Graph SHA: `dbd29f50b6d5a10d1ea103da0198d37aa8788e3b` (`graphify-out/graph.json` blob).
+Graph SHA: `784906a87faeaa43c707964ebed66176a6399797` (`graphify-out/graph.json` blob).
 
 Working-tree status: clean after commit and graph refresh.
 
