@@ -1386,6 +1386,17 @@ public:
                     prefill_profile_.enabled ? base : std::numeric_limits<std::size_t>::max());
                 layer_span[layer].release_m23_repacked();
                 std::swap(current, next);
+                if (exp0380_probe && base == 896 && count == kPrefillBatch
+                    && layer == static_cast<std::size_t>(exp0380_probe_layer())) {
+                    std::cerr << "EXP0380 B64 layer=" << layer
+                              << " HANDOFF stage=" << exp0380_stage << " BEGIN\n" << std::flush;
+                    if (exp0380_stage == 10) {
+                        MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+                        std::cerr << "EXP0380 B64 layer=" << layer
+                                  << " HANDOFF GPU_EVENT END\n" << std::flush;
+                        std::exit(0);
+                    }
+                }
             }
             final_hidden = current + (count - 1) * kHidden;
             processed_tokens += count;
@@ -1564,6 +1575,16 @@ public:
                 std::cerr << "EXP0380 PREFIX_B128 layer=" << layer << " RELEASE_END\n" << std::flush;
             }
             std::swap(current, next);
+            if (exp0380_probe && base_position == 896 && prompt.size() == kPrefillBatch
+                && layer == static_cast<std::size_t>(exp0380_probe_layer())
+                && exp0380_probe_stage() == 10) {
+                std::cerr << "EXP0380 B64 layer=" << layer
+                          << " HANDOFF GPU_EVENT BEGIN\n" << std::flush;
+                MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+                std::cerr << "EXP0380 B64 layer=" << layer
+                          << " HANDOFF GPU_EVENT END\n" << std::flush;
+                std::exit(0);
+            }
             if (exp0380_probe && base_position == 768 && prompt.size() == kM12PrefillBatch) {
                 std::cerr << "EXP0380 PREFIX_B128 layer=" << layer << " END alloc="
                           << g_device_allocations << " total=" << g_total_device_bytes

@@ -218,6 +218,22 @@ The L63 attempt initially sat in model initialization (`D`,
 bounded process remained alive; that initialization wait is not attributed to
 B64 attention.
 
+## Post-layer handoff probe
+
+Stage 10 added a test-only checkpoint after the B64 layer-major path had
+returned, released its temporary M23 resources, swapped activation buffers,
+and synchronized the existing stream. It passed at both ends of the stack:
+
+```text
+target layer   handoff result
+L3             GPU_EVENT END
+L63            GPU_EVENT END
+```
+
+Thus the exact L3 attention composition and its immediate release/swap
+handoff both complete in the real P960 state. The same is true at L63. The
+whole-model B64 collapse is not localized to those boundaries.
+
 ## Decision
 
 **LEARN.** No individual B64 attention operation has failed in the qualified
@@ -228,13 +244,13 @@ individual attention stages; no first hanging operation has been proven.
 
 ## Exact next PRIMARY
 
-The next PRIMARY is runtime composition after the qualified B64 attention
-stage: isolate the first post-layer handoff/release or later-layer operation
-without running the remaining whole-model B64 workload. Keep repeated-B128
-stream/workspace/driver-state attribution in scope because its variable
-prefix behavior remains the only reproduced runtime instability. Do not
-attribute the hang to a specific Q/K/causal/O/FFN kernel, and do not run B4
-or whole-model qualification until that runtime contract is proven.
+The next PRIMARY is a bounded later-layer B64 composition ladder, beginning
+with the first layer after the qualified L3 boundary and stopping after one
+target layer's handoff. Keep repeated-B128 stream/workspace/driver-state
+attribution in scope because its variable prefix behavior remains the only
+reproduced runtime instability. Do not attribute the hang to a specific
+Q/K/causal/O/FFN kernel, and do not run B4 or whole-model qualification until
+that runtime contract is proven.
 Do not run FFN, B4, or whole-model qualification.
 
 Is B64 scheduler work authorized? **NO.**
