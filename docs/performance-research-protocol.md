@@ -195,4 +195,9 @@ differs, alongside earlier L5/L6 recurrent state/history differences, so the
 L6→L7 handoff is not the origin. The next PRIMARY is refreshed full-model
 prefill attribution, followed only if justified by L5→L6 contract
 qualification. No KV-write fix, tail geometry, or performance kernel is
-authorized until that upstream contract is qualified.
+authorized until that upstream contract is qualified. EXP-0373 then qualified
+the aligned B128 route at P640/P1664: both 16-token continuations matched,
+state drift was smooth, and the route recovered 77.89%/60.20% of clean
+prefill wall. The next PRIMARY is arbitrary-remainder scheduling with the
+validated B128 route; do not continue L5→L6 forensics without contradictory
+model-boundary evidence.

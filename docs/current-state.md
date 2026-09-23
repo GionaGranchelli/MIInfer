@@ -22,8 +22,10 @@ EXP-0371 localized the first unique difference to L7 input hidden before
 attention normalization. EXP-0372 found that L6 input already differs, with
 earlier L5/L6 recurrent state/history differences. The L6→L7 handoff is not
 the origin; the next evidence target is L5→L6 only after refreshed full-model
-attribution. The original P640 delta remains classified as
-expected batched drift.
+attribution. EXP-0373 refreshed P640/P1664 full-model semantics and found
+identical 16-token continuations with smooth recurrent drift; the aligned B128
+route is now qualified and recovers 77.89%/60.20% of P640/P1664 prefill wall.
+The next target is arbitrary-remainder scheduling, not more layer forensics.
 EXP-0360 through EXP-0363 rejected the tested
 attention families; they did not authorize an optimization candidate or imply
 that attention is still the dominant end-to-end gap. The current qualified decode path is
