@@ -4294,6 +4294,27 @@ struct FullAttentionLayer {
         }
     }
 
+    void capture_exp0371_prepare(const float* inputs, std::size_t count,
+                                 const float* normalized_out,
+                                 const float* qfull_out,
+                                 const float* value_out) const {
+        const char* prefix = std::getenv("MIINFER_EXP0371_CAPTURE_PREFIX");
+        if (prefix == nullptr || index != 7 || count < 4) return;
+        const std::size_t qfull_stride = (24 * 2 + 4) * 256;
+        const auto input_host = download(inputs, count * kHidden);
+        const auto norm_host = download(normalized_out, count * kHidden);
+        const auto qfull_host = download(qfull_out, count * qfull_stride);
+        const auto value_host = download(value_out, count * 1024);
+        const auto write = [&](const char* suffix, const float* data, std::size_t stride) {
+            std::ofstream out(std::string(prefix) + suffix, std::ios::binary | std::ios::trunc);
+            out.write(reinterpret_cast<const char*>(data), 4 * stride * sizeof(float));
+        };
+        write(".input.f32", input_host.data(), kHidden);
+        write(".norm.f32", norm_host.data(), kHidden);
+        write(".qfull.f32", qfull_host.data(), qfull_stride);
+        write(".v.f32", value_host.data(), 1024);
+    }
+
     bool prepare_prefill_batch(const float* inputs, std::size_t count,
                                bool normalized_ready = false) {
         ensure_m23_repacked();
@@ -4396,6 +4417,9 @@ struct FullAttentionLayer {
             }
             stage_end(4, stage_profile_position);
             count_m23_dispatch(1);
+            capture_exp0371_prepare(inputs, count, normalized_out,
+                                    static_cast<const float*>(prefill_qfull->get()),
+                                    static_cast<const float*>(prefill_value->get()));
             return true;
         }
         for (std::size_t i = 0; i < count; ++i) {
@@ -4429,6 +4453,9 @@ struct FullAttentionLayer {
                     hipStreamPerThread);
             }
         }
+        capture_exp0371_prepare(inputs, count, normalized_out,
+                                static_cast<const float*>(prefill_qfull->get()),
+                                static_cast<const float*>(prefill_value->get()));
         return true;
     }
 
@@ -5006,6 +5033,16 @@ struct FullAttentionLayer {
         if (scalar_capture_prefix != nullptr && index == 7
             && position >= 1536 && position < 1540) {
             const auto mode = position == 1536 ? std::ios::trunc : std::ios::app;
+            const auto write_tensor = [&](const char* suffix, const float* data, std::size_t elements) {
+                std::ofstream out(std::string(scalar_capture_prefix) + suffix,
+                                  std::ios::binary | mode);
+                out.write(reinterpret_cast<const char*>(data),
+                          static_cast<std::streamsize>(elements * sizeof(float)));
+            };
+            write_tensor(".input.f32", input, kHidden);
+            write_tensor(".norm.f32", normalized_input, kHidden);
+            write_tensor(".qfull.f32", qfull_dest, 13312);
+            write_tensor(".v.f32", value_input, 1024);
             std::ofstream k_out(std::string(scalar_capture_prefix) + ".l7.projected-k.f32",
                                 std::ios::binary | mode);
             std::ofstream v_out(std::string(scalar_capture_prefix) + ".l7.write-v.f32",

@@ -188,7 +188,8 @@ versus scalar P512 showed substantially larger K/V error envelopes. EXP-0369
 corrected the P1664 comparison indexing: the first divergence is at the actual
 partial-tail boundary, position 1536, where the selector changes the route
 from scalar `run()` to batched partial attention. The current frontier is
-stage-level qualification of that route. EXP-0370 localized the first L7 tail
-divergence to projected K/V inputs before cache storage; no KV-write fix, tail
-geometry, or performance kernel is authorized until that upstream contract is
-qualified.
+stage-level qualification of that route. EXP-0370 localized divergence before
+cache storage, and EXP-0371 localized the first unique difference to L7 input
+hidden before attention normalization. The current frontier is the L6→L7
+inter-layer output contract; no KV-write fix, tail geometry, or performance
+kernel is authorized until that upstream contract is qualified.
