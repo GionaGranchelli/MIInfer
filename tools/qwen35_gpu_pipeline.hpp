@@ -84,6 +84,22 @@ bool environment_flag(const char* name, bool default_value = false) {
     throw std::runtime_error(std::string(name) + " must be 0 or 1");
 }
 
+bool exp0380_b64_probe_enabled() {
+    return environment_flag("MIINFER_EXP0380_B64_ATTN_PROBE");
+}
+
+int exp0380_probe_stage() {
+    const char* value = std::getenv("MIINFER_EXP0380_STAGE");
+    return value == nullptr ? 0 : std::atoi(value);
+}
+
+[[noreturn]] void exp0380_probe_complete(const char* stage) {
+    std::cerr << "EXP0380 " << stage << " GPU_EVENT BEGIN\n" << std::flush;
+    MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+    std::cerr << "EXP0380 " << stage << " GPU_EVENT END\n" << std::flush;
+    std::exit(0);
+}
+
 std::size_t g_device_allocations = 0;
 std::size_t g_total_device_bytes = 0;
 std::size_t g_live_device_bytes = 0;
@@ -1923,7 +1939,9 @@ struct RecurrentLayer {
                                      std::uint32_t base_position,
                                      std::uint32_t token_count) {
         if (projected_qkv == nullptr || projected_gate == nullptr || projected_beta == nullptr
-            || projected_decay == nullptr || token_count < kM12PrefillBatch
+            || projected_decay == nullptr
+            || (token_count < kM12PrefillBatch
+                && !(exp0380_b64_probe_enabled() && token_count == kPrefillBatch))
             || token_count > prefill_capacity || token_count % kPrefillBatch != 0
             || !m12_gdn_workspace_ready || m12_gdn_raw_output == nullptr
             || !prefill_core_query || !prefill_core_key || !prefill_core_value
@@ -1984,7 +2002,10 @@ struct RecurrentLayer {
 
     const float* prefill_wide_beta_decay(const float* inputs, std::uint32_t base_position,
                                          std::uint32_t token_count) {
-        if (inputs == nullptr || token_count < kM12PrefillBatch || token_count > prefill_capacity
+        if (inputs == nullptr
+            || (token_count < kM12PrefillBatch
+                && !(exp0380_b64_probe_enabled() && token_count == kPrefillBatch))
+            || token_count > prefill_capacity
             || token_count % kPrefillBatch != 0 || !prefill_normalized
             || !prefill_core_beta || !prefill_core_decay) {
             throw std::runtime_error("invalid M23 wide beta/decay inputs");
@@ -2014,7 +2035,10 @@ struct RecurrentLayer {
 
     const float* prefill_wide_qkv_gate(const float* inputs, std::uint32_t base_position,
                                        std::uint32_t token_count) {
-        if (!prefill_wide_qkv || token_count < kM12PrefillBatch || token_count > prefill_capacity
+        if (!prefill_wide_qkv
+            || (token_count < kM12PrefillBatch
+                && !(exp0380_b64_probe_enabled() && token_count == kPrefillBatch))
+            || token_count > prefill_capacity
             || token_count % kPrefillBatch != 0
             || ((!prefill_wide_repacked) && (wide_qkv_fp16 == nullptr || wide_gate_fp16 == nullptr))
             || m12_dense_input == nullptr || m12_dense_handle == nullptr) {
@@ -2210,7 +2234,9 @@ struct RecurrentLayer {
 
     const float* prefill_wide_ssm_out(const float* gated_batch, std::uint32_t base_position,
                                       std::uint32_t token_count) {
-        if (!prefill_wide_qkv || gated_batch == nullptr || token_count < kM12PrefillBatch
+        if (!prefill_wide_qkv || gated_batch == nullptr
+            || (token_count < kM12PrefillBatch
+                && !(exp0380_b64_probe_enabled() && token_count == kPrefillBatch))
             || token_count > prefill_capacity || token_count % kPrefillBatch != 0
             || ((!prefill_wide_repacked) && wide_ssm_out_fp16 == nullptr)
             || m12_dense_input == nullptr || m12_dense_handle == nullptr) {
@@ -2317,7 +2343,9 @@ struct RecurrentLayer {
                       std::uint32_t token_count) {
         if (prefill_mx_repacked) ensure_mx_repacked();
         else ensure_m23_repacked();
-        if (!prefill_wide_qkv || inputs == nullptr || outputs == nullptr || token_count < kM12PrefillBatch
+        if (!prefill_wide_qkv || inputs == nullptr || outputs == nullptr
+            || (token_count < kM12PrefillBatch
+                && !(exp0380_b64_probe_enabled() && token_count == kPrefillBatch))
             || token_count > prefill_capacity || token_count % kPrefillBatch != 0
             || ((!prefill_wide_repacked) && (!wide_ffn_gate_fp16 || !wide_ffn_up_fp16 || !wide_ffn_down_fp16))
             || m12_dense_input == nullptr || m12_dense_handle == nullptr) {
@@ -4349,14 +4377,19 @@ struct FullAttentionLayer {
             || inputs == nullptr
             || (d_qk_combined == nullptr && d_qk_mmq == nullptr)
             || (d_v_native == nullptr
-                && !(wide_attn_prefill && count >= kM12PrefillBatch
+                && !(wide_attn_prefill
+                     && (count >= kM12PrefillBatch
+                         || (exp0380_b64_probe_enabled() && count == kPrefillBatch))
                      && count <= prefill_capacity && count % kPrefillBatch == 0
                      && d_v_mmq && prefill_mmq_q8))) {
             return false;
         }
         auto* normalized_out = static_cast<float*>(prefill_normalized->get());
         auto* q8_out = static_cast<miinfer::Q8_1Block*>(prefill_q8_1->get());
-        if (wide_attn_prefill && count >= kM12PrefillBatch && count <= prefill_capacity
+        if (wide_attn_prefill
+            && (count >= kM12PrefillBatch
+                || (exp0380_b64_probe_enabled() && count == kPrefillBatch))
+            && count <= prefill_capacity
             && count % kPrefillBatch == 0 && d_qk_mmq && d_v_mmq && prefill_mmq_q8) {
             if (m23_trace_dispatch) m23_dispatch_counts.fill(0);
             if (!normalized_ready) {
@@ -4539,14 +4572,22 @@ struct FullAttentionLayer {
             }
         }
         stage_start(2, profile_position);
+        const bool exp0380_probe = exp0380_b64_probe_enabled() && count == kPrefillBatch
+            && base_position == 896;
+        if (exp0380_probe) std::cerr << "EXP0380 L3 Q_SPLIT_NORM_ROPE HOST_BEGIN\n" << std::flush;
         miinfer::launch_qwen35_fused_q_split_norm_rope_batch(
             qfull, static_cast<const float*>(d_q_norm->get()),
             q, gate, count, base_position,
             24, 4, 256, model.config().rope_theta, model.config().rms_epsilon,
             hipStreamPerThread);
+        if (exp0380_probe) {
+            std::cerr << "EXP0380 L3 Q_SPLIT_NORM_ROPE HOST_RETURN\n" << std::flush;
+            if (exp0380_probe_stage() == 1) exp0380_probe_complete("L3 Q_SPLIT_NORM_ROPE");
+        }
         stage_end(2, profile_position);
         count_m23_dispatch(2);
         stage_start(3, profile_position);
+        if (exp0380_probe) std::cerr << "EXP0380 L3 K_NORM_ROPE_KV HOST_BEGIN\n" << std::flush;
         if (fp16_kv_cache) {
             miinfer::launch_qwen35_fused_k_norm_rope_kv_store_batch_f16(
                 qfull, value, static_cast<const float*>(d_k_norm->get()),
@@ -4560,9 +4601,14 @@ struct FullAttentionLayer {
                 count, base_position, g_cache_capacity, 24, 4, 256,
                 model.config().rope_theta, model.config().rms_epsilon, hipStreamPerThread);
         }
+        if (exp0380_probe) {
+            std::cerr << "EXP0380 L3 K_NORM_ROPE_KV HOST_RETURN\n" << std::flush;
+            if (exp0380_probe_stage() == 2) exp0380_probe_complete("L3 K_NORM_ROPE_KV");
+        }
         stage_end(3, profile_position);
         count_m23_dispatch(3);
         stage_start(6, profile_position);
+        if (exp0380_probe) std::cerr << "EXP0380 L3 CAUSAL HOST_BEGIN\n" << std::flush;
         if (gqa_tiled_attn_prefill) {
             if (!fp16_kv_cache) {
                 throw std::runtime_error(
@@ -4586,6 +4632,10 @@ struct FullAttentionLayer {
                 static_cast<const float*>(value_cache->get()), gate, output, count,
                 base_position, g_cache_capacity, 24, 4, 256,
                 1.0F / std::sqrt(256.0F), hipStreamPerThread);
+        }
+        if (exp0380_probe) {
+            std::cerr << "EXP0380 L3 CAUSAL HOST_RETURN\n" << std::flush;
+            if (exp0380_probe_stage() == 3) exp0380_probe_complete("L3 CAUSAL");
         }
         stage_end(6, profile_position);
         count_m23_dispatch(4);

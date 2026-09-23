@@ -98,6 +98,8 @@ bool apply_runtime_preset() {
             && value.rfind("MIINFER_EXP0374_REMAINDER_SCHED=", 0) != 0
             && value.rfind("MIINFER_EXP0376_CHUNK_TIMING=", 0) != 0
             && value.rfind("MIINFER_EXP0377_B64_RESIDUAL=", 0) != 0
+            && value.rfind("MIINFER_EXP0380_B64_ATTN_PROBE=", 0) != 0
+            && value.rfind("MIINFER_EXP0380_STAGE=", 0) != 0
             && value.rfind("MIINFER_HIP_GRAPH=", 0) != 0) {
             names.emplace_back(value.substr(0, value.find('=')));
         }
@@ -1160,6 +1162,8 @@ public:
         const bool exp0377_b64 = exp0374_scheduler
             && std::getenv("MIINFER_EXP0377_B64_RESIDUAL") != nullptr
             && std::strcmp(std::getenv("MIINFER_EXP0377_B64_RESIDUAL"), "0") != 0;
+        const bool exp0380_probe = exp0374_scheduler && exp0380_b64_probe_enabled();
+        const int exp0380_stage = exp0380_probe ? exp0380_probe_stage() : -1;
         exp0376_chunk_timings_.clear();
         remainder_scheduler_counters_ = {};
         for (std::size_t base = start_position; base < prompt.size();) {
@@ -1275,8 +1279,12 @@ public:
                 if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
                 layer_span[layer].profile_ordered_start(
                     prefill_profile_.enabled ? base : std::numeric_limits<std::size_t>::max());
-                if (wide_prefill_ && count >= kM12PrefillBatch
+                if (wide_prefill_ && (count >= kM12PrefillBatch
+                                      || (exp0380_probe && count == kPrefillBatch))
                     && layer_span[layer].recurrent != nullptr) {
+                    if (exp0380_probe && count == kPrefillBatch && layer < 3) {
+                        std::cerr << "EXP0380 L" << layer << " REC HOST_BEGIN\n" << std::flush;
+                    }
                     if (trace_exp0369) {
                         std::cout << "EXP0369 route base=" << base << " count=" << count
                                   << " absolute=" << base << " layer=" << layer
@@ -1297,7 +1305,8 @@ public:
                 const bool deferred_tail = prepared && layer_span[layer].prefill_tail_batch_supported()
                     && (!gdn_chunkwise_prefill_ || full_m12_chunk);
                 const bool batched_attention = prepared && deferred_tail
-                    && count >= kM12PrefillBatch
+                    && (count >= kM12PrefillBatch
+                        || (exp0380_probe && count == kPrefillBatch))
                     && layer_span[layer].wide_attention_batch_ready();
                 if (trace_exp0369) {
                     std::cout << "EXP0369 route base=" << base << " count=" << count
@@ -1347,6 +1356,12 @@ public:
                     }
                 }
                 if (batched_attention) {
+                    if (exp0380_probe && layer == 3 && count == kPrefillBatch && exp0380_stage == 0) {
+                        std::cerr << "EXP0380 L3 PREP HOST_RETURN BEGIN\n" << std::flush;
+                        MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+                        std::cerr << "EXP0380 L3 PREP GPU_EVENT END\n" << std::flush;
+                        std::exit(0);
+                    }
                     layer_span[layer].finish_prefill_attention(
                         static_cast<std::uint32_t>(base), count);
                 }
@@ -1392,6 +1407,8 @@ public:
                                           std::size_t base_position) {
         float* current = static_cast<float*>(prefill_a_->get());
         float* next = static_cast<float*>(prefill_b_->get());
+        const bool exp0380_probe = exp0380_b64_probe_enabled()
+            && std::getenv("MIINFER_EXP0374_REMAINDER_SCHED") != nullptr;
         for (std::size_t i = 0; i < prompt.size(); ++i) {
             if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
             MIINFER_HIP_CHECK(hipMemcpyAsync(
@@ -1418,7 +1435,8 @@ public:
                     std::min<std::size_t>(full_chunk, prompt.size() - base));
                 const float* chunk_input = current + base * kHidden;
                 float* chunk_output = next + base * kHidden;
-                if (wide_prefill_ && count >= kM12PrefillBatch
+                if (wide_prefill_ && (count >= kM12PrefillBatch
+                                      || (exp0380_probe && count == kPrefillBatch))
                     && layer_span[layer].recurrent != nullptr) {
                     if (trace_exp0369) {
                         std::cout << "EXP0369 route base=" << base << " count=" << count
@@ -1427,16 +1445,25 @@ public:
                     }
                     layer_span[layer].recurrent->prefill_wide(
                         chunk_input, chunk_output, static_cast<std::uint32_t>(base_position + base), count);
+                    if (exp0380_probe && count == kPrefillBatch && layer < 3) {
+                        std::cerr << "EXP0380 L" << layer << " REC HOST_RETURN\n" << std::flush;
+                        MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+                        std::cerr << "EXP0380 L" << layer << " REC GPU_EVENT END\n" << std::flush;
+                    }
                     continue;
                 }
                 const bool prepared = layer_span[layer].prepare_prefill_batch(
                     chunk_input, count, false,
                     prefill_profile_.enabled ? base : std::numeric_limits<std::size_t>::max());
+                if (exp0380_probe && layer == 3 && count == kPrefillBatch) {
+                    std::cerr << "EXP0380 L3 PREP HOST_RETURN\n" << std::flush;
+                }
                 const bool full_m12_chunk = count % kPrefillBatch == 0;
                 const bool deferred_tail = prepared && layer_span[layer].prefill_tail_batch_supported()
                     && (!gdn_chunkwise_prefill_ || full_m12_chunk);
                 const bool batched_attention = prepared && deferred_tail
-                    && count >= kM12PrefillBatch
+                    && (count >= kM12PrefillBatch
+                        || (exp0380_probe && count == kPrefillBatch))
                     && layer_span[layer].wide_attention_batch_ready();
                 if (trace_exp0369) {
                     std::cout << "EXP0369 route base=" << base << " count=" << count
@@ -1463,6 +1490,13 @@ public:
                     }
                 }
                 if (batched_attention) {
+                    if (exp0380_probe && layer == 3 && count == kPrefillBatch
+                        && exp0380_probe_stage() == 0) {
+                        std::cerr << "EXP0380 L3 PREP HOST_RETURN\n" << std::flush;
+                        MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+                        std::cerr << "EXP0380 L3 PREP GPU_EVENT END\n" << std::flush;
+                        std::exit(0);
+                    }
                     layer_span[layer].finish_prefill_attention(
                         static_cast<std::uint32_t>(base_position + base), count);
                 }
