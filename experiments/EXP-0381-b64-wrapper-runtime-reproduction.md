@@ -52,6 +52,11 @@ above that enable the already-proven repeated-B128/B64 test route. No session
 reuse was requested; no graph decode was selected for the direct two-token
 case (`stream=true`).
 
+The exact old shell command was checked against the repository records and
+available shell history. The reverted `MIINFER_EXP0379_B64_CORE=1` selector is
+not recoverable as an executable current-HEAD invocation; the current-equivalent
+wrapper command above is therefore the reproducible admitted command.
+
 ## Zero-token wrapper result
 
 Case A used `max_new_tokens=0` and the ordinary CLI wrapper. It emitted:
@@ -90,6 +95,8 @@ Semantic sanity:
 
 ```text
 first token id = 561
+final norm finite = 1
+logits finite = 1
 ```
 
 Result: **PASS**. No post-prefill stage failed to return or synchronize.
@@ -154,8 +161,8 @@ No performance benchmark or new GPU math kernel was implemented.
 
 ## Provenance
 
-Experiment SHA: `34d6f98850dbdff8aa60cfd8fd0a8902bc4ea424`.
+Experiment SHA: `6b1b699cc5030798b7fec9caee1bc6c4cffecbb0`.
 
-Graph SHA: `36f48f7b7dff2dff65f4f7763b8fc821eec2971e` (`graphify-out/graph.json` blob).
+Graph SHA: `4102b5a9492f9c709969c36a8d039ff5c8b79dad` (`graphify-out/graph.json` blob).
 
 Working-tree status: clean after the experiment record and graph refresh.

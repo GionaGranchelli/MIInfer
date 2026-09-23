@@ -1618,6 +1618,14 @@ public:
         exp0381_marker("FINAL_NORM_RETURN");
         MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
         exp0381_marker("FINAL_NORM_GPU_COMPLETE");
+        if (exp0381_wrapper_probe_enabled()) {
+            std::vector<float> host_norm(kHidden);
+            MIINFER_HIP_CHECK(hipMemcpy(host_norm.data(), final_norm_->get(),
+                                        host_norm.size() * sizeof(float), hipMemcpyDeviceToHost));
+            const bool finite = std::all_of(host_norm.begin(), host_norm.end(),
+                [](float value) { return std::isfinite(value); });
+            std::cerr << "EXP0381 FINAL_NORM_FINITE=" << (finite ? 1 : 0) << "\n" << std::flush;
+        }
         exp0381_marker("FINAL_QUANT_BEGIN");
         miinfer::launch_q8_1_quantize_f32(
             static_cast<const float*>(final_norm_->get()),
@@ -1635,6 +1643,14 @@ public:
         exp0381_marker("LM_HEAD_RETURN");
         MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
         exp0381_marker("LM_HEAD_GPU_COMPLETE");
+        if (exp0381_wrapper_probe_enabled()) {
+            std::vector<float> host_logits(model_.config().vocab_size);
+            MIINFER_HIP_CHECK(hipMemcpy(host_logits.data(), logits_->get(),
+                                        host_logits.size() * sizeof(float), hipMemcpyDeviceToHost));
+            const bool finite = std::all_of(host_logits.begin(), host_logits.end(),
+                [](float value) { return std::isfinite(value); });
+            std::cerr << "EXP0381 LOGITS_FINITE=" << (finite ? 1 : 0) << "\n" << std::flush;
+        }
         exp0381_marker("ARGMAX_BEGIN");
         miinfer::launch_qwen3_argmax(
             static_cast<const float*>(logits_->get()),
