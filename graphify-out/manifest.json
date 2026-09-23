@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1790117037.4641697,
-    "seen": 1790117190.7806013,
-    "ast_hash": "2b3011ad0f5aa5176dee36241cdd1ba7",
+    "mtime": 1790145109.6952026,
+    "seen": 1790145133.0403008,
+    "ast_hash": "4653f58813e97a868f90699cd5853732",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1790077504.7772214,
-    "seen": 1790077774.7475517,
-    "ast_hash": "8cdd36f887330b358beaea99e48b0394",
+    "mtime": 1790143949.489393,
+    "seen": 1790145133.0398314,
+    "ast_hash": "10892ce7121aba214a606993db093588",
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_primitives.hpp": {
@@ -2364,15 +2364,15 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1790116116.4019644,
-    "seen": 1790117190.7805488,
-    "ast_hash": "aa5fa849ec906bf2622635326bd097a2",
+    "mtime": 1790144130.3584516,
+    "seen": 1790145133.04025,
+    "ast_hash": "6df5f80deff48f513cf48310ccaea17b",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1790086109.4416516,
-    "seen": 1790087357.4893448,
-    "ast_hash": "946d0c4d41e066846c3709771521b6e9",
+    "mtime": 1790144796.7508805,
+    "seen": 1790145133.040252,
+    "ast_hash": "78ce1de029a6098279dc2606e4a553ea",
     "semantic_hash": ""
   },
   "docs/M9-AUTOREGRESSIVE-QUALIFICATION.md": {
@@ -5394,9 +5394,9 @@
     "semantic_hash": ""
   },
   "docs/performance-research-protocol.md": {
-    "mtime": 1790117037.4621696,
-    "seen": 1790117190.7806234,
-    "ast_hash": "a0bb8c05f691d0638633a111971e85b4",
+    "mtime": 1790145085.366333,
+    "seen": 1790145133.0403228,
+    "ast_hash": "aefd9cc09c3ffacb1b5500d9e32f56af",
     "semantic_hash": ""
   },
   "experiments/EXP-0364-full-model-prefill-bottleneck-attribution.md": {
@@ -5433,6 +5433,12 @@
     "mtime": 1790117133.3406677,
     "seen": 1790117190.7811508,
     "ast_hash": "9f7f17e78a9fabff746641be3c9ab0e7",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0370-l7-tail-kv-causal-contract.md": {
+    "mtime": 1790145085.365333,
+    "seen": 1790145133.0409124,
+    "ast_hash": "f7374b83ce133a67a699862c4d239a3b",
     "semantic_hash": ""
   }
 }
