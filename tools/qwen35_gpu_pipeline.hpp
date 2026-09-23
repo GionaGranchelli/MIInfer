@@ -4643,6 +4643,13 @@ struct FullAttentionLayer {
 
     void finish_prefill_wide(const float* inputs, float* outputs, std::size_t count,
                              const float* next_norm_weight, float* next_normalized) {
+        const bool exp0380_probe = exp0380_b64_probe_enabled() && index == 3
+            && count == kPrefillBatch;
+        const auto exp0380_stage = [&](const char* name, int stage) {
+            if (!exp0380_probe) return;
+            std::cerr << "EXP0380 L3 " << name << " HOST_RETURN\n" << std::flush;
+            if (exp0380_probe_stage() == stage) exp0380_probe_complete(name);
+        };
         auto* q8 = static_cast<miinfer::M23Q8_1MmqBlock*>(prefill_mmq_q8->get());
         miinfer::MxQ8_1MmqBlock* mx_q8 = nullptr;
         if (prefill_mx_ffn || prefill_mx_o) {
@@ -4701,6 +4708,7 @@ struct FullAttentionLayer {
                 static_cast<std::uint32_t>(count), hipStreamPerThread);
         }
         stage_end(7, profile_position);
+        exp0380_stage("O", 4);
         count_m23_dispatch(5);
         auto* residual_batch = static_cast<float*>(prefill_residual->get());
         auto* normalized_batch = static_cast<float*>(prefill_post_normalized->get());
@@ -4711,8 +4719,10 @@ struct FullAttentionLayer {
             residual_batch, normalized_batch, static_cast<std::uint32_t>(count), kHidden,
             model.config().rms_epsilon, hipStreamPerThread);
         stage_end(8, profile_position);
+        exp0380_stage("POST_ATTN_NORM", 5);
 
         stage_start(10, profile_position);
+        if (exp0380_probe) std::cerr << "EXP0380 L3 FFN_GATE_UP HOST_BEGIN\n" << std::flush;
         if (prefill_mx_ffn) {
             miinfer::launch_mx_q8_1_mmq_quantize(
                 normalized_batch, mx_q8, static_cast<std::uint32_t>(count), kHidden, true,
@@ -4739,6 +4749,7 @@ struct FullAttentionLayer {
                 static_cast<std::uint32_t>(count), hipStreamPerThread);
         }
         stage_end(10, profile_position);
+        exp0380_stage("FFN_GATE_UP", 6);
         count_m23_dispatch(6);
         count_m23_dispatch(7);
         stage_start(11, profile_position);
@@ -4748,6 +4759,7 @@ struct FullAttentionLayer {
             static_cast<float*>(prefill_ffn_activation->get()),
             static_cast<std::uint32_t>(count * kFfnInner), hipStreamPerThread);
         stage_end(11, profile_position);
+        exp0380_stage("SWIGLU", 7);
         stage_start(12, profile_position);
         if (prefill_mx_ffn) {
             miinfer::launch_mx_q8_1_mmq_quantize(
@@ -4783,6 +4795,7 @@ struct FullAttentionLayer {
             }
         }
         stage_end(12, profile_position);
+        exp0380_stage("FFN_DOWN", 8);
         count_m23_dispatch(8);
         stage_start(13, profile_position);
         if (next_norm_weight != nullptr && next_normalized != nullptr) {
@@ -4797,6 +4810,7 @@ struct FullAttentionLayer {
                 outputs, static_cast<std::uint32_t>(count * kHidden), hipStreamPerThread);
         }
         stage_end(13, profile_position);
+        exp0380_stage("FINAL_OUTPUT", 9);
         if (m23_trace_dispatch) {
             std::cerr << "M23 attention dispatches: qk=" << m23_dispatch_counts[0]
                       << " v=" << m23_dispatch_counts[1]

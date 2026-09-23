@@ -1433,6 +1433,9 @@ public:
                 if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
                 const auto count = static_cast<std::uint32_t>(
                     std::min<std::size_t>(full_chunk, prompt.size() - base));
+                if (exp0380_probe && base_position + base == 896 && count == kPrefillBatch) {
+                    std::cerr << "EXP0380 B64 CHUNK_BEGIN\n" << std::flush;
+                }
                 const float* chunk_input = current + base * kHidden;
                 float* chunk_output = next + base * kHidden;
                 if (wide_prefill_ && (count >= kM12PrefillBatch
@@ -1451,6 +1454,9 @@ public:
                         std::cerr << "EXP0380 L" << layer << " REC GPU_EVENT END\n" << std::flush;
                     }
                     continue;
+                }
+                if (exp0380_probe && layer == 3 && count == kPrefillBatch) {
+                    std::cerr << "EXP0380 L3 PREP_HOST_BEGIN\n" << std::flush;
                 }
                 const bool prepared = layer_span[layer].prepare_prefill_batch(
                     chunk_input, count, false,

@@ -46,9 +46,9 @@ first attention layer=L3
 | --- | --- | --- | --- |
 | preparation | yes | yes | PASS |
 | Q split/norm/RoPE | yes | yes | PASS |
-| K norm/RoPE/KV store | no marker | no | watchdog stop |
-| causal attention | not attempted | not attempted | STOP |
-| O projection | not attempted | not attempted | STOP |
+| K norm/RoPE/KV store | yes | yes | PASS |
+| causal attention | yes | yes | PASS |
+| O projection | no O marker | no | bounded timeout before O boundary |
 | post-attention norm | not attempted | not attempted | STOP |
 | FFN gate/up | not attempted | not attempted | STOP |
 | SwiGLU | not attempted | not attempted | STOP |
@@ -71,14 +71,26 @@ EXP0380 L3 Q_SPLIT_NORM_ROPE GPU_EVENT BEGIN
 EXP0380 L3 Q_SPLIT_NORM_ROPE GPU_EVENT END
 ```
 
-The stage-2 run was killed after 120 seconds without a K/KV marker. Since the
-marker was not emitted, this run does not prove that the K/KV kernel itself was
-entered. No later stage was attempted.
+The bounded K-stage rerun emitted:
+
+```text
+EXP0380 L3 K_NORM_ROPE_KV HOST_BEGIN
+EXP0380 L3 K_NORM_ROPE_KV HOST_RETURN
+EXP0380 L3 K_NORM_ROPE_KV GPU_EVENT BEGIN
+EXP0380 L3 K_NORM_ROPE_KV GPU_EVENT END
+```
+
+The bounded causal rerun emitted matching host-return and GPU-event markers.
+The O-stage run did not emit any EXP-0380 marker and was stopped after 120
+seconds, so it does not prove that O projection was entered.
 
 ## Host wait evidence
 
-The watchdog killed the stage-2 process before a `/proc/<pid>/stack` capture
-was taken. After termination, `rocm-smi` reported:
+The O-stage watchdog sampled the live process repeatedly. Its `wchan` samples
+were mostly `0`, with isolated `folio_wait_bit_common` and `futex_do_wait`
+observations. Reading `/proc/<pid>/stack` returned `Permission denied` before
+the process was killed, so no kernel stack was captured. After termination,
+`rocm-smi` reported:
 
 ```text
 GPU utilization: 0%
@@ -88,7 +100,7 @@ temperature: edge 39 C, junction 41 C, memory 39 C
 ```
 
 Therefore the failure is not explained by thermal or clock throttling. The
-failure class remains **UNKNOWN / pre-marker host or HIP-runtime wait**; a GPU
+failure class remains **UNKNOWN / pre-O host or HIP-runtime wait**; a GPU
 kernel noncompletion is not proven.
 
 ## B128 comparison
@@ -99,19 +111,19 @@ probe's pre-marker boundary is instrumented more precisely.
 
 ## Decision
 
-**LEARN / INCOMPLETE LOCALIZATION.** Preparation and Q split/norm/RoPE are
-proven to complete in the exact composed state. The first unresolved boundary
-is before the K/KV completion marker, but the current evidence is insufficient
-to name the exact failing operation.
+**LEARN / INCOMPLETE LOCALIZATION.** Preparation, Q split/norm/RoPE, K/RoPE/KV,
+and causal attention are proven to complete in the exact composed state. The
+first unresolved boundary is after L3 causal attention and before the O marker;
+the current evidence is insufficient to name O projection itself as the
+failing operation.
 
 ## Exact next PRIMARY
 
-Add flushed markers around the real B64 chunk entry and the L3 preparation
-call-site, plus a bounded `/proc` wchan/stack capture while the process is
-still alive. Re-run only the K-stage probe once. The next result must
-distinguish a pre-K recurrent/host wait from entry into
-`launch_qwen35_fused_k_norm_rope_kv_store_batch_f16`; do not run causal, O, FFN,
-B4, or whole-model qualification until that boundary is proven.
+Add a flushed marker immediately on entry to `finish_prefill_wide()` and around
+the existing O host-call boundary. Capture a user-space debugger/backtrace if
+the process remains in `wchan=0`; `/proc/<pid>/stack` is unavailable under the
+current permissions. Do not run FFN, B4, or whole-model qualification until
+the post-causal/pre-O boundary is proven.
 
 Is B64 scheduler work authorized? **NO.**
 
