@@ -1537,6 +1537,10 @@ public:
             std::swap(current, next);
         }
         if (!exp0376_chunk_timing_) MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+        if (exp0380_probe) {
+            std::cerr << "EXP0380 FULL_CHUNK_END base=" << base_position
+                      << " count=" << prompt.size() << "\n" << std::flush;
+        }
         return current + (prompt.size() - 1) * kHidden;
     }
 
