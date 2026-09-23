@@ -1275,8 +1275,9 @@ public:
 
             // Bounded chunk storage; layer order preserves recurrent state and
             // causal KV dependencies while keeping the full chunk at one layer.
-            if (exp0380_probe && base == 896 && count == kPrefillBatch) {
-                std::cerr << "EXP0380 GENERIC_B64_CHUNK_BEGIN\n" << std::flush;
+            if (exp0380_probe) {
+                std::cerr << "EXP0380 CHUNK_BEGIN base=" << base
+                          << " count=" << count << "\n" << std::flush;
             }
             for (std::size_t layer = 0; layer < layer_span.size(); ++layer) {
                 if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
@@ -1412,6 +1413,10 @@ public:
         float* next = static_cast<float*>(prefill_b_->get());
         const bool exp0380_probe = exp0380_b64_probe_enabled()
             && std::getenv("MIINFER_EXP0374_REMAINDER_SCHED") != nullptr;
+        if (exp0380_probe) {
+            std::cerr << "EXP0380 FULL_CHUNK_BEGIN base=" << base_position
+                      << " count=" << prompt.size() << "\n" << std::flush;
+        }
         for (std::size_t i = 0; i < prompt.size(); ++i) {
             if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
             MIINFER_HIP_CHECK(hipMemcpyAsync(

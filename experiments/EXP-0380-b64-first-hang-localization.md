@@ -115,6 +115,12 @@ not reach B64 at all. The full P960 prefix is not a stable prerequisite for
 the later-stage probe under repeated execution; this is a separate runtime
 boundary that must be isolated before interpreting O/FFN stages.
 
+The latest run also added `FULL_CHUNK_BEGIN` at entry to
+`prefill_full_layer_major_chunk()` and emitted no marker. It therefore stopped
+before the full-layer-major B512/B128 path was entered, during the earlier
+P960 prefix. This confirms that the missing O marker is not evidence against
+the L3 O projection.
+
 ## B128 comparison
 
 Not run as a new probe. Existing EXP-0375 evidence proves the matched B128
