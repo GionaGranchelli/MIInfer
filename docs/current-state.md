@@ -16,8 +16,9 @@ contract was rejected, and EXP-0367/0368 localized the first observable
 difference while adding a reusable state-level oracle; the `0.00195312` delta
 is within the larger qualified-B512-vs-scalar numerical envelope. EXP-0369
 corrected the P1664 state-index mapping: it diverges at the actual partial-tail
-boundary (position 1536), where the selector changes the route, and is
-classified as expected batched drift.
+boundary (position 1536), where the selector changes the route. EXP-0370
+localized the first L7 K/V divergence to projected inputs before cache storage,
+while the original P640 delta remains classified as expected batched drift.
 EXP-0360 through EXP-0363 rejected the tested
 attention families; they did not authorize an optimization candidate or imply
 that attention is still the dominant end-to-end gap. The current qualified decode path is

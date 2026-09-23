@@ -91,6 +91,8 @@ bool apply_runtime_preset() {
             && value.rfind("MIINFER_EXP0366_PARTIAL_TAIL=", 0) != 0
             && value.rfind("MIINFER_EXP0368_SCALAR_ORACLE=", 0) != 0
             && value.rfind("MIINFER_EXP0369_TRACE_ROUTE=", 0) != 0
+            && value.rfind("MIINFER_EXP0370_TRACE_CAUSAL=", 0) != 0
+            && value.rfind("MIINFER_EXP0370_CAPTURE_PREFIX=", 0) != 0
             && value.rfind("MIINFER_HIP_GRAPH=", 0) != 0) {
             names.emplace_back(value.substr(0, value.find('=')));
         }

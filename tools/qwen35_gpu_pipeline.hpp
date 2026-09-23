@@ -3670,6 +3670,7 @@ struct RecurrentLayer {
 };
 
 struct FullAttentionLayer {
+    std::size_t index;
     const miinfer::Qwen35Model& model;
     const miinfer::GgufTensor& attn_norm;
     const miinfer::GgufTensor& q_weight;
@@ -3776,7 +3777,7 @@ struct FullAttentionLayer {
     }
 
     FullAttentionLayer(const miinfer::Qwen35Model& model_value, std::size_t layer)
-        : model(model_value),
+        : index(layer), model(model_value),
           attn_norm(tensor(*model.file(), prefix(layer, "attn_norm.weight"))),
           q_weight(tensor(*model.file(), prefix(layer, "attn_q.weight"))),
           k_weight(tensor(*model.file(), prefix(layer, "attn_k.weight"))),
@@ -4472,6 +4473,22 @@ struct FullAttentionLayer {
         const auto* qfull = static_cast<const float*>(prefill_qfull->get());
         const auto* value = static_cast<const float*>(prefill_value->get());
         const auto profile_position = base_position + count - 1;
+        const char* capture_prefix = std::getenv("MIINFER_EXP0370_CAPTURE_PREFIX");
+        if (capture_prefix != nullptr && index == 7 && base_position == 1536 && count >= 4) {
+            const std::size_t qfull_stride = (24 * 2 + 4) * 256;
+            const auto qfull_host = download(qfull, count * qfull_stride);
+            const auto value_host = download(value, count * 1024);
+            std::ofstream k_out(std::string(capture_prefix) + ".l7.projected-k.f32",
+                                std::ios::binary | std::ios::trunc);
+            std::ofstream v_out(std::string(capture_prefix) + ".l7.write-v.f32",
+                                std::ios::binary | std::ios::trunc);
+            for (std::size_t token = 0; token < 4; ++token) {
+                k_out.write(reinterpret_cast<const char*>(qfull_host.data()
+                    + token * qfull_stride + 12288), 1024 * sizeof(float));
+                v_out.write(reinterpret_cast<const char*>(value_host.data()
+                    + token * 1024), 1024 * sizeof(float));
+            }
+        }
         stage_start(2, profile_position);
         miinfer::launch_qwen35_fused_q_split_norm_rope_batch(
             qfull, static_cast<const float*>(d_q_norm->get()),
@@ -4512,7 +4529,8 @@ struct FullAttentionLayer {
                 q, static_cast<const __half*>(key_cache->get()),
                 static_cast<const __half*>(value_cache->get()), gate, output, count,
                 base_position, g_cache_capacity, 24, 4, 256,
-                1.0F / std::sqrt(256.0F), hipStreamPerThread);
+                1.0F / std::sqrt(256.0F), hipStreamPerThread,
+                std::getenv("MIINFER_EXP0370_TRACE_CAUSAL") != nullptr);
         } else {
             miinfer::launch_qwen35_tiled_online_attention_batch(
                 q, static_cast<const float*>(key_cache->get()),
@@ -4984,6 +5002,19 @@ struct FullAttentionLayer {
                     1024, kHidden, (d_qk_combined || d_q_native || d_k_native) ? false : reuse_projection_q8);
         }
         stage_end(5, position);
+        const char* scalar_capture_prefix = std::getenv("MIINFER_EXP0370_CAPTURE_PREFIX");
+        if (scalar_capture_prefix != nullptr && index == 7
+            && position >= 1536 && position < 1540) {
+            const auto mode = position == 1536 ? std::ios::trunc : std::ios::app;
+            std::ofstream k_out(std::string(scalar_capture_prefix) + ".l7.projected-k.f32",
+                                std::ios::binary | mode);
+            std::ofstream v_out(std::string(scalar_capture_prefix) + ".l7.write-v.f32",
+                                std::ios::binary | mode);
+            k_out.write(reinterpret_cast<const char*>(key_dest), 1024 * sizeof(float));
+            v_out.write(reinterpret_cast<const char*>(value_input), 1024 * sizeof(float));
+            k_out.flush();
+            v_out.flush();
+        }
         stage_start(6, position);
         if (fused_rope_norm && decode_state != nullptr && fp16_kv_cache) {
             miinfer::launch_qwen35_fused_k_norm_rope_kv_store_f16_dynamic(

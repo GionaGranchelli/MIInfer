@@ -626,7 +626,8 @@ void launch_qwen35_tiled_online_attention_batch_f16(
     std::uint32_t kv_heads,
     std::uint32_t head_dim,
     float scale,
-    hipStream_t stream = nullptr);
+    hipStream_t stream = nullptr,
+    bool trace_causal = false);
 
 // Candidate 1: gfx906/Qwen3.8-only GQA-shared BK32 prefill attention.
 void launch_qwen35_gqa_tiled_online_attention_batch_f16(

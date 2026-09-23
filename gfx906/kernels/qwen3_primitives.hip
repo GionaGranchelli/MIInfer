@@ -2808,7 +2808,8 @@ __global__ void qwen35_tiled_online_attention_batch_f16_kernel(
     std::uint32_t query_heads,
     std::uint32_t kv_heads,
     std::uint32_t head_dim,
-    float scale) {
+    float scale,
+    bool trace_causal) {
     const std::uint32_t pair = blockIdx.x;
     const std::uint32_t token = pair / query_heads;
     const std::uint32_t head = pair % query_heads;
@@ -2821,6 +2822,10 @@ __global__ void qwen35_tiled_online_attention_batch_f16_kernel(
         (static_cast<std::size_t>(token) * query_heads + head) * head_dim;
     const std::uint32_t cache_length = base_position + token + 1;
     if (cache_length > cache_capacity) return;
+    if (trace_causal && head == 0 && lane == 0 && token < 4) {
+        printf("EXP0370 causal token=%u base=%u query=%u cache_length=%u first=0 last=%u\\n",
+               token, base_position, base_position + token, cache_length, cache_length - 1);
+    }
     const float4 q_vec = *reinterpret_cast<const float4*>(q + q_base + lane * 4);
     float4 acc = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
     float running_max = -INFINITY;
@@ -4953,7 +4958,7 @@ void launch_qwen35_tiled_online_attention_batch_f16(
     const float* gate, float* gated_output, std::uint32_t token_count,
     std::uint32_t base_position, std::uint32_t cache_capacity,
     std::uint32_t query_heads, std::uint32_t kv_heads, std::uint32_t head_dim,
-    float scale, hipStream_t stream) {
+    float scale, hipStream_t stream, bool trace_causal) {
     if (q == nullptr || key_cache == nullptr || value_cache == nullptr || gate == nullptr
         || gated_output == nullptr || token_count == 0 || base_position > cache_capacity
         || token_count > cache_capacity - base_position || cache_capacity == 0
@@ -4964,7 +4969,8 @@ void launch_qwen35_tiled_online_attention_batch_f16(
     hipLaunchKernelGGL(qwen35_tiled_online_attention_batch_f16_kernel,
                        dim3(token_count * query_heads), dim3(64), 0, stream,
                        q, key_cache, value_cache, gate, gated_output, token_count,
-                       base_position, cache_capacity, query_heads, kv_heads, head_dim, scale);
+                       base_position, cache_capacity, query_heads, kv_heads, head_dim, scale,
+                       trace_causal);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
