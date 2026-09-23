@@ -2364,9 +2364,9 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1790175545.058329,
-    "seen": 1790176052.6112273,
-    "ast_hash": "7f8314566c3346c47b393f53fb1397b6",
+    "mtime": 1790178248.9860673,
+    "seen": 1790178602.5357637,
+    "ast_hash": "b83b50da647cfcf75e1db5f735c00241",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
@@ -5475,6 +5475,12 @@
     "mtime": 1790176035.72108,
     "seen": 1790176052.6118789,
     "ast_hash": "f15836d659d3b2e7376d11b5e5a5ad05",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0377-b64-residual-contract.md": {
+    "mtime": 1790178579.111664,
+    "seen": 1790178602.5363429,
+    "ast_hash": "32cef32ff304f480873a28763b0527b7",
     "semantic_hash": ""
   }
 }
