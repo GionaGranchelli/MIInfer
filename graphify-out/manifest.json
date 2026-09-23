@@ -4818,8 +4818,8 @@
     "semantic_hash": ""
   },
   "tests/qwen35_conv_batch_test.cpp": {
-    "mtime": 1790069423.4276786,
-    "seen": 1790069455.4608796,
+    "mtime": 1790179192.5390565,
+    "seen": 1790179269.032671,
     "ast_hash": "43eeb92c80f42986cce08b6c2c7c43d9",
     "semantic_hash": ""
   },
@@ -5481,6 +5481,12 @@
     "mtime": 1790178579.111664,
     "seen": 1790178602.5363429,
     "ast_hash": "32cef32ff304f480873a28763b0527b7",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0378-b64-core-contract-existence.md": {
+    "mtime": 1790179247.9028213,
+    "seen": 1790179269.0333471,
+    "ast_hash": "b7ab768f7db3b8e981aa4c3b3cce86df",
     "semantic_hash": ""
   }
 }
