@@ -26,6 +26,11 @@ attribution. EXP-0373 refreshed P640/P1664 full-model semantics and found
 identical 16-token continuations with smooth recurrent drift; the aligned B128
 route is now qualified and recovers 77.89%/60.20% of P640/P1664 prefill wall.
 The next target is arbitrary-remainder scheduling, not more layer forensics.
+EXP-0374 implemented that scheduler behind `MIINFER_EXP0374_REMAINDER_SCHED=1`.
+Exact P768 passed with `1×B512 + 2×B128`, zero scalar work, byte-identical
+final hidden, and identical 16-token continuation. P1022 reduced scalar
+coverage to 126 tokens but remained residual-dominated; the scheduler remains
+qualified opt-in and the next target is the existing sub-128 residual path.
 EXP-0360 through EXP-0363 rejected the tested
 attention families; they did not authorize an optimization candidate or imply
 that attention is still the dominant end-to-end gap. The current qualified decode path is

@@ -95,6 +95,7 @@ bool apply_runtime_preset() {
             && value.rfind("MIINFER_EXP0370_CAPTURE_PREFIX=", 0) != 0
             && value.rfind("MIINFER_EXP0371_CAPTURE_PREFIX=", 0) != 0
             && value.rfind("MIINFER_EXP0372_CAPTURE_PREFIX=", 0) != 0
+            && value.rfind("MIINFER_EXP0374_REMAINDER_SCHED=", 0) != 0
             && value.rfind("MIINFER_HIP_GRAPH=", 0) != 0) {
             names.emplace_back(value.substr(0, value.find('=')));
         }
@@ -647,6 +648,14 @@ public:
         }
     };
 
+    struct RemainderSchedulerCounters {
+        std::size_t complete_b512_chunks = 0;
+        std::size_t partial_b128_chunks = 0;
+        std::size_t residual_tokens = 0;
+        std::size_t scalar_layer_run_calls = 0;
+        std::size_t scalar_layer_run_tokens = 0;
+    };
+
     void reset() {
         clear_session_checkpoints();
         reset_device_state();
@@ -1127,6 +1136,9 @@ public:
         const auto layer_span = std::span<const GpuLayerRef>(layers_);
         const bool trace_exp0369 = std::getenv("MIINFER_EXP0369_TRACE_ROUTE") != nullptr
             && std::strcmp(std::getenv("MIINFER_EXP0369_TRACE_ROUTE"), "0") != 0;
+        const bool exp0374_scheduler = std::getenv("MIINFER_EXP0374_REMAINDER_SCHED") != nullptr
+            && std::strcmp(std::getenv("MIINFER_EXP0374_REMAINDER_SCHED"), "0") != 0;
+        remainder_scheduler_counters_ = {};
         for (std::size_t base = start_position; base < prompt.size();) {
             if (g_shutdown_requested || (should_cancel && should_cancel())) return nullptr;
             const std::size_t requested = std::min(prefill_chunk_, prompt.size() - base);
@@ -1134,13 +1146,20 @@ public:
             // A whole-request fallback to 64 tokens throws away the useful
             // B512 work for normal API prompts.
             std::size_t count = requested;
-            if (wide_prefill_ && matrix_prefill && count >= kM12PrefillBatch
+            if (!exp0374_scheduler && wide_prefill_ && matrix_prefill && count >= kM12PrefillBatch
                 && count % kPrefillBatch != 0) {
                 count -= count % kPrefillBatch;
             }
             const bool partial_tail_contract = std::getenv("MIINFER_EXP0366_PARTIAL_TAIL") != nullptr
                 && std::strcmp(std::getenv("MIINFER_EXP0366_PARTIAL_TAIL"), "0") != 0;
-            if (partial_tail_contract && full_layer_major_prefill_
+            if (exp0374_scheduler && full_layer_major_prefill_
+                && base >= kFullPrefillCapacity && count < prefill_chunk_ && count >= kM12PrefillBatch) {
+                count = kM12PrefillBatch;
+                ++remainder_scheduler_counters_.partial_b128_chunks;
+            } else if (exp0374_scheduler && full_layer_major_prefill_
+                       && base >= kFullPrefillCapacity && count < kM12PrefillBatch) {
+                remainder_scheduler_counters_.residual_tokens += count;
+            } else if (partial_tail_contract && full_layer_major_prefill_
                 && base >= kFullPrefillCapacity && count < prefill_chunk_ && count > kPrefillBatch) {
                 count = (count / kM12PrefillBatch) * kM12PrefillBatch;
                 if (count == 0) count = kPrefillBatch;
@@ -1149,8 +1168,11 @@ public:
                        && base >= kFullPrefillCapacity && count <= kPrefillBatch) {
                 if (prefill_profile_.enabled) prefill_profile_.partial_tail_scalar_tokens += count;
             }
+            const bool complete_or_exp0374_b128 = count % kM12PrefillBatch == 0
+                && count % kFullPrefillCapacity == 0;
             if (full_layer_major_prefill_ && count >= kM12PrefillBatch
-                && count <= kFullPrefillCapacity && count % kPrefillBatch == 0) {
+                && count <= kFullPrefillCapacity && complete_or_exp0374_b128) {
+                if (count == kFullPrefillCapacity) ++remainder_scheduler_counters_.complete_b512_chunks;
                 final_hidden = prefill_full_layer_major_chunk(
                     prompt.subspan(base, count), should_cancel, base);
                 if (final_hidden == nullptr) return nullptr;
@@ -1161,7 +1183,8 @@ public:
                 }
                 continue;
             }
-            if (count > kPrefillBatch && count < kM12PrefillBatch) count = kPrefillBatch;
+            if (!exp0374_scheduler && count > kPrefillBatch && count < kM12PrefillBatch)
+                count = kPrefillBatch;
             if (prefill_profile_.enabled) {
                 MIINFER_HIP_CHECK(hipEventRecord(prefill_profile_.embedding_start, hipStreamPerThread));
             }
@@ -1232,6 +1255,10 @@ public:
                 float* next_normalized_batch = fuse_next_norm
                     ? const_cast<float*>(layer_span[layer + 1].prefill_normalized_at(0)) : nullptr;
                 if (!batched_attention) {
+                    if (exp0374_scheduler && base >= kFullPrefillCapacity && count < kM12PrefillBatch) {
+                        ++remainder_scheduler_counters_.scalar_layer_run_calls;
+                        remainder_scheduler_counters_.scalar_layer_run_tokens += count;
+                    }
                     if (partial_tail_contract && full_layer_major_prefill_ && base >= kFullPrefillCapacity) {
                         ++prefill_profile_.partial_tail_layer_run_calls;
                         prefill_profile_.partial_tail_layer_run_tokens += count;
@@ -1435,6 +1462,15 @@ public:
         }
         if (!prefill_profile_.decode_mode) {
             prefill_profile_.report(stats.prefill_ms, prompt.size());
+        }
+        if (std::getenv("MIINFER_EXP0374_REMAINDER_SCHED") != nullptr) {
+            std::cout << "EXP-0374 remainder scheduler: complete_b512="
+                      << remainder_scheduler_counters_.complete_b512_chunks
+                      << " partial_b128=" << remainder_scheduler_counters_.partial_b128_chunks
+                      << " residual_tokens=" << remainder_scheduler_counters_.residual_tokens
+                      << " scalar_layer_run_calls=" << remainder_scheduler_counters_.scalar_layer_run_calls
+                      << " scalar_layer_run_tokens=" << remainder_scheduler_counters_.scalar_layer_run_tokens
+                      << '\n';
         }
         if (opt.on_prefill_state) opt.on_prefill_state(final_hidden, prompt.size());
         if (opt.on_prefill_complete) opt.on_prefill_complete();
@@ -2761,6 +2797,7 @@ private:
     bool full_layer_major_prefill_ = false;
     std::size_t prefill_chunk_ = kPrefillBatch;
     PrefillProfile prefill_profile_;
+    RemainderSchedulerCounters remainder_scheduler_counters_;
     hipGraphExec_t decode_graph_ = nullptr;
 };
 

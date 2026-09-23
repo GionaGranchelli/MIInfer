@@ -201,3 +201,8 @@ state drift was smooth, and the route recovered 77.89%/60.20% of clean
 prefill wall. The next PRIMARY is arbitrary-remainder scheduling with the
 validated B128 route; do not continue L5→L6 forensics without contradictory
 model-boundary evidence.
+EXP-0374 implemented the bounded repeated-B128 remainder scheduler behind an
+opt-in selector. Exact P768 passed with zero scalar work and identical final
+hidden/16-token continuation; P1022 reduced scalar coverage to 126 tokens but
+remained residual-dominated. The scheduler is `QUALIFIED_OPT_IN`; the next
+PRIMARY is qualifying the smallest existing sub-128 residual contract.
