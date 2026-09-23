@@ -97,6 +97,7 @@ bool apply_runtime_preset() {
             && value.rfind("MIINFER_EXP0372_CAPTURE_PREFIX=", 0) != 0
             && value.rfind("MIINFER_EXP0374_REMAINDER_SCHED=", 0) != 0
             && value.rfind("MIINFER_EXP0376_CHUNK_TIMING=", 0) != 0
+            && value.rfind("MIINFER_EXP0377_B64_RESIDUAL=", 0) != 0
             && value.rfind("MIINFER_HIP_GRAPH=", 0) != 0) {
             names.emplace_back(value.substr(0, value.find('=')));
         }
@@ -668,6 +669,7 @@ public:
     struct RemainderSchedulerCounters {
         std::size_t complete_b512_chunks = 0;
         std::size_t partial_b128_chunks = 0;
+        std::size_t partial_b64_chunks = 0;
         std::size_t residual_tokens = 0;
         std::size_t scalar_layer_run_calls = 0;
         std::size_t scalar_layer_run_tokens = 0;
@@ -1155,6 +1157,9 @@ public:
             && std::strcmp(std::getenv("MIINFER_EXP0369_TRACE_ROUTE"), "0") != 0;
         const bool exp0374_scheduler = std::getenv("MIINFER_EXP0374_REMAINDER_SCHED") != nullptr
             && std::strcmp(std::getenv("MIINFER_EXP0374_REMAINDER_SCHED"), "0") != 0;
+        const bool exp0377_b64 = exp0374_scheduler
+            && std::getenv("MIINFER_EXP0377_B64_RESIDUAL") != nullptr
+            && std::strcmp(std::getenv("MIINFER_EXP0377_B64_RESIDUAL"), "0") != 0;
         exp0376_chunk_timings_.clear();
         remainder_scheduler_counters_ = {};
         for (std::size_t base = start_position; base < prompt.size();) {
@@ -1176,7 +1181,16 @@ public:
                 ++remainder_scheduler_counters_.partial_b128_chunks;
             } else if (exp0374_scheduler && full_layer_major_prefill_
                        && base >= kFullPrefillCapacity && count < kM12PrefillBatch) {
-                remainder_scheduler_counters_.residual_tokens += count;
+                if (exp0377_b64 && count >= kPrefillBatch) {
+                    count = kPrefillBatch;
+                    ++remainder_scheduler_counters_.partial_b64_chunks;
+                    if (trace_exp0369) {
+                        std::cout << "EXP0377 route base=" << base << " count=" << count
+                                  << " path=existing_b64_prefill\n";
+                    }
+                } else {
+                    remainder_scheduler_counters_.residual_tokens += count;
+                }
             } else if (partial_tail_contract && full_layer_major_prefill_
                 && base >= kFullPrefillCapacity && count < prefill_chunk_ && count > kPrefillBatch) {
                 count = (count / kM12PrefillBatch) * kM12PrefillBatch;
@@ -1530,6 +1544,7 @@ public:
             std::cout << "EXP-0374 remainder scheduler: complete_b512="
                       << remainder_scheduler_counters_.complete_b512_chunks
                       << " partial_b128=" << remainder_scheduler_counters_.partial_b128_chunks
+                      << " partial_b64=" << remainder_scheduler_counters_.partial_b64_chunks
                       << " residual_tokens=" << remainder_scheduler_counters_.residual_tokens
                       << " scalar_layer_run_calls=" << remainder_scheduler_counters_.scalar_layer_run_calls
                       << " scalar_layer_run_tokens=" << remainder_scheduler_counters_.scalar_layer_run_tokens
