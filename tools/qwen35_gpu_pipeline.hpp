@@ -97,6 +97,15 @@ bool exp0383_route_enabled(char route) {
     return value != nullptr && value[0] == route && value[1] == '\0';
 }
 
+bool exp0385_l0_oracle_enabled() {
+    return environment_flag("MIINFER_EXP0385_L0_ORACLE");
+}
+
+std::size_t exp0385_target_layer() {
+    const char* value = std::getenv("MIINFER_EXP0385_LAYER");
+    return value == nullptr ? 0 : static_cast<std::size_t>(std::stoul(value));
+}
+
 bool b64_composition_enabled() {
     return exp0380_b64_probe_enabled() || exp0382_b64_compose_enabled()
         || exp0383_route_enabled('R') || exp0383_route_enabled('F');
@@ -2379,7 +2388,10 @@ struct RecurrentLayer {
             || m12_dense_input == nullptr || m12_dense_handle == nullptr) {
             throw std::runtime_error("invalid M23 wide prefill inputs");
         }
-        const bool validate = prefill_wide_validate;
+        const bool exp0385_oracle = exp0385_l0_oracle_enabled() && index == exp0385_target_layer()
+            && ((base_position == 896 && token_count == kPrefillBatch)
+                || (base_position == 768 && token_count == kM12PrefillBatch));
+        const bool validate = prefill_wide_validate || exp0385_oracle;
         if (m23_trace_dispatch) m23_dispatch_counts.fill(0);
         const auto trace_dispatch = [this] {
             if (!m23_trace_dispatch) return;
@@ -2681,6 +2693,10 @@ struct RecurrentLayer {
         upload(initial_history.data(), history->get(), initial_history.size() * sizeof(float));
         auto* canonical_output = static_cast<float*>(prefill_residual->get());
         float qkv_error = 0.0F, gate_error = 0.0F, beta_error = 0.0F, decay_error = 0.0F;
+        double qkv_sq = 0.0, gate_sq = 0.0, beta_sq = 0.0, decay_sq = 0.0;
+        std::size_t qkv_n = 0, gate_n = 0, beta_n = 0, decay_n = 0;
+        std::size_t qkv_row = 0, gate_row = 0, beta_row = 0, decay_row = 0;
+        double qkv_row_sq = -1.0, gate_row_sq = -1.0, beta_row_sq = -1.0, decay_row_sq = -1.0;
         for (std::uint32_t token = 0; token < token_count; ++token) {
             run(inputs + static_cast<std::size_t>(token) * kHidden, base_position + token,
                 canonical_output + static_cast<std::size_t>(token) * kHidden);
@@ -2688,20 +2704,33 @@ struct RecurrentLayer {
             const auto canonical_gate = download(gate->get(), kInner);
             const auto canonical_beta = download(beta->get(), kVHeads);
             const auto canonical_decay = download(decay->get(), kVHeads);
+            double row_sq = 0.0;
             for (std::size_t i = 0; i < kChannels; ++i) {
-                qkv_error = std::max(qkv_error, std::fabs(
-                    wide_qkv[static_cast<std::size_t>(token) * kChannels + i] - canonical_qkv[i]));
+                const float delta = wide_qkv[static_cast<std::size_t>(token) * kChannels + i] - canonical_qkv[i];
+                qkv_error = std::max(qkv_error, std::fabs(delta)); qkv_sq += delta * delta; ++qkv_n; row_sq += delta * delta;
             }
+            if (row_sq > qkv_row_sq) { qkv_row_sq = row_sq; qkv_row = token; }
+            row_sq = 0.0;
             for (std::size_t i = 0; i < kInner; ++i) {
-                gate_error = std::max(gate_error, std::fabs(
-                    wide_gate[static_cast<std::size_t>(token) * kInner + i] - canonical_gate[i]));
+                const float delta = wide_gate[static_cast<std::size_t>(token) * kInner + i] - canonical_gate[i];
+                gate_error = std::max(gate_error, std::fabs(delta)); gate_sq += delta * delta; ++gate_n; row_sq += delta * delta;
             }
+            if (row_sq > gate_row_sq) { gate_row_sq = row_sq; gate_row = token; }
+            row_sq = 0.0;
             for (std::size_t i = 0; i < kVHeads; ++i) {
-                beta_error = std::max(beta_error, std::fabs(
-                    wide_beta[static_cast<std::size_t>(token) * kVHeads + i] - canonical_beta[i]));
-                decay_error = std::max(decay_error, std::fabs(
-                    wide_decay[static_cast<std::size_t>(token) * kVHeads + i] - canonical_decay[i]));
+                const float beta_delta = wide_beta[static_cast<std::size_t>(token) * kVHeads + i] - canonical_beta[i];
+                const float decay_delta = wide_decay[static_cast<std::size_t>(token) * kVHeads + i] - canonical_decay[i];
+                beta_error = std::max(beta_error, std::fabs(beta_delta)); decay_error = std::max(decay_error, std::fabs(decay_delta));
+                beta_sq += beta_delta * beta_delta; decay_sq += decay_delta * decay_delta; ++beta_n; ++decay_n;
+                row_sq += beta_delta * beta_delta;
             }
+            if (row_sq > beta_row_sq) { beta_row_sq = row_sq; beta_row = token; }
+            row_sq = 0.0;
+            for (std::size_t i = 0; i < kVHeads; ++i) {
+                const float delta = wide_decay[static_cast<std::size_t>(token) * kVHeads + i] - canonical_decay[i];
+                row_sq += delta * delta;
+            }
+            if (row_sq > decay_row_sq) { decay_row_sq = row_sq; decay_row = token; }
         }
         const auto canonical = download(canonical_output, token_count * kHidden);
         const auto canonical_state = download(state->get(), kVHeads * kState * kState);
@@ -2709,14 +2738,30 @@ struct RecurrentLayer {
         upload(wide_state.data(), state->get(), wide_state.size() * sizeof(float));
         upload(wide_history.data(), history->get(), wide_history.size() * sizeof(float));
         float output_error = 0.0F, state_error = 0.0F, history_error = 0.0F;
+        double output_sq = 0.0, state_sq = 0.0, history_sq = 0.0;
+        std::size_t output_n = 0, state_n = 0, history_n = 0;
+        std::size_t output_row = 0; double output_row_sq = -1.0;
+        std::size_t output_first_nonzero = token_count;
         for (std::size_t i = 0; i < wide_output.size(); ++i) {
-            output_error = std::max(output_error, std::fabs(wide_output[i] - canonical[i]));
+            const float delta = wide_output[i] - canonical[i];
+            output_error = std::max(output_error, std::fabs(delta)); output_sq += delta * delta; ++output_n;
+            if (delta != 0.0F && output_first_nonzero == token_count) output_first_nonzero = i / kHidden;
         }
         for (std::size_t i = 0; i < wide_state.size(); ++i) {
-            state_error = std::max(state_error, std::fabs(wide_state[i] - canonical_state[i]));
+            const float delta = wide_state[i] - canonical_state[i];
+            state_error = std::max(state_error, std::fabs(delta)); state_sq += delta * delta; ++state_n;
         }
         for (std::size_t i = 0; i < wide_history.size(); ++i) {
-            history_error = std::max(history_error, std::fabs(wide_history[i] - canonical_history[i]));
+            const float delta = wide_history[i] - canonical_history[i];
+            history_error = std::max(history_error, std::fabs(delta)); history_sq += delta * delta; ++history_n;
+        }
+        for (std::size_t row = 0; row < token_count; ++row) {
+            double row_sq = 0.0;
+            for (std::size_t i = 0; i < kHidden; ++i) {
+                const float delta = wide_output[row * kHidden + i] - canonical[row * kHidden + i];
+                row_sq += delta * delta;
+            }
+            if (row_sq > output_row_sq) { output_row_sq = row_sq; output_row = row; }
         }
         std::cerr << "M23 wide validation: output_max_abs=" << output_error
                   << " qkv_max_abs=" << qkv_error
@@ -2725,6 +2770,33 @@ struct RecurrentLayer {
                   << " decay_max_abs=" << decay_error
                   << " state_max_abs=" << state_error
                   << " history_max_abs=" << history_error << '\n';
+        if (exp0385_oracle) {
+            double row63_sq = 0.0;
+            for (std::size_t i = 0; i < kHidden; ++i) {
+                const float delta = wide_output[(token_count - 1) * kHidden + i]
+                    - canonical[(token_count - 1) * kHidden + i];
+                row63_sq += delta * delta;
+            }
+            std::cerr << "EXP0385 oracle base=" << base_position << " count=" << token_count
+                      << " qkv_rms=" << std::sqrt(qkv_sq / qkv_n) << " qkv_max=" << qkv_error << " qkv_row_max=" << qkv_row
+                      << " gate_rms=" << std::sqrt(gate_sq / gate_n) << " gate_max=" << gate_error << " gate_row_max=" << gate_row
+                      << " beta_rms=" << std::sqrt(beta_sq / beta_n) << " beta_max=" << beta_error << " beta_row_max=" << beta_row
+                      << " decay_rms=" << std::sqrt(decay_sq / decay_n) << " decay_max=" << decay_error << " decay_row_max=" << decay_row
+                      << " state_rms=" << std::sqrt(state_sq / state_n) << " state_max=" << state_error
+                      << " history_rms=" << std::sqrt(history_sq / history_n) << " history_max=" << history_error
+                      << " output_rms=" << std::sqrt(output_sq / output_n) << " output_max=" << output_error
+                      << " output_first_row=" << output_first_nonzero << " output_worst_row=" << output_row
+                      << " output_row63_rms=" << std::sqrt(row63_sq / kHidden) << '\n';
+            const auto export_path = std::getenv("MIINFER_EXP0385_EXPORT_PREFIX");
+            if (export_path != nullptr) {
+                std::ofstream wide_file(std::string(export_path) + ".wide_output.f32", std::ios::binary);
+                wide_file.write(reinterpret_cast<const char*>(wide_output.data()),
+                                static_cast<std::streamsize>(wide_output.size() * sizeof(float)));
+                std::ofstream canonical_file(std::string(export_path) + ".scalar_output.f32", std::ios::binary);
+                canonical_file.write(reinterpret_cast<const char*>(canonical.data()),
+                                     static_cast<std::streamsize>(canonical.size() * sizeof(float)));
+            }
+        }
         trace_dispatch();
     }
 

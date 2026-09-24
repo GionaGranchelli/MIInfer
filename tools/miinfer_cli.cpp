@@ -106,6 +106,9 @@ bool apply_runtime_preset() {
             && value.rfind("MIINFER_EXP0383_ROUTE=", 0) != 0
             && value.rfind("MIINFER_EXP0383_EXPORT_PREFIX=", 0) != 0
             && value.rfind("MIINFER_EXP0384_LAYER_EXPORT_PREFIX=", 0) != 0
+            && value.rfind("MIINFER_EXP0385_L0_ORACLE=", 0) != 0
+            && value.rfind("MIINFER_EXP0385_LAYER=", 0) != 0
+            && value.rfind("MIINFER_EXP0385_EXPORT_PREFIX=", 0) != 0
             && value.rfind("MIINFER_HIP_GRAPH=", 0) != 0) {
             names.emplace_back(value.substr(0, value.find('=')));
         }

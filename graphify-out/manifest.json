@@ -2364,15 +2364,15 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1790238800.393251,
-    "seen": 1790239222.2746544,
-    "ast_hash": "b4857e20c37b25906146695eff7f8f3d",
+    "mtime": 1790241220.3569434,
+    "seen": 1790241469.0428865,
+    "ast_hash": "2392d122011f352531f474795456e0f9",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1790237175.319965,
-    "seen": 1790238280.1626709,
-    "ast_hash": "5c1ae0e6c34c04063c571153c35e5fee",
+    "mtime": 1790241220.3529434,
+    "seen": 1790241469.0428882,
+    "ast_hash": "a044fbc71964129918eeaf68a33796cb",
     "semantic_hash": ""
   },
   "docs/M9-AUTOREGRESSIVE-QUALIFICATION.md": {
@@ -5520,9 +5520,15 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0384-b64-recurrent-layer-localization.md": {
-    "mtime": 1790239207.1708453,
-    "seen": 1790239222.2752848,
-    "ast_hash": "5a4ae91096d516e2dc6bac00ce57d166",
+    "mtime": 1790239231.418702,
+    "seen": 1790241469.043526,
+    "ast_hash": "ca6d5052cd290785c6e00073564c6595",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0385-b64-recurrent-numerical-contract.md": {
+    "mtime": 1790241450.8025954,
+    "seen": 1790241469.0435276,
+    "ast_hash": "31fbc65e082bafd990a5f28bc09c653f",
     "semantic_hash": ""
   }
 }
