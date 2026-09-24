@@ -88,5 +88,6 @@ run-to-run variance to a coarse MIInfer GPU-runtime boundary.
 
 ## Provenance
 
-Experiment commit and graph SHA are added after graph refresh. Final working
-tree status is recorded in the provenance commit.
+Experiment commit: `13db81c` (`EXP-0390 attribute P512 runtime variance boundary`).
+Graph SHA: `e0c96012ec86938f4140c3123dd0eb9de76b4ea9d29d494865d56674726d443f`.
+Final working-tree status after push: clean.
