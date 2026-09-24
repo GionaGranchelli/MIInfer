@@ -172,4 +172,9 @@ No new GPU math kernel was implemented.
 
 ## Provenance
 
-Experiment SHA and graph SHA are recorded after commit and graph refresh.
+Experiment SHA: `acb7ee6808b19d698f48b952be2ea7a75b72df7c`.
+
+Graph SHA: `f9578e8d17293dfb4797a31e7a2d8dab28686fdc`
+(`graphify-out/graph.json` blob).
+
+Working-tree status: clean after the experiment record and graph refresh.
