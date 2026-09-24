@@ -239,3 +239,13 @@ recurrent-versus-attention split is therefore stopped and not qualified. The
 current PRIMARY is baseline-regression attribution under the hermetic
 qualified environment; only after P512 requalifies may P640/P896 and B128
 family attribution resume. B64 remains rejected and B4 remains blocked.
+
+EXP-0389 discriminated that failure with six interleaved fresh processes per
+binary. GOOD `12fc127` and CURRENT `1d9b6fe` both varied widely, while the mx
+sentinel stayed within `7.80 ms`. Effective preset vectors matched, clocks
+remained 1606/1000 MHz, and the current +1,006,694,400 B allocation delta
+reproduced. The result is **MIINFER_RUNTIME_INSTABILITY**, not a clean
+current-HEAD code-regression proof; source bisect and B128 attribution are not
+authorized. The one current PRIMARY is to locate the minimal MIInfer runtime
+boundary responsible for P512 variance, separating setup/model initialization,
+prefill GPU execution, and host synchronization.

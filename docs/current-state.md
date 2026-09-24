@@ -9,17 +9,20 @@ L0–L2 scalar hybrid does not restore the token. B4 remains blocked. The curren
 PRIMARY is a materially different, semantically safe arbitrary-length residual
 architecture, beginning with an exact P1022 contract and measured end-to-end
 ceiling. EXP-0388 then found that the current aligned P512 baseline is
-materially slower and unstable against the prior qualified class, so residual
-architecture work is deferred. The current PRIMARY is now baseline-regression
-attribution. See [EXP-0387](../experiments/EXP-0387-m28-prefill-frontier-refresh.md)
-and [EXP-0388](../experiments/EXP-0388-b128-shape-collapse-attribution.md).
+materially slower and unstable against the prior qualified class. EXP-0389
+showed the known-good binary is also unstable while mx remains stable, so the
+current PRIMARY is MIInfer runtime-variance attribution; residual architecture
+and B128 work are deferred. See [EXP-0387](../experiments/EXP-0387-m28-prefill-frontier-refresh.md),
+[EXP-0388](../experiments/EXP-0388-b128-shape-collapse-attribution.md), and
+[EXP-0389](../experiments/EXP-0389-p512-regression-discriminator.md).
 
 ## Performance research frontier
 
 The mandatory process for new performance work is
 [`performance-research-protocol.md`](performance-research-protocol.md).
-There is exactly one active performance frontier: attribute the current-head
-aligned P512 regression and variance before any B128 or residual work; direct
+There is exactly one active performance frontier: identify the minimal MIInfer
+runtime boundary responsible for P512 run-to-run variance before any B128 or
+residual work; direct
 B64-wide and B4 work are not authorized. The full-model
 Qwen3.8-27B-Q4_K_M prefill bottleneck attribution on one MI50/gfx906 was
 refreshed before

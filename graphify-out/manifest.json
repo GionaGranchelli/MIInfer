@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1790252265.5368402,
-    "seen": 1790252281.8748767,
-    "ast_hash": "0aeb3c43d17ce5a4703653eeaddc3667",
+    "mtime": 1790254169.8299189,
+    "seen": 1790254201.8784885,
+    "ast_hash": "7a1a95f0bd5eca7939fa464e65488ef3",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -5394,9 +5394,9 @@
     "semantic_hash": ""
   },
   "docs/performance-research-protocol.md": {
-    "mtime": 1790252265.53884,
-    "seen": 1790252281.8748984,
-    "ast_hash": "f26cf71a5a5ac0270a035306b1b26869",
+    "mtime": 1790254180.9318612,
+    "seen": 1790254201.878519,
+    "ast_hash": "9ff4c0cbfbb01bad254343a36e682c57",
     "semantic_hash": ""
   },
   "experiments/EXP-0364-full-model-prefill-bottleneck-attribution.md": {
@@ -5544,9 +5544,15 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0388-b128-shape-collapse-attribution.md": {
-    "mtime": 1790252265.53584,
-    "seen": 1790252281.8754742,
-    "ast_hash": "a9566fd6a08a8df200bcd6aa1b755dc1",
+    "mtime": 1790252299.0426657,
+    "seen": 1790254201.8791332,
+    "ast_hash": "570e453db473b0feba3f406717ad9b11",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0389-p512-regression-discriminator.md": {
+    "mtime": 1790254160.4949675,
+    "seen": 1790254201.879135,
+    "ast_hash": "0a283a316f095db503733bc8b8419409",
     "semantic_hash": ""
   }
 }
