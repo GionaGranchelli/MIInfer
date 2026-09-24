@@ -229,3 +229,13 @@ credible measured end-to-end ceiling. The one current PRIMARY is measurement
 and qualification of a materially different, semantically safe arbitrary-
 length residual architecture, beginning with an exact P1022 contract. No
 optimization implementation is authorized by this paragraph.
+
+EXP-0388 then applied the required baseline-integrity gate before B128
+profiling. Five hermetic repeated-fox P512 samples after warm-up were
+`2516.79/4897.95/2558.30/2812.08/2802.39 ms`, median `2802.39 ms` (`182.70
+tok/s`), versus the prior qualified approximately `2.48 s` / `~200–207 tok/s`
+class. The `4897.95 ms` outlier also establishes instability. The B128
+recurrent-versus-attention split is therefore stopped and not qualified. The
+current PRIMARY is baseline-regression attribution under the hermetic
+qualified environment; only after P512 requalifies may P640/P896 and B128
+family attribution resume. B64 remains rejected and B4 remains blocked.

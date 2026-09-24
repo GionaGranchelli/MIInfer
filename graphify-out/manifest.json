@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1790244756.5448627,
-    "seen": 1790244790.3491023,
-    "ast_hash": "a3dbbbb3593aba951eaf9ee8bcd327bf",
+    "mtime": 1790252265.5368402,
+    "seen": 1790252281.8748767,
+    "ast_hash": "0aeb3c43d17ce5a4703653eeaddc3667",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -5394,9 +5394,9 @@
     "semantic_hash": ""
   },
   "docs/performance-research-protocol.md": {
-    "mtime": 1790244773.8207662,
-    "seen": 1790244790.3491254,
-    "ast_hash": "3680dbe2cb47eed7f0902587551e261c",
+    "mtime": 1790252265.53884,
+    "seen": 1790252281.8748984,
+    "ast_hash": "f26cf71a5a5ac0270a035306b1b26869",
     "semantic_hash": ""
   },
   "experiments/EXP-0364-full-model-prefill-bottleneck-attribution.md": {
@@ -5538,9 +5538,15 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0387-m28-prefill-frontier-refresh.md": {
-    "mtime": 1790244746.980916,
-    "seen": 1790244790.3497634,
-    "ast_hash": "c47de8ede43cebe2bcdf36bddb84eeb5",
+    "mtime": 1790245043.226262,
+    "seen": 1790252281.8754725,
+    "ast_hash": "c9292f1f8d5f1e8d78eb20f8ff8c7290",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0388-b128-shape-collapse-attribution.md": {
+    "mtime": 1790252265.53584,
+    "seen": 1790252281.8754742,
+    "ast_hash": "a9566fd6a08a8df200bcd6aa1b755dc1",
     "semantic_hash": ""
   }
 }

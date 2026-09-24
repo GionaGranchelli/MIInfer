@@ -8,15 +8,19 @@ but distributed whole-model semantic drift remains after EXP-0378–0386 and the
 L0–L2 scalar hybrid does not restore the token. B4 remains blocked. The current
 PRIMARY is a materially different, semantically safe arbitrary-length residual
 architecture, beginning with an exact P1022 contract and measured end-to-end
-ceiling. See [EXP-0387](../experiments/EXP-0387-m28-prefill-frontier-refresh.md).
+ceiling. EXP-0388 then found that the current aligned P512 baseline is
+materially slower and unstable against the prior qualified class, so residual
+architecture work is deferred. The current PRIMARY is now baseline-regression
+attribution. See [EXP-0387](../experiments/EXP-0387-m28-prefill-frontier-refresh.md)
+and [EXP-0388](../experiments/EXP-0388-b128-shape-collapse-attribution.md).
 
 ## Performance research frontier
 
 The mandatory process for new performance work is
 [`performance-research-protocol.md`](performance-research-protocol.md).
-There is exactly one active performance frontier: qualify a materially
-different arbitrary-length residual architecture after the EXP-0387 refresh;
-direct B64-wide and B4 work are not authorized. The full-model
+There is exactly one active performance frontier: attribute the current-head
+aligned P512 regression and variance before any B128 or residual work; direct
+B64-wide and B4 work are not authorized. The full-model
 Qwen3.8-27B-Q4_K_M prefill bottleneck attribution on one MI50/gfx906 was
 refreshed before
 choosing the next optimization. EXP-0364 completed that first pass as
