@@ -97,5 +97,6 @@ next PRIMARY was selected from the measured P512 baseline integrity failure.
 
 ## Provenance
 
-Experiment commit and graph SHA are added after graph refresh. Final working
-tree status is recorded in the provenance commit.
+Experiment commit: `06e48a5` (`EXP-0388 attribute B128 shape collapse`).
+Graph SHA: `352997e7e54beb3a28720d57bd5257369b317d601fc6cfd4c8ee620b7e7b3b79`.
+Final working-tree status after push: clean.
