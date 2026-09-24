@@ -120,4 +120,9 @@ math kernel was implemented.
 
 ## Provenance
 
-Experiment SHA and graph SHA are recorded after commit and graph refresh.
+Experiment SHA: `5f655709f4e6671a6d75247ddce5294b6103ea27`.
+
+Graph SHA: `8ccd0c4fdd3cde6f23a990da528cd4483873c348`
+(`graphify-out/graph.json` blob).
+
+Working-tree status: clean after the experiment record and graph refresh.
