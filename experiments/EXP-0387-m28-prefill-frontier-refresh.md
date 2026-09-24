@@ -118,4 +118,6 @@ The one next PRIMARY is:
 
 No new GPU math kernel or residual scheduler optimization was implemented.
 
-Graph SHA and final experiment commit are added after graph refresh.
+Experiment commit: `76792de` (`EXP-0387 refresh M28 prefill frontier`).
+Graph SHA: `cff7ac372a0aa16728774640c8a6c8dabc364e5243ad4c4b22fcd9c74f94090d`.
+Final provenance commit is the follow-up documentation commit.
