@@ -2364,14 +2364,14 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1790267381.854424,
-    "seen": 1790268523.2027712,
+    "mtime": 1790276422.9819539,
+    "seen": 1790276511.1922803,
     "ast_hash": "b94dfdbbc8ce62e0ad35300af75137ca",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1790241764.6897836,
-    "seen": 1790242170.417214,
+    "mtime": 1790276453.2448123,
+    "seen": 1790276511.1922824,
     "ast_hash": "80b3565ede8281e8cdeecf86bd7e4f84",
     "semantic_hash": ""
   },
@@ -5574,9 +5574,15 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0393-p512-baseline-requalification.md": {
-    "mtime": 1790275100.0102816,
-    "seen": 1790275121.3689075,
-    "ast_hash": "c43fd59aa257c22c33bf004c327c2687",
+    "mtime": 1790275165.4259517,
+    "seen": 1790276511.1929624,
+    "ast_hash": "1f4dcdbd8fb429c0635ac08c95c1317a",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0394-b128-physical512-recurrent-projections.md": {
+    "mtime": 1790276494.7686179,
+    "seen": 1790276511.1929638,
+    "ast_hash": "b4d8e60655b75162680083b989ebf541",
     "semantic_hash": ""
   }
 }
