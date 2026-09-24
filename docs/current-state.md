@@ -1,20 +1,16 @@
 # MIInfer Current State
 
-## Current experiment status — EXP-0387
+## Current experiment status — V2-0001 (Prefill V2 Clean-Sheet Architecture)
 
-EXP-0387 refreshed the clean current-head aligned and arbitrary-tail frontiers.
-Direct B64-wide composition is **REJECTED — CURRENT M28 FRONTIER**: it runs,
-but distributed whole-model semantic drift remains after EXP-0378–0386 and the
-L0–L2 scalar hybrid does not restore the token. B4 remains blocked. The current
-PRIMARY is a materially different, semantically safe arbitrary-length residual
-architecture, beginning with an exact P1022 contract and measured end-to-end
-ceiling. EXP-0388 then found that the current aligned P512 baseline is
-materially slower and unstable against the prior qualified class. EXP-0389
-showed the known-good binary is also unstable while mx remains stable, so the
-current PRIMARY is MIInfer runtime-variance attribution; residual architecture
-and B128 work are deferred. See [EXP-0387](../experiments/EXP-0387-m28-prefill-frontier-refresh.md),
-[EXP-0388](../experiments/EXP-0388-b128-shape-collapse-attribution.md), and
-[EXP-0389](../experiments/EXP-0389-p512-regression-discriminator.md).
+V1 prefill optimization campaign (EXP-0364 through EXP-0395, B128, B64, B4, and residual scheduling) is **CLOSED**.
+M28 has transitioned to **Prefill V2**: a clean-sheet single-MI50 (gfx906, Wave64) prefill architecture specialized for Qwen3.8-27B-Q4_K_M.
+V2-0001 qualified the first executable recurrent-layer vertical slice (Layer 0) on the real GGUF model:
+- **N=64 (1×C64)**: 20.63 ms (4.08× speedup vs V1 oracle, Cosine Sim = 0.9982)
+- **N=128 (2×C64)**: 28.59 ms (4.43× speedup vs V1 oracle, Cosine Sim = 0.9984)
+- **N=512 (8×C64)**: 95.86 ms (5.31× speedup vs V1 oracle, Cosine Sim = 0.9995)
+Status: **V2_RECURRENT_ARCHITECTURE_QUALIFIED**.
+Current PRIMARY: Implement one complete repeating 4-layer topology block (`3 × GDN + 1 × GQA`) using the V2 execution contract.
+See [V2-0001](../experiments/V2-0001-recurrent-layer-vertical-slice.md) and [docs/prefill-v2-architecture.md](prefill-v2-architecture.md).
 
 ## Performance research frontier
 
