@@ -24,8 +24,9 @@ There is exactly one active performance frontier: identify the minimal MIInfer
 runtime boundary responsible for P512 run-to-run variance before any B128 or
 residual work; EXP-0390 localized the variance to the GPU timeline and
 terminal completion wait, with stable host submission. EXP-0391 found that the
-first recurrent-versus-attention event split perturbs the host interval, so the
-next PRIMARY is a less-invasive family boundary measurement; direct
+first recurrent-versus-attention event split perturbs the host interval, and
+EXP-0392 did not reproduce the slow state across 6×6 repeated P512 runs. The
+next PRIMARY is clean aligned-baseline requalification; direct
 B64-wide and B4 work are not authorized. The full-model
 Qwen3.8-27B-Q4_K_M prefill bottleneck attribution on one MI50/gfx906 was
 refreshed before

@@ -259,3 +259,11 @@ remainder stayed `~0.08 ms`. The mx sentinel remained stable and clocks stayed
 PRIMARY is a less-invasive recurrent-versus-attention GPU phase split after
 EXP-0391's event instrumentation perturbed host submission; B128, residual,
 B64, and B4 work remain unauthorized.
+
+EXP-0392 then ran six fresh MIInfer processes with six ordinary zero-token
+P512 generates each. Process medians ranged only `2495.87–2539.59 ms`, with a
+median within-process range of `296.80 ms`; no process reproduced the prior
+~5 s state. Four mx sentinels remained within `3.18 ms`. The classification is
+**VARIANCE_NOT_REPRODUCED**. The next PRIMARY is clean aligned-P512 baseline
+requalification; do not resume family profiling or B128 work unless the slow
+state reappears.

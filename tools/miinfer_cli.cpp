@@ -98,6 +98,8 @@ bool apply_runtime_preset() {
             && value.rfind("MIINFER_EXP0374_REMAINDER_SCHED=", 0) != 0
             && value.rfind("MIINFER_EXP0376_CHUNK_TIMING=", 0) != 0
             && value.rfind("MIINFER_EXP0390_RUNTIME_BOUNDARY=", 0) != 0
+            && value.rfind("MIINFER_EXP0392_REPEAT_P512=", 0) != 0
+            && value.rfind("MIINFER_EXP0392_PROCESS_ID=", 0) != 0
             && value.rfind("MIINFER_EXP0377_B64_RESIDUAL=", 0) != 0
             && value.rfind("MIINFER_EXP0380_B64_ATTN_PROBE=", 0) != 0
             && value.rfind("MIINFER_EXP0380_STAGE=", 0) != 0
@@ -3531,6 +3533,28 @@ int cmd_run(int argc, char** argv) {
         }
     }
     std::cerr << "Prompt tokens: " << prompt_tokens.size() << " tokens\n";
+
+    if (const char* repeat_env = std::getenv("MIINFER_EXP0392_REPEAT_P512")) {
+        const std::size_t repetitions = std::stoull(repeat_env);
+        if (repetitions == 0 || repetitions > 64 || prompt_tokens.size() != kFullPrefillCapacity) {
+            throw std::runtime_error(
+                "MIINFER_EXP0392_REPEAT_P512 requires 1..64 repetitions and a 512-token prompt");
+        }
+        const char* process_id = std::getenv("MIINFER_EXP0392_PROCESS_ID");
+        Qwen35RuntimeEngine::GenerateOptions repeat_options;
+        repeat_options.max_new_tokens = 0;
+        repeat_options.stream = false;
+        repeat_options.reuse_session = false;
+        for (std::size_t iteration = 1; iteration <= repetitions; ++iteration) {
+            const auto stats = engine.generate(prompt_tokens, repeat_options);
+            std::cout << "EXP0392 process=" << (process_id != nullptr ? process_id : "unknown")
+                      << " iteration=" << iteration
+                      << " prefill_ms=" << stats.prefill_ms
+                      << " prefill_tok_s=" << stats.prefill_tok_s
+                      << " processed_tokens=" << stats.prefill_processed_tokens << '\n';
+        }
+        return 0;
+    }
 
         if (m26c_export_state) {
             if (m26c_import_state || m26c_decode_route || m26c_output_state || m26c_logits_output
