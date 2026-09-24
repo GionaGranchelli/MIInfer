@@ -2364,15 +2364,15 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1790241220.3569434,
-    "seen": 1790241469.0428865,
-    "ast_hash": "2392d122011f352531f474795456e0f9",
+    "mtime": 1790241764.6937835,
+    "seen": 1790242170.4172122,
+    "ast_hash": "5a675d92ad6ad254dcc9b89a398f8e22",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1790241220.3529434,
-    "seen": 1790241469.0428882,
-    "ast_hash": "a044fbc71964129918eeaf68a33796cb",
+    "mtime": 1790241764.6897836,
+    "seen": 1790242170.417214,
+    "ast_hash": "80b3565ede8281e8cdeecf86bd7e4f84",
     "semantic_hash": ""
   },
   "docs/M9-AUTOREGRESSIVE-QUALIFICATION.md": {
@@ -5526,9 +5526,15 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0385-b64-recurrent-numerical-contract.md": {
-    "mtime": 1790241450.8025954,
-    "seen": 1790241469.0435276,
-    "ast_hash": "31fbc65e082bafd990a5f28bc09c653f",
+    "mtime": 1790241482.1054149,
+    "seen": 1790242170.4178658,
+    "ast_hash": "5a9c0424fc32f0b4825fde86e853f901",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0386-b64-first-group-semantic-sensitivity.md": {
+    "mtime": 1790242152.9565425,
+    "seen": 1790242170.4178672,
+    "ast_hash": "d120dcf93d560d4e43a019f772560175",
     "semantic_hash": ""
   }
 }

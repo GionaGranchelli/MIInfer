@@ -106,9 +106,15 @@ std::size_t exp0385_target_layer() {
     return value == nullptr ? 0 : static_cast<std::size_t>(std::stoul(value));
 }
 
+bool exp0386_first_group_scalar_enabled() {
+    const char* value = std::getenv("MIINFER_EXP0386_ROUTE");
+    return value != nullptr && std::strcmp(value, "FIRST_GROUP_SCALAR") == 0;
+}
+
 bool b64_composition_enabled() {
     return exp0380_b64_probe_enabled() || exp0382_b64_compose_enabled()
-        || exp0383_route_enabled('R') || exp0383_route_enabled('F');
+        || exp0383_route_enabled('R') || exp0383_route_enabled('F')
+        || exp0386_first_group_scalar_enabled();
 }
 
 bool exp0381_wrapper_probe_enabled() {

@@ -109,6 +109,7 @@ bool apply_runtime_preset() {
             && value.rfind("MIINFER_EXP0385_L0_ORACLE=", 0) != 0
             && value.rfind("MIINFER_EXP0385_LAYER=", 0) != 0
             && value.rfind("MIINFER_EXP0385_EXPORT_PREFIX=", 0) != 0
+            && value.rfind("MIINFER_EXP0386_ROUTE=", 0) != 0
             && value.rfind("MIINFER_HIP_GRAPH=", 0) != 0) {
             names.emplace_back(value.substr(0, value.find('=')));
         }
@@ -1174,7 +1175,9 @@ public:
         const bool exp0380_probe = exp0374_scheduler && exp0380_b64_probe_enabled();
         const bool exp0382_compose = exp0374_scheduler && exp0382_b64_compose_enabled();
         const bool exp0383_recurrent = exp0374_scheduler
-            && (exp0383_route_enabled('R') || exp0383_route_enabled('F'));
+            && (exp0383_route_enabled('R') || exp0383_route_enabled('F')
+                || exp0386_first_group_scalar_enabled());
+        const bool exp0386_first_group = exp0374_scheduler && exp0386_first_group_scalar_enabled();
         const bool exp0383_attention = exp0374_scheduler && exp0383_route_enabled('F');
         const bool exp0381_probe = exp0374_scheduler && exp0381_wrapper_probe_enabled();
         const int exp0380_stage = exp0380_probe ? exp0380_probe_stage() : -1;
@@ -1305,6 +1308,7 @@ public:
                 if (wide_prefill_ && (count >= kM12PrefillBatch
                                       || ((exp0380_probe || exp0382_compose || exp0383_recurrent)
                                           && count == kPrefillBatch))
+                    && !(exp0386_first_group && layer < 3)
                     && layer_span[layer].recurrent != nullptr) {
                     if (exp0380_probe && base == 768 && count == kM12PrefillBatch) {
                         std::cerr << "EXP0380 PREFIX_B128 layer=" << layer << " REC_BEGIN\n" << std::flush;
@@ -1460,7 +1464,10 @@ public:
         const bool exp0382_compose = exp0382_b64_compose_enabled()
             && std::getenv("MIINFER_EXP0374_REMAINDER_SCHED") != nullptr;
         const bool exp0383_recurrent = std::getenv("MIINFER_EXP0374_REMAINDER_SCHED") != nullptr
-            && (exp0383_route_enabled('R') || exp0383_route_enabled('F'));
+            && (exp0383_route_enabled('R') || exp0383_route_enabled('F')
+                || exp0386_first_group_scalar_enabled());
+        const bool exp0386_first_group = std::getenv("MIINFER_EXP0374_REMAINDER_SCHED") != nullptr
+            && exp0386_first_group_scalar_enabled();
         const bool exp0383_attention = std::getenv("MIINFER_EXP0374_REMAINDER_SCHED") != nullptr
             && exp0383_route_enabled('F');
         if (exp0380_probe) {
@@ -1504,6 +1511,7 @@ public:
                 if (wide_prefill_ && (count >= kM12PrefillBatch
                                       || ((exp0380_probe || exp0382_compose || exp0383_recurrent)
                                           && count == kPrefillBatch))
+                    && !(exp0386_first_group && layer < 3)
                     && layer_span[layer].recurrent != nullptr) {
                     if (trace_exp0369) {
                         std::cout << "EXP0369 route base=" << base << " count=" << count
