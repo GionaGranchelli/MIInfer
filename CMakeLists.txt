@@ -119,6 +119,9 @@ if(MIINFER_ENABLE_HIP)
         src/qwen3_gpu_layer.cpp
         src/fp16_gemv_reference.cpp
         src/q4_q8_gemv_reference.cpp
+        src/prefill_v2/state.cpp
+        src/prefill_v2/workspace.cpp
+        src/prefill_v2/recurrent_layer.cpp
         gfx906/kernels/vector_add.hip
         gfx906/kernels/fp16_gemv.hip
         gfx906/kernels/q4_q8_gemv.hip
@@ -143,6 +146,10 @@ if(MIINFER_ENABLE_HIP)
         $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Wpedantic>
         $<$<COMPILE_LANGUAGE:HIP>:-Wall;-Wextra;-fgpu-default-stream=per-thread>
     )
+
+    add_executable(miinfer-prefill-v2-recurrent-layer-bakeoff bench/prefill_v2_recurrent_layer_bakeoff.cpp)
+    target_link_libraries(miinfer-prefill-v2-recurrent-layer-bakeoff PRIVATE miinfer_hip)
+    target_compile_options(miinfer-prefill-v2-recurrent-layer-bakeoff PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
 add_executable(miinfer-host-test tests/host_test.cpp)
