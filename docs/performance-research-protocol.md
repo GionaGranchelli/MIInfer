@@ -216,3 +216,16 @@ is now the PRIMARY for the actual composed-B64 route; its route proof shows
 zero scalar work, but the first-token result diverges from control and the
 direct two-token case stops before `step()`. Do not run B64 performance,
 P1022 timing, or B4 qualification until that semantic contract is resolved.
+
+EXP-0387 supersedes that pending frontier. The clean current-head refresh
+qualified aligned and arbitrary-tail measurements: P896 takes `42.465 s` with
+zero scalar residual, while P1022 takes `106.772 s` and adds approximately
+`64.307 s` for its 126-token scalar tail. P2174 and P4222 reproduce the same
+`3×B128 + 126` decomposition. Context-length attention scaling alone does not
+explain the collapse. Direct whole-model B64-wide composition is now
+**REJECTED — CURRENT M28 FRONTIER** based on EXP-0378–0386; B4 remains
+blocked. Reopen B64 only for a materially new semantic strategy with a
+credible measured end-to-end ceiling. The one current PRIMARY is measurement
+and qualification of a materially different, semantically safe arbitrary-
+length residual architecture, beginning with an exact P1022 contract. No
+optimization implementation is authorized by this paragraph.

@@ -1,19 +1,24 @@
 # MIInfer Current State
 
-## Current experiment status — EXP-0382
+## Current experiment status — EXP-0387
 
-EXP-0381's admitted A/B/C runs were lifecycle-only because they did not enable
-the count-64 composition guards. EXP-0382 introduced the clean opt-in
-composed-B64 selector and proved zero scalar work at P960, but the composed
-route produces a different first token and stops before a direct decode step.
-B64 semantic qualification, P1022 timing, and B4 remain blocked.
+EXP-0387 refreshed the clean current-head aligned and arbitrary-tail frontiers.
+Direct B64-wide composition is **REJECTED — CURRENT M28 FRONTIER**: it runs,
+but distributed whole-model semantic drift remains after EXP-0378–0386 and the
+L0–L2 scalar hybrid does not restore the token. B4 remains blocked. The current
+PRIMARY is a materially different, semantically safe arbitrary-length residual
+architecture, beginning with an exact P1022 contract and measured end-to-end
+ceiling. See [EXP-0387](../experiments/EXP-0387-m28-prefill-frontier-refresh.md).
 
 ## Performance research frontier
 
 The mandatory process for new performance work is
 [`performance-research-protocol.md`](performance-research-protocol.md).
-There is exactly one active performance frontier: refresh the full-model
-Qwen3.8-27B-Q4_K_M prefill bottleneck attribution on one MI50/gfx906 before
+There is exactly one active performance frontier: qualify a materially
+different arbitrary-length residual architecture after the EXP-0387 refresh;
+direct B64-wide and B4 work are not authorized. The full-model
+Qwen3.8-27B-Q4_K_M prefill bottleneck attribution on one MI50/gfx906 was
+refreshed before
 choosing the next optimization. EXP-0364 completed that first pass as
 measurement-only `LEARN`, and EXP-0365 confirmed the ~P2K–P8K discrepancy is a
 partial-tail route defect: non-empty remainders fall from the B512
