@@ -79,5 +79,6 @@ MIInfer runtime/environment boundary.
 
 ## Provenance
 
-Experiment commit and graph SHA are added after graph refresh. Final working
-tree status is recorded in the provenance commit.
+Experiment commit: `54a4848` (`EXP-0389 discriminate P512 regression source`).
+Graph SHA: `51759896b000d5b490cbe6b0c34e4f56e7ebd42d6b14912c55d47bd8ef63538b`.
+Final working-tree status after push: clean.
