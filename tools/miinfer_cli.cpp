@@ -97,6 +97,7 @@ bool apply_runtime_preset() {
             && value.rfind("MIINFER_EXP0372_CAPTURE_PREFIX=", 0) != 0
             && value.rfind("MIINFER_EXP0374_REMAINDER_SCHED=", 0) != 0
             && value.rfind("MIINFER_EXP0376_CHUNK_TIMING=", 0) != 0
+            && value.rfind("MIINFER_EXP0390_RUNTIME_BOUNDARY=", 0) != 0
             && value.rfind("MIINFER_EXP0377_B64_RESIDUAL=", 0) != 0
             && value.rfind("MIINFER_EXP0380_B64_ATTN_PROBE=", 0) != 0
             && value.rfind("MIINFER_EXP0380_STAGE=", 0) != 0
@@ -1431,7 +1432,13 @@ public:
                 std::exit(0);
             }
         }
+        const auto terminal_sync_start = std::chrono::steady_clock::now();
         MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+        if (exp0390_runtime_boundary_) {
+            const double terminal_sync_ms = std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - terminal_sync_start).count();
+            std::cout << "EXP0390 terminal_sync_ms=" << terminal_sync_ms << '\n';
+        }
         if (exp0376_chunk_timing_) {
             for (auto& timing : exp0376_chunk_timings_) {
                 float gpu_ms = 0.0F;
@@ -2798,6 +2805,7 @@ private:
         }
         const char* prefill_profile_env = std::getenv("MIINFER_PREFILL_PROFILE");
         exp0376_chunk_timing_ = environment_flag("MIINFER_EXP0376_CHUNK_TIMING");
+        exp0390_runtime_boundary_ = environment_flag("MIINFER_EXP0390_RUNTIME_BOUNDARY");
         const char* decode_profile_env = std::getenv("MIINFER_DECODE_PROFILE");
         prefill_profile_.decode_mode = decode_profile_env != nullptr
             && std::strcmp(decode_profile_env, "0") != 0;
@@ -3144,6 +3152,7 @@ private:
     bool wide_prefill_ = false;
     bool full_layer_major_prefill_ = false;
     bool exp0376_chunk_timing_ = false;
+    bool exp0390_runtime_boundary_ = false;
     std::vector<Exp0376ChunkTiming> exp0376_chunk_timings_;
     std::size_t prefill_chunk_ = kPrefillBatch;
     PrefillProfile prefill_profile_;

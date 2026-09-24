@@ -22,7 +22,9 @@ The mandatory process for new performance work is
 [`performance-research-protocol.md`](performance-research-protocol.md).
 There is exactly one active performance frontier: identify the minimal MIInfer
 runtime boundary responsible for P512 run-to-run variance before any B128 or
-residual work; direct
+residual work; EXP-0390 localized the variance to the GPU timeline and
+terminal completion wait, with stable host submission. The next PRIMARY is a
+coarse recurrent-versus-attention GPU phase split; direct
 B64-wide and B4 work are not authorized. The full-model
 Qwen3.8-27B-Q4_K_M prefill bottleneck attribution on one MI50/gfx906 was
 refreshed before

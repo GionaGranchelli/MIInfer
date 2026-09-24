@@ -249,3 +249,12 @@ current-HEAD code-regression proof; source bisect and B128 attribution are not
 authorized. The one current PRIMARY is to locate the minimal MIInfer runtime
 boundary responsible for P512 variance, separating setup/model initialization,
 prefill GPU execution, and host synchronization.
+
+EXP-0390 added only a timer around the existing terminal stream
+synchronization and reused the EXP-0376 chunk event. Six current P512 runs
+showed fast median GPU timeline `3072.31 ms` versus slow median `4941.93 ms`,
+while host submission was `57.97` versus `50.26 ms` and the unclassified
+remainder stayed `~0.08 ms`. The mx sentinel remained stable and clocks stayed
+1606/1000 MHz. The classification is **GPU_RUNTIME_VARIANCE**. The next
+PRIMARY is a coarse recurrent-versus-attention GPU phase split; B128, residual,
+B64, and B4 work remain unauthorized.
