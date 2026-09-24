@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1790069516.7081537,
-    "seen": 1790069648.9412346,
-    "ast_hash": "3a0cd50ee3b7fd04d5e25212025fc930",
+    "mtime": 1790279283.6661954,
+    "seen": 1790279550.7030528,
+    "ast_hash": "be3c3c92039a1b188bd42718e5704d4c",
     "semantic_hash": ""
   },
   "README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1790268504.042614,
-    "seen": 1790268523.2028308,
-    "ast_hash": "36f0d97345ac36f1c2c59e3812a755fb",
+    "mtime": 1790279533.8619716,
+    "seen": 1790279550.7030835,
+    "ast_hash": "fa7371dda7946432e13aa904d3d23abf",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -5586,9 +5586,69 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0395-b128-b4-tail-fallback.md": {
-    "mtime": 1790278560.6897316,
-    "seen": 1790278578.3677282,
-    "ast_hash": "fc05891c3e047579ed3ad9c13bbd8143",
+    "mtime": 1790278610.4674888,
+    "seen": 1790279550.7037241,
+    "ast_hash": "2ce668e2ea15e74ec14d87a50f151770",
+    "semantic_hash": ""
+  },
+  "bench/prefill_v2_recurrent_layer_bakeoff.cpp": {
+    "mtime": 1790279428.5604866,
+    "seen": 1790279550.702508,
+    "ast_hash": "0fbee73285e3d1fd5f83db060376fa19",
+    "semantic_hash": ""
+  },
+  "include/miinfer/prefill_v2/constants.hpp": {
+    "mtime": 1790279124.4659743,
+    "seen": 1790279550.7025526,
+    "ast_hash": "fa9c804a12b7721ef3ec1161e380325d",
+    "semantic_hash": ""
+  },
+  "include/miinfer/prefill_v2/recurrent_layer.hpp": {
+    "mtime": 1790279185.847674,
+    "seen": 1790279550.7025537,
+    "ast_hash": "df23730cf71c4fb2e3edcae807cd7b03",
+    "semantic_hash": ""
+  },
+  "include/miinfer/prefill_v2/state.hpp": {
+    "mtime": 1790279131.1379416,
+    "seen": 1790279550.7025554,
+    "ast_hash": "d45d096d746dce3112b0d6a7e9aff573",
+    "semantic_hash": ""
+  },
+  "include/miinfer/prefill_v2/workspace.hpp": {
+    "mtime": 1790279180.4447005,
+    "seen": 1790279550.7025568,
+    "ast_hash": "d42a42351d455e71f348dda63e3348ca",
+    "semantic_hash": ""
+  },
+  "src/prefill_v2/recurrent_layer.cpp": {
+    "mtime": 1790279345.7728915,
+    "seen": 1790279550.702947,
+    "ast_hash": "3a7fffd8a2c41f5c7968a58dede0b197",
+    "semantic_hash": ""
+  },
+  "src/prefill_v2/state.cpp": {
+    "mtime": 1790279191.748645,
+    "seen": 1790279550.7029479,
+    "ast_hash": "981e686546ed81dff7c99ecf893efcbc",
+    "semantic_hash": ""
+  },
+  "src/prefill_v2/workspace.cpp": {
+    "mtime": 1790279199.8106058,
+    "seen": 1790279550.702949,
+    "ast_hash": "fb61e265c84327373cbac51e2bd0a41f",
+    "semantic_hash": ""
+  },
+  "docs/prefill-v2-architecture.md": {
+    "mtime": 1790279520.8280354,
+    "seen": 1790279550.7031105,
+    "ast_hash": "915d93855bf75738165a243f017b7c18",
+    "semantic_hash": ""
+  },
+  "experiments/V2-0001-recurrent-layer-vertical-slice.md": {
+    "mtime": 1790279529.6399922,
+    "seen": 1790279550.703727,
+    "ast_hash": "7be8db9704a44632eba0893e50cdb57f",
     "semantic_hash": ""
   }
 }
