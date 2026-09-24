@@ -88,6 +88,14 @@ bool exp0380_b64_probe_enabled() {
     return environment_flag("MIINFER_EXP0380_B64_ATTN_PROBE");
 }
 
+bool exp0382_b64_compose_enabled() {
+    return environment_flag("MIINFER_EXP0382_B64_COMPOSE");
+}
+
+bool b64_composition_enabled() {
+    return exp0380_b64_probe_enabled() || exp0382_b64_compose_enabled();
+}
+
 bool exp0381_wrapper_probe_enabled() {
     return environment_flag("MIINFER_EXP0381_WRAPPER_PROBE");
 }
@@ -1955,7 +1963,7 @@ struct RecurrentLayer {
         if (projected_qkv == nullptr || projected_gate == nullptr || projected_beta == nullptr
             || projected_decay == nullptr
             || (token_count < kM12PrefillBatch
-                && !(exp0380_b64_probe_enabled() && token_count == kPrefillBatch))
+                && !(b64_composition_enabled() && token_count == kPrefillBatch))
             || token_count > prefill_capacity || token_count % kPrefillBatch != 0
             || !m12_gdn_workspace_ready || m12_gdn_raw_output == nullptr
             || !prefill_core_query || !prefill_core_key || !prefill_core_value
@@ -2018,7 +2026,7 @@ struct RecurrentLayer {
                                          std::uint32_t token_count) {
         if (inputs == nullptr
             || (token_count < kM12PrefillBatch
-                && !(exp0380_b64_probe_enabled() && token_count == kPrefillBatch))
+                && !(b64_composition_enabled() && token_count == kPrefillBatch))
             || token_count > prefill_capacity
             || token_count % kPrefillBatch != 0 || !prefill_normalized
             || !prefill_core_beta || !prefill_core_decay) {
@@ -2051,7 +2059,7 @@ struct RecurrentLayer {
                                        std::uint32_t token_count) {
         if (!prefill_wide_qkv
             || (token_count < kM12PrefillBatch
-                && !(exp0380_b64_probe_enabled() && token_count == kPrefillBatch))
+                && !(b64_composition_enabled() && token_count == kPrefillBatch))
             || token_count > prefill_capacity
             || token_count % kPrefillBatch != 0
             || ((!prefill_wide_repacked) && (wide_qkv_fp16 == nullptr || wide_gate_fp16 == nullptr))
@@ -2250,7 +2258,7 @@ struct RecurrentLayer {
                                       std::uint32_t token_count) {
         if (!prefill_wide_qkv || gated_batch == nullptr
             || (token_count < kM12PrefillBatch
-                && !(exp0380_b64_probe_enabled() && token_count == kPrefillBatch))
+                && !(b64_composition_enabled() && token_count == kPrefillBatch))
             || token_count > prefill_capacity || token_count % kPrefillBatch != 0
             || ((!prefill_wide_repacked) && wide_ssm_out_fp16 == nullptr)
             || m12_dense_input == nullptr || m12_dense_handle == nullptr) {
@@ -2359,7 +2367,7 @@ struct RecurrentLayer {
         else ensure_m23_repacked();
         if (!prefill_wide_qkv || inputs == nullptr || outputs == nullptr
             || (token_count < kM12PrefillBatch
-                && !(exp0380_b64_probe_enabled() && token_count == kPrefillBatch))
+                && !(b64_composition_enabled() && token_count == kPrefillBatch))
             || token_count > prefill_capacity || token_count % kPrefillBatch != 0
             || ((!prefill_wide_repacked) && (!wide_ffn_gate_fp16 || !wide_ffn_up_fp16 || !wide_ffn_down_fp16))
             || m12_dense_input == nullptr || m12_dense_handle == nullptr) {
@@ -4393,7 +4401,7 @@ struct FullAttentionLayer {
             || (d_v_native == nullptr
                 && !(wide_attn_prefill
                      && (count >= kM12PrefillBatch
-                         || (exp0380_b64_probe_enabled() && count == kPrefillBatch))
+                         || (b64_composition_enabled() && count == kPrefillBatch))
                      && count <= prefill_capacity && count % kPrefillBatch == 0
                      && d_v_mmq && prefill_mmq_q8))) {
             return false;
@@ -4402,7 +4410,7 @@ struct FullAttentionLayer {
         auto* q8_out = static_cast<miinfer::Q8_1Block*>(prefill_q8_1->get());
         if (wide_attn_prefill
             && (count >= kM12PrefillBatch
-                || (exp0380_b64_probe_enabled() && count == kPrefillBatch))
+                || (b64_composition_enabled() && count == kPrefillBatch))
             && count <= prefill_capacity
             && count % kPrefillBatch == 0 && d_qk_mmq && d_v_mmq && prefill_mmq_q8) {
             if (m23_trace_dispatch) m23_dispatch_counts.fill(0);

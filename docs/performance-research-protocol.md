@@ -209,3 +209,10 @@ B512/B128 dispatch contract and proved the authored routes at P640/P768/P896/
 P1022. Corrected timing shows approximately 13–15 seconds per B128 chunk,
 making repeated-B128 state/runtime attribution the PRIMARY. Sub-128 residual
 work remains blocked.
+
+EXP-0381 corrected the historical wrapper-lifecycle question only: its
+admitted A/B/C cases did not enable the count-64 composition guards. EXP-0382
+is now the PRIMARY for the actual composed-B64 route; its route proof shows
+zero scalar work, but the first-token result diverges from control and the
+direct two-token case stops before `step()`. Do not run B64 performance,
+P1022 timing, or B4 qualification until that semantic contract is resolved.

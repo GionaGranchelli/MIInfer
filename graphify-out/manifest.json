@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1790172475.6001217,
-    "seen": 1790176052.6112785,
-    "ast_hash": "33edb047d61a6880f7274173113e0f0f",
+    "mtime": 1790230774.2835407,
+    "seen": 1790230881.7348526,
+    "ast_hash": "777de7234dfb4bd11d9ea874b40da89d",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -2364,15 +2364,15 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1790203366.538074,
-    "seen": 1790203593.6326144,
-    "ast_hash": "a7422eacb893e1d7b57c07b74ec886bc",
+    "mtime": 1790229981.1932244,
+    "seen": 1790230881.7348058,
+    "ast_hash": "4b316138bf99097358a211061d8fd84c",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1790202246.7422297,
-    "seen": 1790203310.6560874,
-    "ast_hash": "6fbcc1aa79d729a45857634251072e35",
+    "mtime": 1790229953.9563851,
+    "seen": 1790230881.7348073,
+    "ast_hash": "35edb1bd9b56bf620c042630e32b6b85",
     "semantic_hash": ""
   },
   "docs/M9-AUTOREGRESSIVE-QUALIFICATION.md": {
@@ -5394,9 +5394,9 @@
     "semantic_hash": ""
   },
   "docs/performance-research-protocol.md": {
-    "mtime": 1790168925.8480098,
-    "seen": 1790176052.6113,
-    "ast_hash": "02dffd31745afe51844d743a17e5139f",
+    "mtime": 1790230774.2815409,
+    "seen": 1790230881.7348733,
+    "ast_hash": "7f116a3b89a57db31da84768aaff4c27",
     "semantic_hash": ""
   },
   "experiments/EXP-0364-full-model-prefill-bottleneck-attribution.md": {
@@ -5502,9 +5502,15 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0381-b64-wrapper-runtime-reproduction.md": {
-    "mtime": 1790203574.3959858,
-    "seen": 1790203593.6332452,
-    "ast_hash": "a62892d777e75f79f198c0ef2ddf4ccb",
+    "mtime": 1790230774.280541,
+    "seen": 1790230881.7354212,
+    "ast_hash": "17be0c334748c5054ba1d4e7f06587ee",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0382-b64-semantic-performance-qualification.md": {
+    "mtime": 1790230864.0780106,
+    "seen": 1790230881.735423,
+    "ast_hash": "312506426cdf24ad760a257a2337081c",
     "semantic_hash": ""
   }
 }

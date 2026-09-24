@@ -102,6 +102,7 @@ bool apply_runtime_preset() {
             && value.rfind("MIINFER_EXP0380_STAGE=", 0) != 0
             && value.rfind("MIINFER_EXP0380_LAYER=", 0) != 0
             && value.rfind("MIINFER_EXP0381_WRAPPER_PROBE=", 0) != 0
+            && value.rfind("MIINFER_EXP0382_B64_COMPOSE=", 0) != 0
             && value.rfind("MIINFER_HIP_GRAPH=", 0) != 0) {
             names.emplace_back(value.substr(0, value.find('=')));
         }
@@ -1165,6 +1166,7 @@ public:
             && std::getenv("MIINFER_EXP0377_B64_RESIDUAL") != nullptr
             && std::strcmp(std::getenv("MIINFER_EXP0377_B64_RESIDUAL"), "0") != 0;
         const bool exp0380_probe = exp0374_scheduler && exp0380_b64_probe_enabled();
+        const bool exp0382_compose = exp0374_scheduler && exp0382_b64_compose_enabled();
         const bool exp0381_probe = exp0374_scheduler && exp0381_wrapper_probe_enabled();
         const int exp0380_stage = exp0380_probe ? exp0380_probe_stage() : -1;
         exp0376_chunk_timings_.clear();
@@ -1292,7 +1294,7 @@ public:
                 layer_span[layer].profile_ordered_start(
                     prefill_profile_.enabled ? base : std::numeric_limits<std::size_t>::max());
                 if (wide_prefill_ && (count >= kM12PrefillBatch
-                                      || (exp0380_probe && count == kPrefillBatch))
+                                      || ((exp0380_probe || exp0382_compose) && count == kPrefillBatch))
                     && layer_span[layer].recurrent != nullptr) {
                     if (exp0380_probe && base == 768 && count == kM12PrefillBatch) {
                         std::cerr << "EXP0380 PREFIX_B128 layer=" << layer << " REC_BEGIN\n" << std::flush;
@@ -1321,7 +1323,7 @@ public:
                     && (!gdn_chunkwise_prefill_ || full_m12_chunk);
                 const bool batched_attention = prepared && deferred_tail
                     && (count >= kM12PrefillBatch
-                        || (exp0380_probe && count == kPrefillBatch))
+                        || ((exp0380_probe || exp0382_compose) && count == kPrefillBatch))
                     && layer_span[layer].wide_attention_batch_ready();
                 if (trace_exp0369) {
                     std::cout << "EXP0369 route base=" << base << " count=" << count
@@ -1442,6 +1444,8 @@ public:
         float* next = static_cast<float*>(prefill_b_->get());
         const bool exp0380_probe = exp0380_b64_probe_enabled()
             && std::getenv("MIINFER_EXP0374_REMAINDER_SCHED") != nullptr;
+        const bool exp0382_compose = exp0382_b64_compose_enabled()
+            && std::getenv("MIINFER_EXP0374_REMAINDER_SCHED") != nullptr;
         if (exp0380_probe) {
             std::cerr << "EXP0380 FULL_CHUNK_BEGIN base=" << base_position
                       << " count=" << prompt.size() << "\n" << std::flush;
@@ -1481,7 +1485,7 @@ public:
                 const float* chunk_input = current + base * kHidden;
                 float* chunk_output = next + base * kHidden;
                 if (wide_prefill_ && (count >= kM12PrefillBatch
-                                      || (exp0380_probe && count == kPrefillBatch))
+                                      || ((exp0380_probe || exp0382_compose) && count == kPrefillBatch))
                     && layer_span[layer].recurrent != nullptr) {
                     if (trace_exp0369) {
                         std::cout << "EXP0369 route base=" << base << " count=" << count
@@ -1520,7 +1524,7 @@ public:
                     && (!gdn_chunkwise_prefill_ || full_m12_chunk);
                 const bool batched_attention = prepared && deferred_tail
                     && (count >= kM12PrefillBatch
-                        || (exp0380_probe && count == kPrefillBatch))
+                        || ((exp0380_probe || exp0382_compose) && count == kPrefillBatch))
                     && layer_span[layer].wide_attention_batch_ready();
                 if (trace_exp0369) {
                     std::cout << "EXP0369 route base=" << base << " count=" << count

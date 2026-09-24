@@ -166,3 +166,10 @@ Experiment SHA: `6b1b699cc5030798b7fec9caee1bc6c4cffecbb0`.
 Graph SHA: `4102b5a9492f9c709969c36a8d039ff5c8b79dad` (`graphify-out/graph.json` blob).
 
 Working-tree status: clean after the experiment record and graph refresh.
+
+## Scope correction (EXP-0382)
+
+The admitted A/B/C cases above used the repeated-B128/B64 scheduler selectors,
+but not the count-64 composition guards. They prove wrapper lifecycle only;
+they do not prove fully composed B64 runtime. EXP-0382 supersedes that scope
+distinction without erasing this record.

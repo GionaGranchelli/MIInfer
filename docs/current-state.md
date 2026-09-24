@@ -1,5 +1,13 @@
 # MIInfer Current State
 
+## Current experiment status — EXP-0382
+
+EXP-0381's admitted A/B/C runs were lifecycle-only because they did not enable
+the count-64 composition guards. EXP-0382 introduced the clean opt-in
+composed-B64 selector and proved zero scalar work at P960, but the composed
+route produces a different first token and stops before a direct decode step.
+B64 semantic qualification, P1022 timing, and B4 remain blocked.
+
 ## Performance research frontier
 
 The mandatory process for new performance work is
