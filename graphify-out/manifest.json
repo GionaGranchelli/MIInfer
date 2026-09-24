@@ -5568,9 +5568,15 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0392-p512-runtime-state-scope.md": {
-    "mtime": 1790268504.0416138,
-    "seen": 1790268523.2033658,
-    "ast_hash": "790369bb6f4dbedc2d611d801c8f3f73",
+    "mtime": 1790268536.1724722,
+    "seen": 1790275121.3689055,
+    "ast_hash": "e07c7b2fff94c9020b4ffe15692a499c",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0393-p512-baseline-requalification.md": {
+    "mtime": 1790275100.0102816,
+    "seen": 1790275121.3689075,
+    "ast_hash": "c43fd59aa257c22c33bf004c327c2687",
     "semantic_hash": ""
   }
 }
