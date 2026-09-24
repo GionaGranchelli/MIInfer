@@ -85,3 +85,10 @@ do not reopen legacy-B4 profiling or optimization.
 
 The legacy-B4 B128-tail fallback was reverted. No B4 profiling or optimization
 follow-up is authorized.
+
+## Provenance
+
+- experiment commit: `a261d70`
+- graph refresh commit: `1aa447c`
+- graph SHA-256: `fdbc5a8343a79ba49ea67a25ce89789ebecdd45fccc26421f0c3d9a136972e48`
+- final source tree contains no EXP-0395 candidate or test harness.
