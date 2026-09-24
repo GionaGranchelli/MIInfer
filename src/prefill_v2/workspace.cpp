@@ -17,10 +17,10 @@ inline std::size_t align128(std::size_t bytes) {
 
 } // namespace
 
-RecurrentLayerWorkspaceManager::RecurrentLayerWorkspaceManager(std::size_t max_tokens)
+PrefillV2WorkspaceManager::PrefillV2WorkspaceManager(std::size_t max_tokens)
     : max_tokens_(max_tokens) {
     if (max_tokens_ == 0 || max_tokens_ > kMaxPrefillBatch || max_tokens_ % kGdnChunkSize != 0) {
-        throw std::runtime_error("RecurrentLayerWorkspaceManager: invalid max_tokens " + std::to_string(max_tokens_));
+        throw std::runtime_error("PrefillV2WorkspaceManager: invalid max_tokens " + std::to_string(max_tokens_));
     }
 
     // 1. Calculate required bytes for all buffers
@@ -44,8 +44,15 @@ RecurrentLayerWorkspaceManager::RecurrentLayerWorkspaceManager(std::size_t max_t
     const std::size_t residual_bytes = align128(max_tokens_ * kHidden * sizeof(float));
     const std::size_t post_norm_bytes = align128(max_tokens_ * kHidden * sizeof(float));
 
-    // MMQ Q8_1 quantization blocks: max columns is kFfnInner = 17408 (136 blocks of 128)
-    const std::size_t max_blocks_per_token = kFfnInner / 128;
+    // Attention specific activations
+    const std::size_t attn_qfull_bytes = align128(max_tokens_ * kQFullDim * sizeof(float));
+    const std::size_t attn_q_rope_bytes = align128(max_tokens_ * kQDim * sizeof(float));
+    const std::size_t attn_k_bytes = align128(max_tokens_ * kKvDim * sizeof(float));
+    const std::size_t attn_v_bytes = align128(max_tokens_ * kKvDim * sizeof(float));
+    const std::size_t attn_gated_bytes = align128(max_tokens_ * kQDim * sizeof(float));
+
+    // MMQ Q8_1 quantization blocks: max columns is max(kFfnInner, kQFullDim) = 17408 (136 blocks of 128)
+    const std::size_t max_blocks_per_token = std::max(kFfnInner, kQFullDim) / 128;
     const std::size_t mmq_q8_bytes = align128(max_tokens_ * max_blocks_per_token * sizeof(MxQ8_1MmqBlock));
 
     const std::size_t ffn_gate_bytes = align128(max_tokens_ * kFfnInner * sizeof(float));
@@ -56,6 +63,7 @@ RecurrentLayerWorkspaceManager::RecurrentLayerWorkspaceManager(std::size_t max_t
     total_bytes_ = norm_bytes + qkv_bytes + gate_bytes + 4 * beta_decay_bytes
         + query_bytes + key_bytes + value_bytes + gdn_scratch_bytes
         + gdn_raw_bytes + gated_bytes + ssm_out_bytes + residual_bytes + post_norm_bytes
+        + attn_qfull_bytes + attn_q_rope_bytes + attn_k_bytes + attn_v_bytes + attn_gated_bytes
         + mmq_q8_bytes + ffn_gate_bytes + ffn_up_bytes + ffn_act_bytes + ffn_down_bytes;
 
     MIINFER_HIP_CHECK(hipMalloc(&d_buffer_, total_bytes_));
@@ -85,8 +93,15 @@ RecurrentLayerWorkspaceManager::RecurrentLayerWorkspaceManager(std::size_t max_t
     workspace_.gated_output = reinterpret_cast<float*>(ptr); ptr += gated_bytes;
 
     workspace_.ssm_output = reinterpret_cast<float*>(ptr); ptr += ssm_out_bytes;
+    workspace_.projected = workspace_.ssm_output;
     workspace_.residual = reinterpret_cast<float*>(ptr); ptr += residual_bytes;
     workspace_.post_normalized = reinterpret_cast<float*>(ptr); ptr += post_norm_bytes;
+
+    workspace_.attn_qfull = reinterpret_cast<float*>(ptr); ptr += attn_qfull_bytes;
+    workspace_.attn_q_rope = reinterpret_cast<float*>(ptr); ptr += attn_q_rope_bytes;
+    workspace_.attn_k = reinterpret_cast<float*>(ptr); ptr += attn_k_bytes;
+    workspace_.attn_v = reinterpret_cast<float*>(ptr); ptr += attn_v_bytes;
+    workspace_.attn_gated_output = reinterpret_cast<float*>(ptr); ptr += attn_gated_bytes;
 
     workspace_.mmq_q8 = reinterpret_cast<MxQ8_1MmqBlock*>(ptr); ptr += mmq_q8_bytes;
 
@@ -96,20 +111,20 @@ RecurrentLayerWorkspaceManager::RecurrentLayerWorkspaceManager(std::size_t max_t
     workspace_.ffn_down = reinterpret_cast<float*>(ptr); ptr += ffn_down_bytes;
 }
 
-RecurrentLayerWorkspaceManager::~RecurrentLayerWorkspaceManager() {
+PrefillV2WorkspaceManager::~PrefillV2WorkspaceManager() {
     if (d_buffer_ != nullptr) {
         (void)hipFree(d_buffer_);
         d_buffer_ = nullptr;
     }
 }
 
-RecurrentLayerWorkspaceManager::RecurrentLayerWorkspaceManager(RecurrentLayerWorkspaceManager&& other) noexcept
+PrefillV2WorkspaceManager::PrefillV2WorkspaceManager(PrefillV2WorkspaceManager&& other) noexcept
     : max_tokens_(other.max_tokens_),
       total_bytes_(other.total_bytes_),
       d_buffer_(std::exchange(other.d_buffer_, nullptr)),
       workspace_(other.workspace_) {}
 
-RecurrentLayerWorkspaceManager& RecurrentLayerWorkspaceManager::operator=(RecurrentLayerWorkspaceManager&& other) noexcept {
+PrefillV2WorkspaceManager& PrefillV2WorkspaceManager::operator=(PrefillV2WorkspaceManager&& other) noexcept {
     if (this != &other) {
         if (d_buffer_ != nullptr) (void)hipFree(d_buffer_);
         max_tokens_ = other.max_tokens_;

@@ -57,7 +57,7 @@ public:
         RecurrentLayerState& outgoing_state,
         RecurrentLayerWorkspace& workspace,
         std::uint32_t token_count,
-        hipStream_t stream = nullptr);
+        hipStream_t stream = nullptr) const;
 
     // Profiled execution variant for fine-grained phase attribution
     void forward_profiled(
@@ -68,7 +68,7 @@ public:
         RecurrentLayerWorkspace& workspace,
         std::uint32_t token_count,
         RecurrentLayerPhaseTimings& timings,
-        hipStream_t stream = nullptr);
+        hipStream_t stream = nullptr) const;
 
 private:
     std::size_t layer_index_ = 0;

@@ -253,7 +253,7 @@ void PrefillV2RecurrentLayer::forward(
     RecurrentLayerState& outgoing_state,
     RecurrentLayerWorkspace& ws,
     std::uint32_t token_count,
-    hipStream_t stream) {
+    hipStream_t stream) const {
     if (d_input == nullptr || d_output == nullptr) {
         throw std::runtime_error("PrefillV2: null input/output pointer");
     }
@@ -395,7 +395,7 @@ void PrefillV2RecurrentLayer::forward_profiled(
     RecurrentLayerWorkspace& ws,
     std::uint32_t token_count,
     RecurrentLayerPhaseTimings& timings,
-    hipStream_t stream) {
+    hipStream_t stream) const {
     hipEvent_t ev_start, ev_norm, ev_qkv, ev_conv, ev_gdn, ev_ssm, ev_res, ev_ffn_up, ev_end;
     MIINFER_HIP_CHECK(hipEventCreate(&ev_start));
     MIINFER_HIP_CHECK(hipEventCreate(&ev_norm));

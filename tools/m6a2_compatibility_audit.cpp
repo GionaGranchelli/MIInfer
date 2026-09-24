@@ -118,6 +118,36 @@ int main(int argc, char ** argv) {
             for (size_t l : layers) std::cout << l << " ";
             std::cout << "\n";
         }
+
+        std::cout << "\n--- ATTENTION LAYER SIGNATURES ---\n";
+        std::map<std::string, std::vector<std::size_t>> attn_signatures;
+        for (std::size_t layer = 0; layer < 65; ++layer) {
+            std::string q_name = "blk." + std::to_string(layer) + ".attn_q.weight";
+            if (tensor_map.find(q_name) == tensor_map.end()) continue;
+            std::string k_name = "blk." + std::to_string(layer) + ".attn_k.weight";
+            std::string v_name = "blk." + std::to_string(layer) + ".attn_v.weight";
+            std::string o_name = "blk." + std::to_string(layer) + ".attn_output.weight";
+            std::string ffn_g_name = "blk." + std::to_string(layer) + ".ffn_gate.weight";
+            std::string ffn_u_name = "blk." + std::to_string(layer) + ".ffn_up.weight";
+            std::string ffn_d_name = "blk." + std::to_string(layer) + ".ffn_down.weight";
+            
+            std::string q_t = tensor_map.count(q_name) ? miinfer::gguf_tensor_type_name(tensor_map[q_name]->type) : "NONE";
+            std::string k_t = tensor_map.count(k_name) ? miinfer::gguf_tensor_type_name(tensor_map[k_name]->type) : "NONE";
+            std::string v_t = tensor_map.count(v_name) ? miinfer::gguf_tensor_type_name(tensor_map[v_name]->type) : "NONE";
+            std::string o_t = tensor_map.count(o_name) ? miinfer::gguf_tensor_type_name(tensor_map[o_name]->type) : "NONE";
+            std::string ffn_g_t = tensor_map.count(ffn_g_name) ? miinfer::gguf_tensor_type_name(tensor_map[ffn_g_name]->type) : "NONE";
+            std::string ffn_u_t = tensor_map.count(ffn_u_name) ? miinfer::gguf_tensor_type_name(tensor_map[ffn_u_name]->type) : "NONE";
+            std::string ffn_d_t = tensor_map.count(ffn_d_name) ? miinfer::gguf_tensor_type_name(tensor_map[ffn_d_name]->type) : "NONE";
+            
+            std::string sig = "Q:" + q_t + " | K:" + k_t + " | V:" + v_t + " | O:" + o_t + " | FFN-g/u:" + ffn_g_t + "/" + ffn_u_t + " | FFN-down:" + ffn_d_t;
+            attn_signatures[sig].push_back(layer);
+        }
+        for (const auto & [sig, layers] : attn_signatures) {
+            std::cout << "Signature: [" << sig << "]\n";
+            std::cout << "  Count: " << layers.size() << "\n  Layers: ";
+            for (size_t l : layers) std::cout << l << " ";
+            std::cout << "\n";
+        }
     } catch (const std::exception & error) {
         std::cerr << "M6-A2 audit failed: " << error.what() << '\n';
         return 1;

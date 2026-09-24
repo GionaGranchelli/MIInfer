@@ -134,15 +134,22 @@ include/miinfer/prefill_v2/
 ├── constants.hpp          # Hardware & Qwen3.8 architecture parameters
 ├── state.hpp              # RecurrentLayerState & RecurrentLayerStateStorage
 ├── workspace.hpp          # PrefillV2Workspace & scratch plan
-└── recurrent_layer.hpp    # PrefillV2RecurrentLayer interface
+├── kv_cache.hpp           # AttentionKvCacheView & AttentionLayerKvCacheStorage
+├── recurrent_layer.hpp    # PrefillV2RecurrentLayer interface
+├── attention_layer.hpp    # PrefillV2AttentionLayer interface
+└── topology_block.hpp     # PrefillV2TopologyBlock (3xGDN + 1xGQA)
 
 src/prefill_v2/
 ├── state.cpp              # State allocation & lifecycle
 ├── workspace.cpp          # Workspace allocation & pointer partitioning
-└── recurrent_layer.cpp    # Weight repacking & forward pipeline
+├── kv_cache.cpp           # Key/Value cache allocation & lifecycle
+├── recurrent_layer.cpp    # Recurrent weight repacking & forward pipeline
+├── attention_layer.cpp    # Attention weight repacking & forward pipeline
+└── topology_block.cpp     # Ping-pong activation chaining across 4 layers
 
 bench/
-└── prefill_v2_recurrent_layer_bakeoff.cpp  # Empirical bakeoff against V1 oracle
+├── prefill_v2_recurrent_layer_bakeoff.cpp  # Empirical bakeoff against V1 oracle
+└── prefill_v2_topology_block_bakeoff.cpp   # 4-layer topology block bakeoff
 ```
 
 ---
@@ -152,6 +159,9 @@ bench/
 1. **Slice 1 (Qualified)**: Single Recurrent Layer Vertical Slice & 3-Layer Chain.
    - V2-0001: Structurally qualified against canonical V1 token oracle ($5.31\times$ speedup at $N=512$).
    - V2-0002: Performance qualified with compact Mx MMQ against `FAST_V1` ($1.00\times$ speedup, matching $48.65\text{ ms}$ at $N=512$; $145.99\text{ ms}$ on 3-layer chain; $1.000000$ split-call invariant).
-2. **Slice 2**: Full 4-Layer Topology Block (`3 × GDN + 1 × GQA`).
+2. **Slice 2 (Qualified)**: Full 4-Layer Repeating Topology Block (`3 × GDN + 1 × GQA`).
+   - V2-0003: Performance qualified at $180.89\text{ ms}$ at $N=512$ ($1.260\times$ faster than `FAST_V1`, $124.10\times$ faster than Oracle).
+   - Exact bit-for-bit split-call invariant ($512$ vs $256 + 256$, max error $= 0.000000$, cosine $= 1.000000$).
+   - Static VRAM footprint of $17.51\text{ GiB} / 32\text{ GiB}$ for full 64-layer model ($2.89\text{ s}$ projected P512 latency).
 3. **Slice 3**: 64-Layer Full Model Prefill Pipeline.
 4. **Promotion**: V2 replaces V1 as default prefill engine only after end-to-end full-model qualification and baseline speedup verification.

@@ -714,6 +714,34 @@ void launch_qwen35_fused_k_norm_rope_kv_store_batch_f16(
     float epsilon,
     hipStream_t stream = nullptr);
 
+void launch_qwen35_decoupled_q_split_norm_rope_batch(
+    const float* qfull,
+    const float* q_norm_weight,
+    float* query_rope,
+    float* gate,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t heads,
+    std::uint32_t head_dim,
+    float theta,
+    float epsilon,
+    hipStream_t stream = nullptr);
+
+void launch_qwen35_decoupled_k_norm_rope_kv_store_batch_f16(
+    const float* key,
+    const float* value,
+    const float* k_norm_weight,
+    __half* key_cache,
+    __half* value_cache,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t cache_capacity,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float theta,
+    float epsilon,
+    hipStream_t stream = nullptr);
+
 inline void launch_qwen35_tiled_online_attention(
     const float* q,
     const __half* key_cache,

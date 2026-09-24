@@ -1,20 +1,22 @@
 # MIInfer Current State
 
-## Current experiment status — V2-0002 (Prefill V2 Mx Projection & FAST_V1 Confrontation)
+## Current experiment status — V2-0003 (Prefill V2 Slice 2: 4-Layer Topology Block Qualification)
 
 V1 prefill optimization campaign (EXP-0364 through EXP-0395, B128, B64, B4, and residual scheduling) is **CLOSED**.
 M28 has transitioned to **Prefill V2**: a clean-sheet single-MI50 (gfx906, Wave64) prefill architecture specialized for Qwen3.8-27B-Q4_K_M.
-V2-0002 qualified the Mx compact MMQ projection backend on Prefill V2 and benchmarked it against `FAST_V1` and `ORACLE`:
-- **N=512 (8×C64) Layer 0 (Sig A: Q6/Q6)**: 48.65 ms (1.97× speedup vs V2-0001, 1.00× vs FAST_V1 48.56 ms, 90.7× vs Oracle, Cosine Sim = 0.9997)
-- **N=512 (8×C64) Layer 8 (Sig B: Q4/Q4)**: 47.12 ms (1.90× speedup vs V2-0001, 1.00× vs FAST_V1 47.11 ms, 87.0× vs Oracle, Cosine Sim = 0.9972)
-- **N=64 (1×C64)**: 10.65–11.09 ms (~5,800–6,000 tok/s, 49.7× vs Oracle; FAST_V1 unsupported for N<512)
-- **N=128 (2×C64)**: 13.79–14.28 ms (~9,000–9,300 tok/s, 74.9× vs Oracle; FAST_V1 unsupported for N<512)
-- **3-Layer Chain (L0->L1->L2, N=512 contiguous)**: 145.99 ms (0.999× vs FAST_V1 145.90 ms, Cosine Sim = 0.9995)
-- **Stateful Split-Call (512 vs 256+256)**: Cosine Sim = 1.000000, MaxErr = 0.000000 across output and all 3 layer states.
-- **Memory Footprint**: Persistent weights reduced to 246.88 MiB (Sig A) and 212.07 MiB (Sig B), totaling 10.76 GiB for 48 recurrent layers (-3.54 GiB saved). Total recurrent static VRAM = 11.14 GiB / 32 GiB.
-Status: **V2_RECURRENT_PERFORMANCE_QUALIFIED**.
-Current PRIMARY: Implement one complete repeating 4-layer topology block (`3 × GDN + 1 × GQA`) using the V2 execution contract.
-See [V2-0002](../experiments/V2-0002-mx-projection-and-fast-v1-confrontation.md) and [docs/prefill-v2-architecture.md](prefill-v2-architecture.md).
+V2-0003 qualified the 4-layer repeating topology block (`Block 0 = 3 × GDN + 1 × GQA Attention`):
+- **N=512 Performance**: Block 0 executes in **180.89 ms** (1.260× speedup / +20.7% faster vs qualified FAST_V1 227.96 ms, 124.1× vs Oracle 22,449 ms).
+  - Layer breakdown: L0 (GDN) = 48.74 ms, L1 (GDN) = 48.73 ms, L2 (GDN) = 48.82 ms, L3 (GQA) = 34.59 ms.
+- **Multi-Length Scaling**:
+  - N=64: 42.88 ms (1,492 tok/s, 72.9× vs Oracle, Cosine = 0.999018)
+  - N=128: 53.77 ms (2,381 tok/s, 105.9× vs Oracle, Cosine = 0.999196)
+  - N=512: 180.89 ms (2,830 tok/s, 124.1× vs Oracle, Cosine = 0.999544)
+- **Stateful Split-Call Invariant (512 vs 256+256)**: Bit-for-bit exact match (Cosine = 1.000000, MaxErr = 0.000000 across block output, L0/L1/L2 recurrent states, and L3 FP16 KV cache).
+- **Memory Footprint & Full-Model Budget**: Persistent weights = 964.47 MiB per block (15.07 GiB for 64 layers), 48 recurrent states = 151.5 MiB, 16 KV caches = 2.00 GiB (32K capacity), shared monolithic workspace = 297.44 MiB. Total static VRAM = 17.51 GiB / 32 GiB.
+- **Full Model P512 Latency Projection**: 2.894 s (16 blocks × 180.89 ms), reaching 1.253× of mx-llama.cpp (~2.31 s).
+Status: **V2_TOPOLOGY_BLOCK_QUALIFIED**.
+Current PRIMARY: Construct Slice 3 — the 64-layer full model prefill pipeline for Prefill V2.
+See [V2-0003](../experiments/V2-0003-topology-block-vertical-slice.md) and [docs/prefill-v2-architecture.md](prefill-v2-architecture.md).
 
 ## Performance research frontier
 
