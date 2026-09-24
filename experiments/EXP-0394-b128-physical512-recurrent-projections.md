@@ -99,3 +99,11 @@ evidence.
 
 The physical-B512 recurrent-projection candidate was reverted. No further
 projection-width archaeology is authorized without new evidence.
+
+## Provenance
+
+- experiment commit: `e2ea728`
+- graph refresh commit: `d002bbb`
+- graph SHA-256: `19d75d5b7aa42b18802249bf69d3f956d53c2f3c7a0d2372f930d58b45cabcd1`
+- temporary candidate code and harness were reverted before the experiment
+  record was committed.
