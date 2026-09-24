@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1790258371.3666272,
-    "seen": 1790258388.2376409,
-    "ast_hash": "6c0c8cfb79c249151eea6d901d7551ac",
+    "mtime": 1790261574.7306204,
+    "seen": 1790261592.2460415,
+    "ast_hash": "4c0c2628d1c52931a9447e4dca5439f5",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -2364,8 +2364,8 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1790257673.9010873,
-    "seen": 1790258388.237588,
+    "mtime": 1790261553.3027236,
+    "seen": 1790261592.2459934,
     "ast_hash": "36a1a264266d46e2a4559ccf3edbf89a",
     "semantic_hash": ""
   },
@@ -5394,9 +5394,9 @@
     "semantic_hash": ""
   },
   "docs/performance-research-protocol.md": {
-    "mtime": 1790258371.368627,
-    "seen": 1790258388.2376635,
-    "ast_hash": "7b4a378ab6baf4da34678a7ac69abcaf",
+    "mtime": 1790261574.7326205,
+    "seen": 1790261592.246062,
+    "ast_hash": "5e4a954dbab4cd924a9997b2620887ef",
     "semantic_hash": ""
   },
   "experiments/EXP-0364-full-model-prefill-bottleneck-attribution.md": {
@@ -5556,9 +5556,15 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0390-p512-runtime-variance-boundary.md": {
-    "mtime": 1790258371.365627,
-    "seen": 1790258388.2382603,
-    "ast_hash": "b53bfbf59590d0f54f99ce19eb2c095b",
+    "mtime": 1790258399.4024885,
+    "seen": 1790261592.246654,
+    "ast_hash": "3d57be63408954b68a99a8a923c35d3a",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0391-p512-recurrent-attention-variance.md": {
+    "mtime": 1790261574.7286203,
+    "seen": 1790261592.246656,
+    "ast_hash": "6025fddfb1f14d16877f90f343c9e808",
     "semantic_hash": ""
   }
 }

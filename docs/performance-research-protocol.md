@@ -256,5 +256,6 @@ showed fast median GPU timeline `3072.31 ms` versus slow median `4941.93 ms`,
 while host submission was `57.97` versus `50.26 ms` and the unclassified
 remainder stayed `~0.08 ms`. The mx sentinel remained stable and clocks stayed
 1606/1000 MHz. The classification is **GPU_RUNTIME_VARIANCE**. The next
-PRIMARY is a coarse recurrent-versus-attention GPU phase split; B128, residual,
+PRIMARY is a less-invasive recurrent-versus-attention GPU phase split after
+EXP-0391's event instrumentation perturbed host submission; B128, residual,
 B64, and B4 work remain unauthorized.
