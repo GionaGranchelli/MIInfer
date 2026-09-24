@@ -109,7 +109,7 @@ No new GPU math kernel or residual scheduler optimization was implemented.
 
 ## Provenance
 
-- experiment commit: `e40af60`
+- experiment commit: `1096593`
 - graph SHA-256: `efbcebead4114f583000da5c5ff482ffb61f80842d69048f5ff9a0023dc4d21f`
 - graph refresh: `rtk graphify update .`
 - working tree was clean before the experiment; graphify outputs are recorded
