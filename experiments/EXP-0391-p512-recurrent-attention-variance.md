@@ -58,5 +58,6 @@ attempted recurrent/attention event split perturbs the P512 runtime target.
 
 ## Provenance
 
-Experiment commit and graph SHA are added after graph refresh. Final working
-tree status is recorded in the provenance commit.
+Experiment commit: `4f27285` (`EXP-0391 split P512 recurrent and attention variance`).
+Graph SHA: `6b6dda2b152edfc4d12d80cb814f2d8377b3c1f0587384191c76fcc5ec6abaee`.
+Final working-tree status after push: clean.
