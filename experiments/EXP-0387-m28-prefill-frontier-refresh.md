@@ -64,6 +64,14 @@ the event/call-boundary relationship and is not treated as a host-speed claim.
 The event run recorded `alloc_delta=0`, `total_bytes_delta=0`, and
 `live_bytes_delta=0` for every timed chunk.
 
+P1022 contribution accounting is therefore: B512 `3.450 s` clean wall
+baseline; B128 #1/#2/#3 `14.726/13.851/12.852 s` GPU-event time (the three
+chunks' host intervals were `15.834/14.088/12.756 s`); and approximately
+`64.307 s` remaining scalar-tail-associated wall relative to the matched P896
+request. These terms are intentionally not presented as a perfectly additive
+GPU/host decomposition because the event scopes and request wall boundaries
+are different.
+
 P896 is already `42.465 s` with zero scalar residual. P1022 has the same
 B512 + 3×B128 prefix and is `106.772 s`; the matched delta is approximately
 `64.307 s`, or `60.2%` of P1022 wall time. P896 minus P512 is approximately
@@ -120,4 +128,5 @@ No new GPU math kernel or residual scheduler optimization was implemented.
 
 Experiment commit: `76792de` (`EXP-0387 refresh M28 prefill frontier`).
 Graph SHA: `cff7ac372a0aa16728774640c8a6c8dabc364e5243ad4c4b22fcd9c74f94090d`.
-Final provenance commit is the follow-up documentation commit.
+Final provenance commit is the follow-up documentation commit. Working-tree
+status after push: clean.
