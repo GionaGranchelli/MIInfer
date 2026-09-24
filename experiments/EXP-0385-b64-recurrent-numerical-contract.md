@@ -175,4 +175,9 @@ implemented.
 
 ## Provenance
 
-Experiment SHA and graph SHA are recorded after commit and graph refresh.
+Experiment SHA: `49ee63fcfd675adc444cd9cd6259010dbefeae77`.
+
+Graph SHA: `2010201da8ffa22e5835d139a024627a50d18da1`
+(`graphify-out/graph.json` blob).
+
+Working-tree status: clean after the experiment record and graph refresh.
