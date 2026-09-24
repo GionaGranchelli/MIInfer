@@ -78,5 +78,6 @@ and scope of MIInfer's P512 GPU performance state.
 
 ## Provenance
 
-Experiment commit and graph SHA are added after graph refresh. Final working
-tree status is recorded in the provenance commit.
+Experiment commit: `57464c1` (`EXP-0392 classify P512 GPU runtime state scope`).
+Graph SHA: `36f468a6eaf9532c86150a9522f6e25c3a3ff9ee02b427eb650d6742e923c1a7`.
+Final working-tree status after push: clean.
