@@ -92,8 +92,14 @@ bool exp0382_b64_compose_enabled() {
     return environment_flag("MIINFER_EXP0382_B64_COMPOSE");
 }
 
+bool exp0383_route_enabled(char route) {
+    const char* value = std::getenv("MIINFER_EXP0383_ROUTE");
+    return value != nullptr && value[0] == route && value[1] == '\0';
+}
+
 bool b64_composition_enabled() {
-    return exp0380_b64_probe_enabled() || exp0382_b64_compose_enabled();
+    return exp0380_b64_probe_enabled() || exp0382_b64_compose_enabled()
+        || exp0383_route_enabled('R') || exp0383_route_enabled('F');
 }
 
 bool exp0381_wrapper_probe_enabled() {

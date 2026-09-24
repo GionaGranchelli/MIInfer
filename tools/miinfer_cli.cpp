@@ -103,6 +103,8 @@ bool apply_runtime_preset() {
             && value.rfind("MIINFER_EXP0380_LAYER=", 0) != 0
             && value.rfind("MIINFER_EXP0381_WRAPPER_PROBE=", 0) != 0
             && value.rfind("MIINFER_EXP0382_B64_COMPOSE=", 0) != 0
+            && value.rfind("MIINFER_EXP0383_ROUTE=", 0) != 0
+            && value.rfind("MIINFER_EXP0383_EXPORT_PREFIX=", 0) != 0
             && value.rfind("MIINFER_HIP_GRAPH=", 0) != 0) {
             names.emplace_back(value.substr(0, value.find('=')));
         }
@@ -1167,6 +1169,9 @@ public:
             && std::strcmp(std::getenv("MIINFER_EXP0377_B64_RESIDUAL"), "0") != 0;
         const bool exp0380_probe = exp0374_scheduler && exp0380_b64_probe_enabled();
         const bool exp0382_compose = exp0374_scheduler && exp0382_b64_compose_enabled();
+        const bool exp0383_recurrent = exp0374_scheduler
+            && (exp0383_route_enabled('R') || exp0383_route_enabled('F'));
+        const bool exp0383_attention = exp0374_scheduler && exp0383_route_enabled('F');
         const bool exp0381_probe = exp0374_scheduler && exp0381_wrapper_probe_enabled();
         const int exp0380_stage = exp0380_probe ? exp0380_probe_stage() : -1;
         exp0376_chunk_timings_.clear();
@@ -1294,7 +1299,8 @@ public:
                 layer_span[layer].profile_ordered_start(
                     prefill_profile_.enabled ? base : std::numeric_limits<std::size_t>::max());
                 if (wide_prefill_ && (count >= kM12PrefillBatch
-                                      || ((exp0380_probe || exp0382_compose) && count == kPrefillBatch))
+                                      || ((exp0380_probe || exp0382_compose || exp0383_recurrent)
+                                          && count == kPrefillBatch))
                     && layer_span[layer].recurrent != nullptr) {
                     if (exp0380_probe && base == 768 && count == kM12PrefillBatch) {
                         std::cerr << "EXP0380 PREFIX_B128 layer=" << layer << " REC_BEGIN\n" << std::flush;
@@ -1323,7 +1329,8 @@ public:
                     && (!gdn_chunkwise_prefill_ || full_m12_chunk);
                 const bool batched_attention = prepared && deferred_tail
                     && (count >= kM12PrefillBatch
-                        || ((exp0380_probe || exp0382_compose) && count == kPrefillBatch))
+                        || ((exp0380_probe || exp0382_compose || exp0383_attention)
+                            && count == kPrefillBatch))
                     && layer_span[layer].wide_attention_batch_ready();
                 if (trace_exp0369) {
                     std::cout << "EXP0369 route base=" << base << " count=" << count
@@ -1446,6 +1453,10 @@ public:
             && std::getenv("MIINFER_EXP0374_REMAINDER_SCHED") != nullptr;
         const bool exp0382_compose = exp0382_b64_compose_enabled()
             && std::getenv("MIINFER_EXP0374_REMAINDER_SCHED") != nullptr;
+        const bool exp0383_recurrent = std::getenv("MIINFER_EXP0374_REMAINDER_SCHED") != nullptr
+            && (exp0383_route_enabled('R') || exp0383_route_enabled('F'));
+        const bool exp0383_attention = std::getenv("MIINFER_EXP0374_REMAINDER_SCHED") != nullptr
+            && exp0383_route_enabled('F');
         if (exp0380_probe) {
             std::cerr << "EXP0380 FULL_CHUNK_BEGIN base=" << base_position
                       << " count=" << prompt.size() << "\n" << std::flush;
@@ -1485,7 +1496,8 @@ public:
                 const float* chunk_input = current + base * kHidden;
                 float* chunk_output = next + base * kHidden;
                 if (wide_prefill_ && (count >= kM12PrefillBatch
-                                      || ((exp0380_probe || exp0382_compose) && count == kPrefillBatch))
+                                      || ((exp0380_probe || exp0382_compose || exp0383_recurrent)
+                                          && count == kPrefillBatch))
                     && layer_span[layer].recurrent != nullptr) {
                     if (trace_exp0369) {
                         std::cout << "EXP0369 route base=" << base << " count=" << count
@@ -1524,7 +1536,8 @@ public:
                     && (!gdn_chunkwise_prefill_ || full_m12_chunk);
                 const bool batched_attention = prepared && deferred_tail
                     && (count >= kM12PrefillBatch
-                        || ((exp0380_probe || exp0382_compose) && count == kPrefillBatch))
+                        || ((exp0380_probe || exp0382_compose || exp0383_attention)
+                            && count == kPrefillBatch))
                     && layer_span[layer].wide_attention_batch_ready();
                 if (trace_exp0369) {
                     std::cout << "EXP0369 route base=" << base << " count=" << count
@@ -1630,6 +1643,14 @@ public:
                 [](float value) { return std::isfinite(value); });
             std::cerr << "EXP0381 FINAL_NORM_FINITE=" << (finite ? 1 : 0) << "\n" << std::flush;
         }
+        if (const char* prefix = std::getenv("MIINFER_EXP0383_EXPORT_PREFIX")) {
+            std::vector<float> host_norm(kHidden);
+            MIINFER_HIP_CHECK(hipMemcpy(host_norm.data(), final_norm_->get(),
+                                        host_norm.size() * sizeof(float), hipMemcpyDeviceToHost));
+            std::ofstream output(std::string(prefix) + ".final_norm.f32", std::ios::binary);
+            output.write(reinterpret_cast<const char*>(host_norm.data()),
+                         static_cast<std::streamsize>(host_norm.size() * sizeof(float)));
+        }
         exp0381_marker("FINAL_QUANT_BEGIN");
         miinfer::launch_q8_1_quantize_f32(
             static_cast<const float*>(final_norm_->get()),
@@ -1655,6 +1676,14 @@ public:
                 [](float value) { return std::isfinite(value); });
             std::cerr << "EXP0381 LOGITS_FINITE=" << (finite ? 1 : 0) << "\n" << std::flush;
         }
+        if (const char* prefix = std::getenv("MIINFER_EXP0383_EXPORT_PREFIX")) {
+            std::vector<float> host_logits(model_.config().vocab_size);
+            MIINFER_HIP_CHECK(hipMemcpy(host_logits.data(), logits_->get(),
+                                        host_logits.size() * sizeof(float), hipMemcpyDeviceToHost));
+            std::ofstream output(std::string(prefix) + ".logits.f32", std::ios::binary);
+            output.write(reinterpret_cast<const char*>(host_logits.data()),
+                         static_cast<std::streamsize>(host_logits.size() * sizeof(float)));
+        }
         exp0381_marker("ARGMAX_BEGIN");
         miinfer::launch_qwen3_argmax(
             static_cast<const float*>(logits_->get()),
@@ -1672,6 +1701,17 @@ public:
         exp0381_marker("TOKEN_COPY_READ_END");
         exp0381_marker("FIRST_TOKEN_END");
         return result;
+    }
+
+    void export_exp0383_hidden(const float* hidden) {
+        const char* prefix = std::getenv("MIINFER_EXP0383_EXPORT_PREFIX");
+        if (prefix == nullptr) return;
+        std::vector<float> host_hidden(kHidden);
+        MIINFER_HIP_CHECK(hipMemcpy(host_hidden.data(), hidden,
+                                    host_hidden.size() * sizeof(float), hipMemcpyDeviceToHost));
+        std::ofstream output(std::string(prefix) + ".hidden.f32", std::ios::binary);
+        output.write(reinterpret_cast<const char*>(host_hidden.data()),
+                     static_cast<std::streamsize>(host_hidden.size() * sizeof(float)));
     }
 
     GenerateStats generate_layer_major(std::span<const std::uint32_t> prompt,
@@ -1720,6 +1760,7 @@ public:
                       << '\n';
         }
         if (opt.on_prefill_state) opt.on_prefill_state(final_hidden, prompt.size());
+        export_exp0383_hidden(final_hidden);
         if (opt.on_prefill_complete) opt.on_prefill_complete();
         exp0381_marker("PREFILL_CALLBACKS_RETURNED");
         if (exp0380_b64_probe_enabled()
