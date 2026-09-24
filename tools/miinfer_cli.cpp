@@ -105,6 +105,7 @@ bool apply_runtime_preset() {
             && value.rfind("MIINFER_EXP0382_B64_COMPOSE=", 0) != 0
             && value.rfind("MIINFER_EXP0383_ROUTE=", 0) != 0
             && value.rfind("MIINFER_EXP0383_EXPORT_PREFIX=", 0) != 0
+            && value.rfind("MIINFER_EXP0384_LAYER_EXPORT_PREFIX=", 0) != 0
             && value.rfind("MIINFER_HIP_GRAPH=", 0) != 0) {
             names.emplace_back(value.substr(0, value.find('=')));
         }
@@ -1314,6 +1315,7 @@ public:
                                   << " kind=recurrent prepared=0 deferred=0 batched=0 wide=1\n";
                     }
                     layer_span[layer].recurrent->prefill_wide(current, next, base, count);
+                    export_exp0384_layer(base, count, layer, next + (count - 1) * kHidden);
                     layer_span[layer].profile_ordered_end(
                         prefill_profile_.enabled ? base : std::numeric_limits<std::size_t>::max());
                     layer_span[layer].release_m23_repacked();
@@ -1396,6 +1398,7 @@ public:
                 }
                 layer_span[layer].profile_ordered_end(
                     prefill_profile_.enabled ? base : std::numeric_limits<std::size_t>::max());
+                export_exp0384_layer(base, count, layer, next + (count - 1) * kHidden);
                 layer_span[layer].release_m23_repacked();
                 std::swap(current, next);
                 if (exp0380_probe && base == 896 && count == kPrefillBatch
@@ -1594,6 +1597,8 @@ public:
             }
             layer_span[layer].profile_ordered_end(
                 prefill_profile_.enabled ? base_position : std::numeric_limits<std::size_t>::max());
+            export_exp0384_layer(base_position, prompt.size(), layer,
+                                 next + (prompt.size() - 1) * kHidden);
             if (exp0380_probe && base_position == 768 && prompt.size() == kM12PrefillBatch) {
                 std::cerr << "EXP0380 PREFIX_B128 layer=" << layer << " RELEASE_BEGIN\n" << std::flush;
             }
@@ -1712,6 +1717,27 @@ public:
         std::ofstream output(std::string(prefix) + ".hidden.f32", std::ios::binary);
         output.write(reinterpret_cast<const char*>(host_hidden.data()),
                      static_cast<std::streamsize>(host_hidden.size() * sizeof(float)));
+    }
+
+    void export_exp0384_layer(std::size_t base, std::size_t count, std::size_t layer,
+                              const float* output) {
+        const char* prefix = std::getenv("MIINFER_EXP0384_LAYER_EXPORT_PREFIX");
+        if (prefix == nullptr || base != 896 || count != kPrefillBatch) return;
+        std::vector<float> host(kHidden);
+        MIINFER_HIP_CHECK(hipMemcpy(host.data(), output, host.size() * sizeof(float),
+                                    hipMemcpyDeviceToHost));
+        const std::string path = std::string(prefix) + ".layers.f32";
+        std::fstream file(path, std::ios::in | std::ios::out | std::ios::binary);
+        if (!file) {
+            std::ofstream create(path, std::ios::binary);
+            create.seekp(static_cast<std::streamoff>(64 * kHidden * sizeof(float)) - 1);
+            create.put('\0');
+            create.close();
+            file.open(path, std::ios::in | std::ios::out | std::ios::binary);
+        }
+        file.seekp(static_cast<std::streamoff>(layer * kHidden * sizeof(float)));
+        file.write(reinterpret_cast<const char*>(host.data()),
+                   static_cast<std::streamsize>(host.size() * sizeof(float)));
     }
 
     GenerateStats generate_layer_major(std::span<const std::uint32_t> prompt,
