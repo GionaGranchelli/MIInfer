@@ -2364,8 +2364,8 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1790276422.9819539,
-    "seen": 1790276511.1922803,
+    "mtime": 1790278532.588868,
+    "seen": 1790278578.3670561,
     "ast_hash": "b94dfdbbc8ce62e0ad35300af75137ca",
     "semantic_hash": ""
   },
@@ -5580,9 +5580,15 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0394-b128-physical512-recurrent-projections.md": {
-    "mtime": 1790276494.7686179,
-    "seen": 1790276511.1929638,
-    "ast_hash": "b4d8e60655b75162680083b989ebf541",
+    "mtime": 1790276522.706487,
+    "seen": 1790278578.367726,
+    "ast_hash": "84d887e025c2b36d4a2cf51e4d317ffe",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-0395-b128-b4-tail-fallback.md": {
+    "mtime": 1790278560.6897316,
+    "seen": 1790278578.3677282,
+    "ast_hash": "fc05891c3e047579ed3ad9c13bbd8143",
     "semantic_hash": ""
   }
 }
