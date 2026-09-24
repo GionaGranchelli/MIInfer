@@ -54,13 +54,13 @@ PrefillV2RecurrentLayer::PrefillV2RecurrentLayer(const Qwen35Model& model, std::
     const auto* qkv_tensor = require_tensor(file, prefix + "attn_qkv.weight");
     qkv_type_ = qkv_tensor->type;
     if (qkv_type_ == GgufTensorType::q4_k) {
-        const auto tiles = pack_q4k_mmq_tensor(*qkv_tensor);
-        d_qkv_mmq_ = upload_device_buffer<Q4KMmqTile>(
-            tiles.data(), tiles.size() * sizeof(Q4KMmqTile), persistent_weight_bytes_);
+        const auto packed = pack_mx_q4k_repacked_tensor(*qkv_tensor);
+        d_qkv_mmq_ = upload_device_buffer<std::uint8_t>(
+            packed.data(), packed.size(), persistent_weight_bytes_);
     } else if (qkv_type_ == GgufTensorType::q6_k) {
-        const auto tiles = pack_q6k_mmq_tensor(*qkv_tensor);
-        d_qkv_mmq_ = upload_device_buffer<Q6KMmqTile>(
-            tiles.data(), tiles.size() * sizeof(Q6KMmqTile), persistent_weight_bytes_);
+        const auto packed = pack_mx_q6k_repacked_tensor(*qkv_tensor);
+        d_qkv_mmq_ = upload_device_buffer<std::uint8_t>(
+            packed.data(), packed.size(), persistent_weight_bytes_);
     } else {
         throw std::runtime_error("PrefillV2: unsupported attn_qkv quantization type");
     }
@@ -70,9 +70,9 @@ PrefillV2RecurrentLayer::PrefillV2RecurrentLayer(const Qwen35Model& model, std::
     if (gate_tensor->type != GgufTensorType::q4_k) {
         throw std::runtime_error("PrefillV2: unsupported attn_gate quantization type");
     }
-    const auto gate_tiles = pack_q4k_mmq_tensor(*gate_tensor);
-    d_gate_mmq_ = upload_device_buffer<Q4KMmqTile>(
-        gate_tiles.data(), gate_tiles.size() * sizeof(Q4KMmqTile), persistent_weight_bytes_);
+    const auto gate_packed = pack_mx_q4k_repacked_tensor(*gate_tensor);
+    d_gate_mmq_ = upload_device_buffer<std::uint8_t>(
+        gate_packed.data(), gate_packed.size(), persistent_weight_bytes_);
 
     // 4. SSM Beta and Alpha weights: F32[5120, 48]
     const auto* beta_tensor = require_tensor(file, prefix + "ssm_beta.weight");
@@ -125,9 +125,9 @@ PrefillV2RecurrentLayer::PrefillV2RecurrentLayer(const Qwen35Model& model, std::
     if (ssm_out_tensor->type != GgufTensorType::q5_k) {
         throw std::runtime_error("PrefillV2: unsupported ssm_out quantization type");
     }
-    const auto ssm_out_tiles = pack_q5k_mmq_tensor(*ssm_out_tensor);
-    d_ssm_out_mmq_ = upload_device_buffer<Q5KMmqTile>(
-        ssm_out_tiles.data(), ssm_out_tiles.size() * sizeof(Q5KMmqTile), persistent_weight_bytes_);
+    const auto ssm_out_packed = pack_mx_q5k_repacked_tensor(*ssm_out_tensor);
+    d_ssm_out_mmq_ = upload_device_buffer<std::uint8_t>(
+        ssm_out_packed.data(), ssm_out_packed.size(), persistent_weight_bytes_);
 
     // 9. Post Attention RMS Norm: F32[5120]
     const auto* post_norm_tensor = require_tensor(file, prefix + "post_attention_norm.weight");
@@ -142,29 +142,29 @@ PrefillV2RecurrentLayer::PrefillV2RecurrentLayer(const Qwen35Model& model, std::
     if (ffn_gate_tensor->type != GgufTensorType::q4_k) {
         throw std::runtime_error("PrefillV2: unsupported ffn_gate quantization type");
     }
-    const auto ffn_gate_tiles = pack_q4k_mmq_tensor(*ffn_gate_tensor);
-    d_ffn_gate_mmq_ = upload_device_buffer<Q4KMmqTile>(
-        ffn_gate_tiles.data(), ffn_gate_tiles.size() * sizeof(Q4KMmqTile), persistent_weight_bytes_);
+    const auto ffn_gate_packed = pack_mx_q4k_repacked_tensor(*ffn_gate_tensor);
+    d_ffn_gate_mmq_ = upload_device_buffer<std::uint8_t>(
+        ffn_gate_packed.data(), ffn_gate_packed.size(), persistent_weight_bytes_);
 
     const auto* ffn_up_tensor = require_tensor(file, prefix + "ffn_up.weight");
     if (ffn_up_tensor->type != GgufTensorType::q4_k) {
         throw std::runtime_error("PrefillV2: unsupported ffn_up quantization type");
     }
-    const auto ffn_up_tiles = pack_q4k_mmq_tensor(*ffn_up_tensor);
-    d_ffn_up_mmq_ = upload_device_buffer<Q4KMmqTile>(
-        ffn_up_tiles.data(), ffn_up_tiles.size() * sizeof(Q4KMmqTile), persistent_weight_bytes_);
+    const auto ffn_up_packed = pack_mx_q4k_repacked_tensor(*ffn_up_tensor);
+    d_ffn_up_mmq_ = upload_device_buffer<std::uint8_t>(
+        ffn_up_packed.data(), ffn_up_packed.size(), persistent_weight_bytes_);
 
     // 11. FFN Down projection: Q4_K or Q6_K [17408, 5120]
     const auto* ffn_down_tensor = require_tensor(file, prefix + "ffn_down.weight");
     ffn_down_type_ = ffn_down_tensor->type;
     if (ffn_down_type_ == GgufTensorType::q4_k) {
-        const auto tiles = pack_q4k_mmq_tensor(*ffn_down_tensor);
-        d_ffn_down_mmq_ = upload_device_buffer<Q4KMmqTile>(
-            tiles.data(), tiles.size() * sizeof(Q4KMmqTile), persistent_weight_bytes_);
+        const auto packed = pack_mx_q4k_repacked_tensor(*ffn_down_tensor);
+        d_ffn_down_mmq_ = upload_device_buffer<std::uint8_t>(
+            packed.data(), packed.size(), persistent_weight_bytes_);
     } else if (ffn_down_type_ == GgufTensorType::q6_k) {
-        const auto tiles = pack_q6k_mmq_tensor(*ffn_down_tensor);
-        d_ffn_down_mmq_ = upload_device_buffer<Q6KMmqTile>(
-            tiles.data(), tiles.size() * sizeof(Q6KMmqTile), persistent_weight_bytes_);
+        const auto packed = pack_mx_q6k_repacked_tensor(*ffn_down_tensor);
+        d_ffn_down_mmq_ = upload_device_buffer<std::uint8_t>(
+            packed.data(), packed.size(), persistent_weight_bytes_);
     } else {
         throw std::runtime_error("PrefillV2: unsupported ffn_down quantization type");
     }
@@ -290,21 +290,25 @@ void PrefillV2RecurrentLayer::forward(
         ws.raw_beta, ws.raw_alpha, d_ssm_dt_, d_ssm_a_, ws.beta, ws.decay,
         token_count * kVHeads, stream);
 
-    // 3. QKV & Gate projections via MMQ
-    launch_m23_q8_1_mmq_quantize(
-        ws.normalized, ws.mmq_q8, token_count, kHidden, stream);
-
+    // 3. QKV & Gate projections via compact Mx MMQ
     if (qkv_type_ == GgufTensorType::q4_k) {
-        launch_m23_q4k_repacked_mmq(
-            static_cast<const Q4KMmqTile*>(d_qkv_mmq_), ws.mmq_q8,
+        launch_mx_q8_1_mmq_quantize(
+            ws.normalized, ws.mmq_q8, token_count, kHidden, /*affine=*/true, stream);
+        launch_mx_q4k_repacked_mmq(
+            static_cast<const std::uint8_t*>(d_qkv_mmq_), ws.mmq_q8,
             ws.qkv, kChannels, kHidden, token_count, stream);
     } else {
-        launch_m23_q6k_repacked_mmq(
-            static_cast<const Q6KMmqTile*>(d_qkv_mmq_), ws.mmq_q8,
+        launch_mx_q8_1_mmq_quantize(
+            ws.normalized, ws.mmq_q8, token_count, kHidden, /*affine=*/false, stream);
+        launch_mx_q6k_repacked_mmq(
+            static_cast<const std::uint8_t*>(d_qkv_mmq_), ws.mmq_q8,
             ws.qkv, kChannels, kHidden, token_count, stream);
+        // Gate is Q4_K (affine), re-quantize normalized with affine=true
+        launch_mx_q8_1_mmq_quantize(
+            ws.normalized, ws.mmq_q8, token_count, kHidden, /*affine=*/true, stream);
     }
 
-    launch_m23_q4k_repacked_mmq(
+    launch_mx_q4k_repacked_mmq(
         d_gate_mmq_, ws.mmq_q8, ws.gate, kInner, kHidden, token_count, stream);
 
     // 4. Convolution + SiLU + split into Q, K, V (updating conv history buffer in place)
@@ -332,10 +336,10 @@ void PrefillV2RecurrentLayer::forward(
         ws.gdn_raw_output, ws.gate, d_ssm_norm_, ws.gated_output,
         token_count, kVHeads, kState, kRmsNormEpsilon, stream);
 
-    // 8. SSM Out projection
-    launch_m23_q8_1_mmq_quantize(
-        ws.gated_output, ws.mmq_q8, token_count, kInner, stream);
-    launch_m23_q5k_repacked_mmq(
+    // 8. SSM Out projection (Q5_K affine)
+    launch_mx_q8_1_mmq_quantize(
+        ws.gated_output, ws.mmq_q8, token_count, kInner, /*affine=*/true, stream);
+    launch_mx_q5k_repacked_mmq(
         d_ssm_out_mmq_, ws.mmq_q8, ws.ssm_output,
         kHidden, kInner, token_count, stream);
 
@@ -345,13 +349,13 @@ void PrefillV2RecurrentLayer::forward(
         ws.residual, ws.post_normalized,
         token_count, kHidden, kRmsNormEpsilon, stream);
 
-    // 10. FFN Gate & Up projections
-    launch_m23_q8_1_mmq_quantize(
-        ws.post_normalized, ws.mmq_q8, token_count, kHidden, stream);
-    launch_m23_q4k_repacked_mmq(
+    // 10. FFN Gate & Up projections (Q4_K affine)
+    launch_mx_q8_1_mmq_quantize(
+        ws.post_normalized, ws.mmq_q8, token_count, kHidden, /*affine=*/true, stream);
+    launch_mx_q4k_repacked_mmq(
         d_ffn_gate_mmq_, ws.mmq_q8, ws.ffn_gate,
         kFfnInner, kHidden, token_count, stream);
-    launch_m23_q4k_repacked_mmq(
+    launch_mx_q4k_repacked_mmq(
         d_ffn_up_mmq_, ws.mmq_q8, ws.ffn_up,
         kFfnInner, kHidden, token_count, stream);
 
@@ -361,15 +365,17 @@ void PrefillV2RecurrentLayer::forward(
         token_count * kFfnInner, stream);
 
     // 12. FFN Down projection
-    launch_m23_q8_1_mmq_quantize(
-        ws.ffn_activation, ws.mmq_q8, token_count, kFfnInner, stream);
     if (ffn_down_type_ == GgufTensorType::q4_k) {
-        launch_m23_q4k_repacked_mmq(
-            static_cast<const Q4KMmqTile*>(d_ffn_down_mmq_), ws.mmq_q8,
+        launch_mx_q8_1_mmq_quantize(
+            ws.ffn_activation, ws.mmq_q8, token_count, kFfnInner, /*affine=*/true, stream);
+        launch_mx_q4k_repacked_mmq(
+            static_cast<const std::uint8_t*>(d_ffn_down_mmq_), ws.mmq_q8,
             ws.ffn_down, kHidden, kFfnInner, token_count, stream);
     } else {
-        launch_m23_q6k_repacked_mmq(
-            static_cast<const Q6KMmqTile*>(d_ffn_down_mmq_), ws.mmq_q8,
+        launch_mx_q8_1_mmq_quantize(
+            ws.ffn_activation, ws.mmq_q8, token_count, kFfnInner, /*affine=*/false, stream);
+        launch_mx_q6k_repacked_mmq(
+            static_cast<const std::uint8_t*>(d_ffn_down_mmq_), ws.mmq_q8,
             ws.ffn_down, kHidden, kFfnInner, token_count, stream);
     }
 
@@ -426,18 +432,22 @@ void PrefillV2RecurrentLayer::forward_profiled(
     MIINFER_HIP_CHECK(hipEventRecord(ev_norm, stream));
 
     // 3. QKV & Gate
-    launch_m23_q8_1_mmq_quantize(
-        ws.normalized, ws.mmq_q8, token_count, kHidden, stream);
     if (qkv_type_ == GgufTensorType::q4_k) {
-        launch_m23_q4k_repacked_mmq(
-            static_cast<const Q4KMmqTile*>(d_qkv_mmq_), ws.mmq_q8,
+        launch_mx_q8_1_mmq_quantize(
+            ws.normalized, ws.mmq_q8, token_count, kHidden, /*affine=*/true, stream);
+        launch_mx_q4k_repacked_mmq(
+            static_cast<const std::uint8_t*>(d_qkv_mmq_), ws.mmq_q8,
             ws.qkv, kChannels, kHidden, token_count, stream);
     } else {
-        launch_m23_q6k_repacked_mmq(
-            static_cast<const Q6KMmqTile*>(d_qkv_mmq_), ws.mmq_q8,
+        launch_mx_q8_1_mmq_quantize(
+            ws.normalized, ws.mmq_q8, token_count, kHidden, /*affine=*/false, stream);
+        launch_mx_q6k_repacked_mmq(
+            static_cast<const std::uint8_t*>(d_qkv_mmq_), ws.mmq_q8,
             ws.qkv, kChannels, kHidden, token_count, stream);
+        launch_mx_q8_1_mmq_quantize(
+            ws.normalized, ws.mmq_q8, token_count, kHidden, /*affine=*/true, stream);
     }
-    launch_m23_q4k_repacked_mmq(
+    launch_mx_q4k_repacked_mmq(
         d_gate_mmq_, ws.mmq_q8, ws.gate, kInner, kHidden, token_count, stream);
     MIINFER_HIP_CHECK(hipEventRecord(ev_qkv, stream));
 
@@ -465,9 +475,9 @@ void PrefillV2RecurrentLayer::forward_profiled(
     launch_m12_gdn_postprocess(
         ws.gdn_raw_output, ws.gate, d_ssm_norm_, ws.gated_output,
         token_count, kVHeads, kState, kRmsNormEpsilon, stream);
-    launch_m23_q8_1_mmq_quantize(
-        ws.gated_output, ws.mmq_q8, token_count, kInner, stream);
-    launch_m23_q5k_repacked_mmq(
+    launch_mx_q8_1_mmq_quantize(
+        ws.gated_output, ws.mmq_q8, token_count, kInner, /*affine=*/true, stream);
+    launch_mx_q5k_repacked_mmq(
         d_ssm_out_mmq_, ws.mmq_q8, ws.ssm_output,
         kHidden, kInner, token_count, stream);
     MIINFER_HIP_CHECK(hipEventRecord(ev_ssm, stream));
@@ -480,12 +490,12 @@ void PrefillV2RecurrentLayer::forward_profiled(
     MIINFER_HIP_CHECK(hipEventRecord(ev_res, stream));
 
     // 10. FFN Gate & Up
-    launch_m23_q8_1_mmq_quantize(
-        ws.post_normalized, ws.mmq_q8, token_count, kHidden, stream);
-    launch_m23_q4k_repacked_mmq(
+    launch_mx_q8_1_mmq_quantize(
+        ws.post_normalized, ws.mmq_q8, token_count, kHidden, /*affine=*/true, stream);
+    launch_mx_q4k_repacked_mmq(
         d_ffn_gate_mmq_, ws.mmq_q8, ws.ffn_gate,
         kFfnInner, kHidden, token_count, stream);
-    launch_m23_q4k_repacked_mmq(
+    launch_mx_q4k_repacked_mmq(
         d_ffn_up_mmq_, ws.mmq_q8, ws.ffn_up,
         kFfnInner, kHidden, token_count, stream);
     MIINFER_HIP_CHECK(hipEventRecord(ev_ffn_up, stream));
@@ -494,15 +504,17 @@ void PrefillV2RecurrentLayer::forward_profiled(
     launch_qwen3_silu_mul(
         ws.ffn_gate, ws.ffn_up, ws.ffn_activation,
         token_count * kFfnInner, stream);
-    launch_m23_q8_1_mmq_quantize(
-        ws.ffn_activation, ws.mmq_q8, token_count, kFfnInner, stream);
     if (ffn_down_type_ == GgufTensorType::q4_k) {
-        launch_m23_q4k_repacked_mmq(
-            static_cast<const Q4KMmqTile*>(d_ffn_down_mmq_), ws.mmq_q8,
+        launch_mx_q8_1_mmq_quantize(
+            ws.ffn_activation, ws.mmq_q8, token_count, kFfnInner, /*affine=*/true, stream);
+        launch_mx_q4k_repacked_mmq(
+            static_cast<const std::uint8_t*>(d_ffn_down_mmq_), ws.mmq_q8,
             ws.ffn_down, kHidden, kFfnInner, token_count, stream);
     } else {
-        launch_m23_q6k_repacked_mmq(
-            static_cast<const Q6KMmqTile*>(d_ffn_down_mmq_), ws.mmq_q8,
+        launch_mx_q8_1_mmq_quantize(
+            ws.ffn_activation, ws.mmq_q8, token_count, kFfnInner, /*affine=*/false, stream);
+        launch_mx_q6k_repacked_mmq(
+            static_cast<const std::uint8_t*>(d_ffn_down_mmq_), ws.mmq_q8,
             ws.ffn_down, kHidden, kFfnInner, token_count, stream);
     }
     launch_qwen3_add(

@@ -37,8 +37,8 @@ struct RecurrentLayerWorkspace {
     float* residual = nullptr;            // [max_tokens, kHidden]
     float* post_normalized = nullptr;     // [max_tokens, kHidden]
 
-    // MMQ Q8_1 quantization blocks
-    M23Q8_1MmqBlock* mmq_q8 = nullptr;   // [max_tokens * (max(kHidden, kInner, kFfnInner) / 128)] blocks
+    // MMQ Q8_1 quantization blocks (compact Mx contract)
+    MxQ8_1MmqBlock* mmq_q8 = nullptr;   // [max_tokens * (max(kHidden, kInner, kFfnInner) / 128)] blocks
 
     // FFN Activations
     float* ffn_gate = nullptr;            // [max_tokens, kFfnInner]

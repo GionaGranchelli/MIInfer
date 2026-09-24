@@ -46,7 +46,7 @@ RecurrentLayerWorkspaceManager::RecurrentLayerWorkspaceManager(std::size_t max_t
 
     // MMQ Q8_1 quantization blocks: max columns is kFfnInner = 17408 (136 blocks of 128)
     const std::size_t max_blocks_per_token = kFfnInner / 128;
-    const std::size_t mmq_q8_bytes = align128(max_tokens_ * max_blocks_per_token * sizeof(M23Q8_1MmqBlock));
+    const std::size_t mmq_q8_bytes = align128(max_tokens_ * max_blocks_per_token * sizeof(MxQ8_1MmqBlock));
 
     const std::size_t ffn_gate_bytes = align128(max_tokens_ * kFfnInner * sizeof(float));
     const std::size_t ffn_up_bytes = align128(max_tokens_ * kFfnInner * sizeof(float));
@@ -88,7 +88,7 @@ RecurrentLayerWorkspaceManager::RecurrentLayerWorkspaceManager(std::size_t max_t
     workspace_.residual = reinterpret_cast<float*>(ptr); ptr += residual_bytes;
     workspace_.post_normalized = reinterpret_cast<float*>(ptr); ptr += post_norm_bytes;
 
-    workspace_.mmq_q8 = reinterpret_cast<M23Q8_1MmqBlock*>(ptr); ptr += mmq_q8_bytes;
+    workspace_.mmq_q8 = reinterpret_cast<MxQ8_1MmqBlock*>(ptr); ptr += mmq_q8_bytes;
 
     workspace_.ffn_gate = reinterpret_cast<float*>(ptr); ptr += ffn_gate_bytes;
     workspace_.ffn_up = reinterpret_cast<float*>(ptr); ptr += ffn_up_bytes;

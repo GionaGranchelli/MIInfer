@@ -1,16 +1,20 @@
 # MIInfer Current State
 
-## Current experiment status — V2-0001 (Prefill V2 Clean-Sheet Architecture)
+## Current experiment status — V2-0002 (Prefill V2 Mx Projection & FAST_V1 Confrontation)
 
 V1 prefill optimization campaign (EXP-0364 through EXP-0395, B128, B64, B4, and residual scheduling) is **CLOSED**.
 M28 has transitioned to **Prefill V2**: a clean-sheet single-MI50 (gfx906, Wave64) prefill architecture specialized for Qwen3.8-27B-Q4_K_M.
-V2-0001 qualified the first executable recurrent-layer vertical slice (Layer 0) on the real GGUF model:
-- **N=64 (1×C64)**: 20.63 ms (4.08× speedup vs V1 oracle, Cosine Sim = 0.9982)
-- **N=128 (2×C64)**: 28.59 ms (4.43× speedup vs V1 oracle, Cosine Sim = 0.9984)
-- **N=512 (8×C64)**: 95.86 ms (5.31× speedup vs V1 oracle, Cosine Sim = 0.9995)
-Status: **V2_RECURRENT_ARCHITECTURE_QUALIFIED**.
+V2-0002 qualified the Mx compact MMQ projection backend on Prefill V2 and benchmarked it against `FAST_V1` and `ORACLE`:
+- **N=512 (8×C64) Layer 0 (Sig A: Q6/Q6)**: 48.65 ms (1.97× speedup vs V2-0001, 1.00× vs FAST_V1 48.56 ms, 90.7× vs Oracle, Cosine Sim = 0.9997)
+- **N=512 (8×C64) Layer 8 (Sig B: Q4/Q4)**: 47.12 ms (1.90× speedup vs V2-0001, 1.00× vs FAST_V1 47.11 ms, 87.0× vs Oracle, Cosine Sim = 0.9972)
+- **N=64 (1×C64)**: 10.65–11.09 ms (~5,800–6,000 tok/s, 49.7× vs Oracle; FAST_V1 unsupported for N<512)
+- **N=128 (2×C64)**: 13.79–14.28 ms (~9,000–9,300 tok/s, 74.9× vs Oracle; FAST_V1 unsupported for N<512)
+- **3-Layer Chain (L0->L1->L2, N=512 contiguous)**: 145.99 ms (0.999× vs FAST_V1 145.90 ms, Cosine Sim = 0.9995)
+- **Stateful Split-Call (512 vs 256+256)**: Cosine Sim = 1.000000, MaxErr = 0.000000 across output and all 3 layer states.
+- **Memory Footprint**: Persistent weights reduced to 246.88 MiB (Sig A) and 212.07 MiB (Sig B), totaling 10.76 GiB for 48 recurrent layers (-3.54 GiB saved). Total recurrent static VRAM = 11.14 GiB / 32 GiB.
+Status: **V2_RECURRENT_PERFORMANCE_QUALIFIED**.
 Current PRIMARY: Implement one complete repeating 4-layer topology block (`3 × GDN + 1 × GQA`) using the V2 execution contract.
-See [V2-0001](../experiments/V2-0001-recurrent-layer-vertical-slice.md) and [docs/prefill-v2-architecture.md](prefill-v2-architecture.md).
+See [V2-0002](../experiments/V2-0002-mx-projection-and-fast-v1-confrontation.md) and [docs/prefill-v2-architecture.md](prefill-v2-architecture.md).
 
 ## Performance research frontier
 

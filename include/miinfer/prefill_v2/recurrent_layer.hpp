@@ -74,21 +74,21 @@ private:
     std::size_t layer_index_ = 0;
     std::size_t persistent_weight_bytes_ = 0;
 
-    // Device weights
+    // Device weights (Mx compact repacked layouts)
     float* d_attn_norm_ = nullptr;
     void* d_qkv_mmq_ = nullptr;
     GgufTensorType qkv_type_ = GgufTensorType::q4_k;
-    Q4KMmqTile* d_gate_mmq_ = nullptr;
+    std::uint8_t* d_gate_mmq_ = nullptr;
     float* d_ssm_beta_ = nullptr;
     float* d_ssm_alpha_ = nullptr;
     float* d_ssm_dt_ = nullptr;
     float* d_ssm_a_ = nullptr;
     float* d_ssm_conv_ = nullptr;
     float* d_ssm_norm_ = nullptr;
-    Q5KMmqTile* d_ssm_out_mmq_ = nullptr;
+    std::uint8_t* d_ssm_out_mmq_ = nullptr;
     float* d_post_norm_ = nullptr;
-    Q4KMmqTile* d_ffn_gate_mmq_ = nullptr;
-    Q4KMmqTile* d_ffn_up_mmq_ = nullptr;
+    std::uint8_t* d_ffn_gate_mmq_ = nullptr;
+    std::uint8_t* d_ffn_up_mmq_ = nullptr;
     void* d_ffn_down_mmq_ = nullptr;
     GgufTensorType ffn_down_type_ = GgufTensorType::q6_k;
 };

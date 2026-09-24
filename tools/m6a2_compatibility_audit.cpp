@@ -87,6 +87,37 @@ int main(int argc, char ** argv) {
             }
             std::cout << '\n';
         }
+        std::cout << "\n--- RECURRENT LAYER SIGNATURES ---\n";
+        std::unordered_map<std::string, const miinfer::GgufTensor*> tensor_map;
+        for (const auto & t : model->tensors()) {
+            tensor_map[t.name] = &t;
+        }
+        std::map<std::string, std::vector<std::size_t>> signatures;
+        for (std::size_t layer = 0; layer < 65; ++layer) {
+            std::string ssm_out_name = "blk." + std::to_string(layer) + ".ssm_out.weight";
+            if (tensor_map.find(ssm_out_name) == tensor_map.end()) continue;
+            std::string qkv_name = "blk." + std::to_string(layer) + ".attn_qkv.weight";
+            std::string gate_name = "blk." + std::to_string(layer) + ".attn_gate.weight";
+            std::string ffn_g_name = "blk." + std::to_string(layer) + ".ffn_gate.weight";
+            std::string ffn_u_name = "blk." + std::to_string(layer) + ".ffn_up.weight";
+            std::string ffn_d_name = "blk." + std::to_string(layer) + ".ffn_down.weight";
+            
+            std::string qkv_t = tensor_map.count(qkv_name) ? miinfer::gguf_tensor_type_name(tensor_map[qkv_name]->type) : "NONE";
+            std::string gate_t = tensor_map.count(gate_name) ? miinfer::gguf_tensor_type_name(tensor_map[gate_name]->type) : "NONE";
+            std::string ssm_t = miinfer::gguf_tensor_type_name(tensor_map[ssm_out_name]->type);
+            std::string ffn_g_t = tensor_map.count(ffn_g_name) ? miinfer::gguf_tensor_type_name(tensor_map[ffn_g_name]->type) : "NONE";
+            std::string ffn_u_t = tensor_map.count(ffn_u_name) ? miinfer::gguf_tensor_type_name(tensor_map[ffn_u_name]->type) : "NONE";
+            std::string ffn_d_t = tensor_map.count(ffn_d_name) ? miinfer::gguf_tensor_type_name(tensor_map[ffn_d_name]->type) : "NONE";
+            
+            std::string sig = "QKV:" + qkv_t + " | Gate:" + gate_t + " | SSM-out:" + ssm_t + " | FFN-g/u:" + ffn_g_t + "/" + ffn_u_t + " | FFN-down:" + ffn_d_t;
+            signatures[sig].push_back(layer);
+        }
+        for (const auto & [sig, layers] : signatures) {
+            std::cout << "Signature: [" << sig << "]\n";
+            std::cout << "  Count: " << layers.size() << "\n  Layers: ";
+            for (size_t l : layers) std::cout << l << " ";
+            std::cout << "\n";
+        }
     } catch (const std::exception & error) {
         std::cerr << "M6-A2 audit failed: " << error.what() << '\n';
         return 1;

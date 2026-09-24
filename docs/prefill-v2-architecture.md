@@ -64,12 +64,13 @@ void forward(
 ```
 
 ### 3.4 Zero Hot-Path Memory Allocation
-- All scratch buffers are pre-allocated inside a monolithic `PrefillV2Workspace` (247 MiB for $N \le 512$).
+- All scratch buffers are pre-allocated inside a monolithic `PrefillV2Workspace` (245.44 MiB for $N \le 512$).
 - Zero device memory allocations (`hipMalloc`), reallocations, or host-device transfers occur during forward execution.
 
 ### 3.5 Resident Repacked Weights
-- Weights are loaded from GGUF and repacked once into gfx906-native MMQ tiles during layer initialization.
-- Persistent footprint per recurrent layer: 307.03 MiB.
+- Weights are loaded from GGUF and repacked once into gfx906-native compact Mx MMQ tiles during layer initialization.
+- Persistent footprint per recurrent layer: 246.88 MiB (Signature A: Q6_K QKV / Q6_K FFN-down) and 212.07 MiB (Signature B: Q4_K QKV / Q4_K FFN-down).
+- Total for 48 recurrent layers: 10.76 GiB (saving ~3.54 GiB compared to older M23 tiling).
 - No per-token or per-chunk conversions or repack operations in the hot path.
 
 ---
@@ -147,8 +148,10 @@ bench/
 ---
 
 ## 6. Qualification Ladder
-
-1. **Slice 1 (Current)**: Single Recurrent Layer Vertical Slice (Layer 0). Qualified against canonical V1 token oracle at $N \in \{64, 128, 512\}$.
+ 
+1. **Slice 1 (Qualified)**: Single Recurrent Layer Vertical Slice & 3-Layer Chain.
+   - V2-0001: Structurally qualified against canonical V1 token oracle ($5.31\times$ speedup at $N=512$).
+   - V2-0002: Performance qualified with compact Mx MMQ against `FAST_V1` ($1.00\times$ speedup, matching $48.65\text{ ms}$ at $N=512$; $145.99\text{ ms}$ on 3-layer chain; $1.000000$ split-call invariant).
 2. **Slice 2**: Full 4-Layer Topology Block (`3 × GDN + 1 × GQA`).
 3. **Slice 3**: 64-Layer Full Model Prefill Pipeline.
 4. **Promotion**: V2 replaces V1 as default prefill engine only after end-to-end full-model qualification and baseline speedup verification.
