@@ -167,6 +167,14 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-prefill-v2-attention-bakeoff PRIVATE miinfer_hip)
     target_compile_options(miinfer-prefill-v2-attention-bakeoff PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-candidate-b-layout-pruning-bench bench/candidate_b_layout_pruning_bench.cpp)
+    target_link_libraries(miinfer-candidate-b-layout-pruning-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-candidate-b-layout-pruning-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-candidate-a-ffn-shared-bench bench/candidate_a_ffn_shared_bench.cpp)
+    target_link_libraries(miinfer-candidate-a-ffn-shared-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-candidate-a-ffn-shared-bench PRIVATE -Wall -Wextra -Wpedantic)
+
     add_executable(miinfer-prefill-v2-e2e-bench bench/prefill_v2_e2e_bench.cpp)
     target_link_libraries(miinfer-prefill-v2-e2e-bench PRIVATE miinfer_hip)
     target_compile_options(miinfer-prefill-v2-e2e-bench PRIVATE -Wall -Wextra -Wpedantic)

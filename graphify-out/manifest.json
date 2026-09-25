@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1790341547.804164,
-    "seen": 1790342561.5051517,
-    "ast_hash": "2b69adc16dd5e2bcf45f1c97bb9d4d95",
+    "mtime": 1790348525.7942176,
+    "seen": 1790349037.3259008,
+    "ast_hash": "b711b9d7720571910d5de35977cc3ebb",
     "semantic_hash": ""
   },
   "README.md": {
@@ -2040,9 +2040,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/kquant_wave_layout.hpp": {
-    "mtime": 1789212648.7094033,
-    "seen": 1789213839.328806,
-    "ast_hash": "50cc911dbc476e365a131d1c85fa15f0",
+    "mtime": 1790348403.1267676,
+    "seen": 1790349037.3252912,
+    "ast_hash": "cf818ea51d362e64d54903f0f5ee39a4",
     "semantic_hash": ""
   },
   "scripts/run-exp0177-attn-gate-ab.sh": {
@@ -5604,9 +5604,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/prefill_v2/recurrent_layer.hpp": {
-    "mtime": 1790341723.8943632,
-    "seen": 1790342561.504615,
-    "ast_hash": "b2346db79ea0c21ee7e9a83e841cb195",
+    "mtime": 1790348582.9309616,
+    "seen": 1790349037.3253107,
+    "ast_hash": "c3e6a009e0ff79c4d5812453481efda1",
     "semantic_hash": ""
   },
   "include/miinfer/prefill_v2/state.hpp": {
@@ -5622,9 +5622,9 @@
     "semantic_hash": ""
   },
   "src/prefill_v2/recurrent_layer.cpp": {
-    "mtime": 1790341783.4290807,
-    "seen": 1790342561.5050333,
-    "ast_hash": "6ef8683885c0dc2871258abb3d0eddf6",
+    "mtime": 1790348661.30361,
+    "seen": 1790349037.3257515,
+    "ast_hash": "6848c9b5e2c3d0c7fa8e48255cb4e90e",
     "semantic_hash": ""
   },
   "src/prefill_v2/state.cpp": {
@@ -5664,9 +5664,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/prefill_v2/attention_layer.hpp": {
-    "mtime": 1790341834.8478367,
-    "seen": 1790342561.5046072,
-    "ast_hash": "775ef25332b78f953938c9b3c2a87af6",
+    "mtime": 1790348665.097593,
+    "seen": 1790349037.3253028,
+    "ast_hash": "c39a3ae9b5d33f02b9b3d5ce6696f834",
     "semantic_hash": ""
   },
   "include/miinfer/prefill_v2/kv_cache.hpp": {
@@ -5682,9 +5682,9 @@
     "semantic_hash": ""
   },
   "src/prefill_v2/attention_layer.cpp": {
-    "mtime": 1790341852.657752,
-    "seen": 1790342561.5050278,
-    "ast_hash": "f8d999d45beaaf6c5e4510fce45cb1d8",
+    "mtime": 1790348710.8803878,
+    "seen": 1790349037.3257453,
+    "ast_hash": "f99c240f85c8515caf8871a994fae318",
     "semantic_hash": ""
   },
   "src/prefill_v2/kv_cache.cpp": {
@@ -5775,6 +5775,54 @@
     "mtime": 1790342546.0244615,
     "seen": 1790342561.5059114,
     "ast_hash": "91785bba756d2a36304da7e98f310bf0",
+    "semantic_hash": ""
+  },
+  "bench/candidate_a_ffn_shared_bench.cpp": {
+    "mtime": 1790348490.7263749,
+    "seen": 1790349037.3251889,
+    "ast_hash": "abdf41e6635d74f1a8f78d2b7b22dee5",
+    "semantic_hash": ""
+  },
+  "bench/candidate_b_layout_pruning_bench.cpp": {
+    "mtime": 1790348548.6271152,
+    "seen": 1790349037.3251913,
+    "ast_hash": "cd23ad0bf9f6a4065f4fc8adbf35eccc",
+    "semantic_hash": ""
+  },
+  "bench/decode_gdn_breakdown.cpp": {
+    "mtime": 1790344771.4917305,
+    "seen": 1790349037.325196,
+    "ast_hash": "7f508931e5e1d95b9b2e31222f0cd8f4",
+    "semantic_hash": ""
+  },
+  "bench/decode_stage_profile.cpp": {
+    "mtime": 1790344631.670392,
+    "seen": 1790349037.3251982,
+    "ast_hash": "46c067e99899f008f046712562f4ebee",
+    "semantic_hash": ""
+  },
+  "bench/gdn_kernel_bakeoff.cpp": {
+    "mtime": 1790344948.697896,
+    "seen": 1790349037.3252075,
+    "ast_hash": "e17dd7327cd18df658b9b7bd055c3287",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-V2-0010-deltanet-wave-acceleration-and-mx-defeat.md": {
+    "mtime": 1790345322.7071347,
+    "seen": 1790349037.3266602,
+    "ast_hash": "5858e9d345fdc1b5cc6474845c1e6737",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-V2-0011-push-decode-to-32ms-frontier.md": {
+    "mtime": 1790347008.648195,
+    "seen": 1790349037.3266616,
+    "ast_hash": "6dfd67f1df46969757908a19d0653959",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-V2-0012-vram-performance-pareto.md": {
+    "mtime": 1790349017.7513862,
+    "seen": 1790349037.326663,
+    "ast_hash": "549b6fe7a808a92dcbe4660d44fce54c",
     "semantic_hash": ""
   }
 }

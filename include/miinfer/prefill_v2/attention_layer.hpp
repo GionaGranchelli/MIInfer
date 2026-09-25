@@ -118,12 +118,8 @@ private:
     std::uint8_t* d_ffn_up_mmq_ = nullptr;   // [5120, 17408] Q4_K
     std::uint8_t* d_ffn_down_mmq_ = nullptr; // [17408, 5120] Q4_K or Q6_K
 
-    // Gfx906 resident Wave decode weights (coexisting with Mx compact prefill weights)
+    // Gfx906 resident Wave decode weights
     Q4KWaveSwigluFusedTile* d_ffn_swiglu_fused_ = nullptr;
-    Q4KWaveTile* d_o_wave_ = nullptr;
-    Q4KWaveTile* d_q_wave_ = nullptr;
-    Q4KWaveTile* d_k_wave_ = nullptr;
-    void* d_v_wave_ = nullptr;
 };
 
 } // namespace miinfer::prefill_v2

@@ -1106,6 +1106,98 @@ __global__ void q4k_wave_fused_gate_up_swiglu_paired_batched4_kernel(
     }
 }
 
+template <unsigned NumTiles, unsigned Batch = 4>
+__global__ void q4k_wave_fused_gate_up_swiglu_paired_batch_kernel(
+    const Q4KWaveSwigluFusedTile* __restrict__ weights_fused,
+    const miinfer::Q8_1Block* __restrict__ input,
+    float* __restrict__ output,
+    unsigned rows,
+    unsigned token_count) {
+    const unsigned wave_id = threadIdx.x / 64;
+    const unsigned row = blockIdx.x * 4 + wave_id;
+    if (row >= rows) return;
+    const unsigned batch_base = blockIdx.y * Batch;
+    const unsigned lane = threadIdx.x % 64;
+    const unsigned in_block = lane % 16;
+    const unsigned group = 2 * (in_block / 4);
+    float sum_gate[Batch] = {};
+    float sum_up[Batch] = {};
+
+    for (unsigned tile = 0; tile < NumTiles; ++tile) {
+        const auto& w = weights_fused[row * NumTiles + tile];
+        const uint64_t pair0 = w.words_p0[lane];
+        const uint64_t pair1 = w.words_p1[lane];
+        const int v0_g = static_cast<int>(pair0);
+        const int v0_u = static_cast<int>(pair0 >> 32);
+        const int v1_g = static_cast<int>(pair1);
+        const int v1_u = static_cast<int>(pair1 >> 32);
+        const auto& m_g = w.metadata_gate[lane / 16];
+        const auto& m_u = w.metadata_up[lane / 16];
+        const std::uint16_t sc_g = *reinterpret_cast<const std::uint16_t*>(&m_g.scales[group]);
+        const std::uint16_t min_g = *reinterpret_cast<const std::uint16_t*>(&m_g.minimums[group]);
+        const std::uint16_t sc_u = *reinterpret_cast<const std::uint16_t*>(&m_u.scales[group]);
+        const std::uint16_t min_u = *reinterpret_cast<const std::uint16_t*>(&m_u.minimums[group]);
+        const float d_g = __half2float(m_g.d);
+        const float dmin_g = __half2float(m_g.dmin);
+        const float d_u = __half2float(m_u.d);
+        const float dmin_u = __half2float(m_u.dmin);
+        float sd_g[Batch] = {};
+        float sm_g[Batch] = {};
+        float sd_u[Batch] = {};
+        float sm_u[Batch] = {};
+
+        #pragma unroll
+        for (unsigned part = 0; part < 2; ++part) {
+            const int a_g = (part == 0) ? (v0_g & 0x0f0f0f0f) : ((v0_g >> 4) & 0x0f0f0f0f);
+            const int b_g = (part == 0) ? (v1_g & 0x0f0f0f0f) : ((v1_g >> 4) & 0x0f0f0f0f);
+            const int a_u = (part == 0) ? (v0_u & 0x0f0f0f0f) : ((v0_u >> 4) & 0x0f0f0f0f);
+            const int b_u = (part == 0) ? (v1_u & 0x0f0f0f0f) : ((v1_u >> 4) & 0x0f0f0f0f);
+            const int scale_g = (part == 0) ? (sc_g & 0xff) : (sc_g >> 8);
+            const int minimum_g = (part == 0) ? (min_g & 0xff) : (min_g >> 8);
+            const int scale_u = (part == 0) ? (sc_u & 0xff) : (sc_u >> 8);
+            const int minimum_u = (part == 0) ? (min_u & 0xff) : (min_u >> 8);
+            #pragma unroll
+            for (unsigned batch = 0; batch < Batch; ++batch) {
+                if (batch_base + batch < token_count) {
+                    const auto& q = input[(batch_base + batch) * NumTiles * 32 + (tile * 4 + lane / 16) * 8 + group + part];
+                    const auto* u = reinterpret_cast<const int*>(q.qs) + (in_block % 4);
+                    const int dot_g = __builtin_amdgcn_sdot4(a_g, u[0],
+                        __builtin_amdgcn_sdot4(b_g, u[4], 0, false), false);
+                    const int dot_u = __builtin_amdgcn_sdot4(a_u, u[0],
+                        __builtin_amdgcn_sdot4(b_u, u[4], 0, false), false);
+                    const int ones = __builtin_amdgcn_sdot4(0x01010101, u[0],
+                        __builtin_amdgcn_sdot4(0x01010101, u[4], 0, false), false);
+                    const float q_d = __half2float(q.d);
+                    sd_g[batch] += q_d * float(dot_g * scale_g);
+                    sm_g[batch] += q_d * float(ones * minimum_g);
+                    sd_u[batch] += q_d * float(dot_u * scale_u);
+                    sm_u[batch] += q_d * float(ones * minimum_u);
+                }
+            }
+        }
+        #pragma unroll
+        for (unsigned batch = 0; batch < Batch; ++batch) {
+            sum_gate[batch] += d_g * sd_g[batch] - dmin_g * sm_g[batch];
+            sum_up[batch] += d_u * sd_u[batch] - dmin_u * sm_u[batch];
+        }
+    }
+
+    #pragma unroll
+    for (unsigned batch = 0; batch < Batch; ++batch) {
+        if (batch_base + batch < token_count) {
+            #pragma unroll
+            for (int offset = 32; offset > 0; offset /= 2) {
+                sum_gate[batch] += __shfl_down(sum_gate[batch], offset, 64);
+                sum_up[batch] += __shfl_down(sum_up[batch], offset, 64);
+            }
+            if (lane == 0) {
+                const float silu_gate = sum_gate[batch] / (1.0f + expf(-sum_gate[batch]));
+                output[(batch_base + batch) * rows + row] = silu_gate * sum_up[batch];
+            }
+        }
+    }
+}
+
 template <unsigned NumTiles>
 __global__ void q4k_wave_fused_gate_up_swiglu_paired_legacy_kernel(
     const Q4KWaveSwigluFusedTile* __restrict__ weights_fused,
@@ -2918,6 +3010,28 @@ void launch_q4k_wave_fused_gate_up_swiglu_paired_batched4(
     const dim3 block(256);
     hipLaunchKernelGGL((q4k_wave_fused_gate_up_swiglu_paired_batched4_kernel<5>),
                        grid, block, 0, stream, w_fused, x, y_activation, rows);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_q4k_wave_fused_gate_up_swiglu_paired_batch(
+    const Q4KWaveSwigluFusedTile* w_fused,
+    const miinfer::Q8_1Block* x,
+    float* y_activation,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    std::uint32_t token_count,
+    hipStream_t stream) {
+    if (!w_fused || !x || !y_activation || columns % 1024 != 0 || token_count == 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    if (columns / 1024 != 5) {
+        throw std::runtime_error("unsupported batched paired SwiGLU NumTiles: " + std::to_string(columns / 1024));
+    }
+    constexpr unsigned Batch = 4;
+    const dim3 grid((rows + 3) / 4, (token_count + Batch - 1) / Batch);
+    const dim3 block(256);
+    hipLaunchKernelGGL((q4k_wave_fused_gate_up_swiglu_paired_batch_kernel<5, Batch>),
+                       grid, block, 0, stream, w_fused, x, y_activation, rows, token_count);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

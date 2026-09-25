@@ -174,27 +174,6 @@ PrefillV2RecurrentLayer::PrefillV2RecurrentLayer(const Qwen35Model& model, std::
     const auto fused_swiglu_host = pack_q4k_wave_swiglu_fused(*ffn_gate_tensor, *ffn_up_tensor);
     d_ffn_swiglu_fused_ = upload_device_buffer<Q4KWaveSwigluFusedTile>(
         fused_swiglu_host.data(), fused_swiglu_host.size() * sizeof(Q4KWaveSwigluFusedTile), persistent_weight_bytes_);
-
-    // (b) SSM Out Wave layout (Q5_K)
-    const auto ssm_out_wave_host = pack_q5k_wave_tensor(*ssm_out_tensor);
-    d_ssm_out_wave_ = upload_device_buffer<Q5KWaveTile>(
-        ssm_out_wave_host.data(), ssm_out_wave_host.size() * sizeof(Q5KWaveTile), persistent_weight_bytes_);
-
-    // (c) Attention Gate Wave layout (Q4_K)
-    const auto gate_wave_host = pack_q4k_wave_tensor(*gate_tensor);
-    d_gate_wave_ = upload_device_buffer<Q4KWaveTile>(
-        gate_wave_host.data(), gate_wave_host.size() * sizeof(Q4KWaveTile), persistent_weight_bytes_);
-
-    // (d) QKV Wave layout (Q4_K or Q6_K)
-    if (qkv_type_ == GgufTensorType::q4_k) {
-        const auto qkv_wave_host = pack_q4k_wave_tensor(*qkv_tensor);
-        d_qkv_wave_ = upload_device_buffer<Q4KWaveTile>(
-            qkv_wave_host.data(), qkv_wave_host.size() * sizeof(Q4KWaveTile), persistent_weight_bytes_);
-    } else {
-        const auto qkv_wave_host = pack_q6k_wave_tensor(*qkv_tensor);
-        d_qkv_wave_ = upload_device_buffer<Q6KWaveTile>(
-            qkv_wave_host.data(), qkv_wave_host.size() * sizeof(Q6KWaveTile), persistent_weight_bytes_);
-    }
 }
 
 PrefillV2RecurrentLayer::~PrefillV2RecurrentLayer() {
@@ -214,9 +193,6 @@ PrefillV2RecurrentLayer::~PrefillV2RecurrentLayer() {
     if (d_ffn_down_mmq_ != nullptr) (void)hipFree(d_ffn_down_mmq_);
 
     if (d_ffn_swiglu_fused_ != nullptr) (void)hipFree(d_ffn_swiglu_fused_);
-    if (d_ssm_out_wave_ != nullptr) (void)hipFree(d_ssm_out_wave_);
-    if (d_gate_wave_ != nullptr) (void)hipFree(d_gate_wave_);
-    if (d_qkv_wave_ != nullptr) (void)hipFree(d_qkv_wave_);
 }
 
 PrefillV2RecurrentLayer::PrefillV2RecurrentLayer(PrefillV2RecurrentLayer&& other) noexcept
@@ -238,10 +214,7 @@ PrefillV2RecurrentLayer::PrefillV2RecurrentLayer(PrefillV2RecurrentLayer&& other
       d_ffn_up_mmq_(std::exchange(other.d_ffn_up_mmq_, nullptr)),
       d_ffn_down_mmq_(std::exchange(other.d_ffn_down_mmq_, nullptr)),
       ffn_down_type_(other.ffn_down_type_),
-      d_ffn_swiglu_fused_(std::exchange(other.d_ffn_swiglu_fused_, nullptr)),
-      d_ssm_out_wave_(std::exchange(other.d_ssm_out_wave_, nullptr)),
-      d_gate_wave_(std::exchange(other.d_gate_wave_, nullptr)),
-      d_qkv_wave_(std::exchange(other.d_qkv_wave_, nullptr)) {}
+      d_ffn_swiglu_fused_(std::exchange(other.d_ffn_swiglu_fused_, nullptr)) {}
 
 PrefillV2RecurrentLayer& PrefillV2RecurrentLayer::operator=(PrefillV2RecurrentLayer&& other) noexcept {
     if (this != &other) {
@@ -260,9 +233,6 @@ PrefillV2RecurrentLayer& PrefillV2RecurrentLayer::operator=(PrefillV2RecurrentLa
         if (d_ffn_up_mmq_ != nullptr) (void)hipFree(d_ffn_up_mmq_);
         if (d_ffn_down_mmq_ != nullptr) (void)hipFree(d_ffn_down_mmq_);
         if (d_ffn_swiglu_fused_ != nullptr) (void)hipFree(d_ffn_swiglu_fused_);
-        if (d_ssm_out_wave_ != nullptr) (void)hipFree(d_ssm_out_wave_);
-        if (d_gate_wave_ != nullptr) (void)hipFree(d_gate_wave_);
-        if (d_qkv_wave_ != nullptr) (void)hipFree(d_qkv_wave_);
 
         layer_index_ = other.layer_index_;
         persistent_weight_bytes_ = other.persistent_weight_bytes_;
@@ -283,9 +253,6 @@ PrefillV2RecurrentLayer& PrefillV2RecurrentLayer::operator=(PrefillV2RecurrentLa
         d_ffn_down_mmq_ = std::exchange(other.d_ffn_down_mmq_, nullptr);
         ffn_down_type_ = other.ffn_down_type_;
         d_ffn_swiglu_fused_ = std::exchange(other.d_ffn_swiglu_fused_, nullptr);
-        d_ssm_out_wave_ = std::exchange(other.d_ssm_out_wave_, nullptr);
-        d_gate_wave_ = std::exchange(other.d_gate_wave_, nullptr);
-        d_qkv_wave_ = std::exchange(other.d_qkv_wave_, nullptr);
     }
     return *this;
 }
@@ -603,19 +570,24 @@ void PrefillV2RecurrentLayer::decode(
         d_ssm_beta_, d_ssm_alpha_, ws.normalized, d_ssm_dt_, d_ssm_a_, ws.beta, ws.decay,
         kVHeads, kHidden, stream);
 
-    // 3. QKV & Gate projections via native Wave GEMV (shared Q8_1 quantization)
-    launch_q8_1_quantize_f32(ws.normalized, ws.q8_1, kHidden, stream);
+    // 3. QKV & Gate projections via compact Mx MMQ (N=1)
     if (qkv_type_ == GgufTensorType::q4_k) {
-        launch_q4k_wave_gemv(
-            static_cast<const Q4KWaveTile*>(d_qkv_wave_), ws.q8_1,
-            ws.qkv, kChannels, kHidden, stream);
+        launch_mx_q8_1_mmq_quantize(
+            ws.normalized, ws.mmq_q8, 1, kHidden, /*affine=*/true, stream);
+        launch_mx_q4k_repacked_mmq(
+            static_cast<const std::uint8_t*>(d_qkv_mmq_), ws.mmq_q8,
+            ws.qkv, kChannels, kHidden, 1, stream);
     } else {
-        launch_q6k_wave_gemv(
-            static_cast<const Q6KWaveTile*>(d_qkv_wave_), ws.q8_1,
-            ws.qkv, kChannels, kHidden, stream);
+        launch_mx_q8_1_mmq_quantize(
+            ws.normalized, ws.mmq_q8, 1, kHidden, /*affine=*/false, stream);
+        launch_mx_q6k_repacked_mmq(
+            static_cast<const std::uint8_t*>(d_qkv_mmq_), ws.mmq_q8,
+            ws.qkv, kChannels, kHidden, 1, stream);
+        launch_mx_q8_1_mmq_quantize(
+            ws.normalized, ws.mmq_q8, 1, kHidden, /*affine=*/true, stream);
     }
-    launch_q4k_wave_gemv(
-        d_gate_wave_, ws.q8_1, ws.gate, kInner, kHidden, stream);
+    launch_mx_q4k_repacked_mmq(
+        d_gate_mmq_, ws.mmq_q8, ws.gate, kInner, kHidden, 1, stream);
 
     // 4. Convolution + SiLU + split into Q, K, V (updating conv history buffer in place)
     if (decode_state != nullptr) {
@@ -635,20 +607,21 @@ void PrefillV2RecurrentLayer::decode(
         ws.query, ws.key, ws.query, ws.key,
         1, kKHeads, kState, stream);
 
-    // 6 & 7. Fused DeltaNet Recurrent Core in LDS with direct Q8_1 quantization
+    // 6 & 7. Fused DeltaNet Recurrent Core in LDS
     launch_qwen35_deltanet_fused_recurrent_core(
         ws.query, ws.key, ws.value, ws.beta, ws.decay,
         d_ssm_norm_, ws.gate, state.d_state,
         ws.gated_output, /*recurrent_output=*/nullptr,
-        kKHeads, kVHeads, kState, kRmsNormEpsilon, stream,
-        /*gated_output_q8=*/ws.q8_1);
+        kKHeads, kVHeads, kState, kRmsNormEpsilon, stream);
 
-    // 8. SSM Out projection via Wave GEMV (Q5_K)
-    launch_q5k_wave_gemv(
-        d_ssm_out_wave_, ws.q8_1, ws.ssm_output,
-        kHidden, kInner, stream);
+    // 8. SSM Out projection via compact Mx MMQ (Q5_K, affine)
+    launch_mx_q8_1_mmq_quantize(
+        ws.gated_output, ws.mmq_q8, 1, kInner, /*affine=*/true, stream);
+    launch_mx_q5k_repacked_mmq(
+        d_ssm_out_mmq_, ws.mmq_q8, ws.ssm_output,
+        kHidden, kInner, 1, stream);
 
-    // 9. Residual + Post-attention RMS Norm (Fused with Q8_1 quantization)
+    // 9. Residual + Post-attention RMS Norm (Fused with Q8_1 quantization for FFN SwiGLU Paired Wave)
     launch_qwen3_fused_add_rms_norm(
         d_input, ws.ssm_output, d_post_norm_,
         ws.residual, ws.post_normalized,
@@ -712,19 +685,24 @@ void PrefillV2RecurrentLayer::decode_profiled(
         kVHeads, kHidden, stream);
     MIINFER_HIP_CHECK(hipEventRecord(ev_norm, stream));
 
-    // 3. QKV & Gate projections via native Wave GEMV
-    launch_q8_1_quantize_f32(ws.normalized, ws.q8_1, kHidden, stream);
+    // 3. QKV & Gate projections via compact Mx MMQ (N=1)
     if (qkv_type_ == GgufTensorType::q4_k) {
-        launch_q4k_wave_gemv(
-            static_cast<const Q4KWaveTile*>(d_qkv_wave_), ws.q8_1,
-            ws.qkv, kChannels, kHidden, stream);
+        launch_mx_q8_1_mmq_quantize(
+            ws.normalized, ws.mmq_q8, 1, kHidden, /*affine=*/true, stream);
+        launch_mx_q4k_repacked_mmq(
+            static_cast<const std::uint8_t*>(d_qkv_mmq_), ws.mmq_q8,
+            ws.qkv, kChannels, kHidden, 1, stream);
     } else {
-        launch_q6k_wave_gemv(
-            static_cast<const Q6KWaveTile*>(d_qkv_wave_), ws.q8_1,
-            ws.qkv, kChannels, kHidden, stream);
+        launch_mx_q8_1_mmq_quantize(
+            ws.normalized, ws.mmq_q8, 1, kHidden, /*affine=*/false, stream);
+        launch_mx_q6k_repacked_mmq(
+            static_cast<const std::uint8_t*>(d_qkv_mmq_), ws.mmq_q8,
+            ws.qkv, kChannels, kHidden, 1, stream);
+        launch_mx_q8_1_mmq_quantize(
+            ws.normalized, ws.mmq_q8, 1, kHidden, /*affine=*/true, stream);
     }
-    launch_q4k_wave_gemv(
-        d_gate_wave_, ws.q8_1, ws.gate, kInner, kHidden, stream);
+    launch_mx_q4k_repacked_mmq(
+        d_gate_mmq_, ws.mmq_q8, ws.gate, kInner, kHidden, 1, stream);
     MIINFER_HIP_CHECK(hipEventRecord(ev_qkv, stream));
 
     // 4 & 5. Conv + L2 Norm
@@ -744,19 +722,20 @@ void PrefillV2RecurrentLayer::decode_profiled(
         1, kKHeads, kState, stream);
     MIINFER_HIP_CHECK(hipEventRecord(ev_conv, stream));
 
-    // 6 & 7. Fused DeltaNet Recurrent Core in LDS with direct Q8_1 quantization
+    // 6 & 7. Fused DeltaNet Recurrent Core in LDS
     launch_qwen35_deltanet_fused_recurrent_core(
         ws.query, ws.key, ws.value, ws.beta, ws.decay,
         d_ssm_norm_, ws.gate, state.d_state,
         ws.gated_output, /*recurrent_output=*/nullptr,
-        kKHeads, kVHeads, kState, kRmsNormEpsilon, stream,
-        /*gated_output_q8=*/ws.q8_1);
+        kKHeads, kVHeads, kState, kRmsNormEpsilon, stream);
     MIINFER_HIP_CHECK(hipEventRecord(ev_gdn, stream));
 
-    // 8. SSM Out projection via Wave GEMV (Q5_K)
-    launch_q5k_wave_gemv(
-        d_ssm_out_wave_, ws.q8_1, ws.ssm_output,
-        kHidden, kInner, stream);
+    // 8. SSM Out projection via compact Mx MMQ (Q5_K, affine)
+    launch_mx_q8_1_mmq_quantize(
+        ws.gated_output, ws.mmq_q8, 1, kInner, /*affine=*/true, stream);
+    launch_mx_q5k_repacked_mmq(
+        d_ssm_out_mmq_, ws.mmq_q8, ws.ssm_output,
+        kHidden, kInner, 1, stream);
     MIINFER_HIP_CHECK(hipEventRecord(ev_ssm, stream));
 
     // 9. Residual + Post RMSNorm (Fused with Q8_1)

@@ -215,6 +215,14 @@ void launch_q4k_wave_fused_gate_up_swiglu_paired_batched4(
     std::uint32_t rows,
     std::uint32_t columns,
     hipStream_t stream = nullptr);
+void launch_q4k_wave_fused_gate_up_swiglu_paired_batch(
+    const Q4KWaveSwigluFusedTile* w_fused,
+    const miinfer::Q8_1Block* x,
+    float* y_activation,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    std::uint32_t token_count,
+    hipStream_t stream = nullptr);
 void launch_q4k_wave_down(const Q4KWaveTile* w, const miinfer::Q8_1Block* x, float* y,
                           hipStream_t stream = nullptr);
 void launch_q5k_wave_gemv(const Q5KWaveTile* w, const miinfer::Q8_1Block* x, float* y,
