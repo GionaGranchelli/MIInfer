@@ -55,6 +55,20 @@ public:
         std::uint32_t token_count,
         hipStream_t stream = nullptr) const;
 
+    // Specialized single-token decode execution through the 4 layers.
+    void decode(
+        float* d_ping,
+        float* d_pong,
+        float* d_final_output,
+        RecurrentLayerState& state0,
+        RecurrentLayerState& state1,
+        RecurrentLayerState& state2,
+        AttentionKvCacheView kv_cache3,
+        PrefillV2Workspace& ws,
+        std::uint32_t position,
+        const DeviceDecodeState* decode_state = nullptr,
+        hipStream_t stream = nullptr) const;
+
     // Profiled forward execution
     void forward_profiled(
         float* d_ping,

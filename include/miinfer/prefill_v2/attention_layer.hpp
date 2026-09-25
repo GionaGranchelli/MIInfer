@@ -47,6 +47,16 @@ public:
         std::uint32_t token_count,
         hipStream_t stream = nullptr) const;
 
+    // Specialized single-token decode execution with Split-K attention
+    void decode(
+        const float* d_input,
+        float* d_output,
+        AttentionKvCacheView kv_cache,
+        const PrefillV2Workspace& ws,
+        std::uint32_t position,
+        const DeviceDecodeState* decode_state = nullptr,
+        hipStream_t stream = nullptr) const;
+
     // Profiled execution recording kernel phase events
     void forward_profiled(
         const float* d_input,

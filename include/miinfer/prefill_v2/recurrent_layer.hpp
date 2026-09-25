@@ -59,6 +59,15 @@ public:
         std::uint32_t token_count,
         hipStream_t stream = nullptr) const;
 
+    // Executes single-token specialized decode step.
+    void decode(
+        const float* d_input,
+        float* d_output,
+        RecurrentLayerState& state,
+        RecurrentLayerWorkspace& workspace,
+        const DeviceDecodeState* decode_state = nullptr,
+        hipStream_t stream = nullptr) const;
+
     // Profiled execution variant for fine-grained phase attribution
     void forward_profiled(
         const float* d_input,

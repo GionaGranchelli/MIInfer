@@ -84,7 +84,10 @@ PrefillV2Model::PrefillV2Model(PrefillV2Model&& other) noexcept
       ws_mgr_(std::move(other.ws_mgr_)),
       d_ping_(other.d_ping_),
       d_pong_(other.d_pong_),
-      d_temp_tokens_(other.d_temp_tokens_) {
+      d_temp_tokens_(other.d_temp_tokens_),
+      d_decode_state_(other.d_decode_state_),
+      d_decode_tokens_(other.d_decode_tokens_),
+      decode_graph_exec_(other.decode_graph_exec_) {
     other.d_embedding_weights_ = nullptr;
     other.d_final_norm_weights_ = nullptr;
     other.d_output_weights_ = nullptr;
@@ -93,6 +96,9 @@ PrefillV2Model::PrefillV2Model(PrefillV2Model&& other) noexcept
     other.d_ping_ = nullptr;
     other.d_pong_ = nullptr;
     other.d_temp_tokens_ = nullptr;
+    other.d_decode_state_ = nullptr;
+    other.d_decode_tokens_ = nullptr;
+    other.decode_graph_exec_ = nullptr;
 }
 
 PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
@@ -117,6 +123,9 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
         d_ping_ = other.d_ping_;
         d_pong_ = other.d_pong_;
         d_temp_tokens_ = other.d_temp_tokens_;
+        d_decode_state_ = other.d_decode_state_;
+        d_decode_tokens_ = other.d_decode_tokens_;
+        decode_graph_exec_ = other.decode_graph_exec_;
 
         other.d_embedding_weights_ = nullptr;
         other.d_final_norm_weights_ = nullptr;
@@ -126,6 +135,9 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
         other.d_ping_ = nullptr;
         other.d_pong_ = nullptr;
         other.d_temp_tokens_ = nullptr;
+        other.d_decode_state_ = nullptr;
+        other.d_decode_tokens_ = nullptr;
+        other.decode_graph_exec_ = nullptr;
     }
     return *this;
 }
@@ -139,9 +151,21 @@ void PrefillV2Model::allocate_resources() {
     if (has_lm_head_) {
         MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&d_logits_), vocab_size_ * sizeof(float)));
     }
+    MIINFER_HIP_CHECK(hipMalloc(&d_decode_state_, sizeof(DeviceDecodeState)));
+    MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&d_decode_tokens_), kv_capacity_ * sizeof(std::uint32_t)));
+    decode_graph_exec_ = nullptr;
 }
 
 void PrefillV2Model::free_resources() {
+    cleanup_decode_graph();
+    if (d_decode_state_ != nullptr) {
+        (void)hipFree(d_decode_state_);
+        d_decode_state_ = nullptr;
+    }
+    if (d_decode_tokens_ != nullptr) {
+        (void)hipFree(d_decode_tokens_);
+        d_decode_tokens_ = nullptr;
+    }
     if (d_embedding_weights_ != nullptr) {
         (void)hipFree(d_embedding_weights_);
         d_embedding_weights_ = nullptr;
@@ -440,6 +464,8 @@ std::uint32_t PrefillV2Model::decode_step(
         throw std::runtime_error("PrefillV2Model::decode_step: null logits destination buffer");
     }
 
+    auto& ws = const_cast<PrefillV2Workspace&>(ws_mgr_->workspace());
+
     // 1. Copy single input token to device
     MIINFER_HIP_CHECK(hipMemcpyAsync(
         d_temp_tokens_,
@@ -448,16 +474,52 @@ std::uint32_t PrefillV2Model::decode_step(
         hipMemcpyHostToDevice,
         stream));
 
-    // 2. Single token forward through all 64 layers: input token -> d_ping_ (final normalized hidden)
-    forward(d_temp_tokens_, position, 1, d_ping_, stream);
+    // 2. Single token embedding: d_temp_tokens_ -> d_ping_
+    launch_qwen35_q4_k_embedding_batch(
+        static_cast<const Q4KDeviceBlock*>(d_embedding_weights_),
+        d_temp_tokens_,
+        1,
+        vocab_size_,
+        kHidden,
+        d_ping_,
+        stream);
 
-    // 3. Compute logits: d_ping_ -> target_logits
-    compute_logits(d_ping_, target_logits, stream);
+    // 3. Execute 16 Topology Blocks via specialized decode execution path
+    for (std::size_t b = 0; b < 16; ++b) {
+        auto st0 = recurrent_states_[b * 3 + 0].view();
+        auto st1 = recurrent_states_[b * 3 + 1].view();
+        auto st2 = recurrent_states_[b * 3 + 2].view();
 
-    // 4. Argmax on device: target_logits -> d_temp_tokens_[0]
+        blocks_[b]->decode(
+            d_ping_,
+            d_pong_,
+            d_ping_,
+            st0,
+            st1,
+            st2,
+            kv_caches_[b].view(),
+            ws,
+            position,
+            /*decode_state=*/nullptr,
+            stream);
+    }
+
+    // 4. Final RMS Norm: d_ping_ -> d_pong_
+    launch_qwen3_rms_norm(
+        d_ping_,
+        d_final_norm_weights_,
+        d_pong_,
+        kHidden,
+        kRmsNormEpsilon,
+        stream);
+
+    // 5. Compute logits: d_pong_ -> target_logits
+    compute_logits(d_pong_, target_logits, stream);
+
+    // 6. Argmax on device: target_logits -> d_temp_tokens_[0]
     launch_qwen3_argmax(target_logits, d_temp_tokens_, vocab_size_, stream);
 
-    // 5. Read back single output token
+    // 7. Read back single output token
     std::uint32_t next_token = 0;
     MIINFER_HIP_CHECK(hipMemcpyAsync(
         &next_token,
@@ -540,6 +602,63 @@ GenerateStats PrefillV2Model::generate(
     }
 
     // 4. Autoregressive Decode Loop (Zero device copy handoff)
+    const char* env_graph = std::getenv("MIINFER_HIP_GRAPH");
+    bool enable_graph = options.use_hip_graph && (env_graph == nullptr || std::string_view(env_graph) != "0");
+
+    const std::size_t num_decode = options.max_new_tokens - 1;
+
+    if (enable_graph) {
+        hipStream_t exec_stream = (stream != nullptr) ? stream : hipStreamPerThread;
+        capture_decode_graph(exec_stream);
+        stats.used_hip_graph = true;
+
+        DeviceDecodeState state{};
+        state.current_token = first_token;
+        state.position = prompt_len;
+        state.generated = 0;
+        state.stop = 0;
+        state.max_generated = static_cast<std::uint32_t>(num_decode);
+
+        MIINFER_HIP_CHECK(hipMemcpyAsync(d_decode_state_, &state, sizeof(state), hipMemcpyHostToDevice, exec_stream));
+
+        const auto t_decode_start = std::chrono::steady_clock::now();
+
+        for (std::size_t i = 0; i < num_decode; ++i) {
+            MIINFER_HIP_CHECK(hipGraphLaunch(decode_graph_exec_, exec_stream));
+        }
+
+        std::vector<std::uint32_t> host_decode_tokens(num_decode);
+        MIINFER_HIP_CHECK(hipMemcpyAsync(
+            host_decode_tokens.data(),
+            d_decode_tokens_,
+            num_decode * sizeof(std::uint32_t),
+            hipMemcpyDeviceToHost,
+            exec_stream));
+        MIINFER_HIP_CHECK(hipStreamSynchronize(exec_stream));
+
+        const auto t_decode_end = std::chrono::steady_clock::now();
+        stats.decode_ms = std::chrono::duration<double, std::milli>(t_decode_end - t_decode_start).count();
+
+        for (std::uint32_t tok : host_decode_tokens) {
+            stats.generated_tokens.push_back(tok);
+            if (options.on_token) {
+                options.on_token(tok);
+            }
+        }
+
+        const std::uint32_t final_position = prompt_len + static_cast<std::uint32_t>(num_decode);
+        for (auto& st : recurrent_states_) {
+            st.set_position(final_position);
+        }
+
+        const std::size_t decode_count = stats.generated_tokens.size() - 1;
+        stats.decode_tok_per_sec = stats.decode_ms > 0.0 ? (decode_count * 1000.0 / stats.decode_ms) : 0.0;
+        stats.avg_decode_latency_ms = decode_count > 0 ? (stats.decode_ms / decode_count) : 0.0;
+        stats.total_ms = std::chrono::duration<double, std::milli>(t_decode_end - t_start).count();
+
+        return stats;
+    }
+
     const auto t_decode_start = std::chrono::steady_clock::now();
     std::uint32_t current_token = first_token;
 
@@ -565,6 +684,90 @@ GenerateStats PrefillV2Model::generate(
     stats.total_ms = std::chrono::duration<double, std::milli>(t_decode_end - t_start).count();
 
     return stats;
+}
+
+void PrefillV2Model::cleanup_decode_graph() {
+    if (decode_graph_exec_ != nullptr) {
+        (void)hipGraphExecDestroy(decode_graph_exec_);
+        decode_graph_exec_ = nullptr;
+    }
+}
+
+void PrefillV2Model::capture_decode_graph(hipStream_t stream) {
+    if (decode_graph_exec_ != nullptr) {
+        return;
+    }
+    if (!has_lm_head_ || d_output_weights_ == nullptr || d_embedding_weights_ == nullptr ||
+        d_final_norm_weights_ == nullptr || d_decode_state_ == nullptr || d_decode_tokens_ == nullptr) {
+        throw std::runtime_error("PrefillV2Model::capture_decode_graph: required weights/buffers not allocated");
+    }
+
+    hipStream_t capture_stream = (stream != nullptr) ? stream : hipStreamPerThread;
+
+    auto& ws = const_cast<PrefillV2Workspace&>(ws_mgr_->workspace());
+    auto* decode_state = static_cast<DeviceDecodeState*>(d_decode_state_);
+
+    hipGraph_t graph = nullptr;
+    MIINFER_HIP_CHECK(hipStreamBeginCapture(capture_stream, hipStreamCaptureModeRelaxed));
+
+    // 1. Single token embedding from device pointer (&decode_state->current_token)
+    launch_qwen35_q4_k_embedding_device_token(
+        static_cast<const Q4KDeviceBlock*>(d_embedding_weights_),
+        &decode_state->current_token,
+        vocab_size_,
+        kHidden,
+        d_ping_,
+        capture_stream);
+
+    // 2. 16 Topology Blocks (64 layers) via dynamic decode path
+    for (std::size_t b = 0; b < 16; ++b) {
+        auto st0 = recurrent_states_[b * 3 + 0].view();
+        auto st1 = recurrent_states_[b * 3 + 1].view();
+        auto st2 = recurrent_states_[b * 3 + 2].view();
+
+        blocks_[b]->decode(
+            d_ping_,
+            d_pong_,
+            d_ping_,
+            st0,
+            st1,
+            st2,
+            kv_caches_[b].view(),
+            ws,
+            0,
+            decode_state,
+            capture_stream);
+    }
+
+    // 3. Final RMS Norm: d_ping_ -> d_pong_
+    launch_qwen3_rms_norm(
+        d_ping_,
+        d_final_norm_weights_,
+        d_pong_,
+        kHidden,
+        rms_epsilon_,
+        capture_stream);
+
+    // 4. Compute logits: d_pong_ -> d_logits_
+    compute_logits(d_pong_, d_logits_, capture_stream);
+
+    // 5. Device argmax: d_logits_ -> &decode_state->current_token
+    launch_qwen3_argmax(
+        d_logits_,
+        &decode_state->current_token,
+        vocab_size_,
+        capture_stream);
+
+    // 6. Decode state advance: records token to d_decode_tokens_, updates position and generated count
+    launch_qwen35_decode_state_advance(
+        decode_state,
+        d_decode_tokens_,
+        kv_capacity_,
+        capture_stream);
+
+    MIINFER_HIP_CHECK(hipStreamEndCapture(capture_stream, &graph));
+    MIINFER_HIP_CHECK(hipGraphInstantiate(&decode_graph_exec_, graph, nullptr, nullptr, 0));
+    MIINFER_HIP_CHECK(hipGraphDestroy(graph));
 }
 
 std::size_t PrefillV2Model::persistent_weight_bytes() const noexcept {

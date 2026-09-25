@@ -542,4 +542,124 @@ void PrefillV2RecurrentLayer::forward_profiled(
     outgoing_state.position = base_position + token_count;
 }
 
+void PrefillV2RecurrentLayer::decode(
+    const float* d_input,
+    float* d_output,
+    RecurrentLayerState& state,
+    RecurrentLayerWorkspace& ws,
+    const DeviceDecodeState* decode_state,
+    hipStream_t stream) const {
+
+    // 1. Input RMS Normalization
+    launch_qwen3_rms_norm(
+        d_input, d_attn_norm_, ws.normalized, kHidden, kRmsNormEpsilon, stream);
+
+    // 2. Dual beta/alpha projection and parameter preparation
+    launch_qwen35_f32_dual_gemm_batch(
+        d_ssm_beta_, d_ssm_alpha_, ws.normalized, ws.raw_beta, ws.raw_alpha,
+        1, kVHeads, kHidden, stream);
+    launch_qwen35_prepare_beta_decay(
+        ws.raw_beta, ws.raw_alpha, d_ssm_dt_, d_ssm_a_, ws.beta, ws.decay,
+        kVHeads, stream);
+
+    // 3. QKV & Gate projections via compact Mx MMQ (M=1 MMV)
+    if (qkv_type_ == GgufTensorType::q4_k) {
+        launch_mx_q8_1_mmq_quantize(
+            ws.normalized, ws.mmq_q8, 1, kHidden, /*affine=*/true, stream);
+        launch_mx_q4k_repacked_mmq(
+            static_cast<const std::uint8_t*>(d_qkv_mmq_), ws.mmq_q8,
+            ws.qkv, kChannels, kHidden, 1, stream);
+    } else {
+        launch_mx_q8_1_mmq_quantize(
+            ws.normalized, ws.mmq_q8, 1, kHidden, /*affine=*/false, stream);
+        launch_mx_q6k_repacked_mmq(
+            static_cast<const std::uint8_t*>(d_qkv_mmq_), ws.mmq_q8,
+            ws.qkv, kChannels, kHidden, 1, stream);
+        // Gate is Q4_K (affine), re-quantize normalized with affine=true
+        launch_mx_q8_1_mmq_quantize(
+            ws.normalized, ws.mmq_q8, 1, kHidden, /*affine=*/true, stream);
+    }
+
+    launch_mx_q4k_repacked_mmq(
+        d_gate_mmq_, ws.mmq_q8, ws.gate, kInner, kHidden, 1, stream);
+
+    // 4. Convolution + SiLU + split into Q, K, V (updating conv history buffer in place)
+    if (decode_state != nullptr) {
+        launch_qwen35_conv_silu_split_dynamic(
+            ws.qkv, d_ssm_conv_, state.d_conv_history,
+            ws.query, ws.key, ws.value,
+            decode_state, kConvKernel, kChannels, kConvKernel, stream);
+    } else {
+        launch_qwen35_conv_silu_split_batch(
+            ws.qkv, d_ssm_conv_, state.d_conv_history,
+            ws.query, ws.key, ws.value,
+            state.position, 1, kConvKernel, kChannels, kConvKernel, stream);
+    }
+
+    // 5. Dual Head L2 Normalization
+    launch_qwen35_dual_head_l2_normalize_batch(
+        ws.query, ws.key, ws.query, ws.key,
+        1, kKHeads, kState, stream);
+
+    // 6. GDN Recurrent State Update (Single Step)
+    launch_qwen35_deltanet_state_update(
+        ws.query, ws.key, ws.value, ws.beta, ws.decay,
+        state.d_state, ws.gdn_raw_output,
+        kKHeads, kVHeads, kState, stream);
+
+    // 7. SSM Postprocessing (per-head RMS norm + SSM norm scale + SiLU gate)
+    launch_m12_gdn_postprocess(
+        ws.gdn_raw_output, ws.gate, d_ssm_norm_, ws.gated_output,
+        1, kVHeads, kState, kRmsNormEpsilon, stream);
+
+    // 8. SSM Out projection (Q5_K affine)
+    launch_mx_q8_1_mmq_quantize(
+        ws.gated_output, ws.mmq_q8, 1, kInner, /*affine=*/true, stream);
+    launch_mx_q5k_repacked_mmq(
+        d_ssm_out_mmq_, ws.mmq_q8, ws.ssm_output,
+        kHidden, kInner, 1, stream);
+
+    // 9. Residual + Post-attention RMS Norm (Fused)
+    launch_qwen3_fused_add_rms_norm(
+        d_input, ws.ssm_output, d_post_norm_,
+        ws.residual, ws.post_normalized,
+        kHidden, kRmsNormEpsilon, stream);
+
+    // 10. FFN Gate & Up projections (Q4_K affine)
+    launch_mx_q8_1_mmq_quantize(
+        ws.post_normalized, ws.mmq_q8, 1, kHidden, /*affine=*/true, stream);
+    launch_mx_q4k_repacked_mmq(
+        d_ffn_gate_mmq_, ws.mmq_q8, ws.ffn_gate,
+        kFfnInner, kHidden, 1, stream);
+    launch_mx_q4k_repacked_mmq(
+        d_ffn_up_mmq_, ws.mmq_q8, ws.ffn_up,
+        kFfnInner, kHidden, 1, stream);
+
+    // 11. SwiGLU activation
+    launch_qwen3_silu_mul(
+        ws.ffn_gate, ws.ffn_up, ws.ffn_activation,
+        kFfnInner, stream);
+
+    // 12. FFN Down projection
+    if (ffn_down_type_ == GgufTensorType::q4_k) {
+        launch_mx_q8_1_mmq_quantize(
+            ws.ffn_activation, ws.mmq_q8, 1, kFfnInner, /*affine=*/true, stream);
+        launch_mx_q4k_repacked_mmq(
+            static_cast<const std::uint8_t*>(d_ffn_down_mmq_), ws.mmq_q8,
+            ws.ffn_down, kHidden, kFfnInner, 1, stream);
+    } else {
+        launch_mx_q8_1_mmq_quantize(
+            ws.ffn_activation, ws.mmq_q8, 1, kFfnInner, /*affine=*/false, stream);
+        launch_mx_q6k_repacked_mmq(
+            static_cast<const std::uint8_t*>(d_ffn_down_mmq_), ws.mmq_q8,
+            ws.ffn_down, kHidden, kFfnInner, 1, stream);
+    }
+
+    launch_qwen3_add(
+        ws.residual, ws.ffn_down, d_output,
+        kHidden, stream);
+
+    state.position++;
+}
+
 } // namespace miinfer::prefill_v2

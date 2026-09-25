@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1790329355.344344,
-    "seen": 1790329385.3213398,
-    "ast_hash": "121266391867673e502f886ef364680c",
+    "mtime": 1790337667.42467,
+    "seen": 1790337749.0891142,
+    "ast_hash": "0ed8d5f638970674845dd71c3495fb48",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -5604,9 +5604,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/prefill_v2/recurrent_layer.hpp": {
-    "mtime": 1790283907.739895,
-    "seen": 1790284896.7319179,
-    "ast_hash": "7b2ef84b4e9d2f86f821f9440a73e031",
+    "mtime": 1790336950.6163695,
+    "seen": 1790337749.0885043,
+    "ast_hash": "6f3e80912d05975a64e6e15728ddd173",
     "semantic_hash": ""
   },
   "include/miinfer/prefill_v2/state.hpp": {
@@ -5622,9 +5622,9 @@
     "semantic_hash": ""
   },
   "src/prefill_v2/recurrent_layer.cpp": {
-    "mtime": 1790328651.1365829,
-    "seen": 1790329385.3211765,
-    "ast_hash": "aa3ea9ef33475e5d33a618d642532988",
+    "mtime": 1790336969.999269,
+    "seen": 1790337749.0889547,
+    "ast_hash": "1a4626c52c45de84dac9bb3c8529dc64",
     "semantic_hash": ""
   },
   "src/prefill_v2/state.cpp": {
@@ -5640,9 +5640,9 @@
     "semantic_hash": ""
   },
   "docs/prefill-v2-architecture.md": {
-    "mtime": 1790329368.2702656,
-    "seen": 1790329385.321371,
-    "ast_hash": "0e39508c3c9783338a75fd1653ced885",
+    "mtime": 1790337731.393231,
+    "seen": 1790337749.0891457,
+    "ast_hash": "d1b35df60bad10dcb99e965306b1e428",
     "semantic_hash": ""
   },
   "experiments/V2-0001-recurrent-layer-vertical-slice.md": {
@@ -5664,9 +5664,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/prefill_v2/attention_layer.hpp": {
-    "mtime": 1790283668.2813423,
-    "seen": 1790284896.7319126,
-    "ast_hash": "8017280bac76c91a931b2d6f22c757b1",
+    "mtime": 1790336955.6333435,
+    "seen": 1790337749.0884871,
+    "ast_hash": "e5915fd4fa032dec1d4cfa01be6ed30c",
     "semantic_hash": ""
   },
   "include/miinfer/prefill_v2/kv_cache.hpp": {
@@ -5676,15 +5676,15 @@
     "semantic_hash": ""
   },
   "include/miinfer/prefill_v2/topology_block.hpp": {
-    "mtime": 1790283865.5921478,
-    "seen": 1790284896.7319212,
-    "ast_hash": "fb38d6251242fdf80e64b889c5018897",
+    "mtime": 1790336958.599328,
+    "seen": 1790337749.0885084,
+    "ast_hash": "44791306b8dd59afc368559d83440358",
     "semantic_hash": ""
   },
   "src/prefill_v2/attention_layer.cpp": {
-    "mtime": 1790284523.4312015,
-    "seen": 1790284896.7323353,
-    "ast_hash": "252aa03d1ea2980211ea6ba75c068666",
+    "mtime": 1790336981.1152115,
+    "seen": 1790337749.0889494,
+    "ast_hash": "e9e2828f66f8e266015c20637bb8f288",
     "semantic_hash": ""
   },
   "src/prefill_v2/kv_cache.cpp": {
@@ -5694,9 +5694,9 @@
     "semantic_hash": ""
   },
   "src/prefill_v2/topology_block.cpp": {
-    "mtime": 1790283870.8521163,
-    "seen": 1790284896.7323422,
-    "ast_hash": "5de7b496ec0855c3616c4fda4aae7a8b",
+    "mtime": 1790336986.6921825,
+    "seen": 1790337749.088958,
+    "ast_hash": "8cbae771b83252e17b9027001b67aa41",
     "semantic_hash": ""
   },
   "experiments/V2-0003-topology-block-vertical-slice.md": {
@@ -5712,15 +5712,15 @@
     "semantic_hash": ""
   },
   "include/miinfer/prefill_v2/model.hpp": {
-    "mtime": 1790328775.8488336,
-    "seen": 1790329385.320757,
-    "ast_hash": "4e35f5b14c9353c265411148b9df9492",
+    "mtime": 1790337206.4750435,
+    "seen": 1790337749.088502,
+    "ast_hash": "ba4569cc7dbc336c04abd06e03da21a8",
     "semantic_hash": ""
   },
   "src/prefill_v2/model.cpp": {
-    "mtime": 1790328782.605793,
-    "seen": 1790329385.3211749,
-    "ast_hash": "9318051481b597e75d4959e89a094034",
+    "mtime": 1790337404.2510188,
+    "seen": 1790337749.0889528,
+    "ast_hash": "1da0c79c49a4cb5f07988981d4273018",
     "semantic_hash": ""
   },
   "experiments/V2-0004-register-resident-gdn-and-full-model.md": {
@@ -5748,15 +5748,21 @@
     "semantic_hash": ""
   },
   "bench/prefill_v2_e2e_bench.cpp": {
-    "mtime": 1790328882.3131938,
-    "seen": 1790329385.320697,
-    "ast_hash": "dee0e4f62036848c6c8103a8454eec88",
+    "mtime": 1790337267.5027273,
+    "seen": 1790337749.0884326,
+    "ast_hash": "c7126a3a4de3acfa7522affa6365e1d1",
     "semantic_hash": ""
   },
   "experiments/EXP-V2-0007-unified-prefill-to-decode-pipeline.md": {
     "mtime": 1790329346.3193986,
     "seen": 1790329385.322093,
     "ast_hash": "739211559bdb06a627b3fd2934a6fcbd",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-V2-0008-specialized-decode-and-graph-replay.md": {
+    "mtime": 1790337655.843729,
+    "seen": 1790337749.0898333,
+    "ast_hash": "f74724111d233c9aabacdb223e62c499",
     "semantic_hash": ""
   }
 }

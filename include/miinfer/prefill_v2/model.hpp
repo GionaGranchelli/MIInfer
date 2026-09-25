@@ -22,6 +22,7 @@ namespace miinfer::prefill_v2 {
 struct GenerateOptions {
     std::size_t max_new_tokens = 128;
     bool reset_state_before = true;
+    bool use_hip_graph = true;
     std::function<void(std::uint32_t)> on_token = nullptr;
 };
 
@@ -35,6 +36,7 @@ struct GenerateStats {
     double prefill_tok_per_sec = 0.0;
     double decode_tok_per_sec = 0.0;
     double avg_decode_latency_ms = 0.0;
+    bool used_hip_graph = false;
 };
 
 struct ModelProfileBreakdown {
@@ -158,6 +160,11 @@ public:
     [[nodiscard]] const void* output_weights() const noexcept { return d_output_weights_; }
     [[nodiscard]] float* logits_buffer() noexcept { return d_logits_; }
 
+    // Reusable Decode Graph Capture & Replay
+    void capture_decode_graph(hipStream_t stream = nullptr);
+    void cleanup_decode_graph();
+    [[nodiscard]] bool is_decode_graph_captured() const noexcept { return decode_graph_exec_ != nullptr; }
+
 private:
     std::uint32_t vocab_size_ = 0;
     float rms_epsilon_ = 1e-6f;
@@ -189,6 +196,11 @@ private:
     float* d_ping_ = nullptr; // [kMaxPrefillBatch * kHidden] floats
     float* d_pong_ = nullptr; // [kMaxPrefillBatch * kHidden] floats
     std::uint32_t* d_temp_tokens_ = nullptr; // [kMaxPrefillBatch] uint32_t
+
+    // Reusable Device Decode State & Graph Exec
+    void* d_decode_state_ = nullptr; // DeviceDecodeState
+    std::uint32_t* d_decode_tokens_ = nullptr; // [kDefaultCacheCapacity] uint32_t
+    hipGraphExec_t decode_graph_exec_ = nullptr;
 
     void allocate_resources();
     void free_resources();

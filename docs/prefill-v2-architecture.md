@@ -191,4 +191,12 @@ bench/
      - $P512 + TG128$: TTFT = $2311.51\text{ ms}$ (**parity ~0.4%** with `mx-llama.cpp`), sustained decode = $17.0\text{ tok/s}$.
      - $P2048 + TG128$: TTFT = $9748.19\text{ ms}$, sustained decode = $11.2\text{ tok/s}$.
      - Static VRAM footprint: $18.17\text{ GiB}$ ($13.83\text{ GiB}$ free headroom).
-
+7. **Slice 7 (Qualified & Promoted)**: Dedicated Single-Token Decode Execution & Reusable HIP Graph Replay (V2-0008).
+   - Specialized single-token decode execution across all layers (`PrefillV2RecurrentLayer::decode`, `PrefillV2AttentionLayer::decode`, `PrefillV2TopologyBlock::decode`).
+   - Integrated dynamic Split-K attention (`qwen3_wave64_splitk_stage1_f16_kernel`), completely eliminating context degradation ($P64: 55.36\text{ ms} \to P2048: 57.39\text{ ms}$, saving **$31.6\text{ ms/token}$** ($+55.4\%$) at $P2048$).
+   - Captured 64-layer decode execution loop into a reusable resident `hipGraphExec_t` via `DeviceDecodeState`, eliminating host driver dispatch gaps during autoregressive generation.
+   - End-to-end benchmark on 1 × AMD Instinct MI50 32GB:
+     - $P64 + TG128$: TTFT = **622.34 ms**, decode = **18.1 tok/s** (55.36 ms/step), total = **7.65 s**.
+     - $P512 + TG128$: TTFT = **2305.23 ms**, decode = **17.8 tok/s** (56.20 ms/step), total = **9.44 s**.
+     - $P2048 + TG128$: TTFT = **9740.67 ms**, decode = **17.4 tok/s** (57.39 ms/step), total = **17.03 s**.
+     - Static VRAM footprint: **18.17 GiB / 32.00 GiB** ($13.83\text{ GiB}$ free headroom).

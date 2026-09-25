@@ -42,6 +42,32 @@ void PrefillV2TopologyBlock::forward(
     gqa3_.forward(d_pong, d_final_output, kv_cache3, ws, base_position, token_count, stream);
 }
 
+void PrefillV2TopologyBlock::decode(
+    float* d_ping,
+    float* d_pong,
+    float* d_final_output,
+    RecurrentLayerState& state0,
+    RecurrentLayerState& state1,
+    RecurrentLayerState& state2,
+    AttentionKvCacheView kv_cache3,
+    PrefillV2Workspace& ws,
+    std::uint32_t position,
+    const DeviceDecodeState* decode_state,
+    hipStream_t stream) const {
+
+    // Layer 0 (GDN): d_ping -> d_pong
+    gdn0_.decode(d_ping, d_pong, state0, ws, decode_state, stream);
+
+    // Layer 1 (GDN): d_pong -> d_ping
+    gdn1_.decode(d_pong, d_ping, state1, ws, decode_state, stream);
+
+    // Layer 2 (GDN): d_ping -> d_pong
+    gdn2_.decode(d_ping, d_pong, state2, ws, decode_state, stream);
+
+    // Layer 3 (GQA): d_pong -> d_final_output
+    gqa3_.decode(d_pong, d_final_output, kv_cache3, ws, position, decode_state, stream);
+}
+
 void PrefillV2TopologyBlock::forward_profiled(
     float* d_ping,
     float* d_pong,

@@ -403,4 +403,137 @@ void PrefillV2AttentionLayer::forward_profiled(
     (void)hipEventDestroy(ev_ffn_down);
 }
 
+void PrefillV2AttentionLayer::decode(
+    const float* d_input,
+    float* d_output,
+    AttentionKvCacheView kv_cache,
+    const PrefillV2Workspace& ws,
+    std::uint32_t position,
+    const DeviceDecodeState* decode_state,
+    hipStream_t stream) const {
+
+    // 1. Input Normalization (single token)
+    launch_qwen3_rms_norm(
+        d_input, d_attn_norm_, ws.normalized, kHidden, kRmsNormEpsilon, stream);
+
+    // 2. QKV Projections (Mx compact MMQ with M=1 -> dispatched to mx_repacked_mmv_kernel)
+    launch_mx_q8_1_mmq_quantize(
+        ws.normalized, ws.mmq_q8, 1, kHidden, /*affine=*/true, stream);
+
+    // Q + Gate Projection [5120 -> 12288]
+    launch_mx_q4k_repacked_mmq(
+        d_q_mmq_, ws.mmq_q8, ws.attn_qfull, 12288, kHidden, 1, stream);
+
+    // K Projection [5120 -> 1024]
+    launch_mx_q4k_repacked_mmq(
+        d_k_mmq_, ws.mmq_q8, ws.attn_k, 1024, kHidden, 1, stream);
+
+    // V Projection [5120 -> 1024]
+    if (v_is_q6_) {
+        launch_mx_q8_1_mmq_quantize(
+            ws.normalized, ws.mmq_q8, 1, kHidden, /*affine=*/false, stream);
+        launch_mx_q6k_repacked_mmq(
+            d_v_mmq_, ws.mmq_q8, ws.attn_v, 1024, kHidden, 1, stream);
+    } else {
+        launch_mx_q4k_repacked_mmq(
+            d_v_mmq_, ws.mmq_q8, ws.attn_v, 1024, kHidden, 1, stream);
+    }
+
+    // 3. Q Split, RMSNorm, and RoPE
+    if (decode_state != nullptr) {
+        launch_qwen35_fused_q_split_norm_rope_dynamic(
+            ws.attn_qfull, d_q_norm_, ws.attn_q_rope, ws.gate,
+            24, 256, decode_state, kRopeTheta, kRmsNormEpsilon, stream);
+    } else {
+        launch_qwen35_decoupled_q_split_norm_rope_batch(
+            ws.attn_qfull, d_q_norm_, ws.attn_q_rope, ws.gate,
+            1, position, 24, 256, kRopeTheta, kRmsNormEpsilon, stream);
+    }
+
+    // 4. K RMSNorm, RoPE, and Store K + V into KV Cache (FP16)
+    if (decode_state != nullptr) {
+        launch_qwen35_fused_k_norm_rope_kv_store_f16_dynamic(
+            ws.attn_k, ws.attn_v, d_k_norm_, kv_cache.key_cache, kv_cache.value_cache,
+            4, 256, decode_state, static_cast<std::uint32_t>(kv_cache.capacity),
+            kRopeTheta, kRmsNormEpsilon, stream);
+    } else {
+        launch_qwen35_decoupled_k_norm_rope_kv_store_batch_f16(
+            ws.attn_k, ws.attn_v, d_k_norm_, kv_cache.key_cache, kv_cache.value_cache,
+            1, position, static_cast<std::uint32_t>(kv_cache.capacity),
+            4, 256, kRopeTheta, kRmsNormEpsilon, stream);
+    }
+
+    // 5. High-Occupancy Split-K Decode Attention with In-Register Sigmoid Gating
+    if (decode_state != nullptr) {
+        launch_qwen35_tiled_online_attention_f16_dynamic(
+            ws.attn_q_rope,
+            kv_cache.key_cache,
+            kv_cache.value_cache,
+            decode_state,
+            static_cast<std::uint32_t>(kv_cache.capacity),
+            /*output=*/nullptr,
+            ws.gate,
+            ws.attn_gated_output,
+            24,
+            4,
+            256,
+            1.0F / std::sqrt(256.0F),
+            stream);
+    } else {
+        launch_qwen35_tiled_online_attention_f16(
+            ws.attn_q_rope,
+            kv_cache.key_cache,
+            kv_cache.value_cache,
+            position + 1,
+            static_cast<std::uint32_t>(kv_cache.capacity),
+            /*output=*/nullptr,
+            ws.gate,
+            ws.attn_gated_output,
+            24,
+            4,
+            256,
+            1.0F / std::sqrt(256.0F),
+            stream);
+    }
+
+    // 6. Attention Output Projection (O: [6144 -> 5120])
+    launch_mx_q8_1_mmq_quantize(
+        ws.attn_gated_output, ws.mmq_q8, 1, kInner, /*affine=*/true, stream);
+    launch_mx_q4k_repacked_mmq(
+        d_o_mmq_, ws.mmq_q8, ws.projected, kHidden, kInner, 1, stream);
+
+    // 7. Residual Connection + Post-Attention RMSNorm (Fused)
+    launch_qwen3_fused_add_rms_norm(
+        d_input, ws.projected, d_post_attention_norm_, ws.residual, ws.post_normalized,
+        kHidden, kRmsNormEpsilon, stream);
+
+    // 8. FFN Gate and Up Projections (Q4_K MMQ with M=1)
+    launch_mx_q8_1_mmq_quantize(
+        ws.post_normalized, ws.mmq_q8, 1, kHidden, /*affine=*/true, stream);
+    launch_mx_q4k_repacked_mmq(
+        d_ffn_gate_mmq_, ws.mmq_q8, ws.ffn_gate, kFfnInner, kHidden, 1, stream);
+    launch_mx_q4k_repacked_mmq(
+        d_ffn_up_mmq_, ws.mmq_q8, ws.ffn_up, kFfnInner, kHidden, 1, stream);
+
+    // 9. SwiGLU Activation
+    launch_qwen3_silu_mul(
+        ws.ffn_gate, ws.ffn_up, ws.ffn_activation, kFfnInner, stream);
+
+    // 10. FFN Down Projection & Final Residual
+    if (ffn_down_is_q6_) {
+        launch_mx_q8_1_mmq_quantize(
+            ws.ffn_activation, ws.mmq_q8, 1, kFfnInner, /*affine=*/false, stream);
+        launch_mx_q6k_repacked_mmq(
+            d_ffn_down_mmq_, ws.mmq_q8, ws.ffn_down, kHidden, kFfnInner, 1, stream);
+    } else {
+        launch_mx_q8_1_mmq_quantize(
+            ws.ffn_activation, ws.mmq_q8, 1, kFfnInner, /*affine=*/true, stream);
+        launch_mx_q4k_repacked_mmq(
+            d_ffn_down_mmq_, ws.mmq_q8, ws.ffn_down, kHidden, kFfnInner, 1, stream);
+    }
+
+    launch_qwen3_add(
+        ws.residual, ws.ffn_down, d_output, kHidden, stream);
+}
+
 } // namespace miinfer::prefill_v2

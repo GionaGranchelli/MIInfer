@@ -85,7 +85,7 @@ std::vector<std::uint32_t> make_synthetic_prompt(std::size_t count, std::uint32_
 
 int main(int argc, char** argv) {
     std::cout << "===================================================================\n";
-    std::cout << "  MIInfer V2-0007: Unified Prefill V2 -> Static Decode Pipeline\n";
+    std::cout << "  MIInfer V2-0008: Unified Prefill V2 + Reusable HIP Graph Replay\n";
     std::cout << "  Target: 1 x AMD Instinct MI50 32GB (gfx906, Wave64)\n";
     std::cout << "  Model:  Qwen3.8-27B-Q4_K_M (64 Layers, 48 GDN + 16 GQA)\n";
     std::cout << "===================================================================\n\n";

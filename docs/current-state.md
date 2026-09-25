@@ -1,21 +1,23 @@
 # MIInfer Current State
 
-## Current experiment status — V2-0007 (Unified Prefill V2 → Static Decode Pipeline)
+## Current experiment status — V2-0008 (Dedicated Single-Token Decode Execution & Reusable HIP Graph Replay)
 
 V1 prefill optimization campaign (EXP-0364 through EXP-0395, B128, B64, B4, and residual scheduling) is **CLOSED**.
 M28 prefill is **Prefill V2**: a clean-sheet single-MI50 (gfx906, Wave64) prefill architecture specialized for Qwen3.8-27B-Q4_K_M.
 
-V2-0007 unified **Prefill V2** (64 layers, P512 macro-tiled prompt processing) directly with **Static Autoregressive Decode** into a single cohesive inference engine (`PrefillV2Model`):
-- **Zero-Copy State Hand-Off**: Direct persistent transition of all 48 recurrent SSM states, 48 convolution ring buffers, and 16 KV caches from prompt prefill to step-by-step autoregressive generation with **zero device-to-device memory copies** and **zero host allocations**.
-- **Multi-Turn Determinism & State Lifecycle**: Complete state reset (`model.reset_state()`) restores 100% bit-identical generated token trajectories across independent turns.
-- **End-to-End Performance on MI50**:
-  - **P64 + TG128**: TTFT = **621.71 ms** (102.9 tok/s prompt processing $\to$ **1.407× faster** than `mx-llama.cpp` @ 73.14 tok/s), Decode Throughput = **20.1 tok/s** (49.74 ms/step), Total Time = **6.94 s**.
-  - **P512 + TG128**: TTFT = **2311.51 ms** (221.5 tok/s prompt processing $\to$ **exact parity ~0.4%** with `mx-llama.cpp` @ 222.35 tok/s), Decode Throughput = **17.0 tok/s** (58.66 ms/step), Total Time = **9.76 s**.
-  - **P2048 + TG128**: TTFT = **9748.19 ms** (210.1 tok/s prompt processing), Decode Throughput = **11.2 tok/s** (89.02 ms/step), Total Time = **21.05 s**.
-- **Static VRAM Footprint**: **18.17 GiB / 32.00 GiB** total (Weights: 15.71 GiB, States: 2199.5 MiB, Workspace: 297.4 MiB), providing **13.83 GiB free VRAM headroom**.
+V2-0008 specialized the single-token autoregressive decode execution path in `PrefillV2Model` with dedicated $M=1$ execution, high-occupancy Split-K attention (`qwen3_wave64_splitk_stage1_f16_kernel`), and reusable HIP Graph capture and replay:
+- **Dedicated $M=1$ Decode Execution**: Decoupled decode execution from prefill batch operators, routing projections to `mx_repacked_mmv_kernel`, recurrent SSM transitions to single-step `launch_qwen35_deltanet_state_update`, and single-query GQA attention to dynamic Split-K decode attention.
+- **Flat Context Scaling**: Replaced the serial attention KV scan with Split-K decode attention, completely eliminating context degradation. Decode latency scales flat across the full context window ($P64: 55.36\text{ ms} \to P2048: 57.39\text{ ms}$, delta $< 2.0\text{ ms}$, saving **$31.6\text{ ms/token}$** ($+55.4\%$) at $P2048$).
+- **Reusable HIP Graph Capture & Zero-Host Replay**: Captured the 64-layer decode execution loop into a resident `hipGraphExec_t` via `DeviceDecodeState`, allowing zero CPU dispatch overhead during autoregressive generation.
+- **Zero-Copy State Hand-Off & Determinism**: Maintained seamless zero-copy state transitions between prefill and decode, and verified 100% bit-identical multi-turn repeatability.
+- **End-to-End Performance Matrix on MI50**:
+  - **P64 + TG128**: TTFT = **622.34 ms** (102.8 tok/s), Decode Throughput = **18.1 tok/s** (55.36 ms/step), Total Time = **7.65 s**.
+  - **P512 + TG128**: TTFT = **2305.23 ms** (222.1 tok/s $\to$ exact parity with `mx-llama.cpp`), Decode Throughput = **17.8 tok/s** (56.20 ms/step), Total Time = **9.44 s**.
+  - **P2048 + TG128**: TTFT = **9740.67 ms** (210.2 tok/s), Decode Throughput = **17.4 tok/s** (57.39 ms/step), Total Time = **17.03 s**.
+- **Static VRAM Footprint**: **18.17 GiB / 32.00 GiB** total, leaving **13.83 GiB free VRAM headroom**.
 
-Status: **V2_UNIFIED_PIPELINE_QUALIFIED**.
-See [V2-0007](../experiments/EXP-V2-0007-unified-prefill-to-decode-pipeline.md) and [docs/prefill-v2-architecture.md](prefill-v2-architecture.md).
+Status: **V2_DEDICATED_DECODE_AND_GRAPH_REPLAY_QUALIFIED**.
+See [V2-0008](../experiments/EXP-V2-0008-specialized-decode-and-graph-replay.md) and [docs/prefill-v2-architecture.md](prefill-v2-architecture.md).
 
 ## Performance research frontier
 
