@@ -155,6 +155,24 @@ __global__ void qwen35_q4_k_embedding_device_token_kernel(
     output[index] = q4_k_value(block, static_cast<int>(index % 256));
 }
 
+__global__ void qwen35_q4_k_embedding_batch_kernel(
+    const Q4KDeviceBlock* weights,
+    const std::uint32_t* tokens,
+    std::uint32_t vocabulary,
+    std::uint32_t hidden_size,
+    std::uint32_t token_count,
+    float* output) {
+    const std::uint32_t token_idx = blockIdx.y;
+    if (token_idx >= token_count) return;
+    const std::uint32_t token = tokens[token_idx];
+    if (token >= vocabulary) return;
+    const std::uint32_t index = blockIdx.x * blockDim.x + threadIdx.x;
+    if (index >= hidden_size) return;
+    const std::uint32_t blocks_per_row = hidden_size / 256;
+    const auto& block = weights[static_cast<std::size_t>(token) * blocks_per_row + index / 256];
+    output[static_cast<std::size_t>(token_idx) * hidden_size + index] = q4_k_value(block, static_cast<int>(index % 256));
+}
+
 __global__ void qwen3_rms_norm_kernel(
     const float* input,
     const float* weights,
@@ -4207,6 +4225,24 @@ void launch_qwen35_q4_k_embedding_device_token(
     hipLaunchKernelGGL(qwen35_q4_k_embedding_device_token_kernel,
                        dim3((hidden_size + 255) / 256), dim3(256), 0, stream,
                        weights, token_ptr, vocabulary, hidden_size, output);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_q4_k_embedding_batch(
+    const Q4KDeviceBlock* weights,
+    const std::uint32_t* tokens,
+    std::uint32_t token_count,
+    std::uint32_t vocabulary,
+    std::uint32_t hidden_size,
+    float* output,
+    hipStream_t stream) {
+    if (weights == nullptr || tokens == nullptr || output == nullptr || vocabulary == 0 || hidden_size == 0
+        || hidden_size % 256 != 0 || token_count == 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    hipLaunchKernelGGL(qwen35_q4_k_embedding_batch_kernel,
+                       dim3((hidden_size + 255) / 256, token_count), dim3(256), 0, stream,
+                       weights, tokens, vocabulary, hidden_size, token_count, output);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

@@ -322,14 +322,11 @@ void PrefillV2RecurrentLayer::forward(
         ws.query, ws.key, ws.query, ws.key,
         token_count, kKHeads, kState, stream);
 
-    // 6. Chunkwise GDN: sequential execution of internal C=64 chunks
-    for (std::uint32_t chunk_start = 0; chunk_start < token_count; chunk_start += kGdnChunkSize) {
-        launch_m12_gdn_chunk(
-            ws.query, ws.key, ws.value, ws.beta, ws.decay,
-            outgoing_state.d_state, ws.gdn_raw_output, ws.gdn_scratch,
-            token_count, chunk_start, kKHeads, kVHeads, kState,
-            kGdnChunkSize, stream);
-    }
+    // 6. Register-resident GDN scan across complete token batch
+    launch_mx_gdn_chunk(
+        ws.query, ws.key, ws.value, ws.beta, ws.decay,
+        outgoing_state.d_state, ws.gdn_raw_output,
+        token_count, kKHeads, kVHeads, kState, stream);
 
     // 7. SSM Postprocessing (per-head RMS norm + SSM norm scale + SiLU gate)
     launch_m12_gdn_postprocess(
@@ -461,14 +458,11 @@ void PrefillV2RecurrentLayer::forward_profiled(
         token_count, kKHeads, kState, stream);
     MIINFER_HIP_CHECK(hipEventRecord(ev_conv, stream));
 
-    // 6. GDN C64
-    for (std::uint32_t chunk_start = 0; chunk_start < token_count; chunk_start += kGdnChunkSize) {
-        launch_m12_gdn_chunk(
-            ws.query, ws.key, ws.value, ws.beta, ws.decay,
-            outgoing_state.d_state, ws.gdn_raw_output, ws.gdn_scratch,
-            token_count, chunk_start, kKHeads, kVHeads, kState,
-            kGdnChunkSize, stream);
-    }
+    // 6. Register-resident GDN
+    launch_mx_gdn_chunk(
+        ws.query, ws.key, ws.value, ws.beta, ws.decay,
+        outgoing_state.d_state, ws.gdn_raw_output,
+        token_count, kKHeads, kVHeads, kState, stream);
     MIINFER_HIP_CHECK(hipEventRecord(ev_gdn, stream));
 
     // 7 & 8. SSM Post + SSM Out

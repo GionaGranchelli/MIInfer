@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1790283726.204985,
-    "seen": 1790284896.732466,
-    "ast_hash": "2c4a4dc12ee3b11dc8661290647ae2fc",
+    "mtime": 1790287240.3904295,
+    "seen": 1790320715.6982222,
+    "ast_hash": "15eb4e025d1b521d46cfaf0c43240b3c",
     "semantic_hash": ""
   },
   "README.md": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1790284827.1293516,
-    "seen": 1790284896.73251,
-    "ast_hash": "75c1e98055e6cf257685b9a1a337b73f",
+    "mtime": 1790320672.9743695,
+    "seen": 1790320715.6982553,
+    "ast_hash": "186a4cb8124d4cabacc5bcd8921947d4",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1790284499.3153462,
-    "seen": 1790284896.7319384,
-    "ast_hash": "24c20fb2aeebd900f6902689017317c0",
+    "mtime": 1790287167.5678456,
+    "seen": 1790320715.6976962,
+    "ast_hash": "8e6a5118915354abe81ddf2be4f65b32",
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_primitives.hpp": {
@@ -5592,15 +5592,15 @@
     "semantic_hash": ""
   },
   "bench/prefill_v2_recurrent_layer_bakeoff.cpp": {
-    "mtime": 1790280622.0557334,
-    "seen": 1790280779.1419494,
-    "ast_hash": "a3d017bd6e50880c7529ea77cb90b6e6",
+    "mtime": 1790285737.920524,
+    "seen": 1790320715.6976163,
+    "ast_hash": "fc5608f779d9d973ccdcb4901af2415d",
     "semantic_hash": ""
   },
   "include/miinfer/prefill_v2/constants.hpp": {
-    "mtime": 1790283603.7717404,
-    "seen": 1790284896.7319148,
-    "ast_hash": "1314ec5af61d55db0b5a07f69ef82482",
+    "mtime": 1790287196.909678,
+    "seen": 1790320715.6976683,
+    "ast_hash": "50ed043a0eb324e49a92d3f80ecebf82",
     "semantic_hash": ""
   },
   "include/miinfer/prefill_v2/recurrent_layer.hpp": {
@@ -5622,9 +5622,9 @@
     "semantic_hash": ""
   },
   "src/prefill_v2/recurrent_layer.cpp": {
-    "mtime": 1790283913.9938576,
-    "seen": 1790284896.7323387,
-    "ast_hash": "4483207abee3c1febd708ae2797683ce",
+    "mtime": 1790285696.8297868,
+    "seen": 1790320715.698102,
+    "ast_hash": "2858662c6894cc1e7018e375ffcee38d",
     "semantic_hash": ""
   },
   "src/prefill_v2/state.cpp": {
@@ -5640,9 +5640,9 @@
     "semantic_hash": ""
   },
   "docs/prefill-v2-architecture.md": {
-    "mtime": 1790284818.634406,
-    "seen": 1790284896.7325425,
-    "ast_hash": "83bc295d62b10f2cefe0681fdff7f432",
+    "mtime": 1790320698.4192078,
+    "seen": 1790320715.6982846,
+    "ast_hash": "aa811320c700b0d3e82b6568b0e6383f",
     "semantic_hash": ""
   },
   "experiments/V2-0001-recurrent-layer-vertical-slice.md": {
@@ -5658,9 +5658,9 @@
     "semantic_hash": ""
   },
   "bench/prefill_v2_topology_block_bakeoff.cpp": {
-    "mtime": 1790284715.5870488,
-    "seen": 1790284896.7318647,
-    "ast_hash": "92df56a90e62ca62424158fe2180232d",
+    "mtime": 1790285744.622481,
+    "seen": 1790320715.6976187,
+    "ast_hash": "e4877288486953efc279b99d38d1f5bd",
     "semantic_hash": ""
   },
   "include/miinfer/prefill_v2/attention_layer.hpp": {
@@ -5703,6 +5703,30 @@
     "mtime": 1790284806.5624833,
     "seen": 1790284896.7332478,
     "ast_hash": "58dbdc03ebeffe785fc5ffbe8d918f63",
+    "semantic_hash": ""
+  },
+  "bench/prefill_v2_model_bench.cpp": {
+    "mtime": 1790320321.8976035,
+    "seen": 1790320715.6976132,
+    "ast_hash": "2041b90a76751e642ff0cdab5be8e94a",
+    "semantic_hash": ""
+  },
+  "include/miinfer/prefill_v2/model.hpp": {
+    "mtime": 1790287274.793233,
+    "seen": 1790320715.6976721,
+    "ast_hash": "7ab1c5022a75b2f0e2d7ef5ba40fe8fe",
+    "semantic_hash": ""
+  },
+  "src/prefill_v2/model.cpp": {
+    "mtime": 1790316308.041967,
+    "seen": 1790320715.6981003,
+    "ast_hash": "674ac83fccb6d618f472931054d7e8a0",
+    "semantic_hash": ""
+  },
+  "experiments/V2-0004-register-resident-gdn-and-full-model.md": {
+    "mtime": 1790320663.1294322,
+    "seen": 1790320715.6990118,
+    "ast_hash": "8e5217bdc5cfd6e171874005fba28bb3",
     "semantic_hash": ""
   }
 }

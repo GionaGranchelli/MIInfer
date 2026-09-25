@@ -1,22 +1,35 @@
 # MIInfer Current State
 
-## Current experiment status — V2-0003 (Prefill V2 Slice 2: 4-Layer Topology Block Qualification)
+## Current experiment status — V2-0004 (Register-Resident GDN & Full 64-Layer Prefill Model Qualified)
 
 V1 prefill optimization campaign (EXP-0364 through EXP-0395, B128, B64, B4, and residual scheduling) is **CLOSED**.
-M28 has transitioned to **Prefill V2**: a clean-sheet single-MI50 (gfx906, Wave64) prefill architecture specialized for Qwen3.8-27B-Q4_K_M.
-V2-0003 qualified the 4-layer repeating topology block (`Block 0 = 3 × GDN + 1 × GQA Attention`):
-- **N=512 Performance**: Block 0 executes in **180.89 ms** (1.260× speedup / +20.7% faster vs qualified FAST_V1 227.96 ms, 124.1× vs Oracle 22,449 ms).
-  - Layer breakdown: L0 (GDN) = 48.74 ms, L1 (GDN) = 48.73 ms, L2 (GDN) = 48.82 ms, L3 (GQA) = 34.59 ms.
-- **Multi-Length Scaling**:
-  - N=64: 42.88 ms (1,492 tok/s, 72.9× vs Oracle, Cosine = 0.999018)
-  - N=128: 53.77 ms (2,381 tok/s, 105.9× vs Oracle, Cosine = 0.999196)
-  - N=512: 180.89 ms (2,830 tok/s, 124.1× vs Oracle, Cosine = 0.999544)
-- **Stateful Split-Call Invariant (512 vs 256+256)**: Bit-for-bit exact match (Cosine = 1.000000, MaxErr = 0.000000 across block output, L0/L1/L2 recurrent states, and L3 FP16 KV cache).
-- **Memory Footprint & Full-Model Budget**: Persistent weights = 964.47 MiB per block (15.07 GiB for 64 layers), 48 recurrent states = 151.5 MiB, 16 KV caches = 2.00 GiB (32K capacity), shared monolithic workspace = 297.44 MiB. Total static VRAM = 17.51 GiB / 32 GiB.
-- **Full Model P512 Latency Projection**: 2.894 s (16 blocks × 180.89 ms), reaching 1.253× of mx-llama.cpp (~2.31 s).
-Status: **V2_TOPOLOGY_BLOCK_QUALIFIED**.
-Current PRIMARY: Construct Slice 3 — the 64-layer full model prefill pipeline for Prefill V2.
-See [V2-0003](../experiments/V2-0003-topology-block-vertical-slice.md) and [docs/prefill-v2-architecture.md](prefill-v2-architecture.md).
+M28 prefill is **Prefill V2**: a clean-sheet single-MI50 (gfx906, Wave64) prefill architecture specialized for Qwen3.8-27B-Q4_K_M.
+
+V2-0004 qualified both Stage A (register-resident GDN scan) and Stage B (full 64-layer model prefill pipeline):
+- **Stage A Recurrent & Block Acceleration**:
+  - Replaced M12 chunkwise loop with `launch_mx_gdn_chunk` across sequences.
+  - Recurrent layer GDN core latency dropped from **14.26 ms $\to$ 2.74 ms** (5.2× speedup).
+  - Layer 0 (Signature A): **37.07 ms** (1.311× vs FASTEST_V1 48.58 ms).
+  - Layer 8 (Signature B): **35.52 ms** (1.326× vs FASTEST_V1 47.09 ms).
+  - 4-Layer Topology Block 0 @ N512: **145.89 ms** (1.564× vs FASTEST_V1 228.16 ms).
+- **Stage B Full 64-Layer Model Execution (1 x MI50 32GB)**:
+  - `PrefillV2Model` contains 16 Topology Blocks (48 GDN + 16 GQA layers = 64 layers), token embeddings, final RMS norm, 48 recurrent states, 16 KV caches, and shared workspace.
+  - Total VRAM allocated: **18.10 GiB / 32 GiB** (56.6% utilization).
+  - **P512 Execution**: **2295.86 ms** (min **2293.57 ms**, 223.0 tok/s), officially **beating the external reference baseline (`mx-llama.cpp` @ P512: ~2,310 ms)**!
+  - **Multi-Length Performance**:
+    - P64: 612.27 ms (104.5 tok/s)
+    - P128: 714.43 ms (179.2 tok/s)
+    - P512: 2295.86 ms (223.0 tok/s)
+    - P640: 3041.07 ms (210.5 tok/s)
+    - P1024: 4682.31 ms (218.7 tok/s)
+    - P2048: 9728.37 ms (210.5 tok/s)
+  - **Stateful Segmentation Invariant (Full 64-Layer Model)**:
+    - 512 vs (256 + 256): Full Model Output Cosine = **0.999816**, RelRMS = 0.019161, All 48 GDN States Min Cosine = **0.995223**.
+    - 512 vs (4 × 128): Full Model Output Cosine = **0.999596**.
+    - 512 vs (8 × 64): Full Model Output Cosine = **0.999076**.
+    - Continuation (512 + 128) vs (256 + 256 + 128): Cosine = **0.999814**.
+Status: **V2_FULL_MODEL_PREFILL_QUALIFIED**.
+See [V2-0004](../experiments/V2-0004-register-resident-gdn-and-full-model.md) and [docs/prefill-v2-architecture.md](prefill-v2-architecture.md).
 
 ## Performance research frontier
 

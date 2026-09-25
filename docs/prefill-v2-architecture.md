@@ -137,7 +137,8 @@ include/miinfer/prefill_v2/
 ├── kv_cache.hpp           # AttentionKvCacheView & AttentionLayerKvCacheStorage
 ├── recurrent_layer.hpp    # PrefillV2RecurrentLayer interface
 ├── attention_layer.hpp    # PrefillV2AttentionLayer interface
-└── topology_block.hpp     # PrefillV2TopologyBlock (3xGDN + 1xGQA)
+├── topology_block.hpp     # PrefillV2TopologyBlock (3xGDN + 1xGQA)
+└── model.hpp              # PrefillV2Model (Full 64-layer pipeline)
 
 src/prefill_v2/
 ├── state.cpp              # State allocation & lifecycle
@@ -145,11 +146,13 @@ src/prefill_v2/
 ├── kv_cache.cpp           # Key/Value cache allocation & lifecycle
 ├── recurrent_layer.cpp    # Recurrent weight repacking & forward pipeline
 ├── attention_layer.cpp    # Attention weight repacking & forward pipeline
-└── topology_block.cpp     # Ping-pong activation chaining across 4 layers
+├── topology_block.cpp     # Ping-pong activation chaining across 4 layers
+└── model.cpp              # Full 64-layer end-to-end model execution
 
 bench/
 ├── prefill_v2_recurrent_layer_bakeoff.cpp  # Empirical bakeoff against V1 oracle
-└── prefill_v2_topology_block_bakeoff.cpp   # 4-layer topology block bakeoff
+├── prefill_v2_topology_block_bakeoff.cpp   # 4-layer topology block bakeoff
+└── prefill_v2_model_bench.cpp              # Full 64-layer multi-length benchmark
 ```
 
 ---
@@ -162,6 +165,11 @@ bench/
 2. **Slice 2 (Qualified)**: Full 4-Layer Repeating Topology Block (`3 × GDN + 1 × GQA`).
    - V2-0003: Performance qualified at $180.89\text{ ms}$ at $N=512$ ($1.260\times$ faster than `FAST_V1`, $124.10\times$ faster than Oracle).
    - Exact bit-for-bit split-call invariant ($512$ vs $256 + 256$, max error $= 0.000000$, cosine $= 1.000000$).
-   - Static VRAM footprint of $17.51\text{ GiB} / 32\text{ GiB}$ for full 64-layer model ($2.89\text{ s}$ projected P512 latency).
-3. **Slice 3**: 64-Layer Full Model Prefill Pipeline.
-4. **Promotion**: V2 replaces V1 as default prefill engine only after end-to-end full-model qualification and baseline speedup verification.
+3. **Slice 3 (Qualified)**: 64-Layer Full Model Prefill Pipeline (`PrefillV2Model`).
+   - V2-0004: Integrated zero-spill Wave64 register-resident GDN scan (`launch_mx_gdn_chunk`).
+   - Topology Block 0 latency dropped from $180.89\text{ ms} \to 145.89\text{ ms}$ ($1.564\times$ speedup over `FASTEST_V1`).
+   - Full 64-layer end-to-end model prefill executed on single MI50 (18.10 GiB / 32 GiB VRAM footprint).
+   - **P512 Execution**: **2295.86 ms** (223.0 tok/s), officially **beating mx-llama.cpp (2,310 ms)**.
+   - Stateful segmentation invariants pass across $512$ vs $256+256, 4\times 128, 8\times 64$ and continuation ($512+128$ vs $256+256+128$) with cosine $> 0.999$.
+4. **Promotion**: Ready for default prefill engine promotion.
+175: 

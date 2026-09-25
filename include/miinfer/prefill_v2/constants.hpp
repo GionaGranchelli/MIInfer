@@ -36,6 +36,6 @@ constexpr std::size_t kAttentionPerBlock = 1;
 constexpr std::size_t kLayersPerBlock = 4;
 
 // Maximum supported prefill batch / macro-tile for V2 layer slice
-constexpr std::size_t kMaxPrefillBatch = 512;
+constexpr std::size_t kMaxPrefillBatch = 2048;
 
 } // namespace miinfer::prefill_v2

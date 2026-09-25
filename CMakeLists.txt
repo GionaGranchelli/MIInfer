@@ -125,6 +125,7 @@ if(MIINFER_ENABLE_HIP)
         src/prefill_v2/kv_cache.cpp
         src/prefill_v2/attention_layer.cpp
         src/prefill_v2/topology_block.cpp
+        src/prefill_v2/model.cpp
         gfx906/kernels/vector_add.hip
         gfx906/kernels/fp16_gemv.hip
         gfx906/kernels/q4_q8_gemv.hip
@@ -157,6 +158,10 @@ if(MIINFER_ENABLE_HIP)
     add_executable(miinfer-prefill-v2-topology-block-bakeoff bench/prefill_v2_topology_block_bakeoff.cpp)
     target_link_libraries(miinfer-prefill-v2-topology-block-bakeoff PRIVATE miinfer_hip)
     target_compile_options(miinfer-prefill-v2-topology-block-bakeoff PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-prefill-v2-model-bench bench/prefill_v2_model_bench.cpp)
+    target_link_libraries(miinfer-prefill-v2-model-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-prefill-v2-model-bench PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
 add_executable(miinfer-host-test tests/host_test.cpp)

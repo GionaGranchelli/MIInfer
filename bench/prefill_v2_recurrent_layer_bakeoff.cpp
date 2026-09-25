@@ -393,7 +393,7 @@ int run_bakeoff_main(int argc, char** argv) {
     }
     print_device_info(dev_info, std::cout);
 
-    // 0. Set environment variables to enable FAST_V1 Mx configuration for V1
+    // 0. Set environment variables to enable TRUE FASTEST_V1 Mx configuration for V1
     setenv("MIINFER_PREFILL_LAYER_MAJOR", "1", 1);
     setenv("MIINFER_PREFILL_WIDE_CHUNK", "1", 1);
     setenv("MIINFER_PREFILL_CHUNK", "512", 1);
@@ -401,6 +401,7 @@ int run_bakeoff_main(int argc, char** argv) {
     setenv("MIINFER_PREFILL_WIDE_MMQ_FFN", "1", 1);
     setenv("MIINFER_PREFILL_REPACKED_RESIDENT_ALL", "1", 1);
     setenv("MIINFER_PREFILL_REPACKED_RESIDENT_FFN", "1", 1);
+    setenv("MIINFER_PREFILL_MX_GDN", "1", 1);
 
     const auto model = miinfer::Qwen35Model::load(model_path);
     std::cout << "Model loaded: layers=" << model.config().block_count

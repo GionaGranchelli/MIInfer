@@ -118,6 +118,15 @@ void launch_qwen35_q4_k_embedding_device_token(
     float* output,
     hipStream_t stream = nullptr);
 
+void launch_qwen35_q4_k_embedding_batch(
+    const Q4KDeviceBlock* weights,
+    const std::uint32_t* tokens,
+    std::uint32_t token_count,
+    std::uint32_t vocabulary,
+    std::uint32_t hidden_size,
+    float* output,
+    hipStream_t stream = nullptr);
+
 void launch_qwen3_rms_norm(
     const float* input,
     const float* weights,
