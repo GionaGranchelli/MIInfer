@@ -1,35 +1,31 @@
 # MIInfer Current State
 
-## Current experiment status — V2-0004 (Register-Resident GDN & Full 64-Layer Prefill Model Qualified)
+## Current experiment status — V2-0005 (Native P512 Macro-Tiling & Frontier Baseline Qualified)
 
 V1 prefill optimization campaign (EXP-0364 through EXP-0395, B128, B64, B4, and residual scheduling) is **CLOSED**.
 M28 prefill is **Prefill V2**: a clean-sheet single-MI50 (gfx906, Wave64) prefill architecture specialized for Qwen3.8-27B-Q4_K_M.
 
-V2-0004 qualified both Stage A (register-resident GDN scan) and Stage B (full 64-layer model prefill pipeline):
-- **Stage A Recurrent & Block Acceleration**:
-  - Replaced M12 chunkwise loop with `launch_mx_gdn_chunk` across sequences.
-  - Recurrent layer GDN core latency dropped from **14.26 ms $\to$ 2.74 ms** (5.2× speedup).
-  - Layer 0 (Signature A): **37.07 ms** (1.311× vs FASTEST_V1 48.58 ms).
-  - Layer 8 (Signature B): **35.52 ms** (1.326× vs FASTEST_V1 47.09 ms).
-  - 4-Layer Topology Block 0 @ N512: **145.89 ms** (1.564× vs FASTEST_V1 228.16 ms).
-- **Stage B Full 64-Layer Model Execution (1 x MI50 32GB)**:
-  - `PrefillV2Model` contains 16 Topology Blocks (48 GDN + 16 GQA layers = 64 layers), token embeddings, final RMS norm, 48 recurrent states, 16 KV caches, and shared workspace.
-  - Total VRAM allocated: **18.10 GiB / 32 GiB** (56.6% utilization).
-  - **P512 Execution**: **2295.86 ms** (min **2293.57 ms**, 223.0 tok/s), officially **beating the external reference baseline (`mx-llama.cpp` @ P512: ~2,310 ms)**!
-  - **Multi-Length Performance**:
-    - P64: 612.27 ms (104.5 tok/s)
-    - P128: 714.43 ms (179.2 tok/s)
-    - P512: 2295.86 ms (223.0 tok/s)
-    - P640: 3041.07 ms (210.5 tok/s)
-    - P1024: 4682.31 ms (218.7 tok/s)
-    - P2048: 9728.37 ms (210.5 tok/s)
-  - **Stateful Segmentation Invariant (Full 64-Layer Model)**:
-    - 512 vs (256 + 256): Full Model Output Cosine = **0.999816**, RelRMS = 0.019161, All 48 GDN States Min Cosine = **0.995223**.
-    - 512 vs (4 × 128): Full Model Output Cosine = **0.999596**.
-    - 512 vs (8 × 64): Full Model Output Cosine = **0.999076**.
-    - Continuation (512 + 128) vs (256 + 256 + 128): Cosine = **0.999814**.
-Status: **V2_FULL_MODEL_PREFILL_QUALIFIED**.
-See [V2-0004](../experiments/V2-0004-register-resident-gdn-and-full-model.md) and [docs/prefill-v2-architecture.md](prefill-v2-architecture.md).
+V2-0005 qualified native P512 full-model macro-tiling (`kPrefillV2MacroTile = 512`), refreshed the `mx-llama.cpp` baseline on identical hardware state, reclaimed $\sim 900\text{ MiB}$ VRAM workspace, and integrated resident LM Head logit evaluation:
+- **VRAM Footprint Reclaimed**:
+  - Monolithic shared workspace reduced from $1.18\text{ GiB}$ ($N=2048$) down to **$297.44\text{ MiB}$** ($N=512$).
+  - Ping-Pong & temp activations reduced to **$20.01\text{ MiB}$**.
+  - Persistent weights: **$15.71\text{ GiB}$** (including resident Q6_K LM Head $1.66\text{ GiB}$).
+  - Persistent states: **$2199.50\text{ MiB}$** (48 GDN SSM states + 16 KV caches sized for 32K capacity).
+  - Total Static VRAM: **$18.17\text{ GiB}$ / $32.00\text{ GiB}$** (Free Headroom: **$13.82\text{ GiB}$**).
+- **Correctness & LM Head Boundary Verification**:
+  - Block drift audit across all 16 topology blocks (64 layers): output cosine similarity = `1.000000`, strictly finite, zero NaN.
+  - Resident LM Head greedy token evaluation on P640, P1024, P2048: valid RMS ($\sim 1.6$) and sharp top-5 logit distributions.
+- **Performance vs Refreshed `mx-llama.cpp` Baseline (`2e9d29f`) on MI50 (1606/1000 MHz, 225W)**:
+  - **P64**: **613.19 ms** (104.4 tok/s) vs mx 825.49 ms $\implies$ **1.346× WIN (+34.6% faster)**.
+  - **P128**: **716.59 ms** (178.6 tok/s) vs mx 708.47 ms $\implies$ **0.989×** (TIE, within 1.1%).
+  - **P512**: **2304.45 ms mean / 2295.04 ms min** (222.2 tok/s) vs mx 2292.16 ms $\implies$ **0.995×** (TIE, within 0.5%).
+  - **P640**: **3029.15 ms** (211.3 tok/s) vs mx 3012.33 ms $\implies$ **0.994×** (TIE, within 0.6%).
+  - **P1024**: **4677.80 ms** (218.9 tok/s) vs mx 4602.04 ms $\implies$ **0.984×** (TIE, within 1.6%).
+  - **P2048**: **9709.18 ms** (210.9 tok/s) vs mx 9247.30 ms $\implies$ **0.952×** (NEAR, within 4.8%).
+  - **P4096**: **20859.07 ms** (196.4 tok/s) vs mx 18618.18 ms $\implies$ **0.893×** (attention accumulation).
+  - **P8192**: **47678.34 ms** (171.8 tok/s) vs mx 38102.33 ms $\implies$ **0.799×** (attention accumulation).
+Status: **V2_P512_MACRO_TILED_PREFILL_QUALIFIED**.
+See [V2-0005](../experiments/V2-0005-p512-macro-tiled-prefill.md) and [docs/prefill-v2-architecture.md](prefill-v2-architecture.md).
 
 ## Performance research frontier
 

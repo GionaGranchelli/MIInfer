@@ -35,7 +35,10 @@ constexpr std::size_t kRecurrentPerBlock = 3;
 constexpr std::size_t kAttentionPerBlock = 1;
 constexpr std::size_t kLayersPerBlock = 4;
 
-// Maximum supported prefill batch / macro-tile for V2 layer slice
-constexpr std::size_t kMaxPrefillBatch = 2048;
+// Native full-model macro tile size for long sequences
+constexpr std::uint32_t kPrefillV2MacroTile = 512;
+
+// Maximum physical prefill batch width executed in one kernel launch (Macro Tile = 512)
+constexpr std::size_t kMaxPrefillBatch = 512;
 
 } // namespace miinfer::prefill_v2

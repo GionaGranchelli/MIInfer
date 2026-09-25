@@ -168,8 +168,13 @@ bench/
 3. **Slice 3 (Qualified)**: 64-Layer Full Model Prefill Pipeline (`PrefillV2Model`).
    - V2-0004: Integrated zero-spill Wave64 register-resident GDN scan (`launch_mx_gdn_chunk`).
    - Topology Block 0 latency dropped from $180.89\text{ ms} \to 145.89\text{ ms}$ ($1.564\times$ speedup over `FASTEST_V1`).
-   - Full 64-layer end-to-end model prefill executed on single MI50 (18.10 GiB / 32 GiB VRAM footprint).
-   - **P512 Execution**: **2295.86 ms** (223.0 tok/s), officially **beating mx-llama.cpp (2,310 ms)**.
+   - Full 64-layer end-to-end model prefill executed on single MI50.
+   - P512 Execution: **2295.86 ms** (223.0 tok/s).
    - Stateful segmentation invariants pass across $512$ vs $256+256, 4\times 128, 8\times 64$ and continuation ($512+128$ vs $256+256+128$) with cosine $> 0.999$.
-4. **Promotion**: Ready for default prefill engine promotion.
+4. **Slice 4 (Qualified)**: Native P512 Macro Tiling & Refreshed Frontier Benchmark (V2-0005).
+   - `kPrefillV2MacroTile = 512` physical macro tiling partitions arbitrary prompt lengths into canonical $N \le 512$ full-model passes with persistent states.
+   - Sized monolithic workspace for $N=512$, reclaiming $\sim 900\text{ MiB}$ VRAM down to $297.44\text{ MiB}$ ($18.17\text{ GiB}$ total static VRAM including resident LM-Head, leaving $13.82\text{ GiB}$ free headroom).
+   - Integrated resident Q6_K LM Head logit evaluation and greedy decoding.
+   - Refreshed `mx-llama.cpp` baseline on identical hardware state (1606/1000 MHz, 225W): P64 is **1.346× WIN** ($613.19\text{ ms}$ vs $825.49\text{ ms}$), P128..P1024 achieves tight parity ($\le 1.6\%$ delta).
+5. **Promotion**: Ready for default prefill engine promotion.
 175: 

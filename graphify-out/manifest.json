@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1790320672.9743695,
-    "seen": 1790320715.6982553,
-    "ast_hash": "186a4cb8124d4cabacc5bcd8921947d4",
+    "mtime": 1790324413.8109088,
+    "seen": 1790324444.8248742,
+    "ast_hash": "6da8a8fde29246661d77fd1c52329ca4",
     "semantic_hash": ""
   },
   "docs/decisions.md": {
@@ -5598,9 +5598,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/prefill_v2/constants.hpp": {
-    "mtime": 1790287196.909678,
-    "seen": 1790320715.6976683,
-    "ast_hash": "50ed043a0eb324e49a92d3f80ecebf82",
+    "mtime": 1790321496.1231797,
+    "seen": 1790324444.8242767,
+    "ast_hash": "1d76565d38ed3f9f6e9cf48712c1e770",
     "semantic_hash": ""
   },
   "include/miinfer/prefill_v2/recurrent_layer.hpp": {
@@ -5640,9 +5640,9 @@
     "semantic_hash": ""
   },
   "docs/prefill-v2-architecture.md": {
-    "mtime": 1790320698.4192078,
-    "seen": 1790320715.6982846,
-    "ast_hash": "aa811320c700b0d3e82b6568b0e6383f",
+    "mtime": 1790324426.1238315,
+    "seen": 1790324444.8249013,
+    "ast_hash": "9b32620d4ac5012e6bfc41c7fa98d029",
     "semantic_hash": ""
   },
   "experiments/V2-0001-recurrent-layer-vertical-slice.md": {
@@ -5706,27 +5706,33 @@
     "semantic_hash": ""
   },
   "bench/prefill_v2_model_bench.cpp": {
-    "mtime": 1790320321.8976035,
-    "seen": 1790320715.6976132,
-    "ast_hash": "2041b90a76751e642ff0cdab5be8e94a",
+    "mtime": 1790323807.8087046,
+    "seen": 1790324444.8242269,
+    "ast_hash": "594bb32a084dddcca5445fb7cb573412",
     "semantic_hash": ""
   },
   "include/miinfer/prefill_v2/model.hpp": {
-    "mtime": 1790287274.793233,
-    "seen": 1790320715.6976721,
-    "ast_hash": "7ab1c5022a75b2f0e2d7ef5ba40fe8fe",
+    "mtime": 1790321510.1890914,
+    "seen": 1790324444.8242807,
+    "ast_hash": "8b7845c6fe390a57e0f75300d3fc2c8e",
     "semantic_hash": ""
   },
   "src/prefill_v2/model.cpp": {
-    "mtime": 1790316308.041967,
-    "seen": 1790320715.6981003,
-    "ast_hash": "674ac83fccb6d618f472931054d7e8a0",
+    "mtime": 1790321526.3869898,
+    "seen": 1790324444.8246958,
+    "ast_hash": "ac36783bcffbaae80cb7893286c75483",
     "semantic_hash": ""
   },
   "experiments/V2-0004-register-resident-gdn-and-full-model.md": {
     "mtime": 1790320663.1294322,
     "seen": 1790320715.6990118,
     "ast_hash": "8e5217bdc5cfd6e171874005fba28bb3",
+    "semantic_hash": ""
+  },
+  "experiments/V2-0005-p512-macro-tiled-prefill.md": {
+    "mtime": 1790324398.3870056,
+    "seen": 1790324444.825573,
+    "ast_hash": "d67d9134766db46d8e5ab502ca9636ce",
     "semantic_hash": ""
   }
 }
