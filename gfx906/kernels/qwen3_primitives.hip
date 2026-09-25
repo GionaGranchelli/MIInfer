@@ -5691,4 +5691,443 @@ void launch_qwen35_decode_state_advance(
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
+// V2-0006: Native query-tiled GQA prefill attention for long context (Wave64 / gfx906).
+// Workgroup: 256 threads (4 Wave64s) covering 8 query tokens x 2 Q heads per KV head = 16 rows.
+// Each Wave64 handles 4 query rows. K and V tiles (32 positions) are staged collaboratively in LDS (32 KiB).
+__global__ void prefill_v2_query_tiled_attention_f16_kernel(
+    const float* __restrict__ q,
+    const __half* __restrict__ key_cache,
+    const __half* __restrict__ value_cache,
+    const float* __restrict__ gate,
+    float* __restrict__ gated_output,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t cache_capacity,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float scale) {
+
+    constexpr std::uint32_t kBlockTokens = 8;
+    constexpr std::uint32_t kGroupHeads = 2;
+    constexpr std::uint32_t kTileK = 32;
+    constexpr std::uint32_t kThreads = 256;
+    constexpr std::uint32_t kRowsPerWave = 4;
+    constexpr std::uint32_t kGroups = 12; // 4 KV heads * 3 head subgroups
+
+    const std::uint32_t wave = threadIdx.x / 64;
+    const std::uint32_t lane = threadIdx.x % 64;
+
+    const std::uint32_t token_block = blockIdx.x / kGroups;
+    const std::uint32_t group = blockIdx.x % kGroups;
+    const std::uint32_t kv_head = group % kv_heads;
+    const std::uint32_t head_subgroup = group / kv_heads;
+
+    if (token_block * kBlockTokens >= token_count) return;
+
+    __shared__ __half tile_k[kTileK * 256];
+    __shared__ __half tile_v[kTileK * 256];
+
+    float4 qv[kRowsPerWave];
+    float4 acc[kRowsPerWave];
+    float running_max[kRowsPerWave];
+    float running_sum[kRowsPerWave];
+    std::uint32_t token_ids[kRowsPerWave];
+    std::uint32_t head_ids[kRowsPerWave];
+    std::uint32_t causal_limits[kRowsPerWave];
+    bool is_valid[kRowsPerWave];
+
+    #pragma unroll
+    for (std::uint32_t r = 0; r < kRowsPerWave; ++r) {
+        const std::uint32_t r_local = wave * kRowsPerWave + r;
+        const std::uint32_t local_token = r_local / kGroupHeads;
+        const std::uint32_t local_head = r_local % kGroupHeads;
+
+        token_ids[r] = token_block * kBlockTokens + local_token;
+        head_ids[r] = kv_head * 6 + head_subgroup * kGroupHeads + local_head;
+        is_valid[r] = (token_ids[r] < token_count);
+        causal_limits[r] = is_valid[r] ? (base_position + token_ids[r] + 1) : 0;
+
+        acc[r] = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+        running_max[r] = -INFINITY;
+        running_sum[r] = 0.0f;
+
+        if (is_valid[r]) {
+            const std::size_t q_base = (static_cast<std::size_t>(token_ids[r]) * query_heads + head_ids[r]) * head_dim;
+            qv[r] = *reinterpret_cast<const float4*>(q + q_base + lane * 4);
+        } else {
+            qv[r] = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+        }
+    }
+
+    const std::uint32_t block_max_length = base_position + token_block * kBlockTokens + kBlockTokens;
+
+    for (std::uint32_t tile_start = 0; tile_start < block_max_length; tile_start += kTileK) {
+        // Cooperative 128-bit load of K and V tiles from global memory into LDS
+        #pragma unroll
+        for (std::uint32_t i = threadIdx.x; i < (kTileK * 256) / 8; i += kThreads) {
+            const std::uint32_t elem = i * 8;
+            const std::uint32_t pos = elem / 256;
+            const std::uint32_t dim = elem % 256;
+            const std::uint32_t cache_pos = tile_start + pos;
+
+            if (cache_pos < cache_capacity) {
+                const std::size_t cache_addr = (static_cast<std::size_t>(kv_head) * cache_capacity + cache_pos) * 256 + dim;
+                *reinterpret_cast<float4*>(&tile_k[elem]) = *reinterpret_cast<const float4*>(&key_cache[cache_addr]);
+                *reinterpret_cast<float4*>(&tile_v[elem]) = *reinterpret_cast<const float4*>(&value_cache[cache_addr]);
+            } else {
+                *reinterpret_cast<float4*>(&tile_k[elem]) = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+                *reinterpret_cast<float4*>(&tile_v[elem]) = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+            }
+        }
+        __syncthreads();
+
+        const std::uint32_t tile_valid_len = (block_max_length > tile_start) ? min(kTileK, block_max_length - tile_start) : 0;
+
+        for (std::uint32_t p = 0; p < tile_valid_len; ++p) {
+            const std::uint32_t kv_pos = tile_start + p;
+
+            const __half* k_ptr = &tile_k[p * 256 + lane * 4];
+            const float k0 = __half2float(k_ptr[0]);
+            const float k1 = __half2float(k_ptr[1]);
+            const float k2 = __half2float(k_ptr[2]);
+            const float k3 = __half2float(k_ptr[3]);
+
+            const __half* v_ptr = &tile_v[p * 256 + lane * 4];
+            const float v0 = __half2float(v_ptr[0]);
+            const float v1 = __half2float(v_ptr[1]);
+            const float v2 = __half2float(v_ptr[2]);
+            const float v3 = __half2float(v_ptr[3]);
+
+            #pragma unroll
+            for (std::uint32_t r = 0; r < kRowsPerWave; ++r) {
+                if (is_valid[r] && kv_pos < causal_limits[r]) {
+                    const float qk = qv[r].x * k0 + qv[r].y * k1 + qv[r].z * k2 + qv[r].w * k3;
+                    float score = qwen3_wave_sum(qk) * scale;
+                    score = __shfl(score, 0, 64);
+
+                    float alpha = 1.0f;
+                    float weight = 0.0f;
+                    if (lane == 0) {
+                        if (score > running_max[r]) {
+                            alpha = expf(running_max[r] - score);
+                            running_sum[r] = running_sum[r] * alpha + 1.0f;
+                            running_max[r] = score;
+                            weight = 1.0f;
+                        } else {
+                            weight = expf(score - running_max[r]);
+                            running_sum[r] += weight;
+                        }
+                    }
+                    alpha = __shfl(alpha, 0, 64);
+                    weight = __shfl(weight, 0, 64);
+
+                    acc[r].x = acc[r].x * alpha + weight * v0;
+                    acc[r].y = acc[r].y * alpha + weight * v1;
+                    acc[r].z = acc[r].z * alpha + weight * v2;
+                    acc[r].w = acc[r].w * alpha + weight * v3;
+                }
+            }
+        }
+        __syncthreads();
+    }
+
+    // Write final normalized & sigmoid-gated outputs
+    #pragma unroll
+    for (std::uint32_t r = 0; r < kRowsPerWave; ++r) {
+        if (is_valid[r]) {
+            const std::size_t out_base = (static_cast<std::size_t>(token_ids[r]) * query_heads + head_ids[r]) * head_dim;
+            const float denom = __shfl(running_sum[r], 0, 64);
+            const float inv_denom = (denom > 0.0f) ? (1.0f / denom) : 0.0f;
+
+            const float4 gate_vec = *reinterpret_cast<const float4*>(gate + out_base + lane * 4);
+
+            const float ox = (acc[r].x * inv_denom) * (1.0f / (1.0f + expf(-gate_vec.x)));
+            const float oy = (acc[r].y * inv_denom) * (1.0f / (1.0f + expf(-gate_vec.y)));
+            const float oz = (acc[r].z * inv_denom) * (1.0f / (1.0f + expf(-gate_vec.z)));
+            const float ow = (acc[r].w * inv_denom) * (1.0f / (1.0f + expf(-gate_vec.w)));
+
+            *reinterpret_cast<float4*>(gated_output + out_base + lane * 4) = make_float4(ox, oy, oz, ow);
+        }
+    }
+}
+
+void launch_prefill_v2_query_tiled_attention_f16(
+    const float* q,
+    const __half* key_cache,
+    const __half* value_cache,
+    const float* gate,
+    float* gated_output,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t cache_capacity,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float scale,
+    hipStream_t stream) {
+
+    if (q == nullptr || key_cache == nullptr || value_cache == nullptr ||
+        gate == nullptr || gated_output == nullptr || token_count == 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+
+    constexpr std::uint32_t kBlockTokens = 8;
+    constexpr std::uint32_t kGroups = 12; // 4 KV heads * 3 head subgroups
+    const std::uint32_t blocks = ((token_count + kBlockTokens - 1) / kBlockTokens) * kGroups;
+
+    hipLaunchKernelGGL(
+        prefill_v2_query_tiled_attention_f16_kernel,
+        dim3(blocks),
+        dim3(256),
+        0,
+        stream,
+        q, key_cache, value_cache, gate, gated_output,
+        token_count, base_position, cache_capacity,
+        query_heads, kv_heads, head_dim, scale);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+// V2-0006 Candidate B: Split-KV attention for long context (Wave64 / gfx906).
+// Stage 1: Splits the causal prefix across S parallel Wave64 workgroups.
+__global__ void prefill_v2_split_kv_attention_stage1_kernel(
+    const float* __restrict__ q,
+    const __half* __restrict__ key_cache,
+    const __half* __restrict__ value_cache,
+    float* __restrict__ partial_max,
+    float* __restrict__ partial_sum,
+    float* __restrict__ partial_acc,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t cache_capacity,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float scale,
+    std::uint32_t num_splits) {
+
+    constexpr std::uint32_t kBlockK = 16;
+    __shared__ __half tile[kBlockK * 256 * 2]; // 16 KiB LDS
+
+    const std::uint32_t row = blockIdx.x; // token_idx * query_heads + query_head_idx
+    const std::uint32_t split_idx = blockIdx.y; // 0 .. num_splits - 1
+
+    if (row >= token_count * query_heads || split_idx >= num_splits) return;
+
+    const std::uint32_t token_idx = row / query_heads;
+    const std::uint32_t head_idx = row % query_heads;
+    const std::uint32_t kv_head = head_idx / (query_heads / kv_heads); // head_idx / 6
+    const std::uint32_t lane = threadIdx.x; // 0 .. 63
+
+    const std::size_t q_base = (static_cast<std::size_t>(token_idx) * query_heads + head_idx) * head_dim;
+    const float4 q_vec = *reinterpret_cast<const float4*>(q + q_base + lane * 4);
+
+    const std::uint32_t causal_len = base_position + token_idx + 1;
+
+    // Partition causal_len into num_splits chunks (rounded up to kBlockK)
+    const std::uint32_t chunk_size = ((causal_len + num_splits - 1) / num_splits + kBlockK - 1) & ~(kBlockK - 1);
+    const std::uint32_t split_start = split_idx * chunk_size;
+    const std::uint32_t split_end = min(causal_len, (split_idx + 1) * chunk_size);
+
+    float4 acc = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+    float running_max = -INFINITY;
+    float running_sum = 0.0f;
+
+    if (split_start < split_end) {
+        for (std::uint32_t tile_start = split_start; tile_start < split_end; tile_start += kBlockK) {
+            // Cooperative load of 16-element tile into LDS
+            #pragma unroll
+            for (std::uint32_t element = threadIdx.x; element < kBlockK * head_dim; element += 64) {
+                const std::uint32_t pos = element / head_dim;
+                const std::uint32_t dim = element % head_dim;
+                const std::uint32_t cache_pos = tile_start + pos;
+                const std::size_t tile_idx = static_cast<std::size_t>(element);
+
+                if (cache_pos < split_end && cache_pos < cache_capacity) {
+                    const std::size_t cache_addr = (static_cast<std::size_t>(kv_head) * cache_capacity + cache_pos) * head_dim + dim;
+                    tile[tile_idx] = key_cache[cache_addr];
+                    tile[kBlockK * head_dim + tile_idx] = value_cache[cache_addr];
+                } else {
+                    tile[tile_idx] = __float2half(0.0f);
+                    tile[kBlockK * head_dim + tile_idx] = __float2half(0.0f);
+                }
+            }
+            __syncthreads();
+
+            const std::uint32_t valid = min(kBlockK, split_end - tile_start);
+            for (std::uint32_t pos = 0; pos < valid; ++pos) {
+                const std::size_t tile_base = static_cast<std::size_t>(pos) * head_dim;
+                const auto* k = tile + tile_base + lane * 4;
+                float score = qwen3_wave_sum(
+                    q_vec.x * __half2float(k[0]) + q_vec.y * __half2float(k[1]) +
+                    q_vec.z * __half2float(k[2]) + q_vec.w * __half2float(k[3])) * scale;
+                score = __shfl(score, 0, 64);
+
+                float alpha = 1.0f;
+                float weight = 0.0f;
+                if (lane == 0) {
+                    if (score > running_max) {
+                        alpha = expf(running_max - score);
+                        running_sum = running_sum * alpha + 1.0f;
+                        running_max = score;
+                        weight = 1.0f;
+                    } else {
+                        weight = expf(score - running_max);
+                        running_sum += weight;
+                    }
+                }
+                alpha = __shfl(alpha, 0, 64);
+                weight = __shfl(weight, 0, 64);
+
+                const auto* v = tile + kBlockK * head_dim + tile_base + lane * 4;
+                acc.x = acc.x * alpha + weight * __half2float(v[0]);
+                acc.y = acc.y * alpha + weight * __half2float(v[1]);
+                acc.z = acc.z * alpha + weight * __half2float(v[2]);
+                acc.w = acc.w * alpha + weight * __half2float(v[3]);
+            }
+            __syncthreads();
+        }
+    }
+
+    // Write partial outputs
+    const std::size_t meta_idx = static_cast<std::size_t>(row) * num_splits + split_idx;
+    if (lane == 0) {
+        partial_max[meta_idx] = running_max;
+        partial_sum[meta_idx] = running_sum;
+    }
+
+    const std::size_t acc_base = (static_cast<std::size_t>(row) * num_splits + split_idx) * head_dim + lane * 4;
+    *reinterpret_cast<float4*>(partial_acc + acc_base) = acc;
+}
+
+// Stage 2: Combines S partial softmax outputs and applies sigmoid gating.
+__global__ void prefill_v2_split_kv_attention_stage2_kernel(
+    const float* __restrict__ partial_max,
+    const float* __restrict__ partial_sum,
+    const float* __restrict__ partial_acc,
+    const float* __restrict__ gate,
+    float* __restrict__ gated_output,
+    std::uint32_t token_count,
+    std::uint32_t query_heads,
+    std::uint32_t head_dim,
+    std::uint32_t num_splits) {
+
+    const std::uint32_t row = blockIdx.x; // token_idx * query_heads + head_idx
+    if (row >= token_count * query_heads) return;
+
+    const std::uint32_t lane = threadIdx.x; // 0 .. 63
+
+    __shared__ float s_alpha[8]; // supports up to 8 splits
+    __shared__ float s_inv_total_sum;
+
+    if (lane == 0) {
+        float global_max = -INFINITY;
+        #pragma unroll
+        for (std::uint32_t s = 0; s < num_splits; ++s) {
+            float m = partial_max[static_cast<std::size_t>(row) * num_splits + s];
+            if (m > global_max) global_max = m;
+        }
+
+        float total_sum = 0.0f;
+        #pragma unroll
+        for (std::uint32_t s = 0; s < num_splits; ++s) {
+            float m = partial_max[static_cast<std::size_t>(row) * num_splits + s];
+            float sum = partial_sum[static_cast<std::size_t>(row) * num_splits + s];
+            float alpha = (m > -INFINITY) ? expf(m - global_max) : 0.0f;
+            s_alpha[s] = alpha;
+            total_sum += sum * alpha;
+        }
+        s_inv_total_sum = (total_sum > 0.0f) ? (1.0f / total_sum) : 0.0f;
+    }
+    __syncthreads();
+
+    float4 combined_acc = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+    #pragma unroll
+    for (std::uint32_t s = 0; s < num_splits; ++s) {
+        float alpha = s_alpha[s];
+        if (alpha > 0.0f) {
+            const std::size_t acc_base = (static_cast<std::size_t>(row) * num_splits + s) * head_dim + lane * 4;
+            float4 p_acc = *reinterpret_cast<const float4*>(partial_acc + acc_base);
+            combined_acc.x += alpha * p_acc.x;
+            combined_acc.y += alpha * p_acc.y;
+            combined_acc.z += alpha * p_acc.z;
+            combined_acc.w += alpha * p_acc.w;
+        }
+    }
+
+    const std::size_t out_base = static_cast<std::size_t>(row) * head_dim + lane * 4;
+    const float inv_denom = s_inv_total_sum;
+    const float4 gate_vec = *reinterpret_cast<const float4*>(gate + out_base);
+
+    const float ox = (combined_acc.x * inv_denom) * (1.0f / (1.0f + expf(-gate_vec.x)));
+    const float oy = (combined_acc.y * inv_denom) * (1.0f / (1.0f + expf(-gate_vec.y)));
+    const float oz = (combined_acc.z * inv_denom) * (1.0f / (1.0f + expf(-gate_vec.z)));
+    const float ow = (combined_acc.w * inv_denom) * (1.0f / (1.0f + expf(-gate_vec.w)));
+
+    *reinterpret_cast<float4*>(gated_output + out_base) = make_float4(ox, oy, oz, ow);
+}
+
+void launch_prefill_v2_split_kv_attention_f16(
+    const float* q,
+    const __half* key_cache,
+    const __half* value_cache,
+    const float* gate,
+    float* gated_output,
+    float* d_split_workspace,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t cache_capacity,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float scale,
+    std::uint32_t num_splits,
+    hipStream_t stream) {
+
+    if (q == nullptr || key_cache == nullptr || value_cache == nullptr ||
+        gate == nullptr || gated_output == nullptr || d_split_workspace == nullptr || token_count == 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    if (num_splits > 8) num_splits = 8;
+    if (num_splits == 0) num_splits = 1;
+
+    const std::size_t total_rows = static_cast<std::size_t>(token_count) * query_heads;
+    const std::size_t meta_floats = total_rows * num_splits;
+
+    float* d_partial_max = d_split_workspace;
+    float* d_partial_sum = d_split_workspace + meta_floats;
+    float* d_partial_acc = d_split_workspace + meta_floats * 2;
+
+    // Stage 1: Parallel partial attention across KV splits
+    dim3 grid_s1(static_cast<std::uint32_t>(total_rows), num_splits);
+    dim3 block_s1(64); // 1 Wave64 per workgroup
+
+    hipLaunchKernelGGL(
+        prefill_v2_split_kv_attention_stage1_kernel,
+        grid_s1,
+        block_s1,
+        0,
+        stream,
+        q, key_cache, value_cache,
+        d_partial_max, d_partial_sum, d_partial_acc,
+        token_count, base_position, cache_capacity,
+        query_heads, kv_heads, head_dim, scale, num_splits);
+    MIINFER_HIP_CHECK(hipGetLastError());
+
+    // Stage 2: Online softmax reduction and gating
+    dim3 grid_s2(static_cast<std::uint32_t>(total_rows));
+    dim3 block_s2(64);
+
+    hipLaunchKernelGGL(
+        prefill_v2_split_kv_attention_stage2_kernel,
+        grid_s2,
+        block_s2,
+        0,
+        stream,
+        d_partial_max, d_partial_sum, d_partial_acc,
+        gate, gated_output,
+        token_count, query_heads, head_dim, num_splits);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
 }  // namespace miinfer

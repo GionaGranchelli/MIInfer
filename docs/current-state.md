@@ -1,31 +1,25 @@
 # MIInfer Current State
 
-## Current experiment status — V2-0005 (Native P512 Macro-Tiling & Frontier Baseline Qualified)
+## Current experiment status — V2-0006 (GQA Attention Optimization Bakeoff & Candidate Rejection)
 
 V1 prefill optimization campaign (EXP-0364 through EXP-0395, B128, B64, B4, and residual scheduling) is **CLOSED**.
 M28 prefill is **Prefill V2**: a clean-sheet single-MI50 (gfx906, Wave64) prefill architecture specialized for Qwen3.8-27B-Q4_K_M.
 
-V2-0005 qualified native P512 full-model macro-tiling (`kPrefillV2MacroTile = 512`), refreshed the `mx-llama.cpp` baseline on identical hardware state, reclaimed $\sim 900\text{ MiB}$ VRAM workspace, and integrated resident LM Head logit evaluation:
-- **VRAM Footprint Reclaimed**:
-  - Monolithic shared workspace reduced from $1.18\text{ GiB}$ ($N=2048$) down to **$297.44\text{ MiB}$** ($N=512$).
-  - Ping-Pong & temp activations reduced to **$20.01\text{ MiB}$**.
-  - Persistent weights: **$15.71\text{ GiB}$** (including resident Q6_K LM Head $1.66\text{ GiB}$).
-  - Persistent states: **$2199.50\text{ MiB}$** (48 GDN SSM states + 16 KV caches sized for 32K capacity).
-  - Total Static VRAM: **$18.17\text{ GiB}$ / $32.00\text{ GiB}$** (Free Headroom: **$13.82\text{ GiB}$**).
-- **Correctness & LM Head Boundary Verification**:
-  - Block drift audit across all 16 topology blocks (64 layers): output cosine similarity = `1.000000`, strictly finite, zero NaN.
-  - Resident LM Head greedy token evaluation on P640, P1024, P2048: valid RMS ($\sim 1.6$) and sharp top-5 logit distributions.
-- **Performance vs Refreshed `mx-llama.cpp` Baseline (`2e9d29f`) on MI50 (1606/1000 MHz, 225W)**:
-  - **P64**: **613.19 ms** (104.4 tok/s) vs mx 825.49 ms $\implies$ **1.346× WIN (+34.6% faster)**.
-  - **P128**: **716.59 ms** (178.6 tok/s) vs mx 708.47 ms $\implies$ **0.989×** (TIE, within 1.1%).
-  - **P512**: **2304.45 ms mean / 2295.04 ms min** (222.2 tok/s) vs mx 2292.16 ms $\implies$ **0.995×** (TIE, within 0.5%).
-  - **P640**: **3029.15 ms** (211.3 tok/s) vs mx 3012.33 ms $\implies$ **0.994×** (TIE, within 0.6%).
-  - **P1024**: **4677.80 ms** (218.9 tok/s) vs mx 4602.04 ms $\implies$ **0.984×** (TIE, within 1.6%).
-  - **P2048**: **9709.18 ms** (210.9 tok/s) vs mx 9247.30 ms $\implies$ **0.952×** (NEAR, within 4.8%).
-  - **P4096**: **20859.07 ms** (196.4 tok/s) vs mx 18618.18 ms $\implies$ **0.893×** (attention accumulation).
-  - **P8192**: **47678.34 ms** (171.8 tok/s) vs mx 38102.33 ms $\implies$ **0.799×** (attention accumulation).
-Status: **V2_P512_MACRO_TILED_PREFILL_QUALIFIED**.
-See [V2-0005](../experiments/V2-0005-p512-macro-tiled-prefill.md) and [docs/prefill-v2-architecture.md](prefill-v2-architecture.md).
+V2-0006 conducted an implementation sprint and empirical bakeoff evaluating gfx906-specialized attention kernels (Candidate A: Query-Tiled GQA with 32 KiB LDS; Candidate B: Split-KV GQA with $S=2, 4$ partial reductions) against the production Control kernel (`launch_qwen35_tiled_online_attention_batch_f16`, 1 token × 1 Q head × 1 Wave64):
+- **Numerical Correctness Gate**:
+  - All candidates achieved exact mathematical parity across all tested sequence lengths ($N=64..8192$) and continuation ($N=512, \text{base}=4096$) with cosine similarity $= 1.000000$ and max error $\le 5.59 \times 10^{-9}$.
+- **Performance Gate (1-Layer Standalone Attention)**:
+  - **N512**: Control = **2.70 ms**, Cand A = 4.87 ms ($0.55\times$), Cand B2 = 27.14 ms ($0.10\times$), Cand B4 = 27.27 ms ($0.10\times$).
+  - **N1024**: Control = **10.30 ms**, Cand A = 18.10 ms ($0.57\times$), Cand B2 = 107.10 ms ($0.10\times$), Cand B4 = 107.26 ms ($0.10\times$).
+  - **N2048**: Control = **42.08 ms**, Cand A = 69.65 ms ($0.60\times$), Cand B2 = 455.37 ms ($0.09\times$), Cand B4 = 425.70 ms ($0.10\times$).
+  - **N4096**: Control = **176.31 ms**, Cand A = 273.36 ms ($0.65\times$), Cand B2 = 2208.03 ms ($0.08\times$), Cand B4 = 1826.62 ms ($0.10\times$).
+  - **N8192**: Control = **751.29 ms**, Cand A = 1082.08 ms ($0.69\times$), Cand B2 = 9284.69 ms ($0.08\times$), Cand B4 = 8831.21 ms ($0.09\times$).
+- **Architectural Findings & Protocol Decision**:
+  - Control's barrier-free $N \times 24$ independent Wave64 grid provides superior latency hiding and L2 cache streaming on Vega20 compared to multi-wave cooperative workgroup barriers or multi-stage split reductions.
+  - Per operating hard-stop rules, both Candidate A and Candidate B were **REJECTED**.
+  - Production attention remains on the proven Control kernel without regression.
+Status: **V2_ATTENTION_CANDIDATES_REJECTED**.
+See [V2-0006](../experiments/V2-0006-long-context-query-tiled-attention.md) and [docs/prefill-v2-architecture.md](prefill-v2-architecture.md).
 
 ## Performance research frontier
 

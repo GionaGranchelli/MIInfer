@@ -162,6 +162,10 @@ if(MIINFER_ENABLE_HIP)
     add_executable(miinfer-prefill-v2-model-bench bench/prefill_v2_model_bench.cpp)
     target_link_libraries(miinfer-prefill-v2-model-bench PRIVATE miinfer_hip)
     target_compile_options(miinfer-prefill-v2-model-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-prefill-v2-attention-bakeoff bench/prefill_v2_attention_bakeoff.cpp)
+    target_link_libraries(miinfer-prefill-v2-attention-bakeoff PRIVATE miinfer_hip)
+    target_compile_options(miinfer-prefill-v2-attention-bakeoff PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
 add_executable(miinfer-host-test tests/host_test.cpp)

@@ -176,5 +176,9 @@ bench/
    - Sized monolithic workspace for $N=512$, reclaiming $\sim 900\text{ MiB}$ VRAM down to $297.44\text{ MiB}$ ($18.17\text{ GiB}$ total static VRAM including resident LM-Head, leaving $13.82\text{ GiB}$ free headroom).
    - Integrated resident Q6_K LM Head logit evaluation and greedy decoding.
    - Refreshed `mx-llama.cpp` baseline on identical hardware state (1606/1000 MHz, 225W): P64 is **1.346× WIN** ($613.19\text{ ms}$ vs $825.49\text{ ms}$), P128..P1024 achieves tight parity ($\le 1.6\%$ delta).
-5. **Promotion**: Ready for default prefill engine promotion.
-175: 
+5. **Slice 5 (Evaluated & Rejection Gate Enforced)**: GQA Attention Optimization Bakeoff (V2-0006).
+   - Evaluated Candidate A (Query-Tiled GQA with 32 KiB LDS) and Candidate B (Split-KV GQA with $S=2, 4$).
+   - Both candidates passed numerical correctness ($1.000000$ cosine similarity, relative error $< 10^{-6}$).
+   - Standalone performance across $N=512..8192$: Control Wave64 kernel (`launch_qwen35_tiled_online_attention_batch_f16`, 1 token × 1 head) remains $1.44\times$ to $1.81\times$ faster than Candidate A, and $10\times$ faster than Candidate B due to barrier-free grid scheduling and L2 hit efficiency.
+   - Hard-stop rule strictly enforced: Candidate A and B rejected; Control retained as production GQA attention kernel without codebase regressions.
+6. **Promotion**: Ready for default prefill engine promotion.
