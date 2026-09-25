@@ -48,6 +48,9 @@ struct PrefillV2Workspace {
     // MMQ Q8_1 quantization blocks (compact Mx contract)
     MxQ8_1MmqBlock* mmq_q8 = nullptr;   // [max_tokens * (max(kHidden, kInner, kFfnInner, kQFullDim) / 128)] blocks
 
+    // Canonical Q8_1 quantization blocks (for gfx906 native Wave GEMV / Fused SwiGLU decode)
+    Q8_1Block* q8_1 = nullptr;          // [max_tokens * (max(kHidden, kInner, kFfnInner, kQFullDim) / 32)] blocks
+
     // FFN Activations
     float* ffn_gate = nullptr;            // [max_tokens, kFfnInner]
     float* ffn_up = nullptr;              // [max_tokens, kFfnInner]

@@ -100,6 +100,12 @@ private:
     std::uint8_t* d_ffn_up_mmq_ = nullptr;
     void* d_ffn_down_mmq_ = nullptr;
     GgufTensorType ffn_down_type_ = GgufTensorType::q6_k;
+
+    // Gfx906 resident Wave decode weights (coexisting with Mx compact prefill weights)
+    Q4KWaveSwigluFusedTile* d_ffn_swiglu_fused_ = nullptr;
+    Q5KWaveTile* d_ssm_out_wave_ = nullptr;
+    Q4KWaveTile* d_gate_wave_ = nullptr;
+    void* d_qkv_wave_ = nullptr;
 };
 
 } // namespace miinfer::prefill_v2

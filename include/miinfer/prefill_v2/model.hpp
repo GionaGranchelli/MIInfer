@@ -178,6 +178,7 @@ private:
     std::size_t final_norm_bytes_ = 0;
     void* d_output_weights_ = nullptr;        // Q6_K [vocab_size, hidden_size]
     std::size_t output_weight_bytes_ = 0;
+    Q6KWaveTile* d_output_weights_wave_ = nullptr; // Gfx906 resident Wave Q6_K
 
     // LM Head Scratch & Logits Buffer
     void* d_lm_head_q8_k_ = nullptr;          // [kHidden / 256] Q8KDeviceBlock

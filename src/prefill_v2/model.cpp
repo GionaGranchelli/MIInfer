@@ -30,13 +30,13 @@ PrefillV2Model::PrefillV2Model(const miinfer::Qwen35Model& model, std::uint32_t 
     MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&d_final_norm_weights_), final_norm_bytes_));
     MIINFER_HIP_CHECK(hipMemcpy(d_final_norm_weights_, norm_t.data(), final_norm_bytes_, hipMemcpyHostToDevice));
 
-    // 3. Load LM Head Weights (Q6_K)
+    // 3. Load LM Head Weights (Q6_K Wave layout)
     if (has_lm_head_) {
         const auto out_t = model.tensor("output.weight");
-        output_weight_bytes_ = out_t.bytes();
-        MIINFER_HIP_CHECK(hipMalloc(&d_output_weights_, output_weight_bytes_));
-        MIINFER_HIP_CHECK(hipMemcpy(d_output_weights_, out_t.data(), output_weight_bytes_, hipMemcpyHostToDevice));
-        MIINFER_HIP_CHECK(hipMalloc(&d_lm_head_q8_k_, (kHidden / 256) * sizeof(Q8KDeviceBlock)));
+        const auto wave_host = pack_q6k_wave_tensor(*out_t.source);
+        output_weight_bytes_ = wave_host.size() * sizeof(Q6KWaveTile);
+        MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&d_output_weights_wave_), output_weight_bytes_));
+        MIINFER_HIP_CHECK(hipMemcpy(d_output_weights_wave_, wave_host.data(), output_weight_bytes_, hipMemcpyHostToDevice));
     }
 
     // 4. Construct 16 Repeating Topology Blocks (64 layers total)
@@ -76,6 +76,7 @@ PrefillV2Model::PrefillV2Model(PrefillV2Model&& other) noexcept
       final_norm_bytes_(other.final_norm_bytes_),
       d_output_weights_(other.d_output_weights_),
       output_weight_bytes_(other.output_weight_bytes_),
+      d_output_weights_wave_(other.d_output_weights_wave_),
       d_lm_head_q8_k_(other.d_lm_head_q8_k_),
       d_logits_(other.d_logits_),
       blocks_(std::move(other.blocks_)),
@@ -91,6 +92,7 @@ PrefillV2Model::PrefillV2Model(PrefillV2Model&& other) noexcept
     other.d_embedding_weights_ = nullptr;
     other.d_final_norm_weights_ = nullptr;
     other.d_output_weights_ = nullptr;
+    other.d_output_weights_wave_ = nullptr;
     other.d_lm_head_q8_k_ = nullptr;
     other.d_logits_ = nullptr;
     other.d_ping_ = nullptr;
@@ -114,6 +116,7 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
         final_norm_bytes_ = other.final_norm_bytes_;
         d_output_weights_ = other.d_output_weights_;
         output_weight_bytes_ = other.output_weight_bytes_;
+        d_output_weights_wave_ = other.d_output_weights_wave_;
         d_lm_head_q8_k_ = other.d_lm_head_q8_k_;
         d_logits_ = other.d_logits_;
         blocks_ = std::move(other.blocks_);
@@ -130,6 +133,7 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
         other.d_embedding_weights_ = nullptr;
         other.d_final_norm_weights_ = nullptr;
         other.d_output_weights_ = nullptr;
+        other.d_output_weights_wave_ = nullptr;
         other.d_lm_head_q8_k_ = nullptr;
         other.d_logits_ = nullptr;
         other.d_ping_ = nullptr;
@@ -177,6 +181,10 @@ void PrefillV2Model::free_resources() {
     if (d_output_weights_ != nullptr) {
         (void)hipFree(d_output_weights_);
         d_output_weights_ = nullptr;
+    }
+    if (d_output_weights_wave_ != nullptr) {
+        (void)hipFree(d_output_weights_wave_);
+        d_output_weights_wave_ = nullptr;
     }
     if (d_lm_head_q8_k_ != nullptr) {
         (void)hipFree(d_lm_head_q8_k_);
@@ -426,7 +434,7 @@ void PrefillV2Model::compute_logits(
     float* d_logits_out,
     hipStream_t stream) {
 
-    if (!has_lm_head_ || d_output_weights_ == nullptr || d_lm_head_q8_k_ == nullptr) {
+    if (!has_lm_head_ || d_output_weights_wave_ == nullptr) {
         throw std::runtime_error("PrefillV2Model::compute_logits: LM head weights not loaded");
     }
 
@@ -435,15 +443,16 @@ void PrefillV2Model::compute_logits(
         throw std::runtime_error("PrefillV2Model::compute_logits: null logits destination buffer");
     }
 
-    launch_qwen3_q8_k_quantize(
+    auto& ws = const_cast<PrefillV2Workspace&>(ws_mgr_->workspace());
+    launch_q8_1_quantize_f32(
         d_final_hidden_last_token,
-        static_cast<Q8KDeviceBlock*>(d_lm_head_q8_k_),
+        ws.q8_1,
         kHidden,
         stream);
 
-    launch_qwen3_q6_k_q8_k_gemv(
-        static_cast<const Q6KDeviceBlock*>(d_output_weights_),
-        static_cast<const Q8KDeviceBlock*>(d_lm_head_q8_k_),
+    launch_q6k_wave_gemv(
+        d_output_weights_wave_,
+        ws.q8_1,
         target_logits,
         vocab_size_,
         kHidden,
@@ -697,7 +706,7 @@ void PrefillV2Model::capture_decode_graph(hipStream_t stream) {
     if (decode_graph_exec_ != nullptr) {
         return;
     }
-    if (!has_lm_head_ || d_output_weights_ == nullptr || d_embedding_weights_ == nullptr ||
+    if (!has_lm_head_ || d_output_weights_wave_ == nullptr || d_embedding_weights_ == nullptr ||
         d_final_norm_weights_ == nullptr || d_decode_state_ == nullptr || d_decode_tokens_ == nullptr) {
         throw std::runtime_error("PrefillV2Model::capture_decode_graph: required weights/buffers not allocated");
     }

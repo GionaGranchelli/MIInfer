@@ -55,6 +55,10 @@ PrefillV2WorkspaceManager::PrefillV2WorkspaceManager(std::size_t max_tokens)
     const std::size_t max_blocks_per_token = std::max(kFfnInner, kQFullDim) / 128;
     const std::size_t mmq_q8_bytes = align128(max_tokens_ * max_blocks_per_token * sizeof(MxQ8_1MmqBlock));
 
+    // Canonical Q8_1 quantization blocks (for gfx906 native Wave GEMV / Fused SwiGLU decode)
+    const std::size_t max_q8_1_blocks_per_token = std::max(kFfnInner, kQFullDim) / 32;
+    const std::size_t q8_1_bytes = align128(max_tokens_ * max_q8_1_blocks_per_token * sizeof(Q8_1Block));
+
     const std::size_t ffn_gate_bytes = align128(max_tokens_ * kFfnInner * sizeof(float));
     const std::size_t ffn_up_bytes = align128(max_tokens_ * kFfnInner * sizeof(float));
     const std::size_t ffn_act_bytes = align128(max_tokens_ * kFfnInner * sizeof(float));
@@ -64,7 +68,7 @@ PrefillV2WorkspaceManager::PrefillV2WorkspaceManager(std::size_t max_tokens)
         + query_bytes + key_bytes + value_bytes + gdn_scratch_bytes
         + gdn_raw_bytes + gated_bytes + ssm_out_bytes + residual_bytes + post_norm_bytes
         + attn_qfull_bytes + attn_q_rope_bytes + attn_k_bytes + attn_v_bytes + attn_gated_bytes
-        + mmq_q8_bytes + ffn_gate_bytes + ffn_up_bytes + ffn_act_bytes + ffn_down_bytes;
+        + mmq_q8_bytes + q8_1_bytes + ffn_gate_bytes + ffn_up_bytes + ffn_act_bytes + ffn_down_bytes;
 
     MIINFER_HIP_CHECK(hipMalloc(&d_buffer_, total_bytes_));
 
@@ -104,6 +108,7 @@ PrefillV2WorkspaceManager::PrefillV2WorkspaceManager(std::size_t max_tokens)
     workspace_.attn_gated_output = reinterpret_cast<float*>(ptr); ptr += attn_gated_bytes;
 
     workspace_.mmq_q8 = reinterpret_cast<MxQ8_1MmqBlock*>(ptr); ptr += mmq_q8_bytes;
+    workspace_.q8_1 = reinterpret_cast<Q8_1Block*>(ptr); ptr += q8_1_bytes;
 
     workspace_.ffn_gate = reinterpret_cast<float*>(ptr); ptr += ffn_gate_bytes;
     workspace_.ffn_up = reinterpret_cast<float*>(ptr); ptr += ffn_up_bytes;

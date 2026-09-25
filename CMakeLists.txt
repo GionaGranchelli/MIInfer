@@ -170,6 +170,10 @@ if(MIINFER_ENABLE_HIP)
     add_executable(miinfer-prefill-v2-e2e-bench bench/prefill_v2_e2e_bench.cpp)
     target_link_libraries(miinfer-prefill-v2-e2e-bench PRIVATE miinfer_hip)
     target_compile_options(miinfer-prefill-v2-e2e-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-decode-fast-path-bakeoff bench/decode_fast_path_bakeoff.cpp)
+    target_link_libraries(miinfer-decode-fast-path-bakeoff PRIVATE miinfer_hip)
+    target_compile_options(miinfer-decode-fast-path-bakeoff PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
 add_executable(miinfer-host-test tests/host_test.cpp)

@@ -43,9 +43,10 @@ PrefillV2AttentionLayer::PrefillV2AttentionLayer(const miinfer::Qwen35Model& mod
     upload_tensor_f32(model.tensor(name("attn_k_norm.weight")), d_k_norm_, persistent_weight_bytes_);
     upload_tensor_f32(model.tensor(name("post_attention_norm.weight")), d_post_attention_norm_, persistent_weight_bytes_);
 
-    // Helper for uploading packed Mx MMQ weights
-    const auto upload_packed = [this](const std::vector<std::uint8_t>& packed, std::uint8_t*& dev_ptr) {
-        const std::size_t bytes = packed.size();
+    // Helper for uploading packed weights
+    const auto upload_packed = [this](const auto& packed, auto*& dev_ptr) {
+        using Elem = typename std::decay_t<decltype(packed)>::value_type;
+        const std::size_t bytes = packed.size() * sizeof(Elem);
         MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&dev_ptr), bytes));
         upload_to_device(packed.data(), dev_ptr, bytes);
         persistent_weight_bytes_ += bytes;
@@ -104,6 +105,27 @@ PrefillV2AttentionLayer::PrefillV2AttentionLayer(const miinfer::Qwen35Model& mod
     } else {
         throw std::runtime_error("PrefillV2AttentionLayer: ffn_down must be Q4_K or Q6_K");
     }
+
+    // 8. Gfx906 resident Wave decode weights
+    // (a) Paired FFN SwiGLU fused layout
+    const auto fused_swiglu_host = pack_q4k_wave_swiglu_fused(*ffn_gate_t.source, *ffn_up_t.source);
+    upload_packed(fused_swiglu_host, d_ffn_swiglu_fused_);
+
+    // (b) Attention Output Wave layout (Q4_K)
+    upload_packed(pack_q4k_wave_tensor(*o_t.source), d_o_wave_);
+
+    // (c) Attention Q Wave layout (Q4_K)
+    upload_packed(pack_q4k_wave_tensor(*q_t.source), d_q_wave_);
+
+    // (d) Attention K Wave layout (Q4_K)
+    upload_packed(pack_q4k_wave_tensor(*k_t.source), d_k_wave_);
+
+    // (e) Attention V Wave layout (Q4_K or Q6_K)
+    if (v_is_q6_) {
+        upload_packed(pack_q6k_wave_tensor(*v_t.source), d_v_wave_);
+    } else {
+        upload_packed(pack_q4k_wave_tensor(*v_t.source), d_v_wave_);
+    }
 }
 
 PrefillV2AttentionLayer::~PrefillV2AttentionLayer() {
@@ -119,6 +141,12 @@ PrefillV2AttentionLayer::~PrefillV2AttentionLayer() {
     if (d_ffn_gate_mmq_) (void)hipFree(d_ffn_gate_mmq_);
     if (d_ffn_up_mmq_) (void)hipFree(d_ffn_up_mmq_);
     if (d_ffn_down_mmq_) (void)hipFree(d_ffn_down_mmq_);
+
+    if (d_ffn_swiglu_fused_) (void)hipFree(d_ffn_swiglu_fused_);
+    if (d_o_wave_) (void)hipFree(d_o_wave_);
+    if (d_q_wave_) (void)hipFree(d_q_wave_);
+    if (d_k_wave_) (void)hipFree(d_k_wave_);
+    if (d_v_wave_) (void)hipFree(d_v_wave_);
 }
 
 PrefillV2AttentionLayer::PrefillV2AttentionLayer(PrefillV2AttentionLayer&& other) noexcept
@@ -136,7 +164,12 @@ PrefillV2AttentionLayer::PrefillV2AttentionLayer(PrefillV2AttentionLayer&& other
       d_o_mmq_(std::exchange(other.d_o_mmq_, nullptr)),
       d_ffn_gate_mmq_(std::exchange(other.d_ffn_gate_mmq_, nullptr)),
       d_ffn_up_mmq_(std::exchange(other.d_ffn_up_mmq_, nullptr)),
-      d_ffn_down_mmq_(std::exchange(other.d_ffn_down_mmq_, nullptr)) {}
+      d_ffn_down_mmq_(std::exchange(other.d_ffn_down_mmq_, nullptr)),
+      d_ffn_swiglu_fused_(std::exchange(other.d_ffn_swiglu_fused_, nullptr)),
+      d_o_wave_(std::exchange(other.d_o_wave_, nullptr)),
+      d_q_wave_(std::exchange(other.d_q_wave_, nullptr)),
+      d_k_wave_(std::exchange(other.d_k_wave_, nullptr)),
+      d_v_wave_(std::exchange(other.d_v_wave_, nullptr)) {}
 
 PrefillV2AttentionLayer& PrefillV2AttentionLayer::operator=(PrefillV2AttentionLayer&& other) noexcept {
     if (this != &other) {
@@ -152,6 +185,12 @@ PrefillV2AttentionLayer& PrefillV2AttentionLayer::operator=(PrefillV2AttentionLa
         if (d_ffn_gate_mmq_) (void)hipFree(d_ffn_gate_mmq_);
         if (d_ffn_up_mmq_) (void)hipFree(d_ffn_up_mmq_);
         if (d_ffn_down_mmq_) (void)hipFree(d_ffn_down_mmq_);
+
+        if (d_ffn_swiglu_fused_) (void)hipFree(d_ffn_swiglu_fused_);
+        if (d_o_wave_) (void)hipFree(d_o_wave_);
+        if (d_q_wave_) (void)hipFree(d_q_wave_);
+        if (d_k_wave_) (void)hipFree(d_k_wave_);
+        if (d_v_wave_) (void)hipFree(d_v_wave_);
 
         layer_index_ = other.layer_index_;
         persistent_weight_bytes_ = other.persistent_weight_bytes_;
@@ -170,6 +209,12 @@ PrefillV2AttentionLayer& PrefillV2AttentionLayer::operator=(PrefillV2AttentionLa
         d_ffn_gate_mmq_ = std::exchange(other.d_ffn_gate_mmq_, nullptr);
         d_ffn_up_mmq_ = std::exchange(other.d_ffn_up_mmq_, nullptr);
         d_ffn_down_mmq_ = std::exchange(other.d_ffn_down_mmq_, nullptr);
+
+        d_ffn_swiglu_fused_ = std::exchange(other.d_ffn_swiglu_fused_, nullptr);
+        d_o_wave_ = std::exchange(other.d_o_wave_, nullptr);
+        d_q_wave_ = std::exchange(other.d_q_wave_, nullptr);
+        d_k_wave_ = std::exchange(other.d_k_wave_, nullptr);
+        d_v_wave_ = std::exchange(other.d_v_wave_, nullptr);
     }
     return *this;
 }
@@ -416,27 +461,25 @@ void PrefillV2AttentionLayer::decode(
     launch_qwen3_rms_norm(
         d_input, d_attn_norm_, ws.normalized, kHidden, kRmsNormEpsilon, stream);
 
-    // 2. QKV Projections (Mx compact MMQ with M=1 -> dispatched to mx_repacked_mmv_kernel)
-    launch_mx_q8_1_mmq_quantize(
-        ws.normalized, ws.mmq_q8, 1, kHidden, /*affine=*/true, stream);
+    // 2. QKV Projections via native Wave GEMV (shared single Q8_1 quantization)
+    launch_q8_1_quantize_f32(
+        ws.normalized, ws.q8_1, kHidden, stream);
 
-    // Q + Gate Projection [5120 -> 12288]
-    launch_mx_q4k_repacked_mmq(
-        d_q_mmq_, ws.mmq_q8, ws.attn_qfull, 12288, kHidden, 1, stream);
+    // Q + Gate Projection [5120 -> 12288] (Q4_K)
+    launch_q4k_wave_gemv(
+        d_q_wave_, ws.q8_1, ws.attn_qfull, 12288, kHidden, stream);
 
-    // K Projection [5120 -> 1024]
-    launch_mx_q4k_repacked_mmq(
-        d_k_mmq_, ws.mmq_q8, ws.attn_k, 1024, kHidden, 1, stream);
+    // K Projection [5120 -> 1024] (Q4_K)
+    launch_q4k_wave_gemv(
+        d_k_wave_, ws.q8_1, ws.attn_k, 1024, kHidden, stream);
 
-    // V Projection [5120 -> 1024]
+    // V Projection [5120 -> 1024] (Q4_K or Q6_K)
     if (v_is_q6_) {
-        launch_mx_q8_1_mmq_quantize(
-            ws.normalized, ws.mmq_q8, 1, kHidden, /*affine=*/false, stream);
-        launch_mx_q6k_repacked_mmq(
-            d_v_mmq_, ws.mmq_q8, ws.attn_v, 1024, kHidden, 1, stream);
+        launch_q6k_wave_gemv(
+            static_cast<const Q6KWaveTile*>(d_v_wave_), ws.q8_1, ws.attn_v, 1024, kHidden, stream);
     } else {
-        launch_mx_q4k_repacked_mmq(
-            d_v_mmq_, ws.mmq_q8, ws.attn_v, 1024, kHidden, 1, stream);
+        launch_q4k_wave_gemv(
+            static_cast<const Q4KWaveTile*>(d_v_wave_), ws.q8_1, ws.attn_v, 1024, kHidden, stream);
     }
 
     // 3. Q Split, RMSNorm, and RoPE
@@ -496,30 +539,25 @@ void PrefillV2AttentionLayer::decode(
             stream);
     }
 
-    // 6. Attention Output Projection (O: [6144 -> 5120])
-    launch_mx_q8_1_mmq_quantize(
-        ws.attn_gated_output, ws.mmq_q8, 1, kInner, /*affine=*/true, stream);
-    launch_mx_q4k_repacked_mmq(
-        d_o_mmq_, ws.mmq_q8, ws.projected, kHidden, kInner, 1, stream);
+    // 6. Attention Output Projection via Wave GEMV (O: [6144 -> 5120])
+    launch_q8_1_quantize_f32(
+        ws.attn_gated_output, ws.q8_1, kInner, stream);
+    launch_q4k_wave_gemv(
+        d_o_wave_, ws.q8_1, ws.projected, kHidden, kInner, stream);
 
     // 7. Residual Connection + Post-Attention RMSNorm (Fused)
     launch_qwen3_fused_add_rms_norm(
         d_input, ws.projected, d_post_attention_norm_, ws.residual, ws.post_normalized,
         kHidden, kRmsNormEpsilon, stream);
 
-    // 8. FFN Gate and Up Projections (Q4_K MMQ with M=1)
-    launch_mx_q8_1_mmq_quantize(
-        ws.post_normalized, ws.mmq_q8, 1, kHidden, /*affine=*/true, stream);
-    launch_mx_q4k_repacked_mmq(
-        d_ffn_gate_mmq_, ws.mmq_q8, ws.ffn_gate, kFfnInner, kHidden, 1, stream);
-    launch_mx_q4k_repacked_mmq(
-        d_ffn_up_mmq_, ws.mmq_q8, ws.ffn_up, kFfnInner, kHidden, 1, stream);
+    // 8. FFN Gate & Up Projections + SwiGLU Activation (Fused into single resident kernel pass)
+    launch_q8_1_quantize_f32(
+        ws.post_normalized, ws.q8_1, kHidden, stream);
+    launch_q4k_wave_fused_gate_up_swiglu_paired(
+        d_ffn_swiglu_fused_, ws.q8_1, ws.ffn_activation,
+        kFfnInner, kHidden, stream);
 
-    // 9. SwiGLU Activation
-    launch_qwen3_silu_mul(
-        ws.ffn_gate, ws.ffn_up, ws.ffn_activation, kFfnInner, stream);
-
-    // 10. FFN Down Projection & Final Residual
+    // 9. FFN Down Projection & Final Residual
     if (ffn_down_is_q6_) {
         launch_mx_q8_1_mmq_quantize(
             ws.ffn_activation, ws.mmq_q8, 1, kFfnInner, /*affine=*/false, stream);
