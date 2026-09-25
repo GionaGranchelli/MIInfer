@@ -257,8 +257,8 @@ void PrefillV2RecurrentLayer::forward(
     if (d_input == nullptr || d_output == nullptr) {
         throw std::runtime_error("PrefillV2: null input/output pointer");
     }
-    if (token_count == 0 || token_count % kGdnChunkSize != 0 || token_count > kMaxPrefillBatch) {
-        throw std::runtime_error("PrefillV2: token_count must be non-zero multiple of 64 and <= "
+    if (token_count == 0 || token_count > kMaxPrefillBatch) {
+        throw std::runtime_error("PrefillV2: token_count must be non-zero and <= "
                                  + std::to_string(kMaxPrefillBatch) + ", got " + std::to_string(token_count));
     }
     if (incoming_state.d_state == nullptr || incoming_state.d_conv_history == nullptr

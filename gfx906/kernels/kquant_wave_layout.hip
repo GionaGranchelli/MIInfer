@@ -2436,7 +2436,11 @@ bool mx_pipeline_enabled() {
 }
 
 bool mx_mmv_enabled() {
-    return mx_environment_flag("MIINFER_MX_MMV");
+    const char* env = std::getenv("MIINFER_MX_MMV");
+    if (env == nullptr) return true;
+    if (std::strcmp(env, "0") == 0) return false;
+    if (std::strcmp(env, "1") == 0) return true;
+    throw std::runtime_error("MIINFER_MX_MMV must be 0 or 1");
 }
 
 bool mx_pinned_enabled() {

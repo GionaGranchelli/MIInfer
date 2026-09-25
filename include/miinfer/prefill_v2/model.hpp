@@ -15,7 +15,27 @@
 #include <vector>
 #include <span>
 
+#include <functional>
+
 namespace miinfer::prefill_v2 {
+
+struct GenerateOptions {
+    std::size_t max_new_tokens = 128;
+    bool reset_state_before = true;
+    std::function<void(std::uint32_t)> on_token = nullptr;
+};
+
+struct GenerateStats {
+    std::vector<std::uint32_t> prompt_tokens;
+    std::vector<std::uint32_t> generated_tokens;
+    double prefill_ms = 0.0;
+    double ttft_ms = 0.0;
+    double decode_ms = 0.0;
+    double total_ms = 0.0;
+    double prefill_tok_per_sec = 0.0;
+    double decode_tok_per_sec = 0.0;
+    double avg_decode_latency_ms = 0.0;
+};
 
 struct ModelProfileBreakdown {
     double embedding_ms = 0.0;
@@ -90,10 +110,30 @@ public:
 
     // Compute model logits for the final token from its normalized hidden state
     // d_final_hidden_last_token: pointer to normalized hidden state [kHidden]
-    // d_logits_out: device pointer to output logits [vocab_size]
+    // d_logits_out: device pointer to output logits [vocab_size] (if nullptr, writes to internal d_logits_)
     void compute_logits(
         const float* d_final_hidden_last_token,
-        float* d_logits_out,
+        float* d_logits_out = nullptr,
+        hipStream_t stream = nullptr);
+
+    // Single-Token Autoregressive Decode Step:
+    // Takes input_token at sequence position `position`, executes the full 64-layer model,
+    // updates persistent recurrent states and appends to persistent KV caches in place with ZERO copies,
+    // computes next-token logits, and returns the newly generated token ID via device argmax.
+    std::uint32_t decode_step(
+        std::uint32_t input_token,
+        std::uint32_t position,
+        float* d_logits_out = nullptr,
+        hipStream_t stream = nullptr);
+
+    // End-to-End Generation Pipeline:
+    // 1. Prefills the full prompt using native 512-token macro-tiling.
+    // 2. Evaluates the initial token logits (TTFT).
+    // 3. Hands off persistent recurrent states and KV caches directly to the autoregressive decode loop with ZERO device copies.
+    // 4. Decodes up to max_new_tokens sequentially.
+    GenerateStats generate(
+        std::span<const std::uint32_t> prompt,
+        const GenerateOptions& options = GenerateOptions(),
         hipStream_t stream = nullptr);
 
     // Accessors
@@ -116,6 +156,7 @@ public:
     [[nodiscard]] const void* embedding_weights() const noexcept { return d_embedding_weights_; }
     [[nodiscard]] const float* final_norm_weights() const noexcept { return d_final_norm_weights_; }
     [[nodiscard]] const void* output_weights() const noexcept { return d_output_weights_; }
+    [[nodiscard]] float* logits_buffer() noexcept { return d_logits_; }
 
 private:
     std::uint32_t vocab_size_ = 0;
@@ -131,8 +172,9 @@ private:
     void* d_output_weights_ = nullptr;        // Q6_K [vocab_size, hidden_size]
     std::size_t output_weight_bytes_ = 0;
 
-    // LM Head Scratch
+    // LM Head Scratch & Logits Buffer
     void* d_lm_head_q8_k_ = nullptr;          // [kHidden / 256] Q8KDeviceBlock
+    float* d_logits_ = nullptr;               // [vocab_size] float
 
     // 16 Blocks
     std::vector<std::unique_ptr<PrefillV2TopologyBlock>> blocks_;

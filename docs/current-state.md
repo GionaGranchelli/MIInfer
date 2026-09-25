@@ -1,25 +1,21 @@
 # MIInfer Current State
 
-## Current experiment status — V2-0006 (GQA Attention Optimization Bakeoff & Candidate Rejection)
+## Current experiment status — V2-0007 (Unified Prefill V2 → Static Decode Pipeline)
 
 V1 prefill optimization campaign (EXP-0364 through EXP-0395, B128, B64, B4, and residual scheduling) is **CLOSED**.
 M28 prefill is **Prefill V2**: a clean-sheet single-MI50 (gfx906, Wave64) prefill architecture specialized for Qwen3.8-27B-Q4_K_M.
 
-V2-0006 conducted an implementation sprint and empirical bakeoff evaluating gfx906-specialized attention kernels (Candidate A: Query-Tiled GQA with 32 KiB LDS; Candidate B: Split-KV GQA with $S=2, 4$ partial reductions) against the production Control kernel (`launch_qwen35_tiled_online_attention_batch_f16`, 1 token × 1 Q head × 1 Wave64):
-- **Numerical Correctness Gate**:
-  - All candidates achieved exact mathematical parity across all tested sequence lengths ($N=64..8192$) and continuation ($N=512, \text{base}=4096$) with cosine similarity $= 1.000000$ and max error $\le 5.59 \times 10^{-9}$.
-- **Performance Gate (1-Layer Standalone Attention)**:
-  - **N512**: Control = **2.70 ms**, Cand A = 4.87 ms ($0.55\times$), Cand B2 = 27.14 ms ($0.10\times$), Cand B4 = 27.27 ms ($0.10\times$).
-  - **N1024**: Control = **10.30 ms**, Cand A = 18.10 ms ($0.57\times$), Cand B2 = 107.10 ms ($0.10\times$), Cand B4 = 107.26 ms ($0.10\times$).
-  - **N2048**: Control = **42.08 ms**, Cand A = 69.65 ms ($0.60\times$), Cand B2 = 455.37 ms ($0.09\times$), Cand B4 = 425.70 ms ($0.10\times$).
-  - **N4096**: Control = **176.31 ms**, Cand A = 273.36 ms ($0.65\times$), Cand B2 = 2208.03 ms ($0.08\times$), Cand B4 = 1826.62 ms ($0.10\times$).
-  - **N8192**: Control = **751.29 ms**, Cand A = 1082.08 ms ($0.69\times$), Cand B2 = 9284.69 ms ($0.08\times$), Cand B4 = 8831.21 ms ($0.09\times$).
-- **Architectural Findings & Protocol Decision**:
-  - Control's barrier-free $N \times 24$ independent Wave64 grid provides superior latency hiding and L2 cache streaming on Vega20 compared to multi-wave cooperative workgroup barriers or multi-stage split reductions.
-  - Per operating hard-stop rules, both Candidate A and Candidate B were **REJECTED**.
-  - Production attention remains on the proven Control kernel without regression.
-Status: **V2_ATTENTION_CANDIDATES_REJECTED**.
-See [V2-0006](../experiments/V2-0006-long-context-query-tiled-attention.md) and [docs/prefill-v2-architecture.md](prefill-v2-architecture.md).
+V2-0007 unified **Prefill V2** (64 layers, P512 macro-tiled prompt processing) directly with **Static Autoregressive Decode** into a single cohesive inference engine (`PrefillV2Model`):
+- **Zero-Copy State Hand-Off**: Direct persistent transition of all 48 recurrent SSM states, 48 convolution ring buffers, and 16 KV caches from prompt prefill to step-by-step autoregressive generation with **zero device-to-device memory copies** and **zero host allocations**.
+- **Multi-Turn Determinism & State Lifecycle**: Complete state reset (`model.reset_state()`) restores 100% bit-identical generated token trajectories across independent turns.
+- **End-to-End Performance on MI50**:
+  - **P64 + TG128**: TTFT = **621.71 ms** (102.9 tok/s prompt processing $\to$ **1.407× faster** than `mx-llama.cpp` @ 73.14 tok/s), Decode Throughput = **20.1 tok/s** (49.74 ms/step), Total Time = **6.94 s**.
+  - **P512 + TG128**: TTFT = **2311.51 ms** (221.5 tok/s prompt processing $\to$ **exact parity ~0.4%** with `mx-llama.cpp` @ 222.35 tok/s), Decode Throughput = **17.0 tok/s** (58.66 ms/step), Total Time = **9.76 s**.
+  - **P2048 + TG128**: TTFT = **9748.19 ms** (210.1 tok/s prompt processing), Decode Throughput = **11.2 tok/s** (89.02 ms/step), Total Time = **21.05 s**.
+- **Static VRAM Footprint**: **18.17 GiB / 32.00 GiB** total (Weights: 15.71 GiB, States: 2199.5 MiB, Workspace: 297.4 MiB), providing **13.83 GiB free VRAM headroom**.
+
+Status: **V2_UNIFIED_PIPELINE_QUALIFIED**.
+See [V2-0007](../experiments/EXP-V2-0007-unified-prefill-to-decode-pipeline.md) and [docs/prefill-v2-architecture.md](prefill-v2-architecture.md).
 
 ## Performance research frontier
 

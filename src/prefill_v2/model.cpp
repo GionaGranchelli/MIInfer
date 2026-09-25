@@ -1,12 +1,14 @@
+#include <algorithm>
+#include <chrono>
+#include <iostream>
+#include <stdexcept>
+#include <utility>
+
 #include "miinfer/prefill_v2/model.hpp"
 #include "miinfer/hip_check.hpp"
 #include "miinfer/qwen3_gpu_primitives.hpp"
 
 #include <hip/hip_runtime.h>
-#include <algorithm>
-#include <iostream>
-#include <stdexcept>
-#include <utility>
 
 namespace miinfer::prefill_v2 {
 
@@ -75,6 +77,7 @@ PrefillV2Model::PrefillV2Model(PrefillV2Model&& other) noexcept
       d_output_weights_(other.d_output_weights_),
       output_weight_bytes_(other.output_weight_bytes_),
       d_lm_head_q8_k_(other.d_lm_head_q8_k_),
+      d_logits_(other.d_logits_),
       blocks_(std::move(other.blocks_)),
       recurrent_states_(std::move(other.recurrent_states_)),
       kv_caches_(std::move(other.kv_caches_)),
@@ -86,6 +89,7 @@ PrefillV2Model::PrefillV2Model(PrefillV2Model&& other) noexcept
     other.d_final_norm_weights_ = nullptr;
     other.d_output_weights_ = nullptr;
     other.d_lm_head_q8_k_ = nullptr;
+    other.d_logits_ = nullptr;
     other.d_ping_ = nullptr;
     other.d_pong_ = nullptr;
     other.d_temp_tokens_ = nullptr;
@@ -105,6 +109,7 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
         d_output_weights_ = other.d_output_weights_;
         output_weight_bytes_ = other.output_weight_bytes_;
         d_lm_head_q8_k_ = other.d_lm_head_q8_k_;
+        d_logits_ = other.d_logits_;
         blocks_ = std::move(other.blocks_);
         recurrent_states_ = std::move(other.recurrent_states_);
         kv_caches_ = std::move(other.kv_caches_);
@@ -117,6 +122,7 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
         other.d_final_norm_weights_ = nullptr;
         other.d_output_weights_ = nullptr;
         other.d_lm_head_q8_k_ = nullptr;
+        other.d_logits_ = nullptr;
         other.d_ping_ = nullptr;
         other.d_pong_ = nullptr;
         other.d_temp_tokens_ = nullptr;
@@ -130,6 +136,9 @@ void PrefillV2Model::allocate_resources() {
     MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&d_ping_), kMaxPrefillBatch * kHidden * sizeof(float)));
     MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&d_pong_), kMaxPrefillBatch * kHidden * sizeof(float)));
     MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&d_temp_tokens_), kMaxPrefillBatch * sizeof(std::uint32_t)));
+    if (has_lm_head_) {
+        MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&d_logits_), vocab_size_ * sizeof(float)));
+    }
 }
 
 void PrefillV2Model::free_resources() {
@@ -148,6 +157,10 @@ void PrefillV2Model::free_resources() {
     if (d_lm_head_q8_k_ != nullptr) {
         (void)hipFree(d_lm_head_q8_k_);
         d_lm_head_q8_k_ = nullptr;
+    }
+    if (d_logits_ != nullptr) {
+        (void)hipFree(d_logits_);
+        d_logits_ = nullptr;
     }
     if (d_ping_ != nullptr) {
         (void)hipFree(d_ping_);
@@ -393,6 +406,11 @@ void PrefillV2Model::compute_logits(
         throw std::runtime_error("PrefillV2Model::compute_logits: LM head weights not loaded");
     }
 
+    float* target_logits = d_logits_out != nullptr ? d_logits_out : d_logits_;
+    if (target_logits == nullptr) {
+        throw std::runtime_error("PrefillV2Model::compute_logits: null logits destination buffer");
+    }
+
     launch_qwen3_q8_k_quantize(
         d_final_hidden_last_token,
         static_cast<Q8KDeviceBlock*>(d_lm_head_q8_k_),
@@ -402,10 +420,151 @@ void PrefillV2Model::compute_logits(
     launch_qwen3_q6_k_q8_k_gemv(
         static_cast<const Q6KDeviceBlock*>(d_output_weights_),
         static_cast<const Q8KDeviceBlock*>(d_lm_head_q8_k_),
-        d_logits_out,
+        target_logits,
         vocab_size_,
         kHidden,
         stream);
+}
+
+std::uint32_t PrefillV2Model::decode_step(
+    std::uint32_t input_token,
+    std::uint32_t position,
+    float* d_logits_out,
+    hipStream_t stream) {
+
+    if (!has_lm_head_) {
+        throw std::runtime_error("PrefillV2Model::decode_step: LM head weights not loaded");
+    }
+    float* target_logits = d_logits_out != nullptr ? d_logits_out : d_logits_;
+    if (target_logits == nullptr) {
+        throw std::runtime_error("PrefillV2Model::decode_step: null logits destination buffer");
+    }
+
+    // 1. Copy single input token to device
+    MIINFER_HIP_CHECK(hipMemcpyAsync(
+        d_temp_tokens_,
+        &input_token,
+        sizeof(std::uint32_t),
+        hipMemcpyHostToDevice,
+        stream));
+
+    // 2. Single token forward through all 64 layers: input token -> d_ping_ (final normalized hidden)
+    forward(d_temp_tokens_, position, 1, d_ping_, stream);
+
+    // 3. Compute logits: d_ping_ -> target_logits
+    compute_logits(d_ping_, target_logits, stream);
+
+    // 4. Argmax on device: target_logits -> d_temp_tokens_[0]
+    launch_qwen3_argmax(target_logits, d_temp_tokens_, vocab_size_, stream);
+
+    // 5. Read back single output token
+    std::uint32_t next_token = 0;
+    MIINFER_HIP_CHECK(hipMemcpyAsync(
+        &next_token,
+        d_temp_tokens_,
+        sizeof(std::uint32_t),
+        hipMemcpyDeviceToHost,
+        stream));
+    MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
+
+    return next_token;
+}
+
+GenerateStats PrefillV2Model::generate(
+    std::span<const std::uint32_t> prompt,
+    const GenerateOptions& options,
+    hipStream_t stream) {
+
+    if (prompt.empty()) {
+        throw std::runtime_error("PrefillV2Model::generate: empty prompt");
+    }
+    if (!has_lm_head_) {
+        throw std::runtime_error("PrefillV2Model::generate: LM head weights not loaded");
+    }
+
+    if (options.reset_state_before) {
+        reset_state();
+    }
+
+    GenerateStats stats;
+    stats.prompt_tokens.assign(prompt.begin(), prompt.end());
+    stats.generated_tokens.reserve(options.max_new_tokens);
+
+    const auto t_start = std::chrono::steady_clock::now();
+
+    // 1. Prefill sequence using native macro scheduler (Macro Tile = 512)
+    // Each macro tile writes its normalized final hidden to d_pong_ [chunk * kHidden]
+    const std::uint32_t prompt_len = static_cast<std::uint32_t>(prompt.size());
+    std::uint32_t pos = 0;
+    std::uint32_t last_chunk = 0;
+    while (pos < prompt_len) {
+        std::uint32_t chunk = std::min<std::uint32_t>(kPrefillV2MacroTile, prompt_len - pos);
+        MIINFER_HIP_CHECK(hipMemcpyAsync(
+            d_temp_tokens_,
+            prompt.data() + pos,
+            chunk * sizeof(std::uint32_t),
+            hipMemcpyHostToDevice,
+            stream));
+        forward(d_temp_tokens_, pos, chunk, d_pong_, stream);
+        pos += chunk;
+        last_chunk = chunk;
+    }
+
+    // 2. Compute logits for final prompt token (at offset (last_chunk - 1) * kHidden in d_pong_)
+    compute_logits(d_pong_ + (last_chunk - 1) * kHidden, d_logits_, stream);
+
+    // 3. First token via device argmax (TTFT)
+    launch_qwen3_argmax(d_logits_, d_temp_tokens_, vocab_size_, stream);
+    std::uint32_t first_token = 0;
+    MIINFER_HIP_CHECK(hipMemcpyAsync(
+        &first_token,
+        d_temp_tokens_,
+        sizeof(std::uint32_t),
+        hipMemcpyDeviceToHost,
+        stream));
+    MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
+
+    const auto t_ttft = std::chrono::steady_clock::now();
+    stats.prefill_ms = std::chrono::duration<double, std::milli>(t_ttft - t_start).count();
+    stats.ttft_ms = stats.prefill_ms;
+    stats.prefill_tok_per_sec = stats.prefill_ms > 0.0 ? (prompt_len * 1000.0 / stats.prefill_ms) : 0.0;
+
+    stats.generated_tokens.push_back(first_token);
+    if (options.on_token) {
+        options.on_token(first_token);
+    }
+
+    if (options.max_new_tokens <= 1) {
+        stats.total_ms = stats.ttft_ms;
+        return stats;
+    }
+
+    // 4. Autoregressive Decode Loop (Zero device copy handoff)
+    const auto t_decode_start = std::chrono::steady_clock::now();
+    std::uint32_t current_token = first_token;
+
+    for (std::size_t k = 1; k < options.max_new_tokens; ++k) {
+        const std::uint32_t position = prompt_len - 1 + static_cast<std::uint32_t>(k);
+        if (position >= kv_capacity_) {
+            break;
+        }
+
+        const std::uint32_t next_token = decode_step(current_token, position, d_logits_, stream);
+        stats.generated_tokens.push_back(next_token);
+        if (options.on_token) {
+            options.on_token(next_token);
+        }
+        current_token = next_token;
+    }
+
+    const auto t_decode_end = std::chrono::steady_clock::now();
+    stats.decode_ms = std::chrono::duration<double, std::milli>(t_decode_end - t_decode_start).count();
+    const std::size_t decode_count = stats.generated_tokens.size() - 1;
+    stats.decode_tok_per_sec = stats.decode_ms > 0.0 ? (decode_count * 1000.0 / stats.decode_ms) : 0.0;
+    stats.avg_decode_latency_ms = decode_count > 0 ? (stats.decode_ms / decode_count) : 0.0;
+    stats.total_ms = std::chrono::duration<double, std::milli>(t_decode_end - t_start).count();
+
+    return stats;
 }
 
 std::size_t PrefillV2Model::persistent_weight_bytes() const noexcept {
@@ -434,6 +593,9 @@ std::size_t PrefillV2Model::activation_bytes() const noexcept {
     if (d_lm_head_q8_k_ != nullptr) {
         total += (kHidden / 256) * sizeof(Q8KDeviceBlock);
     }
+    if (d_logits_ != nullptr) {
+        total += vocab_size_ * sizeof(float);
+    }
     return total;
 }
 
@@ -442,3 +604,4 @@ std::size_t PrefillV2Model::total_vram_bytes() const noexcept {
 }
 
 } // namespace miinfer::prefill_v2
+

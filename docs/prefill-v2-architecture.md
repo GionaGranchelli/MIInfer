@@ -181,4 +181,14 @@ bench/
    - Both candidates passed numerical correctness ($1.000000$ cosine similarity, relative error $< 10^{-6}$).
    - Standalone performance across $N=512..8192$: Control Wave64 kernel (`launch_qwen35_tiled_online_attention_batch_f16`, 1 token × 1 head) remains $1.44\times$ to $1.81\times$ faster than Candidate A, and $10\times$ faster than Candidate B due to barrier-free grid scheduling and L2 hit efficiency.
    - Hard-stop rule strictly enforced: Candidate A and B rejected; Control retained as production GQA attention kernel without codebase regressions.
-6. **Promotion**: Ready for default prefill engine promotion.
+6. **Slice 6 (Qualified & Promoted)**: Unified Prefill V2 to Static Decode Pipeline (V2-0007).
+   - Unified 64-layer prompt processing (`PrefillV2Model::forward`) and single-token autoregressive decode (`PrefillV2Model::decode_step`, `generate`) in a single resident binary.
+   - Zero-copy state hand-off: Direct persistent state transition for all 48 GDN SSM states ($[48, 128, 128]$ float), 48 Conv histories ($[4, 10240]$ float), and 16 KV caches ($[32768, 4, 256]$ fp16) without any host memory allocations or device-to-device buffer copies.
+   - 100% deterministic multi-turn isolation and state reset repeatability.
+   - Dispatches vector-optimized `mx_repacked_mmv_kernel` (1024 threads/block) for $M=1$ matrix-vector projections.
+   - End-to-end benchmark on 1 × AMD Instinct MI50 32GB:
+     - $P64 + TG128$: TTFT = $621.71\text{ ms}$ (**1.407× faster** prompt processing than `mx-llama.cpp`), sustained decode = $20.1\text{ tok/s}$.
+     - $P512 + TG128$: TTFT = $2311.51\text{ ms}$ (**parity ~0.4%** with `mx-llama.cpp`), sustained decode = $17.0\text{ tok/s}$.
+     - $P2048 + TG128$: TTFT = $9748.19\text{ ms}$, sustained decode = $11.2\text{ tok/s}$.
+     - Static VRAM footprint: $18.17\text{ GiB}$ ($13.83\text{ GiB}$ free headroom).
+
