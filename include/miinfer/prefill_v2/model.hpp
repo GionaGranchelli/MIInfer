@@ -2,6 +2,7 @@
 
 #include "miinfer/prefill_v2/constants.hpp"
 #include "miinfer/prefill_v2/kv_cache.hpp"
+#include "miinfer/prefill_v2/reusable_context.hpp"
 #include "miinfer/prefill_v2/state.hpp"
 #include "miinfer/prefill_v2/topology_block.hpp"
 #include "miinfer/prefill_v2/workspace.hpp"
@@ -14,6 +15,7 @@
 #include <memory>
 #include <vector>
 #include <span>
+#include <string>
 
 #include <functional>
 
@@ -23,6 +25,9 @@ struct GenerateOptions {
     std::size_t max_new_tokens = 128;
     bool reset_state_before = true;
     bool use_hip_graph = true;
+    bool enable_prefix_reuse = false;   // When true, attempts to reuse cached prefix if matching
+    bool cache_prefix_after = false;    // When true, caches prefix state after prefill
+    std::size_t cache_prefix_len = 0;   // If 0, caches entire prompt; otherwise first N tokens
     std::function<void(std::uint32_t)> on_token = nullptr;
 };
 
@@ -37,6 +42,15 @@ struct GenerateStats {
     double decode_tok_per_sec = 0.0;
     double avg_decode_latency_ms = 0.0;
     bool used_hip_graph = false;
+
+    // Reuse telemetry & observability
+    bool reuse_hit = false;
+    std::uint32_t prefix_tokens_reused = 0;
+    std::uint32_t suffix_tokens_dispatched = 0;
+    std::uint32_t gqa_kv_reused_tokens = 0;
+    std::uint32_t gdn_checkpoint_position = 0;
+    double restore_ms = 0.0;
+    double suffix_prefill_ms = 0.0;
 };
 
 struct ModelProfileBreakdown {
@@ -147,6 +161,13 @@ public:
     [[nodiscard]] AttentionLayerKvCacheStorage& kv_storage(std::size_t gqa_idx) { return kv_caches_[gqa_idx]; }
     [[nodiscard]] PrefillV2Workspace& workspace() noexcept { return const_cast<PrefillV2Workspace&>(ws_mgr_->workspace()); }
     [[nodiscard]] std::uint32_t vocab_size() const noexcept { return vocab_size_; }
+    [[nodiscard]] const std::string& model_name() const noexcept { return model_name_; }
+    [[nodiscard]] const std::string& quantization() const noexcept { return quantization_; }
+
+    // Reusable Context & Checkpoint Storage
+    [[nodiscard]] const ReusableContext& reusable_context() const noexcept { return reusable_context_; }
+    [[nodiscard]] ReusableContext& reusable_context() noexcept { return reusable_context_; }
+    [[nodiscard]] std::size_t cached_state_bytes() const noexcept { return reusable_context_.memory_bytes(); }
 
     // Memory footprints
     [[nodiscard]] std::size_t persistent_weight_bytes() const noexcept;
@@ -166,10 +187,15 @@ public:
     [[nodiscard]] bool is_decode_graph_captured() const noexcept { return decode_graph_exec_ != nullptr; }
 
 private:
+    std::string model_name_ = "Qwen3.8-27B";
+    std::string quantization_ = "Q4_K_M";
     std::uint32_t vocab_size_ = 0;
     float rms_epsilon_ = 1e-6f;
     std::uint32_t kv_capacity_ = 32768;
     bool has_lm_head_ = false;
+
+    // Reusable Context
+    ReusableContext reusable_context_;
 
     // Weights on device
     void* d_embedding_weights_ = nullptr;     // Q4_K [vocab_size, hidden_size]

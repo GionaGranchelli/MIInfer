@@ -125,6 +125,7 @@ if(MIINFER_ENABLE_HIP)
         src/prefill_v2/kv_cache.cpp
         src/prefill_v2/attention_layer.cpp
         src/prefill_v2/topology_block.cpp
+        src/prefill_v2/reusable_context.cpp
         src/prefill_v2/model.cpp
         gfx906/kernels/vector_add.hip
         gfx906/kernels/fp16_gemv.hip
@@ -194,6 +195,10 @@ if(MIINFER_ENABLE_HIP)
     add_executable(miinfer-gdn-kernel-bakeoff bench/gdn_kernel_bakeoff.cpp)
     target_link_libraries(miinfer-gdn-kernel-bakeoff PRIVATE miinfer_hip)
     target_compile_options(miinfer-gdn-kernel-bakeoff PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-prefix-state-reuse-bench bench/prefix_state_reuse_bench.cpp)
+    target_link_libraries(miinfer-prefix-state-reuse-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-prefix-state-reuse-bench PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
 add_executable(miinfer-host-test tests/host_test.cpp)

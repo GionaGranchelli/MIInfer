@@ -13,10 +13,13 @@
 namespace miinfer::prefill_v2 {
 
 PrefillV2Model::PrefillV2Model(const miinfer::Qwen35Model& model, std::uint32_t kv_capacity, bool load_lm_head)
-    : vocab_size_(model.config().vocab_size),
+    : model_name_(model.model_name()),
+      quantization_("Q4_K_M"),
+      vocab_size_(model.config().vocab_size),
       rms_epsilon_(model.config().rms_epsilon),
       kv_capacity_(kv_capacity),
-      has_lm_head_(load_lm_head) {
+      has_lm_head_(load_lm_head),
+      reusable_context_(model.model_name(), "Q4_K_M") {
 
     // 1. Load Token Embedding Weights (Q4_K)
     const auto embd_t = model.tensor("token_embd.weight");
@@ -553,8 +556,18 @@ GenerateStats PrefillV2Model::generate(
         throw std::runtime_error("PrefillV2Model::generate: LM head weights not loaded");
     }
 
-    if (options.reset_state_before) {
-        reset_state();
+    const std::uint32_t prompt_len = static_cast<std::uint32_t>(prompt.size());
+    bool is_reuse = false;
+    std::uint32_t prefix_len = 0;
+    std::uint32_t suffix_len = prompt_len;
+
+    if (options.enable_prefix_reuse && reusable_context_.has_valid_prefix()) {
+        auto match = reusable_context_.check_match(prompt, model_name_, quantization_);
+        if (match == ReusableContext::MatchResult::ExactMatch) {
+            is_reuse = true;
+            prefix_len = reusable_context_.prefix_length();
+            suffix_len = prompt_len - prefix_len;
+        }
     }
 
     GenerateStats stats;
@@ -562,23 +575,67 @@ GenerateStats PrefillV2Model::generate(
     stats.generated_tokens.reserve(options.max_new_tokens);
 
     const auto t_start = std::chrono::steady_clock::now();
-
-    // 1. Prefill sequence using native macro scheduler (Macro Tile = 512)
-    // Each macro tile writes its normalized final hidden to d_pong_ [chunk * kHidden]
-    const std::uint32_t prompt_len = static_cast<std::uint32_t>(prompt.size());
-    std::uint32_t pos = 0;
     std::uint32_t last_chunk = 0;
-    while (pos < prompt_len) {
-        std::uint32_t chunk = std::min<std::uint32_t>(kPrefillV2MacroTile, prompt_len - pos);
-        MIINFER_HIP_CHECK(hipMemcpyAsync(
-            d_temp_tokens_,
-            prompt.data() + pos,
-            chunk * sizeof(std::uint32_t),
-            hipMemcpyHostToDevice,
-            stream));
-        forward(d_temp_tokens_, pos, chunk, d_pong_, stream);
-        pos += chunk;
-        last_chunk = chunk;
+
+    if (is_reuse) {
+        stats.reuse_hit = true;
+        stats.prefix_tokens_reused = prefix_len;
+        stats.suffix_tokens_dispatched = suffix_len;
+        stats.gqa_kv_reused_tokens = prefix_len;
+        stats.gdn_checkpoint_position = prefix_len;
+
+        const auto t_restore_start = std::chrono::steady_clock::now();
+        reusable_context_.restore_gdn_states(recurrent_states_, stream);
+        MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
+        const auto t_restore_end = std::chrono::steady_clock::now();
+        stats.restore_ms = std::chrono::duration<double, std::milli>(t_restore_end - t_restore_start).count();
+
+        const auto t_suffix_start = std::chrono::steady_clock::now();
+        // Prefill ONLY the suffix tokens: [prefix_len .. prompt_len - 1]
+        std::uint32_t pos = prefix_len;
+        while (pos < prompt_len) {
+            std::uint32_t chunk = std::min<std::uint32_t>(kPrefillV2MacroTile, prompt_len - pos);
+            MIINFER_HIP_CHECK(hipMemcpyAsync(
+                d_temp_tokens_,
+                prompt.data() + pos,
+                chunk * sizeof(std::uint32_t),
+                hipMemcpyHostToDevice,
+                stream));
+            forward(d_temp_tokens_, pos, chunk, d_pong_, stream);
+            pos += chunk;
+            last_chunk = chunk;
+        }
+        MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
+        const auto t_suffix_end = std::chrono::steady_clock::now();
+        stats.suffix_prefill_ms = std::chrono::duration<double, std::milli>(t_suffix_end - t_suffix_start).count();
+    } else {
+        if (options.reset_state_before) {
+            reset_state();
+        }
+        stats.reuse_hit = false;
+        stats.prefix_tokens_reused = 0;
+        stats.suffix_tokens_dispatched = prompt_len;
+
+        // Cold prefill sequence using native macro scheduler (Macro Tile = 512)
+        std::uint32_t pos = 0;
+        while (pos < prompt_len) {
+            std::uint32_t chunk = std::min<std::uint32_t>(kPrefillV2MacroTile, prompt_len - pos);
+            MIINFER_HIP_CHECK(hipMemcpyAsync(
+                d_temp_tokens_,
+                prompt.data() + pos,
+                chunk * sizeof(std::uint32_t),
+                hipMemcpyHostToDevice,
+                stream));
+            forward(d_temp_tokens_, pos, chunk, d_pong_, stream);
+            pos += chunk;
+            last_chunk = chunk;
+        }
+
+        // If requested, capture the prefix checkpoint immediately after prefill
+        if (options.cache_prefix_after) {
+            std::size_t save_len = (options.cache_prefix_len > 0) ? std::min(options.cache_prefix_len, prompt.size()) : prompt.size();
+            reusable_context_.save(prompt.subspan(0, save_len), recurrent_states_, stream);
+        }
     }
 
     // 2. Compute logits for final prompt token (at offset (last_chunk - 1) * kHidden in d_pong_)
@@ -812,7 +869,7 @@ std::size_t PrefillV2Model::activation_bytes() const noexcept {
 }
 
 std::size_t PrefillV2Model::total_vram_bytes() const noexcept {
-    return persistent_weight_bytes() + persistent_state_bytes() + workspace_bytes() + activation_bytes();
+    return persistent_weight_bytes() + persistent_state_bytes() + workspace_bytes() + activation_bytes() + cached_state_bytes();
 }
 
 } // namespace miinfer::prefill_v2
