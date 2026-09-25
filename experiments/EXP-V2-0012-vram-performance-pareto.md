@@ -69,11 +69,12 @@ Pruning these 7 linear projection Wave layouts and dispatching them through the 
 
 With non-KV static memory reduced to $22.88\text{ GiB}$, the 16 GQA layers consume $64.0\text{ KiB/token}$ of FP16 KV cache:
 
-- **32K Context**: $2.00\text{ GiB}$ KV $\to$ **$24.88\text{ GiB}$** total ($\mathbf{7.12\text{ GiB}}$ free).
-- **64K Context**: $4.00\text{ GiB}$ KV $\to$ **$26.88\text{ GiB}$** total ($\mathbf{5.12\text{ GiB}}$ free).
-- **128K Context**: $8.00\text{ GiB}$ KV $\to$ **$30.88\text{ GiB}$** total ($\mathbf{1.12\text{ GiB}}$ free).
+- **32K Context**: $2.00\text{ GiB}$ KV $\to$ **$24.88\text{ GiB}$** static allocation ($\mathbf{6.29\text{ GiB}}$ observed free) $\to$ **PASS**
+- **64K Context**: $4.00\text{ GiB}$ KV $\to$ **$26.88\text{ GiB}$** static allocation ($\mathbf{4.29\text{ GiB}}$ observed free) $\to$ **PASS**
+- **128K Context**: $8.00\text{ GiB}$ KV $\to$ **$30.88\text{ GiB}$** static allocation ($\mathbf{0.29\text{ GiB}}$ observed free) $\to$ **PASS (`V2_128K_MEMORY_ENVELOPE_QUALIFIED`)**
 
 ---
 
 ## 7. Decision
-**KEEP**. Candidate B achieves the Pareto-optimal operating point: it reclaims nearly $5\text{ GiB}$ of resident memory, enables 64K and 128K context scaling on a single 32GB GPU, preserves 0% prefill regression, and keeps decode well within the mx-beating regime ($29.1\text{ tok/s}$ vs $25.7\text{ tok/s}$).
+**KEEP**. Candidate B achieves the Pareto-optimal operating point: it reclaims nearly $5\text{ GiB}$ of resident memory, enables live 64K and 128K context scaling on a single 32GB GPU, preserves 0% prefill regression, and keeps decode well within the mx-beating regime ($29.1\text{ tok/s}$ vs $25.7\text{ tok/s}$).
+

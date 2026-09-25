@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1790348525.7942176,
-    "seen": 1790349037.3259008,
-    "ast_hash": "b711b9d7720571910d5de35977cc3ebb",
+    "mtime": 1790349103.2661679,
+    "seen": 1790349287.707341,
+    "ast_hash": "abd27c796f39067a2cc31ac63f9b39bf",
     "semantic_hash": ""
   },
   "README.md": {
@@ -5820,9 +5820,15 @@
     "semantic_hash": ""
   },
   "experiments/EXP-V2-0012-vram-performance-pareto.md": {
-    "mtime": 1790349017.7513862,
-    "seen": 1790349037.326663,
-    "ast_hash": "549b6fe7a808a92dcbe4660d44fce54c",
+    "mtime": 1790349273.286734,
+    "seen": 1790349287.7081554,
+    "ast_hash": "3f44d3f0c19c879e9897f912bfd71c25",
+    "semantic_hash": ""
+  },
+  "bench/context_envelope_bench.cpp": {
+    "mtime": 1790349090.9551992,
+    "seen": 1790349287.7067058,
+    "ast_hash": "58e2acc131fb19d1e449cc1c30690da6",
     "semantic_hash": ""
   }
 }

@@ -487,6 +487,10 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-qwen3-layer35-external-test PRIVATE miinfer_hip)
     target_compile_options(miinfer-qwen3-layer35-external-test PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-context-envelope-bench bench/context_envelope_bench.cpp)
+    target_link_libraries(miinfer-context-envelope-bench PRIVATE miinfer_hip miinfer_model)
+    target_compile_options(miinfer-context-envelope-bench PRIVATE -Wall -Wextra -Wpedantic)
+
 endif()
 
 include(CTest)
