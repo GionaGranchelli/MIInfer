@@ -28,6 +28,18 @@ struct RecurrentLayerPhaseTimings {
     double total_layer_ms = 0.0;
 };
 
+struct RecurrentLayerDecodePhaseTimings {
+    double norm_beta_alpha_ms = 0.0;
+    double qkv_gate_proj_ms = 0.0;
+    double conv_l2_norm_ms = 0.0;
+    double gdn_step_ms = 0.0;
+    double ssm_post_out_ms = 0.0;
+    double residual_norm_ms = 0.0;
+    double ffn_gate_up_swiglu_ms = 0.0;
+    double ffn_down_residual_ms = 0.0;
+    double total_layer_ms = 0.0;
+};
+
 // Clean-sheet Prefill V2 Recurrent Layer.
 // Specialization invariants:
 // 1. Semantic invariance: logical recurrence semantics are independent of batch geometry.
@@ -66,6 +78,16 @@ public:
         RecurrentLayerState& state,
         RecurrentLayerWorkspace& workspace,
         const DeviceDecodeState* decode_state = nullptr,
+        hipStream_t stream = nullptr) const;
+
+    // Profiled single-token decode variant for phase attribution
+    void decode_profiled(
+        const float* d_input,
+        float* d_output,
+        RecurrentLayerState& state,
+        RecurrentLayerWorkspace& workspace,
+        const DeviceDecodeState* decode_state,
+        RecurrentLayerDecodePhaseTimings& timings,
         hipStream_t stream = nullptr) const;
 
     // Profiled execution variant for fine-grained phase attribution

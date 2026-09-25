@@ -574,4 +574,167 @@ void PrefillV2AttentionLayer::decode(
         ws.residual, ws.ffn_down, d_output, kHidden, stream);
 }
 
+void PrefillV2AttentionLayer::decode_profiled(
+    const float* d_input,
+    float* d_output,
+    AttentionKvCacheView kv_cache,
+    const PrefillV2Workspace& ws,
+    std::uint32_t position,
+    const DeviceDecodeState* decode_state,
+    AttentionLayerDecodePhaseTimings& timings,
+    hipStream_t stream) const {
+
+    hipEvent_t ev_start, ev_norm, ev_qkv, ev_qk_rope, ev_splitk, ev_o, ev_res, ev_ffn_up, ev_end;
+    MIINFER_HIP_CHECK(hipEventCreate(&ev_start));
+    MIINFER_HIP_CHECK(hipEventCreate(&ev_norm));
+    MIINFER_HIP_CHECK(hipEventCreate(&ev_qkv));
+    MIINFER_HIP_CHECK(hipEventCreate(&ev_qk_rope));
+    MIINFER_HIP_CHECK(hipEventCreate(&ev_splitk));
+    MIINFER_HIP_CHECK(hipEventCreate(&ev_o));
+    MIINFER_HIP_CHECK(hipEventCreate(&ev_res));
+    MIINFER_HIP_CHECK(hipEventCreate(&ev_ffn_up));
+    MIINFER_HIP_CHECK(hipEventCreate(&ev_end));
+
+    MIINFER_HIP_CHECK(hipEventRecord(ev_start, stream));
+
+    // 1. Input RMS Normalization
+    launch_qwen3_rms_norm(
+        d_input, d_attn_norm_, ws.normalized, kHidden, kRmsNormEpsilon, stream);
+    MIINFER_HIP_CHECK(hipEventRecord(ev_norm, stream));
+
+    // 2. Q, K, V Projections via native Wave GEMV (shared Q8_1 quantization)
+    launch_q8_1_quantize_f32(ws.normalized, ws.q8_1, kHidden, stream);
+    launch_q4k_wave_gemv(
+        d_q_wave_, ws.q8_1, ws.attn_qfull, kQFullDim, kHidden, stream);
+    launch_q4k_wave_gemv(
+        d_k_wave_, ws.q8_1, ws.attn_k, kKvDim, kHidden, stream);
+    if (v_is_q6_) {
+        launch_q6k_wave_gemv(
+            static_cast<const Q6KWaveTile*>(d_v_wave_), ws.q8_1, ws.attn_v, kKvDim, kHidden, stream);
+    } else {
+        launch_q4k_wave_gemv(
+            static_cast<const Q4KWaveTile*>(d_v_wave_), ws.q8_1, ws.attn_v, kKvDim, kHidden, stream);
+    }
+    MIINFER_HIP_CHECK(hipEventRecord(ev_qkv, stream));
+
+    // 3. Q RMSNorm, RoPE, and Split (Q [6144] + Gate [6144])
+    if (decode_state != nullptr) {
+        launch_qwen35_fused_q_split_norm_rope_dynamic(
+            ws.attn_qfull, d_q_norm_, ws.attn_q_rope, ws.gate,
+            24, 256, decode_state, kRopeTheta, kRmsNormEpsilon, stream);
+    } else {
+        launch_qwen35_decoupled_q_split_norm_rope_batch(
+            ws.attn_qfull, d_q_norm_, ws.attn_q_rope, ws.gate,
+            1, position, 24, 256, kRopeTheta, kRmsNormEpsilon, stream);
+    }
+
+    // 4. K RMSNorm, RoPE, and Store K + V into KV Cache (FP16)
+    if (decode_state != nullptr) {
+        launch_qwen35_fused_k_norm_rope_kv_store_f16_dynamic(
+            ws.attn_k, ws.attn_v, d_k_norm_, kv_cache.key_cache, kv_cache.value_cache,
+            4, 256, decode_state, static_cast<std::uint32_t>(kv_cache.capacity),
+            kRopeTheta, kRmsNormEpsilon, stream);
+    } else {
+        launch_qwen35_decoupled_k_norm_rope_kv_store_batch_f16(
+            ws.attn_k, ws.attn_v, d_k_norm_, kv_cache.key_cache, kv_cache.value_cache,
+            1, position, static_cast<std::uint32_t>(kv_cache.capacity),
+            4, 256, kRopeTheta, kRmsNormEpsilon, stream);
+    }
+    MIINFER_HIP_CHECK(hipEventRecord(ev_qk_rope, stream));
+
+    // 5. High-Occupancy Split-K Decode Attention with In-Register Sigmoid Gating
+    if (decode_state != nullptr) {
+        launch_qwen35_tiled_online_attention_f16_dynamic(
+            ws.attn_q_rope,
+            kv_cache.key_cache,
+            kv_cache.value_cache,
+            decode_state,
+            static_cast<std::uint32_t>(kv_cache.capacity),
+            /*output=*/nullptr,
+            ws.gate,
+            ws.attn_gated_output,
+            24,
+            4,
+            256,
+            1.0F / std::sqrt(256.0F),
+            stream);
+    } else {
+        launch_qwen35_tiled_online_attention_f16(
+            ws.attn_q_rope,
+            kv_cache.key_cache,
+            kv_cache.value_cache,
+            position + 1,
+            static_cast<std::uint32_t>(kv_cache.capacity),
+            /*output=*/nullptr,
+            ws.gate,
+            ws.attn_gated_output,
+            24,
+            4,
+            256,
+            1.0F / std::sqrt(256.0F),
+            stream);
+    }
+    MIINFER_HIP_CHECK(hipEventRecord(ev_splitk, stream));
+
+    // 6. O Projection
+    launch_q8_1_quantize_f32(ws.attn_gated_output, ws.q8_1, kInner, stream);
+    launch_q4k_wave_gemv(
+        d_o_wave_, ws.q8_1, ws.projected, kHidden, kInner, stream);
+    MIINFER_HIP_CHECK(hipEventRecord(ev_o, stream));
+
+    // 7. Residual + Post-Attention RMSNorm
+    launch_qwen3_fused_add_rms_norm(
+        d_input, ws.projected, d_post_attention_norm_, ws.residual, ws.post_normalized,
+        kHidden, kRmsNormEpsilon, stream);
+    MIINFER_HIP_CHECK(hipEventRecord(ev_res, stream));
+
+    // 8. FFN Gate & Up Projections + SwiGLU
+    launch_q8_1_quantize_f32(
+        ws.post_normalized, ws.q8_1, kHidden, stream);
+    launch_q4k_wave_fused_gate_up_swiglu_paired(
+        d_ffn_swiglu_fused_, ws.q8_1, ws.ffn_activation,
+        kFfnInner, kHidden, stream);
+    MIINFER_HIP_CHECK(hipEventRecord(ev_ffn_up, stream));
+
+    // 9. FFN Down Projection & Final Residual
+    if (ffn_down_is_q6_) {
+        launch_mx_q8_1_mmq_quantize(
+            ws.ffn_activation, ws.mmq_q8, 1, kFfnInner, /*affine=*/false, stream);
+        launch_mx_q6k_repacked_mmq(
+            d_ffn_down_mmq_, ws.mmq_q8, ws.ffn_down, kHidden, kFfnInner, 1, stream);
+    } else {
+        launch_mx_q8_1_mmq_quantize(
+            ws.ffn_activation, ws.mmq_q8, 1, kFfnInner, /*affine=*/true, stream);
+        launch_mx_q4k_repacked_mmq(
+            d_ffn_down_mmq_, ws.mmq_q8, ws.ffn_down, kHidden, kFfnInner, 1, stream);
+    }
+    launch_qwen3_add(
+        ws.residual, ws.ffn_down, d_output, kHidden, stream);
+
+    MIINFER_HIP_CHECK(hipEventRecord(ev_end, stream));
+    MIINFER_HIP_CHECK(hipEventSynchronize(ev_end));
+
+    float ms = 0.0F;
+    MIINFER_HIP_CHECK(hipEventElapsedTime(&ms, ev_start, ev_norm)); timings.norm_ms = ms;
+    MIINFER_HIP_CHECK(hipEventElapsedTime(&ms, ev_norm, ev_qkv)); timings.qkv_proj_ms = ms;
+    MIINFER_HIP_CHECK(hipEventElapsedTime(&ms, ev_qkv, ev_qk_rope)); timings.qk_rope_kv_store_ms = ms;
+    MIINFER_HIP_CHECK(hipEventElapsedTime(&ms, ev_qk_rope, ev_splitk)); timings.splitk_attention_ms = ms;
+    MIINFER_HIP_CHECK(hipEventElapsedTime(&ms, ev_splitk, ev_o)); timings.o_proj_ms = ms;
+    MIINFER_HIP_CHECK(hipEventElapsedTime(&ms, ev_o, ev_res)); timings.residual_norm_ms = ms;
+    MIINFER_HIP_CHECK(hipEventElapsedTime(&ms, ev_res, ev_ffn_up)); timings.ffn_gate_up_swiglu_ms = ms;
+    MIINFER_HIP_CHECK(hipEventElapsedTime(&ms, ev_ffn_up, ev_end)); timings.ffn_down_residual_ms = ms;
+    MIINFER_HIP_CHECK(hipEventElapsedTime(&ms, ev_start, ev_end)); timings.total_layer_ms = ms;
+
+    (void)hipEventDestroy(ev_start);
+    (void)hipEventDestroy(ev_norm);
+    (void)hipEventDestroy(ev_qkv);
+    (void)hipEventDestroy(ev_qk_rope);
+    (void)hipEventDestroy(ev_splitk);
+    (void)hipEventDestroy(ev_o);
+    (void)hipEventDestroy(ev_res);
+    (void)hipEventDestroy(ev_ffn_up);
+    (void)hipEventDestroy(ev_end);
+}
+
 } // namespace miinfer::prefill_v2
+

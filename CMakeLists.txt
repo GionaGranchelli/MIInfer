@@ -174,6 +174,18 @@ if(MIINFER_ENABLE_HIP)
     add_executable(miinfer-decode-fast-path-bakeoff bench/decode_fast_path_bakeoff.cpp)
     target_link_libraries(miinfer-decode-fast-path-bakeoff PRIVATE miinfer_hip)
     target_compile_options(miinfer-decode-fast-path-bakeoff PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-decode-stage-profile bench/decode_stage_profile.cpp)
+    target_link_libraries(miinfer-decode-stage-profile PRIVATE miinfer_hip)
+    target_compile_options(miinfer-decode-stage-profile PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-decode-gdn-breakdown bench/decode_gdn_breakdown.cpp)
+    target_link_libraries(miinfer-decode-gdn-breakdown PRIVATE miinfer_hip)
+    target_compile_options(miinfer-decode-gdn-breakdown PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-gdn-kernel-bakeoff bench/gdn_kernel_bakeoff.cpp)
+    target_link_libraries(miinfer-gdn-kernel-bakeoff PRIVATE miinfer_hip)
+    target_compile_options(miinfer-gdn-kernel-bakeoff PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
 add_executable(miinfer-host-test tests/host_test.cpp)

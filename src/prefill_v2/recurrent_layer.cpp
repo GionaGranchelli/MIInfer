@@ -638,8 +638,8 @@ void PrefillV2RecurrentLayer::decode(
         ws.query, ws.key, ws.query, ws.key,
         1, kKHeads, kState, stream);
 
-    // 6. GDN Recurrent State Update (Single Step)
-    launch_qwen35_deltanet_state_update(
+    // 6. GDN Recurrent State Update (Single Step Wave64 Transposed Row Waves)
+    launch_qwen35_deltanet_state_update_transposed_row_waves(
         ws.query, ws.key, ws.value, ws.beta, ws.decay,
         state.d_state, ws.gdn_raw_output,
         kKHeads, kVHeads, kState, stream);
@@ -689,4 +689,146 @@ void PrefillV2RecurrentLayer::decode(
     state.position++;
 }
 
+void PrefillV2RecurrentLayer::decode_profiled(
+    const float* d_input,
+    float* d_output,
+    RecurrentLayerState& state,
+    RecurrentLayerWorkspace& ws,
+    const DeviceDecodeState* decode_state,
+    RecurrentLayerDecodePhaseTimings& timings,
+    hipStream_t stream) const {
+
+    hipEvent_t ev_start, ev_norm, ev_qkv, ev_conv, ev_gdn, ev_ssm, ev_res, ev_ffn_up, ev_end;
+    MIINFER_HIP_CHECK(hipEventCreate(&ev_start));
+    MIINFER_HIP_CHECK(hipEventCreate(&ev_norm));
+    MIINFER_HIP_CHECK(hipEventCreate(&ev_qkv));
+    MIINFER_HIP_CHECK(hipEventCreate(&ev_conv));
+    MIINFER_HIP_CHECK(hipEventCreate(&ev_gdn));
+    MIINFER_HIP_CHECK(hipEventCreate(&ev_ssm));
+    MIINFER_HIP_CHECK(hipEventCreate(&ev_res));
+    MIINFER_HIP_CHECK(hipEventCreate(&ev_ffn_up));
+    MIINFER_HIP_CHECK(hipEventCreate(&ev_end));
+
+    MIINFER_HIP_CHECK(hipEventRecord(ev_start, stream));
+
+    // 1 & 2. Norm + Beta/Alpha
+    launch_qwen3_rms_norm(
+        d_input, d_attn_norm_, ws.normalized, kHidden, kRmsNormEpsilon, stream);
+    launch_qwen35_f32_dual_gemm_batch(
+        d_ssm_beta_, d_ssm_alpha_, ws.normalized, ws.raw_beta, ws.raw_alpha,
+        1, kVHeads, kHidden, stream);
+    launch_qwen35_prepare_beta_decay(
+        ws.raw_beta, ws.raw_alpha, d_ssm_dt_, d_ssm_a_, ws.beta, ws.decay,
+        kVHeads, stream);
+    MIINFER_HIP_CHECK(hipEventRecord(ev_norm, stream));
+
+    // 3. QKV & Gate projections via native Wave GEMV
+    launch_q8_1_quantize_f32(ws.normalized, ws.q8_1, kHidden, stream);
+    if (qkv_type_ == GgufTensorType::q4_k) {
+        launch_q4k_wave_gemv(
+            static_cast<const Q4KWaveTile*>(d_qkv_wave_), ws.q8_1,
+            ws.qkv, kChannels, kHidden, stream);
+    } else {
+        launch_q6k_wave_gemv(
+            static_cast<const Q6KWaveTile*>(d_qkv_wave_), ws.q8_1,
+            ws.qkv, kChannels, kHidden, stream);
+    }
+    launch_q4k_wave_gemv(
+        d_gate_wave_, ws.q8_1, ws.gate, kInner, kHidden, stream);
+    MIINFER_HIP_CHECK(hipEventRecord(ev_qkv, stream));
+
+    // 4 & 5. Conv + L2 Norm
+    if (decode_state != nullptr) {
+        launch_qwen35_conv_silu_split_dynamic(
+            ws.qkv, d_ssm_conv_, state.d_conv_history,
+            ws.query, ws.key, ws.value,
+            decode_state, kConvKernel, kChannels, kConvKernel, stream);
+    } else {
+        launch_qwen35_conv_silu_split_batch(
+            ws.qkv, d_ssm_conv_, state.d_conv_history,
+            ws.query, ws.key, ws.value,
+            state.position, 1, kConvKernel, kChannels, kConvKernel, stream);
+    }
+    launch_qwen35_dual_head_l2_normalize_batch(
+        ws.query, ws.key, ws.query, ws.key,
+        1, kKHeads, kState, stream);
+    MIINFER_HIP_CHECK(hipEventRecord(ev_conv, stream));
+
+    // 6. GDN Single Step Update (Wave64 Transposed Row Waves)
+    launch_qwen35_deltanet_state_update_transposed_row_waves(
+        ws.query, ws.key, ws.value, ws.beta, ws.decay,
+        state.d_state, ws.gdn_raw_output,
+        kKHeads, kVHeads, kState, stream);
+    MIINFER_HIP_CHECK(hipEventRecord(ev_gdn, stream));
+
+    // 7 & 8. SSM Post + SSM Out
+    launch_m12_gdn_postprocess(
+        ws.gdn_raw_output, ws.gate, d_ssm_norm_, ws.gated_output,
+        1, kVHeads, kState, kRmsNormEpsilon, stream);
+    launch_q8_1_quantize_f32(ws.gated_output, ws.q8_1, kInner, stream);
+    launch_q5k_wave_gemv(
+        d_ssm_out_wave_, ws.q8_1, ws.ssm_output,
+        kHidden, kInner, stream);
+    MIINFER_HIP_CHECK(hipEventRecord(ev_ssm, stream));
+
+    // 9. Residual + Post RMSNorm
+    launch_qwen3_fused_add_rms_norm(
+        d_input, ws.ssm_output, d_post_norm_,
+        ws.residual, ws.post_normalized,
+        kHidden, kRmsNormEpsilon, stream);
+    MIINFER_HIP_CHECK(hipEventRecord(ev_res, stream));
+
+    // 10. FFN Gate/Up SwiGLU Paired
+    launch_q8_1_quantize_f32(ws.post_normalized, ws.q8_1, kHidden, stream);
+    launch_q4k_wave_fused_gate_up_swiglu_paired(
+        d_ffn_swiglu_fused_, ws.q8_1, ws.ffn_activation,
+        kFfnInner, kHidden, stream);
+    MIINFER_HIP_CHECK(hipEventRecord(ev_ffn_up, stream));
+
+    // 11 & 12. FFN Down + Residual Add
+    if (ffn_down_type_ == GgufTensorType::q4_k) {
+        launch_mx_q8_1_mmq_quantize(
+            ws.ffn_activation, ws.mmq_q8, 1, kFfnInner, /*affine=*/true, stream);
+        launch_mx_q4k_repacked_mmq(
+            static_cast<const std::uint8_t*>(d_ffn_down_mmq_), ws.mmq_q8,
+            ws.ffn_down, kHidden, kFfnInner, 1, stream);
+    } else {
+        launch_mx_q8_1_mmq_quantize(
+            ws.ffn_activation, ws.mmq_q8, 1, kFfnInner, /*affine=*/false, stream);
+        launch_mx_q6k_repacked_mmq(
+            static_cast<const std::uint8_t*>(d_ffn_down_mmq_), ws.mmq_q8,
+            ws.ffn_down, kHidden, kFfnInner, 1, stream);
+    }
+    launch_qwen3_add(
+        ws.residual, ws.ffn_down, d_output,
+        kHidden, stream);
+
+    MIINFER_HIP_CHECK(hipEventRecord(ev_end, stream));
+    MIINFER_HIP_CHECK(hipEventSynchronize(ev_end));
+
+    float ms = 0.0F;
+    MIINFER_HIP_CHECK(hipEventElapsedTime(&ms, ev_start, ev_norm)); timings.norm_beta_alpha_ms = ms;
+    MIINFER_HIP_CHECK(hipEventElapsedTime(&ms, ev_norm, ev_qkv)); timings.qkv_gate_proj_ms = ms;
+    MIINFER_HIP_CHECK(hipEventElapsedTime(&ms, ev_qkv, ev_conv)); timings.conv_l2_norm_ms = ms;
+    MIINFER_HIP_CHECK(hipEventElapsedTime(&ms, ev_conv, ev_gdn)); timings.gdn_step_ms = ms;
+    MIINFER_HIP_CHECK(hipEventElapsedTime(&ms, ev_gdn, ev_ssm)); timings.ssm_post_out_ms = ms;
+    MIINFER_HIP_CHECK(hipEventElapsedTime(&ms, ev_ssm, ev_res)); timings.residual_norm_ms = ms;
+    MIINFER_HIP_CHECK(hipEventElapsedTime(&ms, ev_res, ev_ffn_up)); timings.ffn_gate_up_swiglu_ms = ms;
+    MIINFER_HIP_CHECK(hipEventElapsedTime(&ms, ev_ffn_up, ev_end)); timings.ffn_down_residual_ms = ms;
+    MIINFER_HIP_CHECK(hipEventElapsedTime(&ms, ev_start, ev_end)); timings.total_layer_ms = ms;
+
+    (void)hipEventDestroy(ev_start);
+    (void)hipEventDestroy(ev_norm);
+    (void)hipEventDestroy(ev_qkv);
+    (void)hipEventDestroy(ev_conv);
+    (void)hipEventDestroy(ev_gdn);
+    (void)hipEventDestroy(ev_ssm);
+    (void)hipEventDestroy(ev_res);
+    (void)hipEventDestroy(ev_ffn_up);
+    (void)hipEventDestroy(ev_end);
+
+    state.position++;
+}
+
 } // namespace miinfer::prefill_v2
+

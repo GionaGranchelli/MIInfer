@@ -27,6 +27,18 @@ struct AttentionLayerProfileBreakdown {
     double total_layer_ms = 0.0;
 };
 
+struct AttentionLayerDecodePhaseTimings {
+    double norm_ms = 0.0;
+    double qkv_proj_ms = 0.0;
+    double qk_rope_kv_store_ms = 0.0;
+    double splitk_attention_ms = 0.0;
+    double o_proj_ms = 0.0;
+    double residual_norm_ms = 0.0;
+    double ffn_gate_up_swiglu_ms = 0.0;
+    double ffn_down_residual_ms = 0.0;
+    double total_layer_ms = 0.0;
+};
+
 // Clean-sheet Prefill V2 Full GQA Attention layer implementation.
 // Designed exclusively for AMD Instinct MI50 (gfx906, Wave64).
 class PrefillV2AttentionLayer {
@@ -56,6 +68,17 @@ public:
         const PrefillV2Workspace& ws,
         std::uint32_t position,
         const DeviceDecodeState* decode_state = nullptr,
+        hipStream_t stream = nullptr) const;
+
+    // Profiled single-token decode variant for phase attribution
+    void decode_profiled(
+        const float* d_input,
+        float* d_output,
+        AttentionKvCacheView kv_cache,
+        const PrefillV2Workspace& ws,
+        std::uint32_t position,
+        const DeviceDecodeState* decode_state,
+        AttentionLayerDecodePhaseTimings& timings,
         hipStream_t stream = nullptr) const;
 
     // Profiled execution recording kernel phase events
