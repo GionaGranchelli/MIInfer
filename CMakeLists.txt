@@ -199,6 +199,10 @@ if(MIINFER_ENABLE_HIP)
     add_executable(miinfer-prefix-state-reuse-bench bench/prefix_state_reuse_bench.cpp)
     target_link_libraries(miinfer-prefix-state-reuse-bench PRIVATE miinfer_hip)
     target_compile_options(miinfer-prefix-state-reuse-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-suffix-ttft-attribution-bench bench/suffix_ttft_attribution_bench.cpp)
+    target_link_libraries(miinfer-suffix-ttft-attribution-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-suffix-ttft-attribution-bench PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
 add_executable(miinfer-host-test tests/host_test.cpp)

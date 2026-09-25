@@ -220,6 +220,12 @@ void PrefillV2Model::reset_state() {
     }
 }
 
+void PrefillV2Model::restore_reusable_context(hipStream_t stream) {
+    if (reusable_context_.has_valid_prefix()) {
+        reusable_context_.restore_gdn_states(recurrent_states_, stream);
+    }
+}
+
 void PrefillV2Model::forward(
     const std::uint32_t* d_tokens,
     std::uint32_t base_position,

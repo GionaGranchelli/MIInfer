@@ -168,6 +168,7 @@ public:
     [[nodiscard]] const ReusableContext& reusable_context() const noexcept { return reusable_context_; }
     [[nodiscard]] ReusableContext& reusable_context() noexcept { return reusable_context_; }
     [[nodiscard]] std::size_t cached_state_bytes() const noexcept { return reusable_context_.memory_bytes(); }
+    void restore_reusable_context(hipStream_t stream = nullptr);
 
     // Memory footprints
     [[nodiscard]] std::size_t persistent_weight_bytes() const noexcept;
