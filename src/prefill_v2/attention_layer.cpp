@@ -545,14 +545,12 @@ void PrefillV2AttentionLayer::decode(
     launch_q4k_wave_gemv(
         d_o_wave_, ws.q8_1, ws.projected, kHidden, kInner, stream);
 
-    // 7. Residual Connection + Post-Attention RMSNorm (Fused)
+    // 7. Residual Connection + Post-Attention RMSNorm (Fused with Q8_1 quantization)
     launch_qwen3_fused_add_rms_norm(
         d_input, ws.projected, d_post_attention_norm_, ws.residual, ws.post_normalized,
-        kHidden, kRmsNormEpsilon, stream);
+        kHidden, kRmsNormEpsilon, stream, ws.q8_1);
 
     // 8. FFN Gate & Up Projections + SwiGLU Activation (Fused into single resident kernel pass)
-    launch_q8_1_quantize_f32(
-        ws.post_normalized, ws.q8_1, kHidden, stream);
     launch_q4k_wave_fused_gate_up_swiglu_paired(
         d_ffn_swiglu_fused_, ws.q8_1, ws.ffn_activation,
         kFfnInner, kHidden, stream);
@@ -682,15 +680,13 @@ void PrefillV2AttentionLayer::decode_profiled(
         d_o_wave_, ws.q8_1, ws.projected, kHidden, kInner, stream);
     MIINFER_HIP_CHECK(hipEventRecord(ev_o, stream));
 
-    // 7. Residual + Post-Attention RMSNorm
+    // 7. Residual + Post-Attention RMSNorm (Fused with Q8_1)
     launch_qwen3_fused_add_rms_norm(
         d_input, ws.projected, d_post_attention_norm_, ws.residual, ws.post_normalized,
-        kHidden, kRmsNormEpsilon, stream);
+        kHidden, kRmsNormEpsilon, stream, ws.q8_1);
     MIINFER_HIP_CHECK(hipEventRecord(ev_res, stream));
 
     // 8. FFN Gate & Up Projections + SwiGLU
-    launch_q8_1_quantize_f32(
-        ws.post_normalized, ws.q8_1, kHidden, stream);
     launch_q4k_wave_fused_gate_up_swiglu_paired(
         d_ffn_swiglu_fused_, ws.q8_1, ws.ffn_activation,
         kFfnInner, kHidden, stream);

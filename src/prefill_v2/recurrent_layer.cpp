@@ -598,13 +598,10 @@ void PrefillV2RecurrentLayer::decode(
     launch_qwen3_rms_norm(
         d_input, d_attn_norm_, ws.normalized, kHidden, kRmsNormEpsilon, stream);
 
-    // 2. Dual beta/alpha projection and parameter preparation
-    launch_qwen35_f32_dual_gemm_batch(
-        d_ssm_beta_, d_ssm_alpha_, ws.normalized, ws.raw_beta, ws.raw_alpha,
-        1, kVHeads, kHidden, stream);
-    launch_qwen35_prepare_beta_decay(
-        ws.raw_beta, ws.raw_alpha, d_ssm_dt_, d_ssm_a_, ws.beta, ws.decay,
-        kVHeads, stream);
+    // 2. Dual beta/alpha projection and parameter preparation (Fused single launch)
+    launch_qwen35_f32_dual_beta_decay(
+        d_ssm_beta_, d_ssm_alpha_, ws.normalized, d_ssm_dt_, d_ssm_a_, ws.beta, ws.decay,
+        kVHeads, kHidden, stream);
 
     // 3. QKV & Gate projections via native Wave GEMV (shared Q8_1 quantization)
     launch_q8_1_quantize_f32(ws.normalized, ws.q8_1, kHidden, stream);
@@ -638,31 +635,27 @@ void PrefillV2RecurrentLayer::decode(
         ws.query, ws.key, ws.query, ws.key,
         1, kKHeads, kState, stream);
 
-    // 6. GDN Recurrent State Update (Single Step Wave64 Transposed Row Waves)
-    launch_qwen35_deltanet_state_update_transposed_row_waves(
+    // 6 & 7. Fused DeltaNet Recurrent Core in LDS with direct Q8_1 quantization
+    launch_qwen35_deltanet_fused_recurrent_core(
         ws.query, ws.key, ws.value, ws.beta, ws.decay,
-        state.d_state, ws.gdn_raw_output,
-        kKHeads, kVHeads, kState, stream);
-
-    // 7. SSM Postprocessing (per-head RMS norm + SSM norm scale + SiLU gate)
-    launch_m12_gdn_postprocess(
-        ws.gdn_raw_output, ws.gate, d_ssm_norm_, ws.gated_output,
-        1, kVHeads, kState, kRmsNormEpsilon, stream);
+        d_ssm_norm_, ws.gate, state.d_state,
+        ws.gated_output, /*recurrent_output=*/nullptr,
+        kKHeads, kVHeads, kState, kRmsNormEpsilon, stream,
+        /*gated_output_q8=*/ws.q8_1);
 
     // 8. SSM Out projection via Wave GEMV (Q5_K)
-    launch_q8_1_quantize_f32(ws.gated_output, ws.q8_1, kInner, stream);
     launch_q5k_wave_gemv(
         d_ssm_out_wave_, ws.q8_1, ws.ssm_output,
         kHidden, kInner, stream);
 
-    // 9. Residual + Post-attention RMS Norm (Fused)
+    // 9. Residual + Post-attention RMS Norm (Fused with Q8_1 quantization)
     launch_qwen3_fused_add_rms_norm(
         d_input, ws.ssm_output, d_post_norm_,
         ws.residual, ws.post_normalized,
-        kHidden, kRmsNormEpsilon, stream);
+        kHidden, kRmsNormEpsilon, stream,
+        ws.q8_1);
 
     // 10. FFN Gate & Up projections + SwiGLU activation (Fused into single resident kernel pass)
-    launch_q8_1_quantize_f32(ws.post_normalized, ws.q8_1, kHidden, stream);
     launch_q4k_wave_fused_gate_up_swiglu_paired(
         d_ffn_swiglu_fused_, ws.q8_1, ws.ffn_activation,
         kFfnInner, kHidden, stream);
@@ -714,12 +707,9 @@ void PrefillV2RecurrentLayer::decode_profiled(
     // 1 & 2. Norm + Beta/Alpha
     launch_qwen3_rms_norm(
         d_input, d_attn_norm_, ws.normalized, kHidden, kRmsNormEpsilon, stream);
-    launch_qwen35_f32_dual_gemm_batch(
-        d_ssm_beta_, d_ssm_alpha_, ws.normalized, ws.raw_beta, ws.raw_alpha,
-        1, kVHeads, kHidden, stream);
-    launch_qwen35_prepare_beta_decay(
-        ws.raw_beta, ws.raw_alpha, d_ssm_dt_, d_ssm_a_, ws.beta, ws.decay,
-        kVHeads, stream);
+    launch_qwen35_f32_dual_beta_decay(
+        d_ssm_beta_, d_ssm_alpha_, ws.normalized, d_ssm_dt_, d_ssm_a_, ws.beta, ws.decay,
+        kVHeads, kHidden, stream);
     MIINFER_HIP_CHECK(hipEventRecord(ev_norm, stream));
 
     // 3. QKV & Gate projections via native Wave GEMV
@@ -754,32 +744,30 @@ void PrefillV2RecurrentLayer::decode_profiled(
         1, kKHeads, kState, stream);
     MIINFER_HIP_CHECK(hipEventRecord(ev_conv, stream));
 
-    // 6. GDN Single Step Update (Wave64 Transposed Row Waves)
-    launch_qwen35_deltanet_state_update_transposed_row_waves(
+    // 6 & 7. Fused DeltaNet Recurrent Core in LDS with direct Q8_1 quantization
+    launch_qwen35_deltanet_fused_recurrent_core(
         ws.query, ws.key, ws.value, ws.beta, ws.decay,
-        state.d_state, ws.gdn_raw_output,
-        kKHeads, kVHeads, kState, stream);
+        d_ssm_norm_, ws.gate, state.d_state,
+        ws.gated_output, /*recurrent_output=*/nullptr,
+        kKHeads, kVHeads, kState, kRmsNormEpsilon, stream,
+        /*gated_output_q8=*/ws.q8_1);
     MIINFER_HIP_CHECK(hipEventRecord(ev_gdn, stream));
 
-    // 7 & 8. SSM Post + SSM Out
-    launch_m12_gdn_postprocess(
-        ws.gdn_raw_output, ws.gate, d_ssm_norm_, ws.gated_output,
-        1, kVHeads, kState, kRmsNormEpsilon, stream);
-    launch_q8_1_quantize_f32(ws.gated_output, ws.q8_1, kInner, stream);
+    // 8. SSM Out projection via Wave GEMV (Q5_K)
     launch_q5k_wave_gemv(
         d_ssm_out_wave_, ws.q8_1, ws.ssm_output,
         kHidden, kInner, stream);
     MIINFER_HIP_CHECK(hipEventRecord(ev_ssm, stream));
 
-    // 9. Residual + Post RMSNorm
+    // 9. Residual + Post RMSNorm (Fused with Q8_1)
     launch_qwen3_fused_add_rms_norm(
         d_input, ws.ssm_output, d_post_norm_,
         ws.residual, ws.post_normalized,
-        kHidden, kRmsNormEpsilon, stream);
+        kHidden, kRmsNormEpsilon, stream,
+        ws.q8_1);
     MIINFER_HIP_CHECK(hipEventRecord(ev_res, stream));
 
     // 10. FFN Gate/Up SwiGLU Paired
-    launch_q8_1_quantize_f32(ws.post_normalized, ws.q8_1, kHidden, stream);
     launch_q4k_wave_fused_gate_up_swiglu_paired(
         d_ffn_swiglu_fused_, ws.q8_1, ws.ffn_activation,
         kFfnInner, kHidden, stream);
