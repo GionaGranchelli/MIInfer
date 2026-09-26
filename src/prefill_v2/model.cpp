@@ -1,7 +1,10 @@
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <iostream>
+#include <random>
 #include <stdexcept>
+#include <unordered_map>
 #include <utility>
 
 #include "miinfer/prefill_v2/model.hpp"
@@ -11,6 +14,146 @@
 #include <hip/hip_runtime.h>
 
 namespace miinfer::prefill_v2 {
+
+namespace {
+
+std::uint32_t sample_token_from_logits(
+    std::span<const float> raw_logits,
+    std::span<const std::uint32_t> recent_tokens,
+    const GenerateOptions& options,
+    std::mt19937& rng,
+    std::vector<float>& logits_buf,
+    std::vector<std::pair<float, std::uint32_t>>& candidates_buf) {
+
+    const std::size_t vocab_size = raw_logits.size();
+    if (vocab_size == 0) return 0;
+
+    logits_buf.assign(raw_logits.begin(), raw_logits.end());
+
+    // 1. Repetition / Presence / Frequency penalty
+    if (!recent_tokens.empty()) {
+        const std::size_t window = std::min(options.repeat_last_n, recent_tokens.size());
+        const auto token_window = recent_tokens.subspan(recent_tokens.size() - window, window);
+
+        std::unordered_map<std::uint32_t, std::size_t> counts;
+        for (std::uint32_t tok : token_window) {
+            counts[tok]++;
+        }
+
+        for (const auto& [tok, count] : counts) {
+            if (tok < vocab_size) {
+                // Standard repetition penalty
+                if (options.repetition_penalty != 1.0f && options.repetition_penalty > 0.0f) {
+                    if (logits_buf[tok] < 0.0f) {
+                        logits_buf[tok] *= options.repetition_penalty;
+                    } else {
+                        logits_buf[tok] /= options.repetition_penalty;
+                    }
+                }
+                // Frequency penalty
+                if (options.frequency_penalty != 0.0f) {
+                    logits_buf[tok] -= options.frequency_penalty * static_cast<float>(count);
+                }
+                // Presence penalty
+                if (options.presence_penalty != 0.0f) {
+                    logits_buf[tok] -= options.presence_penalty;
+                }
+            }
+        }
+    }
+
+    // 2. Greedy Argmax
+    if (options.temperature <= 0.001f) {
+        float max_val = logits_buf[0];
+        std::uint32_t max_idx = 0;
+        for (std::size_t i = 1; i < vocab_size; ++i) {
+            if (logits_buf[i] > max_val) {
+                max_val = logits_buf[i];
+                max_idx = static_cast<std::uint32_t>(i);
+            }
+        }
+        return max_idx;
+    }
+
+    // 3. Temperature scaling
+    const float inv_temp = 1.0f / options.temperature;
+    for (std::size_t i = 0; i < vocab_size; ++i) {
+        logits_buf[i] *= inv_temp;
+    }
+
+    // 4. Top-K candidates
+    candidates_buf.resize(vocab_size);
+    for (std::size_t i = 0; i < vocab_size; ++i) {
+        candidates_buf[i] = {logits_buf[i], static_cast<std::uint32_t>(i)};
+    }
+
+    const std::size_t k = (options.top_k > 0 && options.top_k < vocab_size) ? options.top_k : vocab_size;
+    if (k < vocab_size) {
+        std::partial_sort(
+            candidates_buf.begin(),
+            candidates_buf.begin() + k,
+            candidates_buf.end(),
+            [](const auto& a, const auto& b) { return a.first > b.first; });
+        candidates_buf.resize(k);
+    } else {
+        std::sort(
+            candidates_buf.begin(),
+            candidates_buf.end(),
+            [](const auto& a, const auto& b) { return a.first > b.first; });
+    }
+
+    // 5. Softmax on top-K candidates
+    const float max_logit = candidates_buf[0].first;
+    float sum_exp = 0.0f;
+    for (auto& c : candidates_buf) {
+        c.first = std::exp(c.first - max_logit);
+        sum_exp += c.first;
+    }
+    const float inv_sum = 1.0f / sum_exp;
+    for (auto& c : candidates_buf) {
+        c.first *= inv_sum;
+    }
+
+    // 6. Top-P (Nucleus) Filtering
+    if (options.top_p > 0.0f && options.top_p < 1.0f) {
+        float cumsum = 0.0f;
+        std::size_t cutoff = candidates_buf.size();
+        for (std::size_t i = 0; i < candidates_buf.size(); ++i) {
+            cumsum += candidates_buf[i].first;
+            if (cumsum >= options.top_p) {
+                cutoff = i + 1;
+                break;
+            }
+        }
+        candidates_buf.resize(cutoff);
+
+        float new_sum = 0.0f;
+        for (const auto& c : candidates_buf) {
+            new_sum += c.first;
+        }
+        if (new_sum > 0.0f) {
+            const float inv_new_sum = 1.0f / new_sum;
+            for (auto& c : candidates_buf) {
+                c.first *= inv_new_sum;
+            }
+        }
+    }
+
+    // 7. Multinomial Sampling
+    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+    const float r = dist(rng);
+    float cum = 0.0f;
+    for (const auto& c : candidates_buf) {
+        cum += c.first;
+        if (r <= cum) {
+            return c.second;
+        }
+    }
+
+    return candidates_buf.back().second;
+}
+
+} // namespace
 
 PrefillV2Model::PrefillV2Model(
     const miinfer::Qwen35Model& model,
@@ -170,6 +313,9 @@ void PrefillV2Model::allocate_resources() {
     MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&d_temp_tokens_), kMaxPrefillBatch * sizeof(std::uint32_t)));
     if (has_lm_head_) {
         MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&d_logits_), vocab_size_ * sizeof(float)));
+        host_logits_.resize(vocab_size_);
+        logits_scratch_.resize(vocab_size_);
+        candidates_buf_.resize(vocab_size_);
     }
     MIINFER_HIP_CHECK(hipMalloc(&d_decode_state_, sizeof(DeviceDecodeState)));
     MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&d_decode_tokens_), kv_capacity_ * sizeof(std::uint32_t)));
@@ -689,27 +835,33 @@ GenerateStats PrefillV2Model::generate(
             pos += chunk;
             last_chunk = chunk;
         }
+    }
 
-        // If requested, capture the prefix checkpoint immediately after prefill
-        if (options.cache_prefix_after) {
-            std::size_t save_len = (options.cache_prefix_len > 0) ? std::min(options.cache_prefix_len, prompt.size()) : prompt.size();
-            reusable_context_.save(prompt.subspan(0, save_len), recurrent_states_, stream);
-        }
+    // 1b. If requested, capture/update the prefix checkpoint immediately after prefill
+    if (options.cache_prefix_after) {
+        std::size_t save_len = (options.cache_prefix_len > 0) ? std::min(options.cache_prefix_len, prompt.size()) : prompt.size();
+        reusable_context_.save(prompt.subspan(0, save_len), recurrent_states_, stream);
     }
 
     // 2. Compute logits for final prompt token (at offset (last_chunk - 1) * kHidden in d_pong_)
     compute_logits(d_pong_ + (last_chunk - 1) * kHidden, d_logits_, stream);
 
-    // 3. First token via device argmax (TTFT)
-    launch_qwen3_argmax(d_logits_, d_temp_tokens_, vocab_size_, stream);
-    std::uint32_t first_token = 0;
+    // 3. First token via host sampling (TTFT)
     MIINFER_HIP_CHECK(hipMemcpyAsync(
-        &first_token,
-        d_temp_tokens_,
-        sizeof(std::uint32_t),
+        host_logits_.data(),
+        d_logits_,
+        vocab_size_ * sizeof(float),
         hipMemcpyDeviceToHost,
         stream));
     MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
+
+    std::uint32_t first_token = sample_token_from_logits(
+        host_logits_,
+        prompt,
+        options,
+        rng_,
+        logits_scratch_,
+        candidates_buf_);
 
     const auto t_ttft = std::chrono::steady_clock::now();
     stats.prefill_ms = std::chrono::duration<double, std::milli>(t_ttft - t_start).count();
@@ -767,14 +919,21 @@ GenerateStats PrefillV2Model::generate(
         for (std::size_t i = 0; i < num_decode; ++i) {
             MIINFER_HIP_CHECK(hipGraphLaunch(decode_graph_exec_, exec_stream));
 
-            std::uint32_t next_token = 0;
             MIINFER_HIP_CHECK(hipMemcpyAsync(
-                &next_token,
-                static_cast<std::uint32_t*>(d_decode_tokens_) + i,
-                sizeof(std::uint32_t),
+                host_logits_.data(),
+                d_logits_,
+                vocab_size_ * sizeof(float),
                 hipMemcpyDeviceToHost,
                 exec_stream));
             MIINFER_HIP_CHECK(hipStreamSynchronize(exec_stream));
+
+            const std::uint32_t next_token = sample_token_from_logits(
+                host_logits_,
+                stats.generated_tokens,
+                options,
+                rng_,
+                logits_scratch_,
+                candidates_buf_);
 
             actual_generated++;
 
@@ -788,6 +947,11 @@ GenerateStats PrefillV2Model::generate(
                     break;
                 }
             }
+
+            state.current_token = next_token;
+            state.position++;
+            state.generated++;
+            MIINFER_HIP_CHECK(hipMemcpyAsync(d_decode_state_, &state, sizeof(state), hipMemcpyHostToDevice, exec_stream));
         }
 
         const auto t_decode_end = std::chrono::steady_clock::now();
@@ -850,7 +1014,7 @@ void PrefillV2Model::capture_decode_graph(hipStream_t stream) {
         return;
     }
     if (!has_lm_head_ || d_output_weights_wave_ == nullptr || d_embedding_weights_ == nullptr ||
-        d_final_norm_weights_ == nullptr || d_decode_state_ == nullptr || d_decode_tokens_ == nullptr) {
+        d_final_norm_weights_ == nullptr || d_decode_state_ == nullptr) {
         throw std::runtime_error("PrefillV2Model::capture_decode_graph: required weights/buffers not allocated");
     }
 
@@ -902,20 +1066,6 @@ void PrefillV2Model::capture_decode_graph(hipStream_t stream) {
 
     // 4. Compute logits: d_pong_ -> d_logits_
     compute_logits(d_pong_, d_logits_, capture_stream);
-
-    // 5. Device argmax: d_logits_ -> &decode_state->current_token
-    launch_qwen3_argmax(
-        d_logits_,
-        &decode_state->current_token,
-        vocab_size_,
-        capture_stream);
-
-    // 6. Decode state advance: records token to d_decode_tokens_, updates position and generated count
-    launch_qwen35_decode_state_advance(
-        decode_state,
-        d_decode_tokens_,
-        kv_capacity_,
-        capture_stream);
 
     MIINFER_HIP_CHECK(hipStreamEndCapture(capture_stream, &graph));
     MIINFER_HIP_CHECK(hipGraphInstantiate(&decode_graph_exec_, graph, nullptr, nullptr, 0));

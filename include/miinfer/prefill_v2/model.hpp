@@ -18,6 +18,7 @@
 #include <string>
 
 #include <functional>
+#include <random>
 
 namespace miinfer::prefill_v2 {
 
@@ -29,6 +30,13 @@ struct GenerateOptions {
     bool cache_prefix_after = false;    // When true, caches prefix state after prefill
     std::size_t cache_prefix_len = 0;   // If 0, caches entire prompt; otherwise first N tokens
     std::vector<std::uint32_t> stop_token_ids = {151643, 151645};
+    float temperature = 0.7f;
+    float top_p = 0.9f;
+    std::uint32_t top_k = 40;
+    float repetition_penalty = 1.1f;
+    float presence_penalty = 0.0f;
+    float frequency_penalty = 0.0f;
+    std::size_t repeat_last_n = 64;
     std::function<bool(std::uint32_t)> on_token = nullptr;
 };
 
@@ -247,6 +255,12 @@ private:
     // Reusable Device Prefill State & Suffix Graph Exec (512 tokens)
     void* d_prefill_state_ = nullptr; // DevicePrefillState
     hipGraphExec_t suffix_graph_exec_ = nullptr;
+
+    // Sampling state
+    mutable std::vector<float> host_logits_;
+    mutable std::vector<float> logits_scratch_;
+    mutable std::vector<std::pair<float, std::uint32_t>> candidates_buf_;
+    mutable std::mt19937 rng_{42};
 
     void allocate_resources();
     void free_resources();

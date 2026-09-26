@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -35,6 +36,12 @@ struct OpenAiChatRequest {
     std::string tool_choice = "auto";
     bool stream = false;
     std::size_t max_tokens = 256;
+    float temperature = 0.7f;
+    float top_p = 0.9f;
+    std::uint32_t top_k = 40;
+    float repetition_penalty = 1.1f;
+    float frequency_penalty = 0.0f;
+    float presence_penalty = 0.0f;
 };
 
 struct OpenAiParseResult {

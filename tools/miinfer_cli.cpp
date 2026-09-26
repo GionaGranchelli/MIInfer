@@ -4407,6 +4407,12 @@ int cmd_serve(int argc, char** argv) {
             opt.use_hip_graph = true;
             opt.enable_prefix_reuse = session_reuse;
             opt.cache_prefix_after = session_reuse;
+            opt.temperature = parsed.request->temperature;
+            opt.top_p = parsed.request->top_p;
+            opt.top_k = parsed.request->top_k;
+            opt.repetition_penalty = parsed.request->repetition_penalty;
+            opt.presence_penalty = parsed.request->presence_penalty;
+            opt.frequency_penalty = parsed.request->frequency_penalty;
             opt.stop_token_ids = {tokenizer.eos_id(), 151643, 151645};
             for (const auto& s : parsed.request->stop) {
                 const auto enc = tokenizer.encode(s);
@@ -4516,6 +4522,12 @@ int cmd_serve(int argc, char** argv) {
             opt.use_hip_graph = true;
             opt.enable_prefix_reuse = session_reuse;
             opt.cache_prefix_after = session_reuse;
+            opt.temperature = parsed.request->temperature;
+            opt.top_p = parsed.request->top_p;
+            opt.top_k = parsed.request->top_k;
+            opt.repetition_penalty = parsed.request->repetition_penalty;
+            opt.presence_penalty = parsed.request->presence_penalty;
+            opt.frequency_penalty = parsed.request->frequency_penalty;
             opt.stop_token_ids = {tokenizer.eos_id(), 151643, 151645};
             for (const auto& s : parsed.request->stop) {
                 const auto enc = tokenizer.encode(s);

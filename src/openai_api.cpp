@@ -182,6 +182,24 @@ OpenAiParseResult parse_openai_chat_request(std::string_view body) {
                 }
             }
         }
+        if (json.contains("temperature") && json["temperature"].is_number()) {
+            request.temperature = json["temperature"].get<float>();
+        }
+        if (json.contains("top_p") && json["top_p"].is_number()) {
+            request.top_p = json["top_p"].get<float>();
+        }
+        if (json.contains("top_k") && json["top_k"].is_number_unsigned()) {
+            request.top_k = json["top_k"].get<std::uint32_t>();
+        }
+        if (json.contains("repetition_penalty") && json["repetition_penalty"].is_number()) {
+            request.repetition_penalty = json["repetition_penalty"].get<float>();
+        }
+        if (json.contains("frequency_penalty") && json["frequency_penalty"].is_number()) {
+            request.frequency_penalty = json["frequency_penalty"].get<float>();
+        }
+        if (json.contains("presence_penalty") && json["presence_penalty"].is_number()) {
+            request.presence_penalty = json["presence_penalty"].get<float>();
+        }
         if (json.contains("tool_choice")) {
             const auto& choice = json["tool_choice"];
             if (choice.is_string()) {
