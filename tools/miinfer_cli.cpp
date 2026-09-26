@@ -4174,6 +4174,7 @@ int cmd_serve(int argc, char** argv) {
     bool experimental_context = false;
     std::optional<std::filesystem::path> api_key_file;
     bool allow_insecure = false;
+    std::optional<bool> session_reuse_flag;
 
     for (int i = 2; i < argc; ++i) {
         std::string_view arg = argv[i];
@@ -4194,10 +4195,14 @@ int cmd_serve(int argc, char** argv) {
             api_key_file = argv[++i];
         } else if (arg == "--allow-insecure") {
             allow_insecure = true;
+        } else if (arg == "--session-reuse") {
+            session_reuse_flag = true;
+        } else if (arg == "--no-session-reuse") {
+            session_reuse_flag = false;
         } else if (model_path.empty() && !arg.starts_with("--")) {
             model_path = arg;
         } else {
-            std::cerr << "usage: miinfer serve --model MODEL.gguf [--port PORT] [--host HOST] [--context N] [--experimental-context] [--api-key-file PATH] [--allow-insecure]\n"; return 2;
+            std::cerr << "usage: miinfer serve --model MODEL.gguf [--port PORT] [--host HOST] [--context N] [--experimental-context] [--api-key-file PATH] [--allow-insecure] [--session-reuse|--no-session-reuse]\n"; return 2;
         }
     }
     if (model_path.empty()) { std::cerr << "missing model; use --model MODEL.gguf\n"; return 2; }
@@ -4229,8 +4234,8 @@ int cmd_serve(int argc, char** argv) {
     }
     const std::string model_id = std::filesystem::path(model_path).stem().string();
     const char* session_reuse_env = std::getenv("MIINFER_SESSION_REUSE");
-    const bool session_reuse = session_reuse_env != nullptr
-        && std::strcmp(session_reuse_env, "0") != 0;
+    const bool session_reuse = session_reuse_flag.value_or(
+        session_reuse_env == nullptr || std::strcmp(session_reuse_env, "0") != 0);
 
     g_cache_capacity = context_length;
     std::cerr << "Initializing MIInfer gfx906 HTTP Server on " << host << ":" << port << " ...\n";
