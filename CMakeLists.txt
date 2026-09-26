@@ -213,6 +213,21 @@ if(MIINFER_ENABLE_HIP)
     set_source_files_properties(bench/suffix_attention_halfwave_multitoken.cpp PROPERTIES LANGUAGE HIP)
     target_link_libraries(miinfer-suffix-attention-halfwave-multitoken PRIVATE miinfer_hip)
     target_compile_options(miinfer-suffix-attention-halfwave-multitoken PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-v2-0017-hierarchical-gqa-bakeoff bench/v2_0017_hierarchical_gqa_bakeoff.cpp)
+    set_source_files_properties(bench/v2_0017_hierarchical_gqa_bakeoff.cpp PROPERTIES LANGUAGE HIP)
+    target_link_libraries(miinfer-v2-0017-hierarchical-gqa-bakeoff PRIVATE miinfer_hip)
+    target_compile_options(miinfer-v2-0017-hierarchical-gqa-bakeoff PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-v2-0017-quad-head-subwave-bakeoff bench/v2_0017_quad_head_subwave_bakeoff.cpp)
+    set_source_files_properties(bench/v2_0017_quad_head_subwave_bakeoff.cpp PROPERTIES LANGUAGE HIP)
+    target_link_libraries(miinfer-v2-0017-quad-head-subwave-bakeoff PRIVATE miinfer_hip)
+    target_compile_options(miinfer-v2-0017-quad-head-subwave-bakeoff PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-v2-0017-pipelined-stream-bakeoff bench/v2_0017_pipelined_stream_bakeoff.cpp)
+    set_source_files_properties(bench/v2_0017_pipelined_stream_bakeoff.cpp PROPERTIES LANGUAGE HIP)
+    target_link_libraries(miinfer-v2-0017-pipelined-stream-bakeoff PRIVATE miinfer_hip)
+    target_compile_options(miinfer-v2-0017-pipelined-stream-bakeoff PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
 add_executable(miinfer-host-test tests/host_test.cpp)

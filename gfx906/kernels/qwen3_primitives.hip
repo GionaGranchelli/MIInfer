@@ -6198,16 +6198,20 @@ __global__ void qwen35_splitk_suffix_attn_stage1_halfwave_unrolled_kernel(
     const std::size_t kv_head_stride = static_cast<std::size_t>(cache_capacity) * head_dim;
     const std::size_t kv_base = static_cast<std::size_t>(kv_head) * kv_head_stride;
 
+    const auto* k_ptr = key_cache + kv_base + static_cast<std::size_t>(k_start) * head_dim + dim_offset;
+    const auto* v_ptr = value_cache + kv_base + static_cast<std::size_t>(k_start) * head_dim + dim_offset;
+
     std::uint32_t pos = k_start;
 
-    // Main unrolled loop
+    // Dual-issue pipelined loop: loads K and V simultaneously to maximize HBM throughput and hide latency
     for (; pos + UNROLL <= k_end; pos += UNROLL) {
-        // 1. Issue UNROLL key loads in flight
         uint4 k_raw[UNROLL];
+        uint4 v_raw[UNROLL];
+
         #pragma unroll
         for (int u = 0; u < UNROLL; ++u) {
-            const std::size_t cache_base = kv_base + static_cast<std::size_t>(pos + u) * head_dim + dim_offset;
-            k_raw[u] = *reinterpret_cast<const uint4*>(key_cache + cache_base);
+            k_raw[u] = *reinterpret_cast<const uint4*>(k_ptr + static_cast<std::size_t>(u) * head_dim);
+            v_raw[u] = *reinterpret_cast<const uint4*>(v_ptr + static_cast<std::size_t>(u) * head_dim);
         }
 
         // 2. Compute dot products
@@ -6233,15 +6237,7 @@ __global__ void qwen35_splitk_suffix_attn_stage1_halfwave_unrolled_kernel(
             scores[u] = __shfl(d * scale, sub_wave * 32, 64);
         }
 
-        // 4. Issue UNROLL value loads in flight
-        uint4 v_raw[UNROLL];
-        #pragma unroll
-        for (int u = 0; u < UNROLL; ++u) {
-            const std::size_t cache_base = kv_base + static_cast<std::size_t>(pos + u) * head_dim + dim_offset;
-            v_raw[u] = *reinterpret_cast<const uint4*>(value_cache + cache_base);
-        }
-
-        // 5. Softmax updates and PV accumulations
+        // 4. Softmax updates and PV accumulations
         #pragma unroll
         for (int u = 0; u < UNROLL; ++u) {
             const float score = scores[u];
@@ -6272,12 +6268,14 @@ __global__ void qwen35_splitk_suffix_attn_stage1_halfwave_unrolled_kernel(
             acc1.z = acc1.z * alpha + weight * __half2float(v_half[6]);
             acc1.w = acc1.w * alpha + weight * __half2float(v_half[7]);
         }
+
+        k_ptr += UNROLL * head_dim;
+        v_ptr += UNROLL * head_dim;
     }
 
     // Scalar cleanup tail
     for (; pos < k_end; ++pos) {
-        const std::size_t cache_base = kv_base + static_cast<std::size_t>(pos) * head_dim + dim_offset;
-        const uint4 k_raw = *reinterpret_cast<const uint4*>(key_cache + cache_base);
+        const uint4 k_raw = *reinterpret_cast<const uint4*>(k_ptr);
         const auto* k_half = reinterpret_cast<const __half*>(&k_raw);
 
         float dot = q_vec0.x * __half2float(k_half[0]) + q_vec0.y * __half2float(k_half[1])
@@ -6308,7 +6306,7 @@ __global__ void qwen35_splitk_suffix_attn_stage1_halfwave_unrolled_kernel(
         alpha = __shfl(alpha, sub_wave * 32, 64);
         weight = __shfl(weight, sub_wave * 32, 64);
 
-        const uint4 v_raw = *reinterpret_cast<const uint4*>(value_cache + cache_base);
+        const uint4 v_raw = *reinterpret_cast<const uint4*>(v_ptr);
         const auto* v_half = reinterpret_cast<const __half*>(&v_raw);
 
         acc0.x = acc0.x * alpha + weight * __half2float(v_half[0]);
@@ -6320,6 +6318,9 @@ __global__ void qwen35_splitk_suffix_attn_stage1_halfwave_unrolled_kernel(
         acc1.y = acc1.y * alpha + weight * __half2float(v_half[5]);
         acc1.z = acc1.z * alpha + weight * __half2float(v_half[6]);
         acc1.w = acc1.w * alpha + weight * __half2float(v_half[7]);
+
+        k_ptr += head_dim;
+        v_ptr += head_dim;
     }
 
     if (sub_lane == 0) {

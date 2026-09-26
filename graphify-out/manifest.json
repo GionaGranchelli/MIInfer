@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1790410432.8519728,
-    "seen": 1790414962.1689062,
-    "ast_hash": "e0efc2b7dad1be53c92d23feea85197d",
+    "mtime": 1790418373.713651,
+    "seen": 1790421748.715892,
+    "ast_hash": "8847c904500ef15bc5d9facfa0fa2238",
     "semantic_hash": ""
   },
   "README.md": {
@@ -5895,6 +5895,30 @@
     "mtime": 1790414947.5022082,
     "seen": 1790414962.169627,
     "ast_hash": "69760b72830aa2e5891fd8ab5fa9a5dc",
+    "semantic_hash": ""
+  },
+  "bench/v2_0017_hierarchical_gqa_bakeoff.cpp": {
+    "mtime": 1790418192.8928504,
+    "seen": 1790421748.7152967,
+    "ast_hash": "30e5953c46a2dd7a77082ac6f11d4b98",
+    "semantic_hash": ""
+  },
+  "bench/v2_0017_pipelined_stream_bakeoff.cpp": {
+    "mtime": 1790418496.6435153,
+    "seen": 1790421748.7152987,
+    "ast_hash": "75cc52b9a55dbfd9a12e157d7626018e",
+    "semantic_hash": ""
+  },
+  "bench/v2_0017_quad_head_subwave_bakeoff.cpp": {
+    "mtime": 1790418277.0077577,
+    "seen": 1790421748.7152998,
+    "ast_hash": "50379de22fdf85e7fbcea941fbe277cb",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-V2-0017-hierarchical-gqa-query-reuse.md": {
+    "mtime": 1790421733.2403202,
+    "seen": 1790421748.716618,
+    "ast_hash": "778c68dfd6c90121d088449274e882c3",
     "semantic_hash": ""
   }
 }
