@@ -19,7 +19,8 @@ namespace {
 
 std::uint32_t sample_token_from_logits(
     std::span<const float> raw_logits,
-    std::span<const std::uint32_t> recent_tokens,
+    std::span<const std::uint32_t> prompt_tokens,
+    std::span<const std::uint32_t> generated_tokens,
     const GenerateOptions& options,
     std::mt19937& rng,
     std::vector<float>& logits_buf,
@@ -31,33 +32,45 @@ std::uint32_t sample_token_from_logits(
     logits_buf.assign(raw_logits.begin(), raw_logits.end());
 
     // 1. Repetition / Presence / Frequency penalty
-    if (!recent_tokens.empty()) {
-        const std::size_t window = std::min(options.repeat_last_n, recent_tokens.size());
-        const auto token_window = recent_tokens.subspan(recent_tokens.size() - window, window);
+    const std::size_t window_limit = options.repeat_last_n > 0 ? options.repeat_last_n : 256;
+    std::unordered_map<std::uint32_t, std::size_t> counts;
 
-        std::unordered_map<std::uint32_t, std::size_t> counts;
-        for (std::uint32_t tok : token_window) {
+    // Track generated tokens first
+    const std::size_t gen_take = std::min(window_limit, generated_tokens.size());
+    if (gen_take > 0) {
+        auto gen_window = generated_tokens.subspan(generated_tokens.size() - gen_take, gen_take);
+        for (std::uint32_t tok : gen_window) {
             counts[tok]++;
         }
+    }
 
-        for (const auto& [tok, count] : counts) {
-            if (tok < vocab_size) {
-                // Standard repetition penalty
-                if (options.repetition_penalty != 1.0f && options.repetition_penalty > 0.0f) {
-                    if (logits_buf[tok] < 0.0f) {
-                        logits_buf[tok] *= options.repetition_penalty;
-                    } else {
-                        logits_buf[tok] /= options.repetition_penalty;
-                    }
+    // If window limit not full, fill remaining from prompt tail
+    if (gen_take < window_limit && !prompt_tokens.empty()) {
+        const std::size_t prompt_remain = window_limit - gen_take;
+        const std::size_t prompt_take = std::min(prompt_remain, prompt_tokens.size());
+        auto prompt_window = prompt_tokens.subspan(prompt_tokens.size() - prompt_take, prompt_take);
+        for (std::uint32_t tok : prompt_window) {
+            counts[tok]++;
+        }
+    }
+
+    for (const auto& [tok, count] : counts) {
+        if (tok < vocab_size) {
+            // Standard repetition penalty
+            if (options.repetition_penalty != 1.0f && options.repetition_penalty > 0.0f) {
+                if (logits_buf[tok] < 0.0f) {
+                    logits_buf[tok] *= options.repetition_penalty;
+                } else {
+                    logits_buf[tok] /= options.repetition_penalty;
                 }
-                // Frequency penalty
-                if (options.frequency_penalty != 0.0f) {
-                    logits_buf[tok] -= options.frequency_penalty * static_cast<float>(count);
-                }
-                // Presence penalty
-                if (options.presence_penalty != 0.0f) {
-                    logits_buf[tok] -= options.presence_penalty;
-                }
+            }
+            // Frequency penalty
+            if (options.frequency_penalty != 0.0f) {
+                logits_buf[tok] -= options.frequency_penalty * static_cast<float>(count);
+            }
+            // Presence penalty
+            if (options.presence_penalty != 0.0f) {
+                logits_buf[tok] -= options.presence_penalty;
             }
         }
     }
@@ -858,6 +871,7 @@ GenerateStats PrefillV2Model::generate(
     std::uint32_t first_token = sample_token_from_logits(
         host_logits_,
         prompt,
+        {},
         options,
         rng_,
         logits_scratch_,
@@ -929,6 +943,7 @@ GenerateStats PrefillV2Model::generate(
 
             const std::uint32_t next_token = sample_token_from_logits(
                 host_logits_,
+                prompt,
                 stats.generated_tokens,
                 options,
                 rng_,
@@ -972,6 +987,7 @@ GenerateStats PrefillV2Model::generate(
 
     const auto t_decode_start = std::chrono::steady_clock::now();
     std::uint32_t current_token = first_token;
+    auto& ws = const_cast<PrefillV2Workspace&>(ws_mgr_->workspace());
 
     for (std::size_t k = 1; k < options.max_new_tokens; ++k) {
         const std::uint32_t position = prompt_len - 1 + static_cast<std::uint32_t>(k);
@@ -979,7 +995,75 @@ GenerateStats PrefillV2Model::generate(
             break;
         }
 
-        const std::uint32_t next_token = decode_step(current_token, position, d_logits_, stream);
+        // 1. Copy single input token to device
+        MIINFER_HIP_CHECK(hipMemcpyAsync(
+            d_temp_tokens_,
+            &current_token,
+            sizeof(std::uint32_t),
+            hipMemcpyHostToDevice,
+            stream));
+
+        // 2. Single token embedding
+        launch_qwen35_q4_k_embedding_batch(
+            static_cast<const Q4KDeviceBlock*>(d_embedding_weights_),
+            d_temp_tokens_,
+            1,
+            vocab_size_,
+            kHidden,
+            d_ping_,
+            stream);
+
+        // 3. Execute 16 Topology Blocks
+        for (std::size_t b = 0; b < 16; ++b) {
+            auto st0 = recurrent_states_[b * 3 + 0].view();
+            auto st1 = recurrent_states_[b * 3 + 1].view();
+            auto st2 = recurrent_states_[b * 3 + 2].view();
+
+            blocks_[b]->decode(
+                d_ping_,
+                d_pong_,
+                d_ping_,
+                st0,
+                st1,
+                st2,
+                kv_caches_[b].view(),
+                ws,
+                position,
+                /*decode_state=*/nullptr,
+                stream);
+        }
+
+        // 4. Final RMS Norm
+        launch_qwen3_rms_norm(
+            d_ping_,
+            d_final_norm_weights_,
+            d_pong_,
+            kHidden,
+            kRmsNormEpsilon,
+            stream);
+
+        // 5. Compute logits
+        compute_logits(d_pong_, d_logits_, stream);
+
+        // 6. Copy logits to host
+        MIINFER_HIP_CHECK(hipMemcpyAsync(
+            host_logits_.data(),
+            d_logits_,
+            vocab_size_ * sizeof(float),
+            hipMemcpyDeviceToHost,
+            stream));
+        MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
+
+        // 7. Sample
+        const std::uint32_t next_token = sample_token_from_logits(
+            host_logits_,
+            prompt,
+            stats.generated_tokens,
+            options,
+            rng_,
+            logits_scratch_,
+            candidates_buf_);
+
         if (is_stop(next_token)) {
             break;
         }

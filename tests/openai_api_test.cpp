@@ -38,7 +38,7 @@ int main() {
     CHECK(generated.calls[0].name == "read_file");
     CHECK(generated.calls[0].arguments == R"({"path":"a.txt"})");
 
-    for (const char* invalid : {"{", "{}", R"({"messages":[]})", R"({"messages":{}})", R"({"messages":[{"role":"tool","content":"x"}]})", R"({"messages":[{"role":"user","content":1}]})", R"({"messages":[{"role":"user","content":"x"}],"stream":1})", R"({"messages":[{"role":"user","content":"x"}],"max_tokens":-1})", R"({"messages":[{"role":"user","content":"x"}],"max_tokens":4097})"}) {
+    for (const char* invalid : {"{", "{}", R"({"messages":[]})", R"({"messages":{}})", R"({"messages":[{"role":"tool","content":"x"}]})", R"({"messages":[{"role":"user","content":1}]})", R"({"messages":[{"role":"user","content":"x"}],"stream":1})", R"({"messages":[{"role":"user","content":"x"}],"max_tokens":-1})", R"({"messages":[{"role":"user","content":"x"}],"max_tokens":65537})"}) {
         CHECK(!miinfer::parse_openai_chat_request(invalid).request);
     }
     std::cout << "openai API host test passed\n";

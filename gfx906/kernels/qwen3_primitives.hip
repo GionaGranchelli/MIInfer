@@ -6953,12 +6953,16 @@ __global__ void qwen35_decoupled_k_norm_rope_kv_store_batch_quant_kernel(
     float epsilon,
     bool is_k_q8,
     bool is_v_q8,
-    const DevicePrefillState* __restrict__ prefill_state) {
+    const DevicePrefillState* __restrict__ prefill_state = nullptr,
+    const DeviceDecodeState* __restrict__ decode_state = nullptr) {
 
     if (prefill_state != nullptr) {
         base_position = prefill_state->base_position;
         token_count = prefill_state->token_count;
         cache_capacity = prefill_state->kv_capacity > 0 ? prefill_state->kv_capacity : cache_capacity;
+    } else if (decode_state != nullptr) {
+        base_position = decode_state->position;
+        token_count = 1;
     }
 
     const std::uint32_t pair = blockIdx.x;
@@ -7065,7 +7069,8 @@ void launch_qwen35_decoupled_k_norm_rope_kv_store_batch_quant(
     bool is_k_q8,
     bool is_v_q8,
     hipStream_t stream,
-    const DevicePrefillState* prefill_state) {
+    const DevicePrefillState* prefill_state,
+    const DeviceDecodeState* decode_state) {
 
     if (key == nullptr || value == nullptr || k_norm_weight == nullptr
         || cache_capacity == 0 || kv_heads == 0 || head_dim != 256
@@ -7079,7 +7084,7 @@ void launch_qwen35_decoupled_k_norm_rope_kv_store_batch_quant(
         key, value, k_norm_weight, key_cache_f16, value_cache_f16,
         key_cache_q8, key_scales, value_cache_q8, value_scales,
         token_count, base_position, cache_capacity, kv_heads, head_dim,
-        theta, epsilon, is_k_q8, is_v_q8, prefill_state);
+        theta, epsilon, is_k_q8, is_v_q8, prefill_state, decode_state);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

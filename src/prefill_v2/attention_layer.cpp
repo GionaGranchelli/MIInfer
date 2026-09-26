@@ -511,7 +511,9 @@ void PrefillV2AttentionLayer::decode(
         1, position, static_cast<std::uint32_t>(kv_cache.capacity),
         4, 256, kRopeTheta, kRmsNormEpsilon,
         kv_cache.is_k_q8(), kv_cache.is_v_q8(),
-        stream);
+        stream,
+        /*prefill_state=*/nullptr,
+        decode_state);
 
     // 5. High-Occupancy Split-K Decode Attention with In-Register Sigmoid Gating
     if (decode_state != nullptr) {

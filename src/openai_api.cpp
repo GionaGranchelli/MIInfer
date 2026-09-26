@@ -164,11 +164,17 @@ OpenAiParseResult parse_openai_chat_request(std::string_view body) {
             if (!json["stream"].is_boolean()) return {{}, "stream must be a boolean"};
             request.stream = json["stream"].get<bool>();
         }
-        if (json.contains("max_tokens")) {
+        if (json.contains("max_completion_tokens") && !json["max_completion_tokens"].is_null()) {
+            if (!json["max_completion_tokens"].is_number_unsigned()) return {{}, "max_completion_tokens must be an unsigned integer"};
+            request.max_tokens = json["max_completion_tokens"].get<std::size_t>();
+            if (request.max_tokens > kMaxOutputTokens) {
+                return {{}, "max_completion_tokens exceeds maximum supported context output limit"};
+            }
+        } else if (json.contains("max_tokens") && !json["max_tokens"].is_null()) {
             if (!json["max_tokens"].is_number_unsigned()) return {{}, "max_tokens must be an unsigned integer"};
             request.max_tokens = json["max_tokens"].get<std::size_t>();
             if (request.max_tokens > kMaxOutputTokens) {
-                return {{}, "max_tokens must be at most 4096"};
+                return {{}, "max_tokens exceeds maximum supported context output limit"};
             }
         }
         if (json.contains("stop")) {
@@ -193,6 +199,11 @@ OpenAiParseResult parse_openai_chat_request(std::string_view body) {
         }
         if (json.contains("repetition_penalty") && json["repetition_penalty"].is_number()) {
             request.repetition_penalty = json["repetition_penalty"].get<float>();
+        } else if (json.contains("repeat_penalty") && json["repeat_penalty"].is_number()) {
+            request.repetition_penalty = json["repeat_penalty"].get<float>();
+        }
+        if (json.contains("repeat_last_n") && json["repeat_last_n"].is_number_unsigned()) {
+            request.repeat_last_n = json["repeat_last_n"].get<std::size_t>();
         }
         if (json.contains("frequency_penalty") && json["frequency_penalty"].is_number()) {
             request.frequency_penalty = json["frequency_penalty"].get<float>();

@@ -4362,12 +4362,14 @@ int cmd_serve(int argc, char** argv) {
         tokenization_us += static_cast<std::uint64_t>(tokenization_ms * 1000.0);
         const double queue_wait_ms = std::chrono::duration<double, std::milli>(started_at - request.queued_at).count();
         state("tokenized");
-        if (prompt_tokens.size() > context_length || prompt_tokens.size() + max_tokens > context_length) {
+        if (prompt_tokens.size() >= context_length) {
             ++http_errors;
-            send_http_error(client_fd, 400, "prompt and max_tokens exceed configured context", "context_length_exceeded");
+            send_http_error(client_fd, 400, "prompt length exceeds configured context", "context_length_exceeded");
             state("rejected");
             return;
         }
+        const std::size_t available_output = context_length - prompt_tokens.size();
+        const std::size_t effective_max_tokens = std::min(max_tokens, available_output);
         state("prefill_started");
         std::optional<double> first_delta_ms;
         const auto mark_first_delta = [&] {
@@ -4403,7 +4405,7 @@ int cmd_serve(int argc, char** argv) {
                 client_fd,
                 "HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nCache-Control: no-cache\r\nConnection: close\r\n\r\n");
             miinfer::prefill_v2::GenerateOptions opt;
-            opt.max_new_tokens = max_tokens;
+            opt.max_new_tokens = effective_max_tokens;
             opt.use_hip_graph = true;
             opt.enable_prefix_reuse = session_reuse;
             opt.cache_prefix_after = session_reuse;
@@ -4413,6 +4415,7 @@ int cmd_serve(int argc, char** argv) {
             opt.repetition_penalty = parsed.request->repetition_penalty;
             opt.presence_penalty = parsed.request->presence_penalty;
             opt.frequency_penalty = parsed.request->frequency_penalty;
+            opt.repeat_last_n = parsed.request->repeat_last_n;
             opt.stop_token_ids = {tokenizer.eos_id(), 151643, 151645};
             for (const auto& s : parsed.request->stop) {
                 const auto enc = tokenizer.encode(s);
@@ -4518,7 +4521,7 @@ int cmd_serve(int argc, char** argv) {
             log_latency(stats);
         } else {
             miinfer::prefill_v2::GenerateOptions opt;
-            opt.max_new_tokens = max_tokens;
+            opt.max_new_tokens = effective_max_tokens;
             opt.use_hip_graph = true;
             opt.enable_prefix_reuse = session_reuse;
             opt.cache_prefix_after = session_reuse;
@@ -4528,6 +4531,7 @@ int cmd_serve(int argc, char** argv) {
             opt.repetition_penalty = parsed.request->repetition_penalty;
             opt.presence_penalty = parsed.request->presence_penalty;
             opt.frequency_penalty = parsed.request->frequency_penalty;
+            opt.repeat_last_n = parsed.request->repeat_last_n;
             opt.stop_token_ids = {tokenizer.eos_id(), 151643, 151645};
             for (const auto& s : parsed.request->stop) {
                 const auto enc = tokenizer.encode(s);

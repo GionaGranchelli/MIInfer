@@ -712,7 +712,8 @@ void launch_qwen35_decoupled_k_norm_rope_kv_store_batch_quant(
     bool is_k_q8,
     bool is_v_q8,
     hipStream_t stream = nullptr,
-    const DevicePrefillState* prefill_state = nullptr);
+    const DevicePrefillState* prefill_state = nullptr,
+    const DeviceDecodeState* decode_state = nullptr);
 
 // V2-0019: Single-Token Quantized Decode Attention (FP16 / Q8 K / Q8 V)
 void launch_qwen35_tiled_online_attention_quant_dynamic(
