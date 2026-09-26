@@ -232,6 +232,10 @@ if(MIINFER_ENABLE_HIP)
     add_executable(miinfer-v2-0018-suffix-hip-graph-bench bench/v2_0018_suffix_hip_graph_bench.cpp)
     target_link_libraries(miinfer-v2-0018-suffix-hip-graph-bench PRIVATE miinfer_hip)
     target_compile_options(miinfer-v2-0018-suffix-hip-graph-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-v2-0021-production-suffix-hip-graph-bench bench/v2_0021_production_suffix_hip_graph_bench.cpp)
+    target_link_libraries(miinfer-v2-0021-production-suffix-hip-graph-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-v2-0021-production-suffix-hip-graph-bench PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
 add_executable(miinfer-host-test tests/host_test.cpp)

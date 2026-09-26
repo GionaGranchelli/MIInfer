@@ -1073,6 +1073,9 @@ GenerateStats PrefillV2Model::generate(
                 break;
             }
         }
+        for (auto& st : recurrent_states_) {
+            st.set_position(position + 1);
+        }
         current_token = next_token;
     }
 
