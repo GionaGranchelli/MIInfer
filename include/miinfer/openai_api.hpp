@@ -31,6 +31,7 @@ struct OpenAiChatRequest {
     std::optional<std::string> model;
     std::vector<ChatMessage> messages;
     std::vector<ChatTool> tools;
+    std::vector<std::string> stop;
     std::string tool_choice = "auto";
     bool stream = false;
     std::size_t max_tokens = 256;

@@ -171,6 +171,17 @@ OpenAiParseResult parse_openai_chat_request(std::string_view body) {
                 return {{}, "max_tokens must be at most 4096"};
             }
         }
+        if (json.contains("stop")) {
+            if (json["stop"].is_string()) {
+                request.stop.push_back(json["stop"].get<std::string>());
+            } else if (json["stop"].is_array()) {
+                for (const auto& s : json["stop"]) {
+                    if (s.is_string()) {
+                        request.stop.push_back(s.get<std::string>());
+                    }
+                }
+            }
+        }
         if (json.contains("tool_choice")) {
             const auto& choice = json["tool_choice"];
             if (choice.is_string()) {

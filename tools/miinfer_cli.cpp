@@ -4402,16 +4402,24 @@ int cmd_serve(int argc, char** argv) {
             opt.use_hip_graph = true;
             opt.enable_prefix_reuse = session_reuse;
             opt.cache_prefix_after = session_reuse;
+            opt.stop_token_ids = {tokenizer.eos_id(), 151643, 151645};
+            for (const auto& s : parsed.request->stop) {
+                const auto enc = tokenizer.encode(s);
+                if (enc.size() == 1) {
+                    opt.stop_token_ids.push_back(enc[0]);
+                }
+            }
             bool request_cancelled = false;
-            opt.on_token = [&](std::uint32_t token) {
-                if (!client_connected) return;
+            opt.on_token = [&](std::uint32_t token) -> bool {
+                if (!client_connected) return false;
                 const std::array<std::uint32_t, 1> single_tok{token};
                 const std::string piece = tokenizer.decode(single_tok);
-                if (defer_tool_output) return;
+                if (defer_tool_output) return true;
                 const std::string sse = "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"delta\":{\"content\":\""
                     + json_escape(piece) + "\"}}]}\n\n";
                 client_connected = send_all(client_fd, sse);
                 if (client_connected && !piece.empty()) mark_first_delta();
+                return client_connected;
             };
             RuntimeGenerateStats stats;
             miinfer::OpenAiGeneratedToolCalls tool_calls;
@@ -4503,6 +4511,13 @@ int cmd_serve(int argc, char** argv) {
             opt.use_hip_graph = true;
             opt.enable_prefix_reuse = session_reuse;
             opt.cache_prefix_after = session_reuse;
+            opt.stop_token_ids = {tokenizer.eos_id(), 151643, 151645};
+            for (const auto& s : parsed.request->stop) {
+                const auto enc = tokenizer.encode(s);
+                if (enc.size() == 1) {
+                    opt.stop_token_ids.push_back(enc[0]);
+                }
+            }
 
             const auto v2_stats = engine.generate(prompt_tokens, opt);
             RuntimeGenerateStats stats;

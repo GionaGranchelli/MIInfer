@@ -28,7 +28,8 @@ struct GenerateOptions {
     bool enable_prefix_reuse = false;   // When true, attempts to reuse cached prefix if matching
     bool cache_prefix_after = false;    // When true, caches prefix state after prefill
     std::size_t cache_prefix_len = 0;   // If 0, caches entire prompt; otherwise first N tokens
-    std::function<void(std::uint32_t)> on_token = nullptr;
+    std::vector<std::uint32_t> stop_token_ids = {151643, 151645};
+    std::function<bool(std::uint32_t)> on_token = nullptr;
 };
 
 struct GenerateStats {

@@ -716,9 +716,24 @@ GenerateStats PrefillV2Model::generate(
     stats.ttft_ms = stats.prefill_ms;
     stats.prefill_tok_per_sec = stats.prefill_ms > 0.0 ? (prompt_len * 1000.0 / stats.prefill_ms) : 0.0;
 
+    const auto is_stop = [&](std::uint32_t tok) {
+        for (auto st : options.stop_token_ids) {
+            if (tok == st) return true;
+        }
+        return false;
+    };
+
+    if (is_stop(first_token)) {
+        stats.total_ms = stats.ttft_ms;
+        return stats;
+    }
+
     stats.generated_tokens.push_back(first_token);
     if (options.on_token) {
-        options.on_token(first_token);
+        if (!options.on_token(first_token)) {
+            stats.total_ms = stats.ttft_ms;
+            return stats;
+        }
     }
 
     if (options.max_new_tokens <= 1) {
@@ -747,31 +762,38 @@ GenerateStats PrefillV2Model::generate(
         MIINFER_HIP_CHECK(hipMemcpyAsync(d_decode_state_, &state, sizeof(state), hipMemcpyHostToDevice, exec_stream));
 
         const auto t_decode_start = std::chrono::steady_clock::now();
+        std::size_t actual_generated = 0;
 
         for (std::size_t i = 0; i < num_decode; ++i) {
             MIINFER_HIP_CHECK(hipGraphLaunch(decode_graph_exec_, exec_stream));
-        }
 
-        std::vector<std::uint32_t> host_decode_tokens(num_decode);
-        MIINFER_HIP_CHECK(hipMemcpyAsync(
-            host_decode_tokens.data(),
-            d_decode_tokens_,
-            num_decode * sizeof(std::uint32_t),
-            hipMemcpyDeviceToHost,
-            exec_stream));
-        MIINFER_HIP_CHECK(hipStreamSynchronize(exec_stream));
+            std::uint32_t next_token = 0;
+            MIINFER_HIP_CHECK(hipMemcpyAsync(
+                &next_token,
+                static_cast<std::uint32_t*>(d_decode_tokens_) + i,
+                sizeof(std::uint32_t),
+                hipMemcpyDeviceToHost,
+                exec_stream));
+            MIINFER_HIP_CHECK(hipStreamSynchronize(exec_stream));
+
+            actual_generated++;
+
+            if (is_stop(next_token)) {
+                break;
+            }
+
+            stats.generated_tokens.push_back(next_token);
+            if (options.on_token) {
+                if (!options.on_token(next_token)) {
+                    break;
+                }
+            }
+        }
 
         const auto t_decode_end = std::chrono::steady_clock::now();
         stats.decode_ms = std::chrono::duration<double, std::milli>(t_decode_end - t_decode_start).count();
 
-        for (std::uint32_t tok : host_decode_tokens) {
-            stats.generated_tokens.push_back(tok);
-            if (options.on_token) {
-                options.on_token(tok);
-            }
-        }
-
-        const std::uint32_t final_position = prompt_len + static_cast<std::uint32_t>(num_decode);
+        const std::uint32_t final_position = prompt_len + static_cast<std::uint32_t>(actual_generated);
         for (auto& st : recurrent_states_) {
             st.set_position(final_position);
         }
@@ -794,9 +816,14 @@ GenerateStats PrefillV2Model::generate(
         }
 
         const std::uint32_t next_token = decode_step(current_token, position, d_logits_, stream);
+        if (is_stop(next_token)) {
+            break;
+        }
         stats.generated_tokens.push_back(next_token);
         if (options.on_token) {
-            options.on_token(next_token);
+            if (!options.on_token(next_token)) {
+                break;
+            }
         }
         current_token = next_token;
     }
