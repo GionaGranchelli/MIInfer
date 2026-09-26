@@ -40,6 +40,7 @@
 #include "qwen35_gpu_pipeline.hpp"
 #include "miinfer/qwen3_tokenizer.hpp"
 #include "miinfer/qwen35_model.hpp"
+#include "miinfer/prefill_v2/model.hpp"
 #include "miinfer/build_info.hpp"
 #include "miinfer/openai_api.hpp"
 #include "miinfer/sha256.hpp"
@@ -4238,8 +4239,10 @@ int cmd_serve(int argc, char** argv) {
               << "qualified_context_length=1024\n"
               << "context_qualification=" << (context_length > 1024 ? "experimental" : "qualified") << "\n"
               << "session_reuse=" << (session_reuse ? "experimental" : "disabled") << "\n";
-    Qwen35RuntimeEngine engine(model_path);
-    std::cerr << "model_context_length=" << engine.model().config().context_length << "\n";
+    const auto model = miinfer::Qwen35Model::load(model_path);
+    const auto tokenizer = miinfer::Qwen3Tokenizer::load(*model.file());
+    miinfer::prefill_v2::PrefillV2Model engine(model, context_length, true, miinfer::prefill_v2::KvCacheQuantMode::kFp16Fp16);
+    std::cerr << "model_context_length=" << model.config().context_length << "\n";
     std::cerr << "device_allocation_count=" << g_device_allocations << "\n"
               << "device_allocated_bytes=" << g_live_device_bytes << "\n"
               << "device_total_allocated_bytes=" << g_total_device_bytes << "\n"
@@ -4348,7 +4351,7 @@ int cmd_serve(int argc, char** argv) {
             state("cancelled");
             return;
         }
-        const auto prompt_tokens = engine.tokenizer().encode(prompt);
+        const auto prompt_tokens = tokenizer.encode(prompt);
         const double tokenization_ms = std::chrono::duration<double, std::milli>(
             std::chrono::steady_clock::now() - tokenization_start).count();
         tokenization_us += static_cast<std::uint64_t>(tokenization_ms * 1000.0);
@@ -4394,33 +4397,46 @@ int cmd_serve(int argc, char** argv) {
             bool client_connected = send_all(
                 client_fd,
                 "HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nCache-Control: no-cache\r\nConnection: close\r\n\r\n");
-            Qwen35RuntimeEngine::GenerateOptions opt;
+            miinfer::prefill_v2::GenerateOptions opt;
             opt.max_new_tokens = max_tokens;
-            opt.reuse_session = session_reuse;
-            opt.should_cancel = client_cancelled;
-            opt.on_prefill_complete = [&] { state("prefill_completed"); };
-            opt.on_first_token = [&] { state("first_token"); };
+            opt.use_hip_graph = true;
+            opt.enable_prefix_reuse = session_reuse;
+            opt.cache_prefix_after = session_reuse;
             bool request_cancelled = false;
-            opt.on_token = [&](std::uint32_t /*token*/, std::string_view piece) {
-                if (!client_connected) return false;
-                if (defer_tool_output) return true;
+            opt.on_token = [&](std::uint32_t token) {
+                if (!client_connected) return;
+                const std::array<std::uint32_t, 1> single_tok{token};
+                const std::string piece = tokenizer.decode(single_tok);
+                if (defer_tool_output) return;
                 const std::string sse = "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"delta\":{\"content\":\""
                     + json_escape(piece) + "\"}}]}\n\n";
                 client_connected = send_all(client_fd, sse);
                 if (client_connected && !piece.empty()) mark_first_delta();
-                return client_connected;
             };
-            Qwen35RuntimeEngine::GenerateStats stats;
+            RuntimeGenerateStats stats;
             miinfer::OpenAiGeneratedToolCalls tool_calls;
             try {
-                stats = engine.generate(prompt_tokens, opt);
+                const auto v2_stats = engine.generate(prompt_tokens, opt);
+                stats.prompt_tokens = v2_stats.prompt_tokens.size();
+                stats.generated_tokens = v2_stats.generated_tokens.size();
+                stats.prefill_processed_tokens = v2_stats.prompt_tokens.size();
+                stats.reused_prefix_tokens = v2_stats.prefix_tokens_reused;
+                stats.common_prefix_tokens = v2_stats.prefix_tokens_reused;
+                stats.prefill_ms = v2_stats.prefill_ms;
+                stats.decode_ms = v2_stats.decode_ms;
+                stats.first_token_ms = v2_stats.ttft_ms;
+                stats.total_ms = v2_stats.total_ms;
+                stats.prefill_tok_s = v2_stats.prefill_tok_per_sec;
+                stats.decode_tok_s = v2_stats.decode_tok_per_sec;
+                stats.text = tokenizer.decode(v2_stats.generated_tokens);
+
                 if (defer_tool_output) tool_calls = miinfer::parse_generated_tool_calls(stats.text);
-                request_cancelled = stats.cancelled;
+                request_cancelled = false;
                 prompt_tokens_total += stats.prompt_tokens;
                 prefill_tokens_total += stats.prefill_processed_tokens;
                 prefill_us += static_cast<std::uint64_t>(stats.prefill_ms * 1000.0);
                 generated_tokens_total += stats.generated_tokens;
-                const bool cancelled = stats.cancelled || !client_connected;
+                const bool cancelled = !client_connected;
                 if (cancelled) { ++cancelled_requests; state("cancelled"); }
                 else state("completed");
                 std::cerr << "miinfer_request {\"request_id\":" << request.request_id
@@ -4482,16 +4498,27 @@ int cmd_serve(int argc, char** argv) {
             }
             log_latency(stats);
         } else {
-            Qwen35RuntimeEngine::GenerateOptions opt;
+            miinfer::prefill_v2::GenerateOptions opt;
             opt.max_new_tokens = max_tokens;
-            opt.reuse_session = session_reuse;
-            opt.should_cancel = client_cancelled;
-            opt.on_prefill_complete = [&] { state("prefill_completed"); };
-            opt.on_first_token = [&] { state("first_token"); };
-            // Server requests must observe shutdown between tokens; the bulk
-            // graph path intentionally does not provide that interruption point.
-            opt.stream = true;
-            const auto stats = engine.generate(prompt_tokens, opt);
+            opt.use_hip_graph = true;
+            opt.enable_prefix_reuse = session_reuse;
+            opt.cache_prefix_after = session_reuse;
+
+            const auto v2_stats = engine.generate(prompt_tokens, opt);
+            RuntimeGenerateStats stats;
+            stats.prompt_tokens = v2_stats.prompt_tokens.size();
+            stats.generated_tokens = v2_stats.generated_tokens.size();
+            stats.prefill_processed_tokens = v2_stats.prompt_tokens.size();
+            stats.reused_prefix_tokens = v2_stats.prefix_tokens_reused;
+            stats.common_prefix_tokens = v2_stats.prefix_tokens_reused;
+            stats.prefill_ms = v2_stats.prefill_ms;
+            stats.decode_ms = v2_stats.decode_ms;
+            stats.first_token_ms = v2_stats.ttft_ms;
+            stats.total_ms = v2_stats.total_ms;
+            stats.prefill_tok_s = v2_stats.prefill_tok_per_sec;
+            stats.decode_tok_s = v2_stats.decode_tok_per_sec;
+            stats.text = tokenizer.decode(v2_stats.generated_tokens);
+
             prompt_tokens_total += stats.prompt_tokens;
             prefill_tokens_total += stats.prefill_processed_tokens;
             prefill_us += static_cast<std::uint64_t>(stats.prefill_ms * 1000.0);
