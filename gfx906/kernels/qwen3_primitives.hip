@@ -1001,7 +1001,12 @@ __global__ void qwen35_decoupled_q_split_norm_rope_batch_kernel(
     std::uint32_t heads,
     std::uint32_t head_dim,
     float theta,
-    float epsilon) {
+    float epsilon,
+    const DevicePrefillState* __restrict__ prefill_state) {
+    if (prefill_state != nullptr) {
+        base_position = prefill_state->base_position;
+        token_count = prefill_state->token_count;
+    }
     const std::uint32_t pair = blockIdx.x;
     const std::uint32_t token = pair / heads;
     const std::uint32_t head = pair % heads;
@@ -1051,7 +1056,13 @@ __global__ void qwen35_decoupled_k_norm_rope_kv_store_batch_f16_kernel(
     std::uint32_t kv_heads,
     std::uint32_t head_dim,
     float theta,
-    float epsilon) {
+    float epsilon,
+    const DevicePrefillState* __restrict__ prefill_state) {
+    if (prefill_state != nullptr) {
+        base_position = prefill_state->base_position;
+        token_count = prefill_state->token_count;
+        cache_capacity = prefill_state->kv_capacity > 0 ? prefill_state->kv_capacity : cache_capacity;
+    }
     const std::uint32_t pair = blockIdx.x;
     const std::uint32_t token = pair / kv_heads;
     const std::uint32_t head = pair % kv_heads;
@@ -1718,7 +1729,12 @@ __global__ void qwen35_conv_silu_split_batch_kernel(
     const float* qkv, const float* conv_weights, float* history,
     float* query, float* key, float* value, std::uint32_t base_position,
     std::uint32_t token_count, std::uint32_t history_capacity,
-    std::uint32_t channels, std::uint32_t conv_kernel) {
+    std::uint32_t channels, std::uint32_t conv_kernel,
+    const DevicePrefillState* __restrict__ prefill_state) {
+    if (prefill_state != nullptr) {
+        base_position = prefill_state->base_position;
+        token_count = prefill_state->token_count;
+    }
     const std::uint32_t channel = blockIdx.x * blockDim.x + threadIdx.x;
     if (channel >= channels) return;
     const std::uint32_t q_size = channels / 5;
@@ -4840,7 +4856,8 @@ void launch_qwen35_conv_silu_split_batch(
     const float* qkv, const float* conv_weights, float* history,
     float* query, float* key, float* value, std::uint32_t base_position,
     std::uint32_t token_count, std::uint32_t history_capacity,
-    std::uint32_t channels, std::uint32_t conv_kernel, hipStream_t stream) {
+    std::uint32_t channels, std::uint32_t conv_kernel, hipStream_t stream,
+    const DevicePrefillState* prefill_state) {
     if (qkv == nullptr || conv_weights == nullptr || history == nullptr || query == nullptr
         || key == nullptr || value == nullptr || token_count == 0 || token_count > 512
         || history_capacity == 0 || channels == 0 || channels % 5 != 0
@@ -4850,7 +4867,7 @@ void launch_qwen35_conv_silu_split_batch(
     hipLaunchKernelGGL(qwen35_conv_silu_split_batch_kernel,
                        dim3((channels + 255) / 256), dim3(256), 0, stream,
                        qkv, conv_weights, history, query, key, value, base_position,
-                       token_count, history_capacity, channels, conv_kernel);
+                       token_count, history_capacity, channels, conv_kernel, prefill_state);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
@@ -5257,7 +5274,8 @@ void launch_qwen35_decoupled_q_split_norm_rope_batch(
     const float* qfull, const float* q_norm_weight, float* query_rope, float* gate,
     std::uint32_t token_count, std::uint32_t base_position, std::uint32_t heads,
     std::uint32_t head_dim, float theta, float epsilon,
-    hipStream_t stream) {
+    hipStream_t stream,
+    const DevicePrefillState* prefill_state) {
     if (qfull == nullptr || q_norm_weight == nullptr || query_rope == nullptr || gate == nullptr
         || token_count == 0 || heads == 0 || head_dim != 256 || !std::isfinite(theta)
         || !std::isfinite(epsilon)) {
@@ -5266,7 +5284,7 @@ void launch_qwen35_decoupled_q_split_norm_rope_batch(
     hipLaunchKernelGGL(qwen35_decoupled_q_split_norm_rope_batch_kernel,
                        dim3(token_count * heads), dim3(256), 0, stream,
                        qfull, q_norm_weight, query_rope, gate, token_count, base_position,
-                       heads, head_dim, theta, epsilon);
+                       heads, head_dim, theta, epsilon, prefill_state);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
@@ -5275,7 +5293,8 @@ void launch_qwen35_decoupled_k_norm_rope_kv_store_batch_f16(
     __half* key_cache, __half* value_cache, std::uint32_t token_count,
     std::uint32_t base_position, std::uint32_t cache_capacity,
     std::uint32_t kv_heads, std::uint32_t head_dim,
-    float theta, float epsilon, hipStream_t stream) {
+    float theta, float epsilon, hipStream_t stream,
+    const DevicePrefillState* prefill_state) {
     if (key == nullptr || value == nullptr || k_norm_weight == nullptr
         || key_cache == nullptr || value_cache == nullptr || token_count == 0
         || cache_capacity == 0 || base_position > cache_capacity
@@ -5287,7 +5306,7 @@ void launch_qwen35_decoupled_k_norm_rope_kv_store_batch_f16(
                        dim3(token_count * kv_heads), dim3(256), 0, stream,
                        key, value, k_norm_weight, key_cache, value_cache, token_count,
                        base_position, cache_capacity, kv_heads, head_dim,
-                       theta, epsilon);
+                       theta, epsilon, prefill_state);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
@@ -6149,7 +6168,14 @@ __global__ void qwen35_splitk_suffix_attn_stage1_halfwave_unrolled_kernel(
     std::uint32_t kv_heads,
     std::uint32_t head_dim,
     float scale,
-    std::uint32_t num_splits) {
+    std::uint32_t num_splits,
+    const DevicePrefillState* __restrict__ prefill_state) {
+
+    if (prefill_state != nullptr) {
+        base_position = prefill_state->base_position;
+        token_count = prefill_state->token_count;
+        cache_capacity = prefill_state->kv_capacity > 0 ? prefill_state->kv_capacity : cache_capacity;
+    }
 
     const std::uint32_t head_pair = blockIdx.x;        // [0, query_heads / 2)
     const std::uint32_t token = blockIdx.y;            // [0, token_count)
@@ -6341,7 +6367,12 @@ __global__ void qwen35_splitk_suffix_attn_stage2_kernel(
     std::uint32_t token_count,
     std::uint32_t query_heads,
     std::uint32_t head_dim,
-    std::uint32_t num_splits) {
+    std::uint32_t num_splits,
+    const DevicePrefillState* __restrict__ prefill_state) {
+
+    if (prefill_state != nullptr) {
+        token_count = prefill_state->token_count;
+    }
 
     const std::uint32_t pair = blockIdx.x;
     const std::uint32_t token = pair / query_heads;
@@ -6432,7 +6463,8 @@ void launch_qwen35_splitk_suffix_attention_f16(
     std::uint32_t head_dim,
     float scale,
     std::uint32_t num_splits,
-    hipStream_t stream) {
+    hipStream_t stream,
+    const DevicePrefillState* prefill_state) {
 
     if (q == nullptr || key_cache == nullptr || value_cache == nullptr ||
         gate == nullptr || gated_output == nullptr || d_split_workspace == nullptr ||
@@ -6458,7 +6490,7 @@ void launch_qwen35_splitk_suffix_attention_f16(
         q, key_cache, value_cache,
         d_partial_max, d_partial_sum, d_partial_acc,
         token_count, base_position, cache_capacity,
-        query_heads, kv_heads, head_dim, scale, num_splits);
+        query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
     MIINFER_HIP_CHECK(hipGetLastError());
 
     // Stage 2
@@ -6469,7 +6501,7 @@ void launch_qwen35_splitk_suffix_attention_f16(
         grid2, block2, 0, stream,
         d_partial_max, d_partial_sum, d_partial_acc,
         gate, gated_output,
-        token_count, query_heads, head_dim, num_splits);
+        token_count, query_heads, head_dim, num_splits, prefill_state);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

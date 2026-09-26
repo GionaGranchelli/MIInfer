@@ -92,7 +92,8 @@ public:
         std::uint32_t base_position,
         std::uint32_t token_count,
         float* d_final_hidden_out,
-        hipStream_t stream = nullptr);
+        hipStream_t stream = nullptr,
+        const DevicePrefillState* prefill_state = nullptr);
 
     // Host token overload: copies host tokens to temporary device buffer and calls forward
     void forward(
@@ -187,6 +188,11 @@ public:
     void cleanup_decode_graph();
     [[nodiscard]] bool is_decode_graph_captured() const noexcept { return decode_graph_exec_ != nullptr; }
 
+    // Reusable Suffix Prefill Graph Capture & Replay (512-token macro tile)
+    void capture_suffix_graph(hipStream_t stream = nullptr);
+    void cleanup_suffix_graph();
+    [[nodiscard]] bool is_suffix_graph_captured() const noexcept { return suffix_graph_exec_ != nullptr; }
+
 private:
     std::string model_name_ = "Qwen3.8-27B";
     std::string quantization_ = "Q4_K_M";
@@ -229,6 +235,10 @@ private:
     void* d_decode_state_ = nullptr; // DeviceDecodeState
     std::uint32_t* d_decode_tokens_ = nullptr; // [kDefaultCacheCapacity] uint32_t
     hipGraphExec_t decode_graph_exec_ = nullptr;
+
+    // Reusable Device Prefill State & Suffix Graph Exec (512 tokens)
+    void* d_prefill_state_ = nullptr; // DevicePrefillState
+    hipGraphExec_t suffix_graph_exec_ = nullptr;
 
     void allocate_resources();
     void free_resources();

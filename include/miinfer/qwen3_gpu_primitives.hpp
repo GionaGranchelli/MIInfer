@@ -36,6 +36,14 @@ struct alignas(64) DeviceDecodeState {
 };
 static_assert(sizeof(DeviceDecodeState) == 64);
 
+struct alignas(64) DevicePrefillState {
+    std::uint32_t base_position;
+    std::uint32_t token_count;
+    std::uint32_t total_length;
+    std::uint32_t kv_capacity;
+};
+static_assert(sizeof(DevicePrefillState) == 64);
+
 // M23 wide-MMQ activation block: four Q8_1 groups for 128 contiguous input
 // values. `s` retains the original group sums; `qsum_scaled` caches the
 // canonical half-rounded d times the integer quantized sum for affine MMQ.
@@ -462,7 +470,8 @@ void launch_qwen35_conv_silu_split_batch(
     std::uint32_t history_capacity,
     std::uint32_t channels,
     std::uint32_t conv_kernel,
-    hipStream_t stream = nullptr);
+    hipStream_t stream = nullptr,
+    const DevicePrefillState* prefill_state = nullptr);
 
 void launch_qwen35_head_l2_normalize(
     const float* input,
@@ -654,7 +663,8 @@ void launch_qwen35_splitk_suffix_attention_f16(
     std::uint32_t head_dim,
     float scale,
     std::uint32_t num_splits = 64,
-    hipStream_t stream = nullptr);
+    hipStream_t stream = nullptr,
+    const DevicePrefillState* prefill_state = nullptr);
 
 // V2-0006 Candidate A: Native query-tiled GQA prefill attention (Wave64 / gfx906).
 void launch_prefill_v2_query_tiled_attention_f16(
@@ -786,7 +796,8 @@ void launch_qwen35_decoupled_q_split_norm_rope_batch(
     std::uint32_t head_dim,
     float theta,
     float epsilon,
-    hipStream_t stream = nullptr);
+    hipStream_t stream = nullptr,
+    const DevicePrefillState* prefill_state = nullptr);
 
 void launch_qwen35_decoupled_k_norm_rope_kv_store_batch_f16(
     const float* key,
@@ -801,7 +812,8 @@ void launch_qwen35_decoupled_k_norm_rope_kv_store_batch_f16(
     std::uint32_t head_dim,
     float theta,
     float epsilon,
-    hipStream_t stream = nullptr);
+    hipStream_t stream = nullptr,
+    const DevicePrefillState* prefill_state = nullptr);
 
 inline void launch_qwen35_tiled_online_attention(
     const float* q,

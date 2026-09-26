@@ -264,7 +264,8 @@ void PrefillV2RecurrentLayer::forward(
     RecurrentLayerState& outgoing_state,
     RecurrentLayerWorkspace& ws,
     std::uint32_t token_count,
-    hipStream_t stream) const {
+    hipStream_t stream,
+    const DevicePrefillState* prefill_state) const {
     if (d_input == nullptr || d_output == nullptr) {
         throw std::runtime_error("PrefillV2: null input/output pointer");
     }
@@ -326,7 +327,7 @@ void PrefillV2RecurrentLayer::forward(
     launch_qwen35_conv_silu_split_batch(
         ws.qkv, d_ssm_conv_, outgoing_state.d_conv_history,
         ws.query, ws.key, ws.value,
-        base_position, token_count, kConvKernel, kChannels, kConvKernel, stream);
+        base_position, token_count, kConvKernel, kChannels, kConvKernel, stream, prefill_state);
 
     // 5. Dual Head L2 Normalization
     launch_qwen35_dual_head_l2_normalize_batch(

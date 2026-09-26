@@ -91,7 +91,9 @@ PrefillV2Model::PrefillV2Model(PrefillV2Model&& other) noexcept
       d_temp_tokens_(other.d_temp_tokens_),
       d_decode_state_(other.d_decode_state_),
       d_decode_tokens_(other.d_decode_tokens_),
-      decode_graph_exec_(other.decode_graph_exec_) {
+      decode_graph_exec_(other.decode_graph_exec_),
+      d_prefill_state_(other.d_prefill_state_),
+      suffix_graph_exec_(other.suffix_graph_exec_) {
     other.d_embedding_weights_ = nullptr;
     other.d_final_norm_weights_ = nullptr;
     other.d_output_weights_ = nullptr;
@@ -104,6 +106,8 @@ PrefillV2Model::PrefillV2Model(PrefillV2Model&& other) noexcept
     other.d_decode_state_ = nullptr;
     other.d_decode_tokens_ = nullptr;
     other.decode_graph_exec_ = nullptr;
+    other.d_prefill_state_ = nullptr;
+    other.suffix_graph_exec_ = nullptr;
 }
 
 PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
@@ -132,6 +136,8 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
         d_decode_state_ = other.d_decode_state_;
         d_decode_tokens_ = other.d_decode_tokens_;
         decode_graph_exec_ = other.decode_graph_exec_;
+        d_prefill_state_ = other.d_prefill_state_;
+        suffix_graph_exec_ = other.suffix_graph_exec_;
 
         other.d_embedding_weights_ = nullptr;
         other.d_final_norm_weights_ = nullptr;
@@ -145,6 +151,8 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
         other.d_decode_state_ = nullptr;
         other.d_decode_tokens_ = nullptr;
         other.decode_graph_exec_ = nullptr;
+        other.d_prefill_state_ = nullptr;
+        other.suffix_graph_exec_ = nullptr;
     }
     return *this;
 }
@@ -161,10 +169,18 @@ void PrefillV2Model::allocate_resources() {
     MIINFER_HIP_CHECK(hipMalloc(&d_decode_state_, sizeof(DeviceDecodeState)));
     MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&d_decode_tokens_), kv_capacity_ * sizeof(std::uint32_t)));
     decode_graph_exec_ = nullptr;
+
+    MIINFER_HIP_CHECK(hipMalloc(&d_prefill_state_, sizeof(DevicePrefillState)));
+    suffix_graph_exec_ = nullptr;
 }
 
 void PrefillV2Model::free_resources() {
     cleanup_decode_graph();
+    cleanup_suffix_graph();
+    if (d_prefill_state_ != nullptr) {
+        (void)hipFree(d_prefill_state_);
+        d_prefill_state_ = nullptr;
+    }
     if (d_decode_state_ != nullptr) {
         (void)hipFree(d_decode_state_);
         d_decode_state_ = nullptr;
@@ -231,7 +247,8 @@ void PrefillV2Model::forward(
     std::uint32_t base_position,
     std::uint32_t token_count,
     float* d_final_hidden_out,
-    hipStream_t stream) {
+    hipStream_t stream,
+    const DevicePrefillState* prefill_state) {
 
     if (token_count == 0 || token_count > kMaxPrefillBatch) {
         throw std::runtime_error("PrefillV2Model::forward: invalid token_count " + std::to_string(token_count)
@@ -270,7 +287,8 @@ void PrefillV2Model::forward(
             ws,
             base_position,
             token_count,
-            stream);
+            stream,
+            prefill_state);
     }
 
     // 3. Final RMS Norm: d_ping_ -> d_final_hidden_out
@@ -597,21 +615,51 @@ GenerateStats PrefillV2Model::generate(
         stats.restore_ms = std::chrono::duration<double, std::milli>(t_restore_end - t_restore_start).count();
 
         const auto t_suffix_start = std::chrono::steady_clock::now();
+        const char* env_graph = std::getenv("MIINFER_HIP_GRAPH");
+        bool enable_graph = options.use_hip_graph && (env_graph == nullptr || std::string_view(env_graph) != "0");
+        hipStream_t exec_stream = (stream != nullptr) ? stream : hipStreamPerThread;
+
         // Prefill ONLY the suffix tokens: [prefix_len .. prompt_len - 1]
         std::uint32_t pos = prefix_len;
         while (pos < prompt_len) {
             std::uint32_t chunk = std::min<std::uint32_t>(kPrefillV2MacroTile, prompt_len - pos);
-            MIINFER_HIP_CHECK(hipMemcpyAsync(
-                d_temp_tokens_,
-                prompt.data() + pos,
-                chunk * sizeof(std::uint32_t),
-                hipMemcpyHostToDevice,
-                stream));
-            forward(d_temp_tokens_, pos, chunk, d_pong_, stream);
+            if (enable_graph && chunk == kPrefillV2MacroTile) {
+                capture_suffix_graph(exec_stream);
+                DevicePrefillState prefill_state_host{};
+                prefill_state_host.base_position = pos;
+                prefill_state_host.token_count = chunk;
+                prefill_state_host.total_length = pos + chunk;
+                prefill_state_host.kv_capacity = kv_capacity_;
+
+                MIINFER_HIP_CHECK(hipMemcpyAsync(
+                    d_temp_tokens_,
+                    prompt.data() + pos,
+                    chunk * sizeof(std::uint32_t),
+                    hipMemcpyHostToDevice,
+                    exec_stream));
+                MIINFER_HIP_CHECK(hipMemcpyAsync(
+                    d_prefill_state_,
+                    &prefill_state_host,
+                    sizeof(DevicePrefillState),
+                    hipMemcpyHostToDevice,
+                    exec_stream));
+                MIINFER_HIP_CHECK(hipGraphLaunch(suffix_graph_exec_, exec_stream));
+            } else {
+                MIINFER_HIP_CHECK(hipMemcpyAsync(
+                    d_temp_tokens_,
+                    prompt.data() + pos,
+                    chunk * sizeof(std::uint32_t),
+                    hipMemcpyHostToDevice,
+                    exec_stream));
+                forward(d_temp_tokens_, pos, chunk, d_pong_, exec_stream);
+            }
             pos += chunk;
             last_chunk = chunk;
         }
-        MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
+        for (auto& st : recurrent_states_) {
+            st.set_position(pos);
+        }
+        MIINFER_HIP_CHECK(hipStreamSynchronize(exec_stream));
         const auto t_suffix_end = std::chrono::steady_clock::now();
         stats.suffix_prefill_ms = std::chrono::duration<double, std::milli>(t_suffix_end - t_suffix_start).count();
     } else {
@@ -839,6 +887,35 @@ void PrefillV2Model::capture_decode_graph(hipStream_t stream) {
 
     MIINFER_HIP_CHECK(hipStreamEndCapture(capture_stream, &graph));
     MIINFER_HIP_CHECK(hipGraphInstantiate(&decode_graph_exec_, graph, nullptr, nullptr, 0));
+    MIINFER_HIP_CHECK(hipGraphDestroy(graph));
+}
+
+void PrefillV2Model::cleanup_suffix_graph() {
+    if (suffix_graph_exec_ != nullptr) {
+        (void)hipGraphExecDestroy(suffix_graph_exec_);
+        suffix_graph_exec_ = nullptr;
+    }
+}
+
+void PrefillV2Model::capture_suffix_graph(hipStream_t stream) {
+    if (suffix_graph_exec_ != nullptr) {
+        return;
+    }
+    if (d_embedding_weights_ == nullptr || d_final_norm_weights_ == nullptr ||
+        d_temp_tokens_ == nullptr || d_prefill_state_ == nullptr || ws_mgr_ == nullptr) {
+        throw std::runtime_error("PrefillV2Model::capture_suffix_graph: required weights/buffers not allocated");
+    }
+
+    hipStream_t capture_stream = (stream != nullptr) ? stream : hipStreamPerThread;
+    auto* prefill_state = static_cast<DevicePrefillState*>(d_prefill_state_);
+
+    hipGraph_t graph = nullptr;
+    MIINFER_HIP_CHECK(hipStreamBeginCapture(capture_stream, hipStreamCaptureModeRelaxed));
+
+    forward(d_temp_tokens_, 0, kPrefillV2MacroTile, d_pong_, capture_stream, prefill_state);
+
+    MIINFER_HIP_CHECK(hipStreamEndCapture(capture_stream, &graph));
+    MIINFER_HIP_CHECK(hipGraphInstantiate(&suffix_graph_exec_, graph, nullptr, nullptr, 0));
     MIINFER_HIP_CHECK(hipGraphDestroy(graph));
 }
 

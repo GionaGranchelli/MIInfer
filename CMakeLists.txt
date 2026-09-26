@@ -228,6 +228,10 @@ if(MIINFER_ENABLE_HIP)
     set_source_files_properties(bench/v2_0017_pipelined_stream_bakeoff.cpp PROPERTIES LANGUAGE HIP)
     target_link_libraries(miinfer-v2-0017-pipelined-stream-bakeoff PRIVATE miinfer_hip)
     target_compile_options(miinfer-v2-0017-pipelined-stream-bakeoff PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-v2-0018-suffix-hip-graph-bench bench/v2_0018_suffix_hip_graph_bench.cpp)
+    target_link_libraries(miinfer-v2-0018-suffix-hip-graph-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-v2-0018-suffix-hip-graph-bench PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
 add_executable(miinfer-host-test tests/host_test.cpp)

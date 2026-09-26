@@ -194,7 +194,8 @@ void PrefillV2AttentionLayer::forward(
     const PrefillV2Workspace& ws,
     std::uint32_t base_position,
     std::uint32_t token_count,
-    hipStream_t stream) const {
+    hipStream_t stream,
+    const DevicePrefillState* prefill_state) const {
 
     if (token_count == 0 || token_count > kMaxPrefillBatch) {
         throw std::runtime_error("PrefillV2AttentionLayer::forward: invalid token_count " + std::to_string(token_count));
@@ -230,21 +231,21 @@ void PrefillV2AttentionLayer::forward(
     // 3. Q Split, RMSNorm, and RoPE
     launch_qwen35_decoupled_q_split_norm_rope_batch(
         ws.attn_qfull, d_q_norm_, ws.attn_q_rope, ws.gate,
-        token_count, base_position, 24, 256, kRopeTheta, kRmsNormEpsilon, stream);
+        token_count, base_position, 24, 256, kRopeTheta, kRmsNormEpsilon, stream, prefill_state);
 
     // 4. K RMSNorm, RoPE, and Store K + V into KV Cache (FP16)
     launch_qwen35_decoupled_k_norm_rope_kv_store_batch_f16(
         ws.attn_k, ws.attn_v, d_k_norm_, kv_cache.key_cache, kv_cache.value_cache,
         token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
-        4, 256, kRopeTheta, kRmsNormEpsilon, stream);
+        4, 256, kRopeTheta, kRmsNormEpsilon, stream, prefill_state);
 
     // 5. Tiled Online Causal Attention with Sigmoid Gating (Split-K specialized for suffix prefill)
-    if (token_count <= 512 && base_position > 0 && ws.splitk_attn_workspace != nullptr) {
+    if (((token_count <= 512 && base_position > 0) || prefill_state != nullptr) && ws.splitk_attn_workspace != nullptr) {
         launch_qwen35_splitk_suffix_attention_f16(
             ws.attn_q_rope, kv_cache.key_cache, kv_cache.value_cache, ws.gate, ws.attn_gated_output,
             ws.splitk_attn_workspace, token_count, base_position,
             static_cast<std::uint32_t>(kv_cache.capacity),
-            24, 4, 256, 1.0F / std::sqrt(256.0F), 32, stream);
+            24, 4, 256, 1.0F / std::sqrt(256.0F), 32, stream, prefill_state);
     } else {
         launch_qwen35_tiled_online_attention_batch_f16(
             ws.attn_q_rope, kv_cache.key_cache, kv_cache.value_cache, ws.gate, ws.attn_gated_output,

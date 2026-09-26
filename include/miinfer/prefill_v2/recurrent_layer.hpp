@@ -69,7 +69,8 @@ public:
         RecurrentLayerState& outgoing_state,
         RecurrentLayerWorkspace& workspace,
         std::uint32_t token_count,
-        hipStream_t stream = nullptr) const;
+        hipStream_t stream = nullptr,
+        const DevicePrefillState* prefill_state = nullptr) const;
 
     // Executes single-token specialized decode step.
     void decode(

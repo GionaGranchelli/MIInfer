@@ -27,19 +27,20 @@ void PrefillV2TopologyBlock::forward(
     PrefillV2Workspace& ws,
     std::uint32_t base_position,
     std::uint32_t token_count,
-    hipStream_t stream) const {
+    hipStream_t stream,
+    const DevicePrefillState* prefill_state) const {
 
     // Layer 0 (GDN): d_ping -> d_pong
-    gdn0_.forward(d_ping, d_pong, state0_in, state0_out, ws, token_count, stream);
+    gdn0_.forward(d_ping, d_pong, state0_in, state0_out, ws, token_count, stream, prefill_state);
 
     // Layer 1 (GDN): d_pong -> d_ping
-    gdn1_.forward(d_pong, d_ping, state1_in, state1_out, ws, token_count, stream);
+    gdn1_.forward(d_pong, d_ping, state1_in, state1_out, ws, token_count, stream, prefill_state);
 
     // Layer 2 (GDN): d_ping -> d_pong
-    gdn2_.forward(d_ping, d_pong, state2_in, state2_out, ws, token_count, stream);
+    gdn2_.forward(d_ping, d_pong, state2_in, state2_out, ws, token_count, stream, prefill_state);
 
     // Layer 3 (GQA): d_pong -> d_final_output
-    gqa3_.forward(d_pong, d_final_output, kv_cache3, ws, base_position, token_count, stream);
+    gqa3_.forward(d_pong, d_final_output, kv_cache3, ws, base_position, token_count, stream, prefill_state);
 }
 
 void PrefillV2TopologyBlock::decode(
