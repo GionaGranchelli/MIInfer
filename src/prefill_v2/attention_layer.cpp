@@ -238,11 +238,19 @@ void PrefillV2AttentionLayer::forward(
         token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
         4, 256, kRopeTheta, kRmsNormEpsilon, stream);
 
-    // 5. Tiled Online Causal Attention with Sigmoid Gating
-    launch_qwen35_tiled_online_attention_batch_f16(
-        ws.attn_q_rope, kv_cache.key_cache, kv_cache.value_cache, ws.gate, ws.attn_gated_output,
-        token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
-        24, 4, 256, 1.0F / std::sqrt(256.0F), stream);
+    // 5. Tiled Online Causal Attention with Sigmoid Gating (Split-K specialized for suffix prefill)
+    if (token_count <= 512 && base_position > 0 && ws.splitk_attn_workspace != nullptr) {
+        launch_qwen35_splitk_suffix_attention_f16(
+            ws.attn_q_rope, kv_cache.key_cache, kv_cache.value_cache, ws.gate, ws.attn_gated_output,
+            ws.splitk_attn_workspace, token_count, base_position,
+            static_cast<std::uint32_t>(kv_cache.capacity),
+            24, 4, 256, 1.0F / std::sqrt(256.0F), 32, stream);
+    } else {
+        launch_qwen35_tiled_online_attention_batch_f16(
+            ws.attn_q_rope, kv_cache.key_cache, kv_cache.value_cache, ws.gate, ws.attn_gated_output,
+            token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
+            24, 4, 256, 1.0F / std::sqrt(256.0F), stream);
+    }
 
     // 6. Attention Output Projection (O: [6144 -> 5120])
     launch_mx_q8_1_mmq_quantize(
@@ -340,11 +348,19 @@ void PrefillV2AttentionLayer::forward_profiled(
         4, 256, kRopeTheta, kRmsNormEpsilon, stream);
     MIINFER_HIP_CHECK(hipEventRecord(ev_rope, stream));
 
-    // 5. Causal Attention
-    launch_qwen35_tiled_online_attention_batch_f16(
-        ws.attn_q_rope, kv_cache.key_cache, kv_cache.value_cache, ws.gate, ws.attn_gated_output,
-        token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
-        24, 4, 256, 1.0F / std::sqrt(256.0F), stream);
+    // 5. Causal Attention (Split-K specialized for suffix prefill)
+    if (token_count <= 512 && base_position > 0 && ws.splitk_attn_workspace != nullptr) {
+        launch_qwen35_splitk_suffix_attention_f16(
+            ws.attn_q_rope, kv_cache.key_cache, kv_cache.value_cache, ws.gate, ws.attn_gated_output,
+            ws.splitk_attn_workspace, token_count, base_position,
+            static_cast<std::uint32_t>(kv_cache.capacity),
+            24, 4, 256, 1.0F / std::sqrt(256.0F), 32, stream);
+    } else {
+        launch_qwen35_tiled_online_attention_batch_f16(
+            ws.attn_q_rope, kv_cache.key_cache, kv_cache.value_cache, ws.gate, ws.attn_gated_output,
+            token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
+            24, 4, 256, 1.0F / std::sqrt(256.0F), stream);
+    }
     MIINFER_HIP_CHECK(hipEventRecord(ev_attn, stream));
 
     // 6. O Projection

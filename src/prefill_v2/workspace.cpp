@@ -64,11 +64,17 @@ PrefillV2WorkspaceManager::PrefillV2WorkspaceManager(std::size_t max_tokens)
     const std::size_t ffn_act_bytes = align128(max_tokens_ * kFfnInner * sizeof(float));
     const std::size_t ffn_down_bytes = align128(max_tokens_ * kHidden * sizeof(float));
 
+    // Split-K Suffix Attention workspace: supports up to 32 splits
+    constexpr std::size_t kMaxSplitK = 32;
+    const std::size_t splitk_attn_floats = kMaxSplitK * max_tokens_ * 24 * (256 + 2);
+    const std::size_t splitk_attn_bytes = align128(splitk_attn_floats * sizeof(float));
+
     total_bytes_ = norm_bytes + qkv_bytes + gate_bytes + 4 * beta_decay_bytes
         + query_bytes + key_bytes + value_bytes + gdn_scratch_bytes
         + gdn_raw_bytes + gated_bytes + ssm_out_bytes + residual_bytes + post_norm_bytes
         + attn_qfull_bytes + attn_q_rope_bytes + attn_k_bytes + attn_v_bytes + attn_gated_bytes
-        + mmq_q8_bytes + q8_1_bytes + ffn_gate_bytes + ffn_up_bytes + ffn_act_bytes + ffn_down_bytes;
+        + mmq_q8_bytes + q8_1_bytes + ffn_gate_bytes + ffn_up_bytes + ffn_act_bytes + ffn_down_bytes
+        + splitk_attn_bytes;
 
     MIINFER_HIP_CHECK(hipMalloc(&d_buffer_, total_bytes_));
 
@@ -106,6 +112,7 @@ PrefillV2WorkspaceManager::PrefillV2WorkspaceManager(std::size_t max_tokens)
     workspace_.attn_k = reinterpret_cast<float*>(ptr); ptr += attn_k_bytes;
     workspace_.attn_v = reinterpret_cast<float*>(ptr); ptr += attn_v_bytes;
     workspace_.attn_gated_output = reinterpret_cast<float*>(ptr); ptr += attn_gated_bytes;
+    workspace_.splitk_attn_workspace = reinterpret_cast<float*>(ptr); ptr += splitk_attn_bytes;
 
     workspace_.mmq_q8 = reinterpret_cast<MxQ8_1MmqBlock*>(ptr); ptr += mmq_q8_bytes;
     workspace_.q8_1 = reinterpret_cast<Q8_1Block*>(ptr); ptr += q8_1_bytes;

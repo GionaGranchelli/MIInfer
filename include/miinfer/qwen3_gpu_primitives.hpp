@@ -638,6 +638,24 @@ void launch_qwen35_tiled_online_attention_batch_f16(
     hipStream_t stream = nullptr,
     bool trace_causal = false);
 
+// V2-0016: Specialized Wave64 Split-K Suffix Attention for Asymmetric Agent Prefill (P >> S)
+void launch_qwen35_splitk_suffix_attention_f16(
+    const float* q,
+    const __half* key_cache,
+    const __half* value_cache,
+    const float* gate,
+    float* gated_output,
+    float* d_split_workspace,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t cache_capacity,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float scale,
+    std::uint32_t num_splits = 64,
+    hipStream_t stream = nullptr);
+
 // V2-0006 Candidate A: Native query-tiled GQA prefill attention (Wave64 / gfx906).
 void launch_prefill_v2_query_tiled_attention_f16(
     const float* q,

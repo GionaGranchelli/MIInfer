@@ -44,6 +44,7 @@ struct PrefillV2Workspace {
     float* attn_k = nullptr;              // [max_tokens, kKvDim (1024)]
     float* attn_v = nullptr;              // [max_tokens, kKvDim (1024)]
     float* attn_gated_output = nullptr;   // [max_tokens, kQDim (6144)]
+    float* splitk_attn_workspace = nullptr; // [max_tokens * 24 * 64 * (256 + 2)] for Split-K suffix attention
 
     // MMQ Q8_1 quantization blocks (compact Mx contract)
     MxQ8_1MmqBlock* mmq_q8 = nullptr;   // [max_tokens * (max(kHidden, kInner, kFfnInner, kQFullDim) / 128)] blocks

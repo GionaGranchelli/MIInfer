@@ -6130,4 +6130,346 @@ void launch_prefill_v2_split_kv_attention_f16(
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
+// -----------------------------------------------------------------------------
+// V2-0016: Specialized Wave64 Split-K Suffix Attention (Half-Wave Dual-Head Unrolled)
+// -----------------------------------------------------------------------------
+
+template <int UNROLL = 4>
+__global__ void qwen35_splitk_suffix_attn_stage1_halfwave_unrolled_kernel(
+    const float* __restrict__ q,
+    const __half* __restrict__ key_cache,
+    const __half* __restrict__ value_cache,
+    float* __restrict__ partial_max,
+    float* __restrict__ partial_sum,
+    float* __restrict__ partial_acc,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t cache_capacity,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float scale,
+    std::uint32_t num_splits) {
+
+    const std::uint32_t head_pair = blockIdx.x;        // [0, query_heads / 2)
+    const std::uint32_t token = blockIdx.y;            // [0, token_count)
+    const std::uint32_t split_id = blockIdx.z;         // [0, num_splits)
+    const std::uint32_t lane = threadIdx.x;            // [0, 64)
+
+    const std::uint32_t sub_wave = lane / 32;          // 0 or 1
+    const std::uint32_t sub_lane = lane % 32;          // [0, 31]
+    const std::uint32_t head = head_pair * 2 + sub_wave;
+    const std::uint32_t dim_offset = sub_lane * 8;     // 8 elements
+
+    if (token >= token_count || head >= query_heads || lane >= 64) return;
+
+    const std::uint32_t kv_head = head / (query_heads / kv_heads);
+    const std::uint32_t total_length = base_position + token + 1;
+    if (total_length > cache_capacity) return;
+
+    const std::uint32_t chunk_size = (total_length + num_splits - 1) / num_splits;
+    const std::uint32_t k_start = split_id * chunk_size;
+    const std::uint32_t k_end = min(k_start + chunk_size, total_length);
+
+    const std::size_t split_head_idx =
+        (static_cast<std::size_t>(split_id) * token_count + token) * query_heads + head;
+
+    if (k_start >= total_length) {
+        if (sub_lane == 0) {
+            partial_max[split_head_idx] = -INFINITY;
+            partial_sum[split_head_idx] = 0.0f;
+        }
+        const std::size_t acc_base = split_head_idx * head_dim + dim_offset;
+        *reinterpret_cast<float4*>(partial_acc + acc_base + 0) = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+        *reinterpret_cast<float4*>(partial_acc + acc_base + 4) = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+        return;
+    }
+
+    const std::size_t q_base =
+        (static_cast<std::size_t>(token) * query_heads + head) * head_dim + dim_offset;
+    const float4 q_vec0 = *reinterpret_cast<const float4*>(q + q_base + 0);
+    const float4 q_vec1 = *reinterpret_cast<const float4*>(q + q_base + 4);
+
+    float4 acc0 = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+    float4 acc1 = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+    float running_max = -INFINITY;
+    float running_sum = 0.0f;
+
+    const std::size_t kv_head_stride = static_cast<std::size_t>(cache_capacity) * head_dim;
+    const std::size_t kv_base = static_cast<std::size_t>(kv_head) * kv_head_stride;
+
+    std::uint32_t pos = k_start;
+
+    // Main unrolled loop
+    for (; pos + UNROLL <= k_end; pos += UNROLL) {
+        // 1. Issue UNROLL key loads in flight
+        uint4 k_raw[UNROLL];
+        #pragma unroll
+        for (int u = 0; u < UNROLL; ++u) {
+            const std::size_t cache_base = kv_base + static_cast<std::size_t>(pos + u) * head_dim + dim_offset;
+            k_raw[u] = *reinterpret_cast<const uint4*>(key_cache + cache_base);
+        }
+
+        // 2. Compute dot products
+        float dots[UNROLL];
+        #pragma unroll
+        for (int u = 0; u < UNROLL; ++u) {
+            const auto* k_half = reinterpret_cast<const __half*>(&k_raw[u]);
+            dots[u] = q_vec0.x * __half2float(k_half[0]) + q_vec0.y * __half2float(k_half[1])
+                    + q_vec0.z * __half2float(k_half[2]) + q_vec0.w * __half2float(k_half[3])
+                    + q_vec1.x * __half2float(k_half[4]) + q_vec1.y * __half2float(k_half[5])
+                    + q_vec1.z * __half2float(k_half[6]) + q_vec1.w * __half2float(k_half[7]);
+        }
+
+        // 3. Half-wave reductions
+        float scores[UNROLL];
+        #pragma unroll
+        for (int u = 0; u < UNROLL; ++u) {
+            float d = dots[u];
+            #pragma unroll
+            for (int offset = 16; offset > 0; offset /= 2) {
+                d += __shfl_xor(d, offset, 32);
+            }
+            scores[u] = __shfl(d * scale, sub_wave * 32, 64);
+        }
+
+        // 4. Issue UNROLL value loads in flight
+        uint4 v_raw[UNROLL];
+        #pragma unroll
+        for (int u = 0; u < UNROLL; ++u) {
+            const std::size_t cache_base = kv_base + static_cast<std::size_t>(pos + u) * head_dim + dim_offset;
+            v_raw[u] = *reinterpret_cast<const uint4*>(value_cache + cache_base);
+        }
+
+        // 5. Softmax updates and PV accumulations
+        #pragma unroll
+        for (int u = 0; u < UNROLL; ++u) {
+            const float score = scores[u];
+            float alpha = 1.0f;
+            float weight = 0.0f;
+            if (sub_lane == 0) {
+                if (score > running_max) {
+                    alpha = expf(running_max - score);
+                    running_sum = running_sum * alpha + 1.0f;
+                    running_max = score;
+                    weight = 1.0f;
+                } else {
+                    weight = expf(score - running_max);
+                    running_sum += weight;
+                }
+            }
+            alpha = __shfl(alpha, sub_wave * 32, 64);
+            weight = __shfl(weight, sub_wave * 32, 64);
+
+            const auto* v_half = reinterpret_cast<const __half*>(&v_raw[u]);
+            acc0.x = acc0.x * alpha + weight * __half2float(v_half[0]);
+            acc0.y = acc0.y * alpha + weight * __half2float(v_half[1]);
+            acc0.z = acc0.z * alpha + weight * __half2float(v_half[2]);
+            acc0.w = acc0.w * alpha + weight * __half2float(v_half[3]);
+
+            acc1.x = acc1.x * alpha + weight * __half2float(v_half[4]);
+            acc1.y = acc1.y * alpha + weight * __half2float(v_half[5]);
+            acc1.z = acc1.z * alpha + weight * __half2float(v_half[6]);
+            acc1.w = acc1.w * alpha + weight * __half2float(v_half[7]);
+        }
+    }
+
+    // Scalar cleanup tail
+    for (; pos < k_end; ++pos) {
+        const std::size_t cache_base = kv_base + static_cast<std::size_t>(pos) * head_dim + dim_offset;
+        const uint4 k_raw = *reinterpret_cast<const uint4*>(key_cache + cache_base);
+        const auto* k_half = reinterpret_cast<const __half*>(&k_raw);
+
+        float dot = q_vec0.x * __half2float(k_half[0]) + q_vec0.y * __half2float(k_half[1])
+                  + q_vec0.z * __half2float(k_half[2]) + q_vec0.w * __half2float(k_half[3])
+                  + q_vec1.x * __half2float(k_half[4]) + q_vec1.y * __half2float(k_half[5])
+                  + q_vec1.z * __half2float(k_half[6]) + q_vec1.w * __half2float(k_half[7]);
+
+        #pragma unroll
+        for (int offset = 16; offset > 0; offset /= 2) {
+            dot += __shfl_xor(dot, offset, 32);
+        }
+        float score = dot * scale;
+        score = __shfl(score, sub_wave * 32, 64);
+
+        float alpha = 1.0f;
+        float weight = 0.0f;
+        if (sub_lane == 0) {
+            if (score > running_max) {
+                alpha = expf(running_max - score);
+                running_sum = running_sum * alpha + 1.0f;
+                running_max = score;
+                weight = 1.0f;
+            } else {
+                weight = expf(score - running_max);
+                running_sum += weight;
+            }
+        }
+        alpha = __shfl(alpha, sub_wave * 32, 64);
+        weight = __shfl(weight, sub_wave * 32, 64);
+
+        const uint4 v_raw = *reinterpret_cast<const uint4*>(value_cache + cache_base);
+        const auto* v_half = reinterpret_cast<const __half*>(&v_raw);
+
+        acc0.x = acc0.x * alpha + weight * __half2float(v_half[0]);
+        acc0.y = acc0.y * alpha + weight * __half2float(v_half[1]);
+        acc0.z = acc0.z * alpha + weight * __half2float(v_half[2]);
+        acc0.w = acc0.w * alpha + weight * __half2float(v_half[3]);
+
+        acc1.x = acc1.x * alpha + weight * __half2float(v_half[4]);
+        acc1.y = acc1.y * alpha + weight * __half2float(v_half[5]);
+        acc1.z = acc1.z * alpha + weight * __half2float(v_half[6]);
+        acc1.w = acc1.w * alpha + weight * __half2float(v_half[7]);
+    }
+
+    if (sub_lane == 0) {
+        partial_max[split_head_idx] = running_max;
+        partial_sum[split_head_idx] = running_sum;
+    }
+    const std::size_t acc_base = split_head_idx * head_dim + dim_offset;
+    *reinterpret_cast<float4*>(partial_acc + acc_base + 0) = acc0;
+    *reinterpret_cast<float4*>(partial_acc + acc_base + 4) = acc1;
+}
+
+__global__ void qwen35_splitk_suffix_attn_stage2_kernel(
+    const float* __restrict__ partial_max,
+    const float* __restrict__ partial_sum,
+    const float* __restrict__ partial_acc,
+    const float* __restrict__ gate,
+    float* __restrict__ gated_output,
+    std::uint32_t token_count,
+    std::uint32_t query_heads,
+    std::uint32_t head_dim,
+    std::uint32_t num_splits) {
+
+    const std::uint32_t pair = blockIdx.x;
+    const std::uint32_t token = pair / query_heads;
+    const std::uint32_t head = pair % query_heads;
+    const std::uint32_t lane = threadIdx.x;
+
+    if (token >= token_count || head >= query_heads || lane >= 64) return;
+
+    __shared__ float s_global_max;
+    __shared__ float s_global_sum;
+
+    if (lane == 0) {
+        float global_max = -INFINITY;
+        for (std::uint32_t s = 0; s < num_splits; ++s) {
+            const std::size_t split_idx =
+                (static_cast<std::size_t>(s) * token_count + token) * query_heads + head;
+            const float m = partial_max[split_idx];
+            if (m > global_max) {
+                global_max = m;
+            }
+        }
+        s_global_max = global_max;
+
+        float global_sum = 0.0f;
+        for (std::uint32_t s = 0; s < num_splits; ++s) {
+            const std::size_t split_idx =
+                (static_cast<std::size_t>(s) * token_count + token) * query_heads + head;
+            const float m = partial_max[split_idx];
+            const float l = partial_sum[split_idx];
+            if (l > 0.0f && std::isfinite(m)) {
+                global_sum += l * expf(m - global_max);
+            }
+        }
+        s_global_sum = global_sum;
+    }
+    __syncthreads();
+
+    const float global_max = s_global_max;
+    const float global_sum = s_global_sum;
+    const float inv_sum = (global_sum > 0.0f) ? (1.0f / global_sum) : 0.0f;
+
+    float4 total_acc = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+    const std::size_t dim_offset = lane * 4;
+
+    for (std::uint32_t s = 0; s < num_splits; ++s) {
+        const std::size_t split_idx =
+            (static_cast<std::size_t>(s) * token_count + token) * query_heads + head;
+        const float m = partial_max[split_idx];
+        const float l = partial_sum[split_idx];
+        if (l > 0.0f && std::isfinite(m)) {
+            const float alpha = expf(m - global_max);
+            const std::size_t acc_base = split_idx * head_dim + dim_offset;
+            const float4 partial = *reinterpret_cast<const float4*>(partial_acc + acc_base);
+            total_acc.x += partial.x * alpha;
+            total_acc.y += partial.y * alpha;
+            total_acc.z += partial.z * alpha;
+            total_acc.w += partial.w * alpha;
+        }
+    }
+
+    const std::size_t out_base =
+        (static_cast<std::size_t>(token) * query_heads + head) * head_dim + dim_offset;
+    if (gate != nullptr) {
+        const float4 g_vec = *reinterpret_cast<const float4*>(gate + out_base);
+        total_acc.x *= (1.0f / (1.0f + expf(-g_vec.x)));
+        total_acc.y *= (1.0f / (1.0f + expf(-g_vec.y)));
+        total_acc.z *= (1.0f / (1.0f + expf(-g_vec.z)));
+        total_acc.w *= (1.0f / (1.0f + expf(-g_vec.w)));
+    }
+
+    float4 out = make_float4(
+        total_acc.x * inv_sum, total_acc.y * inv_sum, total_acc.z * inv_sum, total_acc.w * inv_sum);
+    *reinterpret_cast<float4*>(gated_output + out_base) = out;
+}
+
+void launch_qwen35_splitk_suffix_attention_f16(
+    const float* q,
+    const __half* key_cache,
+    const __half* value_cache,
+    const float* gate,
+    float* gated_output,
+    float* d_split_workspace,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t cache_capacity,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float scale,
+    std::uint32_t num_splits,
+    hipStream_t stream) {
+
+    if (q == nullptr || key_cache == nullptr || value_cache == nullptr ||
+        gate == nullptr || gated_output == nullptr || d_split_workspace == nullptr ||
+        token_count == 0 || query_heads == 0 || kv_heads == 0 || head_dim != 256 ||
+        query_heads % 2 != 0 || !std::isfinite(scale)) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+
+    if (num_splits > 64) num_splits = 64;
+    if (num_splits == 0) num_splits = 64;
+
+    const std::size_t total_meta = static_cast<std::size_t>(num_splits) * token_count * query_heads;
+    float* d_partial_max = d_split_workspace;
+    float* d_partial_sum = d_split_workspace + total_meta;
+    float* d_partial_acc = d_split_workspace + total_meta * 2;
+
+    // Stage 1
+    dim3 grid1(query_heads / 2, token_count, num_splits);
+    dim3 block1(64);
+    hipLaunchKernelGGL(
+        (qwen35_splitk_suffix_attn_stage1_halfwave_unrolled_kernel<4>),
+        grid1, block1, 0, stream,
+        q, key_cache, value_cache,
+        d_partial_max, d_partial_sum, d_partial_acc,
+        token_count, base_position, cache_capacity,
+        query_heads, kv_heads, head_dim, scale, num_splits);
+    MIINFER_HIP_CHECK(hipGetLastError());
+
+    // Stage 2
+    dim3 grid2(token_count * query_heads);
+    dim3 block2(64);
+    hipLaunchKernelGGL(
+        qwen35_splitk_suffix_attn_stage2_kernel,
+        grid2, block2, 0, stream,
+        d_partial_max, d_partial_sum, d_partial_acc,
+        gate, gated_output,
+        token_count, query_heads, head_dim, num_splits);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
 }  // namespace miinfer

@@ -203,6 +203,16 @@ if(MIINFER_ENABLE_HIP)
     add_executable(miinfer-suffix-ttft-attribution-bench bench/suffix_ttft_attribution_bench.cpp)
     target_link_libraries(miinfer-suffix-ttft-attribution-bench PRIVATE miinfer_hip)
     target_compile_options(miinfer-suffix-ttft-attribution-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-suffix-attention-bakeoff bench/suffix_attention_bakeoff.cpp)
+    set_source_files_properties(bench/suffix_attention_bakeoff.cpp PROPERTIES LANGUAGE HIP)
+    target_link_libraries(miinfer-suffix-attention-bakeoff PRIVATE miinfer_hip)
+    target_compile_options(miinfer-suffix-attention-bakeoff PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-suffix-attention-halfwave-multitoken bench/suffix_attention_halfwave_multitoken.cpp)
+    set_source_files_properties(bench/suffix_attention_halfwave_multitoken.cpp PROPERTIES LANGUAGE HIP)
+    target_link_libraries(miinfer-suffix-attention-halfwave-multitoken PRIVATE miinfer_hip)
+    target_compile_options(miinfer-suffix-attention-halfwave-multitoken PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
 add_executable(miinfer-host-test tests/host_test.cpp)
