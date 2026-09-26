@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1790434022.4171183,
-    "seen": 1790437069.9286067,
-    "ast_hash": "cf91a9b7144d047e6752304896c98167",
+    "mtime": 1790439593.0206347,
+    "seen": 1790440737.8784504,
+    "ast_hash": "d87351a002de12f2eb3c91661c14a7b1",
     "semantic_hash": ""
   },
   "README.md": {
@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1790433695.192565,
-    "seen": 1790437069.9281101,
-    "ast_hash": "725aee3cc3fb33d82eca1eda9b2f07f6",
+    "mtime": 1790439285.589832,
+    "seen": 1790440737.877944,
+    "ast_hash": "55bdee809c35efa82c4cf9a5bf014022",
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_primitives.hpp": {
@@ -5670,9 +5670,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/prefill_v2/kv_cache.hpp": {
-    "mtime": 1790283655.2634227,
-    "seen": 1790284896.7319162,
-    "ast_hash": "ef0b0841db094fb0591b4ed92903bc32",
+    "mtime": 1790439206.9461384,
+    "seen": 1790440737.8779175,
+    "ast_hash": "b0e9c371d46813021648e6187fb654c2",
     "semantic_hash": ""
   },
   "include/miinfer/prefill_v2/topology_block.hpp": {
@@ -5682,15 +5682,15 @@
     "semantic_hash": ""
   },
   "src/prefill_v2/attention_layer.cpp": {
-    "mtime": 1790433811.917049,
-    "seen": 1790437069.9284687,
-    "ast_hash": "e06293ddccd5258daf7fc13e807c8bcd",
+    "mtime": 1790439361.6895356,
+    "seen": 1790440737.8783185,
+    "ast_hash": "9008afd907b00de229bdc5ef691cb980",
     "semantic_hash": ""
   },
   "src/prefill_v2/kv_cache.cpp": {
-    "mtime": 1790283661.1143866,
-    "seen": 1790284896.732337,
-    "ast_hash": "1197d9e9f53f8fc728630407dd96d1df",
+    "mtime": 1790439216.4061015,
+    "seen": 1790440737.8783202,
+    "ast_hash": "54eea388385b5f63f8d0e829dd4fe3ef",
     "semantic_hash": ""
   },
   "src/prefill_v2/topology_block.cpp": {
@@ -5712,15 +5712,15 @@
     "semantic_hash": ""
   },
   "include/miinfer/prefill_v2/model.hpp": {
-    "mtime": 1790433838.9009297,
-    "seen": 1790437069.9280858,
-    "ast_hash": "b2c0b6732b9159959e96206a56f3b588",
+    "mtime": 1790439383.5264506,
+    "seen": 1790440737.87792,
+    "ast_hash": "71de723a6ad20067b8226e0566c20f3d",
     "semantic_hash": ""
   },
   "src/prefill_v2/model.cpp": {
-    "mtime": 1790433888.6917095,
-    "seen": 1790437069.9284723,
-    "ast_hash": "555d8977f5d34de3e3043da10f4e1fb2",
+    "mtime": 1790439393.0464134,
+    "seen": 1790440737.878322,
+    "ast_hash": "65a06b01f67beff975f7e567a9fe4e6a",
     "semantic_hash": ""
   },
   "experiments/V2-0004-register-resident-gdn-and-full-model.md": {
@@ -5931,6 +5931,24 @@
     "mtime": 1790437054.6449943,
     "seen": 1790437069.9293118,
     "ast_hash": "02e0494985300c0c475c039729f86940",
+    "semantic_hash": ""
+  },
+  "bench/v2_0019_quantized_kv_bench.cpp": {
+    "mtime": 1790439695.1622367,
+    "seen": 1790440737.8778908,
+    "ast_hash": "b42a823adb30d4f1537a4874263a1bca",
+    "semantic_hash": ""
+  },
+  "tests/qwen3_quant_kv_attention_test.cpp": {
+    "mtime": 1790439626.8585029,
+    "seen": 1790440737.8783896,
+    "ast_hash": "2e9f9a84c874380cc431f70450ea7a4b",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-V2-0019-quantized-kv-cache.md": {
+    "mtime": 1790440722.669523,
+    "seen": 1790440737.8792458,
+    "ast_hash": "f714dbb8efa20d2eb07cb3b1582f108f",
     "semantic_hash": ""
   }
 }

@@ -666,6 +666,77 @@ void launch_qwen35_splitk_suffix_attention_f16(
     hipStream_t stream = nullptr,
     const DevicePrefillState* prefill_state = nullptr);
 
+// V2-0019: Direct-Consumption Quantized Split-K Suffix Attention (FP16 / Q8 K / Q8 V)
+void launch_qwen35_splitk_suffix_attention_quant(
+    const float* q,
+    const __half* key_cache_f16,
+    const __half* value_cache_f16,
+    const int8_t* key_cache_q8,
+    const __half* key_scales,
+    const int8_t* value_cache_q8,
+    const __half* value_scales,
+    const float* gate,
+    float* gated_output,
+    float* d_split_workspace,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t cache_capacity,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float scale,
+    bool is_k_q8,
+    bool is_v_q8,
+    std::uint32_t num_splits = 64,
+    hipStream_t stream = nullptr,
+    const DevicePrefillState* prefill_state = nullptr);
+
+// V2-0019: Decoupled K Norm, RoPE, and Store K + V with Online Q8 Quantization
+void launch_qwen35_decoupled_k_norm_rope_kv_store_batch_quant(
+    const float* key,
+    const float* value,
+    const float* k_norm_weight,
+    __half* key_cache_f16,
+    __half* value_cache_f16,
+    int8_t* key_cache_q8,
+    __half* key_scales,
+    int8_t* value_cache_q8,
+    __half* value_scales,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t cache_capacity,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float theta,
+    float epsilon,
+    bool is_k_q8,
+    bool is_v_q8,
+    hipStream_t stream = nullptr,
+    const DevicePrefillState* prefill_state = nullptr);
+
+// V2-0019: Single-Token Quantized Decode Attention (FP16 / Q8 K / Q8 V)
+void launch_qwen35_tiled_online_attention_quant_dynamic(
+    const float* q,
+    const __half* key_cache_f16,
+    const __half* value_cache_f16,
+    const int8_t* key_cache_q8,
+    const __half* key_scales,
+    const int8_t* value_cache_q8,
+    const __half* value_scales,
+    const DeviceDecodeState* decode_state,
+    std::uint32_t cache_capacity,
+    float* output,
+    const float* gate,
+    float* gated_output,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float scale,
+    bool is_k_q8,
+    bool is_v_q8,
+    hipStream_t stream = nullptr,
+    Q8_1Block* gated_output_q8 = nullptr);
+
 // V2-0006 Candidate A: Native query-tiled GQA prefill attention (Wave64 / gfx906).
 void launch_prefill_v2_query_tiled_attention_f16(
     const float* q,

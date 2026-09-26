@@ -71,13 +71,19 @@ struct ModelProfileBreakdown {
 // - Ping-pong activation buffers
 class PrefillV2Model {
 public:
-    explicit PrefillV2Model(const miinfer::Qwen35Model& model, std::uint32_t kv_capacity = 32768, bool load_lm_head = true);
+    explicit PrefillV2Model(
+        const miinfer::Qwen35Model& model,
+        std::uint32_t kv_capacity = 32768,
+        bool load_lm_head = true,
+        KvCacheQuantMode kv_quant_mode = KvCacheQuantMode::kFp16Fp16);
     ~PrefillV2Model();
 
     PrefillV2Model(const PrefillV2Model&) = delete;
     PrefillV2Model& operator=(const PrefillV2Model&) = delete;
     PrefillV2Model(PrefillV2Model&&) noexcept;
     PrefillV2Model& operator=(PrefillV2Model&&) noexcept;
+
+    [[nodiscard]] KvCacheQuantMode kv_quant_mode() const noexcept { return kv_quant_mode_; }
 
     // Reset all 48 recurrent states and 16 KV caches
     void reset_state();
@@ -199,6 +205,7 @@ private:
     std::uint32_t vocab_size_ = 0;
     float rms_epsilon_ = 1e-6f;
     std::uint32_t kv_capacity_ = 32768;
+    KvCacheQuantMode kv_quant_mode_ = KvCacheQuantMode::kFp16Fp16;
     bool has_lm_head_ = false;
 
     // Reusable Context

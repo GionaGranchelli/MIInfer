@@ -12,12 +12,17 @@
 
 namespace miinfer::prefill_v2 {
 
-PrefillV2Model::PrefillV2Model(const miinfer::Qwen35Model& model, std::uint32_t kv_capacity, bool load_lm_head)
+PrefillV2Model::PrefillV2Model(
+    const miinfer::Qwen35Model& model,
+    std::uint32_t kv_capacity,
+    bool load_lm_head,
+    KvCacheQuantMode kv_quant_mode)
     : model_name_(model.model_name()),
       quantization_("Q4_K_M"),
       vocab_size_(model.config().vocab_size),
       rms_epsilon_(model.config().rms_epsilon),
       kv_capacity_(kv_capacity),
+      kv_quant_mode_(kv_quant_mode),
       has_lm_head_(load_lm_head),
       reusable_context_(model.model_name(), "Q4_K_M") {
 
@@ -57,7 +62,7 @@ PrefillV2Model::PrefillV2Model(const miinfer::Qwen35Model& model, std::uint32_t 
     // 6. Allocate 16 Persistent Attention KV Caches
     kv_caches_.reserve(16);
     for (std::size_t i = 0; i < 16; ++i) {
-        kv_caches_.emplace_back(kv_capacity_);
+        kv_caches_.emplace_back(kv_capacity_, kv_quant_mode_);
     }
 
     // 7. Allocate Monolithic Shared Workspace and Ping-Pong Buffers

@@ -233,19 +233,30 @@ void PrefillV2AttentionLayer::forward(
         ws.attn_qfull, d_q_norm_, ws.attn_q_rope, ws.gate,
         token_count, base_position, 24, 256, kRopeTheta, kRmsNormEpsilon, stream, prefill_state);
 
-    // 4. K RMSNorm, RoPE, and Store K + V into KV Cache (FP16)
-    launch_qwen35_decoupled_k_norm_rope_kv_store_batch_f16(
-        ws.attn_k, ws.attn_v, d_k_norm_, kv_cache.key_cache, kv_cache.value_cache,
+    // 4. K RMSNorm, RoPE, and Store K + V into KV Cache (FP16 or Q8)
+    launch_qwen35_decoupled_k_norm_rope_kv_store_batch_quant(
+        ws.attn_k, ws.attn_v, d_k_norm_,
+        kv_cache.key_cache, kv_cache.value_cache,
+        kv_cache.key_cache_q8, kv_cache.key_scales,
+        kv_cache.value_cache_q8, kv_cache.value_scales,
         token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
-        4, 256, kRopeTheta, kRmsNormEpsilon, stream, prefill_state);
+        4, 256, kRopeTheta, kRmsNormEpsilon,
+        kv_cache.is_k_q8(), kv_cache.is_v_q8(),
+        stream, prefill_state);
 
     // 5. Tiled Online Causal Attention with Sigmoid Gating (Split-K specialized for suffix prefill)
     if (((token_count <= 512 && base_position > 0) || prefill_state != nullptr) && ws.splitk_attn_workspace != nullptr) {
-        launch_qwen35_splitk_suffix_attention_f16(
-            ws.attn_q_rope, kv_cache.key_cache, kv_cache.value_cache, ws.gate, ws.attn_gated_output,
+        launch_qwen35_splitk_suffix_attention_quant(
+            ws.attn_q_rope,
+            kv_cache.key_cache, kv_cache.value_cache,
+            kv_cache.key_cache_q8, kv_cache.key_scales,
+            kv_cache.value_cache_q8, kv_cache.value_scales,
+            ws.gate, ws.attn_gated_output,
             ws.splitk_attn_workspace, token_count, base_position,
             static_cast<std::uint32_t>(kv_cache.capacity),
-            24, 4, 256, 1.0F / std::sqrt(256.0F), 32, stream, prefill_state);
+            24, 4, 256, 1.0F / std::sqrt(256.0F),
+            kv_cache.is_k_q8(), kv_cache.is_v_q8(),
+            32, stream, prefill_state);
     } else {
         launch_qwen35_tiled_online_attention_batch_f16(
             ws.attn_q_rope, kv_cache.key_cache, kv_cache.value_cache, ws.gate, ws.attn_gated_output,
@@ -343,19 +354,30 @@ void PrefillV2AttentionLayer::forward_profiled(
     launch_qwen35_decoupled_q_split_norm_rope_batch(
         ws.attn_qfull, d_q_norm_, ws.attn_q_rope, ws.gate,
         token_count, base_position, 24, 256, kRopeTheta, kRmsNormEpsilon, stream);
-    launch_qwen35_decoupled_k_norm_rope_kv_store_batch_f16(
-        ws.attn_k, ws.attn_v, d_k_norm_, kv_cache.key_cache, kv_cache.value_cache,
+    launch_qwen35_decoupled_k_norm_rope_kv_store_batch_quant(
+        ws.attn_k, ws.attn_v, d_k_norm_,
+        kv_cache.key_cache, kv_cache.value_cache,
+        kv_cache.key_cache_q8, kv_cache.key_scales,
+        kv_cache.value_cache_q8, kv_cache.value_scales,
         token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
-        4, 256, kRopeTheta, kRmsNormEpsilon, stream);
+        4, 256, kRopeTheta, kRmsNormEpsilon,
+        kv_cache.is_k_q8(), kv_cache.is_v_q8(),
+        stream);
     MIINFER_HIP_CHECK(hipEventRecord(ev_rope, stream));
 
     // 5. Causal Attention (Split-K specialized for suffix prefill)
     if (token_count <= 512 && base_position > 0 && ws.splitk_attn_workspace != nullptr) {
-        launch_qwen35_splitk_suffix_attention_f16(
-            ws.attn_q_rope, kv_cache.key_cache, kv_cache.value_cache, ws.gate, ws.attn_gated_output,
+        launch_qwen35_splitk_suffix_attention_quant(
+            ws.attn_q_rope,
+            kv_cache.key_cache, kv_cache.value_cache,
+            kv_cache.key_cache_q8, kv_cache.key_scales,
+            kv_cache.value_cache_q8, kv_cache.value_scales,
+            ws.gate, ws.attn_gated_output,
             ws.splitk_attn_workspace, token_count, base_position,
             static_cast<std::uint32_t>(kv_cache.capacity),
-            24, 4, 256, 1.0F / std::sqrt(256.0F), 32, stream);
+            24, 4, 256, 1.0F / std::sqrt(256.0F),
+            kv_cache.is_k_q8(), kv_cache.is_v_q8(),
+            32, stream);
     } else {
         launch_qwen35_tiled_online_attention_batch_f16(
             ws.attn_q_rope, kv_cache.key_cache, kv_cache.value_cache, ws.gate, ws.attn_gated_output,
@@ -480,25 +502,27 @@ void PrefillV2AttentionLayer::decode(
             1, position, 24, 256, kRopeTheta, kRmsNormEpsilon, stream);
     }
 
-    // 4. K RMSNorm, RoPE, and Store K + V into KV Cache (FP16)
-    if (decode_state != nullptr) {
-        launch_qwen35_fused_k_norm_rope_kv_store_f16_dynamic(
-            ws.attn_k, ws.attn_v, d_k_norm_, kv_cache.key_cache, kv_cache.value_cache,
-            4, 256, decode_state, static_cast<std::uint32_t>(kv_cache.capacity),
-            kRopeTheta, kRmsNormEpsilon, stream);
-    } else {
-        launch_qwen35_decoupled_k_norm_rope_kv_store_batch_f16(
-            ws.attn_k, ws.attn_v, d_k_norm_, kv_cache.key_cache, kv_cache.value_cache,
-            1, position, static_cast<std::uint32_t>(kv_cache.capacity),
-            4, 256, kRopeTheta, kRmsNormEpsilon, stream);
-    }
+    // 4. K RMSNorm, RoPE, and Store K + V into KV Cache (FP16 or Q8)
+    launch_qwen35_decoupled_k_norm_rope_kv_store_batch_quant(
+        ws.attn_k, ws.attn_v, d_k_norm_,
+        kv_cache.key_cache, kv_cache.value_cache,
+        kv_cache.key_cache_q8, kv_cache.key_scales,
+        kv_cache.value_cache_q8, kv_cache.value_scales,
+        1, position, static_cast<std::uint32_t>(kv_cache.capacity),
+        4, 256, kRopeTheta, kRmsNormEpsilon,
+        kv_cache.is_k_q8(), kv_cache.is_v_q8(),
+        stream);
 
     // 5. High-Occupancy Split-K Decode Attention with In-Register Sigmoid Gating
     if (decode_state != nullptr) {
-        launch_qwen35_tiled_online_attention_f16_dynamic(
+        launch_qwen35_tiled_online_attention_quant_dynamic(
             ws.attn_q_rope,
             kv_cache.key_cache,
             kv_cache.value_cache,
+            kv_cache.key_cache_q8,
+            kv_cache.key_scales,
+            kv_cache.value_cache_q8,
+            kv_cache.value_scales,
             decode_state,
             static_cast<std::uint32_t>(kv_cache.capacity),
             /*output=*/nullptr,
@@ -508,21 +532,31 @@ void PrefillV2AttentionLayer::decode(
             4,
             256,
             1.0F / std::sqrt(256.0F),
+            kv_cache.is_k_q8(),
+            kv_cache.is_v_q8(),
             stream);
     } else {
-        launch_qwen35_tiled_online_attention_f16(
+        launch_qwen35_splitk_suffix_attention_quant(
             ws.attn_q_rope,
             kv_cache.key_cache,
             kv_cache.value_cache,
-            position + 1,
-            static_cast<std::uint32_t>(kv_cache.capacity),
-            /*output=*/nullptr,
+            kv_cache.key_cache_q8,
+            kv_cache.key_scales,
+            kv_cache.value_cache_q8,
+            kv_cache.value_scales,
             ws.gate,
             ws.attn_gated_output,
+            ws.splitk_attn_workspace,
+            1,
+            position,
+            static_cast<std::uint32_t>(kv_cache.capacity),
             24,
             4,
             256,
             1.0F / std::sqrt(256.0F),
+            kv_cache.is_k_q8(),
+            kv_cache.is_v_q8(),
+            32,
             stream);
     }
 
@@ -616,26 +650,28 @@ void PrefillV2AttentionLayer::decode_profiled(
             1, position, 24, 256, kRopeTheta, kRmsNormEpsilon, stream);
     }
 
-    // 4. K RMSNorm, RoPE, and Store K + V into KV Cache (FP16)
-    if (decode_state != nullptr) {
-        launch_qwen35_fused_k_norm_rope_kv_store_f16_dynamic(
-            ws.attn_k, ws.attn_v, d_k_norm_, kv_cache.key_cache, kv_cache.value_cache,
-            4, 256, decode_state, static_cast<std::uint32_t>(kv_cache.capacity),
-            kRopeTheta, kRmsNormEpsilon, stream);
-    } else {
-        launch_qwen35_decoupled_k_norm_rope_kv_store_batch_f16(
-            ws.attn_k, ws.attn_v, d_k_norm_, kv_cache.key_cache, kv_cache.value_cache,
-            1, position, static_cast<std::uint32_t>(kv_cache.capacity),
-            4, 256, kRopeTheta, kRmsNormEpsilon, stream);
-    }
+    // 4. K RMSNorm, RoPE, and Store K + V into KV Cache (FP16 or Q8)
+    launch_qwen35_decoupled_k_norm_rope_kv_store_batch_quant(
+        ws.attn_k, ws.attn_v, d_k_norm_,
+        kv_cache.key_cache, kv_cache.value_cache,
+        kv_cache.key_cache_q8, kv_cache.key_scales,
+        kv_cache.value_cache_q8, kv_cache.value_scales,
+        1, position, static_cast<std::uint32_t>(kv_cache.capacity),
+        4, 256, kRopeTheta, kRmsNormEpsilon,
+        kv_cache.is_k_q8(), kv_cache.is_v_q8(),
+        stream);
     MIINFER_HIP_CHECK(hipEventRecord(ev_qk_rope, stream));
 
     // 5. High-Occupancy Split-K Decode Attention with In-Register Sigmoid Gating
     if (decode_state != nullptr) {
-        launch_qwen35_tiled_online_attention_f16_dynamic(
+        launch_qwen35_tiled_online_attention_quant_dynamic(
             ws.attn_q_rope,
             kv_cache.key_cache,
             kv_cache.value_cache,
+            kv_cache.key_cache_q8,
+            kv_cache.key_scales,
+            kv_cache.value_cache_q8,
+            kv_cache.value_scales,
             decode_state,
             static_cast<std::uint32_t>(kv_cache.capacity),
             /*output=*/nullptr,
@@ -645,21 +681,31 @@ void PrefillV2AttentionLayer::decode_profiled(
             4,
             256,
             1.0F / std::sqrt(256.0F),
+            kv_cache.is_k_q8(),
+            kv_cache.is_v_q8(),
             stream);
     } else {
-        launch_qwen35_tiled_online_attention_f16(
+        launch_qwen35_splitk_suffix_attention_quant(
             ws.attn_q_rope,
             kv_cache.key_cache,
             kv_cache.value_cache,
-            position + 1,
-            static_cast<std::uint32_t>(kv_cache.capacity),
-            /*output=*/nullptr,
+            kv_cache.key_cache_q8,
+            kv_cache.key_scales,
+            kv_cache.value_cache_q8,
+            kv_cache.value_scales,
             ws.gate,
             ws.attn_gated_output,
+            ws.splitk_attn_workspace,
+            1,
+            position,
+            static_cast<std::uint32_t>(kv_cache.capacity),
             24,
             4,
             256,
             1.0F / std::sqrt(256.0F),
+            kv_cache.is_k_q8(),
+            kv_cache.is_v_q8(),
+            32,
             stream);
     }
     MIINFER_HIP_CHECK(hipEventRecord(ev_splitk, stream));
