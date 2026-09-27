@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1790508730.6906714,
-    "seen": 1790509635.9053373,
-    "ast_hash": "a3fa21f400a62bf55cf9599786e4623c",
+    "mtime": 1790512400.6237938,
+    "seen": 1790514131.5594614,
+    "ast_hash": "03565a36009c4e00399cf60b988772d5",
     "semantic_hash": ""
   },
   "README.md": {
@@ -6021,6 +6021,18 @@
     "mtime": 1790509620.21648,
     "seen": 1790509635.906114,
     "ast_hash": "87bf83b4ca96d9c00dd194b4b471cd7b",
+    "semantic_hash": ""
+  },
+  "bench/v2_0026_production_hardening_bench.cpp": {
+    "mtime": 1790512391.6688392,
+    "seen": 1790514131.5588276,
+    "ast_hash": "815cb21c47f7f4932b2ca5ceefca342c",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-V2-0026-production-pipeline-hardening.md": {
+    "mtime": 1790514115.8551269,
+    "seen": 1790514131.5603333,
+    "ast_hash": "eb140cbadba0f52d225f103d2785e2ed",
     "semantic_hash": ""
   }
 }
