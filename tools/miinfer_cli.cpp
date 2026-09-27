@@ -222,23 +222,56 @@ struct ExtractedAssistantOutput {
 
 inline ExtractedAssistantOutput extract_reasoning_and_content(std::string_view text) {
     ExtractedAssistantOutput out;
-    const std::size_t think_start = text.find("<think>");
-    if (think_start != std::string_view::npos) {
-        const std::size_t content_start = think_start + 7;
-        const std::size_t think_end = text.find("</think>", content_start);
-        if (think_end != std::string_view::npos) {
+    std::size_t pos = 0;
+    while (pos < text.size()) {
+        const std::size_t p1 = text.find("<think", pos);
+        const std::size_t p2 = text.find("<thought", pos);
+        const std::size_t start = std::min(p1, p2);
+        if (start == std::string_view::npos) {
+            out.content += text.substr(pos);
+            break;
+        }
+        if (start > pos) {
+            out.content += text.substr(pos, start - pos);
+        }
+        std::size_t open_tag_end = text.find('>', start);
+        if (open_tag_end != std::string_view::npos) {
+            ++open_tag_end;
+            while (open_tag_end < text.size() && (text[open_tag_end] == '\r' || text[open_tag_end] == '\n')) ++open_tag_end;
+        } else {
+            open_tag_end = text.find_first_of("\r\n", start);
+            if (open_tag_end != std::string_view::npos) {
+                while (open_tag_end < text.size() && (text[open_tag_end] == '\r' || text[open_tag_end] == '\n')) ++open_tag_end;
+            } else {
+                open_tag_end = text.size();
+            }
+        }
+
+        const std::size_t c1 = text.find("</think", open_tag_end);
+        const std::size_t c2 = text.find("</thought", open_tag_end);
+        const std::size_t close_start = std::min(c1, c2);
+        if (close_start != std::string_view::npos) {
             out.has_reasoning = true;
-            out.reasoning_content = std::string(text.substr(content_start, think_end - content_start));
-            std::size_t post = think_end + 8;
-            while (post < text.size() && (text[post] == '\n' || text[post] == '\r')) ++post;
-            out.content = std::string(text.substr(0, think_start)) + std::string(text.substr(post));
+            out.reasoning_content += text.substr(open_tag_end, close_start - open_tag_end);
+            std::size_t close_tag_end = text.find('>', close_start);
+            if (close_tag_end != std::string_view::npos) {
+                ++close_tag_end;
+                while (close_tag_end < text.size() && (text[close_tag_end] == '\r' || text[close_tag_end] == '\n')) ++close_tag_end;
+                pos = close_tag_end;
+            } else {
+                close_tag_end = text.find_first_of("\r\n", close_start);
+                if (close_tag_end != std::string_view::npos) {
+                    while (close_tag_end < text.size() && (text[close_tag_end] == '\r' || text[close_tag_end] == '\n')) ++close_tag_end;
+                    pos = close_tag_end;
+                } else {
+                    pos = text.size();
+                }
+            }
         } else {
             out.has_reasoning = true;
-            out.reasoning_content = std::string(text.substr(content_start));
-            out.content = std::string(text.substr(0, think_start));
+            out.reasoning_content += text.substr(open_tag_end);
+            pos = text.size();
         }
-    } else {
-        out.content = std::string(text);
     }
     return out;
 }
@@ -4452,18 +4485,22 @@ int cmd_serve(int argc, char** argv) {
                     opt.stop_token_ids.push_back(enc[0]);
                 }
             }
-            enum class StreamReasoningState {
-                DETECT_START,
-                IN_THINK,
-                POST_THINK
+            enum class StreamMode {
+                CONTENT,
+                THINKING
             };
 
-            StreamReasoningState stream_state = StreamReasoningState::DETECT_START;
+            enum class ToolCheckState {
+                CHECKING,
+                IS_TOOL_CALL,
+                IS_CONTENT
+            };
+
+            StreamMode stream_mode = StreamMode::CONTENT;
+            ToolCheckState tool_check_state = defer_tool_output ? ToolCheckState::CHECKING : ToolCheckState::IS_CONTENT;
             std::string accumulated_text;
-            std::size_t think_start_pos = 0;
-            std::size_t streamed_think_bytes = 0;
-            std::size_t post_think_start_pos = 0;
-            std::size_t streamed_content_bytes = 0;
+            std::size_t processed_pos = 0;
+            std::size_t tool_check_start_pos = 0;
 
             const auto send_reasoning_chunk = [&](std::string_view delta) -> bool {
                 if (delta.empty()) return true;
@@ -4483,6 +4520,46 @@ int cmd_serve(int argc, char** argv) {
                 return client_connected;
             };
 
+            const auto find_open_think_tag = [](std::string_view text, std::size_t from, std::size_t& tag_start, std::size_t& tag_end) -> bool {
+                const std::size_t p1 = text.find("<think", from);
+                const std::size_t p2 = text.find("<thought", from);
+                tag_start = std::min(p1, p2);
+                if (tag_start == std::string_view::npos) return false;
+                std::size_t end = text.find('>', tag_start);
+                if (end != std::string_view::npos) {
+                    tag_end = end + 1;
+                    while (tag_end < text.size() && (text[tag_end] == '\r' || text[tag_end] == '\n')) ++tag_end;
+                    return true;
+                }
+                end = text.find_first_of("\r\n", tag_start);
+                if (end != std::string_view::npos) {
+                    while (end < text.size() && (text[end] == '\r' || text[end] == '\n')) ++end;
+                    tag_end = end;
+                    return true;
+                }
+                return false;
+            };
+
+            const auto find_close_think_tag = [](std::string_view text, std::size_t from, std::size_t& tag_start, std::size_t& tag_end) -> bool {
+                const std::size_t p1 = text.find("</think", from);
+                const std::size_t p2 = text.find("</thought", from);
+                tag_start = std::min(p1, p2);
+                if (tag_start == std::string_view::npos) return false;
+                std::size_t end = text.find('>', tag_start);
+                if (end != std::string_view::npos) {
+                    tag_end = end + 1;
+                    while (tag_end < text.size() && (text[tag_end] == '\r' || text[tag_end] == '\n')) ++tag_end;
+                    return true;
+                }
+                end = text.find_first_of("\r\n", tag_start);
+                if (end != std::string_view::npos) {
+                    while (end < text.size() && (text[end] == '\r' || text[end] == '\n')) ++end;
+                    tag_end = end;
+                    return true;
+                }
+                return false;
+            };
+
             bool request_cancelled = false;
             opt.on_token = [&](std::uint32_t token) -> bool {
                 if (!client_connected) return false;
@@ -4490,90 +4567,114 @@ int cmd_serve(int argc, char** argv) {
                 const std::string piece = tokenizer.decode(single_tok);
                 accumulated_text += piece;
 
-                if (stream_state == StreamReasoningState::DETECT_START) {
-                    std::size_t first_non_ws = 0;
-                    while (first_non_ws < accumulated_text.size() && std::isspace(static_cast<unsigned char>(accumulated_text[first_non_ws]))) {
-                        ++first_non_ws;
-                    }
-                    if (first_non_ws < accumulated_text.size()) {
-                        const std::string_view candidate = std::string_view(accumulated_text).substr(first_non_ws);
-                        constexpr std::string_view open_tag = "<think>";
-                        if (candidate.starts_with(open_tag)) {
-                            stream_state = StreamReasoningState::IN_THINK;
-                            think_start_pos = first_non_ws + open_tag.size();
-                            if (think_start_pos < accumulated_text.size() && accumulated_text[think_start_pos] == '\n') {
-                                ++think_start_pos;
+                while (client_connected && processed_pos < accumulated_text.size()) {
+                    if (stream_mode == StreamMode::CONTENT) {
+                        std::size_t tag_start = 0, tag_end = 0;
+                        if (find_open_think_tag(accumulated_text, processed_pos, tag_start, tag_end)) {
+                            if (tag_start > processed_pos) {
+                                if (tool_check_state == ToolCheckState::IS_CONTENT) {
+                                    if (!send_content_chunk(std::string_view(accumulated_text).substr(processed_pos, tag_start - processed_pos))) {
+                                        return false;
+                                    }
+                                }
                             }
-                            streamed_think_bytes = think_start_pos;
-                        } else if (open_tag.starts_with(candidate)) {
-                            // Partial match on "<think>", wait for next token.
+                            processed_pos = tag_end;
+                            stream_mode = StreamMode::THINKING;
+                            continue;
+                        }
+
+                        std::size_t max_suffix = 0;
+                        for (const std::string_view prefix : {"<think>", "<think\n", "<thought>", "<thought\n"}) {
+                            for (std::size_t len = std::min(accumulated_text.size() - processed_pos, prefix.size() - 1); len >= 1; --len) {
+                                if (std::string_view(accumulated_text).ends_with(prefix.substr(0, len))) {
+                                    max_suffix = std::max(max_suffix, len);
+                                }
+                            }
+                        }
+                        const std::size_t safe_end = accumulated_text.size() - max_suffix;
+                        if (safe_end <= processed_pos) {
+                            return true;
+                        }
+
+                        if (tool_check_state == ToolCheckState::IS_CONTENT) {
+                            if (!send_content_chunk(std::string_view(accumulated_text).substr(processed_pos, safe_end - processed_pos))) {
+                                return false;
+                            }
+                            processed_pos = safe_end;
+                            return true;
+                        } else if (tool_check_state == ToolCheckState::IS_TOOL_CALL) {
+                            processed_pos = safe_end;
                             return true;
                         } else {
-                            // Not a thinking block
-                            stream_state = StreamReasoningState::POST_THINK;
-                            post_think_start_pos = 0;
-                            streamed_content_bytes = 0;
+                            std::string_view uninspected = std::string_view(accumulated_text).substr(tool_check_start_pos);
+                            std::size_t first_non_ws = 0;
+                            while (first_non_ws < uninspected.size() && std::isspace(static_cast<unsigned char>(uninspected[first_non_ws]))) {
+                                ++first_non_ws;
+                            }
+                            if (first_non_ws < uninspected.size()) {
+                                std::string_view candidate = uninspected.substr(first_non_ws);
+                                constexpr std::string_view tool_tag = "<tool_call>";
+                                constexpr std::string_view tool_tag_prefix = "<tool_call";
+                                constexpr std::string_view json_tag = "```json";
+                                if (candidate.starts_with(tool_tag) || candidate.starts_with(tool_tag_prefix) || candidate.starts_with(json_tag)) {
+                                    tool_check_state = ToolCheckState::IS_TOOL_CALL;
+                                    processed_pos = safe_end;
+                                    return true;
+                                } else if (tool_tag.starts_with(candidate) || json_tag.starts_with(candidate)) {
+                                    return true;
+                                } else {
+                                    tool_check_state = ToolCheckState::IS_CONTENT;
+                                    if (!send_content_chunk(std::string_view(accumulated_text).substr(processed_pos, safe_end - processed_pos))) {
+                                        return false;
+                                    }
+                                    processed_pos = safe_end;
+                                    return true;
+                                }
+                            } else if (uninspected.size() > 16) {
+                                tool_check_state = ToolCheckState::IS_CONTENT;
+                                if (!send_content_chunk(std::string_view(accumulated_text).substr(processed_pos, safe_end - processed_pos))) {
+                                    return false;
+                                }
+                                processed_pos = safe_end;
+                                return true;
+                            } else {
+                                return true;
+                            }
                         }
-                    } else if (accumulated_text.size() > 16) {
-                        // All whitespace but longer than tag, proceed to post-think
-                        stream_state = StreamReasoningState::POST_THINK;
-                        post_think_start_pos = 0;
-                        streamed_content_bytes = 0;
                     } else {
-                        return true;
-                    }
-                }
+                        std::size_t close_start = 0, close_end = 0;
+                        if (find_close_think_tag(accumulated_text, processed_pos, close_start, close_end)) {
+                            if (close_start > processed_pos) {
+                                if (!send_reasoning_chunk(std::string_view(accumulated_text).substr(processed_pos, close_start - processed_pos))) {
+                                    return false;
+                                }
+                            }
+                            processed_pos = close_end;
+                            stream_mode = StreamMode::CONTENT;
+                            tool_check_state = defer_tool_output ? ToolCheckState::CHECKING : ToolCheckState::IS_CONTENT;
+                            tool_check_start_pos = processed_pos;
+                            continue;
+                        }
 
-                if (stream_state == StreamReasoningState::IN_THINK) {
-                    constexpr std::string_view close_tag = "</think>";
-                    const std::size_t close_pos = accumulated_text.find(close_tag, streamed_think_bytes);
-                    if (close_pos != std::string::npos) {
-                        if (close_pos > streamed_think_bytes) {
-                            if (!send_reasoning_chunk(std::string_view(accumulated_text).substr(streamed_think_bytes, close_pos - streamed_think_bytes))) {
+                        std::size_t max_suffix = 0;
+                        for (const std::string_view prefix : {"</think>", "</think\n", "</thought>", "</thought\n"}) {
+                            for (std::size_t len = std::min(accumulated_text.size() - processed_pos, prefix.size() - 1); len >= 1; --len) {
+                                if (std::string_view(accumulated_text).ends_with(prefix.substr(0, len))) {
+                                    max_suffix = std::max(max_suffix, len);
+                                }
+                            }
+                        }
+                        const std::size_t safe_end = accumulated_text.size() - max_suffix;
+                        if (safe_end > processed_pos) {
+                            if (!send_reasoning_chunk(std::string_view(accumulated_text).substr(processed_pos, safe_end - processed_pos))) {
                                 return false;
                             }
-                            streamed_think_bytes = close_pos;
-                        }
-                        stream_state = StreamReasoningState::POST_THINK;
-                        post_think_start_pos = close_pos + close_tag.size();
-                        while (post_think_start_pos < accumulated_text.size()
-                               && (accumulated_text[post_think_start_pos] == '\n' || accumulated_text[post_think_start_pos] == '\r')) {
-                            ++post_think_start_pos;
-                        }
-                        streamed_content_bytes = post_think_start_pos;
-                    } else {
-                        std::size_t max_suffix_match = 0;
-                        for (std::size_t len = std::min(accumulated_text.size() - streamed_think_bytes, close_tag.size() - 1); len >= 1; --len) {
-                            if (std::string_view(accumulated_text).ends_with(close_tag.substr(0, len))) {
-                                max_suffix_match = len;
-                                break;
-                            }
-                        }
-                        const std::size_t safe_end = accumulated_text.size() - max_suffix_match;
-                        if (safe_end > streamed_think_bytes) {
-                            if (!send_reasoning_chunk(std::string_view(accumulated_text).substr(streamed_think_bytes, safe_end - streamed_think_bytes))) {
-                                return false;
-                            }
-                            streamed_think_bytes = safe_end;
+                            processed_pos = safe_end;
                         }
                         return true;
                     }
                 }
-
-                if (stream_state == StreamReasoningState::POST_THINK) {
-                    if (defer_tool_output) {
-                        return true;
-                    }
-                    if (accumulated_text.size() > streamed_content_bytes) {
-                        if (!send_content_chunk(std::string_view(accumulated_text).substr(streamed_content_bytes))) {
-                            return false;
-                        }
-                        streamed_content_bytes = accumulated_text.size();
-                    }
-                    return true;
-                }
-
-                return true;
+                return client_connected;
             };
             RuntimeGenerateStats stats;
             miinfer::OpenAiGeneratedToolCalls tool_calls;
@@ -4631,26 +4732,23 @@ int cmd_serve(int argc, char** argv) {
                 return;
             }
             if (client_connected && !request_cancelled) {
-                if (stream_state == StreamReasoningState::IN_THINK) {
-                    if (stats.text.size() > streamed_think_bytes) {
-                        send_reasoning_chunk(std::string_view(stats.text).substr(streamed_think_bytes));
+                if (stream_mode == StreamMode::THINKING) {
+                    if (stats.text.size() > processed_pos) {
+                        send_reasoning_chunk(std::string_view(stats.text).substr(processed_pos));
                     }
-                } else if (stream_state == StreamReasoningState::DETECT_START) {
-                    if (!defer_tool_output && !stats.text.empty()) {
-                        send_content_chunk(stats.text);
+                } else if (tool_check_state == ToolCheckState::IS_CONTENT) {
+                    if (stats.text.size() > processed_pos) {
+                        send_content_chunk(std::string_view(stats.text).substr(processed_pos));
                     }
                 }
 
                 if (defer_tool_output) {
                     if (tool_calls.calls.empty()) {
-                        std::string_view remaining;
-                        if (stream_state == StreamReasoningState::POST_THINK) {
-                            remaining = std::string_view(stats.text).substr(post_think_start_pos);
-                        } else {
-                            remaining = stats.text;
-                        }
-                        if (!remaining.empty()) {
-                            send_content_chunk(remaining);
+                        if (tool_check_state != ToolCheckState::IS_CONTENT) {
+                            const auto extracted = extract_reasoning_and_content(stats.text);
+                            if (!extracted.content.empty()) {
+                                send_content_chunk(extracted.content);
+                            }
                         }
                     } else {
                         for (std::size_t i = 0; i < tool_calls.calls.size() && client_connected; ++i) {
