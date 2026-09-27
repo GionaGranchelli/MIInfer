@@ -214,6 +214,35 @@ std::string openai_tool_calls_json(const std::vector<miinfer::ChatToolCall>& cal
     return result + "]";
 }
 
+struct ExtractedAssistantOutput {
+    std::string reasoning_content;
+    std::string content;
+    bool has_reasoning = false;
+};
+
+inline ExtractedAssistantOutput extract_reasoning_and_content(std::string_view text) {
+    ExtractedAssistantOutput out;
+    const std::size_t think_start = text.find("<think>");
+    if (think_start != std::string_view::npos) {
+        const std::size_t content_start = think_start + 7;
+        const std::size_t think_end = text.find("</think>", content_start);
+        if (think_end != std::string_view::npos) {
+            out.has_reasoning = true;
+            out.reasoning_content = std::string(text.substr(content_start, think_end - content_start));
+            std::size_t post = think_end + 8;
+            while (post < text.size() && (text[post] == '\n' || text[post] == '\r')) ++post;
+            out.content = std::string(text.substr(0, think_start)) + std::string(text.substr(post));
+        } else {
+            out.has_reasoning = true;
+            out.reasoning_content = std::string(text.substr(content_start));
+            out.content = std::string(text.substr(0, think_start));
+        }
+    } else {
+        out.content = std::string(text);
+    }
+    return out;
+}
+
 std::optional<int> parse_port(std::string_view value) {
     int port = 0;
     const auto [end, error] = std::from_chars(value.data(), value.data() + value.size(), port);
@@ -4423,17 +4452,128 @@ int cmd_serve(int argc, char** argv) {
                     opt.stop_token_ids.push_back(enc[0]);
                 }
             }
+            enum class StreamReasoningState {
+                DETECT_START,
+                IN_THINK,
+                POST_THINK
+            };
+
+            StreamReasoningState stream_state = StreamReasoningState::DETECT_START;
+            std::string accumulated_text;
+            std::size_t think_start_pos = 0;
+            std::size_t streamed_think_bytes = 0;
+            std::size_t post_think_start_pos = 0;
+            std::size_t streamed_content_bytes = 0;
+
+            const auto send_reasoning_chunk = [&](std::string_view delta) -> bool {
+                if (delta.empty()) return true;
+                const std::string sse = "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"delta\":{\"reasoning_content\":\""
+                    + json_escape(delta) + "\"}}]}\n\n";
+                client_connected = send_all(client_fd, sse);
+                if (client_connected) mark_first_delta();
+                return client_connected;
+            };
+
+            const auto send_content_chunk = [&](std::string_view delta) -> bool {
+                if (delta.empty()) return true;
+                const std::string sse = "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"delta\":{\"content\":\""
+                    + json_escape(delta) + "\"}}]}\n\n";
+                client_connected = send_all(client_fd, sse);
+                if (client_connected) mark_first_delta();
+                return client_connected;
+            };
+
             bool request_cancelled = false;
             opt.on_token = [&](std::uint32_t token) -> bool {
                 if (!client_connected) return false;
                 const std::array<std::uint32_t, 1> single_tok{token};
                 const std::string piece = tokenizer.decode(single_tok);
-                if (defer_tool_output) return true;
-                const std::string sse = "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"delta\":{\"content\":\""
-                    + json_escape(piece) + "\"}}]}\n\n";
-                client_connected = send_all(client_fd, sse);
-                if (client_connected && !piece.empty()) mark_first_delta();
-                return client_connected;
+                accumulated_text += piece;
+
+                if (stream_state == StreamReasoningState::DETECT_START) {
+                    std::size_t first_non_ws = 0;
+                    while (first_non_ws < accumulated_text.size() && std::isspace(static_cast<unsigned char>(accumulated_text[first_non_ws]))) {
+                        ++first_non_ws;
+                    }
+                    if (first_non_ws < accumulated_text.size()) {
+                        const std::string_view candidate = std::string_view(accumulated_text).substr(first_non_ws);
+                        constexpr std::string_view open_tag = "<think>";
+                        if (candidate.starts_with(open_tag)) {
+                            stream_state = StreamReasoningState::IN_THINK;
+                            think_start_pos = first_non_ws + open_tag.size();
+                            if (think_start_pos < accumulated_text.size() && accumulated_text[think_start_pos] == '\n') {
+                                ++think_start_pos;
+                            }
+                            streamed_think_bytes = think_start_pos;
+                        } else if (open_tag.starts_with(candidate)) {
+                            // Partial match on "<think>", wait for next token.
+                            return true;
+                        } else {
+                            // Not a thinking block
+                            stream_state = StreamReasoningState::POST_THINK;
+                            post_think_start_pos = 0;
+                            streamed_content_bytes = 0;
+                        }
+                    } else if (accumulated_text.size() > 16) {
+                        // All whitespace but longer than tag, proceed to post-think
+                        stream_state = StreamReasoningState::POST_THINK;
+                        post_think_start_pos = 0;
+                        streamed_content_bytes = 0;
+                    } else {
+                        return true;
+                    }
+                }
+
+                if (stream_state == StreamReasoningState::IN_THINK) {
+                    constexpr std::string_view close_tag = "</think>";
+                    const std::size_t close_pos = accumulated_text.find(close_tag, streamed_think_bytes);
+                    if (close_pos != std::string::npos) {
+                        if (close_pos > streamed_think_bytes) {
+                            if (!send_reasoning_chunk(std::string_view(accumulated_text).substr(streamed_think_bytes, close_pos - streamed_think_bytes))) {
+                                return false;
+                            }
+                            streamed_think_bytes = close_pos;
+                        }
+                        stream_state = StreamReasoningState::POST_THINK;
+                        post_think_start_pos = close_pos + close_tag.size();
+                        while (post_think_start_pos < accumulated_text.size()
+                               && (accumulated_text[post_think_start_pos] == '\n' || accumulated_text[post_think_start_pos] == '\r')) {
+                            ++post_think_start_pos;
+                        }
+                        streamed_content_bytes = post_think_start_pos;
+                    } else {
+                        std::size_t max_suffix_match = 0;
+                        for (std::size_t len = std::min(accumulated_text.size() - streamed_think_bytes, close_tag.size() - 1); len >= 1; --len) {
+                            if (std::string_view(accumulated_text).ends_with(close_tag.substr(0, len))) {
+                                max_suffix_match = len;
+                                break;
+                            }
+                        }
+                        const std::size_t safe_end = accumulated_text.size() - max_suffix_match;
+                        if (safe_end > streamed_think_bytes) {
+                            if (!send_reasoning_chunk(std::string_view(accumulated_text).substr(streamed_think_bytes, safe_end - streamed_think_bytes))) {
+                                return false;
+                            }
+                            streamed_think_bytes = safe_end;
+                        }
+                        return true;
+                    }
+                }
+
+                if (stream_state == StreamReasoningState::POST_THINK) {
+                    if (defer_tool_output) {
+                        return true;
+                    }
+                    if (accumulated_text.size() > streamed_content_bytes) {
+                        if (!send_content_chunk(std::string_view(accumulated_text).substr(streamed_content_bytes))) {
+                            return false;
+                        }
+                        streamed_content_bytes = accumulated_text.size();
+                    }
+                    return true;
+                }
+
+                return true;
             };
             RuntimeGenerateStats stats;
             miinfer::OpenAiGeneratedToolCalls tool_calls;
@@ -4491,12 +4631,27 @@ int cmd_serve(int argc, char** argv) {
                 return;
             }
             if (client_connected && !request_cancelled) {
+                if (stream_state == StreamReasoningState::IN_THINK) {
+                    if (stats.text.size() > streamed_think_bytes) {
+                        send_reasoning_chunk(std::string_view(stats.text).substr(streamed_think_bytes));
+                    }
+                } else if (stream_state == StreamReasoningState::DETECT_START) {
+                    if (!defer_tool_output && !stats.text.empty()) {
+                        send_content_chunk(stats.text);
+                    }
+                }
+
                 if (defer_tool_output) {
                     if (tool_calls.calls.empty()) {
-                        const std::string sse = "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"delta\":{\"content\":\""
-                            + json_escape(stats.text) + "\"}}]}\n\n";
-                        client_connected = send_all(client_fd, sse);
-                        if (client_connected && !stats.text.empty()) mark_first_delta();
+                        std::string_view remaining;
+                        if (stream_state == StreamReasoningState::POST_THINK) {
+                            remaining = std::string_view(stats.text).substr(post_think_start_pos);
+                        } else {
+                            remaining = stats.text;
+                        }
+                        if (!remaining.empty()) {
+                            send_content_chunk(remaining);
+                        }
                     } else {
                         for (std::size_t i = 0; i < tool_calls.calls.size() && client_connected; ++i) {
                             const auto& call = tool_calls.calls[i];
@@ -4561,13 +4716,23 @@ int cmd_serve(int argc, char** argv) {
             generated_tokens_total += stats.generated_tokens;
             if (stats.cancelled) { ++cancelled_requests; state("cancelled"); }
             else state("completed");
+            const auto extracted = extract_reasoning_and_content(stats.text);
             const auto tool_calls = defer_tool_output
                 ? miinfer::parse_generated_tool_calls(stats.text)
                 : miinfer::OpenAiGeneratedToolCalls{};
             const bool has_tool_calls = !tool_calls.calls.empty();
-            const std::string message = has_tool_calls
-                ? "\"content\":null,\"tool_calls\":" + openai_tool_calls_json(tool_calls.calls)
-                : "\"content\":\"" + json_escape(stats.text) + "\"";
+            std::string message;
+            if (has_tool_calls) {
+                message = "\"content\":null,\"tool_calls\":" + openai_tool_calls_json(tool_calls.calls);
+                if (extracted.has_reasoning) {
+                    message += ",\"reasoning_content\":\"" + json_escape(extracted.reasoning_content) + "\"";
+                }
+            } else {
+                message = "\"content\":\"" + json_escape(extracted.content) + "\"";
+                if (extracted.has_reasoning) {
+                    message += ",\"reasoning_content\":\"" + json_escape(extracted.reasoning_content) + "\"";
+                }
+            }
             std::cerr << "miinfer_request {\"request_id\":" << request.request_id
                       << ",\"request_body_bytes\":" << request.raw.size()
                       << ",\"message_count\":" << parsed.request->messages.size()
