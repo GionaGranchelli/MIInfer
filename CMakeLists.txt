@@ -250,6 +250,11 @@ if(MIINFER_ENABLE_HIP)
     set_source_files_properties(bench/v2_0024_quantized_prefix_kv_bench.cpp PROPERTIES LANGUAGE HIP)
     target_link_libraries(miinfer-v2-0024-quantized-prefix-kv-bench PRIVATE miinfer_hip)
     target_compile_options(miinfer-v2-0024-quantized-prefix-kv-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-v2-0025-lds-staged-gqa-attention-bench bench/v2_0025_lds_staged_gqa_attention_bench.cpp)
+    set_source_files_properties(bench/v2_0025_lds_staged_gqa_attention_bench.cpp PROPERTIES LANGUAGE HIP)
+    target_link_libraries(miinfer-v2-0025-lds-staged-gqa-attention-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-v2-0025-lds-staged-gqa-attention-bench PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
 add_executable(miinfer-host-test tests/host_test.cpp)
