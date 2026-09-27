@@ -6,8 +6,10 @@
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
+#include <filesystem>
 
 #include "miinfer/prefill_v2/model.hpp"
+#include "miinfer/prefill_v2/persistent_session.hpp"
 #include "miinfer/hip_check.hpp"
 #include "miinfer/qwen3_gpu_primitives.hpp"
 
@@ -758,6 +760,15 @@ GenerateStats PrefillV2Model::generate(
         }
     }
 
+    if (!is_reuse && options.enable_prefix_reuse && !options.persistent_session_dir.empty()) {
+        std::uint32_t disk_prefix = 0;
+        if (restore_matching_session(options.persistent_session_dir, prompt, disk_prefix, stream)) {
+            is_reuse = true;
+            prefix_len = disk_prefix;
+            suffix_len = prompt_len - prefix_len;
+        }
+    }
+
     GenerateStats stats;
     stats.prompt_tokens.assign(prompt.begin(), prompt.end());
     stats.generated_tokens.reserve(options.max_new_tokens);
@@ -854,6 +865,21 @@ GenerateStats PrefillV2Model::generate(
     if (options.cache_prefix_after) {
         std::size_t save_len = (options.cache_prefix_len > 0) ? std::min(options.cache_prefix_len, prompt.size()) : prompt.size();
         reusable_context_.save(prompt.subspan(0, save_len), recurrent_states_, stream);
+        if (!options.persistent_session_dir.empty() && save_len >= 256) {
+            const auto prefix_sub = prompt.subspan(0, save_len);
+            const std::uint64_t token_hash = compute_token_sequence_hash(prefix_sub);
+            const std::string filename = PersistentSession::format_session_filename(
+                token_hash, static_cast<std::uint32_t>(save_len));
+            const std::filesystem::path sdir(options.persistent_session_dir);
+            const std::filesystem::path save_path = sdir / filename;
+            if (!std::filesystem::exists(save_path)) {
+                try {
+                    save_session(save_path.string(), prefix_sub, stream);
+                } catch (...) {
+                    // non-fatal disk write error
+                }
+            }
+        }
     }
 
     // 2. Compute logits for final prompt token (at offset (last_chunk - 1) * kHidden in d_pong_)
@@ -1224,5 +1250,34 @@ std::size_t PrefillV2Model::total_vram_bytes() const noexcept {
     return persistent_weight_bytes() + persistent_state_bytes() + workspace_bytes() + activation_bytes() + cached_state_bytes();
 }
 
+void PrefillV2Model::save_session(
+    const std::string& file_path,
+    std::span<const std::uint32_t> prefix_tokens,
+    hipStream_t stream) const {
+    PersistentSession::save_to_file(file_path, *this, prefix_tokens, stream);
+}
+
+bool PrefillV2Model::load_session(
+    const std::string& file_path,
+    std::vector<std::uint32_t>& out_prefix_tokens,
+    hipStream_t stream) {
+    return PersistentSession::load_from_file(file_path, *this, out_prefix_tokens, stream);
+}
+
+bool PrefillV2Model::restore_matching_session(
+    const std::string& session_dir,
+    std::span<const std::uint32_t> full_prompt,
+    std::uint32_t& out_prefix_length,
+    hipStream_t stream) {
+    std::string session_path;
+    if (!PersistentSession::find_matching_session(
+            session_dir, model_name_, quantization_, full_prompt, session_path, out_prefix_length)) {
+        return false;
+    }
+    std::vector<std::uint32_t> loaded_tokens;
+    return load_session(session_path, loaded_tokens, stream);
+}
+
 } // namespace miinfer::prefill_v2
+
 

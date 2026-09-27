@@ -211,4 +211,162 @@ void AttentionLayerKvCacheStorage::download_value(std::vector<float>& host_value
     }
 }
 
+std::size_t AttentionLayerKvCacheStorage::raw_tokens_bytes(std::size_t tokens) const noexcept {
+    if (quant_mode_ == KvCacheQuantMode::kQ8Fp16) {
+        return tokens * kKvHeads * (kHeadDim * sizeof(int8_t) + sizeof(__half))
+             + tokens * kKvHeads * kHeadDim * sizeof(__half);
+    } else if (quant_mode_ == KvCacheQuantMode::kFp16Q8) {
+        return tokens * kKvHeads * kHeadDim * sizeof(__half)
+             + tokens * kKvHeads * (kHeadDim * sizeof(int8_t) + sizeof(__half));
+    } else if (quant_mode_ == KvCacheQuantMode::kQ8Q8) {
+        return 2 * tokens * kKvHeads * (kHeadDim * sizeof(int8_t) + sizeof(__half));
+    }
+    return 2 * tokens * kKvHeads * kHeadDim * sizeof(__half);
+}
+
+void AttentionLayerKvCacheStorage::download_raw(void* host_dst, std::size_t tokens, hipStream_t stream) const {
+    if (tokens > capacity_) {
+        throw std::runtime_error("AttentionLayerKvCacheStorage::download_raw: tokens exceeds capacity");
+    }
+    if (tokens == 0 || host_dst == nullptr) return;
+
+    std::uint8_t* dst = static_cast<std::uint8_t*>(host_dst);
+    std::size_t offset = 0;
+
+    if (d_key_cache_ != nullptr) {
+        const std::size_t slice_bytes = tokens * kHeadDim * sizeof(__half);
+        for (std::size_t h = 0; h < kKvHeads; ++h) {
+            const __half* src = d_key_cache_ + h * capacity_ * kHeadDim;
+            if (stream != nullptr) {
+                MIINFER_HIP_CHECK(hipMemcpyAsync(dst + offset, src, slice_bytes, hipMemcpyDeviceToHost, stream));
+            } else {
+                MIINFER_HIP_CHECK(hipMemcpy(dst + offset, src, slice_bytes, hipMemcpyDeviceToHost));
+            }
+            offset += slice_bytes;
+        }
+    } else if (d_key_cache_q8_ != nullptr && d_key_scales_ != nullptr) {
+        const std::size_t q_slice = tokens * kHeadDim * sizeof(int8_t);
+        const std::size_t s_slice = tokens * sizeof(__half);
+        for (std::size_t h = 0; h < kKvHeads; ++h) {
+            const int8_t* src_q = d_key_cache_q8_ + h * capacity_ * kHeadDim;
+            const __half* src_s = d_key_scales_ + h * capacity_;
+            if (stream != nullptr) {
+                MIINFER_HIP_CHECK(hipMemcpyAsync(dst + offset, src_q, q_slice, hipMemcpyDeviceToHost, stream));
+                offset += q_slice;
+                MIINFER_HIP_CHECK(hipMemcpyAsync(dst + offset, src_s, s_slice, hipMemcpyDeviceToHost, stream));
+                offset += s_slice;
+            } else {
+                MIINFER_HIP_CHECK(hipMemcpy(dst + offset, src_q, q_slice, hipMemcpyDeviceToHost));
+                offset += q_slice;
+                MIINFER_HIP_CHECK(hipMemcpy(dst + offset, src_s, s_slice, hipMemcpyDeviceToHost));
+                offset += s_slice;
+            }
+        }
+    }
+
+    if (d_value_cache_ != nullptr) {
+        const std::size_t slice_bytes = tokens * kHeadDim * sizeof(__half);
+        for (std::size_t h = 0; h < kKvHeads; ++h) {
+            const __half* src = d_value_cache_ + h * capacity_ * kHeadDim;
+            if (stream != nullptr) {
+                MIINFER_HIP_CHECK(hipMemcpyAsync(dst + offset, src, slice_bytes, hipMemcpyDeviceToHost, stream));
+            } else {
+                MIINFER_HIP_CHECK(hipMemcpy(dst + offset, src, slice_bytes, hipMemcpyDeviceToHost));
+            }
+            offset += slice_bytes;
+        }
+    } else if (d_value_cache_q8_ != nullptr && d_value_scales_ != nullptr) {
+        const std::size_t q_slice = tokens * kHeadDim * sizeof(int8_t);
+        const std::size_t s_slice = tokens * sizeof(__half);
+        for (std::size_t h = 0; h < kKvHeads; ++h) {
+            const int8_t* src_q = d_value_cache_q8_ + h * capacity_ * kHeadDim;
+            const __half* src_s = d_value_scales_ + h * capacity_;
+            if (stream != nullptr) {
+                MIINFER_HIP_CHECK(hipMemcpyAsync(dst + offset, src_q, q_slice, hipMemcpyDeviceToHost, stream));
+                offset += q_slice;
+                MIINFER_HIP_CHECK(hipMemcpyAsync(dst + offset, src_s, s_slice, hipMemcpyDeviceToHost, stream));
+                offset += s_slice;
+            } else {
+                MIINFER_HIP_CHECK(hipMemcpy(dst + offset, src_q, q_slice, hipMemcpyDeviceToHost));
+                offset += q_slice;
+                MIINFER_HIP_CHECK(hipMemcpy(dst + offset, src_s, s_slice, hipMemcpyDeviceToHost));
+                offset += s_slice;
+            }
+        }
+    }
+}
+
+void AttentionLayerKvCacheStorage::upload_raw(const void* host_src, std::size_t tokens, hipStream_t stream) {
+    if (tokens > capacity_) {
+        throw std::runtime_error("AttentionLayerKvCacheStorage::upload_raw: tokens exceeds capacity");
+    }
+    if (tokens == 0 || host_src == nullptr) return;
+
+    const std::uint8_t* src = static_cast<const std::uint8_t*>(host_src);
+    std::size_t offset = 0;
+
+    if (d_key_cache_ != nullptr) {
+        const std::size_t slice_bytes = tokens * kHeadDim * sizeof(__half);
+        for (std::size_t h = 0; h < kKvHeads; ++h) {
+            __half* dst = d_key_cache_ + h * capacity_ * kHeadDim;
+            if (stream != nullptr) {
+                MIINFER_HIP_CHECK(hipMemcpyAsync(dst, src + offset, slice_bytes, hipMemcpyHostToDevice, stream));
+            } else {
+                MIINFER_HIP_CHECK(hipMemcpy(dst, src + offset, slice_bytes, hipMemcpyHostToDevice));
+            }
+            offset += slice_bytes;
+        }
+    } else if (d_key_cache_q8_ != nullptr && d_key_scales_ != nullptr) {
+        const std::size_t q_slice = tokens * kHeadDim * sizeof(int8_t);
+        const std::size_t s_slice = tokens * sizeof(__half);
+        for (std::size_t h = 0; h < kKvHeads; ++h) {
+            int8_t* dst_q = d_key_cache_q8_ + h * capacity_ * kHeadDim;
+            __half* dst_s = d_key_scales_ + h * capacity_;
+            if (stream != nullptr) {
+                MIINFER_HIP_CHECK(hipMemcpyAsync(dst_q, src + offset, q_slice, hipMemcpyHostToDevice, stream));
+                offset += q_slice;
+                MIINFER_HIP_CHECK(hipMemcpyAsync(dst_s, src + offset, s_slice, hipMemcpyHostToDevice, stream));
+                offset += s_slice;
+            } else {
+                MIINFER_HIP_CHECK(hipMemcpy(dst_q, src + offset, q_slice, hipMemcpyHostToDevice));
+                offset += q_slice;
+                MIINFER_HIP_CHECK(hipMemcpy(dst_s, src + offset, s_slice, hipMemcpyHostToDevice));
+                offset += s_slice;
+            }
+        }
+    }
+
+    if (d_value_cache_ != nullptr) {
+        const std::size_t slice_bytes = tokens * kHeadDim * sizeof(__half);
+        for (std::size_t h = 0; h < kKvHeads; ++h) {
+            __half* dst = d_value_cache_ + h * capacity_ * kHeadDim;
+            if (stream != nullptr) {
+                MIINFER_HIP_CHECK(hipMemcpyAsync(dst, src + offset, slice_bytes, hipMemcpyHostToDevice, stream));
+            } else {
+                MIINFER_HIP_CHECK(hipMemcpy(dst, src + offset, slice_bytes, hipMemcpyHostToDevice));
+            }
+            offset += slice_bytes;
+        }
+    } else if (d_value_cache_q8_ != nullptr && d_value_scales_ != nullptr) {
+        const std::size_t q_slice = tokens * kHeadDim * sizeof(int8_t);
+        const std::size_t s_slice = tokens * sizeof(__half);
+        for (std::size_t h = 0; h < kKvHeads; ++h) {
+            int8_t* dst_q = d_value_cache_q8_ + h * capacity_ * kHeadDim;
+            __half* dst_s = d_value_scales_ + h * capacity_;
+            if (stream != nullptr) {
+                MIINFER_HIP_CHECK(hipMemcpyAsync(dst_q, src + offset, q_slice, hipMemcpyHostToDevice, stream));
+                offset += q_slice;
+                MIINFER_HIP_CHECK(hipMemcpyAsync(dst_s, src + offset, s_slice, hipMemcpyHostToDevice, stream));
+                offset += s_slice;
+            } else {
+                MIINFER_HIP_CHECK(hipMemcpy(dst_q, src + offset, q_slice, hipMemcpyHostToDevice));
+                offset += q_slice;
+                MIINFER_HIP_CHECK(hipMemcpy(dst_s, src + offset, s_slice, hipMemcpyHostToDevice));
+                offset += s_slice;
+            }
+        }
+    }
+}
+
 } // namespace miinfer::prefill_v2
+

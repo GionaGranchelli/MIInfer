@@ -41,6 +41,7 @@
 #include "miinfer/qwen3_tokenizer.hpp"
 #include "miinfer/qwen35_model.hpp"
 #include "miinfer/prefill_v2/model.hpp"
+#include "miinfer/prefill_v2/persistent_session.hpp"
 #include "miinfer/build_info.hpp"
 #include "miinfer/openai_api.hpp"
 #include "miinfer/sha256.hpp"
@@ -4249,6 +4250,7 @@ int cmd_serve(int argc, char** argv) {
     std::optional<std::filesystem::path> api_key_file;
     bool allow_insecure = false;
     std::optional<bool> session_reuse_flag;
+    std::optional<std::filesystem::path> session_dir;
 
     for (int i = 2; i < argc; ++i) {
         std::string_view arg = argv[i];
@@ -4273,10 +4275,12 @@ int cmd_serve(int argc, char** argv) {
             session_reuse_flag = true;
         } else if (arg == "--no-session-reuse") {
             session_reuse_flag = false;
+        } else if (arg == "--session-dir" && i + 1 < argc) {
+            session_dir = argv[++i];
         } else if (model_path.empty() && !arg.starts_with("--")) {
             model_path = arg;
         } else {
-            std::cerr << "usage: miinfer serve --model MODEL.gguf [--port PORT] [--host HOST] [--context N] [--experimental-context] [--api-key-file PATH] [--allow-insecure] [--session-reuse|--no-session-reuse]\n"; return 2;
+            std::cerr << "usage: miinfer serve --model MODEL.gguf [--port PORT] [--host HOST] [--context N] [--experimental-context] [--api-key-file PATH] [--allow-insecure] [--session-reuse|--no-session-reuse] [--session-dir PATH]\n"; return 2;
         }
     }
     if (model_path.empty()) { std::cerr << "missing model; use --model MODEL.gguf\n"; return 2; }
@@ -4311,13 +4315,24 @@ int cmd_serve(int argc, char** argv) {
     const bool session_reuse = session_reuse_flag.value_or(
         session_reuse_env == nullptr || std::strcmp(session_reuse_env, "0") != 0);
 
+    if (!session_dir) {
+        if (const char* env_sdir = std::getenv("MIINFER_SESSION_DIR")) {
+            session_dir = env_sdir;
+        }
+    }
+    if (session_dir) {
+        std::error_code ec;
+        std::filesystem::create_directories(*session_dir, ec);
+    }
+
     g_cache_capacity = context_length;
     std::cerr << "Initializing MIInfer gfx906 HTTP Server on " << host << ":" << port << " ...\n";
     std::cerr << "configured_context_length=" << context_length << "\n"
               << "runtime_context_capacity=" << g_cache_capacity << "\n"
               << "qualified_context_length=1024\n"
               << "context_qualification=" << (context_length > 1024 ? "experimental" : "qualified") << "\n"
-              << "session_reuse=" << (session_reuse ? "experimental" : "disabled") << "\n";
+              << "session_reuse=" << (session_reuse ? "experimental" : "disabled") << "\n"
+              << "session_dir=" << (session_dir ? session_dir->string() : "disabled") << "\n";
     const auto model = miinfer::Qwen35Model::load(model_path);
     const auto tokenizer = miinfer::Qwen3Tokenizer::load(*model.file());
     miinfer::prefill_v2::PrefillV2Model engine(model, context_length, true, miinfer::prefill_v2::KvCacheQuantMode::kFp16Fp16);
@@ -4483,6 +4498,9 @@ int cmd_serve(int argc, char** argv) {
             opt.use_hip_graph = true;
             opt.enable_prefix_reuse = session_reuse;
             opt.cache_prefix_after = session_reuse;
+            if (session_dir) {
+                opt.persistent_session_dir = session_dir->string();
+            }
             opt.temperature = parsed.request->temperature;
             opt.top_p = parsed.request->top_p;
             opt.top_k = parsed.request->top_k;
@@ -4716,6 +4734,10 @@ int cmd_serve(int argc, char** argv) {
                 stats.prefill_processed_tokens = v2_stats.prompt_tokens.size();
                 stats.reused_prefix_tokens = v2_stats.prefix_tokens_reused;
                 stats.common_prefix_tokens = v2_stats.prefix_tokens_reused;
+                if (v2_stats.prefix_tokens_reused > 0) {
+                    stats.session_checkpoint_count = 1;
+                    stats.session_checkpoint_bytes = engine.persistent_state_bytes();
+                }
                 stats.prefill_ms = v2_stats.prefill_ms;
                 stats.decode_ms = v2_stats.decode_ms;
                 stats.first_token_ms = v2_stats.ttft_ms;
@@ -4809,6 +4831,9 @@ int cmd_serve(int argc, char** argv) {
             opt.use_hip_graph = true;
             opt.enable_prefix_reuse = session_reuse;
             opt.cache_prefix_after = session_reuse;
+            if (session_dir) {
+                opt.persistent_session_dir = session_dir->string();
+            }
             opt.temperature = parsed.request->temperature;
             opt.top_p = parsed.request->top_p;
             opt.top_k = parsed.request->top_k;
@@ -4831,6 +4856,10 @@ int cmd_serve(int argc, char** argv) {
             stats.prefill_processed_tokens = v2_stats.prompt_tokens.size();
             stats.reused_prefix_tokens = v2_stats.prefix_tokens_reused;
             stats.common_prefix_tokens = v2_stats.prefix_tokens_reused;
+            if (v2_stats.prefix_tokens_reused > 0) {
+                stats.session_checkpoint_count = 1;
+                stats.session_checkpoint_bytes = engine.persistent_state_bytes();
+            }
             stats.prefill_ms = v2_stats.prefill_ms;
             stats.decode_ms = v2_stats.decode_ms;
             stats.first_token_ms = v2_stats.ttft_ms;

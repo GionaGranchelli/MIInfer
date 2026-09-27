@@ -126,6 +126,7 @@ if(MIINFER_ENABLE_HIP)
         src/prefill_v2/attention_layer.cpp
         src/prefill_v2/topology_block.cpp
         src/prefill_v2/reusable_context.cpp
+        src/prefill_v2/persistent_session.cpp
         src/prefill_v2/model.cpp
         gfx906/kernels/vector_add.hip
         gfx906/kernels/fp16_gemv.hip
@@ -260,6 +261,11 @@ if(MIINFER_ENABLE_HIP)
     set_source_files_properties(bench/v2_0026_production_hardening_bench.cpp PROPERTIES LANGUAGE HIP)
     target_link_libraries(miinfer-v2-0026-production-hardening-bench PRIVATE miinfer_hip miinfer_model)
     target_compile_options(miinfer-v2-0026-production-hardening-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-v2-0028-persistent-session-bench bench/v2_0028_persistent_session_bench.cpp)
+    set_source_files_properties(bench/v2_0028_persistent_session_bench.cpp PROPERTIES LANGUAGE HIP)
+    target_link_libraries(miinfer-v2-0028-persistent-session-bench PRIVATE miinfer_hip miinfer_model)
+    target_compile_options(miinfer-v2-0028-persistent-session-bench PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
 add_executable(miinfer-host-test tests/host_test.cpp)

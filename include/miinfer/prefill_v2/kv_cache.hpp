@@ -61,6 +61,11 @@ public:
     void download_key(std::vector<float>& host_key, std::size_t tokens) const;
     void download_value(std::vector<float>& host_value, std::size_t tokens) const;
 
+    // Download/upload raw compact device KV buffers for tokens 0..tokens-1
+    void download_raw(void* host_dst, std::size_t tokens, hipStream_t stream = nullptr) const;
+    void upload_raw(const void* host_src, std::size_t tokens, hipStream_t stream = nullptr);
+    [[nodiscard]] std::size_t raw_tokens_bytes(std::size_t tokens) const noexcept;
+
     [[nodiscard]] AttentionKvCacheView view() const noexcept {
         return AttentionKvCacheView{
             .key_cache = d_key_cache_,
