@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1790446040.930876,
-    "seen": 1790446791.929173,
-    "ast_hash": "5695353368c2c03bc2b6e6e22a0cbecf",
+    "mtime": 1790498782.848647,
+    "seen": 1790499042.791775,
+    "ast_hash": "187e83b0801dc64d5ec248f9b14c4c24",
     "semantic_hash": ""
   },
   "README.md": {
@@ -5682,9 +5682,9 @@
     "semantic_hash": ""
   },
   "src/prefill_v2/attention_layer.cpp": {
-    "mtime": 1790453397.1819296,
-    "seen": 1790453629.660304,
-    "ast_hash": "8dcbc59936d257c4b2b3bf3fcf7449db",
+    "mtime": 1790457234.6957724,
+    "seen": 1790463128.606032,
+    "ast_hash": "600e2a3f3148a123da360ce630852c8f",
     "semantic_hash": ""
   },
   "src/prefill_v2/kv_cache.cpp": {
@@ -5718,9 +5718,9 @@
     "semantic_hash": ""
   },
   "src/prefill_v2/model.cpp": {
-    "mtime": 1790453105.9153361,
-    "seen": 1790453629.6603074,
-    "ast_hash": "54119d6368753f26c8297fe802514c6f",
+    "mtime": 1790457428.8279126,
+    "seen": 1790463128.606036,
+    "ast_hash": "161b5b452b756d5596fc248f2718deca",
     "semantic_hash": ""
   },
   "experiments/V2-0004-register-resident-gdn-and-full-model.md": {
@@ -5961,6 +5961,42 @@
     "mtime": 1790446776.5885468,
     "seen": 1790446791.9299157,
     "ast_hash": "3c814d55a83b109177576129f103b650",
+    "semantic_hash": ""
+  },
+  "bench/v2_0021_production_suffix_hip_graph_bench.cpp": {
+    "mtime": 1790461150.115755,
+    "seen": 1790463128.6055892,
+    "ast_hash": "f669c9486ef6db2bd0a23c7f6806e8a1",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-V2-0021-production-suffix-hip-graph.md": {
+    "mtime": 1790463113.5676894,
+    "seen": 1790463128.606986,
+    "ast_hash": "3143598fd0629364d415ea8b250866e7",
+    "semantic_hash": ""
+  },
+  "bench/v2_0022_suffix_mmq_critical_path_bench.cpp": {
+    "mtime": 1790496592.8762884,
+    "seen": 1790497443.2160532,
+    "ast_hash": "00176e3d572f21f75d8c072f0d6e15a9",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-V2-0022-suffix-mmq-critical-path.md": {
+    "mtime": 1790497426.4814694,
+    "seen": 1790497443.2173922,
+    "ast_hash": "b906d482645ea03d8722cb58d39fefe8",
+    "semantic_hash": ""
+  },
+  "bench/v2_0023_cross_query_attention_bench.cpp": {
+    "mtime": 1790498748.9648418,
+    "seen": 1790499042.7912009,
+    "ast_hash": "aa59d0de92c1dc14f07a6743d555f973",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-V2-0023-cross-query-attention.md": {
+    "mtime": 1790499028.365236,
+    "seen": 1790499042.792562,
+    "ast_hash": "8abc6cde24e4f5e3b0c88264454d5ac8",
     "semantic_hash": ""
   }
 }

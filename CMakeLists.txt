@@ -240,6 +240,11 @@ if(MIINFER_ENABLE_HIP)
     add_executable(miinfer-v2-0022-suffix-mmq-critical-path-bench bench/v2_0022_suffix_mmq_critical_path_bench.cpp)
     target_link_libraries(miinfer-v2-0022-suffix-mmq-critical-path-bench PRIVATE miinfer_hip)
     target_compile_options(miinfer-v2-0022-suffix-mmq-critical-path-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-v2-0023-cross-query-attention-bench bench/v2_0023_cross_query_attention_bench.cpp)
+    set_source_files_properties(bench/v2_0023_cross_query_attention_bench.cpp PROPERTIES LANGUAGE HIP)
+    target_link_libraries(miinfer-v2-0023-cross-query-attention-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-v2-0023-cross-query-attention-bench PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
 add_executable(miinfer-host-test tests/host_test.cpp)
