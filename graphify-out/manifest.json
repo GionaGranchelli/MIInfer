@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1790531413.4319487,
-    "seen": 1790531906.1179516,
-    "ast_hash": "42f593b8474917151d6bcf660b8f8392",
+    "mtime": 1790535518.1892917,
+    "seen": 1790535829.1014051,
+    "ast_hash": "6009535d2afb0998046c08c3a5102ca5",
     "semantic_hash": ""
   },
   "README.md": {
@@ -6063,6 +6063,18 @@
     "mtime": 1790531890.2679393,
     "seen": 1790531906.1187775,
     "ast_hash": "882e2d10829f3b0245846ba5a3dda7ca",
+    "semantic_hash": ""
+  },
+  "bench/v2_0029_mmq_efficiency_bench.cpp": {
+    "mtime": 1790535508.5803337,
+    "seen": 1790535829.1008432,
+    "ast_hash": "42a62badf47dd00a415948d097fbcc5f",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-V2-0029-mmq-useful-compute-efficiency.md": {
+    "mtime": 1790535799.6220665,
+    "seen": 1790535829.1022558,
+    "ast_hash": "a38a254e2d876a3e40afeb6be004bff0",
     "semantic_hash": ""
   }
 }

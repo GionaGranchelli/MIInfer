@@ -2214,12 +2214,12 @@ __launch_bounds__(256, 1) __global__ void mx_repacked_mmq_legacy_kernel(
                 const auto lo = weight_lo[local + offset][group];
                 const auto hi = weight_hi[local + offset][group];
                 const auto slot = weight_slot[group][local + offset];
-                for (int column = 0; column < 2; ++column) {
-                    if constexpr (Q6) {
-                        const std::uint16_t d_bits = static_cast<std::uint16_t>(slot.x >> 16);
-                        const float d = __half2float(*reinterpret_cast<const __half*>(&d_bits)) * 0.25F;
-                        const int scale_lo = static_cast<std::int8_t>(slot.x & 0xFFU);
-                        const int scale_hi = static_cast<std::int8_t>((slot.x >> 8) & 0xFFU);
+                if constexpr (Q6) {
+                    const std::uint16_t d_bits = static_cast<std::uint16_t>(slot.x >> 16);
+                    const float d = __half2float(*reinterpret_cast<const __half*>(&d_bits)) * 0.25F;
+                    const int scale_lo = static_cast<std::int8_t>(slot.x & 0xFFU);
+                    const int scale_hi = static_cast<std::int8_t>((slot.x >> 8) & 0xFFU);
+                    for (int column = 0; column < 2; ++column) {
                         const int dot_lo = mx_dp4a(lo.x, x[column].q0.x)
                             + mx_dp4a(lo.y, x[column].q0.y)
                             + mx_dp4a(lo.z, x[column].q0.z)
@@ -2230,13 +2230,15 @@ __launch_bounds__(256, 1) __global__ void mx_repacked_mmq_legacy_kernel(
                             + mx_dp4a(hi.w, x[column].q1.w);
                         accum[offset][column] += d * x[column].d
                             * static_cast<float>(scale_lo * dot_lo + scale_hi * dot_hi);
-                    } else {
-                        const std::uint16_t d_bits = static_cast<std::uint16_t>(slot.y);
-                        const std::uint16_t dmin_bits = static_cast<std::uint16_t>(slot.y >> 16);
-                        const float d = __half2float(*reinterpret_cast<const __half*>(&d_bits));
-                        const float dmin = __half2float(*reinterpret_cast<const __half*>(&dmin_bits));
-                        const int scale = static_cast<int>(slot.x & 0xFFU);
-                        const int minimum = static_cast<int>((slot.x >> 8) & 0xFFU);
+                    }
+                } else {
+                    const std::uint16_t d_bits = static_cast<std::uint16_t>(slot.y);
+                    const std::uint16_t dmin_bits = static_cast<std::uint16_t>(slot.y >> 16);
+                    const float d = __half2float(*reinterpret_cast<const __half*>(&d_bits));
+                    const float dmin = __half2float(*reinterpret_cast<const __half*>(&dmin_bits));
+                    const float d_scale = d * static_cast<float>(slot.x & 0xFFU);
+                    const float dmin_min = dmin * static_cast<float>((slot.x >> 8) & 0xFFU);
+                    for (int column = 0; column < 2; ++column) {
                         // Interleave independent halves as mx does; serializing
                         // all low then all high DP4A chains costs gfx906 issue slots.
                         int dot = 0;
@@ -2248,8 +2250,8 @@ __launch_bounds__(256, 1) __global__ void mx_repacked_mmq_legacy_kernel(
                         dot = mx_dp4a(hi.z, x[column].q1.z, dot);
                         dot = mx_dp4a(lo.w, x[column].q0.w, dot);
                         dot = mx_dp4a(hi.w, x[column].q1.w, dot);
-                        accum[offset][column] += d * x[column].d * static_cast<float>(scale * dot)
-                            - dmin * static_cast<float>(minimum) * x[column].sum;
+                        accum[offset][column] += (d_scale * x[column].d) * static_cast<float>(dot)
+                            - dmin_min * x[column].sum;
                     }
                 }
             }
