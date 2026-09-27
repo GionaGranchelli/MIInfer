@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1790535518.1892917,
-    "seen": 1790535829.1014051,
-    "ast_hash": "6009535d2afb0998046c08c3a5102ca5",
+    "mtime": 1790538904.7990355,
+    "seen": 1790538967.9959965,
+    "ast_hash": "e74afe85372c451c137becad976b50e6",
     "semantic_hash": ""
   },
   "README.md": {
@@ -6075,6 +6075,18 @@
     "mtime": 1790535799.6220665,
     "seen": 1790535829.1022558,
     "ast_hash": "a38a254e2d876a3e40afeb6be004bff0",
+    "semantic_hash": ""
+  },
+  "bench/v2_0030_direct_vgpr_streaming_bench.cpp": {
+    "mtime": 1790538897.6440678,
+    "seen": 1790538967.995375,
+    "ast_hash": "0528fa49f8b39308eb4b97aacc0f1fcf",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-V2-0030-direct-vgpr-weight-streaming.md": {
+    "mtime": 1790538951.9278235,
+    "seen": 1790538967.9967496,
+    "ast_hash": "d10ad777e60b046adebd73a65c8d0e7b",
     "semantic_hash": ""
   }
 }

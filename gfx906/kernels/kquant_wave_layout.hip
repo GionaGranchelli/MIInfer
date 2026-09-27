@@ -2144,6 +2144,132 @@ __launch_bounds__(256, 1) __global__ void mx_repacked_mmq_kernel(
     }
 }
 
+// V2-0030: Direct global-to-VGPR weight streaming kernel.
+// Eliminates LDS weight staging by having each wave load its own 16 rows of
+// weights directly from global memory into a rolling 1-row VGPR window.
+// Activation tile remains in LDS. Enabled via MIINFER_MX_DIRECT=1.
+template <bool Q5, bool Q6>
+__launch_bounds__(256, 1) __global__ void mx_repacked_mmq_direct_kernel(
+    const std::uint8_t* __restrict__ weights,
+    const miinfer::MxQ8_1MmqBlock* __restrict__ input,
+    float* __restrict__ output,
+    std::uint32_t rows,
+    std::uint32_t columns,
+    std::uint32_t token_count) {
+    static_assert(!(Q5 && Q6));
+    const std::uint32_t tx = threadIdx.x;
+    const std::uint32_t ty = threadIdx.y;
+    const std::uint32_t tid = ty * 64 + tx;
+    const std::uint32_t row_base = blockIdx.x * 64;
+    const std::uint32_t token_base = blockIdx.y * 128;
+    const std::uint32_t n_sub = columns / 32;
+    const auto affine_geometry = MxAffineGeometry<Q5>(columns, rows);
+    const auto q6_geometry = MxQ6Geometry(columns, rows);
+
+    // Input activations still need LDS for cooperative loading + broadcast.
+    // Weight LDS arrays are eliminated — weights stream through VGPRs.
+    __shared__ miinfer::MxQ8_1MmqBlock input_tile[128];
+    float accum[16][2] = {};
+
+    for (std::uint32_t subblock_base = 0; subblock_base < n_sub; subblock_base += 4) {
+        // Cooperative input tile loading (unchanged from legacy kernel).
+        constexpr std::uint32_t input_words = sizeof(miinfer::MxQ8_1MmqBlock) / sizeof(uint4);
+        for (std::uint32_t index = tid; index < 128 * input_words; index += 256) {
+            const std::uint32_t token = index / input_words;
+            const std::uint32_t word = index % input_words;
+            auto* destination = reinterpret_cast<uint4*>(input_tile + mx_input_swizzle(token));
+            if (token_base + token < token_count) {
+                const auto* source = reinterpret_cast<const uint4*>(input
+                    + static_cast<std::size_t>(subblock_base / 4) * token_count
+                    + token_base + token);
+                destination[word] = source[word];
+            } else {
+                destination[word] = make_uint4(0, 0, 0, 0);
+            }
+        }
+        __syncthreads();
+
+        // Each wave (ty) directly loads its own 16 rows of weights from global
+        // memory, one row at a time (rolling VGPR window).
+        #pragma unroll 1
+        for (int group = 0; group < 4; ++group) {
+            MxInputSlice x[2]{};
+            for (int column = 0; column < 2; ++column) {
+                const std::uint32_t token = token_base + tx + column * 64;
+                if (token < token_count) {
+                    x[column] = mx_load_input(input_tile, mx_input_swizzle(tx + column * 64),
+                                              group, !Q6);
+                }
+            }
+            const std::uint32_t local = ty * 16;
+            for (int offset = 0; offset < 16; ++offset) {
+                const std::uint32_t row = row_base + local + offset;
+                // Direct global load: each lane in the wave loads from the same
+                // address (uniform access). On gfx906 this results in a single
+                // L2 transaction per wave, broadcast to all 64 lanes via VGPRs.
+                MxWeightWords loaded{make_uint4(0, 0, 0, 0), make_uint4(0, 0, 0, 0), make_uint2(0, 0)};
+                if (row < rows) {
+                    loaded = Q6
+                        ? mx_load_q6(weights, q6_geometry, row, subblock_base + group)
+                        : mx_load_affine<Q5>(weights, affine_geometry, row, subblock_base + group);
+                }
+                const auto lo = loaded.lo;
+                const auto hi = loaded.hi;
+                const auto slot = loaded.slot;
+                if constexpr (Q6) {
+                    const std::uint16_t d_bits = static_cast<std::uint16_t>(slot.x >> 16);
+                    const float d = __half2float(*reinterpret_cast<const __half*>(&d_bits)) * 0.25F;
+                    const int scale_lo = static_cast<std::int8_t>(slot.x & 0xFFU);
+                    const int scale_hi = static_cast<std::int8_t>((slot.x >> 8) & 0xFFU);
+                    for (int column = 0; column < 2; ++column) {
+                        const int dot_lo = mx_dp4a(lo.x, x[column].q0.x)
+                            + mx_dp4a(lo.y, x[column].q0.y)
+                            + mx_dp4a(lo.z, x[column].q0.z)
+                            + mx_dp4a(lo.w, x[column].q0.w);
+                        const int dot_hi = mx_dp4a(hi.x, x[column].q1.x)
+                            + mx_dp4a(hi.y, x[column].q1.y)
+                            + mx_dp4a(hi.z, x[column].q1.z)
+                            + mx_dp4a(hi.w, x[column].q1.w);
+                        accum[offset][column] += d * x[column].d
+                            * static_cast<float>(scale_lo * dot_lo + scale_hi * dot_hi);
+                    }
+                } else {
+                    const std::uint16_t d_bits = static_cast<std::uint16_t>(slot.y);
+                    const std::uint16_t dmin_bits = static_cast<std::uint16_t>(slot.y >> 16);
+                    const float d = __half2float(*reinterpret_cast<const __half*>(&d_bits));
+                    const float dmin = __half2float(*reinterpret_cast<const __half*>(&dmin_bits));
+                    const float d_scale = d * static_cast<float>(slot.x & 0xFFU);
+                    const float dmin_min = dmin * static_cast<float>((slot.x >> 8) & 0xFFU);
+                    for (int column = 0; column < 2; ++column) {
+                        int dot = 0;
+                        dot = mx_dp4a(lo.x, x[column].q0.x, dot);
+                        dot = mx_dp4a(hi.x, x[column].q1.x, dot);
+                        dot = mx_dp4a(lo.y, x[column].q0.y, dot);
+                        dot = mx_dp4a(hi.y, x[column].q1.y, dot);
+                        dot = mx_dp4a(lo.z, x[column].q0.z, dot);
+                        dot = mx_dp4a(hi.z, x[column].q1.z, dot);
+                        dot = mx_dp4a(lo.w, x[column].q0.w, dot);
+                        dot = mx_dp4a(hi.w, x[column].q1.w, dot);
+                        accum[offset][column] += (d_scale * x[column].d) * static_cast<float>(dot)
+                            - dmin_min * x[column].sum;
+                    }
+                }
+            }
+        }
+        __syncthreads();
+    }
+
+    for (int offset = 0; offset < 16; ++offset) {
+        const std::uint32_t row = row_base + ty * 16 + offset;
+        if (row >= rows) continue;
+        for (int column = 0; column < 2; ++column) {
+            const std::uint32_t token = token_base + tx + column * 64;
+            if (token < token_count) output[static_cast<std::size_t>(token) * rows + row]
+                = accum[offset][column];
+        }
+    }
+}
+
 // The register-pipeline transplant is retained behind MIINFER_MX_PIPELINE for
 // isolated retests. The simpler staged kernel is the measured default.
 template <bool Q5, bool Q6>
@@ -2541,6 +2667,10 @@ bool mx_pinned_enabled() {
     return mx_environment_flag("MIINFER_MX_PINNED");
 }
 
+bool mx_direct_enabled() {
+    return mx_environment_flag("MIINFER_MX_DIRECT");
+}
+
 // Port the pinned mx q8_repack quantizer's four-block workgroup contract. The
 // existing kernel remains the default control for isolated A/B measurements.
 template <bool AFFINE>
@@ -2687,6 +2817,10 @@ void launch_mx_q4k_repacked_mmq(
         hipLaunchKernelGGL((mx_repacked_mmv_kernel<false, false>),
                            dim3((rows + 15) / 16), dim3(1024), 0,
                            stream, weights, input, output, rows, columns);
+    } else if (mx_direct_enabled()) {
+        hipLaunchKernelGGL((mx_repacked_mmq_direct_kernel<false, false>),
+                           dim3((rows + 63) / 64, (token_count + 127) / 128), dim3(64, 4), 0,
+                           stream, weights, input, output, rows, columns, token_count);
     } else if (mx_pinned_enabled()) {
         hipLaunchKernelGGL((mx_repacked_mmq_pinned_kernel<false, false>),
                            dim3((rows + 63) / 64, (token_count + 127) / 128), dim3(64, 4), 0,
@@ -2714,6 +2848,10 @@ void launch_mx_q5k_repacked_mmq(
         hipLaunchKernelGGL((mx_repacked_mmv_kernel<true, false>),
                            dim3((rows + 15) / 16), dim3(1024), 0,
                            stream, weights, input, output, rows, columns);
+    } else if (mx_direct_enabled()) {
+        hipLaunchKernelGGL((mx_repacked_mmq_direct_kernel<true, false>),
+                           dim3((rows + 63) / 64, (token_count + 127) / 128), dim3(64, 4), 0,
+                           stream, weights, input, output, rows, columns, token_count);
     } else if (mx_pinned_enabled()) {
         hipLaunchKernelGGL((mx_repacked_mmq_pinned_kernel<true, false>),
                            dim3((rows + 63) / 64, (token_count + 127) / 128), dim3(64, 4), 0,
@@ -2744,6 +2882,10 @@ void launch_mx_q6k_repacked_mmq_impl(
                            stream, weights, input, output, rows, columns);
     } else if (force_pinned || mx_pinned_enabled()) {
         hipLaunchKernelGGL((mx_repacked_mmq_pinned_kernel<false, true>),
+                           dim3((rows + 63) / 64, (token_count + 127) / 128), dim3(64, 4), 0,
+                           stream, weights, input, output, rows, columns, token_count);
+    } else if (mx_direct_enabled()) {
+        hipLaunchKernelGGL((mx_repacked_mmq_direct_kernel<false, true>),
                            dim3((rows + 63) / 64, (token_count + 127) / 128), dim3(64, 4), 0,
                            stream, weights, input, output, rows, columns, token_count);
     } else if (mx_pipeline_enabled()) {

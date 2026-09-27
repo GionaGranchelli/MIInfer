@@ -271,6 +271,11 @@ if(MIINFER_ENABLE_HIP)
     set_source_files_properties(bench/v2_0029_mmq_efficiency_bench.cpp PROPERTIES LANGUAGE HIP)
     target_link_libraries(miinfer-v2-0029-mmq-efficiency-bench PRIVATE miinfer_hip miinfer_model)
     target_compile_options(miinfer-v2-0029-mmq-efficiency-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-v2-0030-direct-vgpr-streaming-bench bench/v2_0030_direct_vgpr_streaming_bench.cpp)
+    set_source_files_properties(bench/v2_0030_direct_vgpr_streaming_bench.cpp PROPERTIES LANGUAGE HIP)
+    target_link_libraries(miinfer-v2-0030-direct-vgpr-streaming-bench PRIVATE miinfer_hip miinfer_model)
+    target_compile_options(miinfer-v2-0030-direct-vgpr-streaming-bench PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
 add_executable(miinfer-host-test tests/host_test.cpp)
