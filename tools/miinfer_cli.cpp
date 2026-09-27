@@ -250,6 +250,18 @@ inline ExtractedAssistantOutput extract_reasoning_and_content(std::string_view t
         const std::size_t c1 = text.find("</think", open_tag_end);
         const std::size_t c2 = text.find("</thought", open_tag_end);
         const std::size_t close_start = std::min(c1, c2);
+
+        const std::size_t t1 = text.find("<tool_call", open_tag_end);
+        const std::size_t t2 = text.find("<function=", open_tag_end);
+        const std::size_t tool_start = std::min(t1, t2);
+
+        if (tool_start != std::string_view::npos && (close_start == std::string_view::npos || tool_start < close_start)) {
+            out.has_reasoning = true;
+            out.reasoning_content += text.substr(open_tag_end, tool_start - open_tag_end);
+            pos = tool_start;
+            continue;
+        }
+
         if (close_start != std::string_view::npos) {
             out.has_reasoning = true;
             out.reasoning_content += text.substr(open_tag_end, close_start - open_tag_end);
@@ -4643,7 +4655,26 @@ int cmd_serve(int argc, char** argv) {
                         }
                     } else {
                         std::size_t close_start = 0, close_end = 0;
-                        if (find_close_think_tag(accumulated_text, processed_pos, close_start, close_end)) {
+                        const bool has_close = find_close_think_tag(accumulated_text, processed_pos, close_start, close_end);
+
+                        const std::size_t t1 = accumulated_text.find("<tool_call", processed_pos);
+                        const std::size_t t2 = accumulated_text.find("<function=", processed_pos);
+                        const std::size_t tool_start = std::min(t1, t2);
+
+                        if (tool_start != std::string_view::npos && (!has_close || tool_start < close_start)) {
+                            if (tool_start > processed_pos) {
+                                if (!send_reasoning_chunk(std::string_view(accumulated_text).substr(processed_pos, tool_start - processed_pos))) {
+                                    return false;
+                                }
+                            }
+                            processed_pos = tool_start;
+                            stream_mode = StreamMode::CONTENT;
+                            tool_check_state = ToolCheckState::IS_TOOL_CALL;
+                            tool_check_start_pos = processed_pos;
+                            continue;
+                        }
+
+                        if (has_close) {
                             if (close_start > processed_pos) {
                                 if (!send_reasoning_chunk(std::string_view(accumulated_text).substr(processed_pos, close_start - processed_pos))) {
                                     return false;
@@ -4657,7 +4688,7 @@ int cmd_serve(int argc, char** argv) {
                         }
 
                         std::size_t max_suffix = 0;
-                        for (const std::string_view prefix : {"</think>", "</think\n", "</thought>", "</thought\n"}) {
+                        for (const std::string_view prefix : {"</think>", "</think\n", "</thought>", "</thought\n", "<tool_call>", "<tool_call\n", "<function="}) {
                             for (std::size_t len = std::min(accumulated_text.size() - processed_pos, prefix.size() - 1); len >= 1; --len) {
                                 if (std::string_view(accumulated_text).ends_with(prefix.substr(0, len))) {
                                     max_suffix = std::max(max_suffix, len);
