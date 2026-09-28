@@ -320,7 +320,7 @@ geometry; it supersedes the earlier `<2,2>`/four-split statement for mx.
 | Q/K and V tiling | one query row, 256-d head, online scalar-token loop, unroll 4 | Q tile 16×2; KQ iteration `nbatch_fa=64`, `nbatch_K=128`; V accumulation consumes tile softmax state | captured tile says 2×2; source `DKQ=DV=256,ncols=4` config differs from mx |
 | Split count | 3 | 3 | 4 in captured launch |
 | Reduction | stage 1 partial max/sum/accumulator, separate stage 2 | separate combine kernel over split partials | separate combine kernel, but coverage does not reconcile |
-| Attention launches in request window | 412 stage-1 + 412 stage-2 | 272 tile + 272 combine | 304 tile + 304 combine |
+| Attention launches in request window | 240 stage-1 + 240 stage-2 | 272 tile + 272 combine | 304 tile + 304 combine |
 | CTA geometry per stage-1 launch | grid 12×512×3, 64 threads = 18,432 CTAs | grid 32×3×12, 256 threads = 1,152 CTAs | grid 1×4×12, 256 threads = 48 CTAs; only two Q positions on x |
 | LDS / VGPR / spills | selected kernel metadata not retained; do not infer | selected code object: 27,136 B LDS, 97 VGPR, 46 SGPR, zero spills (EXP-0362 build record) | selected code-object values not established for this capture |
 | Occupancy | achieved value unavailable | source requests occupancy 3 for `ncols=32`; 27,136 B LDS and 97 VGPR constrain a 256-thread CTA to at most 2 resident CTAs/CU by resource arithmetic; achieved runtime occupancy was not measured | not established |
@@ -352,10 +352,14 @@ actual Q dimension is large, so the trace suggests either an unexpectedly
 small Q microbatch or a capture/dispatch-path discrepancy that must be
 resolved before using upstream as a structural comparison.
 
-The MIInfer capture (`/tmp/mi50-roctracer-scoped.52CpBV/`) shows 412 pairs of
-stage-1 and stage-2 attention launches; stage 1 maps one query position and a
-two-head pair per 64-thread CTA. This launches per query rather than sharing
-one loaded KV tile across 16 query positions. The combination of measured
+The original request-window MIInfer capture
+(`/tmp/mi50-p8192-trace-v2-miinfer.2PPvwn/`) contains 240 stage-1 and 240
+stage-2 launches; stage 1 maps one query position and a two-head pair per
+64-thread CTA. A separate later scoped capture has 206 stage-1 plus 206
+stage-2 calls in its full process trace, not 412 request-window pairs, and
+must not be substituted into the original request attribution. MIInfer thus
+launches per query rather than sharing one loaded KV tile across 16 query
+positions. The combination of measured
 attention-family time (MIInfer 5.099 s vs mx 1.785 s) and mx's demonstrated
 query/KV reuse is a credible structural explanation for much of the attention
 advantage, though attribution is not a causal A/B. Upstream cannot yet confirm
