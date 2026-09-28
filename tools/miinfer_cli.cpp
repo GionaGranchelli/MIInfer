@@ -87,7 +87,6 @@ bool apply_runtime_preset() {
             && value.rfind("MIINFER_PRESET=", 0) != 0
             && value.rfind("MIINFER_DUMP_TOKENS=", 0) != 0
             && value.rfind("MIINFER_V2_0043_GQA_ATTENTION=", 0) != 0
-            && value.rfind("MIINFER_V2_0043_FP32_Q=", 0) != 0
             && value.rfind("MIINFER_V2_0043_COMPARE_REAL=", 0) != 0
             && value.rfind("MIINFER_SESSION_REUSE=", 0) != 0
             && value.rfind("MIINFER_DECODE_PROFILE=", 0) != 0

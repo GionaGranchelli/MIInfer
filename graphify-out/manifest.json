@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1790634378.0358694,
-    "seen": 1790634526.1844077,
-    "ast_hash": "a777eeb7bb84bcf89f5ed21eba033e7e",
+    "mtime": 1790638103.1054108,
+    "seen": 1790638196.4597573,
+    "ast_hash": "76ca24ae59ac738b11a0097bb51ba38c",
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_primitives.hpp": {
@@ -2364,15 +2364,15 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1790634419.2006752,
-    "seen": 1790634526.1848772,
-    "ast_hash": "fe186aef17f67b5a23303212f92839d4",
+    "mtime": 1790637499.4672391,
+    "seen": 1790638196.460208,
+    "ast_hash": "314b69c2aa8e696755e255aac6a57746",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1790634851.195637,
-    "seen": 1790634982.2558558,
-    "ast_hash": "88eb719fe3f3fd6b76cd38e254a65633",
+    "mtime": 1790637496.4252534,
+    "seen": 1790638196.4602091,
+    "ast_hash": "4815ad67d6d0f8319c895dc71e39050b",
     "semantic_hash": ""
   },
   "docs/M9-AUTOREGRESSIVE-QUALIFICATION.md": {
@@ -5370,9 +5370,9 @@
     "semantic_hash": ""
   },
   "bench/qwen35_gqa_prefill_bench.cpp": {
-    "mtime": 1790634430.7156208,
-    "seen": 1790634526.1843183,
-    "ast_hash": "bb63057965da20efcf4d8c8dad201511",
+    "mtime": 1790638115.807351,
+    "seen": 1790638196.45966,
+    "ast_hash": "d45432b8cd6d0dcfc30c7da347c65838",
     "semantic_hash": ""
   },
   "experiments/EXP-0361-wave64-attention-architecture-analysis.md": {
@@ -6090,15 +6090,15 @@
     "semantic_hash": ""
   },
   "experiments/EXP-V2-0042-p8192-trace-and-sampling-regression.md": {
-    "mtime": 1790633690.6511261,
-    "seen": 1790634097.3114674,
-    "ast_hash": "0fef1d92ffcfc33ca395510b096181f8",
+    "mtime": 1790637478.4903374,
+    "seen": 1790638196.4609911,
+    "ast_hash": "d6372b9ba978a4395fe4a9a92fa12736",
     "semantic_hash": ""
   },
   "experiments/EXP-V2-0043-reference-shaped-gqa-attention-rewrite.md": {
-    "mtime": 1790634785.9219449,
-    "seen": 1790634982.2565386,
-    "ast_hash": "ada1a27b817850becc4154d98c9d5bf9",
+    "mtime": 1790638178.7780554,
+    "seen": 1790638196.4609926,
+    "ast_hash": "30768567c04161788e4086ae337b9371",
     "semantic_hash": ""
   }
 }

@@ -30,8 +30,7 @@ float elapsed(hipEvent_t start, hipEvent_t stop) {
 float time_path(int path, const float* q, const __half* key, const __half* value,
                 const float* gate, float* output, float* split_workspace,
                 std::uint32_t tokens,
-                std::uint32_t capacity, int iterations, std::uint32_t splits = 3,
-                bool fp32_query = false) {
+                std::uint32_t capacity, int iterations, std::uint32_t splits = 3) {
     hipEvent_t start{}, stop{};
     hipEventCreate(&start);
     hipEventCreate(&stop);
@@ -55,7 +54,7 @@ float time_path(int path, const float* q, const __half* key, const __half* value
         } else if (path == 5) {
             miinfer::launch_qwen35_kq_fragment_reuse_attention_batch_f16(
                 q, key, value, gate, output, split_workspace, tokens, 0, capacity,
-                24, 4, 256, 1.0F / std::sqrt(256.0F), splits, nullptr, fp32_query);
+                24, 4, 256, 1.0F / std::sqrt(256.0F), splits);
         } else {
             miinfer::launch_qwen35_tiled_online_attention_batch_f16(
                 q, key, value, gate, output, tokens, 0, capacity, 24, 4, 256,
@@ -85,7 +84,7 @@ float time_path(int path, const float* q, const __half* key, const __half* value
         } else if (path == 5) {
             miinfer::launch_qwen35_kq_fragment_reuse_attention_batch_f16(
                 q, key, value, gate, output, split_workspace, tokens, 0, capacity,
-                24, 4, 256, 1.0F / std::sqrt(256.0F), splits, nullptr, fp32_query);
+                24, 4, 256, 1.0F / std::sqrt(256.0F), splits);
         } else {
             miinfer::launch_qwen35_tiled_online_attention_batch_f16(
                 q, key, value, gate, output, tokens, 0, capacity, 24, 4, 256,
@@ -110,12 +109,7 @@ int main(int argc, char** argv) {
     constexpr std::uint32_t kBenchTokens = 8192;
     constexpr std::size_t q_elements = static_cast<std::size_t>(kCapacity) * kHeads * kDim;
     constexpr std::size_t kv_elements = static_cast<std::size_t>(kKvHeads) * kCapacity * kDim;
-    const bool v2_0043_f32q = argc == 2
-        && std::string_view(argv[1]) == "--v2-0043-f32q";
-    const bool v2_0043 = argc == 2 && (std::string_view(argv[1]) == "--v2-0043"
-        || std::string_view(argv[1]) == "--v2-0043-32split" || v2_0043_f32q);
-    const std::uint32_t v2_0043_splits = argc == 2
-        && std::string_view(argv[1]) == "--v2-0043-32split" ? 32U : 3U;
+    const bool v2_0043 = argc == 2 && std::string_view(argv[1]) == "--v2-0043";
     std::vector<float> q(q_elements), gate(q_elements);
     std::vector<__half> key(kv_elements), value(kv_elements);
     std::mt19937 generator(7);
@@ -127,7 +121,7 @@ int main(int argc, char** argv) {
     DeviceBuffer<float> d_q(q.size()), d_gate(gate.size()), d_control(q.size()),
         d_candidate(q.size()), d_schedule(q.size());
     DeviceBuffer<__half> d_key(key.size()), d_value(value.size());
-    const std::uint32_t kSplits = v2_0043_splits;
+    constexpr std::uint32_t kSplits = 3;
     const std::size_t meta = static_cast<std::size_t>(kSplits) * kBenchTokens * kHeads;
     const auto d_split_workspace = v2_0043
         ? std::make_unique<DeviceBuffer<float>>(2 * meta + meta * kDim) : nullptr;
@@ -140,8 +134,7 @@ int main(int argc, char** argv) {
             time_path(4, d_q.ptr, d_key.ptr, d_value.ptr, d_gate.ptr, d_control.ptr,
                       d_split_workspace->ptr, tokens, kCapacity, 1, kSplits);
             time_path(5, d_q.ptr, d_key.ptr, d_value.ptr, d_gate.ptr, d_candidate.ptr,
-                      d_split_workspace->ptr, tokens, kCapacity, 1, kSplits,
-                      v2_0043_f32q);
+                      d_split_workspace->ptr, tokens, kCapacity, 1, kSplits);
             const std::size_t count = static_cast<std::size_t>(tokens) * kHeads * kDim;
             std::vector<float> control_output(count), candidate_output(count);
             hipMemcpy(control_output.data(), d_control.ptr, count * sizeof(float), hipMemcpyDeviceToHost);
@@ -165,9 +158,8 @@ int main(int argc, char** argv) {
             const float control = time_path(4, d_q.ptr, d_key.ptr, d_value.ptr, d_gate.ptr,
                 d_control.ptr, d_split_workspace->ptr, 8192, kCapacity, 1, kSplits);
             const float candidate = time_path(5, d_q.ptr, d_key.ptr, d_value.ptr, d_gate.ptr,
-                d_candidate.ptr, d_split_workspace->ptr, 8192, kCapacity, 1, kSplits,
-                v2_0043_f32q);
-            std::cout << "v2-0043" << (v2_0043_f32q ? "_f32q" : "") << " p8192_pair=" << pair
+                d_candidate.ptr, d_split_workspace->ptr, 8192, kCapacity, 1, kSplits);
+            std::cout << "v2-0043 p8192_pair=" << pair
                       << " control_ms=" << control << " candidate_ms=" << candidate
                       << " speedup=" << control / candidate << '\n';
         }

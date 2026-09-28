@@ -392,7 +392,9 @@ audit found that the initial full-model direct-CLI parity/timing pair did not
 select the candidate, which had only been wired into `PrefillV2AttentionLayer`;
 those end-to-end values are not candidate evidence. The active
 `FullAttentionLayer` route is now wired and tested at P8216: the faster FP16-Q
-variant diverged from exact greedy token parity at generated token 36, while
-FP32-Q restored isolated accuracy but ran at 0.541x control throughput and was
-rejected. Neither variant is promoted. See EXP-V2-0043 for the correction and
-measurements.
+variant diverged from exact greedy token parity at generated token 36. A
+follow-up restored the vectorized Q-fragment LDS load and cleared the isolated
+P8192 gate (1.405x median control/candidate), but the real layer-3 attention
+error and token-36 divergence remained. FP32-Q restored isolated accuracy but
+ran at 0.541x control throughput and was rejected. Neither variant is
+promoted. See EXP-V2-0043 for the correction and measurements.

@@ -2935,7 +2935,6 @@ __launch_bounds__(256, 1) __global__ void qwen35_spillfree_query_tiled_attention
 // each K tile is loaded once into kv_tmp, consumed into a tile-local KQ
 // fragment for all 32 rows, then the same workspace is overwritten once with
 // V and consumed across those rows before the next K tile.
-template<bool FP32_Q>
 __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_batch_f16_kernel(
     const float* __restrict__ q, const __half* __restrict__ key_cache,
     const __half* __restrict__ value_cache, float* __restrict__ split_workspace,
@@ -2947,7 +2946,7 @@ __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_bat
     constexpr std::uint32_t kQueryHeads = 24;
     constexpr std::uint32_t kKvHeads = 4;
     extern __shared__ unsigned char shared[];
-    constexpr std::size_t q_tmp_bytes = 32 * 256 * (FP32_Q ? sizeof(float) : sizeof(__half));
+    constexpr std::size_t q_tmp_bytes = 32 * 256 * sizeof(__half);
     __half* kv_tmp = reinterpret_cast<__half*>(shared + q_tmp_bytes);
     float* kq_fragment = reinterpret_cast<float*>(kv_tmp + kTileK * 128);
     float* row_max = kq_fragment + 32 * kTileK;
@@ -2971,35 +2970,22 @@ __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_bat
 
     float4 acc_lo[kRowsPerWarp];
     float4 acc_hi[kRowsPerWarp];
-    if constexpr (FP32_Q) {
-        float* q_tmp = reinterpret_cast<float*>(shared);
-        for (std::uint32_t i = tid; i < 32 * 256; i += 256) {
-            const std::uint32_t row = i / 256;
-            const std::uint32_t dimension = i % 256;
-            const std::uint32_t token = token_block * kQueryTokens + row / 2;
-            const std::uint32_t head = kv_head * 6 + head_group * 2 + row % 2;
-            const std::size_t q_index =
-                (static_cast<std::size_t>(token) * kQueryHeads + head) * 256 + dimension;
-            q_tmp[i] = token < token_count ? q[q_index] : 0.0f;
-        }
-    } else {
-        __half2* q_tmp2 = reinterpret_cast<__half2*>(shared);
-        for (std::uint32_t i = tid; i < 32 * 64; i += 256) {
-            const std::uint32_t row = i / 64;
-            const std::uint32_t pair = i % 64;
-            const std::uint32_t dimension = pair * 4;
-            const std::uint32_t token = token_block * kQueryTokens + row / 2;
-            const std::uint32_t head = kv_head * 6 + head_group * 2 + row % 2;
-            const std::size_t q_index =
-                (static_cast<std::size_t>(token) * kQueryHeads + head) * 256 + dimension;
-            if (token < token_count) {
-                const float4 qv = *reinterpret_cast<const float4*>(q + q_index);
-                q_tmp2[row * 128 + pair * 2] = __floats2half2_rn(qv.x, qv.y);
-                q_tmp2[row * 128 + pair * 2 + 1] = __floats2half2_rn(qv.z, qv.w);
-            } else {
-                q_tmp2[row * 128 + pair * 2] = __float2half2_rn(0.0f);
-                q_tmp2[row * 128 + pair * 2 + 1] = __float2half2_rn(0.0f);
-            }
+    __half2* q_tmp2 = reinterpret_cast<__half2*>(shared);
+    for (std::uint32_t i = tid; i < 32 * 64; i += 256) {
+        const std::uint32_t row = i / 64;
+        const std::uint32_t pair = i % 64;
+        const std::uint32_t dimension = pair * 4;
+        const std::uint32_t token = token_block * kQueryTokens + row / 2;
+        const std::uint32_t head = kv_head * 6 + head_group * 2 + row % 2;
+        const std::size_t q_index =
+            (static_cast<std::size_t>(token) * kQueryHeads + head) * 256 + dimension;
+        if (token < token_count) {
+            const float4 qv = *reinterpret_cast<const float4*>(q + q_index);
+            q_tmp2[row * 128 + pair * 2] = __floats2half2_rn(qv.x * scale, qv.y * scale);
+            q_tmp2[row * 128 + pair * 2 + 1] = __floats2half2_rn(qv.z * scale, qv.w * scale);
+        } else {
+            q_tmp2[row * 128 + pair * 2] = __float2half2_rn(0.0f);
+            q_tmp2[row * 128 + pair * 2 + 1] = __float2half2_rn(0.0f);
         }
     }
     if (tid < 32) {
@@ -3049,28 +3035,22 @@ __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_bat
 #pragma unroll
                 for (std::uint32_t r = 0; r < kRowsPerWarp; ++r) {
                     const std::uint32_t row = warp * kRowsPerWarp + r;
-                    if constexpr (FP32_Q) {
-                        const __half* k_values = reinterpret_cast<const __half*>(&k_bits);
-                        const float* q_values = reinterpret_cast<const float*>(shared)
-                            + row * 256 + d_base + fragment * 8;
+                    const __half2* k_pairs = reinterpret_cast<const __half2*>(&k_bits);
+                    const uint4 q_bits = *reinterpret_cast<const uint4*>(
+                        reinterpret_cast<const __half*>(shared) + row * 256
+                        + d_base + fragment * 8);
+                    const __half2* q_pairs = reinterpret_cast<const __half2*>(&q_bits);
 #pragma unroll
-                        for (std::uint32_t d = 0; d < 8; ++d) {
-                            dot[r] = fmaf(__half2float(k_values[d]), q_values[d], dot[r]);
-                        }
-                    } else {
-                        const __half2* k_pairs = reinterpret_cast<const __half2*>(&k_bits);
-                        const __half2* q_pairs = reinterpret_cast<const __half2*>(shared)
-                            + row * 128 + d_base / 2 + fragment * 4;
-#pragma unroll
-                        for (std::uint32_t pair = 0; pair < 4; ++pair) {
-                            asm volatile("v_dot2_f32_f16 %0, %1, %2, %0"
-                                : "+v"(dot[r]) : "v"(k_pairs[pair]), "v"(q_pairs[pair]));
-                        }
+                    for (std::uint32_t pair = 0; pair < 4; ++pair) {
+                        asm volatile("v_dot2_f32_f16 %0, %1, %2, %0"
+                            : "+v"(dot[r]) : "v"(k_pairs[pair]), "v"(q_pairs[pair]));
                     }
                 }
             }
             __syncthreads();
         }
+        // Keep unnormalized scores in registers; store only the compact
+        // tile-local half weight fragment consumed by the V phase.
 #pragma unroll
         for (std::uint32_t r = 0; r < kRowsPerWarp; ++r) {
             const std::uint32_t row = warp * kRowsPerWarp + r;
@@ -3082,17 +3062,7 @@ __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_bat
             const std::uint32_t key_position = tile_start + lane;
             const float score = token < token_count && key_position >= row_split_start
                     && key_position < row_split_end && key_position < work_end
-                    ? dot[r] * scale : -INFINITY;
-            kq_fragment[row * kTileK + lane] = score;
-        }
-        __syncthreads();
-
-        // Reduce each KQ row across the 32 lane-owned keys and materialize its
-        // weights once for reuse by every V output lane.
-#pragma unroll
-        for (std::uint32_t r = 0; r < kRowsPerWarp; ++r) {
-            const std::uint32_t row = warp * kRowsPerWarp + r;
-            const float score = kq_fragment[row * kTileK + lane];
+                    ? dot[r] : -INFINITY;
             float tile_max = score;
             for (int offset = 16; offset > 0; offset >>= 1) {
                 tile_max = fmaxf(tile_max, __shfl_down(tile_max, offset, 32));
@@ -5490,7 +5460,7 @@ void launch_qwen35_kq_fragment_reuse_attention_batch_f16(
     std::uint32_t token_count,
     std::uint32_t base_position, std::uint32_t cache_capacity,
     std::uint32_t query_heads, std::uint32_t kv_heads, std::uint32_t head_dim,
-    float scale, std::uint32_t num_splits, hipStream_t stream, bool fp32_query) {
+    float scale, std::uint32_t num_splits, hipStream_t stream) {
     if (q == nullptr || key_cache == nullptr || value_cache == nullptr || gate == nullptr
         || gated_output == nullptr || split_workspace == nullptr || token_count == 0
         || base_position > cache_capacity
@@ -5505,19 +5475,12 @@ void launch_qwen35_kq_fragment_reuse_attention_batch_f16(
     float* partial_sum = partial_max + total_meta;
     float* partial_acc = partial_sum + total_meta;
     const std::uint32_t blocks = (token_count + 15) / 16;
-    const std::size_t shared_bytes = 32 * 256 * (fp32_query ? sizeof(float) : sizeof(__half))
+    const std::size_t shared_bytes = 32 * 256 * sizeof(__half)
         + 32 * 128 * sizeof(__half) + 32 * 32 * sizeof(float) + 3 * 32 * sizeof(float);
-    if (fp32_query) {
-        hipLaunchKernelGGL((qwen35_kq_fragment_reuse_attention_batch_f16_kernel<true>),
-            dim3(blocks, num_splits, groups), dim3(32, 8), shared_bytes, stream,
-            q, key_cache, value_cache, split_workspace, token_count,
-            base_position, cache_capacity, num_splits, scale);
-    } else {
-        hipLaunchKernelGGL((qwen35_kq_fragment_reuse_attention_batch_f16_kernel<false>),
-            dim3(blocks, num_splits, groups), dim3(32, 8), shared_bytes, stream,
-            q, key_cache, value_cache, split_workspace, token_count,
-            base_position, cache_capacity, num_splits, scale);
-    }
+    hipLaunchKernelGGL(qwen35_kq_fragment_reuse_attention_batch_f16_kernel,
+        dim3(blocks, num_splits, groups), dim3(32, 8), shared_bytes, stream,
+        q, key_cache, value_cache, split_workspace, token_count,
+        base_position, cache_capacity, num_splits, scale);
     MIINFER_HIP_CHECK(hipGetLastError());
     hipLaunchKernelGGL(qwen35_splitk_suffix_attn_stage2_kernel,
         dim3(token_count * query_heads), dim3(64), 0, stream,

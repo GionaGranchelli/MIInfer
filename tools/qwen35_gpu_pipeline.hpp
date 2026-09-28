@@ -3908,7 +3908,6 @@ struct FullAttentionLayer {
     bool wide_attn_prefill = false;
     bool gqa_tiled_attn_prefill = false;
     bool v2_0043_gqa_attention = false;
-    bool v2_0043_fp32_q = false;
     bool v2_0043_compare_real = false;
     std::array<std::uint32_t, 9> m23_dispatch_counts{};
     bool m23_trace_dispatch = false;
@@ -3951,7 +3950,6 @@ struct FullAttentionLayer {
           ffn_up_weight(tensor(*model.file(), prefix(layer, "ffn_up.weight"))),
           ffn_down_weight(tensor(*model.file(), prefix(layer, "ffn_down.weight"))) {
         v2_0043_gqa_attention = environment_flag("MIINFER_V2_0043_GQA_ATTENTION");
-        v2_0043_fp32_q = environment_flag("MIINFER_V2_0043_FP32_Q");
         v2_0043_compare_real = environment_flag("MIINFER_V2_0043_COMPARE_REAL");
         const char* wide_attn_env = std::getenv("MIINFER_PREFILL_WIDE_ATTN");
         const char* layer_major_env = std::getenv("MIINFER_PREFILL_LAYER_MAJOR");
@@ -4744,8 +4742,7 @@ struct FullAttentionLayer {
                 static_cast<const __half*>(value_cache->get()), gate, output,
                 static_cast<float*>(g_v2_0043_attention_workspace->get()), count,
                 base_position, g_cache_capacity, 24, 4, 256,
-                1.0F / std::sqrt(256.0F), splits, hipStreamPerThread,
-                v2_0043_fp32_q);
+                1.0F / std::sqrt(256.0F), splits, hipStreamPerThread);
             if (v2_0043_compare_real && index == 3
                 && base_position == 512 && count == 512) {
                 MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));

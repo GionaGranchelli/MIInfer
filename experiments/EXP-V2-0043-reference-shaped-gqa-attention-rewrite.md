@@ -234,6 +234,34 @@ exact token correctness; the corrected FP32-Q variant restores isolated
 accuracy but loses the performance gate. Keep both opt-in, promote neither,
 and do not run a full curve.
 
+### Iterations 16–20 — precision and generated operand schedule
+
+These iterations retained the same 16×2 CTA, 32-key tile, three splits,
+per-query split bounds, and FP32 online/output state. Each was screened with
+the P512/P2048/P4096/P8192 isolated correctness sweep before P8192 timing.
+
+| Iteration | Single change / result | P8192 disposition |
+|---|---|---|
+| 16 | FP16 high+residual Q using a second `v_dot2` pass; synthetic max error `3.73e-9`. Five-pair median 875.654 ms candidate / 348.352 ms control; resource 80 VGPR / 48 SGPR, no spills, 45,440 B LDS. | REJECT — accuracy recovered, but 0.398× control/candidate; added QK arithmetic dominates. |
+| 17 | Reload residual Q from global to restore Q staging to 16 KiB; synthetic max error `3.73e-9`. Median 809.124 / 348.919 ms; 95 VGPR / 48 SGPR, no spills/private bytes, 29,056 B LDS. | REJECT — 0.431×; reducing LDS by 16 KiB recovered only ~8%, so residual-dot work is the main cost. |
+| 18 | Store only normalized weights as FP16 KQ, matching reference representation, while preserving float accumulation in V. Synthetic max error `2.59e-6`; median 331.204 / 349.657 ms. | REJECT — ~5.6% win, below 15%; scalar half-to-float weight use did not reproduce reference's packed half2 consumer. |
+| 19 | Keep scores in registers through softmax; store/reload only tile-local float weights. Synthetic max error `7.16e-9`; median 329.565 / 349.028 ms. | LEARN — ~5.9% win; isolating score lifetime showed that half KQ conversion, not the score round-trip, accounts for the larger loss. |
+| 20 | Restore a single vector 16-byte LDS load for each Q fragment instead of four scalar half2 LDS reads. Iteration 20a median 247.616 / 348.029 ms (1.405×), synthetic max error `7.16e-9`; 83 VGPR / 48 SGPR, zero spills/private bytes, 29,056 B LDS. ISA: 11 `ds_read_b128` vs 18 `ds_read_b32` (previously 3 vs 46), 32 `v_dot2_f32_f16`, 8 barriers, vector global loads, no scratch. | Isolated gate passed. |
+| 20b | Move scale before Q→FP16 conversion as pinned mx does; same geometry and vector loads. Median 247.812 / 348.272 ms (1.405×), synthetic max error `7.16e-9`. | No material change in speed or real-output error. |
+
+Iteration 20b's active M26 P8216 run measured 43,466.51 ms prefill and
+8,039.74 ms decode (51,522.43 ms total), versus one matched control at
+51,394.08 ms prefill and 8,268.80 ms decode (59,671.39 ms total). Do not claim
+this as a qualified end-to-end win: the candidate/control order was not
+thermally interleaved, and the candidate had the one-shot comparison sync. The
+layer-3/base-512 output still differed by `max_abs=4.97699e-5`,
+`rms=5.07132e-7`. Candidate and control matched for the first 36 generated
+token IDs; the first divergence was token index 36. Moving the scale before Q
+conversion changed neither mismatch magnitude nor divergence index. The
+reference-shaped reuse principle is now spill-free and >15% faster in isolated
+P8192 A/B, but greedy correctness remains the active blocker. Do not qualify
+the full context curve or promote until that is resolved.
+
 ### Iteration 13 hypothesis / gates (archived)
 
 Restore iteration 10's fast FP16-Q/in-place-FP32-weight kernel and change only
@@ -363,3 +391,21 @@ interleaved P8192 A/B pairs; neither invokes the legacy full curve.
   compensated query was much slower; iteration 13's source-pinned 3 splits
   diverged at token 6. Iteration 14 now targets the measured control partition
   mismatch: the reference split interval is per query token, not per CTA tile.
+### Iteration 21 — vectorized FP32-Q accuracy branch (2026-09-29)
+
+Hypothesis: the earlier accurate FP32-Q variant's slowdown came from scalarized
+LDS query loads; vectorizing those loads could retain accuracy while recovering
+the P8192 win. The isolated build had 113 VGPR, 48 SGPR, zero spills/private
+bytes, and about 44.4 KiB dynamic LDS (one CTA/CU by LDS resource arithmetic).
+Synthetic correctness passed at 512/2048/4096/8192 with max absolute error
+`3.72529e-9`. Five P8192 pairs had control/candidate medians 347.762/405.399
+ms (0.858× control/candidate), failing the ≥1.15× gate. REJECT; do not route
+this branch through the full model. The temporary FP32-Q kernel/API/benchmark
+branch was removed, leaving only the FP16-Q candidate. Its isolated speedup
+does not clear the independent real-model greedy-parity blocker (first
+divergence at token 36).
+
+After removing the FP32-Q branch, the remaining FP16-Q candidate was rebuilt
+and rerun: synthetic max absolute error remained `7.15954e-9`; P8192 median
+control/candidate was 347.717/247.707 ms (1.404×). This reconfirms the isolated
+speed result, not real-model correctness or promotion.
