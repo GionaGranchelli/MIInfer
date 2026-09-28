@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1790453365.9580796,
-    "seen": 1790453629.659943,
-    "ast_hash": "ff009191fb631dcbe48448d0c552ff2d",
+    "mtime": 1790620541.1598742,
+    "seen": 1790625108.415544,
+    "ast_hash": "76ca24ae59ac738b11a0097bb51ba38c",
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_primitives.hpp": {
@@ -744,8 +744,8 @@
     "semantic_hash": ""
   },
   "tests/qwen3_tokenizer_test.cpp": {
-    "mtime": 1788202468.631247,
-    "seen": 1788202499.9669626,
+    "mtime": 1790605129.4172056,
+    "seen": 1790625108.4159667,
     "ast_hash": "889c1f53da8d479495ff6b218a11bebe",
     "semantic_hash": ""
   },
@@ -2040,8 +2040,8 @@
     "semantic_hash": ""
   },
   "include/miinfer/kquant_wave_layout.hpp": {
-    "mtime": 1790348403.1267676,
-    "seen": 1790349037.3252912,
+    "mtime": 1790605129.3962057,
+    "seen": 1790625108.4154844,
     "ast_hash": "cf818ea51d362e64d54903f0f5ee39a4",
     "semantic_hash": ""
   },
@@ -2364,9 +2364,9 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1790531650.4699552,
-    "seen": 1790531906.1179318,
-    "ast_hash": "e762a4bb6040780e9c73dc8fa768e103",
+    "mtime": 1790628788.066309,
+    "seen": 1790628833.399936,
+    "ast_hash": "314b69c2aa8e696755e255aac6a57746",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
@@ -5370,20 +5370,20 @@
     "semantic_hash": ""
   },
   "bench/qwen35_gqa_prefill_bench.cpp": {
-    "mtime": 1790077603.7146745,
-    "seen": 1790077774.7475088,
-    "ast_hash": "2e7540e8ec9ba397274986d6266c778b",
+    "mtime": 1790628308.9385467,
+    "seen": 1790628833.3994133,
+    "ast_hash": "63cd9b233d9921c01414625e1144f0a6",
     "semantic_hash": ""
   },
   "experiments/EXP-0361-wave64-attention-architecture-analysis.md": {
-    "mtime": 1790075577.5378554,
-    "seen": 1790075592.2866714,
+    "mtime": 1790605129.3792057,
+    "seen": 1790625108.4166574,
     "ast_hash": "f0e2054ee73207748dd184594ea1c590",
     "semantic_hash": ""
   },
   "experiments/EXP-0362-query-tiled-gqa2-prefill.md": {
-    "mtime": 1790076744.000427,
-    "seen": 1790076761.0427902,
+    "mtime": 1790605129.3792057,
+    "seen": 1790625108.4166594,
     "ast_hash": "0175b6feec828d4ad35bcdcb49ae1cd4",
     "semantic_hash": ""
   },
@@ -5394,8 +5394,8 @@
     "semantic_hash": ""
   },
   "docs/performance-research-protocol.md": {
-    "mtime": 1790268504.045614,
-    "seen": 1790268523.2028494,
+    "mtime": 1790605129.3782058,
+    "seen": 1790625108.4160683,
     "ast_hash": "113e5d52888c38f6cf26278bbdacc3a8",
     "semantic_hash": ""
   },
@@ -5574,8 +5574,8 @@
     "semantic_hash": ""
   },
   "experiments/EXP-0393-p512-baseline-requalification.md": {
-    "mtime": 1790275165.4259517,
-    "seen": 1790276511.1929624,
+    "mtime": 1790605129.3792057,
+    "seen": 1790625108.416711,
     "ast_hash": "1f4dcdbd8fb429c0635ac08c95c1317a",
     "semantic_hash": ""
   },
@@ -5676,15 +5676,15 @@
     "semantic_hash": ""
   },
   "include/miinfer/prefill_v2/topology_block.hpp": {
-    "mtime": 1790433816.425029,
-    "seen": 1790437069.928094,
+    "mtime": 1790605129.3962057,
+    "seen": 1790625108.4155307,
     "ast_hash": "be5c71d932d66a0a5e1102055b2ab36a",
     "semantic_hash": ""
   },
   "src/prefill_v2/attention_layer.cpp": {
-    "mtime": 1790457234.6957724,
-    "seen": 1790463128.606032,
-    "ast_hash": "600e2a3f3148a123da360ce630852c8f",
+    "mtime": 1790630167.6577742,
+    "seen": 1790630229.214442,
+    "ast_hash": "e92b7cb4f77b1658f630ff4b21902dd6",
     "semantic_hash": ""
   },
   "src/prefill_v2/kv_cache.cpp": {
@@ -5694,8 +5694,8 @@
     "semantic_hash": ""
   },
   "src/prefill_v2/topology_block.cpp": {
-    "mtime": 1790433825.7539878,
-    "seen": 1790437069.9284792,
+    "mtime": 1790605129.4162054,
+    "seen": 1790625108.4159105,
     "ast_hash": "6e36a3129fba85588a4af66786b230bc",
     "semantic_hash": ""
   },
@@ -5976,8 +5976,8 @@
     "semantic_hash": ""
   },
   "bench/v2_0022_suffix_mmq_critical_path_bench.cpp": {
-    "mtime": 1790496592.8762884,
-    "seen": 1790497443.2160532,
+    "mtime": 1790605129.3782058,
+    "seen": 1790625108.415463,
     "ast_hash": "00176e3d572f21f75d8c072f0d6e15a9",
     "semantic_hash": ""
   },
@@ -6066,14 +6066,14 @@
     "semantic_hash": ""
   },
   "bench/v2_0029_mmq_efficiency_bench.cpp": {
-    "mtime": 1790535508.5803337,
-    "seen": 1790535829.1008432,
+    "mtime": 1790605129.3782058,
+    "seen": 1790625108.415473,
     "ast_hash": "42a62badf47dd00a415948d097fbcc5f",
     "semantic_hash": ""
   },
   "experiments/EXP-V2-0029-mmq-useful-compute-efficiency.md": {
-    "mtime": 1790535799.6220665,
-    "seen": 1790535829.1022558,
+    "mtime": 1790605129.3802056,
+    "seen": 1790625108.4167514,
     "ast_hash": "a38a254e2d876a3e40afeb6be004bff0",
     "semantic_hash": ""
   },
@@ -6087,6 +6087,18 @@
     "mtime": 1790538951.9278235,
     "seen": 1790538967.9967496,
     "ast_hash": "d10ad777e60b046adebd73a65c8d0e7b",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-V2-0042-p8192-trace-and-sampling-regression.md": {
+    "mtime": 1790632586.519449,
+    "seen": 1790632609.3117213,
+    "ast_hash": "029bf164bd22f271e6321ee60e591a66",
+    "semantic_hash": ""
+  },
+  "experiments/EXP-V2-0043-reference-shaped-gqa-attention-rewrite.md": {
+    "mtime": 1790632557.6095881,
+    "seen": 1790632609.3117235,
+    "ast_hash": "5fd23cd8259ad81d0aacf0ce4cbb11c0",
     "semantic_hash": ""
   }
 }

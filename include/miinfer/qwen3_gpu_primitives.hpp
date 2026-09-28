@@ -811,6 +811,15 @@ void launch_qwen35_spillfree_query_tiled_attention_v2_batch_f16(
     std::uint32_t query_heads, std::uint32_t kv_heads, std::uint32_t head_dim,
     float scale, hipStream_t stream = nullptr);
 
+// V2-0043: reference-shaped 16-token x 2-head KQ/KV-reuse prototype.
+void launch_qwen35_kq_fragment_reuse_attention_batch_f16(
+    const float* q, const __half* key_cache, const __half* value_cache,
+    const float* gate, float* gated_output, float* split_workspace,
+    std::uint32_t token_count,
+    std::uint32_t base_position, std::uint32_t cache_capacity,
+    std::uint32_t query_heads, std::uint32_t kv_heads, std::uint32_t head_dim,
+    float scale, std::uint32_t num_splits, hipStream_t stream = nullptr);
+
 void launch_qwen35_fused_q_split_norm_rope_batch(
     const float* qfull,
     const float* q_norm_weight,

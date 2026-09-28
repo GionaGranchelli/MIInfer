@@ -7,7 +7,9 @@
 #include <cstdint>
 #include <iostream>
 #include <limits>
+#include <memory>
 #include <random>
+#include <string_view>
 #include <vector>
 
 namespace {
@@ -26,8 +28,9 @@ float elapsed(hipEvent_t start, hipEvent_t stop) {
 }
 
 float time_path(int path, const float* q, const __half* key, const __half* value,
-                const float* gate, float* output, std::uint32_t tokens,
-                std::uint32_t capacity, int iterations) {
+                const float* gate, float* output, float* split_workspace,
+                std::uint32_t tokens,
+                std::uint32_t capacity, int iterations, std::uint32_t splits = 3) {
     hipEvent_t start{}, stop{};
     hipEventCreate(&start);
     hipEventCreate(&stop);
@@ -44,6 +47,14 @@ float time_path(int path, const float* q, const __half* key, const __half* value
             miinfer::launch_qwen35_spillfree_query_tiled_attention_v2_batch_f16(
                 q, key, value, gate, output, tokens, 0, capacity, 24, 4, 256,
                 1.0F / std::sqrt(256.0F));
+        } else if (path == 4) {
+            miinfer::launch_qwen35_splitk_suffix_attention_f16(
+                q, key, value, gate, output, split_workspace, tokens, 0, capacity,
+                24, 4, 256, 1.0F / std::sqrt(256.0F), splits);
+        } else if (path == 5) {
+            miinfer::launch_qwen35_kq_fragment_reuse_attention_batch_f16(
+                q, key, value, gate, output, split_workspace, tokens, 0, capacity,
+                24, 4, 256, 1.0F / std::sqrt(256.0F), splits);
         } else {
             miinfer::launch_qwen35_tiled_online_attention_batch_f16(
                 q, key, value, gate, output, tokens, 0, capacity, 24, 4, 256,
@@ -66,6 +77,14 @@ float time_path(int path, const float* q, const __half* key, const __half* value
             miinfer::launch_qwen35_spillfree_query_tiled_attention_v2_batch_f16(
                 q, key, value, gate, output, tokens, 0, capacity, 24, 4, 256,
                 1.0F / std::sqrt(256.0F));
+        } else if (path == 4) {
+            miinfer::launch_qwen35_splitk_suffix_attention_f16(
+                q, key, value, gate, output, split_workspace, tokens, 0, capacity,
+                24, 4, 256, 1.0F / std::sqrt(256.0F), splits);
+        } else if (path == 5) {
+            miinfer::launch_qwen35_kq_fragment_reuse_attention_batch_f16(
+                q, key, value, gate, output, split_workspace, tokens, 0, capacity,
+                24, 4, 256, 1.0F / std::sqrt(256.0F), splits);
         } else {
             miinfer::launch_qwen35_tiled_online_attention_batch_f16(
                 q, key, value, gate, output, tokens, 0, capacity, 24, 4, 256,
@@ -82,13 +101,18 @@ float time_path(int path, const float* q, const __half* key, const __half* value
 
 } // namespace
 
-int main() {
+int main(int argc, char** argv) {
     constexpr std::uint32_t kHeads = 24;
     constexpr std::uint32_t kKvHeads = 4;
     constexpr std::uint32_t kDim = 256;
     constexpr std::uint32_t kCapacity = 16384;
+    constexpr std::uint32_t kBenchTokens = 8192;
     constexpr std::size_t q_elements = static_cast<std::size_t>(kCapacity) * kHeads * kDim;
     constexpr std::size_t kv_elements = static_cast<std::size_t>(kKvHeads) * kCapacity * kDim;
+    const bool v2_0043 = argc == 2 && (std::string_view(argv[1]) == "--v2-0043"
+        || std::string_view(argv[1]) == "--v2-0043-32split");
+    const std::uint32_t v2_0043_splits = argc == 2
+        && std::string_view(argv[1]) == "--v2-0043-32split" ? 32U : 3U;
     std::vector<float> q(q_elements), gate(q_elements);
     std::vector<__half> key(kv_elements), value(kv_elements);
     std::mt19937 generator(7);
@@ -100,19 +124,59 @@ int main() {
     DeviceBuffer<float> d_q(q.size()), d_gate(gate.size()), d_control(q.size()),
         d_candidate(q.size()), d_schedule(q.size());
     DeviceBuffer<__half> d_key(key.size()), d_value(value.size());
+    const std::uint32_t kSplits = v2_0043_splits;
+    const std::size_t meta = static_cast<std::size_t>(kSplits) * kBenchTokens * kHeads;
+    const auto d_split_workspace = v2_0043
+        ? std::make_unique<DeviceBuffer<float>>(2 * meta + meta * kDim) : nullptr;
     hipMemcpy(d_q.ptr, q.data(), q.size() * sizeof(float), hipMemcpyHostToDevice);
     hipMemcpy(d_gate.ptr, gate.data(), gate.size() * sizeof(float), hipMemcpyHostToDevice);
     hipMemcpy(d_key.ptr, key.data(), key.size() * sizeof(__half), hipMemcpyHostToDevice);
     hipMemcpy(d_value.ptr, value.data(), value.size() * sizeof(__half), hipMemcpyHostToDevice);
+    if (v2_0043) {
+        for (const std::uint32_t tokens : {512U, 2048U, 4096U, 8192U}) {
+            time_path(4, d_q.ptr, d_key.ptr, d_value.ptr, d_gate.ptr, d_control.ptr,
+                      d_split_workspace->ptr, tokens, kCapacity, 1, kSplits);
+            time_path(5, d_q.ptr, d_key.ptr, d_value.ptr, d_gate.ptr, d_candidate.ptr,
+                      d_split_workspace->ptr, tokens, kCapacity, 1, kSplits);
+            const std::size_t count = static_cast<std::size_t>(tokens) * kHeads * kDim;
+            std::vector<float> control_output(count), candidate_output(count);
+            hipMemcpy(control_output.data(), d_control.ptr, count * sizeof(float), hipMemcpyDeviceToHost);
+            hipMemcpy(candidate_output.data(), d_candidate.ptr, count * sizeof(float), hipMemcpyDeviceToHost);
+            float max_error = 0.0F;
+            float max_relative_error = 0.0F;
+            bool finite = true;
+            for (std::size_t i = 0; i < count; ++i) {
+                const float error = std::fabs(control_output[i] - candidate_output[i]);
+                max_error = std::max(max_error, error);
+                max_relative_error = std::max(max_relative_error,
+                    error / std::max(std::fabs(control_output[i]), 1.0e-6F));
+                finite = finite && std::isfinite(candidate_output[i]);
+            }
+            std::cout << "v2-0043 correctness tokens=" << tokens
+                      << " max_abs_error=" << max_error
+                      << " max_relative_error=" << max_relative_error
+                      << " finite=" << finite << '\n';
+        }
+        for (int pair = 0; pair < 5; ++pair) {
+            const float control = time_path(4, d_q.ptr, d_key.ptr, d_value.ptr, d_gate.ptr,
+                d_control.ptr, d_split_workspace->ptr, 8192, kCapacity, 1, kSplits);
+            const float candidate = time_path(5, d_q.ptr, d_key.ptr, d_value.ptr, d_gate.ptr,
+                d_candidate.ptr, d_split_workspace->ptr, 8192, kCapacity, 1, kSplits);
+            std::cout << "v2-0043 p8192_pair=" << pair
+                      << " control_ms=" << control << " candidate_ms=" << candidate
+                      << " speedup=" << control / candidate << '\n';
+        }
+        return 0;
+    }
     for (const std::uint32_t tokens : {512U, 2048U, 4096U, 8192U}) {
         const float control = time_path(0, d_q.ptr, d_key.ptr, d_value.ptr, d_gate.ptr,
-                                        d_control.ptr, tokens, kCapacity, 5);
+                                        d_control.ptr, nullptr, tokens, kCapacity, 5);
         const float rejected = time_path(1, d_q.ptr, d_key.ptr, d_value.ptr, d_gate.ptr,
-                                         d_candidate.ptr, tokens, kCapacity, 5);
+                                         d_candidate.ptr, nullptr, tokens, kCapacity, 5);
         const float candidate = time_path(2, d_q.ptr, d_key.ptr, d_value.ptr, d_gate.ptr,
-                                          d_candidate.ptr, tokens, kCapacity, 5);
+                                          d_candidate.ptr, nullptr, tokens, kCapacity, 5);
         const float schedule = time_path(3, d_q.ptr, d_key.ptr, d_value.ptr, d_gate.ptr,
-                                         d_schedule.ptr, tokens, kCapacity, 5);
+                                         d_schedule.ptr, nullptr, tokens, kCapacity, 5);
         std::vector<float> control_output(static_cast<std::size_t>(tokens) * kHeads * kDim);
         std::vector<float> candidate_output(control_output.size());
         std::vector<float> schedule_output(control_output.size());

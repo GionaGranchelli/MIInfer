@@ -85,6 +85,9 @@ bool apply_runtime_preset() {
         if (value.rfind("MIINFER_", 0) == 0
             && value.rfind("MIINFER_API_KEY=", 0) != 0
             && value.rfind("MIINFER_PRESET=", 0) != 0
+            && value.rfind("MIINFER_DUMP_TOKENS=", 0) != 0
+            && value.rfind("MIINFER_V2_0043_GQA_ATTENTION=", 0) != 0
+            && value.rfind("MIINFER_V2_0043_COMPARE_REAL=", 0) != 0
             && value.rfind("MIINFER_SESSION_REUSE=", 0) != 0
             && value.rfind("MIINFER_DECODE_PROFILE=", 0) != 0
             && value.rfind("MIINFER_DECODE_PROFILE_POSITION=", 0) != 0
@@ -4729,6 +4732,12 @@ int cmd_serve(int argc, char** argv) {
             miinfer::OpenAiGeneratedToolCalls tool_calls;
             try {
                 const auto v2_stats = engine.generate(prompt_tokens, opt);
+                if (const char* dump_tokens = std::getenv("MIINFER_DUMP_TOKENS");
+                    dump_tokens != nullptr && std::strcmp(dump_tokens, "0") != 0) {
+                    std::cerr << "miinfer_generated_token_ids request_id=" << request.request_id << " ids=";
+                    for (const auto token : v2_stats.generated_tokens) std::cerr << token << ',';
+                    std::cerr << '\n';
+                }
                 stats.prompt_tokens = v2_stats.prompt_tokens.size();
                 stats.generated_tokens = v2_stats.generated_tokens.size();
                 stats.prefill_processed_tokens = v2_stats.prompt_tokens.size();
@@ -4850,6 +4859,12 @@ int cmd_serve(int argc, char** argv) {
             }
 
             const auto v2_stats = engine.generate(prompt_tokens, opt);
+            if (const char* dump_tokens = std::getenv("MIINFER_DUMP_TOKENS");
+                dump_tokens != nullptr && std::strcmp(dump_tokens, "0") != 0) {
+                std::cerr << "miinfer_generated_token_ids request_id=" << request.request_id << " ids=";
+                for (const auto token : v2_stats.generated_tokens) std::cerr << token << ',';
+                std::cerr << '\n';
+            }
             RuntimeGenerateStats stats;
             stats.prompt_tokens = v2_stats.prompt_tokens.size();
             stats.generated_tokens = v2_stats.generated_tokens.size();

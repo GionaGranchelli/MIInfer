@@ -4,14 +4,74 @@
 #include "miinfer/qwen3_gpu_primitives.hpp"
 
 #include <hip/hip_runtime.h>
+#include <algorithm>
 #include <cmath>
+#include <cstdlib>
 #include <cstring>
+#include <iostream>
 #include <stdexcept>
 #include <utility>
+#include <vector>
 
 namespace miinfer::prefill_v2 {
 
 namespace {
+
+bool v2_0043_gqa_attention_enabled() {
+    static const bool enabled = [] {
+        const char* value = std::getenv("MIINFER_V2_0043_GQA_ATTENTION");
+        return value != nullptr && std::strcmp(value, "0") != 0;
+    }();
+    return enabled;
+}
+
+bool v2_0043_real_compare_enabled() {
+    const char* value = std::getenv("MIINFER_V2_0043_COMPARE_REAL");
+    return value != nullptr && std::strcmp(value, "0") != 0;
+}
+
+void compare_v2_0043_real_operands(
+    const float* q, const float* candidate, const float* control,
+    std::size_t elements, hipStream_t stream) {
+    std::vector<float> host_q(elements), host_candidate(elements), host_control(elements);
+    MIINFER_HIP_CHECK(hipMemcpyAsync(host_q.data(), q, elements * sizeof(float),
+                                     hipMemcpyDeviceToHost, stream));
+    MIINFER_HIP_CHECK(hipMemcpyAsync(host_candidate.data(), candidate, elements * sizeof(float),
+                                     hipMemcpyDeviceToHost, stream));
+    MIINFER_HIP_CHECK(hipMemcpyAsync(host_control.data(), control, elements * sizeof(float),
+                                     hipMemcpyDeviceToHost, stream));
+    MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
+
+    float q_max = 0.0F, q_square_sum = 0.0F, q_round_max = 0.0F, q_expansion_max = 0.0F;
+    float max_abs = 0.0F, max_rel = 0.0F, square_error_sum = 0.0F;
+    std::size_t exact = 0;
+    for (std::size_t i = 0; i < elements; ++i) {
+        const float qv = host_q[i];
+        q_max = std::max(q_max, std::fabs(qv));
+        q_square_sum += qv * qv;
+        q_round_max = std::max(q_round_max,
+            std::fabs(qv - __half2float(__float2half(qv))));
+        const __half q_hi = __float2half(qv);
+        const __half q_lo = __float2half(qv - __half2float(q_hi));
+        q_expansion_max = std::max(q_expansion_max, std::fabs(
+            qv - (__half2float(q_hi) + __half2float(q_lo))));
+        const float error = std::fabs(host_candidate[i] - host_control[i]);
+        max_abs = std::max(max_abs, error);
+        max_rel = std::max(max_rel, error / std::max(std::fabs(host_control[i]), 1.0e-6F));
+        square_error_sum += error * error;
+        exact += error == 0.0F;
+    }
+    const float inv_n = 1.0F / static_cast<float>(elements);
+    std::cerr << "miinfer_v2_0043_real_compare elements=" << elements
+              << " q_max_abs=" << q_max
+              << " q_rms=" << std::sqrt(q_square_sum * inv_n)
+              << " q_fp16_round_max_abs=" << q_round_max
+              << " q_two_half_expansion_max_abs=" << q_expansion_max
+              << " attn_max_abs=" << max_abs
+              << " attn_max_rel=" << max_rel
+              << " attn_rms_error=" << std::sqrt(square_error_sum * inv_n)
+              << " attn_exact_values=" << exact << '\n';
+}
 
 void upload_to_device(const void* host_ptr, void* device_ptr, std::size_t bytes) {
     MIINFER_HIP_CHECK(hipMemcpy(device_ptr, host_ptr, bytes, hipMemcpyHostToDevice));
@@ -244,8 +304,38 @@ void PrefillV2AttentionLayer::forward(
         kv_cache.is_k_q8(), kv_cache.is_v_q8(),
         stream, prefill_state);
 
-    // 5. Tiled Online Causal Attention with Sigmoid Gating (Split-K specialized for suffix prefill)
-    if (((token_count <= 512 && base_position > 0) || prefill_state != nullptr) && ws.splitk_attn_workspace != nullptr) {
+    // 5. Tiled Online Causal Attention with Sigmoid Gating.
+    if (v2_0043_gqa_attention_enabled() && base_position > 0) {
+        if (kv_cache.is_k_q8() || kv_cache.is_v_q8() || prefill_state != nullptr
+            || token_count < 16 || token_count % 16 != 0
+            || ws.splitk_attn_workspace == nullptr) {
+            throw std::runtime_error(
+                "MIINFER_V2_0043_GQA_ATTENTION requires FP16 KV, full 16-token tiles, "
+                "no prefill state, and Split-K workspace");
+        }
+        launch_qwen35_kq_fragment_reuse_attention_batch_f16(
+            ws.attn_q_rope, kv_cache.key_cache, kv_cache.value_cache,
+            ws.gate, ws.attn_gated_output, ws.splitk_attn_workspace,
+            token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
+            24, 4, 256, 1.0F / std::sqrt(256.0F), 3, stream);
+        if (v2_0043_real_compare_enabled() && layer_index_ == 3
+            && base_position == 512 && token_count == 512) {
+            launch_qwen35_splitk_suffix_attention_quant(
+                ws.attn_q_rope,
+                kv_cache.key_cache, kv_cache.value_cache,
+                kv_cache.key_cache_q8, kv_cache.key_scales,
+                kv_cache.value_cache_q8, kv_cache.value_scales,
+                ws.gate, ws.attn_qfull,
+                ws.splitk_attn_workspace, token_count, base_position,
+                static_cast<std::uint32_t>(kv_cache.capacity),
+                24, 4, 256, 1.0F / std::sqrt(256.0F),
+                kv_cache.is_k_q8(), kv_cache.is_v_q8(), 32, stream);
+            compare_v2_0043_real_operands(
+                ws.attn_q_rope, ws.attn_gated_output, ws.attn_qfull,
+                static_cast<std::size_t>(token_count) * 24 * 256, stream);
+        }
+    } else if (((token_count <= 512 && base_position > 0) || prefill_state != nullptr)
+        && ws.splitk_attn_workspace != nullptr) {
         launch_qwen35_splitk_suffix_attention_quant(
             ws.attn_q_rope,
             kv_cache.key_cache, kv_cache.value_cache,
@@ -366,7 +456,19 @@ void PrefillV2AttentionLayer::forward_profiled(
     MIINFER_HIP_CHECK(hipEventRecord(ev_rope, stream));
 
     // 5. Causal Attention (Split-K specialized for suffix prefill)
-    if (token_count <= 512 && base_position > 0 && ws.splitk_attn_workspace != nullptr) {
+    if (v2_0043_gqa_attention_enabled() && base_position > 0) {
+        if (kv_cache.is_k_q8() || kv_cache.is_v_q8() || token_count < 16
+            || token_count % 16 != 0 || ws.splitk_attn_workspace == nullptr) {
+            throw std::runtime_error(
+                "MIINFER_V2_0043_GQA_ATTENTION requires FP16 KV, full 16-token tiles, "
+                "and Split-K workspace");
+        }
+        launch_qwen35_kq_fragment_reuse_attention_batch_f16(
+            ws.attn_q_rope, kv_cache.key_cache, kv_cache.value_cache,
+            ws.gate, ws.attn_gated_output, ws.splitk_attn_workspace,
+            token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
+            24, 4, 256, 1.0F / std::sqrt(256.0F), 3, stream);
+    } else if (token_count <= 512 && base_position > 0 && ws.splitk_attn_workspace != nullptr) {
         launch_qwen35_splitk_suffix_attention_quant(
             ws.attn_q_rope,
             kv_cache.key_cache, kv_cache.value_cache,
@@ -772,4 +874,3 @@ void PrefillV2AttentionLayer::decode_profiled(
 }
 
 } // namespace miinfer::prefill_v2
-

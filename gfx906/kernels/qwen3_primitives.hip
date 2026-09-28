@@ -2929,6 +2929,254 @@ __launch_bounds__(256, 1) __global__ void qwen35_spillfree_query_tiled_attention
     }
 }
 
+// V2-0043: reference-shaped 16-token x 2-head CTA. Eight logical 32-lane
+// warps each own four query rows (paired into four gfx906 Wave64s). Q and
+// online output state remain live across KV tiles;
+// each K tile is loaded once into kv_tmp, consumed into a tile-local KQ
+// fragment for all 32 rows, then the same workspace is overwritten once with
+// V and consumed across those rows before the next K tile.
+__launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_batch_f16_kernel(
+    const float* __restrict__ q, const __half* __restrict__ key_cache,
+    const __half* __restrict__ value_cache, float* __restrict__ split_workspace,
+    std::uint32_t token_count, std::uint32_t base_position,
+    std::uint32_t cache_capacity, std::uint32_t num_splits, float scale) {
+    constexpr std::uint32_t kQueryTokens = 16;
+    constexpr std::uint32_t kRowsPerWarp = 4;
+    constexpr std::uint32_t kTileK = 32;
+    constexpr std::uint32_t kQueryHeads = 24;
+    constexpr std::uint32_t kKvHeads = 4;
+    extern __shared__ unsigned char shared[];
+    __half* q_tmp = reinterpret_cast<__half*>(shared);
+    __half* kv_tmp = q_tmp + 32 * 256;
+    float* kq_fragment = reinterpret_cast<float*>(kv_tmp + kTileK * 128);
+    float* row_max = kq_fragment + 32 * kTileK;
+    float* row_sum = row_max + 32;
+    float* row_alpha = row_sum + 32;
+
+    const std::uint32_t lane = threadIdx.x;
+    const std::uint32_t warp = threadIdx.y;
+    const std::uint32_t tid = warp * 32 + lane;
+    const std::uint32_t token_block = blockIdx.x;
+    const std::uint32_t split = blockIdx.y;
+    const std::uint32_t group = blockIdx.z;
+    const std::uint32_t kv_head = group % kKvHeads;
+    const std::uint32_t head_group = group / kKvHeads;
+    if (num_splits == 0 || num_splits > 64 || warp >= 8 || lane >= 32) return;
+    const std::size_t total_meta =
+        static_cast<std::size_t>(num_splits) * token_count * kQueryHeads;
+    float* partial_max = split_workspace;
+    float* partial_sum = partial_max + total_meta;
+    float* partial_acc = partial_sum + total_meta;
+
+    float4 acc_lo[kRowsPerWarp];
+    float4 acc_hi[kRowsPerWarp];
+    __half2* q_tmp2 = reinterpret_cast<__half2*>(q_tmp);
+    for (std::uint32_t i = tid; i < 32 * 64; i += 256) {
+        const std::uint32_t row = i / 64;
+        const std::uint32_t pair = i % 64;
+        const std::uint32_t dimension = pair * 4;
+        const std::uint32_t token = token_block * kQueryTokens + row / 2;
+        const std::uint32_t head = kv_head * 6 + head_group * 2 + row % 2;
+        const std::size_t q_index =
+            (static_cast<std::size_t>(token) * kQueryHeads + head) * 256 + dimension;
+        if (token < token_count) {
+            const float4 qv = *reinterpret_cast<const float4*>(q + q_index);
+            q_tmp2[row * 128 + pair * 2] = __floats2half2_rn(qv.x, qv.y);
+            q_tmp2[row * 128 + pair * 2 + 1] = __floats2half2_rn(qv.z, qv.w);
+        } else {
+            q_tmp2[row * 128 + pair * 2] = __float2half2_rn(0.0f);
+            q_tmp2[row * 128 + pair * 2 + 1] = __float2half2_rn(0.0f);
+        }
+    }
+    if (tid < 32) {
+        row_max[tid] = -INFINITY;
+        row_sum[tid] = 0.0f;
+        row_alpha[tid] = 1.0f;
+    }
+    __syncthreads();
+#pragma unroll
+    for (std::uint32_t r = 0; r < kRowsPerWarp; ++r) {
+        acc_lo[r] = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+        acc_hi[r] = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+    }
+
+    // Match the control kernel: split boundaries are computed independently for
+    // each query's causal length, not once from the whole query block.
+    const std::uint32_t query_begin = token_block * kQueryTokens;
+    const std::uint32_t query_end = min(token_count, query_begin + kQueryTokens);
+    const std::uint32_t first_length = base_position + query_begin + 1;
+    const std::uint32_t last_length = base_position + query_end;
+    const std::uint32_t first_chunk = (first_length + num_splits - 1) / num_splits;
+    const std::uint32_t last_chunk = (last_length + num_splits - 1) / num_splits;
+    const std::uint32_t split_start = split * first_chunk;
+    const std::uint32_t work_end = min(split * last_chunk + last_chunk, last_length);
+
+    for (std::uint32_t tile_start = split_start; tile_start < work_end; tile_start += kTileK) {
+        // Pinned gfx906 config: nbatch_fa=32 and nbatch_K=128. Stage each
+        // 128-wide K fragment, accumulate all QK dots in registers, then reuse
+        // the completed 32-position KQ tile for softmax and V.
+        float dot[kRowsPerWarp] = {};
+        for (std::uint32_t d_base = 0; d_base < 256; d_base += 128) {
+            for (std::uint32_t i = tid; i < 32 * 16; i += 256) {
+                const std::uint32_t position = i / 16;
+                const std::uint32_t dimension = d_base + (i % 16) * 8;
+                const std::uint32_t cache_position = tile_start + position;
+                const std::size_t cache_index =
+                    (static_cast<std::size_t>(kv_head) * cache_capacity + cache_position) * 256
+                    + dimension;
+                const uint4 packed = cache_position < work_end && cache_position < cache_capacity
+                    ? *reinterpret_cast<const uint4*>(key_cache + cache_index)
+                    : make_uint4(0, 0, 0, 0);
+                *reinterpret_cast<uint4*>(kv_tmp + position * 128 + (i % 16) * 8) = packed;
+            }
+            __syncthreads();
+            for (std::uint32_t fragment = 0; fragment < 16; ++fragment) {
+                const uint4 k_bits = *reinterpret_cast<const uint4*>(kv_tmp + lane * 128 + fragment * 8);
+                const __half2* k_pairs = reinterpret_cast<const __half2*>(&k_bits);
+#pragma unroll
+                for (std::uint32_t r = 0; r < kRowsPerWarp; ++r) {
+                    const std::uint32_t row = warp * kRowsPerWarp + r;
+                    const uint4 q_bits = *reinterpret_cast<const uint4*>(
+                        q_tmp + row * 256 + d_base + fragment * 8);
+                    const __half2* q_pairs = reinterpret_cast<const __half2*>(&q_bits);
+#pragma unroll
+                    for (std::uint32_t pair = 0; pair < 4; ++pair) {
+                        asm volatile("v_dot2_f32_f16 %0, %1, %2, %0"
+                            : "+v"(dot[r]) : "v"(k_pairs[pair]), "v"(q_pairs[pair]));
+                    }
+                }
+            }
+            __syncthreads();
+        }
+#pragma unroll
+        for (std::uint32_t r = 0; r < kRowsPerWarp; ++r) {
+            const std::uint32_t row = warp * kRowsPerWarp + r;
+            const std::uint32_t token = token_block * kQueryTokens + row / 2;
+            const std::uint32_t row_length = base_position + token + 1;
+            const std::uint32_t row_chunk = (row_length + num_splits - 1) / num_splits;
+            const std::uint32_t row_split_start = split * row_chunk;
+            const std::uint32_t row_split_end = min(row_split_start + row_chunk, row_length);
+            const std::uint32_t key_position = tile_start + lane;
+            const float score = token < token_count && key_position >= row_split_start
+                    && key_position < row_split_end && key_position < work_end
+                    ? dot[r] * scale : -INFINITY;
+            kq_fragment[row * kTileK + lane] = score;
+        }
+        __syncthreads();
+
+        // Reduce each KQ row across the 32 lane-owned keys and materialize its
+        // weights once for reuse by every V output lane.
+#pragma unroll
+        for (std::uint32_t r = 0; r < kRowsPerWarp; ++r) {
+            const std::uint32_t row = warp * kRowsPerWarp + r;
+            const float score = kq_fragment[row * kTileK + lane];
+            float tile_max = score;
+            for (int offset = 16; offset > 0; offset >>= 1) {
+                tile_max = fmaxf(tile_max, __shfl_down(tile_max, offset, 32));
+            }
+            tile_max = __shfl(tile_max, 0, 32);
+            const float previous_max = row_max[row];
+            const float next_max = fmaxf(previous_max, tile_max);
+            float tile_sum = std::isfinite(score) ? expf(score - tile_max) : 0.0f;
+            for (int offset = 16; offset > 0; offset >>= 1) {
+                tile_sum += __shfl_down(tile_sum, offset, 32);
+            }
+            tile_sum = __shfl(tile_sum, 0, 32);
+            const float alpha = row_sum[row] == 0.0f ? 0.0f : expf(previous_max - next_max);
+            const float tile_scale = std::isfinite(tile_max) ? expf(tile_max - next_max) : 0.0f;
+            if (lane == 0) {
+                row_alpha[row] = std::isfinite(tile_max) ? alpha : 1.0f;
+                row_sum[row] = row_sum[row] * row_alpha[row] + tile_sum * tile_scale;
+                row_max[row] = next_max;
+            }
+            const float weight = std::isfinite(score) ? expf(score - next_max) : 0.0f;
+            kq_fragment[row * kTileK + lane] = weight;
+        }
+        __syncthreads();
+
+#pragma unroll
+        for (std::uint32_t r = 0; r < kRowsPerWarp; ++r) {
+            const std::uint32_t row = warp * kRowsPerWarp + r;
+            const float alpha = row_alpha[row];
+            acc_lo[r].x *= alpha;
+            acc_lo[r].y *= alpha;
+            acc_lo[r].z *= alpha;
+            acc_lo[r].w *= alpha;
+            acc_hi[r].x *= alpha;
+            acc_hi[r].y *= alpha;
+            acc_hi[r].z *= alpha;
+            acc_hi[r].w *= alpha;
+        }
+
+        for (std::uint32_t v_tile = 0; v_tile < kTileK; v_tile += 16) {
+            for (std::uint32_t i = tid; i < 16 * 32; i += 256) {
+                const std::uint32_t position = i / 32;
+                const std::uint32_t dimension = (i % 32) * 8;
+                const std::uint32_t cache_position = tile_start + v_tile + position;
+                const std::size_t cache_index =
+                    (static_cast<std::size_t>(kv_head) * cache_capacity + cache_position) * 256
+                    + dimension;
+                const uint4 packed = cache_position < work_end && cache_position < cache_capacity
+                    ? *reinterpret_cast<const uint4*>(value_cache + cache_index)
+                    : make_uint4(0, 0, 0, 0);
+                *reinterpret_cast<uint4*>(kv_tmp + position * 256 + dimension) = packed;
+            }
+            __syncthreads();
+            for (std::uint32_t p = v_tile; p < v_tile + 16; ++p) {
+                const __half* v = kv_tmp + (p - v_tile) * 256 + lane * 8;
+                const float v0 = __half2float(v[0]);
+                const float v1 = __half2float(v[1]);
+                const float v2 = __half2float(v[2]);
+                const float v3 = __half2float(v[3]);
+                const float v4 = __half2float(v[4]);
+                const float v5 = __half2float(v[5]);
+                const float v6 = __half2float(v[6]);
+                const float v7 = __half2float(v[7]);
+#pragma unroll
+                for (std::uint32_t r = 0; r < kRowsPerWarp; ++r) {
+                    const std::uint32_t row = warp * kRowsPerWarp + r;
+                    const std::uint32_t token = token_block * kQueryTokens + row / 2;
+                    const std::uint32_t cache_position = tile_start + p;
+                    const std::uint32_t row_length = base_position + token + 1;
+                    const std::uint32_t row_chunk = (row_length + num_splits - 1) / num_splits;
+                    const std::uint32_t row_split_start = split * row_chunk;
+                    const std::uint32_t row_split_end = min(row_split_start + row_chunk, row_length);
+                    if (token >= token_count || cache_position < row_split_start
+                            || cache_position >= row_split_end || cache_position >= work_end) continue;
+                    const float weight = kq_fragment[row * kTileK + p];
+                    acc_lo[r].x += weight * v0;
+                    acc_lo[r].y += weight * v1;
+                    acc_lo[r].z += weight * v2;
+                    acc_lo[r].w += weight * v3;
+                    acc_hi[r].x += weight * v4;
+                    acc_hi[r].y += weight * v5;
+                    acc_hi[r].z += weight * v6;
+                    acc_hi[r].w += weight * v7;
+                }
+            }
+            __syncthreads();
+        }
+    }
+
+#pragma unroll
+    for (std::uint32_t r = 0; r < kRowsPerWarp; ++r) {
+        const std::uint32_t row = warp * kRowsPerWarp + r;
+        const std::uint32_t token = token_block * kQueryTokens + row / 2;
+        if (token >= token_count) continue;
+        const std::uint32_t head = kv_head * 6 + head_group * 2 + row % 2;
+        const std::size_t split_idx =
+            (static_cast<std::size_t>(split) * token_count + token) * kQueryHeads + head;
+        if (lane == 0) {
+            partial_max[split_idx] = row_max[row];
+            partial_sum[split_idx] = row_sum[row];
+        }
+        if (lane < 32) {
+            *reinterpret_cast<float4*>(partial_acc + split_idx * 256 + lane * 8) = acc_lo[r];
+            *reinterpret_cast<float4*>(partial_acc + split_idx * 256 + lane * 8 + 4) = acc_hi[r];
+        }
+    }
+}
+
 __global__ void qwen35_tiled_online_attention_batch_f16_kernel(
     const float* __restrict__ q,
     const __half* __restrict__ key_cache,
@@ -5205,6 +5453,48 @@ void launch_qwen35_spillfree_query_tiled_attention_v2_batch_f16(
         dim3(blocks * groups), dim3(32, 8), 25 * 1024, stream,
         q, key_cache, value_cache, gate, gated_output, token_count, base_position,
         cache_capacity, query_heads, kv_heads, head_dim, scale);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+__global__ void qwen35_splitk_suffix_attn_stage2_kernel(
+    const float*, const float*, const float*, const float*, float*,
+    std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t,
+    const DevicePrefillState*);
+
+void launch_qwen35_kq_fragment_reuse_attention_batch_f16(
+    const float* q, const __half* key_cache, const __half* value_cache,
+    const float* gate, float* gated_output, float* split_workspace,
+    std::uint32_t token_count,
+    std::uint32_t base_position, std::uint32_t cache_capacity,
+    std::uint32_t query_heads, std::uint32_t kv_heads, std::uint32_t head_dim,
+    float scale, std::uint32_t num_splits, hipStream_t stream) {
+    if (q == nullptr || key_cache == nullptr || value_cache == nullptr || gate == nullptr
+        || gated_output == nullptr || split_workspace == nullptr || token_count == 0
+        || base_position > cache_capacity
+        || token_count > cache_capacity - base_position || query_heads != 24
+        || kv_heads != 4 || head_dim != 256 || !std::isfinite(scale)
+        || num_splits == 0 || num_splits > 64) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    const std::uint32_t groups = kv_heads * (query_heads / kv_heads / 2);
+    const std::size_t total_meta = static_cast<std::size_t>(num_splits) * token_count * query_heads;
+    float* partial_max = split_workspace;
+    float* partial_sum = partial_max + total_meta;
+    float* partial_acc = partial_sum + total_meta;
+    const std::uint32_t blocks = (token_count + 15) / 16;
+    hipLaunchKernelGGL(qwen35_kq_fragment_reuse_attention_batch_f16_kernel,
+        dim3(blocks, num_splits, groups), dim3(32, 8),
+        32 * 256 * sizeof(__half) + 32 * 128 * sizeof(__half)
+            + 32 * 32 * sizeof(float)
+            + 3 * 32 * sizeof(float), stream,
+        q, key_cache, value_cache, split_workspace, token_count,
+        base_position, cache_capacity, num_splits, scale);
+    MIINFER_HIP_CHECK(hipGetLastError());
+    hipLaunchKernelGGL(qwen35_splitk_suffix_attn_stage2_kernel,
+        dim3(token_count * query_heads), dim3(64), 0, stream,
+        partial_max, partial_sum, partial_acc, gate, gated_output,
+        token_count, query_heads, head_dim, num_splits,
+        static_cast<const DevicePrefillState*>(nullptr));
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

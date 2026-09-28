@@ -379,3 +379,17 @@ an architectural direction. A useful next structural candidate must preserve
 one K tile across the query rows, consume tile-local KQ/softmax state before
 reusing the workspace for V, and pass compile spill/resource gates before a
 single P8192 A/B. No kernel code was changed in this checkpoint.
+
+### V2-0043 follow-up correction (2026-09-28)
+
+The pinned AMD config row for `ncols=32` is
+`GGML_CUDA_FATTN_TILE_CONFIG_CASE(256,256,16,256,2,32,128)`: the selected
+configuration has `nbatch_fa=32`, `nbatch_K=128`, and derived `nbatch_V=16`.
+This supersedes any earlier `nbatch_fa=64` reading; captured P8192 launch
+geometry and request-window attribution are unchanged. The V2-0043 isolated
+prototype subsequently cleared its ≥15% gate, then matched the control's exact
+128-token greedy IDs at an 8,216-token prompt. A single direct-CLI end-to-end
+pair was neutral (candidate 287,991 ms vs control 287,932 ms prefill); this
+does not justify promotion, and the serving API path still rejects reusable
+prefill state for the opt-in candidate. See EXP-V2-0043 for iteration-level
+measurements and conditions.
