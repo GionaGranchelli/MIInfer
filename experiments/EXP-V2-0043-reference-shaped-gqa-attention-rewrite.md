@@ -163,7 +163,7 @@ control within `7.16e-9` max absolute error. Five interleaved P8192 pairs at
 three splits had a 250.227 ms candidate median versus 348.829 ms control
 median (1.394x; 28.3% less attention time), clearing the isolated gate.
 
-The direct full-model greedy check used `MIINFER_CONTEXT_CAPACITY=16384`,
+The initial direct full-model greedy check used `MIINFER_CONTEXT_CAPACITY=16384`,
 `MIINFER_V2_0043_GQA_ATTENTION=1`, `MIINFER_DUMP_TOKENS=1`, the same prompt
 (`"hello " * 8192` followed by a long-form computing-history request), and
 128 generated tokens. Prompt length was 8,216 tokens. Candidate and control
@@ -190,14 +190,49 @@ unset. A P8193 repeated-hello check also
 matched all 37 naturally generated tokens, but stopped on EOS and is secondary
 evidence only.
 
-The serving API cannot currently exercise the candidate: its batched caller
-passes reusable prefill state and the opt-in path deliberately rejects that
-mode before launching the kernel. The direct CLI path did exercise it without
-that state. Keep the candidate opt-in and do not promote it based on isolated
-attention timing alone. The structural reuse prototype passes exact 128-token
-correctness and the isolated P8192 gate, but the current full-model check does
-not show a speedup; an API-compatible, clock/thermal-controlled repeat is
-still needed before promotion.
+### Route-audit correction (2026-09-29)
+
+The preceding direct-CLI P8216 parity/timing results did **not** exercise this
+candidate. `miinfer run` executes `FullAttentionLayer` in
+`tools/qwen35_gpu_pipeline.hpp`; the first opt-in selector had only been
+connected to `PrefillV2AttentionLayer`. The equal 128-token hashes and neutral
+timing above are therefore default-path observations, not candidate
+qualification. The serving API's `PrefillV2AttentionLayer` path does select the
+candidate, but currently rejects its reusable-prefill-state mode before launch.
+
+The opt-in call is now connected to `FullAttentionLayer::finish_prefill_attention`,
+the full-layer-major wide-prefill path used by the M26 configuration. A narrow
+P1025 check under that configuration logged the actual layer-3/base-512/512
+candidate call; it generated the same first token (`248068`) as control. The
+single prefill samples were 6,294.53 ms candidate vs 4,948.28 ms control; this
+small-context timing is not a performance conclusion.
+
+The active-route P8216 greedy A/B completed 128 tokens but diverged first at
+generated token 36. Candidate/control IDs had different hashes. Candidate
+prefill/decode were 43,526.50/8,028.54 ms versus 51,972.65/10,196.94 ms
+control in one sequential pair, a promising but unqualified timing direction.
+At the first suffix attention call (layer 3, base 512, count 512), direct
+candidate-vs-control output comparison measured `max_abs=4.97699e-5`,
+`rms_error=5.07124e-7`, 20,141 exactly equal values of 3,145,728. Thus the
+FP16-Q candidate is not correct enough for exact greedy parity and is not
+promoted despite the one-pair speed direction.
+
+### Iteration 15 result — FP32 Q
+
+The corrected per-query split implementation with FP32 Q compiled at 83 VGPR,
+48 SGPR, zero VGPR/SGPR spills, zero private bytes, and 45,440 B dynamic LDS
+(one CTA/CU by LDS). Synthetic P512/P2048/P4096/P8192 outputs matched within
+`3.73e-9` max absolute error. Five isolated P8192 pairs measured candidate
+median 644.709 ms versus control 349.106 ms (`0.541x` control/candidate), so
+the FP32-Q representation is rejected without an active-route model run. This
+retests the prior rejected I11 under the corrected split contract and confirms
+that its accuracy-oriented arithmetic is not viable for this prototype.
+
+Current disposition: the structural FP16-Q prototype demonstrates a real
+isolated P8192 win and one active-route end-to-end speed direction, but fails
+exact token correctness; the corrected FP32-Q variant restores isolated
+accuracy but loses the performance gate. Keep both opt-in, promote neither,
+and do not run a full curve.
 
 ### Iteration 13 hypothesis / gates (archived)
 
@@ -236,7 +271,34 @@ performance gate misses; do not run repeated full-model timing on a loser.
 | 11 — preserve FP32 Q, change QK arithmetic only | 86 VGPR / 48 SGPR, zero spills, 45,440 B LDS; real output error fell 94× but 16-token text still differed; P8192 468.901/338.587 ms at 32 splits | reject: 27.8% slower and still incorrect |
 | 12 — FP16 high + residual query expansion, `v_dot2` | 77 VGPR / 48 SGPR, zero spills, 45,440 B LDS; synthetic max abs `3.73e-9`; P8192 895.534/338.445 ms at 32 splits | reject: 62.2% slower |
 | 13 — iteration 10 precision, reference-pinned 3 splits, preserve base-0 control | 128-token output diverged at token 6 (candidate ID `7701`, control `5686`) | reject: exact greedy parity failed |
-| 14 — per-query split boundaries, 3 splits, preserve base-0 control | 77 VGPR / 48 SGPR, zero spills, 29,056 B LDS; isolated P8192 median 250.227/348.829 ms (candidate/control, 1.394×); exact 128-token greedy IDs match | retain opt-in prototype; no promotion: one full-model pair was neutral (+0.02% prefill time) and serving API path rejects reusable prefill state |
+| 14 — per-query split boundaries, 3 splits, preserve base-0 control | 77 VGPR / 48 SGPR, zero spills, 29,056 B LDS; isolated P8192 median 250.227/348.829 ms (candidate/control, 1.394×); active M26 P8216 pair diverged at token 36, with 43.53/8.03 s prefill/decode vs 51.97/10.20 s control; real layer-3 attention max error `4.98e-5` | learn: fast but not exact; do not promote |
+| 15 — FP32 Q, corrected per-query split semantics | 83 VGPR / 48 SGPR, zero spills/private bytes, 45,440 B LDS; synthetic error `3.73e-9`; P8192 median 644.709/349.106 ms (candidate/control, 0.541×) | reject: accuracy path misses isolated performance gate |
+
+### Iteration 15 hypothesis / gates — FP32 query staging
+
+Reopen the previously rejected FP32-Q representation only because iteration 14
+fixed the per-query split intervals that had confounded its earlier model-level
+correctness check, and the newly active M26 route now has direct real-input
+evidence: iteration 14 diverged at greedy token 36 and showed `4.98e-5`
+maximum attention-output error at layer 3/base 512. Change only Q staging and
+QK arithmetic to FP32; keep the 16×2 row ownership, K/V tiles, three splits,
+per-query split boundaries, KV precision, and reduction unchanged.
+
+* Resource: 256 threads; zero VGPR/SGPR spills and private bytes; LDS at or
+  below the prior 45,440-byte FP32-Q footprint. Verify the newly compiled
+  gfx906 object before timing; expected occupancy ceiling is one CTA/CU by LDS.
+* Correctness: real layer-3/base-512 output error must materially shrink, then
+  exact 128-token greedy IDs must match on the active M26 P8216 request.
+* Performance: five interleaved isolated P8192 pairs; require ≥15% median
+  attention win. Only then run the active-route model A/B.
+* Kill on resource failure, no material real-output error reduction, exact
+  token mismatch, or failure of the isolated performance threshold. Prior
+  I11's isolated slowdown is not waived; this corrected-boundary rerun must
+  clear the same gate on the active launch path.
+
+The reference trace and iteration-14 A/B establish the mechanism and target;
+the max end-to-end ceiling remains bounded by the measured 12.86% attention
+device-work share. Do not test another split count or tile geometry here.
 
 ### Reference configuration correction (2026-09-28)
 

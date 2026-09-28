@@ -187,6 +187,8 @@ struct WidePrefillWorkspace {
 
 std::array<Buffer, 6> g_m23_repacked_scratch;
 std::array<std::size_t, 6> g_m23_repacked_scratch_bytes{};
+Buffer g_v2_0043_attention_workspace;
+std::size_t g_v2_0043_attention_workspace_bytes = 0;
 
 Buffer allocate(std::size_t bytes) {
     auto result = std::make_shared<DeviceBytes>(bytes);
@@ -3905,6 +3907,9 @@ struct FullAttentionLayer {
     bool decode_mx_o = false;
     bool wide_attn_prefill = false;
     bool gqa_tiled_attn_prefill = false;
+    bool v2_0043_gqa_attention = false;
+    bool v2_0043_fp32_q = false;
+    bool v2_0043_compare_real = false;
     std::array<std::uint32_t, 9> m23_dispatch_counts{};
     bool m23_trace_dispatch = false;
     M23ProfileCounters* m23_profile_counters = nullptr;
@@ -3945,6 +3950,9 @@ struct FullAttentionLayer {
           ffn_gate_weight(tensor(*model.file(), prefix(layer, "ffn_gate.weight"))),
           ffn_up_weight(tensor(*model.file(), prefix(layer, "ffn_up.weight"))),
           ffn_down_weight(tensor(*model.file(), prefix(layer, "ffn_down.weight"))) {
+        v2_0043_gqa_attention = environment_flag("MIINFER_V2_0043_GQA_ATTENTION");
+        v2_0043_fp32_q = environment_flag("MIINFER_V2_0043_FP32_Q");
+        v2_0043_compare_real = environment_flag("MIINFER_V2_0043_COMPARE_REAL");
         const char* wide_attn_env = std::getenv("MIINFER_PREFILL_WIDE_ATTN");
         const char* layer_major_env = std::getenv("MIINFER_PREFILL_LAYER_MAJOR");
         wide_attn_prefill = layer_major_env != nullptr && std::strcmp(layer_major_env, "0") != 0
@@ -4717,7 +4725,66 @@ struct FullAttentionLayer {
         count_m23_dispatch(3);
         stage_start(6, profile_position);
         if (exp0380_probe) std::cerr << "EXP0380 ATTN layer=" << index << " CAUSAL HOST_BEGIN\n" << std::flush;
-        if (gqa_tiled_attn_prefill) {
+        if (v2_0043_gqa_attention && base_position > 0) {
+            if (!fp16_kv_cache || count < 16 || count % 16 != 0) {
+                throw std::runtime_error(
+                    "MIINFER_V2_0043_GQA_ATTENTION requires FP16 KV and full 16-token tiles");
+            }
+            constexpr std::uint32_t splits = 3;
+            const std::size_t workspace_bytes = static_cast<std::size_t>(splits) * count
+                * 24 * (256 + 2) * sizeof(float);
+            // ponytail: one serialized inference uses shared split scratch; use per-engine storage if GPU requests become concurrent.
+            if (!g_v2_0043_attention_workspace
+                || g_v2_0043_attention_workspace_bytes < workspace_bytes) {
+                g_v2_0043_attention_workspace = allocate(workspace_bytes);
+                g_v2_0043_attention_workspace_bytes = workspace_bytes;
+            }
+            miinfer::launch_qwen35_kq_fragment_reuse_attention_batch_f16(
+                q, static_cast<const __half*>(key_cache->get()),
+                static_cast<const __half*>(value_cache->get()), gate, output,
+                static_cast<float*>(g_v2_0043_attention_workspace->get()), count,
+                base_position, g_cache_capacity, 24, 4, 256,
+                1.0F / std::sqrt(256.0F), splits, hipStreamPerThread,
+                v2_0043_fp32_q);
+            if (v2_0043_compare_real && index == 3
+                && base_position == 512 && count == 512) {
+                MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+                const std::size_t elements = static_cast<std::size_t>(count) * 24 * 256;
+                std::vector<float> candidate_host(elements), control_host(elements);
+                MIINFER_HIP_CHECK(hipMemcpy(candidate_host.data(), output,
+                    elements * sizeof(float), hipMemcpyDeviceToHost));
+                auto* control_output = static_cast<float*>(g_v2_0043_attention_workspace->get());
+                if (gqa_tiled_attn_prefill) {
+                    miinfer::launch_qwen35_gqa_tiled_online_attention_batch_f16(
+                        q, static_cast<const __half*>(key_cache->get()),
+                        static_cast<const __half*>(value_cache->get()), gate, control_output,
+                        count, base_position, g_cache_capacity, 24, 4, 256,
+                        1.0F / std::sqrt(256.0F), hipStreamPerThread);
+                } else {
+                    miinfer::launch_qwen35_tiled_online_attention_batch_f16(
+                        q, static_cast<const __half*>(key_cache->get()),
+                        static_cast<const __half*>(value_cache->get()), gate, control_output,
+                        count, base_position, g_cache_capacity, 24, 4, 256,
+                        1.0F / std::sqrt(256.0F), hipStreamPerThread);
+                }
+                MIINFER_HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+                MIINFER_HIP_CHECK(hipMemcpy(control_host.data(), control_output,
+                    elements * sizeof(float), hipMemcpyDeviceToHost));
+                float max_abs = 0.0F, rms_error = 0.0F;
+                std::size_t exact = 0;
+                for (std::size_t i = 0; i < elements; ++i) {
+                    const float error = std::fabs(candidate_host[i] - control_host[i]);
+                    max_abs = std::max(max_abs, error);
+                    rms_error += error * error;
+                    exact += error == 0.0F;
+                }
+                rms_error = std::sqrt(rms_error / static_cast<float>(elements));
+                std::cerr << "miinfer_v2_0043_real_compare layer=" << index
+                          << " base_position=" << base_position << " token_count=" << count
+                          << " max_abs=" << max_abs << " rms_error=" << rms_error
+                          << " exact_values=" << exact << '\n';
+            }
+        } else if (gqa_tiled_attn_prefill) {
             if (!fp16_kv_cache) {
                 throw std::runtime_error(
                     "MIINFER_PREFILL_GQA_TILED_ATTN requires FP16 KV cache");

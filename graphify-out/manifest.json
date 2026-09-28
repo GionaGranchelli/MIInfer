@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1790620541.1598742,
-    "seen": 1790625108.415544,
-    "ast_hash": "76ca24ae59ac738b11a0097bb51ba38c",
+    "mtime": 1790634378.0358694,
+    "seen": 1790634526.1844077,
+    "ast_hash": "a777eeb7bb84bcf89f5ed21eba033e7e",
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_primitives.hpp": {
@@ -2364,15 +2364,15 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1790628788.066309,
-    "seen": 1790628833.399936,
-    "ast_hash": "314b69c2aa8e696755e255aac6a57746",
+    "mtime": 1790634419.2006752,
+    "seen": 1790634526.1848772,
+    "ast_hash": "fe186aef17f67b5a23303212f92839d4",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1790276453.2448123,
-    "seen": 1790276511.1922824,
-    "ast_hash": "80b3565ede8281e8cdeecf86bd7e4f84",
+    "mtime": 1790634851.195637,
+    "seen": 1790634982.2558558,
+    "ast_hash": "88eb719fe3f3fd6b76cd38e254a65633",
     "semantic_hash": ""
   },
   "docs/M9-AUTOREGRESSIVE-QUALIFICATION.md": {
@@ -5370,9 +5370,9 @@
     "semantic_hash": ""
   },
   "bench/qwen35_gqa_prefill_bench.cpp": {
-    "mtime": 1790628308.9385467,
-    "seen": 1790628833.3994133,
-    "ast_hash": "63cd9b233d9921c01414625e1144f0a6",
+    "mtime": 1790634430.7156208,
+    "seen": 1790634526.1843183,
+    "ast_hash": "bb63057965da20efcf4d8c8dad201511",
     "semantic_hash": ""
   },
   "experiments/EXP-0361-wave64-attention-architecture-analysis.md": {
@@ -5682,9 +5682,9 @@
     "semantic_hash": ""
   },
   "src/prefill_v2/attention_layer.cpp": {
-    "mtime": 1790630167.6577742,
-    "seen": 1790630229.214442,
-    "ast_hash": "e92b7cb4f77b1658f630ff4b21902dd6",
+    "mtime": 1790632879.457038,
+    "seen": 1790632898.0085173,
+    "ast_hash": "41e2a71b5e9c8973dd10fa27bce75594",
     "semantic_hash": ""
   },
   "src/prefill_v2/kv_cache.cpp": {
@@ -6090,15 +6090,15 @@
     "semantic_hash": ""
   },
   "experiments/EXP-V2-0042-p8192-trace-and-sampling-regression.md": {
-    "mtime": 1790632586.519449,
-    "seen": 1790632609.3117213,
-    "ast_hash": "029bf164bd22f271e6321ee60e591a66",
+    "mtime": 1790633690.6511261,
+    "seen": 1790634097.3114674,
+    "ast_hash": "0fef1d92ffcfc33ca395510b096181f8",
     "semantic_hash": ""
   },
   "experiments/EXP-V2-0043-reference-shaped-gqa-attention-rewrite.md": {
-    "mtime": 1790632557.6095881,
-    "seen": 1790632609.3117235,
-    "ast_hash": "5fd23cd8259ad81d0aacf0ce4cbb11c0",
+    "mtime": 1790634785.9219449,
+    "seen": 1790634982.2565386,
+    "ast_hash": "ada1a27b817850becc4154d98c9d5bf9",
     "semantic_hash": ""
   }
 }

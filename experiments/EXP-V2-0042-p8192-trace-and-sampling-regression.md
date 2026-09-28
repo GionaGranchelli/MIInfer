@@ -387,9 +387,12 @@ The pinned AMD config row for `ncols=32` is
 configuration has `nbatch_fa=32`, `nbatch_K=128`, and derived `nbatch_V=16`.
 This supersedes any earlier `nbatch_fa=64` reading; captured P8192 launch
 geometry and request-window attribution are unchanged. The V2-0043 isolated
-prototype subsequently cleared its ≥15% gate, then matched the control's exact
-128-token greedy IDs at an 8,216-token prompt. A single direct-CLI end-to-end
-pair was neutral (candidate 287,991 ms vs control 287,932 ms prefill); this
-does not justify promotion, and the serving API path still rejects reusable
-prefill state for the opt-in candidate. See EXP-V2-0043 for iteration-level
-measurements and conditions.
+prototype subsequently cleared its ≥15% isolated P8192 gate. A later route
+audit found that the initial full-model direct-CLI parity/timing pair did not
+select the candidate, which had only been wired into `PrefillV2AttentionLayer`;
+those end-to-end values are not candidate evidence. The active
+`FullAttentionLayer` route is now wired and tested at P8216: the faster FP16-Q
+variant diverged from exact greedy token parity at generated token 36, while
+FP32-Q restored isolated accuracy but ran at 0.541x control throughput and was
+rejected. Neither variant is promoted. See EXP-V2-0043 for the correction and
+measurements.
