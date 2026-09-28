@@ -243,3 +243,59 @@ prompt-token counts, but generated text diverged across engines, so this is
 not a correctness comparison. Do not update the scoreboard or claim a
 competitor win. A future decode comparison needs durable per-request timing
 capture and timestamped telemetry labeling; no full curve is warranted.
+
+### Durable narrow serving requalification — 2026-09-28
+
+Repeated the narrow comparison with one daemon log per runtime, one telemetry
+file per runtime, and raw request/response JSON retained under
+`/tmp/mi50-decode-qualification.H5ei3f/`. This supersedes the diagnostic table
+above for latency only; it does not supersede its warning about cross-engine
+output divergence.
+
+The protocol was five alternating P64/TG128 and P2048/TG128 measured requests
+per runtime, after one warmup per prompt length; cache reuse disabled, exact
+prompt counts 72 and 2,056 (including wrapper), 128 generated tokens, T=0,
+top-p=1, top-k=0, repeat/presence/frequency penalties neutral. Each response
+reported the expected prompt and generated counts. MIInfer server `decode_ms`
+was recorded for every request; reference timings use `timings.predicted_ms`.
+The table reports the median of five request durations divided by 128.
+
+| Runtime (pinned build) | P64 ms/token (five raw ms) | P2048 ms/token (five raw ms) |
+|---|---:|---:|
+| MIInfer (`3f412d9b`) | 34.032 (4378.39, 4365.97, 4355.32, 4352.69, 4356.08) | 35.953 (4606.74, 4601.81, 4601.92, 4600.75, 4602.29) |
+| mx-llama.cpp (`2e9d29fe`) | 39.5706 (5057.706, 5062.971, 5065.031, 5068.097, 5088.643) | 40.1920 (5140.844, 5143.350, 5144.579, 5147.670, 5151.887) |
+| upstream llama.cpp (`73a43d1f`) | 44.4510 (5682.805, 5687.222, 5689.726, 5689.952, 5692.030) | 45.1015 (5765.638, 5770.849, 5772.998, 5779.487, 5786.901) |
+
+Thus the current binaries do not reproduce a ~20 ms/token competitive decode
+loss: MIInfer is 5.539 / 4.239 ms/token faster than pinned mx at P64/P2048 and
+10.419 / 9.149 ms/token faster than upstream. These are serving-path numbers,
+not a correctness or quality win. MIInfer's output-ID hash was stable across
+its five repeats at each length, but generated text differed across engines;
+the benchmark therefore cannot certify equivalent token sequences.
+
+Environment: MI50 gfx906; model
+`/home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf`; ROCm clocks sampled
+at SCLK/MCLK 1606/1000 MHz for all three windows. The configured sysfs PPT cap
+was 225 W (`power1_cap`), equal to the reported hardware maximum. Sampled
+socket-power peaks were 246 W MIInfer, 248 W mx, and 258 W upstream; hotspot
+maxima were 88 C, 84 C, and 90 C respectively. The AMD telemetry API documents
+that socket-power samples can rarely exceed the limit, so these observations
+alone do not establish a different cap or invalidate one runtime selectively.
+They do mean instantaneous cap adherence is not proven; all engines were run
+under the same configured cap and clock state. No cap or clock setting was
+changed for this comparison.
+
+The earlier parent-vs-candidate T=0 A/B (two samples per cell) remained nearly
+neutral: P64 33.75 to 34.11 ms/token and P2048 35.67 to 35.95 ms/token from
+`4eaa016b` to `3f412d9b`. Restoring the parent does not recover the alleged
+competitive regime. Nevertheless, the candidate's host-sampling architecture
+still violates the required device-resident greedy path; treat that as a
+correctness-of-design issue, but do not claim it caused a measured competitive
+regression from this evidence. Do not start further decode tuning or run a
+full curve without a new demonstrated gap.
+
+The P8192 request-window and kernel-family trace attribution above remains the
+completed trace result. Its saved launch/query coverage mismatch still blocks
+asserting exact P8192 workgroup occupancy/reuse from traces; source-path
+comparison is the next bounded attention task, not a reason to rerun traces or
+implement another schedule tweak.
