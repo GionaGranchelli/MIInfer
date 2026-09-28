@@ -299,3 +299,75 @@ completed trace result. Its saved launch/query coverage mismatch still blocks
 asserting exact P8192 workgroup occupancy/reuse from traces; source-path
 comparison is the next bounded attention task, not a reason to rerun traces or
 implement another schedule tweak.
+
+### Exact P8192 dispatch reconciliation (2026-09-28)
+
+The earlier geometry caveat is now resolved for mx by inspecting the retained
+successful P8192 roctracer capture at
+`/tmp/mi50-roctracer-p8192-mx.i6WBzV/2571540_hip_api_trace.txt` (response:
+8,192 prompt tokens). It shows `flash_attn_tile<256,256,16,2,false>` with
+grid `{x=32,y=3,z=12}`, block `{32,8,1}` (256 threads), followed by
+`flash_attn_combine_results<256>` with grid `{x=512,y=24,z=1}`. There are 272
+calls to each kernel family in this request window. This is the exact P8192
+geometry; it supersedes the earlier `<2,2>`/four-split statement for mx.
+
+| Dimension | MIInfer suffix split-K | pinned mx P8192 | pinned upstream P8192 capture |
+|---|---|---|---|
+| Q positions per CTA | 1 | 16 | 2 (captured `<2,2>`) |
+| Q heads per CTA | 2 | 2 | 2 |
+| KV head mapping | adjacent pair shares a KV head, but each query token has separate CTA work | two adjacent Q heads share a CTA; each tile is reused across 16 Q positions | source supports the tiled path; exact P8192 dispatch is unresolved |
+| K/V loads | each CTA streams its token/head's KV prefix; paired heads issue separate per-lane K/V loads | one staged K tile and one staged V tile per CTA/split/loop tile, reused across up to 32 query-head rows | not safely inferable from the mismatched launch geometry |
+| Q/K and V tiling | one query row, 256-d head, online scalar-token loop, unroll 4 | Q tile 16×2; KQ iteration `nbatch_fa=64`, `nbatch_K=128`; V accumulation consumes tile softmax state | captured tile says 2×2; source `DKQ=DV=256,ncols=4` config differs from mx |
+| Split count | 3 | 3 | 4 in captured launch |
+| Reduction | stage 1 partial max/sum/accumulator, separate stage 2 | separate combine kernel over split partials | separate combine kernel, but coverage does not reconcile |
+| Attention launches in request window | 412 stage-1 + 412 stage-2 | 272 tile + 272 combine | 304 tile + 304 combine |
+| CTA geometry per stage-1 launch | grid 12×512×3, 64 threads = 18,432 CTAs | grid 32×3×12, 256 threads = 1,152 CTAs | grid 1×4×12, 256 threads = 48 CTAs; only two Q positions on x |
+| LDS / VGPR / spills | selected kernel metadata not retained; do not infer | selected code object: 27,136 B LDS, 97 VGPR, 46 SGPR, zero spills (EXP-0362 build record) | selected code-object values not established for this capture |
+| Occupancy | achieved value unavailable | source requests occupancy 3 for `ncols=32`; 27,136 B LDS and 97 VGPR constrain a 256-thread CTA to at most 2 resident CTAs/CU by resource arithmetic; achieved runtime occupancy was not measured | not established |
+| Intermediate traffic per tile+combine | split workspace stores and rereads 3×(256 FP32 + float2) per query-head result; exact request total needs verified per-call token coverage | for the observed 512 Q positions, 24 heads and 3 splits: 38,043,648 B partial writes + same partial reads + 12,582,912 B final writes ≈84.6 MiB per tile/combine pair | no defensible per-request byte total because geometry does not cover the reported prompt |
+
+The source paths are `ggml/src/ggml-cuda/fattn-tile.cuh` in pinned mx
+(`2e9d29fe736969160f17476ecf0a6298cee6966`) and pinned upstream
+(`73a43d1f69345aee8bb186ef4b3172cef892f2e5`). In both, `ncols1` is query
+positions and `ncols2` is query-head slots. The mx-selected `<16,2>` path
+loads a K tile once for `flash_attn_tile_iter_KQ`, reuses it for the 32 Q
+columns, then stages/consumes V with the resulting softmax state; for the
+Qwen GQA layout those adjacent two Q heads share one KV head. The mx selected
+gfx906 config is 256 threads, 27,136 B LDS, 97 VGPR, 46 SGPR, zero spills.
+The requested launch occupancy is three, but LDS/VGPR resource arithmetic
+caps residency at two CTAs/CU; this is an upper bound, not a measured achieved
+occupancy. The trace's combine grid covers 512×24 outputs and its 39,636,224
+B allocation is consistent with a max-split partial workspace.
+
+The exact pinned upstream API trace is retained at
+`/tmp/mi50-p8192-trace-v2-upstream.jlbkwf/2759307_hip_api_trace.txt`; its
+paired response reports 8,192 evaluated prompt tokens, yet every selected
+launch is `<2,2>` with grid `{x=1,y=4,z=12}` and its per-launch x coverage is
+only two query positions. This cannot account for the reported prompt even
+across 304 calls and is demonstrably unsuitable for P8192 query coverage,
+intermediate traffic, or occupancy attribution. It does not justify rerunning
+the already captured traces; it leaves upstream runtime geometry open. The
+source dispatch for this shape should select a larger query tile when the
+actual Q dimension is large, so the trace suggests either an unexpectedly
+small Q microbatch or a capture/dispatch-path discrepancy that must be
+resolved before using upstream as a structural comparison.
+
+The MIInfer capture (`/tmp/mi50-roctracer-scoped.52CpBV/`) shows 412 pairs of
+stage-1 and stage-2 attention launches; stage 1 maps one query position and a
+two-head pair per 64-thread CTA. This launches per query rather than sharing
+one loaded KV tile across 16 query positions. The combination of measured
+attention-family time (MIInfer 5.099 s vs mx 1.785 s) and mx's demonstrated
+query/KV reuse is a credible structural explanation for much of the attention
+advantage, though attribution is not a causal A/B. Upstream cannot yet confirm
+the same schedule.
+
+The reuse principle itself is not unprototyped: EXP-0362 exercised a
+16-position × 2-head, 32-KV-row LDS candidate at P8192, but that implementation
+spilled 137 VGPRs and was much slower; EXP-0363 removed spills (40 VGPR, zero
+spills, 28 KiB LDS for candidate A) yet remained slower because it restaged K
+and repeated V work per row group instead of matching mx's KQ-fragment
+dataflow. Those results reject those implementations, not query/KV reuse as
+an architectural direction. A useful next structural candidate must preserve
+one K tile across the query rows, consume tile-local KQ/softmax state before
+reusing the workspace for V, and pass compile spill/resource gates before a
+single P8192 A/B. No kernel code was changed in this checkpoint.
