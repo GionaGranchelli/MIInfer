@@ -311,19 +311,19 @@ grid `{x=32,y=3,z=12}`, block `{32,8,1}` (256 threads), followed by
 calls to each kernel family in this request window. This is the exact P8192
 geometry; it supersedes the earlier `<2,2>`/four-split statement for mx.
 
-| Dimension | MIInfer suffix split-K | pinned mx P8192 | pinned upstream P8192 capture |
+| Dimension | MIInfer suffix split-K | pinned mx P8192 | pinned upstream P8192 recapture |
 |---|---|---|---|
-| Q positions per CTA | 1 | 16 | 2 (captured `<2,2>`) |
+| Q positions per CTA | 1 | 16 | 16 for 256 main launches; tail kernels use 4 and 2 |
 | Q heads per CTA | 2 | 2 | 2 |
-| KV head mapping | adjacent pair shares a KV head, but each query token has separate CTA work | two adjacent Q heads share a CTA; each tile is reused across 16 Q positions | source supports the tiled path; exact P8192 dispatch is unresolved |
-| K/V loads | each CTA streams its token/head's KV prefix; paired heads issue separate per-lane K/V loads | one staged K tile and one staged V tile per CTA/split/loop tile, reused across up to 32 query-head rows | not safely inferable from the mismatched launch geometry |
-| Q/K and V tiling | one query row, 256-d head, online scalar-token loop, unroll 4 | Q tile 16×2; KQ iteration `nbatch_fa=64`, `nbatch_K=128`; V accumulation consumes tile softmax state | captured tile says 2×2; source `DKQ=DV=256,ncols=4` config differs from mx |
-| Split count | 3 | 3 | 4 in captured launch |
-| Reduction | stage 1 partial max/sum/accumulator, separate stage 2 | separate combine kernel over split partials | separate combine kernel, but coverage does not reconcile |
-| Attention launches in request window | 240 stage-1 + 240 stage-2 | 272 tile + 272 combine | 304 tile + 304 combine |
-| CTA geometry per stage-1 launch | grid 12×512×3, 64 threads = 18,432 CTAs | grid 32×3×12, 256 threads = 1,152 CTAs | grid 1×4×12, 256 threads = 48 CTAs; only two Q positions on x |
+| KV head mapping | adjacent pair shares a KV head, but each query token has separate CTA work | two adjacent Q heads share a CTA; each tile is reused across 16 Q positions | same tiled GQA mapping; 16 Q positions and 2 adjacent Q heads in the main tile |
+| K/V loads | each CTA streams its token/head's KV prefix; paired heads issue separate per-lane K/V loads | one staged K tile and one staged V tile per CTA/split/loop tile, reused across up to 32 query-head rows | source has same KQ-tile reuse mechanism; exact main dispatch matches `<16,2>` |
+| Q/K and V tiling | one query row, 256-d head, online scalar-token loop, unroll 4 | Q tile 16×2; KQ iteration `nbatch_fa=64`, `nbatch_K=128`; V accumulation consumes tile softmax state | trace confirms `<16,2>` main tile; source `DKQ=DV=256`; runtime KQ loop config matches source-selected upstream path |
+| Split count | 3 | 3 | 3 for main `<16,2>` launches |
+| Reduction | stage 1 partial max/sum/accumulator, separate stage 2 | separate combine kernel over split partials | separate combine kernel over split partials |
+| Attention launches in request window | 240 stage-1 + 240 stage-2 | 272 tile + 272 combine | 288 tile + 288 combine (256 main, 16 `<4,2>`, 16 `<2,2>`); 288 combine |
+| CTA geometry per stage-1 launch | grid 12×512×3, 64 threads = 18,432 CTAs | grid 32×3×12, 256 threads = 1,152 CTAs | main grid 32×3×12, 256 threads = 1,152 CTAs; tail grids x=1,y=10/4,z=12 |
 | LDS / VGPR / spills | selected kernel metadata not retained; do not infer | selected code object: 27,136 B LDS, 97 VGPR, 46 SGPR, zero spills (EXP-0362 build record) | selected code-object values not established for this capture |
-| Occupancy | achieved value unavailable | source requests occupancy 3 for `ncols=32`; 27,136 B LDS and 97 VGPR constrain a 256-thread CTA to at most 2 resident CTAs/CU by resource arithmetic; achieved runtime occupancy was not measured | not established |
+| Occupancy | achieved value unavailable | source requests occupancy 3 for `ncols=32`; 27,136 B LDS and 97 VGPR constrain a 256-thread CTA to at most 2 resident CTAs/CU by resource arithmetic; achieved runtime occupancy was not measured | selected object metadata / achieved occupancy not retained; do not infer from launch geometry |
 | Intermediate traffic per tile+combine | split workspace stores and rereads 3×(256 FP32 + float2) per query-head result; exact request total needs verified per-call token coverage | for the observed 512 Q positions, 24 heads and 3 splits: 38,043,648 B partial writes + same partial reads + 12,582,912 B final writes ≈84.6 MiB per tile/combine pair | no defensible per-request byte total because geometry does not cover the reported prompt |
 
 The source paths are `ggml/src/ggml-cuda/fattn-tile.cuh` in pinned mx
@@ -339,18 +339,20 @@ caps residency at two CTAs/CU; this is an upper bound, not a measured achieved
 occupancy. The trace's combine grid covers 512×24 outputs and its 39,636,224
 B allocation is consistent with a max-split partial workspace.
 
-The exact pinned upstream API trace is retained at
-`/tmp/mi50-p8192-trace-v2-upstream.jlbkwf/2759307_hip_api_trace.txt`; its
-paired response reports 8,192 evaluated prompt tokens, yet every selected
-launch is `<2,2>` with grid `{x=1,y=4,z=12}` and its per-launch x coverage is
-only two query positions. This cannot account for the reported prompt even
-across 304 calls and is demonstrably unsuitable for P8192 query coverage,
-intermediate traffic, or occupancy attribution. It does not justify rerunning
-the already captured traces; it leaves upstream runtime geometry open. The
-source dispatch for this shape should select a larger query tile when the
-actual Q dimension is large, so the trace suggests either an unexpectedly
-small Q microbatch or a capture/dispatch-path discrepancy that must be
-resolved before using upstream as a structural comparison.
+The earlier upstream trace at
+`/tmp/mi50-p8192-trace-v2-upstream.jlbkwf/2759307_hip_api_trace.txt` is
+retained but invalid for P8192 geometry: every launch was `<2,2>` with
+grid `{x=1,y=4,z=12}`, inconsistent with its reported 8,192 evaluated tokens.
+Because that capture was demonstrably unusable, one exact-prompt recapture was
+made with the pinned upstream build. The new response evaluated 8,193 tokens
+(the rendered 8,192-token prompt plus the BOS token), and its API trace is
+retained at `/tmp/mi50-upstream-p8192-retrace.gNsv41/server-trace.log` (PID
+2938715). It confirms the same main `<16,2>` tiled path as mx: 256 launches
+with grid `{x=32,y=3,z=12}`, block `{32,8,1}`, plus 16 each of `<4,2>` and
+`<2,2>` tail launches; there are 288 combine launches. Thus the earlier
+upstream mismatch was a capture/dispatch-path artifact, not the P8192
+architecture. Exact code-object resource metadata and achieved occupancy were
+not recorded for this upstream binary, so those remain unknown.
 
 The original request-window MIInfer capture
 (`/tmp/mi50-p8192-trace-v2-miinfer.2PPvwn/`) contains 240 stage-1 and 240
@@ -362,8 +364,10 @@ launches per query rather than sharing one loaded KV tile across 16 query
 positions. The combination of measured
 attention-family time (MIInfer 5.099 s vs mx 1.785 s) and mx's demonstrated
 query/KV reuse is a credible structural explanation for much of the attention
-advantage, though attribution is not a causal A/B. Upstream cannot yet confirm
-the same schedule.
+advantage, though attribution is not a causal A/B. Both pinned references now
+confirm the same query/KV reuse principle at P8192; MIInfer's per-query CTA
+mapping remains the measured structural difference. This makes a KQ-fragment
+dataflow prototype evidence-backed, not a speculative schedule variant.
 
 The reuse principle itself is not unprototyped: EXP-0362 exercised a
 16-position × 2-head, 32-KV-row LDS candidate at P8192, but that implementation
