@@ -1,6 +1,6 @@
 # EXP-V2-0042 — P8192 trace attribution and sampler-change decode A/B
 
-**Status:** `LEARN — TRACE ATTRIBUTION COMPLETE; SAMPLER CHANGE NOT THE ~20 MS/TOKEN GAP`
+**Status:** `LEARN — TRACE AGGREGATION COMPLETE; REF DISPATCH GEOMETRY UNRESOLVED; SAMPLER CHANGE NOT THE ~20 MS/TOKEN GAP`
 
 ## Objective
 
@@ -29,8 +29,8 @@ an end-to-end latency delta.
 | Runtime | In-window kernels | Device-work sum | Outside-window kernels | Request wall |
 |---|---:|---:|---:|---:|
 | MIInfer | 20,899 | 39,645.183 ms | 1,043 | 39.903 s |
-| mx | 35,084 | 38,552.376 s | 5,284 | 39.038 s |
-| upstream | 35,228 | 44,481.246 s | 5,172 | 44.956 s |
+| mx | 35,084 | 38,552.376 ms | 5,284 | 39.038 s |
+| upstream | 35,228 | 44,481.246 ms | 5,172 | 44.956 s |
 
 Kernel-family aggregation, in milliseconds:
 
@@ -66,7 +66,7 @@ untraced qualification had a 1.296 s median MIInfer-vs-mx gap (3.36%).
 
 ### Corrected selected reference schedule
 
-The HIP API trace records the actual reference symbol
+The original HIP API trace records the reference symbol
 `flash_attn_tile<256,256,2,2,false>`, with grid
 `numBlocks={z=12,y=4,x=1}` and block `dimBlocks={z=1,y=8,x=32}`. This is
 256 threads (four Wave64 waves), two Q positions and two Q-head slots per CTA,
@@ -90,6 +90,26 @@ The old 27,136-byte/92-VGPR resource note was for the non-selected 4×8 code
 object. Runtime occupancy and equivalent upstream metadata remain to be
 confirmed during source-path analysis; do not infer achieved occupancy from
 the static limits alone.
+
+### Dispatch geometry validity caveat
+
+The saved mx server log confirms an 8,192-token prompt, but the saved API trace
+shows `grid.x=1` for every selected `<2,2>` tile launch. In the pinned source,
+`grid.x=ceil(Q->ne[1]/ncols1)` and `ncols1=2` here, so that geometry represents
+only 2–4 query positions per launch, not the 512-token microbatches expected
+for this request. The 272 tile/combine launches also do not reconcile with
+that query coverage. Thus the saved family-time aggregation remains useful,
+but its launch dimensions cannot yet support an exact P8192 CTA/occupancy or
+intermediate-traffic comparison.
+
+A single exact-8192-token mx request was subsequently profiled with the pinned
+binary through `rocprofv3` to resolve this contradiction. The request itself
+completed (8,192 prompt tokens; one generated token), but the profiler wrapper
+did not finalize its output on interruption and had to be stopped; its output
+directory is empty. This targeted capture is therefore unusable and supplies
+no replacement launch geometry. No MIInfer or upstream trace was rerun. Before
+any P8192 attention prototype, resolve the mx dispatch dimensions using a
+profiler run that exits normally or another trustworthy dispatch-level source.
 
 ## Decode regression A/B
 
@@ -147,13 +167,12 @@ is still required even though this A/B found no material timing regression.
 
 ## Decision / next work
 
-`LEARN`: existing P8192 traces are sufficient; do not rerun them. The actual
-reference dispatch provides a concrete 2-query × 2-head reuse schedule to
-compare against MIInfer's 1-query × 2-head, three-split schedule. Next inspect
-the exact pinned mx and upstream source/dispatch paths and complete the
-schedule/resource accounting (including occupancy, intermediate traffic, and
-launches). Only if that analysis confirms the reuse mechanism explains the
-attention advantage should a narrow P8192 prototype be attempted. No full
+`LEARN`: request-window/kernel-family aggregation is complete from the three
+original captures. The reference source's `<2,2>` code object offers a
+concrete query/head reuse principle, but the saved P8192 launch geometry is
+contradictory and the targeted replacement capture did not produce usable
+data. Keep exact runtime geometry, achieved occupancy, and intermediate
+traffic open; do not begin a P8192 prototype until those are resolved. No full
 curve is authorized for an unproven candidate.
 
 The sampling A/B does not authorize further decode tuning or competitor decode
