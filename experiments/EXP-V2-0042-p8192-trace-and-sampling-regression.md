@@ -179,3 +179,67 @@ The sampling A/B does not authorize further decode tuning or competitor decode
 profiling. First fix the required device-resident greedy fast path; design
 non-greedy candidate sampling without full-logits D2H and per-token host state
 rebuild. Keep that work separate from the P8192 attention hypothesis.
+
+### Pinned source-path audit (follow-up)
+
+Audited the exact checkout revisions used by the original trace:
+
+* mx: `2e9d29fe736969160f17476ecf0a6298cee6966`
+* upstream: `73a43d1f69345aee8bb186ef4b3172cef892f2e5`
+
+Both select `flash_attn_tile<256,256,2,2,false>` and the corresponding
+`flash_attn_combine_results<256>` path for gfx906. In
+`ggml/src/ggml-cuda/fattn-tile.cuh`, `<2,2>` means two query positions
+(`ncols1`) and two query-head slots (`ncols2`) per CTA. GGUF metadata gives
+24 Q heads / 4 KV heads (GQA ratio 6), so `grid.z=12` matches
+`ceil(6/2) * 4`: the tile groups two of the six Q heads sharing a KV head.
+The K/V tile work is reused across those two query positions and two head
+slots. The gfx906 config
+for `DKQ=DV=256,ncols=4` requests 256 threads, occupancy 2, `nbatch_fa=64`,
+`nbatch_K=128`. Each CTA walks 64 KQ rows per online-softmax iteration, with
+up to 128 K columns processed in parallel. The trace reports four KV
+partitions (`grid.y=4`), then a separate combine launch. Selected mx
+code-object metadata is 20,000 B LDS, 94 VGPR, Wave64, zero spills;
+launch-bounds request two resident CTAs, but achieved/runtime occupancy was
+not captured. Upstream uses the same selected tile schedule; its sparse-mask
+support is CUDA-only and not active on this gfx906 path.
+
+The stage-1 partial output and metadata are global scratch, reduced by the
+separate combine kernel. At four splits this is approximately 9,280 bytes of
+partial write + partial read + final write per query-head output (256 FP32
+values plus `float2` metadata per split); total P8192 traffic cannot be
+computed until true query coverage is resolved. MIInfer's stage 1 maps one
+query token and a pair of Q heads per 64-thread CTA, with three KV splits;
+stage 2 reduces global FP32 max/sum/accumulator partials. The reference reuse
+principle is a plausible explanation for the measured attention-family delta
+(1.785 s vs 5.099 s), but the trace/source mapping remains internally
+inconsistent: API launches show grid `{x=1,y=4,z=12}` for `<2,2>`, which
+covers only two Q positions along x, while the request was 8,192 tokens and
+only 272 tile launches were attributed to it. Do not prototype until the
+executed binary's configuration and query coverage are reconciled.
+
+### Exploratory serving comparison (not qualification)
+
+After the parent-vs-candidate sampling A/B, ran five alternating P64/TG128
+and P2048/TG128 requests against current MIInfer and each pinned reference
+server, with 128 generated tokens, explicit greedy-neutral settings, exact
+input counts (72 / 2,056 including chat wrapper), and prompt-cache reuse off.
+Reference JSON timing artifacts are in
+`/tmp/mi50-serving-qualification.HF7aqD/` (not durable).
+
+| Runtime | P64 median decode | P2048 median decode |
+|---|---:|---:|
+| MIInfer | about 34.0 ms/token | about 35.9 ms/token |
+| mx pinned | 39.339 ms/token | 39.997 ms/token |
+| upstream pinned | 44.712 ms/token | 45.309 ms/token |
+
+MIInfer's per-request values are only recoverable from interactive daemon
+output, not a saved server log, so they are approximate and the table is
+diagnostic only. Telemetry covered the entire multi-runtime window rather than
+labeled per-run windows: SCLK/MCLK stayed at 1606/1000 MHz, but sampled socket
+power peaked at 250 W against the configured 225 W cap and junction
+temperature reached 91 C. All engines produced 128 tokens with matching
+prompt-token counts, but generated text diverged across engines, so this is
+not a correctness comparison. Do not update the scoreboard or claim a
+competitor win. A future decode comparison needs durable per-request timing
+capture and timestamped telemetry labeling; no full curve is warranted.
