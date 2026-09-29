@@ -510,7 +510,7 @@ requests. The existing real-output compare hook (which synchronizes after the
 layer-3/base-512 candidate/control comparison) also completed two requests.
 Finally, an opt-in `MIINFER_V2_0043_SYNC_FIRST=1` diagnostic that synchronizes
 only after the first candidate attention call at layer 3/base 512 completed two
-requests at 38.860 s and 38.884 s prefill. All of these serialized timings are
+requests at 38.860 s and 38.875 s prefill. All of these serialized timings are
 diagnostic only; do not use them as candidate performance qualification.
 
 This materially narrows the failure to command-order/lifetime behavior around
