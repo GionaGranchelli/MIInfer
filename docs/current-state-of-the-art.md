@@ -18,9 +18,12 @@ qualification.
 
 The remaining measured stretch is the approximately 1.91x P8192 main-attention
 kernel-time ratio to pinned mx, despite MIInfer's lower whole-request median.
-V2-0043's two bounded parity corrections failed at generated token 18 due to
-FP16 KQ-fragment rounding affecting V accumulation; that stretch is rejected.
-Do not alter the accepted iteration-26 checkpoint while starting V2-0044.
+V2-0044's precision-preserving candidate also failed the real production-path
+attention-output tolerance and was not timed. The attention stretch is closed;
+the unresolved numerical frontier is documented in
+[`EXP-V2-0044`](../experiments/EXP-V2-0044-fp32-kq-fragment-parity.md). Keep
+iteration 26 immutable and qualified. No speculative attention work remains
+active under this goal.
 
 ## Target
 

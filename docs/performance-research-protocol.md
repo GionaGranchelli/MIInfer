@@ -21,15 +21,14 @@ freeze target
 
 This is process and evidence work. It does not authorize a new kernel or a new experiment by itself.
 
-## Current active frontier — 2026-09-29
+## Current frontier status — 2026-09-29
 
-Exactly one `PRIMARY` is active: **V2-0044, P8192 GQA attention efficiency**
-on the immutable post-M28 control at canonical merge
-`e0649c589790f0267a8f1f45b5332532a95ae13a` (production source checkpoint
-`e68c0f20`). The target is to reduce the measured ~1.91× main-attention
-kernel-time ratio to pinned mx-llama.cpp while preserving real-model token
-parity and the current end-to-end win. V2-0043 is closed PASS; its rejected
-stretch candidates must not be restored as controls or promoted.
+V2-0043 is closed **PRIMARY GOAL PASS** on immutable production checkpoint
+`e68c0f20`. V2-0044's one evidence-backed precision correction failed the
+real production-path attention-output tolerance and was not timed; the stretch
+is closed REJECTED. There is no active performance `PRIMARY` until a new goal
+is selected. Do not alter the accepted checkpoint or reopen precision/schedule
+variants without materially new causal evidence.
 
 The request-window traces and exact source comparison are recorded in
 [`EXP-V2-0042`](../experiments/EXP-V2-0042-p8192-trace-and-sampling-regression.md)
@@ -44,13 +43,11 @@ that source-level geometry alone explains the residual gap.
 
 The current evidence does **not** support repeating literal `<16,2>` geometry,
 spill-only layout changes, padding-only bank-conflict changes, unroll-only
-variants, or full-FP16 precision changes. The measured unroll-only attempt
-failed real token parity; the FP16 fragment precision failure has been
-localized. Before selecting any new code variable, rank exact accepted-object
-ISA/memory differences against mx and upstream, distinguish measured counters
-from source-derived traffic estimates, and state why the candidate differs
-materially from those rejected formulations. Preserve the exact merge commit
-as control; parity precedes any meaningful timing.
+variants, or the failed FP32-fragment/FP32-accumulator correction. The
+original FP16 fragment precision crossing is localized; the later correction's
+larger output mismatch is not internally localized. Future attention work
+requires a new goal and new causal evidence. Preserve the exact merge commit as
+control; parity precedes any meaningful timing.
 
 ## One active performance frontier
 
@@ -62,8 +59,8 @@ Every performance area has exactly one state:
 - **REJECTED** — an architectural family failed with sufficient evidence. Reopen it only when new evidence materially changes the premise; parameter tweaking is not new evidence.
 
 The following was the historical frontier at protocol adoption; its M27/M28
-status text is retained as process history and is superseded by the current
-V2-0044 active-frontier section above:
+status text is retained as process history and is superseded by the closed
+frontier status above:
 
 ### PRIMARY
 
@@ -209,7 +206,7 @@ The external workstation fan runs continuously at full speed; ROCm fan RPM/perce
 
 Keep performance commits focused and bisectable. Preserve rejected experiment records. Keep generated graph/index refreshes in a separate commit where practical.
 
-## Historical next-frontier research plan (superseded by V2-0044 above)
+## Historical next-frontier research plan (superseded by V2-0044 closeout above)
 
 No performance implementation is authorized by this section. The missing evidence is a refreshed full-model prefill attribution on the current qualified MI50 setup, including phase/operator timing, dispatch count, context scaling, and an Amdahl ceiling against the current mx comparison. EXP-0360–0363 show that attention geometry/state-placement guesses are not sufficient; they do not prove attention remains the dominant current gap.
 

@@ -36,20 +36,17 @@ V2-0008 specialized the single-token autoregressive decode execution path in `Pr
 Status: **V2_DEDICATED_DECODE_AND_GRAPH_REPLAY_QUALIFIED**.
 See [V2-0008](../experiments/EXP-V2-0008-specialized-decode-and-graph-replay.md) and [docs/prefill-v2-architecture.md](prefill-v2-architecture.md).
 
-## Current performance research frontier
+## Closed attention stretch
 
-The mandatory process for new performance work is
-[`performance-research-protocol.md`](performance-research-protocol.md).
-There is exactly one active `PRIMARY`: V2-0044, reducing the P8192 GQA
-attention-kernel efficiency gap against pinned mx while preserving the merged
-M28 control and real-model token trajectory. The approximately 1.91× main
-attention ratio, request-window launch totals, source paths, and known resource
-limits are recorded in
-[`EXP-V2-0043`](../experiments/EXP-V2-0043-reference-shaped-gqa-attention-rewrite.md).
-The first real-input divergence in rejected V2-0043 stretch variants was
-FP16 KQ-fragment rounding carried into V accumulation; the variants remain
-rejected. No new candidate has been implemented on V2-0044 yet. All M26/M27
-frontier narratives below are historical; they do not supersede V2-0044.
+V2-0044's single precision-preserving correction was rejected on the real
+production path: its layer-3/base-512 gated-attention output exceeded the
+real-model tolerance against iteration 26. It was not performance-tested.
+The details and unresolved internal boundary are recorded in
+[`EXP-V2-0044`](../experiments/EXP-V2-0044-fp32-kq-fragment-parity.md).
+Iteration 26 (`e68c0f20`) remains the immutable production success point;
+V2-0043 is **PRIMARY GOAL PASS**. There is no active performance `PRIMARY`
+until a new goal is selected. All M26/M27 frontier narratives below are
+historical.
 
 This document describes the **current implementation state** of MIInfer.
 
