@@ -2948,8 +2948,8 @@ __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_bat
     extern __shared__ unsigned char shared[];
     constexpr std::size_t q_tmp_bytes = 32 * 256 * sizeof(__half);
     __half* kv_tmp = reinterpret_cast<__half*>(shared + q_tmp_bytes);
-    float* kq_fragment = reinterpret_cast<float*>(kv_tmp + kTileK * 128);
-    float* row_max = kq_fragment + 32 * kTileK;
+    __half* kq_fragment = reinterpret_cast<__half*>(kv_tmp + kTileK * 128);
+    float* row_max = reinterpret_cast<float*>(kq_fragment + 32 * kTileK);
     float* row_sum = row_max + 32;
     float* row_alpha = row_sum + 32;
 
@@ -2968,8 +2968,7 @@ __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_bat
     float* partial_sum = partial_max + total_meta;
     float* partial_acc = partial_sum + total_meta;
 
-    float4 acc_lo[kRowsPerWarp];
-    float4 acc_hi[kRowsPerWarp];
+    __half2 acc[kRowsPerWarp][4];
     __half2* q_tmp2 = reinterpret_cast<__half2*>(shared);
     for (std::uint32_t i = tid; i < 32 * 64; i += 256) {
         const std::uint32_t row = i / 64;
@@ -2996,8 +2995,7 @@ __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_bat
     __syncthreads();
 #pragma unroll
     for (std::uint32_t r = 0; r < kRowsPerWarp; ++r) {
-        acc_lo[r] = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
-        acc_hi[r] = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+        for (std::uint32_t d = 0; d < 4; ++d) acc[r][d] = __float2half2_rn(0.0f);
     }
 
     // Match the control kernel: split boundaries are computed independently for
@@ -3083,22 +3081,16 @@ __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_bat
                 row_max[row] = next_max;
             }
             const float weight = std::isfinite(score) ? expf(score - next_max) : 0.0f;
-            kq_fragment[row * kTileK + lane] = weight;
+            kq_fragment[row * kTileK + lane] = __float2half_rn(weight);
         }
         __syncthreads();
 
 #pragma unroll
         for (std::uint32_t r = 0; r < kRowsPerWarp; ++r) {
             const std::uint32_t row = warp * kRowsPerWarp + r;
-            const float alpha = row_alpha[row];
-            acc_lo[r].x *= alpha;
-            acc_lo[r].y *= alpha;
-            acc_lo[r].z *= alpha;
-            acc_lo[r].w *= alpha;
-            acc_hi[r].x *= alpha;
-            acc_hi[r].y *= alpha;
-            acc_hi[r].z *= alpha;
-            acc_hi[r].w *= alpha;
+            const __half2 alpha = __float2half2_rn(row_alpha[row]);
+#pragma unroll
+            for (std::uint32_t d = 0; d < 4; ++d) acc[r][d] = __hmul2(acc[r][d], alpha);
         }
 
         for (std::uint32_t v_tile = 0; v_tile < kTileK; v_tile += 16) {
@@ -3117,14 +3109,10 @@ __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_bat
             __syncthreads();
             for (std::uint32_t p = v_tile; p < v_tile + 16; ++p) {
                 const __half* v = kv_tmp + (p - v_tile) * 256 + lane * 8;
-                const float v0 = __half2float(v[0]);
-                const float v1 = __half2float(v[1]);
-                const float v2 = __half2float(v[2]);
-                const float v3 = __half2float(v[3]);
-                const float v4 = __half2float(v[4]);
-                const float v5 = __half2float(v[5]);
-                const float v6 = __half2float(v[6]);
-                const float v7 = __half2float(v[7]);
+                const __half2 v01 = *reinterpret_cast<const __half2*>(v + 0);
+                const __half2 v23 = *reinterpret_cast<const __half2*>(v + 2);
+                const __half2 v45 = *reinterpret_cast<const __half2*>(v + 4);
+                const __half2 v67 = *reinterpret_cast<const __half2*>(v + 6);
 #pragma unroll
                 for (std::uint32_t r = 0; r < kRowsPerWarp; ++r) {
                     const std::uint32_t row = warp * kRowsPerWarp + r;
@@ -3136,15 +3124,11 @@ __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_bat
                     const std::uint32_t row_split_end = min(row_split_start + row_chunk, row_length);
                     if (token >= token_count || cache_position < row_split_start
                             || cache_position >= row_split_end || cache_position >= work_end) continue;
-                    const float weight = kq_fragment[row * kTileK + p];
-                    acc_lo[r].x += weight * v0;
-                    acc_lo[r].y += weight * v1;
-                    acc_lo[r].z += weight * v2;
-                    acc_lo[r].w += weight * v3;
-                    acc_hi[r].x += weight * v4;
-                    acc_hi[r].y += weight * v5;
-                    acc_hi[r].z += weight * v6;
-                    acc_hi[r].w += weight * v7;
+                    const __half2 weight = __half2half2(kq_fragment[row * kTileK + p]);
+                    acc[r][0] = __hfma2(v01, weight, acc[r][0]);
+                    acc[r][1] = __hfma2(v23, weight, acc[r][1]);
+                    acc[r][2] = __hfma2(v45, weight, acc[r][2]);
+                    acc[r][3] = __hfma2(v67, weight, acc[r][3]);
                 }
             }
             __syncthreads();
@@ -3164,8 +3148,14 @@ __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_bat
             partial_sum[split_idx] = row_sum[row];
         }
         if (lane < 32) {
-            *reinterpret_cast<float4*>(partial_acc + split_idx * 256 + lane * 8) = acc_lo[r];
-            *reinterpret_cast<float4*>(partial_acc + split_idx * 256 + lane * 8 + 4) = acc_hi[r];
+            const float2 out01 = __half22float2(acc[r][0]);
+            const float2 out23 = __half22float2(acc[r][1]);
+            const float2 out45 = __half22float2(acc[r][2]);
+            const float2 out67 = __half22float2(acc[r][3]);
+            *reinterpret_cast<float4*>(partial_acc + split_idx * 256 + lane * 8) =
+                make_float4(out01.x, out01.y, out23.x, out23.y);
+            *reinterpret_cast<float4*>(partial_acc + split_idx * 256 + lane * 8 + 4) =
+                make_float4(out45.x, out45.y, out67.x, out67.y);
         }
     }
 }
@@ -5476,7 +5466,7 @@ void launch_qwen35_kq_fragment_reuse_attention_batch_f16(
     float* partial_acc = partial_sum + total_meta;
     const std::uint32_t blocks = (token_count + 15) / 16;
     const std::size_t shared_bytes = 32 * 256 * sizeof(__half)
-        + 32 * 128 * sizeof(__half) + 32 * 32 * sizeof(float) + 3 * 32 * sizeof(float);
+        + 32 * 128 * sizeof(__half) + 32 * 32 * sizeof(__half) + 3 * 32 * sizeof(float);
     hipLaunchKernelGGL(qwen35_kq_fragment_reuse_attention_batch_f16_kernel,
         dim3(blocks, num_splits, groups), dim3(32, 8), shared_bytes, stream,
         q, key_cache, value_cache, split_workspace, token_count,

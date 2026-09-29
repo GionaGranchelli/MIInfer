@@ -770,3 +770,63 @@ result. Next inspect the candidate's generated gfx906 ISA/resource metadata
 against the selected reference code object, focusing on memory instructions,
 barriers, vectorization and row/warp ownership; then test only a directly
 supported correction at isolated P8192.
+
+### Iteration 21 hypothesis — reference-width KQ weights
+
+The pinned fast-FP16 implementation stores normalized tile-local KQ weights
+as half and consumes them with FP16 V fragments; the current candidate stores
+the same fragment as FP32. Test only changing that fragment's storage to
+FP16, converting values back to FP32 when the existing FP32 output accumulator
+consumes them. Keep geometry, split count, QK arithmetic, K/V staging,
+online-softmax state, output accumulators and combine unchanged. Expected
+effects are half the KQ LDS footprint/traffic and closer reference fragment
+representation, without introducing lower-precision output accumulation.
+
+Baseline: current candidate source and latest request-window trace above
+(4,110.671 ms candidate main-kernel work; 2.36x pinned mx). Gates: compile
+256-thread gfx906 code with zero VGPR/SGPR spills and zero private bytes;
+isolated control comparison at P512/P2048/P4096/P8192 remains finite and
+within the already-recorded numerical envelope; five paired P8192 timings
+must not regress versus the current candidate. Do not perform full-model
+qualification unless the isolated P8192 result is both correct and measurably
+faster. The attention-only Amdahl ceiling remains 12.86% of total device work.
+
+Iteration 21 result: gfx906 build passed. Synthetic comparisons were finite at
+P512/P2048/P4096/P8192, all with max absolute error `2.59047e-6` (relative
+error peaks at `1.01262` only near zero-valued references, so absolute error
+is the meaningful recorded comparison). Five P8192 pairs measured medians
+347.879 ms control / 249.195 ms candidate; candidate ranged 249.065–293.589 ms
+with one timing outlier. This remains a 28.3% isolated win over control but is
+not faster than iteration 20's 247.616 ms median beyond likely run noise.
+Decision: KEEP the FP16 KQ fragment as the current reference-shaped baseline;
+LEARN that fragment width alone does not explain the residual gap. Continue
+with a separate test of the reference's packed FP16 per-CTA V×KQ accumulator,
+converting to FP32 only at split-partial writeout.
+
+### Iteration 22 hypothesis — packed FP16 online output state
+
+The pinned fast-FP16 path carries `VKQ` as `half2` through online max
+rescaling and V×KQ accumulation, then converts to FP32 when writing split
+partials. The current candidate keeps these per-CTA accumulators in FP32.
+Change only the per-CTA output-state representation/arithmetic to packed FP16;
+retain the FP16 KQ fragment, FP32 max/sum, FP32 split workspace/combine,
+geometry, split count and load schedule. This tests the reference's vector
+arithmetic/state lifetime directly and may reduce registers plus arithmetic
+cost. Gate on finite P512/P2048/P4096/P8192 outputs and max absolute error
+within the existing `2.7563e-5` attention envelope, zero compiler spills/private
+bytes, and five paired P8192 timings faster than iteration 21's 249.195 ms
+candidate median and no slower than control. Do not run full-model testing if
+either correctness or isolated performance fails.
+
+Iteration 22 result: P512/P2048/P4096/P8192 comparisons were finite with max
+absolute error `1.15326e-5`, inside the existing attention envelope. Two five-
+pair runs had candidate medians 241.062 ms and 241.065 ms; in each, four
+candidate samples clustered at 240.958–241.307 ms and one was a ~281 ms
+outlier. The paired controls were stable around 348 ms. Relative to iteration
+21's 249.195 ms candidate median, the repeated ~241.06 ms result is a 3.3%
+isolated improvement; relative to control it is a 1.44x speedup. The rebuilt
+gfx906 code object reports 70 VGPR, 46 SGPR, zero VGPR/SGPR spills, and zero
+private bytes. Dynamic LDS is 27,008 B (below the pinned object's 27,136 B);
+the launch remains 256 threads. Keep this as the current candidate and proceed
+to full-model greedy/token parity and the exact P8192 competitive request. The
+timing outlier is retained, not dropped; report medians and ranges.
