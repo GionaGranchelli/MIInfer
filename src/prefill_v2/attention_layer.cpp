@@ -30,7 +30,7 @@ bool v2_0043_real_compare_enabled() {
     return value != nullptr && std::strcmp(value, "0") != 0;
 }
 
-void compare_v2_0043_real_operands(
+void compare_iteration26_real_operands(
     const float* q, const float* candidate, const float* control,
     std::size_t elements, hipStream_t stream) {
     std::vector<float> host_q(elements), host_candidate(elements), host_control(elements);
@@ -62,7 +62,7 @@ void compare_v2_0043_real_operands(
         exact += error == 0.0F;
     }
     const float inv_n = 1.0F / static_cast<float>(elements);
-    std::cerr << "miinfer_v2_0043_real_compare elements=" << elements
+    std::cerr << "miinfer_iteration26_real_compare elements=" << elements
               << " q_max_abs=" << q_max
               << " q_rms=" << std::sqrt(q_square_sum * inv_n)
               << " q_fp16_round_max_abs=" << q_round_max
@@ -309,28 +309,22 @@ void PrefillV2AttentionLayer::forward(
         && !kv_cache.is_k_q8() && !kv_cache.is_v_q8()
         && token_count >= 16 && token_count % 16 == 0
         && ws.splitk_attn_workspace != nullptr) {
-        launch_qwen35_kq_fragment_reuse_attention_batch_f16(
-            ws.attn_q_rope, kv_cache.key_cache, kv_cache.value_cache,
-            ws.gate, ws.attn_gated_output, ws.splitk_attn_workspace,
-            token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
-            24, 4, 256, 1.0F / std::sqrt(256.0F), 3, stream);
+        const auto launch_iteration26 = [&](float* attention_output) {
+            launch_qwen35_kq_fragment_reuse_attention_batch_f16(
+                ws.attn_q_rope, kv_cache.key_cache, kv_cache.value_cache,
+                ws.gate, attention_output, ws.splitk_attn_workspace,
+                token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
+                24, 4, 256, 1.0F / std::sqrt(256.0F), 3, stream);
+        };
+        launch_iteration26(ws.attn_gated_output);
         if (v2_0043_real_compare_enabled() && layer_index_ == 3) {
             std::cerr << "miinfer_v2_0043_candidate_call base_position=" << base_position
                       << " token_count=" << token_count << '\n';
         }
         if (v2_0043_real_compare_enabled() && layer_index_ == 3
             && base_position == 512 && token_count == 512) {
-            launch_qwen35_splitk_suffix_attention_quant(
-                ws.attn_q_rope,
-                kv_cache.key_cache, kv_cache.value_cache,
-                kv_cache.key_cache_q8, kv_cache.key_scales,
-                kv_cache.value_cache_q8, kv_cache.value_scales,
-                ws.gate, ws.attn_qfull,
-                ws.splitk_attn_workspace, token_count, base_position,
-                static_cast<std::uint32_t>(kv_cache.capacity),
-                24, 4, 256, 1.0F / std::sqrt(256.0F),
-                kv_cache.is_k_q8(), kv_cache.is_v_q8(), 32, stream);
-            compare_v2_0043_real_operands(
+            launch_iteration26(ws.attn_qfull);
+            compare_iteration26_real_operands(
                 ws.attn_q_rope, ws.attn_gated_output, ws.attn_qfull,
                 static_cast<std::size_t>(token_count) * 24 * 256, stream);
         }

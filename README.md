@@ -14,6 +14,27 @@ It is **not** intended to become another general-purpose llama.cpp, vLLM, PyTorc
 
 ## Status
 
+**Current production baseline (2026-09-29):** M28 single-MI50 Prefill V2,
+canonical merge `e0649c589790f0267a8f1f45b5332532a95ae13a`. The accepted
+production implementation is V2-0043 iteration 26 (`e68c0f20`); subsequent
+FP16 stretch variants failed real-model token parity and are not active. The
+release build and post-merge checks passed. Qualification details, model hash,
+hardware/toolchain, serving preset, performance evidence, and test skips are
+recorded in [`docs/post-m28-baseline.md`](docs/post-m28-baseline.md).
+
+The saved P8192 request measured 38.123 s median for MIInfer, 38.937 s for
+pinned mx-llama.cpp, and 44.839 s for pinned upstream llama.cpp. The narrow
+decode A/B measured 34.032 ms/token at P64 and 35.953 ms/token at P2048 for
+MIInfer; generated text differed across engines, so this is not a token
+equivalence claim. The V2-0044 attention stretch is closed rejected: its
+precision-preserving FP16 investigation failed real-model parity and is
+preserved in canonical experiment evidence. The next goal is competitive
+qualification of the frozen production baseline, not another attention
+optimization.
+
+The milestone notes below are historical snapshots; they do not supersede
+this current status.
+
 ## M17 local appliance quick start
 
 From a release archive on a supported MI50/gfx906 Linux machine:
@@ -28,7 +49,7 @@ From a release archive on a supported MI50/gfx906 Linux machine:
 Open `http://127.0.0.1:8080/` for the bundled Web UI. It uses the same public
 `/v1/chat/completions` endpoint as external OpenAI-compatible clients.
 
-**Current phase: M18–M20 qualification closure**
+**Historical status snapshot: M18–M20 qualification closure (superseded)**
 
 M11-B is frozen at the qualified `46.22 tok/s` P513 packed-Q4 baseline. The
 opt-in layer-major prefill path reaches that rate with deferred

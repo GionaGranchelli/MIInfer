@@ -21,6 +21,34 @@ freeze target
 
 This is process and evidence work. It does not authorize a new kernel or a new experiment by itself.
 
+## Current frontier status — 2026-09-29
+
+V2-0043 is closed **PRIMARY GOAL PASS** on immutable production checkpoint
+`e68c0f20`. V2-0044's one evidence-backed precision correction failed the
+real production-path attention-output tolerance and was not timed; the stretch
+is closed REJECTED. There is no active performance `PRIMARY` until a new goal
+is selected. Do not alter the accepted checkpoint or reopen precision/schedule
+variants without materially new causal evidence.
+
+The request-window traces and exact source comparison are recorded in
+[`EXP-V2-0042`](../experiments/EXP-V2-0042-p8192-trace-and-sampling-regression.md)
+and [`EXP-V2-0043`](../experiments/EXP-V2-0043-reference-shaped-gqa-attention-rewrite.md).
+The accepted path already uses a 16-query-position × 2-query-head tile, a
+32-position K tile, 128-wide KQ dimension chunks, three splits, separate
+combine, and FP16 KQ fragments. MIInfer's selected object is recorded at
+75 VGPR / 44 SGPR / 27,008 B LDS with no spills; mx is 97 VGPR / 46 SGPR /
+27,136 B LDS with no spills. LDS resource arithmetic bounds both to at most
+two resident CTAs/CU, but achieved occupancy is not measured. Do not infer
+that source-level geometry alone explains the residual gap.
+
+The current evidence does **not** support repeating literal `<16,2>` geometry,
+spill-only layout changes, padding-only bank-conflict changes, unroll-only
+variants, or the failed FP32-fragment/FP32-accumulator correction. The
+original FP16 fragment precision crossing is localized; the later correction's
+larger output mismatch is not internally localized. Future attention work
+requires a new goal and new causal evidence. Preserve the exact merge commit as
+control; parity precedes any meaningful timing.
+
 ## One active performance frontier
 
 Every performance area has exactly one state:
@@ -30,7 +58,9 @@ Every performance area has exactly one state:
 - **DEFERRED** — potentially valuable, but not on the current critical path.
 - **REJECTED** — an architectural family failed with sufficient evidence. Reopen it only when new evidence materially changes the premise; parameter tweaking is not new evidence.
 
-The frozen frontier at protocol adoption is:
+The following was the historical frontier at protocol adoption; its M27/M28
+status text is retained as process history and is superseded by the closed
+frontier status above:
 
 ### PRIMARY
 
@@ -176,7 +206,7 @@ The external workstation fan runs continuously at full speed; ROCm fan RPM/perce
 
 Keep performance commits focused and bisectable. Preserve rejected experiment records. Keep generated graph/index refreshes in a separate commit where practical.
 
-## Current next-frontier research plan
+## Historical next-frontier research plan (superseded by V2-0044 closeout above)
 
 No performance implementation is authorized by this section. The missing evidence is a refreshed full-model prefill attribution on the current qualified MI50 setup, including phase/operator timing, dispatch count, context scaling, and an Amdahl ceiling against the current mx comparison. EXP-0360–0363 show that attention geometry/state-placement guesses are not sufficient; they do not prove attention remains the dominant current gap.
 
