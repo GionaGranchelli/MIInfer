@@ -20,6 +20,17 @@ int main() {
     CHECK(miinfer::build_chatml(*tool_request.request).find("<tools>") != std::string::npos);
     CHECK(miinfer::build_chatml(*tool_request.request).find("<tool_response>\ncontents") != std::string::npos);
 
+    const auto stop_array_request = miinfer::parse_openai_chat_request(R"({"messages":[{"role":"user","content":"hi"}],"stop":["<|im_end|>","<|endoftext|>"]})");
+    CHECK(stop_array_request.request);
+    CHECK(stop_array_request.request->stop.size() == 2);
+    CHECK(stop_array_request.request->stop[0] == "<|im_end|>");
+    CHECK(stop_array_request.request->stop[1] == "<|endoftext|>");
+
+    const auto stop_str_request = miinfer::parse_openai_chat_request(R"({"messages":[{"role":"user","content":"hi"}],"stop":"<|im_end|>"})");
+    CHECK(stop_str_request.request);
+    CHECK(stop_str_request.request->stop.size() == 1);
+    CHECK(stop_str_request.request->stop[0] == "<|im_end|>");
+
     const auto generated = miinfer::parse_generated_tool_calls(
         "<think>I'll inspect it.</think>\n<tool_call>\n<function=read_file>\n"
         "<parameter=path>\na.txt\n</parameter>\n</function>\n</tool_call>");
@@ -27,7 +38,7 @@ int main() {
     CHECK(generated.calls[0].name == "read_file");
     CHECK(generated.calls[0].arguments == R"({"path":"a.txt"})");
 
-    for (const char* invalid : {"{", "{}", R"({"messages":[]})", R"({"messages":{}})", R"({"messages":[{"role":"tool","content":"x"}]})", R"({"messages":[{"role":"user","content":1}]})", R"({"messages":[{"role":"user","content":"x"}],"stream":1})", R"({"messages":[{"role":"user","content":"x"}],"max_tokens":-1})", R"({"messages":[{"role":"user","content":"x"}],"max_tokens":4097})"}) {
+    for (const char* invalid : {"{", "{}", R"({"messages":[]})", R"({"messages":{}})", R"({"messages":[{"role":"tool","content":"x"}]})", R"({"messages":[{"role":"user","content":1}]})", R"({"messages":[{"role":"user","content":"x"}],"stream":1})", R"({"messages":[{"role":"user","content":"x"}],"max_tokens":-1})", R"({"messages":[{"role":"user","content":"x"}],"max_tokens":65537})"}) {
         CHECK(!miinfer::parse_openai_chat_request(invalid).request);
     }
     std::cout << "openai API host test passed\n";

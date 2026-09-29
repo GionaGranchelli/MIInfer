@@ -119,6 +119,15 @@ if(MIINFER_ENABLE_HIP)
         src/qwen3_gpu_layer.cpp
         src/fp16_gemv_reference.cpp
         src/q4_q8_gemv_reference.cpp
+        src/prefill_v2/state.cpp
+        src/prefill_v2/workspace.cpp
+        src/prefill_v2/recurrent_layer.cpp
+        src/prefill_v2/kv_cache.cpp
+        src/prefill_v2/attention_layer.cpp
+        src/prefill_v2/topology_block.cpp
+        src/prefill_v2/reusable_context.cpp
+        src/prefill_v2/persistent_session.cpp
+        src/prefill_v2/model.cpp
         gfx906/kernels/vector_add.hip
         gfx906/kernels/fp16_gemv.hip
         gfx906/kernels/q4_q8_gemv.hip
@@ -143,6 +152,130 @@ if(MIINFER_ENABLE_HIP)
         $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Wpedantic>
         $<$<COMPILE_LANGUAGE:HIP>:-Wall;-Wextra;-fgpu-default-stream=per-thread>
     )
+
+    add_executable(miinfer-prefill-v2-recurrent-layer-bakeoff bench/prefill_v2_recurrent_layer_bakeoff.cpp)
+    target_link_libraries(miinfer-prefill-v2-recurrent-layer-bakeoff PRIVATE miinfer_hip)
+    target_compile_options(miinfer-prefill-v2-recurrent-layer-bakeoff PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-prefill-v2-topology-block-bakeoff bench/prefill_v2_topology_block_bakeoff.cpp)
+    target_link_libraries(miinfer-prefill-v2-topology-block-bakeoff PRIVATE miinfer_hip)
+    target_compile_options(miinfer-prefill-v2-topology-block-bakeoff PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-prefill-v2-model-bench bench/prefill_v2_model_bench.cpp)
+    target_link_libraries(miinfer-prefill-v2-model-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-prefill-v2-model-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-prefill-v2-attention-bakeoff bench/prefill_v2_attention_bakeoff.cpp)
+    target_link_libraries(miinfer-prefill-v2-attention-bakeoff PRIVATE miinfer_hip)
+    target_compile_options(miinfer-prefill-v2-attention-bakeoff PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-candidate-b-layout-pruning-bench bench/candidate_b_layout_pruning_bench.cpp)
+    target_link_libraries(miinfer-candidate-b-layout-pruning-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-candidate-b-layout-pruning-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-candidate-a-ffn-shared-bench bench/candidate_a_ffn_shared_bench.cpp)
+    target_link_libraries(miinfer-candidate-a-ffn-shared-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-candidate-a-ffn-shared-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-prefill-v2-e2e-bench bench/prefill_v2_e2e_bench.cpp)
+    target_link_libraries(miinfer-prefill-v2-e2e-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-prefill-v2-e2e-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-decode-fast-path-bakeoff bench/decode_fast_path_bakeoff.cpp)
+    target_link_libraries(miinfer-decode-fast-path-bakeoff PRIVATE miinfer_hip)
+    target_compile_options(miinfer-decode-fast-path-bakeoff PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-decode-stage-profile bench/decode_stage_profile.cpp)
+    target_link_libraries(miinfer-decode-stage-profile PRIVATE miinfer_hip)
+    target_compile_options(miinfer-decode-stage-profile PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-decode-gdn-breakdown bench/decode_gdn_breakdown.cpp)
+    target_link_libraries(miinfer-decode-gdn-breakdown PRIVATE miinfer_hip)
+    target_compile_options(miinfer-decode-gdn-breakdown PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-gdn-kernel-bakeoff bench/gdn_kernel_bakeoff.cpp)
+    target_link_libraries(miinfer-gdn-kernel-bakeoff PRIVATE miinfer_hip)
+    target_compile_options(miinfer-gdn-kernel-bakeoff PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-prefix-state-reuse-bench bench/prefix_state_reuse_bench.cpp)
+    target_link_libraries(miinfer-prefix-state-reuse-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-prefix-state-reuse-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-suffix-ttft-attribution-bench bench/suffix_ttft_attribution_bench.cpp)
+    target_link_libraries(miinfer-suffix-ttft-attribution-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-suffix-ttft-attribution-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-suffix-attention-bakeoff bench/suffix_attention_bakeoff.cpp)
+    set_source_files_properties(bench/suffix_attention_bakeoff.cpp PROPERTIES LANGUAGE HIP)
+    target_link_libraries(miinfer-suffix-attention-bakeoff PRIVATE miinfer_hip)
+    target_compile_options(miinfer-suffix-attention-bakeoff PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-suffix-attention-halfwave-multitoken bench/suffix_attention_halfwave_multitoken.cpp)
+    set_source_files_properties(bench/suffix_attention_halfwave_multitoken.cpp PROPERTIES LANGUAGE HIP)
+    target_link_libraries(miinfer-suffix-attention-halfwave-multitoken PRIVATE miinfer_hip)
+    target_compile_options(miinfer-suffix-attention-halfwave-multitoken PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-v2-0017-hierarchical-gqa-bakeoff bench/v2_0017_hierarchical_gqa_bakeoff.cpp)
+    set_source_files_properties(bench/v2_0017_hierarchical_gqa_bakeoff.cpp PROPERTIES LANGUAGE HIP)
+    target_link_libraries(miinfer-v2-0017-hierarchical-gqa-bakeoff PRIVATE miinfer_hip)
+    target_compile_options(miinfer-v2-0017-hierarchical-gqa-bakeoff PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-v2-0017-quad-head-subwave-bakeoff bench/v2_0017_quad_head_subwave_bakeoff.cpp)
+    set_source_files_properties(bench/v2_0017_quad_head_subwave_bakeoff.cpp PROPERTIES LANGUAGE HIP)
+    target_link_libraries(miinfer-v2-0017-quad-head-subwave-bakeoff PRIVATE miinfer_hip)
+    target_compile_options(miinfer-v2-0017-quad-head-subwave-bakeoff PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-v2-0017-pipelined-stream-bakeoff bench/v2_0017_pipelined_stream_bakeoff.cpp)
+    set_source_files_properties(bench/v2_0017_pipelined_stream_bakeoff.cpp PROPERTIES LANGUAGE HIP)
+    target_link_libraries(miinfer-v2-0017-pipelined-stream-bakeoff PRIVATE miinfer_hip)
+    target_compile_options(miinfer-v2-0017-pipelined-stream-bakeoff PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-v2-0018-suffix-hip-graph-bench bench/v2_0018_suffix_hip_graph_bench.cpp)
+    target_link_libraries(miinfer-v2-0018-suffix-hip-graph-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-v2-0018-suffix-hip-graph-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-v2-0021-production-suffix-hip-graph-bench bench/v2_0021_production_suffix_hip_graph_bench.cpp)
+    target_link_libraries(miinfer-v2-0021-production-suffix-hip-graph-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-v2-0021-production-suffix-hip-graph-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-v2-0022-suffix-mmq-critical-path-bench bench/v2_0022_suffix_mmq_critical_path_bench.cpp)
+    target_link_libraries(miinfer-v2-0022-suffix-mmq-critical-path-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-v2-0022-suffix-mmq-critical-path-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-v2-0023-cross-query-attention-bench bench/v2_0023_cross_query_attention_bench.cpp)
+    set_source_files_properties(bench/v2_0023_cross_query_attention_bench.cpp PROPERTIES LANGUAGE HIP)
+    target_link_libraries(miinfer-v2-0023-cross-query-attention-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-v2-0023-cross-query-attention-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-v2-0024-quantized-prefix-kv-bench bench/v2_0024_quantized_prefix_kv_bench.cpp)
+    set_source_files_properties(bench/v2_0024_quantized_prefix_kv_bench.cpp PROPERTIES LANGUAGE HIP)
+    target_link_libraries(miinfer-v2-0024-quantized-prefix-kv-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-v2-0024-quantized-prefix-kv-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-v2-0025-lds-staged-gqa-attention-bench bench/v2_0025_lds_staged_gqa_attention_bench.cpp)
+    set_source_files_properties(bench/v2_0025_lds_staged_gqa_attention_bench.cpp PROPERTIES LANGUAGE HIP)
+    target_link_libraries(miinfer-v2-0025-lds-staged-gqa-attention-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-v2-0025-lds-staged-gqa-attention-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-v2-0026-production-hardening-bench bench/v2_0026_production_hardening_bench.cpp)
+    set_source_files_properties(bench/v2_0026_production_hardening_bench.cpp PROPERTIES LANGUAGE HIP)
+    target_link_libraries(miinfer-v2-0026-production-hardening-bench PRIVATE miinfer_hip miinfer_model)
+    target_compile_options(miinfer-v2-0026-production-hardening-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-v2-0028-persistent-session-bench bench/v2_0028_persistent_session_bench.cpp)
+    set_source_files_properties(bench/v2_0028_persistent_session_bench.cpp PROPERTIES LANGUAGE HIP)
+    target_link_libraries(miinfer-v2-0028-persistent-session-bench PRIVATE miinfer_hip miinfer_model)
+    target_compile_options(miinfer-v2-0028-persistent-session-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-v2-0029-mmq-efficiency-bench bench/v2_0029_mmq_efficiency_bench.cpp)
+    set_source_files_properties(bench/v2_0029_mmq_efficiency_bench.cpp PROPERTIES LANGUAGE HIP)
+    target_link_libraries(miinfer-v2-0029-mmq-efficiency-bench PRIVATE miinfer_hip miinfer_model)
+    target_compile_options(miinfer-v2-0029-mmq-efficiency-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-v2-0030-direct-vgpr-streaming-bench bench/v2_0030_direct_vgpr_streaming_bench.cpp)
+    set_source_files_properties(bench/v2_0030_direct_vgpr_streaming_bench.cpp PROPERTIES LANGUAGE HIP)
+    target_link_libraries(miinfer-v2-0030-direct-vgpr-streaming-bench PRIVATE miinfer_hip miinfer_model)
+    target_compile_options(miinfer-v2-0030-direct-vgpr-streaming-bench PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
 add_executable(miinfer-host-test tests/host_test.cpp)
@@ -436,6 +569,27 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-qwen3-layer35-external-test PRIVATE miinfer_hip)
     target_compile_options(miinfer-qwen3-layer35-external-test PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-context-envelope-bench bench/context_envelope_bench.cpp)
+    target_link_libraries(miinfer-context-envelope-bench PRIVATE miinfer_hip miinfer_model)
+    target_compile_options(miinfer-context-envelope-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-long-context-qualification-bench bench/long_context_qualification_bench.cpp)
+    target_link_libraries(miinfer-long-context-qualification-bench PRIVATE miinfer_hip miinfer_model)
+    target_compile_options(miinfer-long-context-qualification-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-qwen3-quant-kv-attention-test tests/qwen3_quant_kv_attention_test.cpp)
+    target_link_libraries(miinfer-qwen3-quant-kv-attention-test PRIVATE miinfer_hip)
+    target_compile_options(miinfer-qwen3-quant-kv-attention-test PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-v2-0019-quantized-kv-bench bench/v2_0019_quantized_kv_bench.cpp)
+    target_link_libraries(miinfer-v2-0019-quantized-kv-bench PRIVATE miinfer_hip miinfer_model)
+    target_compile_options(miinfer-v2-0019-quantized-kv-bench PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-v2-0020-pipeline-bench bench/v2_0020_pipeline_bench.cpp)
+    set_source_files_properties(bench/v2_0020_pipeline_bench.cpp PROPERTIES LANGUAGE HIP)
+    target_link_libraries(miinfer-v2-0020-pipeline-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-v2-0020-pipeline-bench PRIVATE -Wall -Wextra -Wpedantic)
+
 endif()
 
 include(CTest)
@@ -482,6 +636,8 @@ if(BUILD_TESTING)
         set_tests_properties(qwen3-layer0-gpu PROPERTIES LABELS "gpu-required")
         add_test(NAME qwen3-kv-cache-gpu COMMAND miinfer-qwen3-kv-cache-gpu-test)
         set_tests_properties(qwen3-kv-cache-gpu PROPERTIES LABELS "gpu-required")
+        add_test(NAME qwen3-quant-kv-attention-gpu COMMAND miinfer-qwen3-quant-kv-attention-test)
+        set_tests_properties(qwen3-quant-kv-attention-gpu PROPERTIES LABELS "gpu-required")
         add_test(NAME qwen3-cached-attention-determinism-gpu
                  COMMAND miinfer-qwen3-cached-attention-determinism-gpu-test)
         set_tests_properties(qwen3-cached-attention-determinism-gpu PROPERTIES LABELS "gpu-required")

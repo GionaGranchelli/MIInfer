@@ -1,7 +1,26 @@
 # MIInfer Current State of the Art
 
-Status: M27 exact-prefix reuse qualification; cold P512 tuning stopped after
-EXP-0356, 2026-09-20
+Status: M28 single-MI50 prefill accepted; V2-0043 closed PRIMARY GOAL PASS on
+iteration 26 (`e68c0f20`), 2026-09-29. The M27/P512 material below is retained
+as historical evidence, not the current milestone summary. See
+[`post-m28-baseline.md`](post-m28-baseline.md) for the reproducible checkpoint.
+
+## Current accepted result
+
+The accepted production source at `e68c0f20` preserves exact real-model token
+parity. Its aligned K-row LDS swizzle reduced isolated P8192 suffix-attention
+median from 241.06 ms (iteration 22) to 200.612 ms. The exact saved P8192
+request measured 38.123261 s median in the original three-run qualification;
+the matched pinned mx-llama.cpp median was 38.936731 s. A fresh single-request
+smoke on the current clean build completed 8,192 prompt tokens plus one
+completion token in 38.141 s. That smoke is a health check, not a new timing
+qualification.
+
+The remaining measured stretch is the approximately 1.91x P8192 main-attention
+kernel-time ratio to pinned mx, despite MIInfer's lower whole-request median.
+V2-0043's two bounded parity corrections failed at generated token 18 due to
+FP16 KQ-fragment rounding affecting V accumulation; that stretch is rejected.
+Do not alter the accepted iteration-26 checkpoint while starting V2-0044.
 
 ## Target
 

@@ -1,20 +1,39 @@
 # MIInfer Current State
 
-## Current experiment status — EXP-0387
+## Current checkpoint — M28 / V2-0043 (2026-09-29)
 
-EXP-0387 refreshed the clean current-head aligned and arbitrary-tail frontiers.
-Direct B64-wide composition is **REJECTED — CURRENT M28 FRONTIER**: it runs,
-but distributed whole-model semantic drift remains after EXP-0378–0386 and the
-L0–L2 scalar hybrid does not restore the token. B4 remains blocked. The current
-PRIMARY is a materially different, semantically safe arbitrary-length residual
-architecture, beginning with an exact P1022 contract and measured end-to-end
-ceiling. EXP-0388 then found that the current aligned P512 baseline is
-materially slower and unstable against the prior qualified class. EXP-0389
-showed the known-good binary is also unstable while mx remains stable, so the
-current PRIMARY is MIInfer runtime-variance attribution; residual architecture
-and B128 work are deferred. See [EXP-0387](../experiments/EXP-0387-m28-prefill-frontier-refresh.md),
-[EXP-0388](../experiments/EXP-0388-b128-shape-collapse-attribution.md), and
-[EXP-0389](../experiments/EXP-0389-p512-regression-discriminator.md).
+M28 single-MI50 prefill is the accepted production path. V2-0043 is closed
+**PRIMARY GOAL PASS** at immutable iteration 26, `e68c0f20`; the FP16
+real-model parity stretch is rejected and remains future work. A fresh release
+build passed, all 11 host tests passed, and nine GPU tests passed; five model
+integration tests skipped because no model path was supplied. A clean-build
+short generation passed, and the exact saved P8192 smoke processed 8,192
+prompt tokens and one completion token in 38.141 s. The smoke is not a new
+performance qualification. Detailed evidence and limitations are in
+[`post-m28-baseline.md`](post-m28-baseline.md).
+
+After the closeout commit is merged and post-merge checks pass, create the
+V2-0044 attention-frontier branch from that checkpoint. Preserve `e68c0f20`;
+do not reopen the rejected V2-0043 numerical variants.
+
+## Current experiment status — V2-0008 (Dedicated Single-Token Decode Execution & Reusable HIP Graph Replay)
+
+V1 prefill optimization campaign (EXP-0364 through EXP-0395, B128, B64, B4, and residual scheduling) is **CLOSED**.
+M28 prefill is **Prefill V2**: a clean-sheet single-MI50 (gfx906, Wave64) prefill architecture specialized for Qwen3.8-27B-Q4_K_M.
+
+V2-0008 specialized the single-token autoregressive decode execution path in `PrefillV2Model` with dedicated $M=1$ execution, high-occupancy Split-K attention (`qwen3_wave64_splitk_stage1_f16_kernel`), and reusable HIP Graph capture and replay:
+- **Dedicated $M=1$ Decode Execution**: Decoupled decode execution from prefill batch operators, routing projections to `mx_repacked_mmv_kernel`, recurrent SSM transitions to single-step `launch_qwen35_deltanet_state_update`, and single-query GQA attention to dynamic Split-K decode attention.
+- **Flat Context Scaling**: Replaced the serial attention KV scan with Split-K decode attention, completely eliminating context degradation. Decode latency scales flat across the full context window ($P64: 55.36\text{ ms} \to P2048: 57.39\text{ ms}$, delta $< 2.0\text{ ms}$, saving **$31.6\text{ ms/token}$** ($+55.4\%$) at $P2048$).
+- **Reusable HIP Graph Capture & Zero-Host Replay**: Captured the 64-layer decode execution loop into a resident `hipGraphExec_t` via `DeviceDecodeState`, allowing zero CPU dispatch overhead during autoregressive generation.
+- **Zero-Copy State Hand-Off & Determinism**: Maintained seamless zero-copy state transitions between prefill and decode, and verified 100% bit-identical multi-turn repeatability.
+- **End-to-End Performance Matrix on MI50**:
+  - **P64 + TG128**: TTFT = **622.34 ms** (102.8 tok/s), Decode Throughput = **18.1 tok/s** (55.36 ms/step), Total Time = **7.65 s**.
+  - **P512 + TG128**: TTFT = **2305.23 ms** (222.1 tok/s $\to$ exact parity with `mx-llama.cpp`), Decode Throughput = **17.8 tok/s** (56.20 ms/step), Total Time = **9.44 s**.
+  - **P2048 + TG128**: TTFT = **9740.67 ms** (210.2 tok/s), Decode Throughput = **17.4 tok/s** (57.39 ms/step), Total Time = **17.03 s**.
+- **Static VRAM Footprint**: **18.17 GiB / 32.00 GiB** total, leaving **13.83 GiB free VRAM headroom**.
+
+Status: **V2_DEDICATED_DECODE_AND_GRAPH_REPLAY_QUALIFIED**.
+See [V2-0008](../experiments/EXP-V2-0008-specialized-decode-and-graph-replay.md) and [docs/prefill-v2-architecture.md](prefill-v2-architecture.md).
 
 ## Performance research frontier
 

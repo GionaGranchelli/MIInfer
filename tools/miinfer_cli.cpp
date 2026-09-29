@@ -40,6 +40,8 @@
 #include "qwen35_gpu_pipeline.hpp"
 #include "miinfer/qwen3_tokenizer.hpp"
 #include "miinfer/qwen35_model.hpp"
+#include "miinfer/prefill_v2/model.hpp"
+#include "miinfer/prefill_v2/persistent_session.hpp"
 #include "miinfer/build_info.hpp"
 #include "miinfer/openai_api.hpp"
 #include "miinfer/sha256.hpp"
@@ -83,6 +85,9 @@ bool apply_runtime_preset() {
         if (value.rfind("MIINFER_", 0) == 0
             && value.rfind("MIINFER_API_KEY=", 0) != 0
             && value.rfind("MIINFER_PRESET=", 0) != 0
+            && value.rfind("MIINFER_DUMP_TOKENS=", 0) != 0
+            && value.rfind("MIINFER_V2_0043_GQA_ATTENTION=", 0) != 0
+            && value.rfind("MIINFER_V2_0043_COMPARE_REAL=", 0) != 0
             && value.rfind("MIINFER_SESSION_REUSE=", 0) != 0
             && value.rfind("MIINFER_DECODE_PROFILE=", 0) != 0
             && value.rfind("MIINFER_DECODE_PROFILE_POSITION=", 0) != 0
@@ -211,6 +216,80 @@ std::string openai_tool_calls_json(const std::vector<miinfer::ChatToolCall>& cal
             + json_escape(call.arguments) + "\"}}";
     }
     return result + "]";
+}
+
+struct ExtractedAssistantOutput {
+    std::string reasoning_content;
+    std::string content;
+    bool has_reasoning = false;
+};
+
+inline ExtractedAssistantOutput extract_reasoning_and_content(std::string_view text) {
+    ExtractedAssistantOutput out;
+    std::size_t pos = 0;
+    while (pos < text.size()) {
+        const std::size_t p1 = text.find("<think", pos);
+        const std::size_t p2 = text.find("<thought", pos);
+        const std::size_t start = std::min(p1, p2);
+        if (start == std::string_view::npos) {
+            out.content += text.substr(pos);
+            break;
+        }
+        if (start > pos) {
+            out.content += text.substr(pos, start - pos);
+        }
+        std::size_t open_tag_end = text.find('>', start);
+        if (open_tag_end != std::string_view::npos) {
+            ++open_tag_end;
+            while (open_tag_end < text.size() && (text[open_tag_end] == '\r' || text[open_tag_end] == '\n')) ++open_tag_end;
+        } else {
+            open_tag_end = text.find_first_of("\r\n", start);
+            if (open_tag_end != std::string_view::npos) {
+                while (open_tag_end < text.size() && (text[open_tag_end] == '\r' || text[open_tag_end] == '\n')) ++open_tag_end;
+            } else {
+                open_tag_end = text.size();
+            }
+        }
+
+        const std::size_t c1 = text.find("</think", open_tag_end);
+        const std::size_t c2 = text.find("</thought", open_tag_end);
+        const std::size_t close_start = std::min(c1, c2);
+
+        const std::size_t t1 = text.find("<tool_call", open_tag_end);
+        const std::size_t t2 = text.find("<function=", open_tag_end);
+        const std::size_t tool_start = std::min(t1, t2);
+
+        if (tool_start != std::string_view::npos && (close_start == std::string_view::npos || tool_start < close_start)) {
+            out.has_reasoning = true;
+            out.reasoning_content += text.substr(open_tag_end, tool_start - open_tag_end);
+            pos = tool_start;
+            continue;
+        }
+
+        if (close_start != std::string_view::npos) {
+            out.has_reasoning = true;
+            out.reasoning_content += text.substr(open_tag_end, close_start - open_tag_end);
+            std::size_t close_tag_end = text.find('>', close_start);
+            if (close_tag_end != std::string_view::npos) {
+                ++close_tag_end;
+                while (close_tag_end < text.size() && (text[close_tag_end] == '\r' || text[close_tag_end] == '\n')) ++close_tag_end;
+                pos = close_tag_end;
+            } else {
+                close_tag_end = text.find_first_of("\r\n", close_start);
+                if (close_tag_end != std::string_view::npos) {
+                    while (close_tag_end < text.size() && (text[close_tag_end] == '\r' || text[close_tag_end] == '\n')) ++close_tag_end;
+                    pos = close_tag_end;
+                } else {
+                    pos = text.size();
+                }
+            }
+        } else {
+            out.has_reasoning = true;
+            out.reasoning_content += text.substr(open_tag_end);
+            pos = text.size();
+        }
+    }
+    return out;
 }
 
 std::optional<int> parse_port(std::string_view value) {
@@ -4173,6 +4252,8 @@ int cmd_serve(int argc, char** argv) {
     bool experimental_context = false;
     std::optional<std::filesystem::path> api_key_file;
     bool allow_insecure = false;
+    std::optional<bool> session_reuse_flag;
+    std::optional<std::filesystem::path> session_dir;
 
     for (int i = 2; i < argc; ++i) {
         std::string_view arg = argv[i];
@@ -4193,10 +4274,16 @@ int cmd_serve(int argc, char** argv) {
             api_key_file = argv[++i];
         } else if (arg == "--allow-insecure") {
             allow_insecure = true;
+        } else if (arg == "--session-reuse") {
+            session_reuse_flag = true;
+        } else if (arg == "--no-session-reuse") {
+            session_reuse_flag = false;
+        } else if (arg == "--session-dir" && i + 1 < argc) {
+            session_dir = argv[++i];
         } else if (model_path.empty() && !arg.starts_with("--")) {
             model_path = arg;
         } else {
-            std::cerr << "usage: miinfer serve --model MODEL.gguf [--port PORT] [--host HOST] [--context N] [--experimental-context] [--api-key-file PATH] [--allow-insecure]\n"; return 2;
+            std::cerr << "usage: miinfer serve --model MODEL.gguf [--port PORT] [--host HOST] [--context N] [--experimental-context] [--api-key-file PATH] [--allow-insecure] [--session-reuse|--no-session-reuse] [--session-dir PATH]\n"; return 2;
         }
     }
     if (model_path.empty()) { std::cerr << "missing model; use --model MODEL.gguf\n"; return 2; }
@@ -4228,8 +4315,18 @@ int cmd_serve(int argc, char** argv) {
     }
     const std::string model_id = std::filesystem::path(model_path).stem().string();
     const char* session_reuse_env = std::getenv("MIINFER_SESSION_REUSE");
-    const bool session_reuse = session_reuse_env != nullptr
-        && std::strcmp(session_reuse_env, "0") != 0;
+    const bool session_reuse = session_reuse_flag.value_or(
+        session_reuse_env == nullptr || std::strcmp(session_reuse_env, "0") != 0);
+
+    if (!session_dir) {
+        if (const char* env_sdir = std::getenv("MIINFER_SESSION_DIR")) {
+            session_dir = env_sdir;
+        }
+    }
+    if (session_dir) {
+        std::error_code ec;
+        std::filesystem::create_directories(*session_dir, ec);
+    }
 
     g_cache_capacity = context_length;
     std::cerr << "Initializing MIInfer gfx906 HTTP Server on " << host << ":" << port << " ...\n";
@@ -4237,9 +4334,12 @@ int cmd_serve(int argc, char** argv) {
               << "runtime_context_capacity=" << g_cache_capacity << "\n"
               << "qualified_context_length=1024\n"
               << "context_qualification=" << (context_length > 1024 ? "experimental" : "qualified") << "\n"
-              << "session_reuse=" << (session_reuse ? "experimental" : "disabled") << "\n";
-    Qwen35RuntimeEngine engine(model_path);
-    std::cerr << "model_context_length=" << engine.model().config().context_length << "\n";
+              << "session_reuse=" << (session_reuse ? "experimental" : "disabled") << "\n"
+              << "session_dir=" << (session_dir ? session_dir->string() : "disabled") << "\n";
+    const auto model = miinfer::Qwen35Model::load(model_path);
+    const auto tokenizer = miinfer::Qwen3Tokenizer::load(*model.file());
+    miinfer::prefill_v2::PrefillV2Model engine(model, context_length, true, miinfer::prefill_v2::KvCacheQuantMode::kFp16Fp16);
+    std::cerr << "model_context_length=" << model.config().context_length << "\n";
     std::cerr << "device_allocation_count=" << g_device_allocations << "\n"
               << "device_allocated_bytes=" << g_live_device_bytes << "\n"
               << "device_total_allocated_bytes=" << g_total_device_bytes << "\n"
@@ -4348,18 +4448,20 @@ int cmd_serve(int argc, char** argv) {
             state("cancelled");
             return;
         }
-        const auto prompt_tokens = engine.tokenizer().encode(prompt);
+        const auto prompt_tokens = tokenizer.encode(prompt);
         const double tokenization_ms = std::chrono::duration<double, std::milli>(
             std::chrono::steady_clock::now() - tokenization_start).count();
         tokenization_us += static_cast<std::uint64_t>(tokenization_ms * 1000.0);
         const double queue_wait_ms = std::chrono::duration<double, std::milli>(started_at - request.queued_at).count();
         state("tokenized");
-        if (prompt_tokens.size() > context_length || prompt_tokens.size() + max_tokens > context_length) {
+        if (prompt_tokens.size() >= context_length) {
             ++http_errors;
-            send_http_error(client_fd, 400, "prompt and max_tokens exceed configured context", "context_length_exceeded");
+            send_http_error(client_fd, 400, "prompt length exceeds configured context", "context_length_exceeded");
             state("rejected");
             return;
         }
+        const std::size_t available_output = context_length - prompt_tokens.size();
+        const std::size_t effective_max_tokens = std::min(max_tokens, available_output);
         state("prefill_started");
         std::optional<double> first_delta_ms;
         const auto mark_first_delta = [&] {
@@ -4394,33 +4496,272 @@ int cmd_serve(int argc, char** argv) {
             bool client_connected = send_all(
                 client_fd,
                 "HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nCache-Control: no-cache\r\nConnection: close\r\n\r\n");
-            Qwen35RuntimeEngine::GenerateOptions opt;
-            opt.max_new_tokens = max_tokens;
-            opt.reuse_session = session_reuse;
-            opt.should_cancel = client_cancelled;
-            opt.on_prefill_complete = [&] { state("prefill_completed"); };
-            opt.on_first_token = [&] { state("first_token"); };
-            bool request_cancelled = false;
-            opt.on_token = [&](std::uint32_t /*token*/, std::string_view piece) {
-                if (!client_connected) return false;
-                if (defer_tool_output) return true;
-                const std::string sse = "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"delta\":{\"content\":\""
-                    + json_escape(piece) + "\"}}]}\n\n";
+            miinfer::prefill_v2::GenerateOptions opt;
+            opt.max_new_tokens = effective_max_tokens;
+            opt.use_hip_graph = true;
+            opt.enable_prefix_reuse = session_reuse;
+            opt.cache_prefix_after = session_reuse;
+            if (session_dir) {
+                opt.persistent_session_dir = session_dir->string();
+            }
+            opt.temperature = parsed.request->temperature;
+            opt.top_p = parsed.request->top_p;
+            opt.top_k = parsed.request->top_k;
+            opt.repetition_penalty = parsed.request->repetition_penalty;
+            opt.presence_penalty = parsed.request->presence_penalty;
+            opt.frequency_penalty = parsed.request->frequency_penalty;
+            opt.repeat_last_n = parsed.request->repeat_last_n;
+            opt.stop_token_ids = {tokenizer.eos_id(), 151643, 151645};
+            for (const auto& s : parsed.request->stop) {
+                const auto enc = tokenizer.encode(s);
+                if (enc.size() == 1) {
+                    opt.stop_token_ids.push_back(enc[0]);
+                }
+            }
+            enum class StreamMode {
+                CONTENT,
+                THINKING
+            };
+
+            enum class ToolCheckState {
+                CHECKING,
+                IS_TOOL_CALL,
+                IS_CONTENT
+            };
+
+            StreamMode stream_mode = StreamMode::CONTENT;
+            ToolCheckState tool_check_state = defer_tool_output ? ToolCheckState::CHECKING : ToolCheckState::IS_CONTENT;
+            std::string accumulated_text;
+            std::size_t processed_pos = 0;
+            std::size_t tool_check_start_pos = 0;
+
+            const auto send_reasoning_chunk = [&](std::string_view delta) -> bool {
+                if (delta.empty()) return true;
+                const std::string sse = "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"delta\":{\"reasoning_content\":\""
+                    + json_escape(delta) + "\"}}]}\n\n";
                 client_connected = send_all(client_fd, sse);
-                if (client_connected && !piece.empty()) mark_first_delta();
+                if (client_connected) mark_first_delta();
                 return client_connected;
             };
-            Qwen35RuntimeEngine::GenerateStats stats;
+
+            const auto send_content_chunk = [&](std::string_view delta) -> bool {
+                if (delta.empty()) return true;
+                const std::string sse = "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"delta\":{\"content\":\""
+                    + json_escape(delta) + "\"}}]}\n\n";
+                client_connected = send_all(client_fd, sse);
+                if (client_connected) mark_first_delta();
+                return client_connected;
+            };
+
+            const auto find_open_think_tag = [](std::string_view text, std::size_t from, std::size_t& tag_start, std::size_t& tag_end) -> bool {
+                const std::size_t p1 = text.find("<think", from);
+                const std::size_t p2 = text.find("<thought", from);
+                tag_start = std::min(p1, p2);
+                if (tag_start == std::string_view::npos) return false;
+                std::size_t end = text.find('>', tag_start);
+                if (end != std::string_view::npos) {
+                    tag_end = end + 1;
+                    while (tag_end < text.size() && (text[tag_end] == '\r' || text[tag_end] == '\n')) ++tag_end;
+                    return true;
+                }
+                end = text.find_first_of("\r\n", tag_start);
+                if (end != std::string_view::npos) {
+                    while (end < text.size() && (text[end] == '\r' || text[end] == '\n')) ++end;
+                    tag_end = end;
+                    return true;
+                }
+                return false;
+            };
+
+            const auto find_close_think_tag = [](std::string_view text, std::size_t from, std::size_t& tag_start, std::size_t& tag_end) -> bool {
+                const std::size_t p1 = text.find("</think", from);
+                const std::size_t p2 = text.find("</thought", from);
+                tag_start = std::min(p1, p2);
+                if (tag_start == std::string_view::npos) return false;
+                std::size_t end = text.find('>', tag_start);
+                if (end != std::string_view::npos) {
+                    tag_end = end + 1;
+                    while (tag_end < text.size() && (text[tag_end] == '\r' || text[tag_end] == '\n')) ++tag_end;
+                    return true;
+                }
+                end = text.find_first_of("\r\n", tag_start);
+                if (end != std::string_view::npos) {
+                    while (end < text.size() && (text[end] == '\r' || text[end] == '\n')) ++end;
+                    tag_end = end;
+                    return true;
+                }
+                return false;
+            };
+
+            bool request_cancelled = false;
+            opt.on_token = [&](std::uint32_t token) -> bool {
+                if (!client_connected) return false;
+                const std::array<std::uint32_t, 1> single_tok{token};
+                const std::string piece = tokenizer.decode(single_tok);
+                accumulated_text += piece;
+
+                while (client_connected && processed_pos < accumulated_text.size()) {
+                    if (stream_mode == StreamMode::CONTENT) {
+                        std::size_t tag_start = 0, tag_end = 0;
+                        if (find_open_think_tag(accumulated_text, processed_pos, tag_start, tag_end)) {
+                            if (tag_start > processed_pos) {
+                                if (tool_check_state == ToolCheckState::IS_CONTENT) {
+                                    if (!send_content_chunk(std::string_view(accumulated_text).substr(processed_pos, tag_start - processed_pos))) {
+                                        return false;
+                                    }
+                                }
+                            }
+                            processed_pos = tag_end;
+                            stream_mode = StreamMode::THINKING;
+                            continue;
+                        }
+
+                        std::size_t max_suffix = 0;
+                        for (const std::string_view prefix : {"<think>", "<think\n", "<thought>", "<thought\n"}) {
+                            for (std::size_t len = std::min(accumulated_text.size() - processed_pos, prefix.size() - 1); len >= 1; --len) {
+                                if (std::string_view(accumulated_text).ends_with(prefix.substr(0, len))) {
+                                    max_suffix = std::max(max_suffix, len);
+                                }
+                            }
+                        }
+                        const std::size_t safe_end = accumulated_text.size() - max_suffix;
+                        if (safe_end <= processed_pos) {
+                            return true;
+                        }
+
+                        if (tool_check_state == ToolCheckState::IS_CONTENT) {
+                            if (!send_content_chunk(std::string_view(accumulated_text).substr(processed_pos, safe_end - processed_pos))) {
+                                return false;
+                            }
+                            processed_pos = safe_end;
+                            return true;
+                        } else if (tool_check_state == ToolCheckState::IS_TOOL_CALL) {
+                            processed_pos = safe_end;
+                            return true;
+                        } else {
+                            std::string_view uninspected = std::string_view(accumulated_text).substr(tool_check_start_pos);
+                            std::size_t first_non_ws = 0;
+                            while (first_non_ws < uninspected.size() && std::isspace(static_cast<unsigned char>(uninspected[first_non_ws]))) {
+                                ++first_non_ws;
+                            }
+                            if (first_non_ws < uninspected.size()) {
+                                std::string_view candidate = uninspected.substr(first_non_ws);
+                                constexpr std::string_view tool_tag = "<tool_call>";
+                                constexpr std::string_view tool_tag_prefix = "<tool_call";
+                                constexpr std::string_view json_tag = "```json";
+                                if (candidate.starts_with(tool_tag) || candidate.starts_with(tool_tag_prefix) || candidate.starts_with(json_tag)) {
+                                    tool_check_state = ToolCheckState::IS_TOOL_CALL;
+                                    processed_pos = safe_end;
+                                    return true;
+                                } else if (tool_tag.starts_with(candidate) || json_tag.starts_with(candidate)) {
+                                    return true;
+                                } else {
+                                    tool_check_state = ToolCheckState::IS_CONTENT;
+                                    if (!send_content_chunk(std::string_view(accumulated_text).substr(processed_pos, safe_end - processed_pos))) {
+                                        return false;
+                                    }
+                                    processed_pos = safe_end;
+                                    return true;
+                                }
+                            } else if (uninspected.size() > 16) {
+                                tool_check_state = ToolCheckState::IS_CONTENT;
+                                if (!send_content_chunk(std::string_view(accumulated_text).substr(processed_pos, safe_end - processed_pos))) {
+                                    return false;
+                                }
+                                processed_pos = safe_end;
+                                return true;
+                            } else {
+                                return true;
+                            }
+                        }
+                    } else {
+                        std::size_t close_start = 0, close_end = 0;
+                        const bool has_close = find_close_think_tag(accumulated_text, processed_pos, close_start, close_end);
+
+                        const std::size_t t1 = accumulated_text.find("<tool_call", processed_pos);
+                        const std::size_t t2 = accumulated_text.find("<function=", processed_pos);
+                        const std::size_t tool_start = std::min(t1, t2);
+
+                        if (tool_start != std::string_view::npos && (!has_close || tool_start < close_start)) {
+                            if (tool_start > processed_pos) {
+                                if (!send_reasoning_chunk(std::string_view(accumulated_text).substr(processed_pos, tool_start - processed_pos))) {
+                                    return false;
+                                }
+                            }
+                            processed_pos = tool_start;
+                            stream_mode = StreamMode::CONTENT;
+                            tool_check_state = ToolCheckState::IS_TOOL_CALL;
+                            tool_check_start_pos = processed_pos;
+                            continue;
+                        }
+
+                        if (has_close) {
+                            if (close_start > processed_pos) {
+                                if (!send_reasoning_chunk(std::string_view(accumulated_text).substr(processed_pos, close_start - processed_pos))) {
+                                    return false;
+                                }
+                            }
+                            processed_pos = close_end;
+                            stream_mode = StreamMode::CONTENT;
+                            tool_check_state = defer_tool_output ? ToolCheckState::CHECKING : ToolCheckState::IS_CONTENT;
+                            tool_check_start_pos = processed_pos;
+                            continue;
+                        }
+
+                        std::size_t max_suffix = 0;
+                        for (const std::string_view prefix : {"</think>", "</think\n", "</thought>", "</thought\n", "<tool_call>", "<tool_call\n", "<function="}) {
+                            for (std::size_t len = std::min(accumulated_text.size() - processed_pos, prefix.size() - 1); len >= 1; --len) {
+                                if (std::string_view(accumulated_text).ends_with(prefix.substr(0, len))) {
+                                    max_suffix = std::max(max_suffix, len);
+                                }
+                            }
+                        }
+                        const std::size_t safe_end = accumulated_text.size() - max_suffix;
+                        if (safe_end > processed_pos) {
+                            if (!send_reasoning_chunk(std::string_view(accumulated_text).substr(processed_pos, safe_end - processed_pos))) {
+                                return false;
+                            }
+                            processed_pos = safe_end;
+                        }
+                        return true;
+                    }
+                }
+                return client_connected;
+            };
+            RuntimeGenerateStats stats;
             miinfer::OpenAiGeneratedToolCalls tool_calls;
             try {
-                stats = engine.generate(prompt_tokens, opt);
+                const auto v2_stats = engine.generate(prompt_tokens, opt);
+                if (const char* dump_tokens = std::getenv("MIINFER_DUMP_TOKENS");
+                    dump_tokens != nullptr && std::strcmp(dump_tokens, "0") != 0) {
+                    std::cerr << "miinfer_generated_token_ids request_id=" << request.request_id << " ids=";
+                    for (const auto token : v2_stats.generated_tokens) std::cerr << token << ',';
+                    std::cerr << '\n';
+                }
+                stats.prompt_tokens = v2_stats.prompt_tokens.size();
+                stats.generated_tokens = v2_stats.generated_tokens.size();
+                stats.prefill_processed_tokens = v2_stats.prompt_tokens.size();
+                stats.reused_prefix_tokens = v2_stats.prefix_tokens_reused;
+                stats.common_prefix_tokens = v2_stats.prefix_tokens_reused;
+                if (v2_stats.prefix_tokens_reused > 0) {
+                    stats.session_checkpoint_count = 1;
+                    stats.session_checkpoint_bytes = engine.persistent_state_bytes();
+                }
+                stats.prefill_ms = v2_stats.prefill_ms;
+                stats.decode_ms = v2_stats.decode_ms;
+                stats.first_token_ms = v2_stats.ttft_ms;
+                stats.total_ms = v2_stats.total_ms;
+                stats.prefill_tok_s = v2_stats.prefill_tok_per_sec;
+                stats.decode_tok_s = v2_stats.decode_tok_per_sec;
+                stats.text = tokenizer.decode(v2_stats.generated_tokens);
+
                 if (defer_tool_output) tool_calls = miinfer::parse_generated_tool_calls(stats.text);
-                request_cancelled = stats.cancelled;
+                request_cancelled = false;
                 prompt_tokens_total += stats.prompt_tokens;
                 prefill_tokens_total += stats.prefill_processed_tokens;
                 prefill_us += static_cast<std::uint64_t>(stats.prefill_ms * 1000.0);
                 generated_tokens_total += stats.generated_tokens;
-                const bool cancelled = stats.cancelled || !client_connected;
+                const bool cancelled = !client_connected;
                 if (cancelled) { ++cancelled_requests; state("cancelled"); }
                 else state("completed");
                 std::cerr << "miinfer_request {\"request_id\":" << request.request_id
@@ -4453,12 +4794,24 @@ int cmd_serve(int argc, char** argv) {
                 return;
             }
             if (client_connected && !request_cancelled) {
+                if (stream_mode == StreamMode::THINKING) {
+                    if (stats.text.size() > processed_pos) {
+                        send_reasoning_chunk(std::string_view(stats.text).substr(processed_pos));
+                    }
+                } else if (tool_check_state == ToolCheckState::IS_CONTENT) {
+                    if (stats.text.size() > processed_pos) {
+                        send_content_chunk(std::string_view(stats.text).substr(processed_pos));
+                    }
+                }
+
                 if (defer_tool_output) {
                     if (tool_calls.calls.empty()) {
-                        const std::string sse = "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"delta\":{\"content\":\""
-                            + json_escape(stats.text) + "\"}}]}\n\n";
-                        client_connected = send_all(client_fd, sse);
-                        if (client_connected && !stats.text.empty()) mark_first_delta();
+                        if (tool_check_state != ToolCheckState::IS_CONTENT) {
+                            const auto extracted = extract_reasoning_and_content(stats.text);
+                            if (!extracted.content.empty()) {
+                                send_content_chunk(extracted.content);
+                            }
+                        }
                     } else {
                         for (std::size_t i = 0; i < tool_calls.calls.size() && client_connected; ++i) {
                             const auto& call = tool_calls.calls[i];
@@ -4482,29 +4835,77 @@ int cmd_serve(int argc, char** argv) {
             }
             log_latency(stats);
         } else {
-            Qwen35RuntimeEngine::GenerateOptions opt;
-            opt.max_new_tokens = max_tokens;
-            opt.reuse_session = session_reuse;
-            opt.should_cancel = client_cancelled;
-            opt.on_prefill_complete = [&] { state("prefill_completed"); };
-            opt.on_first_token = [&] { state("first_token"); };
-            // Server requests must observe shutdown between tokens; the bulk
-            // graph path intentionally does not provide that interruption point.
-            opt.stream = true;
-            const auto stats = engine.generate(prompt_tokens, opt);
+            miinfer::prefill_v2::GenerateOptions opt;
+            opt.max_new_tokens = effective_max_tokens;
+            opt.use_hip_graph = true;
+            opt.enable_prefix_reuse = session_reuse;
+            opt.cache_prefix_after = session_reuse;
+            if (session_dir) {
+                opt.persistent_session_dir = session_dir->string();
+            }
+            opt.temperature = parsed.request->temperature;
+            opt.top_p = parsed.request->top_p;
+            opt.top_k = parsed.request->top_k;
+            opt.repetition_penalty = parsed.request->repetition_penalty;
+            opt.presence_penalty = parsed.request->presence_penalty;
+            opt.frequency_penalty = parsed.request->frequency_penalty;
+            opt.repeat_last_n = parsed.request->repeat_last_n;
+            opt.stop_token_ids = {tokenizer.eos_id(), 151643, 151645};
+            for (const auto& s : parsed.request->stop) {
+                const auto enc = tokenizer.encode(s);
+                if (enc.size() == 1) {
+                    opt.stop_token_ids.push_back(enc[0]);
+                }
+            }
+
+            const auto v2_stats = engine.generate(prompt_tokens, opt);
+            if (const char* dump_tokens = std::getenv("MIINFER_DUMP_TOKENS");
+                dump_tokens != nullptr && std::strcmp(dump_tokens, "0") != 0) {
+                std::cerr << "miinfer_generated_token_ids request_id=" << request.request_id << " ids=";
+                for (const auto token : v2_stats.generated_tokens) std::cerr << token << ',';
+                std::cerr << '\n';
+            }
+            RuntimeGenerateStats stats;
+            stats.prompt_tokens = v2_stats.prompt_tokens.size();
+            stats.generated_tokens = v2_stats.generated_tokens.size();
+            stats.prefill_processed_tokens = v2_stats.prompt_tokens.size();
+            stats.reused_prefix_tokens = v2_stats.prefix_tokens_reused;
+            stats.common_prefix_tokens = v2_stats.prefix_tokens_reused;
+            if (v2_stats.prefix_tokens_reused > 0) {
+                stats.session_checkpoint_count = 1;
+                stats.session_checkpoint_bytes = engine.persistent_state_bytes();
+            }
+            stats.prefill_ms = v2_stats.prefill_ms;
+            stats.decode_ms = v2_stats.decode_ms;
+            stats.first_token_ms = v2_stats.ttft_ms;
+            stats.total_ms = v2_stats.total_ms;
+            stats.prefill_tok_s = v2_stats.prefill_tok_per_sec;
+            stats.decode_tok_s = v2_stats.decode_tok_per_sec;
+            stats.text = tokenizer.decode(v2_stats.generated_tokens);
+
             prompt_tokens_total += stats.prompt_tokens;
             prefill_tokens_total += stats.prefill_processed_tokens;
             prefill_us += static_cast<std::uint64_t>(stats.prefill_ms * 1000.0);
             generated_tokens_total += stats.generated_tokens;
             if (stats.cancelled) { ++cancelled_requests; state("cancelled"); }
             else state("completed");
+            const auto extracted = extract_reasoning_and_content(stats.text);
             const auto tool_calls = defer_tool_output
                 ? miinfer::parse_generated_tool_calls(stats.text)
                 : miinfer::OpenAiGeneratedToolCalls{};
             const bool has_tool_calls = !tool_calls.calls.empty();
-            const std::string message = has_tool_calls
-                ? "\"content\":null,\"tool_calls\":" + openai_tool_calls_json(tool_calls.calls)
-                : "\"content\":\"" + json_escape(stats.text) + "\"";
+            std::string message;
+            if (has_tool_calls) {
+                message = "\"content\":null,\"tool_calls\":" + openai_tool_calls_json(tool_calls.calls);
+                if (extracted.has_reasoning) {
+                    message += ",\"reasoning_content\":\"" + json_escape(extracted.reasoning_content) + "\"";
+                }
+            } else {
+                message = "\"content\":\"" + json_escape(extracted.content) + "\"";
+                if (extracted.has_reasoning) {
+                    message += ",\"reasoning_content\":\"" + json_escape(extracted.reasoning_content) + "\"";
+                }
+            }
             std::cerr << "miinfer_request {\"request_id\":" << request.request_id
                       << ",\"request_body_bytes\":" << request.raw.size()
                       << ",\"message_count\":" << parsed.request->messages.size()

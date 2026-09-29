@@ -164,12 +164,52 @@ OpenAiParseResult parse_openai_chat_request(std::string_view body) {
             if (!json["stream"].is_boolean()) return {{}, "stream must be a boolean"};
             request.stream = json["stream"].get<bool>();
         }
-        if (json.contains("max_tokens")) {
+        if (json.contains("max_completion_tokens") && !json["max_completion_tokens"].is_null()) {
+            if (!json["max_completion_tokens"].is_number_unsigned()) return {{}, "max_completion_tokens must be an unsigned integer"};
+            request.max_tokens = json["max_completion_tokens"].get<std::size_t>();
+            if (request.max_tokens > kMaxOutputTokens) {
+                return {{}, "max_completion_tokens exceeds maximum supported context output limit"};
+            }
+        } else if (json.contains("max_tokens") && !json["max_tokens"].is_null()) {
             if (!json["max_tokens"].is_number_unsigned()) return {{}, "max_tokens must be an unsigned integer"};
             request.max_tokens = json["max_tokens"].get<std::size_t>();
             if (request.max_tokens > kMaxOutputTokens) {
-                return {{}, "max_tokens must be at most 4096"};
+                return {{}, "max_tokens exceeds maximum supported context output limit"};
             }
+        }
+        if (json.contains("stop")) {
+            if (json["stop"].is_string()) {
+                request.stop.push_back(json["stop"].get<std::string>());
+            } else if (json["stop"].is_array()) {
+                for (const auto& s : json["stop"]) {
+                    if (s.is_string()) {
+                        request.stop.push_back(s.get<std::string>());
+                    }
+                }
+            }
+        }
+        if (json.contains("temperature") && json["temperature"].is_number()) {
+            request.temperature = json["temperature"].get<float>();
+        }
+        if (json.contains("top_p") && json["top_p"].is_number()) {
+            request.top_p = json["top_p"].get<float>();
+        }
+        if (json.contains("top_k") && json["top_k"].is_number_unsigned()) {
+            request.top_k = json["top_k"].get<std::uint32_t>();
+        }
+        if (json.contains("repetition_penalty") && json["repetition_penalty"].is_number()) {
+            request.repetition_penalty = json["repetition_penalty"].get<float>();
+        } else if (json.contains("repeat_penalty") && json["repeat_penalty"].is_number()) {
+            request.repetition_penalty = json["repeat_penalty"].get<float>();
+        }
+        if (json.contains("repeat_last_n") && json["repeat_last_n"].is_number_unsigned()) {
+            request.repeat_last_n = json["repeat_last_n"].get<std::size_t>();
+        }
+        if (json.contains("frequency_penalty") && json["frequency_penalty"].is_number()) {
+            request.frequency_penalty = json["frequency_penalty"].get<float>();
+        }
+        if (json.contains("presence_penalty") && json["presence_penalty"].is_number()) {
+            request.presence_penalty = json["presence_penalty"].get<float>();
         }
         if (json.contains("tool_choice")) {
             const auto& choice = json["tool_choice"];

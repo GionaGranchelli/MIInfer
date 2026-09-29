@@ -36,6 +36,14 @@ struct alignas(64) DeviceDecodeState {
 };
 static_assert(sizeof(DeviceDecodeState) == 64);
 
+struct alignas(64) DevicePrefillState {
+    std::uint32_t base_position;
+    std::uint32_t token_count;
+    std::uint32_t total_length;
+    std::uint32_t kv_capacity;
+};
+static_assert(sizeof(DevicePrefillState) == 64);
+
 // M23 wide-MMQ activation block: four Q8_1 groups for 128 contiguous input
 // values. `s` retains the original group sums; `qsum_scaled` caches the
 // canonical half-rounded d times the integer quantized sum for affine MMQ.
@@ -113,6 +121,15 @@ void launch_qwen35_q4_k_embedding(
 void launch_qwen35_q4_k_embedding_device_token(
     const Q4KDeviceBlock* weights,
     const std::uint32_t* token_ptr,
+    std::uint32_t vocabulary,
+    std::uint32_t hidden_size,
+    float* output,
+    hipStream_t stream = nullptr);
+
+void launch_qwen35_q4_k_embedding_batch(
+    const Q4KDeviceBlock* weights,
+    const std::uint32_t* tokens,
+    std::uint32_t token_count,
     std::uint32_t vocabulary,
     std::uint32_t hidden_size,
     float* output,
@@ -453,7 +470,8 @@ void launch_qwen35_conv_silu_split_batch(
     std::uint32_t history_capacity,
     std::uint32_t channels,
     std::uint32_t conv_kernel,
-    hipStream_t stream = nullptr);
+    hipStream_t stream = nullptr,
+    const DevicePrefillState* prefill_state = nullptr);
 
 void launch_qwen35_head_l2_normalize(
     const float* input,
@@ -629,6 +647,131 @@ void launch_qwen35_tiled_online_attention_batch_f16(
     hipStream_t stream = nullptr,
     bool trace_causal = false);
 
+// V2-0016: Specialized Wave64 Split-K Suffix Attention for Asymmetric Agent Prefill (P >> S)
+void launch_qwen35_splitk_suffix_attention_f16(
+    const float* q,
+    const __half* key_cache,
+    const __half* value_cache,
+    const float* gate,
+    float* gated_output,
+    float* d_split_workspace,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t cache_capacity,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float scale,
+    std::uint32_t num_splits = 64,
+    hipStream_t stream = nullptr,
+    const DevicePrefillState* prefill_state = nullptr);
+
+// V2-0019: Direct-Consumption Quantized Split-K Suffix Attention (FP16 / Q8 K / Q8 V)
+void launch_qwen35_splitk_suffix_attention_quant(
+    const float* q,
+    const __half* key_cache_f16,
+    const __half* value_cache_f16,
+    const int8_t* key_cache_q8,
+    const __half* key_scales,
+    const int8_t* value_cache_q8,
+    const __half* value_scales,
+    const float* gate,
+    float* gated_output,
+    float* d_split_workspace,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t cache_capacity,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float scale,
+    bool is_k_q8,
+    bool is_v_q8,
+    std::uint32_t num_splits = 64,
+    hipStream_t stream = nullptr,
+    const DevicePrefillState* prefill_state = nullptr);
+
+// V2-0019: Decoupled K Norm, RoPE, and Store K + V with Online Q8 Quantization
+void launch_qwen35_decoupled_k_norm_rope_kv_store_batch_quant(
+    const float* key,
+    const float* value,
+    const float* k_norm_weight,
+    __half* key_cache_f16,
+    __half* value_cache_f16,
+    int8_t* key_cache_q8,
+    __half* key_scales,
+    int8_t* value_cache_q8,
+    __half* value_scales,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t cache_capacity,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float theta,
+    float epsilon,
+    bool is_k_q8,
+    bool is_v_q8,
+    hipStream_t stream = nullptr,
+    const DevicePrefillState* prefill_state = nullptr,
+    const DeviceDecodeState* decode_state = nullptr);
+
+// V2-0019: Single-Token Quantized Decode Attention (FP16 / Q8 K / Q8 V)
+void launch_qwen35_tiled_online_attention_quant_dynamic(
+    const float* q,
+    const __half* key_cache_f16,
+    const __half* value_cache_f16,
+    const int8_t* key_cache_q8,
+    const __half* key_scales,
+    const int8_t* value_cache_q8,
+    const __half* value_scales,
+    const DeviceDecodeState* decode_state,
+    std::uint32_t cache_capacity,
+    float* output,
+    const float* gate,
+    float* gated_output,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float scale,
+    bool is_k_q8,
+    bool is_v_q8,
+    hipStream_t stream = nullptr,
+    Q8_1Block* gated_output_q8 = nullptr);
+
+// V2-0006 Candidate A: Native query-tiled GQA prefill attention (Wave64 / gfx906).
+void launch_prefill_v2_query_tiled_attention_f16(
+    const float* q,
+    const __half* key_cache,
+    const __half* value_cache,
+    const float* gate,
+    float* gated_output,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t cache_capacity,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float scale,
+    hipStream_t stream = nullptr);
+
+// V2-0006 Candidate B: Split-KV prefill attention for long context (Wave64 / gfx906).
+void launch_prefill_v2_split_kv_attention_f16(
+    const float* q,
+    const __half* key_cache,
+    const __half* value_cache,
+    const float* gate,
+    float* gated_output,
+    float* d_split_workspace,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t cache_capacity,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float scale,
+    std::uint32_t num_splits = 4,
+    hipStream_t stream = nullptr);
+
 // Candidate 1: gfx906/Qwen3.8-only GQA-shared BK32 prefill attention.
 void launch_qwen35_gqa_tiled_online_attention_batch_f16(
     const float* q,
@@ -667,6 +810,15 @@ void launch_qwen35_spillfree_query_tiled_attention_v2_batch_f16(
     std::uint32_t base_position, std::uint32_t cache_capacity,
     std::uint32_t query_heads, std::uint32_t kv_heads, std::uint32_t head_dim,
     float scale, hipStream_t stream = nullptr);
+
+// V2-0043: reference-shaped 16-token x 2-head KQ/KV-reuse prototype.
+void launch_qwen35_kq_fragment_reuse_attention_batch_f16(
+    const float* q, const __half* key_cache, const __half* value_cache,
+    const float* gate, float* gated_output, float* split_workspace,
+    std::uint32_t token_count,
+    std::uint32_t base_position, std::uint32_t cache_capacity,
+    std::uint32_t query_heads, std::uint32_t kv_heads, std::uint32_t head_dim,
+    float scale, std::uint32_t num_splits, hipStream_t stream = nullptr);
 
 void launch_qwen35_fused_q_split_norm_rope_batch(
     const float* qfull,
@@ -713,6 +865,36 @@ void launch_qwen35_fused_k_norm_rope_kv_store_batch_f16(
     float theta,
     float epsilon,
     hipStream_t stream = nullptr);
+
+void launch_qwen35_decoupled_q_split_norm_rope_batch(
+    const float* qfull,
+    const float* q_norm_weight,
+    float* query_rope,
+    float* gate,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t heads,
+    std::uint32_t head_dim,
+    float theta,
+    float epsilon,
+    hipStream_t stream = nullptr,
+    const DevicePrefillState* prefill_state = nullptr);
+
+void launch_qwen35_decoupled_k_norm_rope_kv_store_batch_f16(
+    const float* key,
+    const float* value,
+    const float* k_norm_weight,
+    __half* key_cache,
+    __half* value_cache,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t cache_capacity,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float theta,
+    float epsilon,
+    hipStream_t stream = nullptr,
+    const DevicePrefillState* prefill_state = nullptr);
 
 inline void launch_qwen35_tiled_online_attention(
     const float* q,

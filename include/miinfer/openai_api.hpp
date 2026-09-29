@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -31,9 +32,17 @@ struct OpenAiChatRequest {
     std::optional<std::string> model;
     std::vector<ChatMessage> messages;
     std::vector<ChatTool> tools;
+    std::vector<std::string> stop;
     std::string tool_choice = "auto";
     bool stream = false;
     std::size_t max_tokens = 256;
+    float temperature = 0.7f;
+    float top_p = 0.9f;
+    std::uint32_t top_k = 40;
+    float repetition_penalty = 1.15f;
+    float frequency_penalty = 0.0f;
+    float presence_penalty = 0.0f;
+    std::size_t repeat_last_n = 256;
 };
 
 struct OpenAiParseResult {
@@ -41,7 +50,7 @@ struct OpenAiParseResult {
     std::string error;
 };
 
-constexpr std::size_t kMaxOutputTokens = 4096;
+constexpr std::size_t kMaxOutputTokens = 65536;
 
 struct OpenAiGeneratedToolCalls {
     std::vector<ChatToolCall> calls;
