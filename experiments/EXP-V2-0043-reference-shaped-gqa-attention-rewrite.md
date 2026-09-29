@@ -513,6 +513,12 @@ only after the first candidate attention call at layer 3/base 512 completed two
 requests at 38.860 s and 38.875 s prefill. All of these serialized timings are
 diagnostic only; do not use them as candidate performance qualification.
 
+Moving that one diagnostic wait to immediately before (rather than after) the
+same first candidate call also completed two requests: 39.098 s and 38.840 s
+prefill. This does not identify which side of the dispatch needs ordering: both
+calls wait the same per-thread default stream, and the code path passes the
+same stream through the preceding block and candidate launcher.
+
 This materially narrows the failure to command-order/lifetime behavior around
 the candidate path rather than a deterministic P8192 address-bound error; the
 exact dependency is still unproven. The retained one-sync hook is opt-in and
