@@ -522,8 +522,8 @@
     "semantic_hash": ""
   },
   "include/miinfer/qwen3_gpu_primitives.hpp": {
-    "mtime": 1790638103.1054108,
-    "seen": 1790638196.4597573,
+    "mtime": 1790685924.0416813,
+    "seen": 1790685937.1699314,
     "ast_hash": "76ca24ae59ac738b11a0097bb51ba38c",
     "semantic_hash": ""
   },
@@ -2364,14 +2364,14 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1790637499.4672391,
-    "seen": 1790638196.460208,
+    "mtime": 1790685924.0436811,
+    "seen": 1790685937.1703706,
     "ast_hash": "314b69c2aa8e696755e255aac6a57746",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
-    "mtime": 1790637496.4252534,
-    "seen": 1790638196.4602091,
+    "mtime": 1790680259.2228239,
+    "seen": 1790685937.170372,
     "ast_hash": "4815ad67d6d0f8319c895dc71e39050b",
     "semantic_hash": ""
   },
@@ -5370,8 +5370,8 @@
     "semantic_hash": ""
   },
   "bench/qwen35_gqa_prefill_bench.cpp": {
-    "mtime": 1790638115.807351,
-    "seen": 1790638196.45966,
+    "mtime": 1790685924.0406811,
+    "seen": 1790685937.1698365,
     "ast_hash": "d45432b8cd6d0dcfc30c7da347c65838",
     "semantic_hash": ""
   },
@@ -5682,8 +5682,8 @@
     "semantic_hash": ""
   },
   "src/prefill_v2/attention_layer.cpp": {
-    "mtime": 1790650411.9451458,
-    "seen": 1790650431.3320994,
+    "mtime": 1790685924.0416813,
+    "seen": 1790685937.170263,
     "ast_hash": "92f51d40afa5f67918d5edb30468881c",
     "semantic_hash": ""
   },
@@ -5718,8 +5718,8 @@
     "semantic_hash": ""
   },
   "src/prefill_v2/model.cpp": {
-    "mtime": 1790531607.274138,
-    "seen": 1790531906.1178126,
+    "mtime": 1790685924.0426812,
+    "seen": 1790685937.1702664,
     "ast_hash": "37c5d88321188bb4a8b90702e27c7592",
     "semantic_hash": ""
   },
@@ -6096,9 +6096,9 @@
     "semantic_hash": ""
   },
   "experiments/EXP-V2-0043-reference-shaped-gqa-attention-rewrite.md": {
-    "mtime": 1790661082.3300672,
-    "seen": 1790661105.20976,
-    "ast_hash": "c34f735405d73d562777f0e853297396",
+    "mtime": 1790685910.142719,
+    "seen": 1790685937.1711624,
+    "ast_hash": "d650be5daf11bc48f0eda1971c0c0227",
     "semantic_hash": ""
   }
 }

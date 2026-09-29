@@ -28,8 +28,9 @@ met.
 Sources: pinned mx `2e9d29fe736969160f17476ecf0a6298cee6966` and pinned upstream
 `73a43d1f69345aee8bb186ef4b3172cef892f2e5`, both
 `ggml/src/ggml-cuda/fattn-tile.cuh`. For the observed `<16,2>` shape,
-`ncols=32`, four warps, and each warp owns eight Q columns. Adjacent Q heads
-share a KV head.
+`ncols=32`; `WARP_SIZE=32`, so a 256-thread block has eight logical warps,
+each owning four Q rows (`cpw=32/8`). These are four physical gfx906 Wave64s.
+Adjacent Q heads share a KV head.
 
 | Lifetime / work | Reference | MIInfer target |
 |---|---|---|
@@ -53,6 +54,48 @@ records and implementation commits:
   25 KiB LDS), but retained the wrong lifetime order: query-row work enclosed
   the KV-tile loop, restaging K and repeating V per row group. It remained
   ~5.3× slower at P8192. Spill elimination alone did not reproduce reuse.
+
+## Arithmetic boundary: reference-shaped candidate vs qualified MIInfer control
+
+Source review establishes that “reference-shaped” does not mean numerically
+identical to MIInfer's qualified control:
+
+| Operation | Pinned mx FAST_FP16 tile | Iteration 32 candidate | Qualified MIInfer control |
+|---|---|---|---|
+| Q input | Multiply FP32 Q by scale, then convert/store FP16 `Q_tmp` | Same scaled FP16 Q staging | Keep Q FP32; multiply FP32 Q by FP16 K and scale after dot reduction |
+| QK dot | gfx906 `ggml_cuda_mad(float&, half2, half2)` emits `v_dot2_f32_f16` | Same instruction over swizzled LDS fragments | Scalar FP32 products followed by XOR-wave reduction |
+| Tile KQ fragment | `exp(score - max)` stored as FP16; online max includes `3*0.6931f` | FP16 fragment without the offset | No materialized KQ tile; online weights stay FP32 |
+| Persistent V accumulator | FP16 `half2` `VKQ` | FP32 `float2` state | FP32 state |
+
+The corresponding sources are pinned mx `ggml/src/ggml-cuda/fattn-tile.cuh`
+and `common.cuh`, candidate `gfx906/kernels/qwen3_primitives.hip`, and control
+`qwen35_splitk_suffix_attn_stage1_quant_kernel` in the same MIInfer file.
+The reference's KQ max offset is in
+`ggml/src/ggml-cuda/fattn-common.cuh`.
+
+This makes the recent results interpretable, but does not establish a fix:
+Iteration 36 added only the reference max offset to the FP32 candidate and
+increased synthetic max error (`4.73e-6` vs `3.84e-6`); Iteration 37 coupled
+the offset with the reference half2 accumulator and exceeded the existing
+synthetic envelope (`1.93e-5`). Earlier full-FP32-Q arithmetic reduced local
+real attention error by about 94× but cost about 1.39× the control time in
+the then-current 32-split schedule and still missed greedy parity. FP32 KQ
+weights alone improved matched all-call RMS by only about 1.4%. Thus the
+reference arithmetic and control arithmetic are demonstrably different, but
+no tested precision hybrid has met both correctness and performance gates.
+
+## Compiler-schedule evidence
+
+The current Iteration 32 code object (256 threads; 86 VGPR / 46 SGPR; no
+spills/private bytes; 27,008 B dynamic LDS) emits 32 static
+`v_dot2_f32_f16` instructions in the KQ-fragment kernel. The pinned mx object
+selected at runtime for `<256,256,16,2,false>` emits 512 static
+`v_dot2_f32_f16` instructions, with 97 VGPR / 46 SGPR, no spills/private
+bytes, and 27,136 B LDS. Both source loops iterate over 16 fragments; mx
+explicitly unrolls that loop while Iteration 32 did not. The difference is
+consistent with MIInfer retaining a runtime loop around fragment loads and dot
+operations instead of issuing the statically expanded schedule. This is a
+compiler-schedule difference, not a tile-size or arithmetic hypothesis.
 
 ## Candidate invariants
 
@@ -100,6 +143,66 @@ that compiler evidence, not by changing tile dimensions.
   this actual dataflow cannot be made competitive on gfx906.
 
 ## Iteration log
+
+### Iteration 38 result — unroll KQ fragment loop
+
+Only the 16-fragment loop was explicitly unrolled. The gfx906 object remained
+spill-free (97 VGPR / 48 SGPR, 27,008 B dynamic LDS); static `v_dot2_f32_f16`
+count rose from 32 to 256, still below the reference object's 512 because the
+outer two-chunk `d_base` loop remains runtime. Four synthetic context checks
+passed with max absolute error `3.83891e-6`. On the identical P8192/TG128
+greedy API request (`"hello " * 8183`, prompt_tokens=8192), candidate and
+control each emitted 27 tokens but diverged at token index 7 (candidate 5686,
+control 4816). No timing was run; the candidate fails the exact-parity gate.
+The output text also differed. Reject this loop schedule as-is; test no
+performance conclusions from the request's prefill/decode durations.
+
+### Iteration 39 hypothesis / gates — unroll KQ dimension-chunk loop
+
+Iteration 38 exposed a remaining runtime loop around the two 128-dimension KQ
+chunks, while the pinned reference emits a fully expanded KQ schedule. Change
+only that `d_base` loop to an explicit two-iteration unroll; retain the
+iteration-38 fragment unroll and all arithmetic, CTA ownership, split bounds,
+and buffers. First inspect the rebuilt gfx906 object: require 256 threads,
+zero spills/private bytes, and valid LDS. Then run synthetic correctness and
+the identical P8192/TG128 token-parity request. Do not time unless all 128
+generated token IDs match the control exactly. Reject on resource failure or
+any parity mismatch; no full curve.
+
+### Iteration 39 result
+
+The two-iteration dimension-chunk loop was explicitly unrolled, retaining
+Iteration 38's fragment unroll. Build and synthetic P512/P2048/P4096/P8192
+checks passed; max absolute error remained `3.83891e-6`. The code object had
+zero spills/private bytes and emitted 256 static `v_dot2_f32_f16` instructions
+for this kernel, still below the pinned reference's 512. The identical
+P8192/TG128 request produced 27 tokens and the same candidate IDs as Iteration
+38; it diverged from control at token index 7 (`5686` vs `4816`). No timing
+was run. Reject the additional unroll as a parity fix; next work should
+localize the real-model numerical mismatch rather than expand this schedule.
+
+### Real-input divergence attribution — exact token-7 request
+
+Using the existing comparison hook on the exact P8192/TG128 production serving
+request (`"hello " * 8183`; prompt_tokens=8192), bounded to the first suffix
+block (`base_position=512`, `token_count=512`), the first active attention
+layer is layer 3 (the model's attention layers recur every four layers). The
+candidate and control share the same FP32 post-RoPE Q input; candidate staging
+then multiplies by `1/16` and rounds to FP16. On layer 3 that scaled Q rounding
+has max absolute error `2.43664e-4` and RMS `1.55021e-5` relative to the
+control's scaled FP32 Q. The resulting gated attention output differs by max
+absolute `1.92225e-4`, RMS `1.39362e-6` (relative max is unstable near zero:
+6.20). Subsequent attention-layer output RMS error grows through the model,
+reaching `1.48232e-4` at layer 63. Candidate greedy IDs still diverge from
+control at token index 7. This localizes the first implementation boundary
+that differs to FP32→scaled-FP16 Q staging at layer 3/base 512; it does not
+attribute the later amplification to KQ, softmax, or V arithmetic yet.
+
+Correction 1 will preserve FP32 Q through the same tile-local KQ-fragment and
+KV-reuse schedule, using FP32×FP16 accumulation and control-style post-dot
+scale. Require the existing real-model layer-3 output error to collapse and
+exact 128-token parity before any timing. If parity passes, then run isolated
+P8192 A/B against immutable iteration 26; otherwise reject without timing.
 
 ### Iteration 11 hypothesis / gates
 
@@ -1090,3 +1193,541 @@ with source/resource inspection of the exact pinned mx and upstream tiled
 attention implementations, then choose the smallest reuse-driven prototype
 against the measured gap. The decode regression A/B and the earlier checkpoint
 remain recorded/pushed at `5cd93e2`.
+
+### Iteration 27 hypothesis — hoist per-row split bounds out of tile loops
+
+The current candidate and reference both stage one 32-position K tile per
+CTA/split/tile, form one tile-local KQ fragment for all 32 rows, reuse the LDS
+workspace for two 16-position V loads, and retain online softmax state. Their
+split schedules differ: the reference advances aligned K tiles by
+`gridDim.y * nbatch_fa` and applies causal validity through the query mask;
+MIInfer uses contiguous per-split ranges and re-derives each row's split start
+and end in both the KQ-score path and the innermost V-position loop. Test only
+hoisting those row bounds into per-row registers before the KV-tile loop; keep
+the existing contiguous split assignment, tile geometry, LDS mapping, math,
+and dispatch fixed. This tests redundant bound arithmetic/branches, not a new
+schedule.
+
+Gate before timing: selected gfx906 object remains 256 threads, zero spills,
+zero private bytes, and LDS no more than 27,008 B. Inspect ISA to confirm the
+per-position row-bound quotient/multiply/compare sequence is absent from the V
+loop and no scratch path appears. Then require finite P512/P2048/P4096/P8192
+outputs within the existing `2.7563e-5` envelope. Run five unprofiled P8192
+pairs against the current 200.612 ms swizzle baseline; keep only at least 5%
+median improvement. Otherwise restore iteration 26 and use the measured
+reference split traversal as the next separate hypothesis. No full-model run
+unless the isolated gate passes.
+
+### Iteration 27 result — reject row-bound hoisting
+
+The candidate compiled at 256 threads, 78 VGPR, 43 SGPR, zero private bytes,
+zero spills, and 27,008 B LDS. ISA inspection showed the row-bound quotient
+sequence moved out of the V-position loop, but kernel code size grew from
+8,096 to 14,884 bytes and static `s_waitcnt` sites from 99 to 165. Correctness
+passed at P512/P2048/P4096/P8192 with finite outputs and max absolute error
+`1.15326e-5`. The first run was contaminated by an accidentally started second
+benchmark process and is excluded. After that process exited, the clean paired
+P8192 run measured control `[347.308, 354.152, 368.456, 348.030, 348.324]` ms
+(median 348.324) and hoisted candidate `[249.607, 212.186, 241.977, 212.192,
+212.145]` ms (median 212.192). It remains 39.1% faster than the scalar control
+but is 5.8% slower than the interleaved iteration-26 swizzle baseline at
+200.612 ms, failing its 5% keep gate. REJECT and restore iteration 26. The
+bounds work was not the remaining performance cause; next test the reference's
+aligned, strided three-split KV traversal as a separate independent variable.
+
+### Iteration 28 hypothesis — match reference aligned strided KV splits
+
+Pinned mx/upstream assign split `s` the 32-position K/V tiles beginning at
+`s*32` and advance by `num_splits*32`; causal masking is per query row. MIInfer
+currently gives each split a contiguous range based on each query block's
+first/last lengths, starts those ranges at potentially unaligned positions,
+and masks each row again against its split bounds. Change only split traversal
+and its intrinsic validity predicate to reference-style aligned striding;
+retain the 16×2 CTA, 32-row KQ fragment, K/V LDS reuse, XOR K swizzle, three
+splits, math, and output/combine format. This directly tests the remaining
+reference schedule difference and removes contiguous-range overlap/boundary
+work without introducing the failed iteration-27 register arrays.
+
+Require 256 threads, no spills/private bytes, and no more than 27,008 B LDS;
+inspect gfx906 ISA for scratch or scalarized loads. Verify finite P512/P2048/
+P4096/P8192 outputs within `2.7563e-5`, then five unprofiled interleaved
+P8192 A/B pairs against iteration 26's 200.612 ms median. Keep only if median
+improves by at least 5%; otherwise restore iteration 26. Full-model testing is
+reserved for an isolated pass.
+
+### Iteration 28 isolated result — keep pending serving/token-parity gate
+
+The candidate compiled for 256 threads at 95 VGPR / 43 SGPR with zero private
+bytes or spills and 27,008 B LDS. ISA contained vectorized `global_load_dwordx4`
+operations and no scratch path; the LDS footprint limits theoretical residency
+to at most two CTAs/CU. Correctness passed for P512/P2048/P4096/P8192 with
+finite outputs and max absolute error `1.77696e-5`, below the existing
+`2.7563e-5` envelope. The isolated five-pair P8192 run measured control
+`[387.269, 347.685, 346.983, 347.229, 347.804]` ms (median 347.685) and
+candidate `[186.683, 186.575, 186.513, 186.598, 226.701]` ms (median
+186.598). This is 7.0% faster than iteration 26's 200.612 ms median and clears
+the isolated keep threshold; one candidate sample was a high outlier.
+
+Three exact no-reuse P8192/TG1 MIInfer requests completed with 8,192 prompt
+tokens, output token ID `248068`, and internal prefill 37,874.1 / 37,840.4 /
+37,858.8 ms (median 37,858.8 ms). Client wall median was 37.867320 s, 0.256 s
+below iteration 26's 38.123 s median. ROCprofiler v3 did not emit trace CSVs
+for the host-loader/container setup.
+The installed legacy `rocprof --sys-trace --timestamp on` did capture the
+exact no-reuse P8192 request. Raw files are in
+`/tmp/v2043-iter28-legacy-trace/3808037_{hcc_ops_trace,hip_api_trace}.txt`.
+The server log confirms 8,192 prompt tokens, one generated token ID `248068`,
+and 38,187.1 ms internal prefill; traced wall/prefill is excluded from
+end-to-end comparisons. The HIP trace records candidate grid `{x=32,y=3,z=12}`,
+block `{x=32,y=8,z=1}` (256 threads), and 27,008 B dynamic LDS, plus the
+separate 12,288-CTA / 64-thread combine. HCC family aggregation for this
+single-request process yields:
+
+| Candidate attention family | Calls | Sum (ms) |
+|---|---:|---:|
+| KQ-fragment suffix kernel | 240 | 3,111.637 |
+| Split-K combine | 240 | 21.826 |
+| Prefix tiled online attention | 16 | 42.769 |
+| Total | 496 | 3,176.232 |
+
+The trace-selected pinned-mx P8192 attention total remains 1,785.691 ms
+(1,743.247 main + 42.444 combine), so Iter28 is 1.78× in aggregate device
+work, with a 1.391 s residual. The suffix kernel alone is 1.78× mx's main
+kernel time despite fewer candidate launches (240 vs 304); this is still a
+dominant optimization target, not evidence that the reference-shaped dataflow
+has reached parity. No hardware telemetry was recorded during this trace.
+
+The one-pair serving regression check used identical greedy TG1 requests and
+disabled session reuse, candidate first then control from fresh server
+processes. Both produced token ID `248068` at all three sizes:
+
+| Prompt tokens | Candidate client wall (s) | Control client wall (s) | Candidate internal prefill (ms) | Control internal prefill (ms) | Delta |
+|---:|---:|---:|---:|---:|---:|
+| 520 | 2.7457 | 2.7462 | 2,742.6 | 2,744.0 | −0.05% |
+| 2,055 | 9.4084 | 9.5753 | 9,404.7 | 9,571.5 | −1.74% |
+| 4,100 | 18.6803 | 19.2634 | 18,674.7 | 19,257.8 | −3.03% |
+
+No regression appeared, but the fixed candidate-then-control ordering and
+single samples support only a no-regression check, not a performance claim.
+Full-model greedy token parity is required before promotion; the attention gap
+also remains a primary bottleneck, so continue with a measured refinement
+rather than treating this prototype as the endpoint.
+
+The TG128 gate failed. With the same exact P8192 prompt and greedy settings,
+candidate and control matched through token five, then differed at token six
+(`7701` candidate vs `5686` control). The candidate emitted EOS after 123
+tokens; control generated all 128 requested tokens. A candidate real-operand
+comparison at layer 3 / base 512 found attention max absolute error `0.0104355`,
+RMS `9.2611e-5`, with 97/3,145,728 values exact. This is materially above the
+iteration-26 comparator (`8.38935e-5` max / `1.25813e-6` RMS), so the iteration
+28 split traversal is rejected for model correctness despite its isolated
+speed. The trace remains useful as a performance diagnostic only. A likely
+source is precision/order sensitivity in the half-precision output accumulator
+under strided tile assignment; this is a hypothesis, not yet proven.
+
+### Iteration 29 hypothesis — retain FP32 partial output accumulation
+
+Change only the CTA's online output accumulator from repeated `__half2` FMA
+rounding to FP32 FMA while keeping iteration 28's aligned strided split
+schedule, KQ fragment lifetime, swizzled K LDS mapping, V staging, 3 splits,
+partial format, and separate reduction fixed. The real layer-3 error grew by
+about 124× versus iteration 26 when the split traversal changed, while each V
+tile currently rounds the persistent per-row output accumulator back to
+FP16. Higher precision should reduce order sensitivity across the strided
+tile sequence and recover token parity; it may increase VGPR use and
+instruction count. Gate compilation at 256 threads, zero spills/private
+bytes, LDS ≤27,008 B; correctness at P512/P2048/P4096/P8192 plus real-input
+attention comparison and exact P8192/TG128 token parity. Only if these pass,
+run five interleaved isolated P8192 pairs and require at least a 5% median
+improvement over iteration 26 (200.612 ms). If FP32 accumulation exceeds
+resources or erases the speed win, do not keep the strided schedule; revert
+iteration 28 and test an accuracy-preserving split boundary separately.
+
+### Iteration 29 result — partial numerical recovery; parity still fails
+
+The selected object compiled at 256 threads, 86 VGPR / 46 SGPR, zero spills,
+zero private bytes, and 27,008 B dynamic LDS. On the exact P8192 request, the
+real layer-3 attention comparison improved to max abs `8.34614e-5`, RMS
+`1.38991e-6`, with 1,225 exact values of 3,145,728—back near iteration 26's
+error envelope and roughly 125× below iteration 28's RMS. Candidate/control
+TG128 outputs both generated 128 tokens and shared the long initial token
+prefix, but their final response/token sequence still differs near the tail.
+Thus the correction fixes the large split-order sensitivity and the early
+token-6 divergence, but does not pass exact model parity. Do not run the
+performance gate yet. Next compare exact P8192/TG128 parity on the iteration-26
+contiguous-split candidate to determine whether the remaining tail divergence
+is specific to the reference-aligned schedule or shared by the earlier reuse
+kernel. This comparison is diagnostic only; the iteration-26 object is the
+existing parent checkpoint, not a new optimization candidate.
+
+### Iteration 26/29 exact token-stream comparison (2026-09-29)
+
+Ran the exact saved no-reuse P8192/TG128 request with token-ID logging enabled
+against the legacy attention control, then separately against the dirty
+iteration-29 binary. All requests processed exactly 8,192 prompt tokens and
+returned 128 generated tokens. Control and iteration 26 first differ at the
+sixth generated token (`5686` control, `7701` iteration 26), confirming that
+this early parity failure predates iteration 28's aligned split traversal.
+Iteration 29 matches the control stream through the long initial sequence and
+only differs near the tail (`264` control vs `1928` candidate); this is a
+substantial correction, but still fails the exact-token-parity gate. The
+remaining late divergence is consistent with accumulated numerical drift but
+does not prove its cause. No candidate performance qualification was run.
+
+The diagnostic server runs measured 40.006 s internal prefill / 44.990 s client
+wall for control and 38.164 s / 43.161 s for iteration 29. These are single,
+sequential correctness runs without interleaving or hardware telemetry; do not
+interpret them as performance evidence. Iteration 26 completed in 43.056 s in
+the preceding diagnostic, also not a benchmark. Next isolate the earliest
+real-model tensor mismatch between the FP32 candidate and control at the
+late-divergence boundary; retain the candidate's resource and isolated-kernel
+evidence, but do not promote it until exact parity and the stated P8192
+performance gate both pass.
+
+### All-call real-input attention comparison (2026-09-29)
+
+Added opt-in `MIINFER_V2_0043_COMPARE_REAL_ALL=1` to run the legacy attention
+kernel on the candidate call's same Q/KV operands and compare outputs. A no-
+reuse P8192/TG1 request produced 240 comparison rows: 15 chunk bases
+(512..7680, step 512) across the model's 16 full-attention layers
+(3,7,..,63). The uninstrumented request behavior is not a timing result; the
+comparison synchronizes and executes a second attention kernel per row.
+
+The first altered attention call, layer 3/base 512, measured max absolute
+error `8.34614e-5` and RMS `1.38991e-6`, matching the earlier targeted
+comparison. On that same base-512 chunk, local candidate-vs-legacy RMS error
+then measured `3.08142e-6` (L7), `1.90697e-5` (L23), `4.54458e-5` (L27),
+`7.15453e-5` (L47), and `1.09026e-4` (L63). Across the full request the
+largest local RMS was `1.44908e-4` at L63/base 7680. This shows error is
+already present at the first candidate call and grows substantially in later
+candidate-generated activations; it does not by itself identify whether that
+growth is caused by attention arithmetic or propagated input-state drift,
+because both kernels consume the candidate run's same Q/KV operands at each
+comparison point. The request still returned first generated token `248068`.
+
+### First-chunk legacy substitution — no parity recovery (2026-09-29)
+
+Two no-reuse P8192/TG128 interventions replaced the candidate with the legacy
+split-K kernel while preserving the remaining candidate schedule. First,
+replacing only L3/base512 caused the first generated-token mismatch at token 5
+(`760` candidate-hybrid vs `2064` control) and EOS at token 119. Then replacing
+all 16 full-attention calls at base512 still diverged at token 5, but completed
+all 128 requested tokens. The force log confirms exactly 1 and 16 calls were
+substituted, respectively. The legacy scratch is sized for 64 splits, so the
+32-split control call fits; these are valid but deliberately mixed-path
+diagnostics, not performance results.
+
+Neither intervention restores parity; substituting a locally more accurate
+attention result is not monotonically closer end-to-end because later
+candidate chunks/layers still evolve from different floating-point states.
+The coherent base512 intervention changes the later sequence relative to the
+single-call intervention but leaves the same early first-token mismatch.
+Retain the full candidate as unqualified. Next measure where candidate and
+control logits become near-tied at the first differing token, then use the
+already-localized L3/base512 error only if logit-margin evidence supports a
+precision change. Do not run the performance gate until exact token parity is
+resolved.
+
+### Iteration 30 hypothesis — preserve Q precision with a two-half expansion
+
+The serving-path control kernel consumes Q as FP32 and applies attention scale
+after the QK dot. The reuse candidate instead converts each scaled Q element
+to one FP16 value before `v_dot2`. The all-call diagnostic measured up to
+`3.90625e-3` maximum Q-to-FP16 rounding error, while representing Q as a high
+and residual low FP16 value reconstructed within `9.53674e-7`. Test only
+staging scaled Q as two FP16 values and adding the two `v_dot2` contributions;
+hold the aligned 3-split schedule, KQ fragment, half KQ weights, FP32 output
+accumulator, V reuse, and reduction fixed. Expected LDS rises from 27,008 B to
+43,392 B, still below the 64-KiB MI50 workgroup limit but limiting theoretical
+residency to one CTA/CU.
+
+Gate compilation at 256 threads with zero spills/private bytes and LDS <=64
+KiB; then run the existing four-size finite/numerical test, P8192/TG1 all-call
+comparison, and exact P8192/TG128 token parity. Do not benchmark the candidate
+unless the numerical and token gates pass. If Q compensation fails to reduce
+the first-call or full-model error, reject this arithmetic hypothesis and
+continue from the measured layer/chunk error map rather than tuning tile sizes.
+
+This is an evidence-driven re-evaluation, not an untested Q-expansion idea:
+iterations 12 and 16 previously rejected the same two-`v_dot2` expansion as
+too slow (0.398x control/candidate in I16); I17's global residual load improved
+that only to 0.431x. I20's vector LDS access later reached 1.405x in isolated
+P8192, but active-model parity still diverged at token 36 with unchanged
+`5.07e-7` targeted RMS error. This candidate has a different strided schedule
+and FP32 output accumulator, and its new 240-call diagnostic directly measures
+large accumulated Q rounding at deeper layers. Therefore run only the declared
+correctness screen and first-call diagnostic; do not assume I20's isolated
+speed result transfers or proceed to performance unless exact parity passes.
+
+### Iteration 30 result — real-input screen (2026-09-29)
+
+After correcting the host launcher's LDS allocation to match the extra Q
+residual plane, the four-size synthetic correctness-only gate passed at P512,
+P2048, P4096, and P8192: maximum absolute error `3.83845e-6`, finite outputs.
+Code-object resources are 88 VGPR, 46 SGPR, zero spills/private bytes, and
+43,392 B dynamic LDS. The earlier run with a 27,008-B launch allocation
+produced `0.0255` error and is invalid; it did not run with sufficient LDS.
+
+The real P8192/TG1 request produced all 240 all-call rows (16 full-attention
+layers x 15 512-token chunks). Maximum local attention RMS difference from the
+legacy kernel, on the candidate's same operands, was `3.45512e-5`; the request
+returned the control's first token `248068`. The exact P8192/TG128 request
+completed 128 tokens, but still failed parity: its sixth token was `7701`,
+matching the already-recorded iteration-26 mismatch against control token
+`5686`. No performance result was collected. Thus the residual-Q arithmetic
+change passes synthetic tolerance but does not establish full-model parity;
+do not promote or time this candidate. Server stopped after the runs to release
+VRAM.
+
+### Iteration 31 diagnostic — greedy logit margin at first divergence
+
+The required P8192/TG128 stream still first diverges at generated token 6.
+Add an opt-in host-side top-1/top-2 logit report (`MIINFER_DUMP_LOGIT_MARGIN`)
+at the existing D2H sampling point; this adds no device work and is disabled by
+default. Run the exact same P8192 request for six greedy tokens on control and
+the active candidate, then compare the winning IDs and margins at generated
+token 6 (as well as earlier indices). Do not benchmark. If token-6 logits are
+near-tied, quantify whether attention-induced logit delta can explain the flip;
+if the margin is large, return to the state/dataflow mismatch rather than
+further adjusting Q representation.
+
+The logit report must be taken after sampler penalties. The first Iteration 31
+probe was mistakenly before these penalties; its raw margins are retained as
+raw values only and must not be used to explain greedy selection.
+
+Iteration 31 result: same saved 8,192-token request, greedy sampling, and
+six-token cap on control and candidate. Generated IDs matched through token 5
+(`248068, 271, 248069, 271, 2064`). At the first mismatch, control preferred
+5686 over 7701 by only `0.0376225` (22.1785 vs 22.1409), while candidate
+preferred 7701 over 5686 by `0.146294` (22.0469 vs 21.9006). Relative to
+control, candidate shifted 5686 by -0.2779 and 7701 by -0.0940, a 0.1839
+relative change sufficient to flip the near-tie. The token-5 winner also had a
+small control margin (0.1342) but remained the same despite candidate's
+0.2694 margin. This proves the early divergence is sensitive to small logit
+perturbations, not that attention is the sole source: logits include propagated
+state and all preceding layers. No timings were collected; the opt-in margin
+report is disabled by default, and the model server was stopped after capture.
+
+Correction: that margin report ran before the sampler's repetition/presence/
+frequency penalties. It records raw LM-head logits, not the values used by
+greedy argmax, so the numeric gap is not valid evidence for why a token was
+selected. The token-ID comparison remains valid. Move the opt-in report into
+`sample_token_from_logits` after penalties and rerun the exact boundary before
+using any margin values for attribution.
+
+### Iteration 32 result — restore Iteration 29 Q representation
+
+Restoring one FP16 Q term while retaining FP32 output accumulation produced
+the same first six greedy IDs as control, unlike Iteration 30. The rebuilt
+kernel used 86 VGPR / 46 SGPR, zero spills/private bytes, and 27,008 B LDS;
+P512/P2048/P4096/P8192 correctness-only checks were finite with max absolute
+error `3.83891e-6`. Exact P8192/TG128 control/candidate comparison generated
+128 tokens and first diverged at index 127 (`264` control, `1928` candidate).
+
+The corrected post-penalty report shows this is a narrow boundary: control's
+adjusted scores were `20.3483` for 264 and `20.3263` for 1928 (gap `0.0220`);
+candidate's were `20.3457` and `20.4446` (candidate selects 1928 by `0.09894`).
+Token 264 is essentially unchanged (`-0.0026`), while 1928 rises `0.1183` in
+the candidate. No timing was run. This confirms Iteration 30's extra residual
+term reintroduced an early mismatch; Iteration 29 arithmetic is preferable,
+but still fails exact parity at token 127.
+
+### Iteration 33 hypothesis — retain float KQ fragment weights
+
+At the actual first-divergence step, the selected control token's adjusted
+score is stable, while the candidate raises the competitor by `0.1183`. The
+candidate rounds each tile-local softmax weight to FP16 before the V phase;
+the legacy control consumes FP32 weights, and prior Iteration 19 showed that a
+float tile-local KQ fragment has synthetic max error `7.16e-9` and similar
+isolated speed to FP16 KQ (5.9% vs 5.6% over control), though below the 15%
+promotion threshold. Re-evaluate that specific precision variable in the
+current aligned-strided/FP32-output schedule: store and consume KQ weights as
+float, leaving Q representation, KQ lifetime, K/V staging, split traversal,
+output state, and combine unchanged. Expected LDS rises by 2,048 B to 29,056 B.
+Require zero spills/private bytes, finite four-size comparisons within the
+existing envelope, then P8192/TG1 real all-call error comparison and exact
+P8192/TG128 greedy parity with post-penalty margin logging. Do not run timing
+unless token parity passes. Reject this variable if the active-model attention
+error does not decrease materially or the sequence still flips before the
+long-tail boundary; do not compensate by adding another precision term.
+
+Iteration 33 result: FP32 KQ passed the four synthetic sizes at max absolute
+error `7.15954e-9` and compiled at 86 VGPR / 46 SGPR with zero spills/private
+bytes. On the exact same P8192/TG1 request and 240 comparison calls, its maximum
+local RMS error was `1.42899e-4` versus `1.44908e-4` for the matched half-KQ
+Iteration 32 baseline (about 1.4% reduction). At layer 3/base512 it improved
+from `1.38991e-6` to `1.25812e-6`; at layer 63/base7680 it changed from
+`1.44999e-5` in the previous residual-Q screen only, so that earlier value is
+not a matched comparison. In the matched base512 layer-63 call, error moved
+from `1.09026e-4` to `1.03251e-4`; the max-error reduction is too small to
+justify continuing this precision variant under the declared gate. Reject
+FP32 KQ; do not run TG128 or timing. Source is restored to half KQ.
+
+### Iteration 34 diagnostic — isolate the final query row
+
+Aggregate comparison over a 512-token chunk can obscure the final prompt row
+that feeds first-token logits. Extend the opt-in real-operand comparator to
+report max/RMS attention error for only token `token_count-1`, leaving kernel
+math unchanged. Run the current Iteration 32 half-KQ candidate at P8192/TG1
+with the 240-call comparison. Use the per-layer last-row profile to locate the
+earliest meaningful output error on the decode-critical prompt position; do
+not infer it from chunk-wide RMS and do not run performance timing.
+
+### Iteration 32 hypothesis — remove the residual-Q term
+
+Iteration 30 changed only Q representation relative to iteration 29 (single
+FP16 Q to high+residual FP16 Q), yet moved the first token mismatch from the
+late tail back to token 6. The candidate's P8192/TG128 IDs now differ at the
+same early boundary as the iteration-26/28 candidates. The pinned reference's
+FAST_FP16 path converts Q to one FP16 representation before QK; the residual
+term is therefore not reference-shaped either. Restore single-FP16 Q while
+keeping iteration 29's FP32 output accumulation and iteration 28's strided
+split/dataflow fixed. Gate on clean compile/resources, four-size finite/error
+checks, then exact P8192/TG128 IDs with margin logging. Do not time unless the
+complete token stream matches. This is a reversion of one directly implicated
+variable, not another precision sweep.
+
+Iteration 34 result: all 240 comparison rows were collected. For the actual
+last prompt token in the final chunk (base 7680, row 511), candidate-vs-legacy
+local RMS/max absolute errors by layer were: L3 `2.219e-6`/`4.040e-5`, L7
+`2.981e-6`/`5.216e-5`, L11 `5.698e-6`/`1.220e-4`, L19 `1.120e-5`/`2.318e-4`,
+L23 `1.691e-5`/`1.923e-4`, L27 `4.760e-5`/`1.123e-3`, L39
+`7.664e-5`/`3.614e-3`, L59 `1.258e-4`/`1.821e-3`, and L63
+`1.060e-4`/`1.736e-3`. The first conspicuous jump is L27, with the largest
+local RMS at L59. These remain same-candidate-operand shadow comparisons, not
+candidate-vs-control hidden-state differences.
+
+### Iteration 35 hypothesis — substitute legacy at first large last-row error
+
+The last-row profile first rises sharply at L27 on the final P8192 chunk. Add
+one opt-in diagnostic that computes the legacy result for exactly L27/base7680/
+count512 and substitutes that result for the candidate output before the
+attention projection. Run the exact P8192/TG128 request with token IDs and
+post-penalty logit margins. Compare the first-divergence index and token-127
+adjusted scores to the unmodified Iteration 32 run. This isolates the causal
+effect of one measured high-error call; it is not a candidate implementation
+and must never run in performance qualification. Remove/disable it after this
+intervention. Continue to no timing unless the unmodified candidate passes
+full token parity.
+
+Outcome: the opt-in substitution fired exactly once at L27/base7680/count512.
+The request still generated 128 tokens, but its first differing token was
+index 5 (control ID 2064, substituted-run ID 760), versus index 127 for the
+unmodified Iteration 32 candidate. Thus substituting the legacy local result
+does not restore parity; it moves divergence substantially earlier. The
+L27 same-operand local error is not a monotonic explanation of token parity,
+and token divergence alone is too sensitive to establish the root cause.
+No performance result was collected. The temporary substitution hook has
+been removed. The first attempt was invalidated by an already-running server
+holding VRAM; after stopping that exact process, the clean retry completed.
+
+### Iteration 36 hypothesis — match the pinned online-softmax max offset
+
+Pinned mx's tile kernel adds `FATTN_KQ_MAX_OFFSET = 3*0.6931f` to each
+finite KQ score when advancing the online maximum before materializing its
+FP16 KQ fragment. MIInfer currently stores `exp(score - actual_max)` instead
+of `exp(score - (actual_max + offset))`. The common scale is canceled by its
+partial sum/max reduction, so this changes only FP16 fragment rounding and
+the scale at which FP32 partial accumulators operate; geometry, traversal,
+precision types, and reduction are fixed. The hypothesis is that matching
+this explicit reference arithmetic reduces the measured local output error.
+Gate: compile at zero spills/private bytes; existing four-size finite/error
+test; P8192/TG1 all-call comparison; exact P8192/TG128 token parity. No timing
+unless all correctness gates pass. Reject this arithmetic alignment if the
+active-model attention error does not materially improve or exact parity
+still fails.
+
+Iteration 36 result: resources remained 86 VGPR / 46 SGPR with zero
+spills/private bytes. The four-size synthetic max absolute error increased
+from Iteration 32's `3.83891e-6` to `4.72856e-6` (finite at all sizes). The
+verified repeated-hello P8192/TG1 request returned token `248068`; P8192/TG128
+then stopped at natural EOS after 27 tokens. The candidate and legacy control
+both stopped at 27 tokens, but their generated response text differed, so
+exact greedy parity failed. The candidate response wording was
+`..."hello" a lot. How can I help you today? 😊`; control produced
+`..."hello" a lot. 😊 How can I help you today?`. The per-call comparison
+stream was too verbose to preserve a reliable aggregate from this run, so no
+claim of real-input error improvement is made. No performance timing was run.
+Reject the max-offset arithmetic variant and restore Iteration 32 source.
+
+### Iteration 37 hypothesis — couple the reference max offset to FP16 online state
+
+The pinned reference's `FAST_FP16` path uses both the `3*0.6931f` online-max
+offset and a `half2` persistent V accumulator. Iteration 28 tested the
+half-precision accumulator without that offset and diverged early; Iteration
+36 tested the offset with FP32 accumulation, increased synthetic max error,
+and failed greedy parity. These are a coupled numerical regime in the source,
+so test them together while keeping Iteration 32's `<16,2>` mapping, strided
+three-split traversal, FP16 Q/KQ fragment, LDS schedule, and combine fixed.
+The offset scales KQ fragments and running V state down together, then the
+FP32 output partial is converted from half2 at the split boundary. Gate:
+spill/private-free 256-thread compile; four-size finite/error check; matched
+P8192 real-operand all-call check; exact P8192/TG128 parity. No timing unless
+all correctness gates pass. Kill this coupled regime if the active model does
+not improve materially or the complete greedy stream still differs.
+
+Iteration 37 result: the kernel compiled at 256 threads with 95 VGPR, 47
+SGPR, zero spills, zero private bytes, and 27,008 B dynamic LDS. Synthetic
+P512/P2048/P4096/P8192 outputs were finite, but max absolute error was
+`1.9257e-5`, versus `3.83891e-6` for Iteration 32 and the prior
+`~7.2e-6` maximum in the coupled FP16 qualification envelope. Reject before
+real-input execution; no P8192/TG1, TG128, or timing run was made. Restore the
+FP32 online accumulator and unoffset max used by Iteration 32.
+
+### Iteration 38 hypothesis — statically unroll KQ fragments
+
+Test only `#pragma unroll` on MIInfer's 16-fragment KQ loop. Keep Iteration
+32's data types, arithmetic, row ownership, split traversal, memory layout,
+and V loop unchanged. This directly tests the ISA-observed difference from
+the pinned mx loop, which is explicitly unrolled and emits 512 rather than 32
+static `v_dot2_f32_f16` instructions. Bottleneck ceiling remains the measured
+12.86% attention-family share; no broader end-to-end conclusion is implied.
+Compile/resource gate: 256 threads, zero spills/private bytes, LDS ≤64 KiB;
+inspect code object for expanded KQ dot count and no scratch. Correctness gate:
+the four-size numerical test and exact P8192/TG128 greedy parity. Performance
+gate: narrow isolated P8192 A/B only if the exact token gate passes; require
+≥15% median improvement. Kill if unrolling spills, fails correctness, or
+cannot materially improve the isolated P8192 result. Since Iteration 32's
+control/candidate stream differs at token 127, no timing will be run unless
+the recompiled candidate passes parity.
+
+### Final real-input attribution and disposition (2026-09-29)
+
+The immutable production checkpoint remains `e68c0f2` (iteration 26). The
+following bounded attribution used the exact repeated-hello request
+(`"hello " * 8183`, 8,192 prompt tokens, temperature 0, max 128) and the
+full-layer-major production path. No attention timing was collected.
+
+The two allowed evidence-backed corrections were exhausted: (1) preserve Q in
+FP32 and (2) match the control's KQ reduction order. On the first tolerance-
+breaking row (layer 3, chunk base 512, local query token 1 / absolute position
+513, Q head 20, dimension 45), the FP32-Q candidate and control had exactly
+matching KQ scores across 514 keys (max error 0). Their combined online max
+was `8.30334` in both paths; sum was approximately `3.18567` with absolute
+error `2.38419e-7` (relative `7.4841e-8`). Reconstructed normalized FP32
+weights differed by at most `7.45058e-9` (RMS `5.90083e-10`).
+
+The candidate then stores tile-local weights in an FP16 KQ fragment, while the
+control applies FP32 online weights directly to V. Replaying the measured
+scores through the candidate's actual 3-split/tile-local max schedule and
+FP16 fragment rounding gave effective normalized-weight error versus control
+of max `2.46093e-5`, RMS `1.15916e-6`; without fragment rounding the max was
+`7.45058e-9`. The resulting gated V/output row differed by max `2.92063e-5`
+(RMS `1.92588e-6`), exceeding the existing `2.7563e-5` attention envelope.
+Across the compared layer-3 call, maximum error was `8.52346e-5` at local
+query token 153 / head 21 / dimension 86. Thus the first supported divergence
+is FP32→FP16 normalized KQ-fragment storage; V accumulation carries it into
+the first tolerance-breaking output. Q staging, KQ scores, and combined
+softmax state are not the first tolerance-breaking boundaries.
+
+The exact generated streams still fail parity: both emitted 27 tokens, but
+the first mismatch was generated index 18, candidate ID `2500` versus control
+ID `25677`. No performance test followed. Diagnostic full-request timings
+are invalid for performance comparison because the hook synchronously ran
+the reference attention path and copied probe state.
+
+**Decision: REJECT the stretch candidate; CLOSE V2-0043 PRIMARY GOAL PASS on
+iteration 26 (`e68c0f2`).** Restore the source tree's production code to that
+checkpoint. Preserve FP16 KQ-fragment numerical stability as future attention-
+frontier work; do not spend another correction under this goal or promote
+without exact real-model token parity and a material P8192 win.
