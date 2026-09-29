@@ -837,3 +837,17 @@ runs. The direct MIInfer CLI run measured 174.40 prompt tokens/s and 6.20
 decode tokens/s (161.227 ms/token). This establishes parity, not competitive
 latency; compare the exact P8192 request end-to-end against the saved pinned
 reference request before any promotion decision.
+
+### Iteration 22 — exact P8192 end-to-end recheck
+
+The saved P8192/TG1 greedy request was run three times on the current iteration
+22 candidate with `m25_hi_qualified`, context 16,384, and session reuse off.
+Every run processed 8,192 prompt tokens and generated ID `248068`. Candidate
+internal prefill times were 38,849.8 / 38,744.6 / 38,733.9 ms (median
+38,744.6 ms; range 115.9 ms). The saved pinned-mx no-cache samples were
+38,873.986 / 38,880.321 / 38,568.125 ms (median 38,873.986 ms; range
+312.196 ms). The candidate median is 129.4 ms (0.33%) lower, but the ranges
+overlap substantially and the pinned samples predate this rerun. Treat this as
+end-to-end parity within observed noise, not a material win. Together with the
+P8216/128-token exact greedy parity above, correctness now passes; competitive
+performance and attention-family attribution for iteration 22 remain open.
