@@ -318,6 +318,11 @@ void PrefillV2AttentionLayer::forward(
             ws.gate, ws.attn_gated_output, ws.splitk_attn_workspace,
             token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
             24, 4, 256, 1.0F / std::sqrt(256.0F), 3, stream);
+        const char* sync_first = std::getenv("MIINFER_V2_0043_SYNC_FIRST");
+        if (sync_first != nullptr && std::strcmp(sync_first, "0") != 0
+            && layer_index_ == 3 && base_position == 512 && token_count == 512) {
+            MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
+        }
         if (v2_0043_real_compare_enabled() && layer_index_ == 3) {
             std::cerr << "miinfer_v2_0043_candidate_call base_position=" << base_position
                       << " token_count=" << token_count << '\n';

@@ -498,3 +498,27 @@ as a candidate-path memory-safety blocker; its single-request 38.838 s sample
 is not eligible for performance promotion until resolved. That sample is
 nominally ~3.0% faster than the no-reuse control pair median (~40.03 s), but it
 is unpaired and cannot outweigh the repeatability/correctness failure.
+
+### Repeat-fault synchronization localization (2026-09-29)
+
+Fresh no-reuse P8192/TG1 two-request diagnostics show the candidate fault is
+synchronization-sensitive. The uninstrumented candidate repeat previously
+aborted with an HSA memory-aperture violation; the no-reuse control completed
+two requests. With either `AMD_SERIALIZE_KERNEL=3` alone or
+`AMD_SERIALIZE_COPY=3` alone, the candidate completed both same-process P8192
+requests. The existing real-output compare hook (which synchronizes after the
+layer-3/base-512 candidate/control comparison) also completed two requests.
+Finally, an opt-in `MIINFER_V2_0043_SYNC_FIRST=1` diagnostic that synchronizes
+only after the first candidate attention call at layer 3/base 512 completed two
+requests at 38.860 s and 38.884 s prefill. All of these serialized timings are
+diagnostic only; do not use them as candidate performance qualification.
+
+This materially narrows the failure to command-order/lifetime behavior around
+the candidate path rather than a deterministic P8192 address-bound error; the
+exact dependency is still unproven. The retained one-sync hook is opt-in and
+diagnostic, not a promotion workaround. The 27-GB AMD GPU core dump is an
+AMDGPU ELF core, but system GNU GDB cannot decode its device registers and no
+ROCgdb executable is installed. Next isolate which dependency the first-call
+barrier flushes before removing the sync hook or considering a permanent
+ordering fix. The candidate remains unqualified: FP16-Q token/numerical parity
+and an uninstrumented repeat-stable A/B are still required.
