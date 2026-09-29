@@ -485,3 +485,16 @@ Do not promote the candidate or claim it beats the pinned mx trace baseline.
 Next isolate whether the failure reproduces with the control attention path
 under the same server/request lifecycle, then continue same-state A/B only
 after repeat requests are stable.
+
+The first control-path isolation was not configuration-matched: that server
+had prefix/session reuse enabled, unlike the candidate server. Repeating the
+control test with `MIINFER_SESSION_REUSE=0` completed both same-process
+requests successfully at 40.049 s and 40.012 s prefill (40.069 s and 40.012 s
+client wall). The earlier control crash therefore does not establish a
+general repeated-prefill failure. The candidate was already logged with reuse
+disabled and still aborted on its same-process repeat, while the no-reuse
+control is stable. Treat the candidate's repeated-P8192 HSA aperture violation
+as a candidate-path memory-safety blocker; its single-request 38.838 s sample
+is not eligible for performance promotion until resolved. That sample is
+nominally ~3.0% faster than the no-reuse control pair median (~40.03 s), but it
+is unpaired and cannot outweigh the repeatability/correctness failure.
