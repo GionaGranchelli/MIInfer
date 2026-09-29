@@ -409,3 +409,79 @@ After removing the FP32-Q branch, the remaining FP16-Q candidate was rebuilt
 and rerun: synthetic max absolute error remained `7.15954e-9`; P8192 median
 control/candidate was 347.717/247.707 ms (1.404×). This reconfirms the isolated
 speed result, not real-model correctness or promotion.
+
+### Current-build oracle and P8216 check (2026-09-29)
+
+On the exact P8216 raw prompt (`"hello " × 8192` plus the recorded history-of-
+computing instruction), greedy, 128-token runs produced this token-parity
+matrix:
+
+| Pair | First differing generated token | Result |
+|---|---:|---|
+| FP16-Q candidate vs MIInfer control | 36 | mismatch |
+| MIInfer control vs pinned mx | 36 | mismatch |
+| FP16-Q candidate vs pinned mx | 61 | first 60 IDs match |
+| FP16-Q candidate vs pinned upstream | none | exact 128/128 IDs |
+
+The candidate's sequence was directly compared to the pinned upstream server's
+tokenized completion; the earlier candidate log matches all 128 upstream IDs.
+The cleaned `e19bb7a` build then reran the active M26 wide/full-layer route at
+P8216 with the same candidate sequence (128/128 IDs). Its layer-3/base-512
+same-input compare reproduced max abs `4.97699e-5`, RMS `5.07132e-7`, with
+20,173 exact outputs out of 3,145,728. Thus the cleanup did not alter the
+candidate's model behavior. This is an exact match to upstream, not a blanket
+correctness pass: the candidate still differs from pinned mx at token 61, and
+both references differ from MIInfer control at token 36.
+
+The unpaired end-to-end samples for that same prompt were candidate 51.450 s
+(43.525 s prefill + 7.915 s decode), pinned mx 44.631 s (39.345 + 5.286), and
+pinned upstream 51.118 s (45.137 + 5.981). The MIInfer sample includes the
+real-compare synchronization; the three runs were sequential, not thermally
+interleaved, and clocks/temperature were not captured together. Treat these as
+directional only: the candidate tracks upstream's output and total time, but
+has not demonstrated the required P8216 win over pinned mx. Do not start the
+full curve. Next, reconcile why the two reference builds diverge at token 61
+and inspect their pinned code-object/source differences before further
+arithmetic changes.
+
+An intermediate hand-assembled active-route smoke omitted part of the recorded
+M26 environment and crashed in `RecurrentLayer::prefill_wide` before reaching
+attention; its 14.2-GiB systemd core is preserved at
+`/var/lib/systemd/coredump/core.miinfer.1000.0da260cadc72442a8fdc8904728b1a57.3327013.1790639695000000.zst`.
+That run is not candidate evidence. The sourced complete vector and
+core-disabled rerun above reached the intended attention comparison.
+
+The pinned reference source/build audit narrowed the token mismatch: both
+builds are Release for gfx906 with the same HIP compiler path and `-O3`; the
+selected `flash_attn_tile` arithmetic body in `fattn-tile.cuh` is unchanged.
+The file-level differences are the newer upstream `use_sparse=false` launch
+argument. `fattn-common.cuh` differs in Mx's OOM-adaptive parallel-block
+fallback / override, which upstream removed, and in fully-masked-row handling;
+the latter is unreachable for this nonempty causal request, and the captured
+P8192 reference grid uses three splits. Sparse-mask handling is disabled here.
+These source differences do not explain why the two reference executables
+first diverge at token 61; candidate parity with upstream is strong evidence
+for the reconstructed tile, but pinned-mx parity remains an open correctness
+comparison rather than a reason to change Q precision speculatively.
+
+### Exact trace-shaped P8192/TG1 check (2026-09-29)
+
+The current `e19bb7a` candidate server was run with the complete recorded
+`m25_hi_qualified` environment, context 16384, and the exact saved P8192/TG1
+request body from `/tmp/mi50-p8192-trace-v2-miinfer.2PPvwn/request.json`.
+The first request completed with token ID 248068 and `prefill_ms=38837.7`
+(38.850 s wall). The earlier trace samples were MIInfer control 39.881 s,
+pinned mx 39.038 s, and pinned upstream 44.956 s. This single candidate sample
+is nominally 0.20 s faster than mx and 1.04 s faster than MIInfer control, but
+does not establish a win because it is unpaired and within plausible run
+variance.
+
+An immediate same-process repeat was attempted. The MIInfer process aborted
+with `HSA_STATUS_ERROR_MEMORY_APERTURE_VIOLATION` before returning a response;
+therefore no repeat timing exists and the first sample remains preliminary.
+This exposes a repeat-request/runtime stability issue (or an as-yet-unisolated
+candidate interaction) that must be resolved before interleaved qualification.
+Do not promote the candidate or claim it beats the pinned mx trace baseline.
+Next isolate whether the failure reproduces with the control attention path
+under the same server/request lifecycle, then continue same-state A/B only
+after repeat requests are stable.
