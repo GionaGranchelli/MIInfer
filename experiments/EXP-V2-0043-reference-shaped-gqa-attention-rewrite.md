@@ -420,29 +420,226 @@ matrix:
 |---|---:|---|
 | FP16-Q candidate vs MIInfer control | 36 | mismatch |
 | MIInfer control vs pinned mx | 36 | mismatch |
-| FP16-Q candidate vs pinned mx | 61 | first 60 IDs match |
+| MIInfer control vs pinned upstream | 36 | mismatch |
+| pinned mx vs pinned upstream | none | exact 128/128 IDs |
+| FP16-Q candidate vs pinned mx | none | exact 128/128 IDs |
 | FP16-Q candidate vs pinned upstream | none | exact 128/128 IDs |
 
-The candidate's sequence was directly compared to the pinned upstream server's
-tokenized completion; the earlier candidate log matches all 128 upstream IDs.
-The cleaned `e19bb7a` build then reran the active M26 wide/full-layer route at
-P8216 with the same candidate sequence (128/128 IDs). Its layer-3/base-512
-same-input compare reproduced max abs `4.97699e-5`, RMS `5.07132e-7`, with
-20,173 exact outputs out of 3,145,728. Thus the cleanup did not alter the
-candidate's model behavior. This is an exact match to upstream, not a blanket
-correctness pass: the candidate still differs from pinned mx at token 61, and
-both references differ from MIInfer control at token 36.
+The candidate and control sequences were compared with actual
+`completion_probabilities[].id` arrays from the pinned mx server (commit
+`6e4ef6c1`) and upstream server (build commit `73a43d1`), each run against the
+same raw P8216 prompt with context 16,384, `n_predict=128`, `temperature=0`,
+`top_k=1`, `top_p=1`, `repeat_penalty=1`, and `n_probs=1`. Both references
+reported 8,216 evaluated prompt tokens and generated 128 tokens. The candidate
+matches both references 128/128; the references match each other 128/128. The
+MIInfer control differs from both references at generated index 36 (control
+ID 781; reference/candidate ID 310). This resolves the prior apparent
+reference split: the candidate's exact model-level sequence is the one
+corroborated by both independent reference builds, while the control is the
+outlier for this prompt.
+
+The saved `/tmp/v2043-e19bb7a-upstream-parity.log` was mislabeled for this
+purpose: its banner shows the MIInfer runtime and its IDs exactly match the
+control, so it is not used as reference evidence. The direct same-input
+layer-3/base-512 candidate/control comparison remains
+`max_abs=4.97699e-5`, `rms=5.07132e-7`, with 20,173 exact outputs out of
+3,145,728. This numerical difference explains that local disagreement but is
+not being used to override the matching full-model result from both
+references. The reference runs' wall times were sequential and not
+interleaved; they establish token correctness only, not performance.
 
 The unpaired end-to-end samples for that same prompt were candidate 51.450 s
 (43.525 s prefill + 7.915 s decode), pinned mx 44.631 s (39.345 + 5.286), and
 pinned upstream 51.118 s (45.137 + 5.981). The MIInfer sample includes the
 real-compare synchronization; the three runs were sequential, not thermally
 interleaved, and clocks/temperature were not captured together. Treat these as
-directional only: the candidate tracks upstream's output and total time, but
-has not demonstrated the required P8216 win over pinned mx. Do not start the
-full curve. Next, reconcile why the two reference builds diverge at token 61
-and inspect their pinned code-object/source differences before further
-arithmetic changes.
+directional only: candidate output now matches both references exactly, but
+this candidate sample is slower than pinned mx and has not demonstrated the
+required end-to-end win. Do not start the full curve. Next, measure the exact
+P8192 competitive request repeatedly against pinned mx with debug comparison
+sync disabled; the isolated P8192 attention gain and now-confirmed P8216 token
+parity justify this narrow full-model gate.
+
+### Re-evaluation — exact reference token capture (2026-09-29)
+
+The ambiguous `upstream-parity.log` identity was resolved by rerunning the
+exact P8216 request through both reference servers' `/completion` endpoints
+with `n_probs=1` and comparing returned generated token IDs directly. Saved
+responses are `/tmp/v2043-p8216-upstream-completion.json` and
+`/tmp/v2043-p8216-mx-completion.json`. Both returned
+`tokens_evaluated=8216`, `tokens_predicted=128`; their token IDs match each
+other and the cleaned FP16-Q candidate 128/128. The saved MIInfer control IDs
+still first differ at index 36. The earlier standalone CLI text-retokenization
+attempt is superseded by these direct sampler-ID arrays and is not used as a
+correctness result.
+
+### P8192 exact-request end-to-end A/B (2026-09-29)
+
+The material isolated P8192 gain (1.404x median) and exact P8216 match to both
+reference engines justify the narrow full-request gate. MIInfer used the
+saved request `/tmp/mi50-p8192-trace-v2-miinfer.2PPvwn/request.json`,
+`m25_hi_qualified`, context 16,384, candidate enabled, session reuse disabled,
+and the clean no-compare-sync route. The reference was the trace-matched
+`mx-llama.cpp` server build `2e9d29f`, with prompt caching disabled and one
+slot; it received the exact formatted 8,192-token prompt from the saved mx
+trace response. All requests used greedy one-token generation. The first
+candidate request generated ID `248068`; direct token capture on the mx raw
+prompt also returned `248068`.
+
+| Runtime | Client wall (s) | Internal prefill (s) | Prompt tokens | Reuse |
+|---|---|---|---:|---|
+| MIInfer candidate | 38.8600, 38.8474, 38.8535 | 38.8506, 38.8383, 38.8448 | 8,192 each | 0 session/prefix tokens |
+| mx `2e9d29f` | 38.8925, 38.8992, 38.5879 | 38.8740, 38.8803, 38.5681 | 8,192 each | `cache_n=0` each |
+
+Client-wall medians are 38.8535 s MIInfer and 38.8925 s mx, a nominal 39 ms
+(0.10%) MIInfer advantage. That delta is far below the mx sample range
+(311 ms); classify this result as **end-to-end parity within observed noise**,
+not a performance win. SCLK/HBM were observed at 1606/1000 MHz; candidate
+junction temperature peaked at 53 C. Per-sample mx temperature/power telemetry
+was not retained, further limiting a sub-1% claim. A diagnostic rerun with
+prompt caching enabled reused 8,188 tokens and completed in 0.23 s; that
+sample is explicitly excluded. An earlier 6e4ef6c mx-build/chat-template run
+at 55.97 s also used the wrong comparison binary/request path and is excluded.
+
+This clears only the narrow P8192 no-regression check provisionally. It does
+not promote the candidate: the full request has no demonstrated material
+advantage, and the remaining long-context context-regression and refreshed
+attention-family trace gates still need evidence. Continue with those
+qualification checks; do not change query arithmetic based on this wall-time
+tie.
+
+### Re-evaluation — candidate route and shorter-context serving checks (2026-09-29)
+
+The saved `/tmp/mi50-p8192-trace-v2-miinfer.2PPvwn/2746420_hcc_ops_trace.txt`
+was captured Sep 28, before the candidate implementation commit
+`7082b2b`, and contains only the old tiled/split-K control kernels. It is a
+control trace and is not evidence of candidate P8192 kernel attribution. The
+prior exact-request, no-compare P8192 timing remains a candidate-enabled
+serving sample, but the source trace did not prove candidate dispatch.
+
+Reran the exact saved 8,192-token request with
+`MIINFER_V2_0043_GQA_ATTENTION=1` and diagnostic
+`MIINFER_V2_0043_COMPARE_REAL=1`. Live logs confirm 15 candidate suffix calls
+at base positions 512 through 7,680 in steps of 512, each with `token_count=512`.
+The first real layer-3/base-512 candidate/control compare reported Q max abs
+`11.6942`, candidate attention max abs `8.38935e-5`, RMS `1.25813e-6`, and
+2,020 exact outputs of 3,145,728. The request completed 8,192 prompt tokens
+and one generated token. Internal prefill was `38.9308 s`; exclude this
+instrumented run from performance timing because the comparator synchronizes
+and runs the control attention a second time. The older no-compare median
+remains the only performance evidence. Candidate route coverage is now
+proven; a fresh candidate attention-family trace follows.
+
+The opt-in route correction was applied to both
+`PrefillV2AttentionLayer::forward()` and `forward_profiled()`: all candidate
+eligibility conditions (suffix position, no state object for the ordinary
+path, FP16 KV, complete 16-token tile, and workspace) are now dispatch guards;
+ineligible shapes retain their prior kernel. The target rebuilt and
+`graphify update .` completed.
+
+One-request-per-case serving samples used the same repeated-`hello` prompt
+construction, greedy one-token generation, context capacity 16,384, and no
+session/prefix reuse. Candidate was run before control on each context:
+
+| Prompt tokens | Candidate prefill ms | Control prefill ms | Candidate/control | Observation |
+|---:|---:|---:|---:|---|
+| 2,048 | 8,962.85 | 9,061.93 | 0.989× | No apparent regression; one sequential pair only. |
+| 4,096 | 18,380.3 | 18,719.1 | 0.982× | No apparent regression; one sequential pair only. |
+
+Both returned HTTP 200, one completion token, and `finish_reason=stop`; token
+IDs were not captured in these samples. With
+`MIINFER_V2_0043_COMPARE_REAL=1`, the 2,048-token route logged candidate calls
+at base positions 512, 1,024, and 1,536; the base-512 compare gave max abs
+`2.01896e-4`, RMS `1.28693e-6`, max relative `6.3451`, and 11,288 exact
+outputs of 3,145,728. This is real-input evidence and must not be conflated
+with the `7.16e-9` synthetic/isolation result. The relative-error maximum is
+near-zero sensitive; the RMS and token-level impact remain the useful checks.
+These single, non-interleaved A/Bs are preliminary only; repeat them with
+interleaving and captured hardware telemetry before claiming qualification.
+
+The earlier 521-token request exercised a 512-token prefix plus a 9-token
+tail, so the candidate correctly did not run there. Its HTTP 200 verifies the
+fallback fix, not P512 candidate performance. P512 remains control-route
+coverage only; the P512 isolated attention gate had already passed.
+
+### Re-evaluation — fresh candidate request-window trace (2026-09-29)
+
+The exact saved 8,192-token request was captured with ROCTracer and the
+candidate enabled. Raw HCC operations are in
+`/tmp/v2043-p8192-candidate-trace-hip-20260929/3594339_hcc_ops_trace.txt`;
+the server log reports 8,192 prompt tokens, zero prefix/session reuse, one
+generated token, and 38.9549 s internal prefill. Tracing perturbs wall time,
+so use only the per-kernel activity durations below for attribution, not as an
+end-to-end A/B sample.
+
+| P8192 MIInfer kernel family | Control calls | Control time (ms) | Candidate calls | Candidate time (ms) |
+|---|---:|---:|---:|---:|
+| Suffix stage 1 / KQ-V | 240 `qwen35_splitk_suffix_attn_stage1_quant` | 5,034.363 | 240 `qwen35_kq_fragment_reuse_attention_batch_f16` | 4,110.671 |
+| Split-K combine | 240 | 22.057 | 240 | 22.158 |
+| Prefix tiled online attention | 16 | 42.860 | 16 | 42.805 |
+| Attention-family total | 496 | 5,099.280 | 496 | 4,175.634 |
+
+For the same trace sets, pinned mx commit `2e9d29f` recorded 304
+`flash_attn_tile` calls totaling 1,743.247 ms and 304 combines totaling
+42.444 ms (1,785.691 ms total). Upstream commit `73a43d1` recorded 304 main
+calls / 1,743.682 ms and 304 combines / 42.453 ms (1,786.135 ms total); its
+recapture includes the model's BOS, so it is one evaluated token longer than
+the exact 8,192-token MIInfer/mx request. Thus candidate attention-family work
+is still 2.34× pinned mx, a 2.390 s residual attention gap. The candidate
+reduces MIInfer's prior attention-family time by 18.11%, but has not closed
+the competitor gap; the reuse principle is present, while the machine-level
+schedule still needs improvement.
+
+Candidate suffix KQ/V work is 18.35% faster in the trace; the attention-family
+total is lower by 923.646 ms (18.11%). Launch count remains 496: each candidate
+main kernel replaces the old stage-1 kernel, while the separate combine is
+preserved. The 240 candidate calls equal 15 suffix chunks × 16 GQA layers;
+the 16 prefix calls remain on the control tiled-online kernel. Thus the
+reference-shaped rewrite is demonstrably active in the exact P8192 request,
+and the attention-work reduction is now directly measured rather than
+extrapolated from an isolated benchmark. The reference trace still has a
+larger attention-family advantage than MIInfer, so the end-to-end competitive
+gate remains parity-within-noise rather than a robust win.
+
+### Re-evaluation — repeated P2048/P4096 serving A/B (2026-09-29)
+
+Each case uses the same greedy one-token repeated-`hello` prompt, context
+capacity 16,384, and disabled session/prefix reuse. Three samples per mode
+were collected in fresh candidate/control server processes; within each
+mode, P2048/P4096 requests were alternated. Candidate always preceded
+control, so this is repeated but not thermally interleaved, and no per-request
+clock/temperature telemetry was captured. Treat as a no-regression check, not
+a speed claim.
+
+| Prompt tokens | Candidate samples (ms) | Candidate median/range (ms) | Control samples (ms) | Control median/range (ms) | Median delta |
+|---:|---|---:|---|---:|---:|
+| 2,048 | 8,962.85 / 8,968.78 / 8,969.46 | 8,968.78 / 6.61 | 9,061.93 / 9,068.04 / 9,069.72 | 9,068.04 / 7.79 | −99.26 ms (−1.09%) |
+| 4,096 | 18,380.3 / 18,392.1 / 18,418.2 | 18,392.1 / 37.9 | 18,719.1 / 18,741.5 / 18,778.7 | 18,741.5 / 59.6 | −349.4 ms (−1.86%) |
+
+All requests returned HTTP 200 with one generated token and
+`finish_reason=stop`; token IDs were not captured. The candidate distributions
+do not overlap the control distributions, but the fixed candidate-then-control
+order and absent telemetry prevent a qualified improvement claim. They show
+no unacceptable P2048/P4096 regression in this run. P512 remains an
+ineligible-tail fallback, so the selector guard leaves its established route
+unchanged rather than routing a sub-16-token tail through the candidate.
+
+### P512 selector-route correction (2026-09-29)
+
+The first P512 chat request returned HTTP 500 before GPU work because
+`PrefillV2AttentionLayer::forward()` applied the opt-in kernel to a call with
+live `DevicePrefillState`. The initial fix restricted dispatch to stateless
+calls, but retry exposed another valid unsupported shape (KV/workspace or
+tile eligibility) still throwing. Dispatch now enters the candidate only when
+all conditions are met: suffix position, no prefill state, FP16 KV, at least
+16 tokens in a full 16-token tile, and Split-K workspace. Otherwise the
+established attention route runs unchanged. The `miinfer` target rebuilt and
+`graphify update .` completed. A repeat one-token greedy chat request returned
+HTTP 200 and completed 521 prompt tokens at 2,738.9 ms prefill; this confirms
+the request no longer errors, but it is not an A/B timing and the request
+followed fallback rather than proving candidate coverage. The original
+500s, the transient orphan-process OOM during a subsequent launch, and this
+successful fallback request do not count as candidate P512 qualification.
 
 An intermediate hand-assembled active-route smoke omitted part of the recorded
 M26 environment and crashed in `RecurrentLayer::prefill_wide` before reaching

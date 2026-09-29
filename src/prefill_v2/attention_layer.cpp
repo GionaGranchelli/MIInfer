@@ -305,14 +305,10 @@ void PrefillV2AttentionLayer::forward(
         stream, prefill_state);
 
     // 5. Tiled Online Causal Attention with Sigmoid Gating.
-    if (v2_0043_gqa_attention_enabled() && base_position > 0) {
-        if (kv_cache.is_k_q8() || kv_cache.is_v_q8() || prefill_state != nullptr
-            || token_count < 16 || token_count % 16 != 0
-            || ws.splitk_attn_workspace == nullptr) {
-            throw std::runtime_error(
-                "MIINFER_V2_0043_GQA_ATTENTION requires FP16 KV, full 16-token tiles, "
-                "no prefill state, and Split-K workspace");
-        }
+    if (v2_0043_gqa_attention_enabled() && base_position > 0 && prefill_state == nullptr
+        && !kv_cache.is_k_q8() && !kv_cache.is_v_q8()
+        && token_count >= 16 && token_count % 16 == 0
+        && ws.splitk_attn_workspace != nullptr) {
         launch_qwen35_kq_fragment_reuse_attention_batch_f16(
             ws.attn_q_rope, kv_cache.key_cache, kv_cache.value_cache,
             ws.gate, ws.attn_gated_output, ws.splitk_attn_workspace,
@@ -460,13 +456,10 @@ void PrefillV2AttentionLayer::forward_profiled(
     MIINFER_HIP_CHECK(hipEventRecord(ev_rope, stream));
 
     // 5. Causal Attention (Split-K specialized for suffix prefill)
-    if (v2_0043_gqa_attention_enabled() && base_position > 0) {
-        if (kv_cache.is_k_q8() || kv_cache.is_v_q8() || token_count < 16
-            || token_count % 16 != 0 || ws.splitk_attn_workspace == nullptr) {
-            throw std::runtime_error(
-                "MIINFER_V2_0043_GQA_ATTENTION requires FP16 KV, full 16-token tiles, "
-                "and Split-K workspace");
-        }
+    if (v2_0043_gqa_attention_enabled() && base_position > 0
+        && !kv_cache.is_k_q8() && !kv_cache.is_v_q8()
+        && token_count >= 16 && token_count % 16 == 0
+        && ws.splitk_attn_workspace != nullptr) {
         launch_qwen35_kq_fragment_reuse_attention_batch_f16(
             ws.attn_q_rope, kv_cache.key_cache, kv_cache.value_cache,
             ws.gate, ws.attn_gated_output, ws.splitk_attn_workspace,
