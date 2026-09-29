@@ -10,7 +10,19 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M26-CQ — Decode Semantic Equivalence (closed)**
+**Current phase: M28 — Single-MI50 prefill (qualified); V2-0043 closed PASS**
+
+The current accepted production checkpoint is iteration 26, commit
+`e68c0f20`. V2-0043's two permitted real-model parity corrections did not
+restore token parity; its remaining FP16 KQ-fragment precision limitation is
+recorded as future attention-frontier work. After this closeout is merged and
+post-merge checks pass, the next scoped investigation is V2-0044: measure and
+prototype the proven tiled KV-reuse principle for the remaining P8192
+attention-path gap. Do not mix decode, MMQ, power tuning, or unrelated prefill
+work into that frontier. See [`post-m28-baseline.md`](post-m28-baseline.md).
+
+The historical M26/M27 notes below are retained as experiment history and do
+not override this current status.
 
 M26-B historical decode-floor contract recovery is closed as non-comparable in
 [`EXP-0352`](../experiments/EXP-0352-m26b-historical-decode-floor-differential.md).

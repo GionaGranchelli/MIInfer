@@ -1,5 +1,21 @@
 # MIInfer Current State
 
+## Current checkpoint — M28 / V2-0043 (2026-09-29)
+
+M28 single-MI50 prefill is the accepted production path. V2-0043 is closed
+**PRIMARY GOAL PASS** at immutable iteration 26, `e68c0f20`; the FP16
+real-model parity stretch is rejected and remains future work. A fresh release
+build passed, all 11 host tests passed, and nine GPU tests passed; five model
+integration tests skipped because no model path was supplied. A clean-build
+short generation passed, and the exact saved P8192 smoke processed 8,192
+prompt tokens and one completion token in 38.141 s. The smoke is not a new
+performance qualification. Detailed evidence and limitations are in
+[`post-m28-baseline.md`](post-m28-baseline.md).
+
+After the closeout commit is merged and post-merge checks pass, create the
+V2-0044 attention-frontier branch from that checkpoint. Preserve `e68c0f20`;
+do not reopen the rejected V2-0043 numerical variants.
+
 ## Current experiment status — V2-0008 (Dedicated Single-Token Decode Execution & Reusable HIP Graph Replay)
 
 V1 prefill optimization campaign (EXP-0364 through EXP-0395, B128, B64, B4, and residual scheduling) is **CLOSED**.
