@@ -12,11 +12,12 @@ prompt tokens and one completion token in 38.141 s. The smoke is not a new
 performance qualification. Detailed evidence and limitations are in
 [`post-m28-baseline.md`](post-m28-baseline.md).
 
-After the closeout commit is merged and post-merge checks pass, create the
-V2-0044 attention-frontier branch from that checkpoint. Preserve `e68c0f20`;
-do not reopen the rejected V2-0043 numerical variants.
+The post-merge canonical commit is `e0649c589790f0267a8f1f45b5332532a95ae13a`.
+The fresh `rewrite/v2-0044-attention-frontier` branch is based on and pushed at
+that exact commit. Preserve `e68c0f20`; do not reopen the rejected V2-0043
+numerical variants.
 
-## Current experiment status — V2-0008 (Dedicated Single-Token Decode Execution & Reusable HIP Graph Replay)
+## Historical milestone record — V2-0008 (Dedicated Single-Token Decode Execution & Reusable HIP Graph Replay)
 
 V1 prefill optimization campaign (EXP-0364 through EXP-0395, B128, B64, B4, and residual scheduling) is **CLOSED**.
 M28 prefill is **Prefill V2**: a clean-sheet single-MI50 (gfx906, Wave64) prefill architecture specialized for Qwen3.8-27B-Q4_K_M.
@@ -35,56 +36,20 @@ V2-0008 specialized the single-token autoregressive decode execution path in `Pr
 Status: **V2_DEDICATED_DECODE_AND_GRAPH_REPLAY_QUALIFIED**.
 See [V2-0008](../experiments/EXP-V2-0008-specialized-decode-and-graph-replay.md) and [docs/prefill-v2-architecture.md](prefill-v2-architecture.md).
 
-## Performance research frontier
+## Current performance research frontier
 
 The mandatory process for new performance work is
 [`performance-research-protocol.md`](performance-research-protocol.md).
-There is exactly one active performance frontier: identify the minimal MIInfer
-runtime boundary responsible for P512 run-to-run variance before any B128 or
-residual work; EXP-0390 localized the variance to the GPU timeline and
-terminal completion wait, with stable host submission. EXP-0391 found that the
-first recurrent-versus-attention event split perturbs the host interval, and
-EXP-0392 did not reproduce the slow state across 6×6 repeated P512 runs. The
-next PRIMARY is clean aligned-baseline requalification; direct
-B64-wide and B4 work are not authorized. The full-model
-Qwen3.8-27B-Q4_K_M prefill bottleneck attribution on one MI50/gfx906 was
-refreshed before
-choosing the next optimization. EXP-0364 completed that first pass as
-measurement-only `LEARN`, and EXP-0365 confirmed the ~P2K–P8K discrepancy is a
-partial-tail route defect: non-empty remainders fall from the B512
-full-layer-major path into per-token layer execution. The next frontier is
-causal/prefix qualification for the full-attention layer-3 partial K/V contract
-at P640 and one later base position. EXP-0366's opt-in `384 + 64 + 62`
-contract was rejected, and EXP-0367/0368 localized the first observable
-difference while adding a reusable state-level oracle; the `0.00195312` delta
-is within the larger qualified-B512-vs-scalar numerical envelope. EXP-0369
-corrected the P1664 state-index mapping: it diverges at the actual partial-tail
-boundary (position 1536), where the selector changes the route. EXP-0370
-EXP-0370 localized the first L7 K/V divergence before cache storage, and
-EXP-0371 localized the first unique difference to L7 input hidden before
-attention normalization. EXP-0372 found that L6 input already differs, with
-earlier L5/L6 recurrent state/history differences. The L6→L7 handoff is not
-the origin; the next evidence target is L5→L6 only after refreshed full-model
-attribution. EXP-0373 refreshed P640/P1664 full-model semantics and found
-identical 16-token continuations with smooth recurrent drift; the aligned B128
-route is now qualified and recovers 77.89%/60.20% of P640/P1664 prefill wall.
-The next target is arbitrary-remainder scheduling, not more layer forensics.
-EXP-0374 implemented that scheduler behind `MIINFER_EXP0374_REMAINDER_SCHED=1`.
-Its exact P768 semantics passed with `1×B512 + 2×B128`, zero scalar work,
-byte-identical final hidden, and identical 16-token continuation. Source review
-then found that its B128 count failed the full-layer-major dispatch gate, so its
-repeated-B128 performance and P1022 residual attribution were not qualified.
-EXP-0375 corrects the explicit B512/B128 contract and proves the authored B128
-routes at P640/P768/P896/P1022. Corrected timing shows repeated B128 costs about
-13–15 seconds per chunk, so repeated-B128 state/runtime attribution is now the
-PRIMARY; P640/P768 final-hidden, logits, top-10, continuation, finiteness, and
-source-prefix checks pass. No sub-128 residual work is authorized.
-EXP-0360 through EXP-0363 rejected the tested
-attention families; they did not authorize an optimization candidate or imply
-that attention is still the dominant end-to-end gap. The current qualified decode path is
-preserved, while 128K context architecture, Tail-Replay/agent runtime,
-production server optimization, UI/installer, multi-GPU, and other non-critical
-features remain deferred.
+There is exactly one active `PRIMARY`: V2-0044, reducing the P8192 GQA
+attention-kernel efficiency gap against pinned mx while preserving the merged
+M28 control and real-model token trajectory. The approximately 1.91× main
+attention ratio, request-window launch totals, source paths, and known resource
+limits are recorded in
+[`EXP-V2-0043`](../experiments/EXP-V2-0043-reference-shaped-gqa-attention-rewrite.md).
+The first real-input divergence in rejected V2-0043 stretch variants was
+FP16 KQ-fragment rounding carried into V accumulation; the variants remain
+rejected. No new candidate has been implemented on V2-0044 yet. All M26/M27
+frontier narratives below are historical; they do not supersede V2-0044.
 
 This document describes the **current implementation state** of MIInfer.
 
@@ -102,9 +67,9 @@ For the measured leaderboard and current stretch boundary, see
 
 ---
 
-# Current Phase
+# Historical Phase Snapshot (M27; superseded by the current checkpoint above)
 
-**M27 — static unified decode engine**
+**M27 — static unified decode engine (historical)**
 
 Milestone status:
 

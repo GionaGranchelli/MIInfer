@@ -10,16 +10,20 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M28 — Single-MI50 prefill (qualified); V2-0043 closed PASS**
+**Current phase: M28 qualified; V2-0043 closed PASS; V2-0044 PRIMARY**
 
 The current accepted production checkpoint is iteration 26, commit
-`e68c0f20`. V2-0043's two permitted real-model parity corrections did not
+`e68c0f20`, in canonical merge `e0649c589790f0267a8f1f45b5332532a95ae13a`.
+V2-0043's two permitted real-model parity corrections did not
 restore token parity; its remaining FP16 KQ-fragment precision limitation is
 recorded as future attention-frontier work. After this closeout is merged and
 post-merge checks pass, the next scoped investigation is V2-0044: measure and
 prototype the proven tiled KV-reuse principle for the remaining P8192
-attention-path gap. Do not mix decode, MMQ, power tuning, or unrelated prefill
-work into that frontier. See [`post-m28-baseline.md`](post-m28-baseline.md).
+attention-path gap. The pushed branch
+`rewrite/v2-0044-attention-frontier` starts from that exact merge. Do not mix
+decode, MMQ, power tuning, or unrelated prefill work into this frontier. See
+[`post-m28-baseline.md`](post-m28-baseline.md) and
+[`performance-research-protocol.md`](performance-research-protocol.md).
 
 The historical M26/M27 notes below are retained as experiment history and do
 not override this current status.

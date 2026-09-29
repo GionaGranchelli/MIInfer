@@ -2,7 +2,8 @@
 
 Date: 2026-09-29  
 Production checkpoint: `e68c0f20b0eceb20cfe8fede9125b7feef029e6b` (iteration 26)  
-Closeout/evidence commit: `665f996b372178cd63cc83037a8e0ade63df10e4`
+Closeout/evidence commit: `aa4a59c0e94281adc8cdf9312c802cdea76c1ea0`  
+Canonical merge commit: `e0649c589790f0267a8f1f45b5332532a95ae13a`
 
 ## Decision
 
@@ -39,11 +40,29 @@ client wall / 38.132 s internal prefill. A separate short request generated
 six tokens successfully. This is a single smoke, not a repeated performance
 qualification.
 
+The promoted short-context no-regression screen was one matched serving pair,
+not a repeated timing qualification:
+
+| Prompt tokens | MIInfer iteration 26 | Control | Result |
+| ---: | ---: | ---: | --- |
+| 520 | 2.750 s | 2.750 s | neutral |
+| 2,055 | 9.434 s | 9.580 s | candidate 1.5% faster |
+| 4,100 | 18.774 s | 18.770 s | effectively neutral |
+
+These approximate P512/P2048/P4096 serving points confirm no material short-
+context regression; they are not a repeated small-delta claim. See the
+iteration-26 section of EXP-V2-0043 for prompt counts and internal timings.
+
 The narrow decode A/B in [`EXP-V2-0042`](../experiments/EXP-V2-0042-p8192-trace-and-sampling-regression.md)
 also does not support a ~20 ms/token loss: MIInfer (`3f412d9b`) measured
 34.032 ms/token at P64 and 35.953 at P2048, versus pinned mx at 39.571 and
 40.192. Generated text differed across engines, so this is timing evidence,
 not a token-equivalence claim.
+
+| Prompt / generation | MIInfer | pinned mx | upstream |
+| --- | ---: | ---: | ---: |
+| P64 / TG128, ms/token | 34.032 | 39.571 | 44.451 |
+| P2048 / TG128, ms/token | 35.953 | 40.192 | 45.102 |
 
 ## Build and correctness checks
 
@@ -57,11 +76,15 @@ not a token-equivalence claim.
   above.
 - After stopping the test server, `/dev/kfd` had no MIInfer owner and GPU use
   returned to 0%; clocks were 1606/1000 MHz and junction temperature 39 C.
+- Post-merge canonical build and tests passed on `e0649c589790f0267a8f1f45b5332532a95ae13a`.
+- Existing tags are `v0.1.0` and `v0.2.0`, both software releases; there is no
+  engineering-baseline tag convention to extend. The canonical merge SHA and
+  this record are the named checkpoint; no conflicting tag was invented.
 
 ## Next frontier
 
-Only after this closeout is merged and post-merge checks pass, create the
-V2-0044 attention-frontier branch from the merged checkpoint. First revalidate
-the measured P8192 gap and inspect the exact pinned mx/upstream execution
-contracts. Keep iteration 26 immutable; do not reopen the rejected parity
-variants or touch decode, MMQ, power tuning, or unrelated prefill paths.
+The pushed `rewrite/v2-0044-attention-frontier` branch starts at the canonical
+merge commit above. Revalidate the measured P8192 gap and inspect the exact
+pinned mx/upstream execution contracts before implementing a candidate. Keep
+iteration 26 immutable; do not reopen rejected parity variants or touch decode,
+MMQ, power tuning, or unrelated prefill paths.
