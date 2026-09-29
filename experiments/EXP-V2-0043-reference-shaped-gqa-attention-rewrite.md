@@ -851,3 +851,63 @@ overlap substantially and the pinned samples predate this rerun. Treat this as
 end-to-end parity within observed noise, not a material win. Together with the
 P8216/128-token exact greedy parity above, correctness now passes; competitive
 performance and attention-family attribution for iteration 22 remain open.
+
+### Re-evaluation — fresh iteration 22 trace and ISA audit (2026-09-29)
+
+Captured one exact saved P8192/TG1 request on iteration 22 with the host
+ROCtracer plugin, `m25_hi_qualified`, and session reuse disabled. It evaluated
+8,192 prompt tokens and returned token ID `248068`. HCC operations are at
+`/tmp/v2043-iter22-current-candidate-trace/3680137_hcc_ops_trace.txt`; HIP API
+calls are at the adjacent `3680137_hip_api_trace.txt`. The trace contains
+exactly 240 reference-shaped suffix calls, 240 split combines, and 16 prefix
+online-attention calls, covering the request window.
+
+| Iteration 22 family | Calls | HCC time |
+|---|---:|---:|
+| Candidate suffix KQ/V | 240 | 3,989.611 ms |
+| Split combine | 240 | 21.927 ms |
+| Prefix tiled online attention | 16 | 42.794 ms |
+| Attention-family total | 496 | 4,054.332 ms |
+
+The same pinned-mx trace records 304 `flash_attn_tile` calls / 1,743.247 ms
+and 304 combines / 42.444 ms (1,785.691 ms total); upstream records
+1,743.682 ms main / 42.453 ms combine (1,786.135 ms total). Iteration 22 is
+2.270x the pinned-mx attention-family time; the main suffix kernel is 2.289x
+the reference main-kernel time. Compared with the earlier candidate trace,
+iteration 22 reduced main time by 2.95% but leaves a 2.269 s attention-family
+gap. Its traced request prefill was 38.757 s; the attention gap therefore has
+a 5.86% wall-time upper bound, large enough to remain material to the
+competitive/closure target.
+
+The extracted iteration-22 gfx906 candidate object reports 256 threads, 70
+VGPR, 46 SGPR, zero spills/private bytes, and 27,008 B LDS. The selected pinned
+mx object is 256 threads, 97 VGPR, 46 SGPR, zero spills/private bytes, and
+27,136 B LDS. Static disassembly counts include 32 `v_dot2_f32_f16` sites in
+the MIInfer KQ loop versus 512 in the pinned specialization. Source inspection
+explains the code-shape difference: mx compile-time-unrolls its 16-element KQ
+fragment loop; MIInfer's equivalent `fragment < 16` loop has no unroll
+directive. The two loops do the same per-fragment dot work, but MIInfer carries
+it through a compact loop body. This is direct compiler evidence for testing
+KQ-loop scheduling, not proof that unrolling improves runtime. Both paths
+remain LDS-limited to at most two resident CTAs/CU by resource arithmetic;
+achieved occupancy was not measured. The candidate has 10 static barrier sites
+versus 9 in mx and 99 static `s_waitcnt` sites versus 232; do not interpret
+static counts as dynamic executions.
+
+### Iteration 23 hypothesis — unroll only the KQ fragment loop
+
+Change only the candidate's 16-iteration KQ `fragment` loop to compile-time
+unrolled code, matching the pinned source's unroll policy. Keep geometry, KV
+tile size, split count, FP16 KQ storage/output state, reductions, V path,
+barriers, and launch contract unchanged. The isolated baseline is iteration
+22 (P8192 median 241.06 ms; current control was approximately 348 ms). The
+resource gate is zero VGPR/SGPR spills and zero private bytes, 256 threads,
+and LDS no larger than the gfx906 workgroup budget. The correctness gate is
+finite P512/P2048/P4096/P8192 outputs within the existing `2.7563e-5`
+absolute-error envelope. The performance gate is five paired P8192 isolated
+runs with at least a 5% median improvement over iteration 22 and no loss
+against control. Do not run full-model qualification if code spills, numerical
+correctness fails, or the repeated isolated win misses that threshold. If the
+gate passes, repeat exact greedy parity and P8192 end-to-end timing; otherwise
+retain iteration 22 and use the trace/codegen evidence to select the next
+single reference-schedule divergence.
