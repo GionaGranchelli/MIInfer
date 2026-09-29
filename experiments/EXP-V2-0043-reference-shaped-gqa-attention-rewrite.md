@@ -519,12 +519,15 @@ prefill. This does not identify which side of the dispatch needs ordering: both
 calls wait the same per-thread default stream, and the code path passes the
 same stream through the preceding block and candidate launcher.
 
-This materially narrows the failure to command-order/lifetime behavior around
-the candidate path rather than a deterministic P8192 address-bound error; the
-exact dependency is still unproven. The retained one-sync hook is opt-in and
-diagnostic, not a promotion workaround. The 27-GB AMD GPU core dump is an
-AMDGPU ELF core, but system GNU GDB cannot decode its device registers and no
-ROCgdb executable is installed. Next isolate which dependency the first-call
-barrier flushes before removing the sync hook or considering a permanent
-ordering fix. The candidate remains unqualified: FP16-Q token/numerical parity
-and an uninstrumented repeat-stable A/B are still required.
+These sync experiments showed that draining the queue can suppress the earlier
+fault, but did not identify a missing dependency. The temporary one-sync source
+hook has been removed. A fresh no-sync replay then completed three same-process
+requests with prefix reuse disabled; a second fresh no-sync replay with the
+original `MIINFER_DUMP_TOKENS=1` setting completed two more. Both dumped
+requests generated token ID `248068`. Their prefill times were 38.897/38.909 s.
+The earlier HSA aperture fault is therefore not currently reproducible and is
+not an established candidate memory-safety defect; retain it as an anomalous
+failure, not as a resolved root cause. The 27-GB AMD GPU core dump is an AMDGPU
+ELF core, but system GNU GDB cannot decode its device registers and no ROCgdb
+executable is installed. The active qualification blocker is still FP16-Q
+real-model numerical/token parity; do not promote from repeat stability alone.
