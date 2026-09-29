@@ -2943,12 +2943,13 @@ __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_bat
     constexpr std::uint32_t kQueryTokens = 16;
     constexpr std::uint32_t kRowsPerWarp = 4;
     constexpr std::uint32_t kTileK = 32;
+    constexpr std::uint32_t kKRowStride = 128;
     constexpr std::uint32_t kQueryHeads = 24;
     constexpr std::uint32_t kKvHeads = 4;
     extern __shared__ unsigned char shared[];
     constexpr std::size_t q_tmp_bytes = 32 * 256 * sizeof(__half);
     __half* kv_tmp = reinterpret_cast<__half*>(shared + q_tmp_bytes);
-    __half* kq_fragment = reinterpret_cast<__half*>(kv_tmp + kTileK * 128);
+    __half* kq_fragment = reinterpret_cast<__half*>(kv_tmp + kTileK * kKRowStride);
     float* row_max = reinterpret_cast<float*>(kq_fragment + 32 * kTileK);
     float* row_sum = row_max + 32;
     float* row_alpha = row_sum + 32;
@@ -3025,11 +3026,14 @@ __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_bat
                 const uint4 packed = cache_position < work_end && cache_position < cache_capacity
                     ? *reinterpret_cast<const uint4*>(key_cache + cache_index)
                     : make_uint4(0, 0, 0, 0);
-                *reinterpret_cast<uint4*>(kv_tmp + position * 128 + (i % 16) * 8) = packed;
+                const std::uint32_t fragment = (i % 16) ^ (position & 7);
+                *reinterpret_cast<uint4*>(kv_tmp + position * kKRowStride + fragment * 8) = packed;
             }
             __syncthreads();
             for (std::uint32_t fragment = 0; fragment < 16; ++fragment) {
-                const uint4 k_bits = *reinterpret_cast<const uint4*>(kv_tmp + lane * 128 + fragment * 8);
+                const std::uint32_t swizzled_fragment = fragment ^ (lane & 7);
+                const uint4 k_bits = *reinterpret_cast<const uint4*>(
+                    kv_tmp + lane * kKRowStride + swizzled_fragment * 8);
 #pragma unroll
                 for (std::uint32_t r = 0; r < kRowsPerWarp; ++r) {
                     const std::uint32_t row = warp * kRowsPerWarp + r;

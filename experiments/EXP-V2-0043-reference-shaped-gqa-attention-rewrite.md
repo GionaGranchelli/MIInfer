@@ -928,3 +928,165 @@ split-KV kernel, not this attention loop. Next: inspect this candidate's
 selected gfx906 code-object resources/disassembly and compare the remaining
 machine-level schedule against the pinned reference before selecting one more
 narrow test. No full curve or decode work is authorized by this result.
+
+### Iteration 24 hypothesis — compile-time expand both 128-dimension KQ chunks
+
+The iteration 23 gfx906 object confirms `#pragma unroll` expanded the inner
+16-fragment loop (32 to 256 static `v_dot2_f32_f16` sites) while retaining 70
+VGPR, 46 SGPR, zero spills, and zero private bytes. Its 1.08% median gain is
+below the gate. The outer `d_base` loop still serializes the two 128-dimension
+KQ chunks; in the pinned `flash_attn_tile_iter_KQ`, the fixed `nbatch_K` loop
+is explicitly unrolled, and the selected head dimension is 256. Test one
+additional compile-time expansion of this two-iteration outer loop while
+retaining the fragment unroll, all geometry, data types, barriers, and math.
+The prior unrolled-fragment object is a codegen reference, not the production
+control; evaluate against the unchanged iteration 22 path (241.06 ms median,
+control approximately 348 ms). Gate first on 256 threads, zero VGPR/SGPR
+spills, zero private bytes, and LDS at or below the current 27,008 B. Then
+repeat P512/P2048/P4096/P8192 finite/error checks against the same
+`2.7563e-5` envelope and five paired isolated P8192 timings. Require at least
+5% improvement over iteration 22 to continue; otherwise reject and retain the
+iteration 22 source. Do not run full-model qualification unless this gate
+passes. This tests static scheduling of the already-required two KQ chunks,
+not a new tile geometry or memory-reuse claim.
+
+### Iteration 24 result — reject compile-time chunk expansion
+
+The object had 73 VGPR, 46 SGPR, zero spills, zero private bytes, dynamic LDS
+27,008 B, 256 threads, and 512 static `v_dot2_f32_f16` sites (matching the
+pinned object's static count). P512/P2048/P4096/P8192 outputs remained finite
+with max absolute error `1.15326e-5`. Five P8192 pairs measured candidate
+latencies 236.578, 236.581, 280.303, 236.603, and 236.679 ms (median 236.603
+ms); control median was 348.574 ms. This is a 1.85% improvement over the
+iteration 22 median of 241.06 ms, below the predeclared 5% threshold; reject
+the compile-time chunk expansion and restore the iteration 22 source. The
+isolated candidate still beats the current isolated control by about 32%,
+confirming the overall reference-shaped reuse path remains materially
+valuable, but this scheduling-only refinement does not justify another full
+model run. Static dot-site parity alone does not explain the measured 2.27x
+main-attention latency ratio. Next investigation must identify a measured
+runtime cause beyond instruction unrolling before another candidate is
+written.
+
+### Iteration 25 hypothesis — pad K LDS rows to eliminate measured bank conflicts
+
+The rocprofv3 P8192 isolated run (ROCm 7.2.1, same gfx906 device) reports
+`SQ_LDS_BANK_CONFLICT=8,181,374,976` for each candidate dispatch at the 8192
+shape, while the current control reports zero. Candidate source stores K rows
+at `kv_tmp + position * 128` and all lanes read the same fragment at
+`kv_tmp + lane * 128 + fragment * 8`; the 256-byte row pitch maps every lane
+to the same 32-bit LDS bank. Change only the K-stage row pitch to 130 half
+elements (260 B), preserving 128 data elements plus a two-half padding gap.
+Use the padded pitch for K stores/reads and advance the KQ fragment after
+`32*130` elements. The existing V phase addresses the first 4096 half elements
+with its own 256-element row pitch, so it remains unchanged. Extra LDS is 128
+B, taking dynamic allocation from 27,008 to 27,136 B (same as the pinned
+reference object). Gate on 256 threads, zero spills/private bytes, LDS 27,136
+B; finite P512/P2048/P4096/P8192 outputs within `2.7563e-5`; and no material
+increase in `SQ_LDS_BANK_CONFLICT` in a repeat counter run. Require at least
+5% median improvement over the iteration 22 isolated candidate (241.06 ms)
+across five P8192 pairs. If correctness/resource/performance fails, reject and
+restore iteration 22; no full-model run unless the isolated gate passes.
+
+### Iteration 25 result — reject padded K rows
+
+Correctness passed with max absolute error `1.15326e-5`. The counter profile
+showed `SQ_LDS_BANK_CONFLICT` falling from `8.181e9` to `2.456e9` per P8192
+candidate dispatch (70% lower), while TCC hit/miss counts and flat-read
+wavefront counts remained effectively unchanged. The five unprofiled P8192
+candidate times were 248.451, 248.522, 248.429, 248.525, and 248.437 ms
+(median 248.451 ms); control median was 348.989 ms. This is 3.06% slower than
+iteration 22's 241.06 ms, so reject the padded-row layout. It demonstrates
+that bank conflicts exist and are reducible, but this padding form does not
+convert the counter reduction into a latency win. The 130-half pitch gives
+successive rows only 4-byte alignment for 16-byte accesses; this is a plausible
+cost, not a proven cause of the regression. Preserve the unpadded iteration
+22 layout and test an aligned in-row XOR swizzle instead.
+
+### Iteration 26 hypothesis — swizzle K fragments within each aligned LDS row
+
+Keep the iteration 22 128-half row pitch and storage size. Change only K's
+LDS mapping: for position `p`, store vector fragment `f` at `f ^ (p & 7)` and
+read it from that same mapping. Each 16-byte vector remains aligned and inside
+its row; across 32 positions, a fixed fragment spreads over eight bank groups
+instead of mapping every lane to one bank. V layout, Q/K math, barriers,
+geometry, and splits stay unchanged. Resource gate: 256 threads, no spills or
+private bytes, 27,008 B LDS. Correctness gate: finite P512/P2048/P4096/P8192
+outputs within `2.7563e-5`. Counter gate: material reduction from iteration
+22's `8.181e9` LDS-bank-conflict cycles at P8192. Performance gate: five
+unprofiled P8192 pairs with at least 5% improvement over 241.06 ms. Reject if
+the swizzle is correct but does not meet the timing threshold; no full-model
+run unless it passes.
+
+### Iteration 26 result — keep aligned K-row swizzle; promote to full request
+
+The selected gfx906 object reports 75 VGPR, 44 SGPR, zero spills, zero private
+bytes, 256 threads, and 27,008 B launch-time LDS. Correctness passed at
+P512/P2048/P4096/P8192 with finite values and max absolute error
+`1.15326e-5`. The counter profile measured `SQ_LDS_BANK_CONFLICT=2.456e9`
+per P8192 suffix dispatch, 70% below the unpadded iteration 22 layout's
+`8.181e9`; TCC hit/miss and flat-read counts remained effectively unchanged.
+The profile-side timings are diagnostic only.
+
+Two unprofiled five-pair P8192 runs measured candidate medians 200.615 and
+200.609 ms (combined median 200.612 ms); eight of ten candidate measurements
+were 200.47–200.69 ms and two were 210.30/233.25 ms. The control medians were
+348.963 and 348.818 ms. The candidate is 16.8% faster than iteration 22's
+241.06 ms median and about 42.5% faster than the current control. KEEP the
+XOR-swizzled LDS mapping; it retains aligned 16-byte LDS operations unlike
+iteration 25's 130-half padded pitch. The counter reduction is the diagnostic
+mechanism; the unprofiled A/B is the performance evidence.
+
+Three exact saved MIInfer P8192/TG1 chat requests with context 16,384 and no
+session reuse each processed 8,192 prompt tokens and generated token ID
+`248068`. Client wall times were 38.110481 / 38.128589 / 38.123261 s (median
+38.123261 s); internal prefill times were 38,101.1 / 38,118.5 / 38,114.5 ms
+(median 38,114.5 ms). SCLK/HBM were 1,606/1,000 MHz; junction temperature
+was 37 C after the three requests.
+
+The exact candidate-specific request trace is
+`/tmp/v2043-swizzle-trace.Ij0XRS/3707976_hcc_ops_trace.txt` (HIP API trace
+adjacent). It contains 240 suffix calls totaling 3,324.877 ms, 240 combines
+totaling 22.053 ms, and 16 prefix calls totaling 42.839 ms (496 attention
+family launches / 3,389.769 ms total). Against iteration 22 this reduces
+suffix work by 16.7%; against pinned mx's saved 1,743.247 ms main and 42.444
+ms combine, MIInfer still has about a 1.91x main-attention ratio.
+
+Fresh pinned-mx `2e9d29f` runs of the saved raw formatted 8,192-token prompt,
+with cache disabled, one slot, F16 KV, greedy one-token output, measured
+38.936731 / 39.567302 / 38.710838 s (median 38.936731 s); each reported
+8,192 evaluated tokens and output `<think>`, consistent with the earlier
+direct token-ID capture of `248068`. The candidate median is 0.813 s (2.1%)
+lower than this reference median. A same-chat-endpoint mx request is excluded:
+its template evaluated 8,235 tokens, not 8,192. A first traced mx attempt
+segfaulted at 2,048 tokens and is also excluded. The exact matched raw-prompt
+reference comparison therefore passes the end-to-end gate provisionally.
+
+A fresh upstream `73a43d1` run of that same raw formatted prompt completed in
+44.838664 s, evaluated 8,192 tokens, and emitted `<think>`. MIInfer is 6.715 s
+faster in client wall. This matches the direction and scale of the saved
+44.956 s upstream sample.
+
+The final serving regression gate used identical no-reuse requests against the
+swizzle candidate and control, with the same prompt JSONs and greedy TG1. Actual
+prompt counts were 520 / 2,055 / 4,100 tokens (the payloads approximate the
+nominal P512/P2048/P4096 points). Candidate client walls were 2.749749 / 9.433515
+/ 18.774220 s; candidate internal prefill was 2,747.76 / 9,430.34 / 18,769.1
+ms. Control client walls were 2.75 / 9.58 / 18.77 s; internal prefill was
+2,747.92 / 9,572.5 / 19,281.1 ms. The swizzle is effectively neutral at 520
+tokens and faster by 1.5% / 2.7% at 2,055 / 4,100 tokens. All requests
+processed their complete prompt, returned one completion token, and had zero
+reused prefix tokens. The candidate logs recorded token ID `248068`. This is a
+narrow one-pair no-regression gate, not a repeated small-delta performance
+qualification.
+The control server's first launch took about a minute to load the model; initial
+connection failures happened before serving and are not benchmark samples.
+
+The iteration 26 swizzle is promoted. The full P8192 request, exact candidate
+trace, isolated five-pair A/B, and short-context serving checks now support it.
+The remaining primary frontier is the 1.91x P8192 main-attention kernel-time
+ratio to pinned mx despite MIInfer's 2.1% faster whole-request median. Continue
+with source/resource inspection of the exact pinned mx and upstream tiled
+attention implementations, then choose the smallest reuse-driven prototype
+against the measured gap. The decode regression A/B and the earlier checkpoint
+remain recorded/pushed at `5cd93e2`.
