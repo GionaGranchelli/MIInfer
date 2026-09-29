@@ -830,3 +830,10 @@ private bytes. Dynamic LDS is 27,008 B (below the pinned object's 27,136 B);
 the launch remains 256 threads. Keep this as the current candidate and proceed
 to full-model greedy/token parity and the exact P8192 competitive request. The
 timing outlier is retained, not dropped; report medians and ranges.
+
+Greedy full-model parity at the exact raw P8216 prompt passed: iteration 22
+generated 128/128 identical token IDs to both pinned mx and upstream reference
+runs. The direct MIInfer CLI run measured 174.40 prompt tokens/s and 6.20
+decode tokens/s (161.227 ms/token). This establishes parity, not competitive
+latency; compare the exact P8192 request end-to-end against the saved pinned
+reference request before any promotion decision.
