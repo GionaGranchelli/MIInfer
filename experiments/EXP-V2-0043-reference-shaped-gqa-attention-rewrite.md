@@ -728,3 +728,45 @@ failure, not as a resolved root cause. The 27-GB AMD GPU core dump is an AMDGPU
 ELF core, but system GNU GDB cannot decode its device registers and no ROCgdb
 executable is installed. The active qualification blocker is still FP16-Q
 real-model numerical/token parity; do not promote from repeat stability alone.
+
+### Request-window intermediate-traffic audit (2026-09-29)
+
+Re-read the pinned gfx906 HIP configuration rather than using the similarly
+named RDNA table: in `ggml/src/ggml-cuda/fattn-tile.cuh`,
+`ggml_cuda_fattn_tile_get_config_amd()` selects `<256,256,ncols=32>` as
+256 threads, occupancy target 2, `nbatch_fa=32`, `nbatch_K=128`. The RDNA
+table's `<256,256,ncols=32>` entry has `nbatch_K=128` too, while its 16-column
+entry is not the MI50 route. For observed `<16,2>`, `ncols=32`; the active
+gfx906 `<16,2>` entry is therefore 32 positions per K tile, processed in two
+128-dimension KQ chunks. Do not infer the active config from NVIDIA or RDNA
+table entries.
+
+The exact request-window HCC sums are:
+
+| Implementation | Main attention calls / time | Separate combine calls / time | Total |
+|---|---:|---:|---:|
+| MIInfer control | 240 / 5,034.363 ms | 240 / 22.057 ms | 5,099.280 ms (including 16 prefix tiles) |
+| MIInfer KQ-fragment candidate | 240 / 4,110.671 ms | 240 / 22.158 ms | 4,175.634 ms (including 16 prefix tiles) |
+| Pinned mx | 304 / 1,743.247 ms | 304 / 42.444 ms | 1,785.691 ms |
+| Upstream | 304 / 1,743.682 ms | 304 / 42.453 ms | 1,786.135 ms |
+
+The MIInfer candidate workspace is `splits * tokens * query_heads *
+(head_dim + 2) * sizeof(float)`. At 3 splits, 512 query tokens, 24 heads,
+and D=256 this is 38,043,648 bytes per call. Stage 1 writes and stage 2 reads
+that workspace, or approximately 76.09 MB per call and 18.26 GB for 240 calls.
+This is substantial traffic, but the measured separate combine is only
+22.16 ms. The reference combine is slower (42.44 ms), while the candidate main
+kernel is 2.36x the reference main time (4,110.67 / 1,743.25). Thus the
+candidate's extra split-partial round-trip cannot explain the observed main
+kernel gap; the remaining target is main-kernel execution efficiency. The
+reference also incurs 64 more main/combine calls in this captured request, so
+launch count does not account for its advantage.
+
+This accounting narrows but does not yet attribute the main-kernel gap to a
+specific machine-level cause. The candidate meets the data-lifetime intent
+(KQ fragment and shared-workspace reuse) but is not yet architecturally or
+performance qualified. Do not promote or start a parameter sweep from this
+result. Next inspect the candidate's generated gfx906 ISA/resource metadata
+against the selected reference code object, focusing on memory instructions,
+barriers, vectorization and row/warp ownership; then test only a directly
+supported correction at isolated P8192.
