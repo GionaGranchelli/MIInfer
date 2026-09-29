@@ -26,8 +26,11 @@ The saved P8192 request measured 38.123 s median for MIInfer, 38.937 s for
 pinned mx-llama.cpp, and 44.839 s for pinned upstream llama.cpp. The narrow
 decode A/B measured 34.032 ms/token at P64 and 35.953 ms/token at P2048 for
 MIInfer; generated text differed across engines, so this is not a token
-equivalence claim. The current stretch frontier is V2-0044: reduce the
-remaining P8192 attention-kernel gap without changing the frozen baseline.
+equivalence claim. The V2-0044 attention stretch is closed rejected: its
+precision-preserving FP16 investigation failed real-model parity and is
+preserved in canonical experiment evidence. The next goal is competitive
+qualification of the frozen production baseline, not another attention
+optimization.
 
 The milestone notes below are historical snapshots; they do not supersede
 this current status.
