@@ -911,3 +911,20 @@ correctness fails, or the repeated isolated win misses that threshold. If the
 gate passes, repeat exact greedy parity and P8192 end-to-end timing; otherwise
 retain iteration 22 and use the trace/codegen evidence to select the next
 single reference-schedule divergence.
+
+### Iteration 23 result — reject unroll-only change
+
+Added `#pragma unroll` to only the candidate's 16-fragment KQ loop and rebuilt
+the isolated benchmark. The P512/P2048/P4096/P8192 outputs were finite with
+max absolute error `1.15326e-5`, inside the existing envelope. Five P8192
+control/candidate pairs measured candidate latencies of 238.359, 238.374,
+263.409, 238.523, and 238.488 ms (median 238.488 ms); control median was
+348.040 ms. This is only a 1.08% improvement over iteration 22's 241.06 ms,
+below the predeclared 5% threshold, so reject the unroll-only change and do
+not perform full-model qualification. The 263.409 ms point is an isolated
+outlier; the other four cluster around 238.4 ms and still do not clear the
+threshold. The built target emitted an optimizer warning for a different
+split-KV kernel, not this attention loop. Next: inspect this candidate's
+selected gfx906 code-object resources/disassembly and compare the remaining
+machine-level schedule against the pinned reference before selecting one more
+narrow test. No full curve or decode work is authorized by this result.
