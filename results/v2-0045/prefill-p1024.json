@@ -1,0 +1,24 @@
+{
+  "qualification_sha": "81ce0e982220613453889a9a5178f11440ea6b22",
+  "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+  "workload": "P1024 prefill",
+  "runtime": "MIInfer",
+  "samples_ms": [4362.234389, 4355.101431, 4367.993917, 4382.241945, 4371.917668],
+  "prompt_id_sha256": [
+    "0ad84ecaddc510c59c6d65124c3b911fc1d3d0a1f6fb137f6981fe4445500d9d",
+    "128814b2b44ad987defe615d0203f5532e97e3e112a9c17a85c270887c820ae0",
+    "7063bb36deb71ee8945f81fd5e9fbd5ee8fb5b038ca1f30db8c1d47416607321",
+    "a578f73cefc3bc29d0bd39f3e3b42bce7f9c972e227c7a18c84953a94edd672c",
+    "6b7fc8609fab9cb33949db82832b139310d8bcd2be0fc6ece777fa171b46bd95"
+  ],
+  "mx_llama_cpp": {
+    "commit": "2e9d29fe736969160f17476ec6f0a6298cee6966",
+    "samples_ms": [4580.563794, 4576.702527, 4575.840072, 4573.127407, 4575.574381]
+  },
+  "upstream_llama_cpp": {
+    "commit": "73a43d1f69345aee8bb186ef4b3172cef892f2e5",
+    "samples_ms": [5179.685129, 5175.050474, 5169.982277, 5172.695791, 5169.825221]
+  },
+  "verdict": "provisional MIInfer win; full matrix not complete",
+  "notes": "All runners use the same llama-bench rand sequence (C rand default seed 1), BOS handling, model, batch=2048, ubatch=512, 24 threads, all layers offloaded, F16 KV, flash attention. MIInfer measures PrefillV2 prefill plus final-token logits. References are llama-bench test_prompt."
+}

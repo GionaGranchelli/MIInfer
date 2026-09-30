@@ -181,6 +181,10 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-prefill-v2-e2e-bench PRIVATE miinfer_hip)
     target_compile_options(miinfer-prefill-v2-e2e-bench PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-v2-0045-qual-bench bench/v2_0045_qualification_bench.cpp)
+    target_link_libraries(miinfer-v2-0045-qual-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-v2-0045-qual-bench PRIVATE -Wall -Wextra -Wpedantic)
+
     add_executable(miinfer-decode-fast-path-bakeoff bench/decode_fast_path_bakeoff.cpp)
     target_link_libraries(miinfer-decode-fast-path-bakeoff PRIVATE miinfer_hip)
     target_compile_options(miinfer-decode-fast-path-bakeoff PRIVATE -Wall -Wextra -Wpedantic)

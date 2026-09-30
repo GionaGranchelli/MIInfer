@@ -10,10 +10,21 @@ Later milestones should not begin merely because earlier milestones are “mostl
 
 # Current Status
 
-**Current phase: M28 qualified; V2-0043 PRIMARY GOAL PASS; V2-0044 closed REJECTED**
+**Current phase: M28 qualified; V2-0045 competitive qualification PASS; release/serving polish**
+
+V2-0045's authoritative P512–P8192 prefill and P64–P8192 TG128 decode
+matrix has no losing cell against the pinned mx and upstream llama.cpp builds.
+The decode comparison is forced-token model-forward replay, not MIInfer's
+production HTTP graph-generation rate. A three-turn HTTP tool workflow passed
+with exact-prefix reuse, and the ten-request MIInfer stability sequence had no
+inference errors or observed VRAM growth. See
+[`V2-0045 qualification`](../experiments/V2-0045-definitive-competitive-qualification.md)
+for raw evidence and the remaining comparison boundaries. Performance research
+for this generation is closed; proceed with release/serving polish.
 
 The current accepted production checkpoint is iteration 26, commit
-`e68c0f20`, in canonical merge `e0649c589790f0267a8f1f45b5332532a95ae13a`.
+`e68c0f20`, in canonical merge `e0649c589790f0267a8f1f45b5332532a95ae13a`,
+now preserved in immutable `main` baseline `81ce0e982220613453889a9a5178f11440ea6b22`.
 V2-0044 tested one precision-preserving correction on the exact production
 path; it exceeded iteration 26's real-input attention-output tolerance and was
 not timed. The unresolved FP16 numerical limitation is recorded in

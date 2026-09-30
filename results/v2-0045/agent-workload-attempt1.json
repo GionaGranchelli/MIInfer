@@ -1,0 +1,117 @@
+{
+  "qualification_sha": "cd6519262b35514a446e8dcac38d110313b71b16",
+  "workload": "three-turn coding-agent tool/reuse flow",
+  "source_manifest": [
+    {
+      "path": "README.md",
+      "file_sha256": "f6ec3f8ce35726ddbab77c36c12599e3fb85bcca6fd234681b4a796cd43eb8bf",
+      "excerpt_sha256": "693247f1f85ef1387f0c5bf96f3b4323134d04c43d5f28c771d7ae273c8cb25b",
+      "excerpt_bytes": 15000
+    },
+    {
+      "path": "docs/interactive-serving.md",
+      "file_sha256": "745a2cd697fd24741ed5d38585ff6ee542e0ff0afeb717c2a125c39a7474aa02",
+      "excerpt_sha256": "745a2cd697fd24741ed5d38585ff6ee542e0ff0afeb717c2a125c39a7474aa02",
+      "excerpt_bytes": 5962
+    },
+    {
+      "path": "include/miinfer/prefill_v2/model.hpp",
+      "file_sha256": "1c453ec9e2868c0d2ad20a807fc2a6f0edd27efa61551aeaa445f598d5905c88",
+      "excerpt_sha256": "92983e88c839b3635f56ce85df1e5195349cf18b01c9566dfbd0337ace7e2707",
+      "excerpt_bytes": 6000
+    },
+    {
+      "path": "src/openai_api.cpp",
+      "file_sha256": "32f2833a04879d774e73e11b1455dd41b3b48a83ee125faa1759f967cd59f6b1",
+      "excerpt_sha256": "503b0180006fcf0eff580934e60d431212cb3b247be1bfb260663bc9a0c6776a",
+      "excerpt_bytes": 3500
+    }
+  ],
+  "context_excerpt_bytes": 30712,
+  "turns": [
+    {
+      "turn": 1,
+      "requests": [
+        {
+          "content": "",
+          "reasoning_content": "\nThe user wants me to review the current MIInfer serving path and specifically asks me to first call read_file for docs/interactive-serving.md lines 1-80. Let me do that.\n",
+          "tool_calls": [
+            {
+              "id": "call_0",
+              "type": "function",
+              "function": {
+                "name": "read_file",
+                "arguments": "{\"end_line\":80,\"path\":\"docs/interactive-serving.md\",\"start_line\":1}"
+              }
+            }
+          ],
+          "client_ttft_ms": 44171.17104399949,
+          "client_wall_ms": 48148.53461412713,
+          "prompt_tokens": 9404,
+          "generated_tokens": 101,
+          "request_count": 1,
+          "gpu_before": {
+            "vram_used_bytes": 27104825344,
+            "vram_total_bytes": 34342961152,
+            "junction_c": 34.0,
+            "sclk_mhz": 1606,
+            "mclk_mhz": 1000
+          },
+          "gpu_after": {
+            "vram_used_bytes": 27197804544,
+            "vram_total_bytes": 34342961152,
+            "junction_c": 60.0,
+            "sclk_mhz": 1606,
+            "mclk_mhz": 1000
+          }
+        },
+        {
+          "content": "\n\nBased on the documentation and source excerpts available in this repository, here are my observations on the MIInfer interactive serving and prefix-reuse contract:\n\n1. **Preset layering is explicitly documented.** `docs/interactive-serving.md` (lines 3\u20136) states that `m25_interactive` builds on top of `m25_hi_qualified` by adding two environment variables (`MIINFER_MX_MMV=1`, `MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_DECODE=1`). The document labels this an \"experimental serving candidate\" and defers validation detail to EXP-0350. This is fully documented; no assumption is needed about whether",
+          "reasoning_content": "\nThe user wants me to review the current MIInfer serving path based on what I've read so far (docs/interactive-serving.md lines 1-80) plus the other repository excerpts provided in the task description. They want at least eight numbered observations about the serving and prefix reuse contract, citing file names, distinguishing documented behavior from assumptions, and targeting at least 220 words.\n\nLet me also look at some additional files to ground my claims better - particularly the openai_api.cpp excerpt that was already provided, and maybe check for more details about the session reuse implementation.\n\nActually, let me re-read what's available:\n1. `docs/interactive-serving.md` lines 1-80 (read via tool)\n2. `README.md` (provided as excerpt)\n3. `include/miinfer/prefill_v2/model.hpp` (provided as excerpt)\n4. `src/openai_api.cpp` (provided as excerpt)\n\nI have enough context to write a thorough response. Let me structure at least 8 numbered observations, cite specific files, and clearly mark what is documented vs assumed.\n",
+          "tool_calls": [],
+          "client_ttft_ms": 8745.471738977358,
+          "client_wall_ms": 24293.15205407329,
+          "prompt_tokens": 10870,
+          "generated_tokens": 384,
+          "request_count": 1,
+          "gpu_before": {
+            "vram_used_bytes": 27197804544,
+            "vram_total_bytes": 34342961152,
+            "junction_c": 56.0,
+            "sclk_mhz": 1606,
+            "mclk_mhz": 1000
+          },
+          "gpu_after": {
+            "vram_used_bytes": 27198304256,
+            "vram_total_bytes": 34342961152,
+            "junction_c": 64.0,
+            "sclk_mhz": 1606,
+            "mclk_mhz": 1000
+          }
+        }
+      ],
+      "tool_results": [
+        {
+          "tool": "read_file",
+          "arguments": "{\"end_line\":80,\"path\":\"docs/interactive-serving.md\",\"start_line\":1}",
+          "result_sha256": "c6c1edf5dd48f38b0c4cabee949450e380cd7cac24b08b5d6e0e5517b1c1c2fb",
+          "result_chars": 4675
+        }
+      ],
+      "context_tokens": 10870,
+      "reused_prefix_tokens": null,
+      "new_prefill_tokens": null,
+      "generated_tokens_total": 485,
+      "ttft_ms": 8745.471738977358,
+      "wall_ms": 72441.68666820042,
+      "gpu_after": {
+        "vram_used_bytes": 27198304256,
+        "vram_total_bytes": 34342961152,
+        "junction_c": 64.0,
+        "sclk_mhz": 1606,
+        "mclk_mhz": 1000
+      },
+      "minimum_generation_gate": true
+    }
+  ]
+}

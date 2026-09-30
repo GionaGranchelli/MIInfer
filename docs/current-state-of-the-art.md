@@ -1,9 +1,23 @@
 # MIInfer Current State of the Art
 
-Status: M28 single-MI50 prefill accepted; V2-0043 closed PRIMARY GOAL PASS on
-iteration 26 (`e68c0f20`), 2026-09-29. The M27/P512 material below is retained
-as historical evidence, not the current milestone summary. See
+Status: V2-0045 definitive competitive matrix PASS; performance research for
+this generation closed, 2026-09-30. The immutable production baseline is
+`main` at `81ce0e982220613453889a9a5178f11440ea6b22`, containing iteration 26
+(`e68c0f20`). The M27/P512 material below is retained as historical evidence,
+not the current milestone summary. See
 [`post-m28-baseline.md`](post-m28-baseline.md) for the reproducible checkpoint.
+
+V2-0045 measured MIInfer ahead of pinned mx-llama.cpp and upstream llama.cpp
+at all five prefill contexts (P512–P8192) and all four decode contexts
+(P64–P8192, TG128). Decode is forced-token model-forward replay, not a direct
+comparison of the production HTTP generation wrapper. A three-turn HTTP
+coding-agent flow returned visible answers and reused 9.4K–13.8K exact-prefix
+tokens on each tool-result continuation. Ten sequential serving inferences
+completed with three reuse cycles, zero observed VRAM growth, and no runtime
+errors. Release/serving polish, not kernel optimization, is the next phase;
+the approximately 1.91× attention-kernel ratio remains deferred research.
+Detailed evidence and caveats are in
+[`V2-0045`](../experiments/V2-0045-definitive-competitive-qualification.md).
 
 ## Current accepted result
 
