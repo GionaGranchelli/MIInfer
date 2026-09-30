@@ -41,7 +41,7 @@ results. A workload is invalid if evaluated prompt-token counts differ.
 | P2048 prefill | 8838.83 ms | 9195.04 ms | 10415.89 ms | -3.87% | provisional MIInfer win |
 | P4096 prefill | 18044.90 ms | 18576.33 ms | 21068.14 ms | -2.86% | provisional MIInfer win |
 | P8192 prefill | 37633.89 ms | 37982.16 ms | 42978.20 ms | -0.92% | narrow MIInfer win |
-| P64 decode TG128 | pending | pending | pending | pending | pending |
+| P64 decode TG128 | 33.81 ms/token | 38.47 ms/token | 41.43 ms/token | -12.1% | provisional internal replay win |
 | P512 decode TG128 | pending | pending | pending | pending | pending |
 | P2048 decode TG128 | pending | pending | pending | pending | pending |
 | P8192 decode TG128 | pending | pending | pending | pending | pending |
@@ -76,7 +76,12 @@ from a minimal TG1 tail. Decode must replay the same predetermined 128 input
 tokens after the same prompt/context; naturally sampled, different token
 trajectories are not a definitive equivalent-work comparison. If a runtime
 cannot replay through its public interface, use its narrowest internal
-model-forward benchmark and document the exact scope.
+model-forward benchmark and document the exact scope. For decode, MIInfer uses
+the internal forced-input `PrefillV2Model::decode_step` (including its device
+argmax/token handoff), while references use `llama-bench test_gen`; this does
+not time MIInfer's production HIP-graph `generate()` wrapper. The exact P64
+prompt and each TG128 sequence hash are recorded in
+[`results/v2-0045/decode-p64-tg128.json`](../results/v2-0045/decode-p64-tg128.json).
 
 For each workload, collect at least five samples, raw timing output, VRAM,
 temperature, clocks, and process ownership. Interleave runtimes where possible.

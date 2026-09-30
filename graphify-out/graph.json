@@ -117461,7 +117461,7 @@
       "node_kind": "heading",
       "norm_label": "attention frontier \u2014 deferred",
       "source_file": "experiments/V2-0045-definitive-competitive-qualification.md",
-      "source_location": "L52"
+      "source_location": "L63"
     },
     {
       "id": "experiments_v2_0045_definitive_competitive_qualification_decision",
@@ -117473,7 +117473,7 @@
       "node_kind": "heading",
       "norm_label": "decision",
       "source_file": "experiments/V2-0045-definitive-competitive-qualification.md",
-      "source_location": "L83"
+      "source_location": "L94"
     },
     {
       "id": "experiments_v2_0045_definitive_competitive_qualification_pinned_starting_point",
@@ -117497,7 +117497,7 @@
       "node_kind": "heading",
       "norm_label": "qualification protocol",
       "source_file": "experiments/V2-0045-definitive-competitive-qualification.md",
-      "source_location": "L60"
+      "source_location": "L71"
     },
     {
       "id": "experiments_v2_0045_definitive_competitive_qualification_real_agent_workload_and_stability_gate",
@@ -117509,7 +117509,7 @@
       "node_kind": "heading",
       "norm_label": "real agent workload and stability gate",
       "source_file": "experiments/V2-0045-definitive-competitive-qualification.md",
-      "source_location": "L74"
+      "source_location": "L85"
     },
     {
       "id": "experiments_v2_0045_definitive_competitive_qualification_required_scoreboard",
@@ -263819,7 +263819,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/V2-0045-definitive-competitive-qualification.md",
-      "source_location": "L52",
+      "source_location": "L63",
       "weight": 1.0
     },
     {
@@ -263830,7 +263830,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/V2-0045-definitive-competitive-qualification.md",
-      "source_location": "L60",
+      "source_location": "L71",
       "weight": 1.0
     },
     {
@@ -263841,7 +263841,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/V2-0045-definitive-competitive-qualification.md",
-      "source_location": "L74",
+      "source_location": "L85",
       "weight": 1.0
     },
     {
@@ -263852,7 +263852,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "experiments/V2-0045-definitive-competitive-qualification.md",
-      "source_location": "L83",
+      "source_location": "L94",
       "weight": 1.0
     },
     {
@@ -284443,5 +284443,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "5a6f68b4addec9073563e3a370bbba972edf878e"
+  "built_at_commit": "87810135c84004e49ee81bf0ccbdb477b28a2d5c"
 }

@@ -140,14 +140,12 @@ int main(int argc, char** argv) {
                     % static_cast<std::uint32_t>(tokenizer.vocabulary_size());
             (void)model.decode_step(warm_token, 0);
             (void)std::rand();
+            const auto prompt = next_prompt(prompt_tokens, tokenizer);
             for (std::size_t i = 0; i < iterations; ++i) {
-                const auto prompt = next_prompt(prompt_tokens, tokenizer);
                 prompt_hashes.push_back(ids_sha256(prompt));
                 (void)run_prefill(model, prompt, hidden.data, logits.data, false);
                 const auto sequence = next_generation(generated_tokens, tokenizer);
                 generation_hashes.push_back(ids_sha256(sequence));
-                // Consume llama-bench's post-final-step random token as well.
-                (void)std::rand();
                 const auto start = Clock::now();
                 for (std::size_t step = 0; step < sequence.size(); ++step) {
                     (void)model.decode_step(sequence[step],
