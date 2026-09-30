@@ -38,25 +38,47 @@ if [[ ! -x "$package_root/install.sh" ]]; then
     printf 'package is missing install.sh\n' >&2
     exit 1
 fi
+for document in \
+    share/doc/MIInfer/README.md \
+    share/doc/MIInfer/developer-guide.md \
+    share/doc/MIInfer/docs/current-state-of-the-art.md \
+    share/doc/MIInfer/docs/cli-product-contract.md \
+    share/doc/MIInfer/experiments/V2-0045-definitive-competitive-qualification.md; do
+    if [[ ! -f "$package_root/$document" ]]; then
+        printf 'package is missing documentation: %s\n' "$document" >&2
+        exit 1
+    fi
+done
 
-"$package_root/bin/miinfer" --help >/dev/null
+"$package_root/bin/miinfer" --help > "$stage/help.txt"
+if grep -Eq 'M26-C|EXP-[0-9]+|MIINFER_PRESET|kernel selector|profil' "$stage/help.txt"; then
+    printf 'public help exposes developer controls\n' >&2
+    exit 1
+fi
+for command in doctor models inspect run chat serve config; do
+    "$package_root/bin/miinfer" "$command" --help > "$stage/$command-help.txt"
+    if grep -Eq 'M26-C|EXP-[0-9]+|MIINFER_PRESET|kernel selector' "$stage/$command-help.txt"; then
+        printf 'public %s help exposes developer controls\n' "$command" >&2
+        exit 1
+    fi
+done
 "$package_root/bin/miinfer" --version >/dev/null
 "$package_root/bin/miinfer-device-info" --version >/dev/null
-"$package_root/bin/miinfer" config > "$stage/config.txt"
-"$package_root/bin/miinfer" doctor --port 0 > "$stage/doctor.txt"
-if ! grep -q '^gpu=PASS:' "$stage/doctor.txt"; then
+XDG_CONFIG_HOME="$stage/config" "$package_root/bin/miinfer" config --json > "$stage/config.json"
+XDG_CONFIG_HOME="$stage/config" "$package_root/bin/miinfer" doctor --port 0 > "$stage/doctor.txt"
+if ! grep -q '^GPU      PASS' "$stage/doctor.txt"; then
     printf 'doctor did not validate the gfx906 GPU\n' >&2
     cat "$stage/doctor.txt" >&2
     exit 1
 fi
-if ! grep -q '^prefill_path=validated-default$' "$stage/config.txt"; then
-    printf 'configuration contract missing validated prefill path\n' >&2
-    exit 1
-fi
-if ! grep -q '^runtime_context_capacity=65536$' "$stage/config.txt" || \
-   ! grep -q '^model_context_length=262144$' "$stage/config.txt" || \
-   ! grep -q '^qualified_context_length=1024$' "$stage/config.txt"; then
-    printf 'configuration contract missing context limits\n' >&2
+for key in model_dir default_model host port context api_key_file; do
+    if ! grep -q "\"$key\"" "$stage/config.json"; then
+        printf 'configuration output missing public key: %s\n' "$key" >&2
+        exit 1
+    fi
+done
+if ! grep -q '"value": "8192"' "$stage/config.json"; then
+    printf 'configuration output missing production context default\n' >&2
     exit 1
 fi
 mkdir -p "$stage/models/nested"
@@ -65,12 +87,28 @@ if ! "$package_root/bin/miinfer" models "$stage/models" | grep -q 'sample.gguf';
     printf 'model discovery did not find the GGUF fixture\n' >&2
     exit 1
 fi
+mkdir -p "$stage/models/ambiguous"
+: > "$stage/models/ambiguous/Ambiguous-Q4.gguf"
+: > "$stage/models/ambiguous/Ambiguous-Q5.gguf"
+XDG_CONFIG_HOME="$stage/config" "$package_root/bin/miinfer" config set model-dir \
+    "$stage/models/ambiguous" >/dev/null
+if XDG_CONFIG_HOME="$stage/config" "$package_root/bin/miinfer" inspect Ambiguous \
+    > "$stage/ambiguity.txt" 2>&1; then
+    printf 'model resolution silently accepted ambiguous matches\n' >&2
+    exit 1
+fi
+for name in Ambiguous-Q4.gguf Ambiguous-Q5.gguf; do
+    if ! grep -q "$name" "$stage/ambiguity.txt"; then
+        printf 'ambiguity error omitted matching model: %s\n' "$name" >&2
+        exit 1
+    fi
+done
 "$package_root/install.sh" "$archive" "$stage/installed"
 if [[ ! -x "$stage/installed/bin/miinfer" ]]; then
     printf 'installer did not create a runnable release layout\n' >&2
     exit 1
 fi
-"$stage/installed/bin/miinfer" config >/dev/null
+XDG_CONFIG_HOME="$stage/installed-config" "$stage/installed/bin/miinfer" config >/dev/null
 "$stage/installed/bin/miinfer" models "$stage/models" | grep -q 'sample.gguf'
 "$package_root/bin/miinfer-device-info" > "$stage/device-info.txt"
 

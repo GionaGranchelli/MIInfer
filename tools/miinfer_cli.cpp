@@ -19,6 +19,7 @@
 #include <iostream>
 #include <memory>
 #include <limits>
+#include <map>
 #include <mutex>
 #include <numeric>
 #include <optional>
@@ -29,6 +30,8 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
+
+#include <nlohmann/json.hpp>
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -52,6 +55,7 @@ namespace {
 
 std::atomic<bool> g_shutdown_requested{false};
 int g_signal_wakeup_fd = -1;
+bool g_verbose = false;
 constexpr std::size_t kFullPrefillCapacity = 512;
 // Bump when the checkpoint state layout or wide-prefill numerical contract changes.
 constexpr std::uint32_t kSessionExecutionContractVersion = 2;
@@ -151,23 +155,27 @@ bool apply_runtime_preset() {
         }
     }
     g_cache_capacity = 1024;
-    std::cerr << "preset=" << preset << '\n'
-              << "  MIINFER_MX_PIPELINE=unset\n";
-    for (const auto [name, value] : flags) std::cerr << "  " << name << "=" << value << '\n';
+    if (g_verbose) {
+        std::cerr << "Production profile: " << preset << '\n'
+                  << "  MIINFER_MX_PIPELINE=unset\n";
+        for (const auto [name, value] : flags) std::cerr << "  " << name << "=" << value << '\n';
+    }
     if (interactive || m26_mx_mmq) {
         for (const char* name : {"MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_DECODE"}) {
             if (setenv(name, "1", 1) != 0) return false;
-            std::cerr << "  " << name << "=1\n";
+            if (g_verbose) std::cerr << "  " << name << "=1\n";
         }
         if (interactive) {
             if (setenv("MIINFER_MX_MMV", "1", 1) != 0) return false;
-            std::cerr << "  MIINFER_MX_MMV=1\n";
+            if (g_verbose) std::cerr << "  MIINFER_MX_MMV=1\n";
         }
         if (interactive_validate) {
             (void)setenv("MIINFER_WIDE_VALIDATE", "1", 1);
             (void)setenv("MIINFER_WIDE_VALIDATE_MX", "1", 1);
-            std::cerr << "  MIINFER_WIDE_VALIDATE=1\n";
-            std::cerr << "  MIINFER_WIDE_VALIDATE_MX=1\n";
+            if (g_verbose) {
+                std::cerr << "  MIINFER_WIDE_VALIDATE=1\n";
+                std::cerr << "  MIINFER_WIDE_VALIDATE_MX=1\n";
+            }
         }
     }
     return true;
@@ -190,6 +198,19 @@ void signal_handler(int sig) {
             (void)::write(g_signal_wakeup_fd, &wake, sizeof(wake));
         }
     }
+}
+
+void sanitize_product_environment() {
+    std::vector<std::string> selectors;
+    for (char** entry = environ; entry != nullptr && *entry != nullptr; ++entry) {
+        const std::string_view item(*entry);
+        if (item.rfind("MIINFER_", 0) == 0
+            && item.rfind("MIINFER_API_KEY=", 0) != 0
+            && item.rfind("MIINFER_MODEL_DIR=", 0) != 0) {
+            selectors.emplace_back(item.substr(0, item.find('=')));
+        }
+    }
+    for (const auto& name : selectors) unsetenv(name.c_str());
 }
 
 std::string json_escape(std::string_view value) {
@@ -292,11 +313,187 @@ inline ExtractedAssistantOutput extract_reasoning_and_content(std::string_view t
     return out;
 }
 
+struct TerminalOutput {
+    std::string content;
+    bool has_tool_call = false;
+};
+
+TerminalOutput terminal_output(std::string_view text) {
+    TerminalOutput result;
+    const auto extracted = extract_reasoning_and_content(text);
+    result.content = extracted.content;
+    for (std::string_view open : {"<tool_call", "<function="}) {
+        const std::string_view close = open == "<tool_call" ? "</tool_call>" : "</function>";
+        std::size_t search = 0;
+        while ((search = result.content.find(open, search)) != std::string::npos) {
+            result.has_tool_call = true;
+            const auto end = result.content.find(close, search);
+            if (end == std::string::npos) {
+                result.content.erase(search);
+                break;
+            }
+            auto after = result.content.find('>', end);
+            after = after == std::string::npos ? end + close.size() : after + 1;
+            result.content.erase(search, after - search);
+        }
+    }
+    return result;
+}
+
+class TerminalTextStream {
+public:
+    std::string push(std::string_view piece) {
+        pending_.append(piece);
+        return process(false);
+    }
+    std::string finish() { return process(true); }
+
+private:
+    enum class Mode { kContent, kThinking, kTool };
+
+    static std::size_t earliest(std::string_view text,
+                                std::initializer_list<std::string_view> needles,
+                                std::string_view& matched) {
+        std::size_t result = std::string_view::npos;
+        for (const auto needle : needles) {
+            const auto found = text.find(needle);
+            if (found < result) { result = found; matched = needle; }
+        }
+        return result;
+    }
+
+    static std::size_t incomplete_suffix(std::string_view text,
+                                         std::initializer_list<std::string_view> markers) {
+        std::size_t keep = text.size();
+        for (const auto marker : markers) {
+            const std::size_t max_len = std::min(text.size(), marker.size() - 1);
+            for (std::size_t length = 1; length <= max_len; ++length) {
+                if (text.substr(text.size() - length) == marker.substr(0, length)) {
+                    keep = std::min(keep, text.size() - length);
+                }
+            }
+        }
+        return keep;
+    }
+
+    std::size_t complete_tag_end() const {
+        const auto end = pending_.find('>');
+        if (end != std::string::npos) {
+            std::size_t after = end + 1;
+            while (after < pending_.size() && (pending_[after] == '\r' || pending_[after] == '\n')) ++after;
+            return after;
+        }
+        const auto newline = pending_.find_first_of("\r\n");
+        if (newline != std::string::npos) {
+            std::size_t after = newline;
+            while (after < pending_.size() && (pending_[after] == '\r' || pending_[after] == '\n')) ++after;
+            return after;
+        }
+        return std::string::npos;
+    }
+
+    std::string process(bool final) {
+        std::string output;
+        while (!pending_.empty()) {
+            if (mode_ == Mode::kContent) {
+                std::string_view marker;
+                const auto at = earliest(pending_, {"<think", "<thought", "<tool_call", "<function="}, marker);
+                if (at == std::string::npos) {
+                    const auto safe = incomplete_suffix(pending_, {"<think", "<thought", "<tool_call", "<function="});
+                    output.append(pending_, 0, safe);
+                    pending_.erase(0, safe);
+                    if (final) pending_.clear();
+                    break;
+                }
+                output.append(pending_, 0, at);
+                pending_.erase(0, at);
+                const auto after = complete_tag_end();
+                if (after == std::string::npos) {
+                    if (final) pending_.clear();
+                    break;
+                }
+                mode_ = (marker == "<think" || marker == "<thought") ? Mode::kThinking : Mode::kTool;
+                outer_tool_ = marker == "<tool_call";
+                pending_.erase(0, after);
+                continue;
+            }
+
+            if (mode_ == Mode::kThinking) {
+                std::string_view marker;
+                const auto at = earliest(pending_, {"</think", "</thought", "<tool_call", "<function="}, marker);
+                if (at == std::string::npos) {
+                    const auto safe = incomplete_suffix(pending_, {"</think", "</thought", "<tool_call", "<function="});
+                    pending_.erase(0, safe);
+                    if (final) pending_.clear();
+                    break;
+                }
+                pending_.erase(0, at);
+                const auto after = complete_tag_end();
+                if (after == std::string::npos) {
+                    if (final) pending_.clear();
+                    break;
+                }
+                if (marker == "<tool_call" || marker == "<function=") {
+                    mode_ = Mode::kTool;
+                    resume_thinking_ = true;
+                    outer_tool_ = marker == "<tool_call";
+                } else {
+                    mode_ = Mode::kContent;
+                }
+                pending_.erase(0, after);
+                continue;
+            }
+
+            std::string_view marker;
+            const auto at = outer_tool_ ? pending_.find("</tool_call>")
+                : earliest(pending_, {"</tool_call>", "</function>"}, marker);
+            if (outer_tool_) marker = "</tool_call>";
+            if (at == std::string::npos) {
+                const auto safe = incomplete_suffix(pending_, {"</tool_call>", "</function>"});
+                pending_.erase(0, safe);
+                if (final) pending_.clear();
+                break;
+            }
+            if (marker == "</function>" && !outer_tool_) {
+                pending_.erase(0, at + marker.size());
+                mode_ = resume_thinking_ ? Mode::kThinking : Mode::kContent;
+                resume_thinking_ = false;
+                continue;
+            }
+            const auto after = pending_.find('>', at + marker.size());
+            const std::size_t consumed = after == std::string::npos ? at + marker.size() : after + 1;
+            pending_.erase(0, consumed);
+            mode_ = resume_thinking_ ? Mode::kThinking : Mode::kContent;
+            resume_thinking_ = false;
+        }
+        return output;
+    }
+
+    Mode mode_ = Mode::kContent;
+    bool outer_tool_ = false;
+    bool resume_thinking_ = false;
+    std::string pending_;
+};
+
 std::optional<int> parse_port(std::string_view value) {
     int port = 0;
     const auto [end, error] = std::from_chars(value.data(), value.data() + value.size(), port);
     if (error != std::errc{} || end != value.data() + value.size() || port < 0 || port > 65535) return std::nullopt;
     return port;
+}
+
+std::optional<std::size_t> parse_cli_size(std::string_view value) {
+    std::size_t parsed = 0;
+    const auto [end, error] = std::from_chars(value.data(), value.data() + value.size(), parsed);
+    if (error != std::errc{} || end != value.data() + value.size()) return std::nullopt;
+    return parsed;
+}
+
+std::optional<float> parse_cli_float(std::string_view value) {
+    float parsed = 0.0F;
+    const auto [end, error] = std::from_chars(value.data(), value.data() + value.size(), parsed);
+    if (error != std::errc{} || end != value.data() + value.size() || !std::isfinite(parsed)) return std::nullopt;
+    return parsed;
 }
 
 struct RuntimeGenerateOptions {
@@ -3244,13 +3441,180 @@ private:
 // ---------------------------------------------------------------------------
 // Subcommand 1: inspect
 // ---------------------------------------------------------------------------
+struct UserConfig {
+    std::map<std::string, std::string> values;
+    std::filesystem::path path;
+};
+
+UserConfig g_user_config;
+
+std::filesystem::path user_config_path() {
+    if (const char* xdg = std::getenv("XDG_CONFIG_HOME"); xdg != nullptr && *xdg != '\0') {
+        return std::filesystem::path(xdg) / "miinfer/config.toml";
+    }
+    const char* home = std::getenv("HOME");
+    return std::filesystem::path(home == nullptr ? "." : home) / ".config/miinfer/config.toml";
+}
+
+std::string trim_copy(std::string_view value) {
+    const auto first = value.find_first_not_of(" \t\r\n");
+    if (first == std::string_view::npos) return {};
+    const auto last = value.find_last_not_of(" \t\r\n");
+    return std::string(value.substr(first, last - first + 1));
+}
+
+std::string unquote_config_value(std::string value) {
+    value = trim_copy(value);
+    if (value.size() >= 2 && value.front() == '"' && value.back() == '"') {
+        value = value.substr(1, value.size() - 2);
+    }
+    std::string decoded;
+    decoded.reserve(value.size());
+    for (std::size_t i = 0; i < value.size(); ++i) {
+        if (value[i] == '\\' && i + 1 < value.size()) ++i;
+        decoded.push_back(value[i]);
+    }
+    return decoded;
+}
+
+void load_user_config() {
+    g_user_config.path = user_config_path();
+    std::ifstream input(g_user_config.path);
+    std::string line;
+    while (std::getline(input, line)) {
+        const auto comment = line.find('#');
+        if (comment != std::string::npos) line.resize(comment);
+        const auto equal = line.find('=');
+        if (equal == std::string::npos) continue;
+        const std::string key = trim_copy(std::string_view(line).substr(0, equal));
+        if (key == "model_dir" || key == "default_model" || key == "host"
+            || key == "port" || key == "context" || key == "api_key_file") {
+            g_user_config.values[key] = unquote_config_value(line.substr(equal + 1));
+        }
+    }
+}
+
+std::string configured(std::string_view key, std::string fallback) {
+    const auto found = g_user_config.values.find(std::string(key));
+    return found == g_user_config.values.end() ? std::move(fallback) : found->second;
+}
+
+std::filesystem::path expand_user_path(std::string value) {
+    if (value == "~" || value.starts_with("~/")) {
+        const char* home = std::getenv("HOME");
+        if (home != nullptr) value.replace(0, 1, home);
+    }
+    return std::filesystem::path(value);
+}
+
+std::vector<std::filesystem::path> configured_model_directories(
+    std::optional<std::filesystem::path> explicit_directory = std::nullopt) {
+    std::vector<std::filesystem::path> roots;
+    if (explicit_directory) return {*explicit_directory};
+    if (g_user_config.values.contains("model_dir")) {
+        roots.push_back(expand_user_path(configured("model_dir", "")));
+    }
+    if (const char* env_dir = std::getenv("MIINFER_MODEL_DIR"); env_dir != nullptr && *env_dir) {
+        roots.push_back(expand_user_path(env_dir));
+    }
+    if (const char* home = std::getenv("HOME")) {
+        roots.emplace_back(std::filesystem::path(home) / "models");
+        roots.emplace_back(std::filesystem::path(home) / ".local/share/miinfer/models");
+    }
+    std::vector<std::filesystem::path> unique;
+    for (auto& root : roots) {
+        std::error_code ec;
+        auto absolute = std::filesystem::absolute(root, ec).lexically_normal();
+        if (!ec && std::find(unique.begin(), unique.end(), absolute) == unique.end()) {
+            unique.push_back(std::move(absolute));
+        }
+    }
+    return unique;
+}
+
+std::vector<std::filesystem::path> find_models(
+    std::optional<std::filesystem::path> explicit_directory = std::nullopt) {
+    std::vector<std::filesystem::path> found;
+    for (const auto& root : configured_model_directories(explicit_directory)) {
+        std::error_code ec;
+        if (!std::filesystem::is_directory(root, ec)) continue;
+        std::filesystem::recursive_directory_iterator it(
+            root, std::filesystem::directory_options::skip_permission_denied, ec), end;
+        for (; it != end; it.increment(ec)) {
+            if (ec) { ec.clear(); continue; }
+            if (it->is_regular_file(ec) && it->path().extension() == ".gguf") {
+                found.push_back(std::filesystem::absolute(it->path()).lexically_normal());
+            }
+            ec.clear();
+        }
+    }
+    std::sort(found.begin(), found.end());
+    found.erase(std::unique(found.begin(), found.end()), found.end());
+    return found;
+}
+
+std::optional<std::filesystem::path> resolve_model(std::string_view requested,
+                                                    bool use_default = true) {
+    const std::string query = requested.empty() && use_default
+        ? configured("default_model", "") : std::string(requested);
+    if (query.empty()) return std::nullopt;
+    const auto expanded = expand_user_path(query);
+    std::error_code ec;
+    if (std::filesystem::is_regular_file(expanded, ec)
+        && expanded.extension() == ".gguf") {
+        return std::filesystem::absolute(expanded).lexically_normal();
+    }
+    auto models = find_models();
+    const std::string filename = std::filesystem::path(query).filename().string();
+    const auto exact = std::find_if(models.begin(), models.end(), [&](const auto& path) {
+        return path.filename() == filename || path.stem() == query;
+    });
+    std::vector<std::filesystem::path> matches;
+    if (exact != models.end()) {
+        for (const auto& path : models) {
+            if (path.filename() == filename || path.stem() == query) matches.push_back(path);
+        }
+    } else {
+        for (const auto& path : models) {
+            if (path.filename().string().find(query) != std::string::npos
+                || path.stem().string().find(query) != std::string::npos) matches.push_back(path);
+        }
+    }
+    if (matches.size() > 1) {
+        std::ostringstream message;
+        message << "Multiple models match \"" << query << "\":\n\n";
+        for (const auto& path : matches) message << "  " << path.filename().string()
+            << "  (" << path.string() << ")\n";
+        message << "\nSpecify one explicitly.";
+        throw std::runtime_error(message.str());
+    }
+    if (matches.size() == 1) return matches.front();
+    return std::nullopt;
+}
+
+std::optional<std::filesystem::path> require_model(std::string_view requested,
+                                                    std::string_view command) {
+    if (auto model = resolve_model(requested)) return model;
+    const auto models = find_models();
+    std::cerr << "No model specified or found for " << command << ".\n";
+    if (!models.empty()) {
+        std::cerr << "Found " << models.size() << " compatible model file(s):\n\n";
+        for (const auto& path : models) std::cerr << "  " << path.filename().string() << '\n';
+    } else {
+        std::cerr << "No GGUF files found in the configured model directories.\n";
+    }
+    std::cerr << "\nUse: miinfer " << command << " <model>\n"
+              << "or set default_model with `miinfer config set default-model MODEL`.\n";
+    return std::nullopt;
+}
+
 int cmd_inspect(int argc, char** argv) {
     if (argc < 3) {
         std::cerr << "usage: miinfer inspect <model.gguf>\n";
         return 1;
     }
     const std::string model_path = argv[2];
-    std::cout << "Loading model metadata from: " << model_path << " ...\n";
+    if (g_verbose) std::cerr << "Inspecting model metadata: " << model_path << '\n';
 
     const auto file = miinfer::GgufFile::open(model_path);
     const auto model = miinfer::Qwen35Model::load(model_path);
@@ -3267,6 +3631,34 @@ int cmd_inspect(int argc, char** argv) {
         total_weight_bytes += tensor.byte_size;
         quant_stats[tensor.type].first += 1;
         quant_stats[tensor.type].second += tensor.byte_size;
+    }
+
+    if (argc > 3 && std::string_view(argv[3]) == "--json") {
+        nlohmann::json result;
+        result["path"] = model_path;
+        result["name"] = model.model_name();
+        result["architecture"] = "Qwen3.5";
+        result["context_length"] = config.context_length;
+        result["hidden_size"] = config.hidden_size;
+        result["vocabulary_size"] = config.vocab_size;
+        result["layers"] = config.block_count;
+        result["parameter_count"] = total_params;
+        result["weight_bytes"] = total_weight_bytes;
+        result["compatible"] = true;
+        std::cout << result.dump(2) << '\n';
+        return 0;
+    }
+
+    if (!g_verbose) {
+        std::cout << "Model:        " << model.model_name() << '\n'
+                  << "Architecture: Qwen3.5\n"
+                  << "Layers:       " << config.block_count << '\n'
+                  << "Context:      " << config.context_length << " tokens\n"
+                  << "Vocabulary:   " << config.vocab_size << '\n'
+                  << "Weights:      " << std::fixed << std::setprecision(2)
+                  << static_cast<double>(total_weight_bytes) / (1024.0 * 1024.0 * 1024.0) << " GiB\n"
+                  << "Compatibility: supported production model family\n";
+        return 0;
     }
 
     // GPU detection
@@ -3352,94 +3744,321 @@ int cmd_inspect(int argc, char** argv) {
 }
 
 int cmd_models(int argc, char** argv) {
-    if (argc > 3) {
-        std::cerr << "usage: miinfer models [directory]\n";
-        return 2;
+    bool json = false;
+    std::optional<std::filesystem::path> requested_dir;
+    for (int i = 2; i < argc; ++i) {
+        if (std::string_view(argv[i]) == "--json") json = true;
+        else if (!requested_dir) requested_dir = expand_user_path(argv[i]);
+        else {
+            std::cerr << "usage: miinfer models [DIRECTORY] [--json]\n";
+            return 2;
+        }
     }
-    const std::filesystem::path root = argc == 3 ? argv[2] : ".";
-    std::error_code error;
-    if (!std::filesystem::is_directory(root, error)) {
-        std::cerr << "model directory not found: " << root << '\n';
+    if (requested_dir && !std::filesystem::is_directory(*requested_dir)) {
+        std::cerr << "Model directory not found: " << *requested_dir << '\n';
         return 1;
     }
-
-    std::vector<std::filesystem::path> models;
-    for (const auto& entry : std::filesystem::recursive_directory_iterator(
-             root, std::filesystem::directory_options::skip_permission_denied, error)) {
-        if (error) break;
-        if (entry.is_regular_file(error) && entry.path().extension() == ".gguf") {
-            models.push_back(entry.path());
-        }
-        error.clear();
+    const auto models = find_models(requested_dir);
+    if (json) {
+        nlohmann::json result = nlohmann::json::array();
+        for (const auto& model : models) result.push_back({{"name", model.filename().string()}, {"path", model.string()}});
+        std::cout << result.dump(2) << '\n';
+    } else {
+        std::cout << "Models";
+        if (requested_dir) std::cout << " in " << *requested_dir;
+        std::cout << " (" << models.size() << "):\n";
+        for (const auto& model : models) std::cout << "  " << model.filename().string() << "  " << model.string() << '\n';
     }
-    std::sort(models.begin(), models.end());
-
-    std::cout << "GGUF models: " << models.size() << '\n';
-    for (const auto& model : models) std::cout << model.string() << '\n';
     return 0;
 }
 
-int cmd_config(int argc, char**) {
-    if (argc != 2) {
-        std::cerr << "usage: miinfer config\n";
+int cmd_config(int argc, char** argv) {
+    if (argc == 3 && std::string_view(argv[2]) == "--json") {
+        nlohmann::json result;
+        const auto add = [&](std::string_view key, std::string fallback) {
+            const auto found = g_user_config.values.find(std::string(key));
+            result[std::string(key)] = {{"value", found == g_user_config.values.end() ? fallback : found->second},
+                {"source", found == g_user_config.values.end() ? "default" : g_user_config.path.string()}};
+        };
+        result["config_file"] = g_user_config.path.string();
+        add("model_dir", "~/models"); add("default_model", ""); add("host", "127.0.0.1");
+        add("port", "8080"); add("context", "8192"); add("api_key_file", "");
+        std::cout << result.dump(2) << '\n';
+        return 0;
+    }
+    if (argc == 2) {
+        const auto print_value = [](std::string_view key, std::string fallback) {
+            const auto found = g_user_config.values.find(std::string(key));
+            const std::string value = found == g_user_config.values.end() ? std::move(fallback) : found->second;
+            std::cout << key << " = \"" << value << "\"  ["
+                      << (found == g_user_config.values.end() ? "default" : g_user_config.path.string()) << "]\n";
+        };
+        std::cout << "Config file: " << g_user_config.path << '\n';
+        print_value("model_dir", "~/models");
+        print_value("default_model", "");
+        print_value("host", "127.0.0.1");
+        print_value("port", "8080");
+        print_value("context", "8192");
+        print_value("api_key_file", "");
+        return 0;
+    }
+    if (argc != 5 || std::string_view(argv[2]) != "set") {
+        std::cerr << "usage: miinfer config [set KEY VALUE]\n";
         return 2;
     }
-    std::cout << "target_architecture=gfx906\n"
-              << "hardware=AMD Instinct MI50 32GB\n"
-              << "model=Qwen3.8-27B\n"
-              << "quantization=Q4_K_M\n"
-              << "model_context_length=262144\n"
-              << "configured_context_length=1024\n"
-              << "runtime_context_capacity=" << g_cache_capacity << "\n"
-              << "qualified_context_length=1024\n"
-              << "context_qualification=qualified\n"
-              << "prefill_path=validated-default\n"
-              << "m12_prefill=opt-in\n";
+    std::string key = argv[3];
+    std::replace(key.begin(), key.end(), '-', '_');
+    static const std::array<std::string_view, 6> supported{
+        "model_dir", "default_model", "host", "port", "context", "api_key_file"};
+    if (std::find(supported.begin(), supported.end(), key) == supported.end()) {
+        std::cerr << "Unsupported config key: " << argv[3] << '\n';
+        return 2;
+    }
+    const std::string value = argv[4];
+    if ((key == "port" || key == "context")) {
+        std::size_t parsed = 0;
+        const auto [end, error] = std::from_chars(value.data(), value.data() + value.size(), parsed);
+        if (error != std::errc{} || end != value.data() + value.size()
+            || parsed == 0 || (key == "port" && parsed > 65535)) {
+            std::cerr << key << " must be a positive integer" << (key == "port" ? " up to 65535" : "") << '\n';
+            return 2;
+        }
+        if (key == "context" && parsed > 131072) {
+            std::cerr << "context may not exceed 131072\n";
+            return 2;
+        }
+    }
+    if (key == "default_model" && !value.empty() && !resolve_model(value)) {
+        std::cerr << "Default model not found: " << value << '\n';
+        return 2;
+    }
+    g_user_config.values[key] = value;
+    std::error_code ec;
+    std::filesystem::create_directories(g_user_config.path.parent_path(), ec);
+    std::ofstream output(g_user_config.path, std::ios::trunc);
+    if (!output) {
+        std::cerr << "Cannot write config file: " << g_user_config.path << '\n';
+        return 1;
+    }
+    for (const auto& [name, setting] : g_user_config.values) {
+        output << name << " = \"";
+        for (const char c : setting) {
+            if (c == '\\' || c == '"') output << '\\';
+            output << c;
+        }
+        output << "\"\n";
+    }
+    if (!output) {
+        std::cerr << "Failed writing config file: " << g_user_config.path << '\n';
+        return 1;
+    }
+    std::cout << "Saved " << key << " to " << g_user_config.path << '\n';
     return 0;
 }
 
 int cmd_doctor(int argc, char** argv) {
     std::optional<std::filesystem::path> model;
-    int port = 8080;
+    std::optional<int> port;
+    bool json = false;
     for (int i = 2; i < argc; ++i) {
         const std::string_view arg = argv[i];
-        if (arg == "--model" && i + 1 < argc) model = argv[++i];
-        else if (arg == "--port" && i + 1 < argc) {
-            const auto parsed = parse_port(argv[++i]);
-            if (!parsed) { std::cerr << "port must be an integer from 0 to 65535\n"; return 2; }
-            port = *parsed;
-        }
-        else { std::cerr << "usage: miinfer doctor [--model MODEL.gguf] [--port PORT]\n"; return 2; }
+        if (arg == "--model" && i + 1 < argc) {
+            auto resolved = resolve_model(argv[++i]);
+            if (!resolved) { std::cerr << "Model not found: " << argv[i] << '\n'; return 2; }
+            model = *resolved;
+        } else if (arg == "--port" && i + 1 < argc) {
+            port = parse_port(argv[++i]);
+            if (!port) { std::cerr << "port must be an integer from 0 to 65535\n"; return 2; }
+        } else if (arg == "--json") json = true;
+        else { std::cerr << "usage: miinfer doctor [--model MODEL] [--port PORT] [--json]\n"; return 2; }
     }
-    bool healthy = true;
+    struct Check { std::string state; std::string detail; };
+    std::map<std::string, Check> checks;
     hipDeviceProp_t prop{};
     if (hipGetDeviceProperties(&prop, 0) != hipSuccess) {
-        std::cout << "gpu=FAIL: HIP cannot access device 0\n"; healthy = false;
+        checks["GPU"] = {"FAIL", "HIP cannot access device 0"};
+        checks["ROCm"] = {"FAIL", "HIP runtime unavailable"};
+        checks["VRAM"] = {"FAIL", "GPU unavailable"};
     } else {
+        const std::string arch(prop.gcnArchName);
+        const bool compatible = arch.find("gfx906") != std::string::npos;
+        const bool mi50 = std::string(prop.name).find("MI50") != std::string::npos;
         std::size_t free_bytes = 0, total_bytes = 0;
-        const bool gfx906 = std::string_view(prop.gcnArchName).find("gfx906") != std::string_view::npos;
-        if (hipMemGetInfo(&free_bytes, &total_bytes) != hipSuccess) healthy = false;
-        std::cout << "gpu=" << (gfx906 ? "PASS" : "FAIL") << ": " << prop.name << " " << prop.gcnArchName << "\n"
-                  << "vram_free_gib=" << std::fixed << std::setprecision(2) << free_bytes / 1073741824.0 << "\n"
-                  << "rocm_hip=PASS\n";
-        healthy &= gfx906;
+        const bool memory_ok = hipMemGetInfo(&free_bytes, &total_bytes) == hipSuccess;
+        std::ostringstream memory;
+        if (memory_ok) memory << std::fixed << std::setprecision(1)
+            << total_bytes / 1073741824.0 << " GiB total, "
+            << free_bytes / 1073741824.0 << " GiB free";
+        checks["GPU"] = {compatible ? "PASS" : "FAIL", std::string(prop.name) + " (" + arch + ")"};
+        checks["ROCm"] = {"PASS", "HIP runtime available"};
+        checks["VRAM"] = {memory_ok ? "PASS" : "WARN", memory_ok
+            ? memory.str()
+            : "HIP memory query unavailable"};
+        checks["MI50"] = {mi50 ? "PASS" : "WARN", mi50 ? "MI50 identity detected" : "gfx906-compatible device"};
     }
     if (model) {
-        try { (void)miinfer::Qwen35Model::load(*model); std::cout << "model=PASS: " << *model << "\n"; }
-        catch (const std::exception& error) { std::cout << "model=FAIL: " << error.what() << "\n"; healthy = false; }
-    }
-    int fd = socket(AF_INET, SOCK_STREAM, 0);
-    sockaddr_in address{}; address.sin_family = AF_INET; address.sin_addr.s_addr = htonl(INADDR_LOOPBACK); address.sin_port = htons(port);
-    const bool available = fd >= 0 && bind(fd, reinterpret_cast<sockaddr*>(&address), sizeof(address)) == 0;
+        try {
+            (void)miinfer::Qwen35Model::load(model->string());
+            checks["Model"] = {"PASS", model->filename().string() + " (Qwen3.5 production model)"};
+        } catch (const std::exception& error) {
+            checks["Model"] = {"FAIL", error.what()};
+        }
+    } else checks["Model"] = {"WARN", "not checked (pass --model to validate)"};
+    const auto model_dir = expand_user_path(configured("model_dir", "~/models"));
+    std::error_code directory_error;
+    checks["Models"] = {std::filesystem::is_directory(model_dir, directory_error) ? "PASS" : "WARN",
+        model_dir.string()};
+    const int check_port = port.value_or(std::stoi(configured("port", "8080")));
+    const int fd = socket(AF_INET, SOCK_STREAM, 0);
+    sockaddr_in address{};
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    address.sin_port = htons(static_cast<std::uint16_t>(check_port));
+    const bool port_available = fd >= 0 && bind(fd, reinterpret_cast<sockaddr*>(&address), sizeof(address)) == 0;
     if (fd >= 0) close(fd);
-    std::cout << "port=" << (available ? "PASS" : "FAIL") << ": " << port << "\n";
-    return healthy && available ? 0 : 1;
+    checks["Port"] = {port_available ? "PASS" : "FAIL", std::to_string(check_port)
+        + (port_available ? " available" : " unavailable")};
+    const bool gfx906_ready = checks["GPU"].state == "PASS";
+    checks["Runtime"] = {gfx906_ready ? "PASS" : "FAIL",
+        gfx906_ready ? "production profile available" : "requires an AMD gfx906 GPU"};
+    const bool failed = std::any_of(checks.begin(), checks.end(), [](const auto& item) { return item.second.state == "FAIL"; });
+    if (json) {
+        nlohmann::json result;
+        for (const auto& [name, check] : checks) result[name] = {{"status", check.state}, {"detail", check.detail}};
+        result["ready"] = !failed;
+        std::cout << result.dump(2) << '\n';
+    } else {
+        std::cout << "MIInfer Doctor\n\n";
+        for (const auto& [name, check] : checks) std::cout << std::left << std::setw(9) << name
+            << std::setw(6) << check.state << ' ' << check.detail << '\n';
+        std::cout << (failed ? "\nMIInfer is not ready." : "\nReady to run MIInfer.") << '\n';
+    }
+    return failed ? 1 : 0;
 }
 
 // ---------------------------------------------------------------------------
-// Subcommand 2: run
+// Public one-shot generation uses the same Prefill V2 engine as `serve`.
 // ---------------------------------------------------------------------------
 int cmd_run(int argc, char** argv) {
+    if (argc < 3) { std::cerr << "miinfer run MODEL [PROMPT]\n"; return 2; }
+    std::string prompt;
+    std::size_t max_tokens = 128;
+    std::size_t context = static_cast<std::size_t>(std::stoull(configured("context", "8192")));
+    bool stream = true;
+    bool show_stats = false;
+    std::optional<float> temperature;
+    float top_p = 0.9F;
+    std::uint32_t top_k = 40;
+    std::optional<std::uint32_t> seed;
+    for (int i = 3; i < argc; ++i) {
+        const std::string_view arg = argv[i];
+        const auto need_value = [&](std::string_view option) -> const char* {
+            if (i + 1 >= argc) throw std::invalid_argument(std::string(option) + " requires a value");
+            return argv[++i];
+        };
+        if (arg == "--prompt" || arg == "-p") prompt = need_value(arg);
+        else if (arg == "--prompt-file") {
+            std::ifstream input(expand_user_path(need_value(arg)));
+            if (!input) { std::cerr << "Cannot read prompt file.\n"; return 2; }
+            std::ostringstream contents; contents << input.rdbuf(); prompt = contents.str();
+        }
+        else if (arg == "--max-tokens" || arg == "-n") {
+            const auto parsed = parse_cli_size(need_value(arg));
+            if (!parsed) { std::cerr << "max-tokens must be an integer\n"; return 2; }
+            max_tokens = *parsed;
+        }
+        else if (arg == "--context") {
+            const auto parsed = parse_cli_size(need_value(arg));
+            if (!parsed) { std::cerr << "context must be an integer\n"; return 2; }
+            context = *parsed;
+        }
+        else if (arg == "--temperature") {
+            temperature = parse_cli_float(need_value(arg));
+            if (!temperature) { std::cerr << "temperature must be a finite number\n"; return 2; }
+        }
+        else if (arg == "--top-p") {
+            const auto parsed = parse_cli_float(need_value(arg));
+            if (!parsed) { std::cerr << "top-p must be a finite number\n"; return 2; }
+            top_p = *parsed;
+        }
+        else if (arg == "--top-k") {
+            const auto parsed = parse_cli_size(need_value(arg));
+            if (!parsed || *parsed > std::numeric_limits<std::uint32_t>::max()) { std::cerr << "top-k is out of range\n"; return 2; }
+            top_k = static_cast<std::uint32_t>(*parsed);
+        }
+        else if (arg == "--seed") {
+            const auto parsed = parse_cli_size(need_value(arg));
+            if (!parsed || *parsed > std::numeric_limits<std::uint32_t>::max()) { std::cerr << "seed is out of range\n"; return 2; }
+            seed = static_cast<std::uint32_t>(*parsed);
+        }
+        else if (arg == "--no-stream") stream = false;
+        else if (arg == "--stats") show_stats = true;
+        else if (!arg.starts_with('-') && prompt.empty()) prompt = arg;
+        else { std::cerr << "Unknown run option: " << arg << '\n'; return 2; }
+    }
+    if (prompt.empty() && !isatty(STDIN_FILENO)) {
+        std::ostringstream input;
+        input << std::cin.rdbuf();
+        prompt = input.str();
+    }
+    if (prompt.empty()) { std::cerr << "No prompt provided. Use --prompt or pipe text on standard input.\n"; return 2; }
+    if (max_tokens == 0 || max_tokens > 65536 || context == 0 || context > 131072 || top_p <= 0.0F || top_p > 1.0F
+        || (temperature && *temperature < 0.0F)) {
+        std::cerr << "Invalid generation settings; check token, context, temperature, and top-p values.\n";
+        return 2;
+    }
+    const std::string model_path = argv[2];
+    std::cerr << "Profile: production\n";
+    if (g_verbose) std::cerr << "Model: " << model_path << '\n';
+    try {
+        auto model = miinfer::Qwen35Model::load(model_path);
+        auto tokenizer = miinfer::Qwen3Tokenizer::load(*model.file());
+        miinfer::prefill_v2::PrefillV2Model engine(
+            model, static_cast<std::uint32_t>(context), true,
+            miinfer::prefill_v2::KvCacheQuantMode::kFp16Fp16);
+        miinfer::OpenAiChatRequest request;
+        miinfer::ChatMessage user_message;
+        user_message.role = "user";
+        user_message.content = prompt;
+        request.messages.push_back(std::move(user_message));
+        auto tokens = tokenizer.encode(miinfer::build_chatml(request));
+        if (tokens.size() + max_tokens > context) {
+            std::cerr << "Prompt and requested output exceed the configured context of " << context << " tokens.\n";
+            return 2;
+        }
+        miinfer::prefill_v2::GenerateOptions options;
+        options.max_new_tokens = max_tokens;
+        options.use_hip_graph = true;
+        options.temperature = temperature.value_or(0.7F);
+        options.top_p = top_p;
+        options.top_k = top_k;
+        options.seed = seed;
+        options.stop_token_ids = {tokenizer.eos_id(), 151643, 151645};
+        TerminalTextStream text_stream;
+        if (stream) {
+            options.on_token = [&](std::uint32_t token) {
+                const std::string piece = tokenizer.decode(std::span<const std::uint32_t>(&token, 1));
+                std::cout << text_stream.push(piece) << std::flush;
+                return !g_shutdown_requested;
+            };
+            std::cerr << "Generating...\n";
+        }
+        const auto stats = engine.generate(tokens, options);
+        const std::string raw = tokenizer.decode(stats.generated_tokens);
+        const auto visible = terminal_output(raw);
+        std::cout << (stream ? text_stream.finish() : visible.content) << std::flush;
+        if (show_stats) std::cerr << "\nprompt_tokens=" << stats.prompt_tokens.size()
+            << " generated_tokens=" << stats.generated_tokens.size()
+            << " prefill_ms=" << stats.prefill_ms << " decode_ms=" << stats.decode_ms
+            << " total_ms=" << stats.total_ms << '\n';
+        return 0;
+    } catch (const std::exception& error) {
+        std::cerr << "Could not run model:\n  " << model_path << "\nReason:\n  " << error.what() << '\n';
+        return 1;
+    }
+}
+
+int cmd_run_debug(int argc, char** argv) {
     if (argc < 3) {
         std::cerr << "usage: miinfer run <model.gguf> (--prompt \"...\" | --prompt-file PATH) [--max-tokens N]\n";
         return 1;
@@ -4012,51 +4631,88 @@ int cmd_run(int argc, char** argv) {
 // Subcommand 3: chat (Interactive REPL)
 // ---------------------------------------------------------------------------
 int cmd_chat(int argc, char** argv) {
-    if (argc < 3) {
-        std::cerr << "usage: miinfer chat <model.gguf>\n";
+    if (argc < 3) { std::cerr << "miinfer chat MODEL\n"; return 2; }
+    const std::string model_path = argv[2];
+    std::size_t context = static_cast<std::size_t>(std::stoull(configured("context", "8192")));
+    std::size_t max_tokens = 512;
+    bool show_stats = false;
+    for (int i = 3; i < argc; ++i) {
+        const std::string_view arg = argv[i];
+        if (arg == "--context" && i + 1 < argc) context = std::stoull(argv[++i]);
+        else if ((arg == "--max-tokens" || arg == "-n") && i + 1 < argc) max_tokens = std::stoull(argv[++i]);
+        else if (arg == "--stats") show_stats = true;
+        else { std::cerr << "Unknown chat option: " << arg << '\n'; return 2; }
+    }
+    if (context == 0 || context > 131072 || max_tokens == 0) {
+        std::cerr << "Context and max-tokens must be positive; context may not exceed 131072.\n"; return 2;
+    }
+    try {
+        auto model = miinfer::Qwen35Model::load(model_path);
+        auto tokenizer = miinfer::Qwen3Tokenizer::load(*model.file());
+        miinfer::prefill_v2::PrefillV2Model engine(
+            model, static_cast<std::uint32_t>(context), true,
+            miinfer::prefill_v2::KvCacheQuantMode::kFp16Fp16);
+        miinfer::ChatMessage system_message;
+        system_message.role = "system";
+        system_message.content = "You are a helpful, concise assistant.";
+        std::vector<miinfer::ChatMessage> history{std::move(system_message)};
+        std::signal(SIGINT, signal_handler);
+        std::cout << "MIInfer chat — " << model.model_name() << " (production profile)\n"
+                  << "Type /exit or /quit to leave.\n\n";
+        while (!g_shutdown_requested) {
+            std::cout << "You> " << std::flush;
+            std::string input_line;
+            if (!std::getline(std::cin, input_line)) break;
+            if (input_line == "/exit" || input_line == "/quit" || input_line == "exit" || input_line == "quit") break;
+            if (input_line.empty()) continue;
+            miinfer::ChatMessage user_message;
+            user_message.role = "user";
+            user_message.content = input_line;
+            history.push_back(std::move(user_message));
+            miinfer::OpenAiChatRequest request;
+            request.messages = history;
+            const auto prompt_tokens = tokenizer.encode(miinfer::build_chatml(request));
+            if (prompt_tokens.size() + max_tokens > context) {
+                history.pop_back();
+                std::cerr << "That conversation would exceed the configured context of " << context << " tokens.\n";
+                continue;
+            }
+            miinfer::prefill_v2::GenerateOptions options;
+            options.max_new_tokens = max_tokens;
+            options.enable_prefix_reuse = true;
+            options.cache_prefix_after = true;
+            options.use_hip_graph = true;
+            options.temperature = 0.7F;
+            options.top_p = 0.9F;
+            options.top_k = 40;
+            options.stop_token_ids = {tokenizer.eos_id(), 151643, 151645};
+            TerminalTextStream text_stream;
+            std::cout << "MIInfer> " << std::flush;
+            options.on_token = [&](std::uint32_t token) {
+                const std::string piece = tokenizer.decode(std::span<const std::uint32_t>(&token, 1));
+                std::cout << text_stream.push(piece) << std::flush;
+                return !g_shutdown_requested;
+            };
+            const auto stats = engine.generate(prompt_tokens, options);
+            const std::string raw = tokenizer.decode(stats.generated_tokens);
+            const auto visible = terminal_output(raw);
+            std::cout << text_stream.finish();
+            if (visible.has_tool_call) std::cout << "\n[Tool request not executed in terminal chat.]";
+            std::cout << "\n\n" << std::flush;
+            miinfer::ChatMessage assistant_message;
+            assistant_message.role = "assistant";
+            assistant_message.content = raw;
+            history.push_back(std::move(assistant_message));
+            if (show_stats) std::cerr << "tokens=" << stats.generated_tokens.size()
+                << " reused_prefix=" << stats.prefix_tokens_reused
+                << " prefill_ms=" << stats.prefill_ms << " decode_ms=" << stats.decode_ms << '\n';
+        }
+        std::cout << "Goodbye.\n";
+        return 0;
+    } catch (const std::exception& error) {
+        std::cerr << "Could not start chat with model:\n  " << model_path << "\nReason:\n  " << error.what() << '\n';
         return 1;
     }
-    const std::string model_path = argv[2];
-    std::cerr << "Initializing MIInfer gfx906 interactive chat session ...\n";
-    Qwen35RuntimeEngine engine(model_path);
-
-    std::cout << "\n===================================================================\n";
-    std::cout << " MIInfer Interactive Chat (Qwen3.5-27B on AMD Instinct MI50 32GB) \n";
-    std::cout << " Type your message and press Enter. Type 'exit' or 'quit' to end.  \n";
-    std::cout << "===================================================================\n\n";
-
-    std::string history = "<|im_start|>system\nYou are a helpful, concise AI assistant optimized for AMD MI50 inference.<|im_end|>\n";
-
-    while (!g_shutdown_requested) {
-        std::cout << "\x1b[32mUser>\x1b[0m " << std::flush;
-        std::string input_line;
-        if (!std::getline(std::cin, input_line)) break;
-        if (input_line == "exit" || input_line == "quit") break;
-        if (input_line.empty()) continue;
-
-        history += "<|im_start|>user\n" + input_line + "<|im_end|>\n<|im_start|>assistant\n";
-        const auto prompt_tokens = engine.tokenizer().encode(history);
-
-        std::cout << "\x1b[36mAssistant>\x1b[0m " << std::flush;
-
-        std::string assistant_reply;
-        Qwen35RuntimeEngine::GenerateOptions opt;
-        opt.max_new_tokens = 512;
-        opt.on_token = [&](std::uint32_t /*token*/, std::string_view piece) {
-            std::cout << piece << std::flush;
-            assistant_reply += piece;
-            return true;
-        };
-
-        const auto stats = engine.generate(prompt_tokens, opt);
-        std::cout << "\n\x1b[90m[" << stats.generated_tokens << " tokens, "
-                  << std::fixed << std::setprecision(2) << stats.decode_tok_s << " tok/s]\x1b[0m\n\n";
-
-        history += assistant_reply + "<|im_end|>\n";
-    }
-
-    std::cout << "Goodbye!\n";
-    return 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -4246,9 +4902,9 @@ bool constant_time_equal(std::string_view left, std::string_view right) {
 
 int cmd_serve(int argc, char** argv) {
     std::string model_path;
-    int port = 8080;
-    std::string host = "127.0.0.1";
-    std::size_t context_length = 1024;
+    int port = std::stoi(configured("port", "8080"));
+    std::string host = configured("host", "127.0.0.1");
+    std::size_t context_length = static_cast<std::size_t>(std::stoull(configured("context", "8192")));
     bool experimental_context = false;
     std::optional<std::filesystem::path> api_key_file;
     bool allow_insecure = false;
@@ -4261,7 +4917,7 @@ int cmd_serve(int argc, char** argv) {
             model_path = argv[++i];
         } else if (arg == "--port" && i + 1 < argc) {
             const auto parsed = parse_port(argv[++i]);
-            if (!parsed) { std::cerr << "port must be an integer from 0 to 65535\n"; return 2; }
+            if (!parsed || *parsed == 0) { std::cerr << "port must be an integer from 1 to 65535\n"; return 2; }
             port = *parsed;
         } else if (arg == "--host" && i + 1 < argc) {
             host = argv[++i];
@@ -4270,8 +4926,10 @@ int cmd_serve(int argc, char** argv) {
             catch (...) { std::cerr << "context must be a positive integer\n"; return 2; }
         } else if (arg == "--experimental-context") {
             experimental_context = true;
+        } else if (arg == "--verbose") {
+            g_verbose = true;
         } else if (arg == "--api-key-file" && i + 1 < argc) {
-            api_key_file = argv[++i];
+            api_key_file = expand_user_path(argv[++i]);
         } else if (arg == "--allow-insecure") {
             allow_insecure = true;
         } else if (arg == "--session-reuse") {
@@ -4292,8 +4950,9 @@ int cmd_serve(int argc, char** argv) {
         std::cerr << "context must be one of 1024, 8192, 16384, 32768, 65536, 131072\n";
         return 2;
     }
-    if (context_length > 1024 && !experimental_context) {
-        std::cerr << "context values above 1024 require --experimental-context\n"; return 2;
+    (void)experimental_context; // accepted for backwards compatibility; context is a public setting.
+    if (!api_key_file && !configured("api_key_file", "").empty()) {
+        api_key_file = expand_user_path(configured("api_key_file", ""));
     }
     std::string api_key;
     if (api_key_file) {
@@ -4329,22 +4988,23 @@ int cmd_serve(int argc, char** argv) {
     }
 
     g_cache_capacity = context_length;
-    std::cerr << "Initializing MIInfer gfx906 HTTP Server on " << host << ":" << port << " ...\n";
-    std::cerr << "configured_context_length=" << context_length << "\n"
-              << "runtime_context_capacity=" << g_cache_capacity << "\n"
-              << "qualified_context_length=1024\n"
-              << "context_qualification=" << (context_length > 1024 ? "experimental" : "qualified") << "\n"
-              << "session_reuse=" << (session_reuse ? "experimental" : "disabled") << "\n"
-              << "session_dir=" << (session_dir ? session_dir->string() : "disabled") << "\n";
+    std::cerr << "Loading model " << std::filesystem::path(model_path).filename().string() << "...\n";
     const auto model = miinfer::Qwen35Model::load(model_path);
     const auto tokenizer = miinfer::Qwen3Tokenizer::load(*model.file());
     miinfer::prefill_v2::PrefillV2Model engine(model, context_length, true, miinfer::prefill_v2::KvCacheQuantMode::kFp16Fp16);
-    std::cerr << "model_context_length=" << model.config().context_length << "\n";
-    std::cerr << "device_allocation_count=" << g_device_allocations << "\n"
-              << "device_allocated_bytes=" << g_live_device_bytes << "\n"
-              << "device_total_allocated_bytes=" << g_total_device_bytes << "\n"
-              << "device_peak_allocated_bytes=" << g_peak_device_bytes << "\n";
-    print_hip_memory(std::cerr);
+    hipDeviceProp_t server_gpu{};
+    const bool have_gpu = hipGetDeviceProperties(&server_gpu, 0) == hipSuccess;
+    if (g_verbose) {
+        std::cerr << "model_context_length=" << model.config().context_length << "\n"
+                  << "runtime_context_capacity=" << g_cache_capacity << "\n"
+                  << "session_reuse=" << (session_reuse ? "enabled" : "disabled") << "\n"
+                  << "session_dir=" << (session_dir ? session_dir->string() : "disabled") << "\n"
+                  << "device_allocation_count=" << g_device_allocations << "\n"
+                  << "device_allocated_bytes=" << g_live_device_bytes << "\n"
+                  << "device_total_allocated_bytes=" << g_total_device_bytes << "\n"
+                  << "device_peak_allocated_bytes=" << g_peak_device_bytes << "\n";
+        print_hip_memory(std::cerr);
+    }
 
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd < 0) {
@@ -4373,14 +5033,18 @@ int cmd_serve(int argc, char** argv) {
         return 1;
     }
 
-    std::cerr << "MIInfer OpenAI-compatible API listening at http://" << host << ":" << port << "\n";
-    std::cerr << "Request queue capacity: " << kQueueCapacity << "\n";
-    std::cerr << "Endpoints:\n";
-    std::cerr << "  GET  /healthz\n";
-    std::cerr << "  GET  /readyz\n";
-    std::cerr << "  GET  /metrics\n";
-    std::cerr << "  GET  /v1/models\n";
-    std::cerr << "  POST /v1/chat/completions\n";
+    std::cerr << "MIInfer Server\n"
+              << "Model    " << model.model_name() << "\n"
+              << "GPU      " << (have_gpu ? server_gpu.name : "unavailable") << "\n"
+              << "Context  " << context_length << " tokens"
+              << (context_length > 16384 ? " (not covered by current serving qualification)" : "") << "\n"
+              << "Profile  production\n"
+              << "API      http://" << host << ":" << port << "/v1\n"
+              << "Web UI   http://" << host << ":" << port << "/\n"
+              << "Auth     " << (api_key.empty() ? "disabled (localhost only)" : "enabled") << "\n"
+              << "\nReady.\n";
+    if (g_verbose) std::cerr << "Request queue capacity: " << kQueueCapacity
+        << "\nEndpoints: /healthz /readyz /metrics /v1/models /v1/chat/completions\n";
 
     std::signal(SIGINT, signal_handler);
     std::signal(SIGTERM, signal_handler);
@@ -4414,6 +5078,7 @@ int cmd_serve(int argc, char** argv) {
         const int client_fd = request.client_fd;
         ++inference_requests;
         const auto state = [&](std::string_view value) {
+            if (!g_verbose) return;
             std::cerr << "miinfer_request_state request_id=" << request.request_id
                       << " state=" << value << '\n';
         };
@@ -5134,70 +5799,123 @@ int cmd_serve(int argc, char** argv) {
 }
 
 void print_usage() {
-    std::cout << "MIInfer: Purpose-Built AMD gfx906 (MI50) LLM Inference Runtime\n\n";
-    std::cout << "Usage: miinfer <command> [options]\n\n";
-    std::cout << "Commands:\n";
-    std::cout << "  --version                              Print build and target information\n";
-    std::cout << "  config                                 Print supported runtime configuration\n";
-    std::cout << "  doctor [--model MODEL] [--port PORT]  Check MI50, HIP, VRAM, model, and port\n";
-    std::cout << "  models [directory]                     List GGUF model artifacts\n";
-    std::cout << "  inspect <model.gguf>                     Inspect model metadata, quantization, and VRAM budget\n";
-    std::cout << "  run <model.gguf> --prompt \"...\"         Generate text from a prompt with streaming output\n";
-    std::cout << "       --repeat-p512-check                 Check P512, real continuation, and repeat P512\n";
-    std::cout << "       --context N --check-session        Check live append against full replay\n";
-    std::cout << "       --max-tokens N --check-graph-state Compare graph/direct recurrent and KV bytes\n";
-    std::cout << "       --check-graph-state-context N Repeat prompt tokens to context N for parity checks\n";
-    std::cout << "       --m26c-state-context 512 --m26c-export-state FILE Create canonical decode snapshot\n";
-    std::cout << "       --m26c-import-state FILE --m26c-decode-route direct|graph --m26c-output-state FILE\n";
-    std::cout << "       --m26c-logits-output FILE            Export position logits for a one-token probe\n";
-    std::cout << "       --exp0367-state-output FILE         Opt-in partial-tail prefill state snapshot\n";
-    std::cout << "       MIINFER_EXP0368_SCALAR_ORACLE=1    Diagnostic ordered P512 baseline selector\n";
-    std::cout << "       --m26c-layer-path-prefix PREFIX      Capture layers 0 and 1 at one direct token\n";
-    std::cout << "       --m26c-restore-only                 Verify route-specific snapshot import without decoding\n";
-    std::cout << "       --m26c-recurrent-qkv-m23            Use M23 only for recurrent QKV during imported decode\n";
-    std::cout << "       --m26c-ssm-out-native                Use native Q5_K only for SSM output during imported decode\n";
-    std::cout << "       scripts/compare-m26c-state.py LEGACY.bin INTERACTIVE.bin Compare route outputs/state\n";
-    std::cout << "       MIINFER_PRESET=m25_hi_qualified     Use the hermetic qualified MI50 P512 vector\n";
-    std::cout << "       MIINFER_PRESET=m25_interactive      Use experimental wide-prefill/Mx-decode serving\n";
-    std::cout << "  chat <model.gguf>                        Start an interactive multi-turn terminal chat REPL\n";
-    std::cout << "  serve --model MODEL.gguf [--port 8080] [--context N] [--experimental-context]\n"
-              << "        [--api-key-file PATH] [--allow-insecure]   Launch API and Web UI\n\n";
+    std::cout << "MIInfer — fast LLM inference for AMD gfx906\n\n"
+              << "Usage: miinfer <command> [options]\n\n"
+              << "Commands:\n"
+              << "  doctor      Check whether this machine can run MIInfer\n"
+              << "  models      Find available GGUF models\n"
+              << "  inspect     Inspect model compatibility\n"
+              << "  run         Generate a response\n"
+              << "  chat        Start an interactive conversation\n"
+              << "  serve       Start the OpenAI-compatible server\n"
+              << "  config      Show or change user configuration\n"
+              << "  --version   Show version information\n\n"
+              << "Run `miinfer <command> --help` for command-specific options.\n";
+}
+
+void print_command_help(std::string_view command) {
+    if (command == "doctor") std::cout << "Usage: miinfer doctor [--model MODEL] [--port PORT] [--json] [--verbose]\nCheck GPU, HIP, memory, model compatibility, and server port.\n";
+    else if (command == "models") std::cout << "Usage: miinfer models [DIRECTORY] [--json]\nList GGUF files in DIRECTORY or configured model locations.\n";
+    else if (command == "inspect") std::cout << "Usage: miinfer inspect MODEL [--json] [--verbose]\nInspect a local GGUF model and its production compatibility.\n";
+    else if (command == "run") std::cout << "Usage: miinfer run MODEL [PROMPT] [options]\n\nOptions:\n  -p, --prompt TEXT      Prompt text\n  -n, --max-tokens N     Maximum generated tokens (default 128)\n      --context N        Context capacity (default from config)\n      --temperature N    Sampling temperature (default 0.7; 0 is greedy)\n      --top-p N           Nucleus sampling (default 0.9)\n      --top-k N           Top-k sampling (default 40)\n      --seed N            Reproducible sampling seed\n      --no-stream         Buffer output until generation completes\n      --verbose           Show model/runtime diagnostics\n      --stats             Print timing summary\n\nIf PROMPT is omitted, read it from standard input.\n";
+    else if (command == "chat") std::cout << "Usage: miinfer chat [MODEL] [--context N] [--max-tokens N] [--stats]\nStart a multi-turn terminal conversation. Type /exit or /quit to leave.\n";
+    else if (command == "serve") std::cout << "Usage: miinfer serve [MODEL] [--host HOST] [--port PORT] [--context N] [--api-key-file PATH] [--verbose]\nStart the OpenAI-compatible API and bundled web UI (localhost:8080 by default).\n";
+    else if (command == "config") std::cout << "Usage: miinfer config [--json]\n       miinfer config set KEY VALUE\nStable keys: model-dir, default-model, host, port, context, api-key-file.\n";
+    else std::cout << "Usage: miinfer models [DIRECTORY]\n";
 }
 
 } // namespace
 
 int main(int argc, char** argv) try {
-    if (argc < 2) {
-        print_usage();
-        return 1;
+    if (argc < 2) { print_usage(); return 0; }
+    std::vector<std::string> args;
+    args.reserve(static_cast<std::size_t>(argc));
+    for (int i = 0; i < argc; ++i) args.emplace_back(argv[i]);
+    const std::string cmd = args[1];
+    if (cmd == "--version" || cmd == "-V") { miinfer::print_build_info(std::cout); return 0; }
+    if (cmd == "--help" || cmd == "-h" || cmd == "help") { print_usage(); return 0; }
+    if (cmd == "debug" && args.size() > 2 && (args[2] == "--help" || args[2] == "-h")) {
+        std::cout << "Usage: miinfer debug run MODEL [internal diagnostic options]\n"
+                  << "Developer-only access to retained model-state and profiling probes.\n";
+        return 0;
     }
+    if (args.size() > 2 && (args[2] == "--help" || args[2] == "-h")) { print_command_help(cmd); return 0; }
 
-    const std::string_view cmd = argv[1];
-    if ((cmd == "run" || cmd == "chat" || cmd == "serve") && !apply_runtime_preset()) return 2;
-    if (cmd == "inspect") {
-        return cmd_inspect(argc, argv);
-    } else if (cmd == "config") {
-        return cmd_config(argc, argv);
-    } else if (cmd == "doctor") {
-        return cmd_doctor(argc, argv);
-    } else if (cmd == "models") {
-        return cmd_models(argc, argv);
-    } else if (cmd == "run") {
-        return cmd_run(argc, argv);
+    load_user_config();
+    std::erase_if(args, [&](const std::string& arg) {
+        if (arg == "--verbose") { g_verbose = true; return true; }
+        return false;
+    });
+    if (cmd == "debug" && args.size() > 2 && args[2] == "run") {
+        if (std::getenv("MIINFER_PRESET") != nullptr && !apply_runtime_preset()) return 2;
+        std::vector<char*> debug_argv;
+        for (std::size_t i = 2; i < args.size(); ++i) debug_argv.push_back(args[i].data());
+        debug_argv.push_back(nullptr);
+        return cmd_run_debug(static_cast<int>(debug_argv.size() - 1), debug_argv.data());
+    }
+    if (cmd == "inspect" || cmd == "run") {
+        const std::string requested = args.size() > 2 ? args[2] : "";
+        auto model = resolve_model(requested, false);
+        if (!model) { (void)require_model(requested, cmd); return 2; }
+        if (args.size() > 2) args[2] = model->string();
+        else args.push_back(model->string());
     } else if (cmd == "chat") {
-        return cmd_chat(argc, argv);
+        const bool has_model = args.size() > 2 && !args[2].starts_with('-');
+        const std::string requested = has_model ? args[2] : "";
+        auto model = resolve_model(requested);
+        if (!model) { (void)require_model(requested, cmd); return 2; }
+        if (has_model) args[2] = model->string();
+        else args.insert(args.begin() + 2, model->string());
     } else if (cmd == "serve") {
-        return cmd_serve(argc, argv);
-    } else if (cmd == "--version") {
-        miinfer::print_build_info(std::cout);
-        return 0;
-    } else if (cmd == "--help" || cmd == "-h" || cmd == "help") {
-        print_usage();
-        return 0;
+        std::size_t model_index = args.size();
+        for (std::size_t i = 2; i < args.size(); ++i) {
+            if (args[i] == "--model" && i + 1 < args.size()) { model_index = i + 1; break; }
+            if (args[i] == "--host" || args[i] == "--port" || args[i] == "--context"
+                || args[i] == "--api-key-file" || args[i] == "--session-dir") {
+                ++i;
+                continue;
+            }
+            if (args[i].starts_with('-')) continue;
+            model_index = i;
+            break;
+        }
+        const std::string requested = model_index < args.size() ? args[model_index] : "";
+        auto model = resolve_model(requested);
+        if (!model) { (void)require_model(requested, cmd); return 2; }
+        if (model_index < args.size()) args[model_index] = model->string();
+        else { args.push_back("--model"); args.push_back(model->string()); }
+    }
+    if (cmd == "run" || cmd == "chat" || cmd == "serve") {
+        sanitize_product_environment();
+        (void)setenv("MIINFER_PRESET", "m25_hi_qualified", 1);
+        if (!apply_runtime_preset()) return 2;
+        (void)setenv("MIINFER_V2_0043_GQA_ATTENTION", "1", 1);
+        if (cmd == "serve") (void)setenv("MIINFER_SESSION_REUSE", "1", 1);
+    }
+    std::vector<char*> command_argv;
+    command_argv.reserve(args.size() + 1);
+    for (auto& arg : args) command_argv.push_back(arg.data());
+    command_argv.push_back(nullptr);
+    const int command_argc = static_cast<int>(args.size());
+    char** command_argv_data = command_argv.data();
+    if (cmd == "inspect") {
+        return cmd_inspect(command_argc, command_argv_data);
+    } else if (cmd == "config") {
+        return cmd_config(command_argc, command_argv_data);
+    } else if (cmd == "doctor") {
+        return cmd_doctor(command_argc, command_argv_data);
+    } else if (cmd == "models") {
+        return cmd_models(command_argc, command_argv_data);
+    } else if (cmd == "run") {
+        return cmd_run(command_argc, command_argv_data);
+    } else if (cmd == "chat") {
+        return cmd_chat(command_argc, command_argv_data);
+    } else if (cmd == "serve") {
+        return cmd_serve(command_argc, command_argv_data);
     } else {
         std::cerr << "Unknown command: " << cmd << "\n\n";
         print_usage();
-        return 1;
+        return 2;
     }
 } catch (const std::exception& error) {
     std::cerr << "MIInfer: " << error.what() << '\n';

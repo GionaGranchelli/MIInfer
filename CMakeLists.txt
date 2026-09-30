@@ -662,6 +662,16 @@ install(FILES
     docs/hardware.md
     DESTINATION "${CMAKE_INSTALL_DOCDIR}"
 )
+install(FILES
+    developer-guide.md
+    AGENTS.md
+    DESTINATION "${CMAKE_INSTALL_DOCDIR}"
+)
+install(DIRECTORY docs/ DESTINATION "${CMAKE_INSTALL_DOCDIR}/docs"
+        FILES_MATCHING PATTERN "*.md")
+install(DIRECTORY experiments/ DESTINATION "${CMAKE_INSTALL_DOCDIR}/experiments"
+        FILES_MATCHING PATTERN "*.md")
+install(FILES bench/README.md DESTINATION "${CMAKE_INSTALL_DOCDIR}/bench")
 install(PROGRAMS install.sh DESTINATION ".")
 if(MIINFER_ENABLE_HIP)
     install(TARGETS miinfer miinfer-device-info

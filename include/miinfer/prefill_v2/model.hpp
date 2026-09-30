@@ -13,6 +13,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <vector>
 #include <span>
 #include <string>
@@ -33,6 +34,7 @@ struct GenerateOptions {
     float temperature = 0.7f;
     float top_p = 0.9f;
     std::uint32_t top_k = 40;
+    std::optional<std::uint32_t> seed;
     float repetition_penalty = 1.15f;
     float presence_penalty = 0.0f;
     float frequency_penalty = 0.0f;

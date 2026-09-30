@@ -739,6 +739,8 @@ GenerateStats PrefillV2Model::generate(
     const GenerateOptions& options,
     hipStream_t stream) {
 
+    if (options.seed) rng_.seed(*options.seed);
+
     if (prompt.empty()) {
         throw std::runtime_error("PrefillV2Model::generate: empty prompt");
     }
@@ -1279,5 +1281,4 @@ bool PrefillV2Model::restore_matching_session(
 }
 
 } // namespace miinfer::prefill_v2
-
 
