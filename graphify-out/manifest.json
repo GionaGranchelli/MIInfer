@@ -150,15 +150,15 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1790715990.260282,
-    "seen": 1790716086.618486,
-    "ast_hash": "e74afe85372c451c137becad976b50e6",
+    "mtime": 1790724660.4024758,
+    "seen": 1790724851.5887148,
+    "ast_hash": "2e124caaf5c56fe573c798fba68527c6",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1790708653.7910604,
-    "seen": 1790716086.6184874,
-    "ast_hash": "49462b0530cce2a39371d7f38ece0cf0",
+    "mtime": 1790723018.487046,
+    "seen": 1790724851.588716,
+    "ast_hash": "773096ba06044d6b06b6fa9906003622",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -186,8 +186,8 @@
     "semantic_hash": ""
   },
   "docs/current-state.md": {
-    "mtime": 1790715944.12749,
-    "seen": 1790716086.618526,
+    "mtime": 1790723018.487046,
+    "seen": 1790724851.5887477,
     "ast_hash": "de0b15af047257baa73ce1607d0e278a",
     "semantic_hash": ""
   },
@@ -228,8 +228,8 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1790715944.1294901,
-    "seen": 1790716086.6185617,
+    "mtime": 1790723018.4880462,
+    "seen": 1790724851.588784,
     "ast_hash": "a2f98c8951dc6e3de6257fff2510a7fb",
     "semantic_hash": ""
   },
@@ -5142,8 +5142,8 @@
     "semantic_hash": ""
   },
   "docs/current-state-of-the-art.md": {
-    "mtime": 1790715944.1284902,
-    "seen": 1790716086.6185248,
+    "mtime": 1790723018.487046,
+    "seen": 1790724851.5887463,
     "ast_hash": "d469f4724ff5cb3f4719e74f44eae2ae",
     "semantic_hash": ""
   },
@@ -5394,8 +5394,8 @@
     "semantic_hash": ""
   },
   "docs/performance-research-protocol.md": {
-    "mtime": 1790715967.8103833,
-    "seen": 1790716086.6185474,
+    "mtime": 1790723018.4880462,
+    "seen": 1790724851.5887694,
     "ast_hash": "61b35059547a7dc9b5ed0cd9d5bcdab9",
     "semantic_hash": ""
   },
@@ -5682,8 +5682,8 @@
     "semantic_hash": ""
   },
   "src/prefill_v2/attention_layer.cpp": {
-    "mtime": 1790715990.259282,
-    "seen": 1790716086.6183639,
+    "mtime": 1790723018.500046,
+    "seen": 1790724851.5885801,
     "ast_hash": "3e302a9f2d60162a1eba477f483c27c5",
     "semantic_hash": ""
   },
@@ -6102,15 +6102,27 @@
     "semantic_hash": ""
   },
   "docs/post-m28-baseline.md": {
-    "mtime": 1790708720.8187838,
-    "seen": 1790716086.618554,
+    "mtime": 1790723018.4880462,
+    "seen": 1790724851.588776,
     "ast_hash": "c2cadebaa96706b02bf470b0d783173c",
     "semantic_hash": ""
   },
   "experiments/EXP-V2-0044-fp32-kq-fragment-parity.md": {
-    "mtime": 1790716018.4821548,
-    "seen": 1790716086.6191955,
+    "mtime": 1790723018.4880462,
+    "seen": 1790724851.5894172,
     "ast_hash": "108051fb5f32646e287ad1213bf336c6",
+    "semantic_hash": ""
+  },
+  "bench/v2_0045_qualification_bench.cpp": {
+    "mtime": 1790724833.1796706,
+    "seen": 1790724851.5881722,
+    "ast_hash": "546eb939955c9fc99a3f9b616fa5c2d6",
+    "semantic_hash": ""
+  },
+  "experiments/V2-0045-definitive-competitive-qualification.md": {
+    "mtime": 1790723756.973637,
+    "seen": 1790724851.589429,
+    "ast_hash": "fb038b5b2cc08724b668a0eaca409c6c",
     "semantic_hash": ""
   }
 }

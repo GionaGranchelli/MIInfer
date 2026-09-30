@@ -30,17 +30,17 @@ load.
 
 ## Required scoreboard
 
-Primary values are median prefill wall seconds and median decode milliseconds
+Primary values are median prefill wall milliseconds and median decode milliseconds
 per token. Each cell requires at least five valid samples and retained raw
 results. A workload is invalid if evaluated prompt-token counts differ.
 
 | Workload | MIInfer | mx-llama.cpp | upstream llama.cpp | Delta vs fastest | Verdict |
 | --- | ---: | ---: | ---: | ---: | --- |
-| P512 prefill | pending | pending | pending | pending | pending |
-| P1024 prefill | pending | pending | pending | pending | pending |
-| P2048 prefill | pending | pending | pending | pending | pending |
-| P4096 prefill | pending | pending | pending | pending | pending |
-| P8192 prefill | pending | pending | pending | pending | pending |
+| P512 prefill | 2179.94 ms | 2279.13 ms | 2566.41 ms | -4.35% | provisional MIInfer win |
+| P1024 prefill | 4367.99 ms | 4575.84 ms | 5172.70 ms | -4.54% | provisional MIInfer win |
+| P2048 prefill | 8838.83 ms | 9195.04 ms | 10415.89 ms | -3.87% | provisional MIInfer win |
+| P4096 prefill | 18044.90 ms | 18576.33 ms | 21068.14 ms | -2.86% | provisional MIInfer win |
+| P8192 prefill | 37633.89 ms | 37982.16 ms | 42978.20 ms | -0.92% | narrow MIInfer win |
 | P64 decode TG128 | pending | pending | pending | pending | pending |
 | P512 decode TG128 | pending | pending | pending | pending | pending |
 | P2048 decode TG128 | pending | pending | pending | pending | pending |
@@ -48,6 +48,17 @@ results. A workload is invalid if evaluated prompt-token counts differ.
 
 The previous P8192 serving medians (38.123261 s MIInfer / 38.936731 s mx /
 44.838664 s upstream) remain historical until reproduced under this matrix.
+The raw samples and deterministic prompt hashes are preserved in
+[`results/v2-0045/prefill-p512.json`](../results/v2-0045/prefill-p512.json),
+[`results/v2-0045/prefill-p1024.json`](../results/v2-0045/prefill-p1024.json),
+[`results/v2-0045/prefill-p2048.json`](../results/v2-0045/prefill-p2048.json),
+[`results/v2-0045/prefill-p4096.json`](../results/v2-0045/prefill-p4096.json),
+and [`results/v2-0045/prefill-p8192.json`](../results/v2-0045/prefill-p8192.json).
+All five prefill points favor MIInfer in this screen; P8192 is a narrow 0.92%
+lead over mx and requires careful variance review. Decode validation,
+agent-serving measurements, and stability remain pending.
+decode validation, and agent-serving measurements remain pending. The P64
+MIInfer harness smoke is excluded.
 
 ## Attention frontier — deferred
 
