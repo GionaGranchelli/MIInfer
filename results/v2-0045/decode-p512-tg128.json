@@ -1,0 +1,34 @@
+{
+  "qualification_sha": "81ce0e982220613453889a9a5178f11440ea6b22",
+  "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+  "workload": "P512 decode TG128",
+  "measurement_scope": "forced-token model-forward replay; MIInfer uses internal PrefillV2Model::decode_step, refs use llama-bench test_gen",
+  "prompt_tokens": 512,
+  "decode_steps": 128,
+  "prompt_id_sha256": ["372ff825d3aeb21dfe43e7af5b04373dae1e0d78a3ce1e7f14bd2177685081ca"],
+  "decode_id_sha256": [
+    "a801d67a19268474447fab06f0d151d3a8e11c1d580fc626751481c2de2e8b8e",
+    "703e6ffe3dc1978c0233cf5f03957fddf2dc237b2096144bcc0d69c8cdd12645",
+    "5a49d622616f087e69b75e512e45f6351d75dd33cd99f0dccddb608ac56e58a8",
+    "a7cbb23e345c3afdee69eac582d65c3ceb710086f2514dfa6bc0323e4187cb32",
+    "26f54216477e78084ac5f284570f33b31e77fe475457989dfc80d30d0978736a"
+  ],
+  "MIInfer": {
+    "samples_total_ms": [4387.264143, 4363.552367, 4356.625865, 4361.097805, 4357.361096],
+    "median_total_ms": 4361.097805,
+    "median_ms_per_token": 34.071077
+  },
+  "mx_llama_cpp": {
+    "commit": "2e9d29fe736969160f17476ec6f0a6298cee6966",
+    "samples_total_ms": [4952.732180, 4937.344218, 4932.516463, 4932.285772, 4931.940698],
+    "median_total_ms": 4932.516463,
+    "median_ms_per_token": 38.535285
+  },
+  "upstream_llama_cpp": {
+    "commit": "73a43d1f69345aee8bb186ef4b3172cef892f2e5",
+    "samples_total_ms": [5338.736003, 5291.376835, 5297.721305, 5297.227152, 5300.360719],
+    "median_total_ms": 5300.360719,
+    "median_ms_per_token": 41.409068
+  },
+  "verdict": "provisional MIInfer internal-replay win; does not time MIInfer's HIP-graph generate wrapper"
+}

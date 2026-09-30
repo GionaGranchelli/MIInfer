@@ -22,11 +22,12 @@ authorized. The immutable MIInfer production baseline is `main` at
 | Qualification environment | `vllm-gfx906-7.2.1`; ROCm 7.2.1 / HIP 7.2.53211 / HIP Clang 22.0.0git |
 | Working tree at start | tracked files clean; untracked `gpucore.3330886` preserved |
 
-The configured 225 W cap and active-run telemetry still need verification.
-Idle telemetry showed 1606/1000 MHz SCLK/MCLK, PCIe 8.0 GT/s ×16, 35°C
-junction, ~10 MB VRAM use, and no `/dev/kfd` owners. Idle runtime state was
-reported low-power; each accepted benchmark block must re-check clocks under
-load.
+The configured 225 W cap was verified with `rocm-smi -a`. During sampled
+benchmark blocks, SCLK/MCLK remained 1606/1000 MHz and PCIe remained 8.0 GT/s
+×16. The highest observed junction temperature was 84°C and highest observed
+socket power was 202 W, below cap. Each benchmark process was the sole MI50
+KFD owner; no overlapping GPU workload was present. The host's low-power-state
+warning was also emitted while active clocks were at their target values.
 
 ## Required scoreboard
 
@@ -42,9 +43,9 @@ results. A workload is invalid if evaluated prompt-token counts differ.
 | P4096 prefill | 18044.90 ms | 18576.33 ms | 21068.14 ms | -2.86% | provisional MIInfer win |
 | P8192 prefill | 37633.89 ms | 37982.16 ms | 42978.20 ms | -0.92% | narrow MIInfer win |
 | P64 decode TG128 | 33.81 ms/token | 38.47 ms/token | 41.43 ms/token | -12.1% | provisional internal replay win |
-| P512 decode TG128 | pending | pending | pending | pending | pending |
-| P2048 decode TG128 | pending | pending | pending | pending | pending |
-| P8192 decode TG128 | pending | pending | pending | pending | pending |
+| P512 decode TG128 | 34.07 ms/token | 38.54 ms/token | 41.41 ms/token | -11.6% | provisional internal replay win |
+| P2048 decode TG128 | 34.50 ms/token | 39.31 ms/token | 41.99 ms/token | -12.2% | provisional internal replay win |
+| P8192 decode TG128 | 36.88 ms/token | 42.77 ms/token | 43.45 ms/token | -13.8% | provisional internal replay win |
 
 The previous P8192 serving medians (38.123261 s MIInfer / 38.936731 s mx /
 44.838664 s upstream) remain historical until reproduced under this matrix.
@@ -55,10 +56,10 @@ The raw samples and deterministic prompt hashes are preserved in
 [`results/v2-0045/prefill-p4096.json`](../results/v2-0045/prefill-p4096.json),
 and [`results/v2-0045/prefill-p8192.json`](../results/v2-0045/prefill-p8192.json).
 All five prefill points favor MIInfer in this screen; P8192 is a narrow 0.92%
-lead over mx and requires careful variance review. Decode validation,
-agent-serving measurements, and stability remain pending.
-decode validation, and agent-serving measurements remain pending. The P64
-MIInfer harness smoke is excluded.
+lead over mx, with non-overlapping five-sample ranges. All four forced-token
+model-forward replay points also favor MIInfer. The P64 MIInfer harness smoke
+is excluded. Production graph-generation timing, agent-serving measurements,
+and the stability gate remain pending.
 
 ## Attention frontier — deferred
 
@@ -71,7 +72,11 @@ shows it is materially limiting the product.
 ## Qualification protocol
 
 Use one deterministic token corpus across runtimes, preserve its artifact and
-hash, and record BOS handling and evaluated counts. Prefill is timed separately
+hash, and record BOS handling and evaluated counts. The pinned GGUF uses the
+`qwen35` pre-tokenizer and omits `tokenizer.ggml.add_bos_token`; both reference
+builds and MIInfer therefore use no BOS, with vocabulary size 248320. The raw
+token IDs are generated from the default glibc `rand()` seed and validated
+against independent SHA-256 streams. Prefill is timed separately
 from a minimal TG1 tail. Decode must replay the same predetermined 128 input
 tokens after the same prompt/context; naturally sampled, different token
 trajectories are not a definitive equivalent-work comparison. If a runtime
@@ -82,6 +87,8 @@ argmax/token handoff), while references use `llama-bench test_gen`; this does
 not time MIInfer's production HIP-graph `generate()` wrapper. The exact P64
 prompt and each TG128 sequence hash are recorded in
 [`results/v2-0045/decode-p64-tg128.json`](../results/v2-0045/decode-p64-tg128.json).
+Raw P512, P2048, and P8192 replay distributions and input hashes are retained
+in their correspondingly named `results/v2-0045/decode-p*-tg128.json` records.
 
 For each workload, collect at least five samples, raw timing output, VRAM,
 temperature, clocks, and process ownership. Interleave runtimes where possible.
