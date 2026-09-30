@@ -1,0 +1,390 @@
+{
+  "qualification_sha": "cd6519262b35514a446e8dcac38d110313b71b16",
+  "workload": "three-turn coding-agent tool/reuse flow",
+  "source_manifest": [
+    {
+      "path": "README.md",
+      "file_sha256": "f6ec3f8ce35726ddbab77c36c12599e3fb85bcca6fd234681b4a796cd43eb8bf",
+      "excerpt_sha256": "693247f1f85ef1387f0c5bf96f3b4323134d04c43d5f28c771d7ae273c8cb25b",
+      "excerpt_bytes": 15000
+    },
+    {
+      "path": "docs/interactive-serving.md",
+      "file_sha256": "745a2cd697fd24741ed5d38585ff6ee542e0ff0afeb717c2a125c39a7474aa02",
+      "excerpt_sha256": "745a2cd697fd24741ed5d38585ff6ee542e0ff0afeb717c2a125c39a7474aa02",
+      "excerpt_bytes": 5962
+    },
+    {
+      "path": "include/miinfer/prefill_v2/model.hpp",
+      "file_sha256": "1c453ec9e2868c0d2ad20a807fc2a6f0edd27efa61551aeaa445f598d5905c88",
+      "excerpt_sha256": "92983e88c839b3635f56ce85df1e5195349cf18b01c9566dfbd0337ace7e2707",
+      "excerpt_bytes": 6000
+    },
+    {
+      "path": "src/openai_api.cpp",
+      "file_sha256": "32f2833a04879d774e73e11b1455dd41b3b48a83ee125faa1759f967cd59f6b1",
+      "excerpt_sha256": "503b0180006fcf0eff580934e60d431212cb3b247be1bfb260663bc9a0c6776a",
+      "excerpt_bytes": 3500
+    }
+  ],
+  "context_excerpt_bytes": 30712,
+  "turns": [
+    {
+      "turn": 1,
+      "requests": [
+        {
+          "content": "",
+          "reasoning_content": "\nThe user wants me to review the current MIInfer serving path and specifically asks me to first call read_file for docs/interactive-serving.md lines 1-80. Let me do that.\n",
+          "tool_calls": [
+            {
+              "id": "call_0",
+              "type": "function",
+              "function": {
+                "name": "read_file",
+                "arguments": "{\"end_line\":80,\"path\":\"docs/interactive-serving.md\",\"start_line\":1}"
+              }
+            }
+          ],
+          "client_ttft_ms": 44091.570388991386,
+          "client_wall_ms": 48024.09808593802,
+          "prompt_tokens": 9404,
+          "generated_tokens": 101,
+          "request_count": 1,
+          "server_latency": {
+            "request_id": 40,
+            "prompt_tokens": 9404,
+            "common_prefix_tokens": 0,
+            "reused_prefix_tokens": 0,
+            "session_checkpoint_count": 0,
+            "session_checkpoint_bytes": 0,
+            "new_prefill_tokens": 9404,
+            "prefill_ms": 44026.5,
+            "graph_capture_ms": 0,
+            "first_decode_token_ms": 44026.5,
+            "TTFT_wall_ms": 44090.657367,
+            "steady_decode_tok_s": 0,
+            "total_request_ms": 48022.9,
+            "cache_hit": false
+          },
+          "gpu_before": {
+            "vram_used_bytes": 27198074880,
+            "vram_total_bytes": 34342961152,
+            "junction_c": 37.0,
+            "sclk_mhz": 1606,
+            "mclk_mhz": 1000
+          },
+          "gpu_after": {
+            "vram_used_bytes": 27198074880,
+            "vram_total_bytes": 34342961152,
+            "junction_c": 62.0,
+            "sclk_mhz": 1606,
+            "mclk_mhz": 1000
+          }
+        },
+        {
+          "content": "",
+          "reasoning_content": "\nThe user wants me to summarize the serving and prefix-reuse contract from docs/interactive-serving.md (lines 1-80) that I already read, plus what's visible in the repository excerpts for src/openai_api.cpp and include/miinfer/prefill_v2/model.hpp. They want exactly four concise observations, citing files, distinguishing documented behavior from assumptions, ~80-120 words.\n\nLet me draft this carefully:\n\n1. **Preset & wide-prefill chunking** \u2014 `m25_interactive` enables MX MMV + repacked attention decode on top of resident/wide prefill (docs line 3-4). Wide prefill splits into bounded offset-aware chunks \u2264512 tokens with persistent KV/recurrent state across chunks (line 19-21). Documented.\n\n2. **Session reuse is opt-in and exact-prefix only.** Requires `MIINFER_SESSION_REUSE=1`; up to 8 GPU checkpoints at 512-token boundaries within a 3 GiB cap; radix trie picks longest exact token prefix; mismatch/reset/cancel/failure clears cache; prompts <512 have no checkpoint (lines 23-44). Documented.\n\n3. **TTFT wall-clock semantics.** Wall time starts at full HTTP request receipt (includes queueing), ends at first successful nonempty SSE write or response delivery for non-streaming; tool-enabled output is buffered until parsing completes so TTFT can include entire generation (lines 56-61). Documented.\n\n4. **Checkpoint identity binding.** Each checkpoint stores execution-contract version, model/config identity, quantization identity; changing any requires a new engine\u2014no cross-engine reuse (lines 33-39). This is documented as policy but the actual enforcement lives in code not shown here \u2014 I should note that's an assumption if I claim it's enforced. Actually lines 37-39 say \"The cache lives only inside its model/runtime engine; changing model, quantization, or preset requires a new engine and cannot reuse the old checkpoint.\" That IS documented behavior stated explicitly. So all four are documented. Let me just be careful about what's doc vs assumption.\n\nActually let me re-read: the user says \"distinguish documented behavior from assumptions.\" If everything I cite is directly in the file, then there may be nothing to flag as assumption unless I infer something beyond the text. Let me see if any of my",
+          "tool_calls": [],
+          "client_ttft_ms": 8733.210015809163,
+          "client_wall_ms": 29405.855095013976,
+          "prompt_tokens": 10874,
+          "generated_tokens": 512,
+          "request_count": 1,
+          "server_latency": {
+            "request_id": 43,
+            "prompt_tokens": 10874,
+            "common_prefix_tokens": 9404,
+            "reused_prefix_tokens": 9404,
+            "session_checkpoint_count": 1,
+            "session_checkpoint_bytes": 1232601088,
+            "new_prefill_tokens": 10874,
+            "prefill_ms": 8665.31,
+            "graph_capture_ms": 0,
+            "first_decode_token_ms": 8665.31,
+            "TTFT_wall_ms": 8732.392659,
+            "steady_decode_tok_s": 42.4196,
+            "total_request_ms": 29405,
+            "cache_hit": true
+          },
+          "gpu_before": {
+            "vram_used_bytes": 27198074880,
+            "vram_total_bytes": 34342961152,
+            "junction_c": 57.0,
+            "sclk_mhz": 1606,
+            "mclk_mhz": 1000
+          },
+          "gpu_after": {
+            "vram_used_bytes": 27198074880,
+            "vram_total_bytes": 34342961152,
+            "junction_c": 66.0,
+            "sclk_mhz": 1606,
+            "mclk_mhz": 1000
+          }
+        }
+      ],
+      "tool_results": [
+        {
+          "tool": "read_file",
+          "arguments": "{\"end_line\":80,\"path\":\"docs/interactive-serving.md\",\"start_line\":1}",
+          "result_sha256": "c6c1edf5dd48f38b0c4cabee949450e380cd7cac24b08b5d6e0e5517b1c1c2fb",
+          "result_chars": 4675
+        }
+      ],
+      "context_tokens": 10874,
+      "generated_tokens_total": 613,
+      "ttft_ms": 44091.570388991386,
+      "wall_ms": 77429.953180952,
+      "gpu_after": {
+        "vram_used_bytes": 27198074880,
+        "vram_total_bytes": 34342961152,
+        "junction_c": 66.0,
+        "sclk_mhz": 1606,
+        "mclk_mhz": 1000
+      },
+      "minimum_generation_gate": true,
+      "minimum_visible_answer_gate": false,
+      "reused_prefix_tokens": 9404,
+      "new_prefill_tokens": 10874,
+      "prefill_ms": 52691.81
+    },
+    {
+      "turn": 2,
+      "requests": [
+        {
+          "content": "",
+          "reasoning_content": "\nThe user wants me to make a single read_file call for src/prefill_v2/model.cpp lines 737-845, without any additional commentary or explanation. I'll just execute that specific request directly.\n",
+          "tool_calls": [
+            {
+              "id": "call_0",
+              "type": "function",
+              "function": {
+                "name": "read_file",
+                "arguments": "{\"end_line\":845,\"path\":\"src/prefill_v2/model.cpp\",\"start_line\":737}"
+              }
+            }
+          ],
+          "client_ttft_ms": 785.3185830172151,
+          "client_wall_ms": 5318.825563183054,
+          "prompt_tokens": 10946,
+          "generated_tokens": 113,
+          "request_count": 1,
+          "server_latency": {
+            "request_id": 46,
+            "prompt_tokens": 10946,
+            "common_prefix_tokens": 10874,
+            "reused_prefix_tokens": 10874,
+            "session_checkpoint_count": 1,
+            "session_checkpoint_bytes": 1232601088,
+            "new_prefill_tokens": 10946,
+            "prefill_ms": 717.162,
+            "graph_capture_ms": 0,
+            "first_decode_token_ms": 717.162,
+            "TTFT_wall_ms": 784.574191,
+            "steady_decode_tok_s": 29.0467,
+            "total_request_ms": 5317.89,
+            "cache_hit": true
+          },
+          "gpu_before": {
+            "vram_used_bytes": 27198074880,
+            "vram_total_bytes": 34342961152,
+            "junction_c": 62.0,
+            "sclk_mhz": 1606,
+            "mclk_mhz": 1000
+          },
+          "gpu_after": {
+            "vram_used_bytes": 27198074880,
+            "vram_total_bytes": 34342961152,
+            "junction_c": 66.0,
+            "sclk_mhz": 1606,
+            "mclk_mhz": 1000
+          }
+        },
+        {
+          "content": "\n\nIn `src/prefill_v2/model.cpp` (`PrefillV2Model::generate`, lines ~737\u2013845):\n\n1. **Match & select** \u2014 If `enable_prefix_reuse` is set, it first checks in-memory via `reusable_context_.check_match(prompt, model_name_, quantization_)`; only an `ExactMatch` sets `is_reuse`. Otherwise it falls back to disk restore from `persistent_session_dir` (lines 754\u2013770). This matches the doc's \"exact prefix match\" requirement.\n\n2. **Restore state** \u2014 On reuse it calls `restore_gdn_states(recurrent_states_, stream)` then synchronizes, timing into `restore_ms` (lines 786\u2013790). It records reused/suffix counts and treats GQA KV + GDN position as advanced by `prefix_len` (lines 780\u2013784), consistent with the documented recurrent/KV/convolution persistence.\n\n3. **Suffix prefill loop** \u2014 Iterates `[prefix_len .. prompt_len)`, chunking at `kPrefillV2MacroTile` (512); full chunks may use a captured HIP graph when enabled, partial tail uses plain `forward()` (lines 798\u2013833). Graphs are gated on `MIINFER_HIP_GRAPH != \"0\"` plus option flag.\n\n4. **Finalize** \u2014 Sets each recurrent state's position to end of suffix (`pos`) and syncs; times into `suffix_prefill_ms` (lines 834\u2013839). Non-reuse path resets state if requested (line 841+).",
+          "reasoning_content": "\n\n",
+          "tool_calls": [],
+          "client_ttft_ms": 10825.801477069035,
+          "client_wall_ms": 25689.477352891117,
+          "prompt_tokens": 12693,
+          "generated_tokens": 358,
+          "request_count": 1,
+          "server_latency": {
+            "request_id": 49,
+            "prompt_tokens": 12693,
+            "common_prefix_tokens": 10946,
+            "reused_prefix_tokens": 10946,
+            "session_checkpoint_count": 1,
+            "session_checkpoint_bytes": 1232601088,
+            "new_prefill_tokens": 12693,
+            "prefill_ms": 10755.1,
+            "graph_capture_ms": 0,
+            "first_decode_token_ms": 10755.1,
+            "TTFT_wall_ms": 10824.949771,
+            "steady_decode_tok_s": 86.0475,
+            "total_request_ms": 25688.6,
+            "cache_hit": true
+          },
+          "gpu_before": {
+            "vram_used_bytes": 27198074880,
+            "vram_total_bytes": 34342961152,
+            "junction_c": 62.0,
+            "sclk_mhz": 1606,
+            "mclk_mhz": 1000
+          },
+          "gpu_after": {
+            "vram_used_bytes": 27198074880,
+            "vram_total_bytes": 34342961152,
+            "junction_c": 68.0,
+            "sclk_mhz": 1606,
+            "mclk_mhz": 1000
+          }
+        }
+      ],
+      "tool_results": [
+        {
+          "tool": "read_file",
+          "arguments": "{\"end_line\":845,\"path\":\"src/prefill_v2/model.cpp\",\"start_line\":737}",
+          "result_sha256": "9e04aff03b4adf2daf2eb54e92fcea1477628af6e989623364d2d68e8343a19e",
+          "result_chars": 5314
+        }
+      ],
+      "context_tokens": 12693,
+      "generated_tokens_total": 471,
+      "ttft_ms": 785.3185830172151,
+      "wall_ms": 31008.30291607417,
+      "gpu_after": {
+        "vram_used_bytes": 27198074880,
+        "vram_total_bytes": 34342961152,
+        "junction_c": 68.0,
+        "sclk_mhz": 1606,
+        "mclk_mhz": 1000
+      },
+      "minimum_generation_gate": true,
+      "minimum_visible_answer_gate": true,
+      "reused_prefix_tokens": 21820,
+      "new_prefill_tokens": 1819,
+      "prefill_ms": 11472.262
+    },
+    {
+      "turn": 3,
+      "requests": [
+        {
+          "content": "",
+          "reasoning_content": "\n\n",
+          "tool_calls": [
+            {
+              "id": "call_0",
+              "type": "function",
+              "function": {
+                "name": "read_file",
+                "arguments": "{\"end_line\":4510,\"path\":\"tools/miinfer_cli.cpp\",\"start_line\":4470}"
+              }
+            }
+          ],
+          "client_ttft_ms": 63794.34052016586,
+          "client_wall_ms": 66628.7512590643,
+          "prompt_tokens": 13119,
+          "generated_tokens": 69,
+          "request_count": 1,
+          "server_latency": {
+            "request_id": 52,
+            "prompt_tokens": 13119,
+            "common_prefix_tokens": 0,
+            "reused_prefix_tokens": 0,
+            "session_checkpoint_count": 0,
+            "session_checkpoint_bytes": 0,
+            "new_prefill_tokens": 13119,
+            "prefill_ms": 63720.7,
+            "graph_capture_ms": 0,
+            "first_decode_token_ms": 63720.7,
+            "TTFT_wall_ms": 63793.634124,
+            "steady_decode_tok_s": 0,
+            "total_request_ms": 66627.9,
+            "cache_hit": false
+          },
+          "gpu_before": {
+            "vram_used_bytes": 27198074880,
+            "vram_total_bytes": 34342961152,
+            "junction_c": 64.0,
+            "sclk_mhz": 1606,
+            "mclk_mhz": 1000
+          },
+          "gpu_after": {
+            "vram_used_bytes": 27198074880,
+            "vram_total_bytes": 34342961152,
+            "junction_c": 65.0,
+            "sclk_mhz": 1606,
+            "mclk_mhz": 1000
+          }
+        },
+        {
+          "content": "\n\n**Stability checklist for serving telemetry (`tools/miinfer_cli.cpp`, lines 4474\u20134510):**\n\n1. **TTFT validity:** Confirm `first_delta_ms` is non-null before trusting `TTFT_wall_ms`; the code emits `\"null\"` when no SSE delta fired (line 4489), so absent output must not be treated as zero latency.\n\n2. **Cache-hit semantics:** `cache_hit` is true only when `reused_prefix_tokens > 0` (line 4493); verify that a full-prompt replay without any prefix match correctly reports false rather than defaulting to true.\n\n3. **Steady-decode guard:** Throughput requires `generated_tokens > 1` and positive steady time (lines 4490\u20134491); single-token or error responses will report 0 tok/s\u2014confirm",
+          "reasoning_content": "\nThe user wants me to provide a concise four-item stability checklist based on the telemetry code I just read from `tools/miinfer_cli.cpp` lines 4470-4510. They want:\n- Four items\n- One caveat included\n- File citation\n- About 80-120 words\n\nLet me look at what's in that code section:\n\n1. The `log_latency` lambda records: prompt_tokens, common_prefix_tokens, reused_prefix_tokens, session_checkpoint_count/bytes, new_prefill_tokens, prefill_ms, graph_capture_ms, first_decode_token_ms, TTFT_wall_ms, steady_decode_tok_s, total_request_ms, cache_hit.\n\n2. Wall time starts from `request.queued_at` (line 4476) \u2014 includes queueing as documented.\n\n3. TTFT is null if no first_delta_ms was captured (line 4489).\n\n4. Steady decode throughput requires generated_tokens > 1 and steady_ms > 0 (lines 4490-4491).\n\n5. Cache hit is derived from `reused_prefix_tokens > 0` (line 4493).\n\n6. Session reuse options are set conditionally: `enable_prefix_reuse = session_reuse`, `cache_prefix_after = session_reuse` (lines 4502-4503).\n\nNow let me craft a four-item stability checklist with one caveat, citing the file, ~80-120 words.\n",
+          "tool_calls": [],
+          "client_ttft_ms": 6390.557472128421,
+          "client_wall_ms": 28090.87498509325,
+          "prompt_tokens": 14098,
+          "generated_tokens": 512,
+          "request_count": 1,
+          "server_latency": {
+            "request_id": 55,
+            "prompt_tokens": 14098,
+            "common_prefix_tokens": 13119,
+            "reused_prefix_tokens": 13119,
+            "session_checkpoint_count": 1,
+            "session_checkpoint_bytes": 1232601088,
+            "new_prefill_tokens": 14098,
+            "prefill_ms": 6315.23,
+            "graph_capture_ms": 0,
+            "first_decode_token_ms": 6315.23,
+            "TTFT_wall_ms": 6389.721252,
+            "steady_decode_tok_s": 33.1256,
+            "total_request_ms": 28089.9,
+            "cache_hit": true
+          },
+          "gpu_before": {
+            "vram_used_bytes": 27198074880,
+            "vram_total_bytes": 34342961152,
+            "junction_c": 61.0,
+            "sclk_mhz": 1606,
+            "mclk_mhz": 1000
+          },
+          "gpu_after": {
+            "vram_used_bytes": 27198074880,
+            "vram_total_bytes": 34342961152,
+            "junction_c": 68.0,
+            "sclk_mhz": 1606,
+            "mclk_mhz": 1000
+          }
+        }
+      ],
+      "tool_results": [
+        {
+          "tool": "read_file",
+          "arguments": "{\"end_line\":4510,\"path\":\"tools/miinfer_cli.cpp\",\"start_line\":4470}",
+          "result_sha256": "db394f466b684a92f15a88867aa89dd1f535431db1d82531823efd83c21d1a30",
+          "result_chars": 2978
+        }
+      ],
+      "context_tokens": 14098,
+      "generated_tokens_total": 581,
+      "ttft_ms": 63794.34052016586,
+      "wall_ms": 94719.62624415755,
+      "gpu_after": {
+        "vram_used_bytes": 27198074880,
+        "vram_total_bytes": 34342961152,
+        "junction_c": 68.0,
+        "sclk_mhz": 1606,
+        "mclk_mhz": 1000
+      },
+      "minimum_generation_gate": true,
+      "minimum_visible_answer_gate": true,
+      "reused_prefix_tokens": 13119,
+      "new_prefill_tokens": 14098,
+      "prefill_ms": 70035.93
+    }
+  ],
+  "all_turns_minimum_generation_gate": true,
+  "all_turns_visible_answer_gate": false,
+  "conversation_message_count": 16
+}

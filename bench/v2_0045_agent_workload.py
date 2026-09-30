@@ -36,6 +36,7 @@ TOOLS = [
         }, "required": ["query"]},
     }},
 ]
+SERVER_LOG = Path(__file__).resolve().parents[1] / "results/v2-0045/agent-server.log"
 
 
 def sha256(data):
@@ -90,6 +91,43 @@ def metrics(url, key):
     return values
 
 
+def latest_server_latency():
+    if not SERVER_LOG.exists():
+        return None
+    for line in reversed(SERVER_LOG.read_text(errors="replace").splitlines()):
+        if line.startswith("miinfer_request_latency "):
+            return json.loads(line.split(" ", 1)[1])
+    return None
+
+
+def attach_server_latency(result):
+    events = []
+    if SERVER_LOG.exists():
+        events = [json.loads(line.split(" ", 1)[1]) for line in SERVER_LOG.read_text(
+            errors="replace").splitlines() if line.startswith("miinfer_request_latency ")]
+    request_count = sum(len(turn["requests"]) for turn in result["turns"])
+    offset = max(0, len(events) - request_count)
+    for turn in result["turns"]:
+        used = [request.get("server_latency") for request in turn["requests"]]
+        if not all(used):
+            used = events[offset:offset + len(turn["requests"])]
+            offset += len(turn["requests"])
+            for request, event in zip(turn["requests"], used):
+                request["server_latency"] = event
+        turn["reused_prefix_tokens"] = sum(event["reused_prefix_tokens"] for event in used)
+        turn["new_prefill_tokens"] = sum(
+            max(0, event["prompt_tokens"] - event["reused_prefix_tokens"]) for event in used)
+        turn["prefill_ms"] = sum(event["prefill_ms"] for event in used)
+        turn["ttft_ms"] = turn["requests"][0]["client_ttft_ms"]
+        turn["minimum_visible_answer_gate"] = len(turn["requests"][-1]["content"]) >= 300
+        turn["minimum_generation_gate"] = turn["generated_tokens_total"] >= 128
+    result["all_turns_minimum_generation_gate"] = all(
+        turn["minimum_generation_gate"] for turn in result["turns"])
+    result["all_turns_visible_answer_gate"] = all(
+        turn["minimum_visible_answer_gate"] for turn in result["turns"])
+    return result
+
+
 def stream_completion(url, key, model, messages, tool_choice, max_tokens):
     body = json.dumps({
         "model": model, "messages": messages, "tools": TOOLS,
@@ -135,6 +173,7 @@ def stream_completion(url, key, model, messages, tool_choice, max_tokens):
         "prompt_tokens": after["miinfer_prompt_tokens_total"] - before["miinfer_prompt_tokens_total"],
         "generated_tokens": after["miinfer_generated_tokens_total"] - before["miinfer_generated_tokens_total"],
         "request_count": after["miinfer_inference_requests_total"] - before["miinfer_inference_requests_total"],
+        "server_latency": latest_server_latency(),
         "gpu_before": gpu_before, "gpu_after": gpu_snapshot(),
     }
 
@@ -197,9 +236,15 @@ def main():
     parser.add_argument("--api-key", default="miinfer")
     parser.add_argument("--model", default="qwen3.8-27b")
     parser.add_argument("--output", default="results/v2-0045/agent-workload.json")
+    parser.add_argument("--enrich-existing", action="store_true")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     output_path = root / args.output
+    if args.enrich_existing:
+        result = attach_server_latency(json.loads(output_path.read_text(encoding="utf-8")))
+        output_path.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+        print(f"refreshed telemetry for {sum(len(turn['requests']) for turn in result['turns'])} requests")
+        return 0
     context, source_manifest = build_context(root)
     revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root,
                               capture_output=True, text=True, check=True).stdout.strip()
@@ -222,15 +267,15 @@ def main():
         turn = {"turn": index, "requests": []}
         if index > 1:
             messages.append({"role": "user", "content":
-                f"Turn {index}: continue the same coding-agent investigation. First call read_file on {tool_path}, lines {start_line}-{end_line}. Keep the prior history."})
-        call_response = stream_completion(args.url, args.api_key, args.model, messages, "required", 128)
+                f"Turn {index}: continue the same coding-agent investigation. Make exactly one read_file tool call now with path={tool_path}, start_line={start_line}, end_line={end_line}. Do not answer in prose yet; call the tool only. Keep the prior history."})
+        call_response = stream_completion(args.url, args.api_key, args.model, messages, "required", 192)
         turn["requests"].append(call_response)
         tool_results = append_tool_exchange(root, messages, call_response)
         turn["tool_results"] = tool_results
         messages.append({"role": "user", "content": followup})
         completion = None
         for _ in range(3):
-            completion = stream_completion(args.url, args.api_key, args.model, messages, "auto", 384)
+            completion = stream_completion(args.url, args.api_key, args.model, messages, "auto", 1024)
             turn["requests"].append(completion)
             if not completion["tool_calls"]:
                 break
@@ -241,22 +286,25 @@ def main():
             raise RuntimeError(f"turn {index} did not produce a final assistant response")
         messages.append({"role": "assistant", "content": completion["content"]})
         turn["context_tokens"] = completion["prompt_tokens"]
-        turn["reused_prefix_tokens"] = None  # Filled from the server's request-latency log.
-        turn["new_prefill_tokens"] = None
         turn["generated_tokens_total"] = sum(item["generated_tokens"] for item in turn["requests"])
-        turn["ttft_ms"] = completion["client_ttft_ms"]
+        turn["ttft_ms"] = turn["requests"][0]["client_ttft_ms"]
         turn["wall_ms"] = sum(item["client_wall_ms"] for item in turn["requests"])
         turn["gpu_after"] = completion["gpu_after"]
         turn["minimum_generation_gate"] = turn["generated_tokens_total"] >= 128
+        turn["minimum_visible_answer_gate"] = len(completion["content"]) >= 300
         result["turns"].append(turn)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     result["all_turns_minimum_generation_gate"] = all(
         turn["minimum_generation_gate"] for turn in result["turns"])
+    result["all_turns_visible_answer_gate"] = all(
+        turn["minimum_visible_answer_gate"] for turn in result["turns"])
     result["conversation_message_count"] = len(messages)
+    result = attach_server_latency(result)
     output_path.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(result, indent=2))
-    return 0 if result["all_turns_minimum_generation_gate"] else 1
+    return 0 if (result["all_turns_minimum_generation_gate"]
+                 and result["all_turns_visible_answer_gate"]) else 1
 
 
 if __name__ == "__main__":

@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "docs/roadmap.md": {
-    "mtime": 1790723018.4880462,
-    "seen": 1790724851.588784,
-    "ast_hash": "a2f98c8951dc6e3de6257fff2510a7fb",
+    "mtime": 1790736110.8462715,
+    "seen": 1790736154.816447,
+    "ast_hash": "eee0f959b91322cd961043284918e9c1",
     "semantic_hash": ""
   },
   "experiments/EXP-0001-benchmark-harness-validation.md": {
@@ -5142,9 +5142,9 @@
     "semantic_hash": ""
   },
   "docs/current-state-of-the-art.md": {
-    "mtime": 1790723018.487046,
-    "seen": 1790724851.5887463,
-    "ast_hash": "d469f4724ff5cb3f4719e74f44eae2ae",
+    "mtime": 1790736121.099222,
+    "seen": 1790736154.8163965,
+    "ast_hash": "07cb55938af09676c2b4966e3fbbb36f",
     "semantic_hash": ""
   },
   "experiments/EXP-0337-m25-prefill-hip-graph-rejection.md": {
@@ -6120,9 +6120,9 @@
     "semantic_hash": ""
   },
   "experiments/V2-0045-definitive-competitive-qualification.md": {
-    "mtime": 1790732026.7254884,
-    "seen": 1790732340.4586463,
-    "ast_hash": "2355e06da2a4ff92e7d37c164eef719d",
+    "mtime": 1790736098.2523322,
+    "seen": 1790736154.817143,
+    "ast_hash": "166da7c1f168e5c7315ac4ec95c5d112",
     "semantic_hash": ""
   },
   "results/v2-0045/prefill-p1024.json": {
@@ -6156,9 +6156,9 @@
     "semantic_hash": ""
   },
   "bench/v2_0045_agent_workload.py": {
-    "mtime": 1790732306.9091895,
-    "seen": 1790732340.4572074,
-    "ast_hash": "4bcb22c789eb95defd14c042c559422f",
+    "mtime": 1790736048.4585726,
+    "seen": 1790736154.815843,
+    "ast_hash": "da991f489c6a6c0dd0df4edcd279ede2",
     "semantic_hash": ""
   },
   "results/v2-0045/decode-p2048-tg128.json": {
@@ -6183,6 +6183,48 @@
     "mtime": 1790731334.1407075,
     "seen": 1790732340.4575465,
     "ast_hash": "2a6413301d40d21eed0a49446b3c8374",
+    "semantic_hash": ""
+  },
+  "results/v2-0045/agent-workload-attempt1.json": {
+    "mtime": 1790733053.9597285,
+    "seen": 1790733067.819077,
+    "ast_hash": "120cdc9b294b961c1336a94a3f146aef",
+    "semantic_hash": ""
+  },
+  "results/v2-0045/agent-workload.json": {
+    "mtime": 1790734529.4524846,
+    "seen": 1790736154.816113,
+    "ast_hash": "e0dd265d9b6c5863d64dcddd9611dcb7",
+    "semantic_hash": ""
+  },
+  "bench/v2_0045_stability.py": {
+    "mtime": 1790733957.8955348,
+    "seen": 1790736154.8158467,
+    "ast_hash": "22ea753444ec9ea19acda7b88fcb5cc4",
+    "semantic_hash": ""
+  },
+  "results/v2-0045/agent-workload-final.json": {
+    "mtime": 1790736141.5630474,
+    "seen": 1790736154.8161085,
+    "ast_hash": "4e9def9d9f9072bfef44d02eb1c1f262",
+    "semantic_hash": ""
+  },
+  "results/v2-0045/agent-workload-qualified.json": {
+    "mtime": 1790735882.2190967,
+    "seen": 1790736154.8161101,
+    "ast_hash": "7c7f9dcd6144830fb577975c8e0de92c",
+    "semantic_hash": ""
+  },
+  "results/v2-0045/agent-workload-visible.json": {
+    "mtime": 1790735143.407604,
+    "seen": 1790736154.8161113,
+    "ast_hash": "cb776b0a0bf05db6137d5f455651d396",
+    "semantic_hash": ""
+  },
+  "results/v2-0045/stability-workload.json": {
+    "mtime": 1790734292.2629063,
+    "seen": 1790736154.8161283,
+    "ast_hash": "227c284c96b9532cc1f94bbe4a4003a6",
     "semantic_hash": ""
   }
 }

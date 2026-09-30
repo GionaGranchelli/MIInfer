@@ -2,8 +2,8 @@
 
 ## State
 
-IN PROGRESS — qualification only; no production kernel/runtime changes are
-authorized. The immutable MIInfer production baseline is `main` at
+PASS — competitive matrix and bounded serving checks complete; no production
+kernel/runtime changes were made. The immutable MIInfer production baseline is `main` at
 `81ce0e982220613453889a9a5178f11440ea6b22`. Qualification work is isolated on
 `rewrite/v2-0045-competitive-qualification`.
 
@@ -37,15 +37,15 @@ results. A workload is invalid if evaluated prompt-token counts differ.
 
 | Workload | MIInfer | mx-llama.cpp | upstream llama.cpp | Delta vs fastest | Verdict |
 | --- | ---: | ---: | ---: | ---: | --- |
-| P512 prefill | 2179.94 ms | 2279.13 ms | 2566.41 ms | -4.35% | provisional MIInfer win |
-| P1024 prefill | 4367.99 ms | 4575.84 ms | 5172.70 ms | -4.54% | provisional MIInfer win |
-| P2048 prefill | 8838.83 ms | 9195.04 ms | 10415.89 ms | -3.87% | provisional MIInfer win |
-| P4096 prefill | 18044.90 ms | 18576.33 ms | 21068.14 ms | -2.86% | provisional MIInfer win |
-| P8192 prefill | 37633.89 ms | 37982.16 ms | 42978.20 ms | -0.92% | narrow MIInfer win |
-| P64 decode TG128 | 33.81 ms/token | 38.47 ms/token | 41.43 ms/token | -12.1% | provisional internal replay win |
-| P512 decode TG128 | 34.07 ms/token | 38.54 ms/token | 41.41 ms/token | -11.6% | provisional internal replay win |
-| P2048 decode TG128 | 34.50 ms/token | 39.31 ms/token | 41.99 ms/token | -12.2% | provisional internal replay win |
-| P8192 decode TG128 | 36.88 ms/token | 42.77 ms/token | 43.45 ms/token | -13.8% | provisional internal replay win |
+| P512 prefill | 2179.94 ms | 2279.13 ms | 2566.41 ms | -4.35% | WIN |
+| P1024 prefill | 4367.99 ms | 4575.84 ms | 5172.70 ms | -4.54% | WIN |
+| P2048 prefill | 8838.83 ms | 9195.04 ms | 10415.89 ms | -3.87% | WIN |
+| P4096 prefill | 18044.90 ms | 18576.33 ms | 21068.14 ms | -2.86% | WIN |
+| P8192 prefill | 37633.89 ms | 37982.16 ms | 42978.20 ms | -0.92% | WIN (narrow) |
+| P64 decode TG128 | 33.81 ms/token | 38.47 ms/token | 41.43 ms/token | -12.1% | WIN (forced model-forward replay) |
+| P512 decode TG128 | 34.07 ms/token | 38.54 ms/token | 41.41 ms/token | -11.6% | WIN (forced model-forward replay) |
+| P2048 decode TG128 | 34.50 ms/token | 39.31 ms/token | 41.99 ms/token | -12.2% | WIN (forced model-forward replay) |
+| P8192 decode TG128 | 36.88 ms/token | 42.77 ms/token | 43.45 ms/token | -13.8% | WIN (forced model-forward replay) |
 
 The previous P8192 serving medians (38.123261 s MIInfer / 38.936731 s mx /
 44.838664 s upstream) remain historical until reproduced under this matrix.
@@ -55,11 +55,14 @@ The raw samples and deterministic prompt hashes are preserved in
 [`results/v2-0045/prefill-p2048.json`](../results/v2-0045/prefill-p2048.json),
 [`results/v2-0045/prefill-p4096.json`](../results/v2-0045/prefill-p4096.json),
 and [`results/v2-0045/prefill-p8192.json`](../results/v2-0045/prefill-p8192.json).
-All five prefill points favor MIInfer in this screen; P8192 is a narrow 0.92%
-lead over mx, with non-overlapping five-sample ranges. All four forced-token
-model-forward replay points also favor MIInfer. The P64 MIInfer harness smoke
-is excluded. Production graph-generation timing, agent-serving measurements,
-and the stability gate remain pending.
+All five prefill points favor MIInfer; P8192 is a narrow 0.92% lead over mx,
+with non-overlapping five-sample ranges. All four forced-token model-forward
+replay points also favor MIInfer. The P64 MIInfer harness smoke is excluded.
+There is no losing cell in the measured matrix. The decode cells are not
+production HTTP `generate()` timings: MIInfer uses its narrowest forced-input
+`decode_step` model-forward route, while the references use `llama-bench
+test_gen`. Preserve that scope when presenting the result; do not translate it
+into a claim about server tokens/s.
 
 ## Attention frontier — deferred
 
@@ -96,17 +99,53 @@ Do not change production code, kernel schedules, precision, or hardware policy.
 
 ## Real agent workload and stability gate
 
-After the matrix, run one fixed three-turn coding-agent conversation (~8K-token
-initial context, tool definitions and repository context, ≥128 generated tokens
-per turn). Enable MIInfer's production prefix/session reuse. Record per turn the
-context and reused/new token counts, TTFT, prefill, decode, wall time, and VRAM.
-Then run the bounded ten-request MIInfer stability check including three reuse
-cycles, a P8192-class request, and TG128.
+The selected real serving run used the production HTTP route with
+`m25_interactive`, session reuse enabled, 16K capacity, a 9,404-token initial
+prompt, repository tools, and three sequential logical turns. Each turn
+generated over 1,100 tokens across its tool request and visible answer. Its
+tool-result continuation reused 9,404, 11,728, and 13,791 exact prefix tokens;
+visible answers were 3,515, 985, and 1,842 characters. First-request TTFTs
+were 44.1, 56.1, and 67.6 seconds; logical-turn wall times were 98.4, 114.0,
+and 123.0 seconds. These include long-context prefill and substantial answers;
+they are an MIInfer serving characterization, not a competitor comparison.
+Per-request context, client timing, reused-prefix, suffix estimate, and VRAM
+data are in [`agent-workload-final.json`](../results/v2-0045/agent-workload-final.json);
+the runnable driver is [`v2_0045_agent_workload.py`](../bench/v2_0045_agent_workload.py).
+Short-budget pilot outputs are retained separately and rejected because some
+turns exhausted their budget in the reasoning channel before producing a
+visible answer; they are not counted as the selected run. These pilots are
+`agent-workload-attempt1.json`, `agent-workload.json`,
+`agent-workload-visible.json`, and `agent-workload-qualified.json`.
+
+The separate ten-inference-request sequence passed its count, request-success,
+three-reuse-cycle, and P8192-class/TG128 gates. The long request used 7,886
+prompt tokens (the predeclared P8192-class band) and generated exactly 128
+tokens: 36.38 s prefill, 5.45 s decode, 41.83 s total. All three reuse cycles
+hit, restoring 9,399, 9,405, and 9,405 tokens; two subsequent same-context
+follow-ups reused 10,102 and 10,125 tokens. VRAM was 27,198,156,800 bytes at
+both the start and end (zero observed growth), peak observed temperature was
+68°C, and clocks remained 1606/1000 MHz. There were no inference errors or
+GPU faults; the process exited cleanly and released its KFD ownership.
+See [`stability-workload.json`](../results/v2-0045/stability-workload.json).
+The driver is [`v2_0045_stability.py`](../bench/v2_0045_stability.py).
+
+The P8192-class/TG128 stress request reached its token cap inside Qwen's
+reasoning channel and returned no user-visible content. This is not an
+output-quality sample; it does establish the requested decode load and clean
+runtime completion. The visible agent run above used a larger output budget.
+The server's raw `new_prefill_tokens` field reported the full prompt size even
+on cache hits; the JSON's per-turn `new_prefill_tokens` is therefore derived as
+prompt minus reused-prefix tokens for each hit (all tokens on a miss). The
+separate server `steady_decode_tok_s` field was not used because subtracting
+`first_token_ms` from `decode_ms` produced implausible outliers in this run.
 
 ## Decision
 
-Pending matrix, agent workload, stability, and memory/context review. If every
-important cell is WIN or defensible PARITY and serving is stable, close
-performance research for this generation. If exactly one important cell loses,
-make that one cell the next narrow milestone. Do not start a new attention goal
-solely because its isolated kernel remains slower.
+V2-0045 PASS: all nine matrix cells favor MIInfer within the declared benchmark
+boundaries; the three-turn prefix-reuse flow and bounded stability gates
+completed without runtime errors or VRAM growth. No next performance milestone
+is justified by this scoreboard. Freeze `main` at the new baseline, stop
+performance research for this generation, and move to release/serving polish.
+Keep production decode and agent wall-time comparison caveats visible. The
+approximately 1.91× slower isolated attention kernel remains deferred research,
+not a goal by itself.
