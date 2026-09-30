@@ -6120,9 +6120,9 @@
     "semantic_hash": ""
   },
   "experiments/V2-0045-definitive-competitive-qualification.md": {
-    "mtime": 1790728742.1417234,
-    "seen": 1790728997.7027893,
-    "ast_hash": "d982f62a8c3fc524d419e4d67a52bebb",
+    "mtime": 1790732026.7254884,
+    "seen": 1790732340.4586463,
+    "ast_hash": "2355e06da2a4ff92e7d37c164eef719d",
     "semantic_hash": ""
   },
   "results/v2-0045/prefill-p1024.json": {
@@ -6153,6 +6153,36 @@
     "mtime": 1790728729.3177829,
     "seen": 1790728997.7017703,
     "ast_hash": "e5cdf627ca0d37a8781dc98b27d48786",
+    "semantic_hash": ""
+  },
+  "bench/v2_0045_agent_workload.py": {
+    "mtime": 1790732306.9091895,
+    "seen": 1790732340.4572074,
+    "ast_hash": "4bcb22c789eb95defd14c042c559422f",
+    "semantic_hash": ""
+  },
+  "results/v2-0045/decode-p2048-tg128.json": {
+    "mtime": 1790730722.4745467,
+    "seen": 1790732340.4575422,
+    "ast_hash": "4b9605b1326ce44b726c844b8c852c47",
+    "semantic_hash": ""
+  },
+  "results/v2-0045/decode-p512-tg128.json": {
+    "mtime": 1790730337.2233326,
+    "seen": 1790732340.4575436,
+    "ast_hash": "87356e229f5b50e5baa0de24d4e94543",
+    "semantic_hash": ""
+  },
+  "results/v2-0045/decode-p64-tg128.json": {
+    "mtime": 1790729988.6499486,
+    "seen": 1790732340.4575453,
+    "ast_hash": "3fe2278e753a17f3ab8b5583b45c7d84",
+    "semantic_hash": ""
+  },
+  "results/v2-0045/decode-p8192-tg128.json": {
+    "mtime": 1790731334.1407075,
+    "seen": 1790732340.4575465,
+    "ast_hash": "2a6413301d40d21eed0a49446b3c8374",
     "semantic_hash": ""
   }
 }
