@@ -616,6 +616,10 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-long-context-qualification-bench PRIVATE miinfer_hip miinfer_model)
     target_compile_options(miinfer-long-context-qualification-bench PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-m29-vmm-probe bench/m29_vmm_probe.hip)
+    target_link_libraries(miinfer-m29-vmm-probe PRIVATE miinfer_model)
+    target_compile_options(miinfer-m29-vmm-probe PRIVATE -Wall -Wextra -Wpedantic)
+
     add_executable(miinfer-qwen3-quant-kv-attention-test tests/qwen3_quant_kv_attention_test.cpp)
     target_link_libraries(miinfer-qwen3-quant-kv-attention-test PRIVATE miinfer_hip)
     target_compile_options(miinfer-qwen3-quant-kv-attention-test PRIVATE -Wall -Wextra -Wpedantic)
