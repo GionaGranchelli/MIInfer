@@ -155,6 +155,20 @@ hardware gate: the `high` profile produced severe thermal clock fallback at
 matched-bandwidth conclusion is available. No VMM run directory exists under
 `results/m29-0001/vmm/`.
 
+| Required evidence | Status | Result |
+|---|---|---|
+| Minimum/recommended allocation granularity | NOT MEASURED | Probe compiled only |
+| 256K-equivalent virtual reservation | NOT MEASURED | Probe compiled only |
+| Basic reserve/create/map/access/GPU correctness | NOT MEASURED | Probe compiled only |
+| Incremental 16K/32K/64K/128K-equivalent commitment | NOT MEASURED | Probe compiled only |
+| Stable base address and adjacent growth | NOT MEASURED | Probe compiled only |
+| Unmap and same-VA remap | NOT MEASURED | Probe compiled only |
+| Matched `hipMalloc`/VMM correctness and bandwidth | NOT MEASURED | Probe compiled only |
+| Graph replay on VMM mapping | NOT MEASURED | Probe compiled only |
+| Growth after graph capture | NOT MEASURED | Probe compiled only |
+| Same-VA remap between graph replays | NOT MEASURED | Probe compiled only |
+| Cleanup and post-probe VRAM state | NOT MEASURED | Probe not run |
+
 ## Final decision and next recommendation
 
 **VMM_INCONCLUSIVE — hardware qualification prevented a valid test.** The
