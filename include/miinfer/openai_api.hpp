@@ -9,6 +9,8 @@
 
 namespace miinfer {
 
+constexpr std::size_t kDefaultMaxOutputTokens = 1024;
+
 struct ChatToolCall {
     std::string id;
     std::string name;
@@ -35,7 +37,7 @@ struct OpenAiChatRequest {
     std::vector<std::string> stop;
     std::string tool_choice = "auto";
     bool stream = false;
-    std::size_t max_tokens = 256;
+    std::size_t max_tokens = kDefaultMaxOutputTokens;
     float temperature = 0.7f;
     float top_p = 0.9f;
     std::uint32_t top_k = 40;

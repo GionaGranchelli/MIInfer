@@ -755,7 +755,9 @@ GenerateStats PrefillV2Model::generate(
 
     if (options.enable_prefix_reuse && reusable_context_.has_valid_prefix()) {
         auto match = reusable_context_.check_match(prompt, model_name_, quantization_);
-        if (match == ReusableContext::MatchResult::ExactMatch) {
+        // Exact-prefix checkpoints keep recurrent/KV state, not the final hidden vector for logits.
+        if (match == ReusableContext::MatchResult::ExactMatch
+            && reusable_context_.prefix_length() < prompt_len) {
             is_reuse = true;
             prefix_len = reusable_context_.prefix_length();
             suffix_len = prompt_len - prefix_len;
@@ -1281,4 +1283,3 @@ bool PrefillV2Model::restore_matching_session(
 }
 
 } // namespace miinfer::prefill_v2
-
