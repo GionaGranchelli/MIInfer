@@ -1,0 +1,42 @@
+{
+  "timestamp_utc": "2026-10-01T19:36:03Z",
+  "git": {
+    "commit": "2a86acba3ea2",
+    "dirty": "true"
+  },
+  "host": {
+    "hostname": "REDACTED",
+    "distribution": "Fedora Linux 44 (Workstation Edition)",
+    "kernel": "Linux 7.2.4-200.fc44.x86_64 #1 SMP PREEMPT_DYNAMIC Mon Sep  7 19:10:19 UTC 2026 x86_64",
+    "cpu": "Intel(R) Xeon(R) CPU E5-2680 v3 @ 2.50GHz",
+    "ram_bytes": "33576243200"
+  },
+  "software": {
+    "rocm_version": "UNAVAILABLE",
+    "hip_compiler_version": "HIP version: 7.1.52802-9999",
+    "tools": {
+      "rocminfo": "\u001b[37mROCk module is loaded\u001b[0m\n=====================    \nHSA System Attributes    \n==...
+      "rocm_smi": "\n\n============================ ROCm System Management Interface ============================\n==...
+      "amd_smi": "GPU: 0\n    BDF: 0000:06:00.0\n    UUID: 02ff66a1-0000-1000-8016-78e17348c2f7\n    KFD_ID: 4670\n  ...
+    }
+  },
+  "gpu": {
+    "target_architecture": "gfx906",
+    "rocm_smi": {
+      "card0": {
+        "Temperature (Sensor edge) (C)": "51.0",
+        "Temperature (Sensor junction) (C)": "53.0",
+        "Temperature (Sensor memory) (C)": "50.0",
+        "fclk clock speed:": "(1080Mhz)",
+        "fclk clock level:": "6",
+        "mclk clock speed:": "(1000Mhz)",
+        "mclk clock level:": "2",
+        "sclk clock speed:": "(1725Mhz)",
+        "sclk clock level:": "8",
+        "socclk clock speed:": "(971Mhz)",
+        "socclk clock level:": "7",
+        "pcie clock level": "0 (8.0GT/s x16)",
+        "Max Graphics Package Power (W)": "225.0",
+        "Current Socket Graphics Package Power (W)": "36.0",
+... (16 lines truncated)
+[full output: ~/.local/share/rtk/tee/1790884322_jq__host_6c47c2.log]
