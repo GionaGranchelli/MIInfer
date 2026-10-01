@@ -17,9 +17,9 @@ ceiling. Each stopped naturally below the ceiling; 8,192 was not needed.
 
 | Case | Prompt tokens | Generated | Visible result | Prefill / decode | Outcome |
 |---|---:|---:|---|---:|---|
-| Terminal C++ parser | 56 | 1,068 | Complete visible answer; source had quality defects | 581.5 / 38,698.6 ms | Natural stop |
+| Terminal C++ parser | not retained | 1,068 | Complete visible answer; source had quality defects | 581.5 / 38,698.6 ms | Natural stop |
 | Formerly blank terminal C++ parser | 110 | 2,021 | 897 visible tokens, 3,155 chars; 1,119 reasoning tokens; visible output began at token 1,124 | 638.0 / 100,526 ms | Natural stop |
-| Terminal Python LRU cache | recorded in captured run | 1,776 | Complete code and executable example | 579.6 / 77,048.7 ms | Natural stop |
+| Terminal Python LRU cache | not retained | 1,776 | Complete code and executable example | 579.6 / 77,048.7 ms | Natural stop |
 | API `parse_csv_ints` | 55 | 1,250 | 4,750 visible chars, closing code fence | 559.4 / 52,048.5 ms | Natural stop |
 
 The longest observed case used 2,021 tokens. A 4,096-token shared default
@@ -74,11 +74,44 @@ All checks below used the in-progress Release build at
 
 ## Pending release gates
 
-- Re-run full CTest after the final source/evidence commit.
-- Build a fresh package from the clean committed candidate SHA; record filename,
-  SHA-256, and build identity.
-- Run package smoke with and without the model, installed `doctor`, the exact
-  artifact’s default coding/chat/API checks, and the authenticated 20-request
-  16K stability sequence against the installed archive.
-- Record the final V2-0048B release decision. Do not promote or tag unless every
-  exact-artifact gate passes.
+## Final canonical artifact gate
+
+**V2-0048B: RELEASE PASS.** The source was merged to `main` at
+`94fad71ee19f539ce2ec0c7e100ad97d031dbefa`; the archive and all final checks
+below refer to that exact canonical source SHA.
+
+- Version: `0.2.0`
+- Artifact: `miinfer-0.2.0-gfx906-Linux.tar.gz`
+- Size: 963,353 bytes
+- SHA-256: `822fa647cec33efc34689630c0137870b5d61689e77a00b281bdba186a0f4519`
+- Build identity: Release, Git dirty `false`, GCC 16.2.1, HIP Clang 20.0.0,
+  target `gfx906`; installed binary reports source `94fad71ee19f`.
+
+Exact-artifact gates:
+
+- CTest: **26/26 passed**, including package-archive smoke.
+- Package smoke without model: **PASS** through CTest.
+- Package smoke with Qwen3.8-27B-Q4_K_M: **PASS**, including installed
+  `doctor`, first-run CLI, and authenticated API checks.
+- Installed `miinfer doctor --model`: **PASS** for MI50/gfx906, model, ROCm,
+  production runtime, and VRAM.
+- Default terminal chat, all original terminal fixtures: C++ parser 1,068
+  generated / 1,064 visible; formerly blank parser 2,021 / 897 visible; Python
+  LRU 1,776 / 1,422 visible. Each visibly completed and ended with `stop`.
+- Default API `parse_csv_ints`: two identical requests each returned HTTP 200,
+  1,250 completion tokens, 4,750 visible characters, and `finish_reason=stop`.
+- Short terminal chat and short API defaults stopped naturally at 6 and 5
+  generated tokens respectively (`stop`).
+- Explicit `max_tokens=32` and `256`: API non-streaming and streaming all
+  stopped at the exact requested count and returned `finish_reason=length`; SSE
+  completed with `[DONE]`. Terminal `run` and `chat` at 32 both displayed the
+  truncation warning and reported `length`.
+- Authenticated 16K exact-prompt stability: **20/20 HTTP 200**, repeated exact
+  512-token input, four output tokens per request, expected `length`; server
+  health/readiness stayed OK and shutdown was clean. Full-prefill fallback
+  (`reused_prefix_tokens=0`) prevented zero-suffix logits use; no HSA fault.
+
+The previous published `v0.2.0` tag pointed to `0da41d1e47b9` and an archive
+that failed the completion gate. After these exact-artifact gates passed, the
+tag was moved to the canonical source SHA above. No performance, kernel,
+prefix-reuse design, or roadmap work was added under V2-0048B.
