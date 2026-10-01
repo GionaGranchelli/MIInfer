@@ -1,0 +1,56 @@
+{
+  "decision": "V2-0048A PASS",
+  "source": {
+    "baseline_main_sha": "0032bb59cbf8c3d23ccd0eaeb5970004408503d0",
+    "corrected_sha": "a2da93f27efe70c9a78116287ea820a72231b61e",
+    "git_dirty": false
+  },
+  "preserved_v2_0048_artifact": {
+    "path": "/tmp/miinfer-v2-0048-build/miinfer-0.2.0-gfx906-Linux.tar.gz",
+    "size_bytes": 958832,
+    "sha256": "2eb4fc2e8dc6625c0524b8cb4f3c6f2a1ba7f8d7052a3a9e0f8d7b1b32f37efb"
+  },
+  "candidate_artifact": {
+    "path": "/tmp/miinfer-v2-0048a-build/miinfer-0.2.0-gfx906-Linux.tar.gz",
+    "size_bytes": 958858,
+    "sha256": "c98f10dbe8a74bd1cb1d5aa139f840c3f431c1f37617bfb46513456083653807",
+    "reported_commit": "a2da93f27efe",
+    "build_type": "Release",
+    "target": "gfx906",
+    "compiler": "GCC 16.2.1",
+    "hip_compiler": "Clang 20.0.0"
+  },
+  "build_and_tests": {
+    "ctest_passed": 25,
+    "ctest_failed": 0,
+    "ctest_package_smoke_skipped_before_archive": 1,
+    "package_smoke_without_model": "PASS",
+    "package_smoke_with_model": "PASS"
+  },
+  "default_terminal_chat_16k": {
+    "result": "PASS",
+    "generated_tokens": 413,
+    "visible_answer": "complete C++ implementation and edge-case explanation"
+  },
+  "default_authenticated_api_16k": {
+    "result": "PASS",
+    "http_status": 200,
+    "completion_tokens": 446,
+    "visible_characters": 1826,
+    "finish_reason": "stop"
+  },
+  "exact_prompt_stability_16k": {
+    "result": "PASS",
+    "authenticated_requests": 20,
+    "http_200": 20,
+    "first_request_default_output_tokens": 1024,
+    "following_exact_prompt_repeats": 19,
+    "repeat_max_tokens": 4,
+    "repeats_completed": 19,
+    "reused_prefix_tokens_for_repeats": 0,
+    "server_survived_all_requests": true,
+    "clean_shutdown": true,
+    "hsa_fault": false
+  },
+  "promotion_or_publication": "NONE"
+}

@@ -2,7 +2,8 @@
 
 ## Status
 
-Diagnosis confirmed; minimal correction implemented, qualification pending.
+**V2-0048A PASS.** Diagnosis confirmed; minimal correction is qualified on one
+candidate. This is not a promotion or publication of a release.
 V2-0048 and its packaged artifact remain unchanged. `main` remains at
 `0032bb59cbf8c3d23ccd0eaeb5970004408503d0`.
 
@@ -43,12 +44,32 @@ These findings identify separate causes: an inadequate default generation
 budget for some ordinary reasoning/code tasks, and a zero-suffix exact-prefix
 reuse bug that can crash the server independently of the generation budget.
 
-## Qualification still required
+## Candidate and qualification
 
-- Build one candidate from the corrected source commit and preserve its
-  identity.
-- Verify default API and terminal-chat responses are visibly complete on the
-  tested ordinary code task.
-- Re-run the identical-prefix request and a bounded authenticated request
-  stability sequence on that package at 16K.
-- Do not promote or publish unless those gates pass.
+- Corrected source commit: `a2da93f27efe70c9a78116287ea820a72231b61e`.
+- Candidate archive:
+  `/tmp/miinfer-v2-0048a-build/miinfer-0.2.0-gfx906-Linux.tar.gz`, 958,858
+  bytes, SHA-256
+  `c98f10dbe8a74bd1cb1d5aa139f840c3f431c1f37617bfb46513456083653807`.
+- Installed candidate identity reported version `0.2.0`, commit `a2da93f27efe`,
+  `Git dirty: false`, Release, GCC 16.2.1, HIP Clang 20.0.0, gfx906.
+- CTest: 25 passed, 0 failed; the package smoke test was skipped in this
+  pre-package invocation. The package archive smoke passed both without and
+  with the Qwen model argument, including the model-backed first-run checks.
+- Default terminal chat at 16K returned a complete C++ implementation and
+  edge-case explanation, using 413 generated tokens.
+- Authenticated default API code request at 16K returned HTTP 200, 1,826
+  visible characters, 446 completion tokens, and `finish_reason=stop`.
+- The same prompt was then repeated 19 times with `max_tokens=4`. All 19
+  returned HTTP 200 and completed; verbose logs show requests 2–20 completed
+  prefill with `reused_prefix_tokens=0`, confirming the exact-prefix fallback.
+  The server remained alive through request 20 and shut down cleanly; no HSA
+  fault occurred. Empty content on these 4-token stress requests is expected
+  and is not counted as an output-quality check.
+- The original V2-0048 archive hash remains
+  `2eb4fc2e8dc6625c0524b8cb4f3c6f2a1ba7f8d7052a3a9e0f8d7b1b32f37efb`.
+  Candidate SHA, old archive SHA, and test summary are also recorded in
+  [`focused-qualification.json`](../results/v2-0048a/focused-qualification.json).
+
+V2-0048A passes its scoped release-correction gates. Keep `main` at its
+immutable baseline; no release tag, promotion, or publication was performed.
