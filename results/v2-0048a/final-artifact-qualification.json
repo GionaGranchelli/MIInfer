@@ -1,0 +1,51 @@
+{
+  "decision": "RELEASE BLOCKED",
+  "source": {
+    "canonical_sha": "2ee2ee3fb29c461617b21d136a093e0e24c7134d",
+    "version": "0.2.0",
+    "git_dirty": false
+  },
+  "artifact": {
+    "filename": "miinfer-0.2.0-gfx906-Linux.tar.gz",
+    "size_bytes": 958806,
+    "sha256": "2ab21fd56278a19b471b4bc221dc4b1627f91eae97b445f0e849ac140d13935d",
+    "build_type": "Release",
+    "compiler": "GCC 16.2.1",
+    "hip_compiler": "Clang 20.0.0",
+    "target": "gfx906"
+  },
+  "checks": {
+    "ctest": {"passed": 26, "failed": 0},
+    "package_smoke_with_model": "PASS",
+    "installed_doctor_with_model": "PASS",
+    "default_chat_coding": {
+      "result": "FAIL",
+      "default_max_tokens": 1024,
+      "parser_request_generated_tokens": 1024,
+      "parser_answer": "incomplete code",
+      "second_parser_request": "no visible answer after 1024 tokens",
+      "simpler_lru_request_generated_tokens": 1024,
+      "lru_answer": "incomplete example"
+    },
+    "default_authenticated_api_coding": {
+      "result": "FAIL",
+      "identical_requests": 2,
+      "http_statuses": [200, 200],
+      "completion_tokens": [1024, 1024],
+      "visible_characters": [4067, 4067],
+      "answers_complete": false,
+      "exact_prefix_fault": false
+    },
+    "authenticated_stability": {
+      "requests": 20,
+      "http_200": 20,
+      "max_tokens_per_request": 4,
+      "server_survived": true,
+      "clean_shutdown": true,
+      "prefix_fallback_reused_tokens": 0
+    },
+    "performance_matrix_rerun": false
+  },
+  "release_tag_action": "NOT MOVED; existing v0.2.0 tag remains on its prior target",
+  "release_artifact_published": false
+}
