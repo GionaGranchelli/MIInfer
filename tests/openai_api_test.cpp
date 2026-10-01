@@ -5,6 +5,11 @@
 #define CHECK(condition) do { if (!(condition)) { std::cerr << "check failed: " #condition "\n"; return 1; } } while (false)
 
 int main() {
+    const auto default_budget = miinfer::parse_openai_chat_request(
+        R"({"messages":[{"role":"user","content":"hi"}]})");
+    CHECK(default_budget.request);
+    CHECK(default_budget.request->max_tokens == miinfer::kDefaultMaxOutputTokens);
+
     const auto parsed = miinfer::parse_openai_chat_request(R"({"model":"test","messages":[{"role":"system","content":"Be concise."},{"role":"user","content":"He said \"hi\"\\ok\n"},{"role":"assistant","content":"Hi"},{"role":"user","content":"\u03bb"}],"stream":true,"max_tokens":4096,"ignored":1})");
     CHECK(parsed.request);
     CHECK(parsed.request->model && *parsed.request->model == "test");

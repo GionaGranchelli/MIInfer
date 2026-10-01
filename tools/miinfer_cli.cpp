@@ -4634,7 +4634,7 @@ int cmd_chat(int argc, char** argv) {
     if (argc < 3) { std::cerr << "miinfer chat MODEL\n"; return 2; }
     const std::string model_path = argv[2];
     std::size_t context = static_cast<std::size_t>(std::stoull(configured("context", "8192")));
-    std::size_t max_tokens = 512;
+    std::size_t max_tokens = miinfer::kDefaultMaxOutputTokens;
     bool show_stats = false;
     for (int i = 3; i < argc; ++i) {
         const std::string_view arg = argv[i];

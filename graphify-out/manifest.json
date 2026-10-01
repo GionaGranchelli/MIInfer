@@ -2364,9 +2364,9 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1790843376.7090762,
-    "seen": 1790845226.9714608,
-    "ast_hash": "0ea0aa47d3f45f13e1372e9ca6247b72",
+    "mtime": 1790857368.733488,
+    "seen": 1790857568.163354,
+    "ast_hash": "2a7b63e32834f5616c9dc42c117ca04d",
     "semantic_hash": ""
   },
   "tools/qwen35_gpu_pipeline.hpp": {
@@ -2904,9 +2904,9 @@
     "semantic_hash": ""
   },
   "include/miinfer/openai_api.hpp": {
-    "mtime": 1790707166.7741718,
-    "seen": 1790716086.6180065,
-    "ast_hash": "87c59967df1a0bd35dd360db63c7dc0a",
+    "mtime": 1790857368.7314882,
+    "seen": 1790857568.1629019,
+    "ast_hash": "7e634c5b9f47c8d4d1d23f271ae440c6",
     "semantic_hash": ""
   },
   "src/openai_api.cpp": {
@@ -2916,9 +2916,9 @@
     "semantic_hash": ""
   },
   "tests/openai_api_test.cpp": {
-    "mtime": 1790707166.7761717,
-    "seen": 1790716086.6184042,
-    "ast_hash": "850e9f384424780c3ed17a3a9b924e2f",
+    "mtime": 1790857368.7374883,
+    "seen": 1790857568.1632934,
+    "ast_hash": "9e7368327982e6e3a202e0883a6263f1",
     "semantic_hash": ""
   },
   "experiments/EXP-0265-m16d-openai-request-contract.md": {
@@ -5718,9 +5718,9 @@
     "semantic_hash": ""
   },
   "src/prefill_v2/model.cpp": {
-    "mtime": 1790843376.708076,
-    "seen": 1790845226.9713604,
-    "ast_hash": "40dcc846862d3925dd11b023e535a2a9",
+    "mtime": 1790857417.2752678,
+    "seen": 1790857568.1632605,
+    "ast_hash": "95544dc2dac2e8250e738cd5cb2dc330",
     "semantic_hash": ""
   },
   "experiments/V2-0004-register-resident-gdn-and-full-model.md": {
@@ -6252,9 +6252,15 @@
     "semantic_hash": ""
   },
   "experiments/V2-0047-release-packaging.md": {
-    "mtime": 1790846393.2540534,
-    "seen": 1790846522.131495,
-    "ast_hash": "f37cfc8182e5d67c0662ab1f8adc2d99",
+    "mtime": 1790846880.8707588,
+    "seen": 1790857568.1641192,
+    "ast_hash": "bd0e0020c57c3a0139271935223ea78f",
+    "semantic_hash": ""
+  },
+  "experiments/V2-0048A-generation-budget-and-exact-prefix-fault.md": {
+    "mtime": 1790857546.5396814,
+    "seen": 1790857568.1641207,
+    "ast_hash": "7d2300aecf20205d1e949eaf0e620c54",
     "semantic_hash": ""
   }
 }
