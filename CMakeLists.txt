@@ -6,6 +6,41 @@ project(MIInfer VERSION 0.2.0 LANGUAGES CXX)
 
 include(GNUInstallDirs)
 include(FetchContent)
+include(CTest)
+
+option(MIINFER_BUILD_BENCHMARKS "Include benchmark executables in the default build" OFF)
+option(MIINFER_BUILD_RESEARCH_TOOLS "Include historical and forensic tools in the default build" OFF)
+option(MIINFER_BUILD_TESTS "Include test executables in the default build and register CTest tests" ${BUILD_TESTING})
+set(BUILD_TESTING "${MIINFER_BUILD_TESTS}")
+if(MIINFER_BUILD_TESTS)
+    enable_testing()
+endif()
+set(MIINFER_RELEASE_TEST_TARGETS
+    miinfer-host-test
+    miinfer-openai-api-test
+    miinfer-m12-gdn-oracle
+    miinfer-model-loader-test
+    miinfer-qwen3-primitives-host-test
+    miinfer-qwen3-layer0-test
+    miinfer-qwen3-kv-cache-test
+    miinfer-qwen3-forward-test
+    miinfer-qwen3-tokenizer-test
+    miinfer-kquant-wave-test
+    miinfer-hip-smoke
+    miinfer-fp16-gemv-test
+    miinfer-q4-q8-gemv-test
+    miinfer-q4-q8-dot4-probe
+    miinfer-model-gpu-test
+    miinfer-qwen3-primitives-test
+    miinfer-qwen35-conv-batch-test
+    miinfer-qwen3-layer0-gpu-test
+    miinfer-qwen3-kv-cache-gpu-test
+    miinfer-qwen3-quant-kv-attention-test
+    miinfer-qwen3-cached-attention-determinism-gpu-test
+    miinfer-qwen3-forward-gpu-test
+    miinfer-qwen3-decode-gpu-test
+    miinfer-qwen3-decode-sequence-gpu-test
+)
 
 FetchContent_Declare(nlohmann_json
     URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
@@ -596,8 +631,46 @@ if(MIINFER_ENABLE_HIP)
 
 endif()
 
-include(CTest)
-if(BUILD_TESTING)
+# Keep non-product executable targets available for explicit development builds,
+# but do not make research programs a prerequisite of the normal release build.
+get_property(MIINFER_EXECUTABLE_TARGETS DIRECTORY PROPERTY BUILDSYSTEM_TARGETS)
+foreach(MIINFER_TARGET IN LISTS MIINFER_EXECUTABLE_TARGETS)
+    get_target_property(MIINFER_TARGET_TYPE "${MIINFER_TARGET}" TYPE)
+    if(NOT MIINFER_TARGET_TYPE STREQUAL "EXECUTABLE")
+        continue()
+    endif()
+
+    get_target_property(MIINFER_TARGET_SOURCES "${MIINFER_TARGET}" SOURCES)
+    set(MIINFER_EXCLUDE_FROM_ALL FALSE)
+    foreach(MIINFER_SOURCE IN LISTS MIINFER_TARGET_SOURCES)
+        if(MIINFER_SOURCE MATCHES "^bench/"
+           AND NOT MIINFER_TARGET STREQUAL "miinfer-m12-gdn-oracle"
+           AND NOT MIINFER_BUILD_BENCHMARKS)
+            set(MIINFER_EXCLUDE_FROM_ALL TRUE)
+        elseif(MIINFER_SOURCE MATCHES "^tools/"
+               AND NOT MIINFER_TARGET STREQUAL "miinfer"
+               AND NOT MIINFER_BUILD_RESEARCH_TOOLS)
+            set(MIINFER_EXCLUDE_FROM_ALL TRUE)
+        elseif(MIINFER_SOURCE MATCHES "^tests/"
+               AND NOT MIINFER_TARGET STREQUAL "miinfer-device-info"
+               AND (NOT MIINFER_BUILD_TESTS
+                    OR NOT MIINFER_TARGET IN_LIST MIINFER_RELEASE_TEST_TARGETS))
+            set(MIINFER_EXCLUDE_FROM_ALL TRUE)
+        endif()
+    endforeach()
+
+    if(MIINFER_TARGET STREQUAL "miinfer-m12-gdn-oracle"
+       AND NOT MIINFER_BUILD_TESTS
+       AND NOT MIINFER_BUILD_BENCHMARKS)
+        set(MIINFER_EXCLUDE_FROM_ALL TRUE)
+    endif()
+
+    if(MIINFER_EXCLUDE_FROM_ALL)
+        set_property(TARGET "${MIINFER_TARGET}" PROPERTY EXCLUDE_FROM_ALL TRUE)
+    endif()
+endforeach()
+
+if(MIINFER_BUILD_TESTS)
     add_test(NAME host-only COMMAND miinfer-host-test)
     set_tests_properties(host-only PROPERTIES LABELS "host-only")
     add_test(NAME openai-api-host COMMAND miinfer-openai-api-test)
@@ -655,23 +728,13 @@ if(BUILD_TESTING)
     endif()
 endif()
 
+install(FILES README.md LICENSE DESTINATION "${CMAKE_INSTALL_DOCDIR}")
 install(FILES
-    README.md
-    LICENSE
-    docs/current-state.md
+    docs/cli-product-contract.md
     docs/hardware.md
-    DESTINATION "${CMAKE_INSTALL_DOCDIR}"
+    docs/release.md
+    DESTINATION "${CMAKE_INSTALL_DOCDIR}/docs"
 )
-install(FILES
-    developer-guide.md
-    AGENTS.md
-    DESTINATION "${CMAKE_INSTALL_DOCDIR}"
-)
-install(DIRECTORY docs/ DESTINATION "${CMAKE_INSTALL_DOCDIR}/docs"
-        FILES_MATCHING PATTERN "*.md")
-install(DIRECTORY experiments/ DESTINATION "${CMAKE_INSTALL_DOCDIR}/experiments"
-        FILES_MATCHING PATTERN "*.md")
-install(FILES bench/README.md DESTINATION "${CMAKE_INSTALL_DOCDIR}/bench")
 install(PROGRAMS install.sh DESTINATION ".")
 if(MIINFER_ENABLE_HIP)
     install(TARGETS miinfer miinfer-device-info
@@ -684,6 +747,17 @@ set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MI50/gfx906 LLM inference runtime")
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
 set(CPACK_PACKAGE_FILE_NAME
     "miinfer-${PROJECT_VERSION}-${MIINFER_TARGET_ARCH}-${CMAKE_SYSTEM_NAME}")
+set(MIINFER_RELEASE_PACKAGE_ARCHIVE
+    "${CMAKE_BINARY_DIR}/${CPACK_PACKAGE_FILE_NAME}.tar.gz")
 set(CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}")
 set(CPACK_GENERATOR "TGZ")
 include(CPack)
+
+if(MIINFER_BUILD_TESTS)
+    add_test(NAME package-archive-smoke
+        COMMAND bash "${CMAKE_SOURCE_DIR}/scripts/test-package.sh"
+            "${MIINFER_RELEASE_PACKAGE_ARCHIVE}")
+    set_tests_properties(package-archive-smoke PROPERTIES
+        LABELS "package-host"
+        SKIP_REGULAR_EXPRESSION "^SKIP: package archive")
+endif()

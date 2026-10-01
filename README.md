@@ -7,11 +7,12 @@ knowledge of kernel presets.
 
 ## Install and start
 
-On a supported Linux/MI50 system, install the release archive and add its
-binary directory to `PATH`:
+On a supported Linux/MI50 system, download and extract the release archive,
+run its installer, then add the installed binary directory to `PATH`:
 
 ```bash
-./install.sh miinfer-0.2.0-gfx906-Linux.tar.gz
+tar -xzf miinfer-0.2.0-gfx906-Linux.tar.gz
+./miinfer-0.2.0-gfx906-Linux/install.sh miinfer-0.2.0-gfx906-Linux.tar.gz
 export PATH="$HOME/.local/miinfer/bin:$PATH"
 miinfer doctor --model ~/models/Qwen3.8-27B-Q4_K_M.gguf
 miinfer chat ~/models/Qwen3.8-27B-Q4_K_M.gguf
@@ -48,23 +49,18 @@ support `--json` where applicable.
 
 ## Qualification
 
-The V2-0045 MI50 qualification measured MIInfer ahead of pinned mx-llama.cpp
-and upstream llama.cpp in all nine tested prefill/decode cells. The claim is
+The MI50 qualification measured MIInfer ahead of pinned mx-llama.cpp and
+upstream llama.cpp in all nine tested prefill/decode cells. The claim is
 specific to the qualified model, hardware, and workload matrix. Decode used
 forced-token model-forward replay, not HTTP generation throughput; the
 multi-turn serving workload passed with prefix reuse but was not compared
-against the other runtimes. See the
-[qualification record](experiments/V2-0045-definitive-competitive-qualification.md)
-and [current state](docs/current-state-of-the-art.md).
+against the other runtimes. See [release notes and qualification scope](docs/release.md).
 
 The P8192 prefill lead over mx is narrow. The isolated attention kernel remains
 slower, but attention research is deferred because the complete qualified
 runtime wins the measured system-level matrix.
 
-## Development
-
-MIInfer remains specialized for gfx906 and Qwen3.8-27B-Q4_K_M. Build and
-benchmark methodology lives in [`bench/README.md`](bench/README.md) and
-[`docs/benchmarking.md`](docs/benchmarking.md). Historical kernel research and
-milestone notes are retained in [`developer-guide.md`](developer-guide.md);
-they are not required for normal CLI use.
+For source builds, installation details, hardware support, and the public CLI
+contract, see [`docs/release.md`](docs/release.md),
+[`docs/hardware.md`](docs/hardware.md), and
+[`docs/cli-product-contract.md`](docs/cli-product-contract.md).

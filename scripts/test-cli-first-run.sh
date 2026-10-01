@@ -69,7 +69,7 @@ fi
 
 printf 'Testing configured default-model server and API completion...\n' >&2
 port=$(python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1]); s.close()')
-model_id=$(basename "$model")
+model_id=$(basename "${model%.gguf}")
 "$binary" serve --host 127.0.0.1 --port "$port" > "$stage/server-out.txt" 2> "$stage/server.log" &
 server_pid=$!
 ready=0
@@ -86,11 +86,21 @@ if [[ $ready -ne 1 ]]; then
     exit 1
 fi
 grep -q '"ready":true' "$stage/ready.json"
+curl --silent --show-error --fail "http://127.0.0.1:$port/v1/models" \
+    > "$stage/models-api.json"
+grep -q "\"id\":\"$model_id\"" "$stage/models-api.json"
 curl --silent --show-error --fail "http://127.0.0.1:$port/v1/chat/completions" \
     -H 'Content-Type: application/json' \
     -d "{\"model\":\"$model_id\",\"messages\":[{\"role\":\"user\",\"content\":\"Reply with one short greeting.\"}],\"max_tokens\":8,\"temperature\":0}" \
     > "$stage/completion.json"
 grep -q '"role":"assistant"' "$stage/completion.json"
 grep -q '"content":"' "$stage/completion.json"
+
+if env -u MIINFER_API_KEY "$binary" serve --model "$model" \
+    --host 0.0.0.0 --port "$port" > "$stage/lan-out.txt" 2> "$stage/lan-error.txt"; then
+    printf 'unauthenticated LAN serving was unexpectedly accepted\n' >&2
+    exit 1
+fi
+grep -q 'non-loopback serving requires' "$stage/lan-error.txt"
 
 printf 'first-run CLI test passed for %s\n' "$(basename "$model")"
