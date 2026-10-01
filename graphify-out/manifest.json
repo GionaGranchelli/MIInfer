@@ -5832,9 +5832,9 @@
     "semantic_hash": ""
   },
   "bench/long_context_qualification_bench.cpp": {
-    "mtime": 1790883036.5876453,
-    "seen": 1790883097.4151046,
-    "ast_hash": "e5e15fd35d51e31ecbfa9afe4acc29f7",
+    "mtime": 1790883260.7579706,
+    "seen": 1790884464.2773654,
+    "ast_hash": "1f94d64540bbd577c9e18a9a9105a7f7",
     "semantic_hash": ""
   },
   "experiments/EXP-V2-0013-long-context-qualification.md": {
@@ -6306,9 +6306,15 @@
     "semantic_hash": ""
   },
   "experiments/M29-0001-long-context-vmm-feasibility.md": {
-    "mtime": 1790882983.7568042,
-    "seen": 1790883097.4165394,
-    "ast_hash": "ef07fe3d0ce8ac35f27a8f5b13789a38",
+    "mtime": 1790884385.7126615,
+    "seen": 1790884464.2787483,
+    "ast_hash": "ac5e8bf793d590af469c2bbe44a011b7",
+    "semantic_hash": ""
+  },
+  "results/m29-0001/contiguous-control/20261001T193602Z-889474/environment-before.json": {
+    "mtime": 1790884322.2395601,
+    "seen": 1790884464.2777398,
+    "ast_hash": "8b5751c8ff37705eb9a9c64e673ac38b",
     "semantic_hash": ""
   }
 }
