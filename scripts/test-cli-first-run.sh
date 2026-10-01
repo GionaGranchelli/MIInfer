@@ -86,6 +86,9 @@ if [[ $ready -ne 1 ]]; then
     exit 1
 fi
 grep -q '"ready":true' "$stage/ready.json"
+curl --silent --show-error --fail "http://127.0.0.1:$port/healthz" \
+    > "$stage/health.json"
+grep -q '"status":"ok"' "$stage/health.json"
 curl --silent --show-error --fail "http://127.0.0.1:$port/v1/models" \
     > "$stage/models-api.json"
 grep -q "\"id\":\"$model_id\"" "$stage/models-api.json"

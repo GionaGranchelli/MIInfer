@@ -125,7 +125,7 @@ clean commit-built archive. From the installed prefix it verified:
 - `run` with `--prompt`, positional prompt, and stdin, plus production-profile
   selection even with a stale `MIINFER_PRESET` value;
 - default-model multi-turn `chat` with nonzero prefix reuse;
-- unauthenticated localhost serving, `/readyz`, `/v1/models`, and an
+- unauthenticated localhost serving, `/healthz`, `/readyz`, `/v1/models`, and an
   OpenAI-compatible chat completion;
 - unauthenticated non-loopback (`0.0.0.0`) serving remains rejected.
 
