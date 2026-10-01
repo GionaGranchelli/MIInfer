@@ -35,6 +35,23 @@ optimization.
 The milestone notes below are historical snapshots; they do not supersede
 this current status.
 
+## Current CMake build graph
+
+The default release build includes the runtime, device probe, and release test
+targets. Research benchmarks and historical/forensic tools are excluded from
+the default build and can be enabled explicitly:
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+  -DMIINFER_BUILD_BENCHMARKS=ON \
+  -DMIINFER_BUILD_RESEARCH_TOOLS=ON
+cmake --build build
+```
+
+Use `-DMIINFER_BUILD_TESTS=OFF` only when test executables are not needed.
+Normal release packaging uses the options' defaults; see
+[`docs/release.md`](docs/release.md).
+
 ## M17 local appliance quick start
 
 From a release archive on a supported MI50/gfx906 Linux machine:

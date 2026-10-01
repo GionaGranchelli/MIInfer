@@ -150,15 +150,15 @@
     "semantic_hash": ""
   },
   "CMakeLists.txt": {
-    "mtime": 1790778510.2695243,
-    "seen": 1790778881.5243812,
-    "ast_hash": "cf0eaf8d273c1a23044812e2132c03a6",
+    "mtime": 1790845446.8902867,
+    "seen": 1790845544.1509466,
+    "ast_hash": "01ae4e06ba1e6ac550b337a9719047ba",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1790751382.9408603,
-    "seen": 1790777699.3711464,
-    "ast_hash": "79848b0fb058d151bc541794e99c54ae",
+    "mtime": 1790844093.1255212,
+    "seen": 1790845226.9714797,
+    "ast_hash": "9ecf012460bd3d812b6743bae8a5ec54",
     "semantic_hash": ""
   },
   "bench/README.md": {
@@ -2364,8 +2364,8 @@
     "semantic_hash": ""
   },
   "tools/miinfer_cli.cpp": {
-    "mtime": 1790777763.993068,
-    "seen": 1790778881.5243633,
+    "mtime": 1790843376.7090762,
+    "seen": 1790845226.9714608,
     "ast_hash": "0ea0aa47d3f45f13e1372e9ca6247b72",
     "semantic_hash": ""
   },
@@ -2874,9 +2874,9 @@
     "semantic_hash": ""
   },
   "scripts/test-package.sh": {
-    "mtime": 1790778743.0804245,
-    "seen": 1790778881.524236,
-    "ast_hash": "1bc7e0a6311904be94683035f4fb0bed",
+    "mtime": 1790845466.1992033,
+    "seen": 1790845544.15082,
+    "ast_hash": "e5aec0e02069620a7115df2179f4e818",
     "semantic_hash": ""
   },
   "experiments/EXP-0262-m12-production-qualification.md": {
@@ -5712,14 +5712,14 @@
     "semantic_hash": ""
   },
   "include/miinfer/prefill_v2/model.hpp": {
-    "mtime": 1790750529.9818907,
-    "seen": 1790777699.3706145,
+    "mtime": 1790843376.708076,
+    "seen": 1790845226.9709783,
     "ast_hash": "1633a8e1a976ba314e2be9cf7d3fcade",
     "semantic_hash": ""
   },
   "src/prefill_v2/model.cpp": {
-    "mtime": 1790750537.3908527,
-    "seen": 1790777699.3710206,
+    "mtime": 1790843376.708076,
+    "seen": 1790845226.9713604,
     "ast_hash": "40dcc846862d3925dd11b023e535a2a9",
     "semantic_hash": ""
   },
@@ -6228,21 +6228,33 @@
     "semantic_hash": ""
   },
   "scripts/test-cli-first-run.sh": {
-    "mtime": 1790777814.8988252,
-    "seen": 1790778881.5242343,
-    "ast_hash": "a7e1fab0240af8f7bc0452cec6174543",
+    "mtime": 1790846502.0115416,
+    "seen": 1790846522.1306047,
+    "ast_hash": "e9fa6c0f131a803d1b696cb320d290a7",
     "semantic_hash": ""
   },
   "developer-guide.md": {
-    "mtime": 1790723018.487046,
-    "seen": 1790777699.3711572,
-    "ast_hash": "773096ba06044d6b06b6fa9906003622",
+    "mtime": 1790844254.4107392,
+    "seen": 1790845226.9714901,
+    "ast_hash": "7e2f99254eaff694d95e2efa8edf9729",
     "semantic_hash": ""
   },
   "docs/cli-product-contract.md": {
-    "mtime": 1790778698.095637,
-    "seen": 1790778881.5244124,
+    "mtime": 1790843376.6960762,
+    "seen": 1790845226.9715316,
     "ast_hash": "100e57dcf228ea29c8b30d51de0f9839",
+    "semantic_hash": ""
+  },
+  "docs/release.md": {
+    "mtime": 1790846285.0285628,
+    "seen": 1790846522.13084,
+    "ast_hash": "b91d7fdcd59a19604591fb37b2e2e327",
+    "semantic_hash": ""
+  },
+  "experiments/V2-0047-release-packaging.md": {
+    "mtime": 1790846393.2540534,
+    "seen": 1790846522.131495,
+    "ast_hash": "f37cfc8182e5d67c0662ab1f8adc2d99",
     "semantic_hash": ""
   }
 }
