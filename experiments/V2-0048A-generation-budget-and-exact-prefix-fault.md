@@ -4,8 +4,9 @@
 
 **V2-0048A PASS.** Diagnosis confirmed; minimal correction is qualified on one
 candidate. This is not a promotion or publication of a release.
-V2-0048 and its packaged artifact remain unchanged. `main` remains at
-`0032bb59cbf8c3d23ccd0eaeb5970004408503d0`.
+V2-0048 and its packaged artifact remain unchanged. The candidate starts from
+`origin/main` at `0032bb59cbf8c3d23ccd0eaeb5970004408503d0`; local `main` remains
+untouched at V2-0046 commit `16f18b9f783f8f97c31df2196a3eddac57d76933`.
 
 ## Evidence on the preserved V2-0048 package
 
@@ -71,5 +72,5 @@ reuse bug that can crash the server independently of the generation budget.
   Candidate SHA, old archive SHA, and test summary are also recorded in
   [`focused-qualification.json`](../results/v2-0048a/focused-qualification.json).
 
-V2-0048A passes its scoped release-correction gates. Keep `main` at its
-immutable baseline; no release tag, promotion, or publication was performed.
+V2-0048A passes its scoped release-correction gates. Both main refs are
+untouched; no release tag, promotion, or publication was performed.

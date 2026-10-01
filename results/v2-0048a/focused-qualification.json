@@ -1,7 +1,8 @@
 {
   "decision": "V2-0048A PASS",
   "source": {
-    "baseline_main_sha": "0032bb59cbf8c3d23ccd0eaeb5970004408503d0",
+    "canonical_origin_main_sha": "0032bb59cbf8c3d23ccd0eaeb5970004408503d0",
+    "local_main_untouched_sha": "16f18b9f783f8f97c31df2196a3eddac57d76933",
     "corrected_sha": "a2da93f27efe70c9a78116287ea820a72231b61e",
     "git_dirty": false
   },
