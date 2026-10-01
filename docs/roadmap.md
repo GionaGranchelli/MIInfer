@@ -1,82 +1,190 @@
 # MIInfer Roadmap
 
-This roadmap defines the staged development plan for MIInfer.
-
-The project is intentionally structured around **evidence gates**.
-
-Later milestones should not begin merely because earlier milestones are “mostly done.” Each stage exists to answer a specific technical question before the project accepts additional complexity.
+This document preserves historical milestone plans while defining the canonical
+post-v0.2 direction. The **Current Released Baseline** and **Canonical Forward
+Roadmap** below are authoritative; older milestone plans remain history and do
+not authorize new work.
 
 ---
 
 # Current Status
 
-**Current phase: M28 qualified; V2-0045 competitive qualification PASS; release/serving polish**
+**Current released baseline: v0.2.0.** The qualified source is
+[`94fad71`](release-v0.2.0.md), and the release archive SHA-256 is
+`822fa647cec33efc34689630c0137870b5d61689e77a00b281bdba186a0f4519`.
+Release qualification passed the pinned-runtime matrix and V2-0048B exact-
+artifact gates. See the [release record](release-v0.2.0.md) and
+[`V2-0048B evidence`](../experiments/V2-0048B-generation-completion-contract.md).
 
-V2-0045's authoritative P512–P8192 prefill and P64–P8192 TG128 decode
-matrix has no losing cell against the pinned mx and upstream llama.cpp builds.
-The decode comparison is forced-token model-forward replay, not MIInfer's
-production HTTP graph-generation rate. A three-turn HTTP tool workflow passed
-with exact-prefix reuse, and the ten-request MIInfer stability sequence had no
-inference errors or observed VRAM growth. See
-[`V2-0045 qualification`](../experiments/V2-0045-definitive-competitive-qualification.md)
-for raw evidence and the remaining comparison boundaries. Performance research
-for this generation is closed; proceed with release/serving polish.
+**Immediate project phase: v0.2.x release and dogfood.** No M29 implementation
+has begun. The next authorized architectural phase is M29-0000's
+documentation-defined Persistent Context Architecture; it is not permission to
+start implementation sub-stages without focused evidence-backed goals. After
+this documentation gate, the next engineering goal is `M29-0001 — Long-Context
+Baseline and HIP-VMM Feasibility`.
 
-The current accepted production checkpoint is iteration 26, commit
-`e68c0f20`, in canonical merge `e0649c589790f0267a8f1f45b5332532a95ae13a`,
-now preserved in immutable `main` baseline `81ce0e982220613453889a9a5178f11440ea6b22`.
-V2-0044 tested one precision-preserving correction on the exact production
-path; it exceeded iteration 26's real-input attention-output tolerance and was
-not timed. The unresolved FP16 numerical limitation is recorded in
-[`EXP-V2-0044`](../experiments/EXP-V2-0044-fp32-kq-fragment-parity.md).
-Iteration 26 (`e68c0f20`) remains immutable and qualified. The attention
-stretch is closed; do not mix decode, MMQ, power tuning, or unrelated prefill
-work into it. See [`post-m28-baseline.md`](post-m28-baseline.md) and
-[`performance-research-protocol.md`](performance-research-protocol.md).
-
-The historical M26/M27 notes below are retained as experiment history and do
-not override this current status.
-
-M26-B historical decode-floor contract recovery is closed as non-comparable in
-[`EXP-0352`](../experiments/EXP-0352-m26b-historical-decode-floor-differential.md).
-The historical benchmark starts from fixture state at decode position 0 and
-synchronizes/copies one token each step. The current M25 interactive result
-starts after a 512-token prefill and uses queued graph replay with bulk token
-transfer. These are different workloads and timing boundaries, so the
-historical `31–33 ms/token` result is not a regression baseline for the
-interactive `57–59 ms/token` route. The same-fixture current-code control shows
-no shared-pipeline regression; its fresh run had isolated clock dips and is
-retained as diagnostic evidence only.
-
-The current layer-major versus legacy P512 semantic comparison is closed as
-`ROUTES_NOT_COMPARABLE` in [`EXP-0359`](../experiments/EXP-0359-m26cq-decode-semantic-equivalence.md).
-Identical teacher-forced inputs produce route-state drift and a near-tie greedy
-flip, but no accepted pairwise P512 tolerance exists to establish a correctness
-bug. This investigation made no timing qualification. Preserve the qualified
-no-preset route as canonical; base subsequent M26-E/M26-F work on it and do
-not repair the experimental interactive route just to enable a timing A/B.
-
-M27 cold P512 work is stopped. The current control is `205.897 tok/s`; the
-`213.837 tok/s` attention decode-reuse candidate remains experimental because
-its cold-prefill effect is unexplained. Equivalent contract attribution found
-`+16.029 ms` for recurrent work and `+101.979 ms` for attention, but the
-technically motivated FP16 Q/K candidate failed the exact-context screen at
-`-1.49 ms` median. Do not promote the candidate or reopen cold tuning without a
-new measured hypothesis. See EXP-0355 and EXP-0356.
-
-M27 exact prefix reuse is frozen at the current opt-in scope: sparse exact
-B512 checkpoints, longest-prefix radix lookup, and a 3 GiB payload cap. Real
-Pi read/edit/read flows reused the complete cached prefix at ~3.7K, ~7.7K, and
-~15K conversation sizes. Do not add persistence, cross-session policy,
-additional cache tiers, or NVMe without new evidence. See EXP-0350 and EXP-0357.
-
-The M26-CQ current-route semantic comparison is closed. Keep the default,
-qualified prefill, and experimental interactive execution contracts distinct;
-preserve the M26-B non-comparability finding, M26-CQ artifacts, and M27
-evidence. Continue subsequent M26-E/M26-F work from the qualified no-preset
-route when that work is scheduled.
+Historical M0–M28 and V2 records below remain valid history. Their old
+“current,” “immediate next,” and milestone-forward statements are superseded by
+the post-release roadmap in this document; their measurements and conclusions
+are not rewritten.
 
 ---
+
+# Canonical Forward Roadmap
+
+```text
+v0.2.x — Release / dogfood
+        ↓
+M29 — Persistent Context Architecture
+        ↓
+M30 — Agent Runtime Advantage
+        ↓
+M31 — Single-MI50 Agent Frontier Qualification
+        ↓
+V3 — Dual-MI50 Agent Engine
+        ↓
+Second-model / generalisation work
+```
+
+Milestone order is strategic direction, not authorization to implement the
+entire sequence. Every stage begins through a focused, evidence-backed goal.
+The immediate first engineering goal after M29-0000 is M29-0001, covering the
+M29.0 long-context baseline and M29.1 physical-backing feasibility.
+
+## M29 — Persistent Context Architecture
+
+**Mission:** Build a placement-independent persistent context substrate,
+qualify it for production 128K operation on one MI50, and make its logical
+semantics reusable when physical execution later expands to two MI50s.
+
+M29 distinguishes logical context semantics from physical KV backing:
+
+```text
+ContextSpace (identity, positions, pages, placement-independent semantics)
+                         ↓
+              Backing Strategy
+          ┌──────────────┼──────────────┐
+      contiguous      HIP-VMM       other qualified backing
+          └──────────────┼──────────────┘
+               optimized physical KV view
+                         ↓
+                      GQA kernel
+```
+
+`ContextSpace != HIP-VMM`. HIP-VMM is an experiment and one possible backing,
+not a ContextSpace dependency. If it fails, choose another backing and continue
+M29. Logical paging must not force a page-table lookup on every hot-path KV
+access; a backing strategy may expose a pre-resolved physical view that keeps
+kernel addressing equivalent to `base_ptr + offset`.
+
+Stages (each requires its own scoped goal and gate):
+
+```text
+M29.0 — Current long-context baseline: 16K / 32K / 64K / 128K
+M29.1 — Physical-backing feasibility: HIP-VMM investigation
+M29.2 — ContextSpace + logical pages
+M29.3 — DeviceKvPool + DeviceKvShard
+M29.4 — Two logical KV shards on one MI50
+M29.5 — Optimized physical KV view / attention integration
+M29.6 — Production 128K qualification
+```
+
+Single-MI50 production qualification targets 128K. The logical architecture
+may be designed for 256K capacity where inexpensive and technically useful;
+this does not require 256K physical backing on one card. The later V3
+dual-MI50 north star is 256K persistent physical context.
+
+The physical ownership hierarchy is:
+
+```text
+ContextSpace → LogicalPageTable → PlacementPlan
+             → DeviceKvShard[] → DeviceKvPool(device)
+```
+
+A logical page may map to one or more physical shards; each physical shard has
+exactly one owning device. M29's one-card, two-shard experiment tests metadata,
+allocation ownership, placement semantics, lifecycle, and kernel-facing views;
+it is not evidence of dual-GPU performance. Logical page/context/session/
+prefix/snapshot identity, forks, rollback, and COW metadata must not encode
+physical GPU placement. KV-head placement may change without changing logical
+identity.
+
+`N=1` remains a first-class optimized topology; `N=2` extends it. Qualification
+targets `N=1` and `N=2`; `N>2` is not a current product or qualification
+target, and MIInfer will not build a generic distributed-KV framework. M29's
+performance gate is no reproducible, statistically credible decode regression
+greater than 1% attributable to the context architecture across the qualified
+short/mid-context matrix, under equivalent hardware, thermal, workload,
+software, and baseline conditions. Correctness is an independent mandatory
+gate.
+
+## M30 — Agent Runtime Advantage
+
+M29 defines where and how context exists. M30 defines how sessions share,
+branch, restore, and extend it over that substrate. Planned semantics include
+persistent sessions, exact-prefix identity/reuse, recurrent-state reuse,
+shared prefix pages, reference counting, copy-on-write, snapshots, fork,
+rollback, append-only suffix prefill, and Tail-Replay / bounded suffix replay.
+These are planned capabilities, not current implementation claims.
+
+The primary KPI is total wall-clock time across realistic long-running coding
+agent sessions, not only PP512 or TG128. Qualification should use roughly
+20–50 turns with long persistent prefixes, tool calls/results, small appended
+turns, repeated continuation, and fork/branch and rollback when supported. The
+central workload is a large existing context plus a small new suffix whose
+existing work should be reused rather than replayed.
+
+## M31 — Single-MI50 Agent Frontier Qualification
+
+M31 freezes and qualifies the completed N=1 generation before topology
+changes. Evidence should cover cold/warm TTFT; 8K, 32K, 64K, and 128K context;
+prefill, decode, VRAM, correctness, prefix reuse, suffix continuation,
+snapshot/fork and rollback where available; realistic multi-turn coding-agent
+wall clock; and operational stability. It answers: “How good is the finished
+one-MI50 MIInfer agent runtime?” Only after M31 should the roadmap move to
+dual-GPU execution.
+
+## V3 — Dual-MI50 Agent Engine
+
+V3's north star is two AMD Instinct MI50 32 GB devices serving one interactive
+coding-agent session, initially with a Qwen 27B Q4_K_M-class model and
+256K persistent context. `>=40 tok/s` decode is a stretch target, not a
+promise; measured topology and correctness evidence may change the achievable
+performance or execution strategy.
+
+Provisional experiment progression:
+
+```text
+V3-0000 — Dual-MI50 topology qualification
+V3-0001 — Physical DeviceKvShard placement
+V3-0002 — Dual-device KV ownership qualification
+V3-0003 — Candidate parallel attention execution
+V3-0004 — Candidate parallel recurrent/GDN execution
+V3-0005 — Cross-device communication/reduction
+V3-0006 — Short-context dual-GPU decode qualification
+V3-0007 — KV representation/capacity feasibility, if required
+V3-0008 — 128K dual-GPU qualification
+V3-0009 — 256K persistent-context qualification
+V3-0010 — 256K agent-session qualification
+V3-0011 — Dual-GPU performance frontier
+```
+
+GQA head parallelism and GDN tensor parallelism are hypotheses, not
+architectural commitments. V3-0000 must measure PCIe topology, P2P support,
+peer-read/write and bidirectional bandwidth, latency, synchronization,
+IOMMU/ACS constraints, per-device VMM capability, and xGMI availability or
+absence before selecting distributed execution. Do not invent or simulate
+these results during M29/M30. Prefer device-local KV consumption; cross-device
+hot-path traffic should primarily carry activations, partial results, or
+reductions rather than repeated remote KV fetches. This preference does not
+select the parallel algorithm.
+
+## Second-model / generalisation work
+
+Second-model work follows M31 and V3 in the immediate strategic order. Its
+question remains whether MIInfer's architecture generalizes beyond the initial
+model without becoming generic, but the nearer question is how far MIInfer can
+push its intended agent workload on the targeted MI50 hardware.
 
 # Roadmap Principles
 
@@ -838,7 +946,13 @@ M7
 
 ---
 
-# Current Execution Order
+# Historical M26/M27 Execution Notes (superseded)
+
+The following execution order was current before v0.2.0 release. It is retained
+as historical planning context; it is not the current order and does not
+authorize M26-E/M26-F work.
+
+## Historical Execution Order
 
 1. Preserve the clean, pushed M27 closure and the default-runtime M26 recovery
    result. Keep the experimental `213.837 tok/s` P512 candidate and M27 prefix
@@ -852,13 +966,14 @@ M7
 
 ---
 
-# Immediate Next Milestone
+# Historical Immediate Next Milestone (superseded)
 
 ```text
 M26-E/M26-F — Continue from the qualified no-preset route (not started)
 ```
 
-EXP-0352's historical and interactive timing contracts remain non-comparable.
+The M26-E/M26-F proposal below was never started and is superseded by the
+Canonical Forward Roadmap above. EXP-0352's historical and interactive timing contracts remain non-comparable.
 EXP-0359 closes the current-route teacher-forced semantic investigation as
 `ROUTES_NOT_COMPARABLE`: no accepted pairwise numerical tolerance exists, and
 no timing claim was made. Preserve the qualified no-preset route as canonical;

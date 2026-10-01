@@ -803,6 +803,95 @@ bottleneck.
 
 ---
 
+# D032 — Persistent Context and Device-Local KV Ownership
+
+**Status:** Accepted
+
+## Decision
+
+M29 and later context work use these architectural invariants:
+
+1. Logical context identity is independent of physical placement. Logical
+   context, page, session, prefix, snapshot, fork, rollback, and COW identity
+   must survive physical remapping unchanged.
+2. A logical page may be backed by one or more physical shards.
+3. Every physical KV shard has exactly one owning device.
+4. Physical placement may change without changing logical session/context
+   semantics.
+5. Attention should consume locally owned KV wherever practical.
+6. Cross-device hot-path communication should primarily carry activations,
+   partial results, or reductions rather than repeatedly fetch remote KV.
+7. `N=1` remains a first-class optimized topology; `N=2` extends it without a
+   material abstraction tax. `N>2` is not a current product or qualification
+   target.
+8. HIP-VMM is an optional physical-backing implementation, not part of
+   `ContextSpace` identity or semantics. M29 continues with another qualified
+   backing if HIP-VMM is rejected.
+9. Logical paging does not require software page-table indirection on every
+   hot-path KV access. The physical layer may expose an optimized,
+   pre-resolved view to kernels.
+10. This decision intentionally does not select parallel attention, GDN,
+    tensor-parallel, or cross-device reduction algorithms.
+
+The intended ownership hierarchy is:
+
+```text
+ContextSpace
+      ↓
+LogicalPageTable
+      ↓
+PlacementPlan
+      ↓
+DeviceKvShard[]
+      ↓
+DeviceKvPool(device)
+```
+
+This describes planned architecture, not components already implemented.
+
+## Reason
+
+Persistent logical context semantics must outlive any one-card memory layout
+and remain valid if physical KV placement later spans two devices. Keeping
+logical identity separate from backing allows M29 to continue if gfx906
+HIP-VMM is unavailable or unsuitable, preserves the optimized N=1 path, and
+avoids making a software translation step mandatory in attention's hot path.
+Device-local KV is preferred because repeated remote KV fetching would put
+context capacity and device placement directly on the cross-device bandwidth
+critical path.
+
+## Consequences
+
+* M29 targets production 128K context on one MI50. Logical capacity may be
+  designed for 256K where inexpensive and useful; this does not promise that
+  256K can be physically backed on one card.
+* The two-shard / one-MI50 experiment validates metadata, ownership, lifecycle,
+  placement semantics, and kernel-facing views only; it is not dual-GPU
+  performance evidence.
+* M29 must preserve correctness and show no reproducible, statistically
+  credible decode regression greater than 1% attributable to the context
+  architecture across the qualified short/mid-context matrix under equivalent
+  conditions.
+* M30 owns session sharing, prefix and recurrent-state reuse, reference
+  counting, COW, snapshots, fork, rollback, suffix continuation, and
+  Tail-Replay semantics over M29's substrate.
+* M31 qualifies the completed N=1 agent runtime before V3 chooses a dual-MI50
+  execution topology. V3-0000 measures actual PCIe/P2P/VMM/synchronization
+  properties before parallel execution is selected.
+* V3's 256K persistent-context and `>=40 tok/s` decode values are north-star /
+  stretch goals, not product promises.
+
+## Revisit when
+
+Revisit this decision only with evidence that a stated invariant blocks the
+qualified workload or costs more than it protects. Relevant evidence includes
+measured N=1 regression from placement abstractions; correctness failures under
+physical remapping; HIP-VMM capability, reliability, or performance results;
+measured PCIe/P2P bandwidth and latency; or evidence that local-KV ownership
+cannot meet the qualified context/agent workload. Any revision must preserve
+logical identity semantics unless evidence specifically disproves their value,
+and must not infer dual-GPU performance from a one-GPU two-shard test.
+
 # Decision Change Process
 
 A major accepted decision may be changed when evidence justifies it.

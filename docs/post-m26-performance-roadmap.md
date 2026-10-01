@@ -1,8 +1,11 @@
 # Post-M26 Performance Roadmap
 
-This document records the decision tree after M26-C route attribution closed.
-EXP-0359 closes M26-C as `ROUTES_NOT_COMPARABLE`; M26-D was not opened. M26-E
-on the qualified no-preset route is next.
+This document preserves the historical M26–M28 performance decision tree.
+Its M26-C evidence remains valid, but old “next” statements are not current:
+v0.2.0 is released, and the canonical post-release order is v0.2.x dogfood →
+M29 → M30 → M31 → V3 dual-MI50 → second-model/generalisation. See
+[`roadmap.md`](roadmap.md) for the authoritative scope and stage gates. M26-E
+was not started and is not the current next milestone.
 
 See:
 
@@ -280,60 +283,60 @@ M28 is not a request for another sequence of unbounded kernel experiments.
 
 ---
 
-## M29 — Context architecture
+## M29 — Persistent Context Architecture
 
-Proceed only after decode and prefill contracts are stable enough to make
-long-context evidence meaningful.
+M29 is not merely a 64K–128K context benchmark. Its mission is a
+placement-independent persistent logical context substrate, production 128K
+qualification on one MI50, and semantics reusable if physical execution later
+expands to two MI50s. Logical capacity may target 256K where inexpensive; that
+does not require 256K physical backing on one card. `ContextSpace != HIP-VMM`:
+HIP-VMM is an optional physical-backing experiment, and M29 continues with an
+alternative if it fails. Preserve optimized kernel-facing physical views and
+do not mandate per-access software page-table lookup. `N=1` remains first
+class; the M29 two-shard/one-MI50 experiment is not dual-GPU performance
+evidence. See the canonical roadmap and D032 for ownership, identity, N=1/N=2,
+and the >1% decode-regression gate.
 
-Focus:
-
-- decoupled full-attention KV and recurrent state
-- 64K–128K context behavior
-- memory representation
-- VRAM headroom
-- zero-copy or low-copy state transitions
-
-The existing 128K-with-headroom objective remains valid only if correctness and
-performance remain qualified across the chosen execution contract.
-
----
-
-## M30 — Agent runtime advantage
-
-Measure the workload MIInfer ultimately needs to serve well.
-
-Focus:
-
-- exact prefix reuse
-- recurrent-state reuse
-- Tail-Replay / bounded suffix replay
-- rollback
-- multi-turn coding-agent traces
-- cold versus warm TTFT
-- end-to-end turn latency
-
-The primary question is not only whether TG64 is faster. It is whether MIInfer
-reduces total wall clock for real long-running agent interactions.
+Planned stages are M29.0 long-context baseline (16K/32K/64K/128K), M29.1
+backing feasibility, M29.2 ContextSpace/logical pages, M29.3 DeviceKvPool and
+DeviceKvShard, M29.4 two logical shards on one MI50, M29.5 optimized physical
+view/attention integration, and M29.6 production 128K qualification. Each
+stage requires its own focused goal; this document authorizes no
+implementation.
 
 ---
 
-## M31 — Frontier qualification
+## M30 — Agent Runtime Advantage
 
-Freeze implementation and refresh the comparison against the strongest
-reproducible gfx906 baseline.
+M29 defines where/how context exists. M30 defines session sharing, exact-prefix
+and recurrent-state reuse, reference counting, COW, snapshots, fork, rollback,
+append-only suffix prefill, and Tail-Replay over that substrate. Its primary
+KPI is total wall-clock time over realistic long-running coding-agent
+sessions—not only PP512/TG128—including roughly 20–50 turns, long prefixes,
+tool calls/results, small suffixes, repeated continuation, and fork/rollback
+where available.
 
-Qualification should include:
+---
 
-- PP across the selected prompt-size range
-- TG across the selected context range
-- memory usage
-- correctness
-- cold TTFT
-- warm/prefix-reused TTFT
-- multi-turn agent wall clock
+## M31 — Single-MI50 Agent Frontier Qualification
 
-Do not select a winner from one synthetic point. Preserve the full evidence
-matrix.
+M31 freezes and qualifies the completed N=1 generation before topology
+changes. Qualification includes cold/warm TTFT; 8K/32K/64K/128K; prefill,
+decode, VRAM, correctness, prefix reuse, suffix continuation, snapshot/fork and
+rollback where available; coding-agent wall clock; and operational stability.
+It answers how good the finished one-MI50 agent runtime is. Only after M31 does
+the roadmap move to dual-GPU execution.
+
+---
+
+## V3 — Dual-MI50 Agent Engine
+
+V3 targets two MI50s for one interactive coding-agent session, a Qwen 27B
+Q4_K_M-class model, and 256K persistent physical context. `>=40 tok/s` decode
+is a stretch target, not a promise. V3-0000 first measures the real PCIe/P2P,
+bandwidth, latency, synchronization, IOMMU/ACS, VMM, and xGMI topology. GQA
+head-parallel and GDN tensor-parallel execution remain hypotheses. Second-model
+and generalisation work follows V3 in the current strategic order.
 
 ---
 

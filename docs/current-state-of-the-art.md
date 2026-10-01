@@ -1,11 +1,19 @@
 # MIInfer Current State of the Art
 
-Status: V2-0045 definitive competitive matrix PASS; performance research for
-this generation closed, 2026-09-30. The immutable production baseline is
-`main` at `81ce0e982220613453889a9a5178f11440ea6b22`, containing iteration 26
-(`e68c0f20`). The M27/P512 material below is retained as historical evidence,
-not the current milestone summary. See
-[`post-m28-baseline.md`](post-m28-baseline.md) for the reproducible checkpoint.
+Status: **v0.2.0 released.** The qualified source is
+`94fad71ee19f539ce2ec0c7e100ad97d031dbefa`; the release artifact SHA-256 is
+`822fa647cec33efc34689630c0137870b5d61689e77a00b281bdba186a0f4519`. The
+post-release sequence is v0.2.x dogfood → M29 Persistent Context Architecture
+→ M30 Agent Runtime Advantage → M31 Single-MI50 Agent Frontier Qualification
+→ V3 Dual-MI50 Agent Engine → second-model/generalisation. See
+[`roadmap.md`](roadmap.md) and [`release-v0.2.0.md`](release-v0.2.0.md).
+
+The detailed frontier below is a historical V2-0045/M28 report captured before
+release. Its results remain valid for that qualification, but its old “current”
+and “next” labels do not describe the released source or authorize further
+performance work. The M27/P512 material is historical evidence. See
+[`post-m28-baseline.md`](post-m28-baseline.md) for the reproducible M28
+checkpoint.
 
 V2-0045 measured MIInfer ahead of pinned mx-llama.cpp and upstream llama.cpp
 at all five prefill contexts (P512–P8192) and all four decode contexts
@@ -14,12 +22,13 @@ comparison of the production HTTP generation wrapper. A three-turn HTTP
 coding-agent flow returned visible answers and reused 9.4K–13.8K exact-prefix
 tokens on each tool-result continuation. Ten sequential serving inferences
 completed with three reuse cycles, zero observed VRAM growth, and no runtime
-errors. Release/serving polish, not kernel optimization, is the next phase;
-the approximately 1.91× attention-kernel ratio remains deferred research.
+errors. At that time, release/serving polish was next and kernel optimization
+was closed; release/serving qualification is now complete. The approximately
+1.91× attention-kernel ratio remains deferred research.
 Detailed evidence and caveats are in
 [`V2-0045`](../experiments/V2-0045-definitive-competitive-qualification.md).
 
-## Current accepted result
+## Historical accepted result — V2-0045 / M28
 
 The accepted production source at `e68c0f20` preserves exact real-model token
 parity. Its aligned K-row LDS swizzle reduced isolated P8192 suffix-attention

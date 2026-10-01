@@ -1,6 +1,62 @@
 # MIInfer Current State
 
-## Current checkpoint — M28 / V2-0043 (2026-09-29)
+## Current released baseline — v0.2.0 (2026-10-01)
+
+MIInfer v0.2.0 is released. Its qualified source is
+`94fad71ee19f539ce2ec0c7e100ad97d031dbefa`, and the published `v0.2.0` tag
+points to that source commit. The Linux/gfx906 archive is
+`miinfer-0.2.0-gfx906-Linux.tar.gz`, SHA-256
+`822fa647cec33efc34689630c0137870b5d61689e77a00b281bdba186a0f4519`. See
+[`release-v0.2.0.md`](release-v0.2.0.md) and the
+[`V2-0048B exact-artifact qualification`](../experiments/V2-0048B-generation-completion-contract.md).
+This roadmap reset started from canonical `main` at
+`9ef225857172cf6845aac27f1906259fde543373`, after the release evidence was
+recorded.
+
+### Current production implementation
+
+The released runtime targets one AMD Instinct MI50 (`gfx906`) and
+`Qwen3.8-27B-Q4_K_M`. It includes the qualified single-GPU prefill/decode
+runtime, terminal `run`/`chat`, an OpenAI-compatible API, exact-prefix reuse,
+and the local Web UI. This describes shipped behavior; it does not imply
+persistent cross-session ContextSpace, multi-GPU execution, or the future M30
+session semantics.
+
+### Next architectural phase — M29
+
+The immediate project phase is v0.2.x release and dogfood. The next planned
+architecture is **M29 — Persistent Context Architecture**: a
+placement-independent logical context substrate, production 128K qualification
+on one MI50, and semantics designed to remain valid if later placed across two
+MI50s. `ContextSpace` is not implemented. HIP-VMM remains an optional feasibility
+experiment, not a prerequisite. M29 does not begin until a focused goal
+authorizes its first stage. After this documentation gate, the next engineering
+goal is `M29-0001 — Long-Context Baseline and HIP-VMM Feasibility`.
+
+The canonical post-release sequence is:
+
+```text
+v0.2.x release / dogfood
+  → M29 Persistent Context Architecture
+  → M30 Agent Runtime Advantage
+  → M31 Single-MI50 Agent Frontier Qualification
+  → V3 Dual-MI50 Agent Engine
+  → second-model / generalisation work
+```
+
+See [`roadmap.md`](roadmap.md) and
+[`D032`](decisions.md)
+for the accepted forward contract. No M29 implementation or HIP-VMM
+investigation has begun.
+
+## Historical checkpoint — M28 / V2-0043 (2026-09-29)
+
+Everything after this historical archive banner is retained project history.
+It includes older sections titled “Current,” “Immediate,” or “Not
+implemented”; those labels describe the state when those records were written
+and are superseded by the released baseline and roadmap above. Do not use them
+to infer present status or planned ordering. Historical measurements and
+experiment conclusions remain unchanged.
 
 M28 single-MI50 prefill is the accepted production path. V2-0043 is closed
 **PRIMARY GOAL PASS** at immutable iteration 26, `e68c0f20`; the FP16

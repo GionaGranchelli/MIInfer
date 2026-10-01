@@ -1025,3 +1025,90 @@ general inference framework
 ```
 
 MIInfer exists specifically to explore the performance implications of that difference.
+
+# 35. Future Persistent Context Architecture (M29+)
+
+This section records the accepted future architecture; it does not claim that
+these components exist in the v0.2.0 runtime. M29 begins only through focused,
+evidence-backed goals.
+
+## Logical context and physical backing
+
+`ContextSpace != HIP-VMM`. ContextSpace defines logical positions, pages,
+context identity, and placement-independent semantics. HIP-VMM is one possible
+physical backing strategy; contiguous allocation or another qualified backing
+must remain viable if the gfx906 VMM investigation fails.
+
+```text
+                       ContextSpace
+                           │
+                    LogicalPageTable
+                           │
+              ┌────────────┴────────────┐
+              │                         │
+       Context semantics         Physical placement
+              │                         │
+   identity / prefix / state        PlacementPlan
+                                        │
+                              ┌─────────┴─────────┐
+                              │                   │
+                        DeviceKvShard       DeviceKvShard
+                              │                   │
+                        DeviceKvPool         DeviceKvPool
+                              │                   │
+                           device 0            device 1
+```
+
+The intended ownership hierarchy is:
+
+```text
+ContextSpace → LogicalPageTable → PlacementPlan
+             → DeviceKvShard[] → DeviceKvPool(device)
+```
+
+A logical page may have one or more physical shards; every physical shard has
+exactly one owning device. In the planned M29 single-GPU form, one logical page
+may be represented by one shard on device 0 containing KV heads 0..3. The
+M29.4 two-shard/one-device experiment may represent heads 0..1 and 2..3 as
+separate shards, both owned by device 0. That validates metadata, allocation
+ownership, lifecycle, placement semantics, and kernel-facing views; it is not
+evidence of dual-GPU performance.
+
+Logical context, page, session, prefix, snapshot, fork, rollback, and COW
+identity must not encode physical GPU placement. Remapping a logical page from
+one shard on device 0 to shards on devices 0 and 1 must not change those
+semantics.
+
+## Kernel-facing physical view
+
+Logical paging does not require a software page-table lookup on every KV
+access. The physical backing layer may expose a pre-resolved, optimized view so
+hot kernels retain simple addressing such as `base_ptr + offset` or an
+equivalent representation. The context abstraction must not mandate
+per-access indirection. Attention should consume device-locally owned KV
+wherever practical; cross-device hot-path traffic should primarily carry
+activations, partial results, or reductions rather than repeatedly fetch
+remote KV. This is a placement preference, not a commitment to a particular
+parallel attention or recurrent/GDN algorithm.
+
+## Capacity and topology contract
+
+M29's single-MI50 production qualification target is 128K context. Where
+inexpensive and useful, logical design capacity may reach 256K; this does not
+promise 256K physical backing on one MI50. The later V3 dual-MI50 north star is
+256K persistent physical context. `N=1` remains a first-class optimized
+topology; `N=2` extends it without material abstraction tax. `N>2` is not a
+current product or qualification target.
+
+M29 must preserve correctness and show no reproducible, statistically
+credible decode regression greater than 1% attributable to the context
+architecture over the qualified short/mid-context matrix under equivalent
+hardware, thermal, workload, software, and baseline conditions. Correctness
+remains independently mandatory.
+
+M30 adds session sharing, exact-prefix and recurrent-state reuse, refcounting,
+COW, snapshots, fork, rollback, append-only suffix prefill, and Tail-Replay
+semantics over the substrate. M31 qualifies the finished N=1 agent runtime
+before V3 changes execution topology. These are planned boundaries, not
+current implementation capabilities; see [`roadmap.md`](roadmap.md) and
+[`D032`](decisions.md).
