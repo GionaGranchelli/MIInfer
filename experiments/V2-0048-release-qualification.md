@@ -65,6 +65,9 @@ remain opt-in. This is not a packaging blocker.
   reuse was 44,925 / 53,994 / 53,994 tokens per session. VRAM was
   27.105 GB at start and 27.194 GB at end/high-water (+89 MB). The raw
   per-request record is [`stability-20.json`](../results/v2-0048/stability-20.json).
+  Per-request junction snapshots peaked at 94°C; separate live `rocm-smi`
+  samples briefly reached 100°C under sustained agent load, then cooled to
+  46°C idle. No fault occurred during the 20-request sequence itself.
 - Following the later GPU fault, installed device-info still detected gfx906;
   a fresh default localhost server reached readiness and then shut down cleanly.
 
