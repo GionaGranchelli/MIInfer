@@ -920,6 +920,7 @@ GenerateStats PrefillV2Model::generate(
     };
 
     if (is_stop(first_token)) {
+        stats.stop_reason = miinfer::GenerationStopReason::kStopToken;
         stats.total_ms = stats.ttft_ms;
         return stats;
     }
@@ -927,6 +928,7 @@ GenerateStats PrefillV2Model::generate(
     stats.generated_tokens.push_back(first_token);
     if (options.on_token) {
         if (!options.on_token(first_token)) {
+            stats.stop_reason = miinfer::GenerationStopReason::kCancelled;
             stats.total_ms = stats.ttft_ms;
             return stats;
         }
@@ -983,12 +985,14 @@ GenerateStats PrefillV2Model::generate(
             actual_generated++;
 
             if (is_stop(next_token)) {
+                stats.stop_reason = miinfer::GenerationStopReason::kStopToken;
                 break;
             }
 
             stats.generated_tokens.push_back(next_token);
             if (options.on_token) {
                 if (!options.on_token(next_token)) {
+                    stats.stop_reason = miinfer::GenerationStopReason::kCancelled;
                     break;
                 }
             }
@@ -1022,6 +1026,7 @@ GenerateStats PrefillV2Model::generate(
     for (std::size_t k = 1; k < options.max_new_tokens; ++k) {
         const std::uint32_t position = prompt_len - 1 + static_cast<std::uint32_t>(k);
         if (position >= kv_capacity_) {
+            stats.stop_reason = miinfer::GenerationStopReason::kOutputLimit;
             break;
         }
 
@@ -1095,11 +1100,13 @@ GenerateStats PrefillV2Model::generate(
             candidates_buf_);
 
         if (is_stop(next_token)) {
+            stats.stop_reason = miinfer::GenerationStopReason::kStopToken;
             break;
         }
         stats.generated_tokens.push_back(next_token);
         if (options.on_token) {
             if (!options.on_token(next_token)) {
+                stats.stop_reason = miinfer::GenerationStopReason::kCancelled;
                 break;
             }
         }

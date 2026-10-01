@@ -1,5 +1,7 @@
 #pragma once
 
+#include "miinfer/generation_contract.hpp"
+
 #include <cstddef>
 #include <cstdint>
 #include <optional>
@@ -8,8 +10,6 @@
 #include <vector>
 
 namespace miinfer {
-
-constexpr std::size_t kDefaultMaxOutputTokens = 1024;
 
 struct ChatToolCall {
     std::string id;
@@ -37,7 +37,7 @@ struct OpenAiChatRequest {
     std::vector<std::string> stop;
     std::string tool_choice = "auto";
     bool stream = false;
-    std::size_t max_tokens = kDefaultMaxOutputTokens;
+    std::optional<std::size_t> max_tokens;
     float temperature = 0.7f;
     float top_p = 0.9f;
     std::uint32_t top_k = 40;
@@ -59,6 +59,7 @@ struct OpenAiGeneratedToolCalls {
 };
 
 OpenAiParseResult parse_openai_chat_request(std::string_view body);
+std::string_view openai_finish_reason(GenerationStopReason reason, bool has_tool_calls = false) noexcept;
 std::string build_chatml(const OpenAiChatRequest& request);
 OpenAiGeneratedToolCalls parse_generated_tool_calls(std::string_view text);
 

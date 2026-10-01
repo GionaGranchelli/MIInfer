@@ -475,6 +475,18 @@ private:
     std::string pending_;
 };
 
+std::optional<std::size_t> terminal_visible_start_token(
+    std::span<const std::uint32_t> tokens,
+    const miinfer::Qwen3Tokenizer& tokenizer) {
+    TerminalTextStream filter;
+    for (std::size_t i = 0; i < tokens.size(); ++i) {
+        const std::string piece = tokenizer.decode(tokens.subspan(i, 1));
+        if (!filter.push(piece).empty()) return i + 1;
+    }
+    if (!filter.finish().empty()) return tokens.size();
+    return std::nullopt;
+}
+
 std::optional<int> parse_port(std::string_view value) {
     int port = 0;
     const auto [end, error] = std::from_chars(value.data(), value.data() + value.size(), port);
@@ -529,6 +541,7 @@ struct RuntimeGenerateStats {
     std::size_t decode_h2d_bytes = 0;
     std::size_t decode_d2h_bytes = 0;
     bool cancelled = false;
+    miinfer::GenerationStopReason stop_reason = miinfer::GenerationStopReason::kOutputLimit;
 };
 
 // ---------------------------------------------------------------------------
@@ -3942,7 +3955,7 @@ int cmd_doctor(int argc, char** argv) {
 int cmd_run(int argc, char** argv) {
     if (argc < 3) { std::cerr << "miinfer run MODEL [PROMPT]\n"; return 2; }
     std::string prompt;
-    std::size_t max_tokens = 128;
+    std::optional<std::size_t> max_tokens;
     std::size_t context = static_cast<std::size_t>(std::stoull(configured("context", "8192")));
     bool stream = true;
     bool show_stats = false;
@@ -4002,7 +4015,8 @@ int cmd_run(int argc, char** argv) {
         prompt = input.str();
     }
     if (prompt.empty()) { std::cerr << "No prompt provided. Use --prompt or pipe text on standard input.\n"; return 2; }
-    if (max_tokens == 0 || max_tokens > 65536 || context == 0 || context > 131072 || top_p <= 0.0F || top_p > 1.0F
+    if ((max_tokens && (*max_tokens == 0 || *max_tokens > miinfer::kMaxOutputTokens))
+        || context == 0 || context > 131072 || top_p <= 0.0F || top_p > 1.0F
         || (temperature && *temperature < 0.0F)) {
         std::cerr << "Invalid generation settings; check token, context, temperature, and top-p values.\n";
         return 2;
@@ -4022,12 +4036,13 @@ int cmd_run(int argc, char** argv) {
         user_message.content = prompt;
         request.messages.push_back(std::move(user_message));
         auto tokens = tokenizer.encode(miinfer::build_chatml(request));
-        if (tokens.size() + max_tokens > context) {
+        const auto output_limit = miinfer::resolve_output_token_limit(max_tokens, tokens.size(), context);
+        if (!output_limit) {
             std::cerr << "Prompt and requested output exceed the configured context of " << context << " tokens.\n";
             return 2;
         }
         miinfer::prefill_v2::GenerateOptions options;
-        options.max_new_tokens = max_tokens;
+        options.max_new_tokens = *output_limit;
         options.use_hip_graph = true;
         options.temperature = temperature.value_or(0.7F);
         options.top_p = top_p;
@@ -4047,10 +4062,22 @@ int cmd_run(int argc, char** argv) {
         const std::string raw = tokenizer.decode(stats.generated_tokens);
         const auto visible = terminal_output(raw);
         std::cout << (stream ? text_stream.finish() : visible.content) << std::flush;
-        if (show_stats) std::cerr << "\nprompt_tokens=" << stats.prompt_tokens.size()
-            << " generated_tokens=" << stats.generated_tokens.size()
-            << " prefill_ms=" << stats.prefill_ms << " decode_ms=" << stats.decode_ms
-            << " total_ms=" << stats.total_ms << '\n';
+        if (stats.stop_reason == miinfer::GenerationStopReason::kOutputLimit) {
+            std::cout << "\n[response truncated at output-token limit]" << std::flush;
+        }
+        if (show_stats) {
+            const auto extracted = extract_reasoning_and_content(raw);
+            const auto visible_start = terminal_visible_start_token(stats.generated_tokens, tokenizer);
+            std::cerr << "\nprompt_tokens=" << stats.prompt_tokens.size()
+                << " generated_tokens=" << stats.generated_tokens.size()
+                << " visible_tokens=" << tokenizer.encode(visible.content).size()
+                << " visible_chars=" << visible.content.size()
+                << " reasoning_tokens=" << tokenizer.encode(extracted.reasoning_content).size()
+                << " visible_start_token=" << (visible_start ? std::to_string(*visible_start) : "none")
+                << " finish_reason=" << miinfer::openai_finish_reason(stats.stop_reason)
+                << " prefill_ms=" << stats.prefill_ms << " decode_ms=" << stats.decode_ms
+                << " total_ms=" << stats.total_ms << '\n';
+        }
         return 0;
     } catch (const std::exception& error) {
         std::cerr << "Could not run model:\n  " << model_path << "\nReason:\n  " << error.what() << '\n';
@@ -4634,16 +4661,20 @@ int cmd_chat(int argc, char** argv) {
     if (argc < 3) { std::cerr << "miinfer chat MODEL\n"; return 2; }
     const std::string model_path = argv[2];
     std::size_t context = static_cast<std::size_t>(std::stoull(configured("context", "8192")));
-    std::size_t max_tokens = miinfer::kDefaultMaxOutputTokens;
+    std::optional<std::size_t> max_tokens;
     bool show_stats = false;
     for (int i = 3; i < argc; ++i) {
         const std::string_view arg = argv[i];
         if (arg == "--context" && i + 1 < argc) context = std::stoull(argv[++i]);
-        else if ((arg == "--max-tokens" || arg == "-n") && i + 1 < argc) max_tokens = std::stoull(argv[++i]);
+        else if ((arg == "--max-tokens" || arg == "-n") && i + 1 < argc) {
+            max_tokens = parse_cli_size(argv[++i]);
+            if (!max_tokens) { std::cerr << "max-tokens must be an integer\n"; return 2; }
+        }
         else if (arg == "--stats") show_stats = true;
         else { std::cerr << "Unknown chat option: " << arg << '\n'; return 2; }
     }
-    if (context == 0 || context > 131072 || max_tokens == 0) {
+    if (context == 0 || context > 131072
+        || (max_tokens && (*max_tokens == 0 || *max_tokens > miinfer::kMaxOutputTokens))) {
         std::cerr << "Context and max-tokens must be positive; context may not exceed 131072.\n"; return 2;
     }
     try {
@@ -4672,13 +4703,14 @@ int cmd_chat(int argc, char** argv) {
             miinfer::OpenAiChatRequest request;
             request.messages = history;
             const auto prompt_tokens = tokenizer.encode(miinfer::build_chatml(request));
-            if (prompt_tokens.size() + max_tokens > context) {
+            const auto output_limit = miinfer::resolve_output_token_limit(max_tokens, prompt_tokens.size(), context);
+            if (!output_limit) {
                 history.pop_back();
                 std::cerr << "That conversation would exceed the configured context of " << context << " tokens.\n";
                 continue;
             }
             miinfer::prefill_v2::GenerateOptions options;
-            options.max_new_tokens = max_tokens;
+            options.max_new_tokens = *output_limit;
             options.enable_prefix_reuse = true;
             options.cache_prefix_after = true;
             options.use_hip_graph = true;
@@ -4697,15 +4729,28 @@ int cmd_chat(int argc, char** argv) {
             const std::string raw = tokenizer.decode(stats.generated_tokens);
             const auto visible = terminal_output(raw);
             std::cout << text_stream.finish();
+            if (stats.stop_reason == miinfer::GenerationStopReason::kOutputLimit) {
+                std::cout << "\n[response truncated at output-token limit]";
+            }
             if (visible.has_tool_call) std::cout << "\n[Tool request not executed in terminal chat.]";
             std::cout << "\n\n" << std::flush;
             miinfer::ChatMessage assistant_message;
             assistant_message.role = "assistant";
             assistant_message.content = raw;
             history.push_back(std::move(assistant_message));
-            if (show_stats) std::cerr << "tokens=" << stats.generated_tokens.size()
-                << " reused_prefix=" << stats.prefix_tokens_reused
-                << " prefill_ms=" << stats.prefill_ms << " decode_ms=" << stats.decode_ms << '\n';
+            if (show_stats) {
+                const auto extracted = extract_reasoning_and_content(raw);
+                const auto visible_start = terminal_visible_start_token(stats.generated_tokens, tokenizer);
+                std::cerr << "tokens=" << stats.generated_tokens.size()
+                    << " prompt_tokens=" << prompt_tokens.size()
+                    << " visible_tokens=" << tokenizer.encode(visible.content).size()
+                    << " visible_chars=" << visible.content.size()
+                    << " reasoning_tokens=" << tokenizer.encode(extracted.reasoning_content).size()
+                    << " visible_start_token=" << (visible_start ? std::to_string(*visible_start) : "none")
+                    << " finish_reason=" << miinfer::openai_finish_reason(stats.stop_reason)
+                    << " reused_prefix=" << stats.prefix_tokens_reused
+                    << " prefill_ms=" << stats.prefill_ms << " decode_ms=" << stats.decode_ms << '\n';
+            }
         }
         std::cout << "Goodbye.\n";
         return 0;
@@ -5094,7 +5139,6 @@ int cmd_serve(int argc, char** argv) {
         }
         state("parsed");
         const bool is_stream = parsed.request->stream;
-        const std::size_t max_tokens = parsed.request->max_tokens;
         const bool defer_tool_output = !parsed.request->tools.empty()
             && parsed.request->tool_choice != "none";
         const std::string prompt = miinfer::build_chatml(*parsed.request);
@@ -5125,8 +5169,16 @@ int cmd_serve(int argc, char** argv) {
             state("rejected");
             return;
         }
-        const std::size_t available_output = context_length - prompt_tokens.size();
-        const std::size_t effective_max_tokens = std::min(max_tokens, available_output);
+        const auto output_limit = miinfer::resolve_output_token_limit(
+            parsed.request->max_tokens, prompt_tokens.size(), context_length);
+        if (!output_limit) {
+            ++http_errors;
+            send_http_error(client_fd, 400, "requested output limit exceeds remaining context",
+                            "context_length_exceeded");
+            state("rejected");
+            return;
+        }
+        const std::size_t effective_max_tokens = *output_limit;
         state("prefill_started");
         std::optional<double> first_delta_ms;
         const auto mark_first_delta = [&] {
@@ -5405,6 +5457,8 @@ int cmd_serve(int argc, char** argv) {
                 }
                 stats.prompt_tokens = v2_stats.prompt_tokens.size();
                 stats.generated_tokens = v2_stats.generated_tokens.size();
+                stats.stop_reason = v2_stats.stop_reason;
+                stats.cancelled = stats.stop_reason == miinfer::GenerationStopReason::kCancelled;
                 stats.prefill_processed_tokens = v2_stats.prompt_tokens.size();
                 stats.reused_prefix_tokens = v2_stats.prefix_tokens_reused;
                 stats.common_prefix_tokens = v2_stats.prefix_tokens_reused;
@@ -5426,7 +5480,7 @@ int cmd_serve(int argc, char** argv) {
                 prefill_tokens_total += stats.prefill_processed_tokens;
                 prefill_us += static_cast<std::uint64_t>(stats.prefill_ms * 1000.0);
                 generated_tokens_total += stats.generated_tokens;
-                const bool cancelled = !client_connected;
+                const bool cancelled = stats.cancelled || !client_connected;
                 if (cancelled) { ++cancelled_requests; state("cancelled"); }
                 else state("completed");
                 std::cerr << "miinfer_request {\"request_id\":" << request.request_id
@@ -5446,8 +5500,8 @@ int cmd_serve(int argc, char** argv) {
                           << ",\"decode_tokens_per_second\":" << stats.decode_tok_s
                           << ",\"total_ms\":" << stats.total_ms
                           << ",\"cancelled\":" << (cancelled ? "true" : "false")
-                          << ",\"finish_reason\":\"" << (cancelled ? "cancelled"
-                              : !tool_calls.calls.empty() ? "tool_calls" : "stop") << "\""
+                          << ",\"finish_reason\":\""
+                          << miinfer::openai_finish_reason(stats.stop_reason, !tool_calls.calls.empty()) << "\""
                           << ",\"error\":null"
                           << ",\"configured_context\":" << context_length
                           << ",\"runtime_context_capacity\":" << g_cache_capacity << "}\n";
@@ -5490,8 +5544,8 @@ int cmd_serve(int argc, char** argv) {
                         }
                     }
                 }
-                const std::string finish = defer_tool_output && !tool_calls.calls.empty()
-                    ? "tool_calls" : "stop";
+                const std::string finish(miinfer::openai_finish_reason(
+                    stats.stop_reason, !tool_calls.calls.empty()));
                 if (client_connected) {
                     (void)send_all(client_fd, "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"delta\":{},\"finish_reason\":\""
                         + finish + "\"}]}\n\n");
@@ -5533,6 +5587,8 @@ int cmd_serve(int argc, char** argv) {
             RuntimeGenerateStats stats;
             stats.prompt_tokens = v2_stats.prompt_tokens.size();
             stats.generated_tokens = v2_stats.generated_tokens.size();
+            stats.stop_reason = v2_stats.stop_reason;
+            stats.cancelled = stats.stop_reason == miinfer::GenerationStopReason::kCancelled;
             stats.prefill_processed_tokens = v2_stats.prompt_tokens.size();
             stats.reused_prefix_tokens = v2_stats.prefix_tokens_reused;
             stats.common_prefix_tokens = v2_stats.prefix_tokens_reused;
@@ -5588,13 +5644,14 @@ int cmd_serve(int argc, char** argv) {
                       << ",\"decode_tokens_per_second\":" << stats.decode_tok_s
                       << ",\"total_ms\":" << stats.total_ms
                       << ",\"cancelled\":" << (stats.cancelled ? "true" : "false")
-                      << ",\"finish_reason\":\"" << (stats.cancelled ? "cancelled" : has_tool_calls ? "tool_calls" : "stop") << "\""
+                      << ",\"finish_reason\":\""
+                      << miinfer::openai_finish_reason(stats.stop_reason, has_tool_calls) << "\""
                       << ",\"error\":null"
                       << ",\"configured_context\":" << context_length
                       << ",\"runtime_context_capacity\":" << g_cache_capacity << "}\n";
             const std::string body = "{\"id\":\"chatcmpl-1\",\"object\":\"chat.completion\",\"choices\":[{\"message\":{\"role\":\"assistant\","
                 + message + "},\"finish_reason\":\""
-                + std::string(stats.cancelled ? "cancelled" : has_tool_calls ? "tool_calls" : "stop") + "\"}],\"usage\":{\"prompt_tokens\":"
+                + std::string(miinfer::openai_finish_reason(stats.stop_reason, has_tool_calls)) + "\"}],\"usage\":{\"prompt_tokens\":"
                 + std::to_string(stats.prompt_tokens) + ",\"completion_tokens\":"
                 + std::to_string(stats.generated_tokens) + "}}";
             if (send_http_response(client_fd, 200, "OK", "application/json", body)) mark_first_delta();
@@ -5817,8 +5874,8 @@ void print_command_help(std::string_view command) {
     if (command == "doctor") std::cout << "Usage: miinfer doctor [--model MODEL] [--port PORT] [--json] [--verbose]\nCheck GPU, HIP, memory, model compatibility, and server port.\n";
     else if (command == "models") std::cout << "Usage: miinfer models [DIRECTORY] [--json]\nList GGUF files in DIRECTORY or configured model locations.\n";
     else if (command == "inspect") std::cout << "Usage: miinfer inspect MODEL [--json] [--verbose]\nInspect a local GGUF model and its production compatibility.\n";
-    else if (command == "run") std::cout << "Usage: miinfer run MODEL [PROMPT] [options]\n\nOptions:\n  -p, --prompt TEXT      Prompt text\n  -n, --max-tokens N     Maximum generated tokens (default 128)\n      --context N        Context capacity (default from config)\n      --temperature N    Sampling temperature (default 0.7; 0 is greedy)\n      --top-p N           Nucleus sampling (default 0.9)\n      --top-k N           Top-k sampling (default 40)\n      --seed N            Reproducible sampling seed\n      --no-stream         Buffer output until generation completes\n      --verbose           Show model/runtime diagnostics\n      --stats             Print timing summary\n\nIf PROMPT is omitted, read it from standard input.\n";
-    else if (command == "chat") std::cout << "Usage: miinfer chat [MODEL] [--context N] [--max-tokens N] [--stats]\nStart a multi-turn terminal conversation. Type /exit or /quit to leave.\n";
+    else if (command == "run") std::cout << "Usage: miinfer run MODEL [PROMPT] [options]\n\nOptions:\n  -p, --prompt TEXT      Prompt text\n  -n, --max-tokens N     Maximum generated tokens (default 4096, context-limited)\n      --context N        Context capacity (default from config)\n      --temperature N    Sampling temperature (default 0.7; 0 is greedy)\n      --top-p N           Nucleus sampling (default 0.9)\n      --top-k N           Top-k sampling (default 40)\n      --seed N            Reproducible sampling seed\n      --no-stream         Buffer output until generation completes\n      --verbose           Show model/runtime diagnostics\n      --stats             Print timing summary\n\nIf PROMPT is omitted, read it from standard input.\n";
+    else if (command == "chat") std::cout << "Usage: miinfer chat [MODEL] [--context N] [--max-tokens N (default 4096, context-limited)] [--stats]\nStart a multi-turn terminal conversation. Type /exit or /quit to leave.\n";
     else if (command == "serve") std::cout << "Usage: miinfer serve [MODEL] [--host HOST] [--port PORT] [--context N] [--api-key-file PATH] [--verbose]\nStart the OpenAI-compatible API and bundled web UI (localhost:8080 by default).\n";
     else if (command == "config") std::cout << "Usage: miinfer config [--json]\n       miinfer config set KEY VALUE\nStable keys: model-dir, default-model, host, port, context, api-key-file.\n";
     else std::cout << "Usage: miinfer models [DIRECTORY]\n";

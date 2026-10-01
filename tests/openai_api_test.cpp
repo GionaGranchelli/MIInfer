@@ -8,7 +8,26 @@ int main() {
     const auto default_budget = miinfer::parse_openai_chat_request(
         R"({"messages":[{"role":"user","content":"hi"}]})");
     CHECK(default_budget.request);
-    CHECK(default_budget.request->max_tokens == miinfer::kDefaultMaxOutputTokens);
+    CHECK(!default_budget.request->max_tokens);
+
+    const auto explicit_budget = miinfer::parse_openai_chat_request(
+        R"({"messages":[{"role":"user","content":"hi"}],"max_tokens":32})");
+    CHECK(explicit_budget.request && explicit_budget.request->max_tokens == 32);
+    const auto completion_budget = miinfer::parse_openai_chat_request(
+        R"({"messages":[{"role":"user","content":"hi"}],"max_completion_tokens":256})");
+    CHECK(completion_budget.request && completion_budget.request->max_tokens == 256);
+
+    CHECK(miinfer::resolve_output_token_limit(std::nullopt, 55, 8192)
+          == miinfer::kDefaultMaxOutputTokens);
+    CHECK(miinfer::resolve_output_token_limit(std::nullopt, 8191, 8192) == 1);
+    CHECK(miinfer::resolve_output_token_limit(32, 8000, 8192) == 32);
+    CHECK(!miinfer::resolve_output_token_limit(256, 8000, 8192));
+    CHECK(!miinfer::resolve_output_token_limit(std::nullopt, 8192, 8192));
+
+    CHECK(miinfer::openai_finish_reason(miinfer::GenerationStopReason::kStopToken) == "stop");
+    CHECK(miinfer::openai_finish_reason(miinfer::GenerationStopReason::kOutputLimit) == "length");
+    CHECK(miinfer::openai_finish_reason(miinfer::GenerationStopReason::kCancelled) == "cancelled");
+    CHECK(miinfer::openai_finish_reason(miinfer::GenerationStopReason::kOutputLimit, true) == "tool_calls");
 
     const auto parsed = miinfer::parse_openai_chat_request(R"({"model":"test","messages":[{"role":"system","content":"Be concise."},{"role":"user","content":"He said \"hi\"\\ok\n"},{"role":"assistant","content":"Hi"},{"role":"user","content":"\u03bb"}],"stream":true,"max_tokens":4096,"ignored":1})");
     CHECK(parsed.request);
@@ -43,7 +62,7 @@ int main() {
     CHECK(generated.calls[0].name == "read_file");
     CHECK(generated.calls[0].arguments == R"({"path":"a.txt"})");
 
-    for (const char* invalid : {"{", "{}", R"({"messages":[]})", R"({"messages":{}})", R"({"messages":[{"role":"tool","content":"x"}]})", R"({"messages":[{"role":"user","content":1}]})", R"({"messages":[{"role":"user","content":"x"}],"stream":1})", R"({"messages":[{"role":"user","content":"x"}],"max_tokens":-1})", R"({"messages":[{"role":"user","content":"x"}],"max_tokens":65537})"}) {
+    for (const char* invalid : {"{", "{}", R"({"messages":[]})", R"({"messages":{}})", R"({"messages":[{"role":"tool","content":"x"}]})", R"({"messages":[{"role":"user","content":1}]})", R"({"messages":[{"role":"user","content":"x"}],"stream":1})", R"({"messages":[{"role":"user","content":"x"}],"max_tokens":-1})", R"({"messages":[{"role":"user","content":"x"}],"max_tokens":0})", R"({"messages":[{"role":"user","content":"x"}],"max_tokens":65537})", R"({"messages":[{"role":"user","content":"x"}],"max_completion_tokens":0})"}) {
         CHECK(!miinfer::parse_openai_chat_request(invalid).request);
     }
     std::cout << "openai API host test passed\n";
