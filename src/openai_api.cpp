@@ -6,6 +6,13 @@
 
 namespace miinfer {
 
+std::string_view openai_finish_reason(GenerationStopReason reason, bool has_tool_calls) noexcept {
+    if (reason == GenerationStopReason::kCancelled) return "cancelled";
+    if (has_tool_calls) return "tool_calls";
+    if (reason == GenerationStopReason::kOutputLimit) return "length";
+    return "stop";
+}
+
 namespace {
 
 using json = nlohmann::json;
@@ -167,13 +174,15 @@ OpenAiParseResult parse_openai_chat_request(std::string_view body) {
         if (json.contains("max_completion_tokens") && !json["max_completion_tokens"].is_null()) {
             if (!json["max_completion_tokens"].is_number_unsigned()) return {{}, "max_completion_tokens must be an unsigned integer"};
             request.max_tokens = json["max_completion_tokens"].get<std::size_t>();
-            if (request.max_tokens > kMaxOutputTokens) {
+            if (*request.max_tokens == 0) return {{}, "max_completion_tokens must be positive"};
+            if (*request.max_tokens > kMaxOutputTokens) {
                 return {{}, "max_completion_tokens exceeds maximum supported context output limit"};
             }
         } else if (json.contains("max_tokens") && !json["max_tokens"].is_null()) {
             if (!json["max_tokens"].is_number_unsigned()) return {{}, "max_tokens must be an unsigned integer"};
             request.max_tokens = json["max_tokens"].get<std::size_t>();
-            if (request.max_tokens > kMaxOutputTokens) {
+            if (*request.max_tokens == 0) return {{}, "max_tokens must be positive"};
+            if (*request.max_tokens > kMaxOutputTokens) {
                 return {{}, "max_tokens exceeds maximum supported context output limit"};
             }
         }

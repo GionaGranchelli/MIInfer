@@ -1,0 +1,30 @@
+{
+  "baseline_source_sha": "d405f2e353d8fc695f3f1e9b2bd1f866416b2378",
+  "baseline_default_max_tokens": 1024,
+  "terminal_chat_context": 8192,
+  "terminal_chat_temperature": 0.7,
+  "api_context": 8192,
+  "cases": [
+    {
+      "id": "terminal_cpp_parser_incomplete",
+      "surface": "terminal_chat",
+      "prompt": "Write a complete C++20 function that parses a comma-separated list of signed decimal integers into std::vector<int>. It must reject empty fields, whitespace, overflow, and trailing junk; explain its error handling and give a short example."
+    },
+    {
+      "id": "terminal_cpp_parser_blank",
+      "surface": "terminal_chat",
+      "prompt": "Implement a complete C++20 function parse_csv_ints(std::string_view) returning std::vector<int>. Reject empty fields, leading/trailing whitespace, overflow, and trailing junk with useful exceptions. Provide the necessary includes, explain how each validation works, give three short test cases (one rejected), and state complexity. Keep the answer complete and around 600–750 generated tokens; do not omit code or tests."
+    },
+    {
+      "id": "terminal_python_lru_incomplete",
+      "surface": "terminal_chat",
+      "prompt": "Write a complete Python LRUCache class with get(key) returning -1 when absent and put(key, value), both O(1). Explain the OrderedDict operations and provide a short executable example covering eviction and updating an existing key."
+    },
+    {
+      "id": "api_cpp_parser_incomplete",
+      "surface": "openai_chat_completions",
+      "temperature": 0,
+      "prompt": "Write a complete C++20 function parse_csv_ints(std::string_view) returning std::vector<int>. Reject empty fields, whitespace, overflow, and trailing junk. Include headers, concise explanation, and a few test cases."
+    }
+  ]
+}

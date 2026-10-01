@@ -1,6 +1,7 @@
 #pragma once
 
 #include "miinfer/prefill_v2/constants.hpp"
+#include "miinfer/generation_contract.hpp"
 #include "miinfer/prefill_v2/kv_cache.hpp"
 #include "miinfer/prefill_v2/reusable_context.hpp"
 #include "miinfer/prefill_v2/state.hpp"
@@ -44,6 +45,7 @@ struct GenerateOptions {
 };
 
 struct GenerateStats {
+    miinfer::GenerationStopReason stop_reason = miinfer::GenerationStopReason::kOutputLimit;
     std::vector<std::uint32_t> prompt_tokens;
     std::vector<std::uint32_t> generated_tokens;
     double prefill_ms = 0.0;
