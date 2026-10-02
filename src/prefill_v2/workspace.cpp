@@ -4,6 +4,8 @@
 #include <hip/hip_runtime.h>
 #include <algorithm>
 #include <cstddef>
+#include <cstdlib>
+#include <iostream>
 #include <stdexcept>
 #include <utility>
 
@@ -75,6 +77,27 @@ PrefillV2WorkspaceManager::PrefillV2WorkspaceManager(std::size_t max_tokens)
         + attn_qfull_bytes + attn_q_rope_bytes + attn_k_bytes + attn_v_bytes + attn_gated_bytes
         + mmq_q8_bytes + q8_1_bytes + ffn_gate_bytes + ffn_up_bytes + ffn_act_bytes + ffn_down_bytes
         + splitk_attn_bytes;
+
+    if (std::getenv("MIINFER_MEMORY_BUDGET_TRACE") != nullptr) {
+        std::size_t free_bytes = 0;
+        std::size_t total_device_bytes = 0;
+        const auto status = hipMemGetInfo(&free_bytes, &total_device_bytes);
+        std::cerr << "MEMORY_BUDGET workspace_trace max_tokens=" << max_tokens_
+                  << " requested_bytes=" << total_bytes_
+                  << " free_before_bytes=" << free_bytes
+                  << " device_total_bytes=" << total_device_bytes
+                  << " deficit_bytes=" << (total_bytes_ > free_bytes ? total_bytes_ - free_bytes : 0)
+                  << " status=" << hipGetErrorString(status) << '\n';
+        std::cerr << "MEMORY_BUDGET workspace_components"
+                  << " shared_activation_bytes=" << (norm_bytes + ssm_out_bytes + residual_bytes + post_norm_bytes)
+                  << " recurrent_prefill_bytes=" << (qkv_bytes + gate_bytes + 4 * beta_decay_bytes
+                      + query_bytes + key_bytes + value_bytes + gdn_scratch_bytes + gdn_raw_bytes + gated_bytes)
+                  << " attention_prefill_bytes=" << (attn_qfull_bytes + attn_q_rope_bytes + attn_k_bytes
+                      + attn_v_bytes + attn_gated_bytes + splitk_attn_bytes)
+                  << " quantization_bytes=" << (mmq_q8_bytes + q8_1_bytes)
+                  << " ffn_bytes=" << (ffn_gate_bytes + ffn_up_bytes + ffn_act_bytes + ffn_down_bytes)
+                  << '\n';
+    }
 
     MIINFER_HIP_CHECK(hipMalloc(&d_buffer_, total_bytes_));
 
