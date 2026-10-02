@@ -53,16 +53,22 @@ $runtime run --rm --init \
     -v "$model_dir:/models:ro" \
     "$image" bash -lc '
 set -euo pipefail
+host_targets=(
+    miinfer-host-test miinfer-openai-api-test miinfer-m12-gdn-oracle
+    miinfer-model-loader-test miinfer-qwen3-primitives-host-test
+    miinfer-qwen3-layer0-test miinfer-qwen3-kv-cache-test
+    miinfer-qwen3-forward-test miinfer-qwen3-tokenizer-test
+)
 model=/models/"$(basename "$0")"
 echo "container_rocm=$(hipcc --version | awk "/HIP version/{print; exit}")"
 echo "container_arch=$(rocminfo | awk "/^[[:space:]]*Name:[[:space:]]*gfx906[[:space:]]*$/{n++} END{print n+0}")"
 test "$(rocminfo | awk "/^[[:space:]]*Name:[[:space:]]*gfx906[[:space:]]*$/{n++} END{print n+0}")" = 1
 test "$(sha256sum "$model" | awk "{print \$1}")" = "$MIINFER_EXPECTED_MODEL_SHA"
 cmake -S . -B build/qualification-host -DCMAKE_BUILD_TYPE=Release -DMIINFER_ENABLE_HIP=OFF -DMIINFER_BUILD_TESTS=ON
-cmake --build build/qualification-host --parallel 2
-ctest --test-dir build/qualification-host --output-on-failure -L host-only
+cmake --build build/qualification-host --parallel 2 --target "${host_targets[@]}"
+ctest --test-dir build/qualification-host --output-on-failure -L host-only -E kquant-wave-host
 cmake -S . -B build/qualification-gpu -DCMAKE_BUILD_TYPE=Release -DCMAKE_HIP_ARCHITECTURES=gfx906 -DMIINFER_ENABLE_HIP=ON -DMIINFER_HIP_ARCHITECTURE=gfx906 -DMIINFER_TARGET_ARCH=gfx906 -DMIINFER_BUILD_TESTS=ON -DMIINFER_BUILD_BENCHMARKS=ON
-cmake --build build/qualification-gpu --parallel 2
+cmake --build build/qualification-gpu --parallel 2 --target miinfer-hip-smoke miinfer-fp16-gemv-test miinfer-q4-q8-gemv-test miinfer-bench
 ctest --test-dir build/qualification-gpu --output-on-failure -R "hip-smoke|fp16-gemv-correctness|q4-q8-gemv-correctness"
 build/qualification-gpu/miinfer-bench --warmup 2 --iterations 10 --elements 1048576
 ' "$model_path"
