@@ -340,7 +340,7 @@ void PrefillV2AttentionLayer::forward(
             static_cast<std::uint32_t>(kv_cache.capacity),
             24, 4, 256, 1.0F / std::sqrt(256.0F),
             kv_cache.is_k_q8(), kv_cache.is_v_q8(),
-            32, stream, prefill_state);
+            ws.splitk_splits, stream, prefill_state);
     } else {
         launch_qwen35_tiled_online_attention_batch_f16(
             ws.attn_q_rope, kv_cache.key_cache, kv_cache.value_cache, ws.gate, ws.attn_gated_output,
@@ -470,7 +470,7 @@ void PrefillV2AttentionLayer::forward_profiled(
             static_cast<std::uint32_t>(kv_cache.capacity),
             24, 4, 256, 1.0F / std::sqrt(256.0F),
             kv_cache.is_k_q8(), kv_cache.is_v_q8(),
-            32, stream);
+            ws.splitk_splits, stream);
     } else {
         launch_qwen35_tiled_online_attention_batch_f16(
             ws.attn_q_rope, kv_cache.key_cache, kv_cache.value_cache, ws.gate, ws.attn_gated_output,
@@ -651,7 +651,7 @@ void PrefillV2AttentionLayer::decode(
             1.0F / std::sqrt(256.0F),
             kv_cache.is_k_q8(),
             kv_cache.is_v_q8(),
-            32,
+            ws.splitk_splits,
             stream);
     }
 
@@ -800,7 +800,7 @@ void PrefillV2AttentionLayer::decode_profiled(
             1.0F / std::sqrt(256.0F),
             kv_cache.is_k_q8(),
             kv_cache.is_v_q8(),
-            32,
+            ws.splitk_splits,
             stream);
     }
     MIINFER_HIP_CHECK(hipEventRecord(ev_splitk, stream));

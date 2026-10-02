@@ -321,7 +321,11 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
 }
 
 void PrefillV2Model::allocate_resources() {
-    ws_mgr_ = std::make_unique<PrefillV2WorkspaceManager>(kMaxPrefillBatch);
+    // Keep the qualified 32-way scratch path through 64K. At larger capacities,
+    // three-way scratch is sufficient for the same kernel and removes the
+    // construction-time arena peak that blocked the 128K model.
+    const std::uint32_t splitk_splits = kv_capacity_ > 66000 ? 3 : 32;
+    ws_mgr_ = std::make_unique<PrefillV2WorkspaceManager>(kMaxPrefillBatch, splitk_splits);
 
     MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&d_ping_), kMaxPrefillBatch * kHidden * sizeof(float)));
     MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&d_pong_), kMaxPrefillBatch * kHidden * sizeof(float)));

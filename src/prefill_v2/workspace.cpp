@@ -17,10 +17,15 @@ inline std::size_t align128(std::size_t bytes) {
 
 } // namespace
 
-PrefillV2WorkspaceManager::PrefillV2WorkspaceManager(std::size_t max_tokens)
-    : max_tokens_(max_tokens) {
+PrefillV2WorkspaceManager::PrefillV2WorkspaceManager(
+    std::size_t max_tokens, std::uint32_t splitk_splits)
+    : max_tokens_(max_tokens), splitk_splits_(splitk_splits) {
     if (max_tokens_ == 0 || max_tokens_ > kMaxPrefillBatch || max_tokens_ % kGdnChunkSize != 0) {
         throw std::runtime_error("PrefillV2WorkspaceManager: invalid max_tokens " + std::to_string(max_tokens_));
+    }
+    if (splitk_splits_ == 0 || splitk_splits_ > 64) {
+        throw std::runtime_error("PrefillV2WorkspaceManager: invalid splitk_splits "
+            + std::to_string(splitk_splits_));
     }
 
     // 1. Calculate required bytes for all buffers
@@ -64,9 +69,8 @@ PrefillV2WorkspaceManager::PrefillV2WorkspaceManager(std::size_t max_tokens)
     const std::size_t ffn_act_bytes = align128(max_tokens_ * kFfnInner * sizeof(float));
     const std::size_t ffn_down_bytes = align128(max_tokens_ * kHidden * sizeof(float));
 
-    // Split-K Suffix Attention workspace: supports up to 32 splits
-    constexpr std::size_t kMaxSplitK = 32;
-    const std::size_t splitk_attn_floats = kMaxSplitK * max_tokens_ * 24 * (256 + 2);
+    // Split-K Suffix Attention workspace: sized to the selected launch split count.
+    const std::size_t splitk_attn_floats = splitk_splits_ * max_tokens_ * 24 * (256 + 2);
     const std::size_t splitk_attn_bytes = align128(splitk_attn_floats * sizeof(float));
 
     total_bytes_ = norm_bytes + qkv_bytes + gate_bytes + 4 * beta_decay_bytes
@@ -113,6 +117,7 @@ PrefillV2WorkspaceManager::PrefillV2WorkspaceManager(std::size_t max_tokens)
     workspace_.attn_v = reinterpret_cast<float*>(ptr); ptr += attn_v_bytes;
     workspace_.attn_gated_output = reinterpret_cast<float*>(ptr); ptr += attn_gated_bytes;
     workspace_.splitk_attn_workspace = reinterpret_cast<float*>(ptr); ptr += splitk_attn_bytes;
+    workspace_.splitk_splits = splitk_splits_;
 
     workspace_.mmq_q8 = reinterpret_cast<MxQ8_1MmqBlock*>(ptr); ptr += mmq_q8_bytes;
     workspace_.q8_1 = reinterpret_cast<Q8_1Block*>(ptr); ptr += q8_1_bytes;
@@ -133,6 +138,7 @@ PrefillV2WorkspaceManager::~PrefillV2WorkspaceManager() {
 PrefillV2WorkspaceManager::PrefillV2WorkspaceManager(PrefillV2WorkspaceManager&& other) noexcept
     : max_tokens_(other.max_tokens_),
       total_bytes_(other.total_bytes_),
+      splitk_splits_(other.splitk_splits_),
       d_buffer_(std::exchange(other.d_buffer_, nullptr)),
       workspace_(other.workspace_) {}
 
@@ -141,6 +147,7 @@ PrefillV2WorkspaceManager& PrefillV2WorkspaceManager::operator=(PrefillV2Workspa
         if (d_buffer_ != nullptr) (void)hipFree(d_buffer_);
         max_tokens_ = other.max_tokens_;
         total_bytes_ = other.total_bytes_;
+        splitk_splits_ = other.splitk_splits_;
         d_buffer_ = std::exchange(other.d_buffer_, nullptr);
         workspace_ = other.workspace_;
     }
