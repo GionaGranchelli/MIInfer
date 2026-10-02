@@ -1,0 +1,3 @@
+HIP_VMM_FEASIBILITY device=AMD Instinct MI60 / MI50 arch=gfx906:sramecc+:xnack- reserve_bytes=4294967296 granularity_bytes=4096 chunk_bytes=65536 cycles=50
+VMM_RESULT HIP_VMM_VIABLE reserve_avg_us=12.86 map_avg_us=2880.44 unmap_release_avg_us=70.58
+VMM_RESULT HIP_VMM_VIABLE reserve_avg_us=11.24 map_avg_us=4895.32 unmap_release_avg_us=75.94

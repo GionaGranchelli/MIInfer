@@ -458,6 +458,10 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-bench PRIVATE miinfer_hip)
     target_compile_options(miinfer-bench PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-hip-vmm-feasibility tests/hip_vmm_feasibility.hip)
+    target_link_libraries(miinfer-hip-vmm-feasibility PRIVATE miinfer_hip)
+    target_compile_options(miinfer-hip-vmm-feasibility PRIVATE -Wall -Wextra -Wpedantic)
+
     add_executable(miinfer-fp16-gemv-test tests/fp16_gemv_test.cpp)
     target_link_libraries(miinfer-fp16-gemv-test PRIVATE miinfer_hip)
     target_compile_options(miinfer-fp16-gemv-test PRIVATE -Wall -Wextra -Wpedantic)
