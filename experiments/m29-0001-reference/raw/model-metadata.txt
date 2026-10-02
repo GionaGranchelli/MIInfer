@@ -1,0 +1,55 @@
+gguf_ex_read_0: version:      3
+gguf_ex_read_0: alignment:   32
+gguf_ex_read_0: data offset: 10996704
+gguf_ex_read_0: n_kv: 51
+gguf_ex_read_0: kv[0]: key = general.architecture
+gguf_ex_read_0: kv[1]: key = general.type
+gguf_ex_read_0: kv[2]: key = general.sampling.top_k
+gguf_ex_read_0: kv[3]: key = general.sampling.top_p
+gguf_ex_read_0: kv[4]: key = general.sampling.temp
+gguf_ex_read_0: kv[5]: key = general.name
+gguf_ex_read_0: kv[6]: key = general.basename
+gguf_ex_read_0: kv[7]: key = general.description
+gguf_ex_read_0: kv[8]: key = general.quantized_by
+gguf_ex_read_0: kv[9]: key = general.size_label
+gguf_ex_read_0: kv[10]: key = general.license
+gguf_ex_read_0: kv[11]: key = general.repo_url
+gguf_ex_read_0: kv[12]: key = general.base_model.count
+gguf_ex_read_0: kv[13]: key = general.base_model.0.name
+gguf_ex_read_0: kv[14]: key = general.base_model.0.organization
+gguf_ex_read_0: kv[15]: key = general.base_model.0.repo_url
+gguf_ex_read_0: kv[16]: key = general.tags
+gguf_ex_read_0: kv[17]: key = qwen35.block_count
+gguf_ex_read_0: kv[18]: key = qwen35.context_length
+gguf_ex_read_0: kv[19]: key = qwen35.embedding_length
+gguf_ex_read_0: kv[20]: key = qwen35.feed_forward_length
+gguf_ex_read_0: kv[21]: key = qwen35.attention.head_count
+gguf_ex_read_0: kv[22]: key = qwen35.attention.head_count_kv
+gguf_ex_read_0: kv[23]: key = qwen35.rope.dimension_sections
+gguf_ex_read_0: kv[24]: key = qwen35.rope.freq_base
+gguf_ex_read_0: kv[25]: key = qwen35.attention.layer_norm_rms_epsilon
+gguf_ex_read_0: kv[26]: key = qwen35.attention.key_length
+gguf_ex_read_0: kv[27]: key = qwen35.attention.value_length
+gguf_ex_read_0: kv[28]: key = qwen35.nextn_predict_layers
+gguf_ex_read_0: kv[29]: key = qwen35.ssm.conv_kernel
+gguf_ex_read_0: kv[30]: key = qwen35.ssm.state_size
+gguf_ex_read_0: kv[31]: key = qwen35.ssm.group_count
+gguf_ex_read_0: kv[32]: key = qwen35.ssm.time_step_rank
+gguf_ex_read_0: kv[33]: key = qwen35.ssm.inner_size
+gguf_ex_read_0: kv[34]: key = qwen35.full_attention_interval
+gguf_ex_read_0: kv[35]: key = qwen35.rope.dimension_count
+gguf_ex_read_0: kv[36]: key = tokenizer.ggml.model
+gguf_ex_read_0: kv[37]: key = tokenizer.ggml.pre
+gguf_ex_read_0: kv[38]: key = tokenizer.ggml.tokens
+gguf_ex_read_0: kv[39]: key = tokenizer.ggml.token_type
+gguf_ex_read_0: kv[40]: key = tokenizer.ggml.merges
+gguf_ex_read_0: kv[41]: key = tokenizer.ggml.eos_token_id
+gguf_ex_read_0: kv[42]: key = tokenizer.ggml.padding_token_id
+gguf_ex_read_0: kv[43]: key = tokenizer.ggml.bos_token_id
+gguf_ex_read_0: kv[44]: key = general.quantization_version
+gguf_ex_read_0: kv[45]: key = general.file_type
+gguf_ex_read_0: kv[46]: key = quantize.imatrix.file
+gguf_ex_read_0: kv[47]: key = quantize.imatrix.dataset
+gguf_ex_read_0: kv[48]: key = quantize.imatrix.entries_count
+gguf_ex_read_0: kv[49]: key = quantize.imatrix.chunks_count
+gguf_ex_read_0: kv[50]: key = tokenizer.chat_template

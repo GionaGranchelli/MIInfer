@@ -1,0 +1,30 @@
+M29-0001 B provenance
+2026-10-02T19:57:00+02:00
+host=machinist
+model_sha=7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169
+toolbox_parent=a7model_sha=
+toolbox_parent=a708a2790fa51303e3d4f5af9e53c045177181a3
+toolbox_status:
+ M llama.cpp/build-toolbox.llama.sh
+ M llama.cpp/get_models.py
+llama_submodule=52f1096f21b0e12e4532f34224991e06cf21a69a
+image:
+ec7af7dcb79974488d687d5c0b2f544a947131fe6c6ece20c7a3b2eee74fc442 docker.io/kyuz0/llamacpp-toolbox-gfx906@sha256:396ac51f9f386d7144ca6242b7ef235f9e50f86142f84e2a9f5de4f3adb5e4f4
+container:
+docker.io/kyuz0/llamacpp-toolbox-gfx906:rocm-7.2.1 ec7af7dcb79974488d687d5c0b2f544a947131fe6c6ece20c7a3b2eee74fc442
+hipcc:
+HIP version: 7.2.53211-e1a6bc5663
+AMD clang version 22.0.0git (https://github.com/RadeonOpenCompute/llvm-project roc-7.2.1 26084 f58b06dce1f9c15707c5f808fd002e18c2accf7e)
+Target: x86_64-unknown-linux-gnu
+Thread model: posix
+InstalledDir: /opt/rocm-7.2.1/lib/llvm/bin
+Configuration file: /opt/rocm-7.2.1/lib/llvm/bin/clang++.cfg
+clang:
+bash: line 1: clang: command not found
+devices:
+ggml_cuda_init: found 1 ROCm devices (Total VRAM: 32752 MiB):
+  Device 0: AMD Radeon Graphics, gfx906:sramecc-:xnack- (0x906), VMM: no, Wave Size: 64, VRAM: 32752 MiB
+load_backend: loaded ROCm backend from /usr/local/bin/libggml-hip.so
+load_backend: loaded CPU backend from /usr/local/bin/libggml-cpu-haswell.so
+Available devices:
+  ROCm0: AMD Radeon Graphics (32752 MiB, 32730 MiB free)

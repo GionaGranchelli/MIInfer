@@ -1,0 +1,5 @@
+ggml_cuda_init: found 1 ROCm devices (Total VRAM: 32752 MiB):
+  Device 0: AMD Radeon Graphics, gfx906:sramecc-:xnack- (0x906), VMM: no, Wave Size: 64, VRAM: 32752 MiB
+load_backend: loaded ROCm backend from /usr/local/bin/libggml-hip.so
+load_backend: loaded CPU backend from /usr/local/bin/libggml-cpu-haswell.so
+main: error: failed to load model '/home/machinist/models/Qwen3.8-27B-Q4_K_M.gguf'
