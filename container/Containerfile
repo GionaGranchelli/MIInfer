@@ -1,20 +1,14 @@
-FROM docker.io/rocm/dev-ubuntu-22.04@sha256:42851dac319afce41cf993e25f95005b7f2cd0a0f6abd32ad8f25cd876ec56df
-
-LABEL org.opencontainers.image.base.name="docker.io/rocm/dev-ubuntu-22.04" \
-      org.opencontainers.image.base.digest="sha256:42851dac319afce41cf993e25f95005b7f2cd0a0f6abd32ad8f25cd876ec56df"
-
+FROM docker.io/kyuz0/rocm-toolbox-gfx906@sha256:fb0de294a2919ff6d503b4845e055c7fb80db5861954694ee5228e48a14411ec
+LABEL org.opencontainers.image.base.name="docker.io/kyuz0/rocm-toolbox-gfx906" \
+      org.opencontainers.image.base.digest="sha256:fb0de294a2919ff6d503b4845e055c7fb80db5861954694ee5228e48a14411ec"
+USER root
 ENV DEBIAN_FRONTEND=noninteractive \
     MIINFER_HIP_ARCHITECTURE=gfx906 \
-    MIINFER_TARGET_ARCH=gfx906
-
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        build-essential \
-        ca-certificates \
-        cmake \
-        git \
-        pkg-config \
-        python3 \
+    MIINFER_TARGET_ARCH=gfx906 \
+    PATH=/opt/rocm/llvm/bin:$PATH
+RUN apt-get -o Acquire::ForceIPv4=true update \
+    && apt-get -o Acquire::ForceIPv4=true install -y --no-install-recommends \
+        ca-certificates hipblas-dev pkg-config python3-pip \
     && rm -rf /var/lib/apt/lists/*
-
+RUN python3 -m pip install --no-cache-dir --break-system-packages cmake==3.30.5
 WORKDIR /workspace/MIInfer

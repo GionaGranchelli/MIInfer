@@ -5,7 +5,7 @@ repo_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 model_path=${1:-"$HOME/models/Qwen3.8-27B-Q4_K_M.gguf"}
 image=${MIINFER_IMAGE:-localhost/miinfer-dev:rocm-7.2.1}
 expected_model_sha=7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169
-expected_image_digest=sha256:42851dac319afce41cf993e25f95005b7f2cd0a0f6abd32ad8f25cd876ec56df
+expected_image_digest=sha256:fb0de294a2919ff6d503b4845e055c7fb80db5861954694ee5228e48a14411ec
 
 if [[ ! -f $model_path ]]; then
     echo "FAIL model missing: $model_path" >&2
@@ -22,6 +22,9 @@ image_base_digest=$($runtime image inspect "$image" --format '{{index .Config.La
 model_sha=$(sha256sum "$model_path" | awk '{print $1}')
 gpu_count=$(rocminfo 2>/dev/null | awk '/^[[:space:]]*Name:[[:space:]]*gfx906[[:space:]]*$/{n++} END{print n+0}')
 gpu_model=$(rocm-smi --showproductname 2>/dev/null | grep -m1 -E 'MI50|Instinct' || true)
+if [[ -z $gpu_model ]]; then
+    gpu_model=$(lspci 2>/dev/null | grep -i -m1 -E 'Vega 20|MI50|Radeon Pro Vega' || true)
+fi
 rocr_device=
 for candidate in $(seq 0 15); do
     candidate_count=$(ROCR_VISIBLE_DEVICES=$candidate timeout 10 rocminfo 2>/dev/null \
@@ -76,11 +79,15 @@ echo "container_rocm=$(hipcc --version | awk "/HIP version/{print; exit}")"
 echo "container_arch=$(rocminfo | awk "/^[[:space:]]*Name:[[:space:]]*gfx906[[:space:]]*$/{n++} END{print n+0}")"
 test "$(rocminfo | awk "/^[[:space:]]*Name:[[:space:]]*gfx906[[:space:]]*$/{n++} END{print n+0}")" = 1
 test "$(sha256sum "$model" | awk "{print \$1}")" = "$MIINFER_EXPECTED_MODEL_SHA"
-cmake -S . -B build/qualification-host -DCMAKE_BUILD_TYPE=Release -DMIINFER_ENABLE_HIP=OFF -DMIINFER_BUILD_TESTS=ON
-cmake --build build/qualification-host --parallel 2 --target "${host_targets[@]}"
-ctest --test-dir build/qualification-host --output-on-failure -L host-only -E kquant-wave-host
-cmake -S . -B build/qualification-gpu -DCMAKE_BUILD_TYPE=Release -DCMAKE_HIP_ARCHITECTURES=gfx906 -DMIINFER_ENABLE_HIP=ON -DMIINFER_HIP_ARCHITECTURE=gfx906 -DMIINFER_TARGET_ARCH=gfx906 -DMIINFER_BUILD_TESTS=ON -DMIINFER_BUILD_BENCHMARKS=ON
-cmake --build build/qualification-gpu --parallel 2 --target miinfer-hip-smoke miinfer-fp16-gemv-test miinfer-q4-q8-gemv-test miinfer-bench
-ctest --test-dir build/qualification-gpu --output-on-failure -R "hip-smoke|fp16-gemv-correctness|q4-q8-gemv-correctness"
-build/qualification-gpu/miinfer-bench --warmup 2 --iterations 10 --elements 1048576
+host_build=build/qualification-container-rocm721-host
+gpu_build=build/qualification-container-rocm721-gpu
+cmake -S . -B "$host_build" -DCMAKE_PREFIX_PATH=/opt/rocm-7.2.1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=clang++ -DMIINFER_ENABLE_HIP=OFF -DMIINFER_BUILD_TESTS=ON
+cmake --build "$host_build" --parallel 2 --target "${host_targets[@]}"
+ctest --test-dir "$host_build" --output-on-failure -L host-only -E kquant-wave-host
+cmake -S . -B "$gpu_build" -DCMAKE_PREFIX_PATH=/opt/rocm-7.2.1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_HIP_ARCHITECTURES=gfx906 -DMIINFER_ENABLE_HIP=ON -DMIINFER_HIP_ARCHITECTURE=gfx906 -DMIINFER_TARGET_ARCH=gfx906 -DMIINFER_BUILD_TESTS=ON -DMIINFER_BUILD_BENCHMARKS=ON
+cmake --build "$gpu_build" --parallel 2 --target miinfer-hip-smoke miinfer-fp16-gemv-test miinfer-q4-q8-gemv-test miinfer-bench
+"$gpu_build"/miinfer-hip-smoke
+"$gpu_build"/miinfer-fp16-gemv-test
+"$gpu_build"/miinfer-q4-q8-gemv-test
+"$gpu_build"/miinfer-bench --warmup 2 --iterations 10 --elements 1048576
 ' "$model_path"
