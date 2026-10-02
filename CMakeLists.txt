@@ -33,6 +33,7 @@ set(MIINFER_RELEASE_TEST_TARGETS
     miinfer-model-gpu-test
     miinfer-qwen3-primitives-test
     miinfer-qwen35-conv-batch-test
+    miinfer-context-space-test
     miinfer-qwen3-layer0-gpu-test
     miinfer-qwen3-kv-cache-gpu-test
     miinfer-qwen3-quant-kv-attention-test
@@ -142,6 +143,15 @@ target_include_directories(miinfer_openai_api PUBLIC "${CMAKE_CURRENT_SOURCE_DIR
 target_link_libraries(miinfer_openai_api PUBLIC nlohmann_json::nlohmann_json)
 target_compile_features(miinfer_openai_api PUBLIC cxx_std_20)
 target_compile_options(miinfer_openai_api PRIVATE -Wall -Wextra -Wpedantic)
+
+add_library(miinfer_context_space STATIC src/context_space.cpp)
+target_include_directories(miinfer_context_space PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_compile_features(miinfer_context_space PUBLIC cxx_std_20)
+target_compile_options(miinfer_context_space PRIVATE -Wall -Wextra -Wpedantic)
+
+add_executable(miinfer-context-space-test tests/context_space_test.cpp)
+target_link_libraries(miinfer-context-space-test PRIVATE miinfer_context_space)
+target_compile_options(miinfer-context-space-test PRIVATE -Wall -Wextra -Wpedantic)
 
 add_executable(miinfer-openai-api-test tests/openai_api_test.cpp)
 target_link_libraries(miinfer-openai-api-test PRIVATE miinfer_openai_api)
@@ -681,6 +691,8 @@ if(MIINFER_BUILD_TESTS)
     set_tests_properties(model-loader-host PROPERTIES LABELS "host-only")
     add_test(NAME qwen3-primitives-host COMMAND miinfer-qwen3-primitives-host-test)
     set_tests_properties(qwen3-primitives-host PROPERTIES LABELS "host-only")
+    add_test(NAME context-space-host COMMAND miinfer-context-space-test)
+    set_tests_properties(context-space-host PROPERTIES LABELS "host-only")
     add_test(NAME qwen3-layer0-host COMMAND miinfer-qwen3-layer0-test)
     set_tests_properties(qwen3-layer0-host PROPERTIES LABELS "host-only")
     add_test(NAME qwen3-kv-cache-host COMMAND miinfer-qwen3-kv-cache-test)
