@@ -1183,6 +1183,39 @@ KEEP OR REJECT
 
 MIInfer succeeds only if its performance claims survive that loop.
 
+---
+
+# 35. Parallel MI50 development
+
+During the current single-MI50 roadmap, two independent MI50 hosts may be used
+to run separate goals in parallel:
+
+- `mi50-a`: HP Z840 + MI50 32 GB
+- `mi50-b`: Machinist X99 + MI50 32 GB
+
+They are independent experiment hosts, not a distributed inference runtime.
+
+Before parallel work begins, both hosts must use the same qualified MIInfer
+userspace environment: exact source/base SHA, OCI image digest, ROCm/HIP
+userspace and compiler, build configuration, model artifact/hash, benchmark
+inputs, and relevant environment variables. Host-specific CPU, motherboard,
+PCIe, kernel, and cooling differences must still be recorded.
+
+Parallel-agent rules:
+
+1. Each agent receives one goal, one host, one base SHA, and one branch.
+2. Performance baseline and candidate measurements must run on the same host.
+3. Do not compare a candidate on one host against a baseline on the other.
+4. Agents must not independently change a shared architectural contract. Freeze
+   the contract first, then branch parallel work from that commit.
+5. Stop when the assigned goal's evidence/exit gate is satisfied; do not
+   opportunistically start adjacent roadmap work.
+6. Reproduce only important milestone-closing or surprising results on the
+   second host; do not duplicate every exploratory run.
+
+See [`docs/parallel-development.md`](docs/parallel-development.md) for the
+current two-host workflow.
+
 ## graphify
 
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
