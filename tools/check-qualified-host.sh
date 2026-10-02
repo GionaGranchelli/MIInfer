@@ -22,12 +22,22 @@ image_base_digest=$($runtime image inspect "$image" --format '{{index .Config.La
 model_sha=$(sha256sum "$model_path" | awk '{print $1}')
 gpu_count=$(rocminfo 2>/dev/null | awk '/^[[:space:]]*Name:[[:space:]]*gfx906[[:space:]]*$/{n++} END{print n+0}')
 gpu_model=$(rocm-smi --showproductname 2>/dev/null | grep -m1 -E 'MI50|Instinct' || true)
+rocr_device=
+for candidate in $(seq 0 15); do
+    candidate_count=$(ROCR_VISIBLE_DEVICES=$candidate timeout 10 rocminfo 2>/dev/null \
+        | awk '/^[[:space:]]*Name:[[:space:]]*gfx906[[:space:]]*$/{n++} END{print n+0}')
+    if [[ $candidate_count == 1 ]]; then
+        rocr_device=$candidate
+        break
+    fi
+done
 
 echo "host=$(hostname)"
 echo "host_os=$(uname -srmo)"
 echo "cpu=$(lscpu 2>/dev/null | awk -F: '/Model name/{sub(/^[[:space:]]+/,"",$2); print $2; exit}' || true)"
 echo "gpu_model=${gpu_model:-UNAVAILABLE}"
 echo "gfx_target_count=$gpu_count"
+echo "rocr_visible_device=${rocr_device:-UNAVAILABLE}"
 echo "rocm_host=$(timeout 10 hipcc --version 2>/dev/null | awk '/HIP version/{print $0; exit}' || true)"
 echo "kernel=$(uname -r)"
 echo "pcie=$(lspci 2>/dev/null | grep -i -m1 -E 'Vega|MI50|AMD.*Display' || true)"
@@ -40,6 +50,7 @@ echo "model=$model_path"
 echo "model_sha=$model_sha"
 
 [[ $gpu_count == 1 ]] || { echo 'FAIL exactly one gfx906 agent required'; exit 1; }
+[[ -n $rocr_device ]] || { echo 'FAIL could not isolate one gfx906 ROCr device'; exit 1; }
 [[ $model_sha == "$expected_model_sha" ]] || { echo 'FAIL model SHA mismatch'; exit 1; }
 [[ $image_base_digest == "$expected_image_digest" ]] || { echo "FAIL image base digest mismatch: $expected_image_digest"; exit 1; }
 
@@ -49,6 +60,7 @@ $runtime run --rm --init \
     --security-opt=label=disable --group-add=keep-groups \
     -e MIINFER_EXPECTED_MODEL_SHA="$expected_model_sha" \
     -e MIINFER_EXPECTED_IMAGE_DIGEST="$expected_image_digest" \
+    -e ROCR_VISIBLE_DEVICES="$rocr_device" \
     -v "$repo_root:/workspace/MIInfer:Z" \
     -v "$model_dir:/models:ro" \
     "$image" bash -lc '
