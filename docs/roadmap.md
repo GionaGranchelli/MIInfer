@@ -51,6 +51,14 @@ entire sequence. Every stage begins through a focused, evidence-backed goal.
 The immediate first engineering goal after M29-0000 is M29-0001, covering the
 M29.0 long-context baseline and M29.1 physical-backing feasibility.
 
+Before M29 work is split across the two available MI50 hosts, establish one
+reproducible OCI-based gfx906 development environment on both the HP Z840 and
+Machinist X99 systems. The container must pin the MIInfer userspace/toolchain
+configuration and model/benchmark inputs while host-specific hardware and kernel
+properties remain recorded evidence. Once both hosts pass the same smoke and
+baseline checks, dependency-independent M29 goals may run in parallel. See
+[`parallel-development.md`](parallel-development.md).
+
 ## M29 — Persistent Context Architecture
 
 **Mission:** Build a placement-independent persistent context substrate,
