@@ -49,6 +49,21 @@ See [`roadmap.md`](roadmap.md) and
 for the accepted forward contract. No M29 implementation or HIP-VMM
 investigation has begun.
 
+### External gfx906 reference discovery — 2026-10-02
+
+The current roadmap now includes a bounded M29.0A calibration against
+`kyuz0/mi50-gfx906-toolboxes@a708a2790fa51303e3d4f5af9e53c045177181a3`.
+That project provides a reproducible gfx906 ROCm 7.2.1 environment, a native
+llama.cpp build, rebuilt gfx906 rocBLAS/Tensile/RCCL support, and patched
+vLLM/Triton/FlashAttention paths. This is planning evidence only: MIInfer has
+not adopted those libraries or frameworks and has not changed its runtime.
+
+The first authorized use is to refresh the external llama.cpp control with
+MIInfer's exact model and qualified hardware/measurement contract. A later
+OCI/Podman packaging path may reuse the environment/provenance lessons without
+making generic frameworks part of the core runtime. See
+[`gfx906-toolbox-reference.md`](gfx906-toolbox-reference.md).
+
 ## Historical checkpoint — M28 / V2-0043 (2026-09-29)
 
 Everything after this historical archive banner is retained project history.

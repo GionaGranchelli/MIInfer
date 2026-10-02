@@ -297,12 +297,23 @@ class; the M29 two-shard/one-MI50 experiment is not dual-GPU performance
 evidence. See the canonical roadmap and D032 for ownership, identity, N=1/N=2,
 and the >1% decode-regression gate.
 
-Planned stages are M29.0 long-context baseline (16K/32K/64K/128K), M29.1
-backing feasibility, M29.2 ContextSpace/logical pages, M29.3 DeviceKvPool and
-DeviceKvShard, M29.4 two logical shards on one MI50, M29.5 optimized physical
-view/attention integration, and M29.6 production 128K qualification. Each
-stage requires its own focused goal; this document authorizes no
-implementation.
+Planned stages are M29.0 long-context baseline (16K/32K/64K/128K), M29.0A
+current gfx906 external-reference calibration, M29.1 backing feasibility, M29.2
+ContextSpace/logical pages, M29.3 DeviceKvPool and DeviceKvShard, M29.4 two
+logical shards on one MI50, M29.5 optimized physical view/attention integration,
+and M29.6 production 128K qualification. Each stage requires its own focused
+goal; this document authorizes no implementation.
+
+M29.0A is deliberately bounded. Re-run the exact MIInfer Qwen3.8-27B-Q4_K_M
+artifact against the ROCm 7.2.1 llama.cpp path from
+`kyuz0/mi50-gfx906-toolboxes@a708a279` under the same qualified MI50 power,
+clock, token-input, and measurement contract used by V2-0045. If equivalent
+cells remain within 3% of the pinned upstream medians, preserve the refreshed
+environment as a reproducibility control and stop. A reproducible >3% movement
+requires attribution before MIInfer adopts any environment, library, kernel, or
+runtime change. The toolbox's patched vLLM/Triton/FlashAttention stack is a
+separate throughput/compatibility reference, not a direct single-stream decode
+oracle. See [`gfx906-toolbox-reference.md`](gfx906-toolbox-reference.md).
 
 ---
 

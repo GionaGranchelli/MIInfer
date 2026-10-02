@@ -81,6 +81,7 @@ Stages (each requires its own scoped goal and gate):
 
 ```text
 M29.0 — Current long-context baseline: 16K / 32K / 64K / 128K
+M29.0A — Current gfx906 external-reference calibration
 M29.1 — Physical-backing feasibility: HIP-VMM investigation
 M29.2 — ContextSpace + logical pages
 M29.3 — DeviceKvPool + DeviceKvShard
@@ -88,6 +89,40 @@ M29.4 — Two logical KV shards on one MI50
 M29.5 — Optimized physical KV view / attention integration
 M29.6 — Production 128K qualification
 ```
+
+### M29.0A — Current gfx906 external-reference calibration
+
+Before M29 changes context allocation or backing, refresh the strongest practical
+external gfx906 baseline under the same MI50 conditions. The initial reference is
+`kyuz0/mi50-gfx906-toolboxes` pinned at
+`a708a2790fa51303e3d4f5af9e53c045177181a3`, using its ROCm 7.2.1
+`llama.cpp` toolbox path. This is a bounded calibration lane, not a new
+optimization campaign.
+
+The first screen must use MIInfer's exact
+`Qwen3.8-27B-Q4_K_M` model artifact/hash, the qualified 225 W and
+1606/1000 MHz hardware policy, deterministic equivalent token inputs, and the
+existing V2-0045 comparison points (P512/P1024/P2048/P4096/P8192 plus TG128)
+where the external runtime can execute the same work. Record the toolbox commit,
+llama.cpp submodule revision, ROCm/HIP compiler identity, gfx906 rocBLAS/Tensile
+provenance, build flags, clocks, temperatures, power, VRAM, and raw samples.
+
+Use the result only as an attribution gate:
+
+- if the current toolbox reference stays within 3% of the pinned V2-0045
+  upstream medians across equivalent cells and exposes no qualitative change,
+  record the environment and stop;
+- if an equivalent cell moves by more than 3% reproducibly, attribute the
+  difference to source revision, ROCm/Tensile, ROCWMMA attention, build flags,
+  or another measured cause before changing MIInfer;
+- do not compare vLLM aggregate multi-request throughput directly with
+  MIInfer's single-stream TG measurements;
+- patched Triton, FlashAttention, vLLM, rocBLAS, RCCL, or Tensile components do
+  not become MIInfer production dependencies merely because the toolbox ships
+  them.
+
+The detailed discovery and bounded implementation candidates are recorded in
+[`gfx906-toolbox-reference.md`](gfx906-toolbox-reference.md).
 
 Single-MI50 production qualification targets 128K. The logical architecture
 may be designed for 256K capacity where inexpensive and technically useful;
@@ -185,6 +220,25 @@ Second-model work follows M31 and V3 in the immediate strategic order. Its
 question remains whether MIInfer's architecture generalizes beyond the initial
 model without becoming generic, but the nearer question is how far MIInfer can
 push its intended agent workload on the targeted MI50 hardware.
+
+## Cross-cutting — gfx906 reproducibility and distribution
+
+The toolbox discovery also exposes a productization opportunity that is
+independent of kernel research: make the qualified MIInfer runtime reproducible
+for another MI50 owner without requiring reconstruction of the development
+environment.
+
+After M29.0A establishes the external reference environment, MIInfer may add a
+provenance-pinned OCI/Podman distribution path for gfx906. It should package
+only the userspace/runtime pieces MIInfer actually needs, preserve the exact
+ROCm/toolchain and model/runtime provenance, expose hardware/environment checks,
+and run a bounded `miinfer serve` smoke. Rebuilt gfx906 rocBLAS/Tensile/RCCL
+artifacts remain optional reference or compatibility inputs unless controlled
+evidence shows that MIInfer requires them.
+
+This is packaging/reproducibility work, not authorization to replace MIInfer's
+custom execution path with llama.cpp, vLLM, Triton, or a generic framework. It
+does not change the M29 → M30 → M31 → V3 milestone order.
 
 # Roadmap Principles
 
