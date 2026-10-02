@@ -1,0 +1,3115 @@
+timestamp=2026-10-02T19:15:30+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 33.0
+GPU[0]		: Temperature (Sensor junction) (C): 34.0
+GPU[0]		: Temperature (Sensor memory) (C): 33.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 0: (550Mhz)
+GPU[0]		: mclk clock level: 0: (350Mhz)
+GPU[0]		: sclk clock level: 1: (930Mhz)
+GPU[0]		: socclk clock level: 0: (309Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 21.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 10891264
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:15:45+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 33.0
+GPU[0]		: Temperature (Sensor junction) (C): 34.0
+GPU[0]		: Temperature (Sensor memory) (C): 33.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 0: (550Mhz)
+GPU[0]		: mclk clock level: 0: (350Mhz)
+GPU[0]		: sclk clock level: 1: (930Mhz)
+GPU[0]		: socclk clock level: 0: (309Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 21.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 10891264
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:16:01+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 33.0
+GPU[0]		: Temperature (Sensor junction) (C): 34.0
+GPU[0]		: Temperature (Sensor memory) (C): 33.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 0: (550Mhz)
+GPU[0]		: mclk clock level: 0: (350Mhz)
+GPU[0]		: sclk clock level: 1: (930Mhz)
+GPU[0]		: socclk clock level: 0: (309Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 21.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 10891264
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:16:16+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 33.0
+GPU[0]		: Temperature (Sensor junction) (C): 34.0
+GPU[0]		: Temperature (Sensor memory) (C): 33.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 0: (550Mhz)
+GPU[0]		: mclk clock level: 0: (350Mhz)
+GPU[0]		: sclk clock level: 1: (930Mhz)
+GPU[0]		: socclk clock level: 0: (309Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 21.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 10891264
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:16:31+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 33.0
+GPU[0]		: Temperature (Sensor junction) (C): 35.0
+GPU[0]		: Temperature (Sensor memory) (C): 34.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 0: (550Mhz)
+GPU[0]		: mclk clock level: 0: (350Mhz)
+GPU[0]		: sclk clock level: 0: (925Mhz)
+GPU[0]		: socclk clock level: 0: (309Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 23.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 2195660800
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:16:46+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 33.0
+GPU[0]		: Temperature (Sensor junction) (C): 35.0
+GPU[0]		: Temperature (Sensor memory) (C): 33.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 0: (550Mhz)
+GPU[0]		: mclk clock level: 0: (350Mhz)
+GPU[0]		: sclk clock level: 0: (925Mhz)
+GPU[0]		: socclk clock level: 0: (309Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 23.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 9881288704
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:17:01+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 33.0
+GPU[0]		: Temperature (Sensor junction) (C): 34.0
+GPU[0]		: Temperature (Sensor memory) (C): 34.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 0: (550Mhz)
+GPU[0]		: mclk clock level: 0: (350Mhz)
+GPU[0]		: sclk clock level: 0: (925Mhz)
+GPU[0]		: socclk clock level: 0: (309Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 23.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 17855963136
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:17:16+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 40.0
+GPU[0]		: Temperature (Sensor junction) (C): 66.0
+GPU[0]		: Temperature (Sensor memory) (C): 38.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 213.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 28202307584
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:17:32+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 53.0
+GPU[0]		: Temperature (Sensor junction) (C): 80.0
+GPU[0]		: Temperature (Sensor memory) (C): 51.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 211.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 28206276608
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:17:47+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 44.0
+GPU[0]		: Temperature (Sensor junction) (C): 45.0
+GPU[0]		: Temperature (Sensor memory) (C): 43.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 0: (550Mhz)
+GPU[0]		: mclk clock level: 0: (350Mhz)
+GPU[0]		: sclk clock level: 0: (925Mhz)
+GPU[0]		: socclk clock level: 0: (309Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 24.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 5855137792
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:18:02+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 39.0
+GPU[0]		: Temperature (Sensor junction) (C): 41.0
+GPU[0]		: Temperature (Sensor memory) (C): 39.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 0: (550Mhz)
+GPU[0]		: mclk clock level: 0: (350Mhz)
+GPU[0]		: sclk clock level: 0: (925Mhz)
+GPU[0]		: socclk clock level: 0: (309Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 23.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 14072446976
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:18:17+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 36.0
+GPU[0]		: Temperature (Sensor junction) (C): 38.0
+GPU[0]		: Temperature (Sensor memory) (C): 36.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 0: (550Mhz)
+GPU[0]		: mclk clock level: 0: (350Mhz)
+GPU[0]		: sclk clock level: 0: (925Mhz)
+GPU[0]		: socclk clock level: 0: (309Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 24.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 22261968896
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:18:32+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 51.0
+GPU[0]		: Temperature (Sensor junction) (C): 77.0
+GPU[0]		: Temperature (Sensor memory) (C): 50.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 7: (1606Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 225.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 28271538176
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:18:47+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 58.0
+GPU[0]		: Temperature (Sensor junction) (C): 86.0
+GPU[0]		: Temperature (Sensor memory) (C): 57.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 202.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 28271538176
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:19:03+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 63.0
+GPU[0]		: Temperature (Sensor junction) (C): 90.0
+GPU[0]		: Temperature (Sensor memory) (C): 70.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 213.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 28271906816
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:19:18+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 47.0
+GPU[0]		: Temperature (Sensor junction) (C): 49.0
+GPU[0]		: Temperature (Sensor memory) (C): 48.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 0: (550Mhz)
+GPU[0]		: mclk clock level: 0: (350Mhz)
+GPU[0]		: sclk clock level: 0: (925Mhz)
+GPU[0]		: socclk clock level: 0: (309Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 23.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 7633993728
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:19:33+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 42.0
+GPU[0]		: Temperature (Sensor junction) (C): 43.0
+GPU[0]		: Temperature (Sensor memory) (C): 42.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 0: (550Mhz)
+GPU[0]		: mclk clock level: 0: (350Mhz)
+GPU[0]		: sclk clock level: 0: (925Mhz)
+GPU[0]		: socclk clock level: 0: (309Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 27.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 15851249664
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:19:48+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 38.0
+GPU[0]		: Temperature (Sensor junction) (C): 40.0
+GPU[0]		: Temperature (Sensor memory) (C): 39.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 0: (550Mhz)
+GPU[0]		: mclk clock level: 0: (350Mhz)
+GPU[0]		: sclk clock level: 0: (925Mhz)
+GPU[0]		: socclk clock level: 0: (309Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 24.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 23861870592
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:20:03+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 54.0
+GPU[0]		: Temperature (Sensor junction) (C): 81.0
+GPU[0]		: Temperature (Sensor memory) (C): 53.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 163.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 28271804416
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:20:18+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 61.0
+GPU[0]		: Temperature (Sensor junction) (C): 88.0
+GPU[0]		: Temperature (Sensor memory) (C): 59.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 6: (1080Mhz)
+GPU[0]		: mclk clock level: 1: (800Mhz)
+GPU[0]		: sclk clock level: 7: (1606Mhz)
+GPU[0]		: socclk clock level: 6: (850Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 233.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 28271804416
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:20:34+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 64.0
+GPU[0]		: Temperature (Sensor junction) (C): 93.0
+GPU[0]		: Temperature (Sensor memory) (C): 63.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 204.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 28271804416
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:20:49+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 66.0
+GPU[0]		: Temperature (Sensor junction) (C): 95.0
+GPU[0]		: Temperature (Sensor memory) (C): 65.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 226.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 28271804416
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:21:04+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 67.0
+GPU[0]		: Temperature (Sensor junction) (C): 99.0
+GPU[0]		: Temperature (Sensor memory) (C): 65.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 7: (1606Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 192.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 28271804416
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:21:19+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 66.0
+GPU[0]		: Temperature (Sensor junction) (C): 95.0
+GPU[0]		: Temperature (Sensor memory) (C): 75.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 222.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 28272173056
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:21:34+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 50.0
+GPU[0]		: Temperature (Sensor junction) (C): 51.0
+GPU[0]		: Temperature (Sensor memory) (C): 51.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 0: (550Mhz)
+GPU[0]		: mclk clock level: 0: (350Mhz)
+GPU[0]		: sclk clock level: 0: (925Mhz)
+GPU[0]		: socclk clock level: 0: (309Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 24.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 7747751936
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:21:49+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 42.0
+GPU[0]		: Temperature (Sensor junction) (C): 44.0
+GPU[0]		: Temperature (Sensor memory) (C): 44.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 0: (550Mhz)
+GPU[0]		: mclk clock level: 0: (350Mhz)
+GPU[0]		: sclk clock level: 0: (925Mhz)
+GPU[0]		: socclk clock level: 0: (309Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 25.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 15926497280
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:22:05+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 38.0
+GPU[0]		: Temperature (Sensor junction) (C): 40.0
+GPU[0]		: Temperature (Sensor memory) (C): 39.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 0: (550Mhz)
+GPU[0]		: mclk clock level: 0: (350Mhz)
+GPU[0]		: sclk clock level: 0: (925Mhz)
+GPU[0]		: socclk clock level: 0: (309Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 23.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 23861645312
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:22:20+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 54.0
+GPU[0]		: Temperature (Sensor junction) (C): 81.0
+GPU[0]		: Temperature (Sensor memory) (C): 53.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 194.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 28338302976
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:22:35+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 58.0
+GPU[0]		: Temperature (Sensor junction) (C): 89.0
+GPU[0]		: Temperature (Sensor memory) (C): 59.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 218.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 28338302976
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:22:50+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 63.0
+GPU[0]		: Temperature (Sensor junction) (C): 93.0
+GPU[0]		: Temperature (Sensor memory) (C): 61.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 6: (1080Mhz)
+GPU[0]		: mclk clock level: 1: (800Mhz)
+GPU[0]		: sclk clock level: 7: (1606Mhz)
+GPU[0]		: socclk clock level: 6: (850Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 229.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 28338302976
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:23:05+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 64.0
+GPU[0]		: Temperature (Sensor junction) (C): 98.0
+GPU[0]		: Temperature (Sensor memory) (C): 63.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 6: (1080Mhz)
+GPU[0]		: mclk clock level: 1: (800Mhz)
+GPU[0]		: sclk clock level: 6: (1485Mhz)
+GPU[0]		: socclk clock level: 6: (850Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 238.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 28338302976
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:23:20+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 66.0
+GPU[0]		: Temperature (Sensor junction) (C): 95.0
+GPU[0]		: Temperature (Sensor memory) (C): 64.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 194.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 28338302976
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:23:36+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 66.0
+GPU[0]		: Temperature (Sensor junction) (C): 96.0
+GPU[0]		: Temperature (Sensor memory) (C): 65.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 208.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 28338302976
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:23:51+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 66.0
+GPU[0]		: Temperature (Sensor junction) (C): 98.0
+GPU[0]		: Temperature (Sensor memory) (C): 65.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 7: (1606Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 192.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 28338302976
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:24:06+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 66.0
+GPU[0]		: Temperature (Sensor junction) (C): 95.0
+GPU[0]		: Temperature (Sensor memory) (C): 65.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 217.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 28338302976
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:24:21+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 66.0
+GPU[0]		: Temperature (Sensor junction) (C): 93.0
+GPU[0]		: Temperature (Sensor memory) (C): 65.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 223.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 28338302976
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:24:36+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 66.0
+GPU[0]		: Temperature (Sensor junction) (C): 97.0
+GPU[0]		: Temperature (Sensor memory) (C): 65.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 6: (1080Mhz)
+GPU[0]		: mclk clock level: 1: (800Mhz)
+GPU[0]		: sclk clock level: 6: (1485Mhz)
+GPU[0]		: socclk clock level: 6: (850Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 233.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 28338302976
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:24:51+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 66.0
+GPU[0]		: Temperature (Sensor junction) (C): 97.0
+GPU[0]		: Temperature (Sensor memory) (C): 65.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 6: (1080Mhz)
+GPU[0]		: mclk clock level: 1: (800Mhz)
+GPU[0]		: sclk clock level: 6: (1485Mhz)
+GPU[0]		: socclk clock level: 6: (850Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 237.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 28338302976
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:25:07+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 67.0
+GPU[0]		: Temperature (Sensor junction) (C): 95.0
+GPU[0]		: Temperature (Sensor memory) (C): 66.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 212.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 28338302976
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:25:22+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 66.0
+GPU[0]		: Temperature (Sensor junction) (C): 94.0
+GPU[0]		: Temperature (Sensor memory) (C): 65.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 172.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 28338302976
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:25:37+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 66.0
+GPU[0]		: Temperature (Sensor junction) (C): 98.0
+GPU[0]		: Temperature (Sensor memory) (C): 65.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 6: (1080Mhz)
+GPU[0]		: mclk clock level: 1: (800Mhz)
+GPU[0]		: sclk clock level: 6: (1485Mhz)
+GPU[0]		: socclk clock level: 6: (850Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 220.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 28338302976
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:25:52+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 57.0
+GPU[0]		: Temperature (Sensor junction) (C): 59.0
+GPU[0]		: Temperature (Sensor memory) (C): 59.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 0: (550Mhz)
+GPU[0]		: mclk clock level: 0: (350Mhz)
+GPU[0]		: sclk clock level: 0: (925Mhz)
+GPU[0]		: socclk clock level: 0: (309Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 26.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 2864463872
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:26:07+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 46.0
+GPU[0]		: Temperature (Sensor junction) (C): 48.0
+GPU[0]		: Temperature (Sensor memory) (C): 48.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 0: (550Mhz)
+GPU[0]		: mclk clock level: 0: (350Mhz)
+GPU[0]		: sclk clock level: 0: (925Mhz)
+GPU[0]		: socclk clock level: 0: (309Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 24.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 10790211584
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:26:22+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 41.0
+GPU[0]		: Temperature (Sensor junction) (C): 42.0
+GPU[0]		: Temperature (Sensor memory) (C): 42.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 0: (550Mhz)
+GPU[0]		: mclk clock level: 0: (350Mhz)
+GPU[0]		: sclk clock level: 0: (925Mhz)
+GPU[0]		: socclk clock level: 0: (309Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 23.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 19017895936
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:26:38+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 47.0
+GPU[0]		: Temperature (Sensor junction) (C): 74.0
+GPU[0]		: Temperature (Sensor memory) (C): 46.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 202.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:26:53+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 56.0
+GPU[0]		: Temperature (Sensor junction) (C): 83.0
+GPU[0]		: Temperature (Sensor memory) (C): 55.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 242.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:27:08+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 61.0
+GPU[0]		: Temperature (Sensor junction) (C): 90.0
+GPU[0]		: Temperature (Sensor memory) (C): 60.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 6: (1080Mhz)
+GPU[0]		: mclk clock level: 1: (800Mhz)
+GPU[0]		: sclk clock level: 6: (1485Mhz)
+GPU[0]		: socclk clock level: 6: (850Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 241.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:27:23+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 64.0
+GPU[0]		: Temperature (Sensor junction) (C): 93.0
+GPU[0]		: Temperature (Sensor memory) (C): 62.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 227.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:27:38+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 66.0
+GPU[0]		: Temperature (Sensor junction) (C): 95.0
+GPU[0]		: Temperature (Sensor memory) (C): 65.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 209.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:27:53+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 67.0
+GPU[0]		: Temperature (Sensor junction) (C): 101.0
+GPU[0]		: Temperature (Sensor memory) (C): 65.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 7: (1606Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 184.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:28:09+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 67.0
+GPU[0]		: Temperature (Sensor junction) (C): 100.0
+GPU[0]		: Temperature (Sensor memory) (C): 65.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 6: (1080Mhz)
+GPU[0]		: mclk clock level: 1: (800Mhz)
+GPU[0]		: sclk clock level: 6: (1485Mhz)
+GPU[0]		: socclk clock level: 6: (850Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 221.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:28:24+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 67.0
+GPU[0]		: Temperature (Sensor junction) (C): 95.0
+GPU[0]		: Temperature (Sensor memory) (C): 65.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 6: (1485Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 259.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:28:39+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 67.0
+GPU[0]		: Temperature (Sensor junction) (C): 101.0
+GPU[0]		: Temperature (Sensor memory) (C): 66.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 6: (1080Mhz)
+GPU[0]		: mclk clock level: 1: (800Mhz)
+GPU[0]		: sclk clock level: 7: (1606Mhz)
+GPU[0]		: socclk clock level: 6: (850Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 220.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:28:54+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 67.0
+GPU[0]		: Temperature (Sensor junction) (C): 95.0
+GPU[0]		: Temperature (Sensor memory) (C): 66.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 206.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:29:09+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 67.0
+GPU[0]		: Temperature (Sensor junction) (C): 95.0
+GPU[0]		: Temperature (Sensor memory) (C): 66.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 229.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:29:24+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 67.0
+GPU[0]		: Temperature (Sensor junction) (C): 101.0
+GPU[0]		: Temperature (Sensor memory) (C): 66.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 6: (1080Mhz)
+GPU[0]		: mclk clock level: 1: (800Mhz)
+GPU[0]		: sclk clock level: 5: (1386Mhz)
+GPU[0]		: socclk clock level: 6: (850Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 173.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:29:40+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 67.0
+GPU[0]		: Temperature (Sensor junction) (C): 99.0
+GPU[0]		: Temperature (Sensor memory) (C): 66.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 6: (1080Mhz)
+GPU[0]		: mclk clock level: 1: (800Mhz)
+GPU[0]		: sclk clock level: 7: (1606Mhz)
+GPU[0]		: socclk clock level: 6: (850Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 227.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:29:55+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 67.0
+GPU[0]		: Temperature (Sensor junction) (C): 99.0
+GPU[0]		: Temperature (Sensor memory) (C): 65.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 6: (1080Mhz)
+GPU[0]		: mclk clock level: 1: (800Mhz)
+GPU[0]		: sclk clock level: 6: (1485Mhz)
+GPU[0]		: socclk clock level: 6: (850Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 220.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:30:10+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 67.0
+GPU[0]		: Temperature (Sensor junction) (C): 96.0
+GPU[0]		: Temperature (Sensor memory) (C): 66.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 216.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:30:25+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 68.0
+GPU[0]		: Temperature (Sensor junction) (C): 97.0
+GPU[0]		: Temperature (Sensor memory) (C): 67.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 6: (1080Mhz)
+GPU[0]		: mclk clock level: 1: (800Mhz)
+GPU[0]		: sclk clock level: 7: (1606Mhz)
+GPU[0]		: socclk clock level: 6: (850Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 224.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:30:40+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 67.0
+GPU[0]		: Temperature (Sensor junction) (C): 96.0
+GPU[0]		: Temperature (Sensor memory) (C): 66.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 6: (1080Mhz)
+GPU[0]		: mclk clock level: 1: (800Mhz)
+GPU[0]		: sclk clock level: 7: (1606Mhz)
+GPU[0]		: socclk clock level: 6: (850Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 236.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:30:55+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 68.0
+GPU[0]		: Temperature (Sensor junction) (C): 99.0
+GPU[0]		: Temperature (Sensor memory) (C): 68.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 224.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:31:11+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 68.0
+GPU[0]		: Temperature (Sensor junction) (C): 96.0
+GPU[0]		: Temperature (Sensor memory) (C): 68.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 6: (1080Mhz)
+GPU[0]		: mclk clock level: 1: (800Mhz)
+GPU[0]		: sclk clock level: 7: (1606Mhz)
+GPU[0]		: socclk clock level: 6: (850Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 244.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:31:26+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 68.0
+GPU[0]		: Temperature (Sensor junction) (C): 102.0
+GPU[0]		: Temperature (Sensor memory) (C): 67.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 6: (1080Mhz)
+GPU[0]		: mclk clock level: 1: (800Mhz)
+GPU[0]		: sclk clock level: 6: (1485Mhz)
+GPU[0]		: socclk clock level: 6: (850Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 205.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:31:41+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 68.0
+GPU[0]		: Temperature (Sensor junction) (C): 100.0
+GPU[0]		: Temperature (Sensor memory) (C): 67.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 6: (1080Mhz)
+GPU[0]		: mclk clock level: 1: (800Mhz)
+GPU[0]		: sclk clock level: 7: (1606Mhz)
+GPU[0]		: socclk clock level: 6: (850Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 223.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:31:56+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 68.0
+GPU[0]		: Temperature (Sensor junction) (C): 95.0
+GPU[0]		: Temperature (Sensor memory) (C): 67.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 232.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:32:11+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 68.0
+GPU[0]		: Temperature (Sensor junction) (C): 101.0
+GPU[0]		: Temperature (Sensor memory) (C): 67.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 6: (1080Mhz)
+GPU[0]		: mclk clock level: 1: (800Mhz)
+GPU[0]		: sclk clock level: 6: (1485Mhz)
+GPU[0]		: socclk clock level: 6: (850Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 233.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:32:26+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 68.0
+GPU[0]		: Temperature (Sensor junction) (C): 99.0
+GPU[0]		: Temperature (Sensor memory) (C): 72.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 6: (1485Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 226.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:32:42+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 68.0
+GPU[0]		: Temperature (Sensor junction) (C): 101.0
+GPU[0]		: Temperature (Sensor memory) (C): 68.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 6: (1080Mhz)
+GPU[0]		: mclk clock level: 1: (800Mhz)
+GPU[0]		: sclk clock level: 5: (1386Mhz)
+GPU[0]		: socclk clock level: 6: (850Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 176.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:32:57+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 68.0
+GPU[0]		: Temperature (Sensor junction) (C): 101.0
+GPU[0]		: Temperature (Sensor memory) (C): 68.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 6: (1080Mhz)
+GPU[0]		: mclk clock level: 1: (800Mhz)
+GPU[0]		: sclk clock level: 6: (1485Mhz)
+GPU[0]		: socclk clock level: 6: (850Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 233.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:33:12+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 69.0
+GPU[0]		: Temperature (Sensor junction) (C): 96.0
+GPU[0]		: Temperature (Sensor memory) (C): 67.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 6: (1080Mhz)
+GPU[0]		: mclk clock level: 1: (800Mhz)
+GPU[0]		: sclk clock level: 4: (1282Mhz)
+GPU[0]		: socclk clock level: 6: (850Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 151.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:33:27+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 68.0
+GPU[0]		: Temperature (Sensor junction) (C): 96.0
+GPU[0]		: Temperature (Sensor memory) (C): 68.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 194.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:33:42+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 69.0
+GPU[0]		: Temperature (Sensor junction) (C): 98.0
+GPU[0]		: Temperature (Sensor memory) (C): 74.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 5: (1386Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 232.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:33:57+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 68.0
+GPU[0]		: Temperature (Sensor junction) (C): 95.0
+GPU[0]		: Temperature (Sensor memory) (C): 69.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 220.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:34:13+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 68.0
+GPU[0]		: Temperature (Sensor junction) (C): 97.0
+GPU[0]		: Temperature (Sensor memory) (C): 67.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 5: (1386Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 169.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:34:28+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 69.0
+GPU[0]		: Temperature (Sensor junction) (C): 102.0
+GPU[0]		: Temperature (Sensor memory) (C): 69.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 6: (1080Mhz)
+GPU[0]		: mclk clock level: 1: (800Mhz)
+GPU[0]		: sclk clock level: 6: (1485Mhz)
+GPU[0]		: socclk clock level: 6: (850Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 207.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:34:43+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 68.0
+GPU[0]		: Temperature (Sensor junction) (C): 99.0
+GPU[0]		: Temperature (Sensor memory) (C): 68.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 6: (1080Mhz)
+GPU[0]		: mclk clock level: 1: (800Mhz)
+GPU[0]		: sclk clock level: 7: (1606Mhz)
+GPU[0]		: socclk clock level: 6: (850Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 241.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:34:58+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 69.0
+GPU[0]		: Temperature (Sensor junction) (C): 102.0
+GPU[0]		: Temperature (Sensor memory) (C): 70.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 6: (1080Mhz)
+GPU[0]		: mclk clock level: 1: (800Mhz)
+GPU[0]		: sclk clock level: 7: (1606Mhz)
+GPU[0]		: socclk clock level: 6: (850Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 221.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:35:13+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 69.0
+GPU[0]		: Temperature (Sensor junction) (C): 95.0
+GPU[0]		: Temperature (Sensor memory) (C): 70.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 5: (1386Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 188.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:35:28+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 69.0
+GPU[0]		: Temperature (Sensor junction) (C): 97.0
+GPU[0]		: Temperature (Sensor memory) (C): 71.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 215.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:35:44+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 69.0
+GPU[0]		: Temperature (Sensor junction) (C): 102.0
+GPU[0]		: Temperature (Sensor memory) (C): 69.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 4: (1282Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 158.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:35:59+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 69.0
+GPU[0]		: Temperature (Sensor junction) (C): 97.0
+GPU[0]		: Temperature (Sensor memory) (C): 70.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 222.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:36:14+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 68.0
+GPU[0]		: Temperature (Sensor junction) (C): 98.0
+GPU[0]		: Temperature (Sensor memory) (C): 72.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 6: (1485Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 238.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:36:29+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 69.0
+GPU[0]		: Temperature (Sensor junction) (C): 100.0
+GPU[0]		: Temperature (Sensor memory) (C): 69.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 6: (1080Mhz)
+GPU[0]		: mclk clock level: 1: (800Mhz)
+GPU[0]		: sclk clock level: 3: (1143Mhz)
+GPU[0]		: socclk clock level: 6: (850Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 126.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:36:44+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 69.0
+GPU[0]		: Temperature (Sensor junction) (C): 97.0
+GPU[0]		: Temperature (Sensor memory) (C): 78.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 5: (1386Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 227.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486388736
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:36:59+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 70.0
+GPU[0]		: Temperature (Sensor junction) (C): 99.0
+GPU[0]		: Temperature (Sensor memory) (C): 76.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 8: (1725Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 229.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 30486757376
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:37:15+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 50.0
+GPU[0]		: Temperature (Sensor junction) (C): 51.0
+GPU[0]		: Temperature (Sensor memory) (C): 51.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 6: (1080Mhz)
+GPU[0]		: mclk clock level: 1: (800Mhz)
+GPU[0]		: sclk clock level: 6: (1485Mhz)
+GPU[0]		: socclk clock level: 6: (850Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 26.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 9035280384
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:37:30+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 44.0
+GPU[0]		: Temperature (Sensor junction) (C): 45.0
+GPU[0]		: Temperature (Sensor memory) (C): 45.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 0: (550Mhz)
+GPU[0]		: mclk clock level: 0: (350Mhz)
+GPU[0]		: sclk clock level: 0: (925Mhz)
+GPU[0]		: socclk clock level: 6: (850Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 26.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 17325277184
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+timestamp=2026-10-02T19:37:45+02:00
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 40.0
+GPU[0]		: Temperature (Sensor junction) (C): 43.0
+GPU[0]		: Temperature (Sensor memory) (C): 41.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: fclk clock level: 7: (1278Mhz)
+GPU[0]		: mclk clock level: 2: (1000Mhz)
+GPU[0]		: sclk clock level: 0: (925Mhz)
+GPU[0]		: socclk clock level: 7: (971Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Current Socket Graphics Package Power (W): 32.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 34342961152
+GPU[0]		: VRAM Total Used Memory (B): 31324884992
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================

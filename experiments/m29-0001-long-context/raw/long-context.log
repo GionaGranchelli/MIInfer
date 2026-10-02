@@ -1,0 +1,161 @@
+-- The CXX compiler identification is Clang 22.0.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /opt/rocm/llvm/bin/clang++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Using the multi-header code from /workspace/MIInfer/build/m29-long-context/_deps/nlohmann_json-src/include/
+-- The HIP compiler identification is Clang 22.0.0
+-- Detecting HIP compiler ABI info
+-- Detecting HIP compiler ABI info - done
+-- Check for working HIP compiler: /opt/rocm-7.2.1/lib/llvm/bin/clang++ - skipped
+-- Detecting HIP compile features
+-- Detecting HIP compile features - done
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- Performing Test HIP_CLANG_SUPPORTS_PARALLEL_JOBS
+-- Performing Test HIP_CLANG_SUPPORTS_PARALLEL_JOBS - Success
+-- Configuring done (3.7s)
+-- Generating done (0.3s)
+CMake Warning:
+  Manually-specified variables were not used by the project:
+
+    CMAKE_C_COMPILER
+
+
+-- Build files have been written to: /workspace/MIInfer/build/m29-long-context
+[  0%] Building CXX object CMakeFiles/miinfer_model.dir/src/gguf.cpp.o
+[  6%] Building CXX object CMakeFiles/miinfer_build_info.dir/src/build_info.cpp.o
+[  6%] Linking CXX static library libmiinfer_build_info.a
+[  6%] Built target miinfer_build_info
+[  6%] Building CXX object CMakeFiles/miinfer_model.dir/src/qwen3_model.cpp.o
+[  6%] Building CXX object CMakeFiles/miinfer_model.dir/src/qwen3_primitives.cpp.o
+[ 12%] Building CXX object CMakeFiles/miinfer_model.dir/src/qwen35_model.cpp.o
+[ 18%] Building CXX object CMakeFiles/miinfer_model.dir/src/qwen3_layer.cpp.o
+[ 18%] Building CXX object CMakeFiles/miinfer_model.dir/src/qwen3_tokenizer.cpp.o
+[ 18%] Building CXX object CMakeFiles/miinfer_model.dir/src/sha256.cpp.o
+[ 25%] Linking CXX static library libmiinfer_model.a
+[ 25%] Built target miinfer_model
+[ 31%] Building CXX object CMakeFiles/miinfer_hip.dir/src/device_validation.cpp.o
+[ 31%] Building CXX object CMakeFiles/miinfer_hip.dir/src/model_plan.cpp.o
+[ 31%] Building CXX object CMakeFiles/miinfer_hip.dir/src/qwen3_gpu_layer.cpp.o
+[ 37%] Building CXX object CMakeFiles/miinfer_hip.dir/src/fp16_gemv_reference.cpp.o
+[ 37%] Building CXX object CMakeFiles/miinfer_hip.dir/src/q4_q8_gemv_reference.cpp.o
+[ 43%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/state.cpp.o
+[ 43%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/workspace.cpp.o
+[ 43%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/recurrent_layer.cpp.o
+[ 50%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/kv_cache.cpp.o
+[ 50%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/attention_layer.cpp.o
+[ 56%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/topology_block.cpp.o
+[ 56%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/reusable_context.cpp.o
+[ 56%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/persistent_session.cpp.o
+[ 62%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/model.cpp.o
+[ 62%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/vector_add.hip.o
+[ 68%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/fp16_gemv.hip.o
+[ 68%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/q4_q8_gemv.hip.o
+[ 68%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/q4_q8_packed_dot.hip.o
+[ 75%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/q4_q8_zero_point_dot.hip.o
+[ 75%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/qwen3_primitives.hip.o
+/workspace/MIInfer/gfx906/kernels/qwen3_primitives.hip:2687:35: warning: unused parameter 'scale' [-Wunused-parameter]
+ 2687 |     std::uint32_t head_dim, float scale) {
+      |                                   ^
+[ 81%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/kquant_wave_layout.hip.o
+/workspace/MIInfer/gfx906/kernels/qwen3_primitives.hip:6188:17: warning: loop not unrolled: the optimizer was unable to perform the requested transformation; the transformation might be disabled or specified as part of an unsupported transformation ordering [-Wpass-failed=transform-warning]
+ 6188 | __global__ void prefill_v2_split_kv_attention_stage1_kernel(
+      |                 ^
+2 warnings generated when compiling for gfx906.
+/workspace/MIInfer/gfx906/kernels/qwen3_primitives.hip:2687:35: warning: unused parameter 'scale' [-Wunused-parameter]
+ 2687 |     std::uint32_t head_dim, float scale) {
+      |                                   ^
+1 warning generated when compiling for host.
+[ 81%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/m12_dense_stage.hip.o
+/workspace/MIInfer/gfx906/kernels/kquant_wave_layout.hip:2404:43: warning: failed to meet occupancy target given by 'amdgpu-waves-per-eu' in '_ZN12_GLOBAL__N_129mx_repacked_mmq_pinned_kernelILb0ELb0EEEvPKhPKN7miinfer14MxQ8_1MmqBlockEPfjjj': desired occupancy was 2, final occupancy is 1 [-Wpass-failed]
+ 2404 | __launch_bounds__(256, 2) __global__ void mx_repacked_mmq_pinned_kernel(
+      |                                           ^
+/workspace/MIInfer/gfx906/kernels/kquant_wave_layout.hip:2404:43: warning: failed to meet occupancy target given by 'amdgpu-waves-per-eu' in '_ZN12_GLOBAL__N_129mx_repacked_mmq_pinned_kernelILb1ELb0EEEvPKhPKN7miinfer14MxQ8_1MmqBlockEPfjjj': desired occupancy was 2, final occupancy is 1 [-Wpass-failed]
+[ 81%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/m12_gdn_chunk.hip.o
+2 warnings generated when compiling for gfx906.
+[ 87%] Building CXX object CMakeFiles/miinfer_hip.dir/src/kquant_wave_layout.cpp.o
+[ 87%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/memory_stream.hip.o
+[ 93%] Linking HIP static library libmiinfer_hip.a
+[ 93%] Built target miinfer_hip
+[ 93%] Building CXX object CMakeFiles/miinfer-long-context-qualification-bench.dir/bench/long_context_qualification_bench.cpp.o
+/workspace/MIInfer/bench/long_context_qualification_bench.cpp:76:18: warning: unused variable 'to_mib' [-Wunused-variable]
+   76 |     const double to_mib = 1.0 / (1024.0 * 1024.0);
+      |                  ^~~~~~
+1 warning generated.
+[100%] Linking HIP executable miinfer-long-context-qualification-bench
+[100%] Built target miinfer-long-context-qualification-bench
+===================================================================
+  MIInfer V2-0013: Long-Context Frontier Qualification
+  Context Scale: 4K -> 8K -> 16K -> 32K -> 64K -> 128K
+  Target: 1 x AMD Instinct MI50 32GB (gfx906, Wave64)
+  Model:  Qwen3.8-27B-Q4_K_M (64 Layers, 48 GDN + 16 GQA)
+===================================================================
+
+[INFO] Device: AMD Instinct MI60 / MI50 (gfx906:sramecc+:xnack-)
+[INFO] Loading GGUF Model from: /models/Qwen3.8-27B-Q4_K_M.gguf
+[INFO] Model loaded successfully: Qwen3.8-27B (64 layers, hidden=5120, vocab=248320)
+
+-------------------------------------------------------------------
+  Running Evaluation: 4K Context (Prompt = 4096, Decode = 128, KV Cap = 32768)
+-------------------------------------------------------------------
+  Memory Breakdown (bytes): weights=24068487168 recurrent_state=158859264 kv_cache=2147483648 workspace=727711744 activation=21966848 cached_state=158859264 total=27283367936
+  Static VRAM Allocation: 25.41 GiB / 31.98 GiB
+  Observed Free Headroom: 5.77 GiB
+  Executing Prefill (4096 tokens in Macro-512 tiles)...
+  Prefill Completed:   17561.56 ms (233.2 tok/s)
+  Decode Step Latency: 37.55 ms/token (26.6 tok/s)
+  Total Run Time:      22.34 s
+  Numerical Validity:  VALID (No NaN/Inf/Collapse)
+
+-------------------------------------------------------------------
+  Running Evaluation: 8K Context (Prompt = 8192, Decode = 128, KV Cap = 32768)
+-------------------------------------------------------------------
+  Memory Breakdown (bytes): weights=24068487168 recurrent_state=158859264 kv_cache=2147483648 workspace=727711744 activation=21966848 cached_state=158859264 total=27283367936
+  Static VRAM Allocation: 25.41 GiB / 31.98 GiB
+  Observed Free Headroom: 5.70 GiB
+  Executing Prefill (8192 tokens in Macro-512 tiles)...
+  Prefill Completed:   37731.87 ms (217.1 tok/s)
+  Decode Step Latency: 38.13 ms/token (26.2 tok/s)
+  Total Run Time:      42.58 s
+  Numerical Validity:  VALID (No NaN/Inf/Collapse)
+
+-------------------------------------------------------------------
+  Running Evaluation: 16K Context (Prompt = 16384, Decode = 128, KV Cap = 32768)
+-------------------------------------------------------------------
+  Memory Breakdown (bytes): weights=24068487168 recurrent_state=158859264 kv_cache=2147483648 workspace=727711744 activation=21966848 cached_state=158859264 total=27283367936
+  Static VRAM Allocation: 25.41 GiB / 31.98 GiB
+  Observed Free Headroom: 5.70 GiB
+  Executing Prefill (16384 tokens in Macro-512 tiles)...
+  Prefill Completed:   86225.92 ms (190.0 tok/s)
+  Decode Step Latency: 40.09 ms/token (24.9 tok/s)
+  Total Run Time:      91.33 s
+  Numerical Validity:  VALID (No NaN/Inf/Collapse)
+
+-------------------------------------------------------------------
+  Running Evaluation: 32K Context (Prompt = 32768, Decode = 128, KV Cap = 33000)
+-------------------------------------------------------------------
+  Memory Breakdown (bytes): weights=24068487168 recurrent_state=158859264 kv_cache=2162688000 workspace=727711744 activation=21966848 cached_state=158859264 total=27298572288
+  Static VRAM Allocation: 25.42 GiB / 31.98 GiB
+  Observed Free Headroom: 5.63 GiB
+  Executing Prefill (32768 tokens in Macro-512 tiles)...
+  Prefill Completed:   216201.80 ms (151.6 tok/s)
+  Decode Step Latency: 46.57 ms/token (21.5 tok/s)
+  Total Run Time:      222.13 s
+  Numerical Validity:  VALID (No NaN/Inf/Collapse)
+
+-------------------------------------------------------------------
+  Running Evaluation: 64K Context (Prompt = 65536, Decode = 128, KV Cap = 66000)
+-------------------------------------------------------------------
+  Memory Breakdown (bytes): weights=24068487168 recurrent_state=158859264 kv_cache=4325376000 workspace=727711744 activation=21966848 cached_state=158859264 total=29461260288
+  Static VRAM Allocation: 27.44 GiB / 31.98 GiB
+  Observed Free Headroom: 3.63 GiB
+  Executing Prefill (65536 tokens in Macro-512 tiles)...
+  Prefill Completed:   617527.52 ms (106.1 tok/s)
+  Decode Step Latency: 60.07 ms/token (16.6 tok/s)
+  Total Run Time:      625.17 s
+ MIInfer HIP failure: out of memory
+  expression: hipMalloc(&d_buffer_, total_bytes_)
+  location: /workspace/MIInfer/src/prefill_v2/workspace.cpp:79
