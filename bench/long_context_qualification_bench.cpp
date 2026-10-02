@@ -103,6 +103,18 @@ int main(int argc, char** argv) {
 
         // Initialize model with exact KV capacity
         PrefillV2Model model(qwen_model, cfg.kv_capacity, /*load_lm_head=*/true);
+        const auto recurrent_bytes = model.recurrent_states().size()
+            * (RecurrentLayerState::kStateBytes + RecurrentLayerState::kConvHistoryBytes);
+        const auto kv_bytes = std::accumulate(
+            model.kv_caches().begin(), model.kv_caches().end(), std::size_t{0},
+            [](std::size_t total, const auto& cache) { return total + cache.total_bytes(); });
+        std::cout << "  Memory Breakdown (bytes): weights=" << model.persistent_weight_bytes()
+                  << " recurrent_state=" << recurrent_bytes
+                  << " kv_cache=" << kv_bytes
+                  << " workspace=" << model.workspace_bytes()
+                  << " activation=" << model.activation_bytes()
+                  << " cached_state=" << model.cached_state_bytes()
+                  << " total=" << model.total_vram_bytes() << "\n";
 
         std::size_t free_mem = 0, total_mem = 0;
         MIINFER_HIP_CHECK(hipMemGetInfo(&free_mem, &total_mem));
