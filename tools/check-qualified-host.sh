@@ -85,9 +85,23 @@ cmake -S . -B "$host_build" -DCMAKE_PREFIX_PATH=/opt/rocm-7.2.1 -DCMAKE_BUILD_TY
 cmake --build "$host_build" --parallel 2 --target "${host_targets[@]}"
 ctest --test-dir "$host_build" --output-on-failure -L host-only -E kquant-wave-host
 cmake -S . -B "$gpu_build" -DCMAKE_PREFIX_PATH=/opt/rocm-7.2.1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_HIP_ARCHITECTURES=gfx906 -DMIINFER_ENABLE_HIP=ON -DMIINFER_HIP_ARCHITECTURE=gfx906 -DMIINFER_TARGET_ARCH=gfx906 -DMIINFER_BUILD_TESTS=ON -DMIINFER_BUILD_BENCHMARKS=ON
-cmake --build "$gpu_build" --parallel 2 --target miinfer-hip-smoke miinfer-fp16-gemv-test miinfer-q4-q8-gemv-test miinfer-bench
+cmake --build "$gpu_build" --parallel 2 --target miinfer-hip-smoke miinfer-fp16-gemv-test miinfer-q4-q8-gemv-test miinfer-bench miinfer
 "$gpu_build"/miinfer-hip-smoke
 "$gpu_build"/miinfer-fp16-gemv-test
 "$gpu_build"/miinfer-q4-q8-gemv-test
 "$gpu_build"/miinfer-bench --warmup 2 --iterations 10 --elements 1048576
+' "$model_path"
+$runtime run --rm --init \
+    --device /dev/kfd --device /dev/dri \
+    --security-opt=label=disable --group-add=keep-groups \
+    -e MIINFER_EXPECTED_MODEL_SHA="$expected_model_sha" \
+    -e ROCR_VISIBLE_DEVICES="$rocr_device" \
+    -v "$repo_root:/workspace/MIInfer:Z" \
+    -v "$model_dir:/models:ro" \
+    "$image" bash -lc '
+set -euo pipefail
+model=/models/"$(basename "$0")"
+test "$(sha256sum "$model" | cut -d" " -f1)" = "$MIINFER_EXPECTED_MODEL_SHA"
+"build/qualification-container-rocm721-gpu/miinfer" run "$model" --prompt Hello --max-tokens 1 --no-stream
+echo "generation_smoke=PASS"
 ' "$model_path"
