@@ -47,6 +47,13 @@ Both hosts must independently:
 Absolute timings do not have to match. The purpose is to prove that both hosts
 can execute the same experiment contract reproducibly.
 
+The canonical implementation is `container/Containerfile` plus
+`tools/check-qualified-host.sh`. Build the image with `--pull=never` after the
+base image has been resolved, then run the qualification command documented in
+[`mi50-environment.md`](mi50-environment.md) on each host. Record the complete
+stdout as host evidence and retain the exact source SHA, model SHA and image
+base digest with it.
+
 ## Parallel work rules
 
 After the environment gate passes, both hosts are peers. Assign whichever

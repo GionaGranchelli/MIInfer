@@ -1,0 +1,20 @@
+FROM docker.io/rocm/dev-ubuntu-22.04@sha256:42851dac319afce41cf993e25f95005b7f2cd0a0f6abd32ad8f25cd876ec56df
+
+LABEL org.opencontainers.image.base.name="docker.io/rocm/dev-ubuntu-22.04" \
+      org.opencontainers.image.base.digest="sha256:42851dac319afce41cf993e25f95005b7f2cd0a0f6abd32ad8f25cd876ec56df"
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    MIINFER_HIP_ARCHITECTURE=gfx906 \
+    MIINFER_TARGET_ARCH=gfx906
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        ca-certificates \
+        cmake \
+        git \
+        pkg-config \
+        python3 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /workspace/MIInfer
