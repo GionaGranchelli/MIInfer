@@ -7,6 +7,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <array>
 #include <span>
 #include <vector>
 
@@ -20,8 +21,23 @@ enum class KvCacheQuantMode : std::uint8_t {
     kQ8Q8     = 3  // Candidate D: Q8 Key + Q8 Value
 };
 
-// Non-owning view of a single attention layer's KV cache on GPU.
-struct AttentionKvCacheView {
+// One already-resolved physical KV head range. Logical page identity is not
+// present: attention receives only device addresses and layout metadata.
+struct PhysicalKvShardView {
+    __half* key_cache = nullptr;
+    __half* value_cache = nullptr;
+    int8_t* key_cache_q8 = nullptr;
+    __half* key_scales = nullptr;
+    int8_t* value_cache_q8 = nullptr;
+    __half* value_scales = nullptr;
+    std::size_t head_begin = 0;
+    std::size_t head_count = 0;
+};
+
+// Kernel-facing resolved physical view. The legacy fields are the N=1 fast
+// path and remain directly usable by existing launches. Multi-shard callers
+// consume the compact shard descriptors resolved before entering the hot loop.
+struct PhysicalKvView {
     // FP16 pointers (used in FP16 or mixed modes)
     __half* key_cache = nullptr;       // [kKvHeads, capacity, kHeadDim]
     __half* value_cache = nullptr;     // [kKvHeads, capacity, kHeadDim]
@@ -36,6 +52,8 @@ struct AttentionKvCacheView {
     std::size_t head_count_kv = kKvHeads;
     std::size_t head_dim = kHeadDim;
     KvCacheQuantMode quant_mode = KvCacheQuantMode::kFp16Fp16;
+    std::array<PhysicalKvShardView, 2> shards{};
+    std::uint32_t shard_count = 1;
 
     [[nodiscard]] bool is_k_q8() const noexcept {
         return quant_mode == KvCacheQuantMode::kQ8Fp16 || quant_mode == KvCacheQuantMode::kQ8Q8;
@@ -43,7 +61,10 @@ struct AttentionKvCacheView {
     [[nodiscard]] bool is_v_q8() const noexcept {
         return quant_mode == KvCacheQuantMode::kFp16Q8 || quant_mode == KvCacheQuantMode::kQ8Q8;
     }
+    [[nodiscard]] bool is_single_shard() const noexcept { return shard_count == 1; }
 };
+
+using AttentionKvCacheView = PhysicalKvView;
 
 // Device storage for an attention layer's Key and Value cache (FP16 / Q8).
 class AttentionLayerKvCacheStorage {
@@ -67,7 +88,7 @@ public:
     [[nodiscard]] std::size_t raw_tokens_bytes(std::size_t tokens) const noexcept;
 
     [[nodiscard]] AttentionKvCacheView view() const noexcept {
-        return AttentionKvCacheView{
+        AttentionKvCacheView result{
             .key_cache = d_key_cache_,
             .value_cache = d_value_cache_,
             .key_cache_q8 = d_key_cache_q8_,
@@ -79,6 +100,10 @@ public:
             .head_dim = kHeadDim,
             .quant_mode = quant_mode_
         };
+        result.shards[0] = {
+            d_key_cache_, d_value_cache_, d_key_cache_q8_, d_key_scales_,
+            d_value_cache_q8_, d_value_scales_, 0, kKvHeads};
+        return result;
     }
 
     [[nodiscard]] std::size_t capacity() const noexcept { return capacity_; }
