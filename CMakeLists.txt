@@ -34,6 +34,7 @@ set(MIINFER_RELEASE_TEST_TARGETS
     miinfer-qwen3-primitives-test
     miinfer-qwen35-conv-batch-test
     miinfer-context-space-test
+    miinfer-device-kv-pool-test
     miinfer-qwen3-layer0-gpu-test
     miinfer-qwen3-kv-cache-gpu-test
     miinfer-qwen3-quant-kv-attention-test
@@ -197,6 +198,13 @@ if(MIINFER_ENABLE_HIP)
         $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Wpedantic>
         $<$<COMPILE_LANGUAGE:HIP>:-Wall;-Wextra;-fgpu-default-stream=per-thread>
     )
+    add_library(miinfer_device_kv_pool STATIC src/device_kv_pool.cpp)
+    target_link_libraries(miinfer_device_kv_pool PUBLIC miinfer_hip)
+    target_include_directories(miinfer_device_kv_pool PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+    target_compile_features(miinfer_device_kv_pool PUBLIC cxx_std_20)
+    add_executable(miinfer-device-kv-pool-test tests/device_kv_pool_test.cpp)
+    target_link_libraries(miinfer-device-kv-pool-test PRIVATE miinfer_device_kv_pool)
+    target_compile_options(miinfer-device-kv-pool-test PRIVATE -Wall -Wextra -Wpedantic)
 
     add_executable(miinfer-prefill-v2-recurrent-layer-bakeoff bench/prefill_v2_recurrent_layer_bakeoff.cpp)
     target_link_libraries(miinfer-prefill-v2-recurrent-layer-bakeoff PRIVATE miinfer_hip)
@@ -709,6 +717,8 @@ if(MIINFER_BUILD_TESTS)
     if(MIINFER_ENABLE_HIP)
         add_test(NAME hip-smoke COMMAND miinfer-hip-smoke)
         set_tests_properties(hip-smoke PROPERTIES LABELS "gpu-required")
+        add_test(NAME device-kv-pool COMMAND miinfer-device-kv-pool-test)
+        set_tests_properties(device-kv-pool PROPERTIES LABELS "gpu-required")
         add_test(NAME fp16-gemv-correctness COMMAND miinfer-fp16-gemv-test)
         set_tests_properties(fp16-gemv-correctness PROPERTIES LABELS "gpu-required")
         add_test(NAME q4-q8-gemv-correctness COMMAND miinfer-q4-q8-gemv-test)
