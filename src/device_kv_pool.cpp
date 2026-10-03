@@ -85,9 +85,14 @@ DeviceKvBlock DeviceKvPool::allocate(std::size_t bytes, std::size_t alignment) {
 }
 
 bool DeviceKvPool::owns(const DeviceKvBlock& block) const noexcept {
-    return block.device == device_ && block.id != 0 && block.data != nullptr
-        && block.offset <= capacity_ && block.bytes <= capacity_ - block.offset
-        && block.data == static_cast<const std::byte*>(backing_) + block.offset;
+    if (block.device != device_ || block.id == 0 || block.data == nullptr
+        || block.offset > capacity_ || block.bytes > capacity_ - block.offset
+        || block.data != static_cast<const std::byte*>(backing_) + block.offset) {
+        return false;
+    }
+    return std::any_of(active_.begin(), active_.end(), [&](const DeviceKvBlock& active) {
+        return active.id == block.id && active.offset == block.offset && active.bytes == block.bytes;
+    });
 }
 
 void DeviceKvPool::release(const DeviceKvBlock& block) {
