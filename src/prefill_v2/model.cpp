@@ -743,7 +743,11 @@ GenerateStats PrefillV2Model::generate(
     const GenerateOptions& options,
     hipStream_t stream) {
 
-    if (options.seed) rng_.seed(*options.seed);
+    if (options.seed) {
+        rng_.seed(*options.seed);
+    } else if (options.reset_state_before) {
+        rng_.seed(42);
+    }
 
     if (prompt.empty()) {
         throw std::runtime_error("PrefillV2Model::generate: empty prompt");
