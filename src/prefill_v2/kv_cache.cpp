@@ -62,20 +62,28 @@ AttentionLayerKvCacheStorage::AttentionLayerKvCacheStorage(std::size_t capacity,
         || physical.bytes != physical_block_.bytes) {
         throw std::logic_error("AttentionLayerKvCacheStorage: physical view resolution mismatch");
     }
+    auto* resolved_base = const_cast<std::byte*>(static_cast<const std::byte*>(physical.data))
+        + physical.offset;
+    const auto resolve_pointer = [&](auto* pointer) {
+        if (pointer == nullptr) return pointer;
+        const auto byte_offset = reinterpret_cast<const std::byte*>(pointer) - base;
+        return reinterpret_cast<decltype(pointer)>(resolved_base + byte_offset);
+    };
 
-    physical_view_.key_cache = d_key_cache_;
-    physical_view_.value_cache = d_value_cache_;
-    physical_view_.key_cache_q8 = d_key_cache_q8_;
-    physical_view_.key_scales = d_key_scales_;
-    physical_view_.value_cache_q8 = d_value_cache_q8_;
-    physical_view_.value_scales = d_value_scales_;
+    physical_view_.key_cache = resolve_pointer(d_key_cache_);
+    physical_view_.value_cache = resolve_pointer(d_value_cache_);
+    physical_view_.key_cache_q8 = resolve_pointer(d_key_cache_q8_);
+    physical_view_.key_scales = resolve_pointer(d_key_scales_);
+    physical_view_.value_cache_q8 = resolve_pointer(d_value_cache_q8_);
+    physical_view_.value_scales = resolve_pointer(d_value_scales_);
     physical_view_.capacity = capacity_;
     physical_view_.head_count_kv = kKvHeads;
     physical_view_.head_dim = kHeadDim;
     physical_view_.quant_mode = quant_mode_;
     physical_view_.shards[0] = {
-        d_key_cache_, d_value_cache_, d_key_cache_q8_, d_key_scales_,
-        d_value_cache_q8_, d_value_scales_, 0, kKvHeads};
+        physical_view_.key_cache, physical_view_.value_cache,
+        physical_view_.key_cache_q8, physical_view_.key_scales,
+        physical_view_.value_cache_q8, physical_view_.value_scales, 0, kKvHeads};
 
     reset(nullptr);
 }
