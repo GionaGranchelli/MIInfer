@@ -1,6 +1,8 @@
 #pragma once
 
 #include "miinfer/prefill_v2/constants.hpp"
+#include "miinfer/device_kv_pool.hpp"
+#include "miinfer/device_kv_shard.hpp"
 
 #include <hip/hip_runtime_api.h>
 #include <hip/hip_fp16.h>
@@ -8,6 +10,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <array>
+#include <memory>
 #include <span>
 #include <vector>
 
@@ -88,22 +91,7 @@ public:
     [[nodiscard]] std::size_t raw_tokens_bytes(std::size_t tokens) const noexcept;
 
     [[nodiscard]] AttentionKvCacheView view() const noexcept {
-        AttentionKvCacheView result{
-            .key_cache = d_key_cache_,
-            .value_cache = d_value_cache_,
-            .key_cache_q8 = d_key_cache_q8_,
-            .key_scales = d_key_scales_,
-            .value_cache_q8 = d_value_cache_q8_,
-            .value_scales = d_value_scales_,
-            .capacity = capacity_,
-            .head_count_kv = kKvHeads,
-            .head_dim = kHeadDim,
-            .quant_mode = quant_mode_
-        };
-        result.shards[0] = {
-            d_key_cache_, d_value_cache_, d_key_cache_q8_, d_key_scales_,
-            d_value_cache_q8_, d_value_scales_, 0, kKvHeads};
-        return result;
+        return physical_view_;
     }
 
     [[nodiscard]] std::size_t capacity() const noexcept { return capacity_; }
@@ -134,6 +122,12 @@ public:
 private:
     std::size_t capacity_ = 0;
     KvCacheQuantMode quant_mode_ = KvCacheQuantMode::kFp16Fp16;
+
+    std::unique_ptr<miinfer::DeviceKvPool> physical_pool_;
+    std::unique_ptr<miinfer::ContextSpace> physical_context_;
+    std::unique_ptr<miinfer::PlacementPlan> physical_plan_;
+    miinfer::DeviceKvBlock physical_block_{};
+    PhysicalKvView physical_view_{};
 
     // FP16 pointers
     __half* d_key_cache_ = nullptr;

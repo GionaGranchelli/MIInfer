@@ -181,6 +181,7 @@ if(MIINFER_ENABLE_HIP)
         src/prefill_v2/state.cpp
         src/prefill_v2/workspace.cpp
         src/prefill_v2/recurrent_layer.cpp
+        src/device_kv_pool.cpp
         src/prefill_v2/kv_cache.cpp
         src/prefill_v2/attention_layer.cpp
         src/prefill_v2/topology_block.cpp
@@ -205,16 +206,14 @@ if(MIINFER_ENABLE_HIP)
             "${CMAKE_CURRENT_BINARY_DIR}/generated"
     )
     target_compile_features(miinfer_hip PUBLIC cxx_std_20)
-    target_link_libraries(miinfer_hip PUBLIC miinfer_build_info miinfer_model roc::hipblas)
+    target_link_libraries(miinfer_hip PUBLIC miinfer_build_info miinfer_model miinfer_device_kv_shard roc::hipblas)
     target_compile_definitions(miinfer_hip PUBLIC __HIP_PLATFORM_AMD__)
     target_compile_options(miinfer_hip PRIVATE
         $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Wpedantic>
         $<$<COMPILE_LANGUAGE:HIP>:-Wall;-Wextra;-fgpu-default-stream=per-thread>
     )
-    add_library(miinfer_device_kv_pool STATIC src/device_kv_pool.cpp)
+    add_library(miinfer_device_kv_pool INTERFACE)
     target_link_libraries(miinfer_device_kv_pool PUBLIC miinfer_hip)
-    target_include_directories(miinfer_device_kv_pool PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
-    target_compile_features(miinfer_device_kv_pool PUBLIC cxx_std_20)
     add_executable(miinfer-device-kv-pool-test tests/device_kv_pool_test.cpp)
     target_link_libraries(miinfer-device-kv-pool-test PRIVATE miinfer_device_kv_pool)
     target_compile_options(miinfer-device-kv-pool-test PRIVATE -Wall -Wextra -Wpedantic)
