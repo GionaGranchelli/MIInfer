@@ -4,6 +4,7 @@
 import argparse
 import hashlib
 import json
+import os
 import re
 import subprocess
 import time
@@ -45,7 +46,9 @@ TOOLS = [
         }, "required": ["query"]},
     }},
 ]
-SERVER_LOG = Path(__file__).resolve().parents[1] / "results/v2-0045/agent-server.log"
+SERVER_LOG = Path(os.environ.get(
+    "MIINFER_SERVER_LOG",
+    Path(__file__).resolve().parents[1] / "results/v2-0045/agent-server.log"))
 
 
 def sha256(data):
@@ -117,12 +120,10 @@ def attach_server_latency(result):
     request_count = sum(len(turn["requests"]) for turn in result["turns"])
     offset = max(0, len(events) - request_count)
     for turn in result["turns"]:
-        used = [request.get("server_latency") for request in turn["requests"]]
-        if not all(used):
-            used = events[offset:offset + len(turn["requests"])]
-            offset += len(turn["requests"])
-            for request, event in zip(turn["requests"], used):
-                request["server_latency"] = event
+        used = events[offset:offset + len(turn["requests"])]
+        offset += len(turn["requests"])
+        for request, event in zip(turn["requests"], used):
+            request["server_latency"] = event
         turn["reused_prefix_tokens"] = sum(event["reused_prefix_tokens"] for event in used)
         turn["new_prefill_tokens"] = sum(event.get(
             "suffix_tokens_dispatched",
