@@ -1,0 +1,48 @@
+===================================================================
+  MIInfer V2-0013: Long-Context Frontier Qualification
+  Context Scale: 4K -> 8K -> 16K -> 32K -> 64K -> 128K
+  Target: 1 x AMD Instinct MI50 32GB (gfx906, Wave64)
+  Model:  Qwen3.8-27B-Q4_K_M (64 Layers, 48 GDN + 16 GQA)
+===================================================================
+
+[INFO] Device: AMD Instinct MI60 / MI50 (gfx906:sramecc+:xnack-)
+[INFO] Loading GGUF Model from: /home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf
+[INFO] Model loaded successfully: Qwen3.8-27B (64 layers, hidden=5120, vocab=248320)
+
+-------------------------------------------------------------------
+  Running Evaluation: 4K Context (Prompt = 4096, Decode = 128, KV Cap = 32768)
+-------------------------------------------------------------------
+  Memory Breakdown (bytes): weights=24068487168 recurrent_state=158859264 kv_cache=2147483648 workspace=727711744 activation=21966848 cached_state=158859264 total=27283367936
+  Static VRAM Allocation: 25.41 GiB / 31.98 GiB
+  Observed Free Headroom: 5.77 GiB
+  Executing Prefill (4096 tokens in Macro-512 tiles)...
+  Prefill Completed:   17696.19 ms (231.5 tok/s)
+  Decode Step Latency: 38.19 ms/token (26.2 tok/s)
+  Total Run Time:      22.55 s
+  Numerical Validity:  VALID (No NaN/Inf/Collapse)
+
+-------------------------------------------------------------------
+  Running Evaluation: 64K Context (Prompt = 65536, Decode = 128, KV Cap = 66000)
+-------------------------------------------------------------------
+  Memory Breakdown (bytes): weights=24068487168 recurrent_state=158859264 kv_cache=4325376000 workspace=727711744 activation=21966848 cached_state=158859264 total=29461260288
+  Static VRAM Allocation: 27.44 GiB / 31.98 GiB
+  Observed Free Headroom: 3.63 GiB
+  Executing Prefill (65536 tokens in Macro-512 tiles)...
+  Prefill Completed:   603277.21 ms (108.6 tok/s)
+  Decode Step Latency: 60.72 ms/token (16.5 tok/s)
+  Total Run Time:      611.00 s
+  Numerical Validity:  VALID (No NaN/Inf/Collapse)
+
+
+========================================================================================================
+  V2-0013: Long-Context Frontier Qualification Summary Table (4K -> 128K)
+========================================================================================================
+
+| Context Regime | Prompt Tokens | Decode Latency | Decode Throughput | Prefill TTFT | Prefill Throughput | Total VRAM | Free VRAM |
+|:---|---:|---:|---:|---:|---:|---:|---:|
+| **4K Context** |          4096 |        38.19 ms |            26.2 tok/s |   17696.19 ms |            231.5 tok/s |    25.41 GiB |    5.77 GiB |
+| **64K Context** |         65536 |        60.72 ms |            16.5 tok/s |  603277.21 ms |            108.6 tok/s |    27.44 GiB |    3.63 GiB |
+
+========================================================================================================
+  V2-0013 Long-Context Frontier Qualification Complete.
+========================================================================================================
