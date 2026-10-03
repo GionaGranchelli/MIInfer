@@ -250,7 +250,7 @@ PrefillV2AttentionLayer& PrefillV2AttentionLayer::operator=(PrefillV2AttentionLa
 void PrefillV2AttentionLayer::forward(
     const float* d_input,
     float* d_output,
-    AttentionKvCacheView kv_cache,
+    PhysicalKvView kv_cache,
     const PrefillV2Workspace& ws,
     std::uint32_t base_position,
     std::uint32_t token_count,
@@ -391,7 +391,7 @@ void PrefillV2AttentionLayer::forward(
 void PrefillV2AttentionLayer::forward_profiled(
     const float* d_input,
     float* d_output,
-    AttentionKvCacheView kv_cache,
+    PhysicalKvView kv_cache,
     const PrefillV2Workspace& ws,
     std::uint32_t base_position,
     std::uint32_t token_count,
@@ -551,7 +551,7 @@ void PrefillV2AttentionLayer::forward_profiled(
 void PrefillV2AttentionLayer::decode(
     const float* d_input,
     float* d_output,
-    AttentionKvCacheView kv_cache,
+    PhysicalKvView kv_cache,
     const PrefillV2Workspace& ws,
     std::uint32_t position,
     const DeviceDecodeState* decode_state,
@@ -691,7 +691,7 @@ void PrefillV2AttentionLayer::decode(
 void PrefillV2AttentionLayer::decode_profiled(
     const float* d_input,
     float* d_output,
-    AttentionKvCacheView kv_cache,
+    PhysicalKvView kv_cache,
     const PrefillV2Workspace& ws,
     std::uint32_t position,
     const DeviceDecodeState* decode_state,
