@@ -56,6 +56,12 @@ AttentionLayerKvCacheStorage::AttentionLayerKvCacheStorage(std::size_t capacity,
     physical_plan_->place(miinfer::DeviceKvShard(
         device, physical_context_->page_id_at(logical.begin), logical,
         {physical_block_.data, 0, physical_block_.bytes}, {0, kKvHeads}));
+    const auto resolved = physical_plan_->resolve(logical, {0, kKvHeads});
+    const auto physical = resolved.front().physical_range();
+    if (physical.data != physical_block_.data || physical.offset != 0
+        || physical.bytes != physical_block_.bytes) {
+        throw std::logic_error("AttentionLayerKvCacheStorage: physical view resolution mismatch");
+    }
 
     physical_view_.key_cache = d_key_cache_;
     physical_view_.value_cache = d_value_cache_;
