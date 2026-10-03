@@ -49,7 +49,16 @@ void PlacementPlan::validate(const DeviceKvShard& shard) const {
     }
     for (const auto& existing : shards_) {
         if (overlaps(existing.logical_range(), logical)) {
-            throw std::invalid_argument("PlacementPlan has overlapping logical placement");
+            const auto existing_logical = existing.logical_range();
+            const auto existing_heads = existing.kv_heads();
+            const auto new_heads = shard.kv_heads();
+            const bool same_page = existing.logical_page() == shard.logical_page()
+                && existing_logical.begin == logical.begin && existing_logical.end() == logical.end();
+            const bool disjoint_heads = existing_heads.count != 0 && new_heads.count != 0
+                && (existing_heads.end() <= new_heads.begin || new_heads.end() <= existing_heads.begin);
+            if (!same_page || !disjoint_heads) {
+                throw std::invalid_argument("PlacementPlan has overlapping logical placement");
+            }
         }
         if (existing.owning_device() == shard.owning_device()) {
             const auto left = existing.physical_range();
@@ -69,8 +78,19 @@ void PlacementPlan::place(DeviceKvShard shard) {
     validate(shard);
     shards_.push_back(std::move(shard));
     std::sort(shards_.begin(), shards_.end(), [](const auto& left, const auto& right) {
-        return left.logical_range().begin < right.logical_range().begin;
+        if (left.logical_range().begin != right.logical_range().begin) {
+            return left.logical_range().begin < right.logical_range().begin;
+        }
+        return left.kv_heads().begin < right.kv_heads().begin;
     });
+}
+
+std::size_t PlacementPlan::clear_page(LogicalPageId logical_page) {
+    const auto old_size = shards_.size();
+    shards_.erase(std::remove_if(shards_.begin(), shards_.end(), [&](const auto& shard) {
+        return shard.logical_page() == logical_page;
+    }), shards_.end());
+    return old_size - shards_.size();
 }
 
 void PlacementPlan::replace(DeviceKvShard shard) {
@@ -111,13 +131,15 @@ std::vector<DeviceKvShard> PlacementPlan::resolve(LogicalRange range) const {
     for (const auto& shard : shards_) {
         const auto logical = shard.logical_range();
         if (logical.end() <= range.begin || logical.begin >= range.end()) continue;
-        if ((result.empty() && logical.begin > covered)
-            || (!result.empty() && logical.begin != covered)) {
+        const bool same_logical_coverage = !result.empty()
+            && logical.begin == result.back().logical_range().begin
+            && logical.end() == result.back().logical_range().end();
+        if ((!same_logical_coverage && result.empty() && logical.begin > covered)
+            || (!same_logical_coverage && !result.empty() && logical.begin != covered)) {
             throw std::logic_error("PlacementPlan has a gap in resolved placement");
         }
         result.push_back(shard);
         covered = std::max(covered, logical.end());
-        if (covered >= range.end()) break;
     }
     if (covered < range.end()) throw std::logic_error("PlacementPlan has no complete physical placement");
     return result;
