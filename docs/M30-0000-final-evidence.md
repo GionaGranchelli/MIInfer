@@ -6,9 +6,9 @@
 |---|---|
 | `M30_0000_BASE_SHA` | `23deab2eda689fc0cfc21782d3f6df1303bee2ee` |
 | `AGENT_WORKLOAD_VERSION` | `m30-agent-v1` |
-| `BASELINE_FINAL_SHA` | populated by the baseline evidence commit |
+| `BASELINE_FINAL_SHA` | `6dc66c59f7545a10041ad6984bc43ce4ad487740` |
 | `REUSE_MAP_FINAL_SHA` | `97dd684b329617f6a8e8e58bfad70db96c050adb` |
-| `INTEGRATED_EVIDENCE_SHA` | populated by the final integration commit |
+| `INTEGRATED_EVIDENCE_SHA` | populated after this synthesis commit |
 
 ## Opportunity synthesis
 
