@@ -526,8 +526,14 @@ struct RuntimeGenerateStats {
     std::size_t prompt_tokens = 0;
     std::size_t prefill_processed_tokens = 0;
     std::size_t generated_tokens = 0;
+    bool reuse_hit = false;
     std::size_t reused_prefix_tokens = 0;
     std::size_t common_prefix_tokens = 0;
+    std::size_t suffix_tokens_dispatched = 0;
+    std::size_t gqa_kv_reused_tokens = 0;
+    std::size_t gdn_checkpoint_position = 0;
+    double restore_ms = 0.0;
+    double suffix_prefill_ms = 0.0;
     std::size_t session_checkpoint_count = 0;
     std::size_t session_checkpoint_bytes = 0;
     double graph_capture_ms = 0.0;
@@ -5196,7 +5202,13 @@ int cmd_serve(int argc, char** argv) {
             std::cerr << "miinfer_request_latency {\"request_id\":" << request.request_id
                       << ",\"prompt_tokens\":" << stats.prompt_tokens
                       << ",\"common_prefix_tokens\":" << stats.common_prefix_tokens
+                      << ",\"reuse_hit\":" << (stats.reuse_hit ? "true" : "false")
                       << ",\"reused_prefix_tokens\":" << stats.reused_prefix_tokens
+                      << ",\"suffix_tokens_dispatched\":" << stats.suffix_tokens_dispatched
+                      << ",\"gqa_kv_reused_tokens\":" << stats.gqa_kv_reused_tokens
+                      << ",\"gdn_checkpoint_position\":" << stats.gdn_checkpoint_position
+                      << ",\"restore_ms\":" << stats.restore_ms
+                      << ",\"suffix_prefill_ms\":" << stats.suffix_prefill_ms
                       << ",\"session_checkpoint_count\":" << stats.session_checkpoint_count
                       << ",\"session_checkpoint_bytes\":" << stats.session_checkpoint_bytes
                       << ",\"new_prefill_tokens\":" << stats.prefill_processed_tokens
@@ -5459,9 +5471,16 @@ int cmd_serve(int argc, char** argv) {
                 stats.generated_tokens = v2_stats.generated_tokens.size();
                 stats.stop_reason = v2_stats.stop_reason;
                 stats.cancelled = stats.stop_reason == miinfer::GenerationStopReason::kCancelled;
-                stats.prefill_processed_tokens = v2_stats.prompt_tokens.size();
+                stats.reuse_hit = v2_stats.reuse_hit;
+                stats.prefill_processed_tokens = v2_stats.reuse_hit
+                    ? v2_stats.suffix_tokens_dispatched : v2_stats.prompt_tokens.size();
                 stats.reused_prefix_tokens = v2_stats.prefix_tokens_reused;
                 stats.common_prefix_tokens = v2_stats.prefix_tokens_reused;
+                stats.suffix_tokens_dispatched = v2_stats.suffix_tokens_dispatched;
+                stats.gqa_kv_reused_tokens = v2_stats.gqa_kv_reused_tokens;
+                stats.gdn_checkpoint_position = v2_stats.gdn_checkpoint_position;
+                stats.restore_ms = v2_stats.restore_ms;
+                stats.suffix_prefill_ms = v2_stats.suffix_prefill_ms;
                 if (v2_stats.prefix_tokens_reused > 0) {
                     stats.session_checkpoint_count = 1;
                     stats.session_checkpoint_bytes = engine.persistent_state_bytes();
@@ -5492,6 +5511,13 @@ int cmd_serve(int argc, char** argv) {
                           << ",\"queue_wait_ms\":" << queue_wait_ms
                           << ",\"prefill_ms\":" << stats.prefill_ms
                           << ",\"prefill_processed_tokens\":" << stats.prefill_processed_tokens
+                          << ",\"reuse_hit\":" << (stats.reuse_hit ? "true" : "false")
+                          << ",\"reused_prefix_tokens\":" << stats.reused_prefix_tokens
+                          << ",\"suffix_tokens_dispatched\":" << stats.suffix_tokens_dispatched
+                          << ",\"gqa_kv_reused_tokens\":" << stats.gqa_kv_reused_tokens
+                          << ",\"gdn_checkpoint_position\":" << stats.gdn_checkpoint_position
+                          << ",\"restore_ms\":" << stats.restore_ms
+                          << ",\"suffix_prefill_ms\":" << stats.suffix_prefill_ms
                           << ",\"prefill_tokens_per_second\":" << stats.prefill_tok_s
                           << ",\"first_decode_token_ms\":" << stats.first_token_ms
                           << ",\"time_to_first_token_ms\":" << stats.prefill_ms + stats.first_token_ms
@@ -5589,9 +5615,16 @@ int cmd_serve(int argc, char** argv) {
             stats.generated_tokens = v2_stats.generated_tokens.size();
             stats.stop_reason = v2_stats.stop_reason;
             stats.cancelled = stats.stop_reason == miinfer::GenerationStopReason::kCancelled;
-            stats.prefill_processed_tokens = v2_stats.prompt_tokens.size();
+            stats.reuse_hit = v2_stats.reuse_hit;
+            stats.prefill_processed_tokens = v2_stats.reuse_hit
+                ? v2_stats.suffix_tokens_dispatched : v2_stats.prompt_tokens.size();
             stats.reused_prefix_tokens = v2_stats.prefix_tokens_reused;
             stats.common_prefix_tokens = v2_stats.prefix_tokens_reused;
+            stats.suffix_tokens_dispatched = v2_stats.suffix_tokens_dispatched;
+            stats.gqa_kv_reused_tokens = v2_stats.gqa_kv_reused_tokens;
+            stats.gdn_checkpoint_position = v2_stats.gdn_checkpoint_position;
+            stats.restore_ms = v2_stats.restore_ms;
+            stats.suffix_prefill_ms = v2_stats.suffix_prefill_ms;
             if (v2_stats.prefix_tokens_reused > 0) {
                 stats.session_checkpoint_count = 1;
                 stats.session_checkpoint_bytes = engine.persistent_state_bytes();
@@ -5636,6 +5669,13 @@ int cmd_serve(int argc, char** argv) {
                       << ",\"queue_wait_ms\":" << queue_wait_ms
                       << ",\"prefill_ms\":" << stats.prefill_ms
                       << ",\"prefill_processed_tokens\":" << stats.prefill_processed_tokens
+                      << ",\"reuse_hit\":" << (stats.reuse_hit ? "true" : "false")
+                      << ",\"reused_prefix_tokens\":" << stats.reused_prefix_tokens
+                      << ",\"suffix_tokens_dispatched\":" << stats.suffix_tokens_dispatched
+                      << ",\"gqa_kv_reused_tokens\":" << stats.gqa_kv_reused_tokens
+                      << ",\"gdn_checkpoint_position\":" << stats.gdn_checkpoint_position
+                      << ",\"restore_ms\":" << stats.restore_ms
+                      << ",\"suffix_prefill_ms\":" << stats.suffix_prefill_ms
                       << ",\"prefill_tokens_per_second\":" << stats.prefill_tok_s
                       << ",\"first_decode_token_ms\":" << stats.first_token_ms
                       << ",\"time_to_first_token_ms\":" << stats.prefill_ms + stats.first_token_ms
