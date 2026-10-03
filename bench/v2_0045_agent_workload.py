@@ -192,7 +192,10 @@ def stream_completion(url, key, model, messages, tool_choice, max_tokens):
 
 def execute_tool(root, call):
     name = call["function"]["name"]
-    args = json.loads(call["function"]["arguments"] or "{}")
+    try:
+        args = json.loads(call["function"]["arguments"] or "{}")
+    except json.JSONDecodeError:
+        return f"Tool error: malformed arguments for {name}; continue without this result."
     if name == "read_file":
         target = (root / args["path"]).resolve()
         if not target.is_relative_to(root):
@@ -222,7 +225,7 @@ def execute_tool(root, call):
             except OSError:
                 continue
         return "\n".join(hits) or "No matches."
-    raise ValueError(f"unsupported tool: {name}")
+    return f"Tool error: unsupported tool {name}; continue without this result."
 
 
 def append_tool_exchange(root, messages, response):
