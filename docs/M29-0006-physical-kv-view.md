@@ -1,6 +1,6 @@
 # M29-0006 physical KV view
 
-Status: `IN PROGRESS`
+Status: `M29_5_N1_PHYSICAL_VIEW_CONTRACT_ONLY`
 
 Contract base: `78adc52c85c05095e6cd0e5a034690b4df2b3b91`
 
@@ -17,7 +17,26 @@ resolves the legacy raw pointers once and populates the single shard with
 allocation, copy, or synchronization was added.
 
 The Z840 physical build/smoke result is pending because `192.168.68.54:22`
-is currently timing out.
+is currently timing out. The alternate Z840 endpoint `100.118.66.80` is
+reachable and the contract test passes there, but this is not yet a production
+placement integration qualification.
+
+### A-side boundary
+
+The current `PrefillV2Model` constructs `AttentionLayerKvCacheStorage` with
+direct `hipMalloc` ownership and calls `storage.view()` at each layer. The
+production model does not currently own or connect a `ContextSpace`,
+`PlacementPlan`, or `DeviceKvPool`. Therefore the present change makes the
+kernel-facing type explicit and proves the N=1 descriptor is pointer-equivalent
+to the old view, but it does not yet satisfy the full placement-resolved chain.
+
+The precise A-side classification is:
+
+`M29_5_N1_PHYSICAL_VIEW_BLOCKED_PRODUCTION_PLACEMENT_NOT_WIRED`
+
+Wiring those existing placement objects into production cache allocation and
+retaining the current raw K/V layout requires more than the allowed tiny
+interface adaptation; it is not claimed in this change.
 
 ## N=2 same-MI50
 
