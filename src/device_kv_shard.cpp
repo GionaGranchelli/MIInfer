@@ -96,6 +96,12 @@ void PlacementPlan::replace(DeviceKvShard shard) {
 }
 
 std::vector<DeviceKvShard> PlacementPlan::resolve(LogicalRange range) const {
+    if (range.length == 0) {
+        if (range.begin > context_->committed_extent()) {
+            throw std::out_of_range("PlacementPlan resolve range is not committed");
+        }
+        return {};
+    }
     check_end(range, "resolve range");
     if (range.begin > context_->committed_extent() || range.end() > context_->committed_extent()) {
         throw std::out_of_range("PlacementPlan resolve range is not committed");
@@ -105,7 +111,8 @@ std::vector<DeviceKvShard> PlacementPlan::resolve(LogicalRange range) const {
     for (const auto& shard : shards_) {
         const auto logical = shard.logical_range();
         if (logical.end() <= range.begin || logical.begin >= range.end()) continue;
-        if (!result.empty() && logical.begin != covered) {
+        if ((result.empty() && logical.begin > covered)
+            || (!result.empty() && logical.begin != covered)) {
             throw std::logic_error("PlacementPlan has a gap in resolved placement");
         }
         result.push_back(shard);

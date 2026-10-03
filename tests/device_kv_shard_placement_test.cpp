@@ -40,6 +40,10 @@ int main() {
     throws([&] { plan.place({0, second_id, {3, 4}, {second_storage, 0, sizeof(second_storage)}}); });
     throws([&] { plan.place({0, second_id, {4, 4}, {replacement_storage, 0, sizeof(replacement_storage)}}); });
     throws([&] { (void)plan.resolve({0, 9}); });
+    miinfer::PlacementPlan incomplete(context);
+    incomplete.place({0, second_id, {4, 4}, {second_storage, 0, sizeof(second_storage)}});
+    throws([&] { (void)incomplete.resolve({0, 8}); });
+    require(incomplete.resolve({4, 0}).empty(), "empty resolution");
     throws([&] { miinfer::DeviceKvShard(-1, first_id, {0, 4}, {first_storage, 0, sizeof(first_storage)}); });
     throws([&] { miinfer::DeviceKvShard(0, first_id, {0, 4}, {nullptr, 0, 4}); });
     std::cout << "DeviceKvShard placement tests passed\n";
