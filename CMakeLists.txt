@@ -37,6 +37,7 @@ set(MIINFER_RELEASE_TEST_TARGETS
     miinfer-device-kv-pool-test
     miinfer-device-kv-shard-placement-test
     miinfer-two-shard-placement-test
+    miinfer-two-shard-validation-test
     miinfer-qwen3-layer0-gpu-test
     miinfer-qwen3-kv-cache-gpu-test
     miinfer-qwen3-quant-kv-attention-test
@@ -220,6 +221,9 @@ if(MIINFER_ENABLE_HIP)
     add_executable(miinfer-two-shard-placement-test tests/two_shard_placement_test.cpp)
     target_link_libraries(miinfer-two-shard-placement-test PRIVATE miinfer_device_kv_pool miinfer_device_kv_shard)
     target_compile_options(miinfer-two-shard-placement-test PRIVATE -Wall -Wextra -Wpedantic)
+    add_executable(miinfer-two-shard-validation-test tests/two_shard_validation_test.cpp)
+    target_link_libraries(miinfer-two-shard-validation-test PRIVATE miinfer_device_kv_pool miinfer_device_kv_shard)
+    target_compile_options(miinfer-two-shard-validation-test PRIVATE -Wall -Wextra -Wpedantic)
 
     add_executable(miinfer-prefill-v2-recurrent-layer-bakeoff bench/prefill_v2_recurrent_layer_bakeoff.cpp)
     target_link_libraries(miinfer-prefill-v2-recurrent-layer-bakeoff PRIVATE miinfer_hip)
@@ -738,6 +742,8 @@ if(MIINFER_BUILD_TESTS)
         set_tests_properties(device-kv-pool PROPERTIES LABELS "gpu-required")
         add_test(NAME two-shard-placement COMMAND miinfer-two-shard-placement-test)
         set_tests_properties(two-shard-placement PROPERTIES LABELS "gpu-required")
+        add_test(NAME two-shard-validation COMMAND miinfer-two-shard-validation-test)
+        set_tests_properties(two-shard-validation PROPERTIES LABELS "gpu-required")
         add_test(NAME fp16-gemv-correctness COMMAND miinfer-fp16-gemv-test)
         set_tests_properties(fp16-gemv-correctness PROPERTIES LABELS "gpu-required")
         add_test(NAME q4-q8-gemv-correctness COMMAND miinfer-q4-q8-gemv-test)
