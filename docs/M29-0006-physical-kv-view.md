@@ -1,6 +1,6 @@
 # M29-0006 physical KV view
 
-Status: `M29_5_N1_PHYSICAL_VIEW_INTEGRATED_GENERATION_PASS_PERF_PENDING`
+Status: `M29_5_N1_PHYSICAL_VIEW_128K_SMOKE_PASS_PERF_PENDING`
 
 Contract base: `78adc52c85c05095e6cd0e5a034690b4df2b3b91`
 
@@ -31,11 +31,12 @@ Fresh integrated 4K/64K paired A/B measurements remain pending. The prior
 M29-0005 4K/64K timings remain baseline evidence only until rerun against this
 placement-backed candidate.
 
-The final candidate context envelope passed 32K, 64K, and 128K construction:
-128K used 31.07 GiB and retained 0.11 GiB observed device free memory. A
-candidate 128K prefill/decode/generation run was not repeated because the
-existing focused run takes tens of minutes; the retained M29-0003 result is
-baseline evidence, not a new M29-0006 execution claim.
+The final candidate context envelope passed 32K, 64K, and 128K construction.
+The focused candidate 128K prefill/decode run then completed with numerical
+validity `VALID`: 2,261,824.11 ms prefill (57.9 tok/s), 87.88 ms/token decode
+(11.4 tok/s), 31.07 GiB static VRAM, and 0.08 GiB observed free headroom.
+This was run from the candidate branch with `--only-128k`; it is a focused
+128K smoke, not the full 4K-to-128K matrix.
 
 ## N=2 same-MI50
 
