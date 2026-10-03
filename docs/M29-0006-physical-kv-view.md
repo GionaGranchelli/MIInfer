@@ -38,6 +38,12 @@ Wiring those existing placement objects into production cache allocation and
 retaining the current raw K/V layout requires more than the allowed tiny
 interface adaptation; it is not claimed in this change.
 
+The production PrefillV2 end-to-end harness was also run on the Z840 candidate
+and exited `134` with `State isolation failure: multi-turn generation
+diverged!`. Therefore no M29-0006 model-generation correctness pass or fresh
+candidate A/B performance qualification is claimed. The prior M29-0005 4K/64K
+timings remain baseline evidence only.
+
 ## N=2 same-MI50
 
 Placement and validation remain metadata/ownership tests only. Production
