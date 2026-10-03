@@ -1,6 +1,7 @@
 #include "miinfer/device_kv_pool.hpp"
 #include "miinfer/device_kv_shard.hpp"
 #include "miinfer/device_validation.hpp"
+#include "miinfer/hip_check.hpp"
 
 #include <hip/hip_runtime_api.h>
 
