@@ -35,6 +35,7 @@ set(MIINFER_RELEASE_TEST_TARGETS
     miinfer-qwen35-conv-batch-test
     miinfer-context-space-test
     miinfer-device-kv-pool-test
+    miinfer-device-kv-shard-placement-test
     miinfer-qwen3-layer0-gpu-test
     miinfer-qwen3-kv-cache-gpu-test
     miinfer-qwen3-quant-kv-attention-test
@@ -153,6 +154,16 @@ target_compile_options(miinfer_context_space PRIVATE -Wall -Wextra -Wpedantic)
 add_executable(miinfer-context-space-test tests/context_space_test.cpp)
 target_link_libraries(miinfer-context-space-test PRIVATE miinfer_context_space)
 target_compile_options(miinfer-context-space-test PRIVATE -Wall -Wextra -Wpedantic)
+
+add_library(miinfer_device_kv_shard STATIC src/device_kv_shard.cpp)
+target_link_libraries(miinfer_device_kv_shard PUBLIC miinfer_context_space)
+target_include_directories(miinfer_device_kv_shard PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_compile_features(miinfer_device_kv_shard PUBLIC cxx_std_20)
+target_compile_options(miinfer_device_kv_shard PRIVATE -Wall -Wextra -Wpedantic)
+
+add_executable(miinfer-device-kv-shard-placement-test tests/device_kv_shard_placement_test.cpp)
+target_link_libraries(miinfer-device-kv-shard-placement-test PRIVATE miinfer_device_kv_shard)
+target_compile_options(miinfer-device-kv-shard-placement-test PRIVATE -Wall -Wextra -Wpedantic)
 
 add_executable(miinfer-openai-api-test tests/openai_api_test.cpp)
 target_link_libraries(miinfer-openai-api-test PRIVATE miinfer_openai_api)
@@ -701,6 +712,8 @@ if(MIINFER_BUILD_TESTS)
     set_tests_properties(qwen3-primitives-host PROPERTIES LABELS "host-only")
     add_test(NAME context-space-host COMMAND miinfer-context-space-test)
     set_tests_properties(context-space-host PROPERTIES LABELS "host-only")
+    add_test(NAME device-kv-shard-placement-host COMMAND miinfer-device-kv-shard-placement-test)
+    set_tests_properties(device-kv-shard-placement-host PROPERTIES LABELS "host-only")
     add_test(NAME qwen3-layer0-host COMMAND miinfer-qwen3-layer0-test)
     set_tests_properties(qwen3-layer0-host PROPERTIES LABELS "host-only")
     add_test(NAME qwen3-kv-cache-host COMMAND miinfer-qwen3-kv-cache-test)
