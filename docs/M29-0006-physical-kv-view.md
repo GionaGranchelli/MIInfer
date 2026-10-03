@@ -6,7 +6,7 @@ Contract base: `78adc52c85c05095e6cd0e5a034690b4df2b3b91`
 
 Contract commit: `b71d08600c586927a7b4c07bbb3c7eef15a57d44`
 
-N=1 integration commit: `7e58787`
+N=1 integration commit: `024f1c2`
 
 ## N=1
 
@@ -24,12 +24,18 @@ generation for P64/P512/P2048 after the minimal deterministic RNG reset fix in
 `generate()`. The same harness failed on the M29-0005 base, so that fix is
 independently attributable to the pre-existing harness defect.
 
-Candidate measurements were P64: 550.39 ms TTFT / 33.87 ms decode step,
-P512: 2071.04 ms / 34.66 ms, and P2048: 8535.27 ms / 35.86 ms.
+The final candidate rerun measured P64: 550.22 ms TTFT / 34.00 ms decode
+step, P512: 2071.88 ms / 34.69 ms, and P2048: 8538.58 ms / 35.87 ms.
 
 Fresh integrated 4K/64K paired A/B measurements remain pending. The prior
 M29-0005 4K/64K timings remain baseline evidence only until rerun against this
 placement-backed candidate.
+
+The final candidate context envelope passed 32K, 64K, and 128K construction:
+128K used 31.07 GiB and retained 0.11 GiB observed device free memory. A
+candidate 128K prefill/decode/generation run was not repeated because the
+existing focused run takes tens of minutes; the retained M29-0003 result is
+baseline evidence, not a new M29-0006 execution claim.
 
 ## N=2 same-MI50
 

@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
         std::uint32_t seed;
     };
 
-    const std::vector<ContextTestConfig> test_configs = {
+    const std::vector<ContextTestConfig> all_test_configs = {
         {"4K Context",    4096,   128,  32768, 42},
         {"8K Context",    8192,   128,  32768, 77},
         {"16K Context",  16384,   128,  32768, 99},
@@ -91,6 +91,10 @@ int main(int argc, char** argv) {
         {"64K Context",  65536,   128,  66000, 456},
         {"128K Context", 131072,  128, 131200, 789},
     };
+    const bool only_128k = argc > 2 && std::string(argv[2]) == "--only-128k";
+    const std::vector<ContextTestConfig> test_configs = only_128k
+        ? std::vector<ContextTestConfig>{all_test_configs.back()}
+        : all_test_configs;
 
     std::vector<BenchmarkResult> results;
 
