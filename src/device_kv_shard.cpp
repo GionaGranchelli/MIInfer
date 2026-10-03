@@ -145,4 +145,31 @@ std::vector<DeviceKvShard> PlacementPlan::resolve(LogicalRange range) const {
     return result;
 }
 
+std::vector<DeviceKvShard> PlacementPlan::resolve(LogicalRange range, KvHeadRange heads) const {
+    if (heads.count == 0 || heads.begin > std::numeric_limits<std::size_t>::max() - heads.count) {
+        throw std::invalid_argument("PlacementPlan expected KV-head range is invalid");
+    }
+    const auto result = resolve(range);
+    LogicalPageId current_page = 0;
+    std::size_t covered = heads.begin;
+    for (const auto& shard : result) {
+        if (shard.logical_page() != current_page) {
+            if (current_page != 0 && covered != heads.end()) {
+                throw std::logic_error("PlacementPlan has incomplete KV-head coverage");
+            }
+            current_page = shard.logical_page();
+            covered = heads.begin;
+        }
+        const auto shard_heads = shard.kv_heads();
+        if (shard_heads.begin != covered || shard_heads.end() > heads.end()) {
+            throw std::logic_error("PlacementPlan has overlapping or incomplete KV-head coverage");
+        }
+        covered = shard_heads.end();
+    }
+    if (current_page == 0 || covered != heads.end()) {
+        throw std::logic_error("PlacementPlan has incomplete KV-head coverage");
+    }
+    return result;
+}
+
 }  // namespace miinfer

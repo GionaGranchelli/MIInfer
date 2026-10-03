@@ -54,6 +54,7 @@ public:
     void replace(DeviceKvShard shard);
     [[nodiscard]] std::size_t clear_page(LogicalPageId logical_page);
     [[nodiscard]] std::vector<DeviceKvShard> resolve(LogicalRange range) const;
+    [[nodiscard]] std::vector<DeviceKvShard> resolve(LogicalRange range, KvHeadRange heads) const;
     [[nodiscard]] std::size_t size() const noexcept { return shards_.size(); }
 
 private:
