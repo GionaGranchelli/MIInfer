@@ -1,42 +1,25 @@
 # M29-0006 physical KV view
 
-Status: `M29_5_N1_PHYSICAL_VIEW_CONTRACT_ONLY`
+Status: `M29_5_N1_PHYSICAL_VIEW_INTEGRATED_GENERATION_GATE_BLOCKED`
 
 Contract base: `78adc52c85c05095e6cd0e5a034690b4df2b3b91`
 
 Contract commit: `b71d08600c586927a7b4c07bbb3c7eef15a57d44`
 
-N=1 integration commit: `5325fc49c992ed1884ff371d66e22147d26cd645`
+N=1 integration commit: `f6284ec`
 
 ## N=1
 
 `PhysicalKvView` is now the explicit kernel-facing type at all four attention
-entry points (forward, decode, and their profiled variants). `view()` still
-resolves the legacy raw pointers once and populates the single shard with
-`head_begin = 0` and `head_count = kKvHeads`. No per-element logical lookup,
-allocation, copy, or synchronization was added.
+entry points (forward, decode, and their profiled variants). Production
+`AttentionLayerKvCacheStorage` allocates one placement-owned `DeviceKvPool`
+block, registers a full-capacity `ContextSpace` page and `PlacementPlan` shard
+for all KV heads, and caches the resulting raw-pointer view. No per-element
+logical lookup, allocation, copy, or synchronization was added.
 
-The Z840 physical build/smoke result is pending because `192.168.68.54:22`
-is currently timing out. The alternate Z840 endpoint `100.118.66.80` is
-reachable and the contract test passes there, but this is not yet a production
-placement integration qualification.
-
-### A-side boundary
-
-The current `PrefillV2Model` constructs `AttentionLayerKvCacheStorage` with
-direct `hipMalloc` ownership and calls `storage.view()` at each layer. The
-production model does not currently own or connect a `ContextSpace`,
-`PlacementPlan`, or `DeviceKvPool`. Therefore the present change makes the
-kernel-facing type explicit and proves the N=1 descriptor is pointer-equivalent
-to the old view, but it does not yet satisfy the full placement-resolved chain.
-
-The precise A-side classification is:
-
-`M29_5_N1_PHYSICAL_VIEW_BLOCKED_PRODUCTION_PLACEMENT_NOT_WIRED`
-
-Wiring those existing placement objects into production cache allocation and
-retaining the current raw K/V layout requires more than the allowed tiny
-interface adaptation; it is not claimed in this change.
+The Z840 alternate endpoint `100.118.66.80` is reachable. The physical-view,
+HIP smoke, ContextSpace, and placement tests pass there. The N=1 exit remains
+blocked by the model-level generation gate below.
 
 The production PrefillV2 end-to-end harness was also run on the Z840 candidate
 and exited `134` with `State isolation failure: multi-turn generation
