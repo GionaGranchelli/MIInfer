@@ -92,9 +92,12 @@ int main(int argc, char** argv) {
         {"128K Context", 131072,  128, 131200, 789},
     };
     const bool only_128k = argc > 2 && std::string(argv[2]) == "--only-128k";
+    const bool only_4k_64k = argc > 2 && std::string(argv[2]) == "--only-4k-64k";
     const std::vector<ContextTestConfig> test_configs = only_128k
         ? std::vector<ContextTestConfig>{all_test_configs.back()}
-        : all_test_configs;
+        : only_4k_64k
+            ? std::vector<ContextTestConfig>{all_test_configs.front(), all_test_configs[4]}
+            : all_test_configs;
 
     std::vector<BenchmarkResult> results;
 
