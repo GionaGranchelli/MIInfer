@@ -1,12 +1,12 @@
 # M29-0006 physical KV view
 
-Status: `M29_5_N1_PHYSICAL_VIEW_INTEGRATED_GENERATION_GATE_BLOCKED`
+Status: `M29_5_N1_PHYSICAL_VIEW_INTEGRATED_GENERATION_PASS_PERF_PENDING`
 
 Contract base: `78adc52c85c05095e6cd0e5a034690b4df2b3b91`
 
 Contract commit: `b71d08600c586927a7b4c07bbb3c7eef15a57d44`
 
-N=1 integration commit: `f6284ec`
+N=1 integration commit: `7e58787`
 
 ## N=1
 
@@ -18,14 +18,18 @@ for all KV heads, and caches the resulting raw-pointer view. No per-element
 logical lookup, allocation, copy, or synchronization was added.
 
 The Z840 alternate endpoint `100.118.66.80` is reachable. The physical-view,
-HIP smoke, ContextSpace, and placement tests pass there. The N=1 exit remains
-blocked by the model-level generation gate below.
+HIP smoke, ContextSpace, and placement tests pass there. The model-level
+PrefillV2 harness now passes state isolation, 16-step decode continuity, and
+generation for P64/P512/P2048 after the minimal deterministic RNG reset fix in
+`generate()`. The same harness failed on the M29-0005 base, so that fix is
+independently attributable to the pre-existing harness defect.
 
-The production PrefillV2 end-to-end harness was also run on the Z840 candidate
-and exited `134` with `State isolation failure: multi-turn generation
-diverged!`. Therefore no M29-0006 model-generation correctness pass or fresh
-candidate A/B performance qualification is claimed. The prior M29-0005 4K/64K
-timings remain baseline evidence only.
+Candidate measurements were P64: 550.39 ms TTFT / 33.87 ms decode step,
+P512: 2071.04 ms / 34.66 ms, and P2048: 8535.27 ms / 35.86 ms.
+
+Fresh integrated 4K/64K paired A/B measurements remain pending. The prior
+M29-0005 4K/64K timings remain baseline evidence only until rerun against this
+placement-backed candidate.
 
 ## N=2 same-MI50
 
