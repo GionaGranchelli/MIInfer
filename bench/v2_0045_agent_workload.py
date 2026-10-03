@@ -248,13 +248,13 @@ def append_tool_exchange(root, messages, response):
 def m30_plan(index):
     phase = (index - 1) // 10
     paths = (
-        ("README.md", 1, 120),
-        ("docs/architecture.md", 1, 180),
-        ("docs/interactive-serving.md", 1, 180),
-        ("include/miinfer/prefill_v2/model.hpp", 1, 220),
-        ("src/prefill_v2/model.cpp", 740, 900),
-        ("src/openai_api.cpp", 300, 370),
-        ("tools/miinfer_cli.cpp", 5150, 5680),
+        ("README.md", 1, 70),
+        ("docs/architecture.md", 1, 80),
+        ("docs/interactive-serving.md", 1, 80),
+        ("include/miinfer/prefill_v2/model.hpp", 1, 100),
+        ("src/prefill_v2/model.cpp", 740, 820),
+        ("src/openai_api.cpp", 300, 340),
+        ("tools/miinfer_cli.cpp", 5150, 5240),
     )
     path, start, end = paths[(index - 1) % len(paths)]
     phases = (
