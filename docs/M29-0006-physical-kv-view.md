@@ -1,6 +1,6 @@
 # M29-0006 physical KV view
 
-Status: `M29_5_N1_PHYSICAL_VIEW_128K_SMOKE_PASS_PERF_PENDING`
+Status: `M29_5_N1_PHYSICAL_VIEW_QUALIFIED`
 
 Contract base: `78adc52c85c05095e6cd0e5a034690b4df2b3b91`
 
@@ -27,9 +27,14 @@ independently attributable to the pre-existing harness defect.
 The final candidate rerun measured P64: 550.22 ms TTFT / 34.00 ms decode
 step, P512: 2071.88 ms / 34.69 ms, and P2048: 8538.58 ms / 35.87 ms.
 
-Fresh integrated 4K/64K paired A/B measurements remain pending. The prior
-M29-0005 4K/64K timings remain baseline evidence only until rerun against this
-placement-backed candidate.
+Fresh same-host paired A/B measurements completed on the Z840 with the same
+MI50 device and model. Baseline source was detached pre-fastpath commit
+`31ae821`; candidate source was the placement-backed branch after the focused
+benchmark-mode commit. Raw decode results were baseline/candidate 38.09/38.21
+ms at 4K and 60.61/60.87 ms at 64K, for deltas of +0.315% and +0.429%.
+Raw prefill results were 17721.49/17696.10 ms at 4K and 604565.16/604121.32
+ms at 64K, for deltas of -0.143% and -0.073%. Both runs were numerically
+valid. The decode regression gate therefore passes at <=1%.
 
 The final candidate context envelope passed 32K, 64K, and 128K construction.
 The focused candidate 128K prefill/decode run then completed with numerical
