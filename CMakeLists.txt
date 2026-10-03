@@ -213,7 +213,7 @@ if(MIINFER_ENABLE_HIP)
         $<$<COMPILE_LANGUAGE:HIP>:-Wall;-Wextra;-fgpu-default-stream=per-thread>
     )
     add_library(miinfer_device_kv_pool INTERFACE)
-    target_link_libraries(miinfer_device_kv_pool PUBLIC miinfer_hip)
+    target_link_libraries(miinfer_device_kv_pool INTERFACE miinfer_hip)
     add_executable(miinfer-device-kv-pool-test tests/device_kv_pool_test.cpp)
     target_link_libraries(miinfer-device-kv-pool-test PRIVATE miinfer_device_kv_pool)
     target_compile_options(miinfer-device-kv-pool-test PRIVATE -Wall -Wextra -Wpedantic)
