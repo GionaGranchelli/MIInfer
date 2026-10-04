@@ -883,7 +883,9 @@ GenerateStats PrefillV2Model::generate(
     if (options.cache_prefix_after) {
         std::size_t save_len = (options.cache_prefix_len > 0) ? std::min(options.cache_prefix_len, prompt.size()) : prompt.size();
         if (save_len == prompt.size()) {
-            reusable_context_.save(prompt, recurrent_states_, d_pong_ + (last_chunk - 1) * kHidden, stream);
+            if (!(is_reuse && suffix_len == 0)) {
+                reusable_context_.save(prompt, recurrent_states_, d_pong_ + (last_chunk - 1) * kHidden, stream);
+            }
         } else {
             // A single forward pass leaves state at prompt.size(), not save_len.
             reusable_context_.clear();
