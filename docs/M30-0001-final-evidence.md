@@ -40,4 +40,6 @@ The candidate log contains genuine suffix-only reuse, including request 247: 81,
 
 The 82-request run is evidence that the mechanism operated, but it is not a valid apples-to-apples 86-request performance qualification. The candidate and baseline tool-call trajectories diverged at multiple logical turns; therefore the higher candidate prompt and wall totals cannot be attributed solely to the reuse implementation. No M30-0001 success-gate claim is made from this run.
 
+The first prompt already differed before any candidate reuse hit: the candidate recorded 5,372 prompt tokens, while the baseline recorded 5,354. The workload embeds repository excerpts in its initial context, including the first 6,000 bytes of `include/miinfer/prefill_v2/model.hpp`; that excerpt changed between the baseline and candidate commits. Consequently, later tool-call trajectory differences and the 82-versus-86 request count cannot isolate reuse behavior. A valid rerun must execute the candidate server with the frozen M30-0000 workload context (including the baseline source excerpts and tool results).
+
 The 32 GiB Machinist 27B runtime attempt remains separately blocked by HIP out-of-memory during recurrent-layer construction and is not used as correctness evidence for the Z840 run.
