@@ -135,3 +135,29 @@ its telemetry, but does not prove that the newer `PrefillV2Model` reusable
 context is the path serving requests. Wiring those two paths together would be
 a separate integration change and is intentionally not inferred from the
 green focused test.
+
+## Bounded no-reuse attribution probe
+
+To quantify the existing production path without starting another 86-request
+run, the first 10 fixed-transcript requests were replayed twice on the same
+Z840: once with the default session reuse and once with `--no-session-reuse`.
+Both runs carried the same 94,524 logical prompt tokens.
+
+| Metric, first 10 requests | Reuse enabled | `--no-session-reuse` |
+|---|---:|---:|
+| Physically prefetched tokens | 33,267 | 94,524 |
+| Prefill wall sum | 153,779.7 ms | 425,745.3 ms |
+| Total request wall sum | 358,311.5 ms | 629,583.6 ms |
+| Reuse hits | 6 | 0 |
+
+The controlled differences are 64.8% fewer physical prompt tokens, 63.9% less
+prefill time, and 43.1% less total request wall time with reuse enabled. This
+confirms that the production checkpoint path is materially effective. It is a
+bounded attribution probe, not a substitute for the required 40-turn
+canonical qualification, and it does not isolate the M30 changes from the
+pre-existing `Qwen35RuntimeEngine` session checkpoint implementation.
+
+Artifacts:
+
+- `results/m30-0001-noreuse-probe.json`
+- `results/m30-0001-noreuse-probe-server.log`
