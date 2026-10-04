@@ -125,3 +125,13 @@ differences cannot be attributed to the M30 changes. A meaningful attribution
 experiment requires either a controlled `--no-session-reuse` production
 baseline or an isolated GDN-only comparison with the existing GQA cache held
 constant; neither is claimed here.
+
+The code-coverage boundary is also explicit: the focused lifecycle test
+instantiates `PrefillV2Model`, while `miinfer serve` routes through
+`Qwen35RuntimeEngine`. The latter has its own pre-existing session-checkpoint
+implementation that snapshots recurrent state/history and attention KV. The
+canonical server run therefore validates the production checkpoint path and
+its telemetry, but does not prove that the newer `PrefillV2Model` reusable
+context is the path serving requests. Wiring those two paths together would be
+a separate integration change and is intentionally not inferred from the
+green focused test.
