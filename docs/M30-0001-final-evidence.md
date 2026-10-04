@@ -161,3 +161,16 @@ Artifacts:
 
 - `results/m30-0001-noreuse-probe.json`
 - `results/m30-0001-noreuse-probe-server.log`
+
+An exploratory full no-reuse replay was then started to test whether a strict
+86-request cold baseline was economically practical. It was stopped after
+14/86 requests: all 14 were cold, 152,811 logical tokens required 152,811
+physical tokens, and the partial run consumed 1,039,380.6 ms of request wall
+time. This is intentionally non-qualifying evidence; continuing it would
+project several additional hours while duplicating the attribution already
+established by the bounded probe.
+
+Partial artifacts:
+
+- `results/m30-0001-noreuse-partial.json`
+- `results/m30-0001-noreuse-partial-server.log`
