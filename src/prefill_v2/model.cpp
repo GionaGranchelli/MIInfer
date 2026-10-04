@@ -763,9 +763,9 @@ GenerateStats PrefillV2Model::generate(
 
     if (options.enable_prefix_reuse && reusable_context_.has_valid_prefix()) {
         auto match = reusable_context_.check_match(prompt, model_name_, quantization_);
-        // Exact-prefix checkpoints keep recurrent/KV state, not the final hidden vector for logits.
         if (match == ReusableContext::MatchResult::ExactMatch
-            && reusable_context_.prefix_length() < prompt_len) {
+            && (reusable_context_.prefix_length() < prompt_len
+                || reusable_context_.has_final_hidden())) {
             is_reuse = true;
             prefix_len = reusable_context_.prefix_length();
             suffix_len = prompt_len - prefix_len;
@@ -775,9 +775,15 @@ GenerateStats PrefillV2Model::generate(
     if (!is_reuse && options.enable_prefix_reuse && !options.persistent_session_dir.empty()) {
         std::uint32_t disk_prefix = 0;
         if (restore_matching_session(options.persistent_session_dir, prompt, disk_prefix, stream)) {
-            is_reuse = true;
-            prefix_len = disk_prefix;
-            suffix_len = prompt_len - prefix_len;
+            if (disk_prefix < prompt_len) {
+                is_reuse = true;
+                prefix_len = disk_prefix;
+                suffix_len = prompt_len - prefix_len;
+            } else {
+                // Disk sessions do not yet carry the boundary hidden vector;
+                // discard the loaded state and use the correct full path.
+                reset_state();
+            }
         }
     }
 
@@ -876,8 +882,13 @@ GenerateStats PrefillV2Model::generate(
     // 1b. If requested, capture/update the prefix checkpoint immediately after prefill
     if (options.cache_prefix_after) {
         std::size_t save_len = (options.cache_prefix_len > 0) ? std::min(options.cache_prefix_len, prompt.size()) : prompt.size();
-        reusable_context_.save(prompt.subspan(0, save_len), recurrent_states_, stream);
-        if (!options.persistent_session_dir.empty() && save_len >= 256) {
+        if (save_len == prompt.size()) {
+            reusable_context_.save(prompt, recurrent_states_, d_pong_ + (last_chunk - 1) * kHidden, stream);
+        } else {
+            // A single forward pass leaves state at prompt.size(), not save_len.
+            reusable_context_.clear();
+        }
+        if (!options.persistent_session_dir.empty() && save_len == prompt.size() && save_len >= 256) {
             const auto prefix_sub = prompt.subspan(0, save_len);
             const std::uint64_t token_hash = compute_token_sequence_hash(prefix_sub);
             const std::string filename = PersistentSession::format_session_filename(
@@ -894,8 +905,14 @@ GenerateStats PrefillV2Model::generate(
         }
     }
 
-    // 2. Compute logits for final prompt token (at offset (last_chunk - 1) * kHidden in d_pong_)
-    compute_logits(d_pong_ + (last_chunk - 1) * kHidden, d_logits_, stream);
+    // 2. Compute logits for the final prompt token. A zero-suffix exact hit
+    // restores the cached boundary hidden vector without replaying the prefix.
+    if (is_reuse && suffix_len == 0) {
+        reusable_context_.restore_final_hidden(d_pong_, stream);
+        compute_logits(d_pong_, d_logits_, stream);
+    } else {
+        compute_logits(d_pong_ + (last_chunk - 1) * kHidden, d_logits_, stream);
+    }
 
     // 3. First token via host sampling (TTFT)
     MIINFER_HIP_CHECK(hipMemcpyAsync(

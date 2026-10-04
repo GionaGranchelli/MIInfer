@@ -81,17 +81,18 @@ private:
 class ReusableContext {
 public:
     ReusableContext(std::string model_id = "Qwen3.8-27B", std::string quantization = "Q4_K_M");
-    ~ReusableContext() = default;
+    ~ReusableContext();
 
     ReusableContext(const ReusableContext&) = delete;
     ReusableContext& operator=(const ReusableContext&) = delete;
-    ReusableContext(ReusableContext&&) noexcept = default;
-    ReusableContext& operator=(ReusableContext&&) noexcept = default;
+    ReusableContext(ReusableContext&& other) noexcept;
+    ReusableContext& operator=(ReusableContext&& other) noexcept;
 
     // Save prefix state
     void save(
         std::span<const std::uint32_t> prefix_tokens,
         const std::vector<RecurrentLayerStateStorage>& active_states,
+        const float* final_hidden = nullptr,
         hipStream_t stream = nullptr);
 
     // Match evaluation results
@@ -113,6 +114,13 @@ public:
     // Restore GDN states to active model
     void restore_gdn_states(std::vector<RecurrentLayerStateStorage>& active_states, hipStream_t stream = nullptr) const;
 
+    // Restore the normalized hidden vector for the cached boundary. This is
+    // the zero-suffix logits input; it must not advance model state.
+    void restore_final_hidden(float* destination, hipStream_t stream = nullptr) const;
+
+    [[nodiscard]] bool has_final_hidden() const noexcept { return final_hidden_valid_; }
+    void download_final_hidden(std::vector<float>& destination, hipStream_t stream = nullptr) const;
+
     // Reset / clear cache
     void clear();
 
@@ -126,6 +134,8 @@ private:
     PrefixFingerprint fingerprint_;
     std::vector<std::uint32_t> cached_tokens_;
     GdnCheckpointStorage gdn_checkpoint_;
+    float* d_final_hidden_ = nullptr;
+    bool final_hidden_valid_ = false;
 };
 
 } // namespace miinfer::prefill_v2

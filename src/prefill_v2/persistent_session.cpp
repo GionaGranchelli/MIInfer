@@ -261,7 +261,9 @@ bool PersistentSession::load_from_file(
     }
 
     // Also update model's in-memory reusable_context_
-    model.reusable_context().save(out_prefix_tokens, model.recurrent_states(), stream);
+    // The legacy session format has no boundary hidden payload; keep the
+    // restored state usable for nonzero suffixes, but not for zero-suffix hits.
+    model.reusable_context().save(out_prefix_tokens, model.recurrent_states(), nullptr, stream);
 
     return true;
 }
