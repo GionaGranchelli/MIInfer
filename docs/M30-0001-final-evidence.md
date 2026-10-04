@@ -67,4 +67,42 @@ rerun proves live GQA+GDN reuse and memory behavior under the frozen initial
 context, but it does not support an apples-to-apples wall-clock or token
 reduction claim against M30-0000.
 
+## Fixed-transcript 86-request replay
+
+To remove model-response trajectory drift from the comparison, the corrected
+M30-0000 assistant/tool transcript was replayed against the candidate while
+advancing the request history from the frozen baseline transcript. This is a
+valid 40-turn/86-request run, but it is a performance replay rather than a
+second output-correctness oracle: canonical focused correctness is covered by
+the lifecycle tests above.
+
+Artifacts:
+
+- `results/m30-0001-fixed-replay.json`
+- `results/m30-0001-fixed-replay-server.log`
+- `bench/m30_fixed_transcript_replay.py`
+
+| Metric | M30-0000 baseline | M30-0001 fixed replay |
+|---|---:|---:|
+| Requests | 86 | 86 |
+| Logical prompt tokens | 3,651,780 | 3,631,536 |
+| Physically prefetched tokens | 1,582,245 | 1,574,774 |
+| Reused prefix tokens | 2,069,535 | 2,056,762 |
+| Reuse hits | baseline telemetry unavailable | 53 |
+| Prefill wall sum | 10,810,661.9 ms | 10,773,544.6 ms |
+| Total request wall sum | 12,918,848.7 ms | 12,868,518.2 ms |
+| Generated tokens | 41,114 | 40,911 |
+| Peak VRAM | 34,323,197,952 bytes | 34,323,324,928 bytes |
+
+The fixed replay met the 40-turn/86-request and minimum-generation gates. It
+reused 99.38% of the baseline's exposed repeated-prefix total and executed
+1,574,774 suffix/new-prefill tokens, with 33 cold/fallback requests and 53
+reuse hits. However, the measured physical-prefill reduction is only 7,471
+tokens (0.47%), and total request wall reduction is 50,330.5 ms (0.39%). The
+candidate also reports 20,244 fewer logical prompt tokens than the baseline
+artifact. Therefore this run proves exact-trajectory telemetry and live reuse,
+but does not demonstrate a meaningful canonical performance improvement. The
+implementation remains focused-green; the M30-0001 canonical success gate is
+not claimed as passed.
+
 The 32 GiB Machinist 27B runtime attempt remains separately blocked by HIP out-of-memory during recurrent-layer construction and is not used as correctness evidence for the Z840 run.
