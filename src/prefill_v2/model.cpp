@@ -798,6 +798,9 @@ GenerateStats PrefillV2Model::generate(
         stats.reuse_hit = true;
         stats.prefix_tokens_reused = prefix_len;
         stats.suffix_tokens_dispatched = suffix_len;
+        stats.suffix_tokens_executed = suffix_len;
+        stats.prefix_tokens_replayed = 0;
+        stats.checkpoint_position = prefix_len;
         stats.gqa_kv_reused_tokens = prefix_len;
         stats.gdn_checkpoint_position = prefix_len;
 
@@ -862,6 +865,9 @@ GenerateStats PrefillV2Model::generate(
         stats.reuse_hit = false;
         stats.prefix_tokens_reused = 0;
         stats.suffix_tokens_dispatched = prompt_len;
+        stats.suffix_tokens_executed = prompt_len;
+        stats.prefix_tokens_replayed = prompt_len;
+        stats.checkpoint_position = 0;
 
         // Cold prefill sequence using native macro scheduler (Macro Tile = 512)
         std::uint32_t pos = 0;

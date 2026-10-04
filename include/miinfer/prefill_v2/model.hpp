@@ -61,6 +61,9 @@ struct GenerateStats {
     bool reuse_hit = false;
     std::uint32_t prefix_tokens_reused = 0;
     std::uint32_t suffix_tokens_dispatched = 0;
+    std::uint32_t suffix_tokens_executed = 0;
+    std::uint32_t prefix_tokens_replayed = 0;
+    std::uint32_t checkpoint_position = 0;
     std::uint32_t gqa_kv_reused_tokens = 0;
     std::uint32_t gdn_checkpoint_position = 0;
     double restore_ms = 0.0;

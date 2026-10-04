@@ -530,6 +530,9 @@ struct RuntimeGenerateStats {
     std::size_t reused_prefix_tokens = 0;
     std::size_t common_prefix_tokens = 0;
     std::size_t suffix_tokens_dispatched = 0;
+    std::size_t suffix_tokens_executed = 0;
+    std::size_t prefix_tokens_replayed = 0;
+    std::size_t checkpoint_position = 0;
     std::size_t gqa_kv_reused_tokens = 0;
     std::size_t gdn_checkpoint_position = 0;
     double restore_ms = 0.0;
@@ -5205,6 +5208,9 @@ int cmd_serve(int argc, char** argv) {
                       << ",\"reuse_hit\":" << (stats.reuse_hit ? "true" : "false")
                       << ",\"reused_prefix_tokens\":" << stats.reused_prefix_tokens
                       << ",\"suffix_tokens_dispatched\":" << stats.suffix_tokens_dispatched
+                      << ",\"suffix_tokens_executed\":" << stats.suffix_tokens_executed
+                      << ",\"prefix_tokens_replayed\":" << stats.prefix_tokens_replayed
+                      << ",\"checkpoint_position\":" << stats.checkpoint_position
                       << ",\"gqa_kv_reused_tokens\":" << stats.gqa_kv_reused_tokens
                       << ",\"gdn_checkpoint_position\":" << stats.gdn_checkpoint_position
                       << ",\"restore_ms\":" << stats.restore_ms
@@ -5477,6 +5483,9 @@ int cmd_serve(int argc, char** argv) {
                 stats.reused_prefix_tokens = v2_stats.prefix_tokens_reused;
                 stats.common_prefix_tokens = v2_stats.prefix_tokens_reused;
                 stats.suffix_tokens_dispatched = v2_stats.suffix_tokens_dispatched;
+                stats.suffix_tokens_executed = v2_stats.suffix_tokens_executed;
+                stats.prefix_tokens_replayed = v2_stats.prefix_tokens_replayed;
+                stats.checkpoint_position = v2_stats.checkpoint_position;
                 stats.gqa_kv_reused_tokens = v2_stats.gqa_kv_reused_tokens;
                 stats.gdn_checkpoint_position = v2_stats.gdn_checkpoint_position;
                 stats.restore_ms = v2_stats.restore_ms;
@@ -5514,6 +5523,9 @@ int cmd_serve(int argc, char** argv) {
                           << ",\"reuse_hit\":" << (stats.reuse_hit ? "true" : "false")
                           << ",\"reused_prefix_tokens\":" << stats.reused_prefix_tokens
                           << ",\"suffix_tokens_dispatched\":" << stats.suffix_tokens_dispatched
+                          << ",\"suffix_tokens_executed\":" << stats.suffix_tokens_executed
+                          << ",\"prefix_tokens_replayed\":" << stats.prefix_tokens_replayed
+                          << ",\"checkpoint_position\":" << stats.checkpoint_position
                           << ",\"gqa_kv_reused_tokens\":" << stats.gqa_kv_reused_tokens
                           << ",\"gdn_checkpoint_position\":" << stats.gdn_checkpoint_position
                           << ",\"restore_ms\":" << stats.restore_ms
@@ -5618,9 +5630,12 @@ int cmd_serve(int argc, char** argv) {
             stats.reuse_hit = v2_stats.reuse_hit;
             stats.prefill_processed_tokens = v2_stats.reuse_hit
                 ? v2_stats.suffix_tokens_dispatched : v2_stats.prompt_tokens.size();
-            stats.reused_prefix_tokens = v2_stats.prefix_tokens_reused;
-            stats.common_prefix_tokens = v2_stats.prefix_tokens_reused;
-            stats.suffix_tokens_dispatched = v2_stats.suffix_tokens_dispatched;
+                stats.reused_prefix_tokens = v2_stats.prefix_tokens_reused;
+                stats.common_prefix_tokens = v2_stats.prefix_tokens_reused;
+                stats.suffix_tokens_dispatched = v2_stats.suffix_tokens_dispatched;
+                stats.suffix_tokens_executed = v2_stats.suffix_tokens_executed;
+                stats.prefix_tokens_replayed = v2_stats.prefix_tokens_replayed;
+                stats.checkpoint_position = v2_stats.checkpoint_position;
             stats.gqa_kv_reused_tokens = v2_stats.gqa_kv_reused_tokens;
             stats.gdn_checkpoint_position = v2_stats.gdn_checkpoint_position;
             stats.restore_ms = v2_stats.restore_ms;
@@ -5670,8 +5685,11 @@ int cmd_serve(int argc, char** argv) {
                       << ",\"prefill_ms\":" << stats.prefill_ms
                       << ",\"prefill_processed_tokens\":" << stats.prefill_processed_tokens
                       << ",\"reuse_hit\":" << (stats.reuse_hit ? "true" : "false")
-                      << ",\"reused_prefix_tokens\":" << stats.reused_prefix_tokens
-                      << ",\"suffix_tokens_dispatched\":" << stats.suffix_tokens_dispatched
+                          << ",\"reused_prefix_tokens\":" << stats.reused_prefix_tokens
+                          << ",\"suffix_tokens_dispatched\":" << stats.suffix_tokens_dispatched
+                          << ",\"suffix_tokens_executed\":" << stats.suffix_tokens_executed
+                          << ",\"prefix_tokens_replayed\":" << stats.prefix_tokens_replayed
+                          << ",\"checkpoint_position\":" << stats.checkpoint_position
                       << ",\"gqa_kv_reused_tokens\":" << stats.gqa_kv_reused_tokens
                       << ",\"gdn_checkpoint_position\":" << stats.gdn_checkpoint_position
                       << ",\"restore_ms\":" << stats.restore_ms
