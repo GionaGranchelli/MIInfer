@@ -106,3 +106,22 @@ implementation remains focused-green; the M30-0001 canonical success gate is
 not claimed as passed.
 
 The 32 GiB Machinist 27B runtime attempt remains separately blocked by HIP out-of-memory during recurrent-layer construction and is not used as correctness evidence for the Z840 run.
+
+## Baseline qualification boundary
+
+The fixed replay exposed an additional limitation in the comparison itself.
+M30-0000 was described as a measurement-only baseline, but its production
+server was already started with session reuse enabled. The serving adapter
+defaults `session_reuse` to enabled, and its existing `SessionCheckpoint`
+stores/restores both GDN recurrent state/history and GQA key/value state. The
+baseline artifact consequently already reports 53 `cache_hit` requests and
+1,582,245 physically prefetched tokens; M30-0001 reports the corresponding
+reuse path as 53 `reuse_hit` requests and 1,574,774 new-prefill tokens.
+
+Therefore the fixed replay is exact-trajectory evidence for the current
+production reuse path, but it is not a discriminating before/after experiment
+for the M30 implementation. The small 0.47% physical and 0.39% wall-time
+differences cannot be attributed to the M30 changes. A meaningful attribution
+experiment requires either a controlled `--no-session-reuse` production
+baseline or an isolated GDN-only comparison with the existing GQA cache held
+constant; neither is claimed here.
