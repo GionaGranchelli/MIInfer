@@ -99,7 +99,7 @@ int main(int argc, char** argv) {
                   << "semantics=synthetic prompt; warm means repeated prompt after one TG128 warmup; greedy\n";
 
         for (const auto& context : contexts) {
-            PrefillV2Model model(*model_data, static_cast<std::uint32_t>(context.tokens + 256), true);
+            PrefillV2Model model(model_data, static_cast<std::uint32_t>(context.tokens + 256), true);
             const auto prompt = prompt_tokens(context.tokens, context.seed);
             std::size_t free_bytes = 0;
             std::size_t total_bytes = 0;
