@@ -1,11 +1,11 @@
 #include <algorithm>
-#include <atomic>
 #include <chrono>
 #include <cmath>
 #include <iostream>
 #include <random>
 #include <stdexcept>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <filesystem>
 
@@ -20,13 +20,11 @@ namespace miinfer::prefill_v2 {
 
 namespace {
 
-// ponytail: host/disk snapshots with an 8-entry, 3 GiB cap; move to shared
-// GPU pages only if measured restore/write cost justifies the complexity.
+// ponytail: immutable host backing with an 8-entry, 3 GiB cap; move to shared
+// GPU pages only if measured range upload cost justifies the complexity.
 constexpr std::size_t kPersistentCheckpointStride = kPrefillV2MacroTile;
 constexpr std::size_t kMaxPersistentCheckpoints = 8;
 constexpr std::size_t kPersistentCheckpointBudgetBytes = 3ULL * 1024 * 1024 * 1024;
-std::atomic<std::uint64_t> g_snapshot_namespace{1};
-
 void prune_persistent_checkpoints(
     const std::filesystem::path& directory,
     const std::string& model_id,
@@ -254,9 +252,6 @@ PrefillV2Model::PrefillV2Model(
       has_lm_head_(load_lm_head),
       reusable_context_(model.model_name(), "Q4_K_M") {
 
-    snapshot_directory_ = std::filesystem::temp_directory_path()
-        / ("miinfer-snapshots-" + std::to_string(g_snapshot_namespace.fetch_add(1)));
-
     // 1. Load Token Embedding Weights (Q4_K)
     const auto embd_t = model.tensor("token_embd.weight");
     embedding_bytes_ = embd_t.bytes();
@@ -331,12 +326,13 @@ PrefillV2Model::PrefillV2Model(PrefillV2Model&& other) noexcept
       decode_graph_exec_(other.decode_graph_exec_),
       d_prefill_state_(other.d_prefill_state_),
       suffix_graph_exec_(other.suffix_graph_exec_),
-      snapshot_directory_(std::move(other.snapshot_directory_)),
       snapshots_(std::move(other.snapshots_)),
       next_snapshot_id_(other.next_snapshot_id_),
       snapshot_use_clock_(other.snapshot_use_clock_),
       snapshot_bytes_(other.snapshot_bytes_),
-      snapshot_state_loaded_(other.snapshot_state_loaded_) {
+      snapshot_state_loaded_(other.snapshot_state_loaded_),
+      snapshot_cow_events_(other.snapshot_cow_events_),
+      snapshot_cow_bytes_(other.snapshot_cow_bytes_) {
     other.d_embedding_weights_ = nullptr;
     other.d_final_norm_weights_ = nullptr;
     other.d_output_weights_ = nullptr;
@@ -355,7 +351,8 @@ PrefillV2Model::PrefillV2Model(PrefillV2Model&& other) noexcept
     other.snapshot_use_clock_ = 0;
     other.snapshot_bytes_ = 0;
     other.snapshot_state_loaded_ = false;
-    other.snapshot_directory_.clear();
+    other.snapshot_cow_events_ = 0;
+    other.snapshot_cow_bytes_ = 0;
 }
 
 PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
@@ -387,12 +384,13 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
         decode_graph_exec_ = other.decode_graph_exec_;
         d_prefill_state_ = other.d_prefill_state_;
         suffix_graph_exec_ = other.suffix_graph_exec_;
-        snapshot_directory_ = std::move(other.snapshot_directory_);
         snapshots_ = std::move(other.snapshots_);
         next_snapshot_id_ = other.next_snapshot_id_;
         snapshot_use_clock_ = other.snapshot_use_clock_;
         snapshot_bytes_ = other.snapshot_bytes_;
         snapshot_state_loaded_ = other.snapshot_state_loaded_;
+        snapshot_cow_events_ = other.snapshot_cow_events_;
+        snapshot_cow_bytes_ = other.snapshot_cow_bytes_;
 
         other.d_embedding_weights_ = nullptr;
         other.d_final_norm_weights_ = nullptr;
@@ -412,7 +410,8 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
         other.snapshot_use_clock_ = 0;
         other.snapshot_bytes_ = 0;
         other.snapshot_state_loaded_ = false;
-        other.snapshot_directory_.clear();
+        other.snapshot_cow_events_ = 0;
+        other.snapshot_cow_bytes_ = 0;
     }
     return *this;
 }
@@ -1453,7 +1452,160 @@ bool PrefillV2Model::restore_matching_session(
     return load_session(session_path, loaded_tokens, stream);
 }
 
+PrefillV2Model::SnapshotBacking::SnapshotBacking(
+    std::shared_ptr<SnapshotBacking> parent_backing)
+    : parent(std::move(parent_backing)) {
+    if (parent != nullptr) ++parent->references;
+}
+
+PrefillV2Model::SnapshotBacking::~SnapshotBacking() {
+    if (parent != nullptr && parent->references > 0) --parent->references;
+}
+
+const PrefillV2Model::SnapshotRecord* PrefillV2Model::find_longest_snapshot_prefix(
+    std::span<const std::uint32_t> tokens) const noexcept {
+    const SnapshotRecord* best = nullptr;
+    for (const auto& [id, record] : snapshots_) {
+        (void)id;
+        if (record.tokens.size() >= tokens.size()
+            || (best != nullptr && record.tokens.size() <= best->tokens.size())) continue;
+        if (std::equal(record.tokens.begin(), record.tokens.end(), tokens.begin())) best = &record;
+    }
+    return best;
+}
+
+std::shared_ptr<PrefillV2Model::SnapshotBacking>
+PrefillV2Model::capture_snapshot_backing(
+    std::span<const std::uint32_t> tokens, hipStream_t stream) {
+    const SnapshotRecord* parent_record = find_longest_snapshot_prefix(tokens);
+    const std::size_t parent_length = parent_record == nullptr ? 0 : parent_record->tokens.size();
+    auto backing = std::make_shared<SnapshotBacking>(
+        parent_record == nullptr ? nullptr : parent_record->backing);
+    backing->prefix_length = tokens.size();
+    backing->suffix_begin = parent_length;
+    backing->suffix_tokens = tokens.size() - parent_length;
+
+    const std::size_t gdn_layer_bytes = RecurrentLayerState::kStateBytes
+        + RecurrentLayerState::kConvHistoryBytes;
+    backing->gdn.resize(recurrent_states_.size() * gdn_layer_bytes);
+    std::size_t gdn_offset = 0;
+    for (std::size_t i = 0; i < recurrent_states_.size(); ++i) {
+        const auto view = recurrent_storage(i).view();
+        if (stream != nullptr) {
+            MIINFER_HIP_CHECK(hipMemcpyAsync(
+                backing->gdn.data() + gdn_offset, view.d_state,
+                RecurrentLayerState::kStateBytes, hipMemcpyDeviceToHost, stream));
+            gdn_offset += RecurrentLayerState::kStateBytes;
+            MIINFER_HIP_CHECK(hipMemcpyAsync(
+                backing->gdn.data() + gdn_offset, view.d_conv_history,
+                RecurrentLayerState::kConvHistoryBytes, hipMemcpyDeviceToHost, stream));
+            gdn_offset += RecurrentLayerState::kConvHistoryBytes;
+        } else {
+            MIINFER_HIP_CHECK(hipMemcpy(
+                backing->gdn.data() + gdn_offset, view.d_state,
+                RecurrentLayerState::kStateBytes, hipMemcpyDeviceToHost));
+            gdn_offset += RecurrentLayerState::kStateBytes;
+            MIINFER_HIP_CHECK(hipMemcpy(
+                backing->gdn.data() + gdn_offset, view.d_conv_history,
+                RecurrentLayerState::kConvHistoryBytes, hipMemcpyDeviceToHost));
+            gdn_offset += RecurrentLayerState::kConvHistoryBytes;
+        }
+    }
+
+    const std::size_t per_layer = kv_caches_.front().raw_tokens_bytes(backing->suffix_tokens);
+    backing->kv_suffix.resize(kv_caches_.size() * per_layer);
+    for (std::size_t i = 0; i < kv_caches_.size(); ++i) {
+        kv_caches_[i].download_raw_range(
+            backing->kv_suffix.data() + i * per_layer,
+            parent_length, backing->suffix_tokens, stream);
+    }
+    if (stream != nullptr) MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
+    backing->bytes = backing->gdn.size() + backing->kv_suffix.size();
+    return backing;
+}
+
+void PrefillV2Model::restore_snapshot_backing(
+    const std::shared_ptr<SnapshotBacking>& backing, hipStream_t stream) {
+    for (auto& kv : kv_caches_) kv.reset(stream);
+
+    std::vector<const SnapshotBacking*> chain;
+    for (auto current = backing; current != nullptr; current = current->parent) {
+        chain.push_back(current.get());
+    }
+    std::reverse(chain.begin(), chain.end());
+    for (const auto* node : chain) {
+        const std::size_t per_layer = kv_caches_.front().raw_tokens_bytes(node->suffix_tokens);
+        for (std::size_t i = 0; i < kv_caches_.size(); ++i) {
+            kv_caches_[i].upload_raw_range(
+                node->kv_suffix.data() + i * per_layer,
+                node->suffix_begin, node->suffix_tokens, stream);
+        }
+    }
+
+    std::size_t gdn_offset = 0;
+    for (std::size_t i = 0; i < recurrent_states_.size(); ++i) {
+        auto view = recurrent_storage(i).view();
+        if (stream != nullptr) {
+            MIINFER_HIP_CHECK(hipMemcpyAsync(
+                view.d_state, backing->gdn.data() + gdn_offset,
+                RecurrentLayerState::kStateBytes, hipMemcpyHostToDevice, stream));
+            gdn_offset += RecurrentLayerState::kStateBytes;
+            MIINFER_HIP_CHECK(hipMemcpyAsync(
+                view.d_conv_history, backing->gdn.data() + gdn_offset,
+                RecurrentLayerState::kConvHistoryBytes, hipMemcpyHostToDevice, stream));
+            gdn_offset += RecurrentLayerState::kConvHistoryBytes;
+        } else {
+            MIINFER_HIP_CHECK(hipMemcpy(
+                view.d_state, backing->gdn.data() + gdn_offset,
+                RecurrentLayerState::kStateBytes, hipMemcpyHostToDevice));
+            gdn_offset += RecurrentLayerState::kStateBytes;
+            MIINFER_HIP_CHECK(hipMemcpy(
+                view.d_conv_history, backing->gdn.data() + gdn_offset,
+                RecurrentLayerState::kConvHistoryBytes, hipMemcpyHostToDevice));
+            gdn_offset += RecurrentLayerState::kConvHistoryBytes;
+        }
+        recurrent_storage(i).set_position(static_cast<std::uint32_t>(backing->prefix_length));
+    }
+    if (stream != nullptr) MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
+}
+
+void PrefillV2Model::refresh_snapshot_bytes() noexcept {
+    std::unordered_set<const SnapshotBacking*> seen;
+    std::size_t total = 0;
+    for (const auto& [id, record] : snapshots_) {
+        (void)id;
+        for (auto current = record.backing; current != nullptr; current = current->parent) {
+            if (seen.insert(current.get()).second) total += current->bytes;
+        }
+    }
+    snapshot_bytes_ = total;
+}
+
+PrefillV2Model::SnapshotTelemetry PrefillV2Model::snapshot_telemetry() const noexcept {
+    SnapshotTelemetry result;
+    result.logical_snapshot_count = snapshots_.size();
+    std::unordered_set<const SnapshotBacking*> seen;
+    for (const auto& [id, record] : snapshots_) {
+        (void)id;
+        for (auto current = record.backing; current != nullptr; current = current->parent) {
+            if (!seen.insert(current.get()).second) continue;
+            result.reference_count += current->references;
+            if (current->references > 1) result.physical_shared_bytes += current->bytes;
+            else result.private_branch_bytes += current->bytes;
+        }
+    }
+    result.cow_events = snapshot_cow_events_;
+    result.cow_bytes_copied = snapshot_cow_bytes_;
+    return result;
+}
+
+void PrefillV2Model::release_snapshot_record(SnapshotRecord& record) noexcept {
+    if (record.backing != nullptr && record.backing->references > 0) --record.backing->references;
+    record.backing.reset();
+}
+
 void PrefillV2Model::evict_snapshots_except(SnapshotId preserve) noexcept {
+    refresh_snapshot_bytes();
     while ((snapshots_.size() > kMaxPersistentCheckpoints
             || snapshot_bytes_ > kPersistentCheckpointBudgetBytes)
            && !snapshots_.empty()) {
@@ -1461,43 +1613,45 @@ void PrefillV2Model::evict_snapshots_except(SnapshotId preserve) noexcept {
         for (auto it = snapshots_.begin(); it != snapshots_.end(); ++it) {
             if (it->first == preserve) continue;
             if (candidate == snapshots_.end()
-                || it->second.last_used < candidate->second.last_used) {
-                candidate = it;
-            }
+                || it->second.last_used < candidate->second.last_used) candidate = it;
         }
         if (candidate == snapshots_.end()) break;
-        const SnapshotId id = candidate->first;
-        release_snapshot(id);
+        release_snapshot(candidate->first);
     }
 }
 
 PrefillV2Model::SnapshotId PrefillV2Model::snapshot(
-    std::span<const std::uint32_t> tokens,
-    hipStream_t stream) {
+    std::span<const std::uint32_t> tokens, hipStream_t stream) {
     if (tokens.empty() || tokens.size() > kv_capacity_) return kInvalidSnapshotId;
-    std::error_code ec;
-    std::filesystem::create_directories(snapshot_directory_, ec);
-    if (ec) return kInvalidSnapshotId;
-
-    SnapshotId id = next_snapshot_id_++;
-    if (id == kInvalidSnapshotId) id = next_snapshot_id_++;
-    const auto path = snapshot_directory_ / ("snapshot_" + std::to_string(id) + ".miinfer");
     try {
-        save_session(path.string(), tokens, stream);
-        const auto bytes = static_cast<std::size_t>(std::filesystem::file_size(path));
-        if (bytes > kPersistentCheckpointBudgetBytes) {
-            std::filesystem::remove(path, ec);
-            return kInvalidSnapshotId;
+        SnapshotId id = next_snapshot_id_++;
+        if (id == kInvalidSnapshotId) id = next_snapshot_id_++;
+
+        std::shared_ptr<SnapshotBacking> backing;
+        for (const auto& [existing_id, record] : snapshots_) {
+            (void)existing_id;
+            if (record.tokens.size() == tokens.size()
+                && std::equal(record.tokens.begin(), record.tokens.end(), tokens.begin())) {
+                backing = record.backing;
+                break;
+            }
         }
+        if (backing == nullptr) {
+            backing = capture_snapshot_backing(tokens, stream);
+            snapshot_bytes_ += backing->bytes;
+            if (backing->parent != nullptr) {
+                ++snapshot_cow_events_;
+                snapshot_cow_bytes_ += backing->bytes;
+            }
+        }
+        ++backing->references;
         snapshots_.emplace(id, SnapshotRecord{
-            path, std::vector<std::uint32_t>(tokens.begin(), tokens.end()), bytes,
+            backing, std::vector<std::uint32_t>(tokens.begin(), tokens.end()),
             ++snapshot_use_clock_});
-        snapshot_bytes_ += bytes;
+        refresh_snapshot_bytes();
         evict_snapshots_except(id);
-        if (snapshots_.find(id) == snapshots_.end()) return kInvalidSnapshotId;
-        return id;
+        return snapshots_.find(id) == snapshots_.end() ? kInvalidSnapshotId : id;
     } catch (...) {
-        std::filesystem::remove(path, ec);
         return kInvalidSnapshotId;
     }
 }
@@ -1505,32 +1659,22 @@ PrefillV2Model::SnapshotId PrefillV2Model::snapshot(
 PrefillV2Model::SnapshotId PrefillV2Model::fork(SnapshotId source) {
     const auto found = snapshots_.find(source);
     if (found == snapshots_.end()) return kInvalidSnapshotId;
-    std::error_code ec;
-    const SnapshotId id = next_snapshot_id_++;
-    const auto path = snapshot_directory_ / ("snapshot_" + std::to_string(id) + ".miinfer");
-    std::filesystem::copy_file(found->second.path, path,
-                               std::filesystem::copy_options::none, ec);
-    if (ec) return kInvalidSnapshotId;
-    const auto bytes = static_cast<std::size_t>(std::filesystem::file_size(path, ec));
-    if (ec || bytes > kPersistentCheckpointBudgetBytes) {
-        std::filesystem::remove(path, ec);
-        return kInvalidSnapshotId;
-    }
+    SnapshotId id = next_snapshot_id_++;
+    if (id == kInvalidSnapshotId) id = next_snapshot_id_++;
+    ++found->second.backing->references;
     snapshots_.emplace(id, SnapshotRecord{
-        path, found->second.tokens, bytes, ++snapshot_use_clock_});
-    snapshot_bytes_ += bytes;
+        found->second.backing, found->second.tokens, ++snapshot_use_clock_});
     found->second.last_used = ++snapshot_use_clock_;
     evict_snapshots_except(id);
-    if (snapshots_.find(id) == snapshots_.end()) return kInvalidSnapshotId;
-    return id;
+    return snapshots_.find(id) == snapshots_.end() ? kInvalidSnapshotId : id;
 }
 
 bool PrefillV2Model::restore_snapshot(SnapshotId id, hipStream_t stream) {
     const auto found = snapshots_.find(id);
     if (found == snapshots_.end()) return false;
-    std::vector<std::uint32_t> loaded_tokens;
-    if (!load_session(found->second.path.string(), loaded_tokens, stream)
-        || loaded_tokens != found->second.tokens) return false;
+    restore_snapshot_backing(found->second.backing, stream);
+    reusable_context_.save(found->second.tokens, recurrent_states_, nullptr, stream);
+    if (stream != nullptr) MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
     found->second.last_used = ++snapshot_use_clock_;
     snapshot_state_loaded_ = true;
     return true;
@@ -1543,10 +1687,9 @@ bool PrefillV2Model::rollback_snapshot(SnapshotId id, hipStream_t stream) {
 bool PrefillV2Model::release_snapshot(SnapshotId id) noexcept {
     const auto found = snapshots_.find(id);
     if (found == snapshots_.end()) return false;
-    std::error_code ec;
-    std::filesystem::remove(found->second.path, ec);
-    snapshot_bytes_ -= std::min(snapshot_bytes_, found->second.bytes);
+    release_snapshot_record(found->second);
     snapshots_.erase(found);
+    refresh_snapshot_bytes();
     return true;
 }
 
@@ -1554,10 +1697,9 @@ void PrefillV2Model::clear_snapshots() noexcept {
     snapshots_.clear();
     snapshot_bytes_ = 0;
     snapshot_use_clock_ = 0;
-    std::error_code ec;
-    if (!snapshot_directory_.empty()) {
-        std::filesystem::remove_all(snapshot_directory_, ec);
-    }
+    snapshot_state_loaded_ = false;
+    snapshot_cow_events_ = 0;
+    snapshot_cow_bytes_ = 0;
 }
 
 } // namespace miinfer::prefill_v2

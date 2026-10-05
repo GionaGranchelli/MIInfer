@@ -88,6 +88,10 @@ public:
     // Download/upload raw compact device KV buffers for tokens 0..tokens-1
     void download_raw(void* host_dst, std::size_t tokens, hipStream_t stream = nullptr) const;
     void upload_raw(const void* host_src, std::size_t tokens, hipStream_t stream = nullptr);
+    void download_raw_range(void* host_dst, std::size_t begin, std::size_t tokens,
+                            hipStream_t stream = nullptr) const;
+    void upload_raw_range(const void* host_src, std::size_t begin, std::size_t tokens,
+                          hipStream_t stream = nullptr);
     [[nodiscard]] std::size_t raw_tokens_bytes(std::size_t tokens) const noexcept;
 
     [[nodiscard]] AttentionKvCacheView view() const noexcept {

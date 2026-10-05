@@ -61,6 +61,13 @@ int main(int argc, char** argv) {
 
             const auto fork_b = engine.fork(s0);
             require(fork_b != Model::kInvalidSnapshotId, "fork B was not created");
+            const auto fork_c = engine.fork(s0);
+            require(fork_c != Model::kInvalidSnapshotId, "fork C was not created");
+            const auto shared = engine.snapshot_telemetry();
+            require(shared.logical_snapshot_count == 3
+                        && shared.physical_shared_bytes > 0
+                        && shared.reference_count >= 3,
+                    "forks did not share physical snapshot backing");
 
             require(engine.restore_snapshot(s0), "restore S0 before branch A failed");
             const auto a = engine.generate(branch_a, prefill_only);
@@ -70,6 +77,10 @@ int main(int argc, char** argv) {
 
             const auto s1 = engine.snapshot(branch_a);
             require(s1 != Model::kInvalidSnapshotId, "nested snapshot S1 was not created");
+            const auto cow = engine.snapshot_telemetry();
+            require(cow.cow_events >= 1 && cow.cow_bytes_copied > 0
+                        && cow.private_branch_bytes > 0,
+                    "divergent snapshot did not create private COW backing");
             require(engine.generate(branch_a2, prefill_only).reuse_hit, "nested continuation failed");
             require(engine.rollback_snapshot(s1), "rollback to nested S1 failed");
             require(engine.generate(branch_a2, prefill_only).reuse_hit,
@@ -90,6 +101,7 @@ int main(int argc, char** argv) {
             require(!engine.restore_snapshot(999999), "invalid snapshot ID was accepted");
             require(engine.release_snapshot(fork_b), "fork B release failed");
             require(!engine.restore_snapshot(fork_b), "released fork B remained valid");
+            require(engine.release_snapshot(fork_c), "fork C release failed");
             require(engine.release_snapshot(s1), "nested snapshot S1 release failed");
             require(engine.release_snapshot(s0), "snapshot S0 release failed");
             require(!engine.restore_snapshot(s0), "released S0 remained valid");
@@ -116,7 +128,8 @@ int main(int argc, char** argv) {
 
         std::cout << "M30-0004 snapshot/fork/rollback: PASS"
                   << " snapshot=PASS fork=PASS rollback=PASS nested=PASS"
-                  << " invalid=PASS release=PASS evict=PASS reset=PASS cold_parity=PASS\n";
+                  << " invalid=PASS release=PASS shared=PASS cow=PASS"
+                  << " evict=PASS reset=PASS cold_parity=PASS\n";
         return 0;
     } catch (const std::exception& error) {
         std::cerr << "M30-0004 snapshot/fork/rollback: FAIL: " << error.what() << '\n';

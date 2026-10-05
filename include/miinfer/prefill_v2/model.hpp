@@ -13,7 +13,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <filesystem>
 #include <memory>
 #include <optional>
 #include <unordered_map>
@@ -94,6 +93,15 @@ class PrefillV2Model {
 public:
     using SnapshotId = std::uint64_t;
     static constexpr SnapshotId kInvalidSnapshotId = 0;
+
+    struct SnapshotTelemetry {
+        std::size_t logical_snapshot_count = 0;
+        std::size_t physical_shared_bytes = 0;
+        std::size_t private_branch_bytes = 0;
+        std::size_t reference_count = 0;
+        std::size_t cow_events = 0;
+        std::size_t cow_bytes_copied = 0;
+    };
 
     explicit PrefillV2Model(
         const miinfer::Qwen35Model& model,
@@ -234,6 +242,7 @@ public:
     void clear_snapshots() noexcept;
     [[nodiscard]] std::size_t snapshot_count() const noexcept { return snapshots_.size(); }
     [[nodiscard]] std::size_t snapshot_bytes() const noexcept { return snapshot_bytes_; }
+    [[nodiscard]] SnapshotTelemetry snapshot_telemetry() const noexcept;
 
     // Memory footprints
     [[nodiscard]] std::size_t persistent_weight_bytes() const noexcept;
@@ -258,14 +267,35 @@ public:
     [[nodiscard]] bool is_suffix_graph_captured() const noexcept { return suffix_graph_exec_ != nullptr; }
 
 private:
-    struct SnapshotRecord {
-        std::filesystem::path path;
-        std::vector<std::uint32_t> tokens;
+    struct SnapshotBacking {
+        explicit SnapshotBacking(std::shared_ptr<SnapshotBacking> parent_backing = nullptr);
+        ~SnapshotBacking();
+
+        std::shared_ptr<SnapshotBacking> parent;
+        std::size_t prefix_length = 0;
+        std::size_t suffix_begin = 0;
+        std::size_t suffix_tokens = 0;
+        std::vector<std::uint8_t> gdn;
+        std::vector<std::uint8_t> kv_suffix;
         std::size_t bytes = 0;
+        std::size_t references = 0;
+    };
+
+    struct SnapshotRecord {
+        std::shared_ptr<SnapshotBacking> backing;
+        std::vector<std::uint32_t> tokens;
         std::uint64_t last_used = 0;
     };
 
     void evict_snapshots_except(SnapshotId preserve) noexcept;
+    [[nodiscard]] const SnapshotRecord* find_longest_snapshot_prefix(
+        std::span<const std::uint32_t> tokens) const noexcept;
+    [[nodiscard]] std::shared_ptr<SnapshotBacking> capture_snapshot_backing(
+        std::span<const std::uint32_t> tokens, hipStream_t stream);
+    void restore_snapshot_backing(
+        const std::shared_ptr<SnapshotBacking>& backing, hipStream_t stream);
+    void release_snapshot_record(SnapshotRecord& record) noexcept;
+    void refresh_snapshot_bytes() noexcept;
 
     std::string model_name_ = "Qwen3.8-27B";
     std::string quantization_ = "Q4_K_M";
@@ -320,12 +350,13 @@ private:
     mutable std::vector<std::pair<float, std::uint32_t>> candidates_buf_;
     mutable std::mt19937 rng_{42};
 
-    std::filesystem::path snapshot_directory_;
     std::unordered_map<SnapshotId, SnapshotRecord> snapshots_;
     SnapshotId next_snapshot_id_ = 1;
     std::uint64_t snapshot_use_clock_ = 0;
     std::size_t snapshot_bytes_ = 0;
     bool snapshot_state_loaded_ = false;
+    std::size_t snapshot_cow_events_ = 0;
+    std::size_t snapshot_cow_bytes_ = 0;
 
     void allocate_resources();
     void free_resources();

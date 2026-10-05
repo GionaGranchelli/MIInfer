@@ -396,4 +396,114 @@ void AttentionLayerKvCacheStorage::upload_raw(const void* host_src, std::size_t 
     }
 }
 
+void AttentionLayerKvCacheStorage::download_raw_range(
+    void* host_dst, std::size_t begin, std::size_t tokens, hipStream_t stream) const {
+    if (begin > capacity_ || tokens > capacity_ - begin) {
+        throw std::runtime_error("AttentionLayerKvCacheStorage::download_raw_range: range exceeds capacity");
+    }
+    if (tokens == 0 || host_dst == nullptr) return;
+
+    auto copy = [stream](void* dst, const void* src, std::size_t bytes) {
+        if (stream != nullptr) MIINFER_HIP_CHECK(hipMemcpyAsync(dst, src, bytes, hipMemcpyDeviceToHost, stream));
+        else MIINFER_HIP_CHECK(hipMemcpy(dst, src, bytes, hipMemcpyDeviceToHost));
+    };
+    auto* dst = static_cast<std::uint8_t*>(host_dst);
+    const bool key_q8 = quant_mode_ == KvCacheQuantMode::kQ8Fp16
+        || quant_mode_ == KvCacheQuantMode::kQ8Q8;
+    const bool value_q8 = quant_mode_ == KvCacheQuantMode::kFp16Q8
+        || quant_mode_ == KvCacheQuantMode::kQ8Q8;
+    const std::size_t fp16_values = tokens * kHeadDim * sizeof(__half);
+    const std::size_t q_values = tokens * kHeadDim * sizeof(std::int8_t);
+    const std::size_t scales = tokens * sizeof(__half);
+    std::size_t offset = 0;
+
+    if (!key_q8) {
+        for (std::size_t h = 0; h < kKvHeads; ++h) {
+            copy(dst + offset,
+                 d_key_cache_ + h * capacity_ * kHeadDim + begin * kHeadDim,
+                 fp16_values);
+            offset += fp16_values;
+        }
+    } else {
+        for (std::size_t h = 0; h < kKvHeads; ++h) {
+            copy(dst + offset,
+                 d_key_cache_q8_ + h * capacity_ * kHeadDim + begin * kHeadDim,
+                 q_values);
+            offset += q_values;
+            copy(dst + offset, d_key_scales_ + h * capacity_ + begin, scales);
+            offset += scales;
+        }
+    }
+    if (!value_q8) {
+        for (std::size_t h = 0; h < kKvHeads; ++h) {
+            copy(dst + offset,
+                 d_value_cache_ + h * capacity_ * kHeadDim + begin * kHeadDim,
+                 fp16_values);
+            offset += fp16_values;
+        }
+    } else {
+        for (std::size_t h = 0; h < kKvHeads; ++h) {
+            copy(dst + offset,
+                 d_value_cache_q8_ + h * capacity_ * kHeadDim + begin * kHeadDim,
+                 q_values);
+            offset += q_values;
+            copy(dst + offset, d_value_scales_ + h * capacity_ + begin, scales);
+            offset += scales;
+        }
+    }
+}
+
+void AttentionLayerKvCacheStorage::upload_raw_range(
+    const void* host_src, std::size_t begin, std::size_t tokens, hipStream_t stream) {
+    if (begin > capacity_ || tokens > capacity_ - begin) {
+        throw std::runtime_error("AttentionLayerKvCacheStorage::upload_raw_range: range exceeds capacity");
+    }
+    if (tokens == 0 || host_src == nullptr) return;
+
+    auto copy = [stream](void* dst, const void* src, std::size_t bytes) {
+        if (stream != nullptr) MIINFER_HIP_CHECK(hipMemcpyAsync(dst, src, bytes, hipMemcpyHostToDevice, stream));
+        else MIINFER_HIP_CHECK(hipMemcpy(dst, src, bytes, hipMemcpyHostToDevice));
+    };
+    const auto* src = static_cast<const std::uint8_t*>(host_src);
+    const bool key_q8 = quant_mode_ == KvCacheQuantMode::kQ8Fp16
+        || quant_mode_ == KvCacheQuantMode::kQ8Q8;
+    const bool value_q8 = quant_mode_ == KvCacheQuantMode::kFp16Q8
+        || quant_mode_ == KvCacheQuantMode::kQ8Q8;
+    const std::size_t fp16_values = tokens * kHeadDim * sizeof(__half);
+    const std::size_t q_values = tokens * kHeadDim * sizeof(std::int8_t);
+    const std::size_t scales = tokens * sizeof(__half);
+    std::size_t offset = 0;
+
+    if (!key_q8) {
+        for (std::size_t h = 0; h < kKvHeads; ++h) {
+            copy(d_key_cache_ + h * capacity_ * kHeadDim + begin * kHeadDim,
+                 src + offset, fp16_values);
+            offset += fp16_values;
+        }
+    } else {
+        for (std::size_t h = 0; h < kKvHeads; ++h) {
+            copy(d_key_cache_q8_ + h * capacity_ * kHeadDim + begin * kHeadDim,
+                 src + offset, q_values);
+            offset += q_values;
+            copy(d_key_scales_ + h * capacity_ + begin, src + offset, scales);
+            offset += scales;
+        }
+    }
+    if (!value_q8) {
+        for (std::size_t h = 0; h < kKvHeads; ++h) {
+            copy(d_value_cache_ + h * capacity_ * kHeadDim + begin * kHeadDim,
+                 src + offset, fp16_values);
+            offset += fp16_values;
+        }
+    } else {
+        for (std::size_t h = 0; h < kKvHeads; ++h) {
+            copy(d_value_cache_q8_ + h * capacity_ * kHeadDim + begin * kHeadDim,
+                 src + offset, q_values);
+            offset += q_values;
+            copy(d_value_scales_ + h * capacity_ + begin, src + offset, scales);
+            offset += scales;
+        }
+    }
+}
+
 } // namespace miinfer::prefill_v2
