@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <cmath>
 #include <iostream>
@@ -24,6 +25,7 @@ namespace {
 constexpr std::size_t kPersistentCheckpointStride = kPrefillV2MacroTile;
 constexpr std::size_t kMaxPersistentCheckpoints = 8;
 constexpr std::size_t kPersistentCheckpointBudgetBytes = 3ULL * 1024 * 1024 * 1024;
+std::atomic<std::uint64_t> g_snapshot_namespace{1};
 
 void prune_persistent_checkpoints(
     const std::filesystem::path& directory,
@@ -252,6 +254,9 @@ PrefillV2Model::PrefillV2Model(
       has_lm_head_(load_lm_head),
       reusable_context_(model.model_name(), "Q4_K_M") {
 
+    snapshot_directory_ = std::filesystem::temp_directory_path()
+        / ("miinfer-snapshots-" + std::to_string(g_snapshot_namespace.fetch_add(1)));
+
     // 1. Load Token Embedding Weights (Q4_K)
     const auto embd_t = model.tensor("token_embd.weight");
     embedding_bytes_ = embd_t.bytes();
@@ -296,6 +301,7 @@ PrefillV2Model::PrefillV2Model(
 }
 
 PrefillV2Model::~PrefillV2Model() {
+    clear_snapshots();
     free_resources();
 }
 
@@ -324,7 +330,12 @@ PrefillV2Model::PrefillV2Model(PrefillV2Model&& other) noexcept
       d_decode_tokens_(other.d_decode_tokens_),
       decode_graph_exec_(other.decode_graph_exec_),
       d_prefill_state_(other.d_prefill_state_),
-      suffix_graph_exec_(other.suffix_graph_exec_) {
+      suffix_graph_exec_(other.suffix_graph_exec_),
+      snapshot_directory_(std::move(other.snapshot_directory_)),
+      snapshots_(std::move(other.snapshots_)),
+      next_snapshot_id_(other.next_snapshot_id_),
+      snapshot_use_clock_(other.snapshot_use_clock_),
+      snapshot_bytes_(other.snapshot_bytes_) {
     other.d_embedding_weights_ = nullptr;
     other.d_final_norm_weights_ = nullptr;
     other.d_output_weights_ = nullptr;
@@ -339,10 +350,15 @@ PrefillV2Model::PrefillV2Model(PrefillV2Model&& other) noexcept
     other.decode_graph_exec_ = nullptr;
     other.d_prefill_state_ = nullptr;
     other.suffix_graph_exec_ = nullptr;
+    other.next_snapshot_id_ = 1;
+    other.snapshot_use_clock_ = 0;
+    other.snapshot_bytes_ = 0;
+    other.snapshot_directory_.clear();
 }
 
 PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
     if (this != &other) {
+        clear_snapshots();
         free_resources();
         vocab_size_ = other.vocab_size_;
         rms_epsilon_ = other.rms_epsilon_;
@@ -369,6 +385,11 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
         decode_graph_exec_ = other.decode_graph_exec_;
         d_prefill_state_ = other.d_prefill_state_;
         suffix_graph_exec_ = other.suffix_graph_exec_;
+        snapshot_directory_ = std::move(other.snapshot_directory_);
+        snapshots_ = std::move(other.snapshots_);
+        next_snapshot_id_ = other.next_snapshot_id_;
+        snapshot_use_clock_ = other.snapshot_use_clock_;
+        snapshot_bytes_ = other.snapshot_bytes_;
 
         other.d_embedding_weights_ = nullptr;
         other.d_final_norm_weights_ = nullptr;
@@ -384,6 +405,10 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
         other.decode_graph_exec_ = nullptr;
         other.d_prefill_state_ = nullptr;
         other.suffix_graph_exec_ = nullptr;
+        other.next_snapshot_id_ = 1;
+        other.snapshot_use_clock_ = 0;
+        other.snapshot_bytes_ = 0;
+        other.snapshot_directory_.clear();
     }
     return *this;
 }
@@ -466,6 +491,8 @@ void PrefillV2Model::free_resources() {
 }
 
 void PrefillV2Model::reset_state() {
+    reusable_context_.clear();
+    clear_snapshots();
     for (auto& st : recurrent_states_) {
         st.reset();
     }
@@ -1415,6 +1442,112 @@ bool PrefillV2Model::restore_matching_session(
     }
     std::vector<std::uint32_t> loaded_tokens;
     return load_session(session_path, loaded_tokens, stream);
+}
+
+void PrefillV2Model::evict_snapshots_except(SnapshotId preserve) noexcept {
+    while ((snapshots_.size() > kMaxPersistentCheckpoints
+            || snapshot_bytes_ > kPersistentCheckpointBudgetBytes)
+           && !snapshots_.empty()) {
+        auto candidate = snapshots_.end();
+        for (auto it = snapshots_.begin(); it != snapshots_.end(); ++it) {
+            if (it->first == preserve) continue;
+            if (candidate == snapshots_.end()
+                || it->second.last_used < candidate->second.last_used) {
+                candidate = it;
+            }
+        }
+        if (candidate == snapshots_.end()) break;
+        const SnapshotId id = candidate->first;
+        release_snapshot(id);
+    }
+}
+
+PrefillV2Model::SnapshotId PrefillV2Model::snapshot(
+    std::span<const std::uint32_t> tokens,
+    hipStream_t stream) {
+    if (tokens.empty() || tokens.size() > kv_capacity_) return kInvalidSnapshotId;
+    std::error_code ec;
+    std::filesystem::create_directories(snapshot_directory_, ec);
+    if (ec) return kInvalidSnapshotId;
+
+    SnapshotId id = next_snapshot_id_++;
+    if (id == kInvalidSnapshotId) id = next_snapshot_id_++;
+    const auto path = snapshot_directory_ / ("snapshot_" + std::to_string(id) + ".miinfer");
+    try {
+        save_session(path.string(), tokens, stream);
+        const auto bytes = static_cast<std::size_t>(std::filesystem::file_size(path));
+        if (bytes > kPersistentCheckpointBudgetBytes) {
+            std::filesystem::remove(path, ec);
+            return kInvalidSnapshotId;
+        }
+        snapshots_.emplace(id, SnapshotRecord{
+            path, std::vector<std::uint32_t>(tokens.begin(), tokens.end()), bytes,
+            ++snapshot_use_clock_});
+        snapshot_bytes_ += bytes;
+        evict_snapshots_except(id);
+        if (snapshots_.find(id) == snapshots_.end()) return kInvalidSnapshotId;
+        return id;
+    } catch (...) {
+        std::filesystem::remove(path, ec);
+        return kInvalidSnapshotId;
+    }
+}
+
+PrefillV2Model::SnapshotId PrefillV2Model::fork(SnapshotId source) {
+    const auto found = snapshots_.find(source);
+    if (found == snapshots_.end()) return kInvalidSnapshotId;
+    std::error_code ec;
+    const SnapshotId id = next_snapshot_id_++;
+    const auto path = snapshot_directory_ / ("snapshot_" + std::to_string(id) + ".miinfer");
+    std::filesystem::copy_file(found->second.path, path,
+                               std::filesystem::copy_options::none, ec);
+    if (ec) return kInvalidSnapshotId;
+    const auto bytes = static_cast<std::size_t>(std::filesystem::file_size(path, ec));
+    if (ec || bytes > kPersistentCheckpointBudgetBytes) {
+        std::filesystem::remove(path, ec);
+        return kInvalidSnapshotId;
+    }
+    snapshots_.emplace(id, SnapshotRecord{
+        path, found->second.tokens, bytes, ++snapshot_use_clock_});
+    snapshot_bytes_ += bytes;
+    found->second.last_used = ++snapshot_use_clock_;
+    evict_snapshots_except(id);
+    if (snapshots_.find(id) == snapshots_.end()) return kInvalidSnapshotId;
+    return id;
+}
+
+bool PrefillV2Model::restore_snapshot(SnapshotId id, hipStream_t stream) {
+    const auto found = snapshots_.find(id);
+    if (found == snapshots_.end()) return false;
+    std::vector<std::uint32_t> loaded_tokens;
+    if (!load_session(found->second.path.string(), loaded_tokens, stream)
+        || loaded_tokens != found->second.tokens) return false;
+    found->second.last_used = ++snapshot_use_clock_;
+    return true;
+}
+
+bool PrefillV2Model::rollback_snapshot(SnapshotId id, hipStream_t stream) {
+    return restore_snapshot(id, stream);
+}
+
+bool PrefillV2Model::release_snapshot(SnapshotId id) noexcept {
+    const auto found = snapshots_.find(id);
+    if (found == snapshots_.end()) return false;
+    std::error_code ec;
+    std::filesystem::remove(found->second.path, ec);
+    snapshot_bytes_ -= std::min(snapshot_bytes_, found->second.bytes);
+    snapshots_.erase(found);
+    return true;
+}
+
+void PrefillV2Model::clear_snapshots() noexcept {
+    snapshots_.clear();
+    snapshot_bytes_ = 0;
+    snapshot_use_clock_ = 0;
+    std::error_code ec;
+    if (!snapshot_directory_.empty()) {
+        std::filesystem::remove_all(snapshot_directory_, ec);
+    }
 }
 
 } // namespace miinfer::prefill_v2

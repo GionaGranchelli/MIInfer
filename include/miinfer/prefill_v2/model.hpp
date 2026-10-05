@@ -13,8 +13,10 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <filesystem>
 #include <memory>
 #include <optional>
+#include <unordered_map>
 #include <vector>
 #include <span>
 #include <string>
@@ -90,6 +92,9 @@ struct ModelProfileBreakdown {
 // - Ping-pong activation buffers
 class PrefillV2Model {
 public:
+    using SnapshotId = std::uint64_t;
+    static constexpr SnapshotId kInvalidSnapshotId = 0;
+
     explicit PrefillV2Model(
         const miinfer::Qwen35Model& model,
         std::uint32_t kv_capacity = 32768,
@@ -217,6 +222,19 @@ public:
         std::uint32_t& out_prefix_length,
         hipStream_t stream = nullptr);
 
+    // Process-local agent snapshot lifecycle. Snapshot tokens must describe
+    // the active full-model state at the time of capture.
+    [[nodiscard]] SnapshotId snapshot(
+        std::span<const std::uint32_t> tokens,
+        hipStream_t stream = nullptr);
+    [[nodiscard]] SnapshotId fork(SnapshotId source);
+    bool restore_snapshot(SnapshotId id, hipStream_t stream = nullptr);
+    bool rollback_snapshot(SnapshotId id, hipStream_t stream = nullptr);
+    bool release_snapshot(SnapshotId id) noexcept;
+    void clear_snapshots() noexcept;
+    [[nodiscard]] std::size_t snapshot_count() const noexcept { return snapshots_.size(); }
+    [[nodiscard]] std::size_t snapshot_bytes() const noexcept { return snapshot_bytes_; }
+
     // Memory footprints
     [[nodiscard]] std::size_t persistent_weight_bytes() const noexcept;
     [[nodiscard]] std::size_t persistent_state_bytes() const noexcept;
@@ -240,6 +258,15 @@ public:
     [[nodiscard]] bool is_suffix_graph_captured() const noexcept { return suffix_graph_exec_ != nullptr; }
 
 private:
+    struct SnapshotRecord {
+        std::filesystem::path path;
+        std::vector<std::uint32_t> tokens;
+        std::size_t bytes = 0;
+        std::uint64_t last_used = 0;
+    };
+
+    void evict_snapshots_except(SnapshotId preserve) noexcept;
+
     std::string model_name_ = "Qwen3.8-27B";
     std::string quantization_ = "Q4_K_M";
     std::uint32_t vocab_size_ = 0;
@@ -292,6 +319,12 @@ private:
     mutable std::vector<float> logits_scratch_;
     mutable std::vector<std::pair<float, std::uint32_t>> candidates_buf_;
     mutable std::mt19937 rng_{42};
+
+    std::filesystem::path snapshot_directory_;
+    std::unordered_map<SnapshotId, SnapshotRecord> snapshots_;
+    SnapshotId next_snapshot_id_ = 1;
+    std::uint64_t snapshot_use_clock_ = 0;
+    std::size_t snapshot_bytes_ = 0;
 
     void allocate_resources();
     void free_resources();
