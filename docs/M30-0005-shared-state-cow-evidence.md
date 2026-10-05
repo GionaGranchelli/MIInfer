@@ -27,31 +27,33 @@ contains a shared base, four sibling forks, a divergent branch-A snapshot, a
 nested fork, and a nested successor snapshot: eight logical snapshots total.
 Representative branch outputs are compared against cold execution.
 
-| Metric | M30-0004 full-copy | M30-0005 COW |
+| Metric | Device full-copy control | M30-0005 COW |
 |---|---:|---:|
 | Branch operations | 8 | 8 |
 | Snapshot count | 8 | 8 |
-| Physical checkpoint bytes | 1,275,332,088 | 477,233,152 |
+| Physical checkpoint bytes | 1,275,330,560 | 477,233,152 |
 | Shared bytes | n/a | 318,308,352 |
-| Private bytes | 1,275,332,088 | 158,924,800 |
+| Private bytes | 1,275,330,560 | 158,924,800 |
 | Reference count | n/a | 10 |
 | COW events | n/a | 2 |
 | COW bytes copied | n/a | 317,849,600 |
-| Peak VRAM | 25,202,993,152 | 25,680,226,304 |
-| Restore latency, eight restores | 1,345.19 ms | 24.63 ms |
-| Branch wall time | 4,239.35 ms | 657.22 ms |
+| Peak VRAM | 26,478,323,712 | 25,680,226,304 |
+| Restore latency, eight restores | 19.59 ms | 24.74 ms |
+| Branch wall time | 656.79 ms | 657.42 ms |
 | Physical suffix tokens | 6 | 6 |
 | Cold physical tokens | 48 | 48 |
 
-Physical checkpoint memory decreased by 798,098,936 bytes (62.6%) at the same
-branch depth. All representative COW outputs matched cold outputs exactly.
+Physical checkpoint memory decreased by 798,097,408 bytes (62.6%) at the same
+branch depth. Peak VRAM decreased by the same 798,097,408 bytes (3.0% of the
+device full-copy run). All representative COW outputs matched cold outputs
+exactly.
 
-The peak-VRAM comparison needs an explicit qualification: the M30-0004 control
-stores full copies as disk-backed `.miinfer` files, while M30-0005 intentionally
-forbids disk persistence and keeps shared backing on the GPU. Therefore COW
-uses 477,233,152 more VRAM than that disk-backed control even though its unique
-checkpoint memory is 62.6% lower. This is the expected consequence of the
-no-disk requirement, not a claimed VRAM win over disk.
+The primary table uses a fair device-resident full-copy control selected with
+the internal `MIINFER_M30_0005_FULL_COPY=1` switch; production defaults remain
+COW. The original M30-0004 disk-backed control also passed the same workload:
+1,275,332,088 checkpoint bytes, 25,202,993,152 peak VRAM, 1,345.19 ms restore
+latency, and 4,241.86 ms branch wall time. It is retained as historical
+compatibility evidence, not used for the VRAM comparison.
 
 ## Gate result
 
@@ -59,13 +61,12 @@ no-disk requirement, not a claimed VRAM win over disk.
 - reference counting/lifetime cleanup: PASS;
 - COW isolation and sibling integrity: PASS;
 - rollback/cold parity: PASS;
-- restore latency accounting: PASS, 24.63 ms COW vs 1,345.19 ms full-copy;
+- restore latency accounting: PASS, 24.74 ms COW vs 19.59 ms device full-copy;
 - physical checkpoint memory reduction: PASS, 62.6%;
+- peak VRAM reduction at equal depth: PASS, 3.0%;
 - useful branch depth at the tested topology: PASS, eight snapshots;
 - VRAM reduction versus the disk-backed M30-0004 control: NOT APPLICABLE;
 - disk persistence in the new snapshot API: PASS, none.
 
-The remaining product decision is whether device-resident no-disk snapshots
-should be compared against a future device-resident full-copy control for a
-strict VRAM gate. That control is outside the M30-0004 implementation and was
-not substituted silently here.
+The device full-copy control is test-only and exists solely to make the VRAM
+gate apples-to-apples; it is not a second production cache authority.

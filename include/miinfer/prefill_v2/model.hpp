@@ -291,7 +291,8 @@ private:
     [[nodiscard]] const SnapshotRecord* find_longest_snapshot_prefix(
         std::span<const std::uint32_t> tokens) const noexcept;
     [[nodiscard]] std::shared_ptr<SnapshotBacking> capture_snapshot_backing(
-        std::span<const std::uint32_t> tokens, hipStream_t stream);
+        std::span<const std::uint32_t> tokens, hipStream_t stream,
+        bool use_parent = true);
     void restore_snapshot_backing(
         const std::shared_ptr<SnapshotBacking>& backing, hipStream_t stream);
     void release_snapshot_record(SnapshotRecord& record) noexcept;
