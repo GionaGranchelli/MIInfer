@@ -73,6 +73,7 @@ host_targets=(
     miinfer-model-loader-test miinfer-qwen3-primitives-host-test
     miinfer-qwen3-layer0-test miinfer-qwen3-kv-cache-test
     miinfer-qwen3-forward-test miinfer-qwen3-tokenizer-test
+    miinfer-context-space-test miinfer-device-kv-shard-placement-test
 )
 model=/models/"$(basename "$0")"
 echo "container_rocm=$(hipcc --version | awk "/HIP version/{print; exit}")"
