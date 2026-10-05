@@ -1,0 +1,490 @@
+host=machinist
+host_os=Linux 7.2.7-200.fc44.x86_64 x86_64 GNU/Linux
+cpu=Intel(R) Xeon(R) CPU E5-2680 v4 @ 2.40GHz
+gpu_model=85:00.0 VGA compatible controller: Advanced Micro Devices, Inc. [AMD/ATI] Vega 20 [Radeon Pro Vega II/Radeon Pro Vega II Duo]
+gfx_target_count=1
+rocr_visible_device=1
+rocm_host=HIP version: 7.1.52802-9999
+kernel=7.2.7-200.fc44.x86_64
+pcie=85:00.0 VGA compatible controller: Advanced Micro Devices, Inc. [AMD/ATI] Vega 20 [Radeon Pro Vega II/Radeon Pro Vega II Duo]
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 28.0
+GPU[0]		: Temperature (Sensor junction) (C): 30.0
+GPU[0]		: Temperature (Sensor memory) (C): 26.0
+GPU[1]		: Temperature (Sensor edge) (C): 34.0
+GPU[1]		: Temperature (Sensor junction) (C): 36.0
+GPU[1]		: Temperature (Sensor memory) (C): 34.0
+==========================================================================================
+=============================== Current clock frequencies ================================
+GPU[0]		: dcefclk clock level: 1: (236Mhz)
+GPU[0]		: fclk clock level: 1: (1711Mhz)
+GPU[0]		: mclk clock level: 0: (96Mhz)
+GPU[0]		: sclk clock level: S: (0Mhz)
+GPU[0]		: socclk clock level: 1: (1066Mhz)
+GPU[0]		: pcie clock level: 0 (8.0GT/s x16)
+GPU[1]		: fclk clock level: 0: (1166Mhz)
+GPU[1]		: mclk clock level: 0: (1000Mhz)
+GPU[1]		: sclk clock level: 1: (1000Mhz)
+GPU[1]		: socclk clock level: 0: (971Mhz)
+GPU[1]		: pcie clock level: 0 (8.0GT/s x16)
+==========================================================================================
+=================================== Power Consumption ====================================
+GPU[0]		: Average Graphics Package Power (W): 8.0
+GPU[1]		: Current Socket Graphics Package Power (W): 25.0
+==========================================================================================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 17095983104
+GPU[0]		: VRAM Total Used Memory (B): 283881472
+GPU[1]		: VRAM Total Memory (B): 34342961152
+GPU[1]		: VRAM Total Used Memory (B): 10878976
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: get_name, Failed to load a library
+GPU[0]		: Card Series: 		N/A
+GPU[0]		: Card Model: 		0x7590
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		R906XTGO
+GPU[0]		: Subsystem ID: 	0x2429
+GPU[0]		: Device Rev: 		0xc0
+GPU[0]		: Node ID: 		1
+GPU[0]		: GUID: 		11295
+GPU[0]		: GFX Version: 		gfx1200
+GPU[1]		: get_name, Failed to load a library
+GPU[1]		: Card Series: 		N/A
+GPU[1]		: Card Model: 		0x66a3
+GPU[1]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[1]		: Card SKU: 		D163A1XT
+GPU[1]		: Subsystem ID: 	0x0201
+GPU[1]		: Device Rev: 		0x00
+GPU[1]		: Node ID: 		2
+GPU[1]		: GUID: 		55600
+GPU[1]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+miinfer_sha=99840d10eabe5e64fe2564d34d3d3fcd42b43521
+image=localhost/miinfer-dev:rocm-7.2.1
+image_id=50ff28a28cc13a3ca7333cd0c70e322d16245967c5fdf0d30a1bf57bda80a512
+image_base_digest=sha256:fb0de294a2919ff6d503b4845e055c7fb80db5861954694ee5228e48a14411ec
+model=/home/machinist/models/Qwen3.8-27B-Q4_K_M.gguf
+model_sha=7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169
+container_rocm=HIP version: 7.2.53211-e1a6bc5663
+container_arch=1
+-- The CXX compiler identification is Clang 22.0.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /opt/rocm/llvm/bin/clang++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Using the multi-header code from /workspace/MIInfer/build/qualification-container-rocm721-host/_deps/nlohmann_json-src/include/
+-- Configuring done (0.8s)
+-- Generating done (0.1s)
+-- Build files have been written to: /workspace/MIInfer/build/qualification-container-rocm721-host
+[  8%] Building CXX object CMakeFiles/miinfer_model.dir/src/gguf.cpp.o
+[ 16%] Building CXX object CMakeFiles/miinfer_build_info.dir/src/build_info.cpp.o
+[ 25%] Linking CXX static library libmiinfer_build_info.a
+[ 25%] Built target miinfer_build_info
+[ 33%] Building CXX object CMakeFiles/miinfer_model.dir/src/qwen3_model.cpp.o
+[ 41%] Building CXX object CMakeFiles/miinfer_model.dir/src/qwen35_model.cpp.o
+[ 50%] Building CXX object CMakeFiles/miinfer_model.dir/src/qwen3_primitives.cpp.o
+[ 58%] Building CXX object CMakeFiles/miinfer_model.dir/src/qwen3_layer.cpp.o
+[ 66%] Building CXX object CMakeFiles/miinfer_model.dir/src/qwen3_tokenizer.cpp.o
+[ 75%] Building CXX object CMakeFiles/miinfer_model.dir/src/sha256.cpp.o
+[ 83%] Linking CXX static library libmiinfer_model.a
+[ 83%] Built target miinfer_model
+[ 91%] Building CXX object CMakeFiles/miinfer-host-test.dir/tests/host_test.cpp.o
+[100%] Linking CXX executable miinfer-host-test
+[100%] Built target miinfer-host-test
+[ 25%] Building CXX object CMakeFiles/miinfer_openai_api.dir/src/openai_api.cpp.o
+[ 50%] Linking CXX static library libmiinfer_openai_api.a
+[ 50%] Built target miinfer_openai_api
+[ 75%] Building CXX object CMakeFiles/miinfer-openai-api-test.dir/tests/openai_api_test.cpp.o
+[100%] Linking CXX executable miinfer-openai-api-test
+[100%] Built target miinfer-openai-api-test
+[ 50%] Building CXX object CMakeFiles/miinfer-m12-gdn-oracle.dir/bench/m12_gdn_oracle.cpp.o
+[100%] Linking CXX executable miinfer-m12-gdn-oracle
+[100%] Built target miinfer-m12-gdn-oracle
+[ 80%] Built target miinfer_model
+[ 90%] Building CXX object CMakeFiles/miinfer-model-loader-test.dir/tests/model_loader_test.cpp.o
+[100%] Linking CXX executable miinfer-model-loader-test
+[100%] Built target miinfer-model-loader-test
+[ 80%] Built target miinfer_model
+[ 90%] Building CXX object CMakeFiles/miinfer-qwen3-primitives-host-test.dir/tests/qwen3_primitives_host_test.cpp.o
+[100%] Linking CXX executable miinfer-qwen3-primitives-host-test
+[100%] Built target miinfer-qwen3-primitives-host-test
+[ 80%] Built target miinfer_model
+[ 90%] Building CXX object CMakeFiles/miinfer-qwen3-layer0-test.dir/tests/qwen3_layer0_test.cpp.o
+[100%] Linking CXX executable miinfer-qwen3-layer0-test
+[100%] Built target miinfer-qwen3-layer0-test
+[ 80%] Built target miinfer_model
+[ 90%] Building CXX object CMakeFiles/miinfer-qwen3-kv-cache-test.dir/tests/qwen3_kv_cache_test.cpp.o
+[100%] Linking CXX executable miinfer-qwen3-kv-cache-test
+[100%] Built target miinfer-qwen3-kv-cache-test
+[ 80%] Built target miinfer_model
+[ 90%] Building CXX object CMakeFiles/miinfer-qwen3-forward-test.dir/tests/qwen3_forward_test.cpp.o
+[100%] Linking CXX executable miinfer-qwen3-forward-test
+[100%] Built target miinfer-qwen3-forward-test
+[ 80%] Built target miinfer_model
+[ 90%] Building CXX object CMakeFiles/miinfer-qwen3-tokenizer-test.dir/tests/qwen3_tokenizer_test.cpp.o
+[100%] Linking CXX executable miinfer-qwen3-tokenizer-test
+[100%] Built target miinfer-qwen3-tokenizer-test
+[ 25%] Building CXX object CMakeFiles/miinfer_context_space.dir/src/context_space.cpp.o
+[ 50%] Linking CXX static library libmiinfer_context_space.a
+[ 50%] Built target miinfer_context_space
+[ 75%] Building CXX object CMakeFiles/miinfer-context-space-test.dir/tests/context_space_test.cpp.o
+[100%] Linking CXX executable miinfer-context-space-test
+[100%] Built target miinfer-context-space-test
+[ 33%] Built target miinfer_context_space
+[ 50%] Building CXX object CMakeFiles/miinfer_device_kv_shard.dir/src/device_kv_shard.cpp.o
+[ 66%] Linking CXX static library libmiinfer_device_kv_shard.a
+[ 66%] Built target miinfer_device_kv_shard
+[ 83%] Building CXX object CMakeFiles/miinfer-device-kv-shard-placement-test.dir/tests/device_kv_shard_placement_test.cpp.o
+[100%] Linking CXX executable miinfer-device-kv-shard-placement-test
+[100%] Built target miinfer-device-kv-shard-placement-test
+Internal ctest changing into directory: /workspace/MIInfer/build/qualification-container-rocm721-host
+Test project /workspace/MIInfer/build/qualification-container-rocm721-host
+      Start  1: host-only
+ 1/12 Test  #1: host-only ..........................   Passed    0.00 sec
+      Start  2: openai-api-host
+ 2/12 Test  #2: openai-api-host ....................   Passed    0.00 sec
+      Start  3: m12-gdn-oracle
+ 3/12 Test  #3: m12-gdn-oracle .....................   Passed    1.30 sec
+      Start  4: model-loader-host
+ 4/12 Test  #4: model-loader-host ..................   Passed    0.00 sec
+      Start  5: qwen3-primitives-host
+ 5/12 Test  #5: qwen3-primitives-host ..............   Passed    0.00 sec
+      Start  6: context-space-host
+ 6/12 Test  #6: context-space-host .................   Passed    0.00 sec
+      Start  7: device-kv-shard-placement-host
+ 7/12 Test  #7: device-kv-shard-placement-host .....   Passed    0.00 sec
+      Start  8: qwen3-layer0-host
+ 8/12 Test  #8: qwen3-layer0-host ..................   Passed    0.00 sec
+      Start  9: qwen3-kv-cache-host
+ 9/12 Test  #9: qwen3-kv-cache-host ................   Passed    0.00 sec
+      Start 10: qwen3-forward-host
+10/12 Test #10: qwen3-forward-host .................   Passed    0.00 sec
+      Start 11: qwen3-tokenizer-host
+11/12 Test #11: qwen3-tokenizer-host ...............   Passed    0.00 sec
+      Start 12: qwen3-layer0-comparator-mutation
+12/12 Test #12: qwen3-layer0-comparator-mutation ...   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 12
+
+Label Time Summary:
+host-only    =   1.32 sec*proc (12 tests)
+
+Total Test time (real) =   1.32 sec
+-- The CXX compiler identification is Clang 22.0.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /opt/rocm/llvm/bin/clang++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Using the multi-header code from /workspace/MIInfer/build/qualification-container-rocm721-gpu/_deps/nlohmann_json-src/include/
+-- The HIP compiler identification is Clang 22.0.0
+-- Detecting HIP compiler ABI info
+-- Detecting HIP compiler ABI info - done
+-- Check for working HIP compiler: /opt/rocm-7.2.1/lib/llvm/bin/clang++ - skipped
+-- Detecting HIP compile features
+-- Detecting HIP compile features - done
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- Performing Test HIP_CLANG_SUPPORTS_PARALLEL_JOBS
+-- Performing Test HIP_CLANG_SUPPORTS_PARALLEL_JOBS - Success
+-- Configuring done (3.2s)
+-- Generating done (0.3s)
+-- Build files have been written to: /workspace/MIInfer/build/qualification-container-rocm721-gpu
+[  0%] Building CXX object CMakeFiles/miinfer_build_info.dir/src/build_info.cpp.o
+[  0%] Building CXX object CMakeFiles/miinfer_context_space.dir/src/context_space.cpp.o
+[  6%] Linking CXX static library libmiinfer_build_info.a
+[  6%] Built target miinfer_build_info
+[  6%] Building CXX object CMakeFiles/miinfer_model.dir/src/gguf.cpp.o
+[ 13%] Linking CXX static library libmiinfer_context_space.a
+[ 13%] Built target miinfer_context_space
+[ 20%] Building CXX object CMakeFiles/miinfer_model.dir/src/qwen3_model.cpp.o
+[ 20%] Building CXX object CMakeFiles/miinfer_model.dir/src/qwen35_model.cpp.o
+[ 20%] Building CXX object CMakeFiles/miinfer_model.dir/src/qwen3_primitives.cpp.o
+[ 26%] Building CXX object CMakeFiles/miinfer_model.dir/src/qwen3_layer.cpp.o
+[ 26%] Building CXX object CMakeFiles/miinfer_model.dir/src/qwen3_tokenizer.cpp.o
+[ 26%] Building CXX object CMakeFiles/miinfer_model.dir/src/sha256.cpp.o
+[ 26%] Building CXX object CMakeFiles/miinfer_device_kv_shard.dir/src/device_kv_shard.cpp.o
+[ 33%] Linking CXX static library libmiinfer_model.a
+[ 33%] Built target miinfer_model
+[ 33%] Linking CXX static library libmiinfer_device_kv_shard.a
+[ 33%] Built target miinfer_device_kv_shard
+[ 40%] Building CXX object CMakeFiles/miinfer_hip.dir/src/device_validation.cpp.o
+[ 40%] Building CXX object CMakeFiles/miinfer_hip.dir/src/model_plan.cpp.o
+[ 40%] Building CXX object CMakeFiles/miinfer_hip.dir/src/qwen3_gpu_layer.cpp.o
+[ 46%] Building CXX object CMakeFiles/miinfer_hip.dir/src/fp16_gemv_reference.cpp.o
+[ 46%] Building CXX object CMakeFiles/miinfer_hip.dir/src/q4_q8_gemv_reference.cpp.o
+[ 46%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/state.cpp.o
+[ 53%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/workspace.cpp.o
+[ 53%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/recurrent_layer.cpp.o
+[ 53%] Building CXX object CMakeFiles/miinfer_hip.dir/src/device_kv_pool.cpp.o
+[ 60%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/kv_cache.cpp.o
+[ 60%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/attention_layer.cpp.o
+[ 66%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/topology_block.cpp.o
+[ 66%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/reusable_context.cpp.o
+[ 66%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/persistent_session.cpp.o
+[ 73%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/model.cpp.o
+[ 73%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/vector_add.hip.o
+[ 73%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/fp16_gemv.hip.o
+[ 80%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/q4_q8_gemv.hip.o
+[ 80%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/q4_q8_packed_dot.hip.o
+[ 80%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/q4_q8_zero_point_dot.hip.o
+[ 86%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/qwen3_primitives.hip.o
+[ 86%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/kquant_wave_layout.hip.o
+/workspace/MIInfer/gfx906/kernels/qwen3_primitives.hip:2687:35: warning: unused parameter 'scale' [-Wunused-parameter]
+ 2687 |     std::uint32_t head_dim, float scale) {
+      |                                   ^
+/workspace/MIInfer/gfx906/kernels/qwen3_primitives.hip:6188:17: warning: loop not unrolled: the optimizer was unable to perform the requested transformation; the transformation might be disabled or specified as part of an unsupported transformation ordering [-Wpass-failed=transform-warning]
+ 6188 | __global__ void prefill_v2_split_kv_attention_stage1_kernel(
+      |                 ^
+2 warnings generated when compiling for gfx906.
+/workspace/MIInfer/gfx906/kernels/qwen3_primitives.hip:2687:35: warning: unused parameter 'scale' [-Wunused-parameter]
+ 2687 |     std::uint32_t head_dim, float scale) {
+      |                                   ^
+1 warning generated when compiling for host.
+[ 86%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/m12_dense_stage.hip.o
+/workspace/MIInfer/gfx906/kernels/kquant_wave_layout.hip:2404:43: warning: failed to meet occupancy target given by 'amdgpu-waves-per-eu' in '_ZN12_GLOBAL__N_129mx_repacked_mmq_pinned_kernelILb0ELb0EEEvPKhPKN7miinfer14MxQ8_1MmqBlockEPfjjj': desired occupancy was 2, final occupancy is 1 [-Wpass-failed]
+ 2404 | __launch_bounds__(256, 2) __global__ void mx_repacked_mmq_pinned_kernel(
+      |                                           ^
+[ 93%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/m12_gdn_chunk.hip.o
+/workspace/MIInfer/gfx906/kernels/kquant_wave_layout.hip:2404:43: warning: failed to meet occupancy target given by 'amdgpu-waves-per-eu' in '_ZN12_GLOBAL__N_129mx_repacked_mmq_pinned_kernelILb1ELb0EEEvPKhPKN7miinfer14MxQ8_1MmqBlockEPfjjj': desired occupancy was 2, final occupancy is 1 [-Wpass-failed]
+2 warnings generated when compiling for gfx906.
+[ 93%] Building CXX object CMakeFiles/miinfer_hip.dir/src/kquant_wave_layout.cpp.o
+[100%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/memory_stream.hip.o
+[100%] Linking HIP static library libmiinfer_hip.a
+[100%] Built target miinfer_hip
+[100%] Building CXX object CMakeFiles/miinfer-hip-smoke.dir/tests/hip_smoke.cpp.o
+[100%] Linking HIP executable miinfer-hip-smoke
+[100%] Built target miinfer-hip-smoke
+[  6%] Built target miinfer_context_space
+[ 12%] Built target miinfer_build_info
+[ 12%] Built target miinfer_device_kv_shard
+[ 31%] Built target miinfer_model
+[ 93%] Built target miinfer_hip
+[100%] Building CXX object CMakeFiles/miinfer-fp16-gemv-test.dir/tests/fp16_gemv_test.cpp.o
+[100%] Linking HIP executable miinfer-fp16-gemv-test
+[100%] Built target miinfer-fp16-gemv-test
+[  6%] Built target miinfer_context_space
+[ 12%] Built target miinfer_build_info
+[ 12%] Built target miinfer_device_kv_shard
+[ 31%] Built target miinfer_model
+[ 93%] Built target miinfer_hip
+[ 93%] Building CXX object CMakeFiles/miinfer-q4-q8-gemv-test.dir/tests/q4_q8_gemv_test.cpp.o
+[100%] Linking HIP executable miinfer-q4-q8-gemv-test
+[100%] Built target miinfer-q4-q8-gemv-test
+[  6%] Built target miinfer_context_space
+[ 12%] Built target miinfer_build_info
+[ 12%] Built target miinfer_device_kv_shard
+[ 31%] Built target miinfer_model
+[ 93%] Built target miinfer_hip
+[100%] Building CXX object CMakeFiles/miinfer-bench.dir/bench/hip_smoke_bench.cpp.o
+[100%] Linking HIP executable miinfer-bench
+[100%] Built target miinfer-bench
+[  6%] Built target miinfer_context_space
+[ 12%] Built target miinfer_build_info
+[ 12%] Building CXX object CMakeFiles/miinfer_openai_api.dir/src/openai_api.cpp.o
+[ 31%] Built target miinfer_model
+[ 31%] Built target miinfer_device_kv_shard
+[ 93%] Built target miinfer_hip
+[100%] Linking CXX static library libmiinfer_openai_api.a
+[100%] Built target miinfer_openai_api
+[100%] Building CXX object CMakeFiles/miinfer.dir/tools/miinfer_cli.cpp.o
+/workspace/MIInfer/tools/miinfer_cli.cpp:2826:41: warning: lambda capture 'this' is not used [-Wunused-lambda-capture]
+ 2826 |             const auto write_capture = [this, &layer_path_prefix](
+      |                                         ^~~~~
+In file included from /workspace/MIInfer/tools/miinfer_cli.cpp:43:
+In file included from /workspace/MIInfer/tools/qwen35_gpu_pipeline.hpp:4:
+/workspace/MIInfer/tools/m6a3_qwen35_layer.cpp:93:28: warning: unused function 'read_tokens' [-Wunused-function]
+   93 | std::vector<std::uint32_t> read_tokens(const std::filesystem::path& path) {
+      |                            ^~~~~~~~~~~
+/workspace/MIInfer/tools/m6a3_qwen35_layer.cpp:361:20: warning: unused function 'conv_output' [-Wunused-function]
+  361 | std::vector<float> conv_output(std::span<const float> current,
+      |                    ^~~~~~~~~~~
+/workspace/MIInfer/tools/m6a3_qwen35_layer.cpp:417:20: warning: unused function 'layer_path' [-Wunused-function]
+  417 | std::vector<float> layer_path(const GgufFile& model, const std::filesystem::path& fixture,
+      |                    ^~~~~~~~~~
+In file included from /workspace/MIInfer/tools/miinfer_cli.cpp:43:
+/workspace/MIInfer/tools/qwen35_gpu_pipeline.hpp:314:8: warning: unused function 'copy_combined_q4k_mmq_tensors' [-Wunused-function]
+  314 | Buffer copy_combined_q4k_mmq_tensors(const miinfer::GgufTensor& a, const miinfer::GgufTensor& b) {
+      |        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/MIInfer/tools/qwen35_gpu_pipeline.hpp:442:7: warning: unused function 'cosine_similarity' [-Wunused-function]
+  442 | float cosine_similarity(std::span<const float> actual, std::span<const float> expected) {
+      |       ^~~~~~~~~~~~~~~~~
+/workspace/MIInfer/tools/qwen35_gpu_pipeline.hpp:455:13: warning: unused function 'first_argmax' [-Wunused-function]
+  455 | std::size_t first_argmax(std::span<const float> values) {
+      |             ^~~~~~~~~~~~
+/workspace/MIInfer/tools/qwen35_gpu_pipeline.hpp:463:26: warning: unused function 'top_indices' [-Wunused-function]
+  463 | std::vector<std::size_t> top_indices(std::span<const float> values, std::size_t count) {
+      |                          ^~~~~~~~~~~
+/workspace/MIInfer/tools/qwen35_gpu_pipeline.hpp:475:13: warning: unused function 'rank_of' [-Wunused-function]
+  475 | std::size_t rank_of(std::span<const float> values, std::size_t index) {
+      |             ^~~~~~~
+/workspace/MIInfer/tools/qwen35_gpu_pipeline.hpp:484:15: warning: unused function 'detailed_device_error' [-Wunused-function]
+  484 | DetailedError detailed_device_error(const float* device, std::size_t elements,
+      |               ^~~~~~~~~~~~~~~~~~~~~
+/workspace/MIInfer/tools/qwen35_gpu_pipeline.hpp:674:14: warning: unused function 'compare_bytes' [-Wunused-function]
+  674 | ByteMismatch compare_bytes(std::span<const std::byte> actual,
+      |              ^~~~~~~~~~~~~
+/workspace/MIInfer/tools/qwen35_gpu_pipeline.hpp:690:15: warning: unused function 'fingerprint' [-Wunused-function]
+  690 | std::uint64_t fingerprint(const void* device, std::size_t bytes) {
+      |               ^~~~~~~~~~~
+/workspace/MIInfer/tools/qwen35_gpu_pipeline.hpp:5664:6: warning: unused function 'run_hybrid_block' [-Wunused-function]
+ 5664 | void run_hybrid_block(RecurrentLayer& recurrent0, RecurrentLayer& recurrent1,
+      |      ^~~~~~~~~~~~~~~~
+/workspace/MIInfer/tools/qwen35_gpu_pipeline.hpp:5867:19: warning: unused function 'read_external_operands' [-Wunused-function]
+ 5867 | RecurrentOperands read_external_operands(const std::filesystem::path& fixture) {
+      |                   ^~~~~~~~~~~~~~~~~~~~~~
+/workspace/MIInfer/tools/qwen35_gpu_pipeline.hpp:5883:20: warning: unused function 'replay_state' [-Wunused-function]
+ 5883 | std::vector<float> replay_state(const RecurrentOperands& operands) {
+      |                    ^~~~~~~~~~~~
+/workspace/MIInfer/tools/miinfer_cli.cpp:4792:23: warning: unused variable 'kMaxRequestTokens' [-Wunused-const-variable]
+ 4792 | constexpr std::size_t kMaxRequestTokens = 4096;
+      |                       ^~~~~~~~~~~~~~~~~
+16 warnings generated.
+[100%] Linking HIP executable miinfer
+[100%] Built target miinfer
+HIP smoke test passed on AMD Radeon Graphics (gfx906:sramecc-:xnack-)
+device: AMD Radeon Graphics (gfx906:sramecc-:xnack-)
+miinfer-baseline small-tail max_abs=5.4419041e-05 mean_abs=2.3136714e-05 max_rel=0.00045568527 cosine=0.99999996 result=PASS
+rocblas-gemm small-tail max_abs=5.4419041e-05 mean_abs=2.3136714e-05 max_rel=0.00045568527 cosine=0.99999996 result=PASS
+miinfer-baseline m-tail max_abs=0.00011956692 mean_abs=2.0917599e-05 max_rel=0.0004585646 cosine=0.99999998 result=PASS
+rocblas-gemm m-tail max_abs=0.00011956692 mean_abs=2.0917599e-05 max_rel=0.0004585646 cosine=0.99999998 result=PASS
+miinfer-baseline k-split-tail max_abs=2.8394163e-05 mean_abs=1.0124662e-05 max_rel=0.00032265264 cosine=0.99999998 result=PASS
+miinfer-k-split-2 k-split-tail max_abs=2.8394163e-05 mean_abs=1.0124662e-05 max_rel=0.00032265264 cosine=0.99999998 result=PASS
+miinfer-k-split-4 k-split-tail max_abs=2.8394163e-05 mean_abs=1.0124662e-05 max_rel=0.00032265264 cosine=0.99999998 result=PASS
+rocblas-gemm k-split-tail max_abs=2.8394163e-05 mean_abs=1.0124662e-05 max_rel=0.00032265264 cosine=0.99999998 result=PASS
+miinfer-baseline Q max_abs=0.0018935204 mean_abs=0.00018879801 max_rel=0.0013759346 cosine=0.99999998 result=PASS
+miinfer-k-split-2 Q max_abs=0.0018935204 mean_abs=0.00018879823 max_rel=0.0013759346 cosine=0.99999998 result=PASS
+miinfer-k-split-4 Q max_abs=0.0018935204 mean_abs=0.00018879871 max_rel=0.0013759346 cosine=0.99999998 result=PASS
+rocblas-gemm Q max_abs=0.0018935204 mean_abs=0.00018880299 max_rel=0.0029306055 cosine=0.99999998 result=PASS
+miinfer-baseline K max_abs=0.0018782616 mean_abs=0.00018776237 max_rel=0.0004849951 cosine=0.99999998 result=PASS
+miinfer-k-split-2 K max_abs=0.0018782616 mean_abs=0.00018776237 max_rel=0.0004849951 cosine=0.99999998 result=PASS
+miinfer-k-split-4 K max_abs=0.0018782616 mean_abs=0.00018776237 max_rel=0.0004849951 cosine=0.99999998 result=PASS
+rocblas-gemm K max_abs=0.0018782616 mean_abs=0.00018777337 max_rel=0.0010340109 cosine=0.99999998 result=PASS
+miinfer-baseline V max_abs=0.0018782616 mean_abs=0.00018776237 max_rel=0.0004849951 cosine=0.99999998 result=PASS
+miinfer-k-split-2 V max_abs=0.0018782616 mean_abs=0.00018776237 max_rel=0.0004849951 cosine=0.99999998 result=PASS
+miinfer-k-split-4 V max_abs=0.0018782616 mean_abs=0.00018776237 max_rel=0.0004849951 cosine=0.99999998 result=PASS
+rocblas-gemm V max_abs=0.0018782616 mean_abs=0.00018777337 max_rel=0.0010340109 cosine=0.99999998 result=PASS
+miinfer-baseline O max_abs=0.0018935204 mean_abs=0.00018879801 max_rel=0.0013759346 cosine=0.99999998 result=PASS
+miinfer-k-split-2 O max_abs=0.0018935204 mean_abs=0.00018879823 max_rel=0.0013759346 cosine=0.99999998 result=PASS
+miinfer-k-split-4 O max_abs=0.0018935204 mean_abs=0.00018879871 max_rel=0.0013759346 cosine=0.99999998 result=PASS
+rocblas-gemm O max_abs=0.0018935204 mean_abs=0.00018880299 max_rel=0.0029306055 cosine=0.99999998 result=PASS
+miinfer-baseline G max_abs=0.0017876625 mean_abs=0.00018863044 max_rel=0.01031891 cosine=0.99999998 result=PASS
+miinfer-k-split-2 G max_abs=0.0017876625 mean_abs=0.00018863093 max_rel=0.010998344 cosine=0.99999998 result=PASS
+miinfer-k-split-4 G max_abs=0.0017876625 mean_abs=0.00018863057 max_rel=0.0096394751 cosine=0.99999998 result=PASS
+rocblas-gemm G max_abs=0.0017876625 mean_abs=0.00018863645 max_rel=0.013036647 cosine=0.99999998 result=PASS
+miinfer-baseline U max_abs=0.0017876625 mean_abs=0.00018863044 max_rel=0.01031891 cosine=0.99999998 result=PASS
+miinfer-k-split-2 U max_abs=0.0017876625 mean_abs=0.00018863093 max_rel=0.010998344 cosine=0.99999998 result=PASS
+miinfer-k-split-4 U max_abs=0.0017876625 mean_abs=0.00018863057 max_rel=0.0096394751 cosine=0.99999998 result=PASS
+rocblas-gemm U max_abs=0.0017876625 mean_abs=0.00018863645 max_rel=0.013036647 cosine=0.99999998 result=PASS
+miinfer-baseline D max_abs=0.0019431114 mean_abs=0.00032158469 max_rel=0.05915493 cosine=0.99999998 result=PASS
+miinfer-k-split-2 D max_abs=0.0019431114 mean_abs=0.00032158389 max_rel=0.14366197 cosine=0.99999998 result=PASS
+miinfer-k-split-4 D max_abs=0.0019431114 mean_abs=0.00032158524 max_rel=0.17183099 cosine=0.99999998 result=PASS
+rocblas-gemm D max_abs=0.0019431114 mean_abs=0.00032160591 max_rel=0.55492958 cosine=0.99999998 result=PASS
+q4_q8 zero-point algebra max_ideal_error=1.52588e-05 max_stored_s_error=0.0221405 result=PASS
+silu+q8 exact fusion byte_identity=PASS blocks=384
+q4_q8 scalar small max_abs=5.80251e-05 mean_abs=1.98739e-05 cosine=1 result=PASS
+q4_q8 packed-dot small max_abs=5.80251e-05 mean_abs=1.98739e-05 cosine=1 result=PASS
+q4_q8 zero-point-dot small max_abs=5.80251e-05 mean_abs=2.55959e-05 cosine=1 result=PASS
+q4_q8 zero-point-128 small max_abs=5.80251e-05 mean_abs=2.55959e-05 cosine=1 result=PASS
+q4_q8 zero-point-wave64 small max_abs=5.80251e-05 mean_abs=2.55959e-05 cosine=1 result=PASS
+q4_q8 zero-point-four-wave64 small max_abs=5.80251e-05 mean_abs=2.55959e-05 cosine=1 result=PASS
+q4_q8 zero-point-four-wave64-exact-metadata small max_abs=5.80251e-05 mean_abs=1.98739e-05 cosine=1 result=PASS
+q4_q8 zero-point-exact-metadata small max_abs=5.80251e-05 mean_abs=1.98739e-05 cosine=1 result=PASS
+q4_q8 scalar tail max_abs=0.00012055 mean_abs=2.02121e-05 cosine=1 result=PASS
+q4_q8 packed-dot tail max_abs=0.00012055 mean_abs=2.02121e-05 cosine=1 result=PASS
+q4_q8 zero-point-dot tail max_abs=0.00012055 mean_abs=2.03629e-05 cosine=1 result=PASS
+q4_q8 zero-point-128 tail max_abs=0.00012055 mean_abs=2.03629e-05 cosine=1 result=PASS
+q4_q8 zero-point-wave64 tail max_abs=0.00012055 mean_abs=2.03629e-05 cosine=1 result=PASS
+q4_q8 zero-point-four-wave64 tail max_abs=0.00012055 mean_abs=2.03629e-05 cosine=1 result=PASS
+q4_q8 zero-point-four-wave64-exact-metadata tail max_abs=0.00012055 mean_abs=2.02121e-05 cosine=1 result=PASS
+q4_q8 zero-point-exact-metadata tail max_abs=0.00012055 mean_abs=2.02121e-05 cosine=1 result=PASS
+q4_q8 scalar Q max_abs=0.00192595 mean_abs=0.00018516 cosine=1 result=PASS
+q4_q8 packed-dot Q max_abs=0.00192595 mean_abs=0.000185159 cosine=1 result=PASS
+q4_q8 zero-point-dot Q max_abs=0.00261021 mean_abs=0.000477077 cosine=1 result=PASS
+q4_q8 zero-point-128 Q max_abs=0.00261021 mean_abs=0.000477077 cosine=1 result=PASS
+q4_q8 zero-point-wave64 Q max_abs=0.00261021 mean_abs=0.000477079 cosine=1 result=PASS
+q4_q8 zero-point-four-wave64 Q max_abs=0.00261021 mean_abs=0.00047705 cosine=1 result=PASS
+q4_q8 zero-point-four-wave64-exact-metadata Q max_abs=0.00192595 mean_abs=0.000185159 cosine=1 result=PASS
+q4_q8 zero-point-exact-metadata Q max_abs=0.00192595 mean_abs=0.000185159 cosine=1 result=PASS
+q4_q8 scalar K max_abs=0.00112486 mean_abs=0.000182121 cosine=1 result=PASS
+q4_q8 packed-dot K max_abs=0.00112486 mean_abs=0.00018212 cosine=1 result=PASS
+q4_q8 zero-point-dot K max_abs=0.00266814 mean_abs=0.00059598 cosine=1 result=PASS
+q4_q8 zero-point-128 K max_abs=0.00266814 mean_abs=0.00059598 cosine=1 result=PASS
+q4_q8 zero-point-wave64 K max_abs=0.00266814 mean_abs=0.00059598 cosine=1 result=PASS
+q4_q8 zero-point-four-wave64 K max_abs=0.00266814 mean_abs=0.00059598 cosine=1 result=PASS
+q4_q8 zero-point-four-wave64-exact-metadata K max_abs=0.00112486 mean_abs=0.000182122 cosine=1 result=PASS
+q4_q8 zero-point-exact-metadata K max_abs=0.00112486 mean_abs=0.00018212 cosine=1 result=PASS
+q4_q8 scalar V max_abs=0.00112486 mean_abs=0.000182121 cosine=1 result=PASS
+q4_q8 packed-dot V max_abs=0.00112486 mean_abs=0.00018212 cosine=1 result=PASS
+q4_q8 zero-point-dot V max_abs=0.00266814 mean_abs=0.00059598 cosine=1 result=PASS
+q4_q8 zero-point-128 V max_abs=0.00266814 mean_abs=0.00059598 cosine=1 result=PASS
+q4_q8 zero-point-wave64 V max_abs=0.00266814 mean_abs=0.00059598 cosine=1 result=PASS
+q4_q8 zero-point-four-wave64 V max_abs=0.00266814 mean_abs=0.00059598 cosine=1 result=PASS
+q4_q8 zero-point-four-wave64-exact-metadata V max_abs=0.00112486 mean_abs=0.000182122 cosine=1 result=PASS
+q4_q8 zero-point-exact-metadata V max_abs=0.00112486 mean_abs=0.00018212 cosine=1 result=PASS
+q4_q8 scalar O max_abs=0.00192595 mean_abs=0.00018516 cosine=1 result=PASS
+q4_q8 packed-dot O max_abs=0.00192595 mean_abs=0.000185159 cosine=1 result=PASS
+q4_q8 zero-point-dot O max_abs=0.00261021 mean_abs=0.000477077 cosine=1 result=PASS
+q4_q8 zero-point-128 O max_abs=0.00261021 mean_abs=0.000477077 cosine=1 result=PASS
+q4_q8 zero-point-wave64 O max_abs=0.00261021 mean_abs=0.000477079 cosine=1 result=PASS
+q4_q8 zero-point-four-wave64 O max_abs=0.00261021 mean_abs=0.00047705 cosine=1 result=PASS
+q4_q8 zero-point-four-wave64-exact-metadata O max_abs=0.00192595 mean_abs=0.000185159 cosine=1 result=PASS
+q4_q8 zero-point-exact-metadata O max_abs=0.00192595 mean_abs=0.000185159 cosine=1 result=PASS
+q4_q8 scalar G max_abs=0.00175571 mean_abs=0.00018584 cosine=1 result=PASS
+q4_q8 packed-dot G max_abs=0.00175571 mean_abs=0.000185839 cosine=1 result=PASS
+q4_q8 zero-point-dot G max_abs=0.00275373 mean_abs=0.000549376 cosine=1 result=PASS
+q4_q8 zero-point-128 G max_abs=0.00275373 mean_abs=0.000549376 cosine=1 result=PASS
+q4_q8 zero-point-wave64 G max_abs=0.00275373 mean_abs=0.000549283 cosine=1 result=PASS
+q4_q8 zero-point-four-wave64 G max_abs=0.00275373 mean_abs=0.000549375 cosine=1 result=PASS
+q4_q8 zero-point-four-wave64-exact-metadata G max_abs=0.00175571 mean_abs=0.00018584 cosine=1 result=PASS
+q4_q8 zero-point-exact-metadata G max_abs=0.00175571 mean_abs=0.000185839 cosine=1 result=PASS
+q4_q8 scalar U max_abs=0.00175571 mean_abs=0.00018584 cosine=1 result=PASS
+q4_q8 packed-dot U max_abs=0.00175571 mean_abs=0.000185839 cosine=1 result=PASS
+q4_q8 zero-point-dot U max_abs=0.00275373 mean_abs=0.000549376 cosine=1 result=PASS
+q4_q8 zero-point-128 U max_abs=0.00275373 mean_abs=0.000549376 cosine=1 result=PASS
+q4_q8 zero-point-wave64 U max_abs=0.00275373 mean_abs=0.000549283 cosine=1 result=PASS
+q4_q8 zero-point-four-wave64 U max_abs=0.00275373 mean_abs=0.000549375 cosine=1 result=PASS
+q4_q8 zero-point-four-wave64-exact-metadata U max_abs=0.00175571 mean_abs=0.00018584 cosine=1 result=PASS
+q4_q8 zero-point-exact-metadata U max_abs=0.00175571 mean_abs=0.000185839 cosine=1 result=PASS
+q4_q8 scalar D max_abs=0.00316334 mean_abs=0.000322924 cosine=1 result=PASS
+q4_q8 packed-dot D max_abs=0.00316334 mean_abs=0.000322922 cosine=1 result=PASS
+q4_q8 zero-point-dot D max_abs=0.00412154 mean_abs=0.000893556 cosine=1 result=PASS
+q4_q8 zero-point-128 D max_abs=0.00412154 mean_abs=0.000893617 cosine=1 result=PASS
+q4_q8 zero-point-wave64 D max_abs=0.00412154 mean_abs=0.000893632 cosine=1 result=PASS
+q4_q8 zero-point-four-wave64 D max_abs=0.00412154 mean_abs=0.000893632 cosine=1 result=PASS
+q4_q8 zero-point-four-wave64-exact-metadata D max_abs=0.00316334 mean_abs=0.000322922 cosine=1 result=PASS
+q4_q8 zero-point-exact-metadata D max_abs=0.00316334 mean_abs=0.000322922 cosine=1 result=PASS
+{
+  "benchmark": "hip_smoke",
+  "version": "0.2.0",
+  "git_commit": "UNAVAILABLE",
+  "git_dirty": "UNAVAILABLE",
+  "build_type": "Release",
+  "compiler": "Clang 22.0.0",
+  "hip_compiler": "Clang 22.0.0",
+  "hip_available": "true",
+  "gpu": "AMD Radeon Graphics",
+  "gfx": "gfx906:sramecc-:xnack-",
+  "vram_bytes": 34342961152,
+  "elements": 1048576,
+  "warmup_iterations": 2,
+  "measured_iterations": 10,
+  "mean_us": 47.375601,
+  "median_us": 47.359500,
+  "min_us": 43.839999,
+  "max_us": 51.359002,
+  "stddev_us": 2.508855,
+  "samples_us": [46.720002, 44.160001, 48.799001, 47.038998, 51.359002, 43.839999, 50.560001, 44.479001, 49.120001, 47.680002],
+  "correctness": "PASS"
+}
+hip_smoke: 10 HIP-event samples, median 47.3595 us
+Profile: production
+
+[response truncated at output-token limit]generation_smoke=PASS

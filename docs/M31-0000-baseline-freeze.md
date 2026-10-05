@@ -12,6 +12,7 @@ workload or reopen COW optimization.
 ```text
 M31_BASELINE_SHA=<filled after final evidence commit>
 M31_MERGE_SHA=dbcbdca801623ea7e4a6d42c1dcefef16e947685
+M31_GATE_SHA=99840d10eabe5e64fe2564d34d3d3fcd42b43521
 M31_MODEL_PATH=/home/machinist/models/Qwen3.8-27B-Q4_K_M.gguf
 M31_MODEL_SHA256=7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169
 M31_CONTAINER_IMAGE=localhost/miinfer-dev:rocm-7.2.1
