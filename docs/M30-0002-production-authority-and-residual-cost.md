@@ -46,6 +46,20 @@ construct or call the Prefill V2 `ContextSpace`, `PlacementPlan`,
 `DeviceKvPool`, or `PhysicalKvView` path. Its richer multi-checkpoint behavior
 must not be mistaken for serving behavior.
 
+| Responsibility | `PrefillV2Model` / `serve` | `Qwen35RuntimeEngine` / other CLI path |
+|---|---|---|
+| Model execution | `PrefillV2Model::forward`, `generate`, and `decode_step` | `generate_layer_major` / legacy layer objects |
+| Prefill | 512-token full-model macro tiles; suffix-only continuation on a hit | Wide/layer-major runtime scheduler |
+| Decode | Persistent V2 recurrent/KV state handed directly to single-token decode | Runtime engine's separate decode graph and buffers |
+| KV ownership | 16 `AttentionLayerKvCacheStorage` instances with resolved `PhysicalKvView` | Direct runtime-layer key/value buffers |
+| GDN ownership | 48 `RecurrentLayerStateStorage` instances plus `ReusableContext` checkpoint | Runtime-layer recurrent buffers plus `SessionCheckpoint` copies |
+| Exact-prefix reuse | One active in-memory exact checkpoint; persistent files are optional | Longest-prefix radix index over up to eight in-memory checkpoints |
+| Zero suffix | Supported with the in-memory final-hidden payload | Separate runtime checkpoint semantics; not the serving path |
+| Context/placement | `ContextSpace` -> `PlacementPlan` -> `DeviceKvPool` -> `PhysicalKvView` | No calls to those M29 placement types in this class |
+| 128K | Current server accepts 131072; M29 records a focused 128K envelope | Runtime has a configurable cache capacity, but is not the M29 shipped authority |
+| Integration | `cmd_serve` constructs it and maps its telemetry | `cmd_run`/benchmark-style CLI path constructs it |
+| M29 relationship | The qualified physical-view production owner | Retained compatibility/measurement architecture |
+
 ## Reuse semantics audit
 
 | Capability | Current serving behavior |
@@ -94,4 +108,3 @@ RESIDUAL_ANALYSIS_SHA=pending
 SEMANTICS_AUDIT_SHA=pending
 INTEGRATED_EVIDENCE_SHA=pending
 ```
-
