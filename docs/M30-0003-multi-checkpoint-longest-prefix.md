@@ -82,6 +82,12 @@ active branch-A checkpoint, selected the retained 1024-token common checkpoint,
 and executed only its 186-token suffix. This is the requested serving-side
 longest-prefix result; the earlier terminal-only session failure is resolved.
 
+The branch-A/B serving response was then replayed on a fresh
+`--no-session-reuse` server. The reuse and cold response bodies were both 205
+bytes with SHA-256
+`f1f8fee0bbb9f480fcccd007d3aacbbc5ee411d11fbbbab100b24ae064a4e180`.
+API-level output parity therefore passed.
+
 An older dirty Machinist binary was also probed before the isolated build and
 failed its first reuse assertion (`length=512`, `retained=0`); that result is
 rejected because it did not match the current source/configuration contract.
