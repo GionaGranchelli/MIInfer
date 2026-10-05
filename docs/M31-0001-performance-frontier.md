@@ -21,6 +21,22 @@ after one same-prompt TG128 warmup. Warm means warmed model/graph execution,
 not persistent prefix reuse; that architectural comparison belongs to
 M31-0002. The benchmark emits one JSON row per context and decode length.
 
+## Short-context reference points
+
+The frontier also retains the existing V2-0045-compatible short-context
+reference points, without changing that benchmark's output convention:
+
+| Reference | Prefill | Decode |
+|---:|:---:|:---:|
+| P512 | required | TG128 required |
+| P2K | required | TG128 required |
+| P4K | required | TG128 required |
+
+Run these with `miinfer-v2-0045-qual-bench` on the same frozen host, model,
+image, GPU, and clock policy. Record the complete stdout, command line, and
+model checksum alongside the frontier JSONL. These are comparison references,
+not replacements for the 8K/32K/64K/128K frontier matrix.
+
 ## Evidence
 
 ```text
@@ -31,4 +47,6 @@ M31_0001_RESULT=<PASS or FAIL>
 
 Results must retain the complete benchmark output, model checksum, context
 seeds, decode lengths, VRAM values, and output-parity status. A result with
-failed parity is not a valid performance result.
+failed parity is not a valid performance result. The short-context evidence
+must additionally retain one prefill and one TG128 decode result for each of
+P512, P2K, and P4K.
