@@ -43,6 +43,7 @@ struct RunResult {
     std::size_t peak_vram = 0;
     std::size_t physical_tokens = 0;
     double wall_ms = 0.0;
+    double restore_ms = 0.0;
     std::size_t shared_bytes = 0;
     std::size_t private_bytes = 0;
     std::size_t references = 0;
@@ -78,7 +79,9 @@ RunResult run_snapshot_workload(const miinfer::Qwen35Model& model) {
 
     RunResult result;
     for (std::size_t i = 0; i < branches.size(); ++i) {
+        const auto restore_start = now_ms();
         require(engine.restore_snapshot(fork_ids[i]), "sibling restore failed");
+        result.restore_ms += now_ms() - restore_start;
         const auto start = now_ms();
         const auto stats = engine.generate(branches[i], options(true, 1));
         result.wall_ms += now_ms() - start;
@@ -88,17 +91,23 @@ RunResult run_snapshot_workload(const miinfer::Qwen35Model& model) {
                 "sibling did not reuse shared prefix");
     }
 
+    const auto branch_restore_start = now_ms();
     require(engine.restore_snapshot(fork_ids[0]), "branch A restore failed");
+    result.restore_ms += now_ms() - branch_restore_start;
     (void)engine.generate(branches[0], continue_options);
     const auto branch_a_id = engine.snapshot(branches[0]);
     require(branch_a_id != Model::kInvalidSnapshotId, "branch A snapshot failed");
     const auto nested_id = engine.fork(branch_a_id);
     require(nested_id != Model::kInvalidSnapshotId, "nested fork failed");
+    const auto nested_restore_start = now_ms();
     require(engine.restore_snapshot(nested_id), "nested restore failed");
+    result.restore_ms += now_ms() - nested_restore_start;
     (void)engine.generate(branch_a2, continue_options);
     const auto nested_state_id = engine.snapshot(branch_a2);
     require(nested_state_id != Model::kInvalidSnapshotId, "nested state snapshot failed");
+    const auto nested_state_restore_start = now_ms();
     require(engine.restore_snapshot(nested_state_id), "nested state restore failed");
+    result.restore_ms += now_ms() - nested_state_restore_start;
     const auto nested_start = now_ms();
     const auto nested = engine.generate(branch_a3, options(true, 1));
     result.wall_ms += now_ms() - nested_start;
@@ -140,6 +149,10 @@ RunResult run_snapshot_workload(const miinfer::Qwen35Model& model) {
     require(engine.release_snapshot(base_id), "base release failed");
     require(engine.snapshot_count() == 0 && engine.snapshot_bytes() == 0,
             "COW cleanup left physical backing");
+#if MIINFER_M30_0005_COW
+    require(engine.snapshot_telemetry().reference_count == 0,
+            "COW cleanup left backing references");
+#endif
     return result;
 }
 
@@ -190,6 +203,7 @@ int main(int argc, char** argv) {
                   << " cow_events=" << candidate.cow_events
                   << " cow_bytes_copied=" << candidate.cow_bytes
                   << " peak_vram=" << candidate.peak_vram
+                  << " restore_ms=" << candidate.restore_ms
                   << " branch_wall_ms=" << candidate.wall_ms
                   << " cold_wall_ms=" << cold_wall_ms
                   << " physical_tokens=" << candidate.physical_tokens
@@ -201,6 +215,7 @@ int main(int argc, char** argv) {
                   << " checkpoint_bytes=" << candidate.checkpoint_bytes
                   << " private_bytes=" << candidate.checkpoint_bytes
                   << " peak_vram=" << candidate.peak_vram
+                  << " restore_ms=" << candidate.restore_ms
                   << " branch_wall_ms=" << candidate.wall_ms
                   << " cold_wall_ms=" << cold_wall_ms
                   << " physical_tokens=" << candidate.physical_tokens

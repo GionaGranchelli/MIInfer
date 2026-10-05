@@ -35,6 +35,7 @@ Representative branch outputs are compared against cold execution.
 | COW events | n/a | 2 |
 | COW bytes copied | n/a | 317,849,600 |
 | Peak VRAM | 25,202,993,152 | 25,680,226,304 |
+| Restore latency, eight restores | 1,345.19 ms | 24.63 ms |
 | Branch wall time | 4,239.35 ms | 657.22 ms |
 | Physical suffix tokens | 6 | 6 |
 | Cold physical tokens | 48 | 48 |
@@ -55,6 +56,7 @@ no-disk requirement, not a claimed VRAM win over disk.
 - reference counting/lifetime cleanup: PASS;
 - COW isolation and sibling integrity: PASS;
 - rollback/cold parity: PASS;
+- restore latency accounting: PASS, 24.63 ms COW vs 1,345.19 ms full-copy;
 - physical checkpoint memory reduction: PASS, 62.6%;
 - useful branch depth at the tested topology: PASS, eight snapshots;
 - VRAM reduction versus the disk-backed M30-0004 control: NOT APPLICABLE;
@@ -64,4 +66,3 @@ The remaining product decision is whether device-resident no-disk snapshots
 should be compared against a future device-resident full-copy control for a
 strict VRAM gate. That control is outside the M30-0004 implementation and was
 not substituted silently here.
-
