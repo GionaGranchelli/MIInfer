@@ -1,0 +1,35 @@
+===================================================================
+  MIInfer V2-0013: Long-Context Frontier Qualification
+  Context Scale: 4K -> 8K -> 16K -> 32K -> 64K -> 128K
+  Target: 1 x AMD Instinct MI50 32GB (gfx906, Wave64)
+  Model:  Qwen3.8-27B-Q4_K_M (64 Layers, 48 GDN + 16 GQA)
+===================================================================
+
+[INFO] Device: AMD Instinct MI60 / MI50 (gfx906:sramecc+:xnack-)
+[INFO] Loading GGUF Model from: /home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf
+[INFO] Model loaded successfully: Qwen3.8-27B (64 layers, hidden=5120, vocab=248320)
+
+-------------------------------------------------------------------
+  Running Evaluation: 128K Context (Prompt = 131072, Decode = 128, KV Cap = 131200)
+-------------------------------------------------------------------
+  Memory Breakdown (bytes): weights=24068487168 recurrent_state=158859264 kv_cache=8598323200 workspace=359956480 activation=21966848 cached_state=158859264 total=33366452224
+  Static VRAM Allocation: 31.07 GiB / 31.98 GiB
+  Observed Free Headroom: 0.05 GiB
+  Executing Prefill (131072 tokens in Macro-512 tiles)...
+  Prefill Completed:   2315053.00 ms (56.6 tok/s)
+  Decode Step Latency: 87.76 ms/token (11.4 tok/s)
+  Total Run Time:      2326.21 s
+  Numerical Validity:  VALID (No NaN/Inf/Collapse)
+
+
+========================================================================================================
+  V2-0013: Long-Context Frontier Qualification Summary Table (4K -> 128K)
+========================================================================================================
+
+| Context Regime | Prompt Tokens | Decode Latency | Decode Throughput | Prefill TTFT | Prefill Throughput | Total VRAM | Free VRAM |
+|:---|---:|---:|---:|---:|---:|---:|---:|
+| **128K Context** |        131072 |        87.76 ms |            11.4 tok/s | 2315053.00 ms |             56.6 tok/s |    31.07 GiB |    0.05 GiB |
+
+========================================================================================================
+  V2-0013 Long-Context Frontier Qualification Complete.
+========================================================================================================

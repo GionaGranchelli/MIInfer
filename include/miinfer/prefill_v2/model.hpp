@@ -15,6 +15,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <unordered_map>
 #include <vector>
 #include <span>
 #include <string>
@@ -61,10 +62,15 @@ struct GenerateStats {
     bool reuse_hit = false;
     std::uint32_t prefix_tokens_reused = 0;
     std::uint32_t suffix_tokens_dispatched = 0;
+    std::uint32_t suffix_tokens_executed = 0;
+    std::uint32_t prefix_tokens_replayed = 0;
+    std::uint32_t checkpoint_position = 0;
     std::uint32_t gqa_kv_reused_tokens = 0;
     std::uint32_t gdn_checkpoint_position = 0;
     double restore_ms = 0.0;
     double suffix_prefill_ms = 0.0;
+    std::size_t persistent_checkpoint_count = 0;
+    std::size_t persistent_checkpoint_bytes = 0;
 };
 
 struct ModelProfileBreakdown {
@@ -85,6 +91,18 @@ struct ModelProfileBreakdown {
 // - Ping-pong activation buffers
 class PrefillV2Model {
 public:
+    using SnapshotId = std::uint64_t;
+    static constexpr SnapshotId kInvalidSnapshotId = 0;
+
+    struct SnapshotTelemetry {
+        std::size_t logical_snapshot_count = 0;
+        std::size_t physical_shared_bytes = 0;
+        std::size_t private_branch_bytes = 0;
+        std::size_t reference_count = 0;
+        std::size_t cow_events = 0;
+        std::size_t cow_bytes_copied = 0;
+    };
+
     explicit PrefillV2Model(
         const miinfer::Qwen35Model& model,
         std::uint32_t kv_capacity = 32768,
@@ -212,6 +230,20 @@ public:
         std::uint32_t& out_prefix_length,
         hipStream_t stream = nullptr);
 
+    // Process-local agent snapshot lifecycle. Snapshot tokens must describe
+    // the active full-model state at the time of capture.
+    [[nodiscard]] SnapshotId snapshot(
+        std::span<const std::uint32_t> tokens,
+        hipStream_t stream = nullptr);
+    [[nodiscard]] SnapshotId fork(SnapshotId source);
+    bool restore_snapshot(SnapshotId id, hipStream_t stream = nullptr);
+    bool rollback_snapshot(SnapshotId id, hipStream_t stream = nullptr);
+    bool release_snapshot(SnapshotId id) noexcept;
+    void clear_snapshots() noexcept;
+    [[nodiscard]] std::size_t snapshot_count() const noexcept { return snapshots_.size(); }
+    [[nodiscard]] std::size_t snapshot_bytes() const noexcept { return snapshot_bytes_; }
+    [[nodiscard]] SnapshotTelemetry snapshot_telemetry() const noexcept;
+
     // Memory footprints
     [[nodiscard]] std::size_t persistent_weight_bytes() const noexcept;
     [[nodiscard]] std::size_t persistent_state_bytes() const noexcept;
@@ -235,6 +267,37 @@ public:
     [[nodiscard]] bool is_suffix_graph_captured() const noexcept { return suffix_graph_exec_ != nullptr; }
 
 private:
+    struct SnapshotBacking {
+        explicit SnapshotBacking(std::shared_ptr<SnapshotBacking> parent_backing = nullptr);
+        ~SnapshotBacking();
+
+        std::shared_ptr<SnapshotBacking> parent;
+        std::size_t prefix_length = 0;
+        std::size_t suffix_begin = 0;
+        std::size_t suffix_tokens = 0;
+        void* d_gdn = nullptr;
+        void* d_kv_suffix = nullptr;
+        std::size_t bytes = 0;
+        std::size_t references = 0;
+    };
+
+    struct SnapshotRecord {
+        std::shared_ptr<SnapshotBacking> backing;
+        std::vector<std::uint32_t> tokens;
+        std::uint64_t last_used = 0;
+    };
+
+    void evict_snapshots_except(SnapshotId preserve) noexcept;
+    [[nodiscard]] const SnapshotRecord* find_longest_snapshot_prefix(
+        std::span<const std::uint32_t> tokens) const noexcept;
+    [[nodiscard]] std::shared_ptr<SnapshotBacking> capture_snapshot_backing(
+        std::span<const std::uint32_t> tokens, hipStream_t stream,
+        bool use_parent = true);
+    void restore_snapshot_backing(
+        const std::shared_ptr<SnapshotBacking>& backing, hipStream_t stream);
+    void release_snapshot_record(SnapshotRecord& record) noexcept;
+    void refresh_snapshot_bytes() noexcept;
+
     std::string model_name_ = "Qwen3.8-27B";
     std::string quantization_ = "Q4_K_M";
     std::uint32_t vocab_size_ = 0;
@@ -287,6 +350,14 @@ private:
     mutable std::vector<float> logits_scratch_;
     mutable std::vector<std::pair<float, std::uint32_t>> candidates_buf_;
     mutable std::mt19937 rng_{42};
+
+    std::unordered_map<SnapshotId, SnapshotRecord> snapshots_;
+    SnapshotId next_snapshot_id_ = 1;
+    std::uint64_t snapshot_use_clock_ = 0;
+    std::size_t snapshot_bytes_ = 0;
+    bool snapshot_state_loaded_ = false;
+    std::size_t snapshot_cow_events_ = 0;
+    std::size_t snapshot_cow_bytes_ = 0;
 
     void allocate_resources();
     void free_resources();

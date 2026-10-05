@@ -3,7 +3,16 @@
 #include "miinfer/hip_check.hpp"
 
 #include <hip/hip_runtime.h>
+#define HIPBLAS_V2
 #include <hipblas/hipblas.h>
+
+#ifdef HIPBLAS_V2
+#define MIINFER_HIPBLAS_DATA_TYPE(value) value
+#define MIINFER_HIPBLAS_COMPUTE_TYPE(value) value
+#else
+#define MIINFER_HIPBLAS_DATA_TYPE(value) static_cast<hipblasDatatype_t>(value)
+#define MIINFER_HIPBLAS_COMPUTE_TYPE(value) static_cast<hipblasDatatype_t>(value)
+#endif
 
 #include <cstdlib>
 #include <cstdio>
@@ -304,16 +313,16 @@ bool launch_rocblas_gemm_fp16(
             k,
             &alpha,
             weights,
-            HIP_R_16F,
+            MIINFER_HIPBLAS_DATA_TYPE(HIP_R_16F),
             k,
             input,
-            HIP_R_16F,
+            MIINFER_HIPBLAS_DATA_TYPE(HIP_R_16F),
             k,
             &beta,
             output,
-            HIP_R_16F,
+            MIINFER_HIPBLAS_DATA_TYPE(HIP_R_16F),
             m,
-            HIPBLAS_COMPUTE_32F,
+            MIINFER_HIPBLAS_COMPUTE_TYPE(HIPBLAS_COMPUTE_32F),
             HIPBLAS_GEMM_DEFAULT),
         "hipblasGemmEx",
         error);
@@ -354,16 +363,16 @@ bool launch_rocblas_gemm_fp16_batch(
             k,
             &alpha,
             weights,
-            HIP_R_16F,
+            MIINFER_HIPBLAS_DATA_TYPE(HIP_R_16F),
             k,
             input,
-            HIP_R_16F,
+            MIINFER_HIPBLAS_DATA_TYPE(HIP_R_16F),
             k,
             &beta,
             output,
-            HIP_R_32F,
+            MIINFER_HIPBLAS_DATA_TYPE(HIP_R_32F),
             m,
-            HIPBLAS_COMPUTE_32F,
+            MIINFER_HIPBLAS_COMPUTE_TYPE(HIPBLAS_COMPUTE_32F),
             HIPBLAS_GEMM_DEFAULT),
         "hipblasGemmEx batch",
         error);

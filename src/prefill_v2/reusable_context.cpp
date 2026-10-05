@@ -133,11 +133,39 @@ ReusableContext::ReusableContext(std::string model_id, std::string quantization)
     fingerprint_.prefix_length = 0;
     fingerprint_.token_hash = 0;
     fingerprint_.state_layout_version = kStateLayoutVersion;
+    MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&d_final_hidden_), kHidden * sizeof(float)));
+}
+
+ReusableContext::~ReusableContext() {
+    if (d_final_hidden_ != nullptr) {
+        (void)hipFree(d_final_hidden_);
+        d_final_hidden_ = nullptr;
+    }
+}
+
+ReusableContext::ReusableContext(ReusableContext&& other) noexcept
+    : fingerprint_(std::move(other.fingerprint_)),
+      cached_tokens_(std::move(other.cached_tokens_)),
+      gdn_checkpoint_(std::move(other.gdn_checkpoint_)),
+      d_final_hidden_(std::exchange(other.d_final_hidden_, nullptr)),
+      final_hidden_valid_(std::exchange(other.final_hidden_valid_, false)) {}
+
+ReusableContext& ReusableContext::operator=(ReusableContext&& other) noexcept {
+    if (this != &other) {
+        if (d_final_hidden_ != nullptr) (void)hipFree(d_final_hidden_);
+        fingerprint_ = std::move(other.fingerprint_);
+        cached_tokens_ = std::move(other.cached_tokens_);
+        gdn_checkpoint_ = std::move(other.gdn_checkpoint_);
+        d_final_hidden_ = std::exchange(other.d_final_hidden_, nullptr);
+        final_hidden_valid_ = std::exchange(other.final_hidden_valid_, false);
+    }
+    return *this;
 }
 
 void ReusableContext::save(
     std::span<const std::uint32_t> prefix_tokens,
     const std::vector<RecurrentLayerStateStorage>& active_states,
+    const float* final_hidden,
     hipStream_t stream) {
     if (prefix_tokens.empty()) {
         clear();
@@ -145,6 +173,13 @@ void ReusableContext::save(
     }
 
     gdn_checkpoint_.capture(active_states, stream);
+    if (final_hidden != nullptr) {
+        MIINFER_HIP_CHECK(hipMemcpyAsync(
+            d_final_hidden_, final_hidden, kHidden * sizeof(float), hipMemcpyDeviceToDevice, stream));
+        final_hidden_valid_ = true;
+    } else {
+        final_hidden_valid_ = false;
+    }
 
     cached_tokens_.assign(prefix_tokens.begin(), prefix_tokens.end());
     fingerprint_.prefix_length = static_cast<std::uint32_t>(prefix_tokens.size());
@@ -199,11 +234,35 @@ void ReusableContext::restore_gdn_states(
     }
 }
 
+void ReusableContext::restore_final_hidden(float* destination, hipStream_t stream) const {
+    if (!has_final_hidden()) {
+        throw std::runtime_error("ReusableContext::restore_final_hidden: no final hidden checkpoint");
+    }
+    if (destination == nullptr) {
+        throw std::runtime_error("ReusableContext::restore_final_hidden: null destination");
+    }
+    MIINFER_HIP_CHECK(hipMemcpyAsync(
+        destination, d_final_hidden_, kHidden * sizeof(float), hipMemcpyDeviceToDevice, stream));
+}
+
+void ReusableContext::download_final_hidden(std::vector<float>& destination, hipStream_t stream) const {
+    if (!has_final_hidden()) {
+        throw std::runtime_error("ReusableContext::download_final_hidden: no final hidden checkpoint");
+    }
+    destination.resize(kHidden);
+    MIINFER_HIP_CHECK(hipMemcpyAsync(
+        destination.data(), d_final_hidden_, kHidden * sizeof(float), hipMemcpyDeviceToHost, stream));
+    if (stream != nullptr) {
+        MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
+    }
+}
+
 void ReusableContext::clear() {
     gdn_checkpoint_.invalidate();
     cached_tokens_.clear();
     fingerprint_.prefix_length = 0;
     fingerprint_.token_hash = 0;
+    final_hidden_valid_ = false;
 }
 
 } // namespace miinfer::prefill_v2

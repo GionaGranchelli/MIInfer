@@ -1,0 +1,89 @@
+===================================================================
+  MIInfer V2-0013: Long-Context Frontier Qualification
+  Context Scale: 4K -> 8K -> 16K -> 32K -> 64K -> 128K
+  Target: 1 x AMD Instinct MI50 32GB (gfx906, Wave64)
+  Model:  Qwen3.8-27B-Q4_K_M (64 Layers, 48 GDN + 16 GQA)
+===================================================================
+
+[INFO] Device: AMD Radeon Graphics (gfx906:sramecc-:xnack-)
+[INFO] Loading GGUF Model from: /home/machinist/models/Qwen3.8-27B-Q4_K_M.gguf
+[INFO] Model loaded successfully: Qwen3.8-27B (64 layers, hidden=5120, vocab=248320)
+
+-------------------------------------------------------------------
+  Running Evaluation: 4K Context (Prompt = 4096, Decode = 128, KV Cap = 32768)
+-------------------------------------------------------------------
+MEMORY_BUDGET workspace_trace max_tokens=512 requested_bytes=727711744 free_before_bytes=6943670272 device_total_bytes=34342961152 deficit_bytes=0 status=no error
+MEMORY_BUDGET workspace_components shared_activation_bytes=41943040 recurrent_prefill_bytes=87949312 attention_prefill_bytes=460324864 quantization_bytes=20054016 ffn_bytes=117440512
+  Memory Breakdown (bytes): weights=24068487168 recurrent_state=158859264 kv_cache=2147483648 workspace=727711744 activation=21966848 cached_state=158859264 total=27283367936
+  Static VRAM Allocation: 25.41 GiB / 31.98 GiB
+  Observed Free Headroom: 5.77 GiB
+  Executing Prefill (4096 tokens in Macro-512 tiles)...
+  Prefill Completed:   17852.09 ms (229.4 tok/s)
+  Decode Step Latency: 38.53 ms/token (26.0 tok/s)
+  Total Run Time:      22.75 s
+  Numerical Validity:  VALID (No NaN/Inf/Collapse)
+
+-------------------------------------------------------------------
+  Running Evaluation: 8K Context (Prompt = 8192, Decode = 128, KV Cap = 32768)
+-------------------------------------------------------------------
+MEMORY_BUDGET workspace_trace max_tokens=512 requested_bytes=727711744 free_before_bytes=6866075648 device_total_bytes=34342961152 deficit_bytes=0 status=no error
+MEMORY_BUDGET workspace_components shared_activation_bytes=41943040 recurrent_prefill_bytes=87949312 attention_prefill_bytes=460324864 quantization_bytes=20054016 ffn_bytes=117440512
+  Memory Breakdown (bytes): weights=24068487168 recurrent_state=158859264 kv_cache=2147483648 workspace=727711744 activation=21966848 cached_state=158859264 total=27283367936
+  Static VRAM Allocation: 25.41 GiB / 31.98 GiB
+  Observed Free Headroom: 5.70 GiB
+  Executing Prefill (8192 tokens in Macro-512 tiles)...
+  Prefill Completed:   38218.43 ms (214.3 tok/s)
+  Decode Step Latency: 38.93 ms/token (25.7 tok/s)
+  Total Run Time:      43.17 s
+  Numerical Validity:  VALID (No NaN/Inf/Collapse)
+
+-------------------------------------------------------------------
+  Running Evaluation: 16K Context (Prompt = 16384, Decode = 128, KV Cap = 32768)
+-------------------------------------------------------------------
+MEMORY_BUDGET workspace_trace max_tokens=512 requested_bytes=727711744 free_before_bytes=6866075648 device_total_bytes=34342961152 deficit_bytes=0 status=no error
+MEMORY_BUDGET workspace_components shared_activation_bytes=41943040 recurrent_prefill_bytes=87949312 attention_prefill_bytes=460324864 quantization_bytes=20054016 ffn_bytes=117440512
+  Memory Breakdown (bytes): weights=24068487168 recurrent_state=158859264 kv_cache=2147483648 workspace=727711744 activation=21966848 cached_state=158859264 total=27283367936
+  Static VRAM Allocation: 25.41 GiB / 31.98 GiB
+  Observed Free Headroom: 5.70 GiB
+  Executing Prefill (16384 tokens in Macro-512 tiles)...
+  Prefill Completed:   86905.09 ms (188.5 tok/s)
+  Decode Step Latency: 40.80 ms/token (24.5 tok/s)
+  Total Run Time:      92.09 s
+  Numerical Validity:  VALID (No NaN/Inf/Collapse)
+
+-------------------------------------------------------------------
+  Running Evaluation: 32K Context (Prompt = 32768, Decode = 128, KV Cap = 33000)
+-------------------------------------------------------------------
+MEMORY_BUDGET workspace_trace max_tokens=512 requested_bytes=727711744 free_before_bytes=6798966784 device_total_bytes=34342961152 deficit_bytes=0 status=no error
+MEMORY_BUDGET workspace_components shared_activation_bytes=41943040 recurrent_prefill_bytes=87949312 attention_prefill_bytes=460324864 quantization_bytes=20054016 ffn_bytes=117440512
+  Memory Breakdown (bytes): weights=24068487168 recurrent_state=158859264 kv_cache=2162688000 workspace=727711744 activation=21966848 cached_state=158859264 total=27298572288
+  Static VRAM Allocation: 25.42 GiB / 31.98 GiB
+  Observed Free Headroom: 5.63 GiB
+  Executing Prefill (32768 tokens in Macro-512 tiles)...
+  Prefill Completed:   219414.32 ms (149.3 tok/s)
+  Decode Step Latency: 47.40 ms/token (21.1 tok/s)
+  Total Run Time:      225.44 s
+  Numerical Validity:  VALID (No NaN/Inf/Collapse)
+
+-------------------------------------------------------------------
+  Running Evaluation: 64K Context (Prompt = 65536, Decode = 128, KV Cap = 66000)
+-------------------------------------------------------------------
+MEMORY_BUDGET workspace_trace max_tokens=512 requested_bytes=727711744 free_before_bytes=4651483136 device_total_bytes=34342961152 deficit_bytes=0 status=no error
+MEMORY_BUDGET workspace_components shared_activation_bytes=41943040 recurrent_prefill_bytes=87949312 attention_prefill_bytes=460324864 quantization_bytes=20054016 ffn_bytes=117440512
+  Memory Breakdown (bytes): weights=24068487168 recurrent_state=158859264 kv_cache=4325376000 workspace=727711744 activation=21966848 cached_state=158859264 total=29461260288
+  Static VRAM Allocation: 27.44 GiB / 31.98 GiB
+  Observed Free Headroom: 3.63 GiB
+  Executing Prefill (65536 tokens in Macro-512 tiles)...
+  Prefill Completed:   623038.78 ms (105.2 tok/s)
+  Decode Step Latency: 61.76 ms/token (16.2 tok/s)
+  Total Run Time:      630.89 s
+  Numerical Validity:  VALID (No NaN/Inf/Collapse)
+
+-------------------------------------------------------------------
+  Running Evaluation: 128K Context (Prompt = 131072, Decode = 128, KV Cap = 131200)
+-------------------------------------------------------------------
+MEMORY_BUDGET workspace_trace max_tokens=512 requested_bytes=727711744 free_before_bytes=356515840 device_total_bytes=34342961152 deficit_bytes=371195904 status=no error
+MEMORY_BUDGET workspace_components shared_activation_bytes=41943040 recurrent_prefill_bytes=87949312 attention_prefill_bytes=460324864 quantization_bytes=20054016 ffn_bytes=117440512
+MIInfer HIP failure: out of memory
+  expression: hipMalloc(&d_buffer_, total_bytes_)
+  location: /home/machinist/Development/MIInfer/src/prefill_v2/workspace.cpp:102

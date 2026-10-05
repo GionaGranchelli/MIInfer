@@ -1,10 +1,13 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <cstdlib>
 #include <iostream>
 #include <random>
 #include <stdexcept>
+#include <string_view>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <filesystem>
 
@@ -18,6 +21,78 @@
 namespace miinfer::prefill_v2 {
 
 namespace {
+
+// ponytail: immutable host backing with an 8-entry, 3 GiB cap; move to shared
+// GPU pages only if measured range upload cost justifies the complexity.
+constexpr std::size_t kPersistentCheckpointStride = kPrefillV2MacroTile;
+constexpr std::size_t kMaxPersistentCheckpoints = 8;
+constexpr std::size_t kPersistentCheckpointBudgetBytes = 3ULL * 1024 * 1024 * 1024;
+
+bool full_copy_snapshot_mode() noexcept {
+    const char* value = std::getenv("MIINFER_M30_0005_FULL_COPY");
+    return value != nullptr && std::string_view(value) != "0";
+}
+void prune_persistent_checkpoints(
+    const std::filesystem::path& directory,
+    const std::string& model_id,
+    const std::string& quantization,
+    const std::filesystem::path& preserve) {
+    struct Entry {
+        std::filesystem::path path;
+        std::size_t bytes = 0;
+        std::uint64_t created = 0;
+    };
+    std::vector<Entry> entries;
+    std::size_t total_bytes = 0;
+    std::error_code ec;
+    for (const auto& item : std::filesystem::directory_iterator(directory, ec)) {
+        if (ec || !item.is_regular_file(ec) || item.path().extension() != ".miinfer") continue;
+        PersistentSessionHeader header{};
+        if (!PersistentSession::inspect_file(item.path().string(), header)) continue;
+        if (std::string_view(header.model_id) != model_id
+            || std::string_view(header.quantization) != quantization) continue;
+        const auto bytes = static_cast<std::size_t>(item.file_size(ec));
+        if (ec) continue;
+        entries.push_back({item.path(), bytes, header.created_timestamp});
+        total_bytes += bytes;
+    }
+    std::sort(entries.begin(), entries.end(), [](const Entry& left, const Entry& right) {
+        if (left.created != right.created) return left.created < right.created;
+        return left.path.string() < right.path.string();
+    });
+    while ((entries.size() > kMaxPersistentCheckpoints
+            || total_bytes > kPersistentCheckpointBudgetBytes) && !entries.empty()) {
+        const auto candidate = std::find_if(entries.begin(), entries.end(),
+            [&](const Entry& entry) { return entry.path != preserve; });
+        if (candidate == entries.end()) break;
+        std::filesystem::remove(candidate->path, ec);
+        if (!ec) {
+            total_bytes -= candidate->bytes;
+            entries.erase(candidate);
+        } else {
+            break;
+        }
+    }
+}
+
+std::pair<std::size_t, std::size_t> persistent_checkpoint_stats(
+    const std::filesystem::path& directory,
+    const std::string& model_id,
+    const std::string& quantization) {
+    std::size_t count = 0;
+    std::size_t bytes = 0;
+    std::error_code ec;
+    for (const auto& item : std::filesystem::directory_iterator(directory, ec)) {
+        if (ec || !item.is_regular_file(ec) || item.path().extension() != ".miinfer") continue;
+        PersistentSessionHeader header{};
+        if (!PersistentSession::inspect_file(item.path().string(), header)
+            || std::string_view(header.model_id) != model_id
+            || std::string_view(header.quantization) != quantization) continue;
+        bytes += static_cast<std::size_t>(item.file_size(ec));
+        if (!ec) ++count;
+    }
+    return {count, bytes};
+}
 
 std::uint32_t sample_token_from_logits(
     std::span<const float> raw_logits,
@@ -228,6 +303,7 @@ PrefillV2Model::PrefillV2Model(
 }
 
 PrefillV2Model::~PrefillV2Model() {
+    clear_snapshots();
     free_resources();
 }
 
@@ -256,7 +332,14 @@ PrefillV2Model::PrefillV2Model(PrefillV2Model&& other) noexcept
       d_decode_tokens_(other.d_decode_tokens_),
       decode_graph_exec_(other.decode_graph_exec_),
       d_prefill_state_(other.d_prefill_state_),
-      suffix_graph_exec_(other.suffix_graph_exec_) {
+      suffix_graph_exec_(other.suffix_graph_exec_),
+      snapshots_(std::move(other.snapshots_)),
+      next_snapshot_id_(other.next_snapshot_id_),
+      snapshot_use_clock_(other.snapshot_use_clock_),
+      snapshot_bytes_(other.snapshot_bytes_),
+      snapshot_state_loaded_(other.snapshot_state_loaded_),
+      snapshot_cow_events_(other.snapshot_cow_events_),
+      snapshot_cow_bytes_(other.snapshot_cow_bytes_) {
     other.d_embedding_weights_ = nullptr;
     other.d_final_norm_weights_ = nullptr;
     other.d_output_weights_ = nullptr;
@@ -271,10 +354,17 @@ PrefillV2Model::PrefillV2Model(PrefillV2Model&& other) noexcept
     other.decode_graph_exec_ = nullptr;
     other.d_prefill_state_ = nullptr;
     other.suffix_graph_exec_ = nullptr;
+    other.next_snapshot_id_ = 1;
+    other.snapshot_use_clock_ = 0;
+    other.snapshot_bytes_ = 0;
+    other.snapshot_state_loaded_ = false;
+    other.snapshot_cow_events_ = 0;
+    other.snapshot_cow_bytes_ = 0;
 }
 
 PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
     if (this != &other) {
+        clear_snapshots();
         free_resources();
         vocab_size_ = other.vocab_size_;
         rms_epsilon_ = other.rms_epsilon_;
@@ -301,6 +391,13 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
         decode_graph_exec_ = other.decode_graph_exec_;
         d_prefill_state_ = other.d_prefill_state_;
         suffix_graph_exec_ = other.suffix_graph_exec_;
+        snapshots_ = std::move(other.snapshots_);
+        next_snapshot_id_ = other.next_snapshot_id_;
+        snapshot_use_clock_ = other.snapshot_use_clock_;
+        snapshot_bytes_ = other.snapshot_bytes_;
+        snapshot_state_loaded_ = other.snapshot_state_loaded_;
+        snapshot_cow_events_ = other.snapshot_cow_events_;
+        snapshot_cow_bytes_ = other.snapshot_cow_bytes_;
 
         other.d_embedding_weights_ = nullptr;
         other.d_final_norm_weights_ = nullptr;
@@ -316,12 +413,22 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
         other.decode_graph_exec_ = nullptr;
         other.d_prefill_state_ = nullptr;
         other.suffix_graph_exec_ = nullptr;
+        other.next_snapshot_id_ = 1;
+        other.snapshot_use_clock_ = 0;
+        other.snapshot_bytes_ = 0;
+        other.snapshot_state_loaded_ = false;
+        other.snapshot_cow_events_ = 0;
+        other.snapshot_cow_bytes_ = 0;
     }
     return *this;
 }
 
 void PrefillV2Model::allocate_resources() {
-    ws_mgr_ = std::make_unique<PrefillV2WorkspaceManager>(kMaxPrefillBatch);
+    // Keep the qualified 32-way scratch path through 64K. At larger capacities,
+    // three-way scratch is sufficient for the same kernel and removes the
+    // construction-time arena peak that blocked the 128K model.
+    const std::uint32_t splitk_splits = kv_capacity_ > 66000 ? 3 : 32;
+    ws_mgr_ = std::make_unique<PrefillV2WorkspaceManager>(kMaxPrefillBatch, splitk_splits);
 
     MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&d_ping_), kMaxPrefillBatch * kHidden * sizeof(float)));
     MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&d_pong_), kMaxPrefillBatch * kHidden * sizeof(float)));
@@ -394,6 +501,9 @@ void PrefillV2Model::free_resources() {
 }
 
 void PrefillV2Model::reset_state() {
+    reusable_context_.clear();
+    clear_snapshots();
+    snapshot_state_loaded_ = false;
     for (auto& st : recurrent_states_) {
         st.reset();
     }
@@ -404,7 +514,11 @@ void PrefillV2Model::reset_state() {
 
 void PrefillV2Model::restore_reusable_context(hipStream_t stream) {
     if (reusable_context_.has_valid_prefix()) {
-        reusable_context_.restore_gdn_states(recurrent_states_, stream);
+        if (snapshot_state_loaded_) {
+            snapshot_state_loaded_ = false;
+        } else {
+            reusable_context_.restore_gdn_states(recurrent_states_, stream);
+        }
     }
 }
 
@@ -739,7 +853,11 @@ GenerateStats PrefillV2Model::generate(
     const GenerateOptions& options,
     hipStream_t stream) {
 
-    if (options.seed) rng_.seed(*options.seed);
+    if (options.seed) {
+        rng_.seed(*options.seed);
+    } else if (options.reset_state_before) {
+        rng_.seed(42);
+    }
 
     if (prompt.empty()) {
         throw std::runtime_error("PrefillV2Model::generate: empty prompt");
@@ -755,9 +873,9 @@ GenerateStats PrefillV2Model::generate(
 
     if (options.enable_prefix_reuse && reusable_context_.has_valid_prefix()) {
         auto match = reusable_context_.check_match(prompt, model_name_, quantization_);
-        // Exact-prefix checkpoints keep recurrent/KV state, not the final hidden vector for logits.
         if (match == ReusableContext::MatchResult::ExactMatch
-            && reusable_context_.prefix_length() < prompt_len) {
+            && (reusable_context_.prefix_length() < prompt_len
+                || reusable_context_.has_final_hidden())) {
             is_reuse = true;
             prefix_len = reusable_context_.prefix_length();
             suffix_len = prompt_len - prefix_len;
@@ -767,9 +885,15 @@ GenerateStats PrefillV2Model::generate(
     if (!is_reuse && options.enable_prefix_reuse && !options.persistent_session_dir.empty()) {
         std::uint32_t disk_prefix = 0;
         if (restore_matching_session(options.persistent_session_dir, prompt, disk_prefix, stream)) {
-            is_reuse = true;
-            prefix_len = disk_prefix;
-            suffix_len = prompt_len - prefix_len;
+            if (disk_prefix < prompt_len) {
+                is_reuse = true;
+                prefix_len = disk_prefix;
+                suffix_len = prompt_len - prefix_len;
+            } else {
+                // Disk sessions do not yet carry the boundary hidden vector;
+                // discard the loaded state and use the correct full path.
+                reset_state();
+            }
         }
     }
 
@@ -779,11 +903,31 @@ GenerateStats PrefillV2Model::generate(
 
     const auto t_start = std::chrono::steady_clock::now();
     std::uint32_t last_chunk = 0;
+    const auto save_persistent_checkpoint = [&](std::uint32_t length) {
+        if (options.persistent_session_dir.empty()
+            || length < kPersistentCheckpointStride
+            || length % kPersistentCheckpointStride != 0) return;
+        const auto prefix = prompt.first(length);
+        const auto hash = compute_token_sequence_hash(prefix);
+        const std::filesystem::path directory(options.persistent_session_dir);
+        const auto path = directory / PersistentSession::format_session_filename(
+            hash, length);
+        if (std::filesystem::exists(path)) return;
+        try {
+            save_session(path.string(), prefix, stream);
+            prune_persistent_checkpoints(directory, model_name_, quantization_, path);
+        } catch (...) {
+            // Persistent checkpoint capture is an optimization; generation remains non-fatal.
+        }
+    };
 
     if (is_reuse) {
         stats.reuse_hit = true;
         stats.prefix_tokens_reused = prefix_len;
         stats.suffix_tokens_dispatched = suffix_len;
+        stats.suffix_tokens_executed = suffix_len;
+        stats.prefix_tokens_replayed = 0;
+        stats.checkpoint_position = prefix_len;
         stats.gqa_kv_reused_tokens = prefix_len;
         stats.gdn_checkpoint_position = prefix_len;
 
@@ -834,6 +978,7 @@ GenerateStats PrefillV2Model::generate(
             }
             pos += chunk;
             last_chunk = chunk;
+            save_persistent_checkpoint(pos);
         }
         for (auto& st : recurrent_states_) {
             st.set_position(pos);
@@ -848,6 +993,9 @@ GenerateStats PrefillV2Model::generate(
         stats.reuse_hit = false;
         stats.prefix_tokens_reused = 0;
         stats.suffix_tokens_dispatched = prompt_len;
+        stats.suffix_tokens_executed = prompt_len;
+        stats.prefix_tokens_replayed = prompt_len;
+        stats.checkpoint_position = 0;
 
         // Cold prefill sequence using native macro scheduler (Macro Tile = 512)
         std::uint32_t pos = 0;
@@ -862,14 +1010,22 @@ GenerateStats PrefillV2Model::generate(
             forward(d_temp_tokens_, pos, chunk, d_pong_, stream);
             pos += chunk;
             last_chunk = chunk;
+            save_persistent_checkpoint(pos);
         }
     }
 
     // 1b. If requested, capture/update the prefix checkpoint immediately after prefill
     if (options.cache_prefix_after) {
         std::size_t save_len = (options.cache_prefix_len > 0) ? std::min(options.cache_prefix_len, prompt.size()) : prompt.size();
-        reusable_context_.save(prompt.subspan(0, save_len), recurrent_states_, stream);
-        if (!options.persistent_session_dir.empty() && save_len >= 256) {
+        if (save_len == prompt.size()) {
+            if (!(is_reuse && suffix_len == 0)) {
+                reusable_context_.save(prompt, recurrent_states_, d_pong_ + (last_chunk - 1) * kHidden, stream);
+            }
+        } else {
+            // A single forward pass leaves state at prompt.size(), not save_len.
+            reusable_context_.clear();
+        }
+        if (!options.persistent_session_dir.empty() && save_len == prompt.size() && save_len >= 256) {
             const auto prefix_sub = prompt.subspan(0, save_len);
             const std::uint64_t token_hash = compute_token_sequence_hash(prefix_sub);
             const std::string filename = PersistentSession::format_session_filename(
@@ -879,6 +1035,7 @@ GenerateStats PrefillV2Model::generate(
             if (!std::filesystem::exists(save_path)) {
                 try {
                     save_session(save_path.string(), prefix_sub, stream);
+                    prune_persistent_checkpoints(sdir, model_name_, quantization_, save_path);
                 } catch (...) {
                     // non-fatal disk write error
                 }
@@ -886,8 +1043,21 @@ GenerateStats PrefillV2Model::generate(
         }
     }
 
-    // 2. Compute logits for final prompt token (at offset (last_chunk - 1) * kHidden in d_pong_)
-    compute_logits(d_pong_ + (last_chunk - 1) * kHidden, d_logits_, stream);
+    if (!options.persistent_session_dir.empty()) {
+        const auto [count, bytes] = persistent_checkpoint_stats(
+            options.persistent_session_dir, model_name_, quantization_);
+        stats.persistent_checkpoint_count = count;
+        stats.persistent_checkpoint_bytes = bytes;
+    }
+
+    // 2. Compute logits for the final prompt token. A zero-suffix exact hit
+    // restores the cached boundary hidden vector without replaying the prefix.
+    if (is_reuse && suffix_len == 0) {
+        reusable_context_.restore_final_hidden(d_pong_, stream);
+        compute_logits(d_pong_, d_logits_, stream);
+    } else {
+        compute_logits(d_pong_ + (last_chunk - 1) * kHidden, d_logits_, stream);
+    }
 
     // 3. First token via host sampling (TTFT)
     MIINFER_HIP_CHECK(hipMemcpyAsync(
@@ -1258,7 +1428,8 @@ std::size_t PrefillV2Model::activation_bytes() const noexcept {
 }
 
 std::size_t PrefillV2Model::total_vram_bytes() const noexcept {
-    return persistent_weight_bytes() + persistent_state_bytes() + workspace_bytes() + activation_bytes() + cached_state_bytes();
+    return persistent_weight_bytes() + persistent_state_bytes() + workspace_bytes()
+        + activation_bytes() + cached_state_bytes() + snapshot_bytes_;
 }
 
 void PrefillV2Model::save_session(
@@ -1287,6 +1458,292 @@ bool PrefillV2Model::restore_matching_session(
     }
     std::vector<std::uint32_t> loaded_tokens;
     return load_session(session_path, loaded_tokens, stream);
+}
+
+PrefillV2Model::SnapshotBacking::SnapshotBacking(
+    std::shared_ptr<SnapshotBacking> parent_backing)
+    : parent(std::move(parent_backing)) {
+    if (parent != nullptr) ++parent->references;
+}
+
+PrefillV2Model::SnapshotBacking::~SnapshotBacking() {
+    if (d_gdn != nullptr) (void)hipFree(d_gdn);
+    if (d_kv_suffix != nullptr) (void)hipFree(d_kv_suffix);
+    if (parent != nullptr && parent->references > 0) --parent->references;
+}
+
+const PrefillV2Model::SnapshotRecord* PrefillV2Model::find_longest_snapshot_prefix(
+    std::span<const std::uint32_t> tokens) const noexcept {
+    const SnapshotRecord* best = nullptr;
+    for (const auto& [id, record] : snapshots_) {
+        (void)id;
+        if (record.tokens.size() >= tokens.size()
+            || (best != nullptr && record.tokens.size() <= best->tokens.size())) continue;
+        if (std::equal(record.tokens.begin(), record.tokens.end(), tokens.begin())) best = &record;
+    }
+    return best;
+}
+
+std::shared_ptr<PrefillV2Model::SnapshotBacking>
+PrefillV2Model::capture_snapshot_backing(
+    std::span<const std::uint32_t> tokens, hipStream_t stream, bool use_parent) {
+    const SnapshotRecord* parent_record = use_parent
+        ? find_longest_snapshot_prefix(tokens) : nullptr;
+    const std::size_t parent_length = parent_record == nullptr ? 0 : parent_record->tokens.size();
+    auto backing = std::make_shared<SnapshotBacking>(
+        parent_record == nullptr ? nullptr : parent_record->backing);
+    backing->prefix_length = tokens.size();
+    backing->suffix_begin = parent_length;
+    backing->suffix_tokens = tokens.size() - parent_length;
+
+    const std::size_t gdn_layer_bytes = RecurrentLayerState::kStateBytes
+        + RecurrentLayerState::kConvHistoryBytes;
+    const std::size_t gdn_bytes = recurrent_states_.size() * gdn_layer_bytes;
+    MIINFER_HIP_CHECK(hipMalloc(&backing->d_gdn, gdn_bytes));
+    std::size_t gdn_offset = 0;
+    for (std::size_t i = 0; i < recurrent_states_.size(); ++i) {
+        const auto view = recurrent_storage(i).view();
+        if (stream != nullptr) {
+            MIINFER_HIP_CHECK(hipMemcpyAsync(
+                static_cast<std::uint8_t*>(backing->d_gdn) + gdn_offset,
+                view.d_state, RecurrentLayerState::kStateBytes,
+                hipMemcpyDeviceToDevice, stream));
+            gdn_offset += RecurrentLayerState::kStateBytes;
+            MIINFER_HIP_CHECK(hipMemcpyAsync(
+                static_cast<std::uint8_t*>(backing->d_gdn) + gdn_offset,
+                view.d_conv_history, RecurrentLayerState::kConvHistoryBytes,
+                hipMemcpyDeviceToDevice, stream));
+            gdn_offset += RecurrentLayerState::kConvHistoryBytes;
+        } else {
+            MIINFER_HIP_CHECK(hipMemcpy(
+                static_cast<std::uint8_t*>(backing->d_gdn) + gdn_offset,
+                view.d_state, RecurrentLayerState::kStateBytes,
+                hipMemcpyDeviceToDevice));
+            gdn_offset += RecurrentLayerState::kStateBytes;
+            MIINFER_HIP_CHECK(hipMemcpy(
+                static_cast<std::uint8_t*>(backing->d_gdn) + gdn_offset,
+                view.d_conv_history, RecurrentLayerState::kConvHistoryBytes,
+                hipMemcpyDeviceToDevice));
+            gdn_offset += RecurrentLayerState::kConvHistoryBytes;
+        }
+    }
+
+    const std::size_t per_layer = kv_caches_.front().raw_tokens_bytes(backing->suffix_tokens);
+    const std::size_t kv_bytes = kv_caches_.size() * per_layer;
+    if (kv_bytes > 0) MIINFER_HIP_CHECK(hipMalloc(&backing->d_kv_suffix, kv_bytes));
+    std::vector<std::uint8_t> host_range(per_layer);
+    if (stream != nullptr) MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
+    for (std::size_t i = 0; i < kv_caches_.size(); ++i) {
+        kv_caches_[i].download_raw_range(
+            host_range.data(), parent_length, backing->suffix_tokens, nullptr);
+        if (per_layer > 0) {
+            MIINFER_HIP_CHECK(hipMemcpy(
+                static_cast<std::uint8_t*>(backing->d_kv_suffix) + i * per_layer,
+                host_range.data(), per_layer, hipMemcpyHostToDevice));
+        }
+    }
+    backing->bytes = gdn_bytes + kv_bytes;
+    return backing;
+}
+
+void PrefillV2Model::restore_snapshot_backing(
+    const std::shared_ptr<SnapshotBacking>& backing, hipStream_t stream) {
+    for (auto& kv : kv_caches_) kv.reset(stream);
+
+    std::vector<const SnapshotBacking*> chain;
+    for (auto current = backing; current != nullptr; current = current->parent) {
+        chain.push_back(current.get());
+    }
+    std::reverse(chain.begin(), chain.end());
+    for (const auto* node : chain) {
+        const std::size_t per_layer = kv_caches_.front().raw_tokens_bytes(node->suffix_tokens);
+        std::vector<std::uint8_t> host_range(per_layer);
+        for (std::size_t i = 0; i < kv_caches_.size(); ++i) {
+            if (per_layer > 0) {
+                MIINFER_HIP_CHECK(hipMemcpy(
+                    host_range.data(),
+                    static_cast<const std::uint8_t*>(node->d_kv_suffix) + i * per_layer,
+                    per_layer, hipMemcpyDeviceToHost));
+                kv_caches_[i].upload_raw_range(
+                    host_range.data(), node->suffix_begin, node->suffix_tokens, nullptr);
+            }
+        }
+    }
+
+    std::size_t gdn_offset = 0;
+    for (std::size_t i = 0; i < recurrent_states_.size(); ++i) {
+        auto view = recurrent_storage(i).view();
+        if (stream != nullptr) {
+            MIINFER_HIP_CHECK(hipMemcpyAsync(
+                view.d_state, static_cast<const std::uint8_t*>(backing->d_gdn) + gdn_offset,
+                RecurrentLayerState::kStateBytes, hipMemcpyDeviceToDevice, stream));
+            gdn_offset += RecurrentLayerState::kStateBytes;
+            MIINFER_HIP_CHECK(hipMemcpyAsync(
+                view.d_conv_history, static_cast<const std::uint8_t*>(backing->d_gdn) + gdn_offset,
+                RecurrentLayerState::kConvHistoryBytes, hipMemcpyDeviceToDevice, stream));
+            gdn_offset += RecurrentLayerState::kConvHistoryBytes;
+        } else {
+            MIINFER_HIP_CHECK(hipMemcpy(
+                view.d_state, static_cast<const std::uint8_t*>(backing->d_gdn) + gdn_offset,
+                RecurrentLayerState::kStateBytes, hipMemcpyDeviceToDevice));
+            gdn_offset += RecurrentLayerState::kStateBytes;
+            MIINFER_HIP_CHECK(hipMemcpy(
+                view.d_conv_history, static_cast<const std::uint8_t*>(backing->d_gdn) + gdn_offset,
+                RecurrentLayerState::kConvHistoryBytes, hipMemcpyDeviceToDevice));
+            gdn_offset += RecurrentLayerState::kConvHistoryBytes;
+        }
+        recurrent_storage(i).set_position(static_cast<std::uint32_t>(backing->prefix_length));
+    }
+    if (stream != nullptr) MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
+}
+
+void PrefillV2Model::refresh_snapshot_bytes() noexcept {
+    std::unordered_set<const SnapshotBacking*> seen;
+    std::size_t total = 0;
+    for (const auto& [id, record] : snapshots_) {
+        (void)id;
+        for (auto current = record.backing; current != nullptr; current = current->parent) {
+            if (seen.insert(current.get()).second) total += current->bytes;
+        }
+    }
+    snapshot_bytes_ = total;
+}
+
+PrefillV2Model::SnapshotTelemetry PrefillV2Model::snapshot_telemetry() const noexcept {
+    SnapshotTelemetry result;
+    result.logical_snapshot_count = snapshots_.size();
+    std::unordered_set<const SnapshotBacking*> seen;
+    for (const auto& [id, record] : snapshots_) {
+        (void)id;
+        for (auto current = record.backing; current != nullptr; current = current->parent) {
+            if (!seen.insert(current.get()).second) continue;
+            result.reference_count += current->references;
+            if (current->references > 1) result.physical_shared_bytes += current->bytes;
+            else result.private_branch_bytes += current->bytes;
+        }
+    }
+    result.cow_events = snapshot_cow_events_;
+    result.cow_bytes_copied = snapshot_cow_bytes_;
+    return result;
+}
+
+void PrefillV2Model::release_snapshot_record(SnapshotRecord& record) noexcept {
+    if (record.backing != nullptr && record.backing->references > 0) --record.backing->references;
+    record.backing.reset();
+}
+
+void PrefillV2Model::evict_snapshots_except(SnapshotId preserve) noexcept {
+    refresh_snapshot_bytes();
+    while ((snapshots_.size() > kMaxPersistentCheckpoints
+            || snapshot_bytes_ > kPersistentCheckpointBudgetBytes)
+           && !snapshots_.empty()) {
+        auto candidate = snapshots_.end();
+        for (auto it = snapshots_.begin(); it != snapshots_.end(); ++it) {
+            if (it->first == preserve) continue;
+            if (candidate == snapshots_.end()
+                || it->second.last_used < candidate->second.last_used) candidate = it;
+        }
+        if (candidate == snapshots_.end()) break;
+        release_snapshot(candidate->first);
+    }
+}
+
+PrefillV2Model::SnapshotId PrefillV2Model::snapshot(
+    std::span<const std::uint32_t> tokens, hipStream_t stream) {
+    if (tokens.empty() || tokens.size() > kv_capacity_) return kInvalidSnapshotId;
+    try {
+        SnapshotId id = next_snapshot_id_++;
+        if (id == kInvalidSnapshotId) id = next_snapshot_id_++;
+
+        std::shared_ptr<SnapshotBacking> backing;
+        for (const auto& [existing_id, record] : snapshots_) {
+            (void)existing_id;
+            if (!full_copy_snapshot_mode()
+                && record.tokens.size() == tokens.size()
+                && std::equal(record.tokens.begin(), record.tokens.end(), tokens.begin())) {
+                backing = record.backing;
+                break;
+            }
+        }
+        if (backing == nullptr) {
+            backing = capture_snapshot_backing(tokens, stream, !full_copy_snapshot_mode());
+            snapshot_bytes_ += backing->bytes;
+            if (backing->parent != nullptr) {
+                ++snapshot_cow_events_;
+                snapshot_cow_bytes_ += backing->bytes;
+            }
+        }
+        ++backing->references;
+        snapshots_.emplace(id, SnapshotRecord{
+            backing, std::vector<std::uint32_t>(tokens.begin(), tokens.end()),
+            ++snapshot_use_clock_});
+        refresh_snapshot_bytes();
+        evict_snapshots_except(id);
+        return snapshots_.find(id) == snapshots_.end() ? kInvalidSnapshotId : id;
+    } catch (...) {
+        return kInvalidSnapshotId;
+    }
+}
+
+PrefillV2Model::SnapshotId PrefillV2Model::fork(SnapshotId source) {
+    const auto found = snapshots_.find(source);
+    if (found == snapshots_.end()) return kInvalidSnapshotId;
+    SnapshotId id = next_snapshot_id_++;
+    if (id == kInvalidSnapshotId) id = next_snapshot_id_++;
+    if (full_copy_snapshot_mode()) {
+        const auto tokens = found->second.tokens;
+        if (!restore_snapshot(source)) return kInvalidSnapshotId;
+        try {
+            auto backing = capture_snapshot_backing(tokens, nullptr, false);
+            ++backing->references;
+            snapshots_.emplace(id, SnapshotRecord{
+                backing, tokens, ++snapshot_use_clock_});
+            refresh_snapshot_bytes();
+            evict_snapshots_except(id);
+            return snapshots_.find(id) == snapshots_.end() ? kInvalidSnapshotId : id;
+        } catch (...) {
+            return kInvalidSnapshotId;
+        }
+    }
+    ++found->second.backing->references;
+    snapshots_.emplace(id, SnapshotRecord{
+        found->second.backing, found->second.tokens, ++snapshot_use_clock_});
+    found->second.last_used = ++snapshot_use_clock_;
+    evict_snapshots_except(id);
+    return snapshots_.find(id) == snapshots_.end() ? kInvalidSnapshotId : id;
+}
+
+bool PrefillV2Model::restore_snapshot(SnapshotId id, hipStream_t stream) {
+    const auto found = snapshots_.find(id);
+    if (found == snapshots_.end()) return false;
+    restore_snapshot_backing(found->second.backing, stream);
+    reusable_context_.save(found->second.tokens, recurrent_states_, nullptr, stream);
+    if (stream != nullptr) MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
+    found->second.last_used = ++snapshot_use_clock_;
+    snapshot_state_loaded_ = true;
+    return true;
+}
+
+bool PrefillV2Model::rollback_snapshot(SnapshotId id, hipStream_t stream) {
+    return restore_snapshot(id, stream);
+}
+
+bool PrefillV2Model::release_snapshot(SnapshotId id) noexcept {
+    const auto found = snapshots_.find(id);
+    if (found == snapshots_.end()) return false;
+    release_snapshot_record(found->second);
+    snapshots_.erase(found);
+    refresh_snapshot_bytes();
+    return true;
+}
+
+void PrefillV2Model::clear_snapshots() noexcept {
+    snapshots_.clear();
+    snapshot_bytes_ = 0;
+    snapshot_use_clock_ = 0;
+    snapshot_state_loaded_ = false;
+    snapshot_cow_events_ = 0;
+    snapshot_cow_bytes_ = 0;
 }
 
 } // namespace miinfer::prefill_v2

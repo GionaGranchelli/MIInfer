@@ -54,7 +54,7 @@ public:
     void forward(
         const float* d_input,
         float* d_output,
-        AttentionKvCacheView kv_cache,
+        PhysicalKvView kv_cache,
         const PrefillV2Workspace& ws,
         std::uint32_t base_position,
         std::uint32_t token_count,
@@ -65,7 +65,7 @@ public:
     void decode(
         const float* d_input,
         float* d_output,
-        AttentionKvCacheView kv_cache,
+        PhysicalKvView kv_cache,
         const PrefillV2Workspace& ws,
         std::uint32_t position,
         const DeviceDecodeState* decode_state = nullptr,
@@ -75,7 +75,7 @@ public:
     void decode_profiled(
         const float* d_input,
         float* d_output,
-        AttentionKvCacheView kv_cache,
+        PhysicalKvView kv_cache,
         const PrefillV2Workspace& ws,
         std::uint32_t position,
         const DeviceDecodeState* decode_state,
@@ -86,7 +86,7 @@ public:
     void forward_profiled(
         const float* d_input,
         float* d_output,
-        AttentionKvCacheView kv_cache,
+        PhysicalKvView kv_cache,
         const PrefillV2Workspace& ws,
         std::uint32_t base_position,
         std::uint32_t token_count,

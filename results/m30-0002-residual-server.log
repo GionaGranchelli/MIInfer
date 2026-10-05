@@ -1,0 +1,989 @@
+Production profile: m25_hi_qualified
+  MIINFER_MX_PIPELINE=unset
+  MIINFER_CONTEXT_CAPACITY=1024
+  MIINFER_PREFILL_LAYER_MAJOR=1
+  MIINFER_PREFILL_WIDE_CHUNK=1
+  MIINFER_PREFILL_FULL_LAYER_MAJOR=1
+  MIINFER_PREFILL_WIDE_ATTN=1
+  MIINFER_PREFILL_WIDE_REPACKED_MMQ=1
+  MIINFER_PREFILL_WIDE_MX_REPACKED_MMQ=1
+  MIINFER_PREFILL_WIDE_MMQ_QKV=1
+  MIINFER_PREFILL_WIDE_MMQ_SSM_OUT=1
+  MIINFER_PREFILL_WIDE_MMQ_FFN=1
+  MIINFER_M23_REPACKED_ROW128=1
+  MIINFER_PREFILL_REPACKED_RESIDENT_ALL=1
+  MIINFER_PREFILL_CHUNK=512
+  MIINFER_PREFILL_MX_GDN=1
+  MIINFER_MX_Q8_BATCH=0
+  MIINFER_MX_PINNED_QKV=0
+  MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_FFN=1
+  MIINFER_PREFILL_WIDE_MX_REPACKED_ATTN_O=1
+Loading model Qwen3.8-27B-Q4_K_M.gguf...
+model_context_length=262144
+runtime_context_capacity=131072
+session_reuse=enabled
+session_dir=disabled
+device_allocation_count=0
+device_allocated_bytes=0
+device_total_allocated_bytes=0
+device_peak_allocated_bytes=0
+device_vram_free_bytes=117440512
+device_vram_total_bytes=34342961152
+MIInfer Server
+Model    Qwen3.8-27B
+GPU      AMD Radeon Graphics
+Context  131072 tokens (not covered by current serving qualification)
+Profile  production
+API      http://127.0.0.1:8090/v1
+Web UI   http://127.0.0.1:8090/
+Auth     disabled (localhost only)
+
+Ready.
+Request queue capacity: 8
+Endpoints: /healthz /readyz /metrics /v1/models /v1/chat/completions
+miinfer_request_state request_id=1 state=received
+miinfer_request_state request_id=2 state=received
+miinfer_request_state request_id=2 state=queued
+miinfer_request_state request_id=2 state=dequeued
+miinfer_request_state request_id=2 state=parsed
+miinfer_request_state request_id=2 state=tokenized
+miinfer_request_state request_id=2 state=prefill_started
+miinfer_request_state request_id=2 state=completed
+miinfer_request {"request_id":2,"request_body_bytes":20235,"message_count":2,"prompt_chars":20000,"prompt_tokens":5372,"tokenization_ms":8.52901,"queue_wait_ms":0.114939,"prefill_ms":23192.7,"prefill_processed_tokens":5372,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":5372,"suffix_tokens_executed":5372,"prefix_tokens_replayed":5372,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":231.624,"first_decode_token_ms":23192.7,"time_to_first_token_ms":46385.5,"generated_tokens":134,"decode_ms":5345.57,"decode_tokens_per_second":24.8804,"total_ms":28545.5,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":2,"prompt_tokens":5372,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":5372,"suffix_tokens_executed":5372,"prefix_tokens_replayed":5372,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":5372,"prefill_ms":23192.7,"graph_capture_ms":0,"first_decode_token_ms":23192.7,"TTFT_wall_ms":23261.249227,"steady_decode_tok_s":0,"total_request_ms":28555.2,"cache_hit":false}
+miinfer_request_state request_id=3 state=received
+miinfer_request_state request_id=4 state=received
+miinfer_request_state request_id=5 state=received
+miinfer_request_state request_id=5 state=queued
+miinfer_request_state request_id=5 state=dequeued
+miinfer_request_state request_id=5 state=parsed
+miinfer_request_state request_id=5 state=tokenized
+miinfer_request_state request_id=5 state=prefill_started
+miinfer_request_state request_id=5 state=completed
+miinfer_request {"request_id":5,"request_body_bytes":25846,"message_count":5,"prompt_chars":25516,"prompt_tokens":6926,"tokenization_ms":10.1654,"queue_wait_ms":0.123585,"prefill_ms":30572.3,"prefill_processed_tokens":6926,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":6926,"suffix_tokens_executed":6926,"prefix_tokens_replayed":6926,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":226.545,"first_decode_token_ms":30572.3,"time_to_first_token_ms":61144.6,"generated_tokens":245,"decode_ms":10210.3,"decode_tokens_per_second":23.8975,"total_ms":40782.6,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":5,"prompt_tokens":6926,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":6926,"suffix_tokens_executed":6926,"prefix_tokens_replayed":6926,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":6926,"prefill_ms":30572.3,"graph_capture_ms":0,"first_decode_token_ms":30572.3,"TTFT_wall_ms":30625.231616,"steady_decode_tok_s":0,"total_request_ms":40794.2,"cache_hit":false}
+miinfer_request_state request_id=6 state=received
+miinfer_request_state request_id=7 state=received
+miinfer_request_state request_id=8 state=received
+miinfer_request_state request_id=8 state=queued
+miinfer_request_state request_id=8 state=dequeued
+miinfer_request_state request_id=8 state=parsed
+miinfer_request_state request_id=8 state=tokenized
+miinfer_request_state request_id=8 state=prefill_started
+miinfer_request_state request_id=8 state=completed
+miinfer_request {"request_id":8,"request_body_bytes":31348,"message_count":10,"prompt_chars":30853,"prompt_tokens":8415,"tokenization_ms":11.3989,"queue_wait_ms":0.064003,"prefill_ms":37507.4,"prefill_processed_tokens":8415,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":8415,"suffix_tokens_executed":8415,"prefix_tokens_replayed":8415,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":224.356,"first_decode_token_ms":37507.4,"time_to_first_token_ms":75014.9,"generated_tokens":1024,"decode_ms":40075.5,"decode_tokens_per_second":25.5268,"total_ms":77583,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":8,"prompt_tokens":8415,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":8415,"suffix_tokens_executed":8415,"prefix_tokens_replayed":8415,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":8415,"prefill_ms":37507.4,"graph_capture_ms":0,"first_decode_token_ms":37507.4,"TTFT_wall_ms":37558.622709,"steady_decode_tok_s":398.355,"total_request_ms":77597,"cache_hit":false}
+miinfer_request_state request_id=9 state=received
+miinfer_request_state request_id=10 state=received
+miinfer_request_state request_id=11 state=received
+miinfer_request_state request_id=11 state=queued
+miinfer_request_state request_id=11 state=dequeued
+miinfer_request_state request_id=11 state=parsed
+miinfer_request_state request_id=11 state=tokenized
+miinfer_request_state request_id=11 state=prefill_started
+miinfer_request_state request_id=11 state=completed
+miinfer_request {"request_id":11,"request_body_bytes":31725,"message_count":12,"prompt_chars":31210,"prompt_tokens":8493,"tokenization_ms":12.2161,"queue_wait_ms":0.053569,"prefill_ms":37948.4,"prefill_processed_tokens":8493,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":8493,"suffix_tokens_executed":8493,"prefix_tokens_replayed":8493,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":223.804,"first_decode_token_ms":37948.4,"time_to_first_token_ms":75896.7,"generated_tokens":100,"decode_ms":3889.03,"decode_tokens_per_second":25.4562,"total_ms":41837.4,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":11,"prompt_tokens":8493,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":8493,"suffix_tokens_executed":8493,"prefix_tokens_replayed":8493,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":8493,"prefill_ms":37948.4,"graph_capture_ms":0,"first_decode_token_ms":37948.4,"TTFT_wall_ms":38000.421729,"steady_decode_tok_s":0,"total_request_ms":41850.7,"cache_hit":false}
+miinfer_request_state request_id=12 state=received
+miinfer_request_state request_id=13 state=received
+miinfer_request_state request_id=14 state=received
+miinfer_request_state request_id=14 state=queued
+miinfer_request_state request_id=14 state=dequeued
+miinfer_request_state request_id=14 state=parsed
+miinfer_request_state request_id=14 state=tokenized
+miinfer_request_state request_id=14 state=prefill_started
+miinfer_request_state request_id=14 state=completed
+miinfer_request {"request_id":14,"request_body_bytes":34432,"message_count":15,"prompt_chars":33797,"prompt_tokens":9250,"tokenization_ms":12.8216,"queue_wait_ms":0.075899,"prefill_ms":4190.88,"prefill_processed_tokens":757,"reuse_hit":true,"reused_prefix_tokens":8493,"suffix_tokens_dispatched":757,"suffix_tokens_executed":757,"prefix_tokens_replayed":0,"checkpoint_position":8493,"gqa_kv_reused_tokens":8493,"gdn_checkpoint_position":8493,"restore_ms":0.766838,"suffix_prefill_ms":4186.98,"prefill_tokens_per_second":2207.17,"first_decode_token_ms":4190.88,"time_to_first_token_ms":8381.76,"generated_tokens":1024,"decode_ms":40643,"decode_tokens_per_second":25.1704,"total_ms":44833.9,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":14,"prompt_tokens":9250,"common_prefix_tokens":8493,"reuse_hit":true,"reused_prefix_tokens":8493,"suffix_tokens_dispatched":757,"suffix_tokens_executed":757,"prefix_tokens_replayed":0,"checkpoint_position":8493,"gqa_kv_reused_tokens":8493,"gdn_checkpoint_position":8493,"restore_ms":0.766838,"suffix_prefill_ms":4186.98,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":757,"prefill_ms":4190.88,"graph_capture_ms":0,"first_decode_token_ms":4190.88,"TTFT_wall_ms":4244.034100,"steady_decode_tok_s":28.0642,"total_request_ms":44849.4,"cache_hit":true}
+miinfer_request_state request_id=15 state=received
+miinfer_request_state request_id=16 state=received
+miinfer_request_state request_id=17 state=received
+miinfer_request_state request_id=17 state=queued
+miinfer_request_state request_id=17 state=dequeued
+miinfer_request_state request_id=17 state=parsed
+miinfer_request_state request_id=17 state=tokenized
+miinfer_request_state request_id=17 state=prefill_started
+miinfer_request_state request_id=17 state=completed
+miinfer_request {"request_id":17,"request_body_bytes":34738,"message_count":17,"prompt_chars":34090,"prompt_tokens":9316,"tokenization_ms":12.737,"queue_wait_ms":0.055494,"prefill_ms":662.368,"prefill_processed_tokens":66,"reuse_hit":true,"reused_prefix_tokens":9250,"suffix_tokens_dispatched":66,"suffix_tokens_executed":66,"prefix_tokens_replayed":0,"checkpoint_position":9250,"gqa_kv_reused_tokens":9250,"gdn_checkpoint_position":9250,"restore_ms":0.807586,"suffix_prefill_ms":658.411,"prefill_tokens_per_second":14064.7,"first_decode_token_ms":662.368,"time_to_first_token_ms":1324.74,"generated_tokens":106,"decode_ms":4182.52,"decode_tokens_per_second":25.1045,"total_ms":4844.91,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":17,"prompt_tokens":9316,"common_prefix_tokens":9250,"reuse_hit":true,"reused_prefix_tokens":9250,"suffix_tokens_dispatched":66,"suffix_tokens_executed":66,"prefix_tokens_replayed":0,"checkpoint_position":9250,"gqa_kv_reused_tokens":9250,"gdn_checkpoint_position":9250,"restore_ms":0.807586,"suffix_prefill_ms":658.411,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":66,"prefill_ms":662.368,"graph_capture_ms":0,"first_decode_token_ms":662.368,"TTFT_wall_ms":715.564624,"steady_decode_tok_s":29.8282,"total_request_ms":4859,"cache_hit":true}
+miinfer_request_state request_id=18 state=received
+miinfer_request_state request_id=19 state=received
+miinfer_request_state request_id=20 state=received
+miinfer_request_state request_id=20 state=queued
+miinfer_request_state request_id=20 state=dequeued
+miinfer_request_state request_id=20 state=parsed
+miinfer_request_state request_id=20 state=tokenized
+miinfer_request_state request_id=20 state=prefill_started
+miinfer_request_state request_id=20 state=completed
+miinfer_request {"request_id":20,"request_body_bytes":40050,"message_count":20,"prompt_chars":39319,"prompt_tokens":10790,"tokenization_ms":14.455,"queue_wait_ms":0.082636,"prefill_ms":8360.69,"prefill_processed_tokens":1474,"reuse_hit":true,"reused_prefix_tokens":9316,"suffix_tokens_dispatched":1474,"suffix_tokens_executed":1474,"prefix_tokens_replayed":0,"checkpoint_position":9316,"gqa_kv_reused_tokens":9316,"gdn_checkpoint_position":9316,"restore_ms":0.790724,"suffix_prefill_ms":8356.65,"prefill_tokens_per_second":1290.56,"first_decode_token_ms":8360.69,"time_to_first_token_ms":16721.4,"generated_tokens":1024,"decode_ms":41618.5,"decode_tokens_per_second":24.5804,"total_ms":49979.2,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":20,"prompt_tokens":10790,"common_prefix_tokens":9316,"reuse_hit":true,"reused_prefix_tokens":9316,"suffix_tokens_dispatched":1474,"suffix_tokens_executed":1474,"prefix_tokens_replayed":0,"checkpoint_position":9316,"gqa_kv_reused_tokens":9316,"gdn_checkpoint_position":9316,"restore_ms":0.790724,"suffix_prefill_ms":8356.65,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1474,"prefill_ms":8360.69,"graph_capture_ms":0,"first_decode_token_ms":8360.69,"TTFT_wall_ms":8416.692572,"steady_decode_tok_s":30.7597,"total_request_ms":49996.5,"cache_hit":true}
+miinfer_request_state request_id=21 state=received
+miinfer_request_state request_id=22 state=received
+miinfer_request_state request_id=23 state=received
+miinfer_request_state request_id=23 state=queued
+miinfer_request_state request_id=23 state=dequeued
+miinfer_request_state request_id=23 state=parsed
+miinfer_request_state request_id=23 state=tokenized
+miinfer_request_state request_id=23 state=prefill_started
+miinfer_request_state request_id=23 state=completed
+miinfer_request {"request_id":23,"request_body_bytes":40701,"message_count":22,"prompt_chars":39950,"prompt_tokens":10962,"tokenization_ms":14.6913,"queue_wait_ms":0.097675,"prefill_ms":1297.87,"prefill_processed_tokens":172,"reuse_hit":true,"reused_prefix_tokens":10790,"suffix_tokens_dispatched":172,"suffix_tokens_executed":172,"prefix_tokens_replayed":0,"checkpoint_position":10790,"gqa_kv_reused_tokens":10790,"gdn_checkpoint_position":10790,"restore_ms":0.820282,"suffix_prefill_ms":1293.92,"prefill_tokens_per_second":8446.17,"first_decode_token_ms":1297.87,"time_to_first_token_ms":2595.73,"generated_tokens":89,"decode_ms":3603.84,"decode_tokens_per_second":24.4184,"total_ms":4901.72,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":23,"prompt_tokens":10962,"common_prefix_tokens":10790,"reuse_hit":true,"reused_prefix_tokens":10790,"suffix_tokens_dispatched":172,"suffix_tokens_executed":172,"prefix_tokens_replayed":0,"checkpoint_position":10790,"gqa_kv_reused_tokens":10790,"gdn_checkpoint_position":10790,"restore_ms":0.820282,"suffix_prefill_ms":1293.92,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":172,"prefill_ms":1297.87,"graph_capture_ms":0,"first_decode_token_ms":1297.87,"TTFT_wall_ms":1354.040487,"steady_decode_tok_s":38.1617,"total_request_ms":4917.75,"cache_hit":true}
+miinfer_request_state request_id=24 state=received
+miinfer_request_state request_id=25 state=received
+miinfer_request_state request_id=26 state=received
+miinfer_request_state request_id=26 state=queued
+miinfer_request_state request_id=26 state=dequeued
+miinfer_request_state request_id=26 state=parsed
+miinfer_request_state request_id=26 state=tokenized
+miinfer_request_state request_id=26 state=prefill_started
+miinfer_request_state request_id=26 state=completed
+miinfer_request {"request_id":26,"request_body_bytes":45340,"message_count":25,"prompt_chars":44475,"prompt_tokens":12558,"tokenization_ms":15.4786,"queue_wait_ms":0.079789,"prefill_ms":9596.64,"prefill_processed_tokens":1596,"reuse_hit":true,"reused_prefix_tokens":10962,"suffix_tokens_dispatched":1596,"suffix_tokens_executed":1596,"prefix_tokens_replayed":0,"checkpoint_position":10962,"gqa_kv_reused_tokens":10962,"gdn_checkpoint_position":10962,"restore_ms":0.781521,"suffix_prefill_ms":9592.72,"prefill_tokens_per_second":1308.58,"first_decode_token_ms":9596.64,"time_to_first_token_ms":19193.3,"generated_tokens":1024,"decode_ms":42719.8,"decode_tokens_per_second":23.9467,"total_ms":52316.5,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":26,"prompt_tokens":12558,"common_prefix_tokens":10962,"reuse_hit":true,"reused_prefix_tokens":10962,"suffix_tokens_dispatched":1596,"suffix_tokens_executed":1596,"prefix_tokens_replayed":0,"checkpoint_position":10962,"gqa_kv_reused_tokens":10962,"gdn_checkpoint_position":10962,"restore_ms":0.781521,"suffix_prefill_ms":9592.72,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1596,"prefill_ms":9596.64,"graph_capture_ms":0,"first_decode_token_ms":9596.64,"TTFT_wall_ms":9654.732600,"steady_decode_tok_s":30.8847,"total_request_ms":52334.9,"cache_hit":true}
+miinfer_request_state request_id=27 state=received
+miinfer_request_state request_id=28 state=received
+miinfer_request_state request_id=29 state=received
+miinfer_request_state request_id=29 state=queued
+miinfer_request_state request_id=29 state=dequeued
+miinfer_request_state request_id=29 state=parsed
+miinfer_request_state request_id=29 state=tokenized
+miinfer_request_state request_id=29 state=prefill_started
+miinfer_request_state request_id=29 state=completed
+miinfer_request {"request_id":29,"request_body_bytes":45646,"message_count":27,"prompt_chars":44768,"prompt_tokens":12630,"tokenization_ms":16.1041,"queue_wait_ms":0.098104,"prefill_ms":716.436,"prefill_processed_tokens":72,"reuse_hit":true,"reused_prefix_tokens":12558,"suffix_tokens_dispatched":72,"suffix_tokens_executed":72,"prefix_tokens_replayed":0,"checkpoint_position":12558,"gqa_kv_reused_tokens":12558,"gdn_checkpoint_position":12558,"restore_ms":0.855872,"suffix_prefill_ms":712.458,"prefill_tokens_per_second":17628.9,"first_decode_token_ms":716.436,"time_to_first_token_ms":1432.87,"generated_tokens":89,"decode_ms":3691.45,"decode_tokens_per_second":23.8389,"total_ms":4407.9,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":29,"prompt_tokens":12630,"common_prefix_tokens":12558,"reuse_hit":true,"reused_prefix_tokens":12558,"suffix_tokens_dispatched":72,"suffix_tokens_executed":72,"prefix_tokens_replayed":0,"checkpoint_position":12558,"gqa_kv_reused_tokens":12558,"gdn_checkpoint_position":12558,"restore_ms":0.855872,"suffix_prefill_ms":712.458,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":72,"prefill_ms":716.436,"graph_capture_ms":0,"first_decode_token_ms":716.436,"TTFT_wall_ms":775.115369,"steady_decode_tok_s":29.5797,"total_request_ms":4425.44,"cache_hit":true}
+miinfer_request_state request_id=30 state=received
+miinfer_request_state request_id=31 state=received
+miinfer_request_state request_id=32 state=received
+miinfer_request_state request_id=32 state=queued
+miinfer_request_state request_id=32 state=dequeued
+miinfer_request_state request_id=32 state=parsed
+miinfer_request_state request_id=32 state=tokenized
+miinfer_request_state request_id=32 state=prefill_started
+miinfer_request_state request_id=32 state=completed
+miinfer_request {"request_id":32,"request_body_bytes":50093,"message_count":30,"prompt_chars":49128,"prompt_tokens":13965,"tokenization_ms":17.3936,"queue_wait_ms":0.099958,"prefill_ms":8271.39,"prefill_processed_tokens":1335,"reuse_hit":true,"reused_prefix_tokens":12630,"suffix_tokens_dispatched":1335,"suffix_tokens_executed":1335,"prefix_tokens_replayed":0,"checkpoint_position":12630,"gqa_kv_reused_tokens":12630,"gdn_checkpoint_position":12630,"restore_ms":0.786327,"suffix_prefill_ms":8267.39,"prefill_tokens_per_second":1688.35,"first_decode_token_ms":8271.39,"time_to_first_token_ms":16542.8,"generated_tokens":1024,"decode_ms":43616.6,"decode_tokens_per_second":23.4544,"total_ms":51888,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":32,"prompt_tokens":13965,"common_prefix_tokens":12630,"reuse_hit":true,"reused_prefix_tokens":12630,"suffix_tokens_dispatched":1335,"suffix_tokens_executed":1335,"prefix_tokens_replayed":0,"checkpoint_position":12630,"gqa_kv_reused_tokens":12630,"gdn_checkpoint_position":12630,"restore_ms":0.786327,"suffix_prefill_ms":8267.39,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1335,"prefill_ms":8271.39,"graph_capture_ms":0,"first_decode_token_ms":8271.39,"TTFT_wall_ms":8332.364119,"steady_decode_tok_s":28.9431,"total_request_ms":51908.5,"cache_hit":true}
+miinfer_request_state request_id=33 state=received
+miinfer_request_state request_id=34 state=received
+miinfer_request_state request_id=35 state=received
+miinfer_request_state request_id=35 state=queued
+miinfer_request_state request_id=35 state=dequeued
+miinfer_request_state request_id=35 state=parsed
+miinfer_request_state request_id=35 state=tokenized
+miinfer_request_state request_id=35 state=prefill_started
+miinfer_request_state request_id=35 state=completed
+miinfer_request {"request_id":35,"request_body_bytes":50393,"message_count":32,"prompt_chars":49415,"prompt_tokens":14034,"tokenization_ms":16.6906,"queue_wait_ms":0.088328,"prefill_ms":728.6,"prefill_processed_tokens":69,"reuse_hit":true,"reused_prefix_tokens":13965,"suffix_tokens_dispatched":69,"suffix_tokens_executed":69,"prefix_tokens_replayed":0,"checkpoint_position":13965,"gqa_kv_reused_tokens":13965,"gdn_checkpoint_position":13965,"restore_ms":0.824949,"suffix_prefill_ms":724.622,"prefill_tokens_per_second":19261.6,"first_decode_token_ms":728.6,"time_to_first_token_ms":1457.2,"generated_tokens":89,"decode_ms":3772.16,"decode_tokens_per_second":23.3288,"total_ms":4500.78,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":35,"prompt_tokens":14034,"common_prefix_tokens":13965,"reuse_hit":true,"reused_prefix_tokens":13965,"suffix_tokens_dispatched":69,"suffix_tokens_executed":69,"prefix_tokens_replayed":0,"checkpoint_position":13965,"gqa_kv_reused_tokens":13965,"gdn_checkpoint_position":13965,"restore_ms":0.824949,"suffix_prefill_ms":724.622,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":69,"prefill_ms":728.6,"graph_capture_ms":0,"first_decode_token_ms":728.6,"TTFT_wall_ms":789.135642,"steady_decode_tok_s":28.9135,"total_request_ms":4519.18,"cache_hit":true}
+miinfer_request_state request_id=36 state=received
+miinfer_request_state request_id=37 state=received
+miinfer_request_state request_id=38 state=received
+miinfer_request_state request_id=38 state=queued
+miinfer_request_state request_id=38 state=dequeued
+miinfer_request_state request_id=38 state=parsed
+miinfer_request_state request_id=38 state=tokenized
+miinfer_request_state request_id=38 state=prefill_started
+miinfer_request_state request_id=38 state=completed
+miinfer_request {"request_id":38,"request_body_bytes":52919,"message_count":35,"prompt_chars":51867,"prompt_tokens":14752,"tokenization_ms":18.4419,"queue_wait_ms":0.054082,"prefill_ms":4701.85,"prefill_processed_tokens":718,"reuse_hit":true,"reused_prefix_tokens":14034,"suffix_tokens_dispatched":718,"suffix_tokens_executed":718,"prefix_tokens_replayed":0,"checkpoint_position":14034,"gqa_kv_reused_tokens":14034,"gdn_checkpoint_position":14034,"restore_ms":0.788821,"suffix_prefill_ms":4697.87,"prefill_tokens_per_second":3137.49,"first_decode_token_ms":4701.85,"time_to_first_token_ms":9403.69,"generated_tokens":1024,"decode_ms":44049.7,"decode_tokens_per_second":23.2238,"total_ms":48751.5,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":38,"prompt_tokens":14752,"common_prefix_tokens":14034,"reuse_hit":true,"reused_prefix_tokens":14034,"suffix_tokens_dispatched":718,"suffix_tokens_executed":718,"prefix_tokens_replayed":0,"checkpoint_position":14034,"gqa_kv_reused_tokens":14034,"gdn_checkpoint_position":14034,"restore_ms":0.788821,"suffix_prefill_ms":4697.87,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":718,"prefill_ms":4701.85,"graph_capture_ms":0,"first_decode_token_ms":4701.85,"TTFT_wall_ms":4764.333181,"steady_decode_tok_s":25.9989,"total_request_ms":48773,"cache_hit":true}
+miinfer_request_state request_id=39 state=received
+miinfer_request_state request_id=40 state=received
+miinfer_request_state request_id=41 state=received
+miinfer_request_state request_id=41 state=queued
+miinfer_request_state request_id=41 state=dequeued
+miinfer_request_state request_id=41 state=parsed
+miinfer_request_state request_id=41 state=tokenized
+miinfer_request_state request_id=41 state=prefill_started
+miinfer_request_state request_id=41 state=completed
+miinfer_request {"request_id":41,"request_body_bytes":55301,"message_count":38,"prompt_chars":54172,"prompt_tokens":15448,"tokenization_ms":18.325,"queue_wait_ms":0.065983,"prefill_ms":4705.95,"prefill_processed_tokens":696,"reuse_hit":true,"reused_prefix_tokens":14752,"suffix_tokens_dispatched":696,"suffix_tokens_executed":696,"prefix_tokens_replayed":0,"checkpoint_position":14752,"gqa_kv_reused_tokens":14752,"gdn_checkpoint_position":14752,"restore_ms":0.801152,"suffix_prefill_ms":4702.07,"prefill_tokens_per_second":3282.65,"first_decode_token_ms":4705.95,"time_to_first_token_ms":9411.91,"generated_tokens":1024,"decode_ms":44243,"decode_tokens_per_second":23.1223,"total_ms":48949,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":41,"prompt_tokens":15448,"common_prefix_tokens":14752,"reuse_hit":true,"reused_prefix_tokens":14752,"suffix_tokens_dispatched":696,"suffix_tokens_executed":696,"prefix_tokens_replayed":0,"checkpoint_position":14752,"gqa_kv_reused_tokens":14752,"gdn_checkpoint_position":14752,"restore_ms":0.801152,"suffix_prefill_ms":4702.07,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":696,"prefill_ms":4705.95,"graph_capture_ms":0,"first_decode_token_ms":4705.95,"TTFT_wall_ms":4768.615645,"steady_decode_tok_s":25.8745,"total_request_ms":48970.2,"cache_hit":true}
+miinfer_request_state request_id=42 state=received
+miinfer_request_state request_id=43 state=received
+miinfer_request_state request_id=44 state=received
+miinfer_request_state request_id=44 state=queued
+miinfer_request_state request_id=44 state=dequeued
+miinfer_request_state request_id=44 state=parsed
+miinfer_request_state request_id=44 state=tokenized
+miinfer_request_state request_id=44 state=prefill_started
+miinfer_request_state request_id=44 state=completed
+miinfer_request {"request_id":44,"request_body_bytes":56487,"message_count":40,"prompt_chars":55330,"prompt_tokens":15705,"tokenization_ms":18.7652,"queue_wait_ms":0.097149,"prefill_ms":1996.56,"prefill_processed_tokens":257,"reuse_hit":true,"reused_prefix_tokens":15448,"suffix_tokens_dispatched":257,"suffix_tokens_executed":257,"prefix_tokens_replayed":0,"checkpoint_position":15448,"gqa_kv_reused_tokens":15448,"gdn_checkpoint_position":15448,"restore_ms":0.793211,"suffix_prefill_ms":1992.66,"prefill_tokens_per_second":7866.02,"first_decode_token_ms":1996.56,"time_to_first_token_ms":3993.12,"generated_tokens":114,"decode_ms":4941.84,"decode_tokens_per_second":22.866,"total_ms":6938.42,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":44,"prompt_tokens":15705,"common_prefix_tokens":15448,"reuse_hit":true,"reused_prefix_tokens":15448,"suffix_tokens_dispatched":257,"suffix_tokens_executed":257,"prefix_tokens_replayed":0,"checkpoint_position":15448,"gqa_kv_reused_tokens":15448,"gdn_checkpoint_position":15448,"restore_ms":0.793211,"suffix_prefill_ms":1992.66,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":257,"prefill_ms":1996.56,"graph_capture_ms":0,"first_decode_token_ms":1996.56,"TTFT_wall_ms":2060.037477,"steady_decode_tok_s":38.3664,"total_request_ms":6958.92,"cache_hit":true}
+miinfer_request_state request_id=45 state=received
+miinfer_request_state request_id=46 state=received
+miinfer_request_state request_id=47 state=received
+miinfer_request_state request_id=47 state=queued
+miinfer_request_state request_id=47 state=dequeued
+miinfer_request_state request_id=47 state=parsed
+miinfer_request_state request_id=47 state=tokenized
+miinfer_request_state request_id=47 state=prefill_started
+miinfer_request_state request_id=47 state=completed
+miinfer_request {"request_id":47,"request_body_bytes":63387,"message_count":43,"prompt_chars":61958,"prompt_tokens":17592,"tokenization_ms":22.0072,"queue_wait_ms":0.069431,"prefill_ms":12541.6,"prefill_processed_tokens":1887,"reuse_hit":true,"reused_prefix_tokens":15705,"suffix_tokens_dispatched":1887,"suffix_tokens_executed":1887,"prefix_tokens_replayed":0,"checkpoint_position":15705,"gqa_kv_reused_tokens":15705,"gdn_checkpoint_position":15705,"restore_ms":0.770564,"suffix_prefill_ms":12537.6,"prefill_tokens_per_second":1402.69,"first_decode_token_ms":12541.6,"time_to_first_token_ms":25083.2,"generated_tokens":873,"decode_ms":35811.4,"decode_tokens_per_second":24.3498,"total_ms":48353,"cancelled":false,"finish_reason":"stop","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":47,"prompt_tokens":17592,"common_prefix_tokens":15705,"reuse_hit":true,"reused_prefix_tokens":15705,"suffix_tokens_dispatched":1887,"suffix_tokens_executed":1887,"prefix_tokens_replayed":0,"checkpoint_position":15705,"gqa_kv_reused_tokens":15705,"gdn_checkpoint_position":15705,"restore_ms":0.770564,"suffix_prefill_ms":12537.6,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1887,"prefill_ms":12541.6,"graph_capture_ms":0,"first_decode_token_ms":12541.6,"TTFT_wall_ms":12605.711162,"steady_decode_tok_s":37.4735,"total_request_ms":48377.9,"cache_hit":true}
+miinfer_request_state request_id=48 state=received
+miinfer_request_state request_id=49 state=received
+miinfer_request_state request_id=50 state=received
+miinfer_request_state request_id=50 state=queued
+miinfer_request_state request_id=50 state=dequeued
+miinfer_request_state request_id=50 state=parsed
+miinfer_request_state request_id=50 state=tokenized
+miinfer_request_state request_id=50 state=prefill_started
+miinfer_request_state request_id=50 state=completed
+miinfer_request {"request_id":50,"request_body_bytes":65877,"message_count":45,"prompt_chars":64412,"prompt_tokens":18166,"tokenization_ms":21.6168,"queue_wait_ms":0.101919,"prefill_ms":88908.4,"prefill_processed_tokens":18166,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":18166,"suffix_tokens_executed":18166,"prefix_tokens_replayed":18166,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":204.323,"first_decode_token_ms":88908.4,"time_to_first_token_ms":177817,"generated_tokens":96,"decode_ms":3931.02,"decode_tokens_per_second":24.1668,"total_ms":92839.4,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":50,"prompt_tokens":18166,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":18166,"suffix_tokens_executed":18166,"prefix_tokens_replayed":18166,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":18166,"prefill_ms":88908.4,"graph_capture_ms":0,"first_decode_token_ms":88908.4,"TTFT_wall_ms":88972.465121,"steady_decode_tok_s":0,"total_request_ms":92862.7,"cache_hit":false}
+miinfer_request_state request_id=51 state=received
+miinfer_request_state request_id=52 state=received
+miinfer_request_state request_id=53 state=received
+miinfer_request_state request_id=53 state=queued
+miinfer_request_state request_id=53 state=dequeued
+miinfer_request_state request_id=53 state=parsed
+miinfer_request_state request_id=53 state=tokenized
+miinfer_request_state request_id=53 state=prefill_started
+miinfer_request_state request_id=53 state=completed
+miinfer_request {"request_id":53,"request_body_bytes":69349,"message_count":48,"prompt_chars":67815,"prompt_tokens":19262,"tokenization_ms":23.4808,"queue_wait_ms":0.079258,"prefill_ms":7902.54,"prefill_processed_tokens":1096,"reuse_hit":true,"reused_prefix_tokens":18166,"suffix_tokens_dispatched":1096,"suffix_tokens_executed":1096,"prefix_tokens_replayed":0,"checkpoint_position":18166,"gqa_kv_reused_tokens":18166,"gdn_checkpoint_position":18166,"restore_ms":0.804167,"suffix_prefill_ms":7898.56,"prefill_tokens_per_second":2437.45,"first_decode_token_ms":7902.54,"time_to_first_token_ms":15805.1,"generated_tokens":1024,"decode_ms":42685.4,"decode_tokens_per_second":23.966,"total_ms":50588,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":53,"prompt_tokens":19262,"common_prefix_tokens":18166,"reuse_hit":true,"reused_prefix_tokens":18166,"suffix_tokens_dispatched":1096,"suffix_tokens_executed":1096,"prefix_tokens_replayed":0,"checkpoint_position":18166,"gqa_kv_reused_tokens":18166,"gdn_checkpoint_position":18166,"restore_ms":0.804167,"suffix_prefill_ms":7898.56,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1096,"prefill_ms":7902.54,"graph_capture_ms":0,"first_decode_token_ms":7902.54,"TTFT_wall_ms":7968.990202,"steady_decode_tok_s":29.411,"total_request_ms":50615,"cache_hit":true}
+miinfer_request_state request_id=54 state=received
+miinfer_request_state request_id=55 state=received
+miinfer_request_state request_id=56 state=received
+miinfer_request_state request_id=56 state=queued
+miinfer_request_state request_id=56 state=dequeued
+miinfer_request_state request_id=56 state=parsed
+miinfer_request_state request_id=56 state=tokenized
+miinfer_request_state request_id=56 state=prefill_started
+miinfer_request_state request_id=56 state=completed
+miinfer_request {"request_id":56,"request_body_bytes":71138,"message_count":50,"prompt_chars":69563,"prompt_tokens":19708,"tokenization_ms":23.4711,"queue_wait_ms":0.076035,"prefill_ms":97838.6,"prefill_processed_tokens":19708,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":19708,"suffix_tokens_executed":19708,"prefix_tokens_replayed":19708,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":201.434,"first_decode_token_ms":97838.6,"time_to_first_token_ms":195677,"generated_tokens":99,"decode_ms":4115.87,"decode_tokens_per_second":23.8103,"total_ms":101954,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":56,"prompt_tokens":19708,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":19708,"suffix_tokens_executed":19708,"prefix_tokens_replayed":19708,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":19708,"prefill_ms":97838.6,"graph_capture_ms":0,"first_decode_token_ms":97838.6,"TTFT_wall_ms":97905.419918,"steady_decode_tok_s":0,"total_request_ms":101980,"cache_hit":false}
+miinfer_request_state request_id=57 state=received
+miinfer_request_state request_id=58 state=received
+miinfer_request_state request_id=59 state=received
+miinfer_request_state request_id=59 state=queued
+miinfer_request_state request_id=59 state=dequeued
+miinfer_request_state request_id=59 state=parsed
+miinfer_request_state request_id=59 state=tokenized
+miinfer_request_state request_id=59 state=prefill_started
+miinfer_request_state request_id=59 state=completed
+miinfer_request {"request_id":59,"request_body_bytes":73845,"message_count":53,"prompt_chars":72150,"prompt_tokens":20465,"tokenization_ms":24.1781,"queue_wait_ms":0.131673,"prefill_ms":5543.75,"prefill_processed_tokens":757,"reuse_hit":true,"reused_prefix_tokens":19708,"suffix_tokens_dispatched":757,"suffix_tokens_executed":757,"prefix_tokens_replayed":0,"checkpoint_position":19708,"gqa_kv_reused_tokens":19708,"gdn_checkpoint_position":19708,"restore_ms":0.782849,"suffix_prefill_ms":5539.81,"prefill_tokens_per_second":3691.54,"first_decode_token_ms":5543.75,"time_to_first_token_ms":11087.5,"generated_tokens":200,"decode_ms":8390.94,"decode_tokens_per_second":23.7161,"total_ms":13934.7,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":59,"prompt_tokens":20465,"common_prefix_tokens":19708,"reuse_hit":true,"reused_prefix_tokens":19708,"suffix_tokens_dispatched":757,"suffix_tokens_executed":757,"prefix_tokens_replayed":0,"checkpoint_position":19708,"gqa_kv_reused_tokens":19708,"gdn_checkpoint_position":19708,"restore_ms":0.782849,"suffix_prefill_ms":5539.81,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":757,"prefill_ms":5543.75,"graph_capture_ms":0,"first_decode_token_ms":5543.75,"TTFT_wall_ms":5611.919027,"steady_decode_tok_s":69.8935,"total_request_ms":13960.9,"cache_hit":true}
+miinfer_request_state request_id=60 state=received
+miinfer_request_state request_id=61 state=received
+miinfer_request_state request_id=62 state=received
+miinfer_request_state request_id=62 state=queued
+miinfer_request_state request_id=62 state=dequeued
+miinfer_request_state request_id=62 state=parsed
+miinfer_request_state request_id=62 state=tokenized
+miinfer_request_state request_id=62 state=prefill_started
+miinfer_request_state request_id=62 state=completed
+miinfer_request {"request_id":62,"request_body_bytes":76408,"message_count":56,"prompt_chars":74590,"prompt_tokens":21200,"tokenization_ms":25.1996,"queue_wait_ms":0.07902,"prefill_ms":5544.94,"prefill_processed_tokens":735,"reuse_hit":true,"reused_prefix_tokens":20465,"suffix_tokens_dispatched":735,"suffix_tokens_executed":735,"prefix_tokens_replayed":0,"checkpoint_position":20465,"gqa_kv_reused_tokens":20465,"gdn_checkpoint_position":20465,"restore_ms":0.802186,"suffix_prefill_ms":5541,"prefill_tokens_per_second":3823.31,"first_decode_token_ms":5544.94,"time_to_first_token_ms":11089.9,"generated_tokens":1024,"decode_ms":43488.2,"decode_tokens_per_second":23.5236,"total_ms":49033.2,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":62,"prompt_tokens":21200,"common_prefix_tokens":20465,"reuse_hit":true,"reused_prefix_tokens":20465,"suffix_tokens_dispatched":735,"suffix_tokens_executed":735,"prefix_tokens_replayed":0,"checkpoint_position":20465,"gqa_kv_reused_tokens":20465,"gdn_checkpoint_position":20465,"restore_ms":0.802186,"suffix_prefill_ms":5541,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":735,"prefill_ms":5544.94,"graph_capture_ms":0,"first_decode_token_ms":5544.94,"TTFT_wall_ms":5613.932528,"steady_decode_tok_s":26.9613,"total_request_ms":49061.8,"cache_hit":true}
+miinfer_request_state request_id=63 state=received
+miinfer_request_state request_id=64 state=received
+miinfer_request_state request_id=65 state=received
+miinfer_request_state request_id=65 state=queued
+miinfer_request_state request_id=65 state=dequeued
+miinfer_request_state request_id=65 state=parsed
+miinfer_request_state request_id=65 state=tokenized
+miinfer_request_state request_id=65 state=prefill_started
+miinfer_request_state request_id=65 state=completed
+miinfer_request {"request_id":65,"request_body_bytes":76715,"message_count":58,"prompt_chars":74884,"prompt_tokens":21267,"tokenization_ms":24.9032,"queue_wait_ms":0.083056,"prefill_ms":807.897,"prefill_processed_tokens":67,"reuse_hit":true,"reused_prefix_tokens":21200,"suffix_tokens_dispatched":67,"suffix_tokens_executed":67,"prefix_tokens_replayed":0,"checkpoint_position":21200,"gqa_kv_reused_tokens":21200,"gdn_checkpoint_position":21200,"restore_ms":0.823777,"suffix_prefill_ms":803.955,"prefill_tokens_per_second":26323.9,"first_decode_token_ms":807.897,"time_to_first_token_ms":1615.79,"generated_tokens":102,"decode_ms":4312.15,"decode_tokens_per_second":23.4222,"total_ms":5120.06,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":65,"prompt_tokens":21267,"common_prefix_tokens":21200,"reuse_hit":true,"reused_prefix_tokens":21200,"suffix_tokens_dispatched":67,"suffix_tokens_executed":67,"prefix_tokens_replayed":0,"checkpoint_position":21200,"gqa_kv_reused_tokens":21200,"gdn_checkpoint_position":21200,"restore_ms":0.823777,"suffix_prefill_ms":803.955,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":67,"prefill_ms":807.897,"graph_capture_ms":0,"first_decode_token_ms":807.897,"TTFT_wall_ms":876.529496,"steady_decode_tok_s":28.8221,"total_request_ms":5146.82,"cache_hit":true}
+miinfer_request_state request_id=66 state=received
+miinfer_request_state request_id=67 state=received
+miinfer_request_state request_id=68 state=received
+miinfer_request_state request_id=68 state=queued
+miinfer_request_state request_id=68 state=dequeued
+miinfer_request_state request_id=68 state=parsed
+miinfer_request_state request_id=68 state=tokenized
+miinfer_request_state request_id=68 state=prefill_started
+miinfer_request_state request_id=68 state=completed
+miinfer_request {"request_id":68,"request_body_bytes":82028,"message_count":61,"prompt_chars":80114,"prompt_tokens":22742,"tokenization_ms":26.6417,"queue_wait_ms":0.097181,"prefill_ms":11272.1,"prefill_processed_tokens":1475,"reuse_hit":true,"reused_prefix_tokens":21267,"suffix_tokens_dispatched":1475,"suffix_tokens_executed":1475,"prefix_tokens_replayed":0,"checkpoint_position":21267,"gqa_kv_reused_tokens":21267,"gdn_checkpoint_position":21267,"restore_ms":0.778504,"suffix_prefill_ms":11268.1,"prefill_tokens_per_second":2017.55,"first_decode_token_ms":11272.1,"time_to_first_token_ms":22544.2,"generated_tokens":1024,"decode_ms":44181.8,"decode_tokens_per_second":23.1543,"total_ms":55453.9,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":68,"prompt_tokens":22742,"common_prefix_tokens":21267,"reuse_hit":true,"reused_prefix_tokens":21267,"suffix_tokens_dispatched":1475,"suffix_tokens_executed":1475,"prefix_tokens_replayed":0,"checkpoint_position":21267,"gqa_kv_reused_tokens":21267,"gdn_checkpoint_position":21267,"restore_ms":0.778504,"suffix_prefill_ms":11268.1,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1475,"prefill_ms":11272.1,"graph_capture_ms":0,"first_decode_token_ms":11272.1,"TTFT_wall_ms":11343.501446,"steady_decode_tok_s":31.0851,"total_request_ms":55484,"cache_hit":true}
+miinfer_request_state request_id=69 state=received
+miinfer_request_state request_id=70 state=received
+miinfer_request_state request_id=71 state=received
+miinfer_request_state request_id=71 state=queued
+miinfer_request_state request_id=71 state=dequeued
+miinfer_request_state request_id=71 state=parsed
+miinfer_request_state request_id=71 state=tokenized
+miinfer_request_state request_id=71 state=prefill_started
+miinfer_request_state request_id=71 state=completed
+miinfer_request {"request_id":71,"request_body_bytes":82345,"message_count":63,"prompt_chars":80418,"prompt_tokens":22816,"tokenization_ms":26.0526,"queue_wait_ms":0.113238,"prefill_ms":856.302,"prefill_processed_tokens":74,"reuse_hit":true,"reused_prefix_tokens":22742,"suffix_tokens_dispatched":74,"suffix_tokens_executed":74,"prefix_tokens_replayed":0,"checkpoint_position":22742,"gqa_kv_reused_tokens":22742,"gdn_checkpoint_position":22742,"restore_ms":0.820873,"suffix_prefill_ms":852.377,"prefill_tokens_per_second":26644.8,"first_decode_token_ms":856.302,"time_to_first_token_ms":1712.6,"generated_tokens":90,"decode_ms":3855.2,"decode_tokens_per_second":23.0857,"total_ms":4711.52,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":71,"prompt_tokens":22816,"common_prefix_tokens":22742,"reuse_hit":true,"reused_prefix_tokens":22742,"suffix_tokens_dispatched":74,"suffix_tokens_executed":74,"prefix_tokens_replayed":0,"checkpoint_position":22742,"gqa_kv_reused_tokens":22742,"gdn_checkpoint_position":22742,"restore_ms":0.820873,"suffix_prefill_ms":852.377,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":74,"prefill_ms":856.302,"graph_capture_ms":0,"first_decode_token_ms":856.302,"TTFT_wall_ms":926.728790,"steady_decode_tok_s":29.6776,"total_request_ms":4739.51,"cache_hit":true}
+miinfer_request_state request_id=72 state=received
+miinfer_request_state request_id=73 state=received
+miinfer_request_state request_id=74 state=received
+miinfer_request_state request_id=74 state=queued
+miinfer_request_state request_id=74 state=dequeued
+miinfer_request_state request_id=74 state=parsed
+miinfer_request_state request_id=74 state=tokenized
+miinfer_request_state request_id=74 state=prefill_started
+miinfer_request_state request_id=74 state=completed
+miinfer_request {"request_id":74,"request_body_bytes":86987,"message_count":66,"prompt_chars":84946,"prompt_tokens":24413,"tokenization_ms":27.4392,"queue_wait_ms":0.10033,"prefill_ms":12810.2,"prefill_processed_tokens":1597,"reuse_hit":true,"reused_prefix_tokens":22816,"suffix_tokens_dispatched":1597,"suffix_tokens_executed":1597,"prefix_tokens_replayed":0,"checkpoint_position":22816,"gqa_kv_reused_tokens":22816,"gdn_checkpoint_position":22816,"restore_ms":0.789074,"suffix_prefill_ms":12806.3,"prefill_tokens_per_second":1905.75,"first_decode_token_ms":12810.2,"time_to_first_token_ms":25620.3,"generated_tokens":1024,"decode_ms":44917.3,"decode_tokens_per_second":22.7752,"total_ms":57727.5,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":74,"prompt_tokens":24413,"common_prefix_tokens":22816,"reuse_hit":true,"reused_prefix_tokens":22816,"suffix_tokens_dispatched":1597,"suffix_tokens_executed":1597,"prefix_tokens_replayed":0,"checkpoint_position":22816,"gqa_kv_reused_tokens":22816,"gdn_checkpoint_position":22816,"restore_ms":0.789074,"suffix_prefill_ms":12806.3,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1597,"prefill_ms":12810.2,"graph_capture_ms":0,"first_decode_token_ms":12810.2,"TTFT_wall_ms":12883.012710,"steady_decode_tok_s":31.8621,"total_request_ms":57758.5,"cache_hit":true}
+miinfer_request_state request_id=75 state=received
+miinfer_request_state request_id=76 state=received
+miinfer_request_state request_id=77 state=received
+miinfer_request_state request_id=77 state=queued
+miinfer_request_state request_id=77 state=dequeued
+miinfer_request_state request_id=77 state=parsed
+miinfer_request_state request_id=77 state=tokenized
+miinfer_request_state request_id=77 state=prefill_started
+miinfer_request_state request_id=77 state=completed
+miinfer_request {"request_id":77,"request_body_bytes":87835,"message_count":68,"prompt_chars":85764,"prompt_tokens":24622,"tokenization_ms":28.6342,"queue_wait_ms":0.069249,"prefill_ms":127779,"prefill_processed_tokens":24622,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":24622,"suffix_tokens_executed":24622,"prefix_tokens_replayed":24622,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":192.692,"first_decode_token_ms":127779,"time_to_first_token_ms":255559,"generated_tokens":89,"decode_ms":3871.96,"decode_tokens_per_second":22.7275,"total_ms":131651,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":77,"prompt_tokens":24622,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":24622,"suffix_tokens_executed":24622,"prefix_tokens_replayed":24622,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":24622,"prefill_ms":127779,"graph_capture_ms":0,"first_decode_token_ms":127779,"TTFT_wall_ms":127853.439723,"steady_decode_tok_s":0,"total_request_ms":131682,"cache_hit":false}
+miinfer_request_state request_id=78 state=received
+miinfer_request_state request_id=79 state=received
+miinfer_request_state request_id=80 state=received
+miinfer_request_state request_id=80 state=queued
+miinfer_request_state request_id=80 state=dequeued
+miinfer_request_state request_id=80 state=parsed
+miinfer_request_state request_id=80 state=tokenized
+miinfer_request_state request_id=80 state=prefill_started
+miinfer_request_state request_id=80 state=completed
+miinfer_request {"request_id":80,"request_body_bytes":92285,"message_count":71,"prompt_chars":90127,"prompt_tokens":25958,"tokenization_ms":28.8478,"queue_wait_ms":0.082014,"prefill_ms":10944.1,"prefill_processed_tokens":1336,"reuse_hit":true,"reused_prefix_tokens":24622,"suffix_tokens_dispatched":1336,"suffix_tokens_executed":1336,"prefix_tokens_replayed":0,"checkpoint_position":24622,"gqa_kv_reused_tokens":24622,"gdn_checkpoint_position":24622,"restore_ms":0.786404,"suffix_prefill_ms":10940.2,"prefill_tokens_per_second":2371.86,"first_decode_token_ms":10944.1,"time_to_first_token_ms":21888.3,"generated_tokens":1024,"decode_ms":45372.1,"decode_tokens_per_second":22.5469,"total_ms":56316.3,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":80,"prompt_tokens":25958,"common_prefix_tokens":24622,"reuse_hit":true,"reused_prefix_tokens":24622,"suffix_tokens_dispatched":1336,"suffix_tokens_executed":1336,"prefix_tokens_replayed":0,"checkpoint_position":24622,"gqa_kv_reused_tokens":24622,"gdn_checkpoint_position":24622,"restore_ms":0.786404,"suffix_prefill_ms":10940.2,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1336,"prefill_ms":10944.1,"graph_capture_ms":0,"first_decode_token_ms":10944.1,"TTFT_wall_ms":11018.689744,"steady_decode_tok_s":29.7142,"total_request_ms":56348.8,"cache_hit":true}
+miinfer_request_state request_id=81 state=received
+miinfer_request_state request_id=82 state=received
+miinfer_request_state request_id=83 state=received
+miinfer_request_state request_id=83 state=queued
+miinfer_request_state request_id=83 state=dequeued
+miinfer_request_state request_id=83 state=parsed
+miinfer_request_state request_id=83 state=tokenized
+miinfer_request_state request_id=83 state=prefill_started
+miinfer_request_state request_id=83 state=completed
+miinfer_request {"request_id":83,"request_body_bytes":96588,"message_count":74,"prompt_chars":94340,"prompt_tokens":27271,"tokenization_ms":30.688,"queue_wait_ms":0.073715,"prefill_ms":11196.9,"prefill_processed_tokens":1313,"reuse_hit":true,"reused_prefix_tokens":25958,"suffix_tokens_dispatched":1313,"suffix_tokens_executed":1313,"prefix_tokens_replayed":0,"checkpoint_position":25958,"gqa_kv_reused_tokens":25958,"gdn_checkpoint_position":25958,"restore_ms":0.829733,"suffix_prefill_ms":11192.9,"prefill_tokens_per_second":2435.59,"first_decode_token_ms":11196.9,"time_to_first_token_ms":22393.8,"generated_tokens":1024,"decode_ms":46076.8,"decode_tokens_per_second":22.2021,"total_ms":57273.7,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":83,"prompt_tokens":27271,"common_prefix_tokens":25958,"reuse_hit":true,"reused_prefix_tokens":25958,"suffix_tokens_dispatched":1313,"suffix_tokens_executed":1313,"prefix_tokens_replayed":0,"checkpoint_position":25958,"gqa_kv_reused_tokens":25958,"gdn_checkpoint_position":25958,"restore_ms":0.829733,"suffix_prefill_ms":11192.9,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1313,"prefill_ms":11196.9,"graph_capture_ms":0,"first_decode_token_ms":11196.9,"TTFT_wall_ms":11274.660509,"steady_decode_tok_s":29.3292,"total_request_ms":57308.2,"cache_hit":true}
+miinfer_request_state request_id=84 state=received
+miinfer_request_state request_id=85 state=received
+miinfer_request_state request_id=86 state=received
+miinfer_request_state request_id=86 state=queued
+miinfer_request_state request_id=86 state=dequeued
+miinfer_request_state request_id=86 state=parsed
+miinfer_request_state request_id=86 state=tokenized
+miinfer_request_state request_id=86 state=prefill_started
+miinfer_request_state request_id=86 state=completed
+miinfer_request {"request_id":86,"request_body_bytes":97765,"message_count":76,"prompt_chars":95489,"prompt_tokens":27558,"tokenization_ms":31.2186,"queue_wait_ms":0.082211,"prefill_ms":147363,"prefill_processed_tokens":27558,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":27558,"suffix_tokens_executed":27558,"prefix_tokens_replayed":27558,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":187.008,"first_decode_token_ms":147363,"time_to_first_token_ms":294725,"generated_tokens":107,"decode_ms":4816.43,"decode_tokens_per_second":22.008,"total_ms":152179,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":86,"prompt_tokens":27558,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":27558,"suffix_tokens_executed":27558,"prefix_tokens_replayed":27558,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":27558,"prefill_ms":147363,"graph_capture_ms":0,"first_decode_token_ms":147363,"TTFT_wall_ms":147440.813447,"steady_decode_tok_s":0,"total_request_ms":152213,"cache_hit":false}
+miinfer_request_state request_id=87 state=received
+miinfer_request_state request_id=88 state=received
+miinfer_request_state request_id=89 state=received
+miinfer_request_state request_id=89 state=queued
+miinfer_request_state request_id=89 state=dequeued
+miinfer_request_state request_id=89 state=parsed
+miinfer_request_state request_id=89 state=tokenized
+miinfer_request_state request_id=89 state=prefill_started
+miinfer_request_state request_id=89 state=completed
+miinfer_request {"request_id":89,"request_body_bytes":100295,"message_count":79,"prompt_chars":97944,"prompt_tokens":28277,"tokenization_ms":31.5161,"queue_wait_ms":0.10344,"prefill_ms":6350.44,"prefill_processed_tokens":719,"reuse_hit":true,"reused_prefix_tokens":27558,"suffix_tokens_dispatched":719,"suffix_tokens_executed":719,"prefix_tokens_replayed":0,"checkpoint_position":27558,"gqa_kv_reused_tokens":27558,"gdn_checkpoint_position":27558,"restore_ms":0.776777,"suffix_prefill_ms":6346.48,"prefill_tokens_per_second":4452.76,"first_decode_token_ms":6350.44,"time_to_first_token_ms":12700.9,"generated_tokens":1024,"decode_ms":46353.2,"decode_tokens_per_second":22.0697,"total_ms":52703.7,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":89,"prompt_tokens":28277,"common_prefix_tokens":27558,"reuse_hit":true,"reused_prefix_tokens":27558,"suffix_tokens_dispatched":719,"suffix_tokens_executed":719,"prefix_tokens_replayed":0,"checkpoint_position":27558,"gqa_kv_reused_tokens":27558,"gdn_checkpoint_position":27558,"restore_ms":0.776777,"suffix_prefill_ms":6346.48,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":719,"prefill_ms":6350.44,"graph_capture_ms":0,"first_decode_token_ms":6350.44,"TTFT_wall_ms":6428.998808,"steady_decode_tok_s":25.5732,"total_request_ms":52739.2,"cache_hit":true}
+miinfer_request_state request_id=90 state=received
+miinfer_request_state request_id=91 state=received
+miinfer_request_state request_id=92 state=received
+miinfer_request_state request_id=92 state=queued
+miinfer_request_state request_id=92 state=dequeued
+miinfer_request_state request_id=92 state=parsed
+miinfer_request_state request_id=92 state=tokenized
+miinfer_request_state request_id=92 state=prefill_started
+miinfer_request_state request_id=92 state=completed
+miinfer_request {"request_id":92,"request_body_bytes":102800,"message_count":81,"prompt_chars":100390,"prompt_tokens":28861,"tokenization_ms":32.6323,"queue_wait_ms":0.110298,"prefill_ms":155584,"prefill_processed_tokens":28861,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":28861,"suffix_tokens_executed":28861,"prefix_tokens_replayed":28861,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":185.502,"first_decode_token_ms":155584,"time_to_first_token_ms":311167,"generated_tokens":103,"decode_ms":4658.8,"decode_tokens_per_second":21.8941,"total_ms":160242,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":92,"prompt_tokens":28861,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":28861,"suffix_tokens_executed":28861,"prefix_tokens_replayed":28861,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":28861,"prefill_ms":155584,"graph_capture_ms":0,"first_decode_token_ms":155584,"TTFT_wall_ms":155663.757888,"steady_decode_tok_s":0,"total_request_ms":160277,"cache_hit":false}
+miinfer_request_state request_id=93 state=received
+miinfer_request_state request_id=94 state=received
+miinfer_request_state request_id=95 state=received
+miinfer_request_state request_id=95 state=queued
+miinfer_request_state request_id=95 state=dequeued
+miinfer_request_state request_id=95 state=parsed
+miinfer_request_state request_id=95 state=tokenized
+miinfer_request_state request_id=95 state=prefill_started
+miinfer_request_state request_id=95 state=completed
+miinfer_request {"request_id":95,"request_body_bytes":109703,"message_count":84,"prompt_chars":107021,"prompt_tokens":30749,"tokenization_ms":32.9336,"queue_wait_ms":0.070189,"prefill_ms":16160,"prefill_processed_tokens":1888,"reuse_hit":true,"reused_prefix_tokens":28861,"suffix_tokens_dispatched":1888,"suffix_tokens_executed":1888,"prefix_tokens_replayed":0,"checkpoint_position":28861,"gqa_kv_reused_tokens":28861,"gdn_checkpoint_position":28861,"restore_ms":0.779305,"suffix_prefill_ms":16156,"prefill_tokens_per_second":1902.78,"first_decode_token_ms":16160,"time_to_first_token_ms":32320.1,"generated_tokens":307,"decode_ms":14135.1,"decode_tokens_per_second":21.6482,"total_ms":30295.2,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":95,"prompt_tokens":30749,"common_prefix_tokens":28861,"reuse_hit":true,"reused_prefix_tokens":28861,"suffix_tokens_dispatched":1888,"suffix_tokens_executed":1888,"prefix_tokens_replayed":0,"checkpoint_position":28861,"gqa_kv_reused_tokens":28861,"gdn_checkpoint_position":28861,"restore_ms":0.779305,"suffix_prefill_ms":16156,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1888,"prefill_ms":16160,"graph_capture_ms":0,"first_decode_token_ms":16160,"TTFT_wall_ms":16240.874769,"steady_decode_tok_s":0,"total_request_ms":30330.8,"cache_hit":true}
+miinfer_request_state request_id=96 state=received
+miinfer_request_state request_id=97 state=received
+miinfer_request_state request_id=98 state=received
+miinfer_request_state request_id=98 state=queued
+miinfer_request_state request_id=98 state=dequeued
+miinfer_request_state request_id=98 state=parsed
+miinfer_request_state request_id=98 state=tokenized
+miinfer_request_state request_id=98 state=prefill_started
+miinfer_request_state request_id=98 state=completed
+miinfer_request {"request_id":98,"request_body_bytes":113000,"message_count":86,"prompt_chars":110151,"prompt_tokens":31506,"tokenization_ms":36.9968,"queue_wait_ms":0.09895,"prefill_ms":173924,"prefill_processed_tokens":31506,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":31506,"suffix_tokens_executed":31506,"prefix_tokens_replayed":31506,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":181.148,"first_decode_token_ms":173924,"time_to_first_token_ms":347848,"generated_tokens":95,"decode_ms":4394.56,"decode_tokens_per_second":21.3901,"total_ms":178319,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":98,"prompt_tokens":31506,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":31506,"suffix_tokens_executed":31506,"prefix_tokens_replayed":31506,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":31506,"prefill_ms":173924,"graph_capture_ms":0,"first_decode_token_ms":173924,"TTFT_wall_ms":174009.605004,"steady_decode_tok_s":0,"total_request_ms":178358,"cache_hit":false}
+miinfer_request_state request_id=99 state=received
+miinfer_request_state request_id=100 state=received
+miinfer_request_state request_id=101 state=received
+miinfer_request_state request_id=101 state=queued
+miinfer_request_state request_id=101 state=dequeued
+miinfer_request_state request_id=101 state=parsed
+miinfer_request_state request_id=101 state=tokenized
+miinfer_request_state request_id=101 state=prefill_started
+miinfer_request_state request_id=101 state=completed
+miinfer_request {"request_id":101,"request_body_bytes":116475,"message_count":89,"prompt_chars":113557,"prompt_tokens":32603,"tokenization_ms":37.1004,"queue_wait_ms":0.085335,"prefill_ms":10523.1,"prefill_processed_tokens":1097,"reuse_hit":true,"reused_prefix_tokens":31506,"suffix_tokens_dispatched":1097,"suffix_tokens_executed":1097,"prefix_tokens_replayed":0,"checkpoint_position":31506,"gqa_kv_reused_tokens":31506,"gdn_checkpoint_position":31506,"restore_ms":0.7771,"suffix_prefill_ms":10519.2,"prefill_tokens_per_second":3098.22,"first_decode_token_ms":10523.1,"time_to_first_token_ms":21046.3,"generated_tokens":1024,"decode_ms":48333.8,"decode_tokens_per_second":21.1653,"total_ms":58857,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":101,"prompt_tokens":32603,"common_prefix_tokens":31506,"reuse_hit":true,"reused_prefix_tokens":31506,"suffix_tokens_dispatched":1097,"suffix_tokens_executed":1097,"prefix_tokens_replayed":0,"checkpoint_position":31506,"gqa_kv_reused_tokens":31506,"gdn_checkpoint_position":31506,"restore_ms":0.7771,"suffix_prefill_ms":10519.2,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1097,"prefill_ms":10523.1,"graph_capture_ms":0,"first_decode_token_ms":10523.1,"TTFT_wall_ms":10608.933011,"steady_decode_tok_s":27.0559,"total_request_ms":58897.8,"cache_hit":true}
+miinfer_request_state request_id=102 state=received
+miinfer_request_state request_id=103 state=received
+miinfer_request_state request_id=104 state=received
+miinfer_request_state request_id=104 state=queued
+miinfer_request_state request_id=104 state=dequeued
+miinfer_request_state request_id=104 state=parsed
+miinfer_request_state request_id=104 state=tokenized
+miinfer_request_state request_id=104 state=prefill_started
+miinfer_request_state request_id=104 state=completed
+miinfer_request {"request_id":104,"request_body_bytes":120810,"message_count":91,"prompt_chars":117675,"prompt_tokens":33542,"tokenization_ms":38.4579,"queue_wait_ms":0.084709,"prefill_ms":188340,"prefill_processed_tokens":33542,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":33542,"suffix_tokens_executed":33542,"prefix_tokens_replayed":33542,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":178.093,"first_decode_token_ms":188340,"time_to_first_token_ms":376681,"generated_tokens":107,"decode_ms":5046.44,"decode_tokens_per_second":21.0049,"total_ms":193387,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":104,"prompt_tokens":33542,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":33542,"suffix_tokens_executed":33542,"prefix_tokens_replayed":33542,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":33542,"prefill_ms":188340,"graph_capture_ms":0,"first_decode_token_ms":188340,"TTFT_wall_ms":188428.260723,"steady_decode_tok_s":0,"total_request_ms":193428,"cache_hit":false}
+miinfer_request_state request_id=105 state=received
+miinfer_request_state request_id=106 state=received
+miinfer_request_state request_id=107 state=received
+miinfer_request_state request_id=107 state=queued
+miinfer_request_state request_id=107 state=dequeued
+miinfer_request_state request_id=107 state=parsed
+miinfer_request_state request_id=107 state=tokenized
+miinfer_request_state request_id=107 state=prefill_started
+miinfer_request_state request_id=107 state=completed
+miinfer_request {"request_id":107,"request_body_bytes":123520,"message_count":94,"prompt_chars":120265,"prompt_tokens":34300,"tokenization_ms":37.4755,"queue_wait_ms":0.084504,"prefill_ms":7407.64,"prefill_processed_tokens":758,"reuse_hit":true,"reused_prefix_tokens":33542,"suffix_tokens_dispatched":758,"suffix_tokens_executed":758,"prefix_tokens_replayed":0,"checkpoint_position":33542,"gqa_kv_reused_tokens":33542,"gdn_checkpoint_position":33542,"restore_ms":0.781968,"suffix_prefill_ms":7403.67,"prefill_tokens_per_second":4630.35,"first_decode_token_ms":7407.64,"time_to_first_token_ms":14815.3,"generated_tokens":1024,"decode_ms":48952.5,"decode_tokens_per_second":20.8978,"total_ms":56360.2,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":107,"prompt_tokens":34300,"common_prefix_tokens":33542,"reuse_hit":true,"reused_prefix_tokens":33542,"suffix_tokens_dispatched":758,"suffix_tokens_executed":758,"prefix_tokens_replayed":0,"checkpoint_position":33542,"gqa_kv_reused_tokens":33542,"gdn_checkpoint_position":33542,"restore_ms":0.781968,"suffix_prefill_ms":7403.67,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":758,"prefill_ms":7407.64,"graph_capture_ms":0,"first_decode_token_ms":7407.64,"TTFT_wall_ms":7495.352160,"steady_decode_tok_s":24.624,"total_request_ms":56401.8,"cache_hit":true}
+miinfer_request_state request_id=108 state=received
+miinfer_request_state request_id=109 state=received
+miinfer_request_state request_id=110 state=received
+miinfer_request_state request_id=110 state=queued
+miinfer_request_state request_id=110 state=dequeued
+miinfer_request_state request_id=110 state=parsed
+miinfer_request_state request_id=110 state=tokenized
+miinfer_request_state request_id=110 state=prefill_started
+miinfer_request_state request_id=110 state=completed
+miinfer_request {"request_id":110,"request_body_bytes":126763,"message_count":96,"prompt_chars":123392,"prompt_tokens":35025,"tokenization_ms":38.6824,"queue_wait_ms":0.068605,"prefill_ms":198820,"prefill_processed_tokens":35025,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":35025,"suffix_tokens_executed":35025,"prefix_tokens_replayed":35025,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":176.164,"first_decode_token_ms":198820,"time_to_first_token_ms":397640,"generated_tokens":101,"decode_ms":4827.11,"decode_tokens_per_second":20.7163,"total_ms":203647,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":110,"prompt_tokens":35025,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":35025,"suffix_tokens_executed":35025,"prefix_tokens_replayed":35025,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":35025,"prefill_ms":198820,"graph_capture_ms":0,"first_decode_token_ms":198820,"TTFT_wall_ms":198908.696078,"steady_decode_tok_s":0,"total_request_ms":203688,"cache_hit":false}
+miinfer_request_state request_id=111 state=received
+miinfer_request_state request_id=112 state=received
+miinfer_request_state request_id=113 state=received
+miinfer_request_state request_id=113 state=queued
+miinfer_request_state request_id=113 state=dequeued
+miinfer_request_state request_id=113 state=parsed
+miinfer_request_state request_id=113 state=tokenized
+miinfer_request_state request_id=113 state=prefill_started
+miinfer_request_state request_id=113 state=completed
+miinfer_request {"request_id":113,"request_body_bytes":132078,"message_count":99,"prompt_chars":128624,"prompt_tokens":36500,"tokenization_ms":40.9653,"queue_wait_ms":0.08268,"prefill_ms":15019.6,"prefill_processed_tokens":1475,"reuse_hit":true,"reused_prefix_tokens":35025,"suffix_tokens_dispatched":1475,"suffix_tokens_executed":1475,"prefix_tokens_replayed":0,"checkpoint_position":35025,"gqa_kv_reused_tokens":35025,"gdn_checkpoint_position":35025,"restore_ms":0.786463,"suffix_prefill_ms":15015.7,"prefill_tokens_per_second":2430.16,"first_decode_token_ms":15019.6,"time_to_first_token_ms":30039.2,"generated_tokens":1024,"decode_ms":49871.2,"decode_tokens_per_second":20.5128,"total_ms":64890.8,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":113,"prompt_tokens":36500,"common_prefix_tokens":35025,"reuse_hit":true,"reused_prefix_tokens":35025,"suffix_tokens_dispatched":1475,"suffix_tokens_executed":1475,"prefix_tokens_replayed":0,"checkpoint_position":35025,"gqa_kv_reused_tokens":35025,"gdn_checkpoint_position":35025,"restore_ms":0.786463,"suffix_prefill_ms":15015.7,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1475,"prefill_ms":15019.6,"graph_capture_ms":0,"first_decode_token_ms":15019.6,"TTFT_wall_ms":15111.215482,"steady_decode_tok_s":29.353,"total_request_ms":64936.2,"cache_hit":true}
+miinfer_request_state request_id=114 state=received
+miinfer_request_state request_id=115 state=received
+miinfer_request_state request_id=116 state=received
+miinfer_request_state request_id=116 state=queued
+miinfer_request_state request_id=116 state=dequeued
+miinfer_request_state request_id=116 state=parsed
+miinfer_request_state request_id=116 state=tokenized
+miinfer_request_state request_id=116 state=prefill_started
+miinfer_request_state request_id=116 state=completed
+miinfer_request {"request_id":116,"request_body_bytes":137246,"message_count":102,"prompt_chars":133706,"prompt_tokens":37952,"tokenization_ms":42.361,"queue_wait_ms":0.072382,"prefill_ms":15291.8,"prefill_processed_tokens":1452,"reuse_hit":true,"reused_prefix_tokens":36500,"suffix_tokens_dispatched":1452,"suffix_tokens_executed":1452,"prefix_tokens_replayed":0,"checkpoint_position":36500,"gqa_kv_reused_tokens":36500,"gdn_checkpoint_position":36500,"restore_ms":0.812257,"suffix_prefill_ms":15287.8,"prefill_tokens_per_second":2481.85,"first_decode_token_ms":15291.8,"time_to_first_token_ms":30583.7,"generated_tokens":1024,"decode_ms":50672.7,"decode_tokens_per_second":20.1884,"total_ms":65964.5,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":116,"prompt_tokens":37952,"common_prefix_tokens":36500,"reuse_hit":true,"reused_prefix_tokens":36500,"suffix_tokens_dispatched":1452,"suffix_tokens_executed":1452,"prefix_tokens_replayed":0,"checkpoint_position":36500,"gqa_kv_reused_tokens":36500,"gdn_checkpoint_position":36500,"restore_ms":0.812257,"suffix_prefill_ms":15287.8,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1452,"prefill_ms":15291.8,"graph_capture_ms":0,"first_decode_token_ms":15291.8,"TTFT_wall_ms":15385.660315,"steady_decode_tok_s":28.914,"total_request_ms":66011,"cache_hit":true}
+miinfer_request_state request_id=117 state=received
+miinfer_request_state request_id=118 state=received
+miinfer_request_state request_id=119 state=received
+miinfer_request_state request_id=119 state=queued
+miinfer_request_state request_id=119 state=dequeued
+miinfer_request_state request_id=119 state=parsed
+miinfer_request_state request_id=119 state=tokenized
+miinfer_request_state request_id=119 state=prefill_started
+miinfer_request_state request_id=119 state=completed
+miinfer_request {"request_id":119,"request_body_bytes":137563,"message_count":104,"prompt_chars":134010,"prompt_tokens":38026,"tokenization_ms":42.6641,"queue_wait_ms":0.108113,"prefill_ms":1048.72,"prefill_processed_tokens":74,"reuse_hit":true,"reused_prefix_tokens":37952,"suffix_tokens_dispatched":74,"suffix_tokens_executed":74,"prefix_tokens_replayed":0,"checkpoint_position":37952,"gqa_kv_reused_tokens":37952,"gdn_checkpoint_position":37952,"restore_ms":0.827678,"suffix_prefill_ms":1044.72,"prefill_tokens_per_second":36259.6,"first_decode_token_ms":1048.72,"time_to_first_token_ms":2097.43,"generated_tokens":116,"decode_ms":5706.03,"decode_tokens_per_second":20.1541,"total_ms":6754.76,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":119,"prompt_tokens":38026,"common_prefix_tokens":37952,"reuse_hit":true,"reused_prefix_tokens":37952,"suffix_tokens_dispatched":74,"suffix_tokens_executed":74,"prefix_tokens_replayed":0,"checkpoint_position":37952,"gqa_kv_reused_tokens":37952,"gdn_checkpoint_position":37952,"restore_ms":0.827678,"suffix_prefill_ms":1044.72,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":74,"prefill_ms":1048.72,"graph_capture_ms":0,"first_decode_token_ms":1048.72,"TTFT_wall_ms":1142.612225,"steady_decode_tok_s":24.6923,"total_request_ms":6800.09,"cache_hit":true}
+miinfer_request_state request_id=120 state=received
+miinfer_request_state request_id=121 state=received
+miinfer_request_state request_id=122 state=received
+miinfer_request_state request_id=122 state=queued
+miinfer_request_state request_id=122 state=dequeued
+miinfer_request_state request_id=122 state=parsed
+miinfer_request_state request_id=122 state=tokenized
+miinfer_request_state request_id=122 state=prefill_started
+miinfer_request_state request_id=122 state=completed
+miinfer_request {"request_id":122,"request_body_bytes":142205,"message_count":107,"prompt_chars":138538,"prompt_tokens":39623,"tokenization_ms":44.4899,"queue_wait_ms":0.095365,"prefill_ms":17480.3,"prefill_processed_tokens":1597,"reuse_hit":true,"reused_prefix_tokens":38026,"suffix_tokens_dispatched":1597,"suffix_tokens_executed":1597,"prefix_tokens_replayed":0,"checkpoint_position":38026,"gqa_kv_reused_tokens":38026,"gdn_checkpoint_position":38026,"restore_ms":0.778266,"suffix_prefill_ms":17476.4,"prefill_tokens_per_second":2266.72,"first_decode_token_ms":17480.3,"time_to_first_token_ms":34960.6,"generated_tokens":199,"decode_ms":9931.6,"decode_tokens_per_second":19.9364,"total_ms":27411.9,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":122,"prompt_tokens":39623,"common_prefix_tokens":38026,"reuse_hit":true,"reused_prefix_tokens":38026,"suffix_tokens_dispatched":1597,"suffix_tokens_executed":1597,"prefix_tokens_replayed":0,"checkpoint_position":38026,"gqa_kv_reused_tokens":38026,"gdn_checkpoint_position":38026,"restore_ms":0.778266,"suffix_prefill_ms":17476.4,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1597,"prefill_ms":17480.3,"graph_capture_ms":0,"first_decode_token_ms":17480.3,"TTFT_wall_ms":17576.884585,"steady_decode_tok_s":0,"total_request_ms":27459.4,"cache_hit":true}
+miinfer_request_state request_id=123 state=received
+miinfer_request_state request_id=124 state=received
+miinfer_request_state request_id=125 state=received
+miinfer_request_state request_id=125 state=queued
+miinfer_request_state request_id=125 state=dequeued
+miinfer_request_state request_id=125 state=parsed
+miinfer_request_state request_id=125 state=tokenized
+miinfer_request_state request_id=125 state=prefill_started
+miinfer_request_state request_id=125 state=completed
+miinfer_request {"request_id":125,"request_body_bytes":145781,"message_count":109,"prompt_chars":141992,"prompt_tokens":40487,"tokenization_ms":46.1212,"queue_wait_ms":0.067411,"prefill_ms":239775,"prefill_processed_tokens":40487,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":40487,"suffix_tokens_executed":40487,"prefix_tokens_replayed":40487,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":168.854,"first_decode_token_ms":239775,"time_to_first_token_ms":479551,"generated_tokens":108,"decode_ms":5397.67,"decode_tokens_per_second":19.8234,"total_ms":245173,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":125,"prompt_tokens":40487,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":40487,"suffix_tokens_executed":40487,"prefix_tokens_replayed":40487,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":40487,"prefill_ms":239775,"graph_capture_ms":0,"first_decode_token_ms":239775,"TTFT_wall_ms":239873.705983,"steady_decode_tok_s":0,"total_request_ms":245222,"cache_hit":false}
+miinfer_request_state request_id=126 state=received
+miinfer_request_state request_id=127 state=received
+miinfer_request_state request_id=128 state=received
+miinfer_request_state request_id=128 state=queued
+miinfer_request_state request_id=128 state=dequeued
+miinfer_request_state request_id=128 state=parsed
+miinfer_request_state request_id=128 state=tokenized
+miinfer_request_state request_id=128 state=prefill_started
+miinfer_request_state request_id=128 state=completed
+miinfer_request {"request_id":128,"request_body_bytes":150231,"message_count":112,"prompt_chars":146355,"prompt_tokens":41823,"tokenization_ms":46.2119,"queue_wait_ms":0.064761,"prefill_ms":14974.6,"prefill_processed_tokens":1336,"reuse_hit":true,"reused_prefix_tokens":40487,"suffix_tokens_dispatched":1336,"suffix_tokens_executed":1336,"prefix_tokens_replayed":0,"checkpoint_position":40487,"gqa_kv_reused_tokens":40487,"gdn_checkpoint_position":40487,"restore_ms":0.778836,"suffix_prefill_ms":14970.7,"prefill_tokens_per_second":2792.93,"first_decode_token_ms":14974.6,"time_to_first_token_ms":29949.2,"generated_tokens":1024,"decode_ms":52133.8,"decode_tokens_per_second":19.6226,"total_ms":67108.4,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":128,"prompt_tokens":41823,"common_prefix_tokens":40487,"reuse_hit":true,"reused_prefix_tokens":40487,"suffix_tokens_dispatched":1336,"suffix_tokens_executed":1336,"prefix_tokens_replayed":0,"checkpoint_position":40487,"gqa_kv_reused_tokens":40487,"gdn_checkpoint_position":40487,"restore_ms":0.778836,"suffix_prefill_ms":14970.7,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1336,"prefill_ms":14974.6,"graph_capture_ms":0,"first_decode_token_ms":14974.6,"TTFT_wall_ms":15073.820403,"steady_decode_tok_s":27.5302,"total_request_ms":67159,"cache_hit":true}
+miinfer_request_state request_id=129 state=received
+miinfer_request_state request_id=130 state=received
+miinfer_request_state request_id=131 state=received
+miinfer_request_state request_id=131 state=queued
+miinfer_request_state request_id=131 state=dequeued
+miinfer_request_state request_id=131 state=parsed
+miinfer_request_state request_id=131 state=tokenized
+miinfer_request_state request_id=131 state=prefill_started
+miinfer_request_state request_id=131 state=completed
+miinfer_request {"request_id":131,"request_body_bytes":153334,"message_count":114,"prompt_chars":149408,"prompt_tokens":42538,"tokenization_ms":48.147,"queue_wait_ms":0.08251,"prefill_ms":255988,"prefill_processed_tokens":42538,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":42538,"suffix_tokens_executed":42538,"prefix_tokens_replayed":42538,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":166.172,"first_decode_token_ms":255988,"time_to_first_token_ms":511977,"generated_tokens":102,"decode_ms":5197.08,"decode_tokens_per_second":19.434,"total_ms":261185,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":131,"prompt_tokens":42538,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":42538,"suffix_tokens_executed":42538,"prefix_tokens_replayed":42538,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":42538,"prefill_ms":255988,"graph_capture_ms":0,"first_decode_token_ms":255988,"TTFT_wall_ms":256089.918012,"steady_decode_tok_s":0,"total_request_ms":261236,"cache_hit":false}
+miinfer_request_state request_id=132 state=received
+miinfer_request_state request_id=133 state=received
+miinfer_request_state request_id=134 state=received
+miinfer_request_state request_id=134 state=queued
+miinfer_request_state request_id=134 state=dequeued
+miinfer_request_state request_id=134 state=parsed
+miinfer_request_state request_id=134 state=tokenized
+miinfer_request_state request_id=134 state=prefill_started
+miinfer_request_state request_id=134 state=completed
+miinfer_request {"request_id":134,"request_body_bytes":155863,"message_count":117,"prompt_chars":151863,"prompt_tokens":43257,"tokenization_ms":50.0527,"queue_wait_ms":0.062962,"prefill_ms":8411.02,"prefill_processed_tokens":719,"reuse_hit":true,"reused_prefix_tokens":42538,"suffix_tokens_dispatched":719,"suffix_tokens_executed":719,"prefix_tokens_replayed":0,"checkpoint_position":42538,"gqa_kv_reused_tokens":42538,"gdn_checkpoint_position":42538,"restore_ms":0.795623,"suffix_prefill_ms":8407.05,"prefill_tokens_per_second":5142.9,"first_decode_token_ms":8411.02,"time_to_first_token_ms":16822,"generated_tokens":619,"decode_ms":31829.6,"decode_tokens_per_second":19.4159,"total_ms":40240.7,"cancelled":false,"finish_reason":"stop","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":134,"prompt_tokens":43257,"common_prefix_tokens":42538,"reuse_hit":true,"reused_prefix_tokens":42538,"suffix_tokens_dispatched":719,"suffix_tokens_executed":719,"prefix_tokens_replayed":0,"checkpoint_position":42538,"gqa_kv_reused_tokens":42538,"gdn_checkpoint_position":42538,"restore_ms":0.795623,"suffix_prefill_ms":8407.05,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":719,"prefill_ms":8411.02,"graph_capture_ms":0,"first_decode_token_ms":8411.02,"TTFT_wall_ms":8514.695923,"steady_decode_tok_s":26.3893,"total_request_ms":40294.4,"cache_hit":true}
+miinfer_request_state request_id=135 state=received
+miinfer_request_state request_id=136 state=received
+miinfer_request_state request_id=137 state=received
+miinfer_request_state request_id=137 state=queued
+miinfer_request_state request_id=137 state=dequeued
+miinfer_request_state request_id=137 state=parsed
+miinfer_request_state request_id=137 state=tokenized
+miinfer_request_state request_id=137 state=prefill_started
+miinfer_request_state request_id=137 state=completed
+miinfer_request {"request_id":137,"request_body_bytes":158832,"message_count":119,"prompt_chars":154773,"prompt_tokens":43885,"tokenization_ms":51.6085,"queue_wait_ms":0.04597,"prefill_ms":267545,"prefill_processed_tokens":43885,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":43885,"suffix_tokens_executed":43885,"prefix_tokens_replayed":43885,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":164.029,"first_decode_token_ms":267545,"time_to_first_token_ms":535089,"generated_tokens":136,"decode_ms":7026.69,"decode_tokens_per_second":19.2125,"total_ms":274571,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":137,"prompt_tokens":43885,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":43885,"suffix_tokens_executed":43885,"prefix_tokens_replayed":43885,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":43885,"prefill_ms":267545,"graph_capture_ms":0,"first_decode_token_ms":267545,"TTFT_wall_ms":267650.266423,"steady_decode_tok_s":0,"total_request_ms":274626,"cache_hit":false}
+miinfer_request_state request_id=138 state=received
+miinfer_request_state request_id=139 state=received
+miinfer_request_state request_id=140 state=received
+miinfer_request_state request_id=140 state=queued
+miinfer_request_state request_id=140 state=dequeued
+miinfer_request_state request_id=140 state=parsed
+miinfer_request_state request_id=140 state=tokenized
+miinfer_request_state request_id=140 state=prefill_started
+miinfer_request_state request_id=140 state=completed
+miinfer_request {"request_id":140,"request_body_bytes":165730,"message_count":122,"prompt_chars":161399,"prompt_tokens":45772,"tokenization_ms":52.1551,"queue_wait_ms":0.071335,"prefill_ms":22583.1,"prefill_processed_tokens":1887,"reuse_hit":true,"reused_prefix_tokens":43885,"suffix_tokens_dispatched":1887,"suffix_tokens_executed":1887,"prefix_tokens_replayed":0,"checkpoint_position":43885,"gqa_kv_reused_tokens":43885,"gdn_checkpoint_position":43885,"restore_ms":0.782504,"suffix_prefill_ms":22579.2,"prefill_tokens_per_second":2026.82,"first_decode_token_ms":22583.1,"time_to_first_token_ms":45166.3,"generated_tokens":223,"decode_ms":11692,"decode_tokens_per_second":18.9873,"total_ms":34275.2,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":140,"prompt_tokens":45772,"common_prefix_tokens":43885,"reuse_hit":true,"reused_prefix_tokens":43885,"suffix_tokens_dispatched":1887,"suffix_tokens_executed":1887,"prefix_tokens_replayed":0,"checkpoint_position":43885,"gqa_kv_reused_tokens":43885,"gdn_checkpoint_position":43885,"restore_ms":0.782504,"suffix_prefill_ms":22579.2,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1887,"prefill_ms":22583.1,"graph_capture_ms":0,"first_decode_token_ms":22583.1,"TTFT_wall_ms":22690.118795,"steady_decode_tok_s":0,"total_request_ms":34330.5,"cache_hit":true}
+miinfer_request_state request_id=141 state=received
+miinfer_request_state request_id=142 state=received
+miinfer_request_state request_id=143 state=received
+miinfer_request_state request_id=143 state=queued
+miinfer_request_state request_id=143 state=dequeued
+miinfer_request_state request_id=143 state=parsed
+miinfer_request_state request_id=143 state=tokenized
+miinfer_request_state request_id=143 state=prefill_started
+miinfer_request_state request_id=143 state=completed
+miinfer_request {"request_id":143,"request_body_bytes":166019,"message_count":124,"prompt_chars":161675,"prompt_tokens":45836,"tokenization_ms":51.37,"queue_wait_ms":0.083459,"prefill_ms":969.515,"prefill_processed_tokens":64,"reuse_hit":true,"reused_prefix_tokens":45772,"suffix_tokens_dispatched":64,"suffix_tokens_executed":64,"prefix_tokens_replayed":0,"checkpoint_position":45772,"gqa_kv_reused_tokens":45772,"gdn_checkpoint_position":45772,"restore_ms":0.769486,"suffix_prefill_ms":965.581,"prefill_tokens_per_second":47277.2,"first_decode_token_ms":969.515,"time_to_first_token_ms":1939.03,"generated_tokens":60,"decode_ms":3165.08,"decode_tokens_per_second":18.6409,"total_ms":4134.62,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":143,"prompt_tokens":45836,"common_prefix_tokens":45772,"reuse_hit":true,"reused_prefix_tokens":45772,"suffix_tokens_dispatched":64,"suffix_tokens_executed":64,"prefix_tokens_replayed":0,"checkpoint_position":45772,"gqa_kv_reused_tokens":45772,"gdn_checkpoint_position":45772,"restore_ms":0.769486,"suffix_prefill_ms":965.581,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":64,"prefill_ms":969.515,"graph_capture_ms":0,"first_decode_token_ms":969.515,"TTFT_wall_ms":1076.213001,"steady_decode_tok_s":26.8723,"total_request_ms":4188.81,"cache_hit":true}
+miinfer_request_state request_id=144 state=received
+miinfer_request_state request_id=145 state=received
+miinfer_request_state request_id=146 state=received
+miinfer_request_state request_id=146 state=queued
+miinfer_request_state request_id=146 state=dequeued
+miinfer_request_state request_id=146 state=parsed
+miinfer_request_state request_id=146 state=tokenized
+miinfer_request_state request_id=146 state=prefill_started
+miinfer_request_state request_id=146 state=completed
+miinfer_request {"request_id":146,"request_body_bytes":169489,"message_count":127,"prompt_chars":165076,"prompt_tokens":46932,"tokenization_ms":52.992,"queue_wait_ms":0.074311,"prefill_ms":13768,"prefill_processed_tokens":1096,"reuse_hit":true,"reused_prefix_tokens":45836,"suffix_tokens_dispatched":1096,"suffix_tokens_executed":1096,"prefix_tokens_replayed":0,"checkpoint_position":45836,"gqa_kv_reused_tokens":45836,"gdn_checkpoint_position":45836,"restore_ms":0.768646,"suffix_prefill_ms":13764.1,"prefill_tokens_per_second":3408.77,"first_decode_token_ms":13768,"time_to_first_token_ms":27536.1,"generated_tokens":1024,"decode_ms":54381.7,"decode_tokens_per_second":18.8115,"total_ms":68149.7,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":146,"prompt_tokens":46932,"common_prefix_tokens":45836,"reuse_hit":true,"reused_prefix_tokens":45836,"suffix_tokens_dispatched":1096,"suffix_tokens_executed":1096,"prefix_tokens_replayed":0,"checkpoint_position":45836,"gqa_kv_reused_tokens":45836,"gdn_checkpoint_position":45836,"restore_ms":0.768646,"suffix_prefill_ms":13764.1,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1096,"prefill_ms":13768,"graph_capture_ms":0,"first_decode_token_ms":13768,"TTFT_wall_ms":13876.305101,"steady_decode_tok_s":25.1886,"total_request_ms":68207.5,"cache_hit":true}
+miinfer_request_state request_id=147 state=received
+miinfer_request_state request_id=148 state=received
+miinfer_request_state request_id=149 state=received
+miinfer_request_state request_id=149 state=queued
+miinfer_request_state request_id=149 state=dequeued
+miinfer_request_state request_id=149 state=parsed
+miinfer_request_state request_id=149 state=tokenized
+miinfer_request_state request_id=149 state=prefill_started
+miinfer_request_state request_id=149 state=completed
+miinfer_request {"request_id":149,"request_body_bytes":172907,"message_count":129,"prompt_chars":168440,"prompt_tokens":47613,"tokenization_ms":52.4687,"queue_wait_ms":0.064198,"prefill_ms":299315,"prefill_processed_tokens":47613,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":47613,"suffix_tokens_executed":47613,"prefix_tokens_replayed":47613,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":159.073,"first_decode_token_ms":299315,"time_to_first_token_ms":598630,"generated_tokens":155,"decode_ms":8208.26,"decode_tokens_per_second":18.7616,"total_ms":307524,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":149,"prompt_tokens":47613,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":47613,"suffix_tokens_executed":47613,"prefix_tokens_replayed":47613,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":47613,"prefill_ms":299315,"graph_capture_ms":0,"first_decode_token_ms":299315,"TTFT_wall_ms":299424.031911,"steady_decode_tok_s":0,"total_request_ms":307579,"cache_hit":false}
+miinfer_request_state request_id=150 state=received
+miinfer_request_state request_id=151 state=received
+miinfer_request_state request_id=152 state=received
+miinfer_request_state request_id=152 state=queued
+miinfer_request_state request_id=152 state=dequeued
+miinfer_request_state request_id=152 state=parsed
+miinfer_request_state request_id=152 state=tokenized
+miinfer_request_state request_id=152 state=prefill_started
+miinfer_request_state request_id=152 state=completed
+miinfer_request {"request_id":152,"request_body_bytes":175612,"message_count":132,"prompt_chars":171025,"prompt_tokens":48370,"tokenization_ms":54.6325,"queue_wait_ms":0.08985,"prefill_ms":9530.59,"prefill_processed_tokens":757,"reuse_hit":true,"reused_prefix_tokens":47613,"suffix_tokens_dispatched":757,"suffix_tokens_executed":757,"prefix_tokens_replayed":0,"checkpoint_position":47613,"gqa_kv_reused_tokens":47613,"gdn_checkpoint_position":47613,"restore_ms":0.792554,"suffix_prefill_ms":9526.62,"prefill_tokens_per_second":5075.24,"first_decode_token_ms":9530.59,"time_to_first_token_ms":19061.2,"generated_tokens":510,"decode_ms":27275.5,"decode_tokens_per_second":18.6614,"total_ms":36806.1,"cancelled":false,"finish_reason":"stop","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":152,"prompt_tokens":48370,"common_prefix_tokens":47613,"reuse_hit":true,"reused_prefix_tokens":47613,"suffix_tokens_dispatched":757,"suffix_tokens_executed":757,"prefix_tokens_replayed":0,"checkpoint_position":47613,"gqa_kv_reused_tokens":47613,"gdn_checkpoint_position":47613,"restore_ms":0.792554,"suffix_prefill_ms":9526.62,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":757,"prefill_ms":9530.59,"graph_capture_ms":0,"first_decode_token_ms":9530.59,"TTFT_wall_ms":9641.185954,"steady_decode_tok_s":28.6843,"total_request_ms":36864.7,"cache_hit":true}
+miinfer_request_state request_id=153 state=received
+miinfer_request_state request_id=154 state=received
+miinfer_request_state request_id=155 state=received
+miinfer_request_state request_id=155 state=queued
+miinfer_request_state request_id=155 state=dequeued
+miinfer_request_state request_id=155 state=parsed
+miinfer_request_state request_id=155 state=tokenized
+miinfer_request_state request_id=155 state=prefill_started
+miinfer_request_state request_id=155 state=completed
+miinfer_request {"request_id":155,"request_body_bytes":177878,"message_count":134,"prompt_chars":173223,"prompt_tokens":48844,"tokenization_ms":54.4478,"queue_wait_ms":0.071707,"prefill_ms":308603,"prefill_processed_tokens":48844,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":48844,"suffix_tokens_executed":48844,"prefix_tokens_replayed":48844,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":158.275,"first_decode_token_ms":308603,"time_to_first_token_ms":617206,"generated_tokens":137,"decode_ms":7322.23,"decode_tokens_per_second":18.5736,"total_ms":315925,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":155,"prompt_tokens":48844,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":48844,"suffix_tokens_executed":48844,"prefix_tokens_replayed":48844,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":48844,"prefill_ms":308603,"graph_capture_ms":0,"first_decode_token_ms":308603,"TTFT_wall_ms":308713.486300,"steady_decode_tok_s":0,"total_request_ms":315983,"cache_hit":false}
+miinfer_request_state request_id=156 state=received
+miinfer_request_state request_id=157 state=received
+miinfer_request_state request_id=158 state=received
+miinfer_request_state request_id=158 state=queued
+miinfer_request_state request_id=158 state=dequeued
+miinfer_request_state request_id=158 state=parsed
+miinfer_request_state request_id=158 state=tokenized
+miinfer_request_state request_id=158 state=prefill_started
+miinfer_request_state request_id=158 state=completed
+miinfer_request {"request_id":158,"request_body_bytes":183188,"message_count":137,"prompt_chars":178450,"prompt_tokens":50318,"tokenization_ms":57.3941,"queue_wait_ms":0.068382,"prefill_ms":19346.1,"prefill_processed_tokens":1474,"reuse_hit":true,"reused_prefix_tokens":48844,"suffix_tokens_dispatched":1474,"suffix_tokens_executed":1474,"prefix_tokens_replayed":0,"checkpoint_position":48844,"gqa_kv_reused_tokens":48844,"gdn_checkpoint_position":48844,"restore_ms":0.767332,"suffix_prefill_ms":19342.1,"prefill_tokens_per_second":2600.94,"first_decode_token_ms":19346.1,"time_to_first_token_ms":38692.1,"generated_tokens":566,"decode_ms":30743.7,"decode_tokens_per_second":18.3777,"total_ms":50089.8,"cancelled":false,"finish_reason":"stop","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":158,"prompt_tokens":50318,"common_prefix_tokens":48844,"reuse_hit":true,"reused_prefix_tokens":48844,"suffix_tokens_dispatched":1474,"suffix_tokens_executed":1474,"prefix_tokens_replayed":0,"checkpoint_position":48844,"gqa_kv_reused_tokens":48844,"gdn_checkpoint_position":48844,"restore_ms":0.767332,"suffix_prefill_ms":19342.1,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1474,"prefill_ms":19346.1,"graph_capture_ms":0,"first_decode_token_ms":19346.1,"TTFT_wall_ms":19460.356264,"steady_decode_tok_s":49.5716,"total_request_ms":50151.2,"cache_hit":true}
+miinfer_request_state request_id=159 state=received
+miinfer_request_state request_id=160 state=received
+miinfer_request_state request_id=161 state=received
+miinfer_request_state request_id=161 state=queued
+miinfer_request_state request_id=161 state=dequeued
+miinfer_request_state request_id=161 state=parsed
+miinfer_request_state request_id=161 state=tokenized
+miinfer_request_state request_id=161 state=prefill_started
+miinfer_request_state request_id=161 state=completed
+miinfer_request {"request_id":161,"request_body_bytes":186952,"message_count":139,"prompt_chars":182146,"prompt_tokens":51139,"tokenization_ms":59.0271,"queue_wait_ms":0.096039,"prefill_ms":329745,"prefill_processed_tokens":51139,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":51139,"suffix_tokens_executed":51139,"prefix_tokens_replayed":51139,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":155.086,"first_decode_token_ms":329745,"time_to_first_token_ms":659490,"generated_tokens":99,"decode_ms":5428.03,"decode_tokens_per_second":18.0544,"total_ms":335173,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":161,"prompt_tokens":51139,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":51139,"suffix_tokens_executed":51139,"prefix_tokens_replayed":51139,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":51139,"prefill_ms":329745,"graph_capture_ms":0,"first_decode_token_ms":329745,"TTFT_wall_ms":329862.250505,"steady_decode_tok_s":0,"total_request_ms":335235,"cache_hit":false}
+miinfer_request_state request_id=162 state=received
+miinfer_request_state request_id=163 state=received
+miinfer_request_state request_id=164 state=received
+miinfer_request_state request_id=164 state=queued
+miinfer_request_state request_id=164 state=dequeued
+miinfer_request_state request_id=164 state=parsed
+miinfer_request_state request_id=164 state=tokenized
+miinfer_request_state request_id=164 state=prefill_started
+miinfer_request_state request_id=164 state=completed
+miinfer_request {"request_id":164,"request_body_bytes":191589,"message_count":142,"prompt_chars":186669,"prompt_tokens":52735,"tokenization_ms":60.4841,"queue_wait_ms":0.073941,"prefill_ms":21971.8,"prefill_processed_tokens":1596,"reuse_hit":true,"reused_prefix_tokens":51139,"suffix_tokens_dispatched":1596,"suffix_tokens_executed":1596,"prefix_tokens_replayed":0,"checkpoint_position":51139,"gqa_kv_reused_tokens":51139,"gdn_checkpoint_position":51139,"restore_ms":0.784647,"suffix_prefill_ms":21967.8,"prefill_tokens_per_second":2400.13,"first_decode_token_ms":21971.8,"time_to_first_token_ms":43943.5,"generated_tokens":484,"decode_ms":26756.5,"decode_tokens_per_second":18.0517,"total_ms":48728.3,"cancelled":false,"finish_reason":"stop","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":164,"prompt_tokens":52735,"common_prefix_tokens":51139,"reuse_hit":true,"reused_prefix_tokens":51139,"suffix_tokens_dispatched":1596,"suffix_tokens_executed":1596,"prefix_tokens_replayed":0,"checkpoint_position":51139,"gqa_kv_reused_tokens":51139,"gdn_checkpoint_position":51139,"restore_ms":0.784647,"suffix_prefill_ms":21967.8,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1596,"prefill_ms":21971.8,"graph_capture_ms":0,"first_decode_token_ms":21971.8,"TTFT_wall_ms":22090.903570,"steady_decode_tok_s":100.945,"total_request_ms":48792.9,"cache_hit":true}
+miinfer_request_state request_id=165 state=received
+miinfer_request_state request_id=166 state=received
+miinfer_request_state request_id=167 state=received
+miinfer_request_state request_id=167 state=queued
+miinfer_request_state request_id=167 state=dequeued
+miinfer_request_state request_id=167 state=parsed
+miinfer_request_state request_id=167 state=tokenized
+miinfer_request_state request_id=167 state=prefill_started
+miinfer_request_state request_id=167 state=completed
+miinfer_request {"request_id":167,"request_body_bytes":194817,"message_count":144,"prompt_chars":189845,"prompt_tokens":53448,"tokenization_ms":61.5505,"queue_wait_ms":0.09783,"prefill_ms":349093,"prefill_processed_tokens":53448,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":53448,"suffix_tokens_executed":53448,"prefix_tokens_replayed":53448,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":153.105,"first_decode_token_ms":349093,"time_to_first_token_ms":698186,"generated_tokens":114,"decode_ms":6307.59,"decode_tokens_per_second":17.9149,"total_ms":355401,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":167,"prompt_tokens":53448,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":53448,"suffix_tokens_executed":53448,"prefix_tokens_replayed":53448,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":53448,"prefill_ms":349093,"graph_capture_ms":0,"first_decode_token_ms":349093,"TTFT_wall_ms":349213.225604,"steady_decode_tok_s":0,"total_request_ms":355466,"cache_hit":false}
+miinfer_request_state request_id=168 state=received
+miinfer_request_state request_id=169 state=received
+miinfer_request_state request_id=170 state=received
+miinfer_request_state request_id=170 state=queued
+miinfer_request_state request_id=170 state=dequeued
+miinfer_request_state request_id=170 state=parsed
+miinfer_request_state request_id=170 state=tokenized
+miinfer_request_state request_id=170 state=prefill_started
+miinfer_request_state request_id=170 state=completed
+miinfer_request {"request_id":170,"request_body_bytes":199262,"message_count":147,"prompt_chars":194203,"prompt_tokens":54783,"tokenization_ms":61.3357,"queue_wait_ms":0.078156,"prefill_ms":18768.8,"prefill_processed_tokens":1335,"reuse_hit":true,"reused_prefix_tokens":53448,"suffix_tokens_dispatched":1335,"suffix_tokens_executed":1335,"prefix_tokens_replayed":0,"checkpoint_position":53448,"gqa_kv_reused_tokens":53448,"gdn_checkpoint_position":53448,"restore_ms":0.814332,"suffix_prefill_ms":18764.8,"prefill_tokens_per_second":2918.84,"first_decode_token_ms":18768.8,"time_to_first_token_ms":37537.6,"generated_tokens":856,"decode_ms":48159.6,"decode_tokens_per_second":17.7535,"total_ms":66928.4,"cancelled":false,"finish_reason":"stop","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":170,"prompt_tokens":54783,"common_prefix_tokens":53448,"reuse_hit":true,"reused_prefix_tokens":53448,"suffix_tokens_dispatched":1335,"suffix_tokens_executed":1335,"prefix_tokens_replayed":0,"checkpoint_position":53448,"gqa_kv_reused_tokens":53448,"gdn_checkpoint_position":53448,"restore_ms":0.814332,"suffix_prefill_ms":18764.8,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1335,"prefill_ms":18768.8,"graph_capture_ms":0,"first_decode_token_ms":18768.8,"TTFT_wall_ms":18889.802978,"steady_decode_tok_s":29.0907,"total_request_ms":66994.5,"cache_hit":true}
+miinfer_request_state request_id=171 state=received
+miinfer_request_state request_id=172 state=received
+miinfer_request_state request_id=173 state=received
+miinfer_request_state request_id=173 state=queued
+miinfer_request_state request_id=173 state=dequeued
+miinfer_request_state request_id=173 state=parsed
+miinfer_request_state request_id=173 state=tokenized
+miinfer_request_state request_id=173 state=prefill_started
+miinfer_request_state request_id=173 state=completed
+miinfer_request {"request_id":173,"request_body_bytes":203018,"message_count":149,"prompt_chars":197903,"prompt_tokens":55586,"tokenization_ms":63.5124,"queue_wait_ms":0.098933,"prefill_ms":369022,"prefill_processed_tokens":55586,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":55586,"suffix_tokens_executed":55586,"prefix_tokens_replayed":55586,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":150.63,"first_decode_token_ms":369022,"time_to_first_token_ms":738045,"generated_tokens":109,"decode_ms":6124.1,"decode_tokens_per_second":17.6352,"total_ms":375146,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":173,"prompt_tokens":55586,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":55586,"suffix_tokens_executed":55586,"prefix_tokens_replayed":55586,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":55586,"prefill_ms":369022,"graph_capture_ms":0,"first_decode_token_ms":369022,"TTFT_wall_ms":369145.205217,"steady_decode_tok_s":0,"total_request_ms":375214,"cache_hit":false}
+miinfer_request_state request_id=174 state=received
+miinfer_request_state request_id=175 state=received
+miinfer_request_state request_id=176 state=received
+miinfer_request_state request_id=176 state=queued
+miinfer_request_state request_id=176 state=dequeued
+miinfer_request_state request_id=176 state=parsed
+miinfer_request_state request_id=176 state=tokenized
+miinfer_request_state request_id=176 state=prefill_started
+miinfer_request_state request_id=176 state=completed
+miinfer_request {"request_id":176,"request_body_bytes":205542,"message_count":152,"prompt_chars":200353,"prompt_tokens":56304,"tokenization_ms":64.8168,"queue_wait_ms":0.063642,"prefill_ms":10355.6,"prefill_processed_tokens":718,"reuse_hit":true,"reused_prefix_tokens":55586,"suffix_tokens_dispatched":718,"suffix_tokens_executed":718,"prefix_tokens_replayed":0,"checkpoint_position":55586,"gqa_kv_reused_tokens":55586,"gdn_checkpoint_position":55586,"restore_ms":0.781284,"suffix_prefill_ms":10351.6,"prefill_tokens_per_second":5437.08,"first_decode_token_ms":10355.6,"time_to_first_token_ms":20711.1,"generated_tokens":582,"decode_ms":33039.6,"decode_tokens_per_second":17.585,"total_ms":43395.2,"cancelled":false,"finish_reason":"stop","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":176,"prompt_tokens":56304,"common_prefix_tokens":55586,"reuse_hit":true,"reused_prefix_tokens":55586,"suffix_tokens_dispatched":718,"suffix_tokens_executed":718,"prefix_tokens_replayed":0,"checkpoint_position":55586,"gqa_kv_reused_tokens":55586,"gdn_checkpoint_position":55586,"restore_ms":0.781284,"suffix_prefill_ms":10351.6,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":718,"prefill_ms":10355.6,"graph_capture_ms":0,"first_decode_token_ms":10355.6,"TTFT_wall_ms":10480.711325,"steady_decode_tok_s":25.6127,"total_request_ms":43464.3,"cache_hit":true}
+miinfer_request_state request_id=177 state=received
+miinfer_request_state request_id=178 state=received
+miinfer_request_state request_id=179 state=received
+miinfer_request_state request_id=179 state=queued
+miinfer_request_state request_id=179 state=dequeued
+miinfer_request_state request_id=179 state=parsed
+miinfer_request_state request_id=179 state=tokenized
+miinfer_request_state request_id=179 state=prefill_started
+miinfer_request_state request_id=179 state=completed
+miinfer_request {"request_id":179,"request_body_bytes":208834,"message_count":154,"prompt_chars":203586,"prompt_tokens":56996,"tokenization_ms":64.3047,"queue_wait_ms":0.066907,"prefill_ms":381606,"prefill_processed_tokens":56996,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":56996,"suffix_tokens_executed":56996,"prefix_tokens_replayed":56996,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":149.358,"first_decode_token_ms":381606,"time_to_first_token_ms":763213,"generated_tokens":125,"decode_ms":7093.94,"decode_tokens_per_second":17.4797,"total_ms":388700,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":179,"prompt_tokens":56996,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":56996,"suffix_tokens_executed":56996,"prefix_tokens_replayed":56996,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":56996,"prefill_ms":381606,"graph_capture_ms":0,"first_decode_token_ms":381606,"TTFT_wall_ms":381730.377414,"steady_decode_tok_s":0,"total_request_ms":388768,"cache_hit":false}
+miinfer_request_state request_id=180 state=received
+miinfer_request_state request_id=181 state=received
+miinfer_request_state request_id=182 state=received
+miinfer_request_state request_id=182 state=queued
+miinfer_request_state request_id=182 state=dequeued
+miinfer_request_state request_id=182 state=parsed
+miinfer_request_state request_id=182 state=tokenized
+miinfer_request_state request_id=182 state=prefill_started
+miinfer_request_state request_id=182 state=completed
+miinfer_request {"request_id":182,"request_body_bytes":215732,"message_count":157,"prompt_chars":210212,"prompt_tokens":58883,"tokenization_ms":66.7062,"queue_wait_ms":0.068739,"prefill_ms":28156,"prefill_processed_tokens":1887,"reuse_hit":true,"reused_prefix_tokens":56996,"suffix_tokens_dispatched":1887,"suffix_tokens_executed":1887,"prefix_tokens_replayed":0,"checkpoint_position":56996,"gqa_kv_reused_tokens":56996,"gdn_checkpoint_position":56996,"restore_ms":0.764853,"suffix_prefill_ms":28152,"prefill_tokens_per_second":2091.31,"first_decode_token_ms":28156,"time_to_first_token_ms":56312.1,"generated_tokens":775,"decode_ms":44999,"decode_tokens_per_second":17.2004,"total_ms":73155.1,"cancelled":false,"finish_reason":"stop","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":182,"prompt_tokens":58883,"common_prefix_tokens":56996,"reuse_hit":true,"reused_prefix_tokens":56996,"suffix_tokens_dispatched":1887,"suffix_tokens_executed":1887,"prefix_tokens_replayed":0,"checkpoint_position":56996,"gqa_kv_reused_tokens":56996,"gdn_checkpoint_position":56996,"restore_ms":0.764853,"suffix_prefill_ms":28152,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1887,"prefill_ms":28156,"graph_capture_ms":0,"first_decode_token_ms":28156,"TTFT_wall_ms":28283.543842,"steady_decode_tok_s":45.9539,"total_request_ms":73226.6,"cache_hit":true}
+miinfer_request_state request_id=183 state=received
+miinfer_request_state request_id=184 state=received
+miinfer_request_state request_id=185 state=received
+miinfer_request_state request_id=185 state=queued
+miinfer_request_state request_id=185 state=dequeued
+miinfer_request_state request_id=185 state=parsed
+miinfer_request_state request_id=185 state=tokenized
+miinfer_request_state request_id=185 state=prefill_started
+miinfer_request_state request_id=185 state=completed
+miinfer_request {"request_id":185,"request_body_bytes":218636,"message_count":159,"prompt_chars":213082,"prompt_tokens":59509,"tokenization_ms":67.8819,"queue_wait_ms":0.080992,"prefill_ms":404956,"prefill_processed_tokens":59509,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":59509,"suffix_tokens_executed":59509,"prefix_tokens_replayed":59509,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":146.952,"first_decode_token_ms":404956,"time_to_first_token_ms":809913,"generated_tokens":100,"decode_ms":5779.34,"decode_tokens_per_second":17.13,"total_ms":410736,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":185,"prompt_tokens":59509,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":59509,"suffix_tokens_executed":59509,"prefix_tokens_replayed":59509,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":59509,"prefill_ms":404956,"graph_capture_ms":0,"first_decode_token_ms":404956,"TTFT_wall_ms":405085.225696,"steady_decode_tok_s":0,"total_request_ms":410807,"cache_hit":false}
+miinfer_request_state request_id=186 state=received
+miinfer_request_state request_id=187 state=received
+miinfer_request_state request_id=188 state=received
+miinfer_request_state request_id=188 state=queued
+miinfer_request_state request_id=188 state=dequeued
+miinfer_request_state request_id=188 state=parsed
+miinfer_request_state request_id=188 state=tokenized
+miinfer_request_state request_id=188 state=prefill_started
+miinfer_request_state request_id=188 state=completed
+miinfer_request {"request_id":188,"request_body_bytes":222106,"message_count":162,"prompt_chars":216483,"prompt_tokens":60605,"tokenization_ms":69.2059,"queue_wait_ms":0.070245,"prefill_ms":17201.2,"prefill_processed_tokens":1096,"reuse_hit":true,"reused_prefix_tokens":59509,"suffix_tokens_dispatched":1096,"suffix_tokens_executed":1096,"prefix_tokens_replayed":0,"checkpoint_position":59509,"gqa_kv_reused_tokens":59509,"gdn_checkpoint_position":59509,"restore_ms":0.766224,"suffix_prefill_ms":17197.2,"prefill_tokens_per_second":3523.31,"first_decode_token_ms":17201.2,"time_to_first_token_ms":34402.3,"generated_tokens":1024,"decode_ms":60152,"decode_tokens_per_second":17.0069,"total_ms":77353.1,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":188,"prompt_tokens":60605,"common_prefix_tokens":59509,"reuse_hit":true,"reused_prefix_tokens":59509,"suffix_tokens_dispatched":1096,"suffix_tokens_executed":1096,"prefix_tokens_replayed":0,"checkpoint_position":59509,"gqa_kv_reused_tokens":59509,"gdn_checkpoint_position":59509,"restore_ms":0.766224,"suffix_prefill_ms":17197.2,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1096,"prefill_ms":17201.2,"graph_capture_ms":0,"first_decode_token_ms":17201.2,"TTFT_wall_ms":17331.907982,"steady_decode_tok_s":23.8179,"total_request_ms":77428.1,"cache_hit":true}
+miinfer_request_state request_id=189 state=received
+miinfer_request_state request_id=190 state=received
+miinfer_request_state request_id=191 state=received
+miinfer_request_state request_id=191 state=queued
+miinfer_request_state request_id=191 state=dequeued
+miinfer_request_state request_id=191 state=parsed
+miinfer_request_state request_id=191 state=tokenized
+miinfer_request_state request_id=191 state=prefill_started
+miinfer_request_state request_id=191 state=completed
+miinfer_request {"request_id":191,"request_body_bytes":222770,"message_count":164,"prompt_chars":217123,"prompt_tokens":60743,"tokenization_ms":71.0164,"queue_wait_ms":0.092447,"prefill_ms":418044,"prefill_processed_tokens":60743,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":60743,"suffix_tokens_executed":60743,"prefix_tokens_replayed":60743,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":145.303,"first_decode_token_ms":418044,"time_to_first_token_ms":836088,"generated_tokens":112,"decode_ms":6527.66,"decode_tokens_per_second":17.0046,"total_ms":424572,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":191,"prompt_tokens":60743,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":60743,"suffix_tokens_executed":60743,"prefix_tokens_replayed":60743,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":60743,"prefill_ms":418044,"graph_capture_ms":0,"first_decode_token_ms":418044,"TTFT_wall_ms":418176.498635,"steady_decode_tok_s":0,"total_request_ms":424646,"cache_hit":false}
+miinfer_request_state request_id=192 state=received
+miinfer_request_state request_id=193 state=received
+miinfer_request_state request_id=194 state=received
+miinfer_request_state request_id=194 state=queued
+miinfer_request_state request_id=194 state=dequeued
+miinfer_request_state request_id=194 state=parsed
+miinfer_request_state request_id=194 state=tokenized
+miinfer_request_state request_id=194 state=prefill_started
+miinfer_request_state request_id=194 state=completed
+miinfer_request {"request_id":194,"request_body_bytes":225475,"message_count":167,"prompt_chars":219708,"prompt_tokens":61500,"tokenization_ms":70.2023,"queue_wait_ms":0.42963,"prefill_ms":11676.2,"prefill_processed_tokens":757,"reuse_hit":true,"reused_prefix_tokens":60743,"suffix_tokens_dispatched":757,"suffix_tokens_executed":757,"prefix_tokens_replayed":0,"checkpoint_position":60743,"gqa_kv_reused_tokens":60743,"gdn_checkpoint_position":60743,"restore_ms":0.786677,"suffix_prefill_ms":11672.3,"prefill_tokens_per_second":5267.12,"first_decode_token_ms":11676.2,"time_to_first_token_ms":23352.4,"generated_tokens":1024,"decode_ms":60532.7,"decode_tokens_per_second":16.9,"total_ms":72208.9,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":194,"prompt_tokens":61500,"common_prefix_tokens":60743,"reuse_hit":true,"reused_prefix_tokens":60743,"suffix_tokens_dispatched":757,"suffix_tokens_executed":757,"prefix_tokens_replayed":0,"checkpoint_position":60743,"gqa_kv_reused_tokens":60743,"gdn_checkpoint_position":60743,"restore_ms":0.786677,"suffix_prefill_ms":11672.3,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":757,"prefill_ms":11676.2,"graph_capture_ms":0,"first_decode_token_ms":11676.2,"TTFT_wall_ms":11808.645388,"steady_decode_tok_s":20.9389,"total_request_ms":72285,"cache_hit":true}
+miinfer_request_state request_id=195 state=received
+miinfer_request_state request_id=196 state=received
+miinfer_request_state request_id=197 state=received
+miinfer_request_state request_id=197 state=queued
+miinfer_request_state request_id=197 state=dequeued
+miinfer_request_state request_id=197 state=parsed
+miinfer_request_state request_id=197 state=tokenized
+miinfer_request_state request_id=197 state=prefill_started
+miinfer_request_state request_id=197 state=completed
+miinfer_request {"request_id":197,"request_body_bytes":228042,"message_count":169,"prompt_chars":222209,"prompt_tokens":62017,"tokenization_ms":69.5143,"queue_wait_ms":0.045616,"prefill_ms":429328,"prefill_processed_tokens":62017,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":62017,"suffix_tokens_executed":62017,"prefix_tokens_replayed":62017,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":144.451,"first_decode_token_ms":429328,"time_to_first_token_ms":858656,"generated_tokens":81,"decode_ms":4756.51,"decode_tokens_per_second":16.819,"total_ms":434084,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":197,"prompt_tokens":62017,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":62017,"suffix_tokens_executed":62017,"prefix_tokens_replayed":62017,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":62017,"prefill_ms":429328,"graph_capture_ms":0,"first_decode_token_ms":429328,"TTFT_wall_ms":429459.377375,"steady_decode_tok_s":0,"total_request_ms":434158,"cache_hit":false}
+miinfer_request_state request_id=198 state=received
+miinfer_request_state request_id=199 state=received
+miinfer_request_state request_id=200 state=received
+miinfer_request_state request_id=200 state=queued
+miinfer_request_state request_id=200 state=dequeued
+miinfer_request_state request_id=200 state=parsed
+miinfer_request_state request_id=200 state=tokenized
+miinfer_request_state request_id=200 state=prefill_started
+miinfer_request_state request_id=200 state=completed
+miinfer_request {"request_id":200,"request_body_bytes":233355,"message_count":172,"prompt_chars":227439,"prompt_tokens":63492,"tokenization_ms":72.8536,"queue_wait_ms":0.075654,"prefill_ms":23865.5,"prefill_processed_tokens":1475,"reuse_hit":true,"reused_prefix_tokens":62017,"suffix_tokens_dispatched":1475,"suffix_tokens_executed":1475,"prefix_tokens_replayed":0,"checkpoint_position":62017,"gqa_kv_reused_tokens":62017,"gdn_checkpoint_position":62017,"restore_ms":0.789481,"suffix_prefill_ms":23861.5,"prefill_tokens_per_second":2660.41,"first_decode_token_ms":23865.5,"time_to_first_token_ms":47731,"generated_tokens":1024,"decode_ms":61492.9,"decode_tokens_per_second":16.6361,"total_ms":85358.4,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":200,"prompt_tokens":63492,"common_prefix_tokens":62017,"reuse_hit":true,"reused_prefix_tokens":62017,"suffix_tokens_dispatched":1475,"suffix_tokens_executed":1475,"prefix_tokens_replayed":0,"checkpoint_position":62017,"gqa_kv_reused_tokens":62017,"gdn_checkpoint_position":62017,"restore_ms":0.789481,"suffix_prefill_ms":23861.5,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1475,"prefill_ms":23865.5,"graph_capture_ms":0,"first_decode_token_ms":23865.5,"TTFT_wall_ms":24001.192984,"steady_decode_tok_s":27.1876,"total_request_ms":85437.1,"cache_hit":true}
+miinfer_request_state request_id=201 state=received
+miinfer_request_state request_id=202 state=received
+miinfer_request_state request_id=203 state=received
+miinfer_request_state request_id=203 state=queued
+miinfer_request_state request_id=203 state=dequeued
+miinfer_request_state request_id=203 state=parsed
+miinfer_request_state request_id=203 state=tokenized
+miinfer_request_state request_id=203 state=prefill_started
+miinfer_request_state request_id=203 state=completed
+miinfer_request {"request_id":203,"request_body_bytes":236775,"message_count":174,"prompt_chars":230792,"prompt_tokens":64249,"tokenization_ms":71.9697,"queue_wait_ms":0.069513,"prefill_ms":452150,"prefill_processed_tokens":64249,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":64249,"suffix_tokens_executed":64249,"prefix_tokens_replayed":64249,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":142.097,"first_decode_token_ms":452150,"time_to_first_token_ms":904300,"generated_tokens":121,"decode_ms":7224.82,"decode_tokens_per_second":16.6094,"total_ms":459375,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":203,"prompt_tokens":64249,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":64249,"suffix_tokens_executed":64249,"prefix_tokens_replayed":64249,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":64249,"prefill_ms":452150,"graph_capture_ms":0,"first_decode_token_ms":452150,"TTFT_wall_ms":452284.759874,"steady_decode_tok_s":0,"total_request_ms":459450,"cache_hit":false}
+miinfer_request_state request_id=204 state=received
+miinfer_request_state request_id=205 state=received
+miinfer_request_state request_id=206 state=received
+miinfer_request_state request_id=206 state=queued
+miinfer_request_state request_id=206 state=dequeued
+miinfer_request_state request_id=206 state=parsed
+miinfer_request_state request_id=206 state=tokenized
+miinfer_request_state request_id=206 state=prefill_started
+miinfer_request_state request_id=206 state=completed
+miinfer_request {"request_id":206,"request_body_bytes":241415,"message_count":177,"prompt_chars":235318,"prompt_tokens":65846,"tokenization_ms":75.8044,"queue_wait_ms":0.078687,"prefill_ms":26880.5,"prefill_processed_tokens":1597,"reuse_hit":true,"reused_prefix_tokens":64249,"suffix_tokens_dispatched":1597,"suffix_tokens_executed":1597,"prefix_tokens_replayed":0,"checkpoint_position":64249,"gqa_kv_reused_tokens":64249,"gdn_checkpoint_position":64249,"restore_ms":0.763583,"suffix_prefill_ms":26876.5,"prefill_tokens_per_second":2449.59,"first_decode_token_ms":26880.5,"time_to_first_token_ms":53760.9,"generated_tokens":616,"decode_ms":37614.8,"decode_tokens_per_second":16.3499,"total_ms":64495.3,"cancelled":false,"finish_reason":"stop","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":206,"prompt_tokens":65846,"common_prefix_tokens":64249,"reuse_hit":true,"reused_prefix_tokens":64249,"suffix_tokens_dispatched":1597,"suffix_tokens_executed":1597,"prefix_tokens_replayed":0,"checkpoint_position":64249,"gqa_kv_reused_tokens":64249,"gdn_checkpoint_position":64249,"restore_ms":0.763583,"suffix_prefill_ms":26876.5,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1597,"prefill_ms":26880.5,"graph_capture_ms":0,"first_decode_token_ms":26880.5,"TTFT_wall_ms":27019.894380,"steady_decode_tok_s":57.2928,"total_request_ms":64575.7,"cache_hit":true}
+miinfer_request_state request_id=207 state=received
+miinfer_request_state request_id=208 state=received
+miinfer_request_state request_id=209 state=received
+miinfer_request_state request_id=209 state=queued
+miinfer_request_state request_id=209 state=dequeued
+miinfer_request_state request_id=209 state=parsed
+miinfer_request_state request_id=209 state=tokenized
+miinfer_request_state request_id=209 state=prefill_started
+miinfer_request_state request_id=209 state=completed
+miinfer_request {"request_id":209,"request_body_bytes":244908,"message_count":179,"prompt_chars":238776,"prompt_tokens":66597,"tokenization_ms":74.6743,"queue_wait_ms":0.077372,"prefill_ms":475164,"prefill_processed_tokens":66597,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":66597,"suffix_tokens_executed":66597,"prefix_tokens_replayed":66597,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":140.156,"first_decode_token_ms":475164,"time_to_first_token_ms":950328,"generated_tokens":192,"decode_ms":11589.3,"decode_tokens_per_second":16.4808,"total_ms":486753,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":209,"prompt_tokens":66597,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":66597,"suffix_tokens_executed":66597,"prefix_tokens_replayed":66597,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":66597,"prefill_ms":475164,"graph_capture_ms":0,"first_decode_token_ms":475164,"TTFT_wall_ms":475302.776709,"steady_decode_tok_s":0,"total_request_ms":486832,"cache_hit":false}
+miinfer_request_state request_id=210 state=received
+miinfer_request_state request_id=211 state=received
+miinfer_request_state request_id=212 state=received
+miinfer_request_state request_id=212 state=queued
+miinfer_request_state request_id=212 state=dequeued
+miinfer_request_state request_id=212 state=parsed
+miinfer_request_state request_id=212 state=tokenized
+miinfer_request_state request_id=212 state=prefill_started
+miinfer_request_state request_id=212 state=completed
+miinfer_request {"request_id":212,"request_body_bytes":249356,"message_count":182,"prompt_chars":243137,"prompt_tokens":67933,"tokenization_ms":76.8926,"queue_wait_ms":0.068179,"prefill_ms":22874.7,"prefill_processed_tokens":1336,"reuse_hit":true,"reused_prefix_tokens":66597,"suffix_tokens_dispatched":1336,"suffix_tokens_executed":1336,"prefix_tokens_replayed":0,"checkpoint_position":66597,"gqa_kv_reused_tokens":66597,"gdn_checkpoint_position":66597,"restore_ms":0.819456,"suffix_prefill_ms":22870.6,"prefill_tokens_per_second":2969.79,"first_decode_token_ms":22874.7,"time_to_first_token_ms":45749.3,"generated_tokens":598,"decode_ms":37073.6,"decode_tokens_per_second":16.1031,"total_ms":59948.3,"cancelled":false,"finish_reason":"stop","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":212,"prompt_tokens":67933,"common_prefix_tokens":66597,"reuse_hit":true,"reused_prefix_tokens":66597,"suffix_tokens_dispatched":1336,"suffix_tokens_executed":1336,"prefix_tokens_replayed":0,"checkpoint_position":66597,"gqa_kv_reused_tokens":66597,"gdn_checkpoint_position":66597,"restore_ms":0.819456,"suffix_prefill_ms":22870.6,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1336,"prefill_ms":22874.7,"graph_capture_ms":0,"first_decode_token_ms":22874.7,"TTFT_wall_ms":23016.476988,"steady_decode_tok_s":42.0454,"total_request_ms":60030.2,"cache_hit":true}
+miinfer_request_state request_id=213 state=received
+miinfer_request_state request_id=214 state=received
+miinfer_request_state request_id=215 state=received
+miinfer_request_state request_id=215 state=queued
+miinfer_request_state request_id=215 state=dequeued
+miinfer_request_state request_id=215 state=parsed
+miinfer_request_state request_id=215 state=tokenized
+miinfer_request_state request_id=215 state=prefill_started
+miinfer_request_state request_id=215 state=completed
+miinfer_request {"request_id":215,"request_body_bytes":252248,"message_count":184,"prompt_chars":245993,"prompt_tokens":68570,"tokenization_ms":79.3873,"queue_wait_ms":0.087838,"prefill_ms":498310,"prefill_processed_tokens":68570,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":68570,"suffix_tokens_executed":68570,"prefix_tokens_replayed":68570,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":137.605,"first_decode_token_ms":498310,"time_to_first_token_ms":996620,"generated_tokens":115,"decode_ms":7101.16,"decode_tokens_per_second":16.0537,"total_ms":505411,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":215,"prompt_tokens":68570,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":68570,"suffix_tokens_executed":68570,"prefix_tokens_replayed":68570,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":68570,"prefill_ms":498310,"graph_capture_ms":0,"first_decode_token_ms":498310,"TTFT_wall_ms":498455.066105,"steady_decode_tok_s":0,"total_request_ms":505494,"cache_hit":false}
+miinfer_request_state request_id=216 state=received
+miinfer_request_state request_id=217 state=received
+miinfer_request_state request_id=218 state=received
+miinfer_request_state request_id=218 state=queued
+miinfer_request_state request_id=218 state=dequeued
+miinfer_request_state request_id=218 state=parsed
+miinfer_request_state request_id=218 state=tokenized
+miinfer_request_state request_id=218 state=prefill_started
+miinfer_request_state request_id=218 state=completed
+miinfer_request {"request_id":218,"request_body_bytes":254775,"message_count":187,"prompt_chars":248446,"prompt_tokens":69289,"tokenization_ms":80.0784,"queue_wait_ms":0.079017,"prefill_ms":12525.5,"prefill_processed_tokens":719,"reuse_hit":true,"reused_prefix_tokens":68570,"suffix_tokens_dispatched":719,"suffix_tokens_executed":719,"prefix_tokens_replayed":0,"checkpoint_position":68570,"gqa_kv_reused_tokens":68570,"gdn_checkpoint_position":68570,"restore_ms":0.795061,"suffix_prefill_ms":12521.6,"prefill_tokens_per_second":5531.82,"first_decode_token_ms":12525.5,"time_to_first_token_ms":25051.1,"generated_tokens":1024,"decode_ms":64100.2,"decode_tokens_per_second":15.9594,"total_ms":76625.8,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":218,"prompt_tokens":69289,"common_prefix_tokens":68570,"reuse_hit":true,"reused_prefix_tokens":68570,"suffix_tokens_dispatched":719,"suffix_tokens_executed":719,"prefix_tokens_replayed":0,"checkpoint_position":68570,"gqa_kv_reused_tokens":68570,"gdn_checkpoint_position":68570,"restore_ms":0.795061,"suffix_prefill_ms":12521.6,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":719,"prefill_ms":12525.5,"graph_capture_ms":0,"first_decode_token_ms":12525.5,"TTFT_wall_ms":12671.033630,"steady_decode_tok_s":19.8353,"total_request_ms":76711.8,"cache_hit":true}
+miinfer_request_state request_id=219 state=received
+miinfer_request_state request_id=220 state=received
+miinfer_request_state request_id=221 state=received
+miinfer_request_state request_id=221 state=queued
+miinfer_request_state request_id=221 state=dequeued
+miinfer_request_state request_id=221 state=parsed
+miinfer_request_state request_id=221 state=tokenized
+miinfer_request_state request_id=221 state=prefill_started
+miinfer_request_state request_id=221 state=completed
+miinfer_request {"request_id":221,"request_body_bytes":257095,"message_count":189,"prompt_chars":250735,"prompt_tokens":69772,"tokenization_ms":80.3908,"queue_wait_ms":0.098591,"prefill_ms":508593,"prefill_processed_tokens":69772,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":69772,"suffix_tokens_executed":69772,"prefix_tokens_replayed":69772,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":137.186,"first_decode_token_ms":508593,"time_to_first_token_ms":1.01719e+06,"generated_tokens":90,"decode_ms":5574.4,"decode_tokens_per_second":15.9658,"total_ms":514167,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":221,"prompt_tokens":69772,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":69772,"suffix_tokens_executed":69772,"prefix_tokens_replayed":69772,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":69772,"prefill_ms":508593,"graph_capture_ms":0,"first_decode_token_ms":508593,"TTFT_wall_ms":508738.614294,"steady_decode_tok_s":0,"total_request_ms":514251,"cache_hit":false}
+miinfer_request_state request_id=222 state=received
+miinfer_request_state request_id=223 state=received
+miinfer_request_state request_id=224 state=received
+miinfer_request_state request_id=224 state=queued
+miinfer_request_state request_id=224 state=dequeued
+miinfer_request_state request_id=224 state=parsed
+miinfer_request_state request_id=224 state=tokenized
+miinfer_request_state request_id=224 state=prefill_started
+miinfer_request_state request_id=224 state=completed
+miinfer_request {"request_id":224,"request_body_bytes":263996,"message_count":192,"prompt_chars":257364,"prompt_tokens":71660,"tokenization_ms":80.5146,"queue_wait_ms":0.085562,"prefill_ms":31697.8,"prefill_processed_tokens":1888,"reuse_hit":true,"reused_prefix_tokens":69772,"suffix_tokens_dispatched":1888,"suffix_tokens_executed":1888,"prefix_tokens_replayed":0,"checkpoint_position":69772,"gqa_kv_reused_tokens":69772,"gdn_checkpoint_position":69772,"restore_ms":0.774671,"suffix_prefill_ms":31693.9,"prefill_tokens_per_second":2260.72,"first_decode_token_ms":31697.8,"time_to_first_token_ms":63395.6,"generated_tokens":1024,"decode_ms":65252.5,"decode_tokens_per_second":15.6776,"total_ms":96950.3,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":224,"prompt_tokens":71660,"common_prefix_tokens":69772,"reuse_hit":true,"reused_prefix_tokens":69772,"suffix_tokens_dispatched":1888,"suffix_tokens_executed":1888,"prefix_tokens_replayed":0,"checkpoint_position":69772,"gqa_kv_reused_tokens":69772,"gdn_checkpoint_position":69772,"restore_ms":0.774671,"suffix_prefill_ms":31693.9,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1888,"prefill_ms":31697.8,"graph_capture_ms":0,"first_decode_token_ms":31697.8,"TTFT_wall_ms":31845.587247,"steady_decode_tok_s":30.4876,"total_request_ms":97036.7,"cache_hit":true}
+miinfer_request_state request_id=225 state=received
+miinfer_request_state request_id=226 state=received
+miinfer_request_state request_id=227 state=received
+miinfer_request_state request_id=227 state=queued
+miinfer_request_state request_id=227 state=dequeued
+miinfer_request_state request_id=227 state=parsed
+miinfer_request_state request_id=227 state=tokenized
+miinfer_request_state request_id=227 state=prefill_started
+miinfer_request_state request_id=227 state=completed
+miinfer_request {"request_id":227,"request_body_bytes":266605,"message_count":194,"prompt_chars":259943,"prompt_tokens":72213,"tokenization_ms":79.5185,"queue_wait_ms":0.100696,"prefill_ms":534102,"prefill_processed_tokens":72213,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":72213,"suffix_tokens_executed":72213,"prefix_tokens_replayed":72213,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":135.205,"first_decode_token_ms":534102,"time_to_first_token_ms":1.0682e+06,"generated_tokens":131,"decode_ms":8242.34,"decode_tokens_per_second":15.7722,"total_ms":542344,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":227,"prompt_tokens":72213,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":72213,"suffix_tokens_executed":72213,"prefix_tokens_replayed":72213,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":72213,"prefill_ms":534102,"graph_capture_ms":0,"first_decode_token_ms":534102,"TTFT_wall_ms":534247.564487,"steady_decode_tok_s":0,"total_request_ms":542428,"cache_hit":false}
+miinfer_request_state request_id=228 state=received
+miinfer_request_state request_id=229 state=received
+miinfer_request_state request_id=230 state=received
+miinfer_request_state request_id=230 state=queued
+miinfer_request_state request_id=230 state=dequeued
+miinfer_request_state request_id=230 state=parsed
+miinfer_request_state request_id=230 state=tokenized
+miinfer_request_state request_id=230 state=prefill_started
+miinfer_request_state request_id=230 state=completed
+miinfer_request {"request_id":230,"request_body_bytes":270078,"message_count":197,"prompt_chars":263347,"prompt_tokens":73310,"tokenization_ms":82.6525,"queue_wait_ms":0.091598,"prefill_ms":20594.3,"prefill_processed_tokens":1097,"reuse_hit":true,"reused_prefix_tokens":72213,"suffix_tokens_dispatched":1097,"suffix_tokens_executed":1097,"prefix_tokens_replayed":0,"checkpoint_position":72213,"gqa_kv_reused_tokens":72213,"gdn_checkpoint_position":72213,"restore_ms":0.784261,"suffix_prefill_ms":20590.3,"prefill_tokens_per_second":3559.72,"first_decode_token_ms":20594.3,"time_to_first_token_ms":41188.6,"generated_tokens":1024,"decode_ms":66093.6,"decode_tokens_per_second":15.4781,"total_ms":86687.9,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":230,"prompt_tokens":73310,"common_prefix_tokens":72213,"reuse_hit":true,"reused_prefix_tokens":72213,"suffix_tokens_dispatched":1097,"suffix_tokens_executed":1097,"prefix_tokens_replayed":0,"checkpoint_position":72213,"gqa_kv_reused_tokens":72213,"gdn_checkpoint_position":72213,"restore_ms":0.784261,"suffix_prefill_ms":20590.3,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1097,"prefill_ms":20594.3,"graph_capture_ms":0,"first_decode_token_ms":20594.3,"TTFT_wall_ms":20744.787618,"steady_decode_tok_s":22.4839,"total_request_ms":86776.5,"cache_hit":true}
+miinfer_request_state request_id=231 state=received
+miinfer_request_state request_id=232 state=received
+miinfer_request_state request_id=233 state=received
+miinfer_request_state request_id=233 state=queued
+miinfer_request_state request_id=233 state=dequeued
+miinfer_request_state request_id=233 state=parsed
+miinfer_request_state request_id=233 state=tokenized
+miinfer_request_state request_id=233 state=prefill_started
+miinfer_request_state request_id=233 state=completed
+miinfer_request {"request_id":233,"request_body_bytes":270588,"message_count":199,"prompt_chars":263832,"prompt_tokens":73429,"tokenization_ms":81.6847,"queue_wait_ms":0.05949,"prefill_ms":547985,"prefill_processed_tokens":73429,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":73429,"suffix_tokens_executed":73429,"prefix_tokens_replayed":73429,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":133.998,"first_decode_token_ms":547985,"time_to_first_token_ms":1.09597e+06,"generated_tokens":122,"decode_ms":7741.69,"decode_tokens_per_second":15.6297,"total_ms":555727,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":233,"prompt_tokens":73429,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":73429,"suffix_tokens_executed":73429,"prefix_tokens_replayed":73429,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":73429,"prefill_ms":547985,"graph_capture_ms":0,"first_decode_token_ms":547985,"TTFT_wall_ms":548134.386124,"steady_decode_tok_s":0,"total_request_ms":555813,"cache_hit":false}
+miinfer_request_state request_id=234 state=received
+miinfer_request_state request_id=235 state=received
+miinfer_request_state request_id=236 state=received
+miinfer_request_state request_id=236 state=queued
+miinfer_request_state request_id=236 state=dequeued
+miinfer_request_state request_id=236 state=parsed
+miinfer_request_state request_id=236 state=tokenized
+miinfer_request_state request_id=236 state=prefill_started
+miinfer_request_state request_id=236 state=completed
+miinfer_request {"request_id":236,"request_body_bytes":273296,"message_count":202,"prompt_chars":266420,"prompt_tokens":74187,"tokenization_ms":83.4485,"queue_wait_ms":0.082697,"prefill_ms":13897.4,"prefill_processed_tokens":758,"reuse_hit":true,"reused_prefix_tokens":73429,"suffix_tokens_dispatched":758,"suffix_tokens_executed":758,"prefix_tokens_replayed":0,"checkpoint_position":73429,"gqa_kv_reused_tokens":73429,"gdn_checkpoint_position":73429,"restore_ms":0.793672,"suffix_prefill_ms":13893.5,"prefill_tokens_per_second":5338.18,"first_decode_token_ms":13897.4,"time_to_first_token_ms":27794.9,"generated_tokens":1024,"decode_ms":66405.9,"decode_tokens_per_second":15.4053,"total_ms":80303.3,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":236,"prompt_tokens":74187,"common_prefix_tokens":73429,"reuse_hit":true,"reused_prefix_tokens":73429,"suffix_tokens_dispatched":758,"suffix_tokens_executed":758,"prefix_tokens_replayed":0,"checkpoint_position":73429,"gqa_kv_reused_tokens":73429,"gdn_checkpoint_position":73429,"restore_ms":0.793672,"suffix_prefill_ms":13893.5,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":758,"prefill_ms":13897.4,"graph_capture_ms":0,"first_decode_token_ms":13897.4,"TTFT_wall_ms":14049.753824,"steady_decode_tok_s":19.4826,"total_request_ms":80393.2,"cache_hit":true}
+miinfer_request_state request_id=237 state=received
+miinfer_request_state request_id=238 state=received
+miinfer_request_state request_id=239 state=received
+miinfer_request_state request_id=239 state=queued
+miinfer_request_state request_id=239 state=dequeued
+miinfer_request_state request_id=239 state=parsed
+miinfer_request_state request_id=239 state=tokenized
+miinfer_request_state request_id=239 state=prefill_started
+miinfer_request_state request_id=239 state=completed
+miinfer_request {"request_id":239,"request_body_bytes":275752,"message_count":204,"prompt_chars":268818,"prompt_tokens":74685,"tokenization_ms":82.7494,"queue_wait_ms":0.086626,"prefill_ms":563916,"prefill_processed_tokens":74685,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":74685,"suffix_tokens_executed":74685,"prefix_tokens_replayed":74685,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":132.44,"first_decode_token_ms":563916,"time_to_first_token_ms":1.12783e+06,"generated_tokens":140,"decode_ms":9017.89,"decode_tokens_per_second":15.4138,"total_ms":572934,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":239,"prompt_tokens":74685,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":74685,"suffix_tokens_executed":74685,"prefix_tokens_replayed":74685,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":74685,"prefill_ms":563916,"graph_capture_ms":0,"first_decode_token_ms":563916,"TTFT_wall_ms":564066.799695,"steady_decode_tok_s":0,"total_request_ms":573021,"cache_hit":false}
+miinfer_request_state request_id=240 state=received
+miinfer_request_state request_id=241 state=received
+miinfer_request_state request_id=242 state=received
+miinfer_request_state request_id=242 state=queued
+miinfer_request_state request_id=242 state=dequeued
+miinfer_request_state request_id=242 state=parsed
+miinfer_request_state request_id=242 state=tokenized
+miinfer_request_state request_id=242 state=prefill_started
+miinfer_request_state request_id=242 state=completed
+miinfer_request {"request_id":242,"request_body_bytes":281065,"message_count":207,"prompt_chars":274048,"prompt_tokens":76160,"tokenization_ms":85.0598,"queue_wait_ms":0.080561,"prefill_ms":29208.7,"prefill_processed_tokens":1475,"reuse_hit":true,"reused_prefix_tokens":74685,"suffix_tokens_dispatched":1475,"suffix_tokens_executed":1475,"prefix_tokens_replayed":0,"checkpoint_position":74685,"gqa_kv_reused_tokens":74685,"gdn_checkpoint_position":74685,"restore_ms":0.784139,"suffix_prefill_ms":29204.7,"prefill_tokens_per_second":2607.44,"first_decode_token_ms":29208.7,"time_to_first_token_ms":58417.4,"generated_tokens":1024,"decode_ms":67652.8,"decode_tokens_per_second":15.1213,"total_ms":96861.6,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":242,"prompt_tokens":76160,"common_prefix_tokens":74685,"reuse_hit":true,"reused_prefix_tokens":74685,"suffix_tokens_dispatched":1475,"suffix_tokens_executed":1475,"prefix_tokens_replayed":0,"checkpoint_position":74685,"gqa_kv_reused_tokens":74685,"gdn_checkpoint_position":74685,"restore_ms":0.784139,"suffix_prefill_ms":29204.7,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1475,"prefill_ms":29208.7,"graph_capture_ms":0,"first_decode_token_ms":29208.7,"TTFT_wall_ms":29362.967230,"steady_decode_tok_s":26.61,"total_request_ms":96952.8,"cache_hit":true}
+miinfer_request_state request_id=243 state=received
+miinfer_request_state request_id=244 state=received
+miinfer_request_state request_id=245 state=received
+miinfer_request_state request_id=245 state=queued
+miinfer_request_state request_id=245 state=dequeued
+miinfer_request_state request_id=245 state=parsed
+miinfer_request_state request_id=245 state=tokenized
+miinfer_request_state request_id=245 state=prefill_started
+miinfer_request_state request_id=245 state=completed
+miinfer_request {"request_id":245,"request_body_bytes":284362,"message_count":209,"prompt_chars":277297,"prompt_tokens":76865,"tokenization_ms":88.0699,"queue_wait_ms":0.094001,"prefill_ms":585095,"prefill_processed_tokens":76865,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":76865,"suffix_tokens_executed":76865,"prefix_tokens_replayed":76865,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":131.372,"first_decode_token_ms":585095,"time_to_first_token_ms":1.17019e+06,"generated_tokens":143,"decode_ms":9278.13,"decode_tokens_per_second":15.3048,"total_ms":594373,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":245,"prompt_tokens":76865,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":76865,"suffix_tokens_executed":76865,"prefix_tokens_replayed":76865,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":76865,"prefill_ms":585095,"graph_capture_ms":0,"first_decode_token_ms":585095,"TTFT_wall_ms":585252.141378,"steady_decode_tok_s":0,"total_request_ms":594466,"cache_hit":false}
+miinfer_request_state request_id=246 state=received
+miinfer_request_state request_id=247 state=received
+miinfer_request_state request_id=248 state=received
+miinfer_request_state request_id=248 state=queued
+miinfer_request_state request_id=248 state=dequeued
+miinfer_request_state request_id=248 state=parsed
+miinfer_request_state request_id=248 state=tokenized
+miinfer_request_state request_id=248 state=prefill_started
+miinfer_request_state request_id=248 state=completed
+miinfer_request {"request_id":248,"request_body_bytes":289002,"message_count":212,"prompt_chars":281823,"prompt_tokens":78462,"tokenization_ms":88.8786,"queue_wait_ms":0.101158,"prefill_ms":32552.7,"prefill_processed_tokens":1597,"reuse_hit":true,"reused_prefix_tokens":76865,"suffix_tokens_dispatched":1597,"suffix_tokens_executed":1597,"prefix_tokens_replayed":0,"checkpoint_position":76865,"gqa_kv_reused_tokens":76865,"gdn_checkpoint_position":76865,"restore_ms":0.786367,"suffix_prefill_ms":32548.7,"prefill_tokens_per_second":2410.31,"first_decode_token_ms":32552.7,"time_to_first_token_ms":65105.4,"generated_tokens":1024,"decode_ms":68605.7,"decode_tokens_per_second":14.9113,"total_ms":101158,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":248,"prompt_tokens":78462,"common_prefix_tokens":76865,"reuse_hit":true,"reused_prefix_tokens":76865,"suffix_tokens_dispatched":1597,"suffix_tokens_executed":1597,"prefix_tokens_replayed":0,"checkpoint_position":76865,"gqa_kv_reused_tokens":76865,"gdn_checkpoint_position":76865,"restore_ms":0.786367,"suffix_prefill_ms":32548.7,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1597,"prefill_ms":32552.7,"graph_capture_ms":0,"first_decode_token_ms":32552.7,"TTFT_wall_ms":32711.990672,"steady_decode_tok_s":28.3749,"total_request_ms":101253,"cache_hit":true}
+miinfer_request_state request_id=249 state=received
+miinfer_request_state request_id=250 state=received
+miinfer_request_state request_id=251 state=received
+miinfer_request_state request_id=251 state=queued
+miinfer_request_state request_id=251 state=dequeued
+miinfer_request_state request_id=251 state=parsed
+miinfer_request_state request_id=251 state=tokenized
+miinfer_request_state request_id=251 state=prefill_started
+miinfer_request_state request_id=251 state=completed
+miinfer_request {"request_id":251,"request_body_bytes":291502,"message_count":214,"prompt_chars":284293,"prompt_tokens":79007,"tokenization_ms":87.1786,"queue_wait_ms":0.068301,"prefill_ms":609869,"prefill_processed_tokens":79007,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":79007,"suffix_tokens_executed":79007,"prefix_tokens_replayed":79007,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"prefill_tokens_per_second":129.547,"first_decode_token_ms":609869,"time_to_first_token_ms":1.21974e+06,"generated_tokens":92,"decode_ms":6045.91,"decode_tokens_per_second":15.0515,"total_ms":615915,"cancelled":false,"finish_reason":"tool_calls","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":251,"prompt_tokens":79007,"common_prefix_tokens":0,"reuse_hit":false,"reused_prefix_tokens":0,"suffix_tokens_dispatched":79007,"suffix_tokens_executed":79007,"prefix_tokens_replayed":79007,"checkpoint_position":0,"gqa_kv_reused_tokens":0,"gdn_checkpoint_position":0,"restore_ms":0,"suffix_prefill_ms":0,"session_checkpoint_count":0,"session_checkpoint_bytes":0,"new_prefill_tokens":79007,"prefill_ms":609869,"graph_capture_ms":0,"first_decode_token_ms":609869,"TTFT_wall_ms":610026.274859,"steady_decode_tok_s":0,"total_request_ms":616007,"cache_hit":false}
+miinfer_request_state request_id=252 state=received
+miinfer_request_state request_id=253 state=received
+miinfer_request_state request_id=254 state=received
+miinfer_request_state request_id=254 state=queued
+miinfer_request_state request_id=254 state=dequeued
+miinfer_request_state request_id=254 state=parsed
+miinfer_request_state request_id=254 state=tokenized
+miinfer_request_state request_id=254 state=prefill_started
+miinfer_request_state request_id=254 state=completed
+miinfer_request {"request_id":254,"request_body_bytes":295950,"message_count":217,"prompt_chars":288654,"prompt_tokens":80343,"tokenization_ms":91.405,"queue_wait_ms":0.068594,"prefill_ms":27279,"prefill_processed_tokens":1336,"reuse_hit":true,"reused_prefix_tokens":79007,"suffix_tokens_dispatched":1336,"suffix_tokens_executed":1336,"prefix_tokens_replayed":0,"checkpoint_position":79007,"gqa_kv_reused_tokens":79007,"gdn_checkpoint_position":79007,"restore_ms":0.786759,"suffix_prefill_ms":27274.9,"prefill_tokens_per_second":2945.23,"first_decode_token_ms":27279,"time_to_first_token_ms":54558,"generated_tokens":1024,"decode_ms":69442,"decode_tokens_per_second":14.7317,"total_ms":96721.1,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":254,"prompt_tokens":80343,"common_prefix_tokens":79007,"reuse_hit":true,"reused_prefix_tokens":79007,"suffix_tokens_dispatched":1336,"suffix_tokens_executed":1336,"prefix_tokens_replayed":0,"checkpoint_position":79007,"gqa_kv_reused_tokens":79007,"gdn_checkpoint_position":79007,"restore_ms":0.786759,"suffix_prefill_ms":27274.9,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1336,"prefill_ms":27279,"graph_capture_ms":0,"first_decode_token_ms":27279,"TTFT_wall_ms":27441.734323,"steady_decode_tok_s":24.2629,"total_request_ms":96818.5,"cache_hit":true}
+miinfer_request_state request_id=255 state=received
+miinfer_request_state request_id=256 state=received
+miinfer_request_state request_id=257 state=received
+miinfer_request_state request_id=257 state=queued
+miinfer_request_state request_id=257 state=dequeued
+miinfer_request_state request_id=257 state=parsed
+miinfer_request_state request_id=257 state=tokenized
+miinfer_request_state request_id=257 state=prefill_started
+miinfer_request_state request_id=257 state=completed
+miinfer_request {"request_id":257,"request_body_bytes":300253,"message_count":220,"prompt_chars":292867,"prompt_tokens":81656,"tokenization_ms":90.4863,"queue_wait_ms":0.069903,"prefill_ms":28852.1,"prefill_processed_tokens":1313,"reuse_hit":true,"reused_prefix_tokens":80343,"suffix_tokens_dispatched":1313,"suffix_tokens_executed":1313,"prefix_tokens_replayed":0,"checkpoint_position":80343,"gqa_kv_reused_tokens":80343,"gdn_checkpoint_position":80343,"restore_ms":0.839056,"suffix_prefill_ms":28848.1,"prefill_tokens_per_second":2830.16,"first_decode_token_ms":28852.1,"time_to_first_token_ms":57704.2,"generated_tokens":1024,"decode_ms":70510.5,"decode_tokens_per_second":14.5085,"total_ms":99362.6,"cancelled":false,"finish_reason":"length","error":null,"configured_context":131072,"runtime_context_capacity":131072}
+miinfer_request_latency {"request_id":257,"prompt_tokens":81656,"common_prefix_tokens":80343,"reuse_hit":true,"reused_prefix_tokens":80343,"suffix_tokens_dispatched":1313,"suffix_tokens_executed":1313,"prefix_tokens_replayed":0,"checkpoint_position":80343,"gqa_kv_reused_tokens":80343,"gdn_checkpoint_position":80343,"restore_ms":0.839056,"suffix_prefill_ms":28848.1,"session_checkpoint_count":1,"session_checkpoint_bytes":8748793856,"new_prefill_tokens":1313,"prefill_ms":28852.1,"graph_capture_ms":0,"first_decode_token_ms":28852.1,"TTFT_wall_ms":29015.573841,"steady_decode_tok_s":24.5569,"total_request_ms":99459.3,"cache_hit":true}
+miinfer_request_state request_id=258 state=received

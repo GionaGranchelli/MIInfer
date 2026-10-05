@@ -1,0 +1,83 @@
+{
+  "run": {
+    "host": "machinist@100.114.213.94",
+    "gpu_selection": "HIP_VISIBLE_DEVICES=1 (MI50 gfx906)",
+    "model": "/home/machinist/models/Qwen3.8-27B-Q4_K_M.gguf",
+    "context_tokens": 131072,
+    "session_reuse": true,
+    "workload": "m30-fixed-transcript-replay",
+    "turns": 40,
+    "requests": 86,
+    "latency_records": 86,
+    "request_records": 86,
+    "all_turns_minimum_generation_gate": true
+  },
+  "token_accounting": {
+    "logical_prompt_tokens": 3626268,
+    "reused_prefix_tokens": 2053960,
+    "suffix_tokens_executed": 1572308,
+    "prefix_tokens_replayed": 1516386,
+    "reuse_hits": 53,
+    "cold_or_fallback_requests": 33,
+    "reused_prefix_fraction_of_logical": 0.56641,
+    "suffix_fraction_of_logical": 0.43359,
+    "prefix_replay_fraction_of_logical": 0.41817
+  },
+  "timing_ms": {
+    "all": {
+      "prefill": {"sum": 10817853.688, "p50": 22277.45, "p95": 534102, "max": 609869},
+      "suffix_prefill": {"sum": 681661.874, "p50": 4442.425, "p95": 28152, "max": 32548.7},
+      "restore": {"sum": 41.995, "p50": 0.777, "p95": 0.825, "max": 0.856},
+      "ttft_wall": {"sum": 10826648.012, "p50": 22390.511, "p95": 534247.564, "max": 610026.275},
+      "request_wall": {"sum": 13093710.62, "p50": 67683.25, "p95": 542428, "max": 616007},
+      "decode": {"sum": 2271402.44, "p50": 11640.65, "p95": 66405.9, "max": 70510.5},
+      "tokenization": {"sum": 4139.725, "p50": 47.179, "p95": 87.179, "max": 91.405},
+      "queue_wait": {"sum": 7.388, "p50": 0.081, "p95": 0.113, "max": 0.43}
+    },
+    "cold_or_fallback": {
+      "prefill": 10135981.8,
+      "decode": 242167.33,
+      "request_wall": 10379987.8,
+      "residual_wall_outside_prefill_decode": 1838.67
+    },
+    "reuse_hits": {
+      "suffix_prefill": 681661.874,
+      "restore": 41.995,
+      "decode": 2029235.11,
+      "request_wall": 2713722.82,
+      "residual_wall_outside_prefill_decode": 2615.822
+    }
+  },
+  "residual_wall_definition": "request total_request_ms - prefill_ms - request decode_ms; includes HTTP/host/runtime remainder and any unseparated save/update work",
+  "residual_wall_ms": {
+    "sum": 4454.492,
+    "fraction_of_request_wall": 0.00034,
+    "interpretation": "The measured wall time is dominated by prefill and decode. Restore is separately instrumented and is negligible; save/update is not separately instrumented."
+  },
+  "checkpoint_and_memory": {
+    "runtime_context_capacity": 131072,
+    "reuse_session_checkpoint_count": 1,
+    "reuse_session_checkpoint_bytes": 8748793856,
+    "startup_device_vram_total_bytes": 34342961152,
+    "startup_device_vram_free_bytes": 117440512,
+    "per_request_vram_telemetry": false,
+    "memory_note": "The server log provides startup free/total VRAM and checkpoint bytes, but no per-request VRAM peak series."
+  },
+  "semantics_observed": {
+    "in_memory_checkpoint": "one active exact-prefix checkpoint",
+    "reuse_match": "exact token/model/quantization/state-layout match in memory",
+    "reuse_continuation": "suffix-only continuation; zero-suffix can use the retained final hidden state",
+    "persistent_sessions": "disk sessions select the longest matching prefix, but serialized sessions do not carry final hidden state",
+    "branching_or_cow": "no COW/refcount/fork/rollback/Tail-Replay capability observed",
+    "invalidations": "cold/fallback requests reset or replace the active in-memory checkpoint"
+  },
+  "observability_limits": [
+    "save/update time is not a separate telemetry field and is included in the prefill or residual remainder",
+    "the residual wall definition is an uninstrumented remainder, not a direct kernel-time measurement",
+    "per-request VRAM peaks are not emitted by the serving telemetry"
+  ],
+  "source_artifacts": [
+    "results/m30-0002-residual.json",
+    "results/m30-0002-residual-server.log"
+  ]
+}

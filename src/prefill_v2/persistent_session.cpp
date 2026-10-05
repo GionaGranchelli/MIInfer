@@ -250,6 +250,7 @@ bool PersistentSession::load_from_file(
 
     const std::size_t single_layer_kv_bytes = header.kv_bytes / kExpectedGqaLayers;
     for (std::size_t j = 0; j < kExpectedGqaLayers; ++j) {
+        model.kv_storage(j).reset(stream);
         model.kv_storage(j).upload_raw(
             kv_host_buf.data() + j * single_layer_kv_bytes,
             P,
@@ -261,7 +262,10 @@ bool PersistentSession::load_from_file(
     }
 
     // Also update model's in-memory reusable_context_
-    model.reusable_context().save(out_prefix_tokens, model.recurrent_states(), stream);
+    // The legacy session format has no boundary hidden payload; keep the
+    // restored state usable for nonzero suffixes, but not for zero-suffix hits.
+    model.reusable_context().save(out_prefix_tokens, model.recurrent_states(), nullptr, stream);
+    MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
 
     return true;
 }

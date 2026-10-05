@@ -4,6 +4,7 @@
 import argparse
 import hashlib
 import json
+import os
 import re
 import subprocess
 import time
@@ -16,6 +17,15 @@ SOURCES = (
     ("docs/interactive-serving.md", 5962),
     ("include/miinfer/prefill_v2/model.hpp", 6000),
     ("src/openai_api.cpp", 3500),
+)
+M30_SOURCES = (
+    ("README.md", 12000),
+    ("docs/architecture.md", 10000),
+    ("docs/interactive-serving.md", 9000),
+    ("include/miinfer/prefill_v2/model.hpp", 10000),
+    ("src/prefill_v2/model.cpp", 14000),
+    ("src/openai_api.cpp", 7000),
+    ("tools/miinfer_cli.cpp", 12000),
 )
 TOOLS = [
     {"type": "function", "function": {
@@ -36,14 +46,16 @@ TOOLS = [
         }, "required": ["query"]},
     }},
 ]
-SERVER_LOG = Path(__file__).resolve().parents[1] / "results/v2-0045/agent-server.log"
+SERVER_LOG = Path(os.environ.get(
+    "MIINFER_SERVER_LOG",
+    Path(__file__).resolve().parents[1] / "results/v2-0045/agent-server.log"))
 
 
 def sha256(data):
     return hashlib.sha256(data).hexdigest()
 
 
-def build_context(root):
+def build_context(root, sources=SOURCES):
     parts, manifest = [], []
     for relative, limit in SOURCES:
         data = (root / relative).read_bytes()
@@ -108,15 +120,16 @@ def attach_server_latency(result):
     request_count = sum(len(turn["requests"]) for turn in result["turns"])
     offset = max(0, len(events) - request_count)
     for turn in result["turns"]:
-        used = [request.get("server_latency") for request in turn["requests"]]
-        if not all(used):
-            used = events[offset:offset + len(turn["requests"])]
-            offset += len(turn["requests"])
-            for request, event in zip(turn["requests"], used):
-                request["server_latency"] = event
+        used = events[offset:offset + len(turn["requests"])]
+        offset += len(turn["requests"])
+        for request, event in zip(turn["requests"], used):
+            request["server_latency"] = event
         turn["reused_prefix_tokens"] = sum(event["reused_prefix_tokens"] for event in used)
-        turn["new_prefill_tokens"] = sum(
-            max(0, event["prompt_tokens"] - event["reused_prefix_tokens"]) for event in used)
+        turn["new_prefill_tokens"] = sum(event.get(
+            "suffix_tokens_dispatched",
+            max(0, event["prompt_tokens"] - event["reused_prefix_tokens"])) for event in used)
+        turn["gdn_restore_ms"] = sum(event.get("restore_ms", 0.0) for event in used)
+        turn["suffix_prefill_ms"] = sum(event.get("suffix_prefill_ms", 0.0) for event in used)
         turn["prefill_ms"] = sum(event["prefill_ms"] for event in used)
         turn["ttft_ms"] = turn["requests"][0]["client_ttft_ms"]
         turn["minimum_visible_answer_gate"] = len(turn["requests"][-1]["content"]) >= 300
@@ -180,7 +193,10 @@ def stream_completion(url, key, model, messages, tool_choice, max_tokens):
 
 def execute_tool(root, call):
     name = call["function"]["name"]
-    args = json.loads(call["function"]["arguments"] or "{}")
+    try:
+        args = json.loads(call["function"]["arguments"] or "{}")
+    except json.JSONDecodeError:
+        return f"Tool error: malformed arguments for {name}; continue without this result."
     if name == "read_file":
         target = (root / args["path"]).resolve()
         if not target.is_relative_to(root):
@@ -210,7 +226,7 @@ def execute_tool(root, call):
             except OSError:
                 continue
         return "\n".join(hits) or "No matches."
-    raise ValueError(f"unsupported tool: {name}")
+    return f"Tool error: unsupported tool {name}; continue without this result."
 
 
 def append_tool_exchange(root, messages, response):
@@ -230,6 +246,31 @@ def append_tool_exchange(root, messages, response):
     return results
 
 
+def m30_plan(index):
+    phase = (index - 1) // 10
+    paths = (
+        ("README.md", 1, 70),
+        ("docs/architecture.md", 1, 80),
+        ("docs/interactive-serving.md", 1, 80),
+        ("include/miinfer/prefill_v2/model.hpp", 1, 100),
+        ("src/prefill_v2/model.cpp", 740, 820),
+        ("src/openai_api.cpp", 300, 340),
+        ("tools/miinfer_cli.cpp", 5150, 5240),
+    )
+    path, start, end = paths[(index - 1) % len(paths)]
+    phases = (
+        "orient the repository and identify the production request path",
+        "inspect model state ownership and prepare an implementation plan",
+        "interpret tests and diagnose a bounded hypothetical failure",
+        "review regression evidence and prepare release-readiness notes",
+    )
+    return path, start, end, (
+        f"Turn {index} belongs to phase {phase + 1}: {phases[phase]}. "
+        f"Read the requested excerpt, distinguish measured facts from assumptions, "
+        "and report a concise evidence-based continuation for the coding-agent session."
+    )
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--url", default="http://127.0.0.1:8087/v1/chat/completions")
@@ -237,6 +278,7 @@ def main():
     parser.add_argument("--model", default="qwen3.8-27b")
     parser.add_argument("--output", default="results/v2-0045/agent-workload.json")
     parser.add_argument("--enrich-existing", action="store_true")
+    parser.add_argument("--m30", action="store_true", help="run the frozen 40-turn M30 workload")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     output_path = root / args.output
@@ -245,14 +287,17 @@ def main():
         output_path.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
         print(f"refreshed telemetry for {sum(len(turn['requests']) for turn in result['turns'])} requests")
         return 0
-    context, source_manifest = build_context(root)
+    context, source_manifest = build_context(root, M30_SOURCES if args.m30 else SOURCES)
     revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root,
                               capture_output=True, text=True, check=True).stdout.strip()
     messages = [
         {"role": "system", "content": "You are a careful coding-agent assistant working in the MIInfer repository. Use repository tools when requested, ground claims in files, and preserve prior conversation context."},
         {"role": "user", "content": context + "\n\nTask: review the current MIInfer serving path. First call read_file for docs/interactive-serving.md lines 1-80. Do not write or modify files."},
     ]
-    result = {"qualification_sha": revision, "workload": "three-turn coding-agent tool/reuse flow",
+    result = {"qualification_sha": revision,
+              "workload": "m30-agent-v1" if args.m30 else "three-turn coding-agent tool/reuse flow",
+              "workload_version": "m30-agent-v1" if args.m30 else "v2-0045-three-turn",
+              "logical_turn_target": 40 if args.m30 else 3,
               "source_manifest": source_manifest, "context_excerpt_bytes": len(context.encode()),
               "turns": []}
     plans = [
@@ -263,6 +308,8 @@ def main():
         ("tools/miinfer_cli.cpp", 4470, 4510,
          "Relate the request telemetry and prefix reuse behavior to a practical 10-request stability test. Give an evidence-based final checklist and caveats in at least eight numbered items and 220 words."),
     ]
+    if args.m30:
+        plans = [m30_plan(index) for index in range(1, 41)]
     for index, (tool_path, start_line, end_line, followup) in enumerate(plans, 1):
         turn = {"turn": index, "requests": []}
         if index > 1:

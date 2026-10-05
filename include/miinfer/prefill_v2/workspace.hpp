@@ -13,6 +13,7 @@ namespace miinfer::prefill_v2 {
 
 // Non-owning layout of pre-allocated scratch memory for Prefill V2 layers (Recurrent and Attention).
 struct PrefillV2Workspace {
+    std::uint32_t splitk_splits = 32;     // scratch split count selected for the KV capacity
     // Shared Activations
     float* normalized = nullptr;          // [max_tokens, kHidden]
     float* residual = nullptr;            // [max_tokens, kHidden]
@@ -64,7 +65,9 @@ using RecurrentLayerWorkspace = PrefillV2Workspace;
 // Manager allocating and owning the monolithic workspace buffer for Prefill V2 layers.
 class PrefillV2WorkspaceManager {
 public:
-    explicit PrefillV2WorkspaceManager(std::size_t max_tokens = kMaxPrefillBatch);
+    explicit PrefillV2WorkspaceManager(
+        std::size_t max_tokens = kMaxPrefillBatch,
+        std::uint32_t splitk_splits = 32);
     ~PrefillV2WorkspaceManager();
     PrefillV2WorkspaceManager(const PrefillV2WorkspaceManager&) = delete;
     PrefillV2WorkspaceManager& operator=(const PrefillV2WorkspaceManager&) = delete;
@@ -74,10 +77,12 @@ public:
     [[nodiscard]] const PrefillV2Workspace& workspace() const noexcept { return workspace_; }
     [[nodiscard]] std::size_t max_tokens() const noexcept { return max_tokens_; }
     [[nodiscard]] std::size_t total_workspace_bytes() const noexcept { return total_bytes_; }
+    [[nodiscard]] std::uint32_t splitk_splits() const noexcept { return splitk_splits_; }
 
 private:
     std::size_t max_tokens_ = 0;
     std::size_t total_bytes_ = 0;
+    std::uint32_t splitk_splits_ = 32;
     void* d_buffer_ = nullptr;
     PrefillV2Workspace workspace_{};
 };

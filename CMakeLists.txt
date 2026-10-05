@@ -33,6 +33,11 @@ set(MIINFER_RELEASE_TEST_TARGETS
     miinfer-model-gpu-test
     miinfer-qwen3-primitives-test
     miinfer-qwen35-conv-batch-test
+    miinfer-context-space-test
+    miinfer-device-kv-pool-test
+    miinfer-device-kv-shard-placement-test
+    miinfer-two-shard-placement-test
+    miinfer-two-shard-validation-test
     miinfer-qwen3-layer0-gpu-test
     miinfer-qwen3-kv-cache-gpu-test
     miinfer-qwen3-quant-kv-attention-test
@@ -143,6 +148,25 @@ target_link_libraries(miinfer_openai_api PUBLIC nlohmann_json::nlohmann_json)
 target_compile_features(miinfer_openai_api PUBLIC cxx_std_20)
 target_compile_options(miinfer_openai_api PRIVATE -Wall -Wextra -Wpedantic)
 
+add_library(miinfer_context_space STATIC src/context_space.cpp)
+target_include_directories(miinfer_context_space PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_compile_features(miinfer_context_space PUBLIC cxx_std_20)
+target_compile_options(miinfer_context_space PRIVATE -Wall -Wextra -Wpedantic)
+
+add_executable(miinfer-context-space-test tests/context_space_test.cpp)
+target_link_libraries(miinfer-context-space-test PRIVATE miinfer_context_space)
+target_compile_options(miinfer-context-space-test PRIVATE -Wall -Wextra -Wpedantic)
+
+add_library(miinfer_device_kv_shard STATIC src/device_kv_shard.cpp)
+target_link_libraries(miinfer_device_kv_shard PUBLIC miinfer_context_space)
+target_include_directories(miinfer_device_kv_shard PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_compile_features(miinfer_device_kv_shard PUBLIC cxx_std_20)
+target_compile_options(miinfer_device_kv_shard PRIVATE -Wall -Wextra -Wpedantic)
+
+add_executable(miinfer-device-kv-shard-placement-test tests/device_kv_shard_placement_test.cpp)
+target_link_libraries(miinfer-device-kv-shard-placement-test PRIVATE miinfer_device_kv_shard)
+target_compile_options(miinfer-device-kv-shard-placement-test PRIVATE -Wall -Wextra -Wpedantic)
+
 add_executable(miinfer-openai-api-test tests/openai_api_test.cpp)
 target_link_libraries(miinfer-openai-api-test PRIVATE miinfer_openai_api)
 target_compile_options(miinfer-openai-api-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -157,6 +181,7 @@ if(MIINFER_ENABLE_HIP)
         src/prefill_v2/state.cpp
         src/prefill_v2/workspace.cpp
         src/prefill_v2/recurrent_layer.cpp
+        src/device_kv_pool.cpp
         src/prefill_v2/kv_cache.cpp
         src/prefill_v2/attention_layer.cpp
         src/prefill_v2/topology_block.cpp
@@ -181,12 +206,43 @@ if(MIINFER_ENABLE_HIP)
             "${CMAKE_CURRENT_BINARY_DIR}/generated"
     )
     target_compile_features(miinfer_hip PUBLIC cxx_std_20)
-    target_link_libraries(miinfer_hip PUBLIC miinfer_build_info miinfer_model roc::hipblas)
+    target_link_libraries(miinfer_hip PUBLIC miinfer_build_info miinfer_model miinfer_device_kv_shard roc::hipblas)
     target_compile_definitions(miinfer_hip PUBLIC __HIP_PLATFORM_AMD__)
     target_compile_options(miinfer_hip PRIVATE
         $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Wpedantic>
         $<$<COMPILE_LANGUAGE:HIP>:-Wall;-Wextra;-fgpu-default-stream=per-thread>
     )
+    add_library(miinfer_device_kv_pool INTERFACE)
+    target_link_libraries(miinfer_device_kv_pool INTERFACE miinfer_hip)
+    add_executable(miinfer-device-kv-pool-test tests/device_kv_pool_test.cpp)
+    target_link_libraries(miinfer-device-kv-pool-test PRIVATE miinfer_device_kv_pool)
+    target_compile_options(miinfer-device-kv-pool-test PRIVATE -Wall -Wextra -Wpedantic)
+    add_executable(miinfer-two-shard-placement-test tests/two_shard_placement_test.cpp)
+    target_link_libraries(miinfer-two-shard-placement-test PRIVATE miinfer_device_kv_pool miinfer_device_kv_shard)
+    target_compile_options(miinfer-two-shard-placement-test PRIVATE -Wall -Wextra -Wpedantic)
+    add_executable(miinfer-two-shard-validation-test tests/two_shard_validation_test.cpp)
+    target_link_libraries(miinfer-two-shard-validation-test PRIVATE miinfer_device_kv_pool miinfer_device_kv_shard)
+    target_compile_options(miinfer-two-shard-validation-test PRIVATE -Wall -Wextra -Wpedantic)
+    add_executable(miinfer-prefill-v2-exact-prefix-reuse-test tests/prefill_v2_exact_prefix_reuse_test.cpp)
+    target_link_libraries(miinfer-prefill-v2-exact-prefix-reuse-test PRIVATE miinfer_hip)
+    target_compile_options(miinfer-prefill-v2-exact-prefix-reuse-test PRIVATE -Wall -Wextra -Wpedantic)
+    add_executable(miinfer-prefill-v2-snapshot-fork-rollback-test tests/prefill_v2_snapshot_fork_rollback_test.cpp)
+    target_link_libraries(miinfer-prefill-v2-snapshot-fork-rollback-test PRIVATE miinfer_hip)
+    target_compile_options(miinfer-prefill-v2-snapshot-fork-rollback-test PRIVATE -Wall -Wextra -Wpedantic)
+    add_executable(miinfer-prefill-v2-agent-branch-workload-test tests/prefill_v2_agent_branch_workload_test.cpp)
+    target_link_libraries(miinfer-prefill-v2-agent-branch-workload-test PRIVATE miinfer_hip)
+    target_compile_options(miinfer-prefill-v2-agent-branch-workload-test PRIVATE -Wall -Wextra -Wpedantic)
+    add_executable(miinfer-prefill-v2-cow-branch-workload-test tests/prefill_v2_cow_branch_workload_test.cpp)
+    target_link_libraries(miinfer-prefill-v2-cow-branch-workload-test PRIVATE miinfer_hip)
+    target_compile_definitions(miinfer-prefill-v2-cow-branch-workload-test PRIVATE MIINFER_M30_0005_COW=1)
+    target_compile_options(miinfer-prefill-v2-cow-branch-workload-test PRIVATE -Wall -Wextra -Wpedantic)
+    add_executable(miinfer-prefill-v2-device-full-copy-workload-test tests/prefill_v2_cow_branch_workload_test.cpp)
+    target_link_libraries(miinfer-prefill-v2-device-full-copy-workload-test PRIVATE miinfer_hip)
+    target_compile_definitions(miinfer-prefill-v2-device-full-copy-workload-test PRIVATE MIINFER_M30_0005_COW=0)
+    target_compile_options(miinfer-prefill-v2-device-full-copy-workload-test PRIVATE -Wall -Wextra -Wpedantic)
+    add_executable(miinfer-physical-kv-view-test tests/physical_kv_view_test.cpp)
+    target_link_libraries(miinfer-physical-kv-view-test PRIVATE miinfer_hip)
+    target_compile_options(miinfer-physical-kv-view-test PRIVATE -Wall -Wextra -Wpedantic)
 
     add_executable(miinfer-prefill-v2-recurrent-layer-bakeoff bench/prefill_v2_recurrent_layer_bakeoff.cpp)
     target_link_libraries(miinfer-prefill-v2-recurrent-layer-bakeoff PRIVATE miinfer_hip)
@@ -681,6 +737,10 @@ if(MIINFER_BUILD_TESTS)
     set_tests_properties(model-loader-host PROPERTIES LABELS "host-only")
     add_test(NAME qwen3-primitives-host COMMAND miinfer-qwen3-primitives-host-test)
     set_tests_properties(qwen3-primitives-host PROPERTIES LABELS "host-only")
+    add_test(NAME context-space-host COMMAND miinfer-context-space-test)
+    set_tests_properties(context-space-host PROPERTIES LABELS "host-only")
+    add_test(NAME device-kv-shard-placement-host COMMAND miinfer-device-kv-shard-placement-test)
+    set_tests_properties(device-kv-shard-placement-host PROPERTIES LABELS "host-only")
     add_test(NAME qwen3-layer0-host COMMAND miinfer-qwen3-layer0-test)
     set_tests_properties(qwen3-layer0-host PROPERTIES LABELS "host-only")
     add_test(NAME qwen3-kv-cache-host COMMAND miinfer-qwen3-kv-cache-test)
@@ -697,6 +757,14 @@ if(MIINFER_BUILD_TESTS)
     if(MIINFER_ENABLE_HIP)
         add_test(NAME hip-smoke COMMAND miinfer-hip-smoke)
         set_tests_properties(hip-smoke PROPERTIES LABELS "gpu-required")
+        add_test(NAME device-kv-pool COMMAND miinfer-device-kv-pool-test)
+        set_tests_properties(device-kv-pool PROPERTIES LABELS "gpu-required")
+        add_test(NAME two-shard-placement COMMAND miinfer-two-shard-placement-test)
+        set_tests_properties(two-shard-placement PROPERTIES LABELS "gpu-required")
+        add_test(NAME two-shard-validation COMMAND miinfer-two-shard-validation-test)
+        set_tests_properties(two-shard-validation PROPERTIES LABELS "gpu-required")
+        add_test(NAME physical-kv-view COMMAND miinfer-physical-kv-view-test)
+        set_tests_properties(physical-kv-view PROPERTIES LABELS "gpu-required")
         add_test(NAME fp16-gemv-correctness COMMAND miinfer-fp16-gemv-test)
         set_tests_properties(fp16-gemv-correctness PROPERTIES LABELS "gpu-required")
         add_test(NAME q4-q8-gemv-correctness COMMAND miinfer-q4-q8-gemv-test)
