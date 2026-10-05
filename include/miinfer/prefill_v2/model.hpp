@@ -325,6 +325,7 @@ private:
     SnapshotId next_snapshot_id_ = 1;
     std::uint64_t snapshot_use_clock_ = 0;
     std::size_t snapshot_bytes_ = 0;
+    bool snapshot_state_loaded_ = false;
 
     void allocate_resources();
     void free_resources();

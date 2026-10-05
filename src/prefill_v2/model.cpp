@@ -335,7 +335,8 @@ PrefillV2Model::PrefillV2Model(PrefillV2Model&& other) noexcept
       snapshots_(std::move(other.snapshots_)),
       next_snapshot_id_(other.next_snapshot_id_),
       snapshot_use_clock_(other.snapshot_use_clock_),
-      snapshot_bytes_(other.snapshot_bytes_) {
+      snapshot_bytes_(other.snapshot_bytes_),
+      snapshot_state_loaded_(other.snapshot_state_loaded_) {
     other.d_embedding_weights_ = nullptr;
     other.d_final_norm_weights_ = nullptr;
     other.d_output_weights_ = nullptr;
@@ -353,6 +354,7 @@ PrefillV2Model::PrefillV2Model(PrefillV2Model&& other) noexcept
     other.next_snapshot_id_ = 1;
     other.snapshot_use_clock_ = 0;
     other.snapshot_bytes_ = 0;
+    other.snapshot_state_loaded_ = false;
     other.snapshot_directory_.clear();
 }
 
@@ -390,6 +392,7 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
         next_snapshot_id_ = other.next_snapshot_id_;
         snapshot_use_clock_ = other.snapshot_use_clock_;
         snapshot_bytes_ = other.snapshot_bytes_;
+        snapshot_state_loaded_ = other.snapshot_state_loaded_;
 
         other.d_embedding_weights_ = nullptr;
         other.d_final_norm_weights_ = nullptr;
@@ -408,6 +411,7 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
         other.next_snapshot_id_ = 1;
         other.snapshot_use_clock_ = 0;
         other.snapshot_bytes_ = 0;
+        other.snapshot_state_loaded_ = false;
         other.snapshot_directory_.clear();
     }
     return *this;
@@ -493,6 +497,7 @@ void PrefillV2Model::free_resources() {
 void PrefillV2Model::reset_state() {
     reusable_context_.clear();
     clear_snapshots();
+    snapshot_state_loaded_ = false;
     for (auto& st : recurrent_states_) {
         st.reset();
     }
@@ -503,7 +508,11 @@ void PrefillV2Model::reset_state() {
 
 void PrefillV2Model::restore_reusable_context(hipStream_t stream) {
     if (reusable_context_.has_valid_prefix()) {
-        reusable_context_.restore_gdn_states(recurrent_states_, stream);
+        if (snapshot_state_loaded_) {
+            snapshot_state_loaded_ = false;
+        } else {
+            reusable_context_.restore_gdn_states(recurrent_states_, stream);
+        }
     }
 }
 
@@ -1523,6 +1532,7 @@ bool PrefillV2Model::restore_snapshot(SnapshotId id, hipStream_t stream) {
     if (!load_session(found->second.path.string(), loaded_tokens, stream)
         || loaded_tokens != found->second.tokens) return false;
     found->second.last_used = ++snapshot_use_clock_;
+    snapshot_state_loaded_ = true;
     return true;
 }
 
