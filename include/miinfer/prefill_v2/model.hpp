@@ -68,6 +68,8 @@ struct GenerateStats {
     std::uint32_t gdn_checkpoint_position = 0;
     double restore_ms = 0.0;
     double suffix_prefill_ms = 0.0;
+    std::size_t persistent_checkpoint_count = 0;
+    std::size_t persistent_checkpoint_bytes = 0;
 };
 
 struct ModelProfileBreakdown {

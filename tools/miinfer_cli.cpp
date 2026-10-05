@@ -5490,7 +5490,9 @@ int cmd_serve(int argc, char** argv) {
                 stats.gdn_checkpoint_position = v2_stats.gdn_checkpoint_position;
                 stats.restore_ms = v2_stats.restore_ms;
                 stats.suffix_prefill_ms = v2_stats.suffix_prefill_ms;
-                if (v2_stats.prefix_tokens_reused > 0) {
+                stats.session_checkpoint_count = v2_stats.persistent_checkpoint_count;
+                stats.session_checkpoint_bytes = v2_stats.persistent_checkpoint_bytes;
+                if (v2_stats.prefix_tokens_reused > 0 && stats.session_checkpoint_count == 0) {
                     stats.session_checkpoint_count = 1;
                     stats.session_checkpoint_bytes = engine.persistent_state_bytes();
                 }
@@ -5640,7 +5642,9 @@ int cmd_serve(int argc, char** argv) {
             stats.gdn_checkpoint_position = v2_stats.gdn_checkpoint_position;
             stats.restore_ms = v2_stats.restore_ms;
             stats.suffix_prefill_ms = v2_stats.suffix_prefill_ms;
-            if (v2_stats.prefix_tokens_reused > 0) {
+            stats.session_checkpoint_count = v2_stats.persistent_checkpoint_count;
+            stats.session_checkpoint_bytes = v2_stats.persistent_checkpoint_bytes;
+            if (v2_stats.prefix_tokens_reused > 0 && stats.session_checkpoint_count == 0) {
                 stats.session_checkpoint_count = 1;
                 stats.session_checkpoint_bytes = engine.persistent_state_bytes();
             }

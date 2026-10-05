@@ -19,6 +19,74 @@ namespace miinfer::prefill_v2 {
 
 namespace {
 
+// ponytail: host/disk snapshots with an 8-entry, 3 GiB cap; move to shared
+// GPU pages only if measured restore/write cost justifies the complexity.
+constexpr std::size_t kPersistentCheckpointStride = kPrefillV2MacroTile;
+constexpr std::size_t kMaxPersistentCheckpoints = 8;
+constexpr std::size_t kPersistentCheckpointBudgetBytes = 3ULL * 1024 * 1024 * 1024;
+
+void prune_persistent_checkpoints(
+    const std::filesystem::path& directory,
+    const std::string& model_id,
+    const std::string& quantization,
+    const std::filesystem::path& preserve) {
+    struct Entry {
+        std::filesystem::path path;
+        std::size_t bytes = 0;
+        std::uint64_t created = 0;
+    };
+    std::vector<Entry> entries;
+    std::size_t total_bytes = 0;
+    std::error_code ec;
+    for (const auto& item : std::filesystem::directory_iterator(directory, ec)) {
+        if (ec || !item.is_regular_file(ec) || item.path().extension() != ".miinfer") continue;
+        PersistentSessionHeader header{};
+        if (!PersistentSession::inspect_file(item.path().string(), header)) continue;
+        if (std::string_view(header.model_id) != model_id
+            || std::string_view(header.quantization) != quantization) continue;
+        const auto bytes = static_cast<std::size_t>(item.file_size(ec));
+        if (ec) continue;
+        entries.push_back({item.path(), bytes, header.created_timestamp});
+        total_bytes += bytes;
+    }
+    std::sort(entries.begin(), entries.end(), [](const Entry& left, const Entry& right) {
+        if (left.created != right.created) return left.created < right.created;
+        return left.path.string() < right.path.string();
+    });
+    while ((entries.size() > kMaxPersistentCheckpoints
+            || total_bytes > kPersistentCheckpointBudgetBytes) && !entries.empty()) {
+        const auto candidate = std::find_if(entries.begin(), entries.end(),
+            [&](const Entry& entry) { return entry.path != preserve; });
+        if (candidate == entries.end()) break;
+        std::filesystem::remove(candidate->path, ec);
+        if (!ec) {
+            total_bytes -= candidate->bytes;
+            entries.erase(candidate);
+        } else {
+            break;
+        }
+    }
+}
+
+std::pair<std::size_t, std::size_t> persistent_checkpoint_stats(
+    const std::filesystem::path& directory,
+    const std::string& model_id,
+    const std::string& quantization) {
+    std::size_t count = 0;
+    std::size_t bytes = 0;
+    std::error_code ec;
+    for (const auto& item : std::filesystem::directory_iterator(directory, ec)) {
+        if (ec || !item.is_regular_file(ec) || item.path().extension() != ".miinfer") continue;
+        PersistentSessionHeader header{};
+        if (!PersistentSession::inspect_file(item.path().string(), header)
+            || std::string_view(header.model_id) != model_id
+            || std::string_view(header.quantization) != quantization) continue;
+        bytes += static_cast<std::size_t>(item.file_size(ec));
+        if (!ec) ++count;
+    }
+    return {count, bytes};
+}
+
 std::uint32_t sample_token_from_logits(
     std::span<const float> raw_logits,
     std::span<const std::uint32_t> prompt_tokens,
@@ -793,6 +861,23 @@ GenerateStats PrefillV2Model::generate(
 
     const auto t_start = std::chrono::steady_clock::now();
     std::uint32_t last_chunk = 0;
+    const auto save_persistent_checkpoint = [&](std::uint32_t length) {
+        if (options.persistent_session_dir.empty()
+            || length < kPersistentCheckpointStride
+            || length % kPersistentCheckpointStride != 0) return;
+        const auto prefix = prompt.first(length);
+        const auto hash = compute_token_sequence_hash(prefix);
+        const std::filesystem::path directory(options.persistent_session_dir);
+        const auto path = directory / PersistentSession::format_session_filename(
+            hash, length);
+        if (std::filesystem::exists(path)) return;
+        try {
+            save_session(path.string(), prefix, stream);
+            prune_persistent_checkpoints(directory, model_name_, quantization_, path);
+        } catch (...) {
+            // Persistent checkpoint capture is an optimization; generation remains non-fatal.
+        }
+    };
 
     if (is_reuse) {
         stats.reuse_hit = true;
@@ -851,6 +936,7 @@ GenerateStats PrefillV2Model::generate(
             }
             pos += chunk;
             last_chunk = chunk;
+            save_persistent_checkpoint(pos);
         }
         for (auto& st : recurrent_states_) {
             st.set_position(pos);
@@ -882,6 +968,7 @@ GenerateStats PrefillV2Model::generate(
             forward(d_temp_tokens_, pos, chunk, d_pong_, stream);
             pos += chunk;
             last_chunk = chunk;
+            save_persistent_checkpoint(pos);
         }
     }
 
@@ -906,11 +993,19 @@ GenerateStats PrefillV2Model::generate(
             if (!std::filesystem::exists(save_path)) {
                 try {
                     save_session(save_path.string(), prefix_sub, stream);
+                    prune_persistent_checkpoints(sdir, model_name_, quantization_, save_path);
                 } catch (...) {
                     // non-fatal disk write error
                 }
             }
         }
+    }
+
+    if (!options.persistent_session_dir.empty()) {
+        const auto [count, bytes] = persistent_checkpoint_stats(
+            options.persistent_session_dir, model_name_, quantization_);
+        stats.persistent_checkpoint_count = count;
+        stats.persistent_checkpoint_bytes = bytes;
     }
 
     // 2. Compute logits for the final prompt token. A zero-suffix exact hit

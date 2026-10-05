@@ -1,7 +1,7 @@
 # M30-0003 Multi-Checkpoint and Longest-Prefix Reuse
 
-Status: bounded alternate-path hypothesis passes; production serving
-implementation is not yet claimed.
+Status: bounded multi-checkpoint and longest-prefix reuse passes in the
+serving authority on a targeted branch workload.
 
 ## Verified current state
 
@@ -34,10 +34,11 @@ checkpoint. Full in-memory snapshots therefore consume KV-sized VRAM, which
 is incompatible with the observed 128K serving envelope unless a measured
 budget and eviction policy are introduced.
 
-The smallest safe next experiment is therefore a causal branch/retry workload
-using the existing disk session path, with several retained checkpoint files,
-longest-prefix selection, suffix token counts, restore cost, and output parity
-against cold replay. COW, fork, rollback, tail replay, and a new serving
+The serving implementation now captures full GDN+GQA checkpoints at each
+512-token macro boundary when a session directory is configured. Retention is
+bounded to eight compatible files and 3 GiB, with oldest compatible files
+evicted after capture. The existing longest-prefix finder and session restore
+path remain the authority. COW, fork, rollback, tail replay, and a new serving
 authority remain out of scope.
 
 ## Evidence boundary
@@ -66,11 +67,20 @@ prompt at 3009 tokens and the branch at 3010 tokens with `match=0`; the
 ChatML terminal assistant marker means saving only the complete request does
 not create an intermediate prefix checkpoint for the next branch.
 
-Therefore persistent session selection is a storage primitive, not yet the
-serving-side M30-0003 solution. The serving implementation still needs to
-capture compatible intermediate GDN+GQA state together during prefill (or
-another equivalent full-state mechanism) before it can claim branch replay
-reduction.
+The implementation then added intermediate checkpoint capture during serving
+prefill. On the same isolated exact-source Machinist build, with a 1209-token
+base prompt and two divergent 1210-token branches, production telemetry was:
+
+```text
+request 1: reuse=false reused=0    new=1209 replayed=1209 checkpoint_count=3 bytes=656485563
+request 2: reuse=true  reused=1024 new=186  replayed=0    checkpoint_count=4 bytes=894648384
+request 3: reuse=true  reused=1024 new=186  replayed=0    checkpoint_count=5 bytes=1132811205
+```
+
+All three requests returned HTTP 200. The divergent third request missed the
+active branch-A checkpoint, selected the retained 1024-token common checkpoint,
+and executed only its 186-token suffix. This is the requested serving-side
+longest-prefix result; the earlier terminal-only session failure is resolved.
 
 An older dirty Machinist binary was also probed before the isolated build and
 failed its first reuse assertion (`length=512`, `retained=0`); that result is
