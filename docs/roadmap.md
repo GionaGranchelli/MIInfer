@@ -16,12 +16,21 @@ Release qualification passed the pinned-runtime matrix and V2-0048B exact-
 artifact gates. See the [release record](release-v0.2.0.md) and
 [`V2-0048B evidence`](../experiments/V2-0048B-generation-completion-contract.md).
 
-**Immediate project phase: v0.2.x release and dogfood.** No M29 implementation
-has begun. The next authorized architectural phase is M29-0000's
-documentation-defined Persistent Context Architecture; it is not permission to
-start implementation sub-stages without focused evidence-backed goals. After
-this documentation gate, the next engineering goal is `M29-0001 — Long-Context
-Baseline and HIP-VMM Feasibility`.
+**Immediate project phase: M31 — Single-MI50 Agent Frontier Qualification.**
+M29 and M30 have been integrated and evidenced on the M31-0000 baseline branch.
+M31-0000 freezes the canonical source and environment only; it performs no
+performance work. The qualification stages are:
+
+```text
+M31-0000 — Canonical baseline freeze
+M31-0001 — Single-MI50 performance frontier
+M31-0002 — Persistent-context qualification
+M31-0003 — Canonical agent workload
+M31-0004 — Stability and release gate
+```
+
+The next implementation goal is M31-0001 after M31-0000's clean-gate evidence
+is recorded.
 
 Historical M0–M28 and V2 records below remain valid history. Their old
 “current,” “immediate next,” and milestone-forward statements are superseded by
@@ -186,6 +195,11 @@ snapshot/fork and rollback where available; realistic multi-turn coding-agent
 wall clock; and operational stability. It answers: “How good is the finished
 one-MI50 MIInfer agent runtime?” Only after M31 should the roadmap move to
 dual-GPU execution.
+
+M31 is intentionally qualification, not an optimization campaign. The frozen
+N=1 result, including measured weaknesses, is the invariant for V3: dual-MI50
+work must preserve N=1 correctness and must not materially regress the frozen
+single-MI50 path.
 
 ## V3 — Dual-MI50 Agent Engine
 

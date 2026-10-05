@@ -18,20 +18,27 @@ recorded.
 The released runtime targets one AMD Instinct MI50 (`gfx906`) and
 `Qwen3.8-27B-Q4_K_M`. It includes the qualified single-GPU prefill/decode
 runtime, terminal `run`/`chat`, an OpenAI-compatible API, exact-prefix reuse,
-and the local Web UI. This describes shipped behavior; it does not imply
-persistent cross-session ContextSpace, multi-GPU execution, or the future M30
-session semantics.
+and the local Web UI. The integrated runtime now also contains the M29
+persistent-context substrate and the completed M30 session-sharing, snapshot,
+fork, rollback, and copy-on-write semantics. See the M30 evidence records for
+the measured gates; this does not imply multi-GPU execution.
 
-### Next architectural phase — M29
+### Current qualification phase — M31
 
-The immediate project phase is v0.2.x release and dogfood. The next planned
-architecture is **M29 — Persistent Context Architecture**: a
-placement-independent logical context substrate, production 128K qualification
-on one MI50, and semantics designed to remain valid if later placed across two
-MI50s. `ContextSpace` is not implemented. HIP-VMM remains an optional feasibility
-experiment, not a prerequisite. M29 does not begin until a focused goal
-authorizes its first stage. After this documentation gate, the next engineering
-goal is `M29-0001 — Long-Context Baseline and HIP-VMM Feasibility`.
+M29 and M30 are complete at the integrated M31-0000 starting point. The active
+phase is **M31 — Single-MI50 Agent Frontier Qualification**, which freezes the
+canonical N=1 runtime and records its strengths and weaknesses before V3.
+M31-0000 is baseline freeze only; it contains no performance work.
+
+M31 is split into five independently evidenced gates:
+
+```text
+M31-0000  canonical baseline freeze
+M31-0001  single-MI50 performance frontier
+M31-0002  persistent-context qualification
+M31-0003  canonical deterministic agent workload
+M31-0004  stability and release gate
+```
 
 The canonical post-release sequence is:
 
@@ -44,10 +51,9 @@ v0.2.x release / dogfood
   → second-model / generalisation work
 ```
 
-See [`roadmap.md`](roadmap.md) and
-[`D032`](decisions.md)
-for the accepted forward contract. No M29 implementation or HIP-VMM
-investigation has begun.
+See [`roadmap.md`](roadmap.md), [`D032`](decisions.md), and
+[`M31-0000-baseline-freeze.md`](M31-0000-baseline-freeze.md) for the accepted
+forward contract and baseline evidence.
 
 ### External gfx906 reference discovery — 2026-10-02
 

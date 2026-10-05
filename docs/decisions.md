@@ -878,6 +878,12 @@ critical path.
 * M31 qualifies the completed N=1 agent runtime before V3 chooses a dual-MI50
   execution topology. V3-0000 measures actual PCIe/P2P/VMM/synchronization
   properties before parallel execution is selected.
+* M31 qualification is split into M31-0000 through M31-0004: baseline freeze,
+  performance frontier, persistent-context qualification, canonical agent
+  workload, and stability/release gate. Qualification records weaknesses; it
+  does not reopen M30 optimization work.
+* V3 must preserve N=1 correctness and must not materially regress the frozen
+  M31 single-MI50 path.
 * V3's 256K persistent-context and `>=40 tok/s` decode values are north-star /
   stretch goals, not product promises.
 
