@@ -275,8 +275,8 @@ private:
         std::size_t prefix_length = 0;
         std::size_t suffix_begin = 0;
         std::size_t suffix_tokens = 0;
-        std::vector<std::uint8_t> gdn;
-        std::vector<std::uint8_t> kv_suffix;
+        void* d_gdn = nullptr;
+        void* d_kv_suffix = nullptr;
         std::size_t bytes = 0;
         std::size_t references = 0;
     };

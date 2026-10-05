@@ -1421,7 +1421,8 @@ std::size_t PrefillV2Model::activation_bytes() const noexcept {
 }
 
 std::size_t PrefillV2Model::total_vram_bytes() const noexcept {
-    return persistent_weight_bytes() + persistent_state_bytes() + workspace_bytes() + activation_bytes() + cached_state_bytes();
+    return persistent_weight_bytes() + persistent_state_bytes() + workspace_bytes()
+        + activation_bytes() + cached_state_bytes() + snapshot_bytes_;
 }
 
 void PrefillV2Model::save_session(
@@ -1459,6 +1460,8 @@ PrefillV2Model::SnapshotBacking::SnapshotBacking(
 }
 
 PrefillV2Model::SnapshotBacking::~SnapshotBacking() {
+    if (d_gdn != nullptr) (void)hipFree(d_gdn);
+    if (d_kv_suffix != nullptr) (void)hipFree(d_kv_suffix);
     if (parent != nullptr && parent->references > 0) --parent->references;
 }
 
@@ -1487,40 +1490,51 @@ PrefillV2Model::capture_snapshot_backing(
 
     const std::size_t gdn_layer_bytes = RecurrentLayerState::kStateBytes
         + RecurrentLayerState::kConvHistoryBytes;
-    backing->gdn.resize(recurrent_states_.size() * gdn_layer_bytes);
+    const std::size_t gdn_bytes = recurrent_states_.size() * gdn_layer_bytes;
+    MIINFER_HIP_CHECK(hipMalloc(&backing->d_gdn, gdn_bytes));
     std::size_t gdn_offset = 0;
     for (std::size_t i = 0; i < recurrent_states_.size(); ++i) {
         const auto view = recurrent_storage(i).view();
         if (stream != nullptr) {
             MIINFER_HIP_CHECK(hipMemcpyAsync(
-                backing->gdn.data() + gdn_offset, view.d_state,
-                RecurrentLayerState::kStateBytes, hipMemcpyDeviceToHost, stream));
+                static_cast<std::uint8_t*>(backing->d_gdn) + gdn_offset,
+                view.d_state, RecurrentLayerState::kStateBytes,
+                hipMemcpyDeviceToDevice, stream));
             gdn_offset += RecurrentLayerState::kStateBytes;
             MIINFER_HIP_CHECK(hipMemcpyAsync(
-                backing->gdn.data() + gdn_offset, view.d_conv_history,
-                RecurrentLayerState::kConvHistoryBytes, hipMemcpyDeviceToHost, stream));
+                static_cast<std::uint8_t*>(backing->d_gdn) + gdn_offset,
+                view.d_conv_history, RecurrentLayerState::kConvHistoryBytes,
+                hipMemcpyDeviceToDevice, stream));
             gdn_offset += RecurrentLayerState::kConvHistoryBytes;
         } else {
             MIINFER_HIP_CHECK(hipMemcpy(
-                backing->gdn.data() + gdn_offset, view.d_state,
-                RecurrentLayerState::kStateBytes, hipMemcpyDeviceToHost));
+                static_cast<std::uint8_t*>(backing->d_gdn) + gdn_offset,
+                view.d_state, RecurrentLayerState::kStateBytes,
+                hipMemcpyDeviceToDevice));
             gdn_offset += RecurrentLayerState::kStateBytes;
             MIINFER_HIP_CHECK(hipMemcpy(
-                backing->gdn.data() + gdn_offset, view.d_conv_history,
-                RecurrentLayerState::kConvHistoryBytes, hipMemcpyDeviceToHost));
+                static_cast<std::uint8_t*>(backing->d_gdn) + gdn_offset,
+                view.d_conv_history, RecurrentLayerState::kConvHistoryBytes,
+                hipMemcpyDeviceToDevice));
             gdn_offset += RecurrentLayerState::kConvHistoryBytes;
         }
     }
 
     const std::size_t per_layer = kv_caches_.front().raw_tokens_bytes(backing->suffix_tokens);
-    backing->kv_suffix.resize(kv_caches_.size() * per_layer);
+    const std::size_t kv_bytes = kv_caches_.size() * per_layer;
+    if (kv_bytes > 0) MIINFER_HIP_CHECK(hipMalloc(&backing->d_kv_suffix, kv_bytes));
+    std::vector<std::uint8_t> host_range(per_layer);
+    if (stream != nullptr) MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
     for (std::size_t i = 0; i < kv_caches_.size(); ++i) {
         kv_caches_[i].download_raw_range(
-            backing->kv_suffix.data() + i * per_layer,
-            parent_length, backing->suffix_tokens, stream);
+            host_range.data(), parent_length, backing->suffix_tokens, nullptr);
+        if (per_layer > 0) {
+            MIINFER_HIP_CHECK(hipMemcpy(
+                static_cast<std::uint8_t*>(backing->d_kv_suffix) + i * per_layer,
+                host_range.data(), per_layer, hipMemcpyHostToDevice));
+        }
     }
-    if (stream != nullptr) MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
-    backing->bytes = backing->gdn.size() + backing->kv_suffix.size();
+    backing->bytes = gdn_bytes + kv_bytes;
     return backing;
 }
 
@@ -1535,10 +1549,16 @@ void PrefillV2Model::restore_snapshot_backing(
     std::reverse(chain.begin(), chain.end());
     for (const auto* node : chain) {
         const std::size_t per_layer = kv_caches_.front().raw_tokens_bytes(node->suffix_tokens);
+        std::vector<std::uint8_t> host_range(per_layer);
         for (std::size_t i = 0; i < kv_caches_.size(); ++i) {
-            kv_caches_[i].upload_raw_range(
-                node->kv_suffix.data() + i * per_layer,
-                node->suffix_begin, node->suffix_tokens, stream);
+            if (per_layer > 0) {
+                MIINFER_HIP_CHECK(hipMemcpy(
+                    host_range.data(),
+                    static_cast<const std::uint8_t*>(node->d_kv_suffix) + i * per_layer,
+                    per_layer, hipMemcpyDeviceToHost));
+                kv_caches_[i].upload_raw_range(
+                    host_range.data(), node->suffix_begin, node->suffix_tokens, stream);
+            }
         }
     }
 
@@ -1547,21 +1567,21 @@ void PrefillV2Model::restore_snapshot_backing(
         auto view = recurrent_storage(i).view();
         if (stream != nullptr) {
             MIINFER_HIP_CHECK(hipMemcpyAsync(
-                view.d_state, backing->gdn.data() + gdn_offset,
-                RecurrentLayerState::kStateBytes, hipMemcpyHostToDevice, stream));
+                view.d_state, static_cast<const std::uint8_t*>(backing->d_gdn) + gdn_offset,
+                RecurrentLayerState::kStateBytes, hipMemcpyDeviceToDevice, stream));
             gdn_offset += RecurrentLayerState::kStateBytes;
             MIINFER_HIP_CHECK(hipMemcpyAsync(
-                view.d_conv_history, backing->gdn.data() + gdn_offset,
-                RecurrentLayerState::kConvHistoryBytes, hipMemcpyHostToDevice, stream));
+                view.d_conv_history, static_cast<const std::uint8_t*>(backing->d_gdn) + gdn_offset,
+                RecurrentLayerState::kConvHistoryBytes, hipMemcpyDeviceToDevice, stream));
             gdn_offset += RecurrentLayerState::kConvHistoryBytes;
         } else {
             MIINFER_HIP_CHECK(hipMemcpy(
-                view.d_state, backing->gdn.data() + gdn_offset,
-                RecurrentLayerState::kStateBytes, hipMemcpyHostToDevice));
+                view.d_state, static_cast<const std::uint8_t*>(backing->d_gdn) + gdn_offset,
+                RecurrentLayerState::kStateBytes, hipMemcpyDeviceToDevice));
             gdn_offset += RecurrentLayerState::kStateBytes;
             MIINFER_HIP_CHECK(hipMemcpy(
-                view.d_conv_history, backing->gdn.data() + gdn_offset,
-                RecurrentLayerState::kConvHistoryBytes, hipMemcpyHostToDevice));
+                view.d_conv_history, static_cast<const std::uint8_t*>(backing->d_gdn) + gdn_offset,
+                RecurrentLayerState::kConvHistoryBytes, hipMemcpyDeviceToDevice));
             gdn_offset += RecurrentLayerState::kConvHistoryBytes;
         }
         recurrent_storage(i).set_position(static_cast<std::uint32_t>(backing->prefix_length));
