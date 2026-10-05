@@ -1557,7 +1557,7 @@ void PrefillV2Model::restore_snapshot_backing(
                     static_cast<const std::uint8_t*>(node->d_kv_suffix) + i * per_layer,
                     per_layer, hipMemcpyDeviceToHost));
                 kv_caches_[i].upload_raw_range(
-                    host_range.data(), node->suffix_begin, node->suffix_tokens, stream);
+                    host_range.data(), node->suffix_begin, node->suffix_tokens, nullptr);
             }
         }
     }
