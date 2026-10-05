@@ -1,9 +1,11 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <cstdlib>
 #include <iostream>
 #include <random>
 #include <stdexcept>
+#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -25,6 +27,11 @@ namespace {
 constexpr std::size_t kPersistentCheckpointStride = kPrefillV2MacroTile;
 constexpr std::size_t kMaxPersistentCheckpoints = 8;
 constexpr std::size_t kPersistentCheckpointBudgetBytes = 3ULL * 1024 * 1024 * 1024;
+
+bool full_copy_snapshot_mode() noexcept {
+    const char* value = std::getenv("MIINFER_M30_0005_FULL_COPY");
+    return value != nullptr && std::string_view(value) != "0";
+}
 void prune_persistent_checkpoints(
     const std::filesystem::path& directory,
     const std::string& model_id,
@@ -1479,8 +1486,9 @@ const PrefillV2Model::SnapshotRecord* PrefillV2Model::find_longest_snapshot_pref
 
 std::shared_ptr<PrefillV2Model::SnapshotBacking>
 PrefillV2Model::capture_snapshot_backing(
-    std::span<const std::uint32_t> tokens, hipStream_t stream) {
-    const SnapshotRecord* parent_record = find_longest_snapshot_prefix(tokens);
+    std::span<const std::uint32_t> tokens, hipStream_t stream, bool use_parent) {
+    const SnapshotRecord* parent_record = use_parent
+        ? find_longest_snapshot_prefix(tokens) : nullptr;
     const std::size_t parent_length = parent_record == nullptr ? 0 : parent_record->tokens.size();
     auto backing = std::make_shared<SnapshotBacking>(
         parent_record == nullptr ? nullptr : parent_record->backing);
@@ -1650,14 +1658,15 @@ PrefillV2Model::SnapshotId PrefillV2Model::snapshot(
         std::shared_ptr<SnapshotBacking> backing;
         for (const auto& [existing_id, record] : snapshots_) {
             (void)existing_id;
-            if (record.tokens.size() == tokens.size()
+            if (!full_copy_snapshot_mode()
+                && record.tokens.size() == tokens.size()
                 && std::equal(record.tokens.begin(), record.tokens.end(), tokens.begin())) {
                 backing = record.backing;
                 break;
             }
         }
         if (backing == nullptr) {
-            backing = capture_snapshot_backing(tokens, stream);
+            backing = capture_snapshot_backing(tokens, stream, !full_copy_snapshot_mode());
             snapshot_bytes_ += backing->bytes;
             if (backing->parent != nullptr) {
                 ++snapshot_cow_events_;
@@ -1681,6 +1690,21 @@ PrefillV2Model::SnapshotId PrefillV2Model::fork(SnapshotId source) {
     if (found == snapshots_.end()) return kInvalidSnapshotId;
     SnapshotId id = next_snapshot_id_++;
     if (id == kInvalidSnapshotId) id = next_snapshot_id_++;
+    if (full_copy_snapshot_mode()) {
+        const auto tokens = found->second.tokens;
+        if (!restore_snapshot(source)) return kInvalidSnapshotId;
+        try {
+            auto backing = capture_snapshot_backing(tokens, nullptr, false);
+            ++backing->references;
+            snapshots_.emplace(id, SnapshotRecord{
+                backing, tokens, ++snapshot_use_clock_});
+            refresh_snapshot_bytes();
+            evict_snapshots_except(id);
+            return snapshots_.find(id) == snapshots_.end() ? kInvalidSnapshotId : id;
+        } catch (...) {
+            return kInvalidSnapshotId;
+        }
+    }
     ++found->second.backing->references;
     snapshots_.emplace(id, SnapshotRecord{
         found->second.backing, found->second.tokens, ++snapshot_use_clock_});
