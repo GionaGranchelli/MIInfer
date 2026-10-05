@@ -1,7 +1,7 @@
 # M30-0002 production authority and residual agent cost
 
-Status: analysis in progress; the required normal-reuse 40-turn/86-request
-residual run is active on the Machinist MI50.
+Status: complete; the required normal-reuse 40-turn/86-request residual run
+completed on the Machinist MI50 and all telemetry rows are present.
 
 ## Decision
 
@@ -76,18 +76,64 @@ must not be mistaken for serving behavior.
 
 ## Residual canonical workload
 
-The fixed M30 transcript is being replayed once with normal production reuse
-enabled on the Machinist MI50. The final report will aggregate the server's
-per-request telemetry into this table; no cold 86-request replay is required.
+The fixed M30 transcript was replayed once with normal production reuse
+enabled on the Machinist MI50. The run used the current release build, model
+`/home/machinist/models/Qwen3.8-27B-Q4_K_M.gguf`,
+`HIP_VISIBLE_DEVICES=1`, `--context 131072`, and the existing command:
 
-| Cost family | Session cost | Avoidable? | Existing mechanism | Candidate next mechanism |
-|---|---:|---|---|---|
-| Suffix prefill | pending | mostly no | exact-prefix suffix execution | — |
-| Residual prefix replay | pending | yes if present | exact-prefix match/fallback | measure before selecting |
-| State restore/update | pending | maybe | GDN restore and checkpoint capture | measure before selecting |
-| Branch/retry replay | pending | workload-dependent | single in-memory checkpoint | measure before selecting |
-| Decode | pending | mostly no | current decode kernels | later |
-| Runtime/host overhead | pending | maybe | sequential server loop | measure before selecting |
+```text
+python3 bench/m30_fixed_transcript_replay.py \
+  --baseline results/m30-0000-agent-workload-corrected.json \
+  --url http://127.0.0.1:8090/v1/chat/completions \
+  --output results/m30-0002-residual.json
+```
+
+The artifact contains 40 turns/86 requests, passes the all-turns minimum
+generation gate, and matches 86 server latency rows and 86 request rows. No
+cold 86-request comparison was required.
+
+| Cost family | Measured result | Avoidable? | Interpretation |
+|---|---:|---|---|
+| Suffix prefill | 1,572,308 tokens; 681,661.874 ms on reuse hits | mostly no | Existing exact-prefix reuse already executes only the suffix. |
+| Residual prefix replay | 1,516,386 tokens across 33 cold/fallback requests | yes if a valid prior checkpoint exists | This is the largest remaining avoidable token category. |
+| State restore/update | restore 41.995 ms total; save/update not separately instrumented | restore is negligible; update unknown | Restore is not the wall-time bottleneck; capture/update is included in existing timing or the residual remainder. |
+| Branch/retry replay | no distinct branch/retry marker; cold rows are the evidence available | workload-dependent | The run does not prove that every cold row is a retry or branch. |
+| Decode | 2,271,402.44 ms total | mostly no | 17.3473% of measured request wall time; current decode path is already production behavior. |
+| Runtime/host overhead | 4,454.492 ms after prefill+decode | low | 0.034% of measured request wall time; tokenization was 4,139.725 ms and queue wait 7.388 ms. |
+
+Aggregate request wall time was 13,093,710.62 ms. Prefill accounted for
+10,817,853.688 ms (82.6187%), decode for 2,271,402.44 ms, and the measured
+remainder for 4,454.492 ms. Logical prompt volume was 3,626,268 tokens;
+2,053,960 (56.641%) were reused and 1,572,308 (43.359%) were executed as
+suffix/new prefill. The reuse count was 53 hits versus 33 cold/fallback rows.
+
+The serving checkpoint remained one active in-memory checkpoint, with a
+reported reuse checkpoint size of 8,748,793,856 bytes. Startup telemetry
+reported 34,342,961,152 total device-VRAM bytes and 117,440,512 free bytes;
+there is no per-request VRAM peak series in this server log.
+
+## Final capability recommendation
+
+The single highest-value missing capability indicated by this run is a
+serving-side multi-checkpoint/longest-prefix retention mechanism for genuine
+branch or retry workloads. The evidence is the 1,516,386-token residual replay
+on 33 cold/fallback requests while the current in-memory serving authority
+retains only one checkpoint. This is a recommendation for the next capability,
+not an implementation claim: this transcript does not independently prove that
+all 33 cold rows represent branches or retries, so a follow-up workload should
+first validate that causal pattern. No new suffix, restore, decode, or host
+overhead optimization is justified by these measurements.
+
+## Completion gates
+
+| Gate | Result |
+|---|---|
+| Serving execution path identified | PASS — `miinfer serve` constructs `PrefillV2Model`. |
+| M29 relationship understood | PASS — the qualified chain is ContextSpace -> PlacementPlan -> DeviceKvPool -> PhysicalKvView. |
+| Existing reuse semantics documented | PASS — one active exact-prefix checkpoint, suffix continuation, zero-suffix behavior, invalidation, and persistent-session distinction are recorded above. |
+| Residual agent wall-time attributed | PASS — prefill, suffix prefill, restore, decode, tokenization, queue wait, and residual remainder are measured. |
+| Remaining prefix replay quantified | PASS — 1,516,386 replayed tokens across 33 cold/fallback rows. |
+| Next capability selected from evidence | PASS with qualification — multi-checkpoint/longest-prefix retention is selected, pending causal validation with a branch/retry workload. |
 
 ## Historical boundary
 
@@ -104,7 +150,7 @@ Those results do not claim that M30-0001 caused the existing advantage.
 ```text
 M30_0002_BASE_SHA=2aecf03
 RUNTIME_AUTHORITY_RESULT=PREFILL_V2_IS_AUTHORITY_QWEN35_RUNTIME_COMPATIBILITY
-RESIDUAL_ANALYSIS_SHA=pending
-SEMANTICS_AUDIT_SHA=pending
+RESIDUAL_ANALYSIS_SHA=d3f3866fd6f18b0d4e65909419c16866f9812e36
+SEMANTICS_AUDIT_SHA=9644c6d
 INTEGRATED_EVIDENCE_SHA=pending
 ```
