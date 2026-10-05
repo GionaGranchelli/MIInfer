@@ -126,15 +126,13 @@ experiment requires either a controlled `--no-session-reuse` production
 baseline or an isolated GDN-only comparison with the existing GQA cache held
 constant; neither is claimed here.
 
-The code-coverage boundary is also explicit: the focused lifecycle test
-instantiates `PrefillV2Model`, while `miinfer serve` routes through
-`Qwen35RuntimeEngine`. The latter has its own pre-existing session-checkpoint
-implementation that snapshots recurrent state/history and attention KV. The
-canonical server run therefore validates the production checkpoint path and
-its telemetry, but does not prove that the newer `PrefillV2Model` reusable
-context is the path serving requests. Wiring those two paths together would be
-a separate integration change and is intentionally not inferred from the
-green focused test.
+The code-coverage boundary is also explicit: both the focused lifecycle test
+and `miinfer serve` exercise `PrefillV2Model`; `cmd_serve` constructs that
+engine and passes the session-reuse option through to `generate`. The
+remaining qualification limitation is historical rather than a wiring gap:
+prefix/GDN reuse already existed before the M30 zero-suffix and telemetry
+commits. The fixed replay therefore validates the current production path but
+does not isolate the incremental M30 delta from that pre-existing reuse path.
 
 ## Bounded no-reuse attribution probe
 
@@ -155,7 +153,7 @@ prefill time, and 43.1% less total request wall time with reuse enabled. This
 confirms that the production checkpoint path is materially effective. It is a
 bounded attribution probe, not a substitute for the required 40-turn
 canonical qualification, and it does not isolate the M30 changes from the
-pre-existing `Qwen35RuntimeEngine` session checkpoint implementation.
+pre-existing session-checkpoint implementation.
 
 Artifacts:
 
