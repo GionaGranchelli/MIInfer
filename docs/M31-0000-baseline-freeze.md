@@ -10,7 +10,7 @@ workload or reopen COW optimization.
 ## Required record
 
 ```text
-M31_BASELINE_SHA=6319e68bcf925c095bfdb4567a79da56f6b7f451
+M31_BASELINE_SHA=99840d10eabe5e64fe2564d34d3d3fcd42b43521
 M31_MERGE_SHA=dbcbdca801623ea7e4a6d42c1dcefef16e947685
 M31_GATE_SHA=99840d10eabe5e64fe2564d34d3d3fcd42b43521
 M31_GATE_RESULT=PASS
@@ -25,6 +25,10 @@ M31_GPU=AMD MI50/gfx906, card1, 32 GiB HBM2
 M31_GPU_CLOCKS=fclk=1166MHz, mclk=1000MHz, sclk=1000MHz, socclk=971MHz
 M31_POWER_POLICY=power_dpm_force_performance_level=auto; rocm-smi Performance Level=auto
 ```
+
+`M31_BASELINE_SHA` is the exact source SHA tested by the clean gate. The
+subsequent commits only add the retained gate output and this final record;
+they do not change runtime or benchmark code.
 
 ## Gate
 
