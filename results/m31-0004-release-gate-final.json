@@ -1,0 +1,410 @@
+{
+  "benchmark": "M31-0004",
+  "required_repetitions": {
+    "cold": 10,
+    "warm": 10,
+    "agent": 10
+  },
+  "runs": {
+    "cold": [
+      {
+        "wall_ms": 256608.607,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-1.txt"
+      },
+      {
+        "wall_ms": 256709.265,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-10.txt"
+      },
+      {
+        "wall_ms": 256615.75,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-2.txt"
+      },
+      {
+        "wall_ms": 256728.664,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-3.txt"
+      },
+      {
+        "wall_ms": 256737.78,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-4.txt"
+      },
+      {
+        "wall_ms": 256713.067,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-5.txt"
+      },
+      {
+        "wall_ms": 256745.956,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-6.txt"
+      },
+      {
+        "wall_ms": 256732.071,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-7.txt"
+      },
+      {
+        "wall_ms": 256753.677,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-8.txt"
+      },
+      {
+        "wall_ms": 256764.668,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-9.txt"
+      }
+    ],
+    "warm": [
+      {
+        "wall_ms": 47109.897,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-1.txt"
+      },
+      {
+        "wall_ms": 47205.221,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-10.txt"
+      },
+      {
+        "wall_ms": 47128.27,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-2.txt"
+      },
+      {
+        "wall_ms": 47206.433,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-3.txt"
+      },
+      {
+        "wall_ms": 47162.106,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-4.txt"
+      },
+      {
+        "wall_ms": 47169.421,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-5.txt"
+      },
+      {
+        "wall_ms": 47232.705,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-6.txt"
+      },
+      {
+        "wall_ms": 47148.581,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-7.txt"
+      },
+      {
+        "wall_ms": 47144.227,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-8.txt"
+      },
+      {
+        "wall_ms": 47192.688,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-9.txt"
+      }
+    ],
+    "agent": [
+      {
+        "wall_ms": 303718.50399999996,
+        "cold_wall_ms": 256608.607,
+        "warm_wall_ms": 47109.897,
+        "peak_vram_bytes": 26971482112,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-1.txt"
+      },
+      {
+        "wall_ms": 303914.48600000003,
+        "cold_wall_ms": 256709.265,
+        "warm_wall_ms": 47205.221,
+        "peak_vram_bytes": 26971482112,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-10.txt"
+      },
+      {
+        "wall_ms": 303744.02,
+        "cold_wall_ms": 256615.75,
+        "warm_wall_ms": 47128.27,
+        "peak_vram_bytes": 26971482112,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-2.txt"
+      },
+      {
+        "wall_ms": 303935.097,
+        "cold_wall_ms": 256728.664,
+        "warm_wall_ms": 47206.433,
+        "peak_vram_bytes": 26971482112,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-3.txt"
+      },
+      {
+        "wall_ms": 303899.886,
+        "cold_wall_ms": 256737.78,
+        "warm_wall_ms": 47162.106,
+        "peak_vram_bytes": 26971482112,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-4.txt"
+      },
+      {
+        "wall_ms": 303882.488,
+        "cold_wall_ms": 256713.067,
+        "warm_wall_ms": 47169.421,
+        "peak_vram_bytes": 26971482112,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-5.txt"
+      },
+      {
+        "wall_ms": 303978.661,
+        "cold_wall_ms": 256745.956,
+        "warm_wall_ms": 47232.705,
+        "peak_vram_bytes": 26971482112,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-6.txt"
+      },
+      {
+        "wall_ms": 303880.652,
+        "cold_wall_ms": 256732.071,
+        "warm_wall_ms": 47148.581,
+        "peak_vram_bytes": 26971482112,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-7.txt"
+      },
+      {
+        "wall_ms": 303897.904,
+        "cold_wall_ms": 256753.677,
+        "warm_wall_ms": 47144.227,
+        "peak_vram_bytes": 26971482112,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-8.txt"
+      },
+      {
+        "wall_ms": 303957.356,
+        "cold_wall_ms": 256764.668,
+        "warm_wall_ms": 47192.688,
+        "peak_vram_bytes": 26971482112,
+        "status": "FAIL",
+        "artifact": "results/m31-0004-native-runs/run-9.txt"
+      }
+    ]
+  },
+  "statistics": {
+    "cold": {
+      "median": 256730.3675,
+      "p95": 256764.668,
+      "min": 256608.607,
+      "max": 256764.668,
+      "coefficient_of_variation": 0.00020226566642073097
+    },
+    "warm": {
+      "median": 47165.7635,
+      "p95": 47232.705,
+      "min": 47109.897,
+      "max": 47232.705,
+      "coefficient_of_variation": 0.000780490515242502
+    },
+    "agent": {
+      "median": 303898.895,
+      "p95": 303978.661,
+      "min": 303718.50399999996,
+      "max": 303978.661,
+      "coefficient_of_variation": 0.00026577642053367224
+    }
+  },
+  "vram_drift": {
+    "min_bytes": 26971482112,
+    "max_bytes": 26971482112,
+    "delta_bytes": 0
+  },
+  "correctness_failures": [
+    {
+      "wall_ms": 256608.607,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-1.txt"
+    },
+    {
+      "wall_ms": 256709.265,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-10.txt"
+    },
+    {
+      "wall_ms": 256615.75,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-2.txt"
+    },
+    {
+      "wall_ms": 256728.664,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-3.txt"
+    },
+    {
+      "wall_ms": 256737.78,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-4.txt"
+    },
+    {
+      "wall_ms": 256713.067,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-5.txt"
+    },
+    {
+      "wall_ms": 256745.956,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-6.txt"
+    },
+    {
+      "wall_ms": 256732.071,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-7.txt"
+    },
+    {
+      "wall_ms": 256753.677,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-8.txt"
+    },
+    {
+      "wall_ms": 256764.668,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-9.txt"
+    },
+    {
+      "wall_ms": 47109.897,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-1.txt"
+    },
+    {
+      "wall_ms": 47205.221,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-10.txt"
+    },
+    {
+      "wall_ms": 47128.27,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-2.txt"
+    },
+    {
+      "wall_ms": 47206.433,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-3.txt"
+    },
+    {
+      "wall_ms": 47162.106,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-4.txt"
+    },
+    {
+      "wall_ms": 47169.421,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-5.txt"
+    },
+    {
+      "wall_ms": 47232.705,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-6.txt"
+    },
+    {
+      "wall_ms": 47148.581,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-7.txt"
+    },
+    {
+      "wall_ms": 47144.227,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-8.txt"
+    },
+    {
+      "wall_ms": 47192.688,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-9.txt"
+    },
+    {
+      "wall_ms": 303718.50399999996,
+      "cold_wall_ms": 256608.607,
+      "warm_wall_ms": 47109.897,
+      "peak_vram_bytes": 26971482112,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-1.txt"
+    },
+    {
+      "wall_ms": 303914.48600000003,
+      "cold_wall_ms": 256709.265,
+      "warm_wall_ms": 47205.221,
+      "peak_vram_bytes": 26971482112,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-10.txt"
+    },
+    {
+      "wall_ms": 303744.02,
+      "cold_wall_ms": 256615.75,
+      "warm_wall_ms": 47128.27,
+      "peak_vram_bytes": 26971482112,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-2.txt"
+    },
+    {
+      "wall_ms": 303935.097,
+      "cold_wall_ms": 256728.664,
+      "warm_wall_ms": 47206.433,
+      "peak_vram_bytes": 26971482112,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-3.txt"
+    },
+    {
+      "wall_ms": 303899.886,
+      "cold_wall_ms": 256737.78,
+      "warm_wall_ms": 47162.106,
+      "peak_vram_bytes": 26971482112,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-4.txt"
+    },
+    {
+      "wall_ms": 303882.488,
+      "cold_wall_ms": 256713.067,
+      "warm_wall_ms": 47169.421,
+      "peak_vram_bytes": 26971482112,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-5.txt"
+    },
+    {
+      "wall_ms": 303978.661,
+      "cold_wall_ms": 256745.956,
+      "warm_wall_ms": 47232.705,
+      "peak_vram_bytes": 26971482112,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-6.txt"
+    },
+    {
+      "wall_ms": 303880.652,
+      "cold_wall_ms": 256732.071,
+      "warm_wall_ms": 47148.581,
+      "peak_vram_bytes": 26971482112,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-7.txt"
+    },
+    {
+      "wall_ms": 303897.904,
+      "cold_wall_ms": 256753.677,
+      "warm_wall_ms": 47144.227,
+      "peak_vram_bytes": 26971482112,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-8.txt"
+    },
+    {
+      "wall_ms": 303957.356,
+      "cold_wall_ms": 256764.668,
+      "warm_wall_ms": 47192.688,
+      "peak_vram_bytes": 26971482112,
+      "status": "FAIL",
+      "artifact": "results/m31-0004-native-runs/run-9.txt"
+    }
+  ],
+  "gpu_errors": [],
+  "oom": [],
+  "state_leaks": [],
+  "result": "SINGLE_MI50_NOT_QUALIFIED"
+}

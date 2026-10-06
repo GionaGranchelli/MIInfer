@@ -43,9 +43,10 @@ M31-0004  stability and release gate
 The M31 qualification attempt is now evidenced through M31-0004 and is
 `SINGLE_MI50_NOT_QUALIFIED`: M31-0001 has a 64K/TG128 parity failure,
 M31-0002 has an integrated prefix-reuse parity failure, and the native M31-0003
-workload exercises COW but fails output parity. These are recorded weaknesses,
-not new M30 optimization tasks; V3 remains blocked on preserving a clean N=1
-correctness invariant.
+workload exercises COW but fails output parity. M31-0004 completed ten native
+repetitions with zero observed peak-VRAM drift, but all ten retained the parity
+failure. These are recorded weaknesses, not new M30 optimization tasks; V3
+remains blocked on preserving a clean N=1 correctness invariant.
 
 The canonical post-release sequence is:
 

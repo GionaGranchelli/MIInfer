@@ -32,16 +32,22 @@ def main():
         native = []
         pattern = re.compile(
             r"cold_replay_wall_ms=([0-9.]+).*persistent_runtime_wall_ms=([0-9.]+).*"
-            r"output_parity=(PASS|FAIL)")
+            r"peak_vram_bytes=([0-9]+).*output_parity=(PASS|FAIL)")
+        peak_vram = []
         for path in sorted(args.native_dir.glob("run-*.txt")):
             match = pattern.search(path.read_text(errors="replace"))
             if match:
-                cold, warm, parity = match.groups()
+                cold, warm, peak, parity = match.groups()
+                peak_vram.append(int(peak))
                 native.append({"wall_ms": float(cold) + float(warm), "cold_wall_ms": float(cold),
-                               "warm_wall_ms": float(warm), "status": parity, "artifact": str(path)})
+                               "warm_wall_ms": float(warm), "peak_vram_bytes": int(peak),
+                               "status": parity, "artifact": str(path)})
         payload["runs"] = {"cold": [{"wall_ms": item["cold_wall_ms"], "status": item["status"], "artifact": item["artifact"]} for item in native],
                            "warm": [{"wall_ms": item["warm_wall_ms"], "status": item["status"], "artifact": item["artifact"]} for item in native],
                            "agent": native}
+        if peak_vram:
+            payload["vram_drift"] = {"min_bytes": min(peak_vram), "max_bytes": max(peak_vram),
+                                     "delta_bytes": max(peak_vram) - min(peak_vram)}
     runs = payload.get("runs", payload) if isinstance(payload, dict) else payload
     categories = {name: list(runs.get(name, [])) if isinstance(runs, dict) else []
                   for name in ("cold", "warm", "agent")}

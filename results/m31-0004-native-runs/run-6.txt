@@ -1,0 +1,2 @@
+M31-0003 canonical-agent workload: FAIL
+turns=20 cold_replay_wall_ms=256745.956 persistent_runtime_wall_ms=47232.705 agent_runtime_speedup=5.436 baseline_replayed_tokens=53780 replayed_tokens=257 replay_avoided=0.995 branch_events=1 avoided_tokens=48659 checkpoint_bytes=761856000 peak_vram_bytes=26971482112 cow_shared_bytes=519110656 cow_private_bytes=242745344 cow_events=14 cow_bytes_copied=2928672768 output_parity=FAIL

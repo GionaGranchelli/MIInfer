@@ -40,7 +40,7 @@ correctness and must not materially regress the frozen single-MI50 path.
 
 ```text
 M31_BASELINE_SHA=99840d10eabe5e64fe2564d34d3d3fcd42b43521
-M31_0004_GATE_SHA=7ee03f8678fd59c82c88246e5b5250464529c216
+M31_0004_GATE_SHA=4b4e61a8bd178d8378dcb3f3f18f7b56069ab89e
 M31_0004_RESULT=SINGLE_MI50_NOT_QUALIFIED
 ```
 
@@ -53,3 +53,15 @@ M31-0002 has a prefix-reuse parity failure, and the native M31-0003 workload
 has an output-parity failure. The native workload does exercise COW, so the
 earlier HTTP-interface limitation is no longer the blocker. No release claim
 is made from the incomplete repetition set.
+
+The final stability campaign completed all ten native workload repetitions.
+All ten deterministically failed output parity, with no process-reported GPU
+error or OOM. Across the repetitions, cold wall time was median 256730.368 ms
+(p95 256764.668 ms), persistent wall time was median 47165.764 ms (p95
+47232.705 ms), and combined agent wall time was median 303898.895 ms (p95
+303978.661 ms). Peak VRAM was constant at 26971482112 bytes (zero observed
+drift). The gate artifact is
+`results/m31-0004-release-gate-final.json` (SHA-256
+`09695a5adae63666f9cb6444f459ce5f3956b0399c929edf004d8829dc158ea4`); the
+run log is `results/m31-0004-native-runs/stability.log` (SHA-256
+`c24121b153c6a9d9fb58507cf3a09c18f73c82c51fde940edd1f697a4df73ad0`).
