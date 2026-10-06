@@ -29,8 +29,12 @@ M31-0003 — Canonical agent workload
 M31-0004 — Stability and release gate
 ```
 
-The next implementation goal is M31-0001 after M31-0000's clean-gate evidence
-is recorded.
+M31-0000 is complete. The M31-0001 through M31-0004 evidence is recorded, but
+the explicit release decision is `SINGLE_MI50_NOT_QUALIFIED`; V3 dual-MI50
+work must not treat this N=1 result as a passing invariant. The next task is a
+focused root-cause investigation of the two parity failures and a runtime/API
+path for exercising COW in the canonical agent workload, without reopening the
+M30 86-request campaign or broad COW optimization.
 
 Historical M0–M28 and V2 records below remain valid history. Their old
 “current,” “immediate next,” and milestone-forward statements are superseded by

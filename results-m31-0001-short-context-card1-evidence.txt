@@ -1,0 +1,24 @@
+M31-0001 short-context reference evidence
+=========================================
+Host: machinist
+GPU: card1 (AMD Instinct MI50, 32 GiB)
+GPU visibility: ROCR_VISIBLE_DEVICES=1
+Image: localhost/miinfer-dev:rocm-7.2.1
+Model: /models/Qwen3.8-27B-Q4_K_M.gguf
+Model SHA256: 7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169
+Clock/power policy: M31-0000 frozen policy (automatic power policy)
+
+Wrapper command:
+/usr/bin/podman run --rm --device=/dev/kfd --device=/dev/dri --group-add video --ipc=host --network=host -e ROCR_VISIBLE_DEVICES=1 -v /home/machinist/Development/m31-0002-qual:/workspace/MIInfer:Z -v /home/machinist/models:/models:ro,Z localhost/miinfer-dev:rocm-7.2.1 /workspace/MIInfer/build/m31-0002/miinfer-v2-0045-qual-bench /models/Qwen3.8-27B-Q4_K_M.gguf {mode} {prompt_tokens} {decode_tokens}
+
+Complete stdout artifact:
+results-m31-0001-short-context-card1.txt
+Artifact SHA256: ac8e7393691c6119044e474c05a121ffbe911331bc56c532c5cecfff82cb8ae8
+
+Rows:
+P512 prefill: 5 iterations, rc=0, mean 2063.632 ms, 248.106 tok/s
+P512 TG128 decode: 5 iterations, rc=0, mean 4307.061 ms, 29.719 tok/s
+P2K prefill: 5 iterations, rc=0, mean 8528.243 ms, 240.143 tok/s
+P2K TG128 decode: 5 iterations, rc=0, mean 4377.916 ms, 29.238 tok/s
+P4K prefill: 5 iterations, rc=0, mean 17707.579 ms, 231.313 tok/s
+P4K TG128 decode: 5 iterations, rc=0, mean 4477.575 ms, 28.587 tok/s

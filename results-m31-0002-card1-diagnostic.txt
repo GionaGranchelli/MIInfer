@@ -1,0 +1,2 @@
+prefix_diagnostic expected_size=32 actual_size=32 first_mismatch=11 expected=3299 actual=4434
+M31-0002 persistent-context qualification: FAIL: prefix output mismatch

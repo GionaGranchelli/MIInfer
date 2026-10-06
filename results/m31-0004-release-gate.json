@@ -1,0 +1,24 @@
+{
+  "benchmark": "M31-0004",
+  "required_repetitions": {
+    "cold": 10,
+    "warm": 10,
+    "agent": 10
+  },
+  "runs": {
+    "cold": [],
+    "warm": [],
+    "agent": []
+  },
+  "statistics": {
+    "cold": {},
+    "warm": {},
+    "agent": {}
+  },
+  "vram_drift": null,
+  "correctness_failures": [],
+  "gpu_errors": [],
+  "oom": [],
+  "state_leaks": [],
+  "result": "SINGLE_MI50_NOT_QUALIFIED"
+}

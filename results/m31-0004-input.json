@@ -1,0 +1,11 @@
+{
+  "runs": {
+    "cold": [],
+    "warm": [],
+    "agent": []
+  },
+  "vram_drift": null,
+  "gpu_errors": [],
+  "oom": [],
+  "state_leaks": []
+}

@@ -37,6 +37,14 @@ exact workload/source manifest.
 
 ```text
 M31_BASELINE_SHA=99840d10eabe5e64fe2564d34d3d3fcd42b43521
-M31_0003_WORKLOAD_SHA=<filled after implementation>
-M31_0003_RESULT=<PASS or FAIL>
+M31_0003_WORKLOAD_SHA=b5d380ff8fad9f3c5d28b132dfc08cbdb1c26ae5
+M31_0003_RESULT=FAIL
 ```
+
+The deterministic 20-turn transcript and source manifest are implemented in
+`bench/m31_0003_canonical_agent_workload.py`. A dry-run produced transcript
+SHA-256 `bde1a70ee24db344c7f05845ab183d8d6b9d9ed36e37f6fef23a804898eb25ce`.
+The live three-path gate is not promoted: the HTTP interface can exercise cold
+and persistent paths, but it does not expose process-local snapshot/fork/COW
+operations required for the third path. No speedup or replay-avoidance claim
+is made.

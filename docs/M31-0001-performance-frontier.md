@@ -41,8 +41,8 @@ not replacements for the 8K/32K/64K/128K frontier matrix.
 
 ```text
 M31_BASELINE_SHA=99840d10eabe5e64fe2564d34d3d3fcd42b43521
-M31_0001_BENCHMARK_SHA=<filled after run>
-M31_0001_RESULT=<PASS or FAIL>
+M31_0001_BENCHMARK_SHA=d9648222ec0f8402876a4239b13a01c864d1015f
+M31_0001_RESULT=FAIL
 ```
 
 Results must retain the complete benchmark output, model checksum, context
@@ -50,3 +50,10 @@ seeds, decode lengths, VRAM values, and output-parity status. A result with
 failed parity is not a valid performance result. The short-context evidence
 must additionally retain one prefill and one TG128 decode result for each of
 P512, P2K, and P4K.
+
+The short-context reference run completed on Machinist card1 with all six
+invocations returning `rc=0`; its complete stdout is retained in
+`results-m31-0001-short-context-card1.txt`, with command and environment
+metadata in `results-m31-0001-short-context-card1-evidence.txt`. The model
+checksum in every row is
+`7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169`.

@@ -32,7 +32,7 @@ Options options(std::size_t generated, bool reuse, bool reset) {
     Options result;
     result.max_new_tokens = generated;
     result.reset_state_before = reset;
-    result.use_hip_graph = false;
+    result.use_hip_graph = true;
     result.enable_prefix_reuse = reuse;
     result.temperature = 0.0f;
     result.top_p = 1.0f;
@@ -44,6 +44,19 @@ Options options(std::size_t generated, bool reuse, bool reset) {
 
 void require(bool condition, const char* message) {
     if (!condition) throw std::runtime_error(message);
+}
+
+void report_mismatch(const std::vector<std::uint32_t>& expected,
+                     const std::vector<std::uint32_t>& actual) {
+    std::size_t index = 0;
+    while (index < expected.size() && index < actual.size() && expected[index] == actual[index]) {
+        ++index;
+    }
+    std::cerr << "prefix_diagnostic expected_size=" << expected.size()
+              << " actual_size=" << actual.size() << " first_mismatch=" << index;
+    if (index < expected.size()) std::cerr << " expected=" << expected[index];
+    if (index < actual.size()) std::cerr << " actual=" << actual[index];
+    std::cerr << '\n';
 }
 
 } // namespace
@@ -72,8 +85,12 @@ int main(int argc, char** argv) {
         const auto warm = engine.generate(full, options(32, false, true));
         require(cold.generated_tokens == warm.generated_tokens, "cold/warm output mismatch");
 
+        const auto cold_branch_a = engine.generate(branch_a, options(32, false, true));
+        const auto cold_nested = engine.generate(nested, options(32, false, true));
+        const auto cold_branch_b = engine.generate(branch_b, options(32, false, true));
+
         const auto prefix_stats = engine.generate(prefix, [&] {
-            auto result = options(0, false, true);
+            auto result = options(32, false, true);
             result.cache_prefix_after = true;
             result.cache_prefix_len = prefix.size();
             return result;
@@ -84,9 +101,14 @@ int main(int argc, char** argv) {
         const double reuse_wall_ms = now_ms() - reuse_start;
         require(reuse.reuse_hit && reuse.prefix_tokens_reused == prefix.size(),
                 "prefix reuse did not hit the canonical prefix");
-        require(reuse.generated_tokens == cold.generated_tokens, "prefix output mismatch");
+        if (reuse.generated_tokens != cold.generated_tokens) {
+            report_mismatch(cold.generated_tokens, reuse.generated_tokens);
+            require(false, "prefix output mismatch");
+        }
 
         engine.reset_state();
+        require(!engine.restore_snapshot(Model::kInvalidSnapshotId),
+                "invalid snapshot was accepted");
         const auto base = engine.generate(prefix, options(0, false, true));
         (void)base;
         const auto base_snapshot = engine.snapshot(prefix);
@@ -108,15 +130,22 @@ int main(int argc, char** argv) {
         const auto nested_fork = engine.fork(branch_snapshot);
         require(nested_fork != Model::kInvalidSnapshotId, "nested fork failed");
         require(engine.restore_snapshot(nested_fork), "nested restore failed");
-        const auto nested_stats = engine.generate(nested, options(0, true, false));
-        require(nested_stats.reuse_hit, "nested COW continuation failed");
+        const auto nested_stats = engine.generate(nested, options(32, true, false));
+        require(nested_stats.reuse_hit && nested_stats.generated_tokens == cold_nested.generated_tokens,
+                "nested COW continuation or output parity failed");
         const auto telemetry = engine.snapshot_telemetry();
         require(telemetry.cow_events > 0 && telemetry.private_branch_bytes > 0,
                 "COW mutation was not observed");
 
+        require(engine.restore_snapshot(branch_snapshot), "branch restore failed");
+        const auto branch_resume = engine.generate(branch_a, options(32, true, false));
+        require(branch_resume.reuse_hit && branch_resume.generated_tokens == cold_branch_a.generated_tokens,
+                "sibling output parity failed");
+
         require(engine.rollback_snapshot(base_snapshot), "canonical rollback failed");
         const auto resumed = engine.generate(branch_b, options(32, true, false));
-        require(resumed.reuse_hit, "canonical branch resume failed");
+        require(resumed.reuse_hit && resumed.generated_tokens == cold_branch_b.generated_tokens,
+                "canonical branch resume or output parity failed");
 
         const auto checkpoint_bytes = engine.snapshot_bytes();
         const auto peak_vram = engine.total_vram_bytes();
@@ -126,6 +155,8 @@ int main(int argc, char** argv) {
         require(engine.release_snapshot(branch_snapshot), "branch release failed");
         require(engine.release_snapshot(sibling), "sibling release failed");
         require(engine.release_snapshot(base_snapshot), "base release failed");
+        require(!engine.restore_snapshot(base_snapshot), "released snapshot was accepted");
+        require(!engine.release_snapshot(base_snapshot), "released snapshot was released twice");
         require(engine.snapshot_count() == 0, "snapshot cleanup failed");
 
         std::cout << std::fixed << std::setprecision(3)

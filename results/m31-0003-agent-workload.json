@@ -1,0 +1,160 @@
+{
+  "benchmark": "M31-0003",
+  "workload": "canonical-agent-20-turn-v1",
+  "qualification_sha": "d9648222ec0f8402876a4239b13a01c864d1015f",
+  "source_manifest": [
+    {
+      "path": "docs/architecture.md",
+      "sha256": "487acb241be987f032bc741b3084595c0538483f7f5c210a374b5c6ca360ab19",
+      "bytes": 22796
+    },
+    {
+      "path": "docs/interactive-serving.md",
+      "sha256": "745a2cd697fd24741ed5d38585ff6ee542e0ff0afeb717c2a125c39a7474aa02",
+      "bytes": 5962
+    },
+    {
+      "path": "include/miinfer/prefill_v2/model.hpp",
+      "sha256": "d465c2d11061c590bffc67aca7ea521d72a7f909909e86bfabba4f1fe07914aa",
+      "bytes": 16024
+    },
+    {
+      "path": "src/prefill_v2/model.cpp",
+      "sha256": "a1df31482f3da36f45b4be8c892ddb898170f77773f38d176af025542d3ee3e9",
+      "bytes": 65866
+    }
+  ],
+  "transcript_sha256": "bde1a70ee24db344c7f05845ab183d8d6b9d9ed36e37f6fef23a804898eb25ce",
+  "events": [
+    {
+      "turn": 1,
+      "kind": "conversation",
+      "prompt": "M31 canonical turn 1: perform the deterministic conversation step.",
+      "tool_result": null
+    },
+    {
+      "turn": 2,
+      "kind": "code_generation",
+      "prompt": "M31 canonical turn 2: perform the deterministic code_generation step.",
+      "tool_result": null
+    },
+    {
+      "turn": 3,
+      "kind": "code_generation",
+      "prompt": "M31 canonical turn 3: perform the deterministic code_generation step.",
+      "tool_result": null
+    },
+    {
+      "turn": 4,
+      "kind": "tool_invocation",
+      "prompt": "M31 canonical turn 4: perform the deterministic tool_invocation step.",
+      "tool_result": null
+    },
+    {
+      "turn": 5,
+      "kind": "tool_result",
+      "prompt": "M31 canonical turn 5: perform the deterministic tool_result step.",
+      "tool_result": "tools/read_file returned docs/architecture.md lines 1-80 from the frozen source tree."
+    },
+    {
+      "turn": 6,
+      "kind": "branch",
+      "prompt": "M31 canonical turn 6: perform the deterministic branch step.",
+      "tool_result": null
+    },
+    {
+      "turn": 7,
+      "kind": "failed_attempt",
+      "prompt": "M31 canonical turn 7: perform the deterministic failed_attempt step.",
+      "tool_result": "tool error: attempted patch rejected by the validation gate; preserve the branch and rollback."
+    },
+    {
+      "turn": 8,
+      "kind": "rollback",
+      "prompt": "M31 canonical turn 8: perform the deterministic rollback step.",
+      "tool_result": null
+    },
+    {
+      "turn": 9,
+      "kind": "alternate_branch",
+      "prompt": "M31 canonical turn 9: perform the deterministic alternate_branch step.",
+      "tool_result": null
+    },
+    {
+      "turn": 10,
+      "kind": "code_generation",
+      "prompt": "M31 canonical turn 10: perform the deterministic code_generation step.",
+      "tool_result": null
+    },
+    {
+      "turn": 11,
+      "kind": "tool_invocation",
+      "prompt": "M31 canonical turn 11: perform the deterministic tool_invocation step.",
+      "tool_result": null
+    },
+    {
+      "turn": 12,
+      "kind": "tool_result",
+      "prompt": "M31 canonical turn 12: perform the deterministic tool_result step.",
+      "tool_result": "tools/read_file returned docs/architecture.md lines 1-80 from the frozen source tree."
+    },
+    {
+      "turn": 13,
+      "kind": "branch",
+      "prompt": "M31 canonical turn 13: perform the deterministic branch step.",
+      "tool_result": null
+    },
+    {
+      "turn": 14,
+      "kind": "failed_attempt",
+      "prompt": "M31 canonical turn 14: perform the deterministic failed_attempt step.",
+      "tool_result": "tool error: attempted patch rejected by the validation gate; preserve the branch and rollback."
+    },
+    {
+      "turn": 15,
+      "kind": "tool_invocation",
+      "prompt": "M31 canonical turn 15: perform the deterministic tool_invocation step.",
+      "tool_result": null
+    },
+    {
+      "turn": 16,
+      "kind": "tool_result",
+      "prompt": "M31 canonical turn 16: perform the deterministic tool_result step.",
+      "tool_result": "tools/read_file returned docs/architecture.md lines 1-80 from the frozen source tree."
+    },
+    {
+      "turn": 17,
+      "kind": "branch",
+      "prompt": "M31 canonical turn 17: perform the deterministic branch step.",
+      "tool_result": null
+    },
+    {
+      "turn": 18,
+      "kind": "rollback",
+      "prompt": "M31 canonical turn 18: perform the deterministic rollback step.",
+      "tool_result": null
+    },
+    {
+      "turn": 19,
+      "kind": "alternate_branch",
+      "prompt": "M31 canonical turn 19: perform the deterministic alternate_branch step.",
+      "tool_result": null
+    },
+    {
+      "turn": 20,
+      "kind": "long_tool_result",
+      "prompt": "M31 canonical turn 20: perform the deterministic long_tool_result step.",
+      "tool_result": "tool result: deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; deterministic repository excerpt; "
+    }
+  ],
+  "paths": {
+    "cow": {
+      "requests": [],
+      "snapshot_api_required": true
+    }
+  },
+  "replay_avoided": null,
+  "agent_runtime_speedup": null,
+  "parity_gate": false,
+  "result": "FAIL"
+}
