@@ -931,17 +931,16 @@ GenerateStats PrefillV2Model::generate(
         stats.gqa_kv_reused_tokens = prefix_len;
         stats.gdn_checkpoint_position = prefix_len;
 
+        hipStream_t exec_stream = (stream != nullptr) ? stream : hipStreamPerThread;
         const auto t_restore_start = std::chrono::steady_clock::now();
-        reusable_context_.restore_gdn_states(recurrent_states_, stream);
-        MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
+        reusable_context_.restore_gdn_states(recurrent_states_, exec_stream);
+        MIINFER_HIP_CHECK(hipStreamSynchronize(exec_stream));
         const auto t_restore_end = std::chrono::steady_clock::now();
         stats.restore_ms = std::chrono::duration<double, std::milli>(t_restore_end - t_restore_start).count();
 
         const auto t_suffix_start = std::chrono::steady_clock::now();
         const char* env_graph = std::getenv("MIINFER_HIP_GRAPH");
         bool enable_graph = options.use_hip_graph && (env_graph == nullptr || std::string_view(env_graph) != "0");
-        hipStream_t exec_stream = (stream != nullptr) ? stream : hipStreamPerThread;
-
         // Prefill ONLY the suffix tokens: [prefix_len .. prompt_len - 1]
         std::uint32_t pos = prefix_len;
         while (pos < prompt_len) {
@@ -1048,6 +1047,21 @@ GenerateStats PrefillV2Model::generate(
             options.persistent_session_dir, model_name_, quantization_);
         stats.persistent_checkpoint_count = count;
         stats.persistent_checkpoint_bytes = bytes;
+    }
+
+    // A zero-token request is a prefill-only operation.  In particular, a
+    // caller priming an in-memory reusable prefix must not decode one token
+    // after the checkpoint is captured: that would mutate the resident KV
+    // tail while the checkpoint still describes the prefix boundary.
+    if (options.max_new_tokens == 0) {
+        MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
+        const auto t_prefill_end = std::chrono::steady_clock::now();
+        stats.prefill_ms = std::chrono::duration<double, std::milli>(t_prefill_end - t_start).count();
+        stats.ttft_ms = stats.prefill_ms;
+        stats.prefill_tok_per_sec = stats.prefill_ms > 0.0
+            ? (prompt_len * 1000.0 / stats.prefill_ms) : 0.0;
+        stats.total_ms = stats.prefill_ms;
+        return stats;
     }
 
     // 2. Compute logits for the final prompt token. A zero-suffix exact hit

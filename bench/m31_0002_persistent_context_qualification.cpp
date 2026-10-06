@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
         const auto cold_branch_b = engine.generate(branch_b, options(32, false, true));
 
         const auto prefix_stats = engine.generate(prefix, [&] {
-            auto result = options(32, false, true);
+            auto result = options(0, false, true);
             result.cache_prefix_after = true;
             result.cache_prefix_len = prefix.size();
             return result;

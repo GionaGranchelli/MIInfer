@@ -78,19 +78,25 @@ void GdnCheckpointStorage::capture(
         float* dst_state = d_checkpoint_states_ + i * RecurrentLayerState::kStateElements;
         float* dst_history = d_checkpoint_conv_history_ + i * RecurrentLayerState::kConvHistoryElements;
 
-        MIINFER_HIP_CHECK(hipMemcpyAsync(
-            dst_state,
-            view.d_state,
-            RecurrentLayerState::kStateBytes,
-            hipMemcpyDeviceToDevice,
-            stream));
+        if (stream != nullptr) {
+            MIINFER_HIP_CHECK(hipMemcpyAsync(
+                dst_state, view.d_state, RecurrentLayerState::kStateBytes,
+                hipMemcpyDeviceToDevice, stream));
+        } else {
+            MIINFER_HIP_CHECK(hipMemcpy(
+                dst_state, view.d_state, RecurrentLayerState::kStateBytes,
+                hipMemcpyDeviceToDevice));
+        }
 
-        MIINFER_HIP_CHECK(hipMemcpyAsync(
-            dst_history,
-            view.d_conv_history,
-            RecurrentLayerState::kConvHistoryBytes,
-            hipMemcpyDeviceToDevice,
-            stream));
+        if (stream != nullptr) {
+            MIINFER_HIP_CHECK(hipMemcpyAsync(
+                dst_history, view.d_conv_history, RecurrentLayerState::kConvHistoryBytes,
+                hipMemcpyDeviceToDevice, stream));
+        } else {
+            MIINFER_HIP_CHECK(hipMemcpy(
+                dst_history, view.d_conv_history, RecurrentLayerState::kConvHistoryBytes,
+                hipMemcpyDeviceToDevice));
+        }
     }
     is_valid_ = true;
 }
@@ -111,19 +117,25 @@ void GdnCheckpointStorage::restore(
         const float* src_state = d_checkpoint_states_ + i * RecurrentLayerState::kStateElements;
         const float* src_history = d_checkpoint_conv_history_ + i * RecurrentLayerState::kConvHistoryElements;
 
-        MIINFER_HIP_CHECK(hipMemcpyAsync(
-            view.d_state,
-            src_state,
-            RecurrentLayerState::kStateBytes,
-            hipMemcpyDeviceToDevice,
-            stream));
+        if (stream != nullptr) {
+            MIINFER_HIP_CHECK(hipMemcpyAsync(
+                view.d_state, src_state, RecurrentLayerState::kStateBytes,
+                hipMemcpyDeviceToDevice, stream));
+        } else {
+            MIINFER_HIP_CHECK(hipMemcpy(
+                view.d_state, src_state, RecurrentLayerState::kStateBytes,
+                hipMemcpyDeviceToDevice));
+        }
 
-        MIINFER_HIP_CHECK(hipMemcpyAsync(
-            view.d_conv_history,
-            src_history,
-            RecurrentLayerState::kConvHistoryBytes,
-            hipMemcpyDeviceToDevice,
-            stream));
+        if (stream != nullptr) {
+            MIINFER_HIP_CHECK(hipMemcpyAsync(
+                view.d_conv_history, src_history, RecurrentLayerState::kConvHistoryBytes,
+                hipMemcpyDeviceToDevice, stream));
+        } else {
+            MIINFER_HIP_CHECK(hipMemcpy(
+                view.d_conv_history, src_history, RecurrentLayerState::kConvHistoryBytes,
+                hipMemcpyDeviceToDevice));
+        }
     }
 }
 
