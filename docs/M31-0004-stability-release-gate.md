@@ -40,7 +40,7 @@ correctness and must not materially regress the frozen single-MI50 path.
 
 ```text
 M31_BASELINE_SHA=99840d10eabe5e64fe2564d34d3d3fcd42b43521
-M31_0004_GATE_SHA=b5d380ff8fad9f3c5d28b132dfc08cbdb1c26ae5
+M31_0004_GATE_SHA=7ee03f8678fd59c82c88246e5b5250464529c216
 M31_0004_RESULT=SINGLE_MI50_NOT_QUALIFIED
 ```
 
@@ -49,5 +49,7 @@ The aggregation gate is implemented in
 each category and fails closed when repetitions, correctness evidence, or
 upstream M31 qualification are missing. The current decision is
 `SINGLE_MI50_NOT_QUALIFIED` because M31-0001 has a 64K TG128 parity failure,
-M31-0002 has a prefix-reuse parity failure, and M31-0003 lacks a callable COW
-path; no release claim is made from the incomplete repetition set.
+M31-0002 has a prefix-reuse parity failure, and the native M31-0003 workload
+has an output-parity failure. The native workload does exercise COW, so the
+earlier HTTP-interface limitation is no longer the blocker. No release claim
+is made from the incomplete repetition set.

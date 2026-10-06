@@ -37,14 +37,17 @@ exact workload/source manifest.
 
 ```text
 M31_BASELINE_SHA=99840d10eabe5e64fe2564d34d3d3fcd42b43521
-M31_0003_WORKLOAD_SHA=b5d380ff8fad9f3c5d28b132dfc08cbdb1c26ae5
+M31_0003_WORKLOAD_SHA=7ee03f8678fd59c82c88246e5b5250464529c216
 M31_0003_RESULT=FAIL
 ```
 
-The deterministic 20-turn transcript and source manifest are implemented in
-`bench/m31_0003_canonical_agent_workload.py`. A dry-run produced transcript
-SHA-256 `bde1a70ee24db344c7f05845ab183d8d6b9d9ed36e37f6fef23a804898eb25ce`.
-The live three-path gate is not promoted: the HTTP interface can exercise cold
-and persistent paths, but it does not expose process-local snapshot/fork/COW
-operations required for the third path. No speedup or replay-avoidance claim
-is made.
+The canonical native workload is implemented in
+`bench/m31_0003_canonical_agent_workload.cpp`; the Python runner remains a
+dry-run/API manifest helper. The card-1 native run completed 20 deterministic
+turns with one branch/rollback sequence. Its artifact is
+`results-m31-0003-card1-native.txt` (SHA-256
+`640d1bec3d0e3957ae7d0acd6ecbce08c883a236d264124b0a0af9d429775765`). It
+measured 256681.460 ms cold/replay wall time, 47176.381 ms persistent wall
+time, 5.441x speedup, 99.5% replay avoidance, 14 COW events, and
+2928672768 COW bytes copied. The output-parity gate failed, so these are
+diagnostic measurements and are not promoted as a qualification pass.

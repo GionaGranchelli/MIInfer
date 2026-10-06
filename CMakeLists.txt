@@ -681,6 +681,11 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-m31-0002-persistent-context-qualification PRIVATE miinfer_hip miinfer_model)
     target_compile_options(miinfer-m31-0002-persistent-context-qualification PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-m31-0003-canonical-agent-workload
+        bench/m31_0003_canonical_agent_workload.cpp)
+    target_link_libraries(miinfer-m31-0003-canonical-agent-workload PRIVATE miinfer_hip miinfer_model)
+    target_compile_options(miinfer-m31-0003-canonical-agent-workload PRIVATE -Wall -Wextra -Wpedantic)
+
     add_executable(miinfer-qwen3-quant-kv-attention-test tests/qwen3_quant_kv_attention_test.cpp)
     target_link_libraries(miinfer-qwen3-quant-kv-attention-test PRIVATE miinfer_hip)
     target_compile_options(miinfer-qwen3-quant-kv-attention-test PRIVATE -Wall -Wextra -Wpedantic)

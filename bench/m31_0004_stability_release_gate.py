@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import json
 import math
+import re
 import statistics
 import subprocess
 from pathlib import Path
@@ -23,9 +24,24 @@ def stats(values):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", type=Path, required=True, help="JSON array or object with cold/warm/agent runs")
+    parser.add_argument("--native-dir", type=Path, help="Parse native M31-0003 text artifacts into repetitions")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
-    payload = json.loads(args.input.read_text(encoding="utf-8"))
+    payload = json.loads(args.input.read_text(encoding="utf-8")) if args.input.exists() else {}
+    if args.native_dir:
+        native = []
+        pattern = re.compile(
+            r"cold_replay_wall_ms=([0-9.]+).*persistent_runtime_wall_ms=([0-9.]+).*"
+            r"output_parity=(PASS|FAIL)")
+        for path in sorted(args.native_dir.glob("run-*.txt")):
+            match = pattern.search(path.read_text(errors="replace"))
+            if match:
+                cold, warm, parity = match.groups()
+                native.append({"wall_ms": float(cold) + float(warm), "cold_wall_ms": float(cold),
+                               "warm_wall_ms": float(warm), "status": parity, "artifact": str(path)})
+        payload["runs"] = {"cold": [{"wall_ms": item["cold_wall_ms"], "status": item["status"], "artifact": item["artifact"]} for item in native],
+                           "warm": [{"wall_ms": item["warm_wall_ms"], "status": item["status"], "artifact": item["artifact"]} for item in native],
+                           "agent": native}
     runs = payload.get("runs", payload) if isinstance(payload, dict) else payload
     categories = {name: list(runs.get(name, [])) if isinstance(runs, dict) else []
                   for name in ("cold", "warm", "agent")}
