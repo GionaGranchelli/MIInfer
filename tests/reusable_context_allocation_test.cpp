@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <cstdlib>
 #include <cstring>
+#include <stdexcept>
 #include <vector>
 
 namespace {
@@ -72,6 +73,30 @@ int main() {
     require(context.memory_bytes() == checkpoint_bytes);
     require(context.has_valid_prefix());
     require(copies == 96); // One state and one history copy for each GDN layer.
+
+    const std::array<std::uint32_t, 4> extended_prefix{11, 29, 31, 47};
+    context.save_extension(2, std::span(extended_prefix).subspan(2), states);
+    require(context.cached_prefix_tokens().size() == extended_prefix.size());
+    require(context.fingerprint().token_hash == compute_token_sequence_hash(extended_prefix));
+    require(copies == 192); // Only checkpoint copies repeat; token hashing is host-only.
+
+    const std::array<std::uint32_t, 6> twice_extended{11, 29, 31, 47, 61, 73};
+    context.save_extension(4, std::span(twice_extended).subspan(4), states);
+    require(context.fingerprint().token_hash == compute_token_sequence_hash(twice_extended));
+    const std::size_t copies_before_invalid_extension = copies;
+    bool rejected_invalid_extension = false;
+    try {
+        context.save_extension(5, std::span(twice_extended).subspan(5), states);
+    } catch (const std::runtime_error&) {
+        rejected_invalid_extension = true;
+    }
+    require(rejected_invalid_extension);
+    require(copies == copies_before_invalid_extension);
+
+    const std::array<std::uint32_t, 3> divergent_prefix{11, 29, 48};
+    context.save(divergent_prefix, states);
+    require(context.cached_prefix_tokens().size() == divergent_prefix.size());
+    require(context.fingerprint().token_hash == compute_token_sequence_hash(divergent_prefix));
 
     context.clear();
     require(!context.has_valid_prefix());

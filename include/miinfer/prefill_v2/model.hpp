@@ -195,13 +195,13 @@ public:
     [[nodiscard]] std::size_t block_count() const noexcept { return blocks_.size(); }
     [[nodiscard]] const PrefillV2TopologyBlock& block(std::size_t idx) const { return *blocks_[idx]; }
     [[nodiscard]] const RecurrentLayerStateStorage& recurrent_storage(std::size_t gdn_idx) const { return recurrent_states_[gdn_idx]; }
-    [[nodiscard]] RecurrentLayerStateStorage& recurrent_storage(std::size_t gdn_idx) { return recurrent_states_[gdn_idx]; }
+    [[nodiscard]] RecurrentLayerStateStorage& recurrent_storage(std::size_t gdn_idx) { invalidate_runtime_state_cache(); return recurrent_states_[gdn_idx]; }
     [[nodiscard]] const std::vector<RecurrentLayerStateStorage>& recurrent_states() const noexcept { return recurrent_states_; }
-    [[nodiscard]] std::vector<RecurrentLayerStateStorage>& recurrent_states() noexcept { return recurrent_states_; }
+    [[nodiscard]] std::vector<RecurrentLayerStateStorage>& recurrent_states() noexcept { invalidate_runtime_state_cache(); return recurrent_states_; }
     [[nodiscard]] const AttentionLayerKvCacheStorage& kv_storage(std::size_t gqa_idx) const { return kv_caches_[gqa_idx]; }
-    [[nodiscard]] AttentionLayerKvCacheStorage& kv_storage(std::size_t gqa_idx) { return kv_caches_[gqa_idx]; }
+    [[nodiscard]] AttentionLayerKvCacheStorage& kv_storage(std::size_t gqa_idx) { invalidate_runtime_state_cache(); return kv_caches_[gqa_idx]; }
     [[nodiscard]] const std::vector<AttentionLayerKvCacheStorage>& kv_caches() const noexcept { return kv_caches_; }
-    [[nodiscard]] std::vector<AttentionLayerKvCacheStorage>& kv_caches() noexcept { return kv_caches_; }
+    [[nodiscard]] std::vector<AttentionLayerKvCacheStorage>& kv_caches() noexcept { invalidate_runtime_state_cache(); return kv_caches_; }
     [[nodiscard]] PrefillV2Workspace& workspace() noexcept { return const_cast<PrefillV2Workspace&>(ws_mgr_->workspace()); }
     [[nodiscard]] std::uint32_t vocab_size() const noexcept { return vocab_size_; }
     [[nodiscard]] const std::string& model_name() const noexcept { return model_name_; }
@@ -209,7 +209,7 @@ public:
 
     // Reusable Context & Checkpoint Storage
     [[nodiscard]] const ReusableContext& reusable_context() const noexcept { return reusable_context_; }
-    [[nodiscard]] ReusableContext& reusable_context() noexcept { return reusable_context_; }
+    [[nodiscard]] ReusableContext& reusable_context() noexcept { invalidate_runtime_state_cache(); return reusable_context_; }
     [[nodiscard]] std::size_t cached_state_bytes() const noexcept { return reusable_context_.memory_bytes(); }
     void restore_reusable_context(hipStream_t stream = nullptr);
 
@@ -352,6 +352,7 @@ private:
     mutable std::mt19937 rng_{42};
 
     std::unordered_map<SnapshotId, SnapshotRecord> snapshots_;
+    const SnapshotBacking* active_snapshot_backing_ = nullptr;
     SnapshotId next_snapshot_id_ = 1;
     std::uint64_t snapshot_use_clock_ = 0;
     std::size_t snapshot_bytes_ = 0;
@@ -361,6 +362,11 @@ private:
 
     void allocate_resources();
     void free_resources();
+    void invalidate_runtime_state_cache() noexcept {
+        reusable_context_.mark_not_resident();
+        active_snapshot_backing_ = nullptr;
+        snapshot_state_loaded_ = false;
+    }
 };
 
 } // namespace miinfer::prefill_v2

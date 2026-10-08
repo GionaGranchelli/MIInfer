@@ -44,6 +44,15 @@ inline std::uint64_t compute_token_sequence_hash(std::span<const std::uint32_t> 
     return hash;
 }
 
+inline std::uint64_t extend_token_sequence_hash(
+    std::uint64_t hash, std::span<const std::uint32_t> tokens) noexcept {
+    for (std::uint32_t tok : tokens) {
+        hash ^= static_cast<std::uint64_t>(tok);
+        hash *= 0x100000001b3ULL;
+    }
+    return hash;
+}
+
 // Checkpoint storage for 48 GDN SSM layers on GPU.
 // Each GDN layer has:
 //   - Recurrent state: 48 * 128 * 128 * sizeof(float) = 3,145,728 bytes (3.0 MiB)
@@ -95,6 +104,13 @@ public:
         const float* final_hidden = nullptr,
         hipStream_t stream = nullptr);
 
+    void save_extension(
+        std::uint32_t expected_prefix_length,
+        std::span<const std::uint32_t> appended_tokens,
+        const std::vector<RecurrentLayerStateStorage>& active_states,
+        const float* final_hidden = nullptr,
+        hipStream_t stream = nullptr);
+
     // Match evaluation results
     enum class MatchResult {
         ExactMatch,
@@ -119,6 +135,9 @@ public:
     void restore_final_hidden(float* destination, hipStream_t stream = nullptr) const;
 
     [[nodiscard]] bool has_final_hidden() const noexcept { return final_hidden_valid_; }
+    [[nodiscard]] bool is_resident() const noexcept { return resident_; }
+    void mark_resident() noexcept { resident_ = true; }
+    void mark_not_resident() noexcept { resident_ = false; }
     void download_final_hidden(std::vector<float>& destination, hipStream_t stream = nullptr) const;
 
     // Reset / clear cache
@@ -136,6 +155,7 @@ private:
     GdnCheckpointStorage gdn_checkpoint_;
     float* d_final_hidden_ = nullptr;
     bool final_hidden_valid_ = false;
+    bool resident_ = false;
 };
 
 } // namespace miinfer::prefill_v2

@@ -534,6 +534,7 @@ void PrefillV2Model::forward(
         throw std::runtime_error("PrefillV2Model::forward: invalid token_count " + std::to_string(token_count)
                                  + " (max physical tile is " + std::to_string(kMaxPrefillBatch) + ")");
     }
+    invalidate_runtime_state_cache();
 
     auto& ws = const_cast<PrefillV2Workspace&>(ws_mgr_->workspace());
 
@@ -614,6 +615,7 @@ void PrefillV2Model::forward_profiled(
     if (token_count == 0 || token_count > kMaxPrefillBatch) {
         throw std::runtime_error("PrefillV2Model::forward_profiled: invalid token_count " + std::to_string(token_count));
     }
+    invalidate_runtime_state_cache();
 
     auto& ws = const_cast<PrefillV2Workspace&>(ws_mgr_->workspace());
 
@@ -779,6 +781,7 @@ std::uint32_t PrefillV2Model::decode_step(
     if (target_logits == nullptr) {
         throw std::runtime_error("PrefillV2Model::decode_step: null logits destination buffer");
     }
+    invalidate_runtime_state_cache();
 
     auto& ws = const_cast<PrefillV2Workspace&>(ws_mgr_->workspace());
 
@@ -903,6 +906,7 @@ GenerateStats PrefillV2Model::generate(
 
     const auto t_start = std::chrono::steady_clock::now();
     std::uint32_t last_chunk = 0;
+    bool final_prefix_captured = false;
     const auto save_persistent_checkpoint = [&](std::uint32_t length) {
         if (options.persistent_session_dir.empty()
             || length < kPersistentCheckpointStride
@@ -965,6 +969,7 @@ GenerateStats PrefillV2Model::generate(
                     sizeof(DevicePrefillState),
                     hipMemcpyHostToDevice,
                     exec_stream));
+                invalidate_runtime_state_cache();
                 MIINFER_HIP_CHECK(hipGraphLaunch(suffix_graph_exec_, exec_stream));
             } else {
                 MIINFER_HIP_CHECK(hipMemcpyAsync(
@@ -977,6 +982,18 @@ GenerateStats PrefillV2Model::generate(
             }
             pos += chunk;
             last_chunk = chunk;
+            if (options.cache_prefix_after && pos % kPrefillV2MacroTile == 0) {
+                const auto prefix_before_chunk = pos - chunk;
+                if (reusable_context_.prefix_length() == prefix_before_chunk) {
+                    reusable_context_.save_extension(
+                        prefix_before_chunk, prompt.subspan(prefix_before_chunk, chunk),
+                        recurrent_states_, d_pong_ + (chunk - 1) * kHidden, exec_stream);
+                } else {
+                    reusable_context_.save(
+                        prompt.first(pos), recurrent_states_, d_pong_ + (chunk - 1) * kHidden, exec_stream);
+                }
+                final_prefix_captured = pos == prompt_len;
+            }
             save_persistent_checkpoint(pos);
         }
         for (auto& st : recurrent_states_) {
@@ -998,6 +1015,7 @@ GenerateStats PrefillV2Model::generate(
 
         // Cold prefill sequence using native macro scheduler (Macro Tile = 512)
         std::uint32_t pos = 0;
+        bool cache_prefix_seeded = false;
         while (pos < prompt_len) {
             std::uint32_t chunk = std::min<std::uint32_t>(kPrefillV2MacroTile, prompt_len - pos);
             MIINFER_HIP_CHECK(hipMemcpyAsync(
@@ -1009,6 +1027,19 @@ GenerateStats PrefillV2Model::generate(
             forward(d_temp_tokens_, pos, chunk, d_pong_, stream);
             pos += chunk;
             last_chunk = chunk;
+            if (options.cache_prefix_after && pos % kPrefillV2MacroTile == 0) {
+                if (cache_prefix_seeded) {
+                    const auto prefix_before_chunk = pos - chunk;
+                    reusable_context_.save_extension(
+                        prefix_before_chunk, prompt.subspan(prefix_before_chunk, chunk),
+                        recurrent_states_, d_pong_ + (chunk - 1) * kHidden, stream);
+                } else {
+                    reusable_context_.save(
+                        prompt.first(pos), recurrent_states_, d_pong_ + (chunk - 1) * kHidden, stream);
+                    cache_prefix_seeded = true;
+                }
+                final_prefix_captured = pos == prompt_len;
+            }
             save_persistent_checkpoint(pos);
         }
     }
@@ -1017,7 +1048,7 @@ GenerateStats PrefillV2Model::generate(
     if (options.cache_prefix_after) {
         std::size_t save_len = (options.cache_prefix_len > 0) ? std::min(options.cache_prefix_len, prompt.size()) : prompt.size();
         if (save_len == prompt.size()) {
-            if (!(is_reuse && suffix_len == 0)) {
+            if (!(is_reuse && suffix_len == 0) && !final_prefix_captured) {
                 reusable_context_.save(prompt, recurrent_states_, d_pong_ + (last_chunk - 1) * kHidden, stream);
             }
         } else {
@@ -1147,6 +1178,7 @@ GenerateStats PrefillV2Model::generate(
         std::size_t actual_generated = 0;
 
         for (std::size_t i = 0; i < num_decode; ++i) {
+            if (i == 0) invalidate_runtime_state_cache();
             MIINFER_HIP_CHECK(hipGraphLaunch(decode_graph_exec_, exec_stream));
 
             MIINFER_HIP_CHECK(hipMemcpyAsync(
@@ -1213,6 +1245,7 @@ GenerateStats PrefillV2Model::generate(
             stats.stop_reason = miinfer::GenerationStopReason::kOutputLimit;
             break;
         }
+        if (k == 1) invalidate_runtime_state_cache();
 
         // 1. Copy single input token to device
         MIINFER_HIP_CHECK(hipMemcpyAsync(
@@ -1730,6 +1763,7 @@ PrefillV2Model::SnapshotId PrefillV2Model::fork(SnapshotId source) {
 bool PrefillV2Model::restore_snapshot(SnapshotId id, hipStream_t stream) {
     const auto found = snapshots_.find(id);
     if (found == snapshots_.end()) return false;
+    invalidate_runtime_state_cache();
     restore_snapshot_backing(found->second.backing, stream);
     reusable_context_.save(found->second.tokens, recurrent_states_, nullptr, stream);
     if (stream != nullptr) MIINFER_HIP_CHECK(hipStreamSynchronize(stream));

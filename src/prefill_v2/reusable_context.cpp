@@ -162,7 +162,8 @@ ReusableContext::ReusableContext(ReusableContext&& other) noexcept
       cached_tokens_(std::move(other.cached_tokens_)),
       gdn_checkpoint_(std::move(other.gdn_checkpoint_)),
       d_final_hidden_(std::exchange(other.d_final_hidden_, nullptr)),
-      final_hidden_valid_(std::exchange(other.final_hidden_valid_, false)) {}
+      final_hidden_valid_(std::exchange(other.final_hidden_valid_, false)),
+      resident_(std::exchange(other.resident_, false)) {}
 
 ReusableContext& ReusableContext::operator=(ReusableContext&& other) noexcept {
     if (this != &other) {
@@ -172,6 +173,7 @@ ReusableContext& ReusableContext::operator=(ReusableContext&& other) noexcept {
         gdn_checkpoint_ = std::move(other.gdn_checkpoint_);
         d_final_hidden_ = std::exchange(other.d_final_hidden_, nullptr);
         final_hidden_valid_ = std::exchange(other.final_hidden_valid_, false);
+        resident_ = std::exchange(other.resident_, false);
     }
     return *this;
 }
@@ -196,9 +198,34 @@ void ReusableContext::save(
     }
 
     cached_tokens_.assign(prefix_tokens.begin(), prefix_tokens.end());
-    fingerprint_.prefix_length = static_cast<std::uint32_t>(prefix_tokens.size());
     fingerprint_.token_hash = compute_token_sequence_hash(prefix_tokens);
+    fingerprint_.prefix_length = static_cast<std::uint32_t>(prefix_tokens.size());
     fingerprint_.state_layout_version = kStateLayoutVersion;
+    resident_ = true;
+}
+
+void ReusableContext::save_extension(
+    std::uint32_t expected_prefix_length,
+    std::span<const std::uint32_t> appended_tokens,
+    const std::vector<RecurrentLayerStateStorage>& active_states,
+    const float* final_hidden,
+    hipStream_t stream) {
+    if (!has_valid_prefix() || fingerprint_.prefix_length != expected_prefix_length ||
+        cached_tokens_.size() != expected_prefix_length || appended_tokens.empty()) {
+        throw std::runtime_error("ReusableContext::save_extension: prefix boundary mismatch");
+    }
+    gdn_checkpoint_.capture(active_states, stream);
+    if (final_hidden != nullptr) {
+        MIINFER_HIP_CHECK(hipMemcpyAsync(
+            d_final_hidden_, final_hidden, kHidden * sizeof(float), hipMemcpyDeviceToDevice, stream));
+        final_hidden_valid_ = true;
+    } else {
+        final_hidden_valid_ = false;
+    }
+    cached_tokens_.insert(cached_tokens_.end(), appended_tokens.begin(), appended_tokens.end());
+    fingerprint_.token_hash = extend_token_sequence_hash(fingerprint_.token_hash, appended_tokens);
+    fingerprint_.prefix_length += static_cast<std::uint32_t>(appended_tokens.size());
+    resident_ = true;
 }
 
 ReusableContext::MatchResult ReusableContext::check_match(
@@ -277,6 +304,7 @@ void ReusableContext::clear() {
     fingerprint_.prefix_length = 0;
     fingerprint_.token_hash = 0;
     final_hidden_valid_ = false;
+    resident_ = false;
 }
 
 } // namespace miinfer::prefill_v2
