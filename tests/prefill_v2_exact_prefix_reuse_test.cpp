@@ -82,9 +82,27 @@ int main(int argc, char** argv) {
         require(!fresh.reuse_hit, "fresh session unexpectedly reused state");
         require(fresh.generated_tokens == cold_tokens, "fresh-session output differs from clean output");
 
+        {
+            miinfer::prefill_v2::PrefillV2Model boundary_engine(model, 2048, true);
+            for (const std::size_t length : {511U, 512U, 513U, 1024U, 1025U}) {
+                std::vector<std::uint32_t> boundary_prompt(length);
+                for (std::size_t i = 0; i < length; ++i) {
+                    boundary_prompt[i] = static_cast<std::uint32_t>((i * 31 + length) % 1000 + 1);
+                }
+                const auto boundary_cold = boundary_engine.generate(boundary_prompt, options(true, true));
+                const auto boundary_hit = boundary_engine.generate(boundary_prompt, options(true, true));
+                require(!boundary_cold.reuse_hit, "boundary cold run unexpectedly reused state");
+                require(boundary_hit.reuse_hit && boundary_hit.prefix_tokens_reused == length
+                            && boundary_hit.suffix_tokens_executed == 0,
+                        "boundary exact-prefix hit failed");
+                require_same_tokens(boundary_cold, boundary_hit, "boundary reuse output differs from cold output");
+            }
+        }
+
         std::cout << "M30-0001 exact-prefix reuse: PASS"
                   << " zero_suffix_twice=PASS"
                   << " suffix=PASS"
+                  << " boundary_prefixes=PASS"
                   << " mismatch_fallback=PASS"
                   << " fresh_session=PASS\n";
         return 0;

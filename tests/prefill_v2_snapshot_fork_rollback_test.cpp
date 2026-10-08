@@ -57,6 +57,11 @@ int main(int argc, char** argv) {
             require(s0 != Model::kInvalidSnapshotId, "snapshot S0 was not created");
 
             require(engine.restore_snapshot(s0), "snapshot S0 restore failed");
+            const auto saved_position = engine.recurrent_storage(0).position();
+            engine.recurrent_storage(0).reset();
+            require(engine.restore_snapshot(s0), "snapshot restore after recurrent-state mutation failed");
+            require(engine.recurrent_storage(0).position() == saved_position,
+                    "snapshot restore did not recover recurrent position after mutation");
             require(engine.rollback_snapshot(s0), "snapshot S0 rollback failed");
 
             const auto fork_b = engine.fork(s0);
