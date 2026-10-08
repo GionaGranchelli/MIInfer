@@ -843,3 +843,22 @@ if(MIINFER_BUILD_TESTS)
         LABELS "package-host"
         SKIP_REGULAR_EXPRESSION "^SKIP: package archive")
 endif()
+if(MIINFER_BUILD_TESTS)
+    find_path(MIINFER_HIP_INCLUDE_DIR hip/hip_runtime_api.h HINTS /opt/rocm/include)
+    if(MIINFER_HIP_INCLUDE_DIR)
+        add_executable(miinfer-reusable-context-allocation-test
+            tests/reusable_context_allocation_test.cpp
+            src/prefill_v2/reusable_context.cpp
+            src/prefill_v2/state.cpp
+        )
+        target_include_directories(miinfer-reusable-context-allocation-test PRIVATE
+            "${CMAKE_CURRENT_SOURCE_DIR}/include"
+            "${MIINFER_HIP_INCLUDE_DIR}"
+        )
+        target_compile_definitions(miinfer-reusable-context-allocation-test PRIVATE __HIP_PLATFORM_AMD__)
+        target_compile_features(miinfer-reusable-context-allocation-test PRIVATE cxx_std_20)
+        target_compile_options(miinfer-reusable-context-allocation-test PRIVATE -Wall -Wextra -Wpedantic)
+        add_test(NAME reusable-context-allocation COMMAND miinfer-reusable-context-allocation-test)
+        set_tests_properties(reusable-context-allocation PROPERTIES LABELS "host-only")
+    endif()
+endif()

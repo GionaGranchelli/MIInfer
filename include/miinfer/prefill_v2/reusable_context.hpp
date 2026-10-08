@@ -52,7 +52,7 @@ inline std::uint64_t compute_token_sequence_hash(std::span<const std::uint32_t> 
 // Across 48 GDN layers: 48 * 3,309,568 = 158,859,264 bytes (151.50 MiB)
 class GdnCheckpointStorage {
 public:
-    GdnCheckpointStorage();
+    GdnCheckpointStorage() = default;
     ~GdnCheckpointStorage();
 
     GdnCheckpointStorage(const GdnCheckpointStorage&) = delete;

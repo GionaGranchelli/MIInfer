@@ -14,16 +14,6 @@ constexpr std::size_t kGdnLayerCount = 48;
 
 } // namespace
 
-GdnCheckpointStorage::GdnCheckpointStorage() {
-    const std::size_t states_bytes = kGdnLayerCount * RecurrentLayerState::kStateBytes;
-    const std::size_t history_bytes = kGdnLayerCount * RecurrentLayerState::kConvHistoryBytes;
-    total_bytes_ = states_bytes + history_bytes;
-
-    MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&d_checkpoint_states_), states_bytes));
-    MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&d_checkpoint_conv_history_), history_bytes));
-    is_valid_ = false;
-}
-
 GdnCheckpointStorage::~GdnCheckpointStorage() {
     if (d_checkpoint_states_ != nullptr) {
         (void)hipFree(d_checkpoint_states_);
@@ -69,8 +59,20 @@ void GdnCheckpointStorage::capture(
         throw std::runtime_error("GdnCheckpointStorage::capture: expected " + std::to_string(kGdnLayerCount) +
                                  " active GDN states, got " + std::to_string(active_states.size()));
     }
-    if (d_checkpoint_states_ == nullptr || d_checkpoint_conv_history_ == nullptr) {
-        throw std::runtime_error("GdnCheckpointStorage::capture: unallocated checkpoint storage");
+    if (d_checkpoint_states_ == nullptr && d_checkpoint_conv_history_ == nullptr) {
+        const std::size_t states_bytes = kGdnLayerCount * RecurrentLayerState::kStateBytes;
+        const std::size_t history_bytes = kGdnLayerCount * RecurrentLayerState::kConvHistoryBytes;
+        float* states = nullptr;
+        float* history = nullptr;
+        MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&states), states_bytes));
+        const hipError_t error = hipMalloc(reinterpret_cast<void**>(&history), history_bytes);
+        if (error != hipSuccess) (void)hipFree(states);
+        MIINFER_HIP_CHECK(error);
+        d_checkpoint_states_ = states;
+        d_checkpoint_conv_history_ = history;
+        total_bytes_ = states_bytes + history_bytes;
+    } else if (d_checkpoint_states_ == nullptr || d_checkpoint_conv_history_ == nullptr) {
+        throw std::runtime_error("GdnCheckpointStorage::capture: partially allocated checkpoint storage");
     }
 
     for (std::size_t i = 0; i < kGdnLayerCount; ++i) {
