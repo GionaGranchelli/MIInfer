@@ -1,0 +1,37 @@
+Internal ctest changing into directory: /build
+Test project /build
+      Start  1: host-only
+ 1/14 Test  #1: host-only ..........................   Passed    0.00 sec
+      Start  2: openai-api-host
+ 2/14 Test  #2: openai-api-host ....................   Passed    0.00 sec
+      Start  3: m12-gdn-oracle
+ 3/14 Test  #3: m12-gdn-oracle .....................   Passed    1.44 sec
+      Start  4: model-loader-host
+ 4/14 Test  #4: model-loader-host ..................   Passed    0.00 sec
+      Start  5: qwen3-primitives-host
+ 5/14 Test  #5: qwen3-primitives-host ..............   Passed    0.00 sec
+      Start  6: context-space-host
+ 6/14 Test  #6: context-space-host .................   Passed    0.00 sec
+      Start  7: device-kv-shard-placement-host
+ 7/14 Test  #7: device-kv-shard-placement-host .....   Passed    0.00 sec
+      Start  8: qwen3-layer0-host
+ 8/14 Test  #8: qwen3-layer0-host ..................   Passed    0.00 sec
+      Start  9: qwen3-kv-cache-host
+ 9/14 Test  #9: qwen3-kv-cache-host ................   Passed    0.00 sec
+      Start 10: qwen3-forward-host
+10/14 Test #10: qwen3-forward-host .................   Passed    0.00 sec
+      Start 11: qwen3-tokenizer-host
+11/14 Test #11: qwen3-tokenizer-host ...............   Passed    0.00 sec
+      Start 12: qwen3-layer0-comparator-mutation
+12/14 Test #12: qwen3-layer0-comparator-mutation ...   Passed    0.00 sec
+      Start 13: kquant-wave-host
+13/14 Test #13: kquant-wave-host ...................   Passed    0.06 sec
+      Start 34: reusable-context-allocation
+14/14 Test #34: reusable-context-allocation ........   Passed    0.34 sec
+
+100% tests passed, 0 tests failed out of 14
+
+Label Time Summary:
+host-only    =   1.86 sec*proc (14 tests)
+
+Total Test time (real) =   1.86 sec

@@ -76,11 +76,13 @@ int main(int argc, char** argv) {
             cold_tokens = cold.generated_tokens;
         }
 
-        miinfer::prefill_v2::PrefillV2Model fresh_engine(model, 1024, true);
-        const auto fresh = fresh_engine.generate(prompt, options(true, true));
+        {
+            miinfer::prefill_v2::PrefillV2Model fresh_engine(model, 1024, true);
+            const auto fresh = fresh_engine.generate(prompt, options(true, true));
 
-        require(!fresh.reuse_hit, "fresh session unexpectedly reused state");
-        require(fresh.generated_tokens == cold_tokens, "fresh-session output differs from clean output");
+            require(!fresh.reuse_hit, "fresh session unexpectedly reused state");
+            require(fresh.generated_tokens == cold_tokens, "fresh-session output differs from clean output");
+        }
 
         {
             miinfer::prefill_v2::PrefillV2Model boundary_engine(model, 2048, true);

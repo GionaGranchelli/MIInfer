@@ -1,0 +1,7 @@
+CPU_GUARD_TIMING detected_to_TERM_ms=0 detected_to_KILL_ms=0 detected_to_worker_exit_ms=50 detected_to_descendants_exit_ms=80 detected_to_cleanup_ms=80
+CPU_GUARD_TIMING detected_to_TERM_ms=0 detected_to_KILL_ms=2050 detected_to_worker_exit_ms=2110 detected_to_descendants_exit_ms=2130 detected_to_cleanup_ms=2140
+CPU_GUARD_TIMING detected_to_TERM_ms=0 detected_to_KILL_ms=30 detected_to_worker_exit_ms=80 detected_to_descendants_exit_ms=110 detected_to_cleanup_ms=110
+CPU_GUARD_TIMING detected_to_TERM_ms=10 detected_to_KILL_ms=0 detected_to_worker_exit_ms=60 detected_to_descendants_exit_ms=80 detected_to_cleanup_ms=90
+CPU_GUARD_TIMING detected_to_TERM_ms=0 detected_to_KILL_ms=0 detected_to_worker_exit_ms=50 detected_to_descendants_exit_ms=80 detected_to_cleanup_ms=90
+CPU_GUARD_TIMING detected_to_TERM_ms=0 detected_to_KILL_ms=0 detected_to_worker_exit_ms=50 detected_to_descendants_exit_ms=80 detected_to_cleanup_ms=80
+PASS: bounded TERM/KILL shutdown, nested descendants, natural exit, isolated process group, stale/unavailable telemetry, unexpected monitor exit, and monotonic latency events

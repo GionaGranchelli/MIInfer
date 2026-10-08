@@ -1,0 +1,105 @@
+[  7%] Building CXX object CMakeFiles/miinfer_context_space.dir/src/context_space.cpp.o
+[  7%] Building CXX object CMakeFiles/miinfer_build_info.dir/src/build_info.cpp.o
+[ 15%] Building CXX object CMakeFiles/miinfer_model.dir/src/gguf.cpp.o
+[ 15%] Building CXX object CMakeFiles/miinfer_model.dir/src/qwen3_model.cpp.o
+[ 15%] Building CXX object CMakeFiles/miinfer_model.dir/src/qwen35_model.cpp.o
+[ 23%] Building CXX object CMakeFiles/miinfer_model.dir/src/qwen3_primitives.cpp.o
+[ 23%] Building CXX object CMakeFiles/miinfer_model.dir/src/qwen3_layer.cpp.o
+[ 23%] Building CXX object CMakeFiles/miinfer_model.dir/src/qwen3_tokenizer.cpp.o
+[ 23%] Linking CXX static library libmiinfer_build_info.a
+[ 23%] Built target miinfer_build_info
+[ 30%] Building CXX object CMakeFiles/miinfer_model.dir/src/sha256.cpp.o
+[ 30%] Linking CXX static library libmiinfer_context_space.a
+[ 30%] Built target miinfer_context_space
+[ 30%] Building CXX object CMakeFiles/miinfer_device_kv_shard.dir/src/device_kv_shard.cpp.o
+[ 38%] Linking CXX static library libmiinfer_device_kv_shard.a
+[ 38%] Built target miinfer_device_kv_shard
+[ 38%] Linking CXX static library libmiinfer_model.a
+[ 38%] Built target miinfer_model
+[ 38%] Building CXX object CMakeFiles/miinfer_hip.dir/src/device_validation.cpp.o
+[ 46%] Building CXX object CMakeFiles/miinfer_hip.dir/src/qwen3_gpu_layer.cpp.o
+[ 46%] Building CXX object CMakeFiles/miinfer_hip.dir/src/model_plan.cpp.o
+[ 46%] Building CXX object CMakeFiles/miinfer_hip.dir/src/q4_q8_gemv_reference.cpp.o
+[ 46%] Building CXX object CMakeFiles/miinfer_hip.dir/src/fp16_gemv_reference.cpp.o
+[ 53%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/state.cpp.o
+[ 53%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/workspace.cpp.o
+[ 53%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/recurrent_layer.cpp.o
+[ 53%] Building CXX object CMakeFiles/miinfer_hip.dir/src/device_kv_pool.cpp.o
+[ 61%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/kv_cache.cpp.o
+[ 61%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/attention_layer.cpp.o
+[ 61%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/topology_block.cpp.o
+[ 69%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/reusable_context.cpp.o
+[ 69%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/persistent_session.cpp.o
+[ 69%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/model.cpp.o
+[ 76%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/vector_add.hip.o
+[ 76%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/fp16_gemv.hip.o
+[ 76%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/q4_q8_gemv.hip.o
+[ 84%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/q4_q8_packed_dot.hip.o
+[ 84%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/q4_q8_zero_point_dot.hip.o
+[ 84%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/qwen3_primitives.hip.o
+[ 92%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/kquant_wave_layout.hip.o
+/src/gfx906/kernels/qwen3_primitives.hip:2687:35: warning: unused parameter 'scale' [-Wunused-parameter]
+ 2687 |     std::uint32_t head_dim, float scale) {
+      |                                   ^
+[ 92%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/m12_dense_stage.hip.o
+[ 92%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/m12_gdn_chunk.hip.o
+[100%] Building CXX object CMakeFiles/miinfer_hip.dir/src/kquant_wave_layout.cpp.o
+[100%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/memory_stream.hip.o
+/src/gfx906/kernels/qwen3_primitives.hip:6188:17: warning: loop not unrolled: the optimizer was unable to perform the requested transformation; the transformation might be disabled or specified as part of an unsupported transformation ordering [-Wpass-failed=transform-warning]
+ 6188 | __global__ void prefill_v2_split_kv_attention_stage1_kernel(
+      |                 ^
+2 warnings generated when compiling for gfx906.
+/src/gfx906/kernels/qwen3_primitives.hip:2687:35: warning: unused parameter 'scale' [-Wunused-parameter]
+ 2687 |     std::uint32_t head_dim, float scale) {
+      |                                   ^
+1 warning generated when compiling for host.
+/src/gfx906/kernels/kquant_wave_layout.hip:2404:43: warning: failed to meet occupancy target given by 'amdgpu-waves-per-eu' in '_ZN12_GLOBAL__N_129mx_repacked_mmq_pinned_kernelILb0ELb0EEEvPKhPKN7miinfer14MxQ8_1MmqBlockEPfjjj': desired occupancy was 2, final occupancy is 1 [-Wpass-failed]
+ 2404 | __launch_bounds__(256, 2) __global__ void mx_repacked_mmq_pinned_kernel(
+      |                                           ^
+/src/gfx906/kernels/kquant_wave_layout.hip:2404:43: warning: failed to meet occupancy target given by 'amdgpu-waves-per-eu' in '_ZN12_GLOBAL__N_129mx_repacked_mmq_pinned_kernelILb1ELb0EEEvPKhPKN7miinfer14MxQ8_1MmqBlockEPfjjj': desired occupancy was 2, final occupancy is 1 [-Wpass-failed]
+2 warnings generated when compiling for gfx906.
+[100%] Linking HIP static library libmiinfer_hip.a
+[100%] Built target miinfer_hip
+[100%] Building CXX object CMakeFiles/miinfer-prefill-v2-exact-prefix-reuse-test.dir/tests/prefill_v2_exact_prefix_reuse_test.cpp.o
+[100%] Linking HIP executable miinfer-prefill-v2-exact-prefix-reuse-test
+[100%] Built target miinfer-prefill-v2-exact-prefix-reuse-test
+[  7%] Built target miinfer_context_space
+[  7%] Built target miinfer_build_info
+[ 15%] Built target miinfer_device_kv_shard
+[ 38%] Built target miinfer_model
+[100%] Built target miinfer_hip
+[100%] Building CXX object CMakeFiles/miinfer-prefill-v2-snapshot-fork-rollback-test.dir/tests/prefill_v2_snapshot_fork_rollback_test.cpp.o
+[100%] Linking HIP executable miinfer-prefill-v2-snapshot-fork-rollback-test
+[100%] Built target miinfer-prefill-v2-snapshot-fork-rollback-test
+[  7%] Built target miinfer_build_info
+[  7%] Built target miinfer_context_space
+[ 30%] Built target miinfer_model
+[ 38%] Built target miinfer_device_kv_shard
+[100%] Built target miinfer_hip
+[100%] Building CXX object CMakeFiles/miinfer-prefill-v2-agent-branch-workload-test.dir/tests/prefill_v2_agent_branch_workload_test.cpp.o
+[100%] Linking HIP executable miinfer-prefill-v2-agent-branch-workload-test
+[100%] Built target miinfer-prefill-v2-agent-branch-workload-test
+[  7%] Built target miinfer_context_space
+[  7%] Built target miinfer_build_info
+[ 28%] Built target miinfer_model
+[ 35%] Built target miinfer_device_kv_shard
+[ 92%] Built target miinfer_hip
+[ 92%] Building CXX object CMakeFiles/miinfer-m31-0005-decode-attention-bound-test.dir/tests/m31_0005_decode_attention_bound_test.cpp.o
+[100%] Linking HIP executable miinfer-m31-0005-decode-attention-bound-test
+[100%] Built target miinfer-m31-0005-decode-attention-bound-test
+[  7%] Built target miinfer_context_space
+[  7%] Built target miinfer_build_info
+[ 28%] Built target miinfer_model
+[ 35%] Built target miinfer_device_kv_shard
+[ 92%] Built target miinfer_hip
+[100%] Building CXX object CMakeFiles/miinfer-m31-0006-guard-gpu-worker.dir/tests/m31_0006_guard_gpu_worker.cpp.o
+[100%] Linking HIP executable miinfer-m31-0006-guard-gpu-worker
+[100%] Built target miinfer-m31-0006-guard-gpu-worker
+[  7%] Built target miinfer_context_space
+[  7%] Built target miinfer_build_info
+[ 30%] Built target miinfer_model
+[ 38%] Built target miinfer_device_kv_shard
+[100%] Built target miinfer_hip
+[100%] Building CXX object CMakeFiles/miinfer-m31-0006-graph-attention-microbench.dir/bench/m31_0006_graph_attention_microbench.cpp.o
+[100%] Linking HIP executable miinfer-m31-0006-graph-attention-microbench
+[100%] Built target miinfer-m31-0006-graph-attention-microbench

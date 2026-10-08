@@ -14,6 +14,7 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_PREFIX_PATH": "/opt/rocm-7.2.1",
         "CMAKE_HIP_ARCHITECTURES": "gfx906",
         "MIINFER_ENABLE_HIP": "ON",
         "MIINFER_HIP_ARCHITECTURE": "gfx906",
@@ -28,6 +29,7 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_PREFIX_PATH": "/opt/rocm-7.2.1",
         "CMAKE_HIP_ARCHITECTURES": "gfx906",
         "MIINFER_ENABLE_HIP": "ON",
         "MIINFER_HIP_ARCHITECTURE": "gfx906",

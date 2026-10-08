@@ -1,0 +1,12 @@
+THERMAL_GUARD_BEGIN gpu=0 pci=0000:06:00.0 warn_junction_c=80 max_junction_c=85 initial_junction_c=25.0
+GUARD_EVENT event=worker_started monotonic_s=202194.85 since_start_ms=180 worker_pid=766869 worker_pgid=766869 command=timeout --signal=INT --kill-after=5s 60s podman run --rm --init --name m31-0005-graph-boundary-final-20261008 --device=/dev/kfd --device=/dev/dri --security-opt=label=disable --group-add=keep-groups -e M31_GPU_RUN_AUTHORIZED=1 -v /tmp/m31-0006-target-build-20261008:/build:ro localhost/miinfer-dev:rocm-7.2.1 /build/miinfer-m31-0005-decode-attention-bound-test
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=26.0 warn_c=80 limit_c=85
+M31-0005 decode graph/eager boundary position=1: PASS
+M31-0005 decode graph/eager boundary position=511: PASS
+M31-0005 decode graph/eager boundary position=512: PASS
+M31-0005 causal decode KV bound: PASS
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=26.0 warn_c=80 limit_c=85
+GUARD_EVENT event=worker_exit monotonic_s=202196.08 since_start_ms=1410 worker_pid=766869 worker_pgid=766869 status=0
+GUARD_EVENT event=descendants_exited monotonic_s=202196.12 since_start_ms=1450 worker_pid=766869 worker_pgid=766869 process_group=766869 group_empty_observed=true
+GUARD_EVENT event=cleanup_complete monotonic_s=202196.12 since_start_ms=1450 worker_pid=766869 worker_pgid=766869 process_group=766869

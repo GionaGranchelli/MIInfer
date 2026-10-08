@@ -1,0 +1,40 @@
+THERMAL_GUARD_BEGIN gpu=0 pci=0000:06:00.0 warn_junction_c=80 max_junction_c=85 initial_junction_c=33
+GUARD_EVENT event=worker_started monotonic_s=200788.32 since_start_ms=20 worker_pid=627202 worker_pgid=627202 command=podman run --rm --init --name m31-0006-guard-worker-20261008 --device=/dev/kfd --device=/dev/dri --security-opt=label=disable --group-add=keep-groups -e M31_GPU_RUN_AUTHORIZED=1 -v /tmp/m31-0006-current-build.POzNmO:/build:ro localhost/miinfer-dev:rocm-7.2.1 /build/m31_0006_guard_gpu_worker --confirm-mi50-guard-test
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=33 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=33 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=33 warn_c=80 limit_c=85
+M31_GUARD_GPU_WORKER_READY device=0 arch=gfx906 allocated_bytes=4194304
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=33 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=33 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=33 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=33 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=33 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=33 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=33 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=33 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=33 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=33 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=33 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=33 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=33 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=33 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=33 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=33 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=33 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=33 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=33 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=33 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=33 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=33 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=33 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=33 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=33 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=33 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=85 warn_c=80 limit_c=85
+THERMAL_WARNING reason=temperature_limit junction_c=85 warning_c=80
+GUARD_EVENT event=detected monotonic_s=200794.82 since_start_ms=6520 worker_pid=627202 worker_pgid=627202 reason=temperature_limit junction_c=85 limit_c=85
+THERMAL_GUARD_ABORT reason=temperature_limit junction_c=85 limit_c=85
+GUARD_EVENT event=signal_sent monotonic_s=200794.83 since_start_ms=6530 worker_pid=627202 worker_pgid=627202 detected_to_signal_sent_ms=10 signal=TERM result=sent reason=temperature_limit
+GUARD_EVENT event=worker_exit monotonic_s=200794.96 since_start_ms=6660 worker_pid=627202 worker_pgid=627202 detected_to_worker_exit_ms=140 status=143
+GUARD_EVENT event=descendants_exited monotonic_s=200794.99 since_start_ms=6690 worker_pid=627202 worker_pgid=627202 detected_to_descendants_exited_ms=170 process_group=627202 group_empty_observed=true
+GUARD_EVENT event=cleanup_complete monotonic_s=200794.99 since_start_ms=6690 worker_pid=627202 worker_pgid=627202 detected_to_cleanup_complete_ms=170 process_group=627202

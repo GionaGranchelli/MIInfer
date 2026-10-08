@@ -1,0 +1,32 @@
+THERMAL_GUARD_BEGIN gpu=0 pci=0000:06:00.0 warn_junction_c=80 max_junction_c=85 initial_junction_c=25.0
+GUARD_EVENT event=worker_started monotonic_s=202252.67 since_start_ms=190 worker_pid=769906 worker_pgid=769906 command=timeout --signal=INT --kill-after=5s 120s podman run --rm --init --name m31-0006-attention-64k-20261008 --device=/dev/kfd --device=/dev/dri --security-opt=label=disable --group-add=keep-groups -e M31_GPU_RUN_AUTHORIZED=1 -v /tmp/m31-0006-target-build-20261008:/build:ro localhost/miinfer-dev:rocm-7.2.1 /build/miinfer-m31-0006-graph-attention-microbench --context 65536 --mode baseline --repeats 1
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+# host=0e70ad7f01b7 gpu_index=0 bdf=0000:06:00.0 name="AMD Instinct MI60 / MI50" arch=gfx906:sramecc+:xnack- cus=60 vram_bytes=34342961152 hip_runtime_version=70253211 hip_driver_version=70253211 context=65536 mode=baseline default_active_splits=64 candidate_active_splits=64 grid=24x64 block_threads=64 wavefront=64 scratch_static_bytes=1585152 repeats=1 kv=fp16 q_heads=24 kv_heads=4 head_dim=256 scale=0.0625 capacity=65537 rng_seed=1831993350 output=fp32 gate=sigmoid graph_nodes=2
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=26.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=26.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+# correctness=PASS default_active_splits=64 candidate_active_splits=64 graph_grid=24x64 block_threads=64 wavefront=64 default_graph_capture_ms=0.142541 candidate_graph_capture_ms=0 static_scratch_bytes=1585152 allocation_delta_bytes=427819008 live_allocated_bytes=448790528 free_vram_before_bytes=34321989632 total_vram_before_bytes=34342961152 free_vram_after_bytes=33894170624 total_vram_after_bytes=34342961152 reference_abs_tolerance=0.002 default_max_abs_vs_reference=3.34694e-10 future_kv_poison=10000.0 ignored
+sample context=65536 variant=default active_splits=64 grid=24x64 sample=1 direct_kernel_pair_ms=1.989757 direct_submit_to_complete_ms=2.002285 graph_kernel_pair_ms=1.985757 graph_replay_submit_to_complete_ms=1.994080 scratch_static_bytes=1585152 observed_allocation_delta_bytes=427819008 max_abs_vs_reference=0.000000 max_abs_vs_default=0.000000
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=26.0 warn_c=80 limit_c=85
+GUARD_EVENT event=worker_exit monotonic_s=202262.31 since_start_ms=9830 worker_pid=769906 worker_pgid=769906 status=0
+GUARD_EVENT event=descendants_exited monotonic_s=202262.35 since_start_ms=9870 worker_pid=769906 worker_pgid=769906 process_group=769906 group_empty_observed=true
+GUARD_EVENT event=cleanup_complete monotonic_s=202262.35 since_start_ms=9870 worker_pid=769906 worker_pgid=769906 process_group=769906

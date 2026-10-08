@@ -1,0 +1,19 @@
+THERMAL_GUARD_BEGIN gpu=0 pci=0000:06:00.0 warn_junction_c=80 max_junction_c=85 initial_junction_c=25.0
+GUARD_EVENT event=worker_started monotonic_s=202375.59 since_start_ms=190 worker_pid=774327 worker_pgid=774327 command=timeout --signal=INT --kill-after=5s 120s podman run --rm --init --name m31-0006-attention-32k-split16-20261008 --device=/dev/kfd --device=/dev/dri --security-opt=label=disable --group-add=keep-groups -e M31_GPU_RUN_AUTHORIZED=1 -v /tmp/m31-0006-target-build-20261008:/build:ro localhost/miinfer-dev:rocm-7.2.1 /build/miinfer-m31-0006-graph-attention-microbench --context 32768 --mode split16 --repeats 1
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+# host=2e56cd2981fd gpu_index=0 bdf=0000:06:00.0 name="AMD Instinct MI60 / MI50" arch=gfx906:sramecc+:xnack- cus=60 vram_bytes=34342961152 hip_runtime_version=70253211 hip_driver_version=70253211 context=32768 mode=split16 default_active_splits=64 candidate_active_splits=16 grid=24x64 block_threads=64 wavefront=64 scratch_static_bytes=1585152 repeats=1 kv=fp16 q_heads=24 kv_heads=4 head_dim=256 scale=0.0625 capacity=32769 rng_seed=1831960582 output=fp32 gate=sigmoid graph_nodes=2
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=26.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+# correctness=PASS default_active_splits=64 candidate_active_splits=16 graph_grid=24x64 block_threads=64 wavefront=64 default_graph_capture_ms=0.150934 candidate_graph_capture_ms=0.096167 static_scratch_bytes=1585152 allocation_delta_bytes=293601280 live_allocated_bytes=314572800 free_vram_before_bytes=34321989632 total_vram_before_bytes=34342961152 free_vram_after_bytes=34028388352 total_vram_after_bytes=34342961152 reference_abs_tolerance=0.002 default_max_abs_vs_reference=4.07454e-10 future_kv_poison=10000.0 ignored
+sample context=32768 variant=default active_splits=64 grid=24x64 sample=1 direct_kernel_pair_ms=0.965759 direct_submit_to_complete_ms=0.978533 graph_kernel_pair_ms=0.957278 graph_replay_submit_to_complete_ms=0.976517 scratch_static_bytes=1585152 observed_allocation_delta_bytes=293601280 max_abs_vs_reference=0.000000 max_abs_vs_default=0.000000
+sample context=32768 variant=split16 active_splits=16 grid=24x64 sample=1 direct_kernel_pair_ms=2.616156 direct_submit_to_complete_ms=2.627576 graph_kernel_pair_ms=2.579516 graph_replay_submit_to_complete_ms=2.598830 scratch_static_bytes=1585152 observed_allocation_delta_bytes=293601280 max_abs_vs_reference=0.000000 max_abs_vs_default=0.000000
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=26.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=25.0 warn_c=80 limit_c=85
+GUARD_EVENT event=worker_exit monotonic_s=202379.61 since_start_ms=4210 worker_pid=774327 worker_pgid=774327 status=0
+GUARD_EVENT event=descendants_exited monotonic_s=202379.64 since_start_ms=4240 worker_pid=774327 worker_pgid=774327 process_group=774327 group_empty_observed=true
+GUARD_EVENT event=cleanup_complete monotonic_s=202379.65 since_start_ms=4250 worker_pid=774327 worker_pgid=774327 process_group=774327

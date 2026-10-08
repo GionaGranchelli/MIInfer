@@ -696,6 +696,24 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-m31-0005-decode-attention-bound-test PRIVATE miinfer_hip)
     target_compile_options(miinfer-m31-0005-decode-attention-bound-test PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-m31-0006-guard-gpu-worker
+        tests/m31_0006_guard_gpu_worker.cpp)
+    target_link_libraries(miinfer-m31-0006-guard-gpu-worker PRIVATE miinfer_hip)
+    target_compile_options(miinfer-m31-0006-guard-gpu-worker PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-m31-0006-graph-attention-microbench
+        bench/m31_0006_graph_attention_microbench.cpp)
+    target_link_libraries(miinfer-m31-0006-graph-attention-microbench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-m31-0006-graph-attention-microbench
+        PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(miinfer-m31-0006-production-graph-decode-smoke
+        bench/m31_0006_production_graph_decode_smoke.cpp)
+    target_link_libraries(miinfer-m31-0006-production-graph-decode-smoke
+        PRIVATE miinfer_hip miinfer_model)
+    target_compile_options(miinfer-m31-0006-production-graph-decode-smoke
+        PRIVATE -Wall -Wextra -Wpedantic)
+
     add_executable(miinfer-v2-0019-quantized-kv-bench bench/v2_0019_quantized_kv_bench.cpp)
     target_link_libraries(miinfer-v2-0019-quantized-kv-bench PRIVATE miinfer_hip miinfer_model)
     target_compile_options(miinfer-v2-0019-quantized-kv-bench PRIVATE -Wall -Wextra -Wpedantic)

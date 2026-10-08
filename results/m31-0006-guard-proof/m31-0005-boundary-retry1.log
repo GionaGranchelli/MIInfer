@@ -1,0 +1,5 @@
+GUARD_EVENT event=worker_started monotonic_s=200954.52 since_start_ms=0 worker_pid=636405 worker_pgid=636405 command=podman run --rm --init --name m31-0006-m31-0005-boundary-r1-20261008 --device=/dev/kfd --device=/dev/dri --security-opt=label=disable --group-add=keep-groups -v /tmp/m31-0006-current-build.POzNmO:/build:ro localhost/miinfer-dev:rocm-7.2.1 /build/miinfer-m31-0005-decode-attention-bound-test
+M31-0005 causal decode KV bound: PASS
+GUARD_EVENT event=worker_exit monotonic_s=200955.59 since_start_ms=1070 worker_pid=636405 worker_pgid=636405 status=0
+GUARD_EVENT event=descendants_exited monotonic_s=200955.63 since_start_ms=1110 worker_pid=636405 worker_pgid=636405 process_group=636405 group_empty_observed=true
+GUARD_EVENT event=cleanup_complete monotonic_s=200955.63 since_start_ms=1110 worker_pid=636405 worker_pgid=636405 process_group=636405

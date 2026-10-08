@@ -1,0 +1,42 @@
+[  7%] Built target miinfer_context_space
+[  7%] Built target miinfer_build_info
+[ 28%] Built target miinfer_model
+[ 35%] Built target miinfer_device_kv_shard
+[ 92%] Built target miinfer_hip
+[100%] Built target miinfer-prefill-v2-exact-prefix-reuse-test
+[  7%] Built target miinfer_context_space
+[  7%] Built target miinfer_build_info
+[ 28%] Built target miinfer_model
+[ 35%] Built target miinfer_device_kv_shard
+[ 92%] Built target miinfer_hip
+[100%] Built target miinfer-prefill-v2-snapshot-fork-rollback-test
+[  7%] Built target miinfer_context_space
+[  7%] Built target miinfer_build_info
+[ 28%] Built target miinfer_model
+[ 35%] Built target miinfer_device_kv_shard
+[ 92%] Built target miinfer_hip
+[100%] Built target miinfer-prefill-v2-agent-branch-workload-test
+[  7%] Built target miinfer_context_space
+[  7%] Built target miinfer_build_info
+[ 30%] Built target miinfer_model
+[ 38%] Built target miinfer_device_kv_shard
+[100%] Built target miinfer_hip
+[100%] Built target miinfer-m31-0005-decode-attention-bound-test
+[  7%] Built target miinfer_context_space
+[  7%] Built target miinfer_build_info
+[ 28%] Built target miinfer_model
+[ 35%] Built target miinfer_device_kv_shard
+[ 92%] Built target miinfer_hip
+[100%] Built target miinfer-m31-0006-guard-gpu-worker
+[  7%] Built target miinfer_context_space
+[  7%] Built target miinfer_build_info
+[ 28%] Built target miinfer_model
+[ 35%] Built target miinfer_device_kv_shard
+[ 92%] Built target miinfer_hip
+[100%] Built target miinfer-m31-0006-graph-attention-microbench
+[  7%] Built target miinfer_context_space
+[  7%] Built target miinfer_build_info
+[ 30%] Built target miinfer_model
+[ 38%] Built target miinfer_device_kv_shard
+[100%] Built target miinfer_hip
+[100%] Built target miinfer-m31-0006-production-graph-decode-smoke

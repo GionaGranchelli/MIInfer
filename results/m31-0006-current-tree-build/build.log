@@ -1,0 +1,308 @@
+[  0%] Building CXX object CMakeFiles/miinfer_model.dir/src/qwen3_model.cpp.o
+[  2%] Building CXX object CMakeFiles/miinfer_model.dir/src/gguf.cpp.o
+[  5%] Building CXX object CMakeFiles/miinfer-m12-gdn-oracle.dir/bench/m12_gdn_oracle.cpp.o
+[  5%] Building CXX object CMakeFiles/miinfer_build_info.dir/src/build_info.cpp.o
+[  5%] Building CXX object CMakeFiles/miinfer_model.dir/src/qwen35_model.cpp.o
+[  5%] Building CXX object CMakeFiles/miinfer-reusable-context-allocation-test.dir/tests/reusable_context_allocation_test.cpp.o
+[  5%] Building CXX object CMakeFiles/miinfer_openai_api.dir/src/openai_api.cpp.o
+[  5%] Building CXX object CMakeFiles/miinfer_context_space.dir/src/context_space.cpp.o
+[  5%] Linking CXX static library libmiinfer_build_info.a
+[  5%] Built target miinfer_build_info
+[  7%] Building CXX object CMakeFiles/miinfer_model.dir/src/qwen3_primitives.cpp.o
+[ 10%] Linking CXX static library libmiinfer_context_space.a
+[ 10%] Built target miinfer_context_space
+[ 10%] Building CXX object CMakeFiles/miinfer-context-space-test.dir/tests/context_space_test.cpp.o
+[ 10%] Building CXX object CMakeFiles/miinfer-reusable-context-allocation-test.dir/src/prefill_v2/reusable_context.cpp.o
+[ 12%] Linking CXX executable miinfer-m12-gdn-oracle
+[ 12%] Linking CXX executable miinfer-context-space-test
+[ 12%] Built target miinfer-m12-gdn-oracle
+[ 12%] Building CXX object CMakeFiles/miinfer_model.dir/src/qwen3_layer.cpp.o
+[ 12%] Building CXX object CMakeFiles/miinfer_device_kv_shard.dir/src/device_kv_shard.cpp.o
+[ 12%] Built target miinfer-context-space-test
+[ 12%] Building CXX object CMakeFiles/miinfer_model.dir/src/qwen3_tokenizer.cpp.o
+[ 15%] Building CXX object CMakeFiles/miinfer_model.dir/src/sha256.cpp.o
+[ 15%] Building CXX object CMakeFiles/miinfer-reusable-context-allocation-test.dir/src/prefill_v2/state.cpp.o
+[ 17%] Linking CXX executable miinfer-reusable-context-allocation-test
+[ 17%] Built target miinfer-reusable-context-allocation-test
+[ 17%] Linking CXX static library libmiinfer_device_kv_shard.a
+[ 17%] Built target miinfer_device_kv_shard
+[ 17%] Building CXX object CMakeFiles/miinfer-device-kv-shard-placement-test.dir/tests/device_kv_shard_placement_test.cpp.o
+[ 17%] Linking CXX executable miinfer-device-kv-shard-placement-test
+[ 17%] Built target miinfer-device-kv-shard-placement-test
+[ 17%] Linking CXX static library libmiinfer_model.a
+[ 17%] Built target miinfer_model
+[ 20%] Building CXX object CMakeFiles/miinfer-host-test.dir/tests/host_test.cpp.o
+[ 20%] Building CXX object CMakeFiles/miinfer-model-loader-test.dir/tests/model_loader_test.cpp.o
+[ 20%] Building CXX object CMakeFiles/miinfer-qwen3-primitives-host-test.dir/tests/qwen3_primitives_host_test.cpp.o
+[ 20%] Building CXX object CMakeFiles/miinfer-qwen3-layer0-test.dir/tests/qwen3_layer0_test.cpp.o
+[ 20%] Building CXX object CMakeFiles/miinfer-qwen3-kv-cache-test.dir/tests/qwen3_kv_cache_test.cpp.o
+[ 20%] Building CXX object CMakeFiles/miinfer-qwen3-forward-test.dir/tests/qwen3_forward_test.cpp.o
+[ 23%] Building CXX object CMakeFiles/miinfer_hip.dir/src/device_validation.cpp.o
+[ 23%] Linking CXX executable miinfer-host-test
+[ 23%] Built target miinfer-host-test
+[ 23%] Building CXX object CMakeFiles/miinfer-qwen3-tokenizer-test.dir/tests/qwen3_tokenizer_test.cpp.o
+[ 23%] Linking CXX executable miinfer-qwen3-primitives-host-test
+[ 23%] Built target miinfer-qwen3-primitives-host-test
+[ 23%] Building CXX object CMakeFiles/miinfer_hip.dir/src/model_plan.cpp.o
+[ 23%] Building CXX object CMakeFiles/miinfer_hip.dir/src/qwen3_gpu_layer.cpp.o
+[ 25%] Linking CXX executable miinfer-qwen3-tokenizer-test
+[ 25%] Built target miinfer-qwen3-tokenizer-test
+[ 28%] Building CXX object CMakeFiles/miinfer_hip.dir/src/fp16_gemv_reference.cpp.o
+[ 28%] Linking CXX executable miinfer-model-loader-test
+[ 28%] Built target miinfer-model-loader-test
+[ 28%] Building CXX object CMakeFiles/miinfer_hip.dir/src/q4_q8_gemv_reference.cpp.o
+[ 30%] Linking CXX executable miinfer-qwen3-layer0-test
+[ 30%] Built target miinfer-qwen3-layer0-test
+[ 30%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/state.cpp.o
+[ 30%] Linking CXX executable miinfer-qwen3-kv-cache-test
+[ 30%] Built target miinfer-qwen3-kv-cache-test
+[ 33%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/workspace.cpp.o
+[ 33%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/recurrent_layer.cpp.o
+[ 33%] Building CXX object CMakeFiles/miinfer_hip.dir/src/device_kv_pool.cpp.o
+[ 35%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/kv_cache.cpp.o
+[ 38%] Linking CXX executable miinfer-qwen3-forward-test
+[ 38%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/attention_layer.cpp.o
+[ 38%] Built target miinfer-qwen3-forward-test
+[ 38%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/topology_block.cpp.o
+[ 41%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/reusable_context.cpp.o
+[ 41%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/persistent_session.cpp.o
+[ 41%] Building CXX object CMakeFiles/miinfer_hip.dir/src/prefill_v2/model.cpp.o
+[ 43%] Linking CXX static library libmiinfer_openai_api.a
+[ 43%] Built target miinfer_openai_api
+[ 46%] Building CXX object CMakeFiles/miinfer-openai-api-test.dir/tests/openai_api_test.cpp.o
+[ 48%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/vector_add.hip.o
+[ 48%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/fp16_gemv.hip.o
+[ 48%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/q4_q8_gemv.hip.o
+[ 51%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/q4_q8_packed_dot.hip.o
+[ 51%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/q4_q8_zero_point_dot.hip.o
+[ 51%] Linking CXX executable miinfer-openai-api-test
+[ 51%] Built target miinfer-openai-api-test
+[ 51%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/qwen3_primitives.hip.o
+[ 53%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/kquant_wave_layout.hip.o
+/src/gfx906/kernels/qwen3_primitives.hip:2687:35: warning: unused parameter 'scale' [-Wunused-parameter]
+ 2687 |     std::uint32_t head_dim, float scale) {
+      |                                   ^
+[ 53%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/m12_dense_stage.hip.o
+[ 53%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/m12_gdn_chunk.hip.o
+[ 56%] Building CXX object CMakeFiles/miinfer_hip.dir/src/kquant_wave_layout.cpp.o
+[ 56%] Building HIP object CMakeFiles/miinfer_hip.dir/gfx906/kernels/memory_stream.hip.o
+/src/gfx906/kernels/qwen3_primitives.hip:6188:17: warning: loop not unrolled: the optimizer was unable to perform the requested transformation; the transformation might be disabled or specified as part of an unsupported transformation ordering [-Wpass-failed=transform-warning]
+ 6188 | __global__ void prefill_v2_split_kv_attention_stage1_kernel(
+      |                 ^
+2 warnings generated when compiling for gfx906.
+/src/gfx906/kernels/qwen3_primitives.hip:2687:35: warning: unused parameter 'scale' [-Wunused-parameter]
+ 2687 |     std::uint32_t head_dim, float scale) {
+      |                                   ^
+1 warning generated when compiling for host.
+/src/gfx906/kernels/kquant_wave_layout.hip:2404:43: warning: failed to meet occupancy target given by 'amdgpu-waves-per-eu' in '_ZN12_GLOBAL__N_129mx_repacked_mmq_pinned_kernelILb0ELb0EEEvPKhPKN7miinfer14MxQ8_1MmqBlockEPfjjj': desired occupancy was 2, final occupancy is 1 [-Wpass-failed]
+ 2404 | __launch_bounds__(256, 2) __global__ void mx_repacked_mmq_pinned_kernel(
+      |                                           ^
+/src/gfx906/kernels/kquant_wave_layout.hip:2404:43: warning: failed to meet occupancy target given by 'amdgpu-waves-per-eu' in '_ZN12_GLOBAL__N_129mx_repacked_mmq_pinned_kernelILb1ELb0EEEvPKhPKN7miinfer14MxQ8_1MmqBlockEPfjjj': desired occupancy was 2, final occupancy is 1 [-Wpass-failed]
+2 warnings generated when compiling for gfx906.
+[ 56%] Linking HIP static library libmiinfer_hip.a
+[ 56%] Built target miinfer_hip
+[ 56%] Building CXX object CMakeFiles/miinfer-device-kv-pool-test.dir/tests/device_kv_pool_test.cpp.o
+[ 56%] Building CXX object CMakeFiles/miinfer-two-shard-placement-test.dir/tests/two_shard_placement_test.cpp.o
+[ 58%] Building CXX object CMakeFiles/miinfer-two-shard-validation-test.dir/tests/two_shard_validation_test.cpp.o
+[ 58%] Building CXX object CMakeFiles/miinfer-physical-kv-view-test.dir/tests/physical_kv_view_test.cpp.o
+[ 58%] Building CXX object CMakeFiles/miinfer.dir/tools/miinfer_cli.cpp.o
+[ 61%] Building CXX object CMakeFiles/miinfer-device-info.dir/tests/device_info.cpp.o
+[ 61%] Building CXX object CMakeFiles/miinfer-hip-smoke.dir/tests/hip_smoke.cpp.o
+[ 64%] Building CXX object CMakeFiles/miinfer-fp16-gemv-test.dir/tests/fp16_gemv_test.cpp.o
+[ 64%] Linking HIP executable miinfer-device-info
+[ 64%] Linking HIP executable miinfer-hip-smoke
+[ 64%] Built target miinfer-device-info
+[ 64%] Built target miinfer-hip-smoke
+[ 66%] Building CXX object CMakeFiles/miinfer-q4-q8-gemv-test.dir/tests/q4_q8_gemv_test.cpp.o
+[ 66%] Building CXX object CMakeFiles/miinfer-q4-q8-dot4-probe.dir/tests/q4_q8_dot4_probe.cpp.o
+[ 66%] Linking HIP executable miinfer-two-shard-placement-test
+[ 66%] Built target miinfer-two-shard-placement-test
+[ 66%] Building CXX object CMakeFiles/miinfer-kquant-wave-test.dir/tests/kquant_wave_test.cpp.o
+[ 69%] Linking HIP executable miinfer-device-kv-pool-test
+[ 69%] Built target miinfer-device-kv-pool-test
+[ 69%] Building CXX object CMakeFiles/miinfer-model-gpu-test.dir/tests/model_gpu_test.cpp.o
+[ 71%] Linking HIP executable miinfer-physical-kv-view-test
+[ 71%] Built target miinfer-physical-kv-view-test
+[ 74%] Building CXX object CMakeFiles/miinfer-qwen3-primitives-test.dir/tests/qwen3_primitives_test.cpp.o
+[ 74%] Linking HIP executable miinfer-two-shard-validation-test
+[ 74%] Built target miinfer-two-shard-validation-test
+[ 76%] Building CXX object CMakeFiles/miinfer-qwen35-conv-batch-test.dir/tests/qwen35_conv_batch_test.cpp.o
+[ 76%] Linking HIP executable miinfer-fp16-gemv-test
+[ 76%] Built target miinfer-fp16-gemv-test
+[ 79%] Building CXX object CMakeFiles/miinfer-qwen3-layer0-gpu-test.dir/tests/qwen3_layer0_gpu_test.cpp.o
+[ 82%] Linking HIP executable miinfer-q4-q8-dot4-probe
+[ 82%] Built target miinfer-q4-q8-dot4-probe
+[ 82%] Building CXX object CMakeFiles/miinfer-qwen3-kv-cache-gpu-test.dir/tests/qwen3_kv_cache_gpu_test.cpp.o
+/src/tests/kquant_wave_test.cpp: In function ‘int main()’:
+/src/tests/kquant_wave_test.cpp:40:24: warning: ‘void* memcpy(void*, const void*, size_t)’ copying an object of type ‘struct __half’ with ‘protected’ member ‘__half::__x’ from an array of ‘uint16_t’ {aka ‘short unsigned int’}; use assignment or copy-initialization instead [-Wclass-memaccess]
+   40 |             std::memcpy(&blk.d, &d_bits, 2);
+      |             ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~
+In file included from /opt/rocm-7.2.1/include/hip/amd_detail/amd_hip_fp16.h:1139,
+                 from /opt/rocm-7.2.1/include/hip/hip_fp16.h:29,
+                 from /src/include/miinfer/qwen3_gpu_primitives.hpp:3,
+                 from /src/include/miinfer/kquant_wave_layout.hpp:2,
+                 from /src/tests/kquant_wave_test.cpp:1:
+/opt/rocm-7.2.1/include/hip/amd_detail/hip_fp16_gcc.h:23:8: note: ‘struct __half’ declared here
+   23 | struct __half {
+      |        ^~~~~~
+/src/tests/kquant_wave_test.cpp:41:24: warning: ‘void* memcpy(void*, const void*, size_t)’ copying an object of type ‘struct __half’ with ‘protected’ member ‘__half::__x’ from an array of ‘uint16_t’ {aka ‘short unsigned int’}; use assignment or copy-initialization instead [-Wclass-memaccess]
+   41 |             std::memcpy(&blk.dmin, &dmin_bits, 2);
+      |             ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~
+/opt/rocm-7.2.1/include/hip/amd_detail/hip_fp16_gcc.h:23:8: note: ‘struct __half’ declared here
+   23 | struct __half {
+      |        ^~~~~~
+/src/tests/kquant_wave_test.cpp:84:24: warning: ‘void* memcpy(void*, const void*, size_t)’ copying an object of type ‘struct __half’ with ‘protected’ member ‘__half::__x’ from an array of ‘uint16_t’ {aka ‘short unsigned int’}; use assignment or copy-initialization instead [-Wclass-memaccess]
+   84 |             std::memcpy(&blk.d, &d_bits, 2);
+      |             ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~
+/opt/rocm-7.2.1/include/hip/amd_detail/hip_fp16_gcc.h:23:8: note: ‘struct __half’ declared here
+   23 | struct __half {
+      |        ^~~~~~
+/src/tests/kquant_wave_test.cpp:85:24: warning: ‘void* memcpy(void*, const void*, size_t)’ copying an object of type ‘struct __half’ with ‘protected’ member ‘__half::__x’ from an array of ‘uint16_t’ {aka ‘short unsigned int’}; use assignment or copy-initialization instead [-Wclass-memaccess]
+   85 |             std::memcpy(&blk.dmin, &dmin_bits, 2);
+      |             ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~
+/opt/rocm-7.2.1/include/hip/amd_detail/hip_fp16_gcc.h:23:8: note: ‘struct __half’ declared here
+   23 | struct __half {
+      |        ^~~~~~
+/src/tests/kquant_wave_test.cpp:128:24: warning: ‘void* memcpy(void*, const void*, size_t)’ copying an object of type ‘struct __half’ with ‘protected’ member ‘__half::__x’ from an array of ‘uint16_t’ {aka ‘short unsigned int’}; use assignment or copy-initialization instead [-Wclass-memaccess]
+  128 |             std::memcpy(&blk.d, &d_bits, 2);
+      |             ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~
+/opt/rocm-7.2.1/include/hip/amd_detail/hip_fp16_gcc.h:23:8: note: ‘struct __half’ declared here
+   23 | struct __half {
+      |        ^~~~~~
+/src/tests/kquant_wave_test.cpp:222:24: warning: ‘void* memcpy(void*, const void*, size_t)’ copying an object of type ‘struct __half’ with ‘protected’ member ‘__half::__x’ from an array of ‘uint16_t’ {aka ‘short unsigned int’}; use assignment or copy-initialization instead [-Wclass-memaccess]
+  222 |             std::memcpy(&block.d, &d_bits, sizeof(d_bits));
+      |             ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/opt/rocm-7.2.1/include/hip/amd_detail/hip_fp16_gcc.h:23:8: note: ‘struct __half’ declared here
+   23 | struct __half {
+      |        ^~~~~~
+/src/tests/kquant_wave_test.cpp:285:24: warning: ‘void* memcpy(void*, const void*, size_t)’ copying an object of type ‘struct __half’ with ‘protected’ member ‘__half::__x’ from an array of ‘uint16_t’ {aka ‘short unsigned int’}; use assignment or copy-initialization instead [-Wclass-memaccess]
+  285 |             std::memcpy(&gate_blocks[b].d, &d_bits, 2);
+      |             ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/opt/rocm-7.2.1/include/hip/amd_detail/hip_fp16_gcc.h:23:8: note: ‘struct __half’ declared here
+   23 | struct __half {
+      |        ^~~~~~
+/src/tests/kquant_wave_test.cpp:286:24: warning: ‘void* memcpy(void*, const void*, size_t)’ copying an object of type ‘struct __half’ with ‘protected’ member ‘__half::__x’ from an array of ‘uint16_t’ {aka ‘short unsigned int’}; use assignment or copy-initialization instead [-Wclass-memaccess]
+  286 |             std::memcpy(&gate_blocks[b].dmin, &dmin_bits, 2);
+      |             ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/opt/rocm-7.2.1/include/hip/amd_detail/hip_fp16_gcc.h:23:8: note: ‘struct __half’ declared here
+   23 | struct __half {
+      |        ^~~~~~
+/src/tests/kquant_wave_test.cpp:290:24: warning: ‘void* memcpy(void*, const void*, size_t)’ copying an object of type ‘struct __half’ with ‘protected’ member ‘__half::__x’ from an array of ‘uint16_t’ {aka ‘short unsigned int’}; use assignment or copy-initialization instead [-Wclass-memaccess]
+  290 |             std::memcpy(&up_blocks[b].d, &d_bits, 2);
+      |             ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/opt/rocm-7.2.1/include/hip/amd_detail/hip_fp16_gcc.h:23:8: note: ‘struct __half’ declared here
+   23 | struct __half {
+      |        ^~~~~~
+/src/tests/kquant_wave_test.cpp:291:24: warning: ‘void* memcpy(void*, const void*, size_t)’ copying an object of type ‘struct __half’ with ‘protected’ member ‘__half::__x’ from an array of ‘uint16_t’ {aka ‘short unsigned int’}; use assignment or copy-initialization instead [-Wclass-memaccess]
+  291 |             std::memcpy(&up_blocks[b].dmin, &dmin_bits, 2);
+      |             ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/opt/rocm-7.2.1/include/hip/amd_detail/hip_fp16_gcc.h:23:8: note: ‘struct __half’ declared here
+   23 | struct __half {
+      |        ^~~~~~
+/src/tests/kquant_wave_test.cpp:297:24: warning: ‘void* memcpy(void*, const void*, size_t)’ copying an object of type ‘struct __half’ with ‘protected’ member ‘__half::__x’ from an array of ‘uint16_t’ {aka ‘short unsigned int’}; use assignment or copy-initialization instead [-Wclass-memaccess]
+  297 |             std::memcpy(&b.d, &d_bits, 2);
+      |             ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~
+/opt/rocm-7.2.1/include/hip/amd_detail/hip_fp16_gcc.h:23:8: note: ‘struct __half’ declared here
+   23 | struct __half {
+      |        ^~~~~~
+/src/tests/kquant_wave_test.cpp:299:24: warning: ‘void* memcpy(void*, const void*, size_t)’ copying an object of type ‘struct __half’ with ‘protected’ member ‘__half::__x’ from an array of ‘uint16_t’ {aka ‘short unsigned int’}; use assignment or copy-initialization instead [-Wclass-memaccess]
+  299 |             std::memcpy(&b.s, &s_bits, 2);
+      |             ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~
+/opt/rocm-7.2.1/include/hip/amd_detail/hip_fp16_gcc.h:23:8: note: ‘struct __half’ declared here
+   23 | struct __half {
+      |        ^~~~~~
+[ 82%] Linking HIP executable miinfer-model-gpu-test
+[ 82%] Linking HIP executable miinfer-q4-q8-gemv-test
+[ 82%] Built target miinfer-model-gpu-test
+[ 84%] Building CXX object CMakeFiles/miinfer-qwen3-cached-attention-determinism-gpu-test.dir/tests/qwen3_cached_attention_determinism_gpu_test.cpp.o
+[ 84%] Built target miinfer-q4-q8-gemv-test
+[ 87%] Building CXX object CMakeFiles/miinfer-qwen3-forward-gpu-test.dir/tests/qwen3_forward_gpu_test.cpp.o
+[ 87%] Linking HIP executable miinfer-qwen3-primitives-test
+[ 87%] Built target miinfer-qwen3-primitives-test
+[ 87%] Building CXX object CMakeFiles/miinfer-qwen3-decode-gpu-test.dir/tests/qwen3_decode_gpu_test.cpp.o
+[ 87%] Linking HIP executable miinfer-kquant-wave-test
+[ 87%] Built target miinfer-kquant-wave-test
+[ 89%] Building CXX object CMakeFiles/miinfer-qwen3-decode-sequence-gpu-test.dir/tests/qwen3_decode_sequence_gpu_test.cpp.o
+[ 89%] Linking HIP executable miinfer-qwen3-cached-attention-determinism-gpu-test
+[ 89%] Built target miinfer-qwen3-cached-attention-determinism-gpu-test
+[ 89%] Building CXX object CMakeFiles/miinfer-qwen3-quant-kv-attention-test.dir/tests/qwen3_quant_kv_attention_test.cpp.o
+[ 89%] Linking HIP executable miinfer-qwen3-layer0-gpu-test
+[ 89%] Built target miinfer-qwen3-layer0-gpu-test
+[ 92%] Building CXX object CMakeFiles/miinfer-m31-0005-decode-attention-bound-test.dir/tests/m31_0005_decode_attention_bound_test.cpp.o
+[ 92%] Linking HIP executable miinfer-qwen35-conv-batch-test
+[ 92%] Built target miinfer-qwen35-conv-batch-test
+[ 94%] Linking HIP executable miinfer-qwen3-decode-gpu-test
+[ 94%] Built target miinfer-qwen3-decode-gpu-test
+[ 97%] Linking HIP executable miinfer-qwen3-kv-cache-gpu-test
+[ 97%] Built target miinfer-qwen3-kv-cache-gpu-test
+/src/tests/qwen3_quant_kv_attention_test.cpp: In destructor ‘{anonymous}::GpuBuffer::~GpuBuffer()’:
+/src/tests/qwen3_quant_kv_attention_test.cpp:24:20: warning: ignoring returned value of type ‘hipError_t’, declared with attribute ‘nodiscard’ [-Wunused-result]
+   24 |             hipFree(ptr);
+      |             ~~~~~~~^~~~~
+In file included from /src/include/miinfer/hip_check.hpp:3,
+                 from /src/tests/qwen3_quant_kv_attention_test.cpp:1:
+/opt/rocm-7.2.1/include/hip/hip_runtime_api.h:4579:12: note: in call to ‘hipError_t hipFree(void*)’, declared here
+ 4579 | hipError_t hipFree(void* ptr);
+      |            ^~~~~~~
+/opt/rocm-7.2.1/include/hip/hip_runtime_api.h:419:3: note: ‘hipError_t’ declared here
+  419 | } hipError_t;
+      |   ^~~~~~~~~~
+[ 97%] Linking HIP executable miinfer-m31-0005-decode-attention-bound-test
+[ 97%] Built target miinfer-m31-0005-decode-attention-bound-test
+[100%] Linking HIP executable miinfer-qwen3-quant-kv-attention-test
+[100%] Built target miinfer-qwen3-quant-kv-attention-test
+[100%] Linking HIP executable miinfer-qwen3-decode-sequence-gpu-test
+[100%] Linking HIP executable miinfer-qwen3-forward-gpu-test
+[100%] Built target miinfer-qwen3-decode-sequence-gpu-test
+[100%] Built target miinfer-qwen3-forward-gpu-test
+/src/tools/miinfer_cli.cpp: In function ‘void {anonymous}::signal_handler(int)’:
+/src/tools/miinfer_cli.cpp:198:26: warning: ignoring return value of ‘ssize_t write(int, const void*, size_t)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+  198 |             (void)::write(g_signal_wakeup_fd, &wake, sizeof(wake));
+      |                   ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /src/tools/miinfer_cli.cpp:43:
+/src/tools/qwen35_gpu_pipeline.hpp: At global scope:
+/src/tools/qwen35_gpu_pipeline.hpp:5883:20: warning: ‘std::vector<float> {anonymous}::replay_state(const RecurrentOperands&)’ defined but not used [-Wunused-function]
+ 5883 | std::vector<float> replay_state(const RecurrentOperands& operands) {
+      |                    ^~~~~~~~~~~~
+/src/tools/qwen35_gpu_pipeline.hpp:5867:19: warning: ‘{anonymous}::RecurrentOperands {anonymous}::read_external_operands(const std::filesystem::__cxx11::path&)’ defined but not used [-Wunused-function]
+ 5867 | RecurrentOperands read_external_operands(const std::filesystem::path& fixture) {
+      |                   ^~~~~~~~~~~~~~~~~~~~~~
+/src/tools/qwen35_gpu_pipeline.hpp:5664:6: warning: ‘void {anonymous}::run_hybrid_block(RecurrentLayer&, RecurrentLayer&, RecurrentLayer&, FullAttentionLayer&, const float*, uint32_t, float*, float*, float*, float*)’ defined but not used [-Wunused-function]
+ 5664 | void run_hybrid_block(RecurrentLayer& recurrent0, RecurrentLayer& recurrent1,
+      |      ^~~~~~~~~~~~~~~~
+/src/tools/qwen35_gpu_pipeline.hpp:690:15: warning: ‘uint64_t {anonymous}::fingerprint(const void*, std::size_t)’ defined but not used [-Wunused-function]
+  690 | std::uint64_t fingerprint(const void* device, std::size_t bytes) {
+      |               ^~~~~~~~~~~
+/src/tools/qwen35_gpu_pipeline.hpp:674:14: warning: ‘{anonymous}::ByteMismatch {anonymous}::compare_bytes(std::span<const std::byte>, std::span<const std::byte>)’ defined but not used [-Wunused-function]
+  674 | ByteMismatch compare_bytes(std::span<const std::byte> actual,
+      |              ^~~~~~~~~~~~~
+/src/tools/qwen35_gpu_pipeline.hpp:484:15: warning: ‘{anonymous}::DetailedError {anonymous}::detailed_device_error(const float*, std::size_t, const std::filesystem::__cxx11::path&)’ defined but not used [-Wunused-function]
+  484 | DetailedError detailed_device_error(const float* device, std::size_t elements,
+      |               ^~~~~~~~~~~~~~~~~~~~~
+/src/tools/qwen35_gpu_pipeline.hpp:475:13: warning: ‘std::size_t {anonymous}::rank_of(std::span<const float>, std::size_t)’ defined but not used [-Wunused-function]
+  475 | std::size_t rank_of(std::span<const float> values, std::size_t index) {
+      |             ^~~~~~~
+/src/tools/qwen35_gpu_pipeline.hpp:463:26: warning: ‘std::vector<long unsigned int> {anonymous}::top_indices(std::span<const float>, std::size_t)’ defined but not used [-Wunused-function]
+  463 | std::vector<std::size_t> top_indices(std::span<const float> values, std::size_t count) {
+      |                          ^~~~~~~~~~~
+/src/tools/qwen35_gpu_pipeline.hpp:455:13: warning: ‘std::size_t {anonymous}::first_argmax(std::span<const float>)’ defined but not used [-Wunused-function]
+  455 | std::size_t first_argmax(std::span<const float> values) {
+      |             ^~~~~~~~~~~~
+/src/tools/qwen35_gpu_pipeline.hpp:442:7: warning: ‘float {anonymous}::cosine_similarity(std::span<const float>, std::span<const float>)’ defined but not used [-Wunused-function]
+  442 | float cosine_similarity(std::span<const float> actual, std::span<const float> expected) {
+      |       ^~~~~~~~~~~~~~~~~
+/src/tools/qwen35_gpu_pipeline.hpp:314:8: warning: ‘{anonymous}::Buffer {anonymous}::copy_combined_q4k_mmq_tensors(const miinfer::GgufTensor&, const miinfer::GgufTensor&)’ defined but not used [-Wunused-function]
+  314 | Buffer copy_combined_q4k_mmq_tensors(const miinfer::GgufTensor& a, const miinfer::GgufTensor& b) {
+      |        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /src/tools/qwen35_gpu_pipeline.hpp:4:
+/src/tools/m6a3_qwen35_layer.cpp:417:20: warning: ‘std::vector<float> {anonymous}::layer_path(const miinfer::GgufFile&, const std::filesystem::__cxx11::path&, std::size_t, std::span<const float>, std::span<const float>, std::vector<float>&, bool)’ defined but not used [-Wunused-function]
+  417 | std::vector<float> layer_path(const GgufFile& model, const std::filesystem::path& fixture,
+      |                    ^~~~~~~~~~
+/src/tools/m6a3_qwen35_layer.cpp:361:20: warning: ‘std::vector<float> {anonymous}::conv_output(std::span<const float>, const std::vector<std::array<float, 10240> >&, const miinfer::GgufTensor&)’ defined but not used [-Wunused-function]
+  361 | std::vector<float> conv_output(std::span<const float> current,
+      |                    ^~~~~~~~~~~
+/src/tools/m6a3_qwen35_layer.cpp:93:28: warning: ‘std::vector<unsigned int> {anonymous}::read_tokens(const std::filesystem::__cxx11::path&)’ defined but not used [-Wunused-function]
+   93 | std::vector<std::uint32_t> read_tokens(const std::filesystem::path& path) {
+      |                            ^~~~~~~~~~~
+[100%] Linking HIP executable miinfer
+[100%] Built target miinfer

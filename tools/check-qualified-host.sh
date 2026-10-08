@@ -86,7 +86,8 @@ cmake -S . -B "$host_build" -DCMAKE_PREFIX_PATH=/opt/rocm-7.2.1 -DCMAKE_BUILD_TY
 cmake --build "$host_build" --parallel 2 --target "${host_targets[@]}"
 ctest --test-dir "$host_build" --output-on-failure -L host-only -E kquant-wave-host
 cmake -S . -B "$gpu_build" -DCMAKE_PREFIX_PATH=/opt/rocm-7.2.1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_HIP_ARCHITECTURES=gfx906 -DMIINFER_ENABLE_HIP=ON -DMIINFER_HIP_ARCHITECTURE=gfx906 -DMIINFER_TARGET_ARCH=gfx906 -DMIINFER_BUILD_TESTS=ON -DMIINFER_BUILD_BENCHMARKS=ON
-cmake --build "$gpu_build" --parallel 2 --target miinfer-hip-smoke miinfer-fp16-gemv-test miinfer-q4-q8-gemv-test miinfer-bench miinfer
+cmake --build "$gpu_build" --parallel 2 --target miinfer-kquant-wave-test miinfer-hip-smoke miinfer-fp16-gemv-test miinfer-q4-q8-gemv-test miinfer-bench miinfer
+ctest --test-dir "$gpu_build" --output-on-failure -R '^kquant-wave-host$'
 "$gpu_build"/miinfer-hip-smoke
 "$gpu_build"/miinfer-fp16-gemv-test
 "$gpu_build"/miinfer-q4-q8-gemv-test
