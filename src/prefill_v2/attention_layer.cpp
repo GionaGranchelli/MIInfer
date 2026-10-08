@@ -643,7 +643,8 @@ void PrefillV2AttentionLayer::decode(
             ws.attn_gated_output,
             ws.splitk_attn_workspace,
             1,
-            position + 1,
+            // The kernel adds token + 1 to base_position for the inclusive KV length.
+            position,
             static_cast<std::uint32_t>(kv_cache.capacity),
             24,
             4,

@@ -41,6 +41,7 @@ set(MIINFER_RELEASE_TEST_TARGETS
     miinfer-qwen3-layer0-gpu-test
     miinfer-qwen3-kv-cache-gpu-test
     miinfer-qwen3-quant-kv-attention-test
+    miinfer-m31-0005-decode-attention-bound-test
     miinfer-qwen3-cached-attention-determinism-gpu-test
     miinfer-qwen3-forward-gpu-test
     miinfer-qwen3-decode-gpu-test
@@ -690,6 +691,11 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-qwen3-quant-kv-attention-test PRIVATE miinfer_hip)
     target_compile_options(miinfer-qwen3-quant-kv-attention-test PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-m31-0005-decode-attention-bound-test
+        tests/m31_0005_decode_attention_bound_test.cpp)
+    target_link_libraries(miinfer-m31-0005-decode-attention-bound-test PRIVATE miinfer_hip)
+    target_compile_options(miinfer-m31-0005-decode-attention-bound-test PRIVATE -Wall -Wextra -Wpedantic)
+
     add_executable(miinfer-v2-0019-quantized-kv-bench bench/v2_0019_quantized_kv_bench.cpp)
     target_link_libraries(miinfer-v2-0019-quantized-kv-bench PRIVATE miinfer_hip miinfer_model)
     target_compile_options(miinfer-v2-0019-quantized-kv-bench PRIVATE -Wall -Wextra -Wpedantic)
@@ -766,9 +772,9 @@ if(MIINFER_BUILD_TESTS)
     add_test(NAME qwen3-layer0-comparator-mutation
              COMMAND miinfer-qwen3-layer0-test --self-test-mutation)
     set_tests_properties(qwen3-layer0-comparator-mutation PROPERTIES LABELS "host-only")
-    add_test(NAME kquant-wave-host COMMAND miinfer-kquant-wave-test)
-    set_tests_properties(kquant-wave-host PROPERTIES LABELS "host-only")
     if(MIINFER_ENABLE_HIP)
+        add_test(NAME kquant-wave-host COMMAND miinfer-kquant-wave-test)
+        set_tests_properties(kquant-wave-host PROPERTIES LABELS "host-only")
         add_test(NAME hip-smoke COMMAND miinfer-hip-smoke)
         set_tests_properties(hip-smoke PROPERTIES LABELS "gpu-required")
         add_test(NAME device-kv-pool COMMAND miinfer-device-kv-pool-test)
@@ -797,6 +803,9 @@ if(MIINFER_BUILD_TESTS)
         set_tests_properties(qwen3-kv-cache-gpu PROPERTIES LABELS "gpu-required")
         add_test(NAME qwen3-quant-kv-attention-gpu COMMAND miinfer-qwen3-quant-kv-attention-test)
         set_tests_properties(qwen3-quant-kv-attention-gpu PROPERTIES LABELS "gpu-required")
+        add_test(NAME m31-0005-decode-attention-bound-gpu
+                 COMMAND miinfer-m31-0005-decode-attention-bound-test)
+        set_tests_properties(m31-0005-decode-attention-bound-gpu PROPERTIES LABELS "gpu-required")
         add_test(NAME qwen3-cached-attention-determinism-gpu
                  COMMAND miinfer-qwen3-cached-attention-determinism-gpu-test)
         set_tests_properties(qwen3-cached-attention-determinism-gpu PROPERTIES LABELS "gpu-required")
