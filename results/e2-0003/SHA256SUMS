@@ -1,0 +1,6 @@
+f71f4e346efc4cb40a9bf147744a8291580bf4d1bc5ffa385b265458665413f1  docs/performance/e2-0003-mmq-gateup-only.md
+9d9bed99ee5ab5cf2cdd6e1108bbaa28e554983a22976f0b6ab85d36d4df05b4  results/e2-0003/source-manifest.json
+53166ef77f5240515015032f8d328e8d77e2efec9d7f5761c5ccac1826b871dc  results/e2-0003/offline-validation-20261009.txt
+3d6f0e6f0bf7061119ef5a93ae34a6239c76e9d110fd8032977ae26ce3296c43  results/e2-0003/parser-test.log
+fe23a7b66326314626b210bb5d3967fd29ca204d0a3fb767da064b88db6e8294  results/e2-0003/cmake-configure.log
+1d6de277990bc9fe1e1afd787a73a892e8764ecf8129930b61c893ab63c936bf  results/e2-0003/ssh-preflight.log

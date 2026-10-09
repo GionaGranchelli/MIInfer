@@ -101,6 +101,11 @@ M31 dirty overlay. No campaign GPU work started.
 - `graphify update .` completed in an isolated clean worktree at the candidate
   commit (11,207 nodes, 15,646 edges); existing generated graph files in the
   user's dirty checkout were preserved.
+- Hash manifest: `results/e2-0003/source-manifest.json`. It records relevant
+  source SHA-256 values, historical model/prompt identity with provenance,
+  parser-test binary SHA-256, build flags, and explicitly absent runtime/GPU
+  artifacts. The failed CMake output and parser-test exit codes are preserved
+  under `results/e2-0003/`.
 - Repeated bounded SSH preflight to Z840 `192.168.68.54` timed out. The local
   P620 has no initialized AMD driver. No control or candidate binary was
   built, no GPU experiment ran, and no memory, parity, throughput, or graph
@@ -122,17 +127,18 @@ M31 dirty overlay. No campaign GPU work started.
 
 ## Final campaign decision
 
-**M31-OVERNIGHT-01: PARTIAL / BLOCKED.** The implementation and offline
-evidence are complete. The campaign ended early after two bounded Z840 SSH
-preflights timed out; no safe GPU experiment could begin. There are no
+**M31-OVERNIGHT-01 checkpoint: PARTIAL / BLOCKED.** The implementation and
+offline checks are complete. Four bounded Z840 SSH preflights timed out by
+this checkpoint; no safe GPU experiment could begin. There are no
 control or candidate runs and Candidate B was not triggered.
 
 ```text
 START_TIME: 2026-10-09 22:50:25 UTC
-END_TIME: 2026-10-09 23:04:20 UTC
-ELAPSED: 00:13:55
+CHECKPOINT_TIME: 2026-10-09 23:08:17 UTC
+ELAPSED_AT_CHECKPOINT: 00:17:52
+AUTHORIZED_WINDOW_END: 2026-10-10 06:50:25 UTC
 BASE_SHA: 99d40748bb4ae8921fbf3558b9f0216389ebfd8a plus preserved M31 overlay
-FINAL_SHA: c2fd12bbd24b3ae75f34f6de2401fb00b0df785e (before this report commit)
+CAMPAIGN_SOURCE_SHA: c2fd12bbd24b3ae75f34f6de2401fb00b0df785e (report/evidence commits follow)
 EXPERIMENT_BRANCHES: experiment/e2-0003-mmq-gateup-only
 DEFAULT_PATH_UNCHANGED: source path retained; runtime not verified
 
@@ -190,8 +196,9 @@ KNOWN_LIMITATIONS: Z840 unreachable; constructor raw-pointer exception cleanup i
 - Correctness: unqualified. No model token or graph result was produced.
 - Tracking: issue #7 and #9 received Phase B updates; #6 and PR #10 were not
   changed. No push or merge occurred. Dirty user M31 and graphify files remain.
-- **Next goal:** restore connectivity to the Z840 and run a fresh safe preflight,
-  then build the same-source control/candidate binaries in the pinned runtime.
+- **Next goal:** continue offline evidence preparation and recheck Z840
+  connectivity within the authorized window; after reachability, run a fresh
+  safe preflight, then build same-source control/candidate binaries in the pinned runtime.
   Acceptance remains: sampled VRAM reduction >=6.0 GB, prefill >=95% and decode
   >=85% of control and above 20.56 tok/s, eight-token parity, operation checks,
   graph replay, and thermal guard all pass.

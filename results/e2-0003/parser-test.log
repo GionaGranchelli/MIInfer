@@ -1,0 +1,8 @@
+COMMAND: g++ -std=c++20 -O2 -DNDEBUG -Wall -Wextra -Wpedantic -Iinclude tests/prefill_v2_experimental_options_test.cpp -o /tmp/e2-0003-options-test-final
+COMPILE_EXIT_CODE: 0
+RUN_COMMAND: /tmp/e2-0003-options-test-final
+RUN_EXIT_CODE: 0
+STDOUT: empty
+STDERR: empty
+TESTED: unset -> false; "0" -> false; "1" -> true; unsupported "true" throws invalid_argument
+BINARY_SHA256: f5bfb0762c097e6096da9a0fde4b6aae5c0773f1302160641246d2fd019e15f3

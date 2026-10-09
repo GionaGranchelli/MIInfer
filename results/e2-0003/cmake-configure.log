@@ -1,0 +1,46 @@
+-- Using the multi-header code from /tmp/e2-0003-clean-build/_deps/nlohmann_json-src/include/
+-- The HIP compiler identification is unknown
+-- Detecting HIP compiler ABI info
+-- Detecting HIP compiler ABI info - failed
+-- Check for working HIP compiler: /opt/rocm-6.2.0/lib/llvm/bin/clang++
+-- Check for working HIP compiler: /opt/rocm-6.2.0/lib/llvm/bin/clang++ - broken
+CMake Error at /usr/share/cmake-4.2/Modules/CMakeTestHIPCompiler.cmake:73 (message):
+  The HIP compiler
+
+    "/opt/rocm-6.2.0/lib/llvm/bin/clang++"
+
+  is not able to compile a simple test program.
+
+  It fails with the following output:
+
+    Change Dir: '/tmp/e2-0003-clean-build/CMakeFiles/CMakeScratch/TryCompile-QpaxmK'
+    
+    Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_c0e75/fast
+    /usr/bin/gmake  -f CMakeFiles/cmTC_c0e75.dir/build.make CMakeFiles/cmTC_c0e75.dir/build
+    gmake[1]: Entering directory '/tmp/e2-0003-clean-build/CMakeFiles/CMakeScratch/TryCompile-QpaxmK'
+    Building HIP object CMakeFiles/cmTC_c0e75.dir/testHIPCompiler.hip.o
+    /opt/rocm-6.2.0/lib/llvm/bin/clang++    --offload-arch=gfx906 -o CMakeFiles/cmTC_c0e75.dir/testHIPCompiler.hip.o  -c /tmp/e2-0003-clean-build/CMakeFiles/CMakeScratch/TryCompile-QpaxmK/testHIPCompiler.hip
+    /opt/rocm-6.2.0/lib/llvm/bin/lld: error while loading shared libraries: libxml2.so.2: cannot open shared object file: No such file or directory
+    clang++: error: unable to execute command: No such file or directory
+    clang++: error: amdgcn-link command failed due to signal (use -v to see invocation)
+    AMD clang version 18.0.0git (https://github.com/RadeonOpenCompute/llvm-project roc-6.2.0 24292 26466ce804ac523b398608f17388eb6d605a3f09)
+    Target: x86_64-unknown-linux-gnu
+    Thread model: posix
+    InstalledDir: /opt/rocm-6.2.0/lib/llvm/bin
+    Configuration file: /opt/rocm-6.2.0/lib/llvm/bin/clang++.cfg
+    clang++: note: diagnostic msg: Error generating preprocessed source(s).
+    gmake[1]: *** [CMakeFiles/cmTC_c0e75.dir/build.make:81: CMakeFiles/cmTC_c0e75.dir/testHIPCompiler.hip.o] Error 1
+    gmake[1]: Leaving directory '/tmp/e2-0003-clean-build/CMakeFiles/CMakeScratch/TryCompile-QpaxmK'
+    gmake: *** [Makefile:134: cmTC_c0e75/fast] Error 2
+    
+    
+
+
+
+  CMake will not be able to correctly generate this project.
+Call Stack (most recent call first):
+  CMakeLists.txt:57 (enable_language)
+
+
+-- Configuring incomplete, errors occurred!
+exit_code=1

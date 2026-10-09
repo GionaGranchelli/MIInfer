@@ -1,0 +1,65 @@
+{
+  "campaign": "M31-OVERNIGHT-01 / E2-0003",
+  "recorded_at_utc": "2026-10-09T23:08:17Z",
+  "branch": "experiment/e2-0003-mmq-gateup-only",
+  "base_commit": "99d40748bb4ae8921fbf3558b9f0216389ebfd8a",
+  "campaign_plan_commit": "dd35dab2fa0c615b539f1905057d70899aca7db1",
+  "implementation_commit": "fef7b6637d57e664a18c528245f0d558382842da",
+  "test_commit": "c2fd12bbd24b3ae75f34f6de2401fb00b0df785e",
+  "offline_checkpoint_commit": "25fb95ca3349265e5d08753ea41ffab6bf84f152",
+  "report_commit_at_recording": "467c7d387f083c0c1835dc2dba1a4a1201229ba5",
+  "worktree_state": "dirty with preserved M31 overlay and untracked M31 evidence; no campaign changes staged",
+  "candidate_source_files_sha256": {
+    "include/miinfer/prefill_v2/experimental_options.hpp": "b44fb4bc66d187f6d76d4ea7160479bf7ed8eff7b06afff7668cfe8848f503a6",
+    "include/miinfer/prefill_v2/model.hpp": "2720f9a69bec3c52909269a7b98250f543be775087c96e8b953445eddda15c26",
+    "include/miinfer/prefill_v2/recurrent_layer.hpp": "9a71ea48cecbccefe2cf9c5345c8e1603f43e64d34ffe801ab55e42eaa006eff",
+    "include/miinfer/prefill_v2/attention_layer.hpp": "4ecf61bd1de079d3147cede8155c5d16967ba2b8122d53137d54b7b1b45b0b53",
+    "include/miinfer/prefill_v2/topology_block.hpp": "2690f44f7b6a91a534cb82ec41aa38560ec73714aff1062474787c94aa031fc5",
+    "src/prefill_v2/model.cpp": "de6c95867b8caab4fcf42389cc2478ec8e30dde234bb5536e2699e4f8e733c8f",
+    "src/prefill_v2/recurrent_layer.cpp": "bfcd13bae414711f28c6ce54389bfa5410936e34766ede5befb08b8d938d9942",
+    "src/prefill_v2/attention_layer.cpp": "7066c8aac3ea2b53eb05211d53d0f8caef7749189e8a7584d3fb37d7da00913a",
+    "src/prefill_v2/topology_block.cpp": "6a45b6a9c06a7bd15ce7db3609fa6a4963123abc7eed8d13afd07413e87f57bc",
+    "tests/prefill_v2_experimental_options_test.cpp": "9b2ce70789d8db94f2fb338c0a4867555fcbaa72deacf699fa29622db898c44b"
+  },
+  "model": {
+    "sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+    "provenance": "historical E3-0001 evidence; not reverified on the unavailable Z840 during this campaign"
+  },
+  "prompt": {
+    "tokens": 1024,
+    "fingerprint_fnv1a64": "bce3932a8fc5d121",
+    "provenance": "historical E3-0001 artifact; no campaign prompt was run"
+  },
+  "build": {
+    "candidate_runtime_binary_sha256": null,
+    "candidate_runtime_binary_status": "NOT_BUILT",
+    "cmake_command": "cmake -S . -B /tmp/e2-0003-clean-build -DCMAKE_BUILD_TYPE=Release -DMIINFER_ENABLE_HIP=ON -DMIINFER_BUILD_TESTS=ON",
+    "cmake_status": "BLOCKED: ROCm 6.2 lld cannot load host libxml2.so.2 during HIP compiler detection",
+    "syntax_check": "PASS with hipcc -std=c++20 -fsyntax-only --offload-arch=gfx906 on recurrent_layer.cpp, attention_layer.cpp, model.cpp, topology_block.cpp",
+    "syntax_check_rocm": "host ROCm 6.2.0",
+    "test_build_flags": "g++ -std=c++20 -O2 -DNDEBUG -Wall -Wextra -Wpedantic",
+    "parser_test_binary_sha256": "f5bfb0762c097e6096da9a0fde4b6aae5c0773f1302160641246d2fd019e15f3"
+  },
+  "hardware": {
+    "target": "HP Z840 / AMD Instinct MI50 / gfx906",
+    "expected_bdf": "0000:06:00.0",
+    "preflight": "BLOCKED: bounded SSH timed out four times through 2026-10-09T23:07:28Z; no identity or telemetry captured during campaign",
+    "gpu_runs": 0
+  },
+  "memory_accounting": {
+    "fused_gateup_request_bytes_omitted_by_candidate": 7130316800,
+    "mmq_gateup_request_bytes_retained": 6452936704,
+    "sampled_physical_vram_delta_bytes": null
+  },
+  "comparison": {
+    "control_calls": 0,
+    "candidate_calls": 0,
+    "raw_benchmark_json": null,
+    "telemetry": null,
+    "token_parity": "NOT_RUN",
+    "hip_graph": "NOT_RUN",
+    "prefill_tok_s": null,
+    "decode_tok_s": null,
+    "candidate_disposition": "BLOCKED / PARTIAL"
+  }
+}
