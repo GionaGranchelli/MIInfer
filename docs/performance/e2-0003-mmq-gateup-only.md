@@ -119,3 +119,79 @@ M31 dirty overlay. No campaign GPU work started.
   identity/idle/model/telemetry preflight before building or running paired
   tests. If the host remains unavailable, finalize as blocked without using
   the unqualified Machinist.
+
+## Final campaign decision
+
+**M31-OVERNIGHT-01: PARTIAL / BLOCKED.** The implementation and offline
+evidence are complete. The campaign ended early after two bounded Z840 SSH
+preflights timed out; no safe GPU experiment could begin. There are no
+control or candidate runs and Candidate B was not triggered.
+
+```text
+START_TIME: 2026-10-09 22:50:25 UTC
+END_TIME: 2026-10-09 23:04:20 UTC
+ELAPSED: 00:13:55
+BASE_SHA: 99d40748bb4ae8921fbf3558b9f0216389ebfd8a plus preserved M31 overlay
+FINAL_SHA: c2fd12bbd24b3ae75f34f6de2401fb00b0df785e (before this report commit)
+EXPERIMENT_BRANCHES: experiment/e2-0003-mmq-gateup-only
+DEFAULT_PATH_UNCHANGED: source path retained; runtime not verified
+
+CANDIDATE_A_IMPLEMENTED: YES, default off
+BUILD_STATUS: HIP syntax-only PASS; full CMake/build BLOCKED by missing libxml2.so.2
+CORRECTNESS: NOT_RUN (GPU route); parser test PASS
+HIP_GRAPH: NOT_RUN
+PREFILL_TOK_S: NOT_RUN
+DECODE_TOK_S: NOT_RUN
+SAMPLED_VRAM_SAVINGS: UNKNOWN
+ALLOCATION_BYTES_SAVED: 7,130,316,800 B maximum fused request removal (static)
+THERMAL_STATUS: no campaign GPU workload; guard self-test PASS
+DECISION: BLOCKED / PARTIAL; no KEEP or REJECT verdict
+
+CANDIDATE_B_TRIGGERED: NO
+CANDIDATE_B_DECISION: NOT_RUN
+
+E3_HARNESS: inspected and historical artifacts/schema validated
+CONTROL_RUNS: 0
+CANDIDATE_RUNS: 0
+NUMERICAL_REGRESSION: NOT_RUN
+PERSISTENT_CONTEXT: NOT_RUN
+SNAPSHOT_ROLLBACK: NOT_RUN
+TESTS_PASSED: option parser; gfx906 HIP syntax-only; diff check; existing thermal-guard self-test
+TESTS_FAILED: full CMake HIP compiler detection (host libxml2.so.2 unavailable)
+TESTS_SKIPPED: operation reference, allocation/cleanup runtime, graph, A/B, sessions, memory, performance
+KNOWN_LIMITATIONS: Z840 unreachable; constructor raw-pointer exception cleanup is pre-existing and not RAII
+```
+
+### Same-source scorecard
+
+| Metric | Fused control | MMQ-only |
+|---|---:|---:|
+| Weight allocation bytes | NOT_RUN | NOT_RUN; static max request reduction 7,130,316,800 B |
+| Sampled device memory | NOT_RUN | NOT_RUN |
+| Memory saving | NOT_RUN | UNKNOWN |
+| Prefill tok/s | NOT_RUN | NOT_RUN |
+| Decode tok/s | NOT_RUN | NOT_RUN |
+| Prefill change | NOT_RUN | NOT_RUN |
+| Decode change | NOT_RUN | NOT_RUN |
+| Eight-token parity | NOT_RUN | NOT_RUN |
+| Numerical checks | NOT_RUN | Parser only; route reference not run |
+| HIP Graph | NOT_RUN | NOT_RUN |
+| Persistent-session checks | NOT_RUN | NOT_RUN |
+| Snapshot/rollback checks | NOT_RUN | NOT_RUN |
+| Maximum junction temperature | NOT_RUN | NOT_RUN |
+| Decision | UNMEASURED | BLOCKED / PARTIAL |
+
+### Conclusion and next goal
+
+- Best candidate: none established. MMQ-only remains a default-off experiment.
+- Physical memory recovered: unknown. Allocation requests are not residency.
+- Performance retained: unknown. Older-source fast-path data supports treating
+  decode speed as a risk only; it cannot substitute for this source's A/B.
+- Correctness: unqualified. No model token or graph result was produced.
+- Tracking: issue #7 and #9 received Phase B updates; #6 and PR #10 were not
+  changed. No push or merge occurred. Dirty user M31 and graphify files remain.
+- **Next goal:** restore connectivity to the Z840 and run a fresh safe preflight,
+  then build the same-source control/candidate binaries in the pinned runtime.
+  Acceptance remains: sampled VRAM reduction >=6.0 GB, prefill >=95% and decode
+  >=85% of control and above 20.56 tok/s, eight-token parity, operation checks,
+  graph replay, and thermal guard all pass.
