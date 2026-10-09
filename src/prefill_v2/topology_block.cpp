@@ -6,12 +6,13 @@
 
 namespace miinfer::prefill_v2 {
 
-PrefillV2TopologyBlock::PrefillV2TopologyBlock(const miinfer::Qwen35Model& model, std::size_t block_index)
+PrefillV2TopologyBlock::PrefillV2TopologyBlock(
+    const miinfer::Qwen35Model& model, std::size_t block_index, bool mmq_gateup_only)
     : block_index_(block_index),
-      gdn0_(model, block_index * kLayersPerBlock + 0),
-      gdn1_(model, block_index * kLayersPerBlock + 1),
-      gdn2_(model, block_index * kLayersPerBlock + 2),
-      gqa3_(model, block_index * kLayersPerBlock + 3) {}
+      gdn0_(model, block_index * kLayersPerBlock + 0, mmq_gateup_only),
+      gdn1_(model, block_index * kLayersPerBlock + 1, mmq_gateup_only),
+      gdn2_(model, block_index * kLayersPerBlock + 2, mmq_gateup_only),
+      gqa3_(model, block_index * kLayersPerBlock + 3, mmq_gateup_only) {}
 
 void PrefillV2TopologyBlock::forward(
     float* d_ping,

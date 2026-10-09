@@ -1,6 +1,7 @@
 #pragma once
 
 #include "miinfer/prefill_v2/constants.hpp"
+#include "miinfer/prefill_v2/experimental_options.hpp"
 #include "miinfer/generation_contract.hpp"
 #include "miinfer/prefill_v2/kv_cache.hpp"
 #include "miinfer/prefill_v2/reusable_context.hpp"
@@ -116,6 +117,9 @@ public:
     PrefillV2Model& operator=(PrefillV2Model&&) noexcept;
 
     [[nodiscard]] KvCacheQuantMode kv_quant_mode() const noexcept { return kv_quant_mode_; }
+    [[nodiscard]] bool experimental_mmq_gateup_only() const noexcept {
+        return experimental_mmq_gateup_only_;
+    }
 
     // Reset all 48 recurrent states and 16 KV caches
     void reset_state();
@@ -304,6 +308,7 @@ private:
     float rms_epsilon_ = 1e-6f;
     std::uint32_t kv_capacity_ = 32768;
     KvCacheQuantMode kv_quant_mode_ = KvCacheQuantMode::kFp16Fp16;
+    bool experimental_mmq_gateup_only_ = false;
     bool has_lm_head_ = false;
 
     // Reusable Context

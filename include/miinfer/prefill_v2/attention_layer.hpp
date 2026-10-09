@@ -43,7 +43,8 @@ struct AttentionLayerDecodePhaseTimings {
 // Designed exclusively for AMD Instinct MI50 (gfx906, Wave64).
 class PrefillV2AttentionLayer {
 public:
-    PrefillV2AttentionLayer(const miinfer::Qwen35Model& model, std::size_t layer_index);
+    PrefillV2AttentionLayer(const miinfer::Qwen35Model& model, std::size_t layer_index,
+                           bool mmq_gateup_only = false);
     ~PrefillV2AttentionLayer();
     PrefillV2AttentionLayer(const PrefillV2AttentionLayer&) = delete;
     PrefillV2AttentionLayer& operator=(const PrefillV2AttentionLayer&) = delete;

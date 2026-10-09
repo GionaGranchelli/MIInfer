@@ -37,7 +37,8 @@ T* upload_device_buffer(const void* host_data, std::size_t bytes, std::size_t& t
 
 } // namespace
 
-PrefillV2RecurrentLayer::PrefillV2RecurrentLayer(const Qwen35Model& model, std::size_t layer_index)
+PrefillV2RecurrentLayer::PrefillV2RecurrentLayer(
+    const Qwen35Model& model, std::size_t layer_index, bool mmq_gateup_only)
     : layer_index_(layer_index) {
     const auto& file = *model.file();
     const std::string prefix = "blk." + std::to_string(layer_index_) + ".";
@@ -171,9 +172,11 @@ PrefillV2RecurrentLayer::PrefillV2RecurrentLayer(const Qwen35Model& model, std::
 
     // 12. Gfx906 resident Wave decode weights
     // (a) Paired FFN SwiGLU fused layout
-    const auto fused_swiglu_host = pack_q4k_wave_swiglu_fused(*ffn_gate_tensor, *ffn_up_tensor);
-    d_ffn_swiglu_fused_ = upload_device_buffer<Q4KWaveSwigluFusedTile>(
-        fused_swiglu_host.data(), fused_swiglu_host.size() * sizeof(Q4KWaveSwigluFusedTile), persistent_weight_bytes_);
+    if (!mmq_gateup_only) {
+        const auto fused_swiglu_host = pack_q4k_wave_swiglu_fused(*ffn_gate_tensor, *ffn_up_tensor);
+        d_ffn_swiglu_fused_ = upload_device_buffer<Q4KWaveSwigluFusedTile>(
+            fused_swiglu_host.data(), fused_swiglu_host.size() * sizeof(Q4KWaveSwigluFusedTile), persistent_weight_bytes_);
+    }
 }
 
 PrefillV2RecurrentLayer::~PrefillV2RecurrentLayer() {
@@ -630,9 +633,19 @@ void PrefillV2RecurrentLayer::decode(
         ws.q8_1);
 
     // 10. FFN Gate & Up projections + SwiGLU activation (Fused into single resident kernel pass)
-    launch_q4k_wave_fused_gate_up_swiglu_paired(
-        d_ffn_swiglu_fused_, ws.q8_1, ws.ffn_activation,
-        kFfnInner, kHidden, stream);
+    if (d_ffn_swiglu_fused_ != nullptr) {
+        launch_q4k_wave_fused_gate_up_swiglu_paired(
+            d_ffn_swiglu_fused_, ws.q8_1, ws.ffn_activation,
+            kFfnInner, kHidden, stream);
+    } else {
+        launch_mx_q8_1_mmq_quantize(
+            ws.post_normalized, ws.mmq_q8, 1, kHidden, /*affine=*/true, stream);
+        launch_mx_q4k_repacked_mmq(
+            d_ffn_gate_mmq_, ws.mmq_q8, ws.ffn_gate, kFfnInner, kHidden, 1, stream);
+        launch_mx_q4k_repacked_mmq(
+            d_ffn_up_mmq_, ws.mmq_q8, ws.ffn_up, kFfnInner, kHidden, 1, stream);
+        launch_qwen3_silu_mul(ws.ffn_gate, ws.ffn_up, ws.ffn_activation, kFfnInner, stream);
+    }
 
     // 11. FFN Down projection
     if (ffn_down_type_ == GgufTensorType::q4_k) {
@@ -748,9 +761,19 @@ void PrefillV2RecurrentLayer::decode_profiled(
     MIINFER_HIP_CHECK(hipEventRecord(ev_res, stream));
 
     // 10. FFN Gate/Up SwiGLU Paired
-    launch_q4k_wave_fused_gate_up_swiglu_paired(
-        d_ffn_swiglu_fused_, ws.q8_1, ws.ffn_activation,
-        kFfnInner, kHidden, stream);
+    if (d_ffn_swiglu_fused_ != nullptr) {
+        launch_q4k_wave_fused_gate_up_swiglu_paired(
+            d_ffn_swiglu_fused_, ws.q8_1, ws.ffn_activation,
+            kFfnInner, kHidden, stream);
+    } else {
+        launch_mx_q8_1_mmq_quantize(
+            ws.post_normalized, ws.mmq_q8, 1, kHidden, /*affine=*/true, stream);
+        launch_mx_q4k_repacked_mmq(
+            d_ffn_gate_mmq_, ws.mmq_q8, ws.ffn_gate, kFfnInner, kHidden, 1, stream);
+        launch_mx_q4k_repacked_mmq(
+            d_ffn_up_mmq_, ws.mmq_q8, ws.ffn_up, kFfnInner, kHidden, 1, stream);
+        launch_qwen3_silu_mul(ws.ffn_gate, ws.ffn_up, ws.ffn_activation, kFfnInner, stream);
+    }
     MIINFER_HIP_CHECK(hipEventRecord(ev_ffn_up, stream));
 
     // 11 & 12. FFN Down + Residual Add

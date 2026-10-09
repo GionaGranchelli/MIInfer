@@ -49,7 +49,8 @@ struct RecurrentLayerDecodePhaseTimings {
 // 5. Zero hot-path allocations.
 class PrefillV2RecurrentLayer {
 public:
-    PrefillV2RecurrentLayer(const Qwen35Model& model, std::size_t layer_index);
+    PrefillV2RecurrentLayer(const Qwen35Model& model, std::size_t layer_index,
+                            bool mmq_gateup_only = false);
     ~PrefillV2RecurrentLayer();
     PrefillV2RecurrentLayer(const PrefillV2RecurrentLayer&) = delete;
     PrefillV2RecurrentLayer& operator=(const PrefillV2RecurrentLayer&) = delete;

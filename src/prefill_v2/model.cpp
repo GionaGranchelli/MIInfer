@@ -256,6 +256,8 @@ PrefillV2Model::PrefillV2Model(
       rms_epsilon_(model.config().rms_epsilon),
       kv_capacity_(kv_capacity),
       kv_quant_mode_(kv_quant_mode),
+      experimental_mmq_gateup_only_(mmq_gateup_only_from_env(
+          std::getenv("MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY"))),
       has_lm_head_(load_lm_head),
       reusable_context_(model.model_name(), "Q4_K_M") {
 
@@ -283,7 +285,8 @@ PrefillV2Model::PrefillV2Model(
     // 4. Construct 16 Repeating Topology Blocks (64 layers total)
     blocks_.reserve(16);
     for (std::size_t b = 0; b < 16; ++b) {
-        blocks_.emplace_back(std::make_unique<PrefillV2TopologyBlock>(model, b));
+        blocks_.emplace_back(std::make_unique<PrefillV2TopologyBlock>(
+            model, b, experimental_mmq_gateup_only_));
     }
 
     // 5. Allocate 48 Persistent Recurrent Layer States
@@ -311,6 +314,7 @@ PrefillV2Model::PrefillV2Model(PrefillV2Model&& other) noexcept
     : vocab_size_(other.vocab_size_),
       rms_epsilon_(other.rms_epsilon_),
       kv_capacity_(other.kv_capacity_),
+      experimental_mmq_gateup_only_(other.experimental_mmq_gateup_only_),
       has_lm_head_(other.has_lm_head_),
       d_embedding_weights_(other.d_embedding_weights_),
       embedding_bytes_(other.embedding_bytes_),
@@ -357,6 +361,7 @@ PrefillV2Model::PrefillV2Model(PrefillV2Model&& other) noexcept
     other.next_snapshot_id_ = 1;
     other.snapshot_use_clock_ = 0;
     other.snapshot_bytes_ = 0;
+    other.experimental_mmq_gateup_only_ = false;
     other.snapshot_state_loaded_ = false;
     other.snapshot_cow_events_ = 0;
     other.snapshot_cow_bytes_ = 0;
@@ -369,6 +374,7 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
         vocab_size_ = other.vocab_size_;
         rms_epsilon_ = other.rms_epsilon_;
         kv_capacity_ = other.kv_capacity_;
+        experimental_mmq_gateup_only_ = other.experimental_mmq_gateup_only_;
         has_lm_head_ = other.has_lm_head_;
         d_embedding_weights_ = other.d_embedding_weights_;
         embedding_bytes_ = other.embedding_bytes_;
@@ -416,6 +422,7 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
         other.next_snapshot_id_ = 1;
         other.snapshot_use_clock_ = 0;
         other.snapshot_bytes_ = 0;
+        other.experimental_mmq_gateup_only_ = false;
         other.snapshot_state_loaded_ = false;
         other.snapshot_cow_events_ = 0;
         other.snapshot_cow_bytes_ = 0;

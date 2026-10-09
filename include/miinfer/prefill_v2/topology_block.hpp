@@ -28,7 +28,8 @@ struct TopologyBlockProfileBreakdown {
 // 3 × Gated DeltaNet Recurrent Layers + 1 × Full GQA Attention Layer.
 class PrefillV2TopologyBlock {
 public:
-    PrefillV2TopologyBlock(const miinfer::Qwen35Model& model, std::size_t block_index);
+    PrefillV2TopologyBlock(const miinfer::Qwen35Model& model, std::size_t block_index,
+                          bool mmq_gateup_only = false);
     ~PrefillV2TopologyBlock() = default;
 
     PrefillV2TopologyBlock(const PrefillV2TopologyBlock&) = delete;
