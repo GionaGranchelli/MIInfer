@@ -1,6 +1,6 @@
 {
   "campaign": "M31-OVERNIGHT-01 / E2-0003",
-  "recorded_at_utc": "2026-10-09T23:15:50Z",
+  "recorded_at_utc": "2026-10-09T23:17:59Z",
   "branch": "experiment/e2-0003-mmq-gateup-only",
   "base_commit": "99d40748bb4ae8921fbf3558b9f0216389ebfd8a",
   "campaign_plan_commit": "dd35dab2fa0c615b539f1905057d70899aca7db1",
@@ -43,7 +43,7 @@
   "hardware": {
     "target": "HP Z840 / AMD Instinct MI50 / gfx906",
     "expected_bdf": "0000:06:00.0",
-    "preflight": "BLOCKED: six bounded SSH preflights timed out through 2026-10-09T23:15:50Z; no identity or telemetry captured during campaign",
+    "preflight": "BLOCKED: seven bounded SSH preflights timed out through 2026-10-09T23:17:59Z; no identity or telemetry captured during campaign",
     "gpu_runs": 0
   },
   "memory_accounting": {
