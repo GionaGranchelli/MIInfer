@@ -128,7 +128,7 @@ M31 dirty overlay. No campaign GPU work started.
 ## Interim campaign disposition
 
 **M31-OVERNIGHT-01 checkpoint: PARTIAL / BLOCKED.** The implementation and
-offline checks are complete. Ten bounded Z840 SSH preflights timed out by
+offline checks are complete. Twelve bounded Z840 SSH preflights timed out by
 this checkpoint; no safe GPU experiment could begin. There are no
 control or candidate runs and Candidate B was not triggered. The campaign
 window remains open through the recorded hard stop below.
@@ -169,11 +169,15 @@ window remains open through the recorded hard stop below.
   its raw output is `results/e2-0003/ssh-preflight-20261009-2321.log`.
 - A tenth bounded readiness attempt at `2026-10-09T23:23:36Z` timed out;
   its raw output is `results/e2-0003/ssh-preflight-20261009-2323.log`.
+- The eleventh and twelfth readiness attempts at `2026-10-09T23:25:06Z` and
+  `2026-10-09T23:27:22Z` timed out; raw logs are preserved in
+  `results/e2-0003/ssh-preflight-20261009-2325.log` and
+  `results/e2-0003/ssh-preflight-20261009-2327.log`.
 
 ```text
 START_TIME: 2026-10-09 22:50:25 UTC
-CHECKPOINT_TIME: 2026-10-09 23:23:36 UTC
-ELAPSED_AT_CHECKPOINT: 00:33:11
+CHECKPOINT_TIME: 2026-10-09 23:27:22 UTC
+ELAPSED_AT_CHECKPOINT: 00:36:57
 AUTHORIZED_WINDOW_END: 2026-10-10 06:50:25 UTC
 BASE_SHA: 99d40748bb4ae8921fbf3558b9f0216389ebfd8a plus preserved M31 overlay
 CAMPAIGN_SOURCE_SHA: c2fd12bbd24b3ae75f34f6de2401fb00b0df785e (report/evidence commits follow)
