@@ -376,7 +376,7 @@ def main() -> int:
     parser.add_argument("--pairs", type=int, choices=(1, 2), default=1)
     parser.add_argument("--expected-seconds", type=int, default=240)
     parser.add_argument("--cooldown-timeout-seconds", type=int, default=900)
-    parser.add_argument("--container-runtime", choices=("podman", "docker"), default="podman")
+    parser.add_argument("--container-runtime", choices=("podman",), default="podman")
     args = parser.parse_args()
 
     try:

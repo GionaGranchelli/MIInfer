@@ -65,7 +65,7 @@
   },
   "same_source_harness": {
     "script": "scripts/e2_0003_same_source_ab.py",
-    "script_sha256": "e98a9dba660629226f1ba4eb25e396547e21d79abb382e69d611c495d7272c10",
+    "script_sha256": "24eb4f7f8b8d7361997cc9610b5cd8f3315fc3a2283d5a53267cf2db2e9e71f9",
     "test": "tests/test_e2_0003_same_source_ab.py",
     "test_sha256": "372c6ddad79f85ecaf16a3cc6e39f093dcfe46515e48f4fa225970bdb4d5d8eb",
     "test_status": "PASS: 4 focused unittest cases; Python compilation and diff check pass",
