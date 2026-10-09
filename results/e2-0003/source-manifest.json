@@ -76,5 +76,14 @@
     "compatible_libxml2_so_2_found": false,
     "available_system_soname": "libxml2.so.16",
     "environment_changed": false
+  },
+  "graphify_snapshot": {
+    "commit": "b461a2514726b36bf5b65ebf9e69aec2e08fb92c",
+    "worktree": "/tmp/e2-0003-graphify-20261009-2322",
+    "nodes": 11243,
+    "links": 15723,
+    "graph_json_sha256": "871d2d5b8cc25752973f2726f8de1f76feecd000ada23636f056f262c98277db",
+    "report_sha256": "f568f0a75a8aee49d0e66ab6a03c1d271a6b0c8e1c146e5a397e449d7fed3d95",
+    "main_checkout_graphify_output_preserved": true
   }
 }

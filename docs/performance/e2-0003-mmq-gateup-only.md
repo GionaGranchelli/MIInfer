@@ -147,6 +147,10 @@ window remains open through the recorded hard stop below.
 - Review tightened both per-call and cooldown preflight to require an
   identifiable, idle GPU below 80°C; a fifth focused test covers rejection at
   the 80°C warning threshold.
+- Following repository instructions, `graphify update .` ran in a detached
+  worktree at `b461a2514726b36bf5b65ebf9e69aec2e08fb92c`; it produced 11,243
+  nodes and 15,723 links. The user's dirty `graphify-out/` in the main checkout
+  was preserved.
 - The SSH retry at `2026-10-09T23:12:57Z` timed out after eight seconds.
   Host identity, model hash, image digest, and device state remain unverified;
   no GPU call was started. The harness is prepared but unqualified.
