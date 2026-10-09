@@ -1,6 +1,6 @@
 {
   "campaign": "M31-OVERNIGHT-01 / E2-0003",
-  "recorded_at_utc": "2026-10-09T23:08:17Z",
+  "recorded_at_utc": "2026-10-09T23:13:08Z",
   "branch": "experiment/e2-0003-mmq-gateup-only",
   "base_commit": "99d40748bb4ae8921fbf3558b9f0216389ebfd8a",
   "campaign_plan_commit": "dd35dab2fa0c615b539f1905057d70899aca7db1",
@@ -43,7 +43,7 @@
   "hardware": {
     "target": "HP Z840 / AMD Instinct MI50 / gfx906",
     "expected_bdf": "0000:06:00.0",
-    "preflight": "BLOCKED: bounded SSH timed out four times through 2026-10-09T23:07:28Z; no identity or telemetry captured during campaign",
+    "preflight": "BLOCKED: five bounded SSH preflights timed out through 2026-10-09T23:12:57Z; no identity or telemetry captured during campaign",
     "gpu_runs": 0
   },
   "memory_accounting": {
@@ -60,6 +60,15 @@
     "hip_graph": "NOT_RUN",
     "prefill_tok_s": null,
     "decode_tok_s": null,
-    "candidate_disposition": "BLOCKED / PARTIAL"
+    "candidate_disposition": "BLOCKED / PARTIAL",
+    "same_source_harness": "OFFLINE_TESTED; GPU RUN NOT STARTED"
+  },
+  "same_source_harness": {
+    "script": "scripts/e2_0003_same_source_ab.py",
+    "script_sha256": "e98a9dba660629226f1ba4eb25e396547e21d79abb382e69d611c495d7272c10",
+    "test": "tests/test_e2_0003_same_source_ab.py",
+    "test_sha256": "372c6ddad79f85ecaf16a3cc6e39f093dcfe46515e48f4fa225970bdb4d5d8eb",
+    "test_status": "PASS: 4 focused unittest cases; Python compilation and diff check pass",
+    "runtime_status": "PREPARED, NOT RUN: no verified host, model, image, or GPU preflight"
   }
 }

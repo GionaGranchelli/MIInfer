@@ -1,0 +1,9 @@
+test_metrics_parse_events_properties_and_result (tests.test_e2_0003_same_source_ab.SameSourceHarnessTest.test_metrics_parse_events_properties_and_result) ... ok
+test_phase_memory_requires_nearby_successful_sample (tests.test_e2_0003_same_source_ab.SameSourceHarnessTest.test_phase_memory_requires_nearby_successful_sample) ... ok
+test_prompt_matches_e3_fingerprint (tests.test_e2_0003_same_source_ab.SameSourceHarnessTest.test_prompt_matches_e3_fingerprint) ... ok
+test_route_env_is_the_only_candidate_selector (tests.test_e2_0003_same_source_ab.SameSourceHarnessTest.test_route_env_is_the_only_candidate_selector) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.001s
+
+OK

@@ -125,17 +125,33 @@ M31 dirty overlay. No campaign GPU work started.
   tests. If the host remains unavailable, finalize as blocked without using
   the unqualified Machinist.
 
-## Final campaign decision
+## Interim campaign disposition
 
 **M31-OVERNIGHT-01 checkpoint: PARTIAL / BLOCKED.** The implementation and
-offline checks are complete. Four bounded Z840 SSH preflights timed out by
+offline checks are complete. Five bounded Z840 SSH preflights timed out by
 this checkpoint; no safe GPU experiment could begin. There are no
-control or candidate runs and Candidate B was not triggered.
+control or candidate runs and Candidate B was not triggered. The campaign
+window remains open through the recorded hard stop below.
+
+### Same-source harness checkpoint — 2026-10-09 23:13 UTC
+
+- Added a guarded runner that uses one benchmark binary for both routes and
+  changes only `MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY` between control and
+  candidate. It rechecks the model and binary hashes before each call, records
+  the requested environment, preserves per-call metrics and one-second GPU
+  telemetry, and refuses to overwrite its output directory.
+- The four focused harness tests pass, including the historical prompt
+  fingerprint and the route selector check. Python compilation and
+  `git diff --check` pass. Raw test output and the latest bounded SSH failure
+  are preserved in `results/e2-0003/`.
+- The SSH retry at `2026-10-09T23:12:57Z` timed out after eight seconds.
+  Host identity, model hash, image digest, and device state remain unverified;
+  no GPU call was started. The harness is prepared but unqualified.
 
 ```text
 START_TIME: 2026-10-09 22:50:25 UTC
-CHECKPOINT_TIME: 2026-10-09 23:08:17 UTC
-ELAPSED_AT_CHECKPOINT: 00:17:52
+CHECKPOINT_TIME: 2026-10-09 23:13:08 UTC
+ELAPSED_AT_CHECKPOINT: 00:22:43
 AUTHORIZED_WINDOW_END: 2026-10-10 06:50:25 UTC
 BASE_SHA: 99d40748bb4ae8921fbf3558b9f0216389ebfd8a plus preserved M31 overlay
 CAMPAIGN_SOURCE_SHA: c2fd12bbd24b3ae75f34f6de2401fb00b0df785e (report/evidence commits follow)
@@ -156,13 +172,13 @@ DECISION: BLOCKED / PARTIAL; no KEEP or REJECT verdict
 CANDIDATE_B_TRIGGERED: NO
 CANDIDATE_B_DECISION: NOT_RUN
 
-E3_HARNESS: inspected and historical artifacts/schema validated
+E3_HARNESS: inspected and historical artifacts/schema validated; same-source runner added and offline-tested, no GPU validation
 CONTROL_RUNS: 0
 CANDIDATE_RUNS: 0
 NUMERICAL_REGRESSION: NOT_RUN
 PERSISTENT_CONTEXT: NOT_RUN
 SNAPSHOT_ROLLBACK: NOT_RUN
-TESTS_PASSED: option parser; gfx906 HIP syntax-only; diff check; existing thermal-guard self-test
+TESTS_PASSED: option parser; gfx906 HIP syntax-only; same-source harness (4 tests); diff check; existing thermal-guard self-test
 TESTS_FAILED: full CMake HIP compiler detection (host libxml2.so.2 unavailable)
 TESTS_SKIPPED: operation reference, allocation/cleanup runtime, graph, A/B, sessions, memory, performance
 KNOWN_LIMITATIONS: Z840 unreachable; constructor raw-pointer exception cleanup is pre-existing and not RAII
@@ -187,7 +203,7 @@ KNOWN_LIMITATIONS: Z840 unreachable; constructor raw-pointer exception cleanup i
 | Maximum junction temperature | NOT_RUN | NOT_RUN |
 | Decision | UNMEASURED | BLOCKED / PARTIAL |
 
-### Conclusion and next goal
+### Interim conclusion and next goal
 
 - Best candidate: none established. MMQ-only remains a default-off experiment.
 - Physical memory recovered: unknown. Allocation requests are not residency.
