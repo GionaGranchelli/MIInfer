@@ -1,0 +1,8 @@
+M31-OVERNIGHT-01 local linker dependency check
+timestamp_utc=2026-10-09T23:16:27.924225+00:00
+host=gionag-ThinkStation-P620
+rocm=6.2.41133-dd7f95766 at /opt/rocm-6.2.0
+ldconfig reports libxml2.so.16 -> /usr/lib/x86_64-linux-gnu/libxml2.so.16.1.2
+checked paths: /usr/lib/x86_64-linux-gnu, /usr/local/lib, /opt/rocm-6.2.0/lib/llvm/lib, /opt/rocm-6.2.0/lib
+compatible libxml2.so.2 found: NO
+CMake HIP detection remains blocked; no library symlink, installation, or toolchain change made.

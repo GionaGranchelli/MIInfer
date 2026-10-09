@@ -149,6 +149,11 @@ window remains open through the recorded hard stop below.
   no GPU call was started. The harness is prepared but unqualified.
 - A sixth bounded readiness attempt at `2026-10-09T23:15:50Z` also timed out;
   its raw output is `results/e2-0003/ssh-preflight-20261009-2315.log`.
+- The local ROCm linker dependency check found only `libxml2.so.16` on the
+  P620, not the requested `libxml2.so.2`, in the checked system and ROCm
+  library directories. No compatible library was available to reuse; no
+  soname alias or dependency change was made. Raw findings are in
+  `results/e2-0003/libxml2-soname-check.txt`.
 
 ```text
 START_TIME: 2026-10-09 22:50:25 UTC
