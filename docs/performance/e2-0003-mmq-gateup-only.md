@@ -128,12 +128,12 @@ M31 dirty overlay. No campaign GPU work started.
 ## Interim campaign disposition
 
 **M31-OVERNIGHT-01 checkpoint: PARTIAL / BLOCKED.** The implementation and
-offline checks are complete. Five bounded Z840 SSH preflights timed out by
+offline checks are complete. Six bounded Z840 SSH preflights timed out by
 this checkpoint; no safe GPU experiment could begin. There are no
 control or candidate runs and Candidate B was not triggered. The campaign
 window remains open through the recorded hard stop below.
 
-### Same-source harness checkpoint — 2026-10-09 23:13 UTC
+### Same-source harness checkpoint — 2026-10-09 23:16 UTC
 
 - Added a guarded runner that uses one benchmark binary for both routes and
   changes only `MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY` between control and
@@ -147,11 +147,13 @@ window remains open through the recorded hard stop below.
 - The SSH retry at `2026-10-09T23:12:57Z` timed out after eight seconds.
   Host identity, model hash, image digest, and device state remain unverified;
   no GPU call was started. The harness is prepared but unqualified.
+- A sixth bounded readiness attempt at `2026-10-09T23:15:50Z` also timed out;
+  its raw output is `results/e2-0003/ssh-preflight-20261009-2315.log`.
 
 ```text
 START_TIME: 2026-10-09 22:50:25 UTC
-CHECKPOINT_TIME: 2026-10-09 23:13:08 UTC
-ELAPSED_AT_CHECKPOINT: 00:22:43
+CHECKPOINT_TIME: 2026-10-09 23:15:50 UTC
+ELAPSED_AT_CHECKPOINT: 00:25:25
 AUTHORIZED_WINDOW_END: 2026-10-10 06:50:25 UTC
 BASE_SHA: 99d40748bb4ae8921fbf3558b9f0216389ebfd8a plus preserved M31 overlay
 CAMPAIGN_SOURCE_SHA: c2fd12bbd24b3ae75f34f6de2401fb00b0df785e (report/evidence commits follow)
