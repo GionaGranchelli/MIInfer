@@ -1,0 +1,51 @@
+name: PR Evidence Contract
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, edited]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  evidence-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate declared change evidence
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.pull_request?.body || '';
+            const errors = [];
+            const matched = body.match(/^Change type:\s*(PERFORMANCE|CORRECTNESS|INFRA|DOCS|EXPERIMENT)\s*$/im);
+            if (!matched) errors.push('Change type must be PERFORMANCE, CORRECTNESS, INFRA, DOCS or EXPERIMENT');
+            const headings = [
+              'Hypothesis / purpose',
+              'Baseline and provenance',
+              'Correctness evidence',
+              'Measured performance evidence',
+              'Validation level',
+              'Remaining risk',
+              'Rollback / fallback',
+              'Linked issue'
+            ];
+            const fields = {};
+            for (const heading of headings) {
+              const needle = '## ' + heading + '\n';
+              const start = body.indexOf(needle);
+              if (start < 0) { errors.push('Missing heading: ' + heading); continue; }
+              const after = body.slice(start + needle.length);
+              const next = after.indexOf('\n## ');
+              const raw = (next < 0 ? after : after.slice(0, next));
+              const value = raw.replace(/<!--[\s\S]*?-->/g, '').trim();
+              fields[heading] = value;
+              if (!value || value === 'TODO' || value === 'TBD') errors.push('Unfilled section: ' + heading);
+            }
+            const type = matched?.[1]?.toUpperCase();
+            if (type === 'PERFORMANCE') {
+              if (!/\bL[23]\b/i.test(fields['Validation level'] || '')) errors.push('PERFORMANCE requires L2 or L3 evidence; use EXPERIMENT for earlier stages');
+              const perf = fields['Measured performance evidence'] || '';
+              if (/^(N\/A|none|pending|unmeasured)/i.test(perf)) errors.push('PERFORMANCE requires a measured result or must be classified EXPERIMENT');
+            }
+            if (errors.length) core.setFailed('PR evidence contract failed:\n' + errors.join('\n'));
+            else core.info('Structural evidence contract passed; accuracy still requires review.');
