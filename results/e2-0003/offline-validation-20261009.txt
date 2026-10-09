@@ -1,0 +1,33 @@
+M31-OVERNIGHT-01 / E2-0003 offline validation checkpoint
+Campaign start: 2026-10-09 22:50:25 UTC
+Checkpoint: 2026-10-09 23:02 UTC
+Branch: experiment/e2-0003-mmq-gateup-only
+Parent: dd35dab (campaign plan), based on local M31 commit 99d4074 plus preserved dirty overlay
+Implementation commit: fef7b6637d57e664a18c528245f0d558382842da
+Option-parser test commit: c2fd12bbd24b3ae75f34f6de2401fb00b0df785e
+
+PASS: parser test built and ran with Release assertions disabled:
+  g++ -std=c++20 -O2 -DNDEBUG -Wall -Wextra -Wpedantic -Iinclude
+    tests/prefill_v2_experimental_options_test.cpp
+PASS: HIP syntax-only checks for recurrent_layer.cpp, attention_layer.cpp,
+      model.cpp, and topology_block.cpp with gfx906 target on ROCm 6.2.
+      Compiler emitted only the existing `--hip-link` unused warning.
+PASS: git diff --check.
+PASS: existing guarded thermal self-test (Phase A evidence): 80 C warning,
+      85 C stop, bounded cleanup, stale/unavailable telemetry fail-closed.
+PASS: graphify update in an isolated clean worktree at the candidate commit;
+      graph output rebuilt to 11,207 nodes and 15,646 edges.
+
+BLOCKED: clean-parent CMake configure with MIINFER_ENABLE_HIP=ON and
+MIINFER_BUILD_TESTS=ON fails in HIP compiler detection. ROCm 6.2 lld cannot
+load host library `libxml2.so.2`. No dependencies or toolchain were changed.
+
+BLOCKED: bounded SSH preflight to gionag@192.168.68.54:22 timed out after
+10 seconds. The local ThinkStation P620 reports no initialized AMD driver.
+No model binary was built and no GPU workload was started.
+
+NOT RUN: layer reference comparisons, allocation instrumentation, full build,
+same-source A/B runs, GPU memory sampling, token parity, HIP Graph replay,
+prefill/decode performance, persistent-context tests.
+
+No physical-memory saving or Candidate A KEEP/REJECT verdict is claimed.

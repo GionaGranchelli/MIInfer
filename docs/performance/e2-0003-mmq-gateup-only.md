@@ -2,8 +2,8 @@
 
 ## Phase A checkpoint
 
-**Status: FEASIBLE; GPU preflight unavailable at checkpoint.** No source code or
-runtime behavior has changed in this campaign yet.
+**Phase A status: FEASIBLE; GPU preflight unavailable.** At this checkpoint,
+source behavior had not changed.
 
 ### Source and baseline identity
 
@@ -71,3 +71,51 @@ activation launches.
 - Next authorized phase: implement the default-off MMQ-only candidate and
   offline correctness checks. Resume guarded GPU work only after live Z840
   identity, idle state, model SHA, and thermal telemetry pass preflight.
+
+## Phase B checkpoint
+
+**Status: IMPLEMENTED; offline checks pass; GPU qualification blocked by host
+unavailability.** Candidate implementation commit `fef7b6637d57e664a18c528245f0d558382842da`
+and parser test commit `c2fd12bbd24b3ae75f34f6de2401fb00b0df785e` descend from
+planning commit `dd35dab`. The in-place checkout still carries the preserved
+M31 dirty overlay. No campaign GPU work started.
+
+- Added default-off `MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY` parsing. The model
+  reads it once and passes an immutable bool through 16 blocks to 48 recurrent
+  and 16 attention layers. Invalid values fail model construction.
+- In the opt-in route, both layer constructors skip fused Gate/Up packing and
+  allocation. MMQ weights and workspace stay in place. Eager and profiled
+  single-token decode use the existing MMQ quantizer, Gate and Up projections,
+  and SwiGLU kernel when the fused pointer is null. Prefill code is unchanged.
+- The default route retains a non-null fused pointer and its existing decode
+  call. Model construction precedes graph capture, so the selected weight
+  pointers remain fixed for a model's lifetime. Runtime graph replay is not
+  verified.
+- Structural request reduction remains the exact fused allocation-request
+  upper bound: `7,130,316,800 B`; MMQ Gate/Up requests (`6,452,936,704 B`)
+  remain. No external GPU-memory saving has been measured.
+- Option parsing test passed with `-O2 -DNDEBUG`; `git diff --check` passed.
+  HIP syntax-only checks passed for edited layer/model sources. Full CMake
+  configuration failed before generation because ROCm 6.2 `lld` cannot load
+  the host's missing `libxml2.so.2`.
+- `graphify update .` completed in an isolated clean worktree at the candidate
+  commit (11,207 nodes, 15,646 edges); existing generated graph files in the
+  user's dirty checkout were preserved.
+- Repeated bounded SSH preflight to Z840 `192.168.68.54` timed out. The local
+  P620 has no initialized AMD driver. No control or candidate binary was
+  built, no GPU experiment ran, and no memory, parity, throughput, or graph
+  verdict exists.
+- Constructor destructors release owned pointers after successful
+  construction. Existing raw-pointer constructors do not provide RAII cleanup
+  if an unrelated later allocation throws; this pre-existing limitation was
+  not expanded into this campaign.
+- Candidate A disposition: `BLOCKED / PARTIAL`, not KEEP or REJECT. Historical
+  older-source fast-path measurements make decode throughput the principal
+  risk but do not substitute for the required same-source gate.
+- Candidate B: not triggered. Its only trigger is a measured Candidate A
+  memory success with decode-throughput failure after correctness, graph, and
+  thermal gates pass.
+- Next authorized phase: wait for safe Z840 availability, then complete fresh
+  identity/idle/model/telemetry preflight before building or running paired
+  tests. If the host remains unavailable, finalize as blocked without using
+  the unqualified Machinist.
