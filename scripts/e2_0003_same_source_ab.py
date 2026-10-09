@@ -218,8 +218,11 @@ def call(args, out: Path, route: str, pair: int, order: int) -> dict:
         raise RuntimeError("model changed after preflight")
     label = f"{route}-pair-{pair}"
     before = capture_state(out / "snapshots", f"{label}-before", args.gpu_index)
-    if before["returncode"] != 0 or before["pci_bdf"] != args.expected_bdf:
-        raise RuntimeError(f"GPU identity/telemetry changed before {label}: {before}")
+    if (before["returncode"] != 0 or before["pci_bdf"] != args.expected_bdf
+            or before["junction_c"] is None or before["junction_c"] >= WARN_C
+            or before["gpu_use_percent"] is None or before["gpu_use_percent"] > 1
+            or not before["kfd_idle"]):
+        raise RuntimeError(f"GPU identity/idle/thermal preflight failed before {label}: {before}")
     telemetry_path = out / "telemetry" / f"{label}.jsonl"
     stop = threading.Event()
     start_ns = time.monotonic_ns()
@@ -326,6 +329,7 @@ def wait_cool(args, out: Path, label: str, baseline_c: float,
                    or state["vram_used_bytes"] <= baseline_vram + 512 * 1024 * 1024)
         if (state["returncode"] == 0 and state["pci_bdf"] == args.expected_bdf
                 and state["junction_c"] is not None
+                and state["junction_c"] < WARN_C
                 and state["junction_c"] <= baseline_c + 2.0
                 and state["gpu_use_percent"] is not None and state["gpu_use_percent"] <= 1
                 and state["kfd_idle"] and vram_ok):

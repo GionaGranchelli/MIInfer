@@ -144,6 +144,9 @@ window remains open through the recorded hard stop below.
   fingerprint and the route selector check. Python compilation and
   `git diff --check` pass. Raw test output and the latest bounded SSH failure
   are preserved in `results/e2-0003/`.
+- Review tightened both per-call and cooldown preflight to require an
+  identifiable, idle GPU below 80°C; a fifth focused test covers rejection at
+  the 80°C warning threshold.
 - The SSH retry at `2026-10-09T23:12:57Z` timed out after eight seconds.
   Host identity, model hash, image digest, and device state remain unverified;
   no GPU call was started. The harness is prepared but unqualified.

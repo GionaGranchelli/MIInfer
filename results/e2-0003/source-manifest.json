@@ -1,6 +1,6 @@
 {
   "campaign": "M31-OVERNIGHT-01 / E2-0003",
-  "recorded_at_utc": "2026-10-09T23:19:20Z",
+  "recorded_at_utc": "2026-10-09T23:19:57Z",
   "branch": "experiment/e2-0003-mmq-gateup-only",
   "base_commit": "99d40748bb4ae8921fbf3558b9f0216389ebfd8a",
   "campaign_plan_commit": "dd35dab2fa0c615b539f1905057d70899aca7db1",
@@ -65,11 +65,11 @@
   },
   "same_source_harness": {
     "script": "scripts/e2_0003_same_source_ab.py",
-    "script_sha256": "24eb4f7f8b8d7361997cc9610b5cd8f3315fc3a2283d5a53267cf2db2e9e71f9",
+    "script_sha256": "1e8a21ee4d415486a0b87f3181471a8b9b00d29b1a41b3e54e4e67f92a214000",
     "test": "tests/test_e2_0003_same_source_ab.py",
-    "test_sha256": "372c6ddad79f85ecaf16a3cc6e39f093dcfe46515e48f4fa225970bdb4d5d8eb",
-    "test_status": "PASS: 4 focused unittest cases; Python compilation and diff check pass",
-    "runtime_status": "PREPARED, NOT RUN: no verified host, model, image, or GPU preflight"
+    "test_sha256": "d54dc5831d002adbe91bad37331febd51c00d6518ef90a47fdd4c6a93a8ff306",
+    "test_status": "PASS: 5 focused unittest cases; Python compilation and diff check pass",
+    "runtime_status": "PREPARED, NOT RUN: eight bounded SSH attempts timed out; no verified host, model, image, or GPU preflight"
   },
   "local_linker_dependency_check": {
     "evidence_file": "results/e2-0003/libxml2-soname-check.txt",
