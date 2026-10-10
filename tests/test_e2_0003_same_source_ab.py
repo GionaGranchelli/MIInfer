@@ -58,12 +58,27 @@ class SameSourceHarnessTest(unittest.TestCase):
             binary.touch()
             model.touch()
             args = SimpleNamespace(container_runtime="podman", binary=binary, model=model,
-                                   expected_bdf="0000:06:00.0", image="image")
+                                   expected_bdf="0000:06:00.0", image="image",
+                                   context_profile="8K", prompt_tokens=1024, generate_tokens=32)
             control = MODULE.container_command(args, "control", 1, Path(directory))
             candidate = MODULE.container_command(args, "mmq_only", 1, Path(directory))
         self.assertIn("MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY=0", control)
         self.assertIn("MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY=1", candidate)
         self.assertEqual(control[control.index("/bench/run")], candidate[candidate.index("/bench/run")])
+
+    def test_context_workload_is_passed_through_to_the_same_binary(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            binary = root / "bench"
+            model = root / "model.gguf"
+            binary.touch()
+            model.touch()
+            args = SimpleNamespace(container_runtime="podman", binary=binary, model=model,
+                                   expected_bdf="0000:06:00.0", image="image",
+                                   context_profile="8K", prompt_tokens=8192, generate_tokens=16)
+            command = MODULE.container_command(args, "mmq_only", 1, root)
+        self.assertEqual(command[command.index("8K") + 1:command.index("8K") + 5],
+                         ["--generate", "16", "--prompt-tokens", "8192"])
 
     def test_sampler_contract_is_explicit_and_rejects_legacy_penalty(self):
         self.assertEqual(MODULE.SAMPLER_CONFIG["repetition_penalty"], "1")

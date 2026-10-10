@@ -218,8 +218,8 @@ def container_command(args, route: str, pair: int, output: Path) -> list[str]:
                "--env", f"M31_EXPECTED_GPU_BDF={args.expected_bdf}",
                "--env", "MIINFER_HIP_GRAPH=1",
                "--env", f"MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY={'1' if route == 'mmq_only' else '0'}",
-               args.image, "/bench/run", "/model.gguf", "8K",
-               "--generate", str(OUTPUT_TOKENS), "--prompt-tokens", str(PROMPT_TOKENS),
+               args.image, "/bench/run", "/model.gguf", args.context_profile,
+               "--generate", str(args.generate_tokens), "--prompt-tokens", str(args.prompt_tokens),
                "--iterations", "1", "--warmup", "0",
                "--output", f"/results/{route}-pair-{pair}.metrics"]
     return command
@@ -321,10 +321,10 @@ def valid_call(record: dict) -> bool:
     return (record["guard"]["exit_code"] == 0 and record["guard"]["clean_process_group"]
             and not record["guard"]["thermal_or_watchdog_abort"]
             and result.get("tokens_valid") == "PASS"
-            and len(record["generated_token_ids"]) == OUTPUT_TOKENS
-            and config.get("prompt_tokens") == str(PROMPT_TOKENS)
-            and config.get("generate_tokens") == str(OUTPUT_TOKENS)
-            and config.get("context_capacity_tokens") == str(CONTEXT_TOKENS)
+            and len(record["generated_token_ids"]) == record["expected_generate_tokens"]
+            and config.get("prompt_tokens") == str(record["expected_prompt_tokens"])
+            and config.get("generate_tokens") == str(record["expected_generate_tokens"])
+            and config.get("context_capacity_tokens") == str(record["expected_context_capacity_tokens"])
             and config.get("prompt_fingerprint_fnv1a64") == record["expected_prompt_fingerprint"]
             and sampler_config_valid(config)
             and record["telemetry"]["successful_sample_count"] > 0
@@ -397,6 +397,9 @@ def main() -> int:
     parser.add_argument("--expected-bdf", default=EXPECTED_BDF)
     parser.add_argument("--gpu-index", type=int, default=0)
     parser.add_argument("--pairs", type=int, choices=(1, 2), default=1)
+    parser.add_argument("--context-profile", choices=("8K", "32K", "64K", "128K"), default="8K")
+    parser.add_argument("--prompt-tokens", type=int, default=PROMPT_TOKENS)
+    parser.add_argument("--generate-tokens", type=int, default=OUTPUT_TOKENS)
     parser.add_argument("--expected-seconds", type=int, default=240)
     parser.add_argument("--cooldown-timeout-seconds", type=int, default=900)
     parser.add_argument("--container-runtime", choices=("podman",), default="podman")
@@ -412,6 +415,11 @@ def main() -> int:
             raise ValueError(f"refusing to overwrite output directory: {args.output_dir}")
         if args.expected_seconds < 60 or args.expected_seconds > 600:
             raise ValueError("expected-seconds must be in [60, 600]")
+        context_limit = int(args.context_profile[:-1]) * 1024
+        if not (1 <= args.prompt_tokens <= context_limit and 1 <= args.generate_tokens <= min(args.prompt_tokens, 100)):
+            raise ValueError("prompt/generation count exceeds the selected context profile or bounded-run limit")
+        args.context_capacity_tokens = args.prompt_tokens + 256
+        args.expected_prompt_fingerprint = prompt_fingerprint(make_prompt(args.prompt_tokens, seed=77))
         model_hash = sha256_file(args.model)
         binary_hash = sha256_file(args.binary)
         args.binary_hash = binary_hash
@@ -436,7 +444,7 @@ def main() -> int:
         out = args.output_dir.resolve()
         (out / "snapshots").mkdir()
         (out / "telemetry").mkdir()
-        prompt = make_prompt()
+        prompt = make_prompt(args.prompt_tokens, seed=77)
         prompt_path = out / "prompt.ids"
         prompt_path.write_text("".join(f"{token}\n" for token in prompt))
         prompt_hash = sha256_file(prompt_path)
@@ -474,7 +482,7 @@ def main() -> int:
             "binary_sha256": binary_hash,
             "model_sha256": model_hash,
             "prompt_ids_sha256": prompt_hash,
-            "prompt_tokens": PROMPT_TOKENS,
+            "prompt_tokens": args.prompt_tokens,
             "prompt_fingerprint_fnv1a64": fingerprint,
             "sampler_config": SAMPLER_CONFIG,
             "container_image": args.image,
@@ -501,7 +509,12 @@ def main() -> int:
                         break
                 print(f"PAIR {pair} CALL {position} START route={route}", flush=True)
                 record = call(args, out, route, pair, position)
-                record["expected_prompt_fingerprint"] = fingerprint
+                record.update({
+                    "expected_prompt_fingerprint": fingerprint,
+                    "expected_prompt_tokens": args.prompt_tokens,
+                    "expected_generate_tokens": args.generate_tokens,
+                    "expected_context_capacity_tokens": args.context_capacity_tokens,
+                })
                 (out / f"{route}-pair-{pair}.record.json").write_text(
                     json.dumps(record, indent=2) + "\n")
                 records.append(record)
@@ -557,8 +570,9 @@ def main() -> int:
             "schema_version": "1.0.0", "experiment": "E2-0003",
             "created_at_utc": datetime.now(timezone.utc).isoformat(),
             "source_identity": source_identity,
-            "workload": {"prompt_tokens": PROMPT_TOKENS, "generated_tokens": OUTPUT_TOKENS,
-                         "context_capacity_tokens": CONTEXT_TOKENS, "cold_prefill": True,
+            "workload": {"context_profile": args.context_profile,
+                         "prompt_tokens": args.prompt_tokens, "generated_tokens": args.generate_tokens,
+                         "context_capacity_tokens": args.context_capacity_tokens, "cold_prefill": True,
                          "warmups": 0, "repetitions_per_call": 1,
                          "prompt": "deterministic e2_0003_prompt.hpp seed=77; fingerprint recorded per call",
                          "sampler_config": SAMPLER_CONFIG,
