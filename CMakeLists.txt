@@ -682,6 +682,14 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-m31-0002-persistent-context-qualification PRIVATE miinfer_hip miinfer_model)
     target_compile_options(miinfer-m31-0002-persistent-context-qualification PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(e2-0003-checkpointed-call bench/e2_0003_checkpointed_call.cpp)
+    target_link_libraries(e2-0003-checkpointed-call PRIVATE miinfer_hip miinfer_model)
+    target_compile_options(e2-0003-checkpointed-call PRIVATE -Wall -Wextra -Wpedantic)
+
+    add_executable(e2-0003-gateup-operation-reference bench/e2_0003_gateup_operation_reference.cpp)
+    target_link_libraries(e2-0003-gateup-operation-reference PRIVATE miinfer_hip miinfer_model)
+    target_compile_options(e2-0003-gateup-operation-reference PRIVATE -Wall -Wextra -Wpedantic)
+
     add_executable(miinfer-m31-0003-canonical-agent-workload
         bench/m31_0003_canonical_agent_workload.cpp)
     target_link_libraries(miinfer-m31-0003-canonical-agent-workload PRIVATE miinfer_hip miinfer_model)

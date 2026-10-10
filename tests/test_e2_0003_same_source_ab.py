@@ -65,6 +65,14 @@ class SameSourceHarnessTest(unittest.TestCase):
         self.assertIn("MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY=1", candidate)
         self.assertEqual(control[control.index("/bench/run")], candidate[candidate.index("/bench/run")])
 
+    def test_sampler_contract_is_explicit_and_rejects_legacy_penalty(self):
+        self.assertEqual(MODULE.SAMPLER_CONFIG["repetition_penalty"], "1")
+        self.assertEqual(MODULE.SAMPLER_CONFIG["sampler"], "greedy_argmax")
+        config = dict(MODULE.SAMPLER_CONFIG)
+        self.assertTrue(MODULE.sampler_config_valid(config))
+        config["repetition_penalty"] = "1.15"
+        self.assertFalse(MODULE.sampler_config_valid(config))
+
 
 if __name__ == "__main__":
     unittest.main()

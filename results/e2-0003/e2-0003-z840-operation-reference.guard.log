@@ -1,0 +1,9 @@
+THERMAL_GUARD_BEGIN gpu=0 pci=0000:06:00.0 warn_junction_c=80 max_junction_c=85 initial_junction_c=27.0
+GUARD_EVENT event=worker_started monotonic_s=330878.53 since_start_ms=180 worker_pid=1374141 worker_pgid=1374141 command=podman run --rm --pull=never --network=none --userns=keep-id --device=/dev/kfd --device=/dev/dri --group-add keep-groups --security-opt=label=disable -v /home/fedora-workstation/.cache/e2-0003-recovery-20261010/build/e2-0003-gateup-operation-reference:/probe:ro,Z -v /home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf:/model.gguf:ro,Z localhost/miinfer-dev:rocm-7.2.1 /probe /model.gguf 0000:06:00.0
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=27.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=27.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=27.0 warn_c=80 limit_c=85
+gateup_operation_reference=PASS bdf=0000:06:00.0 layer=0 rows=17408 columns=5120 cosine=0.999998 relative_l2=0.001991 max_abs=0.000979885 thresholds=cosine:0.995,relative_l2:0.02
+GUARD_EVENT event=worker_exit monotonic_s=330879.77 since_start_ms=1420 worker_pid=1374141 worker_pgid=1374141 status=0
+GUARD_EVENT event=descendants_exited monotonic_s=330879.80 since_start_ms=1450 worker_pid=1374141 worker_pgid=1374141 process_group=1374141 group_empty_observed=true
+GUARD_EVENT event=cleanup_complete monotonic_s=330879.81 since_start_ms=1460 worker_pid=1374141 worker_pgid=1374141 process_group=1374141

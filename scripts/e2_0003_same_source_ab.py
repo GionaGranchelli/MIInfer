@@ -22,6 +22,20 @@ MODEL_SHA256 = "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169
 PROMPT_TOKENS = 1024
 OUTPUT_TOKENS = 8
 CONTEXT_TOKENS = 1280
+SAMPLER_CONFIG = {
+    "temperature": "0",
+    "top_p": "1",
+    "top_k": "1",
+    "repetition_penalty": "1",
+    "frequency_penalty": "0",
+    "presence_penalty": "0",
+    "stop_token_ids": "disabled",
+    "repeat_last_n": "256",
+    "reset_state_before": "true",
+    "use_hip_graph": "true",
+    "seed": "42",
+    "sampler": "greedy_argmax",
+}
 EXPECTED_BDF = "0000:06:00.0"
 WARN_C = 80.0
 STOP_C = 85.0
@@ -312,10 +326,15 @@ def valid_call(record: dict) -> bool:
             and config.get("generate_tokens") == str(OUTPUT_TOKENS)
             and config.get("context_capacity_tokens") == str(CONTEXT_TOKENS)
             and config.get("prompt_fingerprint_fnv1a64") == record["expected_prompt_fingerprint"]
+            and sampler_config_valid(config)
             and record["telemetry"]["successful_sample_count"] > 0
             and record["telemetry"]["failed_sample_count"] == 0
             and record["telemetry"]["missing_junction_samples"] == 0
             and not record["telemetry"]["missing_fields"])
+
+
+def sampler_config_valid(config: dict[str, str]) -> bool:
+    return all(config.get(key) == value for key, value in SAMPLER_CONFIG.items())
 
 
 def wait_cool(args, out: Path, label: str, baseline_c: float,
@@ -366,7 +385,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", type=Path, required=True)
     parser.add_argument("--binary", type=Path, required=True,
-                        help="same m31_0002_checkpointed_call binary for both routes")
+                        help="same clean-source E2-0003 binary for both routes")
     parser.add_argument("--source-manifest", type=Path, required=True)
     parser.add_argument("--source-sha", required=True)
     parser.add_argument("--build-flags", required=True)
@@ -450,12 +469,14 @@ def main() -> int:
         shutil.copy2(args.source_manifest, out / "source-manifest.sha256")
         source_identity = {
             "source_sha": args.source_sha,
+            "benchmark": "e2-0003-checkpointed-call",
             "source_manifest_sha256": sha256_file(args.source_manifest),
             "binary_sha256": binary_hash,
             "model_sha256": model_hash,
             "prompt_ids_sha256": prompt_hash,
             "prompt_tokens": PROMPT_TOKENS,
             "prompt_fingerprint_fnv1a64": fingerprint,
+            "sampler_config": SAMPLER_CONFIG,
             "container_image": args.image,
             "container_digest": image_digest,
             "build_flags": args.build_flags,
@@ -539,7 +560,8 @@ def main() -> int:
             "workload": {"prompt_tokens": PROMPT_TOKENS, "generated_tokens": OUTPUT_TOKENS,
                          "context_capacity_tokens": CONTEXT_TOKENS, "cold_prefill": True,
                          "warmups": 0, "repetitions_per_call": 1,
-                         "prompt": "deterministic m31_0002_prompt.hpp seed=77; fingerprint recorded per call",
+                         "prompt": "deterministic e2_0003_prompt.hpp seed=77; fingerprint recorded per call",
+                         "sampler_config": SAMPLER_CONFIG,
                          "miinfer_path": "same binary; HIP Graph enabled; only MMQ Gate/Up env differs"},
             "guard": {"warning_junction_c": WARN_C, "stop_junction_c": STOP_C,
                       "expected_seconds_per_call": args.expected_seconds,

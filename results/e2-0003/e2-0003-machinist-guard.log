@@ -1,0 +1,15 @@
+THERMAL_GUARD_BEGIN gpu=1 pci=0000:85:00.0 warn_junction_c=80 max_junction_c=85 initial_junction_c=29.0
+GUARD_EVENT event=worker_started monotonic_s=330479.42 since_start_ms=180 worker_pid=528789 worker_pgid=528789 command=podman run --rm --pull=never --network=none --userns=keep-id --device=/dev/kfd --device=/dev/dri --group-add keep-groups --security-opt=label=disable -v /home/machinist/.cache/e2-0003-machinist-probe-20261010/probe:/probe:ro,Z localhost/miinfer-dev:rocm-7.2.1 /probe 0000:85:00.0
+THERMAL_SAMPLE gpu=1 pci=0000:85:00.0 junction_c=29.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=1 pci=0000:85:00.0 junction_c=30.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=1 pci=0000:85:00.0 junction_c=29.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=1 pci=0000:85:00.0 junction_c=29.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=1 pci=0000:85:00.0 junction_c=29.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=1 pci=0000:85:00.0 junction_c=29.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=1 pci=0000:85:00.0 junction_c=29.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=1 pci=0000:85:00.0 junction_c=29.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=1 pci=0000:85:00.0 junction_c=29.0 warn_c=80 limit_c=85
+PASS arch=gfx906:sramecc-:xnack- pci=0000:85:00.0 bytes=4096 H2D+D2H verified
+GUARD_EVENT event=worker_exit monotonic_s=330483.07 since_start_ms=3830 worker_pid=528789 worker_pgid=528789 status=0
+GUARD_EVENT event=descendants_exited monotonic_s=330483.10 since_start_ms=3860 worker_pid=528789 worker_pgid=528789 process_group=528789 group_empty_observed=true
+GUARD_EVENT event=cleanup_complete monotonic_s=330483.10 since_start_ms=3860 worker_pid=528789 worker_pgid=528789 process_group=528789
