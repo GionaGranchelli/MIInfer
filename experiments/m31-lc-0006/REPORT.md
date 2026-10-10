@@ -2,7 +2,7 @@
 
 ## Status
 
-Phase A instrumentation-free eager and graph runs are complete. The graph-enabled routes diverge from eager at the second decision, after consuming the same first generated token. Phase B decode-stage localization is pending.
+Phase A instrumentation-free eager and graph runs are complete. Phase B confirms that cold-prefill position metadata makes eager's first recurrent decode use position 0 while graph uses prompt position 2048. The minimal correction and instrumentation-free rerun remain pending.
 
 ## Eager baseline
 
@@ -30,15 +30,17 @@ The graph run records and raw captures are in [`results/m31-lc-0006/z840-untrace
 
 ## Next step
 
-Use the graph-safe trace to compare the first decode under identical token/state, starting with the recurrent state and layer-0 inputs/outputs. Compare the graph trace against the non-perturbing eager trace before changing execution behavior.
+Apply the confirmed cold-prefill position fix, then rerun the instrumentation-free eager/graph pair with the same binary. Keep the exact-logit and exact-token gate; the graph implementation is not considered qualified until the corrected pair matches.
 
 ## Phase B: eager trace validation
 
 Built a trace-capable binary from source revision `c67fc073a8d508370d1e4423de71415504b4a9e9` inside the pinned OCI image (binary SHA-256 is in `source-manifest-graph-trace.json`). On this exact binary, the eager traced and untraced runs produced identical token IDs and byte-identical five-decision raw logits for both routes. This verifies that the eager diagnostic capture did not perturb the output.
 
-The first eager recurrent trace is recorded as `decode-pos0`, while the graph decode state starts from prompt position 2048. Source inspection found the cold-prefill branch does not update stored recurrent positions after prefill, unlike the reusable-prefix branch. This is a candidate cause; the graph-safe trace comparison is still required before changing that behavior.
+The first eager recurrent trace is recorded as `decode-pos0`, while the graph decode state starts from prompt position 2048. Graph-safe capture completed for fused and MMQ routes. For both routes, layer input, recurrent matrix state, convolution history, attention normalization, beta, decay, Z, and QKV were bitwise identical between eager and graph before the convolution. The first differences were all Q/K/V convolution outputs; the recurrent matrix state and subsequent layer outputs differed after that.
 
-Eager trace and no-trace run evidence is in [`results/m31-lc-0006/z840-traced-eager/`](../../results/m31-lc-0006/z840-traced-eager/) and [`results/m31-lc-0006/z840-diagnostic-untraced-eager/`](../../results/m31-lc-0006/z840-diagnostic-untraced-eager/).
+This confirms the position mismatch as the cause. Eager decode calls the batch convolution with `state.position`; graph decode reads `DeviceDecodeState.position`. The cold-prefill path advances the device computation through the prompt but never stores the final `pos` in each host-side recurrent state. The reusable-prefix prefill path does store it. Thus the first eager decode uses position 0, skips the causal convolution history lags, and writes slot 0; graph uses position 2048, reads the correct prior slots, and also writes slot 0. Matching pre-decode state and QKV plus differing convolution outputs isolate the bug to this stale position metadata.
+
+Eager trace and no-trace run evidence is in [`results/m31-lc-0006/z840-traced-eager/`](../../results/m31-lc-0006/z840-traced-eager/) and [`results/m31-lc-0006/z840-diagnostic-untraced-eager/`](../../results/m31-lc-0006/z840-diagnostic-untraced-eager/). Graph trace evidence is in [`results/m31-lc-0006/z840-traced-graph/`](../../results/m31-lc-0006/z840-traced-graph/).
 
 ## Provenance
 
