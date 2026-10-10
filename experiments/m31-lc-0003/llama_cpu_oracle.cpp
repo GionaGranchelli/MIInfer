@@ -13,12 +13,9 @@
 #include <string>
 #include <vector>
 
-#ifndef M31_LLAMA_REVISION
-#define M31_LLAMA_REVISION "UNPINNED"
-#endif
-
 namespace {
 
+constexpr char kLlamaRevision[] = "91c631b21d6e5d09e9c6659efdf6baeef5a44ddb";
 constexpr std::size_t kExpectedPromptTokens = 2048;
 constexpr std::size_t kPromptTile = 512;
 constexpr std::size_t kExpectedVocab = 248320;
@@ -183,7 +180,7 @@ int main(int argc, char** argv) {
         if (!metadata) throw std::runtime_error("cannot write CPU reference metadata");
         metadata << "{\n"
                  << "  \"reference\": \"llama.cpp CPU\",\n"
-                 << "  \"revision\": \"" << M31_LLAMA_REVISION << "\",\n"
+                 << "  \"revision\": \"" << kLlamaRevision << "\",\n"
                  << "  \"model_desc\": \"" << description.data() << "\",\n"
                  << "  \"prompt_tokens\": " << prompt.size() << ",\n"
                  << "  \"forced_history\": [";
@@ -208,7 +205,7 @@ int main(int argc, char** argv) {
         }
         metadata << "]\n}\n";
         if (!metadata) throw std::runtime_error("failed writing CPU reference metadata");
-        std::cout << "reference_revision=" << M31_LLAMA_REVISION
+        std::cout << "reference_revision=" << kLlamaRevision
                   << " model=" << description.data()
                   << " vocab=" << vocab_size
                   << " layers=" << llama_model_n_layer(model.get())
