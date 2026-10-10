@@ -4665,8 +4665,8 @@
     "semantic_hash": ""
   },
   "include/miinfer/prefill_v2/recurrent_layer.hpp": {
-    "mtime": 1791622507.24951,
-    "ast_hash": "8614328aa2efc38af2ae03af0cc2cc1f",
+    "mtime": 1791666241.1022305,
+    "ast_hash": "20d9e3ffcfc1a3863e22974349e6b0e9",
     "semantic_hash": ""
   },
   "include/miinfer/prefill_v2/state.hpp": {
@@ -4680,8 +4680,8 @@
     "semantic_hash": ""
   },
   "src/prefill_v2/recurrent_layer.cpp": {
-    "mtime": 1791622507.3153844,
-    "ast_hash": "3ea6bd7e67a3181af1f6b06abea00f79",
+    "mtime": 1791674500.4762633,
+    "ast_hash": "e0d321685bf4ccdf51847925a7dec261",
     "semantic_hash": ""
   },
   "src/prefill_v2/state.cpp": {
@@ -4725,8 +4725,8 @@
     "semantic_hash": ""
   },
   "include/miinfer/prefill_v2/topology_block.hpp": {
-    "mtime": 1791622507.24951,
-    "ast_hash": "63b05534d52e5a18bc0192781512409f",
+    "mtime": 1791661597.328382,
+    "ast_hash": "bd6d73ab0bd7ed7af2ed2d66c4082288",
     "semantic_hash": ""
   },
   "src/prefill_v2/attention_layer.cpp": {
@@ -4740,8 +4740,8 @@
     "semantic_hash": ""
   },
   "src/prefill_v2/topology_block.cpp": {
-    "mtime": 1791622507.3153844,
-    "ast_hash": "90de877fbc2471d10c7692467b4c737d",
+    "mtime": 1791674494.3771725,
+    "ast_hash": "8e460af6b31be5340aadc81cdefdf81d",
     "semantic_hash": ""
   },
   "experiments/V2-0003-topology-block-vertical-slice.md": {
@@ -4755,13 +4755,13 @@
     "semantic_hash": ""
   },
   "include/miinfer/prefill_v2/model.hpp": {
-    "mtime": 1791622507.24951,
-    "ast_hash": "e43be316539e10a93ead8d915692bf7e",
+    "mtime": 1791661597.328382,
+    "ast_hash": "054e80901150db9d152584a3bb47ad7c",
     "semantic_hash": ""
   },
   "src/prefill_v2/model.cpp": {
-    "mtime": 1791622507.3153844,
-    "ast_hash": "dd679c0d6e057f49a15ac08966d4b960",
+    "mtime": 1791663878.983087,
+    "ast_hash": "797ee1a38734b34632c661b2cc4dbbb9",
     "semantic_hash": ""
   },
   "experiments/V2-0004-register-resident-gdn-and-full-model.md": {
@@ -5245,8 +5245,8 @@
     "semantic_hash": ""
   },
   "bench/e2_0003_checkpointed_call.cpp": {
-    "mtime": 1791630121.1877522,
-    "ast_hash": "517c0c736377bff6d85861b738cdcd6f",
+    "mtime": 1791661771.3529382,
+    "ast_hash": "65864262631d701e3e9a685a2b382f79",
     "semantic_hash": ""
   },
   "bench/e2_0003_gateup_operation_reference.cpp": {
@@ -5585,8 +5585,8 @@
     "semantic_hash": ""
   },
   "scripts/e2_0003_same_source_ab.py": {
-    "mtime": 1791630121.1887522,
-    "ast_hash": "0a0b1edaeb783703ab61c7d3c20e379d",
+    "mtime": 1791666248.6503427,
+    "ast_hash": "b160712b14c54ae693e3b62130471ba8",
     "semantic_hash": ""
   },
   "scripts/run-m31-0006-attention-microbench.sh": {
@@ -5680,8 +5680,8 @@
     "semantic_hash": ""
   },
   "tests/test_e2_0003_same_source_ab.py": {
-    "mtime": 1791630121.1887522,
-    "ast_hash": "0f32aa13f4c8cafd24f304f1a39c313a",
+    "mtime": 1791659639.1886191,
+    "ast_hash": "8bb8ebbce3b00d47f69d16e8817ff0cc",
     "semantic_hash": ""
   },
   "tests/test_m31_exploratory_thermal_guard.sh": {
@@ -6492,6 +6492,2166 @@
   "results/m31-lc-0001/phase1-memory-envelope.md": {
     "mtime": 1791629469.892763,
     "ast_hash": "d58a0cdefa114410116192af4774c19b",
+    "semantic_hash": ""
+  },
+  "experiments/m31-lc-0003/llama_cpu_oracle.cpp": {
+    "mtime": 1791653808.0510275,
+    "ast_hash": "4263547cad71f9648a13e900c9fd82c4",
+    "semantic_hash": ""
+  },
+  "experiments/m31-lc-0004/analyze_projections.py": {
+    "mtime": 1791653785.4726908,
+    "ast_hash": "482ded6790c5ee5dd6ebdb0957329273",
+    "semantic_hash": ""
+  },
+  "experiments/m31-lc-0004/analyze_replay.py": {
+    "mtime": 1791655760.6568472,
+    "ast_hash": "ec9071951de4facf1eb5a2c92ebb8ee8",
+    "semantic_hash": ""
+  },
+  "experiments/m31-lc-0005/analyze_gateup.py": {
+    "mtime": 1791659764.2774565,
+    "ast_hash": "02a28e4b72e9b5ad597dfd2b553c3ddb",
+    "semantic_hash": ""
+  },
+  "experiments/m31-lc-0005/analyze_qkv.py": {
+    "mtime": 1791659754.5923142,
+    "ast_hash": "b5756df2e074f63a8c49837e8d1c9fec",
+    "semantic_hash": ""
+  },
+  "experiments/m31-lc-0005/source-manifest.json": {
+    "mtime": 1791658668.9803784,
+    "ast_hash": "0f99ebd6963119c031aa9be77d782388",
+    "semantic_hash": ""
+  },
+  "experiments/m31-lc-0006/source-manifest-gqa-trace.json": {
+    "mtime": 1791669322.4767048,
+    "ast_hash": "ec554d7b3300a874168bbb94cfa90e17",
+    "semantic_hash": ""
+  },
+  "experiments/m31-lc-0006/source-manifest-graph-trace.json": {
+    "mtime": 1791662114.258915,
+    "ast_hash": "db3ac0b353302b754a6f0e7e8e3aab58",
+    "semantic_hash": ""
+  },
+  "experiments/m31-lc-0006/source-manifest-position-fix.json": {
+    "mtime": 1791663979.3601575,
+    "ast_hash": "84cf5bba610a8a9fa2481e50a95a5943",
+    "semantic_hash": ""
+  },
+  "experiments/m31-lc-0006/source-manifest-selected-trace-v2.json": {
+    "mtime": 1791667253.5793998,
+    "ast_hash": "040b32f1e8c4f1e790af446c16a3985e",
+    "semantic_hash": ""
+  },
+  "experiments/m31-lc-0006/source-manifest-selected-trace.json": {
+    "mtime": 1791666295.2447736,
+    "ast_hash": "f8da825b3a25d3391e8ba850b3670205",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0002/analyze_logits.py": {
+    "mtime": 1791634507.9107525,
+    "ast_hash": "9def99e2168e3f1ece73b32d9eaa13e0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0002/capture/benchmark.json": {
+    "mtime": 1791634422.0704541,
+    "ast_hash": "e0bd77d04ae40d146bfa3ca59cf59a61",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0002/capture/control-pair-1.record.json": {
+    "mtime": 1791634424.6184926,
+    "ast_hash": "89f992d2045b494bac8138176895a480",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0002/capture/cooldown-before-mmq_only-pair-1.json": {
+    "mtime": 1791634424.5954921,
+    "ast_hash": "7ec3cbf97bc4ddc55de63c88d2ddd91b",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0002/capture/environment.json": {
+    "mtime": 1791634427.6445384,
+    "ast_hash": "c8157a091711dd66baa1cfc5e902d3c7",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0002/capture/logit-analysis.json": {
+    "mtime": 1791634525.1283593,
+    "ast_hash": "2779079ed53338700a79e75aa15d56ad",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0002/capture/m31-lc-0002-source-manifest.json": {
+    "mtime": 1791634427.5965376,
+    "ast_hash": "b3a97adff9ab0b5116f74f993a871ed2",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0002/capture/mmq_only-pair-1.record.json": {
+    "mtime": 1791634422.0914543,
+    "ast_hash": "25d0bde1bcb00e2bc8c7ad5e4a9a42ac",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0002/capture/source-identity.json": {
+    "mtime": 1791634427.5765374,
+    "ast_hash": "bddbec027fa9c2c791db29b93e24c42f",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0002/source-manifest.json": {
+    "mtime": 1791633892.8474722,
+    "ast_hash": "b3a97adff9ab0b5116f74f993a871ed2",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0003/analyze_gdn_operation.py": {
+    "mtime": 1791639219.0134432,
+    "ast_hash": "a88dd90b25aac6cbf3b3e48322c6bd0e",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0003/analyze_layer_trace.py": {
+    "mtime": 1791637057.0346115,
+    "ast_hash": "5629675f186337003e9b4f3849e1f020",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0003/analyze_reference.py": {
+    "mtime": 1791635800.0992723,
+    "ast_hash": "335ec2116f8871acaaf304245ddf2664",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0003/reference/comparison.json": {
+    "mtime": 1791635803.5381181,
+    "ast_hash": "9f10abc7301cd164c367c5c5fa9b2f25",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0003/reference/gdn-operation-comparison.json": {
+    "mtime": 1791639354.858805,
+    "ast_hash": "a4df959e7c3dee2e6a3ae76ae5a4b502",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0003/reference/layer-comparison.json": {
+    "mtime": 1791637119.9297426,
+    "ast_hash": "4880101cd8d59f4af585046f61d4ccd2",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0003/reference/llama-cpu-lc4-optrace.cpu.weight-beta-0.json": {
+    "mtime": 1791652578.0,
+    "ast_hash": "60ef1186e96d8ff0adf4b04af60a5535",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0003/reference/llama-cpu-lc4-optrace.cpu.weight-linear_attn_qkv_mixed-0.json": {
+    "mtime": 1791652578.0,
+    "ast_hash": "5b2d1a156cc232fc2e6c8146cd6f8fc5",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0003/reference/llama-cpu.metadata.json": {
+    "mtime": 1791635684.1715057,
+    "ast_hash": "49d7a28efe185ae164cb0063599186c7",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0003/reference/m31-lc4-projection-comparison.json": {
+    "mtime": 1791653811.419247,
+    "ast_hash": "dcc0dea78aedf6cdc79f5a5a668e8698",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0004/replay-analysis.json": {
+    "mtime": 1791655766.1735218,
+    "ast_hash": "2542657fbbbc1af6b210230249ec2352",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0004/trace-inventory.json": {
+    "mtime": 1791653751.3044405,
+    "ast_hash": "6f34214281510238f5d5fe122729610b",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-causal-replay/benchmark.json": {
+    "mtime": 1791658224.1909292,
+    "ast_hash": "1d94f1c9e41b46b238bd4b1928c36dae",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-causal-replay/control-pair-1.record.json": {
+    "mtime": 1791658230.7210238,
+    "ast_hash": "1f3d70879041fdcc7689ab561cb6ef05",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-causal-replay/cooldown-before-mmq_only-pair-1.json": {
+    "mtime": 1791658230.6990235,
+    "ast_hash": "5adda44f0b1f07a06ae33c82718640c5",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-causal-replay/environment.json": {
+    "mtime": 1791658235.216089,
+    "ast_hash": "c8157a091711dd66baa1cfc5e902d3c7",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-causal-replay/mmq_only-pair-1.record.json": {
+    "mtime": 1791658224.2209296,
+    "ast_hash": "c9ad5df209f8b801cc36f0b30c1cb21d",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-causal-replay/qkv-analysis-mmq.json": {
+    "mtime": 1791659779.2462118,
+    "ast_hash": "bb2ababc30cd30bd7866ce0717827d24",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-causal-replay/qkv-analysis.json": {
+    "mtime": 1791659779.183232,
+    "ast_hash": "bb2ababc30cd30bd7866ce0717827d24",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-causal-replay/source-identity.json": {
+    "mtime": 1791658235.1660883,
+    "ast_hash": "38e9f0cd534142ac00c1050f41b7d047",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-causal-replay/source-manifest.json": {
+    "mtime": 1791658235.1830885,
+    "ast_hash": "df7b4611b6a8ac9bfa2b8c5f36cbf151",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-eager-decode-trace-v2/benchmark.json": {
+    "mtime": 1791659157.482544,
+    "ast_hash": "5a32df4b43efb5ff8bff0281445846f5",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-eager-decode-trace-v2/control-pair-1.record.json": {
+    "mtime": 1791659165.3556597,
+    "ast_hash": "76a96c3044ad7fbda267369d1080aaca",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-eager-decode-trace-v2/cooldown-before-mmq_only-pair-1.json": {
+    "mtime": 1791659165.3346593,
+    "ast_hash": "60f4e7c0a3e5dbda79542aa5a82fe6fb",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-eager-decode-trace-v2/environment.json": {
+    "mtime": 1791659171.9287562,
+    "ast_hash": "c8157a091711dd66baa1cfc5e902d3c7",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-eager-decode-trace-v2/gateup-analysis.json": {
+    "mtime": 1791659773.2054484,
+    "ast_hash": "d7cd94d858fd35ae9404676ed61884fa",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-eager-decode-trace-v2/mmq_only-pair-1.record.json": {
+    "mtime": 1791659157.5055444,
+    "ast_hash": "5260d3311575ecc077303fbc02f6b9a7",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-eager-decode-trace-v2/source-identity.json": {
+    "mtime": 1791659171.8677554,
+    "ast_hash": "5dd1933207597e6b9f2d5a7539ba277d",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-eager-decode-trace-v2/source-manifest.json": {
+    "mtime": 1791659171.8867557,
+    "ast_hash": "0f99ebd6963119c031aa9be77d782388",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-diagnostic-untraced-eager/benchmark.json": {
+    "mtime": 1791663134.308009,
+    "ast_hash": "0210c5eaf59aeefc669f0078adcd3928",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-diagnostic-untraced-eager/control-pair-1.record.json": {
+    "mtime": 1791663139.1830814,
+    "ast_hash": "6ff2f02f28106587b0f6c973db95e5f2",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-diagnostic-untraced-eager/cooldown-before-mmq_only-pair-1.json": {
+    "mtime": 1791663139.161081,
+    "ast_hash": "79d833fe91c6d5b4c71ac4a46e3d5d5e",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-diagnostic-untraced-eager/environment.json": {
+    "mtime": 1791663141.4661155,
+    "ast_hash": "c8157a091711dd66baa1cfc5e902d3c7",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-diagnostic-untraced-eager/mmq_only-pair-1.record.json": {
+    "mtime": 1791663134.3400095,
+    "ast_hash": "a262f11dc7204429256e1a8358cd13a9",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-diagnostic-untraced-eager/source-identity.json": {
+    "mtime": 1791663141.3251133,
+    "ast_hash": "8c75fbd180d4b9eb8dfaa904f633b07f",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-diagnostic-untraced-eager/source-manifest-graph-trace.json": {
+    "mtime": 1791663141.3571138,
+    "ast_hash": "db3ac0b353302b754a6f0e7e8e3aab58",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-final-untraced-eager/control-pair-1.record.json": {
+    "mtime": 1791672464.4027116,
+    "ast_hash": "960fc8bf6a0025d8b6ba64ffd700ad64",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-final-untraced-eager/mmq_only-pair-1.record.json": {
+    "mtime": 1791672464.4027364,
+    "ast_hash": "aa60852dcecc4a776b6bae3fa15d6b99",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-final-untraced-graph/control-pair-1.record.json": {
+    "mtime": 1791672464.4029593,
+    "ast_hash": "bca59d552f59279228b43676547041e7",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-final-untraced-graph/mmq_only-pair-1.record.json": {
+    "mtime": 1791672464.4029837,
+    "ast_hash": "67a9ab790a0cf6f108b757170d44d307",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-eager/benchmark.json": {
+    "mtime": 1791670315.0339131,
+    "ast_hash": "3cf74b1e6f53918f5470886a065882e7",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-eager/control-pair-1.record.json": {
+    "mtime": 1791670341.4423068,
+    "ast_hash": "f1736c57bcf547e9a65fe5e1c2b598f6",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-eager/cooldown-before-mmq_only-pair-1.json": {
+    "mtime": 1791670341.1023016,
+    "ast_hash": "645586f76141df97f9bc53c1af07c046",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-eager/environment.json": {
+    "mtime": 1791670362.2236164,
+    "ast_hash": "c8157a091711dd66baa1cfc5e902d3c7",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-eager/mmq_only-pair-1.record.json": {
+    "mtime": 1791670315.0629134,
+    "ast_hash": "2f8a51560ea367f51b237545124f2feb",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-eager/source-identity.json": {
+    "mtime": 1791670360.0125835,
+    "ast_hash": "6aecbffd4847ceb0a28b98a764535470",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-eager/source-manifest-gqa-trace.json": {
+    "mtime": 1791670360.5765917,
+    "ast_hash": "ec554d7b3300a874168bbb94cfa90e17",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-graph/benchmark.json": {
+    "mtime": 1791670315.025913,
+    "ast_hash": "6e36c6a9cf0651c3d2810149b3efd489",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-graph/control-pair-1.record.json": {
+    "mtime": 1791670340.3132899,
+    "ast_hash": "28c1257da1d2df778136a714901b4add",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-graph/cooldown-before-mmq_only-pair-1.json": {
+    "mtime": 1791670339.7762818,
+    "ast_hash": "72e97484389d44bd9b9ae44393bfdcb0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-graph/environment.json": {
+    "mtime": 1791670362.594622,
+    "ast_hash": "c8157a091711dd66baa1cfc5e902d3c7",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-graph/mmq_only-pair-1.record.json": {
+    "mtime": 1791670315.0549135,
+    "ast_hash": "7dc874366be4882bbf01dcc747123531",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-graph/source-identity.json": {
+    "mtime": 1791670362.4446197,
+    "ast_hash": "9c2bd58c251052a5d85f62b20a79cb11",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-graph/source-manifest-gqa-trace.json": {
+    "mtime": 1791670362.5086205,
+    "ast_hash": "ec554d7b3300a874168bbb94cfa90e17",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-eager/benchmark.json": {
+    "mtime": 1791668193.3482566,
+    "ast_hash": "f771915b391b08985a1566d8386d9bb4",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-eager/control-pair-1.record.json": {
+    "mtime": 1791668203.0764012,
+    "ast_hash": "602bbb16528e779c5ddb7ca94833e462",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-eager/cooldown-before-mmq_only-pair-1.json": {
+    "mtime": 1791668203.0004003,
+    "ast_hash": "281f229252a10cd17fd7c7b3f30489e7",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-eager/environment.json": {
+    "mtime": 1791668212.3315392,
+    "ast_hash": "c8157a091711dd66baa1cfc5e902d3c7",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-eager/mmq_only-pair-1.record.json": {
+    "mtime": 1791668193.3712568,
+    "ast_hash": "014db631faee2778e7642795eda5295b",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-eager/source-identity.json": {
+    "mtime": 1791668212.2805383,
+    "ast_hash": "03da701570f89baab3fb41ab848eadbb",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-eager/source-manifest-selected-trace-v2.json": {
+    "mtime": 1791668212.2995386,
+    "ast_hash": "040b32f1e8c4f1e790af446c16a3985e",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-graph/benchmark.json": {
+    "mtime": 1791668213.9655635,
+    "ast_hash": "f2b20e0cec3b365ebc3608a711fd67e7",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-graph/control-pair-1.record.json": {
+    "mtime": 1791668222.9946978,
+    "ast_hash": "e4f760ca46ae55307376460b8ae243ea",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-graph/cooldown-before-mmq_only-pair-1.json": {
+    "mtime": 1791668222.9606974,
+    "ast_hash": "7092a39133398e23d2783f020c1951b2",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-graph/environment.json": {
+    "mtime": 1791668232.8468444,
+    "ast_hash": "c8157a091711dd66baa1cfc5e902d3c7",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-graph/mmq_only-pair-1.record.json": {
+    "mtime": 1791668213.9845636,
+    "ast_hash": "f419b2b8451843880a7891b2ab676518",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-graph/source-identity.json": {
+    "mtime": 1791668232.7988439,
+    "ast_hash": "98e36cb6e8639d290ed8be6f8fc6f42e",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-graph/source-manifest-selected-trace-v2.json": {
+    "mtime": 1791668232.8148441,
+    "ast_hash": "040b32f1e8c4f1e790af446c16a3985e",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-eager/benchmark.json": {
+    "mtime": 1791669198.426229,
+    "ast_hash": "3a94f4cbb915c0e7367a57823850f47e",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-eager/control-pair-1.record.json": {
+    "mtime": 1791669208.318377,
+    "ast_hash": "5e89cec9cd5afd3f11451416e9d06a03",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-eager/cooldown-before-mmq_only-pair-1.json": {
+    "mtime": 1791669208.2893765,
+    "ast_hash": "c704e3539550f39ddfab478102d579c0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-eager/environment.json": {
+    "mtime": 1791669216.7035024,
+    "ast_hash": "c8157a091711dd66baa1cfc5e902d3c7",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-eager/mmq_only-pair-1.record.json": {
+    "mtime": 1791669198.4452293,
+    "ast_hash": "56d35d00b2471f5f4037ff64d38347c6",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-eager/source-identity.json": {
+    "mtime": 1791669216.5975008,
+    "ast_hash": "03da701570f89baab3fb41ab848eadbb",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-eager/source-manifest-selected-trace-v2.json": {
+    "mtime": 1791669216.6595018,
+    "ast_hash": "040b32f1e8c4f1e790af446c16a3985e",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-graph/benchmark.json": {
+    "mtime": 1791669218.3055263,
+    "ast_hash": "8835b0ab434f5bc639ffaee3ea55e9e3",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-graph/control-pair-1.record.json": {
+    "mtime": 1791669227.775668,
+    "ast_hash": "d74fc030444eb7bb2a90c8347771d4f1",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-graph/cooldown-before-mmq_only-pair-1.json": {
+    "mtime": 1791669227.7336674,
+    "ast_hash": "39e8bdf81b0a05454a993ce7c9a10030",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-graph/environment.json": {
+    "mtime": 1791669243.1338975,
+    "ast_hash": "c8157a091711dd66baa1cfc5e902d3c7",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-graph/mmq_only-pair-1.record.json": {
+    "mtime": 1791669218.3775275,
+    "ast_hash": "c0453cf9667756060381d102171c008c",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-graph/source-identity.json": {
+    "mtime": 1791669243.0698967,
+    "ast_hash": "98e36cb6e8639d290ed8be6f8fc6f42e",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-graph/source-manifest-selected-trace-v2.json": {
+    "mtime": 1791669243.091897,
+    "ast_hash": "040b32f1e8c4f1e790af446c16a3985e",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer4-traced-eager/control-pair-1.record.json": {
+    "mtime": 1791671447.3568335,
+    "ast_hash": "b3d80096d3de8b087002f3bac79f1489",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer4-traced-eager/mmq_only-pair-1.record.json": {
+    "mtime": 1791671447.3568587,
+    "ast_hash": "a6523f30a567363316c5947861dbcf08",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer4-traced-graph/control-pair-1.record.json": {
+    "mtime": 1791671447.3570223,
+    "ast_hash": "3b670a1cb5b4b004b012bd35f51e1e49",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer4-traced-graph/mmq_only-pair-1.record.json": {
+    "mtime": 1791671447.3570485,
+    "ast_hash": "2158e35c4cb3677382db0232c47b4f5d",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer5-traced-eager/control-pair-1.record.json": {
+    "mtime": 1791673479.8749642,
+    "ast_hash": "2bc25b5114c9a9a862ea5ebbc0081652",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer5-traced-eager/mmq_only-pair-1.record.json": {
+    "mtime": 1791673479.8749897,
+    "ast_hash": "e3a114e49988949c4fae044f2c323de2",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer5-traced-graph/control-pair-1.record.json": {
+    "mtime": 1791673479.873957,
+    "ast_hash": "9e698a0f3972a9b56c197e772f4babe3",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer5-traced-graph/mmq_only-pair-1.record.json": {
+    "mtime": 1791673479.8739858,
+    "ast_hash": "61fb0d29ab780b23e247bf98b5601706",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer6-traced-eager/control-pair-1.record.json": {
+    "mtime": 1791674474.5950944,
+    "ast_hash": "d4908d3eef3aa498fa46cf23735e1dc0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer6-traced-eager/mmq_only-pair-1.record.json": {
+    "mtime": 1791674474.5951226,
+    "ast_hash": "741e66c6edf0dfb91bcad3758eb42f4b",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer6-traced-graph/control-pair-1.record.json": {
+    "mtime": 1791674474.5959988,
+    "ast_hash": "b05a5e77840467a9ed2efc4e6c2cd8e2",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer6-traced-graph/mmq_only-pair-1.record.json": {
+    "mtime": 1791674474.5960283,
+    "ast_hash": "79276f689704c4d210dc5e5e94af7988",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-eager/benchmark.json": {
+    "mtime": 1791665034.8152816,
+    "ast_hash": "abc31f57043423ae30255338820f2202",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-eager/control-pair-1.record.json": {
+    "mtime": 1791665037.9493282,
+    "ast_hash": "268f02df8c2b34a28cee9bd7111903bc",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-eager/cooldown-before-mmq_only-pair-1.json": {
+    "mtime": 1791665037.864327,
+    "ast_hash": "a59e33ee593d0e2a199ce68eac1f2f2b",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-eager/environment.json": {
+    "mtime": 1791665040.7783704,
+    "ast_hash": "c8157a091711dd66baa1cfc5e902d3c7",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-eager/mmq_only-pair-1.record.json": {
+    "mtime": 1791665034.8652823,
+    "ast_hash": "997a10d13e1a058501e048bb3da7dda1",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-eager/source-identity.json": {
+    "mtime": 1791665040.5783675,
+    "ast_hash": "4a7752c975b7a76d377f2f43104375a3",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-eager/source-manifest-position-fix.json": {
+    "mtime": 1791665040.629368,
+    "ast_hash": "84cf5bba610a8a9fa2481e50a95a5943",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-graph/benchmark.json": {
+    "mtime": 1791665044.2944226,
+    "ast_hash": "3f1dbff191d0c42613454dbfc1ba3659",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-graph/control-pair-1.record.json": {
+    "mtime": 1791665047.6264722,
+    "ast_hash": "9cb24b69226cdab2d297e150e11216b0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-graph/cooldown-before-mmq_only-pair-1.json": {
+    "mtime": 1791665047.5314708,
+    "ast_hash": "2e933f7758ae1f029de6ca622d9c7115",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-graph/environment.json": {
+    "mtime": 1791665050.8155198,
+    "ast_hash": "c8157a091711dd66baa1cfc5e902d3c7",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-graph/mmq_only-pair-1.record.json": {
+    "mtime": 1791665044.3974242,
+    "ast_hash": "be34075260a91223a7fcd2aecd2e9498",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-graph/source-identity.json": {
+    "mtime": 1791665050.6145167,
+    "ast_hash": "6ace73b8dd71ad7d019ae14a201d297e",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-graph/source-manifest-position-fix.json": {
+    "mtime": 1791665050.6665175,
+    "ast_hash": "84cf5bba610a8a9fa2481e50a95a5943",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-eager/benchmark.json": {
+    "mtime": 1791666106.1372228,
+    "ast_hash": "dc92ed3b2291d81d7e05a1704cb0c013",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-eager/control-pair-1.record.json": {
+    "mtime": 1791666116.1973724,
+    "ast_hash": "7d244502c5ed663aa08a217e435bc853",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-eager/cooldown-before-mmq_only-pair-1.json": {
+    "mtime": 1791666116.164372,
+    "ast_hash": "f087ae17d953bd3e07d752208c516df0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-eager/environment.json": {
+    "mtime": 1791666127.6365426,
+    "ast_hash": "c8157a091711dd66baa1cfc5e902d3c7",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-eager/mmq_only-pair-1.record.json": {
+    "mtime": 1791666106.163223,
+    "ast_hash": "771c7b566d4acc632a91eada004a75f2",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-eager/source-identity.json": {
+    "mtime": 1791666127.5425413,
+    "ast_hash": "4a7752c975b7a76d377f2f43104375a3",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-eager/source-manifest-position-fix.json": {
+    "mtime": 1791666127.5735416,
+    "ast_hash": "84cf5bba610a8a9fa2481e50a95a5943",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-graph/benchmark.json": {
+    "mtime": 1791666129.3155675,
+    "ast_hash": "99e56cf15af56103cda881271e7d8c09",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-graph/control-pair-1.record.json": {
+    "mtime": 1791666139.7817233,
+    "ast_hash": "3e89eede3ef9055789d1272148f864f0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-graph/cooldown-before-mmq_only-pair-1.json": {
+    "mtime": 1791666139.7487228,
+    "ast_hash": "281f229252a10cd17fd7c7b3f30489e7",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-graph/environment.json": {
+    "mtime": 1791666152.1679075,
+    "ast_hash": "c8157a091711dd66baa1cfc5e902d3c7",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-graph/mmq_only-pair-1.record.json": {
+    "mtime": 1791666129.351568,
+    "ast_hash": "0430985353b27350eb50bba7489ebd67",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-graph/source-identity.json": {
+    "mtime": 1791666152.0969064,
+    "ast_hash": "6ace73b8dd71ad7d019ae14a201d297e",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-graph/source-manifest-position-fix.json": {
+    "mtime": 1791666152.1199067,
+    "ast_hash": "84cf5bba610a8a9fa2481e50a95a5943",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-eager/benchmark.json": {
+    "mtime": 1791663134.2990088,
+    "ast_hash": "a49b618343a8112e94d4e3fbbbbbb9cd",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-eager/control-pair-1.record.json": {
+    "mtime": 1791663148.168215,
+    "ast_hash": "e01347a217954a7d829ddf8d312409f7",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-eager/cooldown-before-mmq_only-pair-1.json": {
+    "mtime": 1791663148.150215,
+    "ast_hash": "57b169c8a69cf260a9add8941e517682",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-eager/environment.json": {
+    "mtime": 1791663158.0823627,
+    "ast_hash": "c8157a091711dd66baa1cfc5e902d3c7",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-eager/mmq_only-pair-1.record.json": {
+    "mtime": 1791663134.3310091,
+    "ast_hash": "2af4df3d8de7051df2a7782c8ff8bcd6",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-eager/source-identity.json": {
+    "mtime": 1791663158.0253618,
+    "ast_hash": "8c75fbd180d4b9eb8dfaa904f633b07f",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-eager/source-manifest-graph-trace.json": {
+    "mtime": 1791663158.046362,
+    "ast_hash": "db3ac0b353302b754a6f0e7e8e3aab58",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-graph/benchmark.json": {
+    "mtime": 1791663725.842809,
+    "ast_hash": "7e35a44f40ee2b7b10a097d7f7c36a8e",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-graph/control-pair-1.record.json": {
+    "mtime": 1791663736.5359678,
+    "ast_hash": "fadb13979a9af439578fd93de7a38a4a",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-graph/cooldown-before-mmq_only-pair-1.json": {
+    "mtime": 1791663736.5039675,
+    "ast_hash": "a335b7fd50545c236abdd2cc6bf4469f",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-graph/environment.json": {
+    "mtime": 1791663745.7601051,
+    "ast_hash": "c8157a091711dd66baa1cfc5e902d3c7",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-graph/mmq_only-pair-1.record.json": {
+    "mtime": 1791663725.8818095,
+    "ast_hash": "e12d3f118bafe1f63085f898ae315048",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-graph/source-identity.json": {
+    "mtime": 1791663745.689104,
+    "ast_hash": "e1f52c279c97e1b518e4f7cd38b9569f",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-graph/source-manifest-graph-trace.json": {
+    "mtime": 1791663745.7111044,
+    "ast_hash": "db3ac0b353302b754a6f0e7e8e3aab58",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-eager/benchmark.json": {
+    "mtime": 1791660944.4957926,
+    "ast_hash": "bb908a2a7c1b270231f231197f4a3a6e",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-eager/control-pair-1.record.json": {
+    "mtime": 1791660946.0268152,
+    "ast_hash": "2ddf8eb486cade7fefbbf0efc827f3ef",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-eager/cooldown-before-mmq_only-pair-1.json": {
+    "mtime": 1791660946.0088148,
+    "ast_hash": "b9a22a60ed733de323ddf5ad5c896049",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-eager/environment.json": {
+    "mtime": 1791660947.4748363,
+    "ast_hash": "c8157a091711dd66baa1cfc5e902d3c7",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-eager/mmq_only-pair-1.record.json": {
+    "mtime": 1791660944.523793,
+    "ast_hash": "afbfa489c53e06a6d70ec2bb1e4dfe96",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-eager/source-identity.json": {
+    "mtime": 1791660947.4198356,
+    "ast_hash": "e1f3570ec7d4141f2ad1c81e2d966f0c",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-eager/source-manifest.json": {
+    "mtime": 1791660947.4398358,
+    "ast_hash": "0f99ebd6963119c031aa9be77d782388",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-graph/benchmark.json": {
+    "mtime": 1791661464.0634246,
+    "ast_hash": "0381e819896a4b19b653c905d5d2cac8",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-graph/control-pair-1.record.json": {
+    "mtime": 1791661466.9094663,
+    "ast_hash": "0524b64cf6317af02a9d15e29f8c40dc",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-graph/cooldown-before-mmq_only-pair-1.json": {
+    "mtime": 1791661466.892466,
+    "ast_hash": "92d9a10bf10c241127d24d6286b8df35",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-graph/environment.json": {
+    "mtime": 1791661469.0504978,
+    "ast_hash": "c8157a091711dd66baa1cfc5e902d3c7",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-graph/mmq_only-pair-1.record.json": {
+    "mtime": 1791661464.096425,
+    "ast_hash": "163c970324c6b6e9dad80fcc7e0cf094",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-graph/source-identity.json": {
+    "mtime": 1791661468.9594965,
+    "ast_hash": "7e4a35c1d48b11db7ed768b3a5e07deb",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-graph/source-manifest.json": {
+    "mtime": 1791661468.992497,
+    "ast_hash": "0f99ebd6963119c031aa9be77d782388",
+    "semantic_hash": ""
+  },
+  "experiments/m31-lc-0003/PROTOCOL.md": {
+    "mtime": 1791635145.4043782,
+    "ast_hash": "0432e0c22b89544b1a46d6a433344656",
+    "semantic_hash": ""
+  },
+  "experiments/m31-lc-0004/REPORT.md": {
+    "mtime": 1791655734.5104642,
+    "ast_hash": "eb02cfd6ed0201ead4793dcb86b3f0eb",
+    "semantic_hash": ""
+  },
+  "experiments/m31-lc-0005/PROTOCOL.md": {
+    "mtime": 1791657082.0032375,
+    "ast_hash": "3e46335249adc27e799ac5fb2e797b3f",
+    "semantic_hash": ""
+  },
+  "experiments/m31-lc-0005/REPORT.md": {
+    "mtime": 1791659706.8416128,
+    "ast_hash": "39c28bfa2621e2af7b7bb8028fd6414a",
+    "semantic_hash": ""
+  },
+  "experiments/m31-lc-0006/REPORT.md": {
+    "mtime": 1791674477.9069273,
+    "ast_hash": "d1a27236375438ddcf7b6836981d48c9",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0002/REPORT.md": {
+    "mtime": 1791634594.2750592,
+    "ast_hash": "158eb7caa2b24fd75542e2e50148c850",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0002/capture/environment-container_inspect.txt": {
+    "mtime": 1791634427.679539,
+    "ast_hash": "259c6a78547393b1e5fbd60c4d12a7c0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0002/capture/environment-hipconfig.txt": {
+    "mtime": 1791634427.74454,
+    "ast_hash": "28454bf23c08e86afde28033fb24b4e9",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0002/capture/environment-rocm_smi_version.txt": {
+    "mtime": 1791634427.7645402,
+    "ast_hash": "d740dbae6ef592cd9318de336a3e7d17",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0002/capture/environment-rocminfo.txt": {
+    "mtime": 1791634427.7085392,
+    "ast_hash": "e91a5808684e9da2f6a6abae0bb9c0ed",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0002/capture/environment-uname.txt": {
+    "mtime": 1791634427.7915406,
+    "ast_hash": "cc7bd79578874194696f7b4960aac7bb",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0002/capture/snapshots/control-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791634428.7215548,
+    "ast_hash": "88e478f4060e94305e9a7325724de3fa",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0002/capture/snapshots/control-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791634428.7405548,
+    "ast_hash": "17e882d7fc51d4ac9194b709b546d233",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0002/capture/snapshots/cooldown-before-mmq_only-pair-1-000.rocm-smi.txt": {
+    "mtime": 1791634428.7035544,
+    "ast_hash": "c7f78f992be325bd077a767a74a2dd08",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0002/capture/snapshots/cooldown-before-mmq_only-pair-1-001.rocm-smi.txt": {
+    "mtime": 1791634428.680554,
+    "ast_hash": "e1f4cec1b806bbe1b3e6ea30a21048e3",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0002/capture/snapshots/cooldown-before-mmq_only-pair-1-002.rocm-smi.txt": {
+    "mtime": 1791634428.6545537,
+    "ast_hash": "17e2237c811ccbc3721063b483ff7b5d",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0002/capture/snapshots/cooldown-before-mmq_only-pair-1-003.rocm-smi.txt": {
+    "mtime": 1791634428.6265533,
+    "ast_hash": "4f2a629f1ff631319af499df31519ab4",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0002/capture/snapshots/cooldown-before-mmq_only-pair-1-004.rocm-smi.txt": {
+    "mtime": 1791634428.605553,
+    "ast_hash": "5fc318a4f7029f05ab4a140a9c508046",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0002/capture/snapshots/initial.rocm-smi.txt": {
+    "mtime": 1791634428.7665553,
+    "ast_hash": "17e882d7fc51d4ac9194b709b546d233",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0002/capture/snapshots/mmq_only-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791634428.5595522,
+    "ast_hash": "de34870186a9907c64e2eaec69fc86af",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0002/capture/snapshots/mmq_only-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791634428.5835526,
+    "ast_hash": "9c2aa6f1b34b09433613e9395fe819e3",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0003/REPORT.md": {
+    "mtime": 1791639187.8549743,
+    "ast_hash": "bb270a7d97793c1fa96b9d39e31f59ef",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0004/z840-causal-replay/fused-beta-optrace.substitution.txt": {
+    "mtime": 1791655658.2463465,
+    "ast_hash": "307a4f790c470aa9478e215f5f6018fd",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0004/z840-causal-replay/fused-qkv-optrace.substitution.txt": {
+    "mtime": 1791655662.3084059,
+    "ast_hash": "518de5d879b6175eb3671619d818839b",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0004/z840-causal-replay/mmq-beta-optrace.substitution.txt": {
+    "mtime": 1791655669.8665168,
+    "ast_hash": "307a4f790c470aa9478e215f5f6018fd",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0004/z840-causal-replay/mmq-qkv-optrace.substitution.txt": {
+    "mtime": 1791655673.1405647,
+    "ast_hash": "518de5d879b6175eb3671619d818839b",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-causal-replay/environment-container_inspect.txt": {
+    "mtime": 1791658235.2350893,
+    "ast_hash": "259c6a78547393b1e5fbd60c4d12a7c0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-causal-replay/environment-hipconfig.txt": {
+    "mtime": 1791658235.2980902,
+    "ast_hash": "28454bf23c08e86afde28033fb24b4e9",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-causal-replay/environment-rocm_smi_version.txt": {
+    "mtime": 1791658235.3140905,
+    "ast_hash": "d740dbae6ef592cd9318de336a3e7d17",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-causal-replay/environment-rocminfo.txt": {
+    "mtime": 1791658235.27909,
+    "ast_hash": "e91a5808684e9da2f6a6abae0bb9c0ed",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-causal-replay/environment-uname.txt": {
+    "mtime": 1791658235.3300905,
+    "ast_hash": "cc7bd79578874194696f7b4960aac7bb",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-causal-replay/snapshots/control-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791658236.0201006,
+    "ast_hash": "0d2c1ac2cb6aaa4baecff13293682091",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-causal-replay/snapshots/control-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791658236.041101,
+    "ast_hash": "17e882d7fc51d4ac9194b709b546d233",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-causal-replay/snapshots/cooldown-before-mmq_only-pair-1-000.rocm-smi.txt": {
+    "mtime": 1791658236.0011003,
+    "ast_hash": "0d2c1ac2cb6aaa4baecff13293682091",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-causal-replay/snapshots/cooldown-before-mmq_only-pair-1-001.rocm-smi.txt": {
+    "mtime": 1791658235.9841,
+    "ast_hash": "fff48315e2f2a70ba98415a59d2a4a34",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-causal-replay/snapshots/cooldown-before-mmq_only-pair-1-002.rocm-smi.txt": {
+    "mtime": 1791658235.9641,
+    "ast_hash": "baddf3c5458a5613b8ad781516a14401",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-causal-replay/snapshots/cooldown-before-mmq_only-pair-1-003.rocm-smi.txt": {
+    "mtime": 1791658235.9470994,
+    "ast_hash": "c9c22057a7ddbb849d8e2c28a12105ab",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-causal-replay/snapshots/initial.rocm-smi.txt": {
+    "mtime": 1791658236.0621011,
+    "ast_hash": "17e882d7fc51d4ac9194b709b546d233",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-causal-replay/snapshots/mmq_only-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791658235.911099,
+    "ast_hash": "ef31bb3ed8211cd8fb2eb719cbf6b5e5",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-causal-replay/snapshots/mmq_only-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791658235.9290993,
+    "ast_hash": "7bf5a517e4e09a1a70d236e458189320",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-eager-decode-trace-v2/environment-container_inspect.txt": {
+    "mtime": 1791659171.9477565,
+    "ast_hash": "259c6a78547393b1e5fbd60c4d12a7c0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-eager-decode-trace-v2/environment-hipconfig.txt": {
+    "mtime": 1791659171.9987574,
+    "ast_hash": "28454bf23c08e86afde28033fb24b4e9",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-eager-decode-trace-v2/environment-rocm_smi_version.txt": {
+    "mtime": 1791659172.0157576,
+    "ast_hash": "d740dbae6ef592cd9318de336a3e7d17",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-eager-decode-trace-v2/environment-rocminfo.txt": {
+    "mtime": 1791659171.977757,
+    "ast_hash": "e91a5808684e9da2f6a6abae0bb9c0ed",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-eager-decode-trace-v2/environment-uname.txt": {
+    "mtime": 1791659172.0357578,
+    "ast_hash": "cc7bd79578874194696f7b4960aac7bb",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-eager-decode-trace-v2/snapshots/control-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791659173.1167736,
+    "ast_hash": "32221ac1c0126bc060c2b501a9efb232",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-eager-decode-trace-v2/snapshots/control-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791659173.137774,
+    "ast_hash": "17e882d7fc51d4ac9194b709b546d233",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-eager-decode-trace-v2/snapshots/cooldown-before-mmq_only-pair-1-000.rocm-smi.txt": {
+    "mtime": 1791659173.0987735,
+    "ast_hash": "ef31bb3ed8211cd8fb2eb719cbf6b5e5",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-eager-decode-trace-v2/snapshots/cooldown-before-mmq_only-pair-1-001.rocm-smi.txt": {
+    "mtime": 1791659173.075773,
+    "ast_hash": "e8eea68e142ccaae6b17532f00e8e52b",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-eager-decode-trace-v2/snapshots/cooldown-before-mmq_only-pair-1-002.rocm-smi.txt": {
+    "mtime": 1791659173.0537727,
+    "ast_hash": "baddf3c5458a5613b8ad781516a14401",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-eager-decode-trace-v2/snapshots/cooldown-before-mmq_only-pair-1-003.rocm-smi.txt": {
+    "mtime": 1791659173.0327725,
+    "ast_hash": "2c94c12b18bb7460e2a5c9ae095cfbda",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-eager-decode-trace-v2/snapshots/initial.rocm-smi.txt": {
+    "mtime": 1791659173.1587744,
+    "ast_hash": "17e882d7fc51d4ac9194b709b546d233",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-eager-decode-trace-v2/snapshots/mmq_only-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791659172.9907718,
+    "ast_hash": "c7f78f992be325bd077a767a74a2dd08",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0005/z840-eager-decode-trace-v2/snapshots/mmq_only-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791659173.012772,
+    "ast_hash": "21d34f1d691d71314da46067964656e0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-diagnostic-untraced-eager/environment-container_inspect.txt": {
+    "mtime": 1791663141.909122,
+    "ast_hash": "259c6a78547393b1e5fbd60c4d12a7c0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-diagnostic-untraced-eager/environment-hipconfig.txt": {
+    "mtime": 1791663142.7781348,
+    "ast_hash": "28454bf23c08e86afde28033fb24b4e9",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-diagnostic-untraced-eager/environment-rocm_smi_version.txt": {
+    "mtime": 1791663142.8081353,
+    "ast_hash": "d740dbae6ef592cd9318de336a3e7d17",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-diagnostic-untraced-eager/environment-rocminfo.txt": {
+    "mtime": 1791663142.7531345,
+    "ast_hash": "e91a5808684e9da2f6a6abae0bb9c0ed",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-diagnostic-untraced-eager/environment-uname.txt": {
+    "mtime": 1791663142.8321357,
+    "ast_hash": "cc7bd79578874194696f7b4960aac7bb",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-diagnostic-untraced-eager/snapshots/control-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791663145.2701719,
+    "ast_hash": "263eb6d68a05a37a14b62c5252204aee",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-diagnostic-untraced-eager/snapshots/control-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791663145.3111725,
+    "ast_hash": "3ab3cc4f8c672e7ddaf79a74085550a7",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-diagnostic-untraced-eager/snapshots/cooldown-before-mmq_only-pair-1-000.rocm-smi.txt": {
+    "mtime": 1791663145.2441716,
+    "ast_hash": "6346f80d22c2676f9ef0a0095f16ea58",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-diagnostic-untraced-eager/snapshots/cooldown-before-mmq_only-pair-1-001.rocm-smi.txt": {
+    "mtime": 1791663145.2081711,
+    "ast_hash": "6a5180d3c623d57ff5801269d3a902b9",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-diagnostic-untraced-eager/snapshots/cooldown-before-mmq_only-pair-1-002.rocm-smi.txt": {
+    "mtime": 1791663145.1801705,
+    "ast_hash": "a2b7643c25c1f56f7049a910c078acc5",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-diagnostic-untraced-eager/snapshots/cooldown-before-mmq_only-pair-1-003.rocm-smi.txt": {
+    "mtime": 1791663145.1541703,
+    "ast_hash": "2c94c12b18bb7460e2a5c9ae095cfbda",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-diagnostic-untraced-eager/snapshots/cooldown-before-mmq_only-pair-1-004.rocm-smi.txt": {
+    "mtime": 1791663144.2291565,
+    "ast_hash": "c739272371248e31bc6b7a4c904fed59",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-diagnostic-untraced-eager/snapshots/initial.rocm-smi.txt": {
+    "mtime": 1791663145.3511732,
+    "ast_hash": "25531878ef7f52320ccb48be6f3f123d",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-diagnostic-untraced-eager/snapshots/mmq_only-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791663143.7041488,
+    "ast_hash": "263eb6d68a05a37a14b62c5252204aee",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-diagnostic-untraced-eager/snapshots/mmq_only-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791663143.8001502,
+    "ast_hash": "88415b0686d93be71917ed08075f117a",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-eager/environment-container_inspect.txt": {
+    "mtime": 1791670362.270617,
+    "ast_hash": "259c6a78547393b1e5fbd60c4d12a7c0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-eager/environment-hipconfig.txt": {
+    "mtime": 1791670362.4276195,
+    "ast_hash": "28454bf23c08e86afde28033fb24b4e9",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-eager/environment-rocm_smi_version.txt": {
+    "mtime": 1791670362.46662,
+    "ast_hash": "d740dbae6ef592cd9318de336a3e7d17",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-eager/environment-rocminfo.txt": {
+    "mtime": 1791670362.3406181,
+    "ast_hash": "e91a5808684e9da2f6a6abae0bb9c0ed",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-eager/environment-uname.txt": {
+    "mtime": 1791670362.534621,
+    "ast_hash": "cc7bd79578874194696f7b4960aac7bb",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-eager/snapshots/control-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791670364.6916533,
+    "ast_hash": "c5fd63249285576e1bda508b390ec231",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-eager/snapshots/control-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791670364.7226536,
+    "ast_hash": "6ee1564f6286f2cad7ddf74a03e1ff20",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-eager/snapshots/cooldown-before-mmq_only-pair-1-000.rocm-smi.txt": {
+    "mtime": 1791670364.6576526,
+    "ast_hash": "c5fd63249285576e1bda508b390ec231",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-eager/snapshots/cooldown-before-mmq_only-pair-1-001.rocm-smi.txt": {
+    "mtime": 1791670364.5926516,
+    "ast_hash": "ca38704334724585699d8181bf4d491b",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-eager/snapshots/cooldown-before-mmq_only-pair-1-002.rocm-smi.txt": {
+    "mtime": 1791670364.414649,
+    "ast_hash": "494d2b4f66e8f8c8c61b2f3808ef40da",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-eager/snapshots/cooldown-before-mmq_only-pair-1-003.rocm-smi.txt": {
+    "mtime": 1791670364.2656467,
+    "ast_hash": "c739272371248e31bc6b7a4c904fed59",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-eager/snapshots/initial.rocm-smi.txt": {
+    "mtime": 1791670364.7696543,
+    "ast_hash": "91d25cd5b8f924a11160f0d44dfb6cff",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-eager/snapshots/mmq_only-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791670363.9226418,
+    "ast_hash": "263eb6d68a05a37a14b62c5252204aee",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-eager/snapshots/mmq_only-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791670364.0916443,
+    "ast_hash": "25531878ef7f52320ccb48be6f3f123d",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-graph/environment-container_inspect.txt": {
+    "mtime": 1791670362.745624,
+    "ast_hash": "259c6a78547393b1e5fbd60c4d12a7c0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-graph/environment-hipconfig.txt": {
+    "mtime": 1791670363.000628,
+    "ast_hash": "28454bf23c08e86afde28033fb24b4e9",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-graph/environment-rocm_smi_version.txt": {
+    "mtime": 1791670363.1746306,
+    "ast_hash": "d740dbae6ef592cd9318de336a3e7d17",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-graph/environment-rocminfo.txt": {
+    "mtime": 1791670362.863626,
+    "ast_hash": "e91a5808684e9da2f6a6abae0bb9c0ed",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-graph/environment-uname.txt": {
+    "mtime": 1791670363.2846322,
+    "ast_hash": "cc7bd79578874194696f7b4960aac7bb",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-graph/snapshots/control-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791670364.9416568,
+    "ast_hash": "ffd5bd9877a2c661b0aa075a3a24239c",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-graph/snapshots/control-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791670364.9876575,
+    "ast_hash": "f8bee09406fe3d601c3bffddbe5e68b6",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-graph/snapshots/cooldown-before-mmq_only-pair-1-000.rocm-smi.txt": {
+    "mtime": 1791670364.9046564,
+    "ast_hash": "ab18ad169069682dfd724d48d14cf1d2",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-graph/snapshots/cooldown-before-mmq_only-pair-1-001.rocm-smi.txt": {
+    "mtime": 1791670364.8496554,
+    "ast_hash": "17e2237c811ccbc3721063b483ff7b5d",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-graph/snapshots/cooldown-before-mmq_only-pair-1-002.rocm-smi.txt": {
+    "mtime": 1791670364.7976546,
+    "ast_hash": "494d2b4f66e8f8c8c61b2f3808ef40da",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-graph/snapshots/cooldown-before-mmq_only-pair-1-003.rocm-smi.txt": {
+    "mtime": 1791670364.756654,
+    "ast_hash": "7bf5a517e4e09a1a70d236e458189320",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-graph/snapshots/initial.rocm-smi.txt": {
+    "mtime": 1791670365.016658,
+    "ast_hash": "e454140121a667cdf441708b68ca1ee5",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-graph/snapshots/mmq_only-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791670364.690653,
+    "ast_hash": "ffd5bd9877a2c661b0aa075a3a24239c",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-gqa-traced-graph/snapshots/mmq_only-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791670364.7116535,
+    "ast_hash": "305cd328a0f58090499d3ce8a918ba70",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-eager/environment-container_inspect.txt": {
+    "mtime": 1791668212.3525393,
+    "ast_hash": "259c6a78547393b1e5fbd60c4d12a7c0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-eager/environment-hipconfig.txt": {
+    "mtime": 1791668212.4045403,
+    "ast_hash": "28454bf23c08e86afde28033fb24b4e9",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-eager/environment-rocm_smi_version.txt": {
+    "mtime": 1791668212.4235404,
+    "ast_hash": "d740dbae6ef592cd9318de336a3e7d17",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-eager/environment-rocminfo.txt": {
+    "mtime": 1791668212.3825397,
+    "ast_hash": "e91a5808684e9da2f6a6abae0bb9c0ed",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-eager/environment-uname.txt": {
+    "mtime": 1791668212.4495409,
+    "ast_hash": "cc7bd79578874194696f7b4960aac7bb",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-eager/snapshots/control-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791668213.2245524,
+    "ast_hash": "df93506ed3ab190646748ceff7dc805e",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-eager/snapshots/control-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791668213.2415526,
+    "ast_hash": "ab8e582ecc409f71e25d55cb3f1dbd73",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-eager/snapshots/cooldown-before-mmq_only-pair-1-000.rocm-smi.txt": {
+    "mtime": 1791668213.2075522,
+    "ast_hash": "ab18ad169069682dfd724d48d14cf1d2",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-eager/snapshots/cooldown-before-mmq_only-pair-1-001.rocm-smi.txt": {
+    "mtime": 1791668213.1805518,
+    "ast_hash": "17e2237c811ccbc3721063b483ff7b5d",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-eager/snapshots/cooldown-before-mmq_only-pair-1-002.rocm-smi.txt": {
+    "mtime": 1791668213.1625514,
+    "ast_hash": "c9c22057a7ddbb849d8e2c28a12105ab",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-eager/snapshots/initial.rocm-smi.txt": {
+    "mtime": 1791668213.265553,
+    "ast_hash": "9c636f5feba950ab3b735f80cdae40dc",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-eager/snapshots/mmq_only-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791668213.123551,
+    "ast_hash": "0779bdd82f775ea9a970e175023d042d",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-eager/snapshots/mmq_only-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791668213.1395512,
+    "ast_hash": "17e4d23a629d4cb74a6ee335b55d9943",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-graph/environment-container_inspect.txt": {
+    "mtime": 1791668232.8688447,
+    "ast_hash": "259c6a78547393b1e5fbd60c4d12a7c0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-graph/environment-hipconfig.txt": {
+    "mtime": 1791668232.9148455,
+    "ast_hash": "28454bf23c08e86afde28033fb24b4e9",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-graph/environment-rocm_smi_version.txt": {
+    "mtime": 1791668232.9288456,
+    "ast_hash": "d740dbae6ef592cd9318de336a3e7d17",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-graph/environment-rocminfo.txt": {
+    "mtime": 1791668232.8928452,
+    "ast_hash": "e91a5808684e9da2f6a6abae0bb9c0ed",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-graph/environment-uname.txt": {
+    "mtime": 1791668232.950846,
+    "ast_hash": "cc7bd79578874194696f7b4960aac7bb",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-graph/snapshots/control-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791668233.8378592,
+    "ast_hash": "0d2c1ac2cb6aaa4baecff13293682091",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-graph/snapshots/control-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791668233.8648596,
+    "ast_hash": "17e4d23a629d4cb74a6ee335b55d9943",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-graph/snapshots/cooldown-before-mmq_only-pair-1-000.rocm-smi.txt": {
+    "mtime": 1791668233.8108587,
+    "ast_hash": "e376cbc5ab63a891685bc80f6aadbd29",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-graph/snapshots/cooldown-before-mmq_only-pair-1-001.rocm-smi.txt": {
+    "mtime": 1791668233.7878585,
+    "ast_hash": "280ef420e6073d6bdc698a9a73c2101a",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-graph/snapshots/cooldown-before-mmq_only-pair-1-002.rocm-smi.txt": {
+    "mtime": 1791668233.766858,
+    "ast_hash": "4f2a629f1ff631319af499df31519ab4",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-graph/snapshots/cooldown-before-mmq_only-pair-1-003.rocm-smi.txt": {
+    "mtime": 1791668233.7448578,
+    "ast_hash": "7bf5a517e4e09a1a70d236e458189320",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-graph/snapshots/initial.rocm-smi.txt": {
+    "mtime": 1791668233.8998601,
+    "ast_hash": "17e4d23a629d4cb74a6ee335b55d9943",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-graph/snapshots/mmq_only-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791668233.7038572,
+    "ast_hash": "ffd5bd9877a2c661b0aa075a3a24239c",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer1-v2-traced-graph/snapshots/mmq_only-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791668233.7248576,
+    "ast_hash": "e454140121a667cdf441708b68ca1ee5",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-eager/environment-container_inspect.txt": {
+    "mtime": 1791669216.7295027,
+    "ast_hash": "259c6a78547393b1e5fbd60c4d12a7c0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-eager/environment-hipconfig.txt": {
+    "mtime": 1791669216.7815034,
+    "ast_hash": "28454bf23c08e86afde28033fb24b4e9",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-eager/environment-rocm_smi_version.txt": {
+    "mtime": 1791669216.8035038,
+    "ast_hash": "d740dbae6ef592cd9318de336a3e7d17",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-eager/environment-rocminfo.txt": {
+    "mtime": 1791669216.7625031,
+    "ast_hash": "e91a5808684e9da2f6a6abae0bb9c0ed",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-eager/environment-uname.txt": {
+    "mtime": 1791669216.8325043,
+    "ast_hash": "cc7bd79578874194696f7b4960aac7bb",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-eager/snapshots/control-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791669217.615516,
+    "ast_hash": "ffd5bd9877a2c661b0aa075a3a24239c",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-eager/snapshots/control-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791669217.6355164,
+    "ast_hash": "ab8e582ecc409f71e25d55cb3f1dbd73",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-eager/snapshots/cooldown-before-mmq_only-pair-1-000.rocm-smi.txt": {
+    "mtime": 1791669217.5955157,
+    "ast_hash": "ab18ad169069682dfd724d48d14cf1d2",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-eager/snapshots/cooldown-before-mmq_only-pair-1-001.rocm-smi.txt": {
+    "mtime": 1791669217.5765154,
+    "ast_hash": "17e2237c811ccbc3721063b483ff7b5d",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-eager/snapshots/cooldown-before-mmq_only-pair-1-002.rocm-smi.txt": {
+    "mtime": 1791669217.552515,
+    "ast_hash": "c9c22057a7ddbb849d8e2c28a12105ab",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-eager/snapshots/cooldown-before-mmq_only-pair-1-003.rocm-smi.txt": {
+    "mtime": 1791669217.5335147,
+    "ast_hash": "7bf5a517e4e09a1a70d236e458189320",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-eager/snapshots/initial.rocm-smi.txt": {
+    "mtime": 1791669217.6615167,
+    "ast_hash": "e454140121a667cdf441708b68ca1ee5",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-eager/snapshots/mmq_only-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791669217.483514,
+    "ast_hash": "ef31bb3ed8211cd8fb2eb719cbf6b5e5",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-eager/snapshots/mmq_only-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791669217.5125144,
+    "ast_hash": "f8bee09406fe3d601c3bffddbe5e68b6",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-graph/environment-container_inspect.txt": {
+    "mtime": 1791669243.1568978,
+    "ast_hash": "259c6a78547393b1e5fbd60c4d12a7c0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-graph/environment-hipconfig.txt": {
+    "mtime": 1791669243.2248988,
+    "ast_hash": "28454bf23c08e86afde28033fb24b4e9",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-graph/environment-rocm_smi_version.txt": {
+    "mtime": 1791669243.2498994,
+    "ast_hash": "d740dbae6ef592cd9318de336a3e7d17",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-graph/environment-rocminfo.txt": {
+    "mtime": 1791669243.2008986,
+    "ast_hash": "e91a5808684e9da2f6a6abae0bb9c0ed",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-graph/environment-uname.txt": {
+    "mtime": 1791669243.2668996,
+    "ast_hash": "cc7bd79578874194696f7b4960aac7bb",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-graph/snapshots/control-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791669244.0259109,
+    "ast_hash": "6346f80d22c2676f9ef0a0095f16ea58",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-graph/snapshots/control-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791669244.0419111,
+    "ast_hash": "25531878ef7f52320ccb48be6f3f123d",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-graph/snapshots/cooldown-before-mmq_only-pair-1-000.rocm-smi.txt": {
+    "mtime": 1791669244.0059106,
+    "ast_hash": "ffd5bd9877a2c661b0aa075a3a24239c",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-graph/snapshots/cooldown-before-mmq_only-pair-1-001.rocm-smi.txt": {
+    "mtime": 1791669243.9849102,
+    "ast_hash": "280ef420e6073d6bdc698a9a73c2101a",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-graph/snapshots/cooldown-before-mmq_only-pair-1-002.rocm-smi.txt": {
+    "mtime": 1791669243.96791,
+    "ast_hash": "494d2b4f66e8f8c8c61b2f3808ef40da",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-graph/snapshots/initial.rocm-smi.txt": {
+    "mtime": 1791669244.0659115,
+    "ast_hash": "412eb3581809d7468a699deb35ced14d",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-graph/snapshots/mmq_only-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791669243.9189093,
+    "ast_hash": "e376cbc5ab63a891685bc80f6aadbd29",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer2-v2-traced-graph/snapshots/mmq_only-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791669243.9399097,
+    "ast_hash": "412eb3581809d7468a699deb35ced14d",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-eager/environment-container_inspect.txt": {
+    "mtime": 1791665040.825371,
+    "ast_hash": "259c6a78547393b1e5fbd60c4d12a7c0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-eager/environment-hipconfig.txt": {
+    "mtime": 1791665041.0073738,
+    "ast_hash": "28454bf23c08e86afde28033fb24b4e9",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-eager/environment-rocm_smi_version.txt": {
+    "mtime": 1791665041.0603745,
+    "ast_hash": "d740dbae6ef592cd9318de336a3e7d17",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-eager/environment-rocminfo.txt": {
+    "mtime": 1791665040.9423728,
+    "ast_hash": "e91a5808684e9da2f6a6abae0bb9c0ed",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-eager/environment-uname.txt": {
+    "mtime": 1791665041.1423757,
+    "ast_hash": "cc7bd79578874194696f7b4960aac7bb",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-eager/snapshots/control-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791665043.2484071,
+    "ast_hash": "ef31bb3ed8211cd8fb2eb719cbf6b5e5",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-eager/snapshots/control-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791665043.2924078,
+    "ast_hash": "305cd328a0f58090499d3ce8a918ba70",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-eager/snapshots/cooldown-before-mmq_only-pair-1-000.rocm-smi.txt": {
+    "mtime": 1791665043.1894062,
+    "ast_hash": "e4d5959b065e270c97da8c521ee204f7",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-eager/snapshots/cooldown-before-mmq_only-pair-1-001.rocm-smi.txt": {
+    "mtime": 1791665043.1384056,
+    "ast_hash": "280ef420e6073d6bdc698a9a73c2101a",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-eager/snapshots/cooldown-before-mmq_only-pair-1-002.rocm-smi.txt": {
+    "mtime": 1791665043.0724044,
+    "ast_hash": "cfe288c197594f7c2c94422ec6a4ee59",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-eager/snapshots/cooldown-before-mmq_only-pair-1-003.rocm-smi.txt": {
+    "mtime": 1791665043.0234036,
+    "ast_hash": "72e4ff10d8d10c85a77b7c34f199697c",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-eager/snapshots/initial.rocm-smi.txt": {
+    "mtime": 1791665043.3224082,
+    "ast_hash": "9c636f5feba950ab3b735f80cdae40dc",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-eager/snapshots/mmq_only-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791665042.896402,
+    "ast_hash": "d584f76e7ba8452971011cc11dea9d25",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-eager/snapshots/mmq_only-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791665042.9472687,
+    "ast_hash": "17e882d7fc51d4ac9194b709b546d233",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-graph/environment-container_inspect.txt": {
+    "mtime": 1791665050.8825207,
+    "ast_hash": "259c6a78547393b1e5fbd60c4d12a7c0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-graph/environment-hipconfig.txt": {
+    "mtime": 1791665051.0525231,
+    "ast_hash": "28454bf23c08e86afde28033fb24b4e9",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-graph/environment-rocm_smi_version.txt": {
+    "mtime": 1791665051.099524,
+    "ast_hash": "d740dbae6ef592cd9318de336a3e7d17",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-graph/environment-rocminfo.txt": {
+    "mtime": 1791665050.9975224,
+    "ast_hash": "e91a5808684e9da2f6a6abae0bb9c0ed",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-graph/environment-uname.txt": {
+    "mtime": 1791665051.1215243,
+    "ast_hash": "cc7bd79578874194696f7b4960aac7bb",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-graph/snapshots/control-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791665052.650547,
+    "ast_hash": "0d2c1ac2cb6aaa4baecff13293682091",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-graph/snapshots/control-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791665052.7005477,
+    "ast_hash": "08a4374ca8c3c2e688d853b258dccf10",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-graph/snapshots/cooldown-before-mmq_only-pair-1-000.rocm-smi.txt": {
+    "mtime": 1791665052.583546,
+    "ast_hash": "ffd5bd9877a2c661b0aa075a3a24239c",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-graph/snapshots/cooldown-before-mmq_only-pair-1-001.rocm-smi.txt": {
+    "mtime": 1791665052.5395453,
+    "ast_hash": "280ef420e6073d6bdc698a9a73c2101a",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-graph/snapshots/cooldown-before-mmq_only-pair-1-002.rocm-smi.txt": {
+    "mtime": 1791665052.452544,
+    "ast_hash": "cfe288c197594f7c2c94422ec6a4ee59",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-graph/snapshots/initial.rocm-smi.txt": {
+    "mtime": 1791665052.789549,
+    "ast_hash": "21d34f1d691d71314da46067964656e0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-graph/snapshots/mmq_only-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791665052.3345423,
+    "ast_hash": "0e210c9540bdfe34e10b30587a69ba1c",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-graph/snapshots/mmq_only-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791665052.4145434,
+    "ast_hash": "305cd328a0f58090499d3ce8a918ba70",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-eager/environment-container_inspect.txt": {
+    "mtime": 1791666127.661543,
+    "ast_hash": "259c6a78547393b1e5fbd60c4d12a7c0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-eager/environment-hipconfig.txt": {
+    "mtime": 1791666127.725544,
+    "ast_hash": "28454bf23c08e86afde28033fb24b4e9",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-eager/environment-rocm_smi_version.txt": {
+    "mtime": 1791666127.738544,
+    "ast_hash": "d740dbae6ef592cd9318de336a3e7d17",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-eager/environment-rocminfo.txt": {
+    "mtime": 1791666127.6895432,
+    "ast_hash": "e91a5808684e9da2f6a6abae0bb9c0ed",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-eager/environment-uname.txt": {
+    "mtime": 1791666127.7635446,
+    "ast_hash": "cc7bd79578874194696f7b4960aac7bb",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-eager/snapshots/control-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791666128.5585563,
+    "ast_hash": "e4d5959b065e270c97da8c521ee204f7",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-eager/snapshots/control-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791666128.5835567,
+    "ast_hash": "f8bee09406fe3d601c3bffddbe5e68b6",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-eager/snapshots/cooldown-before-mmq_only-pair-1-000.rocm-smi.txt": {
+    "mtime": 1791666128.539556,
+    "ast_hash": "e376cbc5ab63a891685bc80f6aadbd29",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-eager/snapshots/cooldown-before-mmq_only-pair-1-001.rocm-smi.txt": {
+    "mtime": 1791666128.5195558,
+    "ast_hash": "17e2237c811ccbc3721063b483ff7b5d",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-eager/snapshots/cooldown-before-mmq_only-pair-1-002.rocm-smi.txt": {
+    "mtime": 1791666128.4895554,
+    "ast_hash": "c4d87d5b74c6e2d8ff46726ceb577b4b",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-eager/snapshots/cooldown-before-mmq_only-pair-1-003.rocm-smi.txt": {
+    "mtime": 1791666128.4635549,
+    "ast_hash": "f3a0790a0243021e4335b8fe7bf2c50c",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-eager/snapshots/initial.rocm-smi.txt": {
+    "mtime": 1791666128.609557,
+    "ast_hash": "f8bee09406fe3d601c3bffddbe5e68b6",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-eager/snapshots/mmq_only-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791666128.4165542,
+    "ast_hash": "aa1856d1ee5023088d7bc77f2a1a1681",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-eager/snapshots/mmq_only-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791666128.4425545,
+    "ast_hash": "88415b0686d93be71917ed08075f117a",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-graph/environment-container_inspect.txt": {
+    "mtime": 1791666152.196908,
+    "ast_hash": "259c6a78547393b1e5fbd60c4d12a7c0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-graph/environment-hipconfig.txt": {
+    "mtime": 1791666152.265909,
+    "ast_hash": "28454bf23c08e86afde28033fb24b4e9",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-graph/environment-rocm_smi_version.txt": {
+    "mtime": 1791666152.2989094,
+    "ast_hash": "d740dbae6ef592cd9318de336a3e7d17",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-graph/environment-rocminfo.txt": {
+    "mtime": 1791666152.2259083,
+    "ast_hash": "e91a5808684e9da2f6a6abae0bb9c0ed",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-graph/environment-uname.txt": {
+    "mtime": 1791666152.3169098,
+    "ast_hash": "cc7bd79578874194696f7b4960aac7bb",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-graph/snapshots/control-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791666153.340925,
+    "ast_hash": "e376cbc5ab63a891685bc80f6aadbd29",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-graph/snapshots/control-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791666153.3579252,
+    "ast_hash": "305cd328a0f58090499d3ce8a918ba70",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-graph/snapshots/cooldown-before-mmq_only-pair-1-000.rocm-smi.txt": {
+    "mtime": 1791666153.3149245,
+    "ast_hash": "ffd5bd9877a2c661b0aa075a3a24239c",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-graph/snapshots/cooldown-before-mmq_only-pair-1-001.rocm-smi.txt": {
+    "mtime": 1791666153.290924,
+    "ast_hash": "280ef420e6073d6bdc698a9a73c2101a",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-graph/snapshots/cooldown-before-mmq_only-pair-1-002.rocm-smi.txt": {
+    "mtime": 1791666153.2559237,
+    "ast_hash": "c9c22057a7ddbb849d8e2c28a12105ab",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-graph/snapshots/initial.rocm-smi.txt": {
+    "mtime": 1791666153.3919256,
+    "ast_hash": "b5c452b63f43ed418bb71509fe2c046b",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-graph/snapshots/mmq_only-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791666153.1979227,
+    "ast_hash": "ef31bb3ed8211cd8fb2eb719cbf6b5e5",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-position-fix-traced-graph/snapshots/mmq_only-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791666153.2239232,
+    "ast_hash": "17e882d7fc51d4ac9194b709b546d233",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-eager/environment-container_inspect.txt": {
+    "mtime": 1791663158.0953627,
+    "ast_hash": "259c6a78547393b1e5fbd60c4d12a7c0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-eager/environment-hipconfig.txt": {
+    "mtime": 1791663158.1423635,
+    "ast_hash": "28454bf23c08e86afde28033fb24b4e9",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-eager/environment-rocm_smi_version.txt": {
+    "mtime": 1791663158.1563637,
+    "ast_hash": "d740dbae6ef592cd9318de336a3e7d17",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-eager/environment-rocminfo.txt": {
+    "mtime": 1791663158.122363,
+    "ast_hash": "e91a5808684e9da2f6a6abae0bb9c0ed",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-eager/environment-uname.txt": {
+    "mtime": 1791663158.176364,
+    "ast_hash": "cc7bd79578874194696f7b4960aac7bb",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-eager/snapshots/control-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791663159.4703832,
+    "ast_hash": "6346f80d22c2676f9ef0a0095f16ea58",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-eager/snapshots/control-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791663159.4913836,
+    "ast_hash": "88415b0686d93be71917ed08075f117a",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-eager/snapshots/cooldown-before-mmq_only-pair-1-000.rocm-smi.txt": {
+    "mtime": 1791663159.4383829,
+    "ast_hash": "263eb6d68a05a37a14b62c5252204aee",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-eager/snapshots/cooldown-before-mmq_only-pair-1-001.rocm-smi.txt": {
+    "mtime": 1791663159.4203825,
+    "ast_hash": "c5cbcfb4cf7a62361e3f917b086ebbf3",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-eager/snapshots/cooldown-before-mmq_only-pair-1-002.rocm-smi.txt": {
+    "mtime": 1791663159.3973823,
+    "ast_hash": "94ea80756eb796fbe3985af3bad81aa4",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-eager/snapshots/cooldown-before-mmq_only-pair-1-003.rocm-smi.txt": {
+    "mtime": 1791663159.3743818,
+    "ast_hash": "2c94c12b18bb7460e2a5c9ae095cfbda",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-eager/snapshots/initial.rocm-smi.txt": {
+    "mtime": 1791663159.523384,
+    "ast_hash": "412eb3581809d7468a699deb35ced14d",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-eager/snapshots/mmq_only-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791663159.3333812,
+    "ast_hash": "0d2c1ac2cb6aaa4baecff13293682091",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-eager/snapshots/mmq_only-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791663159.3503814,
+    "ast_hash": "412eb3581809d7468a699deb35ced14d",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-graph/environment-container_inspect.txt": {
+    "mtime": 1791663745.7741053,
+    "ast_hash": "259c6a78547393b1e5fbd60c4d12a7c0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-graph/environment-hipconfig.txt": {
+    "mtime": 1791663745.8311062,
+    "ast_hash": "28454bf23c08e86afde28033fb24b4e9",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-graph/environment-rocm_smi_version.txt": {
+    "mtime": 1791663745.8531065,
+    "ast_hash": "d740dbae6ef592cd9318de336a3e7d17",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-graph/environment-rocminfo.txt": {
+    "mtime": 1791663745.8001058,
+    "ast_hash": "e91a5808684e9da2f6a6abae0bb9c0ed",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-graph/environment-uname.txt": {
+    "mtime": 1791663745.8731067,
+    "ast_hash": "cc7bd79578874194696f7b4960aac7bb",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-graph/snapshots/control-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791663747.0901248,
+    "ast_hash": "0e210c9540bdfe34e10b30587a69ba1c",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-graph/snapshots/control-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791663747.1111252,
+    "ast_hash": "305cd328a0f58090499d3ce8a918ba70",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-graph/snapshots/cooldown-before-mmq_only-pair-1-000.rocm-smi.txt": {
+    "mtime": 1791663747.0721247,
+    "ast_hash": "0779bdd82f775ea9a970e175023d042d",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-graph/snapshots/cooldown-before-mmq_only-pair-1-001.rocm-smi.txt": {
+    "mtime": 1791663747.0521243,
+    "ast_hash": "c5cbcfb4cf7a62361e3f917b086ebbf3",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-graph/snapshots/cooldown-before-mmq_only-pair-1-002.rocm-smi.txt": {
+    "mtime": 1791663747.035124,
+    "ast_hash": "fbcd7617252ffb883e6556ec05d62549",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-graph/snapshots/cooldown-before-mmq_only-pair-1-003.rocm-smi.txt": {
+    "mtime": 1791663747.0191238,
+    "ast_hash": "494d2b4f66e8f8c8c61b2f3808ef40da",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-graph/snapshots/initial.rocm-smi.txt": {
+    "mtime": 1791663747.1271255,
+    "ast_hash": "305cd328a0f58090499d3ce8a918ba70",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-graph/snapshots/mmq_only-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791663746.9781232,
+    "ast_hash": "0d2c1ac2cb6aaa4baecff13293682091",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-traced-graph/snapshots/mmq_only-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791663746.9991236,
+    "ast_hash": "412eb3581809d7468a699deb35ced14d",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-eager/environment-container_inspect.txt": {
+    "mtime": 1791660947.4958367,
+    "ast_hash": "259c6a78547393b1e5fbd60c4d12a7c0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-eager/environment-hipconfig.txt": {
+    "mtime": 1791660947.5408373,
+    "ast_hash": "28454bf23c08e86afde28033fb24b4e9",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-eager/environment-rocm_smi_version.txt": {
+    "mtime": 1791660947.5628376,
+    "ast_hash": "d740dbae6ef592cd9318de336a3e7d17",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-eager/environment-rocminfo.txt": {
+    "mtime": 1791660947.523837,
+    "ast_hash": "e91a5808684e9da2f6a6abae0bb9c0ed",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-eager/environment-uname.txt": {
+    "mtime": 1791660947.5918381,
+    "ast_hash": "cc7bd79578874194696f7b4960aac7bb",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-eager/snapshots/control-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791660948.1678467,
+    "ast_hash": "14b1112bc17947e53fc43db1eeb1b8c0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-eager/snapshots/control-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791660948.1838467,
+    "ast_hash": "17e882d7fc51d4ac9194b709b546d233",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-eager/snapshots/cooldown-before-mmq_only-pair-1-000.rocm-smi.txt": {
+    "mtime": 1791660948.1488464,
+    "ast_hash": "d584f76e7ba8452971011cc11dea9d25",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-eager/snapshots/cooldown-before-mmq_only-pair-1-001.rocm-smi.txt": {
+    "mtime": 1791660948.125846,
+    "ast_hash": "537596f3151f30c4186f072483374123",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-eager/snapshots/cooldown-before-mmq_only-pair-1-002.rocm-smi.txt": {
+    "mtime": 1791660948.1048458,
+    "ast_hash": "fd343c0ab45dc48a12f83884afc1ccc5",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-eager/snapshots/cooldown-before-mmq_only-pair-1-003.rocm-smi.txt": {
+    "mtime": 1791660948.0848453,
+    "ast_hash": "c9c22057a7ddbb849d8e2c28a12105ab",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-eager/snapshots/initial.rocm-smi.txt": {
+    "mtime": 1791660948.2038472,
+    "ast_hash": "17e882d7fc51d4ac9194b709b546d233",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-eager/snapshots/mmq_only-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791660948.047845,
+    "ast_hash": "0d2c1ac2cb6aaa4baecff13293682091",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-eager/snapshots/mmq_only-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791660948.0708451,
+    "ast_hash": "21d34f1d691d71314da46067964656e0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-graph/environment-container_inspect.txt": {
+    "mtime": 1791661469.0714982,
+    "ast_hash": "259c6a78547393b1e5fbd60c4d12a7c0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-graph/environment-hipconfig.txt": {
+    "mtime": 1791661469.1174986,
+    "ast_hash": "28454bf23c08e86afde28033fb24b4e9",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-graph/environment-rocm_smi_version.txt": {
+    "mtime": 1791661469.138499,
+    "ast_hash": "d740dbae6ef592cd9318de336a3e7d17",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-graph/environment-rocminfo.txt": {
+    "mtime": 1791661469.0994985,
+    "ast_hash": "e91a5808684e9da2f6a6abae0bb9c0ed",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-graph/environment-uname.txt": {
+    "mtime": 1791661469.1524992,
+    "ast_hash": "cc7bd79578874194696f7b4960aac7bb",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-graph/snapshots/control-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791661470.0355122,
+    "ast_hash": "ef31bb3ed8211cd8fb2eb719cbf6b5e5",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-graph/snapshots/control-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791661470.0535126,
+    "ast_hash": "9c636f5feba950ab3b735f80cdae40dc",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-graph/snapshots/cooldown-before-mmq_only-pair-1-000.rocm-smi.txt": {
+    "mtime": 1791661470.0175118,
+    "ast_hash": "41eff4c0f0711cf97f2f24d1de90b5bf",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-graph/snapshots/cooldown-before-mmq_only-pair-1-001.rocm-smi.txt": {
+    "mtime": 1791661469.9945116,
+    "ast_hash": "72a9cbde4806c53bba835a34500bfbc8",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-graph/snapshots/cooldown-before-mmq_only-pair-1-002.rocm-smi.txt": {
+    "mtime": 1791661469.9765112,
+    "ast_hash": "b7e6b71c969505349d6998af15e49db2",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-graph/snapshots/cooldown-before-mmq_only-pair-1-003.rocm-smi.txt": {
+    "mtime": 1791661469.962511,
+    "ast_hash": "c4d87d5b74c6e2d8ff46726ceb577b4b",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-graph/snapshots/initial.rocm-smi.txt": {
+    "mtime": 1791661470.0705128,
+    "ast_hash": "17e882d7fc51d4ac9194b709b546d233",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-graph/snapshots/mmq_only-pair-1-after.rocm-smi.txt": {
+    "mtime": 1791661469.9175105,
+    "ast_hash": "6346f80d22c2676f9ef0a0095f16ea58",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-untraced-graph/snapshots/mmq_only-pair-1-before.rocm-smi.txt": {
+    "mtime": 1791661469.941511,
+    "ast_hash": "75c54fe17913904cef295e207b4f3fb2",
     "semantic_hash": ""
   }
 }
