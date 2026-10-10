@@ -25,6 +25,12 @@ was independently preserved as
 `04f9a4f211820933b70c049802e57da04e2dc97c676bf7ea1d2668b9287c139b`). The
 same source is now declared as an explicit target in this worktree.
 
+The pinned image contains ROCm 7.2.1 hipBLAS headers and `libhipblas.so`, but
+omits the CMake package config required by this repository. The qualification
+uses the committed `hipblasConfig.cmake` shim to expose those exact installed
+paths as the `roc::hipblas` imported target; it does not substitute a library
+or alter repository build logic.
+
 The old evidence package's `results/e2-0003/SHA256SUMS` is tracked in the
 pushed base, but eight referenced `.log` artifacts were omitted from Git by the
 ignore rule, and the tracked `ssh-preflight.log` did not match its manifest.
