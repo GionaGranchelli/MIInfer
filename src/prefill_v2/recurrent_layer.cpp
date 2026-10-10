@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <iterator>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -23,6 +24,38 @@ namespace miinfer::prefill_v2 {
 
 namespace {
 
+struct GraphTraceSpec {
+    const char* name;
+    std::size_t bytes;
+    bool binary;
+};
+
+const GraphTraceSpec kGraphTraceSpecs[] = {
+    {"layer_input", kHidden * sizeof(float), false},
+    {"state_before", RecurrentLayerState::kStateBytes, true},
+    {"conv_history_before", RecurrentLayerState::kConvHistoryBytes, true},
+    {"attn_norm", kHidden * sizeof(float), false},
+    {"beta", kVHeads * sizeof(float), false},
+    {"decay", kVHeads * sizeof(float), false},
+    {"z", kInner * sizeof(float), false},
+    {"qkv_input_mx_q8", (kHidden / 128) * sizeof(MxQ8_1MmqBlock), true},
+    {"qkv", kChannels * sizeof(float), false},
+    {"q_conv", kKHeads * kState * sizeof(float), false},
+    {"k_conv", kKHeads * kState * sizeof(float), false},
+    {"v_conv", kVHeads * kState * sizeof(float), false},
+    {"conv_history_after", RecurrentLayerState::kConvHistoryBytes, true},
+    {"state_after_gdn", RecurrentLayerState::kStateBytes, true},
+    {"gated_output", kInner * sizeof(float), false},
+    {"post_normalized", kHidden * sizeof(float), false},
+    {"gateup_input_q8_1", (kHidden / 32) * sizeof(Q8_1Block), true},
+    {"gateup_input_mx_q8", (kHidden / 128) * sizeof(MxQ8_1MmqBlock), true},
+    {"ffn_gate", kFfnInner * sizeof(float), false},
+    {"ffn_up", kFfnInner * sizeof(float), false},
+    {"ffn_activation", kFfnInner * sizeof(float), false},
+    {"ffn_down", kHidden * sizeof(float), false},
+    {"layer_output", kHidden * sizeof(float), false},
+};
+
 const GgufTensor* require_tensor(const GgufFile& file, std::string_view name) {
     for (const auto& tensor : file.tensors()) {
         if (tensor.name == name) return &tensor;
@@ -40,6 +73,59 @@ T* upload_device_buffer(const void* host_data, std::size_t bytes, std::size_t& t
 }
 
 } // namespace
+
+RecurrentLayerGraphTrace::RecurrentLayerGraphTrace(std::string prefix, std::uint32_t position)
+    : prefix_(std::move(prefix)), position_(position) {
+    buffers_.reserve(std::size(kGraphTraceSpecs));
+    try {
+        for (const auto& spec : kGraphTraceSpecs) {
+            Buffer buffer{spec.name, spec.bytes, spec.binary, nullptr, false};
+            MIINFER_HIP_CHECK(hipHostMalloc(&buffer.host, buffer.bytes, hipHostMallocDefault));
+            buffers_.push_back(std::move(buffer));
+        }
+    } catch (...) {
+        for (auto& buffer : buffers_) {
+            if (buffer.host != nullptr) (void)hipHostFree(buffer.host);
+        }
+        throw;
+    }
+}
+
+RecurrentLayerGraphTrace::~RecurrentLayerGraphTrace() {
+    for (auto& buffer : buffers_) {
+        if (buffer.host != nullptr) (void)hipHostFree(buffer.host);
+    }
+}
+
+void RecurrentLayerGraphTrace::copy_async(const char* name, const void* device,
+                                          std::size_t bytes, hipStream_t stream) {
+    const auto found = std::find_if(buffers_.begin(), buffers_.end(),
+        [name](const Buffer& buffer) { return buffer.name == name; });
+    if (found == buffers_.end() || found->bytes != bytes) {
+        throw std::runtime_error(std::string("invalid HIP graph trace buffer: ") + name);
+    }
+    MIINFER_HIP_CHECK(hipMemcpyAsync(found->host, device, bytes,
+                                     hipMemcpyDeviceToHost, stream));
+    found->captured = true;
+}
+
+void RecurrentLayerGraphTrace::write_files() {
+    if (written_) throw std::runtime_error("HIP graph decode trace was already written");
+    for (const auto& buffer : buffers_) {
+        if (!buffer.captured) continue;
+        const auto path = std::filesystem::path(prefix_ + ".decode-pos"
+            + std::to_string(position_) + ".layer0." + buffer.name
+            + (buffer.binary ? ".bin" : ".f32"));
+        if (std::filesystem::exists(path)) {
+            throw std::runtime_error("refusing to overwrite HIP graph decode trace: " + path.string());
+        }
+        std::ofstream output(path, std::ios::binary | std::ios::out);
+        if (!output) throw std::runtime_error("cannot create HIP graph decode trace: " + path.string());
+        output.write(static_cast<const char*>(buffer.host), static_cast<std::streamsize>(buffer.bytes));
+        if (!output) throw std::runtime_error("failed writing HIP graph decode trace: " + path.string());
+    }
+    written_ = true;
+}
 
 PrefillV2RecurrentLayer::PrefillV2RecurrentLayer(
     const Qwen35Model& model, std::size_t layer_index, bool mmq_gateup_only)
@@ -651,7 +737,8 @@ void PrefillV2RecurrentLayer::decode(
     RecurrentLayerState& state,
     RecurrentLayerWorkspace& ws,
     const DeviceDecodeState* decode_state,
-    hipStream_t stream) const {
+    hipStream_t stream,
+    RecurrentLayerGraphTrace* graph_trace) const {
 
     const char* trace_prefix = std::getenv("MIINFER_LC_OP_TRACE_PREFIX");
     const char* trace_decode = std::getenv("MIINFER_LC_DECODE_TRACE");
@@ -659,7 +746,13 @@ void PrefillV2RecurrentLayer::decode(
     const bool capture_decode = trace_prefix != nullptr && layer_index_ == 0
         && trace_decode != nullptr && std::string_view(trace_decode) != "0"
         && decode_state == nullptr && !decode_trace_captured;
+    const bool capture_graph_decode = graph_trace != nullptr && layer_index_ == 0
+        && decode_state != nullptr;
     const auto capture_f32 = [&](const char* name, const float* device, std::size_t count) {
+        if (capture_graph_decode) {
+            graph_trace->copy_async(name, device, count * sizeof(float), stream);
+            return;
+        }
         if (!capture_decode) return;
         const auto path = std::filesystem::path(std::string(trace_prefix) + ".decode-pos"
             + std::to_string(state.position) + ".layer" + std::to_string(layer_index_)
@@ -675,6 +768,10 @@ void PrefillV2RecurrentLayer::decode(
         if (!output) throw std::runtime_error("failed writing M31 decode trace: " + path.string());
     };
     const auto capture_bytes = [&](const char* name, const void* device, std::size_t bytes) {
+        if (capture_graph_decode) {
+            graph_trace->copy_async(name, device, bytes, stream);
+            return;
+        }
         if (!capture_decode) return;
         const auto path = std::filesystem::path(std::string(trace_prefix) + ".decode-pos"
             + std::to_string(state.position) + ".layer" + std::to_string(layer_index_)
@@ -690,6 +787,7 @@ void PrefillV2RecurrentLayer::decode(
     };
     capture_f32("layer_input", d_input, kHidden);
     capture_bytes("state_before", state.d_state, RecurrentLayerState::kStateBytes);
+    capture_bytes("conv_history_before", state.d_conv_history, RecurrentLayerState::kConvHistoryBytes);
 
     // 1. Input RMS Normalization
     launch_qwen3_rms_norm(
@@ -738,6 +836,7 @@ void PrefillV2RecurrentLayer::decode(
             ws.query, ws.key, ws.value,
             state.position, 1, kConvKernel, kChannels, kConvKernel, stream);
     }
+    capture_bytes("conv_history_after", state.d_conv_history, RecurrentLayerState::kConvHistoryBytes);
     capture_f32("q_conv", ws.query, kKHeads * kState);
     capture_f32("k_conv", ws.key, kKHeads * kState);
     capture_f32("v_conv", ws.value, kVHeads * kState);

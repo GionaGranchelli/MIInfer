@@ -72,10 +72,11 @@ void PrefillV2TopologyBlock::decode(
     PrefillV2Workspace& ws,
     std::uint32_t position,
     const DeviceDecodeState* decode_state,
-    hipStream_t stream) const {
+    hipStream_t stream,
+    RecurrentLayerGraphTrace* graph_trace) const {
 
     // Layer 0 (GDN): d_ping -> d_pong
-    gdn0_.decode(d_ping, d_pong, state0, ws, decode_state, stream);
+    gdn0_.decode(d_ping, d_pong, state0, ws, decode_state, stream, graph_trace);
 
     // Layer 1 (GDN): d_pong -> d_ping
     gdn1_.decode(d_pong, d_ping, state1, ws, decode_state, stream);

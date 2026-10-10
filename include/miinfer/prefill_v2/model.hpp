@@ -262,7 +262,7 @@ public:
     [[nodiscard]] float* logits_buffer() noexcept { return d_logits_; }
 
     // Reusable Decode Graph Capture & Replay
-    void capture_decode_graph(hipStream_t stream = nullptr);
+    void capture_decode_graph(hipStream_t stream = nullptr, std::uint32_t position = 0);
     void cleanup_decode_graph();
     [[nodiscard]] bool is_decode_graph_captured() const noexcept { return decode_graph_exec_ != nullptr; }
 
@@ -347,6 +347,7 @@ private:
     void* d_decode_state_ = nullptr; // DeviceDecodeState
     std::uint32_t* d_decode_tokens_ = nullptr; // [kDefaultCacheCapacity] uint32_t
     hipGraphExec_t decode_graph_exec_ = nullptr;
+    std::unique_ptr<RecurrentLayerGraphTrace> decode_graph_trace_;
 
     // Reusable Device Prefill State & Suffix Graph Exec (512 tokens)
     void* d_prefill_state_ = nullptr; // DevicePrefillState

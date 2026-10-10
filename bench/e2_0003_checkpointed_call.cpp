@@ -1,3 +1,5 @@
+#include <chrono>
+
 #include "miinfer/hip_check.hpp"
 #include "miinfer/prefill_v2/model.hpp"
 #include "miinfer/qwen35_model.hpp"
@@ -7,7 +9,6 @@
 #include <hip/hip_runtime.h>
 
 #include <algorithm>
-#include <chrono>
 #include <cstdint>
 #include <cstdlib>
 #include <filesystem>

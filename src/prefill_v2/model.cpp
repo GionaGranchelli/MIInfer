@@ -354,6 +354,7 @@ PrefillV2Model::PrefillV2Model(PrefillV2Model&& other) noexcept
       d_decode_state_(other.d_decode_state_),
       d_decode_tokens_(other.d_decode_tokens_),
       decode_graph_exec_(other.decode_graph_exec_),
+      decode_graph_trace_(std::move(other.decode_graph_trace_)),
       d_prefill_state_(other.d_prefill_state_),
       suffix_graph_exec_(other.suffix_graph_exec_),
       snapshots_(std::move(other.snapshots_)),
@@ -414,6 +415,7 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
         d_decode_state_ = other.d_decode_state_;
         d_decode_tokens_ = other.d_decode_tokens_;
         decode_graph_exec_ = other.decode_graph_exec_;
+        decode_graph_trace_ = std::move(other.decode_graph_trace_);
         d_prefill_state_ = other.d_prefill_state_;
         suffix_graph_exec_ = other.suffix_graph_exec_;
         snapshots_ = std::move(other.snapshots_);
@@ -1245,7 +1247,7 @@ GenerateStats PrefillV2Model::generate(
 
     if (enable_graph) {
         hipStream_t exec_stream = (stream != nullptr) ? stream : hipStreamPerThread;
-        capture_decode_graph(exec_stream);
+        capture_decode_graph(exec_stream, prompt_len);
         const bool graph_diagnostics = hip_graph_diagnostics_enabled();
         const auto graph_weight_pointers = graph_diagnostics
             ? decode_graph_weight_pointers() : std::vector<const void*>{};
@@ -1277,6 +1279,9 @@ GenerateStats PrefillV2Model::generate(
                 exec_stream));
             MIINFER_HIP_CHECK(hipStreamSynchronize(exec_stream));
             ++graph_replays;
+            if (i == 0 && decode_graph_trace_ != nullptr) {
+                decode_graph_trace_->write_files();
+            }
             if (graph_diagnostics) {
                 validate_hip_graph_weight_pointers(graph_weight_pointers, "after_replay");
                 std::clog << "event=HIP_GRAPH_REPLAY_OK replay=" << graph_replays << '\n';
@@ -1445,7 +1450,7 @@ void PrefillV2Model::cleanup_decode_graph() {
     }
 }
 
-void PrefillV2Model::capture_decode_graph(hipStream_t stream) {
+void PrefillV2Model::capture_decode_graph(hipStream_t stream, std::uint32_t position) {
     if (decode_graph_exec_ != nullptr) {
         return;
     }
@@ -1455,6 +1460,12 @@ void PrefillV2Model::capture_decode_graph(hipStream_t stream) {
     }
 
     hipStream_t capture_stream = (stream != nullptr) ? stream : hipStreamPerThread;
+    const char* trace_prefix = std::getenv("MIINFER_LC_OP_TRACE_PREFIX");
+    const char* trace_decode = std::getenv("MIINFER_LC_DECODE_TRACE");
+    if (trace_prefix != nullptr && trace_decode != nullptr
+        && std::string_view(trace_decode) != "0") {
+        decode_graph_trace_ = std::make_unique<RecurrentLayerGraphTrace>(trace_prefix, position);
+    }
     const bool graph_diagnostics = hip_graph_diagnostics_enabled();
     const auto captured_weight_pointers = graph_diagnostics
         ? decode_graph_weight_pointers() : std::vector<const void*>{};
@@ -1492,7 +1503,8 @@ void PrefillV2Model::capture_decode_graph(hipStream_t stream) {
             ws,
             0,
             decode_state,
-            capture_stream);
+            capture_stream,
+            decode_graph_trace_.get());
     }
 
     // 3. Final RMS Norm: d_ping_ -> d_pong_

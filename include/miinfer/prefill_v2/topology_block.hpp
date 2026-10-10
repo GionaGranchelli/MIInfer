@@ -72,7 +72,8 @@ public:
         PrefillV2Workspace& ws,
         std::uint32_t position,
         const DeviceDecodeState* decode_state = nullptr,
-        hipStream_t stream = nullptr) const;
+        hipStream_t stream = nullptr,
+        RecurrentLayerGraphTrace* graph_trace = nullptr) const;
 
     // Profiled forward execution
     void forward_profiled(
