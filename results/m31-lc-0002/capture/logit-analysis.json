@@ -1,0 +1,757 @@
+{
+  "schema": "m31-lc-0002-logit-analysis-v1",
+  "source_sha": "f79b45d056c10ebe0f55822f803e19ebbe923b18",
+  "binary_sha256": "f1a4c41194f0c46ce710a4f088678866899b4b1c52106acda1f5f9934c9b8f89",
+  "vocab_size": 248320,
+  "top10_materiality_definition": "first decision where route top-10 token sets or winners differ",
+  "capture_validation": "PASS: same benchmark binary, HIP Graph active, valid five-decision files, reproduced four-token prefix and fifth-token split",
+  "first_bitwise_raw_logit_difference_decision": 2,
+  "first_rank_material_divergence_decision": 3,
+  "decision_analysis": [
+    {
+      "decision": 1,
+      "fused_top1": {
+        "token": 220,
+        "logit": 3.4297399520874023,
+        "probability": 0.0017257971974097253
+      },
+      "fused_top2_margin": 1.1447196006774902,
+      "mmq_top1": {
+        "token": 220,
+        "logit": 3.4297399520874023,
+        "probability": 0.0017257971974097253
+      },
+      "mmq_top2_margin": 1.1447196006774902,
+      "top10_fused": [
+        {
+          "token": 220,
+          "logit": 3.4297399520874023,
+          "probability": 0.0017257971974097253
+        },
+        {
+          "token": 197,
+          "logit": 2.285020351409912,
+          "probability": 0.0005493439595518003
+        },
+        {
+          "token": 62,
+          "logit": 2.2266337871551514,
+          "probability": 0.0005181880468577121
+        },
+        {
+          "token": 954,
+          "logit": 1.9964845180511475,
+          "probability": 0.0004116563634811496
+        },
+        {
+          "token": 198,
+          "logit": 1.9631915092468262,
+          "probability": 0.0003981767185897546
+        },
+        {
+          "token": 95726,
+          "logit": 1.8514915704727173,
+          "probability": 0.0003560944428313669
+        },
+        {
+          "token": 87,
+          "logit": 1.7531459331512451,
+          "probability": 0.00032274106558810567
+        },
+        {
+          "token": 248046,
+          "logit": 1.7075618505477905,
+          "probability": 0.00030835948596595234
+        },
+        {
+          "token": 70,
+          "logit": 1.6067999601364136,
+          "probability": 0.0002788027030623662
+        },
+        {
+          "token": 4745,
+          "logit": 1.5239737033843994,
+          "probability": 0.00025664097337445106
+        }
+      ],
+      "top10_mmq": [
+        {
+          "token": 220,
+          "logit": 3.4297399520874023,
+          "probability": 0.0017257971974097253
+        },
+        {
+          "token": 197,
+          "logit": 2.285020351409912,
+          "probability": 0.0005493439595518003
+        },
+        {
+          "token": 62,
+          "logit": 2.2266337871551514,
+          "probability": 0.0005181880468577121
+        },
+        {
+          "token": 954,
+          "logit": 1.9964845180511475,
+          "probability": 0.0004116563634811496
+        },
+        {
+          "token": 198,
+          "logit": 1.9631915092468262,
+          "probability": 0.0003981767185897546
+        },
+        {
+          "token": 95726,
+          "logit": 1.8514915704727173,
+          "probability": 0.0003560944428313669
+        },
+        {
+          "token": 87,
+          "logit": 1.7531459331512451,
+          "probability": 0.00032274106558810567
+        },
+        {
+          "token": 248046,
+          "logit": 1.7075618505477905,
+          "probability": 0.00030835948596595234
+        },
+        {
+          "token": 70,
+          "logit": 1.6067999601364136,
+          "probability": 0.0002788027030623662
+        },
+        {
+          "token": 4745,
+          "logit": 1.5239737033843994,
+          "probability": 0.00025664097337445106
+        }
+      ],
+      "top10_overlap_count": 10,
+      "top10_probability_mass_fused": 0.0051258009567123845,
+      "top10_probability_mass_mmq": 0.0051258009567123845,
+      "disputed_tokens": {
+        "271": {
+          "fused_logit": 1.501431941986084,
+          "mmq_logit": 1.501431941986084,
+          "fused_probability": 0.0002509205502195208,
+          "mmq_probability": 0.0002509205502195208
+        },
+        "74455": {
+          "fused_logit": -2.6711623668670654,
+          "mmq_logit": -2.6711623668670654,
+          "fused_probability": 3.867243762312152e-06,
+          "mmq_probability": 3.867243762312152e-06
+        }
+      },
+      "ordinary_logit_cosine": 1.0,
+      "centered_logit_cosine": 1.0,
+      "mean_signed_logit_error_mmq_minus_fused": 0.0,
+      "mean_absolute_logit_error": 0.0,
+      "rms_logit_error": 0.0,
+      "max_absolute_logit_error": 0.0,
+      "mean_absolute_centered_logit_error": 0.0,
+      "rms_centered_logit_error": 0.0,
+      "max_absolute_centered_logit_error": 0.0,
+      "stable_softmax_js_nats": 0.0,
+      "stable_softmax_total_variation": 0.0,
+      "raw_vectors_bitwise_equal": true,
+      "rank_material_divergence": false
+    },
+    {
+      "decision": 2,
+      "fused_top1": {
+        "token": 248046,
+        "logit": 8.812675476074219,
+        "probability": 0.03398055878145781
+      },
+      "fused_top2_margin": 0.6638669967651367,
+      "mmq_top1": {
+        "token": 248046,
+        "logit": 8.726600646972656,
+        "probability": 0.029957084436029967
+      },
+      "mmq_top2_margin": 0.4335594177246094,
+      "top10_fused": [
+        {
+          "token": 248046,
+          "logit": 8.812675476074219,
+          "probability": 0.03398055878145781
+        },
+        {
+          "token": 248068,
+          "logit": 8.148808479309082,
+          "probability": 0.017495112632223253
+        },
+        {
+          "token": 95726,
+          "logit": 7.64388370513916,
+          "probability": 0.010559192310401191
+        },
+        {
+          "token": 95793,
+          "logit": 7.296533107757568,
+          "probability": 0.007460677234605156
+        },
+        {
+          "token": 112523,
+          "logit": 7.199780464172363,
+          "probability": 0.006772657487186244
+        },
+        {
+          "token": 197,
+          "logit": 7.175863265991211,
+          "probability": 0.006612596234152513
+        },
+        {
+          "token": 16,
+          "logit": 7.052839279174805,
+          "probability": 0.00584713830913233
+        },
+        {
+          "token": 95815,
+          "logit": 6.954442024230957,
+          "probability": 0.005299195988075318
+        },
+        {
+          "token": 201,
+          "logit": 6.953039169311523,
+          "probability": 0.005291767196890856
+        },
+        {
+          "token": 17,
+          "logit": 6.926321029663086,
+          "probability": 0.005152253099851695
+        }
+      ],
+      "top10_mmq": [
+        {
+          "token": 248046,
+          "logit": 8.726600646972656,
+          "probability": 0.029957084436029967
+        },
+        {
+          "token": 248068,
+          "logit": 8.293041229248047,
+          "probability": 0.01941811553786567
+        },
+        {
+          "token": 95726,
+          "logit": 7.555578231811523,
+          "probability": 0.009288187425720778
+        },
+        {
+          "token": 112523,
+          "logit": 7.495100498199463,
+          "probability": 0.008743107624564874
+        },
+        {
+          "token": 95793,
+          "logit": 7.3832244873046875,
+          "probability": 0.007817694413295648
+        },
+        {
+          "token": 201,
+          "logit": 7.061561107635498,
+          "probability": 0.0056673764269368244
+        },
+        {
+          "token": 16,
+          "logit": 6.942494869232178,
+          "probability": 0.005031207731484473
+        },
+        {
+          "token": 95815,
+          "logit": 6.942255973815918,
+          "probability": 0.0050300059425758175
+        },
+        {
+          "token": 197,
+          "logit": 6.862060070037842,
+          "probability": 0.004642371160875056
+        },
+        {
+          "token": 17,
+          "logit": 6.768369674682617,
+          "probability": 0.004227178995342186
+        }
+      ],
+      "top10_overlap_count": 10,
+      "top10_probability_mass_fused": 0.10447114927397637,
+      "top10_probability_mass_mmq": 0.09982232969469129,
+      "disputed_tokens": {
+        "271": {
+          "fused_logit": 3.9926939010620117,
+          "mmq_logit": 3.8780875205993652,
+          "fused_probability": 0.00027411898515010896,
+          "mmq_probability": 0.00023486432131490103
+        },
+        "74455": {
+          "fused_logit": 0.08550435304641724,
+          "mmq_logit": 0.09468621015548706,
+          "fused_probability": 5.508942695648543e-06,
+          "mmq_probability": 5.342035076603263e-06
+        }
+      },
+      "ordinary_logit_cosine": 0.9991706994664148,
+      "centered_logit_cosine": 0.9980867392878237,
+      "mean_signed_logit_error_mmq_minus_fused": 0.03659772040039186,
+      "mean_absolute_logit_error": 0.08024164361065522,
+      "rms_logit_error": 0.10160824946950668,
+      "max_absolute_logit_error": 0.4708423614501953,
+      "mean_absolute_centered_logit_error": 0.0749792073283013,
+      "rms_centered_logit_error": 0.09478841290871076,
+      "max_absolute_centered_logit_error": 0.47482155920654456,
+      "stable_softmax_js_nats": 0.0015415012650622977,
+      "stable_softmax_total_variation": 0.044500717565802386,
+      "raw_vectors_bitwise_equal": false,
+      "rank_material_divergence": false
+    },
+    {
+      "decision": 3,
+      "fused_top1": {
+        "token": 198,
+        "logit": 27.838016510009766,
+        "probability": 0.9999996761455162
+      },
+      "fused_top2_margin": 16.52948760986328,
+      "mmq_top1": {
+        "token": 198,
+        "logit": 27.718259811401367,
+        "probability": 0.9999996498360801
+      },
+      "mmq_top2_margin": 16.467753410339355,
+      "top10_fused": [
+        {
+          "token": 198,
+          "logit": 27.838016510009766,
+          "probability": 0.9999996761455162
+        },
+        {
+          "token": 271,
+          "logit": 11.308528900146484,
+          "probability": 6.627269042631434e-08
+        },
+        {
+          "token": 317,
+          "logit": 10.177940368652344,
+          "probability": 2.1395687258354023e-08
+        },
+        {
+          "token": 19,
+          "logit": 8.685518264770508,
+          "probability": 4.810337595611819e-09
+        },
+        {
+          "token": 1358,
+          "logit": 8.657147407531738,
+          "probability": 4.675781949195044e-09
+        },
+        {
+          "token": 13,
+          "logit": 8.605328559875488,
+          "probability": 4.4396589612181375e-09
+        },
+        {
+          "token": 248045,
+          "logit": 8.597411155700684,
+          "probability": 4.4046471709645316e-09
+        },
+        {
+          "token": 16,
+          "logit": 8.542503356933594,
+          "probability": 4.169317527788435e-09
+        },
+        {
+          "token": 18,
+          "logit": 8.408677101135254,
+          "probability": 3.647077289468292e-09
+        },
+        {
+          "token": 549,
+          "logit": 8.365011215209961,
+          "probability": 3.491251326726995e-09
+        }
+      ],
+      "top10_mmq": [
+        {
+          "token": 198,
+          "logit": 27.718259811401367,
+          "probability": 0.9999996498360801
+        },
+        {
+          "token": 271,
+          "logit": 11.250506401062012,
+          "probability": 7.04929057040195e-08
+        },
+        {
+          "token": 317,
+          "logit": 10.281808853149414,
+          "probability": 2.675749252540268e-08
+        },
+        {
+          "token": 19,
+          "logit": 8.802963256835938,
+          "probability": 6.098049294302654e-09
+        },
+        {
+          "token": 248045,
+          "logit": 8.740368843078613,
+          "probability": 5.728046332841416e-09
+        },
+        {
+          "token": 1358,
+          "logit": 8.658090591430664,
+          "probability": 5.275620310266259e-09
+        },
+        {
+          "token": 16,
+          "logit": 8.410079002380371,
+          "probability": 4.116835055590858e-09
+        },
+        {
+          "token": 13,
+          "logit": 8.376317977905273,
+          "probability": 3.9801665027628734e-09
+        },
+        {
+          "token": 18,
+          "logit": 8.320343971252441,
+          "probability": 3.763501020439497e-09
+        },
+        {
+          "token": 96193,
+          "logit": 8.249946594238281,
+          "probability": 3.507670947877392e-09
+        }
+      ],
+      "top10_overlap_count": 9,
+      "top10_probability_mass_fused": 0.9999997934519658,
+      "top10_probability_mass_mmq": 0.9999997795563679,
+      "disputed_tokens": {
+        "271": {
+          "fused_logit": 11.308528900146484,
+          "mmq_logit": 11.250506401062012,
+          "fused_probability": 6.627269042631434e-08,
+          "mmq_probability": 7.04929057040195e-08
+        },
+        "74455": {
+          "fused_logit": 4.36631441116333,
+          "mmq_logit": 4.399101734161377,
+          "fused_probability": 6.402788510461831e-11,
+          "mmq_probability": 7.457927760475627e-11
+        }
+      },
+      "ordinary_logit_cosine": 0.9991583577787683,
+      "centered_logit_cosine": 0.9976290592426913,
+      "mean_signed_logit_error_mmq_minus_fused": -0.009934800229702606,
+      "mean_absolute_logit_error": 0.11255578667983969,
+      "rms_logit_error": 0.14256397467427692,
+      "max_absolute_logit_error": 0.7799472808837891,
+      "mean_absolute_centered_logit_error": 0.11227579308791942,
+      "rms_centered_logit_error": 0.14221739211265189,
+      "max_absolute_centered_logit_error": 0.7700124806540867,
+      "stable_softmax_js_nats": 1.1265404185996255e-09,
+      "stable_softmax_total_variation": 3.549893422996978e-08,
+      "raw_vectors_bitwise_equal": false,
+      "rank_material_divergence": true
+    },
+    {
+      "decision": 4,
+      "fused_top1": {
+        "token": 248045,
+        "logit": 30.064437866210938,
+        "probability": 0.9965463340983379
+      },
+      "fused_top2_margin": 5.665142059326172,
+      "mmq_top1": {
+        "token": 248045,
+        "logit": 29.885257720947266,
+        "probability": 0.9963479936108446
+      },
+      "mmq_top2_margin": 5.6090087890625,
+      "top10_fused": [
+        {
+          "token": 248045,
+          "logit": 30.064437866210938,
+          "probability": 0.9965463340983379
+        },
+        {
+          "token": 248044,
+          "logit": 24.399295806884766,
+          "probability": 0.0034526897883875546
+        },
+        {
+          "token": 248046,
+          "logit": 16.11928939819336,
+          "probability": 8.753796914800033e-07
+        },
+        {
+          "token": 248069,
+          "logit": 12.424570083618164,
+          "probability": 2.1757062354446202e-08
+        },
+        {
+          "token": 1358,
+          "logit": 11.856155395507812,
+          "probability": 1.2323693653025655e-08
+        },
+        {
+          "token": 271,
+          "logit": 11.260293960571289,
+          "probability": 6.791435192103919e-09
+        },
+        {
+          "token": 27,
+          "logit": 11.121888160705566,
+          "probability": 5.913610081767586e-09
+        },
+        {
+          "token": 198,
+          "logit": 10.353670120239258,
+          "probability": 2.7429622440890522e-09
+        },
+        {
+          "token": 248068,
+          "logit": 9.82171630859375,
+          "probability": 1.611369817786255e-09
+        },
+        {
+          "token": 96220,
+          "logit": 9.603195190429688,
+          "probability": 1.2950684068673948e-09
+        }
+      ],
+      "top10_mmq": [
+        {
+          "token": 248045,
+          "logit": 29.885257720947266,
+          "probability": 0.9963479936108446
+        },
+        {
+          "token": 248044,
+          "logit": 24.276248931884766,
+          "probability": 0.003651316540821821
+        },
+        {
+          "token": 248046,
+          "logit": 15.515886306762695,
+          "probability": 5.726276794961919e-07
+        },
+        {
+          "token": 248069,
+          "logit": 12.152486801147461,
+          "probability": 1.982286810203568e-08
+        },
+        {
+          "token": 1358,
+          "logit": 11.646337509155273,
+          "probability": 1.1949470095356944e-08
+        },
+        {
+          "token": 271,
+          "logit": 11.470836639404297,
+          "probability": 1.0026043566245458e-08
+        },
+        {
+          "token": 27,
+          "logit": 11.180608749389648,
+          "probability": 7.500413663419812e-09
+        },
+        {
+          "token": 198,
+          "logit": 10.560869216918945,
+          "probability": 4.035856882675502e-09
+        },
+        {
+          "token": 248068,
+          "logit": 10.21411418914795,
+          "probability": 2.8532640336038205e-09
+        },
+        {
+          "token": 11,
+          "logit": 10.181203842163086,
+          "probability": 2.760890484261386e-09
+        }
+      ],
+      "top10_overlap_count": 9,
+      "top10_probability_mass_fused": 0.9999999517016187,
+      "top10_probability_mass_mmq": 0.9999999417281528,
+      "disputed_tokens": {
+        "271": {
+          "fused_logit": 11.260293960571289,
+          "mmq_logit": 11.470836639404297,
+          "fused_probability": 6.791435192103919e-09,
+          "mmq_probability": 1.0026043566245458e-08
+        },
+        "74455": {
+          "fused_logit": 6.375035285949707,
+          "mmq_logit": 6.514745235443115,
+          "fused_probability": 5.132402119997702e-11,
+          "mmq_probability": 7.058727865069287e-11
+        }
+      },
+      "ordinary_logit_cosine": 0.9991154820118424,
+      "centered_logit_cosine": 0.9985334031122481,
+      "mean_signed_logit_error_mmq_minus_fused": 0.015313590218696488,
+      "mean_absolute_logit_error": 0.07104980027050767,
+      "rms_logit_error": 0.09121344461191445,
+      "max_absolute_logit_error": 0.6491575241088867,
+      "mean_absolute_centered_logit_error": 0.0700416988055688,
+      "rms_centered_logit_error": 0.08991877686325937,
+      "max_absolute_centered_logit_error": 0.6338439338901907,
+      "stable_softmax_js_nats": 1.410321803965724e-06,
+      "stable_softmax_total_variation": 0.00019864580980532572,
+      "raw_vectors_bitwise_equal": false,
+      "rank_material_divergence": true
+    },
+    {
+      "decision": 5,
+      "fused_top1": {
+        "token": 271,
+        "logit": 14.833824157714844,
+        "probability": 0.3208255574146913
+      },
+      "fused_top2_margin": 0.14780235290527344,
+      "mmq_top1": {
+        "token": 74455,
+        "logit": 15.149837493896484,
+        "probability": 0.4604413643108137
+      },
+      "mmq_top2_margin": 1.0651473999023438,
+      "top10_fused": [
+        {
+          "token": 271,
+          "logit": 14.833824157714844,
+          "probability": 0.3208255574146913
+        },
+        {
+          "token": 248046,
+          "logit": 14.68602180480957,
+          "probability": 0.27674463555118145
+        },
+        {
+          "token": 198,
+          "logit": 14.185873031616211,
+          "probability": 0.16782913603887104
+        },
+        {
+          "token": 74455,
+          "logit": 13.723713874816895,
+          "probability": 0.10571927771671905
+        },
+        {
+          "token": 846,
+          "logit": 13.444759368896484,
+          "probability": 0.07998449086979378
+        },
+        {
+          "token": 220,
+          "logit": 11.070947647094727,
+          "probability": 0.007448562270561651
+        },
+        {
+          "token": 248068,
+          "logit": 10.72068977355957,
+          "probability": 0.005247559736319717
+        },
+        {
+          "token": 1302,
+          "logit": 9.092428207397461,
+          "probability": 0.0010299410733376785
+        },
+        {
+          "token": 1421,
+          "logit": 8.994549751281738,
+          "probability": 0.0009339084490352021
+        },
+        {
+          "token": 2911,
+          "logit": 8.898953437805176,
+          "probability": 0.0008487647860074541
+        }
+      ],
+      "top10_mmq": [
+        {
+          "token": 74455,
+          "logit": 15.149837493896484,
+          "probability": 0.4604413643108137
+        },
+        {
+          "token": 271,
+          "logit": 14.08469009399414,
+          "probability": 0.15870356915022496
+        },
+        {
+          "token": 846,
+          "logit": 13.995807647705078,
+          "probability": 0.14520632628680216
+        },
+        {
+          "token": 248046,
+          "logit": 13.682286262512207,
+          "probability": 0.10612676604989589
+        },
+        {
+          "token": 198,
+          "logit": 13.32273006439209,
+          "probability": 0.07407499956571985
+        },
+        {
+          "token": 248068,
+          "logit": 10.983193397521973,
+          "probability": 0.007138776625658743
+        },
+        {
+          "token": 220,
+          "logit": 10.90737533569336,
+          "probability": 0.006617537744865642
+        },
+        {
+          "token": 1302,
+          "logit": 9.53130054473877,
+          "probability": 0.0016713782207275307
+        },
+        {
+          "token": 69267,
+          "logit": 9.222397804260254,
+          "probability": 0.0012272131014537007
+        },
+        {
+          "token": 2911,
+          "logit": 9.10288143157959,
+          "probability": 0.0010889669067006282
+        }
+      ],
+      "top10_overlap_count": 9,
+      "top10_probability_mass_fused": 0.9666118339065184,
+      "top10_probability_mass_mmq": 0.9622968979628629,
+      "disputed_tokens": {
+        "271": {
+          "fused_logit": 14.833824157714844,
+          "mmq_logit": 14.08469009399414,
+          "fused_probability": 0.3208255574146913,
+          "mmq_probability": 0.15870356915022496
+        },
+        "74455": {
+          "fused_logit": 13.723713874816895,
+          "mmq_logit": 15.149837493896484,
+          "fused_probability": 0.10571927771671905,
+          "mmq_probability": 0.4604413643108137
+        }
+      },
+      "ordinary_logit_cosine": 0.9978845865828927,
+      "centered_logit_cosine": 0.9927958138946428,
+      "mean_signed_logit_error_mmq_minus_fused": 0.02407996236132434,
+      "mean_absolute_logit_error": 0.19145433248921426,
+      "rms_logit_error": 0.2427038233188339,
+      "max_absolute_logit_error": 1.4261236190795898,
+      "mean_absolute_centered_logit_error": 0.18999852581817456,
+      "rms_centered_logit_error": 0.2415063172388187,
+      "max_absolute_centered_logit_error": 1.4020436567182664,
+      "stable_softmax_js_nats": 0.1085859168277275,
+      "stable_softmax_total_variation": 0.4309458325604977,
+      "raw_vectors_bitwise_equal": false,
+      "rank_material_divergence": true
+    }
+  ]
+}

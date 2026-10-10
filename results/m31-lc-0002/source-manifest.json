@@ -1,0 +1,23 @@
+{
+  "milestone": "M31-LC-0002",
+  "source_sha": "f79b45d056c10ebe0f55822f803e19ebbe923b18",
+  "qualification_base_sha": "f52a81d568128d03adb6033efef2cdec23274348",
+  "benchmark_binary_sha256": "f1a4c41194f0c46ce710a4f088678866899b4b1c52106acda1f5f9934c9b8f89",
+  "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+  "image_digest": "sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e",
+  "build_flags": "Release; MIINFER_ENABLE_HIP=ON; MIINFER_BUILD_TESTS=ON; MIINFER_BUILD_BENCHMARKS=ON; MIINFER_BUILD_RESEARCH_TOOLS=OFF; CMAKE_HIP_ARCHITECTURES=gfx906; hipblas_DIR=/out/hipblas-cmake",
+  "source_files": {
+    "CMakeLists.txt": "5bf36a40851502e2fed624bf8fc654acee898d817968720138887c32eb048f90",
+    "bench/e2_0003_checkpointed_call.cpp": "afa983520ee54e64d6873dc8357e18029ab624fe185e84f474aa3e26e4913776",
+    "bench/e2_0003_prompt.hpp": "f7d48ff176cc5ca59be1e12d84ea962051c8cfa476b1227520d4411f0d6d880c",
+    "include/miinfer/prefill_v2/model.hpp": "ac292560a6a61b95e29028fd8c82bf240ce5435bc910fbf71f1d85c3f6f500e4",
+    "include/miinfer/qwen35_model.hpp": "f0b388032b151e6001a771ac508d377486d80f4430359c8eee0b8fc538b55c5d",
+    "include/miinfer/sha256.hpp": "61dec59bd3191c3df003fb5987557322c9a3c6304e96c0c9f2f763e92065b40a",
+    "src/prefill_v2/model.cpp": "03ce44cc39d107f6ebb7a23d3423fd8b27f4e62b5afb48a5a2220aab8da544e6",
+    "src/prefill_v2/workspace.cpp": "c559d11a275993f410f07d26061543be21b03941e1d49e0b313da755404f5672",
+    "scripts/e2_0003_same_source_ab.py": "c2050d41298e0e524190e190dfaf9cbca546561b3957cfef3a86bcb204f6907b",
+    "scripts/run-m31-exploratory.sh": "0368ad34fd0085f753ee5625d2fb67f91f222b83c88b024dce10654ded520e08",
+    "tests/test_e2_0003_same_source_ab.py": "1577e464dbc5a4b09b54a48a25720f007a564c056f2b1d4e467af64d942b4608"
+  },
+  "build": "existing pinned Release build; benchmark rebuilt from committed M31-LC-0002 source"
+}
