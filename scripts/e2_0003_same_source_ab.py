@@ -217,14 +217,14 @@ def container_command(args, route: str, pair: int, output: Path) -> list[str]:
                "-v", f"{output.resolve()}:/results:Z",
                "--env", f"M31_EXPECTED_GPU_BDF={args.expected_bdf}",
                "--env", "MIINFER_HIP_GRAPH=1",
-               "--env", f"MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY={'1' if route == 'mmq_only' else '0'}",
-               args.image, "/bench/run", "/model.gguf", args.context_profile,
-               "--generate", str(args.generate_tokens), "--prompt-tokens", str(args.prompt_tokens),
-               "--iterations", "1", "--warmup", "0",
-               "--output", f"/results/{route}-pair-{pair}.metrics"]
+               "--env", f"MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY={'1' if route == 'mmq_only' else '0'}"]
     if getattr(args, "capture_layer_zero_trace", False):
         command.extend(["--env", f"MIINFER_LC_OP_TRACE_PREFIX=/results/{route}-optrace",
                         "--env", "MIINFER_LC_DECODE_TRACE_POSITION=2048"])
+    command.extend([args.image, "/bench/run", "/model.gguf", args.context_profile,
+               "--generate", str(args.generate_tokens), "--prompt-tokens", str(args.prompt_tokens),
+               "--iterations", "1", "--warmup", "0",
+               "--output", f"/results/{route}-pair-{pair}.metrics"])
     if getattr(args, "capture_raw_logits", False):
         command.extend(["--capture-raw-logits", f"/results/{route}-pair-{pair}.logits.f32"])
     return command

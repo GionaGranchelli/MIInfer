@@ -96,6 +96,7 @@ class SameSourceHarnessTest(unittest.TestCase):
             command = MODULE.container_command(args, "control", 1, root)
         self.assertIn("MIINFER_LC_OP_TRACE_PREFIX=/results/control-optrace", command)
         self.assertIn("MIINFER_LC_DECODE_TRACE_POSITION=2048", command)
+        self.assertLess(command.index("MIINFER_LC_DECODE_TRACE_POSITION=2048"), command.index("image"))
 
     def test_context_workload_is_passed_through_to_the_same_binary(self):
         with tempfile.TemporaryDirectory() as directory:
