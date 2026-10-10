@@ -1,0 +1,42 @@
+HIP version: 7.1.52802-9999
+
+==hipconfig
+HIP_PATH           :/usr
+ROCM_PATH          :/usr
+HIP_COMPILER       :clang
+HIP_PLATFORM       :amd
+HIP_RUNTIME        :rocclr
+CPP_CONFIG         : -D__HIP_PLATFORM_HCC__= -D__HIP_PLATFORM_AMD__= -I/usr/include -I/include
+
+==hip-clang
+HIP_CLANG_PATH     :/usr/lib64/rocm/llvm/bin
+clang version 20.0.0.rocm
+Target: x86_64-redhat-linux-gnu
+Thread model: posix
+InstalledDir: /usr/lib64/rocm/llvm/bin
+AOMP-18.0-12 (http://github.com/ROCm-Developer-Tools/aomp):
+ Source ID:18.0-12-ce1873ac686bb90ddec72bb99889a4e80e2de382
+  LLVM version 20.0.0.rocm
+  Optimized build.
+  Default target: x86_64-redhat-linux-gnu
+  Host CPU: haswell
+
+  Registered Targets:
+    amdgcn - AMD GCN GPUs
+    r600   - AMD GPUs HD2XXX-HD6XXX
+    x86    - 32-bit X86: Pentium-Pro and above
+    x86-64 - 64-bit X86: EM64T and AMD64
+hip-clang-cxxflags :
+ -O3
+hip-clang-ldflags :
+--driver-mode=g++ -O3 --hip-link
+
+== Environment Variables
+PATH =/home/fedora-workstation/.local/bin:/home/fedora-workstation/.local/bin:/home/fedora-workstation/.nvm/versions/node/v25.9.0/bin:/home/fedora-workstation/.local/bin:/home/fedora-workstation/bin:/usr/local/bin:/usr/bin:/home/fedora-workstation/.lmstudio/bin
+
+== Linux Kernel
+Hostname      :
+fedora
+Linux fedora 7.2.8-200.fc44.x86_64 #1 SMP PREEMPT_DYNAMIC Fri Sep 25 21:05:44 UTC 2026 x86_64 GNU/Linux
+
+egrep: warning: egrep is obsolescent; using grep -E
