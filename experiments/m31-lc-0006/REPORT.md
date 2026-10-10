@@ -30,7 +30,15 @@ The graph run records and raw captures are in [`results/m31-lc-0006/z840-untrace
 
 ## Next step
 
-Use a graph-safe trace to compare the first decode under identical token/state, starting with the recurrent state and layer-0 inputs/outputs. Allocate trace buffers before capture and retrieve them only after replay synchronization. First verify that tracing does not change eager raw logits.
+Use the graph-safe trace to compare the first decode under identical token/state, starting with the recurrent state and layer-0 inputs/outputs. Compare the graph trace against the non-perturbing eager trace before changing execution behavior.
+
+## Phase B: eager trace validation
+
+Built a trace-capable binary from source revision `c67fc073a8d508370d1e4423de71415504b4a9e9` inside the pinned OCI image (binary SHA-256 is in `source-manifest-graph-trace.json`). On this exact binary, the eager traced and untraced runs produced identical token IDs and byte-identical five-decision raw logits for both routes. This verifies that the eager diagnostic capture did not perturb the output.
+
+The first eager recurrent trace is recorded as `decode-pos0`, while the graph decode state starts from prompt position 2048. Source inspection found the cold-prefill branch does not update stored recurrent positions after prefill, unlike the reusable-prefix branch. This is a candidate cause; the graph-safe trace comparison is still required before changing that behavior.
+
+Eager trace and no-trace run evidence is in [`results/m31-lc-0006/z840-traced-eager/`](../../results/m31-lc-0006/z840-traced-eager/) and [`results/m31-lc-0006/z840-diagnostic-untraced-eager/`](../../results/m31-lc-0006/z840-diagnostic-untraced-eager/).
 
 ## Provenance
 

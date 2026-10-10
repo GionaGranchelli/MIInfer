@@ -1,0 +1,25 @@
+{
+  "milestone": "M31-LC-0006",
+  "binary_source_sha": "c67fc073a8d508370d1e4423de71415504b4a9e9",
+  "capture_harness_sha": "c67fc073a8d508370d1e4423de71415504b4a9e9",
+  "binary_sha256": "a53873ccd6cbbe47f43c4da6c6913a55be5faab1762b86b39c5e731742b1cdf7",
+  "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+  "image_digest": "sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e",
+  "build_flags": "Release; MIINFER_ENABLE_HIP=ON; MIINFER_BUILD_TESTS=ON; MIINFER_BUILD_BENCHMARKS=ON; MIINFER_BUILD_RESEARCH_TOOLS=OFF; CMAKE_HIP_ARCHITECTURES=gfx906; CMAKE_PREFIX_PATH=/opt/rocm-7.2.1; hipblas_DIR=/opt/rocm-7.2.1/lib/cmake/hipblas; hip_DIR=/opt/rocm-7.2.1/lib/cmake/hip; FETCHCONTENT_SOURCE_DIR_NLOHMANN_JSON=/deps/nlohmann_json-src",
+  "source_files": {
+    "CMakeLists.txt": "5bf36a40851502e2fed624bf8fc654acee898d817968720138887c32eb048f90",
+    "bench/e2_0003_checkpointed_call.cpp": "89d5a58cbe8ce6a1c8ba2386f0ebe580b1dd6faed2aaae12c802c7b409657bb7",
+    "bench/e2_0003_prompt.hpp": "f7d48ff176cc5ca59be1e12d84ea962051c8cfa476b1227520d4411f0d6d880c",
+    "include/miinfer/prefill_v2/model.hpp": "4b1a1da6a1cd51b51651a8e73cc0c262a0799aa4da18712039915e5847bddb81",
+    "include/miinfer/prefill_v2/recurrent_layer.hpp": "f35c6a9bedfe4a402ca4e1c42424e8ada6657d94f7925b4f8ea3fe36a268e66b",
+    "include/miinfer/prefill_v2/topology_block.hpp": "c523ab690fbed26e8b17ba995ffb9542b6c47db60bbcb9ed85fc5bcd317548c0",
+    "src/prefill_v2/model.cpp": "bf4651fcb07be6315a5ca2d16b727710388baa01cd1d8ba9743bfe40bcf47f38",
+    "src/prefill_v2/recurrent_layer.cpp": "d852f3c08760ae075e7505a85f444796f7eadf94a024a0f2d14fd7ff1aa5298c",
+    "src/prefill_v2/topology_block.cpp": "c9ba1c697503db2f64a8f636a16450bd955ef7f622097e03acfc9950748a267f",
+    "scripts/run-m31-exploratory.sh": "0368ad34fd0085f753ee5625d2fb67f91f222b83c88b024dce10654ded520e08",
+    "scripts/e2_0003_same_source_ab.py": "0e96a30c791a9ed63c2964817135541cfb158b85295d980ec998df01a7a1d4ea",
+    "tests/test_e2_0003_same_source_ab.py": "1cf2f2f2ec2fb3bc8cc6279d64844796e220d482db8bd2292a98cd2dda7e8a25"
+  },
+  "configure_result": "PASS in pinned OCI image using ROCm 7.2.1; nlohmann_json source mounted read-only from host cache because container networking is disabled",
+  "build_result": "PASS: e2-0003-checkpointed-call built inside pinned OCI image with GCC 13.3.0 and HIP Clang 22.0.0; existing nonfatal gfx906 kernel warnings"
+}
