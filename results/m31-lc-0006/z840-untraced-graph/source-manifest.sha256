@@ -1,0 +1,20 @@
+{
+  "milestone": "M31-LC-0005",
+  "binary_source_sha": "d4905bd5be1a4c3c32e466f319cee12cdd313f56",
+  "capture_harness_sha": "d4905bd5be1a4c3c32e466f319cee12cdd313f56",
+  "binary_sha256": "a71929408b3792db8c7a37dc2034fd6c4cce498d6c6a894849c426f13926c894",
+  "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+  "image_digest": "sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e",
+  "build_flags": "Release; MIINFER_ENABLE_HIP=ON; MIINFER_BUILD_TESTS=ON; MIINFER_BUILD_BENCHMARKS=ON; MIINFER_BUILD_RESEARCH_TOOLS=OFF; CMAKE_HIP_ARCHITECTURES=gfx906; CMAKE_PREFIX_PATH=/opt/rocm-7.2.1; hipblas_DIR=/opt/rocm-7.2.1/lib/cmake/hipblas; hip_DIR=/opt/rocm-7.2.1/lib/cmake/hip",
+  "source_files": {
+    "CMakeLists.txt": "5bf36a40851502e2fed624bf8fc654acee898d817968720138887c32eb048f90",
+    "bench/e2_0003_checkpointed_call.cpp": "a7d7cf74c2261bc39b153414f4ed809e723e41e3e5008c69ee652e59f9db706e",
+    "bench/e2_0003_prompt.hpp": "f7d48ff176cc5ca59be1e12d84ea962051c8cfa476b1227520d4411f0d6d880c",
+    "src/prefill_v2/recurrent_layer.cpp": "1195f82bf10450bb77dfa91830763a227e6b2e82d80bc7da5c68b3e66f48a723",
+    "scripts/run-m31-exploratory.sh": "0368ad34fd0085f753ee5625d2fb67f91f222b83c88b024dce10654ded520e08",
+    "scripts/e2_0003_same_source_ab.py": "bca59f1b7314c88558f3b62d681d7676d973ab745f906523a2dc8580172c5d55",
+    "tests/test_e2_0003_same_source_ab.py": "a60b9f4d7d9e8279d8a0c60e9090c88703584254d77a8d31f1670443fab514d3"
+  },
+  "configure_result": "PASS in pinned image; exact /opt/rocm-7.2.1 hip/hipblas CMake package paths",
+  "build_result": "PASS: e2-0003-checkpointed-call target; nonfatal pre-existing kernel resource warnings recorded in build output"
+}
