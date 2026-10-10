@@ -1,0 +1,1 @@
+{"name":"blk.0.attn_qkv.weight","type":14,"shape":[5120,10240],"strides":[210,4200],"bytes":43008000}

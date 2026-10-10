@@ -81,6 +81,7 @@ struct ContextDeleter { void operator()(llama_context* value) const { llama_free
 using ContextOwner = std::unique_ptr<llama_context, ContextDeleter>;
 void write_f32(const std::filesystem::path& path, const std::vector<float>& values);
 void write_rows(const std::filesystem::path& path, const float* values, std::size_t count, bool first);
+void write_binary(const std::filesystem::path& path, const void* data, std::size_t bytes);
 
 struct CpuOpTrace {
     std::string prefix;
@@ -153,6 +154,16 @@ bool capture_cpu_op(ggml_tensor* tensor, bool ask, void* user_data) {
                 throw std::runtime_error("projection input or weight unavailable for scalar replay: " + name);
             }
             const auto outputs = static_cast<std::size_t>(weight->ne[1]);
+            if (name == "beta-0" || name == "linear_attn_qkv_mixed-0") {
+                const auto weight_bytes = static_cast<std::size_t>(weight->nb[1]) * outputs;
+                write_binary(trace.prefix + ".cpu.weight-" + name + ".bin", weight->data, weight_bytes);
+                std::ofstream weight_meta(trace.prefix + ".cpu.weight-" + name + ".json");
+                weight_meta << "{\"name\":\"" << weight->name << "\",\"type\":" << weight->type
+                            << ",\"shape\":[" << weight->ne[0] << "," << weight->ne[1]
+                            << "],\"strides\":[" << weight->nb[0] << "," << weight->nb[1]
+                            << "],\"bytes\":" << weight_bytes << "}\n";
+                if (!weight_meta) throw std::runtime_error("failed writing weight metadata for " + name);
+            }
             std::vector<float> scalar(outputs);
             std::vector<float> weight_row(kHidden);
             for (std::size_t out = 0; out < outputs; ++out) {
@@ -275,6 +286,14 @@ void write_f32(const std::filesystem::path& path, const std::vector<float>& valu
     if (!output) throw std::runtime_error("cannot create " + path.string());
     output.write(reinterpret_cast<const char*>(values.data()),
                  static_cast<std::streamsize>(values.size() * sizeof(float)));
+    if (!output) throw std::runtime_error("failed writing " + path.string());
+}
+
+void write_binary(const std::filesystem::path& path, const void* data, std::size_t bytes) {
+    if (std::filesystem::exists(path)) throw std::runtime_error("refusing to overwrite " + path.string());
+    std::ofstream output(path, std::ios::binary | std::ios::out);
+    if (!output) throw std::runtime_error("cannot create " + path.string());
+    output.write(static_cast<const char*>(data), static_cast<std::streamsize>(bytes));
     if (!output) throw std::runtime_error("failed writing " + path.string());
 }
 

@@ -1,0 +1,658 @@
+{
+  "schema": "m31-lc-0004-projection-reference-v1",
+  "capture": "GDN layer 0, prompt position 0, frozen 2K input",
+  "input_shape": [
+    5120
+  ],
+  "input_cpu_gpu_bitwise_equal": true,
+  "reference": "independent canonical GGUF decode; F32 weights/dequantized weights; FP64 dot; F32 result",
+  "qkv_type": "Q6_K (GGUF type 14), shape [5120,10240], row stride 4200 bytes",
+  "beta_type": "F32 (GGUF type 0), shape [5120,48], row stride 20480 bytes",
+  "comparisons": {
+    "beta": {
+      "reference_sha256": "7f25017adeeeb83201cb9f41edfddbb76094d3726a6861613e63cb6ce7d11e77",
+      "weight_sha256": "f6790337e9991e1013d84cd6b330450e59495a64743b9a2b266d3ae4a5dcf5d6",
+      "input_sha256": "0a5b4e54f37a2c0dea4c6f35ce36b8fadcda44e00bac30a8ab92e7f1adec8ec8",
+      "vs": {
+        "cpu_ggml": {
+          "bitwise_equal": false,
+          "rmse": 5.30995521312401e-07,
+          "max_abs_error": 1.9073486328125e-06,
+          "relative_l2": 2.5912794044488575e-07,
+          "worst_error_channels": [
+            {
+              "index": 34,
+              "reference": 3.858403444290161,
+              "actual": 3.858405351638794,
+              "absolute_error": 1.9073486328125e-06
+            },
+            {
+              "index": 10,
+              "reference": 4.681613445281982,
+              "actual": 4.681612014770508,
+              "absolute_error": 1.430511474609375e-06
+            },
+            {
+              "index": 42,
+              "reference": 4.089797496795654,
+              "actual": 4.089798450469971,
+              "absolute_error": 9.5367431640625e-07
+            },
+            {
+              "index": 19,
+              "reference": 3.1813251972198486,
+              "actual": 3.181326150894165,
+              "absolute_error": 9.5367431640625e-07
+            },
+            {
+              "index": 7,
+              "reference": 0.8132799863815308,
+              "actual": 0.8132808804512024,
+              "absolute_error": 8.940696716308594e-07
+            },
+            {
+              "index": 1,
+              "reference": 1.2520052194595337,
+              "actual": 1.2520060539245605,
+              "absolute_error": 8.344650268554688e-07
+            },
+            {
+              "index": 30,
+              "reference": 0.4879990518093109,
+              "actual": 0.4879983067512512,
+              "absolute_error": 7.450580596923828e-07
+            },
+            {
+              "index": 3,
+              "reference": 2.3210532665252686,
+              "actual": 2.321053981781006,
+              "absolute_error": 7.152557373046875e-07
+            },
+            {
+              "index": 16,
+              "reference": 3.0983378887176514,
+              "actual": 3.098337173461914,
+              "absolute_error": 7.152557373046875e-07
+            },
+            {
+              "index": 6,
+              "reference": 2.7883543968200684,
+              "actual": 2.788353681564331,
+              "absolute_error": 7.152557373046875e-07
+            }
+          ],
+          "top_abs_indices_reference": [
+            26,
+            10,
+            42,
+            34,
+            2,
+            47,
+            31,
+            19,
+            16,
+            15
+          ],
+          "top_abs_indices_actual": [
+            26,
+            10,
+            42,
+            34,
+            2,
+            47,
+            31,
+            19,
+            16,
+            15
+          ],
+          "top_abs_overlap": 10,
+          "reference_top_abs_rank_in_actual": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ]
+        },
+        "cpu_ggml_scalar": {
+          "bitwise_equal": true,
+          "rmse": 0.0,
+          "max_abs_error": 0.0,
+          "relative_l2": 0.0,
+          "worst_error_channels": [
+            {
+              "index": 0,
+              "reference": -0.9927605390548706,
+              "actual": -0.9927605390548706,
+              "absolute_error": 0.0
+            },
+            {
+              "index": 1,
+              "reference": 1.2520052194595337,
+              "actual": 1.2520052194595337,
+              "absolute_error": 0.0
+            },
+            {
+              "index": 2,
+              "reference": 3.50117826461792,
+              "actual": 3.50117826461792,
+              "absolute_error": 0.0
+            },
+            {
+              "index": 3,
+              "reference": 2.3210532665252686,
+              "actual": 2.3210532665252686,
+              "absolute_error": 0.0
+            },
+            {
+              "index": 4,
+              "reference": -0.7939074039459229,
+              "actual": -0.7939074039459229,
+              "absolute_error": 0.0
+            },
+            {
+              "index": 5,
+              "reference": -0.3786448538303375,
+              "actual": -0.3786448538303375,
+              "absolute_error": 0.0
+            },
+            {
+              "index": 6,
+              "reference": 2.7883543968200684,
+              "actual": 2.7883543968200684,
+              "absolute_error": 0.0
+            },
+            {
+              "index": 7,
+              "reference": 0.8132799863815308,
+              "actual": 0.8132799863815308,
+              "absolute_error": 0.0
+            },
+            {
+              "index": 8,
+              "reference": 2.3410258293151855,
+              "actual": 2.3410258293151855,
+              "absolute_error": 0.0
+            },
+            {
+              "index": 9,
+              "reference": -0.9951658844947815,
+              "actual": -0.9951658844947815,
+              "absolute_error": 0.0
+            }
+          ],
+          "top_abs_indices_reference": [
+            26,
+            10,
+            42,
+            34,
+            2,
+            47,
+            31,
+            19,
+            16,
+            15
+          ],
+          "top_abs_indices_actual": [
+            26,
+            10,
+            42,
+            34,
+            2,
+            47,
+            31,
+            19,
+            16,
+            15
+          ],
+          "top_abs_overlap": 10,
+          "reference_top_abs_rank_in_actual": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ]
+        },
+        "gpu_fused": {
+          "bitwise_equal": false,
+          "rmse": 1.2248721313961544e-07,
+          "max_abs_error": 4.76837158203125e-07,
+          "relative_l2": 5.977425043671651e-08,
+          "worst_error_channels": [
+            {
+              "index": 10,
+              "reference": 4.681613445281982,
+              "actual": 4.681612968444824,
+              "absolute_error": 4.76837158203125e-07
+            },
+            {
+              "index": 3,
+              "reference": 2.3210532665252686,
+              "actual": 2.3210530281066895,
+              "absolute_error": 2.384185791015625e-07
+            },
+            {
+              "index": 14,
+              "reference": 1.3511383533477783,
+              "actual": 1.3511385917663574,
+              "absolute_error": 2.384185791015625e-07
+            },
+            {
+              "index": 16,
+              "reference": 3.0983378887176514,
+              "actual": 3.0983381271362305,
+              "absolute_error": 2.384185791015625e-07
+            },
+            {
+              "index": 19,
+              "reference": 3.1813251972198486,
+              "actual": 3.1813254356384277,
+              "absolute_error": 2.384185791015625e-07
+            },
+            {
+              "index": 35,
+              "reference": 2.4844706058502197,
+              "actual": 2.4844703674316406,
+              "absolute_error": 2.384185791015625e-07
+            },
+            {
+              "index": 34,
+              "reference": 3.858403444290161,
+              "actual": 3.8584036827087402,
+              "absolute_error": 2.384185791015625e-07
+            },
+            {
+              "index": 7,
+              "reference": 0.8132799863815308,
+              "actual": 0.8132798075675964,
+              "absolute_error": 1.7881393432617188e-07
+            },
+            {
+              "index": 24,
+              "reference": 1.9944580793380737,
+              "actual": 1.9944581985473633,
+              "absolute_error": 1.1920928955078125e-07
+            },
+            {
+              "index": 18,
+              "reference": -0.7148868441581726,
+              "actual": -0.7148867249488831,
+              "absolute_error": 1.1920928955078125e-07
+            }
+          ],
+          "top_abs_indices_reference": [
+            26,
+            10,
+            42,
+            34,
+            2,
+            47,
+            31,
+            19,
+            16,
+            15
+          ],
+          "top_abs_indices_actual": [
+            26,
+            10,
+            42,
+            34,
+            2,
+            47,
+            31,
+            19,
+            16,
+            15
+          ],
+          "top_abs_overlap": 10,
+          "reference_top_abs_rank_in_actual": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ]
+        }
+      }
+    },
+    "qkv": {
+      "reference_sha256": "1f7164ebef78eacdcc6e51afc5d7ddcd1fb5e06911bf0cd7c7ae11109e97c26d",
+      "weight_sha256": "65b4f6f841cf18b0cc48b1db52868597af45d1f74578f33b010c4cb8c573edce",
+      "input_sha256": "0a5b4e54f37a2c0dea4c6f35ce36b8fadcda44e00bac30a8ab92e7f1adec8ec8",
+      "vs": {
+        "cpu_ggml": {
+          "bitwise_equal": false,
+          "rmse": 0.008011331460245448,
+          "max_abs_error": 0.051830291748046875,
+          "relative_l2": 0.003935376582162706,
+          "worst_error_channels": [
+            {
+              "index": 8458,
+              "reference": -20.512052536010742,
+              "actual": -20.460222244262695,
+              "absolute_error": 0.051830291748046875
+            },
+            {
+              "index": 7110,
+              "reference": -16.70638656616211,
+              "actual": -16.661876678466797,
+              "absolute_error": 0.0445098876953125
+            },
+            {
+              "index": 7862,
+              "reference": 18.390687942504883,
+              "actual": 18.348482131958008,
+              "absolute_error": 0.042205810546875
+            },
+            {
+              "index": 6355,
+              "reference": -18.46677589416504,
+              "actual": -18.426002502441406,
+              "absolute_error": 0.04077339172363281
+            },
+            {
+              "index": 5051,
+              "reference": -14.337125778198242,
+              "actual": -14.2969388961792,
+              "absolute_error": 0.04018688201904297
+            },
+            {
+              "index": 9281,
+              "reference": 16.073087692260742,
+              "actual": 16.0335636138916,
+              "absolute_error": 0.039524078369140625
+            },
+            {
+              "index": 6832,
+              "reference": -16.55177116394043,
+              "actual": -16.512592315673828,
+              "absolute_error": 0.03917884826660156
+            },
+            {
+              "index": 9444,
+              "reference": -17.047847747802734,
+              "actual": -17.009803771972656,
+              "absolute_error": 0.038043975830078125
+            },
+            {
+              "index": 4820,
+              "reference": 17.124683380126953,
+              "actual": 17.086776733398438,
+              "absolute_error": 0.037906646728515625
+            },
+            {
+              "index": 4585,
+              "reference": 20.54198455810547,
+              "actual": 20.50494384765625,
+              "absolute_error": 0.03704071044921875
+            }
+          ],
+          "top_abs_indices_reference": [
+            8305,
+            4209,
+            4585,
+            8458,
+            8681,
+            9920,
+            10015,
+            7234,
+            7974,
+            6417
+          ],
+          "top_abs_indices_actual": [
+            8305,
+            4209,
+            4585,
+            8458,
+            8681,
+            9920,
+            10015,
+            7974,
+            7234,
+            6417
+          ],
+          "top_abs_overlap": 10,
+          "reference_top_abs_rank_in_actual": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            9,
+            8,
+            10
+          ]
+        },
+        "cpu_ggml_scalar": {
+          "bitwise_equal": true,
+          "rmse": 0.0,
+          "max_abs_error": 0.0,
+          "relative_l2": 0.0,
+          "worst_error_channels": [
+            {
+              "index": 0,
+              "reference": 0.8927074074745178,
+              "actual": 0.8927074074745178,
+              "absolute_error": 0.0
+            },
+            {
+              "index": 1,
+              "reference": -0.9197177886962891,
+              "actual": -0.9197177886962891,
+              "absolute_error": 0.0
+            },
+            {
+              "index": 2,
+              "reference": 0.13745816051959991,
+              "actual": 0.13745816051959991,
+              "absolute_error": 0.0
+            },
+            {
+              "index": 3,
+              "reference": 0.9598714709281921,
+              "actual": 0.9598714709281921,
+              "absolute_error": 0.0
+            },
+            {
+              "index": 4,
+              "reference": 1.6915717124938965,
+              "actual": 1.6915717124938965,
+              "absolute_error": 0.0
+            },
+            {
+              "index": 5,
+              "reference": -0.47014960646629333,
+              "actual": -0.47014960646629333,
+              "absolute_error": 0.0
+            },
+            {
+              "index": 6,
+              "reference": 1.5589534044265747,
+              "actual": 1.5589534044265747,
+              "absolute_error": 0.0
+            },
+            {
+              "index": 7,
+              "reference": -0.03915925323963165,
+              "actual": -0.03915925323963165,
+              "absolute_error": 0.0
+            },
+            {
+              "index": 8,
+              "reference": 0.6921698451042175,
+              "actual": 0.6921698451042175,
+              "absolute_error": 0.0
+            },
+            {
+              "index": 9,
+              "reference": 1.0120311975479126,
+              "actual": 1.0120311975479126,
+              "absolute_error": 0.0
+            }
+          ],
+          "top_abs_indices_reference": [
+            8305,
+            4209,
+            4585,
+            8458,
+            8681,
+            9920,
+            10015,
+            7234,
+            7974,
+            6417
+          ],
+          "top_abs_indices_actual": [
+            8305,
+            4209,
+            4585,
+            8458,
+            8681,
+            9920,
+            10015,
+            7234,
+            7974,
+            6417
+          ],
+          "top_abs_overlap": 10,
+          "reference_top_abs_rank_in_actual": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ]
+        },
+        "gpu_fused": {
+          "bitwise_equal": false,
+          "rmse": 0.00581759450751693,
+          "max_abs_error": 0.03555870056152344,
+          "relative_l2": 0.002857755331059425,
+          "worst_error_channels": [
+            {
+              "index": 8305,
+              "reference": 23.190654754638672,
+              "actual": 23.15509605407715,
+              "absolute_error": 0.03555870056152344
+            },
+            {
+              "index": 7792,
+              "reference": -9.171608924865723,
+              "actual": -9.136177062988281,
+              "absolute_error": 0.035431861877441406
+            },
+            {
+              "index": 9794,
+              "reference": 4.579214572906494,
+              "actual": 4.545541763305664,
+              "absolute_error": 0.03367280960083008
+            },
+            {
+              "index": 8458,
+              "reference": -20.512052536010742,
+              "actual": -20.478729248046875,
+              "absolute_error": 0.03332328796386719
+            },
+            {
+              "index": 6184,
+              "reference": 11.220171928405762,
+              "actual": 11.186904907226562,
+              "absolute_error": 0.03326702117919922
+            },
+            {
+              "index": 4209,
+              "reference": 21.993810653686523,
+              "actual": 21.961761474609375,
+              "absolute_error": 0.03204917907714844
+            },
+            {
+              "index": 4362,
+              "reference": -17.043968200683594,
+              "actual": -17.013452529907227,
+              "absolute_error": 0.030515670776367188
+            },
+            {
+              "index": 10161,
+              "reference": 11.9900541305542,
+              "actual": 11.962189674377441,
+              "absolute_error": 0.027864456176757812
+            },
+            {
+              "index": 9444,
+              "reference": -17.047847747802734,
+              "actual": -17.02001953125,
+              "absolute_error": 0.027828216552734375
+            },
+            {
+              "index": 5698,
+              "reference": 2.336172580718994,
+              "actual": 2.3090875148773193,
+              "absolute_error": 0.027085065841674805
+            }
+          ],
+          "top_abs_indices_reference": [
+            8305,
+            4209,
+            4585,
+            8458,
+            8681,
+            9920,
+            10015,
+            7234,
+            7974,
+            6417
+          ],
+          "top_abs_indices_actual": [
+            8305,
+            4209,
+            4585,
+            8458,
+            8681,
+            9920,
+            10015,
+            7974,
+            7234,
+            6417
+          ],
+          "top_abs_overlap": 10,
+          "reference_top_abs_rank_in_actual": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            9,
+            8,
+            10
+          ]
+        }
+      }
+    }
+  },
+  "q6k_synthetic_self_check": "PASS"
+}

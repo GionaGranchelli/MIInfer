@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
@@ -301,6 +302,35 @@ void PrefillV2RecurrentLayer::forward(
         && base_position == 0 && token_count == 512 && !op_trace_captured;
     const auto capture_op = [&](const char* name, const float* device, std::size_t count) {
         if (!capture_ops) return;
+        const char* replacement_path = nullptr;
+        if (std::string_view(name) == "beta") replacement_path = std::getenv("MIINFER_LC_SUBSTITUTE_BETA");
+        if (std::string_view(name) == "linear_attn_qkv_mixed")
+            replacement_path = std::getenv("MIINFER_LC_SUBSTITUTE_QKV");
+        if (replacement_path != nullptr) {
+            if (std::filesystem::file_size(replacement_path) != count * sizeof(float))
+                throw std::runtime_error("GDN projection replacement has the wrong byte size: "
+                                         + std::string(replacement_path));
+            std::vector<float> replacement(count);
+            std::ifstream input(replacement_path, std::ios::binary);
+            if (!input) throw std::runtime_error("cannot open GDN projection replacement: "
+                                                  + std::string(replacement_path));
+            input.read(reinterpret_cast<char*>(replacement.data()),
+                       static_cast<std::streamsize>(replacement.size() * sizeof(float)));
+            if (!input || input.peek() != std::ifstream::traits_type::eof()
+                || std::any_of(replacement.begin(), replacement.end(),
+                               [](float value) { return !std::isfinite(value); }))
+                throw std::runtime_error("invalid GDN projection replacement: "
+                                         + std::string(replacement_path));
+            MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
+            MIINFER_HIP_CHECK(hipMemcpy(const_cast<float*>(device), replacement.data(),
+                                        count * sizeof(float), hipMemcpyHostToDevice));
+            const auto record_path = std::string(op_trace_prefix) + ".substitution.txt";
+            if (std::filesystem::exists(record_path))
+                throw std::runtime_error("refusing to overwrite GDN substitution record: " + record_path);
+            std::ofstream record(record_path);
+            record << "stage=" << name << "\nelements=" << count << "\nreference=" << replacement_path << "\n";
+            if (!record) throw std::runtime_error("failed writing GDN substitution record: " + record_path);
+        }
         const std::filesystem::path path = std::string(op_trace_prefix) + ".gpu." + name + ".f32";
         if (std::filesystem::exists(path)) throw std::runtime_error("refusing to overwrite GDN operation trace: " + path.string());
         std::vector<float> host(count);

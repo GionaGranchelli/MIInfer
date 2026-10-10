@@ -1,0 +1,5 @@
+event=MODEL_HASH_BEGIN iteration=0 epoch_ms=1791653286321
+event=MODEL_HASH_READY iteration=0 epoch_ms=1791653381943
+event=MODEL_LOAD_BEGIN iteration=0 epoch_ms=1791653381943
+event=MODEL_DATA_READY iteration=0 epoch_ms=1791653381975
+event=MODEL_ALLOC_BEGIN iteration=0 epoch_ms=1791653381975
