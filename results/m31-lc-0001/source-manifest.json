@@ -1,0 +1,23 @@
+{
+  "milestone": "M31-LC-0001",
+  "source_sha": "cb99829ee662aa745c327496bd922c4ffcea5792",
+  "qualification_base_sha": "8a8591a18f0ab66b6edae3ea42074a738a349969",
+  "benchmark_binary_sha256": "ef4fd7333a7d2fa8e54d0d8098abacbb2ab77d48b935531f5ea156d241960d7d",
+  "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+  "image_digest": "sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e",
+  "build_flags": "Release; MIINFER_ENABLE_HIP=ON; MIINFER_BUILD_TESTS=ON; MIINFER_BUILD_BENCHMARKS=ON; MIINFER_BUILD_RESEARCH_TOOLS=OFF; CMAKE_HIP_ARCHITECTURES=gfx906; hipblas_DIR=/out/hipblas-cmake",
+  "source_files": {
+    "CMakeLists.txt": "5bf36a40851502e2fed624bf8fc654acee898d817968720138887c32eb048f90",
+    "bench/e2_0003_checkpointed_call.cpp": "5a3494336bd8010d11694a5adfbe8fea50df799c65e42c0de3dca4e61553231c",
+    "bench/e2_0003_prompt.hpp": "f7d48ff176cc5ca59be1e12d84ea962051c8cfa476b1227520d4411f0d6d880c",
+    "include/miinfer/prefill_v2/model.hpp": "cb0be33e61a5192d1db3c285989a5fc34eb9356380903380fd611d078f0c5927",
+    "include/miinfer/qwen35_model.hpp": "f0b388032b151e6001a771ac508d377486d80f4430359c8eee0b8fc538b55c5d",
+    "include/miinfer/sha256.hpp": "61dec59bd3191c3df003fb5987557322c9a3c6304e96c0c9f2f763e92065b40a",
+    "src/prefill_v2/model.cpp": "688104003aa00410833d425d2d5bc781ff6db00687ef9c80697d32b276b42523",
+    "src/prefill_v2/workspace.cpp": "c559d11a275993f410f07d26061543be21b03941e1d49e0b313da755404f5672",
+    "scripts/e2_0003_same_source_ab.py": "77bdf69f5539ed52faf0afac336f7f806ce61a670a6b0b5f356b714f7c5e8099",
+    "scripts/run-m31-exploratory.sh": "0368ad34fd0085f753ee5625d2fb67f91f222b83c88b024dce10654ded520e08",
+    "tests/test_e2_0003_same_source_ab.py": "f2c3b1c620ae2cc1a5cafe294ad08cfdb3cc9cf9680137fe8a283911410563ef"
+  },
+  "build": "existing clean pinned Release build; e2-0003-checkpointed-call rebuilt after adding ttft_ms"
+}

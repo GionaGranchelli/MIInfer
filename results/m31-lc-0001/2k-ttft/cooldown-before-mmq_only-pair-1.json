@@ -1,0 +1,61 @@
+{
+  "ready": true,
+  "samples": [
+    {
+      "pci_bdf": "0000:06:00.0",
+      "unique_id": "0x21678e17348c2f7",
+      "product": "AMD Instinct MI60 / MI50",
+      "junction_c": 36.0,
+      "edge_c": 35.0,
+      "sclk_mhz": 930.0,
+      "mclk_mhz": 350.0,
+      "power_w": 20.0,
+      "vram_used_bytes": 10854400,
+      "gpu_use_percent": 0.0,
+      "kfd_idle": true,
+      "returncode": 0
+    },
+    {
+      "pci_bdf": "0000:06:00.0",
+      "unique_id": "0x21678e17348c2f7",
+      "product": "AMD Instinct MI60 / MI50",
+      "junction_c": 33.0,
+      "edge_c": 32.0,
+      "sclk_mhz": 930.0,
+      "mclk_mhz": 350.0,
+      "power_w": 20.0,
+      "vram_used_bytes": 10854400,
+      "gpu_use_percent": 0.0,
+      "kfd_idle": true,
+      "returncode": 0
+    },
+    {
+      "pci_bdf": "0000:06:00.0",
+      "unique_id": "0x21678e17348c2f7",
+      "product": "AMD Instinct MI60 / MI50",
+      "junction_c": 31.0,
+      "edge_c": 30.0,
+      "sclk_mhz": 930.0,
+      "mclk_mhz": 350.0,
+      "power_w": 20.0,
+      "vram_used_bytes": 10854400,
+      "gpu_use_percent": 0.0,
+      "kfd_idle": true,
+      "returncode": 0
+    },
+    {
+      "pci_bdf": "0000:06:00.0",
+      "unique_id": "0x21678e17348c2f7",
+      "product": "AMD Instinct MI60 / MI50",
+      "junction_c": 30.0,
+      "edge_c": 29.0,
+      "sclk_mhz": 930.0,
+      "mclk_mhz": 350.0,
+      "power_w": 19.0,
+      "vram_used_bytes": 10854400,
+      "gpu_use_percent": 0.0,
+      "kfd_idle": true,
+      "returncode": 0
+    }
+  ]
+}
