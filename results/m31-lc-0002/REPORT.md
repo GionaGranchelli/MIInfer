@@ -11,7 +11,7 @@ The existing exact token-parity gate remains unchanged. MMQ-only remains experim
 ```text
 M31-LC-0002: COMPLETE
 SOURCE_SHA: f79b45d056c10ebe0f55822f803e19ebbe923b18
-REMOTE_SHA: verified at final push (see commit list)
+REMOTE_SHA: 9ec450edad4f4e0ac7c3cce12306dacee45585d2 (initial report/evidence publish; metadata correction is in a later pushed commit)
 GPU_RUNS: 1 guarded matched 2K pair (control then MMQ-only)
 
 DECISION_5_FUSED_TOP1: token 271, logit 14.833824, probability 0.320826
@@ -34,8 +34,8 @@ CORRECTNESS_CRITERION_PROPOSAL: retain exact cross-route token parity as the exi
 EXPERIMENTAL_ROUTE_STATUS: MMQ-only remains experimental and fails the existing 2K cross-route parity gate
 PRODUCTION_ROUTE_STATUS: default fused route unchanged; no production correctness or acceptance-policy change
 NEXT_SINGLE_ACTION: capture or construct an independent full-model reference for this exact 2K prompt/state, then compare the route logits under a predeclared numerical error budget
-COMMITS: 7d2b2f5 capture instrumentation; f79b45d harness test and opt-in handling; final evidence commit listed below
-PUSH_VERIFIED: yes; exact final local and origin branch SHAs verified
+COMMITS: 7d2b2f5 capture instrumentation; f79b45d harness test and opt-in handling; 9ec450e report and raw evidence
+PUSH_VERIFIED: yes; 9ec450edad4f4e0ac7c3cce12306dacee45585d2 was confirmed on origin, then the metadata correction was pushed
 ```
 
 ## Evidence and analysis
