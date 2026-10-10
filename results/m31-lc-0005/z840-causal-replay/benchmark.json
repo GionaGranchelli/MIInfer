@@ -1,0 +1,566 @@
+{
+  "schema_version": "1.0.0",
+  "experiment": "E2-0003",
+  "created_at_utc": "2026-10-10T18:50:11.347322+00:00",
+  "source_identity": {
+    "source_sha": "0ec128d66f416b88afabbed79cc34033dbbe233e",
+    "benchmark": "e2-0003-checkpointed-call",
+    "source_manifest_sha256": "fb33eac10d09357db55418a93a5ab18755c691850059341e2a3ffefbc6b90669",
+    "binary_sha256": "3ca6c71d4e88be42ccc0f76dac9e4a0bfdee60bd8e0826eae4c0dcc7b160b822",
+    "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+    "prompt_ids_sha256": "5acd37f00d9e670f4b4e06d46fa12349e1dee06e356e6e73a186d74672f5bb47",
+    "prompt_tokens": 2048,
+    "prompt_fingerprint_fnv1a64": "a998afbe8b675816",
+    "sampler_config": {
+      "temperature": "0",
+      "top_p": "1",
+      "top_k": "1",
+      "repetition_penalty": "1",
+      "frequency_penalty": "0",
+      "presence_penalty": "0",
+      "stop_token_ids": "disabled",
+      "repeat_last_n": "256",
+      "reset_state_before": "true",
+      "use_hip_graph": "true",
+      "seed": "42",
+      "sampler": "greedy_argmax"
+    },
+    "container_image": "localhost/miinfer-dev:rocm-7.2.1",
+    "container_digest": "sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e",
+    "build_flags": "Release; HIP=ON; gfx906; tests/benchmarks=ON",
+    "host": {
+      "hostname": "fedora",
+      "kernel": "7.2.8-200.fc44.x86_64"
+    },
+    "gpu": {
+      "index": 0,
+      "pci_bdf": "0000:06:00.0",
+      "unique_id": "0x21678e17348c2f7",
+      "product": "AMD Instinct MI60 / MI50"
+    }
+  },
+  "workload": {
+    "context_profile": "8K",
+    "prompt_tokens": 2048,
+    "generated_tokens": 5,
+    "context_capacity_tokens": 2304,
+    "cold_prefill": true,
+    "warmups": 0,
+    "repetitions_per_call": 1,
+    "prompt": "deterministic e2_0003_prompt.hpp seed=77; fingerprint recorded per call",
+    "sampler_config": {
+      "temperature": "0",
+      "top_p": "1",
+      "top_k": "1",
+      "repetition_penalty": "1",
+      "frequency_penalty": "0",
+      "presence_penalty": "0",
+      "stop_token_ids": "disabled",
+      "repeat_last_n": "256",
+      "reset_state_before": "true",
+      "use_hip_graph": "true",
+      "seed": "42",
+      "sampler": "greedy_argmax"
+    },
+    "miinfer_path": "same binary; HIP Graph enabled; only MMQ Gate/Up env differs"
+  },
+  "guard": {
+    "warning_junction_c": 80.0,
+    "stop_junction_c": 85.0,
+    "expected_seconds_per_call": 240,
+    "sample_interval_seconds": 1.0,
+    "power_policy_changed": false
+  },
+  "correctness": {
+    "pair_generated_id_parity": {
+      "1": false
+    },
+    "whole_model_numerical_equivalence": "NOT_ESTABLISHED",
+    "operation_reference": "NOT_RUN"
+  },
+  "verdicts": {
+    "harness": "HARNESS_VALIDATED",
+    "candidate_a_gates": {
+      "same_binary": true,
+      "all_pairs_token_parity": false,
+      "sampled_vram_saving_at_least_6gb": true,
+      "weight_allocation_requests_reduced": true,
+      "prefill_at_least_95_percent": true,
+      "decode_at_least_85_percent": true,
+      "decode_above_historical_llama_20_56": true,
+      "thermal_and_operation_reference": "OPERATION_REFERENCE_NOT_RUN_BY_THIS_HARNESS",
+      "hip_graph": "REQUESTED_BY_BENCHMARK; SUCCESSFUL_RUN_REQUIRED"
+    },
+    "decision": "BLOCKED_OR_INCONCLUSIVE"
+  },
+  "analysis": {
+    "paired_run_count": 1,
+    "sampled_memory_saving_bytes": 7313973248,
+    "weight_allocation_request_saving_bytes": 7130316800,
+    "descriptive_metrics": {
+      "control": {
+        "ttft_ms": {
+          "samples": [
+            8474.731
+          ],
+          "descriptive_median": 8474.731
+        },
+        "prefill_tok_s": {
+          "samples": [
+            241.66
+          ],
+          "descriptive_median": 241.66
+        },
+        "decode_tok_s": {
+          "samples": [
+            28.125
+          ],
+          "descriptive_median": 28.125
+        },
+        "peak_sampled_vram_bytes": {
+          "samples": [
+            26132377600
+          ],
+          "descriptive_median": 26132377600
+        },
+        "weight_allocation_request_bytes": {
+          "samples": [
+            24068487168
+          ],
+          "descriptive_median": 24068487168
+        }
+      },
+      "mmq_only": {
+        "ttft_ms": {
+          "samples": [
+            8457.032
+          ],
+          "descriptive_median": 8457.032
+        },
+        "prefill_tok_s": {
+          "samples": [
+            242.165
+          ],
+          "descriptive_median": 242.165
+        },
+        "decode_tok_s": {
+          "samples": [
+            25.138
+          ],
+          "descriptive_median": 25.138
+        },
+        "peak_sampled_vram_bytes": {
+          "samples": [
+            18818404352
+          ],
+          "descriptive_median": 18818404352
+        },
+        "weight_allocation_request_bytes": {
+          "samples": [
+            16938170368
+          ],
+          "descriptive_median": 16938170368
+        }
+      }
+    }
+  },
+  "runs": [
+    {
+      "pair": 1,
+      "order": 1,
+      "route": "control",
+      "requested_environment": {
+        "MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY": "0",
+        "MIINFER_HIP_GRAPH": "1",
+        "MIINFER_LC_DECODE_TRACE_POSITION": "2048"
+      },
+      "start_state": {
+        "pci_bdf": "0000:06:00.0",
+        "unique_id": "0x21678e17348c2f7",
+        "product": "AMD Instinct MI60 / MI50",
+        "junction_c": 28.0,
+        "edge_c": 27.0,
+        "sclk_mhz": 930.0,
+        "mclk_mhz": 350.0,
+        "power_w": 20.0,
+        "vram_used_bytes": 10854400,
+        "gpu_use_percent": 0.0,
+        "kfd_idle": true,
+        "returncode": 0
+      },
+      "end_state": {
+        "pci_bdf": "0000:06:00.0",
+        "unique_id": "0x21678e17348c2f7",
+        "product": "AMD Instinct MI60 / MI50",
+        "junction_c": 36.0,
+        "edge_c": 35.0,
+        "sclk_mhz": 930.0,
+        "mclk_mhz": 350.0,
+        "power_w": 20.0,
+        "vram_used_bytes": 10854400,
+        "gpu_use_percent": 0.0,
+        "kfd_idle": true,
+        "returncode": 0
+      },
+      "result": {
+        "context": "8K",
+        "iteration": 1,
+        "wall_ms": 8624.186,
+        "ttft_ms": 8474.731,
+        "prefill_ms": 8474.731,
+        "decode_ms": 142.222,
+        "prefill_tok_s": 241.66,
+        "decode_tok_s": 28.125,
+        "used_hip_graph": true,
+        "generated_tokens": 5,
+        "model_vram_bytes": 25128019968,
+        "model_weights_bytes": 24068487168,
+        "persistent_state_bytes": 309854208,
+        "workspace_bytes": 727711744,
+        "activation_bytes": 21966848,
+        "cached_state_bytes": 0,
+        "snapshot_bytes": 0,
+        "splitk_splits": 32,
+        "device_total_bytes": 34342961152,
+        "device_free_before_bytes": 8334082048,
+        "device_free_after_bytes": 8254128128,
+        "device_used_before_bytes": 26008879104,
+        "device_used_after_bytes": 26088833024,
+        "device_residual_after_bytes": 960813056,
+        "device_peak_bytes": null,
+        "raw_logits_decisions": 5,
+        "raw_logits_vocab_size": 248320,
+        "tokens_valid": "PASS",
+        "output_parity": "NOT_CHECKED",
+        "token_ids": [
+          220,
+          248046,
+          198,
+          248045,
+          271
+        ]
+      },
+      "effective_config": {
+        "benchmark": "E2-0003-clean-source",
+        "context": "custom",
+        "context_profile": "8K",
+        "prompt_tokens": "2048",
+        "context_capacity_tokens": "2304",
+        "generate_tokens": "5",
+        "iterations": "1",
+        "warmup": "0",
+        "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+        "prompt_fingerprint_fnv1a64": "a998afbe8b675816",
+        "temperature": "0",
+        "top_p": "1",
+        "top_k": "1",
+        "repetition_penalty": "1",
+        "frequency_penalty": "0",
+        "presence_penalty": "0",
+        "stop_token_ids": "disabled",
+        "repeat_last_n": "256",
+        "reset_state_before": "true",
+        "use_hip_graph": "true",
+        "seed": "42",
+        "sampler": "greedy_argmax",
+        "model_vram_bytes": "25128019968",
+        "raw_logits_capture": "{\"format\":\"native_f32\",\"decisions\":5,\"vocab_size\":248320,\"bytes\":4966400,\"file\":\"control-pair-1.logits.f32\"}"
+      },
+      "generated_token_ids": [
+        220,
+        248046,
+        198,
+        248045,
+        271
+      ],
+      "timings": {
+        "model_load_ms": 31,
+        "model_alloc_ms": 52203,
+        "ttft_ms": 8474.731,
+        "prefill_ms": 8474.731,
+        "decode_ms": 142.222,
+        "prefill_tok_s": 241.66,
+        "decode_tok_s": 28.125,
+        "guarded_wall_ms": 162419.77199801477
+      },
+      "phase_sampled_vram": {
+        "MODEL_ALLOC_READY": {
+          "event": "MODEL_ALLOC_READY",
+          "vram_used_bytes": 24725000192,
+          "sample_delta_ms": 460.900146484375
+        },
+        "PREFILL_END": {
+          "event": "PREFILL_END",
+          "vram_used_bytes": 26132377600,
+          "sample_delta_ms": 52.692138671875
+        },
+        "DECODE_END": {
+          "event": "DECODE_END",
+          "vram_used_bytes": 26132377600,
+          "sample_delta_ms": 99.307861328125
+        }
+      },
+      "guard": {
+        "exit_code": 0,
+        "clean_process_group": true,
+        "thermal_or_watchdog_abort": false,
+        "stdout": "",
+        "stderr": "",
+        "raw_log": "control-pair-1.guard.log"
+      },
+      "telemetry": {
+        "sample_count": 163,
+        "successful_sample_count": 163,
+        "failed_sample_count": 0,
+        "peak_junction_c": 69.0,
+        "peak_vram_used_bytes": 26132377600,
+        "sclk_mhz_observed": [
+          925.0,
+          930.0,
+          1485.0,
+          1725.0
+        ],
+        "mclk_mhz_observed": [
+          350.0,
+          800.0,
+          1000.0
+        ],
+        "power_w_observed": [
+          19.0,
+          20.0,
+          21.0,
+          22.0,
+          23.0,
+          24.0,
+          25.0,
+          27.0,
+          166.0,
+          177.0,
+          182.0,
+          207.0,
+          211.0,
+          212.0,
+          217.0,
+          220.0
+        ],
+        "gpu_use_percent_observed": [
+          0.0,
+          47.0,
+          100.0
+        ],
+        "missing_junction_samples": 0,
+        "missing_fields": [],
+        "raw_samples_file": "control-pair-1.jsonl"
+      },
+      "raw_metrics": "control-pair-1.metrics",
+      "raw_logits_capture": {
+        "file": "control-pair-1.logits.f32",
+        "sha256": "78a1e4032a9f3253e7d4bc28926abf9d4939a77a4b86dfd8b5e319eb0737e92f",
+        "bytes": 4966400,
+        "expected_bytes": 4966400,
+        "valid": true
+      },
+      "expected_prompt_fingerprint": "a998afbe8b675816",
+      "expected_prompt_tokens": 2048,
+      "expected_generate_tokens": 5,
+      "expected_context_capacity_tokens": 2304
+    },
+    {
+      "pair": 1,
+      "order": 2,
+      "route": "mmq_only",
+      "requested_environment": {
+        "MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY": "1",
+        "MIINFER_HIP_GRAPH": "1",
+        "MIINFER_LC_DECODE_TRACE_POSITION": "2048"
+      },
+      "start_state": {
+        "pci_bdf": "0000:06:00.0",
+        "unique_id": "0x21678e17348c2f7",
+        "product": "AMD Instinct MI60 / MI50",
+        "junction_c": 29.0,
+        "edge_c": 28.0,
+        "sclk_mhz": 930.0,
+        "mclk_mhz": 350.0,
+        "power_w": 20.0,
+        "vram_used_bytes": 10854400,
+        "gpu_use_percent": 0.0,
+        "kfd_idle": true,
+        "returncode": 0
+      },
+      "end_state": {
+        "pci_bdf": "0000:06:00.0",
+        "unique_id": "0x21678e17348c2f7",
+        "product": "AMD Instinct MI60 / MI50",
+        "junction_c": 36.0,
+        "edge_c": 35.0,
+        "sclk_mhz": 930.0,
+        "mclk_mhz": 350.0,
+        "power_w": 20.0,
+        "vram_used_bytes": 10854400,
+        "gpu_use_percent": 0.0,
+        "kfd_idle": true,
+        "returncode": 0
+      },
+      "result": {
+        "context": "8K",
+        "iteration": 1,
+        "wall_ms": 8623.84,
+        "ttft_ms": 8457.032,
+        "prefill_ms": 8457.032,
+        "decode_ms": 159.124,
+        "prefill_tok_s": 242.165,
+        "decode_tok_s": 25.138,
+        "used_hip_graph": true,
+        "generated_tokens": 5,
+        "model_vram_bytes": 17997703168,
+        "model_weights_bytes": 16938170368,
+        "persistent_state_bytes": 309854208,
+        "workspace_bytes": 727711744,
+        "activation_bytes": 21966848,
+        "cached_state_bytes": 0,
+        "snapshot_bytes": 0,
+        "splitk_splits": 32,
+        "device_total_bytes": 34342961152,
+        "device_free_before_bytes": 15581839360,
+        "device_free_after_bytes": 15501885440,
+        "device_used_before_bytes": 18761121792,
+        "device_used_after_bytes": 18841075712,
+        "device_residual_after_bytes": 843372544,
+        "device_peak_bytes": null,
+        "raw_logits_decisions": 5,
+        "raw_logits_vocab_size": 248320,
+        "tokens_valid": "PASS",
+        "output_parity": "NOT_CHECKED",
+        "token_ids": [
+          220,
+          248046,
+          198,
+          248045,
+          74455
+        ]
+      },
+      "effective_config": {
+        "benchmark": "E2-0003-clean-source",
+        "context": "custom",
+        "context_profile": "8K",
+        "prompt_tokens": "2048",
+        "context_capacity_tokens": "2304",
+        "generate_tokens": "5",
+        "iterations": "1",
+        "warmup": "0",
+        "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+        "prompt_fingerprint_fnv1a64": "a998afbe8b675816",
+        "temperature": "0",
+        "top_p": "1",
+        "top_k": "1",
+        "repetition_penalty": "1",
+        "frequency_penalty": "0",
+        "presence_penalty": "0",
+        "stop_token_ids": "disabled",
+        "repeat_last_n": "256",
+        "reset_state_before": "true",
+        "use_hip_graph": "true",
+        "seed": "42",
+        "sampler": "greedy_argmax",
+        "model_vram_bytes": "17997703168",
+        "raw_logits_capture": "{\"format\":\"native_f32\",\"decisions\":5,\"vocab_size\":248320,\"bytes\":4966400,\"file\":\"mmq_only-pair-1.logits.f32\"}"
+      },
+      "generated_token_ids": [
+        220,
+        248046,
+        198,
+        248045,
+        74455
+      ],
+      "timings": {
+        "model_load_ms": 31,
+        "model_alloc_ms": 39391,
+        "ttft_ms": 8457.032,
+        "prefill_ms": 8457.032,
+        "decode_ms": 159.124,
+        "prefill_tok_s": 242.165,
+        "decode_tok_s": 25.138,
+        "guarded_wall_ms": 144559.4022089499
+      },
+      "phase_sampled_vram": {
+        "MODEL_ALLOC_READY": {
+          "event": "MODEL_ALLOC_READY",
+          "vram_used_bytes": 18814468096,
+          "sample_delta_ms": 375.65234375
+        },
+        "PREFILL_END": {
+          "event": "PREFILL_END",
+          "vram_used_bytes": 18818404352,
+          "sample_delta_ms": 78.742919921875
+        },
+        "DECODE_END": {
+          "event": "DECODE_END",
+          "vram_used_bytes": 18818404352,
+          "sample_delta_ms": 246.742919921875
+        }
+      },
+      "guard": {
+        "exit_code": 0,
+        "clean_process_group": true,
+        "thermal_or_watchdog_abort": false,
+        "stdout": "",
+        "stderr": "",
+        "raw_log": "mmq_only-pair-1.guard.log"
+      },
+      "telemetry": {
+        "sample_count": 145,
+        "successful_sample_count": 145,
+        "failed_sample_count": 0,
+        "peak_junction_c": 68.0,
+        "peak_vram_used_bytes": 18818404352,
+        "sclk_mhz_observed": [
+          925.0,
+          930.0,
+          1606.0,
+          1725.0
+        ],
+        "mclk_mhz_observed": [
+          350.0,
+          800.0,
+          1000.0
+        ],
+        "power_w_observed": [
+          19.0,
+          20.0,
+          21.0,
+          22.0,
+          23.0,
+          26.0,
+          155.0,
+          182.0,
+          197.0,
+          203.0,
+          206.0,
+          215.0,
+          219.0,
+          243.0
+        ],
+        "gpu_use_percent_observed": [
+          0.0,
+          100.0
+        ],
+        "missing_junction_samples": 0,
+        "missing_fields": [],
+        "raw_samples_file": "mmq_only-pair-1.jsonl"
+      },
+      "raw_metrics": "mmq_only-pair-1.metrics",
+      "raw_logits_capture": {
+        "file": "mmq_only-pair-1.logits.f32",
+        "sha256": "e53a0fe7b54629e437320107ca515c64060ee1ec387055dc3bf9e10719eeb1d4",
+        "bytes": 4966400,
+        "expected_bytes": 4966400,
+        "valid": true
+      },
+      "expected_prompt_fingerprint": "a998afbe8b675816",
+      "expected_prompt_tokens": 2048,
+      "expected_generate_tokens": 5,
+      "expected_context_capacity_tokens": 2304
+    }
+  ]
+}

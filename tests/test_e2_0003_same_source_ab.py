@@ -111,6 +111,8 @@ class SameSourceHarnessTest(unittest.TestCase):
                                    disable_hip_graph=True)
             command = MODULE.container_command(args, "control", 1, root)
         self.assertIn("MIINFER_HIP_GRAPH=0", command)
+        self.assertEqual(MODULE.sampler_config_for(True)["use_hip_graph"], "false")
+        self.assertEqual(MODULE.sampler_config_for(False)["use_hip_graph"], "true")
         self.assertTrue(MODULE.sampler_config_valid({**MODULE.SAMPLER_CONFIG,
                                                      "use_hip_graph": "false"}, "0"))
 

@@ -1,0 +1,25 @@
+{
+  "schema": "m31-lc-0005-qkv-quantization-decomposition-v1",
+  "input_sha256": "0a5b4e54f37a2c0dea4c6f35ce36b8fadcda44e00bac30a8ab92e7f1adec8ec8",
+  "quantized_input_sha256": "48c342bad0e16b3f97d74b882d5b9d44288e887bc08d53daaedf250dc5ef0ba5",
+  "q6k_weight_sha256": "65b4f6f841cf18b0cc48b1db52868597af45d1f74578f33b010c4cb8c573edce",
+  "gpu_output_sha256": "5f3692674b0407962ed185f00a4b4342f5ae66ed0041d740ed25ebf495849771",
+  "reference": "canonical Q6_K dequantization, FP64 dot, F32 output",
+  "activation_b": "dequantized captured MxQ8_1MmqBlock; production bytes verified against quantizer",
+  "activation_quantization_error": {
+    "relative_l2": 0.0028577485648554443,
+    "rmse": 0.00581758073340874,
+    "max_abs": 0.035556793212890625
+  },
+  "gpu_kernel_error_vs_quantized_reference": {
+    "relative_l2": 1.9038837443241234e-07,
+    "rmse": 3.872939902556658e-07,
+    "max_abs": 7.62939453125e-06
+  },
+  "gpu_total_error_vs_full_precision_input": {
+    "relative_l2": 0.002857755331059425,
+    "rmse": 0.00581759450751693,
+    "max_abs": 0.03555870056152344
+  },
+  "synthetic_quantizer_self_check": "PASS"
+}

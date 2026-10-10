@@ -362,6 +362,10 @@ def sampler_config_valid(config: dict[str, str], expected_graph: str = "1") -> b
     return all(config.get(key) == value for key, value in expected.items())
 
 
+def sampler_config_for(disable_hip_graph: bool) -> dict[str, str]:
+    return {**SAMPLER_CONFIG, "use_hip_graph": "false" if disable_hip_graph else "true"}
+
+
 def wait_cool(args, out: Path, label: str, baseline_c: float,
               baseline_vram: float | None) -> dict:
     deadline = time.monotonic() + args.cooldown_timeout_seconds
@@ -506,6 +510,7 @@ def main() -> int:
                           for key, value in environment.items() if key != "gpu_map"}},
             indent=2) + "\n")
         shutil.copy2(args.source_manifest, out / "source-manifest.sha256")
+        run_sampler_config = sampler_config_for(args.disable_hip_graph)
         source_identity = {
             "source_sha": args.source_sha,
             "benchmark": "e2-0003-checkpointed-call",
@@ -515,7 +520,7 @@ def main() -> int:
             "prompt_ids_sha256": prompt_hash,
             "prompt_tokens": args.prompt_tokens,
             "prompt_fingerprint_fnv1a64": fingerprint,
-            "sampler_config": SAMPLER_CONFIG,
+            "sampler_config": run_sampler_config,
             "container_image": args.image,
             "container_digest": image_digest,
             "build_flags": args.build_flags,
@@ -606,7 +611,7 @@ def main() -> int:
                          "context_capacity_tokens": args.context_capacity_tokens, "cold_prefill": True,
                          "warmups": 0, "repetitions_per_call": 1,
                          "prompt": "deterministic e2_0003_prompt.hpp seed=77; fingerprint recorded per call",
-                         "sampler_config": SAMPLER_CONFIG,
+                         "sampler_config": run_sampler_config,
                          "miinfer_path": "same binary; only MMQ Gate/Up env differs; HIP Graph "
                          + ("disabled for diagnostic capture" if args.disable_hip_graph else "enabled")},
             "guard": {"warning_junction_c": WARN_C, "stop_junction_c": STOP_C,

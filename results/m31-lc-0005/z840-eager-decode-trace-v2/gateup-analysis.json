@@ -1,0 +1,231 @@
+{
+  "schema": "m31-lc-0005-gateup-attribution-v1",
+  "case": {
+    "position": 0,
+    "layer": 0,
+    "decode_step": 1,
+    "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+    "prompt_ids_sha256": "5acd37f00d9e670f4b4e06d46fa12349e1dee06e356e6e73a186d74672f5bb47",
+    "forced_history_prefix": [
+      220
+    ],
+    "hip_graph": false
+  },
+  "capture_identity": {
+    "source_sha": "d4905bd5be1a4c3c32e466f319cee12cdd313f56",
+    "binary_sha256": "a71929408b3792db8c7a37dc2034fd6c4cce498d6c6a894849c426f13926c894",
+    "image_digest": "sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e",
+    "gpu_bdf": "0000:06:00.0",
+    "source_manifest_graph_setting_mismatch": true,
+    "control": {
+      "tokens": [
+        220,
+        16,
+        15,
+        15,
+        15
+      ],
+      "raw_logits_valid": true,
+      "guard_exit": 0,
+      "clean_process_group": true,
+      "effective_hip_graph": "false"
+    },
+    "mmq_only": {
+      "tokens": [
+        220,
+        16,
+        15,
+        15,
+        15
+      ],
+      "raw_logits_valid": true,
+      "guard_exit": 0,
+      "clean_process_group": true,
+      "effective_hip_graph": "false"
+    }
+  },
+  "common_stages_bitwise_equal_through_post_normalized": {
+    "layer_input": {
+      "bitwise_equal": true,
+      "relative_l2": 0.0,
+      "rmse": 0.0,
+      "max_abs": 0.0
+    },
+    "attn_norm": {
+      "bitwise_equal": true,
+      "relative_l2": 0.0,
+      "rmse": 0.0,
+      "max_abs": 0.0
+    },
+    "beta": {
+      "bitwise_equal": true,
+      "relative_l2": 0.0,
+      "rmse": 0.0,
+      "max_abs": 0.0
+    },
+    "decay": {
+      "bitwise_equal": true,
+      "relative_l2": 0.0,
+      "rmse": 0.0,
+      "max_abs": 0.0
+    },
+    "qkv": {
+      "bitwise_equal": true,
+      "relative_l2": 0.0,
+      "rmse": 0.0,
+      "max_abs": 0.0
+    },
+    "q_conv": {
+      "bitwise_equal": true,
+      "relative_l2": 0.0,
+      "rmse": 0.0,
+      "max_abs": 0.0
+    },
+    "k_conv": {
+      "bitwise_equal": true,
+      "relative_l2": 0.0,
+      "rmse": 0.0,
+      "max_abs": 0.0
+    },
+    "v_conv": {
+      "bitwise_equal": true,
+      "relative_l2": 0.0,
+      "rmse": 0.0,
+      "max_abs": 0.0
+    },
+    "gated_output": {
+      "bitwise_equal": true,
+      "relative_l2": 0.0,
+      "rmse": 0.0,
+      "max_abs": 0.0
+    },
+    "post_normalized": {
+      "bitwise_equal": true,
+      "relative_l2": 0.0,
+      "rmse": 0.0,
+      "max_abs": 0.0
+    }
+  },
+  "quantized_inputs": {
+    "fused_q8_1": {
+      "sha256": "6c715c7f3b4ac77aa4395adc5dd11513e2fea10d781f721a38dbef0c2f42f9b5",
+      "bytes": 5760,
+      "reproduced_from_post_normalized": true
+    },
+    "mmq_mx_q8": {
+      "sha256": "89a76c092a021bfa4017f9b2504c8be72e2d12995d17a4a0fd19fb12c9ced313",
+      "bytes": 5760,
+      "reproduced_from_post_normalized": true
+    },
+    "decoded_activation_difference": {
+      "bitwise_equal": true,
+      "relative_l2": 0.0,
+      "rmse": 0.0,
+      "max_abs": 0.0
+    },
+    "integer_q_bitwise_equal": true,
+    "half_scale_bitwise_equal": true,
+    "fused_quantized_activation_sum_vs_mmq_original_input_sum": {
+      "bitwise_equal": false,
+      "relative_l2": 0.008548053123502415,
+      "rmse": 0.005538625897473273,
+      "max_abs": 0.0360107421875
+    },
+    "sum_groups_with_different_correction": 160,
+    "q8_1_s_metadata_sha256": "eb2cfbe2ec3107074b5f30bd6ab44b66473828bbbe92f30d0e91ec85c43dce47"
+  },
+  "canonical_q4k_weights": {
+    "gate_sha256": "24b815356fe291c7c19023dc600030e67c7c1214b182b4a9bf64c3f4bd8c0c37",
+    "up_sha256": "6e7fadc9c058abd6e8962b4a07ea15ccf446d2447329d9e06c2cf31baee39b3e",
+    "bytes_each": 50135040,
+    "shape": [
+      17408,
+      5120
+    ]
+  },
+  "projection_reference": {
+    "gate": {
+      "activation_quantization_fused": {
+        "bitwise_equal": false,
+        "relative_l2": 0.005255724630425087,
+        "rmse": 0.000545944989542945,
+        "max_abs": 0.0035742223262786865
+      },
+      "activation_quantization_mmq": {
+        "bitwise_equal": false,
+        "relative_l2": 0.0065641859573113675,
+        "rmse": 0.0006818630514004784,
+        "max_abs": 0.01137852668762207
+      },
+      "mmq_kernel_vs_quantized_reference": {
+        "bitwise_equal": false,
+        "relative_l2": 7.889294672781512e-08,
+        "rmse": 8.197681596636638e-09,
+        "max_abs": 1.1920928955078125e-07
+      }
+    },
+    "up": {
+      "activation_quantization_fused": {
+        "bitwise_equal": false,
+        "relative_l2": 0.005574997354930145,
+        "rmse": 0.0005280162854898489,
+        "max_abs": 0.0021947957575321198
+      },
+      "activation_quantization_mmq": {
+        "bitwise_equal": false,
+        "relative_l2": 0.0068197107258866204,
+        "rmse": 0.0006459049388451329,
+        "max_abs": 0.0025880634784698486
+      },
+      "mmq_kernel_vs_quantized_reference": {
+        "bitwise_equal": false,
+        "relative_l2": 8.345087177327426e-08,
+        "rmse": 7.901807957360635e-09,
+        "max_abs": 2.384185791015625e-07
+      }
+    }
+  },
+  "activation_outputs": {
+    "fused_gpu_vs_own_q8_1_reference": {
+      "bitwise_equal": false,
+      "relative_l2": 9.759637259126148e-08,
+      "rmse": 9.849369435483707e-10,
+      "max_abs": 5.960464477539063e-08
+    },
+    "mmq_gpu_vs_own_mx_q8_reference": {
+      "bitwise_equal": false,
+      "relative_l2": 9.583576722468375e-08,
+      "rmse": 9.66494862919869e-10,
+      "max_abs": 5.960464477539063e-08
+    },
+    "gpu_fused_vs_gpu_mmq": {
+      "bitwise_equal": false,
+      "relative_l2": 0.0032676983152309155,
+      "rmse": 3.297742180992933e-05,
+      "max_abs": 0.0013102293014526367
+    },
+    "reference_fused_vs_reference_mmq": {
+      "bitwise_equal": false,
+      "relative_l2": 0.003267675589566614,
+      "rmse": 3.2977192924724874e-05,
+      "max_abs": 0.0013101696968078613
+    }
+  },
+  "downstream": {
+    "ffn_down": {
+      "bitwise_equal": false,
+      "relative_l2": 0.003060657575928876,
+      "rmse": 9.661017604411594e-05,
+      "max_abs": 0.0029773712158203125
+    },
+    "layer_output": {
+      "bitwise_equal": false,
+      "relative_l2": 0.00047210012306526234,
+      "rmse": 9.661017032173864e-05,
+      "max_abs": 0.0029773712158203125
+    }
+  },
+  "first_differing_comparable_stage": "ffn_activation",
+  "first_differing_route_contract": "Q4_K affine minimum correction uses quantized activation sum in fused Q8_1 and captured original-input sum in MMQ Mx Q8_1",
+  "self_check": "PASS"
+}
