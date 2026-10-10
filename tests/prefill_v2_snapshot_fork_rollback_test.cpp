@@ -92,14 +92,16 @@ int main(int argc, char** argv) {
                     "continuation after nested rollback failed");
 
             require(engine.restore_snapshot(fork_b), "restore fork B failed");
-            const auto b = engine.generate(branch_b, options());
+            auto eager_options = options();
+            eager_options.max_new_tokens = 2;
+            const auto b = engine.generate(branch_b, eager_options);
             require(b.reuse_hit && b.prefix_tokens_reused == prompt.size()
                         && b.suffix_tokens_executed == 1,
                     "branch B did not continue independently from S0");
             branch_b_tokens = b.generated_tokens;
 
             require(engine.rollback_snapshot(s0), "repeated rollback to S0 failed");
-            const auto b_again = engine.generate(branch_b, options());
+            const auto b_again = engine.generate(branch_b, eager_options);
             require(b_again.generated_tokens == branch_b_tokens,
                     "repeated rollback changed branch B output");
 
@@ -112,9 +114,8 @@ int main(int argc, char** argv) {
             require(b_graph.reuse_hit && b_graph.prefix_tokens_reused == prompt.size()
                         && b_graph.suffix_tokens_executed == 1 && b_graph.used_hip_graph,
                     "graph decode after snapshot restore failed");
-            require(!b_graph.generated_tokens.empty()
-                        && b_graph.generated_tokens.front() == branch_b_tokens.front(),
-                    "graph branch changed the first token after snapshot restore");
+            require(b_graph.generated_tokens == branch_b_tokens,
+                    "eager and graph decode differed after snapshot restore");
             require(engine.restore_snapshot(fork_b), "restore fork B after graph capture failed");
             const auto b_graph_after_restore = engine.generate(branch_b, graph_options);
             require(b_graph_after_restore.used_hip_graph
@@ -143,7 +144,9 @@ int main(int argc, char** argv) {
         }
 
         Model fresh_engine(model, 1024, true);
-        const auto cold = fresh_engine.generate(branch_b, options());
+        auto fresh_options = options();
+        fresh_options.max_new_tokens = 2;
+        const auto cold = fresh_engine.generate(branch_b, fresh_options);
         require(cold.generated_tokens == branch_b_tokens,
                 "snapshot branch output differs from cold replay");
         fresh_engine.clear_snapshots();
@@ -153,7 +156,7 @@ int main(int argc, char** argv) {
                   << " snapshot=PASS fork=PASS rollback=PASS nested=PASS"
                   << " invalid=PASS release=PASS shared=PASS cow=PASS"
                   << " evict=PASS reset=PASS cold_parity=PASS graph_after_restore=PASS"
-                  << " graph_replay_after_restore=PASS\n";
+                  << " graph_replay_after_restore=PASS eager_graph_parity=PASS\n";
         return 0;
     } catch (const std::exception& error) {
         std::cerr << "M30-0004 snapshot/fork/rollback: FAIL: " << error.what() << '\n';
