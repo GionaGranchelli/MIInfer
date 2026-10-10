@@ -2,7 +2,8 @@
 cd7d84443a9e158ff65ef26c25e3201b1ade52fbdac871e0e77390a722570b49  experiments/m31-lc-0003/llama_cpu_oracle.cpp
 d92ce6166f4dc49f2120a4426b315711e7c25c4fe7511899de154b50cf87d229  results/m31-lc-0003/analyze_reference.py
 7d7289acb3932ac57f6db9a0451a2bec7faabef9c43162631297c55fa90a907a  results/m31-lc-0003/forced-history.ids
-1cad7973e2bd3dff6b0229b184ecab87da767dc91734b80a53a50ab31ec0c51a  results/m31-lc-0003/REPORT.md
+f1f8ecc323690afe8b4470a1658a11c358905095bd8cb380b5f868d49a60ce41  results/m31-lc-0003/REPORT.md
+0fe3a4b801184298ecf6eb38bd0821d470ac35e86041d15de593a4669d6d0282  results/m31-lc-0003/reference/layer-comparison.json
 f19a0dafc81ff50528f48472523715dad237633e2e9fc92c4f210385bac80031  results/m31-lc-0003/reference/llama-cpu.metadata.json
 260c5e349910ef75aeba4d4473d23bf24c0bd31de923137c86e060e42624dda2  results/m31-lc-0003/reference/llama-cpu.run1.logits.f32
 260c5e349910ef75aeba4d4473d23bf24c0bd31de923137c86e060e42624dda2  results/m31-lc-0003/reference/llama-cpu.run2.logits.f32

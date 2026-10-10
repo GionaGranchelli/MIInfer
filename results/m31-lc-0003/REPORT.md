@@ -22,8 +22,14 @@ For each GPU route and decision, `comparison.json` retains RMSE, maximum absolut
 
 Both GPU routes' raw logit vectors first differ bitwise from the CPU reference at decision 1. Their argmaxes still match the CPU through decision 4. At decision 5, the CPU winner (198) ranks third in fused logits and fifth in MMQ-only logits; the routes select different tokens from the CPU. MMQ-only has a smaller relative L2 at decision 5, while fused is closer at decisions 2–4. Closeness alone does not establish correctness.
 
+## Layer and prompt-position localization
+
+The CPU and fused-GPU embedding outputs match bitwise for all 2,048 prompt positions (SHA-256 `96ce7a52936fc3a7b8a2203731eb9e205b0c4f56a55b6bf2d2d9868fe6cebc97`). The first layer boundary that differs is the output of GDN layer 0, which becomes layer 1's input. Comparing every prompt position shows that layer 0 already differs at position 0: RMSE `0.00556809`, maximum absolute error `0.21034622`, relative L2 `0.01941864`; all 2,048 output rows differ. This rules out divergence accumulating only from recurrent state over the prompt.
+
+This localizes the earliest affected layer and prompt position, but not the first incorrect operation. A first-token operation trace is being compared against the independent CPU graph. No kernel defect is established yet.
+
 ## Finding and remaining work
 
-This comparison does not support either GPU route as numerically equivalent to the CPU reference under the existing exact-token gate. It also does not establish a kernel defect: the earliest observed cross-reference mismatch is a full-vocabulary logit difference after prompt prefill, shared by both GPU routes, and no layer-boundary or operation input/output comparison has yet localized its source. The captured fused/MMQ-only divergence remains later, at decision 2.
+This comparison does not support either GPU route as numerically equivalent to the CPU reference under the existing exact-token gate. The first layer-boundary difference is now localized to GDN layer 0 at prompt position 0, and the captured fused/MMQ-only divergence remains later, at decision 2. Operation comparison is required before attributing the difference to a computation defect.
 
-Next, localize the shared decision-1 difference through model semantics and matching layer-boundary activations; then inspect GDN/GQA state and the first MMQ-sensitive operation only if the traces point there. No 4K/8K ladder, performance study, or optimization work was performed. Do not change the fused default or promote MMQ-only based on these results.
+Next, identify the earliest layer-0 operation mismatch from the matching CPU/GPU traces, then determine whether it is an implementation defect or an expected numerical difference. No 4K/8K ladder, performance study, or optimization work was performed. Do not change the fused default or promote MMQ-only based on these results.

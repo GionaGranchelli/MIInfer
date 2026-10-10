@@ -1,0 +1,703 @@
+{
+  "schema": "m31-lc-0003-layer-trace-comparison-v1",
+  "capture": "last prompt token at position 2047 after each matching layer input",
+  "cpu_trace_sha256": "4e28113eff8688f2fb64457b33bc2174629abb9496c9e20012f79837faac4b6a",
+  "gpu_trace_sha256": "104a53a2f4c965b6bff8f5e7f0187f64d0fc6f9dfb99d98acec7d877ef82e903",
+  "gpu_trace_layout": "embedding; 64 layer outputs; final RMS-normalized hidden",
+  "cpu_trace_layout": "64 layer inputs",
+  "first_bitwise_mismatch": {
+    "next_layer_input": 1,
+    "boundary": "output of layer 0",
+    "bitwise_equal": false,
+    "rmse": 0.0058114526897745,
+    "max_abs_error": 0.2492809295654297,
+    "relative_l2": 0.025891662416940516,
+    "reference_l2": 16.060525496556735,
+    "actual_l2": 16.306784605907616
+  },
+  "layer0_rowwise_comparison": {
+    "embedding_output": {
+      "cpu_sha256": "96ce7a52936fc3a7b8a2203731eb9e205b0c4f56a55b6bf2d2d9868fe6cebc97",
+      "gpu_sha256": "96ce7a52936fc3a7b8a2203731eb9e205b0c4f56a55b6bf2d2d9868fe6cebc97",
+      "first_mismatching_position": null,
+      "mismatching_rows": 0,
+      "first_mismatch_metrics": null,
+      "last_position_metrics": {
+        "bitwise_equal": true,
+        "rmse": 0.0,
+        "max_abs_error": 0.0,
+        "relative_l2": 0.0,
+        "reference_l2": 0.9769610658921196,
+        "actual_l2": 0.9769610658921196
+      }
+    },
+    "layer0_output": {
+      "cpu_sha256": "316c43b3c62a5b2f3f10914019a257c89a887262455c1a40f20960fe49538bea",
+      "gpu_sha256": "cd3c040aff2977fb7792d6f55ea792901c21f59759e3e8e3a6051edf3458dcb5",
+      "first_mismatching_position": 0,
+      "mismatching_rows": 2048,
+      "first_mismatch_metrics": {
+        "bitwise_equal": false,
+        "rmse": 0.005568092221089999,
+        "max_abs_error": 0.21034622192382812,
+        "relative_l2": 0.019418640967133194,
+        "reference_l2": 20.51741146238723,
+        "actual_l2": 20.7296127314725
+      },
+      "last_position_metrics": {
+        "bitwise_equal": false,
+        "rmse": 0.0058114526897745,
+        "max_abs_error": 0.2492809295654297,
+        "relative_l2": 0.025891662416940516,
+        "reference_l2": 16.060525496556735,
+        "actual_l2": 16.306784605907616
+      }
+    }
+  },
+  "layer_boundaries": [
+    {
+      "next_layer_input": 0,
+      "boundary": "embedding output",
+      "bitwise_equal": true,
+      "rmse": 0.0,
+      "max_abs_error": 0.0,
+      "relative_l2": 0.0,
+      "reference_l2": 0.9769610658921196,
+      "actual_l2": 0.9769610658921196
+    },
+    {
+      "next_layer_input": 1,
+      "boundary": "output of layer 0",
+      "bitwise_equal": false,
+      "rmse": 0.0058114526897745,
+      "max_abs_error": 0.2492809295654297,
+      "relative_l2": 0.025891662416940516,
+      "reference_l2": 16.060525496556735,
+      "actual_l2": 16.306784605907616
+    },
+    {
+      "next_layer_input": 2,
+      "boundary": "output of layer 1",
+      "bitwise_equal": false,
+      "rmse": 0.007277890275847255,
+      "max_abs_error": 0.24834251403808594,
+      "relative_l2": 0.02864871796845723,
+      "reference_l2": 18.177547666876517,
+      "actual_l2": 18.394793653043568
+    },
+    {
+      "next_layer_input": 3,
+      "boundary": "output of layer 2",
+      "bitwise_equal": false,
+      "rmse": 0.010853505062368927,
+      "max_abs_error": 0.059764862060546875,
+      "relative_l2": 0.04680999371480667,
+      "reference_l2": 16.590764962854212,
+      "actual_l2": 16.419197863516914
+    },
+    {
+      "next_layer_input": 4,
+      "boundary": "output of layer 3",
+      "bitwise_equal": false,
+      "rmse": 0.016941458230501492,
+      "max_abs_error": 0.16171836853027344,
+      "relative_l2": 0.03586699864070844,
+      "reference_l2": 33.79797913584342,
+      "actual_l2": 33.496797705084276
+    },
+    {
+      "next_layer_input": 5,
+      "boundary": "output of layer 4",
+      "bitwise_equal": false,
+      "rmse": 0.02445129551801306,
+      "max_abs_error": 0.9596061706542969,
+      "relative_l2": 0.04402211819704817,
+      "reference_l2": 39.74348252593026,
+      "actual_l2": 38.705727795567
+    },
+    {
+      "next_layer_input": 6,
+      "boundary": "output of layer 5",
+      "bitwise_equal": false,
+      "rmse": 0.026250031545548384,
+      "max_abs_error": 0.9198760986328125,
+      "relative_l2": 0.04261584536835178,
+      "reference_l2": 44.075140175687366,
+      "actual_l2": 43.08345444098937
+    },
+    {
+      "next_layer_input": 7,
+      "boundary": "output of layer 6",
+      "bitwise_equal": false,
+      "rmse": 0.028066143852462134,
+      "max_abs_error": 0.7239723205566406,
+      "relative_l2": 0.04359968731770102,
+      "reference_l2": 46.06110502625675,
+      "actual_l2": 45.33510412445281
+    },
+    {
+      "next_layer_input": 8,
+      "boundary": "output of layer 7",
+      "bitwise_equal": false,
+      "rmse": 0.033925184467873806,
+      "max_abs_error": 0.47707366943359375,
+      "relative_l2": 0.04477486112363876,
+      "reference_l2": 54.21543551228933,
+      "actual_l2": 53.73213931369193
+    },
+    {
+      "next_layer_input": 9,
+      "boundary": "output of layer 8",
+      "bitwise_equal": false,
+      "rmse": 0.03887321516161718,
+      "max_abs_error": 0.8810234069824219,
+      "relative_l2": 0.045220837651461225,
+      "reference_l2": 61.51015761383994,
+      "actual_l2": 60.677487463488305
+    },
+    {
+      "next_layer_input": 10,
+      "boundary": "output of layer 9",
+      "bitwise_equal": false,
+      "rmse": 0.04191898245327881,
+      "max_abs_error": 1.0203628540039062,
+      "relative_l2": 0.04483430894491328,
+      "reference_l2": 66.90140404988182,
+      "actual_l2": 65.96847045024957
+    },
+    {
+      "next_layer_input": 11,
+      "boundary": "output of layer 10",
+      "bitwise_equal": false,
+      "rmse": 0.044278790821922195,
+      "max_abs_error": 0.7700538635253906,
+      "relative_l2": 0.04624654723788172,
+      "reference_l2": 68.50959798924657,
+      "actual_l2": 67.81982632099239
+    },
+    {
+      "next_layer_input": 12,
+      "boundary": "output of layer 11",
+      "bitwise_equal": false,
+      "rmse": 0.047613568124367615,
+      "max_abs_error": 0.44427490234375,
+      "relative_l2": 0.042734968901041344,
+      "reference_l2": 79.72275836133537,
+      "actual_l2": 79.31132775054054
+    },
+    {
+      "next_layer_input": 13,
+      "boundary": "output of layer 12",
+      "bitwise_equal": false,
+      "rmse": 0.04992325341316036,
+      "max_abs_error": 0.2263641357421875,
+      "relative_l2": 0.04320634966253771,
+      "reference_l2": 82.67806128436044,
+      "actual_l2": 82.50580695659731
+    },
+    {
+      "next_layer_input": 14,
+      "boundary": "output of layer 13",
+      "bitwise_equal": false,
+      "rmse": 0.05120081023790897,
+      "max_abs_error": 0.24004864692687988,
+      "relative_l2": 0.04429724168898667,
+      "reference_l2": 82.70564058962337,
+      "actual_l2": 82.82308634056606
+    },
+    {
+      "next_layer_input": 15,
+      "boundary": "output of layer 14",
+      "bitwise_equal": false,
+      "rmse": 0.05326167475798471,
+      "max_abs_error": 0.5019912719726562,
+      "relative_l2": 0.04634833523236973,
+      "reference_l2": 82.22722978574552,
+      "actual_l2": 82.72691110211929
+    },
+    {
+      "next_layer_input": 16,
+      "boundary": "output of layer 15",
+      "bitwise_equal": false,
+      "rmse": 0.05493511379635838,
+      "max_abs_error": 0.5144577026367188,
+      "relative_l2": 0.04639962109224239,
+      "reference_l2": 84.71700132629329,
+      "actual_l2": 85.27064457036457
+    },
+    {
+      "next_layer_input": 17,
+      "boundary": "output of layer 16",
+      "bitwise_equal": false,
+      "rmse": 0.05570791921014978,
+      "max_abs_error": 0.45716094970703125,
+      "relative_l2": 0.04781505823309233,
+      "reference_l2": 83.3656668619928,
+      "actual_l2": 83.85712546652212
+    },
+    {
+      "next_layer_input": 18,
+      "boundary": "output of layer 17",
+      "bitwise_equal": false,
+      "rmse": 0.057514389306590925,
+      "max_abs_error": 0.7686309814453125,
+      "relative_l2": 0.050098679023860816,
+      "reference_l2": 82.14577257826524,
+      "actual_l2": 82.93956033275072
+    },
+    {
+      "next_layer_input": 19,
+      "boundary": "output of layer 18",
+      "bitwise_equal": false,
+      "rmse": 0.06248442548410534,
+      "max_abs_error": 0.8429489135742188,
+      "relative_l2": 0.05712823212944276,
+      "reference_l2": 78.26290726498915,
+      "actual_l2": 79.0360050972486
+    },
+    {
+      "next_layer_input": 20,
+      "boundary": "output of layer 19",
+      "bitwise_equal": false,
+      "rmse": 0.0724246799260992,
+      "max_abs_error": 1.1730384826660156,
+      "relative_l2": 0.0680138181016856,
+      "reference_l2": 76.19463789375294,
+      "actual_l2": 77.32002709176795
+    },
+    {
+      "next_layer_input": 21,
+      "boundary": "output of layer 20",
+      "bitwise_equal": false,
+      "rmse": 0.07552526129569713,
+      "max_abs_error": 1.2942085266113281,
+      "relative_l2": 0.07504433357792366,
+      "reference_l2": 72.01273603433506,
+      "actual_l2": 73.27178469159057
+    },
+    {
+      "next_layer_input": 22,
+      "boundary": "output of layer 21",
+      "bitwise_equal": false,
+      "rmse": 0.07706557181121176,
+      "max_abs_error": 0.3498530387878418,
+      "relative_l2": 0.07634182925963941,
+      "reference_l2": 72.23252949150516,
+      "actual_l2": 72.54488513294473
+    },
+    {
+      "next_layer_input": 23,
+      "boundary": "output of layer 22",
+      "bitwise_equal": false,
+      "rmse": 0.07923117487261461,
+      "max_abs_error": 0.37491273880004883,
+      "relative_l2": 0.07323544355082587,
+      "reference_l2": 77.41226241826908,
+      "actual_l2": 77.61764917473775
+    },
+    {
+      "next_layer_input": 24,
+      "boundary": "output of layer 23",
+      "bitwise_equal": false,
+      "rmse": 0.08105149979998055,
+      "max_abs_error": 0.37353795766830444,
+      "relative_l2": 0.0751371891633538,
+      "reference_l2": 77.18645437727845,
+      "actual_l2": 77.58446237418528
+    },
+    {
+      "next_layer_input": 25,
+      "boundary": "output of layer 24",
+      "bitwise_equal": false,
+      "rmse": 0.08137440336713782,
+      "max_abs_error": 0.39678363502025604,
+      "relative_l2": 0.07010653033405213,
+      "reference_l2": 83.05472106653185,
+      "actual_l2": 83.32039614069335
+    },
+    {
+      "next_layer_input": 26,
+      "boundary": "output of layer 25",
+      "bitwise_equal": false,
+      "rmse": 0.0837881289413735,
+      "max_abs_error": 0.407203733921051,
+      "relative_l2": 0.07035910749197738,
+      "reference_l2": 85.2112921605399,
+      "actual_l2": 85.52315007292887
+    },
+    {
+      "next_layer_input": 27,
+      "boundary": "output of layer 26",
+      "bitwise_equal": false,
+      "rmse": 0.08758962123187425,
+      "max_abs_error": 0.4082939922809601,
+      "relative_l2": 0.07390165297104959,
+      "reference_l2": 84.80734676921175,
+      "actual_l2": 85.07976176641655
+    },
+    {
+      "next_layer_input": 28,
+      "boundary": "output of layer 27",
+      "bitwise_equal": false,
+      "rmse": 0.10025114043050858,
+      "max_abs_error": 0.6047515869140625,
+      "relative_l2": 0.08286638540294573,
+      "reference_l2": 86.56571225476466,
+      "actual_l2": 86.7258861837056
+    },
+    {
+      "next_layer_input": 29,
+      "boundary": "output of layer 28",
+      "bitwise_equal": false,
+      "rmse": 0.10092277074384881,
+      "max_abs_error": 0.5278304815292358,
+      "relative_l2": 0.08447771212391145,
+      "reference_l2": 85.48344227120589,
+      "actual_l2": 85.65299768623773
+    },
+    {
+      "next_layer_input": 30,
+      "boundary": "output of layer 29",
+      "bitwise_equal": false,
+      "rmse": 0.10423641101857427,
+      "max_abs_error": 0.626678466796875,
+      "relative_l2": 0.08771257119406418,
+      "reference_l2": 85.03399596026472,
+      "actual_l2": 85.0880861129302
+    },
+    {
+      "next_layer_input": 31,
+      "boundary": "output of layer 30",
+      "bitwise_equal": false,
+      "rmse": 0.10833904455835032,
+      "max_abs_error": 0.6453979015350342,
+      "relative_l2": 0.09600865018138548,
+      "reference_l2": 80.743880570651,
+      "actual_l2": 80.96342706604008
+    },
+    {
+      "next_layer_input": 32,
+      "boundary": "output of layer 31",
+      "bitwise_equal": false,
+      "rmse": 0.10657633878069167,
+      "max_abs_error": 0.6616224050521851,
+      "relative_l2": 0.09133036472571948,
+      "reference_l2": 83.49886753124953,
+      "actual_l2": 83.55840326001159
+    },
+    {
+      "next_layer_input": 33,
+      "boundary": "output of layer 32",
+      "bitwise_equal": false,
+      "rmse": 0.10391939705892052,
+      "max_abs_error": 0.674957275390625,
+      "relative_l2": 0.0910384801097976,
+      "reference_l2": 81.67828310816631,
+      "actual_l2": 81.84521168263508
+    },
+    {
+      "next_layer_input": 34,
+      "boundary": "output of layer 33",
+      "bitwise_equal": false,
+      "rmse": 0.10266345967572936,
+      "max_abs_error": 0.8914451599121094,
+      "relative_l2": 0.09285956542215695,
+      "reference_l2": 79.10869661182856,
+      "actual_l2": 79.16816693692732
+    },
+    {
+      "next_layer_input": 35,
+      "boundary": "output of layer 34",
+      "bitwise_equal": false,
+      "rmse": 0.10368666296736849,
+      "max_abs_error": 1.1118011474609375,
+      "relative_l2": 0.10281678202757788,
+      "reference_l2": 72.15955907056754,
+      "actual_l2": 72.07990511072691
+    },
+    {
+      "next_layer_input": 36,
+      "boundary": "output of layer 35",
+      "bitwise_equal": false,
+      "rmse": 0.10157029404535296,
+      "max_abs_error": 0.6369181275367737,
+      "relative_l2": 0.09529177699109818,
+      "reference_l2": 76.26868605924489,
+      "actual_l2": 76.71887459524928
+    },
+    {
+      "next_layer_input": 37,
+      "boundary": "output of layer 36",
+      "bitwise_equal": false,
+      "rmse": 0.09933796446149612,
+      "max_abs_error": 0.5911467671394348,
+      "relative_l2": 0.09374719027668042,
+      "reference_l2": 75.82143102163734,
+      "actual_l2": 76.24695302753004
+    },
+    {
+      "next_layer_input": 38,
+      "boundary": "output of layer 37",
+      "bitwise_equal": false,
+      "rmse": 0.09914684743283629,
+      "max_abs_error": 0.5831149816513062,
+      "relative_l2": 0.09065325007785185,
+      "reference_l2": 78.25831830160931,
+      "actual_l2": 78.55827624703672
+    },
+    {
+      "next_layer_input": 39,
+      "boundary": "output of layer 38",
+      "bitwise_equal": false,
+      "rmse": 0.09442642141615974,
+      "max_abs_error": 0.7685508728027344,
+      "relative_l2": 0.08494629017969083,
+      "reference_l2": 79.53972674712274,
+      "actual_l2": 79.37891792573703
+    },
+    {
+      "next_layer_input": 40,
+      "boundary": "output of layer 39",
+      "bitwise_equal": false,
+      "rmse": 0.09134455332156734,
+      "max_abs_error": 0.5705787092447281,
+      "relative_l2": 0.08167574739548085,
+      "reference_l2": 80.02478566367873,
+      "actual_l2": 80.01280687686688
+    },
+    {
+      "next_layer_input": 41,
+      "boundary": "output of layer 40",
+      "bitwise_equal": false,
+      "rmse": 0.08733003501108065,
+      "max_abs_error": 0.521730437874794,
+      "relative_l2": 0.07911216539209724,
+      "reference_l2": 78.98694974938745,
+      "actual_l2": 79.13121383889285
+    },
+    {
+      "next_layer_input": 42,
+      "boundary": "output of layer 41",
+      "bitwise_equal": false,
+      "rmse": 0.08945299466390758,
+      "max_abs_error": 0.591560423374176,
+      "relative_l2": 0.07944586965739595,
+      "reference_l2": 80.5672502183463,
+      "actual_l2": 80.77697188651858
+    },
+    {
+      "next_layer_input": 43,
+      "boundary": "output of layer 42",
+      "bitwise_equal": false,
+      "rmse": 0.09034242401566718,
+      "max_abs_error": 0.5677328109741211,
+      "relative_l2": 0.07875028178302264,
+      "reference_l2": 82.08704142859517,
+      "actual_l2": 81.93026930260055
+    },
+    {
+      "next_layer_input": 44,
+      "boundary": "output of layer 43",
+      "bitwise_equal": false,
+      "rmse": 0.08740980182160067,
+      "max_abs_error": 0.6133041381835938,
+      "relative_l2": 0.07169258119780056,
+      "reference_l2": 87.24105306622955,
+      "actual_l2": 86.94764984912878
+    },
+    {
+      "next_layer_input": 45,
+      "boundary": "output of layer 44",
+      "bitwise_equal": false,
+      "rmse": 0.0867581404002831,
+      "max_abs_error": 1.0127334594726562,
+      "relative_l2": 0.07102880849732998,
+      "reference_l2": 87.39984967369236,
+      "actual_l2": 86.84296588884988
+    },
+    {
+      "next_layer_input": 46,
+      "boundary": "output of layer 45",
+      "bitwise_equal": false,
+      "rmse": 0.08415930557635741,
+      "max_abs_error": 0.5846481323242188,
+      "relative_l2": 0.06942894015003287,
+      "reference_l2": 86.73544043218902,
+      "actual_l2": 86.51371538297568
+    },
+    {
+      "next_layer_input": 47,
+      "boundary": "output of layer 46",
+      "bitwise_equal": false,
+      "rmse": 0.08373264820127431,
+      "max_abs_error": 0.6100025773048401,
+      "relative_l2": 0.0702465127481077,
+      "reference_l2": 85.29135969405674,
+      "actual_l2": 85.48027054517046
+    },
+    {
+      "next_layer_input": 48,
+      "boundary": "output of layer 47",
+      "bitwise_equal": false,
+      "rmse": 0.08280048146181901,
+      "max_abs_error": 0.6243281960487366,
+      "relative_l2": 0.06311364591544938,
+      "reference_l2": 93.87383786580675,
+      "actual_l2": 94.06656953438379
+    },
+    {
+      "next_layer_input": 49,
+      "boundary": "output of layer 48",
+      "bitwise_equal": false,
+      "rmse": 0.0838106936305138,
+      "max_abs_error": 0.5704782009124756,
+      "relative_l2": 0.06498573355453086,
+      "reference_l2": 92.28187071772284,
+      "actual_l2": 92.50604105375184
+    },
+    {
+      "next_layer_input": 50,
+      "boundary": "output of layer 49",
+      "bitwise_equal": false,
+      "rmse": 0.08415667961490675,
+      "max_abs_error": 0.5645484924316406,
+      "relative_l2": 0.06447326352126143,
+      "reference_l2": 93.39936394194581,
+      "actual_l2": 93.58489541519147
+    },
+    {
+      "next_layer_input": 51,
+      "boundary": "output of layer 50",
+      "bitwise_equal": false,
+      "rmse": 0.09467811017839814,
+      "max_abs_error": 0.8122138977050781,
+      "relative_l2": 0.06748258377432506,
+      "reference_l2": 100.3905557845747,
+      "actual_l2": 100.92893130202174
+    },
+    {
+      "next_layer_input": 52,
+      "boundary": "output of layer 51",
+      "bitwise_equal": false,
+      "rmse": 0.10521994629653214,
+      "max_abs_error": 1.0910377502441406,
+      "relative_l2": 0.0603329333353064,
+      "reference_l2": 124.7896640199933,
+      "actual_l2": 126.01476046218711
+    },
+    {
+      "next_layer_input": 53,
+      "boundary": "output of layer 52",
+      "bitwise_equal": false,
+      "rmse": 0.10769643210634225,
+      "max_abs_error": 1.1059341430664062,
+      "relative_l2": 0.05416581289963524,
+      "reference_l2": 142.26924636478597,
+      "actual_l2": 143.2256551774373
+    },
+    {
+      "next_layer_input": 54,
+      "boundary": "output of layer 53",
+      "bitwise_equal": false,
+      "rmse": 0.11437835072826553,
+      "max_abs_error": 1.1722373962402344,
+      "relative_l2": 0.05263724260463394,
+      "reference_l2": 155.4839910160179,
+      "actual_l2": 156.61010118983876
+    },
+    {
+      "next_layer_input": 55,
+      "boundary": "output of layer 54",
+      "bitwise_equal": false,
+      "rmse": 0.1304595756935072,
+      "max_abs_error": 1.6891555786132812,
+      "relative_l2": 0.055675467365919336,
+      "reference_l2": 167.6667981029102,
+      "actual_l2": 169.19378336442207
+    },
+    {
+      "next_layer_input": 56,
+      "boundary": "output of layer 55",
+      "bitwise_equal": false,
+      "rmse": 0.13981120861294224,
+      "max_abs_error": 1.9409942626953125,
+      "relative_l2": 0.05369881539121617,
+      "reference_l2": 186.29974710456275,
+      "actual_l2": 187.8557988457335
+    },
+    {
+      "next_layer_input": 57,
+      "boundary": "output of layer 56",
+      "bitwise_equal": false,
+      "rmse": 0.14727553777260316,
+      "max_abs_error": 2.5020599365234375,
+      "relative_l2": 0.05224090150504222,
+      "reference_l2": 201.72277546203878,
+      "actual_l2": 203.90047929291532
+    },
+    {
+      "next_layer_input": 58,
+      "boundary": "output of layer 57",
+      "bitwise_equal": false,
+      "rmse": 0.15280932471194056,
+      "max_abs_error": 3.105316162109375,
+      "relative_l2": 0.0502014199991003,
+      "reference_l2": 217.80549643917564,
+      "actual_l2": 220.4551649270435
+    },
+    {
+      "next_layer_input": 59,
+      "boundary": "output of layer 58",
+      "bitwise_equal": false,
+      "rmse": 0.16087497905381518,
+      "max_abs_error": 3.570770263671875,
+      "relative_l2": 0.05678548848099157,
+      "reference_l2": 202.71510833679338,
+      "actual_l2": 205.34643669441476
+    },
+    {
+      "next_layer_input": 60,
+      "boundary": "output of layer 59",
+      "bitwise_equal": false,
+      "rmse": 0.1905848128237963,
+      "max_abs_error": 4.4019622802734375,
+      "relative_l2": 0.05323310821687451,
+      "reference_l2": 256.17777280522864,
+      "actual_l2": 259.3155586502495
+    },
+    {
+      "next_layer_input": 61,
+      "boundary": "output of layer 60",
+      "bitwise_equal": false,
+      "rmse": 0.21083673577429105,
+      "max_abs_error": 5.341827392578125,
+      "relative_l2": 0.0491141954604098,
+      "reference_l2": 307.16676931450587,
+      "actual_l2": 311.09522965138336
+    },
+    {
+      "next_layer_input": 62,
+      "boundary": "output of layer 61",
+      "bitwise_equal": false,
+      "rmse": 0.23633574143815206,
+      "max_abs_error": 4.993804931640625,
+      "relative_l2": 0.05186595301971295,
+      "reference_l2": 326.0483628126013,
+      "actual_l2": 329.05383256658115
+    },
+    {
+      "next_layer_input": 63,
+      "boundary": "output of layer 62",
+      "bitwise_equal": false,
+      "rmse": 0.27451962910822575,
+      "max_abs_error": 3.15765380859375,
+      "relative_l2": 0.058607666179461844,
+      "reference_l2": 335.1613694846686,
+      "actual_l2": 336.522483721319
+    }
+  ],
+  "unpaired_gpu_tail": {
+    "layer63_output_l2": 1073.3420251891791,
+    "final_norm_hidden_l2": 97.53486034867781
+  }
+}
