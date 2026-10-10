@@ -221,6 +221,7 @@ int main(int argc, char** argv) {
                 << "result={\"context\":\"" << found->name
                 << "\",\"iteration\":" << iteration
                 << ",\"wall_ms\":" << wall_ms
+                << ",\"ttft_ms\":" << stats.ttft_ms
                 << ",\"prefill_ms\":" << stats.prefill_ms
                 << ",\"decode_ms\":" << stats.decode_ms
                 << ",\"prefill_tok_s\":" << stats.prefill_tok_per_sec

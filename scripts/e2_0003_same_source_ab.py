@@ -285,6 +285,7 @@ def call(args, out: Path, route: str, pair: int, order: int) -> dict:
         "timings": {
             "model_load_ms": interval(events, "MODEL_LOAD_BEGIN", "MODEL_DATA_READY"),
             "model_alloc_ms": interval(events, "MODEL_ALLOC_BEGIN", "MODEL_ALLOC_READY"),
+            "ttft_ms": result.get("ttft_ms") if result else None,
             "prefill_ms": result.get("prefill_ms") if result else None,
             "decode_ms": result.get("decode_ms") if result else None,
             "prefill_tok_s": result.get("prefill_tok_s") if result else None,
@@ -364,7 +365,7 @@ def wait_cool(args, out: Path, label: str, baseline_c: float,
 def medians(records: list[dict], route: str) -> dict:
     selected = [record for record in records if record["route"] == route and record["result"]]
     result = {}
-    for field in ("prefill_tok_s", "decode_tok_s"):
+    for field in ("ttft_ms", "prefill_tok_s", "decode_tok_s"):
         values = [float(record["result"][field]) for record in selected
                   if record["result"].get(field) is not None]
         result[field] = {"samples": values,

@@ -20,12 +20,13 @@ class SameSourceHarnessTest(unittest.TestCase):
         metrics = (
             "prompt_tokens=1024\ncontext_capacity_tokens=1280\n"
             "event=MODEL_ALLOC_READY iteration=0 epoch_ms=1000\n"
-            'result={"tokens_valid":"PASS","token_ids":[1,2]}\n'
+            'result={"tokens_valid":"PASS","ttft_ms":12.5,"token_ids":[1,2]}\n'
         )
         events, properties, result = MODULE.parse_metrics(metrics)
         self.assertEqual(events["MODEL_ALLOC_READY"], 1000)
         self.assertEqual(properties["context_capacity_tokens"], "1280")
         self.assertEqual(result["token_ids"], [1, 2])
+        self.assertEqual(result["ttft_ms"], 12.5)
 
     def test_phase_memory_requires_nearby_successful_sample(self):
         events = {"PREFILL_END": 1000}
