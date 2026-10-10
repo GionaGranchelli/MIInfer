@@ -15,6 +15,17 @@ def sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
+def inventory(path, dtype, shape, item_bytes=None):
+    path = Path(path)
+    raw = path.read_bytes()
+    if item_bytes is not None and len(raw) != int(np.prod(shape)) * item_bytes:
+        raise ValueError(f"{path}: unexpected byte count {len(raw)} for shape {shape}")
+    if dtype == "little-endian-f32" and not np.isfinite(np.frombuffer(raw, dtype="<f4")).all():
+        raise ValueError(f"{path}: non-finite captured value")
+    return {"dtype": dtype, "shape": shape, "byte_count": len(raw),
+            "sha256": hashlib.sha256(raw).hexdigest()}
+
+
 def read_f32(path, count):
     raw = Path(path).read_bytes()
     if len(raw) != count * 4:
@@ -203,7 +214,7 @@ def main():
     for name in ("control", "mmq_only"):
         prefix = d / f"{name}-optrace.decode-pos0.layer0"
         fields = ("layer_input", "attn_norm", "beta", "decay", "qkv", "q_conv",
-                  "k_conv", "v_conv", "gated_output", "post_normalized",
+                  "k_conv", "v_conv", "z", "gated_output", "post_normalized",
                   "ffn_activation", "ffn_down", "layer_output")
         route[name] = {field: read_f32(prefix.with_name(prefix.name + f".{field}.f32"),
                                        17408 if field.startswith("ffn_") and field != "ffn_down"
@@ -286,6 +297,41 @@ def main():
             "activation_quantization_mmq": stats(refs[f"{tensor}_full_precision"], refs[f"{tensor}_mmq_mx_q8"]),
             "mmq_kernel_vs_quantized_reference": stats(refs[f"{tensor}_mmq_mx_q8"], mmq_gate if tensor == "gate" else mmq_up),
         }
+    f32_shapes = {"layer_input": [5120], "attn_norm": [5120], "beta": [48],
+                  "decay": [48], "qkv": [10240], "q_conv": [2048],
+                  "k_conv": [2048], "v_conv": [6144], "z": [6144],
+                  "gated_output": [6144], "post_normalized": [5120],
+                  "ffn_activation": [ROWS], "ffn_down": [5120],
+                  "layer_output": [5120]}
+    capture_inventory = {}
+    for name in ("control", "mmq_only"):
+        prefix = f"{name}-optrace.decode-pos0.layer0"
+        for field, shape in f32_shapes.items():
+            capture_inventory[f"{prefix}.{field}.f32"] = inventory(
+                d / f"{prefix}.{field}.f32", "little-endian-f32", shape, 4)
+        for field in ("state_before", "state_after_gdn"):
+            capture_inventory[f"{prefix}.{field}.bin"] = inventory(
+                d / f"{prefix}.{field}.bin", "opaque-recurrent-state-bytes", None)
+        capture_inventory[f"{prefix}.qkv_input_mx_q8.bin"] = inventory(
+            d / f"{prefix}.qkv_input_mx_q8.bin", "packed-MxQ8_1MmqBlock", [40, 144], 1)
+        q_name, q_shape = (("gateup_input_q8_1.bin", [160, 36]) if name == "control"
+                           else ("gateup_input_mx_q8.bin", [40, 144]))
+        q_dtype = "packed-Q8_1Block" if name == "control" else "packed-MxQ8_1MmqBlock"
+        capture_inventory[f"{prefix}.{q_name}"] = inventory(
+            d / f"{prefix}.{q_name}", q_dtype, q_shape, 1)
+        if name == "mmq_only":
+            for field in ("ffn_gate", "ffn_up"):
+                capture_inventory[f"{prefix}.{field}.f32"] = inventory(
+                    d / f"{prefix}.{field}.f32", "little-endian-f32", [ROWS], 4)
+        logits = d / f"{name}-pair-1.logits.f32"
+        capture_inventory[logits.name] = inventory(
+            logits, "little-endian-f32", [5, 248320], 4)
+    for path in (d / "ffn_gate.q4k.bin", d / "ffn_up.q4k.bin"):
+        capture_inventory[path.name] = inventory(
+            path, "GGUF-Q4_K-blocks", [ROWS, COLUMNS // 256, Q4_BLOCK], 1)
+    prompt = d / "prompt.ids"
+    capture_inventory[prompt.name] = inventory(
+        prompt, "ascii-token-ids-one-per-line", [2048])
     result = {
         "schema": "m31-lc-0005-gateup-attribution-v1",
         "case": {"position": 0, "layer": 0, "decode_step": 1,
@@ -325,6 +371,7 @@ def main():
         "canonical_q4k_weights": {"gate_sha256": hashlib.sha256(gate_raw).hexdigest(),
                                   "up_sha256": hashlib.sha256(up_raw).hexdigest(),
                                   "bytes_each": len(gate_raw), "shape": [ROWS, COLUMNS]},
+        "capture_inventory": capture_inventory,
         "projection_reference": records,
         "activation_outputs": {
             "fused_gpu_vs_own_q8_1_reference": stats(fused_ref, fused_activation),

@@ -4,6 +4,44 @@
   "quantized_input_sha256": "48c342bad0e16b3f97d74b882d5b9d44288e887bc08d53daaedf250dc5ef0ba5",
   "q6k_weight_sha256": "65b4f6f841cf18b0cc48b1db52868597af45d1f74578f33b010c4cb8c573edce",
   "gpu_output_sha256": "5f3692674b0407962ed185f00a4b4342f5ae66ed0041d740ed25ebf495849771",
+  "capture_inventory": {
+    "input_f32": {
+      "shape": [
+        5120
+      ],
+      "dtype": "little-endian-f32",
+      "byte_count": 20480,
+      "sha256": "0a5b4e54f37a2c0dea4c6f35ce36b8fadcda44e00bac30a8ab92e7f1adec8ec8"
+    },
+    "production_mx_q8_1": {
+      "shape": [
+        40,
+        512,
+        144
+      ],
+      "dtype": "packed-MxQ8_1MmqBlock",
+      "byte_count": 2949120,
+      "sha256": "48c342bad0e16b3f97d74b882d5b9d44288e887bc08d53daaedf250dc5ef0ba5"
+    },
+    "gpu_output_f32": {
+      "shape": [
+        10240
+      ],
+      "dtype": "little-endian-f32",
+      "byte_count": 40960,
+      "sha256": "5f3692674b0407962ed185f00a4b4342f5ae66ed0041d740ed25ebf495849771"
+    },
+    "canonical_q6_k_weights": {
+      "shape": [
+        10240,
+        20,
+        210
+      ],
+      "dtype": "GGUF-Q6_K-blocks",
+      "byte_count": 43008000,
+      "sha256": "65b4f6f841cf18b0cc48b1db52868597af45d1f74578f33b010c4cb8c573edce"
+    }
+  },
   "reference": "canonical Q6_K dequantization, FP64 dot, F32 output",
   "activation_b": "dequantized captured MxQ8_1MmqBlock; production bytes verified against quantizer",
   "activation_quantization_error": {
