@@ -98,6 +98,22 @@ class SameSourceHarnessTest(unittest.TestCase):
         self.assertIn("MIINFER_LC_DECODE_TRACE_POSITION=2048", command)
         self.assertLess(command.index("MIINFER_LC_DECODE_TRACE_POSITION=2048"), command.index("image"))
 
+    def test_eager_trace_mode_is_explicit_and_validated(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            binary = root / "bench"
+            model = root / "model.gguf"
+            binary.touch()
+            model.touch()
+            args = SimpleNamespace(container_runtime="podman", binary=binary, model=model,
+                                   expected_bdf="0000:06:00.0", image="image",
+                                   context_profile="8K", prompt_tokens=2048, generate_tokens=5,
+                                   disable_hip_graph=True)
+            command = MODULE.container_command(args, "control", 1, root)
+        self.assertIn("MIINFER_HIP_GRAPH=0", command)
+        self.assertTrue(MODULE.sampler_config_valid({**MODULE.SAMPLER_CONFIG,
+                                                     "use_hip_graph": "false"}, "0"))
+
     def test_context_workload_is_passed_through_to_the_same_binary(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

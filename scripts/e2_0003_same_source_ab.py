@@ -216,7 +216,7 @@ def container_command(args, route: str, pair: int, output: Path) -> list[str]:
                "-v", f"{args.model.resolve()}:/model.gguf:ro,Z",
                "-v", f"{output.resolve()}:/results:Z",
                "--env", f"M31_EXPECTED_GPU_BDF={args.expected_bdf}",
-               "--env", "MIINFER_HIP_GRAPH=1",
+               "--env", f"MIINFER_HIP_GRAPH={'0' if getattr(args, 'disable_hip_graph', False) else '1'}",
                "--env", f"MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY={'1' if route == 'mmq_only' else '0'}"]
     if getattr(args, "capture_layer_zero_trace", False):
         command.extend(["--env", f"MIINFER_LC_OP_TRACE_PREFIX=/results/{route}-optrace",
@@ -295,7 +295,7 @@ def call(args, out: Path, route: str, pair: int, order: int) -> dict:
         "pair": pair, "order": order, "route": route,
         "requested_environment": {
             "MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY": "1" if route == "mmq_only" else "0",
-            "MIINFER_HIP_GRAPH": "1",
+            "MIINFER_HIP_GRAPH": "0" if getattr(args, "disable_hip_graph", False) else "1",
             "MIINFER_LC_DECODE_TRACE_POSITION": "2048"
                 if getattr(args, "capture_layer_zero_trace", False) else None,
         },
@@ -348,7 +348,7 @@ def valid_call(record: dict) -> bool:
             and config.get("generate_tokens") == str(record["expected_generate_tokens"])
             and config.get("context_capacity_tokens") == str(record["expected_context_capacity_tokens"])
             and config.get("prompt_fingerprint_fnv1a64") == record["expected_prompt_fingerprint"]
-            and sampler_config_valid(config)
+            and sampler_config_valid(config, record["requested_environment"]["MIINFER_HIP_GRAPH"])
             and record["telemetry"]["successful_sample_count"] > 0
             and record["telemetry"]["failed_sample_count"] == 0
             and record["telemetry"]["missing_junction_samples"] == 0
@@ -357,8 +357,9 @@ def valid_call(record: dict) -> bool:
                  or record["raw_logits_capture"]["valid"]))
 
 
-def sampler_config_valid(config: dict[str, str]) -> bool:
-    return all(config.get(key) == value for key, value in SAMPLER_CONFIG.items())
+def sampler_config_valid(config: dict[str, str], expected_graph: str = "1") -> bool:
+    expected = {**SAMPLER_CONFIG, "use_hip_graph": "true" if expected_graph == "1" else "false"}
+    return all(config.get(key) == value for key, value in expected.items())
 
 
 def wait_cool(args, out: Path, label: str, baseline_c: float,
@@ -428,6 +429,8 @@ def main() -> int:
                         help="capture pre-sampling F32 logits for decisions 1-5")
     parser.add_argument("--capture-layer-zero-trace", action="store_true",
                         help="capture layer-0 operation and quantizer inputs at decode position 2048")
+    parser.add_argument("--disable-hip-graph", action="store_true",
+                        help="run the same bounded route pair eagerly for operation tracing")
     parser.add_argument("--expected-seconds", type=int, default=240)
     parser.add_argument("--cooldown-timeout-seconds", type=int, default=900)
     parser.add_argument("--container-runtime", choices=("podman",), default="podman")
@@ -585,7 +588,7 @@ def main() -> int:
                 if control_decode and candidate_decode is not None else None,
             "decode_above_historical_llama_20_56": candidate_decode > 20.56 if candidate_decode is not None else None,
             "thermal_and_operation_reference": "OPERATION_REFERENCE_NOT_RUN_BY_THIS_HARNESS",
-            "hip_graph": "REQUESTED_BY_BENCHMARK; SUCCESSFUL_RUN_REQUIRED",
+            "hip_graph": "DISABLED_FOR_DIAGNOSTIC" if args.disable_hip_graph else "REQUESTED_BY_BENCHMARK; SUCCESSFUL_RUN_REQUIRED",
         }
         decision = "BLOCKED_OR_INCONCLUSIVE"
         if valid and gates["all_pairs_token_parity"] and all(
@@ -604,7 +607,8 @@ def main() -> int:
                          "warmups": 0, "repetitions_per_call": 1,
                          "prompt": "deterministic e2_0003_prompt.hpp seed=77; fingerprint recorded per call",
                          "sampler_config": SAMPLER_CONFIG,
-                         "miinfer_path": "same binary; HIP Graph enabled; only MMQ Gate/Up env differs"},
+                         "miinfer_path": "same binary; only MMQ Gate/Up env differs; HIP Graph "
+                         + ("disabled for diagnostic capture" if args.disable_hip_graph else "enabled")},
             "guard": {"warning_junction_c": WARN_C, "stop_junction_c": STOP_C,
                       "expected_seconds_per_call": args.expected_seconds,
                       "sample_interval_seconds": 1.0, "power_policy_changed": False},
