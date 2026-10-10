@@ -2,7 +2,13 @@
 #include "miinfer/hip_check.hpp"
 
 #include <hip/hip_runtime.h>
+#include <cstdlib>
+#include <filesystem>
+#include <fstream>
 #include <stdexcept>
+#include <string>
+#include <string_view>
+#include <vector>
 
 namespace miinfer::prefill_v2 {
 
@@ -86,6 +92,29 @@ void PrefillV2TopologyBlock::decode(
 
     // Layer 3 (GQA): d_pong -> d_final_output
     gqa3_.decode(d_pong, d_final_output, kv_cache3, ws, position, decode_state, stream);
+    const char* trace_prefix = std::getenv("MIINFER_LC_OP_TRACE_PREFIX");
+    const char* trace_decode = std::getenv("MIINFER_LC_DECODE_TRACE");
+    static bool block_trace_captured = false;
+    if (block_index_ == 0 && graph_trace != nullptr && decode_state != nullptr) {
+        graph_trace->copy_async("block0_gqa3_output", d_final_output,
+                                kHidden * sizeof(float), stream);
+    } else if (block_index_ == 0 && trace_prefix != nullptr && trace_decode != nullptr
+        && std::string_view(trace_decode) != "0" && decode_state == nullptr
+        && !block_trace_captured) {
+        const auto path = std::filesystem::path(std::string(trace_prefix) + ".decode-pos"
+            + std::to_string(position) + ".block0.gqa3_output.f32");
+        if (std::filesystem::exists(path))
+            throw std::runtime_error("refusing to overwrite M31 block trace: " + path.string());
+        std::vector<float> host(kHidden);
+        MIINFER_HIP_CHECK(hipMemcpy(host.data(), d_final_output, kHidden * sizeof(float),
+                                    hipMemcpyDeviceToHost));
+        std::ofstream output(path, std::ios::binary | std::ios::out);
+        if (!output) throw std::runtime_error("cannot create M31 block trace: " + path.string());
+        output.write(reinterpret_cast<const char*>(host.data()),
+                     static_cast<std::streamsize>(host.size() * sizeof(float)));
+        if (!output) throw std::runtime_error("failed writing M31 block trace: " + path.string());
+        block_trace_captured = true;
+    }
 }
 
 void PrefillV2TopologyBlock::forward_profiled(
