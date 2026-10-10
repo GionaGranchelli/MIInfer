@@ -103,6 +103,19 @@ int main(int argc, char** argv) {
             require(b_again.generated_tokens == branch_b_tokens,
                     "repeated rollback changed branch B output");
 
+            require(engine.restore_snapshot(fork_b), "restore fork B before graph decode failed");
+            auto graph_options = options();
+            graph_options.max_new_tokens = 2;
+            graph_options.reset_state_before = false;
+            graph_options.use_hip_graph = true;
+            const auto b_graph = engine.generate(branch_b, graph_options);
+            require(b_graph.reuse_hit && b_graph.prefix_tokens_reused == prompt.size()
+                        && b_graph.suffix_tokens_executed == 1 && b_graph.used_hip_graph,
+                    "graph decode after snapshot restore failed");
+            require(!b_graph.generated_tokens.empty()
+                        && b_graph.generated_tokens.front() == branch_b_tokens.front(),
+                    "graph branch changed the first token after snapshot restore");
+
             require(!engine.restore_snapshot(999999), "invalid snapshot ID was accepted");
             require(engine.release_snapshot(fork_b), "fork B release failed");
             require(!engine.restore_snapshot(fork_b), "released fork B remained valid");
@@ -134,7 +147,7 @@ int main(int argc, char** argv) {
         std::cout << "M30-0004 snapshot/fork/rollback: PASS"
                   << " snapshot=PASS fork=PASS rollback=PASS nested=PASS"
                   << " invalid=PASS release=PASS shared=PASS cow=PASS"
-                  << " evict=PASS reset=PASS cold_parity=PASS\n";
+                  << " evict=PASS reset=PASS cold_parity=PASS graph_after_restore=PASS\n";
         return 0;
     } catch (const std::exception& error) {
         std::cerr << "M30-0004 snapshot/fork/rollback: FAIL: " << error.what() << '\n';
