@@ -1,0 +1,40 @@
+event=MODEL_HASH_BEGIN iteration=0 epoch_ms=1791668349785
+event=MODEL_HASH_READY iteration=0 epoch_ms=1791668445106
+event=MODEL_LOAD_BEGIN iteration=0 epoch_ms=1791668445106
+event=MODEL_DATA_READY iteration=0 epoch_ms=1791668445138
+event=MODEL_ALLOC_BEGIN iteration=0 epoch_ms=1791668445138
+event=MODEL_ALLOC_READY iteration=0 epoch_ms=1791668497014
+benchmark=E2-0003-clean-source
+context=custom
+context_profile=8K
+prompt_tokens=2048
+context_capacity_tokens=2304
+generate_tokens=5
+iterations=1
+warmup=0
+model_sha256=7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169
+prompt_fingerprint_fnv1a64=a998afbe8b675816
+temperature=0
+top_p=1
+top_k=1
+repetition_penalty=1
+frequency_penalty=0
+presence_penalty=0
+stop_token_ids=disabled
+repeat_last_n=256
+reset_state_before=true
+use_hip_graph=false
+seed=42
+sampler=greedy_argmax
+
+model_vram_bytes=25128019968
+event=MODEL_READY iteration=0 epoch_ms=1791668497014
+event=RUN_BEGIN iteration=1 epoch_ms=1791668497014 mode=measure
+event=PREFILL_BEGIN iteration=1 epoch_ms=1791668497014
+event=PREFILL_END iteration=1 epoch_ms=1791668505505
+event=DECODE_BEGIN iteration=1 epoch_ms=1791668505505
+raw_logits_capture={"format":"native_f32","decisions":5,"vocab_size":248320,"bytes":4966400,"file":"control-pair-1.logits.f32"}
+event=DECODE_END iteration=1 epoch_ms=1791668505654
+event=RUN_END iteration=1 epoch_ms=1791668505654 wall_ms=8637.475018
+result={"context":"8K","iteration":1,"wall_ms":8637.475,"ttft_ms":8490.344,"prefill_ms":8490.344,"decode_ms":147.101,"prefill_tok_s":241.215,"decode_tok_s":27.192,"used_hip_graph":false,"generated_tokens":5,"model_vram_bytes":25128019968,"model_weights_bytes":24068487168,"persistent_state_bytes":309854208,"workspace_bytes":727711744,"activation_bytes":21966848,"cached_state_bytes":0,"snapshot_bytes":0,"splitk_splits":32,"device_total_bytes":34342961152,"device_free_before_bytes":8334082048,"device_free_after_bytes":8256225280,"device_used_before_bytes":26008879104,"device_used_after_bytes":26086735872,"device_residual_after_bytes":958715904,"device_peak_bytes":null,"raw_logits_decisions":5,"raw_logits_vocab_size":248320,"tokens_valid":"PASS","output_parity":"NOT_CHECKED","token_ids":[220,248046,198,248045,271]}
+event=CALL_COMPLETE iteration=1 epoch_ms=1791668505654

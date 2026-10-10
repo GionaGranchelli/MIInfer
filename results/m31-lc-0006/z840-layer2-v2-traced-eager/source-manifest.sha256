@@ -1,0 +1,25 @@
+{
+  "milestone": "M31-LC-0006",
+  "binary_source_sha": "3cbea2af7189abada58b9e14d5537f4f41d13084",
+  "capture_harness_sha": "3cbea2af7189abada58b9e14d5537f4f41d13084",
+  "binary_sha256": "49b74f59cfd961ffa6dc25e5d0ffea17d4623fbfaf4df9fc9670b7d4c9986be3",
+  "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+  "image_digest": "sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e",
+  "build_flags": "Release; MIINFER_ENABLE_HIP=ON; MIINFER_BUILD_TESTS=ON; MIINFER_BUILD_BENCHMARKS=ON; MIINFER_BUILD_RESEARCH_TOOLS=OFF; CMAKE_HIP_ARCHITECTURES=gfx906; CMAKE_PREFIX_PATH=/opt/rocm-7.2.1; hipblas_DIR=/opt/rocm-7.2.1/lib/cmake/hipblas; hip_DIR=/opt/rocm-7.2.1/lib/cmake/hip; FETCHCONTENT_SOURCE_DIR_NLOHMANN_JSON=/deps/nlohmann_json-src",
+  "source_files": {
+    "CMakeLists.txt": "5bf36a40851502e2fed624bf8fc654acee898d817968720138887c32eb048f90",
+    "bench/e2_0003_checkpointed_call.cpp": "89d5a58cbe8ce6a1c8ba2386f0ebe580b1dd6faed2aaae12c802c7b409657bb7",
+    "bench/e2_0003_prompt.hpp": "f7d48ff176cc5ca59be1e12d84ea962051c8cfa476b1227520d4411f0d6d880c",
+    "include/miinfer/prefill_v2/model.hpp": "4b1a1da6a1cd51b51651a8e73cc0c262a0799aa4da18712039915e5847bddb81",
+    "include/miinfer/prefill_v2/recurrent_layer.hpp": "248749fea4bba859beee79370412a74c1b8f6dd6bf0d7c820c168677432fbd03",
+    "include/miinfer/prefill_v2/topology_block.hpp": "c523ab690fbed26e8b17ba995ffb9542b6c47db60bbcb9ed85fc5bcd317548c0",
+    "src/prefill_v2/model.cpp": "783e5e359da205f6e4f307207bc265bbfcd7f4e9b01ac86c75d201c93b8cfa4d",
+    "src/prefill_v2/recurrent_layer.cpp": "5326b1bf8be8c709edbe233a0f9b072fd50b5d038c9ab8dc1bc391d48ccc4abc",
+    "src/prefill_v2/topology_block.cpp": "0c57b704ef67e160bd5e87d05d5b70e34d3a3b9ee698311207efe532047db0ad",
+    "scripts/run-m31-exploratory.sh": "0368ad34fd0085f753ee5625d2fb67f91f222b83c88b024dce10654ded520e08",
+    "scripts/e2_0003_same_source_ab.py": "ba8b9b76d8578d35b4362d0086a4b92a2bd1541da38c5fc2bc0fe4c04ab1ec15",
+    "tests/test_e2_0003_same_source_ab.py": "1cf2f2f2ec2fb3bc8cc6279d64844796e220d482db8bd2292a98cd2dda7e8a25"
+  },
+  "configure_result": "PASS in pinned OCI image using ROCm 7.2.1; nlohmann_json source mounted read-only from host cache because container networking is disabled",
+  "build_result": "PASS: selected-layer graph trace forwarding rebuilt inside pinned OCI image with GCC 13.3.0 and HIP Clang 22.0.0; layer selection supports indices 0..47"
+}
