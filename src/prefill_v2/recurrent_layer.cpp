@@ -654,11 +654,11 @@ void PrefillV2RecurrentLayer::decode(
     hipStream_t stream) const {
 
     const char* trace_prefix = std::getenv("MIINFER_LC_OP_TRACE_PREFIX");
-    const char* trace_position_env = std::getenv("MIINFER_LC_DECODE_TRACE_POSITION");
-    const auto trace_position = trace_position_env == nullptr
-        ? std::string::npos : std::stoul(trace_position_env);
+    const char* trace_decode = std::getenv("MIINFER_LC_DECODE_TRACE");
+    static bool decode_trace_captured = false;
     const bool capture_decode = trace_prefix != nullptr && layer_index_ == 0
-        && trace_position == state.position;
+        && trace_decode != nullptr && std::string_view(trace_decode) != "0"
+        && decode_state == nullptr && !decode_trace_captured;
     const auto capture_f32 = [&](const char* name, const float* device, std::size_t count) {
         if (!capture_decode) return;
         const auto path = std::filesystem::path(std::string(trace_prefix) + ".decode-pos"
@@ -812,6 +812,7 @@ void PrefillV2RecurrentLayer::decode(
         kHidden, stream);
     capture_f32("ffn_down", ws.ffn_down, kHidden);
     capture_f32("layer_output", d_output, kHidden);
+    if (capture_decode) decode_trace_captured = true;
 
     state.position++;
 }

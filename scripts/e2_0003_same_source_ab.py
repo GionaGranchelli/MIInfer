@@ -220,7 +220,7 @@ def container_command(args, route: str, pair: int, output: Path) -> list[str]:
                "--env", f"MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY={'1' if route == 'mmq_only' else '0'}"]
     if getattr(args, "capture_layer_zero_trace", False):
         command.extend(["--env", f"MIINFER_LC_OP_TRACE_PREFIX=/results/{route}-optrace",
-                        "--env", "MIINFER_LC_DECODE_TRACE_POSITION=2048"])
+                        "--env", "MIINFER_LC_DECODE_TRACE=1"])
     command.extend([args.image, "/bench/run", "/model.gguf", args.context_profile,
                "--generate", str(args.generate_tokens), "--prompt-tokens", str(args.prompt_tokens),
                "--iterations", "1", "--warmup", "0",
@@ -296,7 +296,7 @@ def call(args, out: Path, route: str, pair: int, order: int) -> dict:
         "requested_environment": {
             "MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY": "1" if route == "mmq_only" else "0",
             "MIINFER_HIP_GRAPH": "0" if getattr(args, "disable_hip_graph", False) else "1",
-            "MIINFER_LC_DECODE_TRACE_POSITION": "2048"
+            "MIINFER_LC_DECODE_TRACE": "1"
                 if getattr(args, "capture_layer_zero_trace", False) else None,
         },
         "start_state": before, "end_state": after,
@@ -428,7 +428,7 @@ def main() -> int:
     parser.add_argument("--capture-raw-logits", action="store_true",
                         help="capture pre-sampling F32 logits for decisions 1-5")
     parser.add_argument("--capture-layer-zero-trace", action="store_true",
-                        help="capture layer-0 operation and quantizer inputs at decode position 2048")
+                        help="capture the first eager layer-0 decode operation and quantizer inputs")
     parser.add_argument("--disable-hip-graph", action="store_true",
                         help="run the same bounded route pair eagerly for operation tracing")
     parser.add_argument("--expected-seconds", type=int, default=240)

@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -17,6 +18,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace {
@@ -137,6 +139,8 @@ int main(int argc, char** argv) {
         event(out, "MODEL_ALLOC_READY", 0);
         const auto prompt = e2_0003::make_prompt(prompt_tokens, found->seed);
         const auto expected = reference_path.empty() ? std::vector<std::uint32_t>{} : read_tokens(reference_path);
+        const char* graph_env = std::getenv("MIINFER_HIP_GRAPH");
+        const bool use_hip_graph = graph_env == nullptr || std::string_view(graph_env) != "0";
 
         out << "benchmark=E2-0003-clean-source\ncontext="
             << (prompt_tokens == found->tokens ? found->name : "custom")
@@ -150,7 +154,8 @@ int main(int argc, char** argv) {
             << "\nprompt_fingerprint_fnv1a64=" << std::hex << e2_0003::prompt_fingerprint(prompt) << std::dec
             << "\ntemperature=0\ntop_p=1\ntop_k=1\nrepetition_penalty=1"
             << "\nfrequency_penalty=0\npresence_penalty=0\nstop_token_ids=disabled"
-            << "\nrepeat_last_n=256\nreset_state_before=true\nuse_hip_graph=true"
+            << "\nrepeat_last_n=256\nreset_state_before=true\nuse_hip_graph="
+            << (use_hip_graph ? "true" : "false")
             << "\nseed=42\nsampler=greedy_argmax\n"
             << "\nmodel_vram_bytes=" << model.total_vram_bytes()
             << "\n" << std::flush;
@@ -175,7 +180,7 @@ int main(int argc, char** argv) {
             miinfer::prefill_v2::GenerateOptions options;
             options.max_new_tokens = generate_tokens;
             options.reset_state_before = true;
-            options.use_hip_graph = true;
+            options.use_hip_graph = use_hip_graph;
             options.temperature = 0.0f;
             options.top_p = 1.0f;
             options.top_k = 1;

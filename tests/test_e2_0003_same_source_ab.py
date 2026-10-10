@@ -95,8 +95,8 @@ class SameSourceHarnessTest(unittest.TestCase):
                                    capture_layer_zero_trace=True)
             command = MODULE.container_command(args, "control", 1, root)
         self.assertIn("MIINFER_LC_OP_TRACE_PREFIX=/results/control-optrace", command)
-        self.assertIn("MIINFER_LC_DECODE_TRACE_POSITION=2048", command)
-        self.assertLess(command.index("MIINFER_LC_DECODE_TRACE_POSITION=2048"), command.index("image"))
+        self.assertIn("MIINFER_LC_DECODE_TRACE=1", command)
+        self.assertLess(command.index("MIINFER_LC_DECODE_TRACE=1"), command.index("image"))
 
     def test_eager_trace_mode_is_explicit_and_validated(self):
         with tempfile.TemporaryDirectory() as directory:
