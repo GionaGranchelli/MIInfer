@@ -236,11 +236,13 @@ window remains open through the recorded hard stop below.
   preserved.
 - The sixty-fourth check at `2026-10-10T05:38:27Z` timed out; the raw log is
   preserved.
+- The sixty-fifth check at `2026-10-10T05:49:57Z` timed out; the raw log is
+  preserved.
 
 ```text
 START_TIME: 2026-10-09 22:50:25 UTC
-CHECKPOINT_TIME: 2026-10-10 05:38:27 UTC
-ELAPSED_AT_CHECKPOINT: 06:48:02
+CHECKPOINT_TIME: 2026-10-10 05:49:57 UTC
+ELAPSED_AT_CHECKPOINT: 06:59:32
 AUTHORIZED_WINDOW_END: 2026-10-10 06:50:25 UTC
 BASE_SHA: 99d40748bb4ae8921fbf3558b9f0216389ebfd8a plus preserved M31 overlay
 CAMPAIGN_SOURCE_SHA: c2fd12bbd24b3ae75f34f6de2401fb00b0df785e (report/evidence commits follow)
