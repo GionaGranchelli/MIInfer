@@ -1,0 +1,37 @@
+{
+  "source_sha": "ed21f41318fd024c3223bff928bb8ac1cc2efcdd",
+  "benchmark": "e2-0003-checkpointed-call",
+  "source_manifest_sha256": "ee4b42f5b7756c089cd234cea1416bb5f50615e4d2a1303d40aecfc1eab00968",
+  "binary_sha256": "6f73be43dc6fd1bc1bd24d770d4545f2a8429bacfe4d840e78353b5f9243d22c",
+  "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+  "prompt_ids_sha256": "11d40611b4eb816549e2c8c6bf05f7a1db0ef9521963a381091fa85685fa4a78",
+  "prompt_tokens": 1024,
+  "prompt_fingerprint_fnv1a64": "bce3932a8fc5d121",
+  "sampler_config": {
+    "temperature": "0",
+    "top_p": "1",
+    "top_k": "1",
+    "repetition_penalty": "1",
+    "frequency_penalty": "0",
+    "presence_penalty": "0",
+    "stop_token_ids": "disabled",
+    "repeat_last_n": "256",
+    "reset_state_before": "true",
+    "use_hip_graph": "true",
+    "seed": "42",
+    "sampler": "greedy_argmax"
+  },
+  "container_image": "localhost/miinfer-dev:rocm-7.2.1",
+  "container_digest": "sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e",
+  "build_flags": "Release; MIINFER_ENABLE_HIP=ON; MIINFER_BUILD_TESTS=ON; MIINFER_BUILD_BENCHMARKS=ON; MIINFER_BUILD_RESEARCH_TOOLS=OFF; CMAKE_HIP_ARCHITECTURES=gfx906; hipblas_DIR=/out/hipblas-cmake",
+  "host": {
+    "hostname": "fedora",
+    "kernel": "7.2.8-200.fc44.x86_64"
+  },
+  "gpu": {
+    "index": 0,
+    "pci_bdf": "0000:06:00.0",
+    "unique_id": "0x21678e17348c2f7",
+    "product": "AMD Instinct MI60 / MI50"
+  }
+}

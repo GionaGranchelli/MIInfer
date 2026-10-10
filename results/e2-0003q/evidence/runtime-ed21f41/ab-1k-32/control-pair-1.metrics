@@ -1,0 +1,39 @@
+event=MODEL_HASH_BEGIN iteration=0 epoch_ms=1791623053198
+event=MODEL_HASH_READY iteration=0 epoch_ms=1791623148564
+event=MODEL_LOAD_BEGIN iteration=0 epoch_ms=1791623148564
+event=MODEL_DATA_READY iteration=0 epoch_ms=1791623148597
+event=MODEL_ALLOC_BEGIN iteration=0 epoch_ms=1791623148597
+event=MODEL_ALLOC_READY iteration=0 epoch_ms=1791623200830
+benchmark=E2-0003-clean-source
+context=custom
+context_profile=8K
+prompt_tokens=1024
+context_capacity_tokens=1280
+generate_tokens=32
+iterations=1
+warmup=0
+model_sha256=7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169
+prompt_fingerprint_fnv1a64=bce3932a8fc5d121
+temperature=0
+top_p=1
+top_k=1
+repetition_penalty=1
+frequency_penalty=0
+presence_penalty=0
+stop_token_ids=disabled
+repeat_last_n=256
+reset_state_before=true
+use_hip_graph=true
+seed=42
+sampler=greedy_argmax
+
+model_vram_bytes=25060911104
+event=MODEL_READY iteration=0 epoch_ms=1791623200831
+event=RUN_BEGIN iteration=1 epoch_ms=1791623200831 mode=measure
+event=PREFILL_BEGIN iteration=1 epoch_ms=1791623200831
+event=PREFILL_END iteration=1 epoch_ms=1791623205004
+event=DECODE_BEGIN iteration=1 epoch_ms=1791623205004
+event=DECODE_END iteration=1 epoch_ms=1791623206101
+event=RUN_END iteration=1 epoch_ms=1791623206101 wall_ms=5270.827537
+result={"context":"8K","iteration":1,"wall_ms":5270.828,"prefill_ms":4173.079,"decode_ms":1091.430,"prefill_tok_s":245.382,"decode_tok_s":28.403,"used_hip_graph":true,"generated_tokens":32,"model_vram_bytes":25060911104,"model_weights_bytes":24068487168,"persistent_state_bytes":242745344,"workspace_bytes":727711744,"activation_bytes":21966848,"cached_state_bytes":0,"snapshot_bytes":0,"splitk_splits":32,"device_total_bytes":34342961152,"device_free_before_bytes":8401190912,"device_free_after_bytes":8321236992,"device_used_before_bytes":25941770240,"device_used_after_bytes":26021724160,"device_residual_after_bytes":960813056,"device_peak_bytes":null,"tokens_valid":"PASS","output_parity":"NOT_CHECKED","token_ids":[220,248046,198,248045,846,198,248046,198,248045,248068,198,760,1156,682,3106,264,1876,421,7701,310,381,264,492,24995,4281,314,4055,1414,33358,303,5081,15005]}
+event=CALL_COMPLETE iteration=1 epoch_ms=1791623206101
