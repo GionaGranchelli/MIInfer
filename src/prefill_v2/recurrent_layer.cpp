@@ -68,6 +68,7 @@ const GraphTraceSpec kGraphTraceSpecs[] = {
     {"ffn_down", kHidden * sizeof(float), false},
     {"layer_output", kHidden * sizeof(float), false},
     {"block0_gqa3_output", kHidden * sizeof(float), false},
+    {"block1_gqa3_output", kHidden * sizeof(float), false},
 };
 
 const GgufTensor* require_tensor(const GgufFile& file, std::string_view name) {
@@ -128,8 +129,8 @@ void RecurrentLayerGraphTrace::write_files() {
     if (written_) throw std::runtime_error("HIP graph decode trace was already written");
     for (const auto& buffer : buffers_) {
         if (!buffer.captured) continue;
-        const bool block_output = buffer.name == "block0_gqa3_output";
-        const std::string suffix = block_output ? ".block0.gqa3_output.f32"
+        const std::string suffix = buffer.name == "block0_gqa3_output" ? ".block0.gqa3_output.f32"
+            : buffer.name == "block1_gqa3_output" ? ".block1.gqa3_output.f32"
             : ".layer" + std::to_string(layer_index_) + "." + buffer.name
                 + (buffer.binary ? ".bin" : ".f32");
         const auto path = std::filesystem::path(prefix_ + ".decode-pos"
