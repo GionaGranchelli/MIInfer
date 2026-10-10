@@ -1,0 +1,7 @@
+timestamp_utc=2026-10-10T01:10:00.999747+00:00
+command=['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=8', '-o', 'ConnectionAttempts=1', '192.168.68.54', 'hostname; date -u; rocm-smi --showbus --showuniqueid --showproductname --showtemp --showmemuse --showuse --showpids; rocminfo | grep -E "^[[:space:]]*Name:[[:space:]]+gfx906$"; ps -eo pid,comm,args | grep -E "[h]ip|[r]ocm|[m]iinfer"']
+exit_code=255
+--- stdout ---
+
+--- stderr ---
+ssh: connect to host 192.168.68.54 port 22: Connection timed out
