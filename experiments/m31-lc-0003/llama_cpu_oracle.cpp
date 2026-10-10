@@ -11,11 +11,17 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <unordered_set>
 #include <vector>
+
+// Pinned llama.cpp exposes these diagnostic functions internally for layer-input traces.
+float* llama_get_embeddings_layer_inp(llama_context* context, std::uint32_t layer);
+void llama_set_embeddings_layer_inp(llama_context* context, std::uint32_t layer, bool enabled);
 
 namespace {
 
 constexpr char kLlamaRevision[] = "91c631b21d6e5d09e9c6659efdf6baeef5a44ddb";
+constexpr std::size_t kHidden = 5120;
 constexpr std::size_t kExpectedPromptTokens = 2048;
 constexpr std::size_t kPromptTile = 512;
 constexpr std::size_t kExpectedVocab = 248320;
@@ -73,10 +79,115 @@ struct BatchOwner {
 
 struct ContextDeleter { void operator()(llama_context* value) const { llama_free(value); } };
 using ContextOwner = std::unique_ptr<llama_context, ContextDeleter>;
+void write_f32(const std::filesystem::path& path, const std::vector<float>& values);
+void write_rows(const std::filesystem::path& path, const float* values, std::size_t count, bool first);
+
+struct CpuOpTrace {
+    std::string prefix;
+    bool enabled = false;
+    std::unordered_set<std::string> captured;
+    std::vector<float> normalized_input;
+    std::string error;
+};
+
+bool capture_cpu_op(ggml_tensor* tensor, bool ask, void* user_data) {
+    auto& trace = *static_cast<CpuOpTrace*>(user_data);
+    if (!trace.enabled) return false;
+    static const std::unordered_set<std::string> names = {
+        "attn_norm-0", "linear_attn_qkv_mixed-0", "z-0", "beta-0", "beta_sigmoid-0",
+        "alpha-0", "a_softplus-0", "gate-0", "state_predelta-0", "conv_output_raw-0",
+        "conv_output_silu-0", "q_conv-0", "k_conv-0", "v_conv-0", "q_conv_predelta-0",
+        "k_conv_predelta-0", "v_conv_predelta-0", "final_output-0", "linear_attn_out-0",
+        "attn_residual-0", "attn_post_norm-0", "ffn_out-0", "post_ffn-0", "l_out-0",
+    };
+    const std::string name(tensor->name);
+    if (names.find(name) == names.end()) return false;
+    if (ask) return true;
+    if (!trace.captured.insert(name).second) return true;
+    if (tensor->type != GGML_TYPE_F32 || tensor->data == nullptr) {
+        trace.error = "unexpected type or null data for " + name;
+        return true;
+    }
+    std::size_t elements = 1;
+    int token_axis = -1;
+    for (int axis = 0; axis < GGML_MAX_DIMS; ++axis) {
+        if (axis > 0 && tensor->ne[axis] == static_cast<std::int64_t>(kPromptTile)) {
+            token_axis = axis;
+            break;
+        }
+        elements *= static_cast<std::size_t>(tensor->ne[axis]);
+    }
+    if (token_axis >= 0) {
+        for (int axis = token_axis + 1; axis < GGML_MAX_DIMS; ++axis) {
+            if (tensor->ne[axis] != 1) {
+                trace.error = "non-singleton dimensions above token axis for " + name;
+                return true;
+            }
+        }
+    }
+    const auto path = trace.prefix + ".cpu." + name + ".f32";
+    const auto count = elements;
+    try {
+        std::vector<float> values(count);
+        std::copy_n(static_cast<const float*>(tensor->data), count, values.data());
+        write_f32(path, values);
+        if (name == "attn_norm-0") {
+            trace.normalized_input.assign(values.begin(), values.begin() + kHidden);
+        }
+        if (name == "linear_attn_qkv_mixed-0" || name == "beta-0" || name == "alpha-0") {
+            const ggml_tensor* matmul = tensor;
+            while (matmul->op == GGML_OP_RESHAPE || matmul->op == GGML_OP_VIEW) {
+                matmul = matmul->src[0];
+            }
+            if (matmul->op != GGML_OP_MUL_MAT || matmul->src[0] == nullptr
+                    || matmul->src[1] == nullptr || matmul->src[0]->ne[0] != kHidden
+                    || matmul->src[1]->ne[0] != kHidden
+                    || matmul->src[0]->ne[1] * static_cast<std::int64_t>(kHidden) > INT32_MAX) {
+                throw std::runtime_error("unexpected projection graph for scalar replay: " + name);
+            }
+            const auto* weight = matmul->src[0];
+            const auto* weight_traits = ggml_get_type_traits(weight->type);
+            if (trace.normalized_input.size() != kHidden || weight->data == nullptr
+                    || (weight->type != GGML_TYPE_F32
+                        && (weight_traits == nullptr || weight_traits->to_float == nullptr))) {
+                throw std::runtime_error("projection input or weight unavailable for scalar replay: " + name);
+            }
+            const auto outputs = static_cast<std::size_t>(weight->ne[1]);
+            std::vector<float> scalar(outputs);
+            std::vector<float> weight_row(kHidden);
+            for (std::size_t out = 0; out < outputs; ++out) {
+                const auto* row = static_cast<const std::uint8_t*>(weight->data) + out * weight->nb[1];
+                if (weight->type == GGML_TYPE_F32) {
+                    std::copy_n(reinterpret_cast<const float*>(row), kHidden, weight_row.data());
+                } else {
+                    weight_traits->to_float(row, weight_row.data(), kHidden);
+                }
+                double sum = 0.0;
+                for (std::size_t in = 0; in < kHidden; ++in) {
+                    sum += static_cast<double>(weight_row[in]) * trace.normalized_input[in];
+                }
+                scalar[out] = static_cast<float>(sum);
+            }
+            write_f32(trace.prefix + ".cpu.scalar-" + name + ".f32", scalar);
+            if (trace.captured.insert("scalar-input").second)
+                write_f32(trace.prefix + ".cpu.scalar-input.f32", trace.normalized_input);
+        }
+        std::ofstream meta(trace.prefix + ".cpu-ops.jsonl", std::ios::out | std::ios::app);
+        meta << "{\"name\":\"" << name << "\",\"type\":\"f32\",\"token_axis\":"
+             << token_axis << ",\"elements\":" << count << ",\"shape\":["
+             << tensor->ne[0] << "," << tensor->ne[1] << "," << tensor->ne[2] << "," << tensor->ne[3]
+             << "]}\n";
+        if (!meta) trace.error = "failed writing metadata for " + name;
+    } catch (const std::exception& error) {
+        trace.error = error.what();
+    }
+    return true;
+}
 
 std::vector<float> capture_pass(llama_model* model, const std::vector<llama_token>& prompt,
                                 const std::vector<llama_token>& forced, std::size_t vocab,
-                                std::int32_t threads) {
+                                std::int32_t threads, const std::string& layer_trace_path = {},
+                                const std::string& op_trace_prefix = {}) {
     auto params = llama_context_default_params();
     params.n_ctx = 2304;
     params.n_batch = kPromptTile;
@@ -91,20 +202,59 @@ std::vector<float> capture_pass(llama_model* model, const std::vector<llama_toke
     params.offload_kqv = false;
     params.op_offload = false;
     params.no_perf = true;
+    CpuOpTrace op_trace{op_trace_prefix};
+    if (!op_trace_prefix.empty()) {
+        params.cb_eval = capture_cpu_op;
+        params.cb_eval_user_data = &op_trace;
+    }
 
     ContextOwner context(llama_init_from_model(model, params));
     if (!context) throw std::runtime_error("llama_init_from_model failed");
+    if (!layer_trace_path.empty()) {
+        if (std::filesystem::exists(layer_trace_path)
+            || std::filesystem::exists(layer_trace_path + ".embedding-rows.f32")
+            || std::filesystem::exists(layer_trace_path + ".layer0-output-rows.f32")) {
+            throw std::runtime_error("refusing to overwrite CPU layer-trace artifacts");
+        }
+        for (std::uint32_t layer = 0; layer < 64; ++layer) {
+            llama_set_embeddings_layer_inp(context.get(), layer, true);
+        }
+    }
     BatchOwner batch(static_cast<std::int32_t>(kPromptTile));
     std::vector<float> logits;
     logits.reserve(kDecisions * vocab);
 
     for (std::size_t offset = 0; offset < prompt.size(); offset += kPromptTile) {
+        op_trace.enabled = !op_trace_prefix.empty() && offset == 0;
         const auto count = std::min(kPromptTile, prompt.size() - offset);
         fill_batch(batch.value, prompt.data() + offset, count,
                    static_cast<llama_pos>(offset), offset + count == prompt.size());
         const auto result = llama_decode(context.get(), batch.value);
         if (result != 0) throw std::runtime_error("llama_decode failed on prompt tile at " + std::to_string(offset)
                                                    + " with code " + std::to_string(result));
+        op_trace.enabled = false;
+        if (!op_trace.error.empty()) throw std::runtime_error("CPU operation trace failed: " + op_trace.error);
+        if (!layer_trace_path.empty()) {
+            const float* embedding = llama_get_embeddings_layer_inp(context.get(), 0);
+            const float* layer0_output = llama_get_embeddings_layer_inp(context.get(), 1);
+            if (embedding == nullptr || layer0_output == nullptr) {
+                throw std::runtime_error("llama layer-0 row trace returned null");
+            }
+            constexpr std::size_t row_count = kPromptTile * 5120;
+            write_rows(layer_trace_path + ".embedding-rows.f32", embedding, row_count, offset == 0);
+            write_rows(layer_trace_path + ".layer0-output-rows.f32", layer0_output, row_count, offset == 0);
+        }
+    }
+    if (!layer_trace_path.empty()) {
+        std::vector<float> trace;
+        trace.reserve(64 * 5120);
+        for (std::uint32_t layer = 0; layer < 64; ++layer) {
+            const float* input = llama_get_embeddings_layer_inp(context.get(), layer);
+            if (input == nullptr) throw std::runtime_error("llama layer-input capture returned null");
+            trace.insert(trace.end(), input + (kPromptTile - 1) * 5120,
+                         input + kPromptTile * 5120);
+        }
+        write_f32(layer_trace_path, trace);
     }
     append_logits(context.get(), vocab, logits); // decision 1
 
@@ -128,6 +278,14 @@ void write_f32(const std::filesystem::path& path, const std::vector<float>& valu
     if (!output) throw std::runtime_error("failed writing " + path.string());
 }
 
+void write_rows(const std::filesystem::path& path, const float* values, std::size_t count, bool first) {
+    std::ofstream output(path, std::ios::binary | std::ios::out
+        | (first ? std::ios::trunc : std::ios::app));
+    if (!output) throw std::runtime_error("cannot create " + path.string());
+    output.write(reinterpret_cast<const char*>(values), static_cast<std::streamsize>(count * sizeof(float)));
+    if (!output) throw std::runtime_error("failed writing " + path.string());
+}
+
 llama_token top_id(const std::vector<float>& values, std::size_t vocab, std::size_t decision) {
     const auto start = values.begin() + decision * vocab;
     return static_cast<llama_token>(std::distance(start, std::max_element(start, start + vocab)));
@@ -136,8 +294,10 @@ llama_token top_id(const std::vector<float>& values, std::size_t vocab, std::siz
 } // namespace
 
 int main(int argc, char** argv) {
-    if (argc != 5) {
-        std::cerr << "usage: m31-lc-0003-cpu-oracle MODEL.gguf PROMPT.ids FORCED.ids OUTPUT_PREFIX\n";
+    const bool layer_trace_only = argc == 6 && std::string(argv[5]) == "--layer-trace-only";
+    const bool operation_trace_only = argc == 6 && std::string(argv[5]) == "--operation-trace-only";
+    if (argc != 5 && !layer_trace_only && !operation_trace_only) {
+        std::cerr << "usage: m31-lc-0003-cpu-oracle MODEL.gguf PROMPT.ids FORCED.ids OUTPUT_PREFIX [--layer-trace-only|--operation-trace-only]\n";
         return 2;
     }
     try {
@@ -167,6 +327,15 @@ int main(int argc, char** argv) {
 
         constexpr std::int32_t threads = 24;
         std::array<std::vector<float>, 2> captures;
+        if (layer_trace_only || operation_trace_only) {
+            captures[0] = capture_pass(model.get(), prompt, forced, vocab_size, threads,
+                                       output_prefix + ".layers.f32",
+                                       operation_trace_only ? output_prefix : std::string{});
+            write_f32(output_prefix + ".run1.logits.f32", captures[0]);
+            std::cout << "layer_trace_layers=64 hidden=5120 final_prompt_token=2047\n";
+            llama_backend_free();
+            return 0;
+        }
         for (std::size_t pass = 0; pass < captures.size(); ++pass) {
             captures[pass] = capture_pass(model.get(), prompt, forced, vocab_size, threads);
             write_f32(output_prefix + ".run" + std::to_string(pass + 1) + ".logits.f32", captures[pass]);

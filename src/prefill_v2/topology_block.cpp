@@ -29,19 +29,36 @@ void PrefillV2TopologyBlock::forward(
     std::uint32_t base_position,
     std::uint32_t token_count,
     hipStream_t stream,
-    const DevicePrefillState* prefill_state) const {
+    const DevicePrefillState* prefill_state,
+    std::vector<float>* layer_trace,
+    std::vector<float>* layer0_row_trace) const {
+
+    const auto capture = [&](std::size_t layer, const float* hidden) {
+        if (layer_trace == nullptr) return;
+        const auto source = hidden + (token_count - 1) * kHidden;
+        auto* target = layer_trace->data() + (layer + 1) * kHidden;
+        MIINFER_HIP_CHECK(hipMemcpy(target, source, kHidden * sizeof(float), hipMemcpyDeviceToHost));
+    };
 
     // Layer 0 (GDN): d_ping -> d_pong
     gdn0_.forward(d_ping, d_pong, state0_in, state0_out, ws, token_count, stream, prefill_state);
+    capture(block_index_ * kLayersPerBlock, d_pong);
+    if (block_index_ == 0 && layer0_row_trace != nullptr) {
+        MIINFER_HIP_CHECK(hipMemcpy(layer0_row_trace->data(), d_pong,
+                                    token_count * kHidden * sizeof(float), hipMemcpyDeviceToHost));
+    }
 
     // Layer 1 (GDN): d_pong -> d_ping
     gdn1_.forward(d_pong, d_ping, state1_in, state1_out, ws, token_count, stream, prefill_state);
+    capture(block_index_ * kLayersPerBlock + 1, d_ping);
 
     // Layer 2 (GDN): d_ping -> d_pong
     gdn2_.forward(d_ping, d_pong, state2_in, state2_out, ws, token_count, stream, prefill_state);
+    capture(block_index_ * kLayersPerBlock + 2, d_pong);
 
     // Layer 3 (GQA): d_pong -> d_final_output
     gqa3_.forward(d_pong, d_final_output, kv_cache3, ws, base_position, token_count, stream, prefill_state);
+    capture(block_index_ * kLayersPerBlock + 3, d_final_output);
 }
 
 void PrefillV2TopologyBlock::decode(

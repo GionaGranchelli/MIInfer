@@ -10,6 +10,7 @@
 #include <unordered_set>
 #include <utility>
 #include <filesystem>
+#include <fstream>
 
 #include "miinfer/prefill_v2/model.hpp"
 #include "miinfer/prefill_v2/persistent_session.hpp"
@@ -573,6 +574,39 @@ void PrefillV2Model::forward(
         d_ping_,
         stream);
 
+    const char* layer_trace_prefix = std::getenv("MIINFER_LC_LAYER_TRACE_PREFIX");
+    const bool trace_prompt_tile = layer_trace_prefix != nullptr
+        && base_position < 2048 && token_count == 512 && base_position % 512 == 0;
+    const bool capture_layer_trace = trace_prompt_tile && base_position == 1536;
+    std::vector<float> layer_trace;
+    if (capture_layer_trace) {
+        const std::filesystem::path path = std::string(layer_trace_prefix) + ".layers.f32";
+        if (std::filesystem::exists(path)) {
+            throw std::runtime_error("refusing to overwrite M31 layer trace: " + path.string());
+        }
+        layer_trace.resize(66 * kHidden);
+        MIINFER_HIP_CHECK(hipMemcpy(layer_trace.data(), d_ping_ + (token_count - 1) * kHidden,
+                                    kHidden * sizeof(float), hipMemcpyDeviceToHost));
+    }
+    std::vector<float> layer0_row_trace;
+    if (trace_prompt_tile) {
+        const std::filesystem::path input_path = std::string(layer_trace_prefix) + ".embedding-rows.f32";
+        const std::filesystem::path output_path = std::string(layer_trace_prefix) + ".layer0-output-rows.f32";
+        if (base_position == 0 && (std::filesystem::exists(input_path) || std::filesystem::exists(output_path))) {
+            throw std::runtime_error("refusing to overwrite M31 row traces");
+        }
+        layer0_row_trace.resize(token_count * kHidden);
+        std::vector<float> embedding_rows(token_count * kHidden);
+        MIINFER_HIP_CHECK(hipMemcpy(embedding_rows.data(), d_ping_,
+                                    embedding_rows.size() * sizeof(float), hipMemcpyDeviceToHost));
+        std::ofstream input_output(input_path, base_position == 0
+            ? (std::ios::binary | std::ios::out) : (std::ios::binary | std::ios::app));
+        if (!input_output) throw std::runtime_error("cannot write M31 embedding trace: " + input_path.string());
+        input_output.write(reinterpret_cast<const char*>(embedding_rows.data()),
+                           static_cast<std::streamsize>(embedding_rows.size() * sizeof(float)));
+        if (!input_output) throw std::runtime_error("failed writing M31 embedding trace: " + input_path.string());
+    }
+
     // 2. Execute 16 Topology Blocks (Block 0..15 = 64 layers)
     for (std::size_t b = 0; b < 16; ++b) {
         auto st0 = recurrent_states_[b * 3 + 0].view();
@@ -594,7 +628,18 @@ void PrefillV2Model::forward(
             base_position,
             token_count,
             stream,
-            prefill_state);
+            prefill_state,
+            capture_layer_trace ? &layer_trace : nullptr,
+            trace_prompt_tile ? &layer0_row_trace : nullptr);
+    }
+    if (trace_prompt_tile) {
+        const std::filesystem::path output_path = std::string(layer_trace_prefix) + ".layer0-output-rows.f32";
+        std::ofstream output(output_path, base_position == 0
+            ? (std::ios::binary | std::ios::out) : (std::ios::binary | std::ios::app));
+        if (!output) throw std::runtime_error("cannot write M31 layer-0 output trace: " + output_path.string());
+        output.write(reinterpret_cast<const char*>(layer0_row_trace.data()),
+                     static_cast<std::streamsize>(layer0_row_trace.size() * sizeof(float)));
+        if (!output) throw std::runtime_error("failed writing M31 layer-0 output trace: " + output_path.string());
     }
 
     // 3. Final RMS Norm: d_ping_ -> d_final_hidden_out
@@ -606,6 +651,18 @@ void PrefillV2Model::forward(
         kHidden,
         rms_epsilon_,
         stream);
+
+    if (capture_layer_trace) {
+        MIINFER_HIP_CHECK(hipMemcpy(layer_trace.data() + 65 * kHidden,
+                                    d_final_hidden_out + (token_count - 1) * kHidden,
+                                    kHidden * sizeof(float), hipMemcpyDeviceToHost));
+        const std::filesystem::path path = std::string(layer_trace_prefix) + ".layers.f32";
+        std::ofstream output(path, std::ios::binary | std::ios::out);
+        if (!output) throw std::runtime_error("cannot create M31 layer trace: " + path.string());
+        output.write(reinterpret_cast<const char*>(layer_trace.data()),
+                     static_cast<std::streamsize>(layer_trace.size() * sizeof(float)));
+        if (!output) throw std::runtime_error("failed writing M31 layer trace: " + path.string());
+    }
 }
 
 void PrefillV2Model::forward(

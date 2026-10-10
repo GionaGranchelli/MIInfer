@@ -1,6 +1,6 @@
 # M31-LC-0003 — Independent Numerical Oracle
 
-**Status: IN PROGRESS — CPU reference is reproducible; neither GPU route is yet supported by the full-model comparison; operation-level localization remains open.**
+**Status: UNRESOLVED — the CPU oracle is reproducible, but neither GPU route passes the existing exact-token gate. The earliest layer-0 numerical differences are localized; evidence does not establish an incorrect kernel or justify a code fix.**
 
 ## Frozen replay and reproducibility
 
@@ -26,10 +26,16 @@ Both GPU routes' raw logit vectors first differ bitwise from the CPU reference a
 
 The CPU and fused-GPU embedding outputs match bitwise for all 2,048 prompt positions (SHA-256 `96ce7a52936fc3a7b8a2203731eb9e205b0c4f56a55b6bf2d2d9868fe6cebc97`). The first layer boundary that differs is the output of GDN layer 0, which becomes layer 1's input. Comparing every prompt position shows that layer 0 already differs at position 0: RMSE `0.00556809`, maximum absolute error `0.21034622`, relative L2 `0.01941864`; all 2,048 output rows differ. This rules out divergence accumulating only from recurrent state over the prompt.
 
-This localizes the earliest affected layer and prompt position, but not the first incorrect operation. A first-token operation trace is being compared against the independent CPU graph. No kernel defect is established yet.
+## Layer-0 operation replay
+
+At prompt position 0, the initial GDN state and attention RMS-normalized input match the CPU bitwise. The first paired operation output that differs bitwise is the beta projection (relative L2 `2.50e-7`, max absolute error `1.67e-6`). An independent scalar projection, using the same captured input, GGUF weights dequantized to F32, FP64 dot products, and F32 output rounding, puts CPU beta at relative L2 `2.59e-7` and GPU beta at `5.98e-8` from the scalar result. Alpha shows the same small scale: CPU `3.04e-7`, GPU `1.06e-7`.
+
+The first larger paired difference is the QKV projection: CPU versus GPU relative L2 `0.00409`. Against the scalar projection, CPU is `0.00394` away and GPU is `0.00286` away. This is consistent with differing activation quantization and accumulation paths for Q4_K projections. It does not prove either path correct, and being closer on this one projection does not establish full-model correctness. The fused and MMQ-only modes share this prefill projection; their experimental switch selects decode FFN weights, so this shared difference does not explain their later token disagreement.
+
+The trace-enabled fused replay completed all five decisions and reproduced the frozen fused logits byte for byte (SHA-256 `78a1e4032a9f3253e7d4bc28926abf9d4939a77a4b86dfd8b5e319eb0737e92f`). Its first layer output also matches the earlier fused row trace at position 0; the CPU operation trace output matches its independently captured CPU row trace. The scalar CPU replay retained the same frozen CPU logits hash `260c5e349910ef75aeba4d4473d23bf24c0bd31de923137c86e060e42624dda2`.
 
 ## Finding and remaining work
 
-This comparison does not support either GPU route as numerically equivalent to the CPU reference under the existing exact-token gate. The first layer-boundary difference is now localized to GDN layer 0 at prompt position 0, and the captured fused/MMQ-only divergence remains later, at decision 2. Operation comparison is required before attributing the difference to a computation defect.
+Neither GPU route is numerically equivalent to the CPU reference under the existing exact-token gate: both disagree with the CPU token at decision 5, and fused versus MMQ-only first differ at decision 2. The shared CPU/GPU difference is localized from identical layer input through the first projection branches and into the QKV MMQ result. Current evidence points to numerical differences in projection paths, not a recurrent-state or prompt-embedding mismatch. It does not establish an incorrect computation.
 
-Next, identify the earliest layer-0 operation mismatch from the matching CPU/GPU traces, then determine whether it is an implementation defect or an expected numerical difference. No 4K/8K ladder, performance study, or optimization work was performed. Do not change the fused default or promote MMQ-only based on these results.
+No corrective kernel change is justified by this evidence. Keep fused as default and MMQ-only experimental. Close this bounded investigation as **UNRESOLVED**, with exact-token parity still failing; do not loosen that gate based on this result. No 4K/8K ladder, performance study, or optimization work was performed.

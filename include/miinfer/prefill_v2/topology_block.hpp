@@ -56,7 +56,9 @@ public:
         std::uint32_t base_position,
         std::uint32_t token_count,
         hipStream_t stream = nullptr,
-        const DevicePrefillState* prefill_state = nullptr) const;
+        const DevicePrefillState* prefill_state = nullptr,
+        std::vector<float>* layer_trace = nullptr,
+        std::vector<float>* layer0_row_trace = nullptr) const;
 
     // Specialized single-token decode execution through the 4 layers.
     void decode(

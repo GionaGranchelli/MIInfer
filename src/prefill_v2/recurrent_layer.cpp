@@ -1,6 +1,9 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
+#include <filesystem>
+#include <fstream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -292,18 +295,40 @@ void PrefillV2RecurrentLayer::forward(
     }
 
     const std::uint32_t base_position = incoming_state.position;
+    const char* op_trace_prefix = std::getenv("MIINFER_LC_OP_TRACE_PREFIX");
+    static bool op_trace_captured = false;
+    const bool capture_ops = op_trace_prefix != nullptr && layer_index_ == 0
+        && base_position == 0 && token_count == 512 && !op_trace_captured;
+    const auto capture_op = [&](const char* name, const float* device, std::size_t count) {
+        if (!capture_ops) return;
+        const std::filesystem::path path = std::string(op_trace_prefix) + ".gpu." + name + ".f32";
+        if (std::filesystem::exists(path)) throw std::runtime_error("refusing to overwrite GDN operation trace: " + path.string());
+        std::vector<float> host(count);
+        MIINFER_HIP_CHECK(hipMemcpy(host.data(), device, count * sizeof(float), hipMemcpyDeviceToHost));
+        std::ofstream output(path, std::ios::binary | std::ios::out);
+        if (!output) throw std::runtime_error("cannot create GDN operation trace: " + path.string());
+        output.write(reinterpret_cast<const char*>(host.data()),
+                     static_cast<std::streamsize>(host.size() * sizeof(float)));
+        if (!output) throw std::runtime_error("failed writing GDN operation trace: " + path.string());
+    };
+    capture_op("state_predelta", incoming_state.d_state, RecurrentLayerState::kStateElements);
 
     // 1. Input RMS Normalization
     launch_qwen3_rms_norm_batch(
         d_input, d_attn_norm_, ws.normalized, token_count, kHidden, kRmsNormEpsilon, stream);
+    capture_op("attn_norm", ws.normalized, kHidden);
 
     // 2. Dual beta/alpha projection and parameter preparation
     launch_qwen35_f32_dual_gemm_batch(
         d_ssm_beta_, d_ssm_alpha_, ws.normalized, ws.raw_beta, ws.raw_alpha,
         token_count, kVHeads, kHidden, stream);
+    capture_op("beta", ws.raw_beta, kVHeads);
+    capture_op("alpha", ws.raw_alpha, kVHeads);
     launch_qwen35_prepare_beta_decay(
         ws.raw_beta, ws.raw_alpha, d_ssm_dt_, d_ssm_a_, ws.beta, ws.decay,
         token_count * kVHeads, stream);
+    capture_op("beta_sigmoid", ws.beta, kVHeads);
+    capture_op("gate", ws.decay, kVHeads);
 
     // 3. QKV & Gate projections via compact Mx MMQ
     if (qkv_type_ == GgufTensorType::q4_k) {
@@ -322,31 +347,40 @@ void PrefillV2RecurrentLayer::forward(
         launch_mx_q8_1_mmq_quantize(
             ws.normalized, ws.mmq_q8, token_count, kHidden, /*affine=*/true, stream);
     }
+    capture_op("linear_attn_qkv_mixed", ws.qkv, kChannels);
 
     launch_mx_q4k_repacked_mmq(
         d_gate_mmq_, ws.mmq_q8, ws.gate, kInner, kHidden, token_count, stream);
+    capture_op("z", ws.gate, kInner);
 
     // 4. Convolution + SiLU + split into Q, K, V (updating conv history buffer in place)
     launch_qwen35_conv_silu_split_batch(
         ws.qkv, d_ssm_conv_, outgoing_state.d_conv_history,
         ws.query, ws.key, ws.value,
         base_position, token_count, kConvKernel, kChannels, kConvKernel, stream, prefill_state);
+    capture_op("q_conv", ws.query, kKHeads * kState);
+    capture_op("k_conv", ws.key, kKHeads * kState);
+    capture_op("v_conv", ws.value, kVHeads * kState);
 
     // 5. Dual Head L2 Normalization
     launch_qwen35_dual_head_l2_normalize_batch(
         ws.query, ws.key, ws.query, ws.key,
         token_count, kKHeads, kState, stream);
+    capture_op("q_conv_predelta", ws.query, kKHeads * kState);
+    capture_op("k_conv_predelta", ws.key, kKHeads * kState);
 
     // 6. Register-resident GDN scan across complete token batch
     launch_mx_gdn_chunk(
         ws.query, ws.key, ws.value, ws.beta, ws.decay,
         outgoing_state.d_state, ws.gdn_raw_output,
         token_count, kKHeads, kVHeads, kState, stream);
+    capture_op("gdn_raw_output", ws.gdn_raw_output, kVHeads * kState);
 
     // 7. SSM Postprocessing (per-head RMS norm + SSM norm scale + SiLU gate)
     launch_m12_gdn_postprocess(
         ws.gdn_raw_output, ws.gate, d_ssm_norm_, ws.gated_output,
         token_count, kVHeads, kState, kRmsNormEpsilon, stream);
+    capture_op("final_output", ws.gated_output, kInner);
 
     // 8. SSM Out projection (Q5_K affine)
     launch_mx_q8_1_mmq_quantize(
@@ -354,12 +388,15 @@ void PrefillV2RecurrentLayer::forward(
     launch_mx_q5k_repacked_mmq(
         d_ssm_out_mmq_, ws.mmq_q8, ws.ssm_output,
         kHidden, kInner, token_count, stream);
+    capture_op("linear_attn_out", ws.ssm_output, kHidden);
 
     // 9. Residual + Post-attention RMS Norm
     launch_qwen3_fused_add_rms_norm_batch(
         d_input, ws.ssm_output, d_post_norm_,
         ws.residual, ws.post_normalized,
         token_count, kHidden, kRmsNormEpsilon, stream);
+    capture_op("attn_residual", ws.residual, kHidden);
+    capture_op("attn_post_norm", ws.post_normalized, kHidden);
 
     // 10. FFN Gate & Up projections (Q4_K affine)
     launch_mx_q8_1_mmq_quantize(
@@ -370,11 +407,14 @@ void PrefillV2RecurrentLayer::forward(
     launch_mx_q4k_repacked_mmq(
         d_ffn_up_mmq_, ws.mmq_q8, ws.ffn_up,
         kFfnInner, kHidden, token_count, stream);
+    capture_op("ffn_gate", ws.ffn_gate, kFfnInner);
+    capture_op("ffn_up", ws.ffn_up, kFfnInner);
 
     // 11. SwiGLU activation
     launch_qwen3_silu_mul(
         ws.ffn_gate, ws.ffn_up, ws.ffn_activation,
         token_count * kFfnInner, stream);
+    capture_op("ffn_activation", ws.ffn_activation, kFfnInner);
 
     // 12. FFN Down projection
     if (ffn_down_type_ == GgufTensorType::q4_k) {
@@ -390,12 +430,15 @@ void PrefillV2RecurrentLayer::forward(
             static_cast<const std::uint8_t*>(d_ffn_down_mmq_), ws.mmq_q8,
             ws.ffn_down, kHidden, kFfnInner, token_count, stream);
     }
+    capture_op("ffn_out", ws.ffn_down, kHidden);
 
     // 13. Final residual addition
     launch_qwen3_add(
         ws.residual, ws.ffn_down, d_output,
         token_count * kHidden, stream);
+    capture_op("post_ffn", d_output, kHidden);
 
+    if (capture_ops) op_trace_captured = true;
     outgoing_state.position = base_position + token_count;
 }
 
