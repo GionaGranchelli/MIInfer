@@ -73,6 +73,11 @@ class SameSourceHarnessTest(unittest.TestCase):
         config["repetition_penalty"] = "1.15"
         self.assertFalse(MODULE.sampler_config_valid(config))
 
+    def test_workload_matches_qualification_pair(self):
+        self.assertEqual(MODULE.PROMPT_TOKENS, 1024)
+        self.assertEqual(MODULE.OUTPUT_TOKENS, 32)
+        self.assertEqual(MODULE.CONTEXT_TOKENS, 1280)
+
 
 if __name__ == "__main__":
     unittest.main()
