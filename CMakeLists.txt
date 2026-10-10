@@ -17,6 +17,7 @@ if(MIINFER_BUILD_TESTS)
 endif()
 set(MIINFER_RELEASE_TEST_TARGETS
     miinfer-host-test
+    miinfer-prefill-v2-experimental-options-test
     miinfer-openai-api-test
     miinfer-m12-gdn-oracle
     miinfer-model-loader-test
@@ -171,6 +172,10 @@ target_compile_options(miinfer-device-kv-shard-placement-test PRIVATE -Wall -Wex
 add_executable(miinfer-openai-api-test tests/openai_api_test.cpp)
 target_link_libraries(miinfer-openai-api-test PRIVATE miinfer_openai_api)
 target_compile_options(miinfer-openai-api-test PRIVATE -Wall -Wextra -Wpedantic)
+
+add_executable(miinfer-prefill-v2-experimental-options-test
+    tests/prefill_v2_experimental_options_test.cpp)
+target_compile_options(miinfer-prefill-v2-experimental-options-test PRIVATE -Wall -Wextra -Wpedantic)
 
 if(MIINFER_ENABLE_HIP)
     add_library(miinfer_hip STATIC
@@ -775,6 +780,9 @@ endforeach()
 if(MIINFER_BUILD_TESTS)
     add_test(NAME host-only COMMAND miinfer-host-test)
     set_tests_properties(host-only PROPERTIES LABELS "host-only")
+    add_test(NAME prefill-v2-experimental-options
+             COMMAND miinfer-prefill-v2-experimental-options-test)
+    set_tests_properties(prefill-v2-experimental-options PROPERTIES LABELS "host-only")
     add_test(NAME openai-api-host COMMAND miinfer-openai-api-test)
     set_tests_properties(openai-api-host PROPERTIES LABELS "host-only")
     add_test(NAME m12-gdn-oracle COMMAND miinfer-m12-gdn-oracle)

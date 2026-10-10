@@ -98,6 +98,13 @@ public:
     [[nodiscard]] std::size_t persistent_weight_bytes() const noexcept { return persistent_weight_bytes_; }
     [[nodiscard]] bool v_is_q6() const noexcept { return v_is_q6_; }
     [[nodiscard]] bool ffn_down_is_q6() const noexcept { return ffn_down_is_q6_; }
+    void append_decode_weight_pointers(std::vector<const void*>& out) const {
+        out.insert(out.end(), {d_attn_norm_, d_q_norm_, d_k_norm_, d_post_attention_norm_,
+            d_q_mmq_, d_k_mmq_, d_v_mmq_, d_o_mmq_});
+        if (d_ffn_swiglu_fused_ != nullptr) out.push_back(d_ffn_swiglu_fused_);
+        else out.insert(out.end(), {d_ffn_gate_mmq_, d_ffn_up_mmq_});
+        out.push_back(d_ffn_down_mmq_);
+    }
 
 private:
     std::size_t layer_index_ = 0;

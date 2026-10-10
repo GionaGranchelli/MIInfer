@@ -301,6 +301,7 @@ private:
         const std::shared_ptr<SnapshotBacking>& backing, hipStream_t stream);
     void release_snapshot_record(SnapshotRecord& record) noexcept;
     void refresh_snapshot_bytes() noexcept;
+    [[nodiscard]] std::vector<const void*> decode_graph_weight_pointers() const;
 
     std::string model_name_ = "Qwen3.8-27B";
     std::string quantization_ = "Q4_K_M";

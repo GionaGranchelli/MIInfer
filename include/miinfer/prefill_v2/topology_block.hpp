@@ -13,6 +13,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <vector>
 
 namespace miinfer::prefill_v2 {
 
@@ -99,6 +100,12 @@ public:
     [[nodiscard]] const PrefillV2RecurrentLayer& gdn1() const noexcept { return gdn1_; }
     [[nodiscard]] const PrefillV2RecurrentLayer& gdn2() const noexcept { return gdn2_; }
     [[nodiscard]] const PrefillV2AttentionLayer& gqa3() const noexcept { return gqa3_; }
+    void append_decode_weight_pointers(std::vector<const void*>& out) const {
+        gdn0_.append_decode_weight_pointers(out);
+        gdn1_.append_decode_weight_pointers(out);
+        gdn2_.append_decode_weight_pointers(out);
+        gqa3_.append_decode_weight_pointers(out);
+    }
 
 private:
     std::size_t block_index_ = 0;

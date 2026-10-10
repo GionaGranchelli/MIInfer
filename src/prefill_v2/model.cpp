@@ -32,6 +32,24 @@ bool full_copy_snapshot_mode() noexcept {
     const char* value = std::getenv("MIINFER_M30_0005_FULL_COPY");
     return value != nullptr && std::string_view(value) != "0";
 }
+
+bool hip_graph_diagnostics_enabled() noexcept {
+    const char* value = std::getenv("MIINFER_HIP_GRAPH_DIAGNOSTICS");
+    return value != nullptr && std::string_view(value) == "1";
+}
+
+void validate_hip_graph_weight_pointers(const std::vector<const void*>& pointers,
+                                        const char* phase) {
+    for (const auto* pointer : pointers) {
+        hipPointerAttribute_t attributes{};
+        const auto status = hipPointerGetAttributes(&attributes, pointer);
+        if (status != hipSuccess) {
+            throw std::runtime_error(std::string("HIP graph weight pointer invalid during ") + phase);
+        }
+    }
+    std::clog << "event=HIP_GRAPH_WEIGHT_POINTERS_VALID phase=" << phase
+              << " count=" << pointers.size() << '\n';
+}
 void prune_persistent_checkpoints(
     const std::filesystem::path& directory,
     const std::string& model_id,
@@ -1170,6 +1188,10 @@ GenerateStats PrefillV2Model::generate(
     if (enable_graph) {
         hipStream_t exec_stream = (stream != nullptr) ? stream : hipStreamPerThread;
         capture_decode_graph(exec_stream);
+        const bool graph_diagnostics = hip_graph_diagnostics_enabled();
+        const auto graph_weight_pointers = graph_diagnostics
+            ? decode_graph_weight_pointers() : std::vector<const void*>{};
+        if (graph_diagnostics) validate_hip_graph_weight_pointers(graph_weight_pointers, "before_replay");
         stats.used_hip_graph = true;
 
         DeviceDecodeState state{};
@@ -1183,6 +1205,7 @@ GenerateStats PrefillV2Model::generate(
 
         const auto t_decode_start = std::chrono::steady_clock::now();
         std::size_t actual_generated = 0;
+        std::size_t graph_replays = 0;
 
         for (std::size_t i = 0; i < num_decode; ++i) {
             if (i == 0) invalidate_runtime_state_cache();
@@ -1195,6 +1218,11 @@ GenerateStats PrefillV2Model::generate(
                 hipMemcpyDeviceToHost,
                 exec_stream));
             MIINFER_HIP_CHECK(hipStreamSynchronize(exec_stream));
+            ++graph_replays;
+            if (graph_diagnostics) {
+                validate_hip_graph_weight_pointers(graph_weight_pointers, "after_replay");
+                std::clog << "event=HIP_GRAPH_REPLAY_OK replay=" << graph_replays << '\n';
+            }
 
             const std::uint32_t next_token = sample_token_from_logits(
                 host_logits_,
@@ -1367,6 +1395,10 @@ void PrefillV2Model::capture_decode_graph(hipStream_t stream) {
     }
 
     hipStream_t capture_stream = (stream != nullptr) ? stream : hipStreamPerThread;
+    const bool graph_diagnostics = hip_graph_diagnostics_enabled();
+    const auto captured_weight_pointers = graph_diagnostics
+        ? decode_graph_weight_pointers() : std::vector<const void*>{};
+    if (graph_diagnostics) validate_hip_graph_weight_pointers(captured_weight_pointers, "before_capture");
 
     auto& ws = const_cast<PrefillV2Workspace&>(ws_mgr_->workspace());
     auto* decode_state = static_cast<DeviceDecodeState*>(d_decode_state_);
@@ -1416,8 +1448,28 @@ void PrefillV2Model::capture_decode_graph(hipStream_t stream) {
     compute_logits(d_pong_, d_logits_, capture_stream);
 
     MIINFER_HIP_CHECK(hipStreamEndCapture(capture_stream, &graph));
+    if (graph_diagnostics) {
+        validate_hip_graph_weight_pointers(captured_weight_pointers, "after_capture");
+        std::clog << "event=HIP_GRAPH_CAPTURE_COMPLETE weight_pointers="
+                  << captured_weight_pointers.size() << '\n';
+    }
     MIINFER_HIP_CHECK(hipGraphInstantiate(&decode_graph_exec_, graph, nullptr, nullptr, 0));
+    if (graph_diagnostics) {
+        const auto instantiated_weight_pointers = decode_graph_weight_pointers();
+        if (instantiated_weight_pointers != captured_weight_pointers) {
+            throw std::runtime_error("HIP graph weight pointer set changed during instantiation");
+        }
+        validate_hip_graph_weight_pointers(instantiated_weight_pointers, "after_instantiate");
+        std::clog << "event=HIP_GRAPH_INSTANTIATE_SUCCESS weight_pointers="
+                  << instantiated_weight_pointers.size() << '\n';
+    }
     MIINFER_HIP_CHECK(hipGraphDestroy(graph));
+}
+
+std::vector<const void*> PrefillV2Model::decode_graph_weight_pointers() const {
+    std::vector<const void*> pointers{d_embedding_weights_, d_final_norm_weights_, d_output_weights_wave_};
+    for (const auto& block : blocks_) block->append_decode_weight_pointers(pointers);
+    return pointers;
 }
 
 void PrefillV2Model::cleanup_suffix_graph() {

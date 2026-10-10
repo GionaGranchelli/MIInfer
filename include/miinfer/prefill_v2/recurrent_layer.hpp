@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace miinfer::prefill_v2 {
 
@@ -61,6 +62,14 @@ public:
     [[nodiscard]] std::size_t persistent_weight_bytes() const noexcept { return persistent_weight_bytes_; }
     [[nodiscard]] GgufTensorType qkv_type() const noexcept { return qkv_type_; }
     [[nodiscard]] GgufTensorType ffn_down_type() const noexcept { return ffn_down_type_; }
+    void append_decode_weight_pointers(std::vector<const void*>& out) const {
+        out.insert(out.end(), {d_attn_norm_, d_qkv_mmq_, d_gate_mmq_, d_ssm_beta_,
+            d_ssm_alpha_, d_ssm_dt_, d_ssm_a_, d_ssm_conv_, d_ssm_norm_,
+            d_ssm_out_mmq_, d_post_norm_});
+        if (d_ffn_swiglu_fused_ != nullptr) out.push_back(d_ffn_swiglu_fused_);
+        else out.insert(out.end(), {d_ffn_gate_mmq_, d_ffn_up_mmq_});
+        out.push_back(d_ffn_down_mmq_);
+    }
 
     // Executes one complete recurrent layer for `token_count` tokens (multiple of 64).
     void forward(
