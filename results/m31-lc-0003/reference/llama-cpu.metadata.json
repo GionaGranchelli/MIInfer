@@ -1,0 +1,20 @@
+{
+  "reference": "llama.cpp CPU",
+  "revision": "91c631b21d6e5d09e9c6659efdf6baeef5a44ddb",
+  "model_desc": "qwen35 27B Q4_K - Medium",
+  "prompt_tokens": 2048,
+  "forced_history": [220, 248046, 198, 248045],
+  "decisions": 5,
+  "vocab_size": 248320,
+  "layers": 64,
+  "embedding_size": 5120,
+  "trained_context": 262144,
+  "context": 2304,
+  "prompt_tile": 512,
+  "threads": 24,
+  "gpu_layers": 0,
+  "kv_type_k": "f16",
+  "kv_type_v": "f16",
+  "bitwise_reproducible": true,
+  "run1_top1": [220, 248046, 198, 248045, 198]
+}
