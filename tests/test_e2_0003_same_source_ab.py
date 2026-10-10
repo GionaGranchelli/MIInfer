@@ -60,12 +60,27 @@ class SameSourceHarnessTest(unittest.TestCase):
             model.touch()
             args = SimpleNamespace(container_runtime="podman", binary=binary, model=model,
                                    expected_bdf="0000:06:00.0", image="image",
-                                   context_profile="8K", prompt_tokens=1024, generate_tokens=32)
+                                   context_profile="8K", prompt_tokens=1024, generate_tokens=32,
+                                   capture_raw_logits=False)
             control = MODULE.container_command(args, "control", 1, Path(directory))
             candidate = MODULE.container_command(args, "mmq_only", 1, Path(directory))
         self.assertIn("MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY=0", control)
         self.assertIn("MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY=1", candidate)
         self.assertEqual(control[control.index("/bench/run")], candidate[candidate.index("/bench/run")])
+
+    def test_raw_logit_capture_is_opt_in_and_route_scoped(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            binary = root / "bench"
+            model = root / "model.gguf"
+            binary.touch()
+            model.touch()
+            args = SimpleNamespace(container_runtime="podman", binary=binary, model=model,
+                                   expected_bdf="0000:06:00.0", image="image",
+                                   context_profile="8K", prompt_tokens=2048, generate_tokens=16,
+                                   capture_raw_logits=True)
+            command = MODULE.container_command(args, "mmq_only", 1, root)
+        self.assertEqual(command[-2:], ["--capture-raw-logits", "/results/mmq_only-pair-1.logits.f32"])
 
     def test_context_workload_is_passed_through_to_the_same_binary(self):
         with tempfile.TemporaryDirectory() as directory:

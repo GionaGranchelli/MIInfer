@@ -222,7 +222,7 @@ def container_command(args, route: str, pair: int, output: Path) -> list[str]:
                "--generate", str(args.generate_tokens), "--prompt-tokens", str(args.prompt_tokens),
                "--iterations", "1", "--warmup", "0",
                "--output", f"/results/{route}-pair-{pair}.metrics"]
-    if args.capture_raw_logits:
+    if getattr(args, "capture_raw_logits", False):
         command.extend(["--capture-raw-logits", f"/results/{route}-pair-{pair}.logits.f32"])
     return command
 
