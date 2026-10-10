@@ -1,0 +1,31 @@
+event=MODEL_HASH_BEGIN iteration=0 epoch_ms=1791618792535
+event=MODEL_HASH_READY iteration=0 epoch_ms=1791618886515
+event=MODEL_LOAD_BEGIN iteration=0 epoch_ms=1791618886515
+event=MODEL_DATA_READY iteration=0 epoch_ms=1791618886546
+event=MODEL_ALLOC_BEGIN iteration=0 epoch_ms=1791618886546
+event=MODEL_ALLOC_READY iteration=0 epoch_ms=1791618938368
+benchmark=M31-0002-call
+context=custom
+context_profile=8K
+prompt_tokens=1024
+context_capacity_tokens=1280
+generate_tokens=8
+iterations=1
+warmup=0
+model_sha256=7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169
+prompt_fingerprint_fnv1a64=bce3932a8fc5d121
+model_vram_bytes=25060911104
+event=MODEL_READY iteration=0 epoch_ms=1791618938368
+event=RUN_BEGIN iteration=1 epoch_ms=1791618938368 mode=measure
+event=PREFILL_BEGIN iteration=1 epoch_ms=1791618938368
+event=PREFILL_PROGRESS iteration=1 epoch_ms=1791618938402 percent=10 tokens=512/1024
+event=PREFILL_PROGRESS iteration=1 epoch_ms=1791618938402 percent=25 tokens=512/1024
+event=PREFILL_PROGRESS iteration=1 epoch_ms=1791618938402 percent=50 tokens=512/1024
+event=PREFILL_PROGRESS iteration=1 epoch_ms=1791618938411 percent=75 tokens=1024/1024
+event=PREFILL_PROGRESS iteration=1 epoch_ms=1791618938411 percent=100 tokens=1024/1024
+event=PREFILL_END iteration=1 epoch_ms=1791618942532
+event=DECODE_BEGIN iteration=1 epoch_ms=1791618942532
+event=DECODE_END iteration=1 epoch_ms=1791618942782
+event=RUN_END iteration=1 epoch_ms=1791618942782 wall_ms=4414.193266
+result={"context":"8K","iteration":1,"wall_ms":4414.193,"prefill_ms":4163.846,"prefill_progress_callback_ms":0.050,"prefill_ms_excluding_progress_callback":4163.796,"decode_ms":244.458,"prefill_tok_s":245.926,"decode_tok_s":28.635,"generated_tokens":8,"model_vram_bytes":25060911104,"model_weights_bytes":24068487168,"persistent_state_bytes":242745344,"workspace_bytes":727711744,"activation_bytes":21966848,"cached_state_bytes":0,"snapshot_bytes":0,"splitk_splits":32,"device_total_bytes":34342961152,"device_free_before_bytes":8401190912,"device_free_after_bytes":8321236992,"device_used_before_bytes":25941770240,"device_used_after_bytes":26021724160,"device_residual_after_bytes":960813056,"device_peak_bytes":null,"tokens_valid":"PASS","output_parity":"NOT_CHECKED","token_ids":[220,248046,198,248045,846,198,2523,248046]}
+event=CALL_COMPLETE iteration=1 epoch_ms=1791618942782

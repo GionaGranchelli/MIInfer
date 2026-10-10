@@ -1,0 +1,127 @@
+captured_at_utc=2026-10-10T07:45:08.250457+00:00
+model_sha256_previous_observation=7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169
+HOST=z840
+COMMAND=['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=8', '-o', 'ConnectionAttempts=1', 'fedora-workstation@100.118.66.80', 'hostname; date -u; rocm-smi --showbus --showuniqueid --showproductname --showtemp --showmemuse --showuse --showpids; df -h /tmp; podman image inspect localhost/miinfer-dev:rocm-7.2.1 --format "{{.Digest}}"']
+EXIT_CODE=0
+--- stdout ---
+fedora
+Sat Oct 10 07:45:08 AM UTC 2026
+
+
+============================ ROCm System Management Interface ============================
+======================================= Unique ID ========================================
+GPU[0]		: Unique ID: 0x21678e17348c2f7
+==========================================================================================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 25.0
+GPU[0]		: Temperature (Sensor junction) (C): 26.0
+GPU[0]		: Temperature (Sensor memory) (C): 25.0
+==========================================================================================
+=================================== % time GPU is busy ===================================
+GPU[0]		: GPU use (%): 0
+==========================================================================================
+=================================== Current Memory Use ===================================
+GPU[0]		: GPU Memory Allocated (VRAM%): 0
+GPU[0]		: GPU Memory Read/Write Activity (%): 0
+GPU[0]		: Memory Activity: N/A
+GPU[0]		: Not supported on the given system
+==========================================================================================
+===================================== KFD Processes ======================================
+No KFD PIDs currently running
+==========================================================================================
+======================================= PCI Bus ID =======================================
+GPU[0]		: PCI Bus: 0000:06:00.0
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Instinct MI60 / MI50
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		4670
+GPU[0]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+Filesystem      Size  Used Avail Use% Mounted on
+tmpfs            16G  3.9G   12G  25% /tmp
+sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e
+
+--- stderr ---
+WARNING: AMD GPU device(s) is/are in a low-power state. Check power control/runtime_status
+
+HOST=machinist
+COMMAND=['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=8', '-o', 'ConnectionAttempts=1', 'machinist@100.114.213.94', 'hostname; date -u; rocm-smi --showbus --showuniqueid --showproductname --showtemp --showmemuse --showuse --showpids; df -h /tmp; podman image inspect localhost/miinfer-dev:rocm-7.2.1 --format "{{.Digest}}"']
+EXIT_CODE=0
+--- stdout ---
+machinist
+Sat Oct 10 07:45:07 UTC 2026
+
+
+============================ ROCm System Management Interface ============================
+======================================= Unique ID ========================================
+GPU[0]		: Unique ID: 0x896befe51f2b7232
+GPU[1]		: Unique ID: 0x2152414173497dd3
+==========================================================================================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 21.0
+GPU[0]		: Temperature (Sensor junction) (C): 22.0
+GPU[0]		: Temperature (Sensor memory) (C): 18.0
+GPU[1]		: Temperature (Sensor edge) (C): 26.0
+GPU[1]		: Temperature (Sensor junction) (C): 29.0
+GPU[1]		: Temperature (Sensor memory) (C): 27.0
+==========================================================================================
+=================================== % time GPU is busy ===================================
+GPU[0]		: GPU use (%): 0
+GPU[1]		: GPU use (%): 0
+==========================================================================================
+=================================== Current Memory Use ===================================
+GPU[0]		: GPU Memory Allocated (VRAM%): 1
+GPU[0]		: GPU Memory Read/Write Activity (%): 3
+GPU[0]		: Memory Activity: N/A
+GPU[0]		: Avg. Memory Bandwidth: 0
+GPU[1]		: GPU Memory Allocated (VRAM%): 0
+GPU[1]		: GPU Memory Read/Write Activity (%): 0
+GPU[1]		: Memory Activity: N/A
+GPU[1]		: Not supported on the given system
+==========================================================================================
+===================================== KFD Processes ======================================
+No KFD PIDs currently running
+==========================================================================================
+======================================= PCI Bus ID =======================================
+GPU[0]		: PCI Bus: 0000:04:00.0
+GPU[1]		: PCI Bus: 0000:85:00.0
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: get_name, Failed to load a library
+GPU[0]		: Card Series: 		N/A
+GPU[0]		: Card Model: 		0x7590
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		R906XTGO
+GPU[0]		: Subsystem ID: 	0x2429
+GPU[0]		: Device Rev: 		0xc0
+GPU[0]		: Node ID: 		1
+GPU[0]		: GUID: 		11295
+GPU[0]		: GFX Version: 		gfx1200
+GPU[1]		: get_name, Failed to load a library
+GPU[1]		: Card Series: 		N/A
+GPU[1]		: Card Model: 		0x66a3
+GPU[1]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[1]		: Card SKU: 		D163A1XT
+GPU[1]		: Subsystem ID: 	0x0201
+GPU[1]		: Device Rev: 		0x00
+GPU[1]		: Node ID: 		2
+GPU[1]		: GUID: 		55600
+GPU[1]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+Filesystem      Size  Used Avail Use% Mounted on
+tmpfs            63G   39M   63G   1% /tmp
+sha256:447907c697fb2c39ce9657401e354a70753d5672ad955d4ceb12de976b91224a
+
+--- stderr ---
+WARNING: AMD GPU device(s) is/are in a low-power state. Check power control/runtime_status
+
+Fail to open libdrm_amdgpu.so: libdrm_amdgpu.so: cannot open shared object file: No such file or directory
+Fail to open libdrm_amdgpu.so: libdrm_amdgpu.so: cannot open shared object file: No such file or directory

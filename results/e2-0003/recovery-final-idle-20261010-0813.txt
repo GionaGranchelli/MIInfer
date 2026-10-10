@@ -1,0 +1,18 @@
+Final recovery idle check: 2026-10-10 08:13:18 UTC
+
+Z840
+- SSH endpoint: fedora-workstation@100.118.66.80
+- Hostname: fedora
+- GPU: index 0, PCI 0000:06:00.0, unique ID 0x21678e17348c2f7
+- Junction: 27 C; GPU use 0%; no KFD PIDs
+- Runtime image digest: sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e
+
+Machinist
+- SSH endpoint: machinist@100.114.213.94
+- Hostname: machinist
+- GPU: index 1, PCI 0000:85:00.0
+- Junction: 29 C; GPU use 0%; no KFD PIDs
+- Runtime image digest: sha256:447907c697fb2c39ce9657401e354a70753d5672ad955d4ceb12de976b91224a
+
+Both hosts returned rocm-smi's low-power/runtime_status warning. Identity,
+temperature, utilization, and KFD process telemetry were still available.

@@ -1,6 +1,6 @@
 {
   "campaign": "M31-OVERNIGHT-01 / E2-0003",
-  "recorded_at_utc": "2026-10-10T06:50:14Z",
+  "recorded_at_utc": "2026-10-10T08:13:18Z",
   "branch": "experiment/e2-0003-mmq-gateup-only",
   "base_commit": "99d40748bb4ae8921fbf3558b9f0216389ebfd8a",
   "campaign_plan_commit": "dd35dab2fa0c615b539f1905057d70899aca7db1",
@@ -8,7 +8,7 @@
   "test_commit": "c2fd12bbd24b3ae75f34f6de2401fb00b0df785e",
   "offline_checkpoint_commit": "25fb95ca3349265e5d08753ea41ffab6bf84f152",
   "report_commit_at_recording": "467c7d387f083c0c1835dc2dba1a4a1201229ba5",
-  "worktree_state": "dirty with preserved M31 overlay and untracked M31 evidence; no campaign changes staged",
+  "worktree_state": "dirty with preserved M31 overlay and untracked M31 evidence; recovery artifacts isolated under results/e2-0003",
   "candidate_source_files_sha256": {
     "include/miinfer/prefill_v2/experimental_options.hpp": "b44fb4bc66d187f6d76d4ea7160479bf7ed8eff7b06afff7668cfe8848f503a6",
     "include/miinfer/prefill_v2/model.hpp": "2720f9a69bec3c52909269a7b98250f543be775087c96e8b953445eddda15c26",
@@ -23,7 +23,7 @@
   },
   "model": {
     "sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
-    "provenance": "historical E3-0001 evidence; not reverified on the unavailable Z840 during this campaign"
+    "provenance": "historical E3-0001 identity, SHA-256 reverified live on Z840 at 2026-10-10T07:52Z"
   },
   "prompt": {
     "tokens": 1024,
@@ -31,37 +31,47 @@
     "provenance": "historical E3-0001 artifact; no campaign prompt was run"
   },
   "build": {
-    "candidate_runtime_binary_sha256": null,
-    "candidate_runtime_binary_status": "NOT_BUILT",
-    "cmake_command": "cmake -S . -B /tmp/e2-0003-clean-build -DCMAKE_BUILD_TYPE=Release -DMIINFER_ENABLE_HIP=ON -DMIINFER_BUILD_TESTS=ON",
-    "cmake_status": "BLOCKED: ROCm 6.2 lld requires libxml2.so.2; local P620 has libxml2.so.16 only in checked paths; no compatible library reused and toolchain unchanged",
+    "candidate_runtime_binary_sha256": "55abb51c547314d958b0285005158eb82757edd922f10acf6f018a396bb580e3",
+    "candidate_runtime_binary_status": "BUILT and clean-rebuilt on Z840 in pinned ROCm 7.2.1 image",
+    "cmake_command": "cmake -S /src -B /build -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/opt/rocm-7.2.1 -DMIINFER_ENABLE_HIP=ON -DMIINFER_BUILD_TESTS=OFF -DMIINFER_BUILD_BENCHMARKS=ON -DMIINFER_BUILD_RESEARCH_TOOLS=OFF; cmake --build /build --clean-first --target miinfer-m31-0002-checkpointed-call e2-0003-gateup-operation-reference -j4",
+    "cmake_status": "PASS on Z840; clean build log results/e2-0003/z840-clean-build.log",
     "syntax_check": "PASS with hipcc -std=c++20 -fsyntax-only --offload-arch=gfx906 on recurrent_layer.cpp, attention_layer.cpp, model.cpp, topology_block.cpp",
     "syntax_check_rocm": "host ROCm 6.2.0",
-    "test_build_flags": "g++ -std=c++20 -O2 -DNDEBUG -Wall -Wextra -Wpedantic",
+    "test_build_flags": "g++/hipcc Release; gfx906; tests OFF; benchmarks ON",
     "parser_test_binary_sha256": "f5bfb0762c097e6096da9a0fde4b6aae5c0773f1302160641246d2fd019e15f3"
   },
   "hardware": {
     "target": "HP Z840 / AMD Instinct MI50 / gfx906",
     "expected_bdf": "0000:06:00.0",
-    "preflight": "BLOCKED: seventy-one bounded SSH preflights timed out through 2026-10-10T06:50:14Z; campaign ended at authorized hard stop; no identity or telemetry captured during campaign",
-    "gpu_runs": 0
+    "preflight": "RECOVERY PASS 2026-10-10T07:37Z and final idle PASS 2026-10-10T08:13Z via user-provided overlay endpoint fedora-workstation@100.118.66.80; MI50 gfx906 at 0000:06:00.0; separate Machinist probe at 0000:85:00.0",
+    "gpu_runs": 5,
+    "same_source_ab_calls": 4,
+    "operation_reference_calls": 1,
+    "machinist_probe_calls": 1
   },
   "memory_accounting": {
     "fused_gateup_request_bytes_omitted_by_candidate": 7130316800,
     "mmq_gateup_request_bytes_retained": 6452936704,
-    "sampled_physical_vram_delta_bytes": null
+    "sampled_physical_vram_delta_bytes": null,
+    "sampled_vram_saving_bytes_median": 7248797696
   },
   "comparison": {
-    "control_calls": 0,
-    "candidate_calls": 0,
-    "raw_benchmark_json": null,
-    "telemetry": null,
-    "token_parity": "NOT_RUN",
-    "hip_graph": "NOT_RUN",
-    "prefill_tok_s": null,
-    "decode_tok_s": null,
-    "candidate_disposition": "BLOCKED / PARTIAL",
-    "same_source_harness": "OFFLINE_TESTED; GPU RUN NOT STARTED"
+    "control_calls": 2,
+    "candidate_calls": 2,
+    "raw_benchmark_json": "results/e2-0003/z840-pair-1/benchmark.json and z840-pair-2/benchmark.json",
+    "telemetry": "1 Hz raw rocm-smi JSONL in both z840-pair artifacts; all samples successful",
+    "token_parity": "PASS: eight generated token IDs identical within both control/candidate pairs",
+    "hip_graph": "PASS by forced graph call path and successful eight-token generation; no direct graph event emitted",
+    "prefill_tok_s": {
+      "control_median": 243.7665,
+      "candidate_median": 243.6025
+    },
+    "decode_tok_s": {
+      "control_median": 28.593,
+      "candidate_median": 25.521
+    },
+    "candidate_disposition": "KEEP as a default-off experiment; selection gates pass, whole-model numerical equivalence not established",
+    "same_source_harness": "PASS: two guarded pairs; operation-level gate-up comparison separately passed"
   },
   "same_source_harness": {
     "script": "scripts/e2_0003_same_source_ab.py",
@@ -69,7 +79,7 @@
     "test": "tests/test_e2_0003_same_source_ab.py",
     "test_sha256": "d54dc5831d002adbe91bad37331febd51c00d6518ef90a47fdd4c6a93a8ff306",
     "test_status": "PASS: 5 focused unittest cases; Python compilation and diff check pass",
-    "runtime_status": "PREPARED, NOT RUN: seventy-one bounded SSH attempts timed out; no verified host, model, image, or GPU preflight"
+    "runtime_status": "PASS: built and clean-rebuilt on Z840; two same-source guarded A/B pairs and one layer-0 operation-reference comparison completed; evidence under results/e2-0003/"
   },
   "local_linker_dependency_check": {
     "evidence_file": "results/e2-0003/libxml2-soname-check.txt",
@@ -85,5 +95,24 @@
     "graph_json_sha256": "871d2d5b8cc25752973f2726f8de1f76feecd000ada23636f056f262c98277db",
     "report_sha256": "f568f0a75a8aee49d0e66ab6a03c1d271a6b0c8e1c146e5a397e449d7fed3d95",
     "main_checkout_graphify_output_preserved": true
+  },
+  "recovery": {
+    "started_at_utc": "2026-10-10T07:34:52Z",
+    "completed_at_utc": "2026-10-10T08:13:18Z",
+    "z840_ssh_endpoint": "fedora-workstation@100.118.66.80",
+    "machinist_ssh_endpoint": "machinist@100.114.213.94",
+    "z840_image_digest": "sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e",
+    "machinist_image_digest": "sha256:447907c697fb2c39ce9657401e354a70753d5672ad955d4ceb12de976b91224a",
+    "source_bundle_sha256": "e7898821f5cc2fae0cf73d7a5a919ce0e49d30e94510018f33b64877b7024a5e",
+    "operation_reference_source_sha256": "04f9a4f211820933b70c049802e57da04e2dc97c676bf7ea1d2668b9287c139b",
+    "operation_reference_binary_sha256": "4dbd5bd1acaefe64afafa1b6f753502933bbd63f10222fddb7c6d4d49134b1ce",
+    "operation_reference_result": "PASS layer 0; cosine=0.999998; relative_l2=0.001991; max_abs=0.000979885; thresholds cosine>=0.995 and relative_l2<=0.02",
+    "machinist_4k_copy_probe": "PASS at 0000:85:00.0 with clean thermal/process guard; prior failure did not reproduce",
+    "unverified": [
+      "whole-model logit equivalence",
+      "prompt lengths above 1K",
+      "persistent session and snapshot/rollback",
+      "full CTest suite"
+    ]
   }
 }

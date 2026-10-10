@@ -322,3 +322,51 @@ KNOWN_LIMITATIONS: Z840 unreachable; constructor raw-pointer exception cleanup i
   Acceptance remains: sampled VRAM reduction >=6.0 GB, prefill >=95% and decode
   >=85% of control and above 20.56 tok/s, eight-token parity, operation checks,
   graph replay, and thermal guard all pass.
+
+## Reopened recovery checkpoint — 2026-10-10
+
+The first window closed blocked because SSH targeted an unreachable address.
+The user then supplied reachable overlay endpoints. Work resumed on the Z840
+at `100.118.66.80`; Machinist at `100.114.213.94` was used only for a separate
+tiny-copy qualification probe.
+
+- **Build:** clean Release `gfx906` rebuild passed inside
+  `localhost/miinfer-dev:rocm-7.2.1`, digest
+  `sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e`.
+  The benchmark binary SHA-256 is
+  `55abb51c547314d958b0285005158eb82757edd922f10acf6f018a396bb580e3`.
+  Model SHA was rechecked as
+  `7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169`.
+- **Same-source 1K/eight-token A/B:** two guarded pairs completed on the Z840
+  MI50 (`0000:06:00.0`, unique ID `0x21678e17348c2f7`) with identical token IDs
+  in both pairs. Median prefill was 243.7665 tok/s control and 243.6025 tok/s
+  MMQ-only (99.93% retained). Median decode was 28.593 and 25.521 tok/s
+  respectively (89.26% retained; above the 20.56 tok/s floor). Median sampled
+  VRAM use fell from 26,032,822,272 B to 18,784,024,576 B, a 7,248,797,696 B
+  reduction. The static fused-allocation request reduction remains
+  7,130,316,800 B; it is a separate accounting measure.
+- **Operation check:** a guarded one-token comparison using layer-0 Gate/Up
+  weights passed between MMQ Gate/Up plus SwiGLU and the fused reference path:
+  cosine `0.999998`, relative L2 `0.001991`, max absolute error `0.000979885`
+  against pre-recorded limits `0.995` and `0.02`.
+- **Graph and thermal:** the same-source caller requests HIP Graph and the
+  benchmark forces `use_hip_graph=true`; each completed eight-token generation
+  therefore traversed graph capture/replay. The harness does not emit a direct
+  graph event, so this is established from the source path and successful
+  multi-token result. All telemetry samples succeeded; peak junction was 61 C
+  on the full-model calls, below the 80 C warning and 85 C stop limits. Guarded
+  process cleanup completed for all calls.
+- **Machinist:** a separately built, guarded 4 KiB H2D+D2H probe passed on its
+  MI50 (`0000:85:00.0`, `gfx906:sramecc-:xnack-`) at 29–30 C. This does not
+  contribute to Z840 performance or memory results.
+- **Disposition:** Candidate A passes the campaign's stated 1K/eight-token
+  selection gates and is **KEEP as a default-off experiment**. Candidate B was
+  not triggered because decode retained 89.26% of control. This does not
+  establish whole-model logit equivalence or qualify the production default.
+- **Not run:** prompts longer than 1K, persistent-session/snapshot rollback
+  checks, and the full CTest suite. Evidence and raw logs are under
+  `results/e2-0003/`; `SHA256SUMS` covers the checkpoint artifacts.
+
+The initial 71 failed SSH attempts and zero-run checkpoint above remain the
+accurate history of the first window. The recovery results supersede its
+blocked status for E2-0003 without changing the default-off implementation.

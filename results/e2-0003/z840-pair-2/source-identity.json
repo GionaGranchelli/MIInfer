@@ -1,0 +1,22 @@
+{
+  "source_sha": "c2fd12bbd24b3ae75f34f6de2401fb00b0df785e+preserved-M31-overlay",
+  "source_manifest_sha256": "bfa5c10cb894af4664fda41483ad311d635c99d2b55fb9e044ff0471406c2c5d",
+  "binary_sha256": "55abb51c547314d958b0285005158eb82757edd922f10acf6f018a396bb580e3",
+  "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+  "prompt_ids_sha256": "11d40611b4eb816549e2c8c6bf05f7a1db0ef9521963a381091fa85685fa4a78",
+  "prompt_tokens": 1024,
+  "prompt_fingerprint_fnv1a64": "bce3932a8fc5d121",
+  "container_image": "localhost/miinfer-dev:rocm-7.2.1",
+  "container_digest": "sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e",
+  "build_flags": "Release;HIP=gfx906;tests=OFF;benchmarks=ON;image=sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e",
+  "host": {
+    "hostname": "fedora",
+    "kernel": "7.2.8-200.fc44.x86_64"
+  },
+  "gpu": {
+    "index": 0,
+    "pci_bdf": "0000:06:00.0",
+    "unique_id": "0x21678e17348c2f7",
+    "product": "AMD Instinct MI60 / MI50"
+  }
+}

@@ -1,0 +1,13 @@
+M31-OVERNIGHT-01 / E2-0003 recovery: Machinist qualification probe
+Captured: 2026-10-10 UTC
+Host: machinist (SSH overlay 100.114.213.94)
+GPU: MI50 / gfx906:sramecc-:xnack- / PCI 0000:85:00.0 / rocm-smi index 1
+Probe: 4 KiB HIP H2D then D2H, byte-for-byte verified
+Result: PASS; previous recorded blocker did not reproduce on this run
+Initial junction: 29 C; observed: 29-30 C; warn/stop: 80/85 C
+Thermal/process guard: clean process-group cleanup; exit 0
+Image digest: sha256:447907c697fb2c39ce9657401e354a70753d5672ad955d4ceb12de976b91224a
+Probe source: bench/m31_0002t_hip_copy_probe.cpp (see adjacent SHA256SUMS)
+Binary SHA-256: 2cc9d94d87b31f09b6321b26ae8f4156b810560f2159eb6bf339b6a3f44aeaa2
+Raw guard log: e2-0003-machinist-guard.log
+Limit: this validates only tiny HIP copy on Machinist; no MIInfer benchmark or Z840 performance comparison was run there.
