@@ -1,0 +1,3 @@
+stage=linear_attn_qkv_mixed
+elements=10240
+reference=/references/qkv-reference.f32
