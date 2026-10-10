@@ -1126,6 +1126,9 @@ GenerateStats PrefillV2Model::generate(
             }
             save_persistent_checkpoint(pos);
         }
+        for (auto& st : recurrent_states_) {
+            st.set_position(pos);
+        }
     }
 
     // 1b. If requested, capture/update the prefix checkpoint immediately after prefill
