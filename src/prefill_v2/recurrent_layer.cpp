@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <charconv>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -23,6 +24,18 @@
 namespace miinfer::prefill_v2 {
 
 namespace {
+
+std::size_t decode_trace_layer_index() {
+    const char* value = std::getenv("MIINFER_LC_TRACE_LAYER");
+    if (value == nullptr) return 0;
+    const std::string_view input(value);
+    std::size_t layer = 0;
+    const auto [end, error] = std::from_chars(input.data(), input.data() + input.size(), layer);
+    if (error != std::errc{} || end != input.data() + input.size() || layer >= 48) {
+        throw std::runtime_error("MIINFER_LC_TRACE_LAYER must be an integer in [0, 47]");
+    }
+    return layer;
+}
 
 struct GraphTraceSpec {
     const char* name;
@@ -75,7 +88,8 @@ T* upload_device_buffer(const void* host_data, std::size_t bytes, std::size_t& t
 } // namespace
 
 RecurrentLayerGraphTrace::RecurrentLayerGraphTrace(std::string prefix, std::uint32_t position)
-    : prefix_(std::move(prefix)), position_(position) {
+    : prefix_(std::move(prefix)), position_(position),
+      layer_index_(decode_trace_layer_index()) {
     buffers_.reserve(std::size(kGraphTraceSpecs));
     try {
         for (const auto& spec : kGraphTraceSpecs) {
@@ -114,7 +128,7 @@ void RecurrentLayerGraphTrace::write_files() {
     for (const auto& buffer : buffers_) {
         if (!buffer.captured) continue;
         const auto path = std::filesystem::path(prefix_ + ".decode-pos"
-            + std::to_string(position_) + ".layer0." + buffer.name
+            + std::to_string(position_) + ".layer" + std::to_string(layer_index_) + "." + buffer.name
             + (buffer.binary ? ".bin" : ".f32"));
         if (std::filesystem::exists(path)) {
             throw std::runtime_error("refusing to overwrite HIP graph decode trace: " + path.string());
@@ -742,11 +756,13 @@ void PrefillV2RecurrentLayer::decode(
 
     const char* trace_prefix = std::getenv("MIINFER_LC_OP_TRACE_PREFIX");
     const char* trace_decode = std::getenv("MIINFER_LC_DECODE_TRACE");
+    const std::size_t trace_layer = decode_trace_layer_index();
     static bool decode_trace_captured = false;
-    const bool capture_decode = trace_prefix != nullptr && layer_index_ == 0
+    const bool capture_decode = trace_prefix != nullptr && layer_index_ == trace_layer
         && trace_decode != nullptr && std::string_view(trace_decode) != "0"
         && decode_state == nullptr && !decode_trace_captured;
-    const bool capture_graph_decode = graph_trace != nullptr && layer_index_ == 0
+    const bool capture_graph_decode = graph_trace != nullptr
+        && layer_index_ == graph_trace->layer_index()
         && decode_state != nullptr;
     const auto capture_f32 = [&](const char* name, const float* device, std::size_t count) {
         if (capture_graph_decode) {

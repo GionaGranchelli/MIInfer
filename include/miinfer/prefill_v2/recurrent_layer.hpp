@@ -51,6 +51,7 @@ public:
     void copy_async(const char* name, const void* device, std::size_t bytes,
                     hipStream_t stream);
     void write_files();
+    [[nodiscard]] std::size_t layer_index() const noexcept { return layer_index_; }
 
 private:
     struct Buffer {
@@ -63,6 +64,7 @@ private:
 
     std::string prefix_;
     std::uint32_t position_ = 0;
+    std::size_t layer_index_ = 0;
     std::vector<Buffer> buffers_;
     bool written_ = false;
 };
