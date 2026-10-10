@@ -79,10 +79,10 @@ void PrefillV2TopologyBlock::decode(
     gdn0_.decode(d_ping, d_pong, state0, ws, decode_state, stream, graph_trace);
 
     // Layer 1 (GDN): d_pong -> d_ping
-    gdn1_.decode(d_pong, d_ping, state1, ws, decode_state, stream);
+    gdn1_.decode(d_pong, d_ping, state1, ws, decode_state, stream, graph_trace);
 
     // Layer 2 (GDN): d_ping -> d_pong
-    gdn2_.decode(d_ping, d_pong, state2, ws, decode_state, stream);
+    gdn2_.decode(d_ping, d_pong, state2, ws, decode_state, stream, graph_trace);
 
     // Layer 3 (GQA): d_pong -> d_final_output
     gqa3_.decode(d_pong, d_final_output, kv_cache3, ws, position, decode_state, stream);
