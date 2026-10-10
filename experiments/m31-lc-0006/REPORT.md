@@ -2,7 +2,7 @@
 
 ## Status
 
-Phase A instrumentation-free eager and graph runs are complete. Phase B confirms that cold-prefill position metadata makes eager's first recurrent decode use position 0 while graph uses prompt position 2048. The minimal correction and instrumentation-free rerun remain pending.
+Phase A instrumentation-free eager and graph runs are complete. Phase B traced the first mismatch to cold-prefill position metadata: eager used position 0 while graph used prompt position 2048. The position fix is pushed as `1b3a9cbd8fa4f72ec40a66601c0598d5524b7f9c` and rebuilt in the pinned OCI image. The first same-binary rerun is complete; exact computation equivalence remains unproven because post-fix raw logits still differ.
 
 ## Eager baseline
 
@@ -28,9 +28,16 @@ This localizes the first observable mismatch to the first decode after the share
 
 The graph run records and raw captures are in [`results/m31-lc-0006/z840-untraced-graph/`](../../results/m31-lc-0006/z840-untraced-graph/). Each mode/route pair has one run, so performance figures remain descriptive only.
 
-## Next step
+## Position-fix rerun
 
-Apply the confirmed cold-prefill position fix, then rerun the instrumentation-free eager/graph pair with the same binary. Keep the exact-logit and exact-token gate; the graph implementation is not considered qualified until the corrected pair matches.
+The fixed binary (`4963661cd7fd0025d09ebbd7eaa3a4782ef084539ee15b3638f271719a0874bd`) ran eager and graph modes on Z840 with the same 2,048-token prompt, model, and five-token decode. The fused control now produces the same token sequence in both modes. Its first-decision logits are bitwise identical; decisions 2–5 have no bitwise-equal values, with maximum absolute differences up to 1.114. The MMQ-only route matches through token four, but its fifth token differs (`271` eager, `74455` graph). Thus the position fix removes the control route's token mismatch in this sample, but does not establish identical decode computation.
+
+| Route | Eager IDs | Graph IDs | Decision 1 logits | Remaining logits |
+|---|---|---|---|---|
+| Fused control | `[220, 248046, 198, 248045, 271]` | `[220, 248046, 198, 248045, 271]` | Bitwise equal | Decisions 2–5 all differ at every value |
+| MMQ Gate/Up | `[220, 248046, 198, 248045, 271]` | `[220, 248046, 198, 248045, 74455]` | Bitwise equal | Decision 3 has one equal value; all other values differ, and decision 5 selects a different token |
+
+The harness's separate eager route-selection gate returned `BLOCKED_OR_INCONCLUSIVE`; both two-configuration runs completed without a runtime or guard error. Full captures are in [`results/m31-lc-0006/z840-position-fix-eager/`](../../results/m31-lc-0006/z840-position-fix-eager/) and [`results/m31-lc-0006/z840-position-fix-graph/`](../../results/m31-lc-0006/z840-position-fix-graph/). The next step is to capture post-fix layer-zero eager and graph traces to identify the first remaining internal divergence. Keep the exact-logit and exact-token gate; the graph implementation is not qualified yet.
 
 ## Phase B: eager trace validation
 
