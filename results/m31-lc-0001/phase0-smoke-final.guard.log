@@ -1,0 +1,37 @@
+THERMAL_GUARD_BEGIN gpu=0 pci=0000:06:00.0 warn_junction_c=80 max_junction_c=85 initial_junction_c=28.0
+GUARD_EVENT event=worker_started monotonic_s=340560.21 since_start_ms=180 worker_pid=1645686 worker_pgid=1645686 command=podman run --rm --pull=never --network=none --device=/dev/kfd --device=/dev/dri --group-add keep-groups --security-opt=label=disable -v /tmp/e2-0003q-build-ed21f41:/build:Z --workdir /build localhost/miinfer-dev:rocm-7.2.1 ctest --output-on-failure -R prefill-v2-experimental-options|hip-smoke|qwen3-quant-kv-attention-gpu|m31-0005-decode-attention-bound-gpu|qwen3-cached-attention-determinism-gpu|reusable-context-allocation
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=28.0 warn_c=80 limit_c=85
+Test project /build
+    Start  2: prefill-v2-experimental-options
+1/6 Test  #2: prefill-v2-experimental-options ..........   Passed    0.00 sec
+    Start 15: hip-smoke
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=28.0 warn_c=80 limit_c=85
+2/6 Test #15: hip-smoke ................................   Passed    0.56 sec
+    Start 28: qwen3-quant-kv-attention-gpu
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=28.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=28.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=28.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=28.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=28.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=52.0 warn_c=80 limit_c=85
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=61.0 warn_c=80 limit_c=85
+3/6 Test #28: qwen3-quant-kv-attention-gpu .............   Passed    2.62 sec
+    Start 29: m31-0005-decode-attention-bound-gpu
+4/6 Test #29: m31-0005-decode-attention-bound-gpu ......   Passed    0.14 sec
+    Start 30: qwen3-cached-attention-determinism-gpu
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=32.0 warn_c=80 limit_c=85
+5/6 Test #30: qwen3-cached-attention-determinism-gpu ...   Passed    0.15 sec
+    Start 35: reusable-context-allocation
+6/6 Test #35: reusable-context-allocation ..............   Passed    0.33 sec
+
+100% tests passed, 0 tests failed out of 6
+
+Label Time Summary:
+gpu-required    =   3.47 sec*proc (4 tests)
+host-only       =   0.33 sec*proc (2 tests)
+
+Total Test time (real) =   3.80 sec
+THERMAL_SAMPLE gpu=0 pci=0000:06:00.0 junction_c=30.0 warn_c=80 limit_c=85
+GUARD_EVENT event=worker_exit monotonic_s=340564.67 since_start_ms=4640 worker_pid=1645686 worker_pgid=1645686 status=0
+GUARD_EVENT event=descendants_exited monotonic_s=340564.70 since_start_ms=4670 worker_pid=1645686 worker_pgid=1645686 process_group=1645686 group_empty_observed=true
+GUARD_EVENT event=cleanup_complete monotonic_s=340564.70 since_start_ms=4670 worker_pid=1645686 worker_pgid=1645686 process_group=1645686
