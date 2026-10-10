@@ -222,6 +222,9 @@ def container_command(args, route: str, pair: int, output: Path) -> list[str]:
                "--generate", str(args.generate_tokens), "--prompt-tokens", str(args.prompt_tokens),
                "--iterations", "1", "--warmup", "0",
                "--output", f"/results/{route}-pair-{pair}.metrics"]
+    if getattr(args, "capture_layer_zero_trace", False):
+        command.extend(["--env", f"MIINFER_LC_OP_TRACE_PREFIX=/results/{route}-optrace",
+                        "--env", "MIINFER_LC_DECODE_TRACE_POSITION=2048"])
     if getattr(args, "capture_raw_logits", False):
         command.extend(["--capture-raw-logits", f"/results/{route}-pair-{pair}.logits.f32"])
     return command
@@ -293,6 +296,8 @@ def call(args, out: Path, route: str, pair: int, order: int) -> dict:
         "requested_environment": {
             "MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY": "1" if route == "mmq_only" else "0",
             "MIINFER_HIP_GRAPH": "1",
+            "MIINFER_LC_DECODE_TRACE_POSITION": "2048"
+                if getattr(args, "capture_layer_zero_trace", False) else None,
         },
         "start_state": before, "end_state": after,
         "result": result, "effective_config": properties,
@@ -421,6 +426,8 @@ def main() -> int:
     parser.add_argument("--generate-tokens", type=int, default=OUTPUT_TOKENS)
     parser.add_argument("--capture-raw-logits", action="store_true",
                         help="capture pre-sampling F32 logits for decisions 1-5")
+    parser.add_argument("--capture-layer-zero-trace", action="store_true",
+                        help="capture layer-0 operation and quantizer inputs at decode position 2048")
     parser.add_argument("--expected-seconds", type=int, default=240)
     parser.add_argument("--cooldown-timeout-seconds", type=int, default=900)
     parser.add_argument("--container-runtime", choices=("podman",), default="podman")

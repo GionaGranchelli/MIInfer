@@ -82,6 +82,21 @@ class SameSourceHarnessTest(unittest.TestCase):
             command = MODULE.container_command(args, "mmq_only", 1, root)
         self.assertEqual(command[-2:], ["--capture-raw-logits", "/results/mmq_only-pair-1.logits.f32"])
 
+    def test_layer_zero_trace_is_opt_in_and_targets_first_decode(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            binary = root / "bench"
+            model = root / "model.gguf"
+            binary.touch()
+            model.touch()
+            args = SimpleNamespace(container_runtime="podman", binary=binary, model=model,
+                                   expected_bdf="0000:06:00.0", image="image",
+                                   context_profile="8K", prompt_tokens=2048, generate_tokens=5,
+                                   capture_layer_zero_trace=True)
+            command = MODULE.container_command(args, "control", 1, root)
+        self.assertIn("MIINFER_LC_OP_TRACE_PREFIX=/results/control-optrace", command)
+        self.assertIn("MIINFER_LC_DECODE_TRACE_POSITION=2048", command)
+
     def test_context_workload_is_passed_through_to_the_same_binary(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
