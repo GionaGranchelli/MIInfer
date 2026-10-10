@@ -175,6 +175,7 @@ target_compile_options(miinfer-openai-api-test PRIVATE -Wall -Wextra -Wpedantic)
 
 add_executable(miinfer-prefill-v2-experimental-options-test
     tests/prefill_v2_experimental_options_test.cpp)
+target_include_directories(miinfer-prefill-v2-experimental-options-test PRIVATE include)
 target_compile_options(miinfer-prefill-v2-experimental-options-test PRIVATE -Wall -Wextra -Wpedantic)
 
 if(MIINFER_ENABLE_HIP)
