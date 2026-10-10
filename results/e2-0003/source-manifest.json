@@ -1,6 +1,6 @@
 {
   "campaign": "M31-OVERNIGHT-01 / E2-0003",
-  "recorded_at_utc": "2026-10-10T05:28:06Z",
+  "recorded_at_utc": "2026-10-10T05:38:27Z",
   "branch": "experiment/e2-0003-mmq-gateup-only",
   "base_commit": "99d40748bb4ae8921fbf3558b9f0216389ebfd8a",
   "campaign_plan_commit": "dd35dab2fa0c615b539f1905057d70899aca7db1",
@@ -43,7 +43,7 @@
   "hardware": {
     "target": "HP Z840 / AMD Instinct MI50 / gfx906",
     "expected_bdf": "0000:06:00.0",
-    "preflight": "BLOCKED: sixty-three bounded SSH preflights timed out through 2026-10-10T05:28:06Z; no identity or telemetry captured during campaign",
+    "preflight": "BLOCKED: sixty-four bounded SSH preflights timed out through 2026-10-10T05:38:27Z; no identity or telemetry captured during campaign",
     "gpu_runs": 0
   },
   "memory_accounting": {
@@ -69,7 +69,7 @@
     "test": "tests/test_e2_0003_same_source_ab.py",
     "test_sha256": "d54dc5831d002adbe91bad37331febd51c00d6518ef90a47fdd4c6a93a8ff306",
     "test_status": "PASS: 5 focused unittest cases; Python compilation and diff check pass",
-    "runtime_status": "PREPARED, NOT RUN: sixty-three bounded SSH attempts timed out; no verified host, model, image, or GPU preflight"
+    "runtime_status": "PREPARED, NOT RUN: sixty-four bounded SSH attempts timed out; no verified host, model, image, or GPU preflight"
   },
   "local_linker_dependency_check": {
     "evidence_file": "results/e2-0003/libxml2-soname-check.txt",
