@@ -341,6 +341,20 @@ void PrefillV2RecurrentLayer::forward(
                      static_cast<std::streamsize>(host.size() * sizeof(float)));
         if (!output) throw std::runtime_error("failed writing GDN operation trace: " + path.string());
     };
+    const auto capture_mx_q8 = [&](const char* name) {
+        if (!capture_ops) return;
+        const auto path = std::filesystem::path(std::string(op_trace_prefix)
+            + ".gpu." + name + ".bin");
+        if (std::filesystem::exists(path))
+            throw std::runtime_error("refusing to overwrite M31 quantizer trace: " + path.string());
+        const std::size_t bytes = (kHidden / 128) * token_count * sizeof(MxQ8_1MmqBlock);
+        std::vector<std::uint8_t> host(bytes);
+        MIINFER_HIP_CHECK(hipMemcpy(host.data(), ws.mmq_q8, bytes, hipMemcpyDeviceToHost));
+        std::ofstream output(path, std::ios::binary | std::ios::out);
+        if (!output) throw std::runtime_error("cannot create M31 quantizer trace: " + path.string());
+        output.write(reinterpret_cast<const char*>(host.data()), static_cast<std::streamsize>(host.size()));
+        if (!output) throw std::runtime_error("failed writing M31 quantizer trace: " + path.string());
+    };
     capture_op("state_predelta", incoming_state.d_state, RecurrentLayerState::kStateElements);
 
     // 1. Input RMS Normalization
@@ -370,6 +384,7 @@ void PrefillV2RecurrentLayer::forward(
     } else {
         launch_mx_q8_1_mmq_quantize(
             ws.normalized, ws.mmq_q8, token_count, kHidden, /*affine=*/false, stream);
+        capture_mx_q8("qkv_input_mx_q8");
         launch_mx_q6k_repacked_mmq(
             static_cast<const std::uint8_t*>(d_qkv_mmq_), ws.mmq_q8,
             ws.qkv, kChannels, kHidden, token_count, stream);
@@ -638,14 +653,55 @@ void PrefillV2RecurrentLayer::decode(
     const DeviceDecodeState* decode_state,
     hipStream_t stream) const {
 
+    const char* trace_prefix = std::getenv("MIINFER_LC_OP_TRACE_PREFIX");
+    const char* trace_position_env = std::getenv("MIINFER_LC_DECODE_TRACE_POSITION");
+    const auto trace_position = trace_position_env == nullptr
+        ? std::string::npos : std::stoul(trace_position_env);
+    const bool capture_decode = trace_prefix != nullptr && layer_index_ == 0
+        && trace_position == state.position;
+    const auto capture_f32 = [&](const char* name, const float* device, std::size_t count) {
+        if (!capture_decode) return;
+        const auto path = std::filesystem::path(std::string(trace_prefix) + ".decode-pos"
+            + std::to_string(state.position) + ".layer" + std::to_string(layer_index_)
+            + "." + name + ".f32");
+        if (std::filesystem::exists(path))
+            throw std::runtime_error("refusing to overwrite M31 decode trace: " + path.string());
+        std::vector<float> host(count);
+        MIINFER_HIP_CHECK(hipMemcpy(host.data(), device, count * sizeof(float), hipMemcpyDeviceToHost));
+        std::ofstream output(path, std::ios::binary | std::ios::out);
+        if (!output) throw std::runtime_error("cannot create M31 decode trace: " + path.string());
+        output.write(reinterpret_cast<const char*>(host.data()),
+                     static_cast<std::streamsize>(host.size() * sizeof(float)));
+        if (!output) throw std::runtime_error("failed writing M31 decode trace: " + path.string());
+    };
+    const auto capture_bytes = [&](const char* name, const void* device, std::size_t bytes) {
+        if (!capture_decode) return;
+        const auto path = std::filesystem::path(std::string(trace_prefix) + ".decode-pos"
+            + std::to_string(state.position) + ".layer" + std::to_string(layer_index_)
+            + "." + name + ".bin");
+        if (std::filesystem::exists(path))
+            throw std::runtime_error("refusing to overwrite M31 decode quantizer trace: " + path.string());
+        std::vector<std::uint8_t> host(bytes);
+        MIINFER_HIP_CHECK(hipMemcpy(host.data(), device, bytes, hipMemcpyDeviceToHost));
+        std::ofstream output(path, std::ios::binary | std::ios::out);
+        if (!output) throw std::runtime_error("cannot create M31 decode quantizer trace: " + path.string());
+        output.write(reinterpret_cast<const char*>(host.data()), static_cast<std::streamsize>(host.size()));
+        if (!output) throw std::runtime_error("failed writing M31 decode quantizer trace: " + path.string());
+    };
+    capture_f32("layer_input", d_input, kHidden);
+    capture_bytes("state_before", state.d_state, RecurrentLayerState::kStateBytes);
+
     // 1. Input RMS Normalization
     launch_qwen3_rms_norm(
         d_input, d_attn_norm_, ws.normalized, kHidden, kRmsNormEpsilon, stream);
+    capture_f32("attn_norm", ws.normalized, kHidden);
 
     // 2. Dual beta/alpha projection and parameter preparation (Fused single launch)
     launch_qwen35_f32_dual_beta_decay(
         d_ssm_beta_, d_ssm_alpha_, ws.normalized, d_ssm_dt_, d_ssm_a_, ws.beta, ws.decay,
         kVHeads, kHidden, stream);
+    capture_f32("beta", ws.beta, kVHeads);
+    capture_f32("decay", ws.decay, kVHeads);
 
     // 3. QKV & Gate projections via compact Mx MMQ (N=1)
     if (qkv_type_ == GgufTensorType::q4_k) {
@@ -657,6 +713,8 @@ void PrefillV2RecurrentLayer::decode(
     } else {
         launch_mx_q8_1_mmq_quantize(
             ws.normalized, ws.mmq_q8, 1, kHidden, /*affine=*/false, stream);
+        capture_bytes("qkv_input_mx_q8", ws.mmq_q8,
+                      (kHidden / 128) * sizeof(MxQ8_1MmqBlock));
         launch_mx_q6k_repacked_mmq(
             static_cast<const std::uint8_t*>(d_qkv_mmq_), ws.mmq_q8,
             ws.qkv, kChannels, kHidden, 1, stream);
@@ -665,6 +723,8 @@ void PrefillV2RecurrentLayer::decode(
     }
     launch_mx_q4k_repacked_mmq(
         d_gate_mmq_, ws.mmq_q8, ws.gate, kInner, kHidden, 1, stream);
+    capture_f32("z", ws.gate, kInner);
+    capture_f32("qkv", ws.qkv, kChannels);
 
     // 4. Convolution + SiLU + split into Q, K, V (updating conv history buffer in place)
     if (decode_state != nullptr) {
@@ -678,6 +738,9 @@ void PrefillV2RecurrentLayer::decode(
             ws.query, ws.key, ws.value,
             state.position, 1, kConvKernel, kChannels, kConvKernel, stream);
     }
+    capture_f32("q_conv", ws.query, kKHeads * kState);
+    capture_f32("k_conv", ws.key, kKHeads * kState);
+    capture_f32("v_conv", ws.value, kVHeads * kState);
 
     // 5. Dual Head L2 Normalization
     launch_qwen35_dual_head_l2_normalize_batch(
@@ -690,6 +753,8 @@ void PrefillV2RecurrentLayer::decode(
         d_ssm_norm_, ws.gate, state.d_state,
         ws.gated_output, /*recurrent_output=*/nullptr,
         kKHeads, kVHeads, kState, kRmsNormEpsilon, stream);
+    capture_bytes("state_after_gdn", state.d_state, RecurrentLayerState::kStateBytes);
+    capture_f32("gated_output", ws.gated_output, kInner);
 
     // 8. SSM Out projection via compact Mx MMQ (Q5_K, affine)
     launch_mx_q8_1_mmq_quantize(
@@ -704,21 +769,28 @@ void PrefillV2RecurrentLayer::decode(
         ws.residual, ws.post_normalized,
         kHidden, kRmsNormEpsilon, stream,
         ws.q8_1);
+    capture_f32("post_normalized", ws.post_normalized, kHidden);
 
     // 10. FFN Gate & Up projections + SwiGLU activation (Fused into single resident kernel pass)
     if (d_ffn_swiglu_fused_ != nullptr) {
+        capture_bytes("gateup_input_q8_1", ws.q8_1, (kHidden / 32) * sizeof(Q8_1Block));
         launch_q4k_wave_fused_gate_up_swiglu_paired(
             d_ffn_swiglu_fused_, ws.q8_1, ws.ffn_activation,
             kFfnInner, kHidden, stream);
     } else {
         launch_mx_q8_1_mmq_quantize(
             ws.post_normalized, ws.mmq_q8, 1, kHidden, /*affine=*/true, stream);
+        capture_bytes("gateup_input_mx_q8", ws.mmq_q8,
+                      (kHidden / 128) * sizeof(MxQ8_1MmqBlock));
         launch_mx_q4k_repacked_mmq(
             d_ffn_gate_mmq_, ws.mmq_q8, ws.ffn_gate, kFfnInner, kHidden, 1, stream);
+        capture_f32("ffn_gate", ws.ffn_gate, kFfnInner);
         launch_mx_q4k_repacked_mmq(
             d_ffn_up_mmq_, ws.mmq_q8, ws.ffn_up, kFfnInner, kHidden, 1, stream);
+        capture_f32("ffn_up", ws.ffn_up, kFfnInner);
         launch_qwen3_silu_mul(ws.ffn_gate, ws.ffn_up, ws.ffn_activation, kFfnInner, stream);
     }
+    capture_f32("ffn_activation", ws.ffn_activation, kFfnInner);
 
     // 11. FFN Down projection
     if (ffn_down_type_ == GgufTensorType::q4_k) {
@@ -738,6 +810,8 @@ void PrefillV2RecurrentLayer::decode(
     launch_qwen3_add(
         ws.residual, ws.ffn_down, d_output,
         kHidden, stream);
+    capture_f32("ffn_down", ws.ffn_down, kHidden);
+    capture_f32("layer_output", d_output, kHidden);
 
     state.position++;
 }
