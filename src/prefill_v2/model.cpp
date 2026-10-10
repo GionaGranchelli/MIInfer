@@ -1137,6 +1137,7 @@ GenerateStats PrefillV2Model::generate(
         hipMemcpyDeviceToHost,
         stream));
     MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
+    if (options.on_raw_logits) options.on_raw_logits(host_logits_);
 
     std::uint32_t first_token = sample_token_from_logits(
         host_logits_,
@@ -1223,6 +1224,7 @@ GenerateStats PrefillV2Model::generate(
                 validate_hip_graph_weight_pointers(graph_weight_pointers, "after_replay");
                 std::clog << "event=HIP_GRAPH_REPLAY_OK replay=" << graph_replays << '\n';
             }
+            if (options.on_raw_logits) options.on_raw_logits(host_logits_);
 
             const std::uint32_t next_token = sample_token_from_logits(
                 host_logits_,
@@ -1342,6 +1344,7 @@ GenerateStats PrefillV2Model::generate(
         MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
 
         // 7. Sample
+        if (options.on_raw_logits) options.on_raw_logits(host_logits_);
         const std::uint32_t next_token = sample_token_from_logits(
             host_logits_,
             prompt,

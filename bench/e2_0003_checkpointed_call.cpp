@@ -87,6 +87,7 @@ int main(int argc, char** argv) {
         std::size_t warmups = 0;
         std::string reference_path;
         std::string output_path;
+        std::string raw_logits_path;
         bool ledger_only = false;
         for (int i = 3; i < argc; ++i) {
             const std::string arg = argv[i];
@@ -97,6 +98,7 @@ int main(int argc, char** argv) {
             else if (arg == "--warmup" && i + 1 < argc) warmups = parse_size(argv[++i], "warmup count", true);
             else if (arg == "--reference-token-ids" && i + 1 < argc) reference_path = argv[++i];
             else if (arg == "--output" && i + 1 < argc) output_path = argv[++i];
+            else if (arg == "--capture-raw-logits" && i + 1 < argc) raw_logits_path = argv[++i];
             else if (arg == "--ledger-only") ledger_only = true;
             else throw std::runtime_error("unknown or incomplete option: " + arg);
         }
@@ -113,6 +115,12 @@ int main(int argc, char** argv) {
             output_file.open(output_path);
             if (!output_file) throw std::runtime_error("cannot create output file: " + output_path);
             output = &output_file;
+        }
+        if (!raw_logits_path.empty() && (iterations != 1 || warmups != 0 || generate_tokens < 5)) {
+            throw std::runtime_error("raw-logit capture requires one measured iteration, no warmup, and at least five generated tokens");
+        }
+        if (!raw_logits_path.empty() && std::filesystem::exists(raw_logits_path)) {
+            throw std::runtime_error("refusing to overwrite existing raw-logit capture: " + raw_logits_path);
         }
         auto& out = *output;
 
@@ -177,6 +185,13 @@ int main(int argc, char** argv) {
             options.repeat_last_n = 256;
             options.stop_token_ids.clear();
             options.seed = 42;
+            std::vector<std::vector<float>> raw_logits;
+            if (measured && !raw_logits_path.empty()) {
+                raw_logits.reserve(5);
+                options.on_raw_logits = [&](std::span<const float> logits) {
+                    if (raw_logits.size() < 5) raw_logits.emplace_back(logits.begin(), logits.end());
+                };
+            }
             std::size_t token_count = 0;
             options.on_token = [&](std::uint32_t token) {
                 const bool first_token = token_count == 0;
@@ -196,6 +211,21 @@ int main(int argc, char** argv) {
             const auto wall_start = std::chrono::steady_clock::now();
             const auto stats = model.generate(prompt, options);
             const auto wall_end = std::chrono::steady_clock::now();
+            if (!raw_logits_path.empty()) {
+                if (raw_logits.size() != 5) throw std::runtime_error("raw-logit capture did not contain five decisions");
+                std::ofstream raw_logits_file(raw_logits_path, std::ios::binary | std::ios::out);
+                if (!raw_logits_file) throw std::runtime_error("cannot create raw-logit capture: " + raw_logits_path);
+                for (const auto& decision : raw_logits) {
+                    if (decision.size() != model.vocab_size()) throw std::runtime_error("raw-logit vocabulary size changed between decisions");
+                    raw_logits_file.write(reinterpret_cast<const char*>(decision.data()),
+                        static_cast<std::streamsize>(decision.size() * sizeof(float)));
+                }
+                if (!raw_logits_file) throw std::runtime_error("failed writing raw-logit capture: " + raw_logits_path);
+                out << "raw_logits_capture={\"format\":\"native_f32\",\"decisions\":5,\"vocab_size\":"
+                    << model.vocab_size() << ",\"bytes\":"
+                    << 5 * model.vocab_size() * sizeof(float) << ",\"file\":\""
+                    << std::filesystem::path(raw_logits_path).filename().string() << "\"}\n" << std::flush;
+            }
             if (token_count == 0) event(out, "PREFILL_END", iteration);
             event(out, "DECODE_END", iteration);
 
@@ -243,6 +273,8 @@ int main(int argc, char** argv) {
                 << ",\"device_used_after_bytes\":" << device_used_after
                 << ",\"device_residual_after_bytes\":" << device_residual_after
                 << ",\"device_peak_bytes\":null"
+                << ",\"raw_logits_decisions\":" << (raw_logits_path.empty() ? 0 : raw_logits.size())
+                << ",\"raw_logits_vocab_size\":" << (raw_logits_path.empty() ? 0 : model.vocab_size())
                 << ",\"tokens_valid\":\"" << (tokens_valid ? "PASS" : "FAIL")
                 << "\",\"output_parity\":\""
                 << (parity_checked ? (parity ? "PASS" : "FAIL") : "NOT_CHECKED")

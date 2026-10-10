@@ -44,6 +44,7 @@ struct GenerateOptions {
     std::size_t repeat_last_n = 256;
     std::string persistent_session_dir; // When non-empty, restores from and saves prefix sessions to this dir
     std::function<bool(std::uint32_t)> on_token = nullptr;
+    std::function<void(std::span<const float>)> on_raw_logits = nullptr;
 };
 
 struct GenerateStats {

@@ -222,6 +222,8 @@ def container_command(args, route: str, pair: int, output: Path) -> list[str]:
                "--generate", str(args.generate_tokens), "--prompt-tokens", str(args.prompt_tokens),
                "--iterations", "1", "--warmup", "0",
                "--output", f"/results/{route}-pair-{pair}.metrics"]
+    if args.capture_raw_logits:
+        command.extend(["--capture-raw-logits", f"/results/{route}-pair-{pair}.logits.f32"])
     return command
 
 
@@ -268,6 +270,19 @@ def call(args, out: Path, route: str, pair: int, order: int) -> dict:
     telemetry = summarize_telemetry(telemetry_path)
     samples = [json.loads(line) for line in telemetry_path.read_text().splitlines() if line]
     generated = result.get("token_ids", []) if result else []
+    logits_path = out / f"{label}.logits.f32"
+    logits_capture = None
+    if args.capture_raw_logits:
+        expected_bytes = 5 * int(result.get("raw_logits_vocab_size", 0)) * 4 if result else 0
+        logits_capture = {
+            "file": logits_path.name,
+            "sha256": sha256_file(logits_path) if logits_path.is_file() else None,
+            "bytes": logits_path.stat().st_size if logits_path.is_file() else None,
+            "expected_bytes": expected_bytes,
+            "valid": logits_path.is_file() and expected_bytes > 0
+                     and logits_path.stat().st_size == expected_bytes
+                     and result.get("raw_logits_decisions") == 5,
+        }
     clean = "event=cleanup_complete" in guard_text and "THERMAL_GUARD_BEGIN" in guard_text
     abort = any(marker in guard_text for marker in
                 ("THERMAL_GUARD_ABORT", "WATCHDOG_ABORT", "cleanup_failed", "THERMAL_GUARD_ERROR"))
@@ -299,6 +314,7 @@ def call(args, out: Path, route: str, pair: int, order: int) -> dict:
                   "raw_log": guard_log.name},
         "telemetry": telemetry,
         "raw_metrics": metrics_path.name if metrics_path.exists() else None,
+        "raw_logits_capture": logits_capture,
     }
     (out / f"{label}.record.json").write_text(json.dumps(record, indent=2) + "\n")
     return record
@@ -331,7 +347,9 @@ def valid_call(record: dict) -> bool:
             and record["telemetry"]["successful_sample_count"] > 0
             and record["telemetry"]["failed_sample_count"] == 0
             and record["telemetry"]["missing_junction_samples"] == 0
-            and not record["telemetry"]["missing_fields"])
+            and not record["telemetry"]["missing_fields"]
+            and (not record.get("raw_logits_capture")
+                 or record["raw_logits_capture"]["valid"]))
 
 
 def sampler_config_valid(config: dict[str, str]) -> bool:
@@ -401,6 +419,8 @@ def main() -> int:
     parser.add_argument("--context-profile", choices=("8K", "32K", "64K", "128K"), default="8K")
     parser.add_argument("--prompt-tokens", type=int, default=PROMPT_TOKENS)
     parser.add_argument("--generate-tokens", type=int, default=OUTPUT_TOKENS)
+    parser.add_argument("--capture-raw-logits", action="store_true",
+                        help="capture pre-sampling F32 logits for decisions 1-5")
     parser.add_argument("--expected-seconds", type=int, default=240)
     parser.add_argument("--cooldown-timeout-seconds", type=int, default=900)
     parser.add_argument("--container-runtime", choices=("podman",), default="podman")
