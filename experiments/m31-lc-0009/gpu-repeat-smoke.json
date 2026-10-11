@@ -1,0 +1,168 @@
+{
+  "schema": "m31-lc-0009-gpu-repeat-smoke-v1",
+  "status": "ONE_CONFIGURATION_THREE_REPEATS_PASS",
+  "source_commit": "4c00f1d",
+  "binary_sha256": "e195f8eb79959da49c8b0563aee1f41f113f7a444c01c8e41e20785b3e6b4e60",
+  "image": "localhost/miinfer-dev:rocm-7.2.1",
+  "image_digest": "sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e",
+  "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+  "host": {
+    "hostname": "fedora",
+    "pci_bdf": "0000:06:00.0",
+    "gpu": "gfx906",
+    "serial": "692121006383",
+    "rocr_visible_devices": "0"
+  },
+  "configuration": {
+    "prompt": "ordinary-64-01",
+    "route": "fused",
+    "mode": "hip-graph",
+    "mmq_gateup_qsum": 0,
+    "hip_graph": 1,
+    "cpu_forced_history": [
+      760,
+      1156,
+      16561,
+      728
+    ],
+    "prompt_sha256": "c5c22b5353991655d59e599a074875541dbd8a51bb43a92098be2fdd0ccdc480"
+  },
+  "teacher_forced": {
+    "iterations": 3,
+    "all_tokens_valid": true,
+    "logits_bytes": 4966400,
+    "logits_sha256": [
+      "f48365126faf35fe651d58fdbe779255e8c62e2791811c9d7ca53bb24b188d9f",
+      "f48365126faf35fe651d58fdbe779255e8c62e2791811c9d7ca53bb24b188d9f",
+      "f48365126faf35fe651d58fdbe779255e8c62e2791811c9d7ca53bb24b188d9f"
+    ],
+    "logits_byte_identical": true,
+    "generated_ids_sha256": [
+      "e1f2cffd0d9378b55449bc7800b0a4fe4808c198e0d42966e04fe5c77cc4fef3",
+      "e1f2cffd0d9378b55449bc7800b0a4fe4808c198e0d42966e04fe5c77cc4fef3",
+      "e1f2cffd0d9378b55449bc7800b0a4fe4808c198e0d42966e04fe5c77cc4fef3"
+    ],
+    "generated_ids_byte_identical": true,
+    "per_iteration_wall_ms": [
+      3989.453,
+      3729.738,
+      3681.706
+    ]
+  },
+  "normal_greedy": {
+    "iterations": 3,
+    "tokens_per_iteration": 64,
+    "generated_ids_sha256": [
+      "e1f2cffd0d9378b55449bc7800b0a4fe4808c198e0d42966e04fe5c77cc4fef3",
+      "e1f2cffd0d9378b55449bc7800b0a4fe4808c198e0d42966e04fe5c77cc4fef3",
+      "e1f2cffd0d9378b55449bc7800b0a4fe4808c198e0d42966e04fe5c77cc4fef3"
+    ],
+    "generated_ids_byte_identical": true,
+    "per_iteration_wall_ms": [
+      2675.898,
+      2637.289,
+      2637.816
+    ]
+  },
+  "states": [
+    {
+      "decision": 1,
+      "active_tokens": 64,
+      "kind": "recurrent",
+      "bytes": 158859264,
+      "run_sha256": [
+        "fad03927b58a0dcdf447961df97ec6b0fcd0cd3b6ed24fa56047478aa710e5d6",
+        "fad03927b58a0dcdf447961df97ec6b0fcd0cd3b6ed24fa56047478aa710e5d6",
+        "fad03927b58a0dcdf447961df97ec6b0fcd0cd3b6ed24fa56047478aa710e5d6"
+      ],
+      "byte_identical": true
+    },
+    {
+      "decision": 1,
+      "active_tokens": 64,
+      "kind": "kv",
+      "bytes": 4194304,
+      "run_sha256": [
+        "e2bec4cb7e6b67dbf5b392e9752325f6aa22324768e318d9e71c0711b55baecc",
+        "e2bec4cb7e6b67dbf5b392e9752325f6aa22324768e318d9e71c0711b55baecc",
+        "e2bec4cb7e6b67dbf5b392e9752325f6aa22324768e318d9e71c0711b55baecc"
+      ],
+      "byte_identical": true
+    },
+    {
+      "decision": 2,
+      "active_tokens": 65,
+      "kind": "recurrent",
+      "bytes": 158859264,
+      "run_sha256": [
+        "5eaaf736e81b251bd3ceadf35d789499d30f09574f048c65e62b85fe13cf46d8",
+        "5eaaf736e81b251bd3ceadf35d789499d30f09574f048c65e62b85fe13cf46d8",
+        "5eaaf736e81b251bd3ceadf35d789499d30f09574f048c65e62b85fe13cf46d8"
+      ],
+      "byte_identical": true
+    },
+    {
+      "decision": 2,
+      "active_tokens": 65,
+      "kind": "kv",
+      "bytes": 4259840,
+      "run_sha256": [
+        "482c2390b387d3a80b7c98618dbc2fa6b742763f11b23f49c4d0a533b7097e90",
+        "482c2390b387d3a80b7c98618dbc2fa6b742763f11b23f49c4d0a533b7097e90",
+        "482c2390b387d3a80b7c98618dbc2fa6b742763f11b23f49c4d0a533b7097e90"
+      ],
+      "byte_identical": true
+    },
+    {
+      "decision": 5,
+      "active_tokens": 68,
+      "kind": "recurrent",
+      "bytes": 158859264,
+      "run_sha256": [
+        "f3f7eda10df31c34965e3bdbecd5ecba3c1deb5cf185d9d7e9c0939295b4da4b",
+        "f3f7eda10df31c34965e3bdbecd5ecba3c1deb5cf185d9d7e9c0939295b4da4b",
+        "f3f7eda10df31c34965e3bdbecd5ecba3c1deb5cf185d9d7e9c0939295b4da4b"
+      ],
+      "byte_identical": true
+    },
+    {
+      "decision": 5,
+      "active_tokens": 68,
+      "kind": "kv",
+      "bytes": 4456448,
+      "run_sha256": [
+        "8d08cc4f3eb60383b0fd9747120d0fd5f2ade35255e8669737cc4f1061de5fcc",
+        "8d08cc4f3eb60383b0fd9747120d0fd5f2ade35255e8669737cc4f1061de5fcc",
+        "8d08cc4f3eb60383b0fd9747120d0fd5f2ade35255e8669737cc4f1061de5fcc"
+      ],
+      "byte_identical": true
+    }
+  ],
+  "raw_capture_storage": {
+    "remote": "/home/fedora-workstation/Development/mi50-lc0009-captures/gpu/fused-graph-multirun",
+    "unique_state_baseline_local": "/tmp/lc9-gpu-captures/smoke/fused-graph",
+    "raw_states_tracked_in_git": false
+  },
+  "command_template": "e2-0003-checkpointed-call MODEL.gguf 8K --generate 64 --iterations 3 --warmup 0 --prompt-ids PROMPT.u32le --capture-token-ids IDS_PATH --output LOG_PATH; teacher-forced pass additionally supplies --forced-token-ids CPU.forced.ids --capture-raw-logits LOGITS.f32 --capture-state-prefix STATE_PREFIX",
+  "cpu_comparison": {
+    "cpu_greedy_ids_sha256": "30ff3e7042461ffe66607e0f23d9e9b1fa51c8d638cf6808842e9da08fa8f680",
+    "cpu_gpu_normal_greedy_equal": false,
+    "common_prefix_tokens": 30,
+    "first_mismatch_position_1based": 31,
+    "classification": "unresolved; logits at the divergence position were not captured and neither 64-token output reaches the frozen final-answer check",
+    "teacher_forced_decision_top1_ids": [
+      760,
+      1156,
+      16561,
+      728,
+      310
+    ],
+    "teacher_forced_top1_matches_cpu": [
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  }
+}
