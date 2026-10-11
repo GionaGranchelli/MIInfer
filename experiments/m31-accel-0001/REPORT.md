@@ -88,3 +88,13 @@ The production API workload now rejects an SSE response unless it observes both 
 ## 2026-10-12 01:33 checkpoint
 
 Safeguards and documentation were pushed at coordinator commit `d22915b`. The clean isolated Z840 worktree fast-forwarded from `e6fa559` to `d22915b`; host `py_compile` and the full tokenizer-backed workload `--self-check` passed. Output confirmed exactly 65,536 initial ChatML tokens, seven source files, eight planned turns, SSE completion checks, and atomic artifact writing. The tokenizer self-check used no GPU. No production inference or qualification claim changed.
+
+## 2026-10-12 01:35 checkpoint
+
+The production-path decode benchmark from worker commit `26b5f076e22ec29cdfd5609cacc7526ee2773b33` was reviewed and cherry-picked as coordinator commit `0ee18e610f25ce0ea1f5f4a82ea018c6bcbc082f`; the coordinator branch is pushed. It adds a fixed seeded prompt, production `PrefillV2Model::generate()` HIP Graph route assertion, per-sample TTFT/decode timing, and fail-closed repeated token-history checks. It supports P=65,536 without starting a 128K workload. This is a benchmark harness, not an optimization or performance result.
+
+Z840 SSH is live, Lake is read/write with 1.6 TB free, and the MI50 was idle at 28 C, 0% utilization, and about 10.9 MB VRAM in use. Fan telemetry still reports 15% / 0 RPM; physical airflow remains unconfirmed, so no GPU workload was launched. The exact coordinator source was checked out into a separate Lake worktree and built in the pinned `localhost/miinfer-dev:rocm-7.2.1` image (digest `bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e`), with no GPU device passed to the container.
+
+## 2026-10-12 01:38 build result
+
+The pinned ROCm 7.2.1 build completed with exit 0 from source `0ee18e610f25ce0ea1f5f4a82ea018c6bcbc082f`, and `miinfer-m31-accel-0001-decode-bench --self-check` passed. Build log: `/mnt/lc9-lake/m31-accel-0001-captures/build/decode-0ee18e6-build.log`, SHA-256 `2803889d8959cee46c61c6eee8f9244ee03efd32ec915334afeae05ed06e7f31`; binary SHA-256 `900729a294a61c1a564e7007d5dbf5a381b7f164aae7bd49cd6cdb40b96431b1`. The container exited 0 and had no host devices configured. The only build warnings were existing HIP warnings about an unused parameter, loop unrolling, and occupancy. This establishes a compiled and self-checked benchmark only; there are still no decode timings. Cooling confirmation is still required before GPU execution.
