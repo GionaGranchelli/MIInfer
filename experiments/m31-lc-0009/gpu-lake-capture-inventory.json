@@ -2983,5 +2983,18 @@
         }
       ]
     }
-  ]
+  ],
+  "live_rehash_verification": {
+    "verified_at_utc": "2026-10-11T21:09Z",
+    "inventory_sha256": "9af747474f7ece1493b1d7a33c8faac178c31ede45acd32057592018b4db8266",
+    "registered_cells": 24,
+    "unique_records": 24,
+    "capture_groups": 288,
+    "raw_files_sha256_checked": 864,
+    "raw_hash_group_mismatches": 0,
+    "record_hash_mismatches": 0,
+    "status": "PASS",
+    "host": "Z840 / fedora",
+    "storage": "/mnt/lc9-lake"
+  }
 }
