@@ -279,6 +279,10 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-prefix-state-reuse-bench PRIVATE miinfer_hip)
     target_compile_options(miinfer-prefix-state-reuse-bench PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-m31-accel-0001-agent64k bench/m31_accel_0001_agent64k.cpp)
+    target_link_libraries(miinfer-m31-accel-0001-agent64k PRIVATE miinfer_hip miinfer_model)
+    target_compile_options(miinfer-m31-accel-0001-agent64k PRIVATE -Wall -Wextra -Wpedantic)
+
     add_executable(miinfer-suffix-ttft-attribution-bench bench/suffix_ttft_attribution_bench.cpp)
     target_link_libraries(miinfer-suffix-ttft-attribution-bench PRIVATE miinfer_hip)
     target_compile_options(miinfer-suffix-ttft-attribution-bench PRIVATE -Wall -Wextra -Wpedantic)
