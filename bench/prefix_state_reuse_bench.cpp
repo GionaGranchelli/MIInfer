@@ -68,6 +68,21 @@ std::vector<std::uint32_t> make_synthetic_prompt(std::size_t count, std::uint32_
     return tokens;
 }
 
+GenerateOptions greedy_options(std::size_t max_new_tokens, bool reset_state) {
+    GenerateOptions options;
+    options.max_new_tokens = max_new_tokens;
+    options.reset_state_before = reset_state;
+    options.temperature = 0.0f;
+    options.top_p = 1.0f;
+    options.top_k = 1;
+    options.seed = 42;
+    options.repetition_penalty = 1.0f;
+    options.presence_penalty = 0.0f;
+    options.frequency_penalty = 0.0f;
+    options.use_hip_graph = true;
+    return options;
+}
+
 void test_failure_cases() {
     std::cout << "\n===================================================================\n";
     std::cout << "  Running ReusableContext Failure Case & Validation Suite\n";
@@ -220,12 +235,9 @@ int main(int argc, char** argv) {
         // [A] COLD BASELINE RUN: Prefill full_prompt (Prefix + Suffix)
         // -----------------------------------------------------------------
         std::cout << "  [Cold Run] Prefilling full prompt (" << full_prompt.size() << " tokens)...\n";
-        GenerateOptions cold_opt;
-        cold_opt.max_new_tokens = cfg.gen_tokens;
-        cold_opt.reset_state_before = true;
+        auto cold_opt = greedy_options(cfg.gen_tokens, true);
         cold_opt.enable_prefix_reuse = false;
         cold_opt.cache_prefix_after = false;
-        cold_opt.use_hip_graph = true;
 
         auto cold_stats = model.generate(full_prompt, cold_opt);
         r.cold_ttft_ms = cold_stats.ttft_ms;
@@ -243,13 +255,10 @@ int main(int argc, char** argv) {
         // [B] TURN 1: Prefill Prefix & Cache Reusable State
         // -----------------------------------------------------------------
         std::cout << "  [Turn 1] Prefilling Prefix (" << prefix_tokens.size() << " tokens) and caching state...\n";
-        GenerateOptions turn1_opt;
-        turn1_opt.max_new_tokens = cfg.gen_tokens;
-        turn1_opt.reset_state_before = true;
+        auto turn1_opt = greedy_options(cfg.gen_tokens, true);
         turn1_opt.enable_prefix_reuse = false;
         turn1_opt.cache_prefix_after = true;
         turn1_opt.cache_prefix_len = cfg.prefix_len;
-        turn1_opt.use_hip_graph = true;
 
         auto turn1_stats = model.generate(prefix_tokens, turn1_opt);
         std::cout << "    Turn 1 TTFT:         " << std::fixed << std::setprecision(2)
@@ -262,12 +271,9 @@ int main(int argc, char** argv) {
         // [C] TURN 2: Reuse Prefix & Prefill ONLY Suffix
         // -----------------------------------------------------------------
         std::cout << "  [Turn 2 (Reuse)] Suffix-only prefill on Full Prompt (" << full_prompt.size() << " tokens)...\n";
-        GenerateOptions turn2_opt;
-        turn2_opt.max_new_tokens = cfg.gen_tokens;
-        turn2_opt.reset_state_before = false; // Must preserve KV cache!
+        auto turn2_opt = greedy_options(cfg.gen_tokens, false);
         turn2_opt.enable_prefix_reuse = true;
         turn2_opt.cache_prefix_after = false;
-        turn2_opt.use_hip_graph = true;
 
         auto reuse_stats = model.generate(full_prompt, turn2_opt);
         r.reuse_hit = reuse_stats.reuse_hit;
