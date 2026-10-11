@@ -21,8 +21,8 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "bench_candidate_a_ffn_shared_bench_main",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "main()"
     },
     {
@@ -296,8 +296,8 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "bench_decode_gdn_breakdown_main",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "main()"
     },
     {
@@ -318,8 +318,8 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "bench_decode_stage_profile_main",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "main()"
     },
     {
@@ -494,8 +494,8 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "bench_e2_0003_gateup_operation_reference_main",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "main()"
     },
     {
@@ -1429,8 +1429,8 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "bench_gdn_kernel_bakeoff_main",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "main()"
     },
     {
@@ -2683,8 +2683,8 @@
       "source_location": "L63",
       "_origin": "ast",
       "id": "bench_m13_quant_mm_bench_find_tensor",
-      "community": 795,
-      "community_name": "Qwen35Model",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "find_tensor()"
     },
     {
@@ -2694,8 +2694,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "bench_m13_quant_mm_bench_cpp_gguftensortype",
-      "community": 795,
-      "community_name": "Qwen35Model",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "gguftensortype"
     },
     {
@@ -2705,8 +2705,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "bench_m13_quant_mm_bench_cpp_uint64_t",
-      "community": 795,
-      "community_name": "Qwen35Model",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "uint64_t"
     },
     {
@@ -4872,8 +4872,8 @@
       "source_location": "L80",
       "_origin": "ast",
       "id": "bench_prefill_v2_attention_bakeoff_main",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "main()"
     },
     {
@@ -5136,8 +5136,8 @@
       "source_location": "L86",
       "_origin": "ast",
       "id": "bench_prefill_v2_e2e_bench_main",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "main()"
     },
     {
@@ -5301,8 +5301,8 @@
       "source_location": "L86",
       "_origin": "ast",
       "id": "bench_prefill_v2_model_bench_main",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "main()"
     },
     {
@@ -5719,8 +5719,8 @@
       "source_location": "L382",
       "_origin": "ast",
       "id": "bench_prefill_v2_recurrent_layer_bakeoff_run_bakeoff_main",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "run_bakeoff_main()"
     },
     {
@@ -7105,8 +7105,8 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "bench_q4k_layout_bench_main",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "main()"
     },
     {
@@ -10746,8 +10746,8 @@
       "source_location": "L106",
       "_origin": "ast",
       "id": "bench_suffix_ttft_attribution_bench_main",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "main()"
     },
     {
@@ -12902,8 +12902,8 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "bench_v2_0029_mmq_efficiency_bench_main",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "main()"
     },
     {
@@ -13133,8 +13133,8 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "bench_v2_0030_direct_vgpr_streaming_bench_main",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "main()"
     },
     {
@@ -16213,8 +16213,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_hpp_uint32_t",
-      "community": 858,
-      "community_name": "Q4KMmqTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "uint32_t"
     },
     {
@@ -16323,8 +16323,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_hpp_uint8_t",
-      "community": 858,
-      "community_name": "Q4KMmqTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "uint8_t"
     },
     {
@@ -16345,8 +16345,8 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q5kwavetile",
-      "community": 858,
-      "community_name": "Q4KMmqTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "q5kwavetile"
     },
     {
@@ -16356,8 +16356,8 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q5kwavetile_words",
-      "community": 858,
-      "community_name": "Q4KMmqTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "words"
     },
     {
@@ -16367,8 +16367,8 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q5kwavetile_qh",
-      "community": 858,
-      "community_name": "Q4KMmqTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "qh"
     },
     {
@@ -16378,8 +16378,8 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q5kwavetile_metadata",
-      "community": 858,
-      "community_name": "Q4KMmqTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "metadata"
     },
     {
@@ -16389,8 +16389,8 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q5kwavetile_padding",
-      "community": 858,
-      "community_name": "Q4KMmqTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "padding"
     },
     {
@@ -16400,8 +16400,8 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q6kwavetile",
-      "community": 858,
-      "community_name": "Q4KMmqTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "q6kwavetile"
     },
     {
@@ -16411,8 +16411,8 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q6kwavetile_words",
-      "community": 858,
-      "community_name": "Q4KMmqTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "words"
     },
     {
@@ -16422,8 +16422,8 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q6kwavetile_qh",
-      "community": 858,
-      "community_name": "Q4KMmqTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "qh"
     },
     {
@@ -16433,8 +16433,8 @@
       "source_location": "L47",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q6kwavetile_metadata",
-      "community": 858,
-      "community_name": "Q4KMmqTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "metadata"
     },
     {
@@ -16444,8 +16444,8 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q6kwavetile_padding",
-      "community": 858,
-      "community_name": "Q4KMmqTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "padding"
     },
     {
@@ -16455,8 +16455,8 @@
       "source_location": "L55",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q6kmmqtile",
-      "community": 858,
-      "community_name": "Q4KMmqTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "q6kmmqtile"
     },
     {
@@ -16466,8 +16466,8 @@
       "source_location": "L56",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q6kmmqtile_values",
-      "community": 858,
-      "community_name": "Q4KMmqTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "values"
     },
     {
@@ -16477,8 +16477,8 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q6kmmqtile_high",
-      "community": 858,
-      "community_name": "Q4KMmqTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "high"
     },
     {
@@ -16488,8 +16488,8 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q6kmmqtile_scale_d",
-      "community": 858,
-      "community_name": "Q4KMmqTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "scale_d"
     },
     {
@@ -16499,8 +16499,8 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q4kmmqtile",
-      "community": 858,
-      "community_name": "Q4KMmqTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "q4kmmqtile"
     },
     {
@@ -16510,8 +16510,8 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q4kmmqtile_values",
-      "community": 858,
-      "community_name": "Q4KMmqTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "values"
     },
     {
@@ -16521,8 +16521,8 @@
       "source_location": "L66",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q4kmmqtile_high",
-      "community": 858,
-      "community_name": "Q4KMmqTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "high"
     },
     {
@@ -16532,8 +16532,8 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q4kmmqtile_scale_d",
-      "community": 858,
-      "community_name": "Q4KMmqTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "scale_d"
     },
     {
@@ -16543,8 +16543,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_hpp_uint16_t",
-      "community": 858,
-      "community_name": "Q4KMmqTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "uint16_t"
     },
     {
@@ -16554,8 +16554,8 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q4kmmqtile_dmin",
-      "community": 858,
-      "community_name": "Q4KMmqTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "dmin"
     },
     {
@@ -23374,8 +23374,8 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "include_miinfer_qwen35_model_qwen35model_load",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "load"
     },
     {
@@ -24166,8 +24166,8 @@
       "source_location": "L237",
       "_origin": "ast",
       "id": "include_miinfer_qwen3_gpu_layer_qwen3layer0gpukvcache_capacity",
-      "community": 288,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": ".capacity()"
     },
     {
@@ -24177,8 +24177,8 @@
       "source_location": "L238",
       "_origin": "ast",
       "id": "include_miinfer_qwen3_gpu_layer_qwen3layer0gpukvcache_length",
-      "community": 288,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": ".length()"
     },
     {
@@ -24254,8 +24254,8 @@
       "source_location": "L254",
       "_origin": "ast",
       "id": "include_miinfer_qwen3_gpu_layer_qwen3gpudecodeworkspace",
-      "community": 288,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community": 378,
+      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
       "norm_label": "qwen3gpudecodeworkspace"
     },
     {
@@ -24265,8 +24265,8 @@
       "source_location": "L259",
       "_origin": "ast",
       "id": "include_miinfer_qwen3_gpu_layer_qwen3gpudecodecache",
-      "community": 288,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community": 378,
+      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
       "norm_label": "qwen3gpudecodecache"
     },
     {
@@ -24276,8 +24276,8 @@
       "source_location": "L263",
       "_origin": "ast",
       "id": "include_miinfer_qwen3_gpu_layer_qwen3gpudecodecache_qwen3gpudecodecache",
-      "community": 288,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community": 378,
+      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
       "norm_label": ".qwen3gpudecodecache()"
     },
     {
@@ -24287,8 +24287,8 @@
       "source_location": "L267",
       "_origin": "ast",
       "id": "include_miinfer_qwen3_gpu_layer_qwen3gpudecodecache_reset",
-      "community": 288,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community": 378,
+      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
       "norm_label": "reset"
     },
     {
@@ -24298,8 +24298,8 @@
       "source_location": "L268",
       "_origin": "ast",
       "id": "include_miinfer_qwen3_gpu_layer_qwen3gpudecodecache_prepare",
-      "community": 288,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community": 378,
+      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
       "norm_label": "prepare"
     },
     {
@@ -24342,8 +24342,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "include_miinfer_qwen3_gpu_layer_hpp_unique_ptr",
-      "community": 288,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community": 378,
+      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
       "norm_label": "unique_ptr"
     },
     {
@@ -24353,8 +24353,8 @@
       "source_location": "L278",
       "_origin": "ast",
       "id": "include_miinfer_qwen3_gpu_layer_qwen3gpudecodecache_caches",
-      "community": 288,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community": 378,
+      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
       "norm_label": "caches_"
     },
     {
@@ -24364,8 +24364,8 @@
       "source_location": "L279",
       "_origin": "ast",
       "id": "include_miinfer_qwen3_gpu_layer_qwen3gpudecodecache_workspace",
-      "community": 288,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community": 378,
+      "community_name": "qwen3_decode_sequence_gpu_test.cpp",
       "norm_label": "workspace_"
     },
     {
@@ -26528,8 +26528,8 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "results_e2_0003_gateup_operation_reference_main",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "main()"
     },
     {
@@ -30798,8 +30798,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_device_validation",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "device_validation.cpp"
     },
     {
@@ -30809,8 +30809,8 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_device_validation_inspect_device",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "inspect_device()"
     },
     {
@@ -30820,8 +30820,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_device_validation_cpp_string",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "string"
     },
     {
@@ -30831,8 +30831,8 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "src_device_validation_is_gfx906",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "is_gfx906()"
     },
     {
@@ -30842,8 +30842,8 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "src_device_validation_validate_gfx906_device",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "validate_gfx906_device()"
     },
     {
@@ -30853,8 +30853,8 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "src_device_validation_print_device_info",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "print_device_info()"
     },
     {
@@ -30864,8 +30864,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_device_validation_cpp_ostream",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "ostream"
     },
     {
@@ -33207,8 +33207,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_prefill_v2_persistent_session",
-      "community": 693,
-      "community_name": "PersistentSessionHeader",
+      "community": 72,
+      "community_name": "D021 \u2014 Graph Topology Is a Performance Parameter",
       "norm_label": "persistent_session.cpp"
     },
     {
@@ -33218,8 +33218,8 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "src_prefill_v2_persistent_session_persistentsession_format_session_filename",
-      "community": 693,
-      "community_name": "PersistentSessionHeader",
+      "community": 72,
+      "community_name": "D021 \u2014 Graph Topology Is a Performance Parameter",
       "norm_label": "persistentsession::format_session_filename()"
     },
     {
@@ -33229,8 +33229,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_prefill_v2_persistent_session_cpp_string",
-      "community": 693,
-      "community_name": "PersistentSessionHeader",
+      "community": 72,
+      "community_name": "D021 \u2014 Graph Topology Is a Performance Parameter",
       "norm_label": "string"
     },
     {
@@ -33240,8 +33240,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_prefill_v2_persistent_session_cpp_uint64_t",
-      "community": 693,
-      "community_name": "PersistentSessionHeader",
+      "community": 72,
+      "community_name": "D021 \u2014 Graph Topology Is a Performance Parameter",
       "norm_label": "uint64_t"
     },
     {
@@ -33251,8 +33251,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_prefill_v2_persistent_session_cpp_uint32_t",
-      "community": 693,
-      "community_name": "PersistentSessionHeader",
+      "community": 72,
+      "community_name": "D021 \u2014 Graph Topology Is a Performance Parameter",
       "norm_label": "uint32_t"
     },
     {
@@ -33262,8 +33262,8 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "src_prefill_v2_persistent_session_persistentsession_save_to_file",
-      "community": 693,
-      "community_name": "PersistentSessionHeader",
+      "community": 72,
+      "community_name": "D021 \u2014 Graph Topology Is a Performance Parameter",
       "norm_label": "persistentsession::save_to_file()"
     },
     {
@@ -33273,8 +33273,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_prefill_v2_persistent_session_cpp_prefillv2model",
-      "community": 693,
-      "community_name": "PersistentSessionHeader",
+      "community": 72,
+      "community_name": "D021 \u2014 Graph Topology Is a Performance Parameter",
       "norm_label": "prefillv2model"
     },
     {
@@ -33284,8 +33284,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_prefill_v2_persistent_session_cpp_span",
-      "community": 693,
-      "community_name": "PersistentSessionHeader",
+      "community": 72,
+      "community_name": "D021 \u2014 Graph Topology Is a Performance Parameter",
       "norm_label": "span"
     },
     {
@@ -33295,8 +33295,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_prefill_v2_persistent_session_cpp_hipstream_t",
-      "community": 693,
-      "community_name": "PersistentSessionHeader",
+      "community": 72,
+      "community_name": "D021 \u2014 Graph Topology Is a Performance Parameter",
       "norm_label": "hipstream_t"
     },
     {
@@ -33306,8 +33306,8 @@
       "source_location": "L144",
       "_origin": "ast",
       "id": "src_prefill_v2_persistent_session_persistentsession_inspect_file",
-      "community": 693,
-      "community_name": "PersistentSessionHeader",
+      "community": 72,
+      "community_name": "D021 \u2014 Graph Topology Is a Performance Parameter",
       "norm_label": "persistentsession::inspect_file()"
     },
     {
@@ -33317,8 +33317,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_prefill_v2_persistent_session_cpp_vector",
-      "community": 693,
-      "community_name": "PersistentSessionHeader",
+      "community": 72,
+      "community_name": "D021 \u2014 Graph Topology Is a Performance Parameter",
       "norm_label": "vector"
     },
     {
@@ -33328,8 +33328,8 @@
       "source_location": "L168",
       "_origin": "ast",
       "id": "src_prefill_v2_persistent_session_persistentsession_load_from_file",
-      "community": 693,
-      "community_name": "PersistentSessionHeader",
+      "community": 72,
+      "community_name": "D021 \u2014 Graph Topology Is a Performance Parameter",
       "norm_label": "persistentsession::load_from_file()"
     },
     {
@@ -33339,8 +33339,8 @@
       "source_location": "L273",
       "_origin": "ast",
       "id": "src_prefill_v2_persistent_session_persistentsession_find_matching_session",
-      "community": 693,
-      "community_name": "PersistentSessionHeader",
+      "community": 72,
+      "community_name": "D021 \u2014 Graph Topology Is a Performance Parameter",
       "norm_label": "persistentsession::find_matching_session()"
     },
     {
@@ -33424,7 +33424,7 @@
       "label": "require_tensor()",
       "file_type": "code",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L74",
+      "source_location": "L75",
       "_origin": "ast",
       "id": "src_prefill_v2_recurrent_layer_require_tensor",
       "community": 710,
@@ -33446,7 +33446,7 @@
       "label": "upload_device_buffer()",
       "file_type": "code",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L82",
+      "source_location": "L83",
       "_origin": "ast",
       "id": "src_prefill_v2_recurrent_layer_upload_device_buffer",
       "community": 710,
@@ -33468,7 +33468,7 @@
       "label": "RecurrentLayerGraphTrace::RecurrentLayerGraphTrace()",
       "file_type": "code",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L92",
+      "source_location": "L93",
       "_origin": "ast",
       "id": "src_prefill_v2_recurrent_layer_recurrentlayergraphtrace_recurrentlayergraphtrace",
       "community": 710,
@@ -33501,7 +33501,7 @@
       "label": "RecurrentLayerGraphTrace::copy_async()",
       "file_type": "code",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L116",
+      "source_location": "L117",
       "_origin": "ast",
       "id": "src_prefill_v2_recurrent_layer_recurrentlayergraphtrace_copy_async",
       "community": 710,
@@ -33523,7 +33523,7 @@
       "label": "RecurrentLayerGraphTrace::write_files()",
       "file_type": "code",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L128",
+      "source_location": "L129",
       "_origin": "ast",
       "id": "src_prefill_v2_recurrent_layer_recurrentlayergraphtrace_write_files",
       "community": 710,
@@ -33534,7 +33534,7 @@
       "label": "PrefillV2RecurrentLayer::PrefillV2RecurrentLayer()",
       "file_type": "code",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L149",
+      "source_location": "L151",
       "_origin": "ast",
       "id": "src_prefill_v2_recurrent_layer_prefillv2recurrentlayer_prefillv2recurrentlayer",
       "community": 243,
@@ -33545,7 +33545,7 @@
       "label": "PrefillV2RecurrentLayer::forward()",
       "file_type": "code",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L372",
+      "source_location": "L374",
       "_origin": "ast",
       "id": "src_prefill_v2_recurrent_layer_prefillv2recurrentlayer_forward",
       "community": 710,
@@ -33567,7 +33567,7 @@
       "label": "PrefillV2RecurrentLayer::forward_profiled()",
       "file_type": "code",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L595",
+      "source_location": "L597",
       "_origin": "ast",
       "id": "src_prefill_v2_recurrent_layer_prefillv2recurrentlayer_forward_profiled",
       "community": 710,
@@ -33578,7 +33578,7 @@
       "label": "PrefillV2RecurrentLayer::decode()",
       "file_type": "code",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L753",
+      "source_location": "L755",
       "_origin": "ast",
       "id": "src_prefill_v2_recurrent_layer_prefillv2recurrentlayer_decode",
       "community": 710,
@@ -33589,7 +33589,7 @@
       "label": "PrefillV2RecurrentLayer::decode_profiled()",
       "file_type": "code",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L940",
+      "source_location": "L942",
       "_origin": "ast",
       "id": "src_prefill_v2_recurrent_layer_prefillv2recurrentlayer_decode_profiled",
       "community": 710,
@@ -33801,8 +33801,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_prefill_v2_state",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "state.cpp"
     },
     {
@@ -33812,8 +33812,8 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_prefill_v2_state_recurrentlayerstatestorage_recurrentlayerstatestorage",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "recurrentlayerstatestorage::recurrentlayerstatestorage()"
     },
     {
@@ -33823,8 +33823,8 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "src_prefill_v2_state_recurrentlayerstatestorage_reset",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "recurrentlayerstatestorage::reset()"
     },
     {
@@ -33834,8 +33834,8 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "src_prefill_v2_state_recurrentlayerstatestorage_upload",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "recurrentlayerstatestorage::upload()"
     },
     {
@@ -33845,8 +33845,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_prefill_v2_state_cpp_span",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "span"
     },
     {
@@ -33856,8 +33856,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_prefill_v2_state_cpp_uint32_t",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "uint32_t"
     },
     {
@@ -33867,8 +33867,8 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "src_prefill_v2_state_recurrentlayerstatestorage_download",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "recurrentlayerstatestorage::download()"
     },
     {
@@ -33878,8 +33878,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_prefill_v2_state_cpp_vector",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "vector"
     },
     {
@@ -33985,7 +33985,7 @@
       "label": "PrefillV2TopologyBlock::forward_profiled()",
       "file_type": "code",
       "source_file": "src/prefill_v2/topology_block.cpp",
-      "source_location": "L123",
+      "source_location": "L127",
       "_origin": "ast",
       "id": "src_prefill_v2_topology_block_prefillv2topologyblock_forward_profiled",
       "community": 734,
@@ -34296,8 +34296,8 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_qwen3_profile_category_name",
-      "community": 806,
-      "community_name": "qwen3_gpu_layer.cpp",
+      "community": 67,
+      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
       "norm_label": "qwen3_profile_category_name()"
     },
     {
@@ -34307,8 +34307,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_cpp_qwen3profilecategory",
-      "community": 806,
-      "community_name": "qwen3_gpu_layer.cpp",
+      "community": 67,
+      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
       "norm_label": "qwen3profilecategory"
     },
     {
@@ -34362,8 +34362,8 @@
       "source_location": "L110",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_devicebytes",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 126,
+      "community_name": "Qwen3GpuDecodeWorkspace",
       "norm_label": "devicebytes"
     },
     {
@@ -34373,8 +34373,8 @@
       "source_location": "L112",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_devicebytes_devicebytes",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 126,
+      "community_name": "Qwen3GpuDecodeWorkspace",
       "norm_label": ".devicebytes()"
     },
     {
@@ -34384,8 +34384,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_cpp_size_t",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "size_t"
     },
     {
@@ -34395,8 +34395,8 @@
       "source_location": "L122",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_devicebytes_data",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 126,
+      "community_name": "Qwen3GpuDecodeWorkspace",
       "norm_label": ".data()"
     },
     {
@@ -34406,8 +34406,8 @@
       "source_location": "L126",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_devicebytes_bytes",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 126,
+      "community_name": "Qwen3GpuDecodeWorkspace",
       "norm_label": "bytes_"
     },
     {
@@ -34417,8 +34417,8 @@
       "source_location": "L129",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_profilescope",
-      "community": 806,
-      "community_name": "qwen3_gpu_layer.cpp",
+      "community": 67,
+      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
       "norm_label": "profilescope"
     },
     {
@@ -34428,8 +34428,8 @@
       "source_location": "L131",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_profilescope_profilescope",
-      "community": 806,
-      "community_name": "qwen3_gpu_layer.cpp",
+      "community": 67,
+      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
       "norm_label": ".profilescope()"
     },
     {
@@ -34439,8 +34439,8 @@
       "source_location": "L152",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_profilescope_finish",
-      "community": 806,
-      "community_name": "qwen3_gpu_layer.cpp",
+      "community": 67,
+      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
       "norm_label": ".finish()"
     },
     {
@@ -34450,8 +34450,8 @@
       "source_location": "L188",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_profilescope_profile",
-      "community": 806,
-      "community_name": "qwen3_gpu_layer.cpp",
+      "community": 67,
+      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
       "norm_label": "profile_"
     },
     {
@@ -34461,8 +34461,8 @@
       "source_location": "L189",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_profilescope_category",
-      "community": 806,
-      "community_name": "qwen3_gpu_layer.cpp",
+      "community": 67,
+      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
       "norm_label": "category_"
     },
     {
@@ -34472,8 +34472,8 @@
       "source_location": "L190",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_profilescope_ffn_stage",
-      "community": 806,
-      "community_name": "qwen3_gpu_layer.cpp",
+      "community": 67,
+      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
       "norm_label": "ffn_stage_"
     },
     {
@@ -34483,8 +34483,8 @@
       "source_location": "L191",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_profilescope_boundary_stage",
-      "community": 806,
-      "community_name": "qwen3_gpu_layer.cpp",
+      "community": 67,
+      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
       "norm_label": "boundary_stage_"
     },
     {
@@ -34494,8 +34494,8 @@
       "source_location": "L192",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_profilescope_dispatches",
-      "community": 806,
-      "community_name": "qwen3_gpu_layer.cpp",
+      "community": 67,
+      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
       "norm_label": "dispatches_"
     },
     {
@@ -34505,8 +34505,8 @@
       "source_location": "L193",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_profilescope_bytes",
-      "community": 806,
-      "community_name": "qwen3_gpu_layer.cpp",
+      "community": 67,
+      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
       "norm_label": "bytes_"
     },
     {
@@ -34516,8 +34516,8 @@
       "source_location": "L194",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_profilescope_copy",
-      "community": 806,
-      "community_name": "qwen3_gpu_layer.cpp",
+      "community": 67,
+      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
       "norm_label": "copy_"
     },
     {
@@ -34527,8 +34527,8 @@
       "source_location": "L195",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_profilescope_finished",
-      "community": 806,
-      "community_name": "qwen3_gpu_layer.cpp",
+      "community": 67,
+      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
       "norm_label": "finished_"
     },
     {
@@ -34538,8 +34538,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_cpp_hipevent_t",
-      "community": 806,
-      "community_name": "qwen3_gpu_layer.cpp",
+      "community": 67,
+      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
       "norm_label": "hipevent_t"
     },
     {
@@ -34549,8 +34549,8 @@
       "source_location": "L196",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_profilescope_start",
-      "community": 806,
-      "community_name": "qwen3_gpu_layer.cpp",
+      "community": 67,
+      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
       "norm_label": "start_"
     },
     {
@@ -34560,8 +34560,8 @@
       "source_location": "L197",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_profilescope_stop",
-      "community": 806,
-      "community_name": "qwen3_gpu_layer.cpp",
+      "community": 67,
+      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
       "norm_label": "stop_"
     },
     {
@@ -34604,8 +34604,8 @@
       "source_location": "L235",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_devicebuffer",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 126,
+      "community_name": "Qwen3GpuDecodeWorkspace",
       "norm_label": "devicebuffer"
     },
     {
@@ -34615,8 +34615,8 @@
       "source_location": "L237",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_devicebuffer_devicebuffer",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 126,
+      "community_name": "Qwen3GpuDecodeWorkspace",
       "norm_label": ".devicebuffer()"
     },
     {
@@ -34626,8 +34626,8 @@
       "source_location": "L238",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_devicebuffer_data",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": ".data()"
     },
     {
@@ -34637,8 +34637,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_cpp_t",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "t"
     },
     {
@@ -34648,8 +34648,8 @@
       "source_location": "L241",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_copy_to_host",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "copy_to_host()"
     },
     {
@@ -34659,8 +34659,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_cpp_vector",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "vector"
     },
     {
@@ -34670,8 +34670,8 @@
       "source_location": "L245",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_device_f32_tensor",
-      "community": 288,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "device_f32_tensor()"
     },
     {
@@ -34802,8 +34802,8 @@
       "source_location": "L379",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_projection_profile_category",
-      "community": 806,
-      "community_name": "qwen3_gpu_layer.cpp",
+      "community": 67,
+      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
       "norm_label": "projection_profile_category()"
     },
     {
@@ -34879,8 +34879,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_cpp_uint32_t",
-      "community": 288,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "uint32_t"
     },
     {
@@ -34901,8 +34901,8 @@
       "source_location": "L481",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_verify_q8_reuse_buffers",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "verify_q8_reuse_buffers()"
     },
     {
@@ -34912,8 +34912,8 @@
       "source_location": "L497",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_verify_fused_ffn_norm_buffers",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "verify_fused_ffn_norm_buffers()"
     },
     {
@@ -34934,8 +34934,8 @@
       "source_location": "L635",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_launch_projection_probe",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "launch_projection_probe()"
     },
     {
@@ -34945,8 +34945,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "qwen3projectionprecision",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "qwen3projectionprecision"
     },
     {
@@ -34956,8 +34956,8 @@
       "source_location": "L694",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_capture",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "capture()"
     },
     {
@@ -34989,8 +34989,8 @@
       "source_location": "L730",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_qwen3gpudecodeworkspace_qwen3gpudecodeworkspace",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": ".qwen3gpudecodeworkspace()"
     },
     {
@@ -35033,8 +35033,8 @@
       "source_location": "L754",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_qwen3gpudecodeworkspace_output",
-      "community": 288,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "output"
     },
     {
@@ -35385,8 +35385,8 @@
       "source_location": "L788",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_qwen3gpudecodeworkspace_final_norm",
-      "community": 288,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "final_norm"
     },
     {
@@ -35451,8 +35451,8 @@
       "source_location": "L832",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_qwen3layer0gpukvcache_qwen3layer0gpukvcache",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "qwen3layer0gpukvcache::qwen3layer0gpukvcache()"
     },
     {
@@ -35484,8 +35484,8 @@
       "source_location": "L894",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_qwen3layer0gpukvcache_snapshot_keys",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "qwen3layer0gpukvcache::snapshot_keys()"
     },
     {
@@ -35495,8 +35495,8 @@
       "source_location": "L901",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_qwen3layer0gpukvcache_snapshot_values",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "qwen3layer0gpukvcache::snapshot_values()"
     },
     {
@@ -35506,8 +35506,8 @@
       "source_location": "L908",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_qwen3gpudecodecache_qwen3gpudecodecache",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "qwen3gpudecodecache::qwen3gpudecodecache()"
     },
     {
@@ -35539,8 +35539,8 @@
       "source_location": "L942",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_qwen3gpudecodecache_length",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "qwen3gpudecodecache::length()"
     },
     {
@@ -35561,8 +35561,8 @@
       "source_location": "L1326",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_execute_qwen3_layer0_gpu",
-      "community": 288,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "execute_qwen3_layer0_gpu()"
     },
     {
@@ -35583,8 +35583,8 @@
       "source_location": "L1366",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_execute_qwen3_decode_gpu",
-      "community": 288,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "execute_qwen3_decode_gpu()"
     },
     {
@@ -35594,8 +35594,8 @@
       "source_location": "L1434",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_execute_qwen3_decode_gpu_fast_impl",
-      "community": 288,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "execute_qwen3_decode_gpu_fast_impl()"
     },
     {
@@ -35605,8 +35605,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_cpp_span",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "span"
     },
     {
@@ -35616,8 +35616,8 @@
       "source_location": "L1522",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_execute_qwen3_decode_gpu_fast",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "execute_qwen3_decode_gpu_fast()"
     },
     {
@@ -35627,8 +35627,8 @@
       "source_location": "L1541",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_execute_qwen3_decode_gpu_greedy",
-      "community": 288,
-      "community_name": "Qwen3GpuDecodeCache",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "execute_qwen3_decode_gpu_greedy()"
     },
     {
@@ -35638,8 +35638,8 @@
       "source_location": "L1560",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_execute_qwen3_layer_gpu_teacher_forced",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "execute_qwen3_layer_gpu_teacher_forced()"
     },
     {
@@ -35649,8 +35649,8 @@
       "source_location": "L1579",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_execute_qwen3_layer_gpu_attention_override",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "execute_qwen3_layer_gpu_attention_override()"
     },
     {
@@ -35660,8 +35660,8 @@
       "source_location": "L1599",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_execute_qwen3_ffn_gpu_probe",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "execute_qwen3_ffn_gpu_probe()"
     },
     {
@@ -35671,8 +35671,8 @@
       "source_location": "L1676",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_execute_qwen3_projection_gpu_probe",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "execute_qwen3_projection_gpu_probe()"
     },
     {
@@ -35682,8 +35682,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "qwen3projection",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "qwen3projection"
     },
     {
@@ -35693,8 +35693,8 @@
       "source_location": "L1760",
       "_origin": "ast",
       "id": "src_qwen3_gpu_layer_execute_qwen3_down_projection_contract_probe",
-      "community": 67,
-      "community_name": "D012 \u2014 FP32 Accumulation Is Allowed Where Correctness Requires It",
+      "community": 806,
+      "community_name": "qwen3_gpu_layer.cpp",
       "norm_label": "execute_qwen3_down_projection_contract_probe()"
     },
     {
@@ -37208,8 +37208,8 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "tests_fp16_gemv_test_run_shape",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "run_shape()"
     },
     {
@@ -37351,8 +37351,8 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "tests_m31_0005_decode_attention_bound_test_devicebuffer_devicebuffer",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": ".devicebuffer()"
     },
     {
@@ -37362,8 +37362,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "tests_m31_0005_decode_attention_bound_test_cpp_size_t",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "size_t"
     },
     {
@@ -37406,8 +37406,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_m31_0006_guard_gpu_worker",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "m31_0006_guard_gpu_worker.cpp"
     },
     {
@@ -37417,8 +37417,8 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "tests_m31_0006_guard_gpu_worker_main",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "main()"
     },
     {
@@ -38176,8 +38176,8 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "tests_q4_q8_dot4_probe_main",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "main()"
     },
     {
@@ -38209,8 +38209,8 @@
       "source_location": "L88",
       "_origin": "ast",
       "id": "tests_q4_q8_gemv_test_run_silu_q8_fusion_identity_test",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "run_silu_q8_fusion_identity_test()"
     },
     {
@@ -38220,8 +38220,8 @@
       "source_location": "L148",
       "_origin": "ast",
       "id": "tests_q4_q8_gemv_test_run_shape",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "run_shape()"
     },
     {
@@ -38231,8 +38231,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "tests_q4_q8_gemv_test_cpp_string",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "string"
     },
     {
@@ -41773,8 +41773,8 @@
       "source_location": "L109",
       "_origin": "ast",
       "id": "tests_qwen3_primitives_test_device_copy",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "device_copy()"
     },
     {
@@ -41784,8 +41784,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "tests_qwen3_primitives_test_cpp_t",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "t"
     },
     {
@@ -41795,8 +41795,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "tests_qwen3_primitives_test_cpp_vector",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "vector"
     },
     {
@@ -41806,8 +41806,8 @@
       "source_location": "L116",
       "_origin": "ast",
       "id": "tests_qwen3_primitives_test_gpu_tests",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "gpu_tests()"
     },
     {
@@ -41861,8 +41861,8 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "tests_qwen3_quant_kv_attention_test_gpubuffer_gpubuffer",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": ".gpubuffer()"
     },
     {
@@ -41872,8 +41872,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "tests_qwen3_quant_kv_attention_test_cpp_size_t",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "size_t"
     },
     {
@@ -42147,8 +42147,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_reusable_context_allocation_test",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "reusable_context_allocation_test.cpp"
     },
     {
@@ -42169,8 +42169,8 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "tests_reusable_context_allocation_test_hipmalloc",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "hipmalloc()"
     },
     {
@@ -42180,8 +42180,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "tests_reusable_context_allocation_test_cpp_hiperror_t",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "hiperror_t"
     },
     {
@@ -42191,8 +42191,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "tests_reusable_context_allocation_test_cpp_size_t",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "size_t"
     },
     {
@@ -42202,8 +42202,8 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "tests_reusable_context_allocation_test_hipfree",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "hipfree()"
     },
     {
@@ -42213,8 +42213,8 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "tests_reusable_context_allocation_test_hipmemset",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "hipmemset()"
     },
     {
@@ -42224,8 +42224,8 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "tests_reusable_context_allocation_test_hipmemcpy",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "hipmemcpy()"
     },
     {
@@ -42279,8 +42279,8 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "tests_reusable_context_allocation_test_hipgeterrorstring",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "hipgeterrorstring()"
     },
     {
@@ -42902,8 +42902,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tools_m6a12_qwen35_attention_projections",
-      "community": 629,
-      "community_name": "vector",
+      "community": 259,
+      "community_name": "m6a12_qwen35_attention_projections.cpp",
       "norm_label": "m6a12_qwen35_attention_projections.cpp"
     },
     {
@@ -46367,8 +46367,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tools_m6a8_qwen35_gpu_foundation",
-      "community": 672,
-      "community_name": "m6a8_qwen35_gpu_foundation.cpp",
+      "community": 629,
+      "community_name": "vector",
       "norm_label": "m6a8_qwen35_gpu_foundation.cpp"
     },
     {
@@ -49326,8 +49326,8 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_m23profilecounters",
-      "community": 801,
-      "community_name": "download",
+      "community": 858,
+      "community_name": "Q4KMmqTile",
       "norm_label": "m23profilecounters"
     },
     {
@@ -49337,8 +49337,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_hpp_array",
-      "community": 801,
-      "community_name": "download",
+      "community": 858,
+      "community_name": "Q4KMmqTile",
       "norm_label": "array"
     },
     {
@@ -49359,8 +49359,8 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_m23profilecounters_recurrent_dispatches",
-      "community": 801,
-      "community_name": "download",
+      "community": 858,
+      "community_name": "Q4KMmqTile",
       "norm_label": "recurrent_dispatches"
     },
     {
@@ -49370,8 +49370,8 @@
       "source_location": "L55",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_m23profilecounters_attention_dispatches",
-      "community": 801,
-      "community_name": "download",
+      "community": 858,
+      "community_name": "Q4KMmqTile",
       "norm_label": "attention_dispatches"
     },
     {
@@ -49381,8 +49381,8 @@
       "source_location": "L56",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_m23profilecounters_recurrent_weight_upload_bytes",
-      "community": 801,
-      "community_name": "download",
+      "community": 858,
+      "community_name": "Q4KMmqTile",
       "norm_label": "recurrent_weight_upload_bytes"
     },
     {
@@ -49392,8 +49392,8 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_m23profilecounters_attention_weight_upload_bytes",
-      "community": 801,
-      "community_name": "download",
+      "community": 858,
+      "community_name": "Q4KMmqTile",
       "norm_label": "attention_weight_upload_bytes"
     },
     {
@@ -49403,8 +49403,8 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_m23profilecounters_recurrent_weight_upload_ms",
-      "community": 801,
-      "community_name": "download",
+      "community": 858,
+      "community_name": "Q4KMmqTile",
       "norm_label": "recurrent_weight_upload_ms"
     },
     {
@@ -49414,8 +49414,8 @@
       "source_location": "L59",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_m23profilecounters_attention_weight_upload_ms",
-      "community": 801,
-      "community_name": "download",
+      "community": 858,
+      "community_name": "Q4KMmqTile",
       "norm_label": "attention_weight_upload_ms"
     },
     {
@@ -49425,8 +49425,8 @@
       "source_location": "L60",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_m23profilecounters_weight_upload_bytes",
-      "community": 801,
-      "community_name": "download",
+      "community": 858,
+      "community_name": "Q4KMmqTile",
       "norm_label": "weight_upload_bytes"
     },
     {
@@ -49436,8 +49436,8 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_m23profilecounters_weight_upload_ms",
-      "community": 801,
-      "community_name": "download",
+      "community": 858,
+      "community_name": "Q4KMmqTile",
       "norm_label": "weight_upload_ms"
     },
     {
@@ -49491,8 +49491,8 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_exp0380_b64_probe_enabled",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": "exp0380_b64_probe_enabled()"
     },
     {
@@ -49557,8 +49557,8 @@
       "source_location": "L114",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_b64_composition_enabled",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": "b64_composition_enabled()"
     },
     {
@@ -49601,8 +49601,8 @@
       "source_location": "L134",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_exp0380_probe_layer",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": "exp0380_probe_layer()"
     },
     {
@@ -49612,8 +49612,8 @@
       "source_location": "L139",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_exp0380_probe_complete",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": "exp0380_probe_complete()"
     },
     {
@@ -50492,8 +50492,8 @@
       "source_location": "L521",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrenttrace",
-      "community": 801,
-      "community_name": "download",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": "recurrenttrace"
     },
     {
@@ -50514,8 +50514,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_hpp_uint32_t",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": "uint32_t"
     },
     {
@@ -50525,8 +50525,8 @@
       "source_location": "L524",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrenttrace_position",
-      "community": 801,
-      "community_name": "download",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": "position"
     },
     {
@@ -50536,8 +50536,8 @@
       "source_location": "L526",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrenttrace_report_at",
-      "community": 801,
-      "community_name": "download",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".report_at()"
     },
     {
@@ -50547,8 +50547,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_hpp_string",
-      "community": 801,
-      "community_name": "download",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": "string"
     },
     {
@@ -50558,8 +50558,8 @@
       "source_location": "L541",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrenttrace_report",
-      "community": 801,
-      "community_name": "download",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".report()"
     },
     {
@@ -50580,8 +50580,8 @@
       "source_location": "L561",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrenttrace_kstateelements",
-      "community": 801,
-      "community_name": "download",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": "kstateelements"
     },
     {
@@ -53451,8 +53451,8 @@
       "source_location": "L1488",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrentlayer_name",
-      "community": 801,
-      "community_name": "download",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".name()"
     },
     {
@@ -53462,8 +53462,8 @@
       "source_location": "L1492",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrentlayer_poison",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": ".poison()"
     },
     {
@@ -53473,8 +53473,8 @@
       "source_location": "L1499",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrentlayer_reset",
-      "community": 741,
-      "community_name": "qwen35_gpu_pipeline.hpp",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": ".reset()"
     },
     {
@@ -53517,8 +53517,8 @@
       "source_location": "L1551",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrentlayer_trace_tensor",
-      "community": 801,
-      "community_name": "download",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".trace_tensor()"
     },
     {
@@ -53550,8 +53550,8 @@
       "source_location": "L1621",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrentlayer_state_value",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".state_value()"
     },
     {
@@ -53649,8 +53649,8 @@
       "source_location": "L1694",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrentlayer_profile_decode_layer_start",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".profile_decode_layer_start()"
     },
     {
@@ -53660,8 +53660,8 @@
       "source_location": "L1700",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrentlayer_profile_decode_layer_end",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".profile_decode_layer_end()"
     },
     {
@@ -53693,8 +53693,8 @@
       "source_location": "L1722",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrentlayer_profile_wide_tail_start",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".profile_wide_tail_start()"
     },
     {
@@ -53704,8 +53704,8 @@
       "source_location": "L1730",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrentlayer_profile_wide_tail_end",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".profile_wide_tail_end()"
     },
     {
@@ -53715,8 +53715,8 @@
       "source_location": "L1736",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrentlayer_profile_wide_tail_family_start",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".profile_wide_tail_family_start()"
     },
     {
@@ -53726,8 +53726,8 @@
       "source_location": "L1744",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrentlayer_profile_wide_tail_family_end",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".profile_wide_tail_family_end()"
     },
     {
@@ -53869,8 +53869,8 @@
       "source_location": "L1980",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrentlayer_prefill_wide_causal",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".prefill_wide_causal()"
     },
     {
@@ -53880,8 +53880,8 @@
       "source_location": "L2048",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrentlayer_prefill_wide_beta_decay",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".prefill_wide_beta_decay()"
     },
     {
@@ -53891,8 +53891,8 @@
       "source_location": "L2081",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrentlayer_prefill_wide_qkv_gate",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".prefill_wide_qkv_gate()"
     },
     {
@@ -53902,8 +53902,8 @@
       "source_location": "L2280",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrentlayer_prefill_wide_ssm_out",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".prefill_wide_ssm_out()"
     },
     {
@@ -53924,8 +53924,8 @@
       "source_location": "L2387",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrentlayer_prefill_wide",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".prefill_wide()"
     },
     {
@@ -55453,8 +55453,8 @@
       "source_location": "L3934",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_count_m23_dispatch",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".count_m23_dispatch()"
     },
     {
@@ -55508,8 +55508,8 @@
       "source_location": "L4369",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_prefix",
-      "community": 801,
-      "community_name": "download",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".prefix()"
     },
     {
@@ -55530,8 +55530,8 @@
       "source_location": "L4378",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_poison",
-      "community": 243,
-      "community_name": "GgufTensor",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": ".poison()"
     },
     {
@@ -55552,8 +55552,8 @@
       "source_location": "L4394",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_stage_start",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".stage_start()"
     },
     {
@@ -55563,8 +55563,8 @@
       "source_location": "L4400",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_stage_end",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".stage_end()"
     },
     {
@@ -55640,8 +55640,8 @@
       "source_location": "L4446",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_profile_decode_layer_start",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".profile_decode_layer_start()"
     },
     {
@@ -55651,8 +55651,8 @@
       "source_location": "L4452",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_profile_decode_layer_end",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".profile_decode_layer_end()"
     },
     {
@@ -55662,8 +55662,8 @@
       "source_location": "L4459",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_capture_exp0371_prepare",
-      "community": 801,
-      "community_name": "download",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".capture_exp0371_prepare()"
     },
     {
@@ -55673,8 +55673,8 @@
       "source_location": "L4480",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_prepare_prefill_batch",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".prepare_prefill_batch()"
     },
     {
@@ -55739,8 +55739,8 @@
       "source_location": "L4659",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_finish_prefill_attention",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".finish_prefill_attention()"
     },
     {
@@ -55750,8 +55750,8 @@
       "source_location": "L4816",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_finish_prefill_wide",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".finish_prefill_wide()"
     },
     {
@@ -55794,8 +55794,8 @@
       "source_location": "L5664",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_run_hybrid_block",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": "run_hybrid_block()"
     },
     {
@@ -56025,8 +56025,8 @@
       "source_location": "L5785",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_gpulayerref_run",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".run()"
     },
     {
@@ -63989,8 +63989,8 @@
       "source_location": "L519",
       "_origin": "ast",
       "id": "docs_decisions_d020_hip_graph_capture_comes_after_correct_execution",
-      "community": 19,
-      "community_name": "decisions.md",
+      "community": 908,
+      "community_name": "D020 \u2014 HIP Graph Capture Comes After Correct Execution",
       "norm_label": "d020 \u2014 hip graph capture comes after correct execution"
     },
     {
@@ -64000,8 +64000,8 @@
       "source_location": "L523",
       "_origin": "ast",
       "id": "docs_decisions_decision_523",
-      "community": 19,
-      "community_name": "decisions.md",
+      "community": 908,
+      "community_name": "D020 \u2014 HIP Graph Capture Comes After Correct Execution",
       "norm_label": "decision"
     },
     {
@@ -64011,8 +64011,8 @@
       "source_location": "L527",
       "_origin": "ast",
       "id": "docs_decisions_order",
-      "community": 19,
-      "community_name": "decisions.md",
+      "community": 908,
+      "community_name": "D020 \u2014 HIP Graph Capture Comes After Correct Execution",
       "norm_label": "order"
     },
     {
@@ -64022,8 +64022,8 @@
       "source_location": "L541",
       "_origin": "ast",
       "id": "docs_decisions_reason_541",
-      "community": 19,
-      "community_name": "decisions.md",
+      "community": 908,
+      "community_name": "D020 \u2014 HIP Graph Capture Comes After Correct Execution",
       "norm_label": "reason"
     },
     {
@@ -64033,8 +64033,8 @@
       "source_location": "L549",
       "_origin": "ast",
       "id": "docs_decisions_d021_graph_topology_is_a_performance_parameter",
-      "community": 72,
-      "community_name": "D021 \u2014 Graph Topology Is a Performance Parameter",
+      "community": 19,
+      "community_name": "decisions.md",
       "norm_label": "d021 \u2014 graph topology is a performance parameter"
     },
     {
@@ -64044,8 +64044,8 @@
       "source_location": "L553",
       "_origin": "ast",
       "id": "docs_decisions_decision_553",
-      "community": 72,
-      "community_name": "D021 \u2014 Graph Topology Is a Performance Parameter",
+      "community": 19,
+      "community_name": "decisions.md",
       "norm_label": "decision"
     },
     {
@@ -64055,8 +64055,8 @@
       "source_location": "L557",
       "_origin": "ast",
       "id": "docs_decisions_reason_557",
-      "community": 72,
-      "community_name": "D021 \u2014 Graph Topology Is a Performance Parameter",
+      "community": 19,
+      "community_name": "decisions.md",
       "norm_label": "reason"
     },
     {
@@ -64066,8 +64066,8 @@
       "source_location": "L561",
       "_origin": "ast",
       "id": "docs_decisions_consequences_561",
-      "community": 72,
-      "community_name": "D021 \u2014 Graph Topology Is a Performance Parameter",
+      "community": 19,
+      "community_name": "decisions.md",
       "norm_label": "consequences"
     },
     {
@@ -126554,7 +126554,7 @@
       "label": "Phase B: eager trace validation",
       "file_type": "document",
       "source_file": "experiments/m31-lc-0006/REPORT.md",
-      "source_location": "L58",
+      "source_location": "L66",
       "_origin": "ast",
       "id": "experiments_m31_lc_0006_report_phase_b_eager_trace_validation",
       "community": 736,
@@ -126565,7 +126565,7 @@
       "label": "Provenance",
       "file_type": "document",
       "source_file": "experiments/m31-lc-0006/REPORT.md",
-      "source_location": "L68",
+      "source_location": "L76",
       "_origin": "ast",
       "id": "experiments_m31_lc_0006_report_provenance",
       "community": 736,
@@ -126576,7 +126576,7 @@
       "label": "Evidence",
       "file_type": "document",
       "source_file": "experiments/m31-lc-0006/REPORT.md",
-      "source_location": "L77",
+      "source_location": "L85",
       "_origin": "ast",
       "id": "experiments_m31_lc_0006_report_evidence",
       "community": 736,
@@ -144104,7 +144104,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/topology_block.cpp",
-      "source_location": "L173",
+      "source_location": "L177",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_topology_block_prefillv2topologyblock_forward_profiled",
@@ -163051,7 +163051,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L74",
+      "source_location": "L75",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast",
@@ -163770,7 +163770,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L74",
+      "source_location": "L75",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -172702,7 +172702,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L595",
+      "source_location": "L597",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -172822,7 +172822,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L940",
+      "source_location": "L942",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -172990,7 +172990,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L753",
+      "source_location": "L755",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -173409,7 +173409,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L310",
+      "source_location": "L312",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -174774,7 +174774,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L753",
+      "source_location": "L755",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -174786,7 +174786,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L940",
+      "source_location": "L942",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -174798,7 +174798,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L372",
+      "source_location": "L374",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -174810,7 +174810,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L595",
+      "source_location": "L597",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -174846,7 +174846,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/topology_block.cpp",
-      "source_location": "L123",
+      "source_location": "L127",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -175154,7 +175154,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/topology_block.cpp",
-      "source_location": "L123",
+      "source_location": "L127",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -175858,7 +175858,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/topology_block.cpp",
-      "source_location": "L123",
+      "source_location": "L127",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -177012,7 +177012,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L149",
+      "source_location": "L151",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -179973,7 +179973,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L753",
+      "source_location": "L755",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -179985,7 +179985,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L940",
+      "source_location": "L942",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -180153,7 +180153,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L372",
+      "source_location": "L374",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -191158,7 +191158,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L285",
+      "source_location": "L287",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer_prefillv2recurrentlayer_prefillv2recurrentlayer",
@@ -191446,7 +191446,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L167",
+      "source_location": "L169",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer_prefillv2recurrentlayer_prefillv2recurrentlayer",
@@ -191482,7 +191482,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L238",
+      "source_location": "L240",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer_prefillv2recurrentlayer_prefillv2recurrentlayer",
@@ -191518,7 +191518,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L171",
+      "source_location": "L173",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer_prefillv2recurrentlayer_prefillv2recurrentlayer",
@@ -195633,7 +195633,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L753",
+      "source_location": "L755",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer",
@@ -195644,7 +195644,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L940",
+      "source_location": "L942",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer",
@@ -195655,7 +195655,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L372",
+      "source_location": "L374",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer",
@@ -195666,7 +195666,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L595",
+      "source_location": "L597",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer",
@@ -195677,7 +195677,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L310",
+      "source_location": "L312",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer",
@@ -195688,7 +195688,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L116",
+      "source_location": "L117",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer",
@@ -195699,7 +195699,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L110",
+      "source_location": "L111",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer",
@@ -195710,7 +195710,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L128",
+      "source_location": "L129",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer",
@@ -195721,7 +195721,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L74",
+      "source_location": "L75",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer",
@@ -195732,7 +195732,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L82",
+      "source_location": "L83",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer",
@@ -195756,7 +195756,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L764",
+      "source_location": "L766",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer_prefillv2recurrentlayer_decode",
@@ -195779,7 +195779,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L149",
+      "source_location": "L151",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -195791,7 +195791,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L116",
+      "source_location": "L117",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -195803,7 +195803,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L82",
+      "source_location": "L83",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -195852,7 +195852,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L156",
+      "source_location": "L158",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer_prefillv2recurrentlayer_prefillv2recurrentlayer",
@@ -195864,7 +195864,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L78",
+      "source_location": "L79",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer_require_tensor",
@@ -195875,7 +195875,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L74",
+      "source_location": "L75",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -195888,7 +195888,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L767",
+      "source_location": "L769",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer_prefillv2recurrentlayer_decode",
@@ -195900,7 +195900,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L411",
+      "source_location": "L413",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer_prefillv2recurrentlayer_forward",
@@ -195911,7 +195911,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L82",
+      "source_location": "L83",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast",
@@ -195925,7 +195925,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L85",
+      "source_location": "L86",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer_upload_device_buffer",
@@ -195935,7 +195935,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L92",
+      "source_location": "L93",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -195947,7 +195947,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L92",
+      "source_location": "L93",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -195960,7 +195960,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L778",
+      "source_location": "L780",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer_prefillv2recurrentlayer_decode",
@@ -195972,7 +195972,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L417",
+      "source_location": "L419",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer_prefillv2recurrentlayer_forward",
@@ -195984,7 +195984,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L121",
+      "source_location": "L122",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer_recurrentlayergraphtrace_copy_async",
@@ -195996,7 +195996,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L139",
+      "source_location": "L141",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer_recurrentlayergraphtrace_write_files",
@@ -196007,7 +196007,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L372",
+      "source_location": "L374",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -196019,7 +196019,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L595",
+      "source_location": "L597",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -196031,7 +196031,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L116",
+      "source_location": "L117",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -196045,7 +196045,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L123",
+      "source_location": "L124",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer_recurrentlayergraphtrace_copy_async",
@@ -196055,7 +196055,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L753",
+      "source_location": "L755",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -196067,7 +196067,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L940",
+      "source_location": "L942",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -196079,7 +196079,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L372",
+      "source_location": "L374",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -196091,7 +196091,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L595",
+      "source_location": "L597",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -196105,7 +196105,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L292",
+      "source_location": "L294",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer_prefillv2recurrentlayer_prefillv2recurrentlayer",
@@ -196115,7 +196115,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L372",
+      "source_location": "L374",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -196129,7 +196129,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L430",
+      "source_location": "L432",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer_prefillv2recurrentlayer_forward",
@@ -196141,7 +196141,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L395",
+      "source_location": "L397",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer_prefillv2recurrentlayer_forward",
@@ -196153,7 +196153,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L429",
+      "source_location": "L431",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer_prefillv2recurrentlayer_forward",
@@ -196163,7 +196163,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L753",
+      "source_location": "L755",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -196175,7 +196175,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L940",
+      "source_location": "L942",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -196187,7 +196187,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L595",
+      "source_location": "L597",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -196201,7 +196201,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L618",
+      "source_location": "L620",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer_prefillv2recurrentlayer_forward_profiled",
@@ -196213,7 +196213,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/recurrent_layer.cpp",
-      "source_location": "L784",
+      "source_location": "L786",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_recurrent_layer_prefillv2recurrentlayer_decode",
@@ -196902,7 +196902,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/topology_block.cpp",
-      "source_location": "L123",
+      "source_location": "L127",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_topology_block",
@@ -197020,7 +197020,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/topology_block.cpp",
-      "source_location": "L123",
+      "source_location": "L127",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -197044,7 +197044,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/topology_block.cpp",
-      "source_location": "L123",
+      "source_location": "L127",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -197068,7 +197068,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/topology_block.cpp",
-      "source_location": "L123",
+      "source_location": "L127",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -197082,7 +197082,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/topology_block.cpp",
-      "source_location": "L111",
+      "source_location": "L114",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_topology_block_prefillv2topologyblock_decode",
@@ -311922,7 +311922,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "experiments/m31-lc-0006/REPORT.md",
-      "source_location": "L77",
+      "source_location": "L85",
       "weight": 1.0,
       "_origin": "ast",
       "source": "experiments_m31_lc_0006_report_m31_lc_0006_hip_graph_execution_equivalence",
@@ -311955,7 +311955,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "experiments/m31-lc-0006/REPORT.md",
-      "source_location": "L58",
+      "source_location": "L66",
       "weight": 1.0,
       "_origin": "ast",
       "source": "experiments_m31_lc_0006_report_m31_lc_0006_hip_graph_execution_equivalence",
@@ -311977,7 +311977,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "experiments/m31-lc-0006/REPORT.md",
-      "source_location": "L68",
+      "source_location": "L76",
       "weight": 1.0,
       "_origin": "ast",
       "source": "experiments_m31_lc_0006_report_m31_lc_0006_hip_graph_execution_equivalence",
@@ -312712,5 +312712,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "f24d9087f3645cb012e9942aace43e6d9c54a715"
+  "built_at_commit": "6a9e5b49054c8c1b474fcc3d7fb00a54dd3c9603"
 }

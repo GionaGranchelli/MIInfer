@@ -4680,8 +4680,8 @@
     "semantic_hash": ""
   },
   "src/prefill_v2/recurrent_layer.cpp": {
-    "mtime": 1791674500.4762633,
-    "ast_hash": "e0d321685bf4ccdf51847925a7dec261",
+    "mtime": 1791679162.0527403,
+    "ast_hash": "198b6f03ddf20032c9bd2cb2dc67c6de",
     "semantic_hash": ""
   },
   "src/prefill_v2/state.cpp": {
@@ -4740,8 +4740,8 @@
     "semantic_hash": ""
   },
   "src/prefill_v2/topology_block.cpp": {
-    "mtime": 1791674494.3771725,
-    "ast_hash": "8e460af6b31be5340aadc81cdefdf81d",
+    "mtime": 1791679162.0527403,
+    "ast_hash": "8cb09c8a4a2898023fe11203ea83f7bd",
     "semantic_hash": ""
   },
   "experiments/V2-0003-topology-block-vertical-slice.md": {
@@ -7370,8 +7370,8 @@
     "semantic_hash": ""
   },
   "experiments/m31-lc-0006/REPORT.md": {
-    "mtime": 1791674477.9069273,
-    "ast_hash": "d1a27236375438ddcf7b6836981d48c9",
+    "mtime": 1791678943.762491,
+    "ast_hash": "ef4c78f7f1044b8a2f4d099e419b081d",
     "semantic_hash": ""
   },
   "results/m31-lc-0002/REPORT.md": {
@@ -8652,6 +8652,91 @@
   "results/m31-lc-0006/z840-untraced-graph/snapshots/mmq_only-pair-1-before.rocm-smi.txt": {
     "mtime": 1791661469.941511,
     "ast_hash": "75c54fe17913904cef295e207b4f3fb2",
+    "semantic_hash": ""
+  },
+  "experiments/m31-lc-0006/source-manifest-block1-trace.json": {
+    "mtime": 1791674617.2938068,
+    "ast_hash": "a347e816d3cd3fa640248423854c2940",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-block1-untraced-eager/control-pair-1.record.json": {
+    "mtime": 1791676676.606552,
+    "ast_hash": "3c027882a10a41066cade3ed98533c7c",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-block1-untraced-eager/mmq_only-pair-1.record.json": {
+    "mtime": 1791676676.6065762,
+    "ast_hash": "5d3e2e8f81071a9c1c6d58bbd888e7c2",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-block1-untraced-graph/control-pair-1.record.json": {
+    "mtime": 1791676676.606166,
+    "ast_hash": "16c375dcfef865df9d15afbda1c68076",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-block1-untraced-graph/mmq_only-pair-1.record.json": {
+    "mtime": 1791676676.6061897,
+    "ast_hash": "a43af93ed5b12f25ee9f506975a4cd40",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer7-traced-eager/control-pair-1.record.json": {
+    "mtime": 1791675633.505717,
+    "ast_hash": "ef258d51da460d600b8372d0966d51ca",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer7-traced-eager/mmq_only-pair-1.record.json": {
+    "mtime": 1791675633.5057435,
+    "ast_hash": "48d885f97096aa4a3f5ee8af2aa7a9ca",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer7-traced-graph/control-pair-1.record.json": {
+    "mtime": 1791675633.5034947,
+    "ast_hash": "eb2309842870ab60179c7fde393b4867",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer7-traced-graph/mmq_only-pair-1.record.json": {
+    "mtime": 1791675633.5035172,
+    "ast_hash": "2028b0e746ac03246ae078e7b5c50b13",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer8-traced-eager/control-pair-1.record.json": {
+    "mtime": 1791677753.6526237,
+    "ast_hash": "6f02cf0f1b5c38f004916fbe36992288",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer8-traced-eager/mmq_only-pair-1.record.json": {
+    "mtime": 1791677753.652655,
+    "ast_hash": "c6a27bbc18c53aaa56e2b10ec95e03ba",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer8-traced-graph/control-pair-1.record.json": {
+    "mtime": 1791677753.6535444,
+    "ast_hash": "5c1970da9556e2e503900074fdc7bdc3",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer8-traced-graph/mmq_only-pair-1.record.json": {
+    "mtime": 1791677753.653569,
+    "ast_hash": "ce91028931d5c92ab9751770a76d9f0b",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer9-traced-eager/control-pair-1.record.json": {
+    "mtime": 1791678900.8744256,
+    "ast_hash": "649ad02f3561a46319a23d6f73aa15b0",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer9-traced-eager/mmq_only-pair-1.record.json": {
+    "mtime": 1791678900.874467,
+    "ast_hash": "ca79e07d7db97533e9b67e99f099186f",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer9-traced-graph/control-pair-1.record.json": {
+    "mtime": 1791678900.9587266,
+    "ast_hash": "ed5b1f6bece595fbb3e5b49f1918f168",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer9-traced-graph/mmq_only-pair-1.record.json": {
+    "mtime": 1791678900.95877,
+    "ast_hash": "112761728160c5cb972bb2fd26162443",
     "semantic_hash": ""
   }
 }

@@ -96,15 +96,18 @@ void PrefillV2TopologyBlock::decode(
     const char* trace_decode = std::getenv("MIINFER_LC_DECODE_TRACE");
     static bool block_trace_captured = false;
     static bool block1_trace_captured = false;
-    if ((block_index_ == 0 || block_index_ == 1) && graph_trace != nullptr && decode_state != nullptr) {
-        graph_trace->copy_async(block_index_ == 0 ? "block0_gqa3_output" : "block1_gqa3_output", d_final_output,
+    static bool block2_trace_captured = false;
+    if (block_index_ <= 2 && graph_trace != nullptr && decode_state != nullptr) {
+        graph_trace->copy_async(block_index_ == 0 ? "block0_gqa3_output"
+            : block_index_ == 1 ? "block1_gqa3_output" : "block2_gqa3_output", d_final_output,
                                 kHidden * sizeof(float), stream);
-    } else if ((block_index_ == 0 || block_index_ == 1) && trace_prefix != nullptr
+    } else if (block_index_ <= 2 && trace_prefix != nullptr
         && trace_decode != nullptr && std::string_view(trace_decode) != "0"
-        && decode_state == nullptr && !(block_index_ == 0 ? block_trace_captured : block1_trace_captured)) {
+        && decode_state == nullptr && !(block_index_ == 0 ? block_trace_captured
+            : block_index_ == 1 ? block1_trace_captured : block2_trace_captured)) {
         const auto path = std::filesystem::path(std::string(trace_prefix) + ".decode-pos"
-            + std::to_string(position) + (block_index_ == 0
-                ? ".block0.gqa3_output.f32" : ".block1.gqa3_output.f32"));
+            + std::to_string(position) + (block_index_ == 0 ? ".block0.gqa3_output.f32"
+                : block_index_ == 1 ? ".block1.gqa3_output.f32" : ".block2.gqa3_output.f32"));
         if (std::filesystem::exists(path))
             throw std::runtime_error("refusing to overwrite M31 block trace: " + path.string());
         std::vector<float> host(kHidden);
@@ -116,7 +119,8 @@ void PrefillV2TopologyBlock::decode(
                      static_cast<std::streamsize>(host.size() * sizeof(float)));
         if (!output) throw std::runtime_error("failed writing M31 block trace: " + path.string());
         if (block_index_ == 0) block_trace_captured = true;
-        else block1_trace_captured = true;
+        else if (block_index_ == 1) block1_trace_captured = true;
+        else block2_trace_captured = true;
     }
 }
 
