@@ -1,6 +1,6 @@
 # M31-ACCEL-0001 live status
 
-Updated: 2026-10-12 01:48 Europe/Amsterdam
+Updated: 2026-10-12 01:49 Europe/Amsterdam
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
 
 ## Source and ownership
@@ -160,3 +160,8 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 - The production workload now also fails closed unless server-reported `gqa_kv_reused_tokens` and `gdn_checkpoint_position` match the reused prefix, and `runtime_context_capacity` covers each prompt. The per-request artifact records these values and check results.
 - Python syntax and no-network workload self-check passed. Self-check covers cold start, exact reuse, short prefix, empty suffix, incorrect GDN position, capacity overflow, missing telemetry, complete/truncated SSE, and atomic result writes.
 - This gates reported positions and capacity, not numerical GDN/KV state equivalence. No GPU or tokenizer process was run; physical cooling remains unverified.
+
+## 2026-10-12 01:49 Z840 tokenizer-backed validation
+
+- Advanced the clean Lake campaign worktree to pushed source `4789d09`; `py_compile` and tokenizer-backed `--self-check` passed on Z840, counting exactly 65,536 initial ChatML tokens and exercising the position/capacity self-check. Log: `/mnt/lc9-lake/m31-accel-0001-captures/gates/position-capacity-4789d09-selfcheck.log`, SHA-256 `411305c5104f84aca5aff43517b13465de94fa3846a10a2b464896b94d627cbe`.
+- The host worktree is clean at `4789d09`. This used CPU tokenization only; no inference or GPU work ran. Numerical state continuity remains unqualified pending a guarded multi-turn execution.
