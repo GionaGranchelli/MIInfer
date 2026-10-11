@@ -24,6 +24,7 @@ constexpr std::size_t kContextTokens = 65536;
 constexpr std::size_t kTurnAppendTokens = 16;
 constexpr std::size_t kRestoreTurn = 4;
 constexpr std::uint32_t kKvCapacity = 65792;
+constexpr std::size_t kMinimumFreeVramBytes = 1ull << 30;
 
 std::size_t generation_budget(std::size_t turn) {
     return turn + 1 == kRestoreTurn ? 1 : 2;
@@ -156,6 +157,14 @@ int main(int argc, char** argv) {
 
         const auto qwen = miinfer::Qwen35Model::load(argv[1]);
         PrefillV2Model model(qwen, kKvCapacity, true);
+        std::size_t free_vram_bytes = 0;
+        std::size_t total_vram_bytes = 0;
+        MIINFER_HIP_CHECK(hipMemGetInfo(&free_vram_bytes, &total_vram_bytes));
+        require(free_vram_bytes >= kMinimumFreeVramBytes,
+                "less than 1 GiB free VRAM after model allocation");
+        std::size_t peak_sampled_vram_bytes = total_vram_bytes - free_vram_bytes;
+        std::cout << "post_allocation_free_vram_bytes=" << free_vram_bytes
+                  << " total_vram_bytes=" << total_vram_bytes << '\n';
         std::vector<std::uint32_t> prompt;
         prompt.reserve(kContextTokens + (kTurns - 1) * kTurnAppendTokens);
         std::vector<std::uint32_t> previous_output;
@@ -195,6 +204,9 @@ int main(int argc, char** argv) {
                 prompt.size() + stats.generated_tokens.size() - 1);
             require_positions(model, expected_position);
             require_finite_logits(model);
+            MIINFER_HIP_CHECK(hipMemGetInfo(&free_vram_bytes, &total_vram_bytes));
+            const auto sampled_vram_bytes = total_vram_bytes - free_vram_bytes;
+            peak_sampled_vram_bytes = std::max(peak_sampled_vram_bytes, sampled_vram_bytes);
             std::cout << "turn=" << (turn + 1)
                       << " prompt_tokens=" << prompt.size()
                       << " reuse_hit=" << (stats.reuse_hit ? "true" : "false")
@@ -203,8 +215,12 @@ int main(int argc, char** argv) {
                       << " generated_tokens=" << stats.generated_tokens.size()
                       << " gdn_position=" << expected_position
                       << " ttft_ms=" << stats.ttft_ms
+                      << " total_ms=" << stats.total_ms
+                      << " decode_tok_per_sec=" << stats.decode_tok_per_sec
                       << " restore_ms=" << stats.restore_ms
-                      << " suffix_prefill_ms=" << stats.suffix_prefill_ms << '\n';
+                      << " suffix_prefill_ms=" << stats.suffix_prefill_ms
+                      << " sampled_vram_used_bytes=" << sampled_vram_bytes
+                      << " sampled_vram_free_bytes=" << free_vram_bytes << '\n';
 
             if (turn + 1 == kRestoreTurn) {
                 const auto state_before_restore = state_fingerprint(model, prompt.size());
@@ -229,7 +245,8 @@ int main(int argc, char** argv) {
                   << " final_context_tokens=" << prompt.size()
                   << " kv_capacity=" << kKvCapacity
                   << " cached_state_bytes=" << model.cached_state_bytes()
-                  << " total_vram_bytes=" << model.total_vram_bytes() << '\n';
+                  << " model_accounted_vram_bytes=" << model.total_vram_bytes()
+                  << " peak_sampled_hip_vram_used_bytes=" << peak_sampled_vram_bytes << '\n';
     } catch (const std::exception& error) {
         std::cerr << "M31-ACCEL-0001 64K persistent multi-turn workload: FAIL: "
                   << error.what() << '\n';
