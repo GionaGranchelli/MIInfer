@@ -132,3 +132,10 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 - Fixed the production workload's fail-open reuse check: every request on turns 2–8 now requires both a nonzero reused prefix and nonzero suffix dispatch. Per-request checks and telemetry are saved into the result; absent telemetry fails closed. Commit `260b9ee60355887330869d96ad80d72f3a50660b` is pushed.
 - Local `py_compile` and no-network `sse_self_check` passed. The clean Z840 campaign worktree was synced to `260b9ee`; its full tokenizer-backed `--self-check` passed exact 65,536-token counting, seven-file/eight-turn planning, SSE completion and atomic artifact checks. Log SHA-256: `64ee44bbfffe0cc57bb413a3970d353f1e97ecac59bdfaee5f86d90b36a53b25`. No GPU/server inference.
 - Fan telemetry remains 0 RPM at idle. Cooling confirmation is still the GPU blocker; 64K multi-turn correctness and state continuity remain unqualified.
+
+## 2026-10-12 02:05 checkpoint
+
+- Deterministic parity setup for the focused suffix benchmark is pushed at `dcde94cf49f68af1e289045bba38f09dd5bb02f5`: cold, cached-prefix, and reuse generation now share greedy sampling, neutral penalties, and seed 42.
+- Pinned ROCm 7.2.1 no-device build exited 0 from isolated `/mnt/lc9-lake/m31-accel-0001-prefix-build` at `dcde94c`; Podman reports `devices=[]`. Log SHA-256 `9edbf83be2bd3bf8156d54a3d68f2a364c8484fc90d0907733064ad1d32c1d96`; binary SHA-256 `0f9d89f488cc5ee3d9736862796de35bd6c664aa27f3a4c542bc6e4dd419a91f`.
+- This only corrects a single-run parity gate. No suffix performance or state-continuity result exists; repeated paired samples and current-source profiling remain outstanding. Historical suffix attributions conflict across source revisions.
+- GPU remains idle at 28 C, 0% use, 10.9 MB VRAM. Cooling/airflow remains unconfirmed. Next: after clearance, run the guarded 64K production workload before any suffix or decode A/B.
