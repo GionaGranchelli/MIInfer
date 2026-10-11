@@ -1,0 +1,35 @@
+{
+  "experiment": "M31-PERF-0001",
+  "role": "candidate",
+  "source_commit": "8a9caec3366512e459a93bad68adde181225304b",
+  "source_tree_clean": true,
+  "binary_sha256": "2661d347ab12f5ab91d391ef119e69b61adb559210268938a549d2f684cfb5f9",
+  "build_flags": "Release; MIINFER_ENABLE_HIP=ON; MIINFER_BUILD_TESTS=ON; MIINFER_BUILD_BENCHMARKS=ON; MIINFER_BUILD_RESEARCH_TOOLS=OFF; CMAKE_HIP_ARCHITECTURES=gfx906; CMAKE_PREFIX_PATH=/opt/rocm-7.2.1; hipblas_DIR=/opt/rocm-7.2.1/lib/cmake/hipblas; hip_DIR=/opt/rocm-7.2.1/lib/cmake/hip; FETCHCONTENT_SOURCE_DIR_NLOHMANN_JSON=/deps/nlohmann_json-src",
+  "container_image": "localhost/miinfer-dev:rocm-7.2.1",
+  "container_digest": "sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e",
+  "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+  "host": "Z840 / fedora",
+  "gpu": {
+    "product": "AMD Instinct MI50",
+    "gfx": "gfx906",
+    "pci_bdf": "0000:06:00.0",
+    "unique_id": "0x21678e17348c2f7"
+  },
+  "toolchain": {
+    "rocm": "7.2.1",
+    "cmake": "3.30.5",
+    "gcc": "13.3.0",
+    "hip_clang": "22.0.0",
+    "nlohmann_json": "3.11.3"
+  },
+  "measurement_harness_sha256": "8e114452add8f584c0e07eafe71fb6c10633b638ecaf56df70969da9e3d272fc",
+  "run_plan_sha256": "cb996be602963f34d704f66006b202b95e103aed55d9ababdf3e5b4edc165bf3",
+  "source_files_sha256": {
+    "CMakeLists.txt": "5bf36a40851502e2fed624bf8fc654acee898d817968720138887c32eb048f90",
+    "bench/e2_0003_checkpointed_call.cpp": "89d5a58cbe8ce6a1c8ba2386f0ebe580b1dd6faed2aaae12c802c7b409657bb7",
+    "include/miinfer/prefill_v2/topology_block.hpp": "57eec10a112005432d6f411b341e336d0e76e1f605f082f1f6a961bb77b691b7",
+    "src/prefill_v2/attention_layer.cpp": "bc0faff155ee3b5f291cc4334e4313d6844b3d3c0a3bd977466e4715f80a8e22",
+    "src/prefill_v2/model.cpp": "3390a83c9cc748a70cee3a071cf6c80fe77b931dfe6fc0928eb58ab7969768fe",
+    "src/prefill_v2/topology_block.cpp": "cae7000411bbdf46fb3d5347ca239fc6f6002ced59d4b1a4f76ea2918575b51a"
+  }
+}

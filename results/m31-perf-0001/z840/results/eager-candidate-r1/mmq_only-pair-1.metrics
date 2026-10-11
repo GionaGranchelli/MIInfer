@@ -1,0 +1,53 @@
+event=MODEL_HASH_BEGIN iteration=0 epoch_ms=1791722707019
+event=MODEL_HASH_READY iteration=0 epoch_ms=1791722802813
+event=MODEL_LOAD_BEGIN iteration=0 epoch_ms=1791722802813
+event=MODEL_DATA_READY iteration=0 epoch_ms=1791722802845
+event=MODEL_ALLOC_BEGIN iteration=0 epoch_ms=1791722802845
+event=MODEL_ALLOC_READY iteration=0 epoch_ms=1791722842408
+benchmark=E2-0003-clean-source
+context=custom
+context_profile=8K
+prompt_tokens=2048
+context_capacity_tokens=2304
+generate_tokens=5
+iterations=2
+warmup=1
+model_sha256=7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169
+prompt_fingerprint_fnv1a64=a998afbe8b675816
+temperature=0
+top_p=1
+top_k=1
+repetition_penalty=1
+frequency_penalty=0
+presence_penalty=0
+stop_token_ids=disabled
+repeat_last_n=256
+reset_state_before=true
+use_hip_graph=false
+seed=42
+sampler=greedy_argmax
+
+model_vram_bytes=17997703168
+event=MODEL_READY iteration=0 epoch_ms=1791722842408
+event=RUN_BEGIN iteration=1 epoch_ms=1791722842408 mode=warmup
+event=PREFILL_BEGIN iteration=1 epoch_ms=1791722842408
+event=PREFILL_END iteration=1 epoch_ms=1791722850860
+event=DECODE_BEGIN iteration=1 epoch_ms=1791722850860
+event=DECODE_END iteration=1 epoch_ms=1791722851022
+event=RUN_END iteration=1 epoch_ms=1791722851022 wall_ms=8613.928582
+event=RUN_BEGIN iteration=1 epoch_ms=1791722851022 mode=measure
+event=PREFILL_BEGIN iteration=1 epoch_ms=1791722851022
+event=PREFILL_END iteration=1 epoch_ms=1791722859508
+event=DECODE_BEGIN iteration=1 epoch_ms=1791722859508
+event=DECODE_END iteration=1 epoch_ms=1791722859669
+event=RUN_END iteration=1 epoch_ms=1791722859669 wall_ms=8646.667103
+result={"context":"8K","iteration":1,"wall_ms":8646.667,"ttft_ms":8485.751,"prefill_ms":8485.751,"decode_ms":160.878,"prefill_tok_s":241.346,"decode_tok_s":24.864,"used_hip_graph":false,"generated_tokens":5,"model_vram_bytes":17997703168,"model_weights_bytes":16938170368,"persistent_state_bytes":309854208,"workspace_bytes":727711744,"activation_bytes":21966848,"cached_state_bytes":0,"snapshot_bytes":0,"splitk_splits":32,"device_total_bytes":34342961152,"device_free_before_bytes":15503982592,"device_free_after_bytes":15503982592,"device_used_before_bytes":18838978560,"device_used_after_bytes":18838978560,"device_residual_after_bytes":841275392,"device_peak_bytes":null,"raw_logits_decisions":0,"raw_logits_vocab_size":0,"tokens_valid":"PASS","output_parity":"NOT_CHECKED","token_ids":[220,248046,198,248045,74455]}
+event=CALL_COMPLETE iteration=1 epoch_ms=1791722859669
+event=RUN_BEGIN iteration=2 epoch_ms=1791722859669 mode=measure
+event=PREFILL_BEGIN iteration=2 epoch_ms=1791722859669
+event=PREFILL_END iteration=2 epoch_ms=1791722868136
+event=DECODE_BEGIN iteration=2 epoch_ms=1791722868136
+event=DECODE_END iteration=2 epoch_ms=1791722868301
+event=RUN_END iteration=2 epoch_ms=1791722868301 wall_ms=8632.551166
+result={"context":"8K","iteration":2,"wall_ms":8632.551,"ttft_ms":8466.873,"prefill_ms":8466.873,"decode_ms":165.642,"prefill_tok_s":241.884,"decode_tok_s":24.148,"used_hip_graph":false,"generated_tokens":5,"model_vram_bytes":17997703168,"model_weights_bytes":16938170368,"persistent_state_bytes":309854208,"workspace_bytes":727711744,"activation_bytes":21966848,"cached_state_bytes":0,"snapshot_bytes":0,"splitk_splits":32,"device_total_bytes":34342961152,"device_free_before_bytes":15503982592,"device_free_after_bytes":15503982592,"device_used_before_bytes":18838978560,"device_used_after_bytes":18838978560,"device_residual_after_bytes":841275392,"device_peak_bytes":null,"raw_logits_decisions":0,"raw_logits_vocab_size":0,"tokens_valid":"PASS","output_parity":"NOT_CHECKED","token_ids":[220,248046,198,248045,74455]}
+event=CALL_COMPLETE iteration=2 epoch_ms=1791722868301

@@ -1,0 +1,45 @@
+{
+  "gpu_map": {
+    "0": "0000:06:00.0"
+  },
+  "commands": {
+    "uname": {
+      "command": [
+        "uname",
+        "-a"
+      ],
+      "returncode": 0
+    },
+    "rocm_smi_version": {
+      "command": [
+        "rocm-smi",
+        "--version"
+      ],
+      "returncode": 0
+    },
+    "hipconfig": {
+      "command": [
+        "hipconfig",
+        "--full"
+      ],
+      "returncode": 0
+    },
+    "rocminfo": {
+      "command": [
+        "rocminfo"
+      ],
+      "returncode": 0
+    },
+    "container_inspect": {
+      "command": [
+        "podman",
+        "image",
+        "inspect",
+        "localhost/miinfer-dev:rocm-7.2.1",
+        "--format",
+        "{{.Digest}}"
+      ],
+      "returncode": 0
+    }
+  }
+}
