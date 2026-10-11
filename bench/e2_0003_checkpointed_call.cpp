@@ -72,6 +72,11 @@ std::size_t parse_size(const std::string& value, const char* name, bool allow_ze
     return static_cast<std::size_t>(parsed);
 }
 
+std::string iteration_path(const std::string& path, std::size_t iteration,
+                           std::size_t iterations) {
+    return path.empty() || iterations == 1 ? path : path + ".run-" + std::to_string(iteration);
+}
+
 void event(std::ostream& out, const char* name, std::size_t iteration,
            const std::string& detail = {}) {
     const auto now = std::chrono::system_clock::now().time_since_epoch();
@@ -208,32 +213,37 @@ int main(int argc, char** argv) {
             if (!output_file) throw std::runtime_error("cannot create output file: " + output_path);
             output = &output_file;
         }
-        if (!raw_logits_path.empty() && (iterations != 1 || warmups != 0 || generate_tokens < 5)) {
-            throw std::runtime_error("raw-logit capture requires one measured iteration, no warmup, and at least five generated tokens");
+        if (!raw_logits_path.empty() && (warmups != 0 || generate_tokens < 5)) {
+            throw std::runtime_error("raw-logit capture requires no warmup and at least five generated tokens");
         }
-        if (!generated_ids_path.empty() && (iterations != 1 || warmups != 0)) {
-            throw std::runtime_error("token ID capture requires one measured iteration and no warmup");
+        if (!generated_ids_path.empty() && warmups != 0) {
+            throw std::runtime_error("token ID capture requires no warmup");
         }
         if (!state_capture_prefix.empty()
-            && (iterations != 1 || warmups != 0 || generate_tokens < 5 || forced_ids.size() != 4)) {
-            throw std::runtime_error("state capture requires one run, no warmup, five decisions, and four forced IDs");
+            && (warmups != 0 || generate_tokens < 5 || forced_ids.size() != 4)) {
+            throw std::runtime_error("state capture requires no warmup, five decisions, and four forced IDs");
         }
         if (!raw_logits_path.empty() && !forced_ids_path.empty() && forced_ids.size() != 4) {
             throw std::runtime_error("five-decision teacher-forced capture requires four forced token IDs");
         }
-        if (!raw_logits_path.empty() && std::filesystem::exists(raw_logits_path)) {
-            throw std::runtime_error("refusing to overwrite existing raw-logit capture: " + raw_logits_path);
-        }
-        if (!generated_ids_path.empty() && std::filesystem::exists(generated_ids_path)) {
-            throw std::runtime_error("refusing to overwrite existing token ID capture: " + generated_ids_path);
-        }
-        if (!state_capture_prefix.empty()) {
-            for (const std::size_t decision : {std::size_t{0}, std::size_t{1}, std::size_t{4}}) {
-                const auto path = state_capture_prefix + ".decision-" + std::to_string(decision + 1);
-                if (std::filesystem::exists(path + ".recurrent.f32")
-                    || std::filesystem::exists(path + ".kv.raw")
-                    || std::filesystem::exists(path + ".json")) {
-                    throw std::runtime_error("refusing to overwrite existing state capture: " + path);
+        for (std::size_t iteration = 1; iteration <= iterations; ++iteration) {
+            const auto raw_path = iteration_path(raw_logits_path, iteration, iterations);
+            const auto ids_path = iteration_path(generated_ids_path, iteration, iterations);
+            const auto state_prefix = iteration_path(state_capture_prefix, iteration, iterations);
+            if (!raw_logits_path.empty() && std::filesystem::exists(raw_path)) {
+                throw std::runtime_error("refusing to overwrite existing raw-logit capture: " + raw_path);
+            }
+            if (!generated_ids_path.empty() && std::filesystem::exists(ids_path)) {
+                throw std::runtime_error("refusing to overwrite existing token ID capture: " + ids_path);
+            }
+            if (!state_capture_prefix.empty()) {
+                for (const std::size_t decision : {std::size_t{0}, std::size_t{1}, std::size_t{4}}) {
+                    const auto path = state_prefix + ".decision-" + std::to_string(decision + 1);
+                    if (std::filesystem::exists(path + ".recurrent.f32")
+                        || std::filesystem::exists(path + ".kv.raw")
+                        || std::filesystem::exists(path + ".json")) {
+                        throw std::runtime_error("refusing to overwrite existing state capture: " + path);
+                    }
                 }
             }
         }
@@ -299,6 +309,9 @@ int main(int argc, char** argv) {
         }
 
         const auto execute = [&](std::size_t iteration, bool measured) {
+            const auto iteration_raw_logits_path = iteration_path(raw_logits_path, iteration, iterations);
+            const auto iteration_generated_ids_path = iteration_path(generated_ids_path, iteration, iterations);
+            const auto iteration_state_prefix = iteration_path(state_capture_prefix, iteration, iterations);
             miinfer::prefill_v2::GenerateOptions options;
             options.max_new_tokens = generate_tokens;
             options.reset_state_before = true;
@@ -315,15 +328,15 @@ int main(int argc, char** argv) {
             options.forced_token_ids = forced_ids;
             std::vector<std::vector<float>> raw_logits;
             std::size_t logit_decision = 0;
-            if (measured && (!raw_logits_path.empty() || !state_capture_prefix.empty())) {
+            if (measured && (!iteration_raw_logits_path.empty() || !iteration_state_prefix.empty())) {
                 raw_logits.reserve(5);
                 options.on_raw_logits = [&](std::span<const float> logits) {
-                    if (!raw_logits_path.empty() && raw_logits.size() < 5) {
+                    if (!iteration_raw_logits_path.empty() && raw_logits.size() < 5) {
                         raw_logits.emplace_back(logits.begin(), logits.end());
                     }
-                    if (!state_capture_prefix.empty()
+                    if (!iteration_state_prefix.empty()
                         && (logit_decision == 0 || logit_decision == 1 || logit_decision == 4)) {
-                        const auto prefix = state_capture_prefix + ".decision-"
+                        const auto prefix = iteration_state_prefix + ".decision-"
                             + std::to_string(logit_decision + 1);
                         capture_state(model, prefix, prompt.size() + logit_decision);
                     }
@@ -349,26 +362,26 @@ int main(int argc, char** argv) {
             const auto wall_start = std::chrono::steady_clock::now();
             const auto stats = model.generate(prompt, options);
             const auto wall_end = std::chrono::steady_clock::now();
-            if (measured && !generated_ids_path.empty()) {
-                std::ofstream ids_file(generated_ids_path);
-                if (!ids_file) throw std::runtime_error("cannot create token ID capture: " + generated_ids_path);
+            if (measured && !iteration_generated_ids_path.empty()) {
+                std::ofstream ids_file(iteration_generated_ids_path);
+                if (!ids_file) throw std::runtime_error("cannot create token ID capture: " + iteration_generated_ids_path);
                 for (const auto token : stats.generated_tokens) ids_file << token << '\n';
-                if (!ids_file) throw std::runtime_error("failed writing token ID capture: " + generated_ids_path);
+                if (!ids_file) throw std::runtime_error("failed writing token ID capture: " + iteration_generated_ids_path);
             }
-            if (!raw_logits_path.empty()) {
+            if (!iteration_raw_logits_path.empty()) {
                 if (raw_logits.size() != 5) throw std::runtime_error("raw-logit capture did not contain five decisions");
-                std::ofstream raw_logits_file(raw_logits_path, std::ios::binary | std::ios::out);
-                if (!raw_logits_file) throw std::runtime_error("cannot create raw-logit capture: " + raw_logits_path);
+                std::ofstream raw_logits_file(iteration_raw_logits_path, std::ios::binary | std::ios::out);
+                if (!raw_logits_file) throw std::runtime_error("cannot create raw-logit capture: " + iteration_raw_logits_path);
                 for (const auto& decision : raw_logits) {
                     if (decision.size() != model.vocab_size()) throw std::runtime_error("raw-logit vocabulary size changed between decisions");
                     raw_logits_file.write(reinterpret_cast<const char*>(decision.data()),
                         static_cast<std::streamsize>(decision.size() * sizeof(float)));
                 }
-                if (!raw_logits_file) throw std::runtime_error("failed writing raw-logit capture: " + raw_logits_path);
+                if (!raw_logits_file) throw std::runtime_error("failed writing raw-logit capture: " + iteration_raw_logits_path);
                 out << "raw_logits_capture={\"format\":\"native_f32\",\"decisions\":5,\"vocab_size\":"
                     << model.vocab_size() << ",\"bytes\":"
                     << 5 * model.vocab_size() * sizeof(float) << ",\"file\":\""
-                    << std::filesystem::path(raw_logits_path).filename().string() << "\"}\n" << std::flush;
+                    << std::filesystem::path(iteration_raw_logits_path).filename().string() << "\"}\n" << std::flush;
             }
             if (token_count == 0) event(out, "PREFILL_END", iteration);
             event(out, "DECODE_END", iteration);
@@ -417,8 +430,8 @@ int main(int argc, char** argv) {
                 << ",\"device_used_after_bytes\":" << device_used_after
                 << ",\"device_residual_after_bytes\":" << device_residual_after
                 << ",\"device_peak_bytes\":null"
-                << ",\"raw_logits_decisions\":" << (raw_logits_path.empty() ? 0 : raw_logits.size())
-                << ",\"raw_logits_vocab_size\":" << (raw_logits_path.empty() ? 0 : model.vocab_size())
+                << ",\"raw_logits_decisions\":" << (iteration_raw_logits_path.empty() ? 0 : raw_logits.size())
+                << ",\"raw_logits_vocab_size\":" << (iteration_raw_logits_path.empty() ? 0 : model.vocab_size())
                 << ",\"tokens_valid\":\"" << (tokens_valid ? "PASS" : "FAIL")
                 << "\",\"output_parity\":\""
                 << (parity_checked ? (parity ? "PASS" : "FAIL") : "NOT_CHECKED")
