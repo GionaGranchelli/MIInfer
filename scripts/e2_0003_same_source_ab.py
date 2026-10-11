@@ -225,7 +225,7 @@ def container_command(args, route: str, pair: int, output: Path) -> list[str]:
                         "--env", f"MIINFER_LC_TRACE_LAYER={args.trace_layer}"])
     command.extend([args.image, "/bench/run", "/model.gguf", args.context_profile,
                "--generate", str(args.generate_tokens), "--prompt-tokens", str(args.prompt_tokens),
-               "--iterations", "1", "--warmup", "0",
+               "--iterations", "1", "--warmup", str(getattr(args, "warmup", 0)),
                "--output", f"/results/{route}-pair-{pair}.metrics"])
     if getattr(args, "capture_raw_logits", False):
         command.extend(["--capture-raw-logits", f"/results/{route}-pair-{pair}.logits.f32"])
@@ -302,6 +302,7 @@ def call(args, out: Path, route: str, pair: int, order: int) -> dict:
             "MIINFER_HIP_GRAPH": "0" if getattr(args, "disable_hip_graph", False) else "1",
             "MIINFER_LC_DECODE_TRACE": "1"
                 if getattr(args, "capture_layer_zero_trace", False) else None,
+            "warmup": str(getattr(args, "warmup", 0)),
         },
         "start_state": before, "end_state": after,
         "result": result, "effective_config": properties,
@@ -352,6 +353,7 @@ def valid_call(record: dict) -> bool:
             and config.get("generate_tokens") == str(record["expected_generate_tokens"])
             and config.get("context_capacity_tokens") == str(record["expected_context_capacity_tokens"])
             and config.get("prompt_fingerprint_fnv1a64") == record["expected_prompt_fingerprint"]
+            and config.get("warmup") == record["requested_environment"]["warmup"]
             and sampler_config_valid(config, record["requested_environment"]["MIINFER_HIP_GRAPH"])
             and record["telemetry"]["successful_sample_count"] > 0
             and record["telemetry"]["failed_sample_count"] == 0
@@ -430,6 +432,8 @@ def main() -> int:
     parser.add_argument("--expected-bdf", default=EXPECTED_BDF)
     parser.add_argument("--gpu-index", type=int, default=0)
     parser.add_argument("--pairs", type=int, choices=(1, 2), default=1)
+    parser.add_argument("--warmup", type=int, default=0,
+                        help="in-process warmup iterations for each call (0-20; incompatible with raw-logit capture)")
     parser.add_argument("--context-profile", choices=("8K", "32K", "64K", "128K"), default="8K")
     parser.add_argument("--prompt-tokens", type=int, default=PROMPT_TOKENS)
     parser.add_argument("--generate-tokens", type=int, default=OUTPUT_TOKENS)
@@ -458,6 +462,10 @@ def main() -> int:
             raise ValueError(f"refusing to overwrite output directory: {args.output_dir}")
         if args.expected_seconds < 60 or args.expected_seconds > 600:
             raise ValueError("expected-seconds must be in [60, 600]")
+        if not 0 <= args.warmup <= 20:
+            raise ValueError("warmup must be in [0, 20]")
+        if args.capture_raw_logits and args.warmup:
+            raise ValueError("raw-logit capture requires warmup=0")
         context_limit = int(args.context_profile[:-1]) * 1024
         if not (1 <= args.prompt_tokens <= context_limit and 1 <= args.generate_tokens <= min(args.prompt_tokens, 100)):
             raise ValueError("prompt/generation count exceeds the selected context profile or bounded-run limit")
@@ -617,7 +625,7 @@ def main() -> int:
             "workload": {"context_profile": args.context_profile,
                          "prompt_tokens": args.prompt_tokens, "generated_tokens": args.generate_tokens,
                          "context_capacity_tokens": args.context_capacity_tokens, "cold_prefill": True,
-                         "warmups": 0, "repetitions_per_call": 1,
+                         "warmups": args.warmup, "repetitions_per_call": 1,
                          "prompt": "deterministic e2_0003_prompt.hpp seed=77; fingerprint recorded per call",
                          "sampler_config": run_sampler_config,
                          "miinfer_path": "same binary; only MMQ Gate/Up env differs; HIP Graph "

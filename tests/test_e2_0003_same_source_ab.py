@@ -61,12 +61,26 @@ class SameSourceHarnessTest(unittest.TestCase):
             args = SimpleNamespace(container_runtime="podman", binary=binary, model=model,
                                    expected_bdf="0000:06:00.0", image="image",
                                    context_profile="8K", prompt_tokens=1024, generate_tokens=32,
-                                   capture_raw_logits=False)
+                                   capture_raw_logits=False, mmq_gateup_qsum=False)
             control = MODULE.container_command(args, "control", 1, Path(directory))
             candidate = MODULE.container_command(args, "mmq_only", 1, Path(directory))
         self.assertIn("MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY=0", control)
         self.assertIn("MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY=1", candidate)
         self.assertEqual(control[control.index("/bench/run")], candidate[candidate.index("/bench/run")])
+
+    def test_warmup_count_is_passed_to_each_call(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            binary = root / "bench"
+            model = root / "model.gguf"
+            binary.touch()
+            model.touch()
+            args = SimpleNamespace(container_runtime="podman", binary=binary, model=model,
+                                   expected_bdf="0000:06:00.0", image="image",
+                                   context_profile="8K", prompt_tokens=2048, generate_tokens=5,
+                                   warmup=1)
+            command = MODULE.container_command(args, "control", 1, root)
+        self.assertEqual(command[command.index("--warmup") + 1], "1")
 
     def test_raw_logit_capture_is_opt_in_and_route_scoped(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -78,7 +92,7 @@ class SameSourceHarnessTest(unittest.TestCase):
             args = SimpleNamespace(container_runtime="podman", binary=binary, model=model,
                                    expected_bdf="0000:06:00.0", image="image",
                                    context_profile="8K", prompt_tokens=2048, generate_tokens=16,
-                                   capture_raw_logits=True)
+                                   capture_raw_logits=True, mmq_gateup_qsum=False)
             command = MODULE.container_command(args, "mmq_only", 1, root)
         self.assertEqual(command[-2:], ["--capture-raw-logits", "/results/mmq_only-pair-1.logits.f32"])
 
@@ -92,7 +106,7 @@ class SameSourceHarnessTest(unittest.TestCase):
             args = SimpleNamespace(container_runtime="podman", binary=binary, model=model,
                                    expected_bdf="0000:06:00.0", image="image",
                                    context_profile="8K", prompt_tokens=2048, generate_tokens=5,
-                                   capture_layer_zero_trace=True)
+                                   capture_layer_zero_trace=True, trace_layer=0)
             command = MODULE.container_command(args, "control", 1, root)
         self.assertIn("MIINFER_LC_OP_TRACE_PREFIX=/results/control-optrace", command)
         self.assertIn("MIINFER_LC_DECODE_TRACE=1", command)
@@ -125,7 +139,8 @@ class SameSourceHarnessTest(unittest.TestCase):
             model.touch()
             args = SimpleNamespace(container_runtime="podman", binary=binary, model=model,
                                    expected_bdf="0000:06:00.0", image="image",
-                                   context_profile="8K", prompt_tokens=8192, generate_tokens=16)
+                                   context_profile="8K", prompt_tokens=8192, generate_tokens=16,
+                                   mmq_gateup_qsum=False)
             command = MODULE.container_command(args, "mmq_only", 1, root)
         self.assertEqual(command[command.index("8K") + 1:command.index("8K") + 5],
                          ["--generate", "16", "--prompt-tokens", "8192"])
