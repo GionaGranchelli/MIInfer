@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <limits>
 #include <memory>
 #include <stdexcept>
@@ -20,15 +21,34 @@ void llama_set_embeddings_layer_inp(llama_context* context, std::uint32_t layer,
 
 namespace {
 
-constexpr char kLlamaRevision[] = "91c631b21d6e5d09e9c6659efdf6baeef5a44ddb";
+constexpr char kLlamaRevision[] = "d1d3c3396aa13a5f239109a822666c4870490ad5";
 constexpr std::size_t kHidden = 5120;
-constexpr std::size_t kExpectedPromptTokens = 2048;
 constexpr std::size_t kPromptTile = 512;
 constexpr std::size_t kExpectedVocab = 248320;
 constexpr std::size_t kDecisions = 5;
 constexpr std::size_t kExpectedForcedHistory = kDecisions - 1;
 
 std::vector<llama_token> read_ids(const std::string& path) {
+    if (std::filesystem::path(path).extension() == ".u32le") {
+        std::ifstream input(path, std::ios::binary);
+        if (!input) throw std::runtime_error("cannot open token IDs: " + path);
+        const std::vector<unsigned char> bytes((std::istreambuf_iterator<char>(input)), {});
+        if (bytes.empty() || bytes.size() % sizeof(std::uint32_t) != 0) {
+            throw std::runtime_error("invalid little-endian uint32 token file: " + path);
+        }
+        std::vector<llama_token> ids(bytes.size() / sizeof(std::uint32_t));
+        for (std::size_t i = 0; i < ids.size(); ++i) {
+            const auto value = static_cast<std::uint32_t>(bytes[i * 4])
+                | (static_cast<std::uint32_t>(bytes[i * 4 + 1]) << 8)
+                | (static_cast<std::uint32_t>(bytes[i * 4 + 2]) << 16)
+                | (static_cast<std::uint32_t>(bytes[i * 4 + 3]) << 24);
+            if (value > static_cast<std::uint32_t>(std::numeric_limits<llama_token>::max())) {
+                throw std::runtime_error("token ID exceeds llama_token range: " + path);
+            }
+            ids[i] = static_cast<llama_token>(value);
+        }
+        return ids;
+    }
     std::ifstream input(path);
     if (!input) throw std::runtime_error("cannot open token IDs: " + path);
     std::vector<llama_token> ids;
@@ -82,6 +102,60 @@ using ContextOwner = std::unique_ptr<llama_context, ContextDeleter>;
 void write_f32(const std::filesystem::path& path, const std::vector<float>& values);
 void write_rows(const std::filesystem::path& path, const float* values, std::size_t count, bool first);
 void write_binary(const std::filesystem::path& path, const void* data, std::size_t bytes);
+
+struct GreedyCapture {
+    std::vector<llama_token> ids;
+    std::vector<float> logits;
+};
+
+GreedyCapture capture_greedy(llama_model* model, const std::vector<llama_token>& prompt,
+                             std::size_t vocab, std::int32_t threads) {
+    constexpr std::size_t generated_count = 64;
+    auto params = llama_context_default_params();
+    params.n_ctx = 2304;
+    params.n_batch = kPromptTile;
+    params.n_ubatch = kPromptTile;
+    params.n_seq_max = 1;
+    params.n_outputs_max = 1;
+    params.n_threads = threads;
+    params.n_threads_batch = threads;
+    params.flash_attn_type = LLAMA_FLASH_ATTN_TYPE_DISABLED;
+    params.type_k = GGML_TYPE_F16;
+    params.type_v = GGML_TYPE_F16;
+    params.offload_kqv = false;
+    params.op_offload = false;
+    params.no_perf = true;
+    ContextOwner context(llama_init_from_model(model, params));
+    if (!context) throw std::runtime_error("llama_init_from_model failed for greedy capture");
+    BatchOwner batch(static_cast<std::int32_t>(kPromptTile));
+    GreedyCapture capture;
+    capture.ids.reserve(generated_count);
+    capture.logits.reserve(generated_count * vocab);
+    for (std::size_t offset = 0; offset < prompt.size(); offset += kPromptTile) {
+        const auto count = std::min(kPromptTile, prompt.size() - offset);
+        fill_batch(batch.value, prompt.data() + offset, count,
+                   static_cast<llama_pos>(offset), offset + count == prompt.size());
+        const auto result = llama_decode(context.get(), batch.value);
+        if (result != 0) throw std::runtime_error("llama_decode failed on greedy prompt tile");
+    }
+    for (std::size_t i = 0; i < generated_count; ++i) {
+        const float* logits = llama_get_logits_ith(context.get(), -1);
+        if (logits == nullptr) throw std::runtime_error("llama_get_logits_ith returned null in greedy capture");
+        for (std::size_t token = 0; token < vocab; ++token) {
+            if (!std::isfinite(logits[token])) throw std::runtime_error("CPU greedy capture produced a non-finite logit");
+        }
+        capture.logits.insert(capture.logits.end(), logits, logits + vocab);
+        capture.ids.push_back(static_cast<llama_token>(std::distance(
+            logits, std::max_element(logits, logits + vocab))));
+        if (i + 1 < generated_count) {
+            fill_batch(batch.value, &capture.ids.back(), 1,
+                       static_cast<llama_pos>(prompt.size() + i), true);
+            const auto result = llama_decode(context.get(), batch.value);
+            if (result != 0) throw std::runtime_error("llama_decode failed during greedy decode");
+        }
+    }
+    return capture;
+}
 
 struct CpuOpTrace {
     std::string prefix;
@@ -297,6 +371,14 @@ void write_binary(const std::filesystem::path& path, const void* data, std::size
     if (!output) throw std::runtime_error("failed writing " + path.string());
 }
 
+void write_ids(const std::filesystem::path& path, const std::vector<llama_token>& ids) {
+    if (std::filesystem::exists(path)) throw std::runtime_error("refusing to overwrite " + path.string());
+    std::ofstream output(path);
+    if (!output) throw std::runtime_error("cannot create " + path.string());
+    for (const auto id : ids) output << id << '\n';
+    if (!output) throw std::runtime_error("failed writing " + path.string());
+}
+
 void write_rows(const std::filesystem::path& path, const float* values, std::size_t count, bool first) {
     std::ofstream output(path, std::ios::binary | std::ios::out
         | (first ? std::ios::trunc : std::ios::app));
@@ -316,16 +398,22 @@ int main(int argc, char** argv) {
     const bool layer_trace_only = argc == 6 && std::string(argv[5]) == "--layer-trace-only";
     const bool operation_trace_only = argc == 6 && std::string(argv[5]) == "--operation-trace-only";
     if (argc != 5 && !layer_trace_only && !operation_trace_only) {
-        std::cerr << "usage: m31-lc-0003-cpu-oracle MODEL.gguf PROMPT.ids FORCED.ids OUTPUT_PREFIX [--layer-trace-only|--operation-trace-only]\n";
+        std::cerr << "usage: m31-lc-0003-cpu-oracle MODEL.gguf PROMPT.ids FORCED.ids|- OUTPUT_PREFIX [--layer-trace-only|--operation-trace-only]\n";
         return 2;
     }
     try {
         const std::string model_path = argv[1];
+        const std::string forced_path = argv[3];
         const std::string output_prefix = argv[4];
         const auto prompt = read_ids(argv[2]);
-        const auto forced = read_ids(argv[3]);
-        if (prompt.size() != kExpectedPromptTokens || forced.size() != kExpectedForcedHistory) {
-            throw std::runtime_error("expected 2,048 prompt IDs and four forced history IDs");
+        if (prompt.empty() || prompt.size() > 2048) {
+            throw std::runtime_error("expected 1-2,048 prompt IDs");
+        }
+        if ((layer_trace_only || operation_trace_only) && prompt.size() != 2048) {
+            throw std::runtime_error("layer and operation trace modes require the original 2,048-token prompt");
+        }
+        if ((layer_trace_only || operation_trace_only) && forced_path == "-") {
+            throw std::runtime_error("trace-only modes require an explicit forced history file");
         }
 
         llama_backend_init();
@@ -343,10 +431,25 @@ int main(int argc, char** argv) {
             || llama_model_n_embd(model.get()) != 5120) {
             throw std::runtime_error("loaded GGUF architecture dimensions do not match the 27B Qwen3.5 model contract");
         }
+        if (std::any_of(prompt.begin(), prompt.end(), [&](llama_token token) {
+                return token < 0 || static_cast<std::size_t>(token) >= vocab_size;
+            })) {
+            throw std::runtime_error("prompt contains a token outside the loaded model vocabulary");
+        }
 
-        constexpr std::int32_t threads = 24;
+        constexpr std::int32_t threads = 48;
+        std::vector<llama_token> forced;
         std::array<std::vector<float>, 2> captures;
         if (layer_trace_only || operation_trace_only) {
+            forced = read_ids(forced_path);
+            if (forced.size() != kExpectedForcedHistory) {
+                throw std::runtime_error("expected exactly four forced history IDs");
+            }
+            if (std::any_of(forced.begin(), forced.end(), [&](llama_token token) {
+                    return token < 0 || static_cast<std::size_t>(token) >= vocab_size;
+                })) {
+                throw std::runtime_error("forced history contains a token outside the loaded model vocabulary");
+            }
             captures[0] = capture_pass(model.get(), prompt, forced, vocab_size, threads,
                                        output_prefix + ".layers.f32",
                                        operation_trace_only ? output_prefix : std::string{});
@@ -354,6 +457,34 @@ int main(int argc, char** argv) {
             std::cout << "layer_trace_layers=64 hidden=5120 final_prompt_token=2047\n";
             llama_backend_free();
             return 0;
+        }
+
+        std::array<GreedyCapture, 2> greedy;
+        for (std::size_t pass = 0; pass < greedy.size(); ++pass) {
+            greedy[pass] = capture_greedy(model.get(), prompt, vocab_size, threads);
+            write_f32(output_prefix + ".greedy.run" + std::to_string(pass + 1) + ".logits.f32",
+                      greedy[pass].logits);
+            write_ids(output_prefix + ".greedy.run" + std::to_string(pass + 1) + ".ids",
+                      greedy[pass].ids);
+        }
+        const bool greedy_reproducible = greedy[0].ids == greedy[1].ids
+            && greedy[0].logits.size() == greedy[1].logits.size()
+            && std::equal(greedy[0].logits.begin(), greedy[0].logits.end(), greedy[1].logits.begin());
+        if (!greedy_reproducible) throw std::runtime_error("CPU greedy output/logits were not bitwise reproducible");
+        if (forced_path == "-") {
+            forced.assign(greedy[0].ids.begin(), greedy[0].ids.begin() + kExpectedForcedHistory);
+            write_ids(output_prefix + ".forced.ids", forced);
+        } else {
+            forced = read_ids(forced_path);
+            if (forced.size() != kExpectedForcedHistory
+                || !std::equal(forced.begin(), forced.end(), greedy[0].ids.begin())) {
+                throw std::runtime_error("forced history must equal the first four CPU greedy IDs");
+            }
+        }
+        if (std::any_of(forced.begin(), forced.end(), [&](llama_token token) {
+                return token < 0 || static_cast<std::size_t>(token) >= vocab_size;
+            })) {
+            throw std::runtime_error("forced history contains a token outside the loaded model vocabulary");
         }
         for (std::size_t pass = 0; pass < captures.size(); ++pass) {
             captures[pass] = capture_pass(model.get(), prompt, forced, vocab_size, threads);
@@ -385,6 +516,8 @@ int main(int argc, char** argv) {
                  << "  \"gpu_layers\": 0,\n"
                  << "  \"kv_type_k\": \"f16\",\n"
                  << "  \"kv_type_v\": \"f16\",\n"
+                 << "  \"greedy_tokens\": " << greedy[0].ids.size() << ",\n"
+                 << "  \"greedy_bitwise_reproducible\": true,\n"
                  << "  \"bitwise_reproducible\": " << (reproducible ? "true" : "false") << ",\n"
                  << "  \"run1_top1\": [";
         for (std::size_t d = 0; d < kDecisions; ++d) {

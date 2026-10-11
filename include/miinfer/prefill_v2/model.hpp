@@ -34,6 +34,7 @@ struct GenerateOptions {
     bool cache_prefix_after = false;    // When true, caches prefix state after prefill
     std::size_t cache_prefix_len = 0;   // If 0, caches entire prompt; otherwise first N tokens
     std::vector<std::uint32_t> stop_token_ids = {151643, 151645};
+    std::vector<std::uint32_t> forced_token_ids;
     float temperature = 0.7f;
     float top_p = 0.9f;
     std::uint32_t top_k = 40;

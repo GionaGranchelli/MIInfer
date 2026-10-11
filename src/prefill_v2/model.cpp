@@ -949,6 +949,11 @@ GenerateStats PrefillV2Model::generate(
     if (prompt.empty()) {
         throw std::runtime_error("PrefillV2Model::generate: empty prompt");
     }
+    if (options.forced_token_ids.size() > options.max_new_tokens
+        || std::any_of(options.forced_token_ids.begin(), options.forced_token_ids.end(),
+            [&](std::uint32_t token) { return token >= vocab_size_; })) {
+        throw std::runtime_error("PrefillV2Model::generate: invalid forced token history");
+    }
     if (!has_lm_head_) {
         throw std::runtime_error("PrefillV2Model::generate: LM head weights not loaded");
     }
@@ -1201,14 +1206,12 @@ GenerateStats PrefillV2Model::generate(
     MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
     if (options.on_raw_logits) options.on_raw_logits(host_logits_);
 
-    std::uint32_t first_token = sample_token_from_logits(
-        host_logits_,
-        prompt,
-        {},
-        options,
-        rng_,
-        logits_scratch_,
-        candidates_buf_);
+    const auto select_token = [&](std::span<const float> logits, std::size_t position) {
+        if (position < options.forced_token_ids.size()) return options.forced_token_ids[position];
+        return sample_token_from_logits(logits, prompt, stats.generated_tokens, options,
+                                        rng_, logits_scratch_, candidates_buf_);
+    };
+    const std::uint32_t first_token = select_token(host_logits_, 0);
 
     const auto t_ttft = std::chrono::steady_clock::now();
     stats.prefill_ms = std::chrono::duration<double, std::milli>(t_ttft - t_start).count();
@@ -1291,14 +1294,7 @@ GenerateStats PrefillV2Model::generate(
             }
             if (options.on_raw_logits) options.on_raw_logits(host_logits_);
 
-            const std::uint32_t next_token = sample_token_from_logits(
-                host_logits_,
-                prompt,
-                stats.generated_tokens,
-                options,
-                rng_,
-                logits_scratch_,
-                candidates_buf_);
+            const std::uint32_t next_token = select_token(host_logits_, stats.generated_tokens.size());
 
             actual_generated++;
 
@@ -1417,14 +1413,7 @@ GenerateStats PrefillV2Model::generate(
 
         // 7. Sample
         if (options.on_raw_logits) options.on_raw_logits(host_logits_);
-        const std::uint32_t next_token = sample_token_from_logits(
-            host_logits_,
-            prompt,
-            stats.generated_tokens,
-            options,
-            rng_,
-            logits_scratch_,
-            candidates_buf_);
+        const std::uint32_t next_token = select_token(host_logits_, stats.generated_tokens.size());
 
         if (is_stop(next_token)) {
             stats.stop_reason = miinfer::GenerationStopReason::kStopToken;

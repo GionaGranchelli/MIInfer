@@ -15,6 +15,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <iterator>
 #include <limits>
 #include <memory>
 #include <stdexcept>
@@ -42,6 +43,23 @@ std::vector<std::uint32_t> read_tokens(const std::string& path) {
         result.push_back(static_cast<std::uint32_t>(token));
     }
     if (!input.eof()) throw std::runtime_error("invalid token in reference token file");
+    return result;
+}
+
+std::vector<std::uint32_t> read_prompt_ids(const std::string& path) {
+    std::ifstream input(path, std::ios::binary);
+    if (!input) throw std::runtime_error("cannot open prompt ID file: " + path);
+    std::vector<unsigned char> bytes((std::istreambuf_iterator<char>(input)), {});
+    if (bytes.empty() || bytes.size() % sizeof(std::uint32_t) != 0) {
+        throw std::runtime_error("prompt ID file must contain little-endian uint32 IDs");
+    }
+    std::vector<std::uint32_t> result(bytes.size() / sizeof(std::uint32_t));
+    for (std::size_t i = 0; i < result.size(); ++i) {
+        result[i] = static_cast<std::uint32_t>(bytes[i * 4])
+            | (static_cast<std::uint32_t>(bytes[i * 4 + 1]) << 8)
+            | (static_cast<std::uint32_t>(bytes[i * 4 + 2]) << 16)
+            | (static_cast<std::uint32_t>(bytes[i * 4 + 3]) << 24);
+    }
     return result;
 }
 
@@ -91,11 +109,19 @@ int main(int argc, char** argv) {
         std::string reference_path;
         std::string output_path;
         std::string raw_logits_path;
+        std::string prompt_ids_path;
+        std::string forced_ids_path;
         bool ledger_only = false;
+        bool prompt_tokens_set = false;
         for (int i = 3; i < argc; ++i) {
             const std::string arg = argv[i];
             if (arg == "--generate" && i + 1 < argc) generate_tokens = parse_size(argv[++i], "generate count");
-            else if (arg == "--prompt-tokens" && i + 1 < argc) prompt_tokens = parse_size(argv[++i], "prompt token count");
+            else if (arg == "--prompt-tokens" && i + 1 < argc) {
+                prompt_tokens = parse_size(argv[++i], "prompt token count");
+                prompt_tokens_set = true;
+            }
+            else if (arg == "--prompt-ids" && i + 1 < argc) prompt_ids_path = argv[++i];
+            else if (arg == "--forced-token-ids" && i + 1 < argc) forced_ids_path = argv[++i];
             else if ((arg == "--iterations" || arg == "--repetitions") && i + 1 < argc)
                 iterations = parse_size(argv[++i], "iteration count");
             else if (arg == "--warmup" && i + 1 < argc) warmups = parse_size(argv[++i], "warmup count", true);
@@ -105,9 +131,23 @@ int main(int argc, char** argv) {
             else if (arg == "--ledger-only") ledger_only = true;
             else throw std::runtime_error("unknown or incomplete option: " + arg);
         }
-        if (prompt_tokens > found->tokens || generate_tokens > prompt_tokens || iterations > 100 || warmups > 20) {
+        if (prompt_tokens_set && !prompt_ids_path.empty()) {
+            throw std::runtime_error("--prompt-tokens and --prompt-ids cannot be used together");
+        }
+        if (prompt_tokens > found->tokens || iterations > 100 || warmups > 20) {
             throw std::runtime_error("requested generation/iteration/warmup count is out of range");
         }
+        const auto prompt = prompt_ids_path.empty()
+            ? e2_0003::make_prompt(prompt_tokens, found->seed)
+            : read_prompt_ids(prompt_ids_path);
+        if (prompt.empty() || prompt.size() > found->tokens) {
+            throw std::runtime_error("prompt ID count is outside the selected context profile");
+        }
+        prompt_tokens = prompt.size();
+        if (generate_tokens > prompt_tokens) {
+            throw std::runtime_error("generation count must not exceed the prompt token count");
+        }
+        const auto forced_ids = forced_ids_path.empty() ? std::vector<std::uint32_t>{} : read_tokens(forced_ids_path);
 
         std::ofstream output_file;
         std::ostream* output = &std::cout;
@@ -122,6 +162,9 @@ int main(int argc, char** argv) {
         if (!raw_logits_path.empty() && (iterations != 1 || warmups != 0 || generate_tokens < 5)) {
             throw std::runtime_error("raw-logit capture requires one measured iteration, no warmup, and at least five generated tokens");
         }
+        if (!raw_logits_path.empty() && !forced_ids_path.empty() && forced_ids.size() != 4) {
+            throw std::runtime_error("five-decision teacher-forced capture requires four forced token IDs");
+        }
         if (!raw_logits_path.empty() && std::filesystem::exists(raw_logits_path)) {
             throw std::runtime_error("refusing to overwrite existing raw-logit capture: " + raw_logits_path);
         }
@@ -134,11 +177,15 @@ int main(int argc, char** argv) {
         const auto model_data = miinfer::Qwen35Model::load(model_path);
         event(out, "MODEL_DATA_READY", 0);
         event(out, "MODEL_ALLOC_BEGIN", 0);
-        const auto context_capacity_tokens = static_cast<std::uint32_t>(prompt_tokens + 256);
+        const auto context_capacity_tokens = static_cast<std::uint32_t>(
+            prompt_tokens + std::max<std::size_t>(256, generate_tokens));
         miinfer::prefill_v2::PrefillV2Model model(
             model_data, context_capacity_tokens, true);
         event(out, "MODEL_ALLOC_READY", 0);
-        const auto prompt = e2_0003::make_prompt(prompt_tokens, found->seed);
+        if (std::any_of(prompt.begin(), prompt.end(),
+                [&](std::uint32_t token) { return token >= model.vocab_size(); })) {
+            throw std::runtime_error("prompt IDs contain a token outside the loaded model vocabulary");
+        }
         const auto expected = reference_path.empty() ? std::vector<std::uint32_t>{} : read_tokens(reference_path);
         const char* graph_env = std::getenv("MIINFER_HIP_GRAPH");
         const bool use_hip_graph = graph_env == nullptr || std::string_view(graph_env) != "0";
@@ -152,14 +199,19 @@ int main(int argc, char** argv) {
             << "\niterations=" << iterations
             << "\nwarmup=" << warmups
             << "\nmodel_sha256=" << model_hash
+            << "\nprompt_ids_sha256="
+            << (prompt_ids_path.empty() ? "synthetic" : miinfer::sha256_file(prompt_ids_path))
             << "\nprompt_fingerprint_fnv1a64=" << std::hex << e2_0003::prompt_fingerprint(prompt) << std::dec
             << "\ntemperature=0\ntop_p=1\ntop_k=1\nrepetition_penalty=1"
             << "\nfrequency_penalty=0\npresence_penalty=0\nstop_token_ids=disabled"
             << "\nrepeat_last_n=256\nreset_state_before=true\nuse_hip_graph="
             << (use_hip_graph ? "true" : "false")
             << "\nseed=42\nsampler=greedy_argmax\n"
-            << "\nmodel_vram_bytes=" << model.total_vram_bytes()
-            << "\n" << std::flush;
+            << "\nforced_token_count=" << forced_ids.size() << "\nforced_token_ids=";
+        for (std::size_t i = 0; i < forced_ids.size(); ++i) out << (i ? "," : "") << forced_ids[i];
+        out << "\nprompt_ids_file="
+            << (prompt_ids_path.empty() ? "synthetic" : std::filesystem::path(prompt_ids_path).filename().string())
+            << "\nmodel_vram_bytes=" << model.total_vram_bytes() << "\n" << std::flush;
         event(out, "MODEL_READY", 0);
         if (ledger_only) {
             std::size_t free_bytes = 0, total_bytes = 0;
@@ -191,6 +243,7 @@ int main(int argc, char** argv) {
             options.repeat_last_n = 256;
             options.stop_token_ids.clear();
             options.seed = 42;
+            options.forced_token_ids = forced_ids;
             std::vector<std::vector<float>> raw_logits;
             if (measured && !raw_logits_path.empty()) {
                 raw_logits.reserve(5);

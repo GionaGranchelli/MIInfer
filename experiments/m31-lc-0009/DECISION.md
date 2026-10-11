@@ -36,6 +36,6 @@ LC-0008's common-history decision-5 logits have relative L2 `0.182344` and maxim
 ## Work still required
 
 1. Verify the official tokenizer revision and special-token mapping against the actual pinned GGUF on Z840.
-2. Generalize the existing fixed-2K CPU/GPU diagnostic runners to consume corpus IDs and arbitrary forced histories without changing inference kernels or defaults.
+2. Runner support for corpus prompt IDs and forced histories is implemented in the existing diagnostics, but still needs a build in the pinned ROCm/llama.cpp environments and a live capture check.
 3. Run the registered matrix, retain and hash raw captures, compute all listed metrics, and replace the partial assessments above with a requirement-by-requirement result.
 4. Revisit the recommendation only after the evidence is complete; any gate change requires explicit approval.
