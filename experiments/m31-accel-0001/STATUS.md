@@ -43,7 +43,14 @@ One GPU job at a time on Z840. Preserve all dirty worktrees and existing logs. R
 - Cooling remains unresolved: `rocm-smi` still reports fan level 15% and 0 RPM. This is not physical confirmation of airflow, so no sustained GPU workload was started.
 - Coordinator workload now writes a partial result before the first request, records `expected_turn_count`, `turns_completed`, and `workload_complete`, and exposes `replayed_tokens` as the sum of server `suffix_tokens_dispatched` for each completed turn. Python syntax and `git diff --check` pass. These fields clarify artifacts; they do not establish persistence or correctness.
 - LC-0009 CPU QSUM decode handoff was pushed separately at `f78949cf4f002c72a27de842ef869b6b177dc1b1`; the work confirms the needed raw one-token decode capture is absent, so LC-0009 remains open.
-- Next: push this coordinator checkpoint, update the clean Z840 campaign worktree, then wait for physical airflow/cooling confirmation while advancing host-only checks. Resume GPU only after the cooling condition is resolved.
+- Immediate follow-up was to push this checkpoint and sync the isolated Z840 worktree; completed at 01:27 below. GPU work remains gated on cooling confirmation.
+
+## 01:27 follow-up
+
+- Pushed coordinator commit `fa03664ccf021a2127f9f7110aa350ebc55e9977` and updated the isolated Z840 campaign worktree to that exact SHA; the worktree is clean.
+- On Z840, the host-only production workload self-check passed again: exact initial request 65,536 tokens, seven source files, eight planned turns. The guarded-runner self-check also passed. Neither check accessed the GPU.
+- The first self-check invocation used an incorrect build-directory path and did not launch; locating the existing binary resolved it without rebuilding. No source or host checkout was damaged.
+- Next: hold GPU work for cooling confirmation and continue only host-side preparation or review.
 
 ## 00:30 checkpoint
 
