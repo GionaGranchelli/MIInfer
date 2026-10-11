@@ -532,6 +532,8 @@ struct RuntimeGenerateStats {
     std::size_t suffix_tokens_dispatched = 0;
     std::size_t gqa_kv_reused_tokens = 0;
     std::size_t gdn_checkpoint_position = 0;
+    std::size_t gdn_final_position_min = 0;
+    std::size_t gdn_final_position_max = 0;
     double restore_ms = 0.0;
     double suffix_prefill_ms = 0.0;
     std::size_t session_checkpoint_count = 0;
@@ -5209,6 +5211,8 @@ int cmd_serve(int argc, char** argv) {
                       << ",\"suffix_tokens_dispatched\":" << stats.suffix_tokens_dispatched
                       << ",\"gqa_kv_reused_tokens\":" << stats.gqa_kv_reused_tokens
                       << ",\"gdn_checkpoint_position\":" << stats.gdn_checkpoint_position
+                      << ",\"gdn_final_position_min\":" << stats.gdn_final_position_min
+                      << ",\"gdn_final_position_max\":" << stats.gdn_final_position_max
                       << ",\"restore_ms\":" << stats.restore_ms
                       << ",\"suffix_prefill_ms\":" << stats.suffix_prefill_ms
                       << ",\"session_checkpoint_count\":" << stats.session_checkpoint_count
@@ -5481,6 +5485,8 @@ int cmd_serve(int argc, char** argv) {
                 stats.suffix_tokens_dispatched = v2_stats.suffix_tokens_dispatched;
                 stats.gqa_kv_reused_tokens = v2_stats.gqa_kv_reused_tokens;
                 stats.gdn_checkpoint_position = v2_stats.gdn_checkpoint_position;
+                stats.gdn_final_position_min = v2_stats.gdn_final_position_min;
+                stats.gdn_final_position_max = v2_stats.gdn_final_position_max;
                 stats.restore_ms = v2_stats.restore_ms;
                 stats.suffix_prefill_ms = v2_stats.suffix_prefill_ms;
                 if (v2_stats.prefix_tokens_reused > 0) {
@@ -5518,6 +5524,8 @@ int cmd_serve(int argc, char** argv) {
                           << ",\"suffix_tokens_dispatched\":" << stats.suffix_tokens_dispatched
                           << ",\"gqa_kv_reused_tokens\":" << stats.gqa_kv_reused_tokens
                           << ",\"gdn_checkpoint_position\":" << stats.gdn_checkpoint_position
+                          << ",\"gdn_final_position_min\":" << stats.gdn_final_position_min
+                          << ",\"gdn_final_position_max\":" << stats.gdn_final_position_max
                           << ",\"restore_ms\":" << stats.restore_ms
                           << ",\"suffix_prefill_ms\":" << stats.suffix_prefill_ms
                           << ",\"prefill_tokens_per_second\":" << stats.prefill_tok_s
@@ -5625,6 +5633,8 @@ int cmd_serve(int argc, char** argv) {
             stats.suffix_tokens_dispatched = v2_stats.suffix_tokens_dispatched;
             stats.gqa_kv_reused_tokens = v2_stats.gqa_kv_reused_tokens;
             stats.gdn_checkpoint_position = v2_stats.gdn_checkpoint_position;
+            stats.gdn_final_position_min = v2_stats.gdn_final_position_min;
+            stats.gdn_final_position_max = v2_stats.gdn_final_position_max;
             stats.restore_ms = v2_stats.restore_ms;
             stats.suffix_prefill_ms = v2_stats.suffix_prefill_ms;
             if (v2_stats.prefix_tokens_reused > 0) {
@@ -5676,6 +5686,8 @@ int cmd_serve(int argc, char** argv) {
                       << ",\"suffix_tokens_dispatched\":" << stats.suffix_tokens_dispatched
                       << ",\"gqa_kv_reused_tokens\":" << stats.gqa_kv_reused_tokens
                       << ",\"gdn_checkpoint_position\":" << stats.gdn_checkpoint_position
+                      << ",\"gdn_final_position_min\":" << stats.gdn_final_position_min
+                      << ",\"gdn_final_position_max\":" << stats.gdn_final_position_max
                       << ",\"restore_ms\":" << stats.restore_ms
                       << ",\"suffix_prefill_ms\":" << stats.suffix_prefill_ms
                       << ",\"prefill_tokens_per_second\":" << stats.prefill_tok_s

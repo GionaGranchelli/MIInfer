@@ -123,40 +123,66 @@ def sse_self_check():
     cold_gate = prefix_reuse_request_gates([{
         "server_latency": {"request_id": "cold", "reused_prefix_tokens": 0,
                             "suffix_tokens_dispatched": 1100},
-        "server_request": {"prompt_tokens": 1100, "gqa_kv_reused_tokens": 0,
+        "server_request": {"prompt_tokens": 1100, "generated_tokens": 0,
+                            "finish_reason": "stop", "gqa_kv_reused_tokens": 0,
                             "gdn_checkpoint_position": 0,
-                            "runtime_context_capacity": 4096},
+                            "runtime_context_capacity": 4096,
+                            "gdn_final_position_min": 1100,
+                            "gdn_final_position_max": 1100},
     }])
     if not cold_gate[0]["passed"]:
         raise RuntimeError("cold request position/capacity self-check failed")
     reuse_checks = prefix_reuse_request_gates([
         {"server_latency": {"request_id": "first", "reused_prefix_tokens": 1000,
                             "suffix_tokens_dispatched": 100},
-         "server_request": {"prompt_tokens": 1100, "gqa_kv_reused_tokens": 1000,
+         "server_request": {"prompt_tokens": 1100, "generated_tokens": 2,
+                             "finish_reason": "length", "gqa_kv_reused_tokens": 1000,
                              "gdn_checkpoint_position": 1000,
-                             "runtime_context_capacity": 4096}},
+                             "runtime_context_capacity": 4096,
+                             "gdn_final_position_min": 1101,
+                             "gdn_final_position_max": 1101}},
         {"server_latency": {"request_id": "short-prefix", "reused_prefix_tokens": 1099,
                             "suffix_tokens_dispatched": 20},
-         "server_request": {"prompt_tokens": 1120, "gqa_kv_reused_tokens": 1099,
+         "server_request": {"prompt_tokens": 1120, "generated_tokens": 1,
+                             "finish_reason": "length", "gqa_kv_reused_tokens": 1099,
                              "gdn_checkpoint_position": 1099,
-                             "runtime_context_capacity": 4096}},
+                             "runtime_context_capacity": 4096,
+                             "gdn_final_position_min": 1120,
+                             "gdn_final_position_max": 1120}},
         {"server_latency": {"request_id": "empty-suffix", "reused_prefix_tokens": 1120,
                             "suffix_tokens_dispatched": 0},
-         "server_request": {"prompt_tokens": 1120, "gqa_kv_reused_tokens": 1120,
+         "server_request": {"prompt_tokens": 1120, "generated_tokens": 1,
+                             "finish_reason": "length", "gqa_kv_reused_tokens": 1120,
                              "gdn_checkpoint_position": 1120,
-                             "runtime_context_capacity": 4096}},
+                             "runtime_context_capacity": 4096,
+                             "gdn_final_position_min": 1120,
+                             "gdn_final_position_max": 1120}},
         {"server_latency": {"request_id": "bad-position", "reused_prefix_tokens": 1120,
                             "suffix_tokens_dispatched": 1},
-         "server_request": {"prompt_tokens": 1121, "gqa_kv_reused_tokens": 1120,
+         "server_request": {"prompt_tokens": 1121, "generated_tokens": 1,
+                             "finish_reason": "length", "gqa_kv_reused_tokens": 1120,
                              "gdn_checkpoint_position": 1119,
-                             "runtime_context_capacity": 4096}},
+                             "runtime_context_capacity": 4096,
+                             "gdn_final_position_min": 1121,
+                             "gdn_final_position_max": 1121}},
         {"server_latency": {"request_id": "capacity-overflow", "reused_prefix_tokens": 1121,
                             "suffix_tokens_dispatched": 1},
-         "server_request": {"prompt_tokens": 1122, "gqa_kv_reused_tokens": 1121,
+         "server_request": {"prompt_tokens": 1122, "generated_tokens": 1,
+                             "finish_reason": "length", "gqa_kv_reused_tokens": 1121,
                              "gdn_checkpoint_position": 1121,
-                             "runtime_context_capacity": 1121}},
+                             "runtime_context_capacity": 1121,
+                             "gdn_final_position_min": 1122,
+                             "gdn_final_position_max": 1122}},
+        {"server_latency": {"request_id": "bad-final-position", "reused_prefix_tokens": 1122,
+                            "suffix_tokens_dispatched": 1},
+         "server_request": {"prompt_tokens": 1123, "generated_tokens": 1,
+                             "finish_reason": "length", "gqa_kv_reused_tokens": 1122,
+                             "gdn_checkpoint_position": 1122,
+                             "runtime_context_capacity": 4096,
+                             "gdn_final_position_min": 1122,
+                             "gdn_final_position_max": 1122}},
     ], previous_prompt_tokens=1000)
-    if [check["passed"] for check in reuse_checks] != [True, False, False, False, False]:
+    if [check["passed"] for check in reuse_checks] != [True, False, False, False, False, False]:
         raise RuntimeError("per-request prefix reuse self-check failed")
     if prefix_reuse_request_gates([], previous_prompt_tokens=1000)[0]["passed"]:
         raise RuntimeError("missing prefix reuse telemetry unexpectedly passed")
@@ -184,6 +210,10 @@ def prefix_reuse_request_gates(requests, previous_prompt_tokens=None):
         gqa_reused = detail.get("gqa_kv_reused_tokens")
         gdn_position = detail.get("gdn_checkpoint_position")
         runtime_capacity = detail.get("runtime_context_capacity")
+        generated_tokens = detail.get("generated_tokens")
+        finish_reason = detail.get("finish_reason")
+        gdn_final_min = detail.get("gdn_final_position_min")
+        gdn_final_max = detail.get("gdn_final_position_max")
         valid_prompt_tokens = type(prompt_tokens) is int and prompt_tokens > 0
         state_position_passed = (
             type(gqa_reused) is int and type(gdn_position) is int
@@ -192,6 +222,18 @@ def prefix_reuse_request_gates(requests, previous_prompt_tokens=None):
         context_capacity_passed = (
             type(runtime_capacity) is int and valid_prompt_tokens
             and runtime_capacity >= prompt_tokens)
+        valid_generated_tokens = type(generated_tokens) is int and generated_tokens >= 0
+        expected_final_position_min = None
+        expected_final_position_max = None
+        if valid_prompt_tokens and valid_generated_tokens and isinstance(finish_reason, str):
+            expected_final_position_min = prompt_tokens + max(0, generated_tokens - 1)
+            expected_final_position_max = prompt_tokens + generated_tokens
+        gdn_final_position_passed = (
+            expected_final_position_min is not None
+            and expected_final_position_max is not None
+            and type(gdn_final_min) is int and type(gdn_final_max) is int
+            and gdn_final_min == gdn_final_max
+            and expected_final_position_min <= gdn_final_min <= expected_final_position_max)
         checks.append({
             "request_index": request_index,
             "request_id": latency.get("request_id"),
@@ -203,8 +245,14 @@ def prefix_reuse_request_gates(requests, previous_prompt_tokens=None):
             "runtime_context_capacity": runtime_capacity,
             "state_position_passed": state_position_passed,
             "context_capacity_passed": context_capacity_passed,
+            "expected_gdn_final_position_min": expected_final_position_min,
+            "expected_gdn_final_position_max": expected_final_position_max,
+            "gdn_final_position_min": gdn_final_min,
+            "gdn_final_position_max": gdn_final_max,
+            "gdn_final_position_passed": gdn_final_position_passed,
             "passed": valid_prompt_tokens and state_position_passed
                 and context_capacity_passed
+                and gdn_final_position_passed
                 and (expected_prefix_tokens is None or suffix > 0),
         })
         expected_prefix_tokens = prompt_tokens if valid_prompt_tokens else -1

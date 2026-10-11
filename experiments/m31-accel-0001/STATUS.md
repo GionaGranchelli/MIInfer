@@ -1,6 +1,6 @@
 # M31-ACCEL-0001 live status
 
-Updated: 2026-10-12 01:49 Europe/Amsterdam
+Updated: 2026-10-12 01:50 Europe/Amsterdam
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
 
 ## Source and ownership
@@ -165,3 +165,9 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 
 - Advanced the clean Lake campaign worktree to pushed source `4789d09`; `py_compile` and tokenizer-backed `--self-check` passed on Z840, counting exactly 65,536 initial ChatML tokens and exercising the position/capacity self-check. Log: `/mnt/lc9-lake/m31-accel-0001-captures/gates/position-capacity-4789d09-selfcheck.log`, SHA-256 `411305c5104f84aca5aff43517b13465de94fa3846a10a2b464896b94d627cbe`.
 - The host worktree is clean at `4789d09`. This used CPU tokenization only; no inference or GPU work ran. Numerical state continuity remains unqualified pending a guarded multi-turn execution.
+
+## 2026-10-12 01:50 GDN cursor correction candidate
+
+- Source audit found that cold prefill passed `RecurrentLayerState` views by value and never advanced the storage cursor after forward. Eager recurrent decode reads that cursor for convolution indexing. The candidate now advances all 48 cursor values to the prompt end and after each consumed decode position, including stop/cancel paths; it reports min/max final positions.
+- The production workload gates the observed GDN position range against each request's prompt and generated-token bounds. Local Python compilation and no-network self-check pass. C++ build and Z840 no-device build are pending; no GPU run is allowed until cooling is confirmed.
+- This validates cursor bookkeeping, not numerical GDN/KV contents or exact cold/reuse output parity.

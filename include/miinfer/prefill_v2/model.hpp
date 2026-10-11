@@ -63,6 +63,8 @@ struct GenerateStats {
     std::uint32_t suffix_tokens_dispatched = 0;
     std::uint32_t gqa_kv_reused_tokens = 0;
     std::uint32_t gdn_checkpoint_position = 0;
+    std::uint32_t gdn_final_position_min = 0;
+    std::uint32_t gdn_final_position_max = 0;
     double restore_ms = 0.0;
     double suffix_prefill_ms = 0.0;
 };

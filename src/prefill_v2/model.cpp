@@ -168,6 +168,18 @@ std::uint32_t sample_token_from_logits(
     return candidates_buf.back().second;
 }
 
+void capture_gdn_positions(
+    const std::vector<RecurrentLayerStateStorage>& states,
+    GenerateStats& stats) {
+    if (states.empty()) return;
+    stats.gdn_final_position_min = states.front().position();
+    stats.gdn_final_position_max = states.front().position();
+    for (const auto& state : states) {
+        stats.gdn_final_position_min = std::min(stats.gdn_final_position_min, state.position());
+        stats.gdn_final_position_max = std::max(stats.gdn_final_position_max, state.position());
+    }
+}
+
 } // namespace
 
 PrefillV2Model::PrefillV2Model(
@@ -871,7 +883,12 @@ GenerateStats PrefillV2Model::generate(
             pos += chunk;
             last_chunk = chunk;
         }
+        for (auto& st : recurrent_states_) {
+            st.set_position(pos);
+        }
     }
+
+    capture_gdn_positions(recurrent_states_, stats);
 
     // 1b. If requested, capture/update the prefix checkpoint immediately after prefill
     if (options.cache_prefix_after) {
@@ -930,6 +947,7 @@ GenerateStats PrefillV2Model::generate(
     if (is_stop(first_token)) {
         stats.stop_reason = miinfer::GenerationStopReason::kStopToken;
         stats.total_ms = stats.ttft_ms;
+        capture_gdn_positions(recurrent_states_, stats);
         return stats;
     }
 
@@ -938,12 +956,14 @@ GenerateStats PrefillV2Model::generate(
         if (!options.on_token(first_token)) {
             stats.stop_reason = miinfer::GenerationStopReason::kCancelled;
             stats.total_ms = stats.ttft_ms;
+            capture_gdn_positions(recurrent_states_, stats);
             return stats;
         }
     }
 
     if (options.max_new_tokens <= 1) {
         stats.total_ms = stats.ttft_ms;
+        capture_gdn_positions(recurrent_states_, stats);
         return stats;
     }
 
@@ -1018,6 +1038,7 @@ GenerateStats PrefillV2Model::generate(
         for (auto& st : recurrent_states_) {
             st.set_position(final_position);
         }
+        capture_gdn_positions(recurrent_states_, stats);
 
         const std::size_t decode_count = stats.generated_tokens.size() - 1;
         stats.decode_tok_per_sec = stats.decode_ms > 0.0 ? (decode_count * 1000.0 / stats.decode_ms) : 0.0;
@@ -1076,6 +1097,11 @@ GenerateStats PrefillV2Model::generate(
                 stream);
         }
 
+        // The state consumed this position even if the next token stops or cancels.
+        for (auto& st : recurrent_states_) {
+            st.set_position(position + 1);
+        }
+
         // 4. Final RMS Norm
         launch_qwen3_rms_norm(
             d_ping_,
@@ -1118,9 +1144,6 @@ GenerateStats PrefillV2Model::generate(
                 break;
             }
         }
-        for (auto& st : recurrent_states_) {
-            st.set_position(position + 1);
-        }
         current_token = next_token;
     }
 
@@ -1130,6 +1153,7 @@ GenerateStats PrefillV2Model::generate(
     stats.decode_tok_per_sec = stats.decode_ms > 0.0 ? (decode_count * 1000.0 / stats.decode_ms) : 0.0;
     stats.avg_decode_latency_ms = decode_count > 0 ? (stats.decode_ms / decode_count) : 0.0;
     stats.total_ms = std::chrono::duration<double, std::milli>(t_decode_end - t_start).count();
+    capture_gdn_positions(recurrent_states_, stats);
 
     return stats;
 }
