@@ -15,6 +15,8 @@
 
 namespace miinfer::prefill_v2 {
 
+class RecurrentLayerGraphTrace;
+
 struct AttentionLayerProfileBreakdown {
     double norm_ms = 0.0;
     double qkv_proj_ms = 0.0;
@@ -70,7 +72,8 @@ public:
         const PrefillV2Workspace& ws,
         std::uint32_t position,
         const DeviceDecodeState* decode_state = nullptr,
-        hipStream_t stream = nullptr) const;
+        hipStream_t stream = nullptr,
+        RecurrentLayerGraphTrace* graph_trace = nullptr) const;
 
     // Profiled single-token decode variant for phase attribution
     void decode_profiled(

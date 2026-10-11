@@ -1,4 +1,5 @@
 #include "miinfer/prefill_v2/attention_layer.hpp"
+#include "miinfer/prefill_v2/recurrent_layer.hpp"
 #include "miinfer/hip_check.hpp"
 #include "miinfer/kquant_wave_layout.hpp"
 #include "miinfer/qwen3_gpu_primitives.hpp"
@@ -8,8 +9,12 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <stdexcept>
+#include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -558,23 +563,61 @@ void PrefillV2AttentionLayer::decode(
     const PrefillV2Workspace& ws,
     std::uint32_t position,
     const DeviceDecodeState* decode_state,
-    hipStream_t stream) const {
+    hipStream_t stream,
+    RecurrentLayerGraphTrace* graph_trace) const {
+
+    const std::size_t gqa_block = layer_index_ / kLayersPerBlock;
+    static bool block0_trace_captured = false;
+    static bool block2_trace_captured = false;
+    const char* trace_prefix = std::getenv("MIINFER_LC_OP_TRACE_PREFIX");
+    const char* trace_decode = std::getenv("MIINFER_LC_DECODE_TRACE");
+    const bool trace_block = gqa_block == 0 || gqa_block == 2;
+    const bool capture_graph = trace_block && graph_trace != nullptr && decode_state != nullptr;
+    const bool capture_eager = trace_block && decode_state == nullptr && trace_prefix != nullptr
+        && trace_decode != nullptr && std::string_view(trace_decode) != "0"
+        && !(gqa_block == 0 ? block0_trace_captured : block2_trace_captured);
+    const std::string block_prefix = capture_graph || capture_eager
+        ? "block" + std::to_string(gqa_block) + "_gqa_" : std::string{};
+    const auto capture_trace = [&](const char* name, const void* device, std::size_t bytes, bool binary) {
+        if (!capture_graph && !capture_eager) return;
+        const std::string buffer_name = block_prefix + name;
+        if (capture_graph) {
+            graph_trace->copy_async(buffer_name.c_str(), device, bytes, stream);
+            return;
+        }
+        const auto path = std::filesystem::path(std::string(trace_prefix) + ".decode-pos"
+            + std::to_string(position) + ".block" + std::to_string(gqa_block) + ".gqa3."
+            + name + (binary ? ".bin" : ".f32"));
+        if (std::filesystem::exists(path))
+            throw std::runtime_error("refusing to overwrite M31 GQA trace: " + path.string());
+        std::vector<std::uint8_t> host(bytes);
+        MIINFER_HIP_CHECK(hipMemcpy(host.data(), device, bytes, hipMemcpyDeviceToHost));
+        std::ofstream output(path, std::ios::binary | std::ios::out);
+        if (!output) throw std::runtime_error("cannot create M31 GQA trace: " + path.string());
+        output.write(reinterpret_cast<const char*>(host.data()), static_cast<std::streamsize>(host.size()));
+        if (!output) throw std::runtime_error("failed writing M31 GQA trace: " + path.string());
+    };
 
     // 1. Input Normalization (single token)
+    capture_trace("input", d_input, kHidden * sizeof(float), false);
     launch_qwen3_rms_norm(
         d_input, d_attn_norm_, ws.normalized, kHidden, kRmsNormEpsilon, stream);
+    capture_trace("normalized", ws.normalized, kHidden * sizeof(float), false);
 
     // 2. QKV Projections via compact Mx MMQ (N=1)
     launch_mx_q8_1_mmq_quantize(
         ws.normalized, ws.mmq_q8, 1, kHidden, true, stream);
+    capture_trace("mx_q8", ws.mmq_q8, (kHidden / 128) * sizeof(MxQ8_1MmqBlock), true);
 
     // Q + Gate Projection [5120 -> 12288] (Q4_K)
     launch_mx_q4k_repacked_mmq(
         d_q_mmq_, ws.mmq_q8, ws.attn_qfull, 12288, kHidden, 1, stream);
+    capture_trace("qfull", ws.attn_qfull, kQFullDim * sizeof(float), false);
 
     // K Projection [5120 -> 1024] (Q4_K)
     launch_mx_q4k_repacked_mmq(
         d_k_mmq_, ws.mmq_q8, ws.attn_k, 1024, kHidden, 1, stream);
+    capture_trace("k", ws.attn_k, kKvDim * sizeof(float), false);
 
     // V Projection [5120 -> 1024] (Q4_K or Q6_K)
     if (v_is_q6_) {
@@ -586,6 +629,7 @@ void PrefillV2AttentionLayer::decode(
         launch_mx_q4k_repacked_mmq(
             d_v_mmq_, ws.mmq_q8, ws.attn_v, 1024, kHidden, 1, stream);
     }
+    capture_trace("v", ws.attn_v, kKvDim * sizeof(float), false);
 
     // 3. Q Split, RMSNorm, and RoPE
     if (decode_state != nullptr) {
@@ -597,6 +641,8 @@ void PrefillV2AttentionLayer::decode(
             ws.attn_qfull, d_q_norm_, ws.attn_q_rope, ws.gate,
             1, position, 24, 256, kRopeTheta, kRmsNormEpsilon, stream);
     }
+    capture_trace("q_rope", ws.attn_q_rope, kQDim * sizeof(float), false);
+    capture_trace("gate", ws.gate, kInner * sizeof(float), false);
 
     // 4. K RMSNorm, RoPE, and Store K + V into KV Cache (FP16 or Q8)
     launch_qwen35_decoupled_k_norm_rope_kv_store_batch_quant(
@@ -610,6 +656,7 @@ void PrefillV2AttentionLayer::decode(
         stream,
         /*prefill_state=*/nullptr,
         decode_state);
+    capture_trace("k_rope", ws.attn_k, kKvDim * sizeof(float), false);
 
     // 5. High-Occupancy Split-K Decode Attention with In-Register Sigmoid Gating
     if (decode_state != nullptr) {
@@ -658,17 +705,20 @@ void PrefillV2AttentionLayer::decode(
             ws.splitk_splits,
             stream);
     }
+    capture_trace("attention", ws.attn_gated_output, kQDim * sizeof(float), false);
 
     // 6. Attention Output Projection via compact Mx MMQ (O: [6144 -> 5120])
     launch_mx_q8_1_mmq_quantize(
         ws.attn_gated_output, ws.mmq_q8, 1, kInner, true, stream);
     launch_mx_q4k_repacked_mmq(
         d_o_mmq_, ws.mmq_q8, ws.projected, kHidden, kInner, 1, stream);
+    capture_trace("projected", ws.projected, kHidden * sizeof(float), false);
 
     // 7. Residual Connection + Post-Attention RMSNorm (Fused with Q8_1 quantization for FFN Paired Wave)
     launch_qwen3_fused_add_rms_norm(
         d_input, ws.projected, d_post_attention_norm_, ws.residual, ws.post_normalized,
         kHidden, kRmsNormEpsilon, stream, ws.q8_1);
+    capture_trace("post_normalized", ws.post_normalized, kHidden * sizeof(float), false);
 
     // 8. FFN Gate & Up Projections + SwiGLU Activation (Fused into single resident kernel pass)
     if (d_ffn_swiglu_fused_) {
@@ -682,8 +732,11 @@ void PrefillV2AttentionLayer::decode(
             d_ffn_gate_mmq_, ws.mmq_q8, ws.ffn_gate, kFfnInner, kHidden, 1, stream);
         launch_mx_q4k_repacked_mmq(
             d_ffn_up_mmq_, ws.mmq_q8, ws.ffn_up, kFfnInner, kHidden, 1, stream);
+        capture_trace("ffn_gate", ws.ffn_gate, kFfnInner * sizeof(float), false);
+        capture_trace("ffn_up", ws.ffn_up, kFfnInner * sizeof(float), false);
         launch_qwen3_silu_mul(ws.ffn_gate, ws.ffn_up, ws.ffn_activation, kFfnInner, stream);
     }
+    capture_trace("ffn_activation", ws.ffn_activation, kFfnInner * sizeof(float), false);
 
     // 9. FFN Down Projection & Final Residual
     if (ffn_down_is_q6_) {
@@ -697,9 +750,15 @@ void PrefillV2AttentionLayer::decode(
         launch_mx_q4k_repacked_mmq(
             d_ffn_down_mmq_, ws.mmq_q8, ws.ffn_down, kHidden, kFfnInner, 1, stream);
     }
+    capture_trace("ffn_down", ws.ffn_down, kHidden * sizeof(float), false);
 
     launch_qwen3_add(
         ws.residual, ws.ffn_down, d_output, kHidden, stream);
+    capture_trace("output", d_output, kHidden * sizeof(float), false);
+    if (capture_eager) {
+        if (gqa_block == 0) block0_trace_captured = true;
+        else block2_trace_captured = true;
+    }
 }
 
 void PrefillV2AttentionLayer::decode_profiled(

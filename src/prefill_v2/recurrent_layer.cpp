@@ -70,6 +70,40 @@ const GraphTraceSpec kGraphTraceSpecs[] = {
     {"block0_gqa3_output", kHidden * sizeof(float), false},
     {"block1_gqa3_output", kHidden * sizeof(float), false},
     {"block2_gqa3_output", kHidden * sizeof(float), false},
+    {"block0_gqa_input", kHidden * sizeof(float), false},
+    {"block0_gqa_normalized", kHidden * sizeof(float), false},
+    {"block0_gqa_mx_q8", (kHidden / 128) * sizeof(MxQ8_1MmqBlock), true},
+    {"block0_gqa_qfull", kQFullDim * sizeof(float), false},
+    {"block0_gqa_k", kKvDim * sizeof(float), false},
+    {"block0_gqa_v", kKvDim * sizeof(float), false},
+    {"block0_gqa_q_rope", kQDim * sizeof(float), false},
+    {"block0_gqa_gate", kInner * sizeof(float), false},
+    {"block0_gqa_k_rope", kKvDim * sizeof(float), false},
+    {"block0_gqa_attention", kQDim * sizeof(float), false},
+    {"block0_gqa_projected", kHidden * sizeof(float), false},
+    {"block0_gqa_post_normalized", kHidden * sizeof(float), false},
+    {"block0_gqa_ffn_gate", kFfnInner * sizeof(float), false},
+    {"block0_gqa_ffn_up", kFfnInner * sizeof(float), false},
+    {"block0_gqa_ffn_activation", kFfnInner * sizeof(float), false},
+    {"block0_gqa_ffn_down", kHidden * sizeof(float), false},
+    {"block0_gqa_output", kHidden * sizeof(float), false},
+    {"block2_gqa_input", kHidden * sizeof(float), false},
+    {"block2_gqa_normalized", kHidden * sizeof(float), false},
+    {"block2_gqa_mx_q8", (kHidden / 128) * sizeof(MxQ8_1MmqBlock), true},
+    {"block2_gqa_qfull", kQFullDim * sizeof(float), false},
+    {"block2_gqa_k", kKvDim * sizeof(float), false},
+    {"block2_gqa_v", kKvDim * sizeof(float), false},
+    {"block2_gqa_q_rope", kQDim * sizeof(float), false},
+    {"block2_gqa_gate", kInner * sizeof(float), false},
+    {"block2_gqa_k_rope", kKvDim * sizeof(float), false},
+    {"block2_gqa_attention", kQDim * sizeof(float), false},
+    {"block2_gqa_projected", kHidden * sizeof(float), false},
+    {"block2_gqa_post_normalized", kHidden * sizeof(float), false},
+    {"block2_gqa_ffn_gate", kFfnInner * sizeof(float), false},
+    {"block2_gqa_ffn_up", kFfnInner * sizeof(float), false},
+    {"block2_gqa_ffn_activation", kFfnInner * sizeof(float), false},
+    {"block2_gqa_ffn_down", kHidden * sizeof(float), false},
+    {"block2_gqa_output", kHidden * sizeof(float), false},
 };
 
 const GgufTensor* require_tensor(const GgufFile& file, std::string_view name) {
@@ -130,9 +164,12 @@ void RecurrentLayerGraphTrace::write_files() {
     if (written_) throw std::runtime_error("HIP graph decode trace was already written");
     for (const auto& buffer : buffers_) {
         if (!buffer.captured) continue;
+        const std::string_view name(buffer.name);
         const std::string suffix = buffer.name == "block0_gqa3_output" ? ".block0.gqa3_output.f32"
             : buffer.name == "block1_gqa3_output" ? ".block1.gqa3_output.f32"
             : buffer.name == "block2_gqa3_output" ? ".block2.gqa3_output.f32"
+            : name.substr(0, 11) == "block0_gqa_" ? ".block0.gqa3." + std::string(name.substr(11)) + (buffer.binary ? ".bin" : ".f32")
+            : name.substr(0, 11) == "block2_gqa_" ? ".block2.gqa3." + std::string(name.substr(11)) + (buffer.binary ? ".bin" : ".f32")
             : ".layer" + std::to_string(layer_index_) + "." + buffer.name
                 + (buffer.binary ? ".bin" : ".f32");
         const auto path = std::filesystem::path(prefix_ + ".decode-pos"

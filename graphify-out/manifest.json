@@ -4680,8 +4680,8 @@
     "semantic_hash": ""
   },
   "src/prefill_v2/recurrent_layer.cpp": {
-    "mtime": 1791679162.0527403,
-    "ast_hash": "198b6f03ddf20032c9bd2cb2dc67c6de",
+    "mtime": 1791682040.3094323,
+    "ast_hash": "d1d32cb704d17746752e694279717838",
     "semantic_hash": ""
   },
   "src/prefill_v2/state.cpp": {
@@ -4715,8 +4715,8 @@
     "semantic_hash": ""
   },
   "include/miinfer/prefill_v2/attention_layer.hpp": {
-    "mtime": 1791622507.2490041,
-    "ast_hash": "304691afadaf8a00ad4dea6e63543ab0",
+    "mtime": 1791682009.294975,
+    "ast_hash": "2c3446d36649f13c9d67b53c8db85d63",
     "semantic_hash": ""
   },
   "include/miinfer/prefill_v2/kv_cache.hpp": {
@@ -4730,8 +4730,8 @@
     "semantic_hash": ""
   },
   "src/prefill_v2/attention_layer.cpp": {
-    "mtime": 1791622507.3147025,
-    "ast_hash": "291788ac46db51d2e9a003fc2f58f752",
+    "mtime": 1791682133.8208108,
+    "ast_hash": "aaf3f1783e188f0f91b02b5ef70caa6d",
     "semantic_hash": ""
   },
   "src/prefill_v2/kv_cache.cpp": {
@@ -4740,8 +4740,8 @@
     "semantic_hash": ""
   },
   "src/prefill_v2/topology_block.cpp": {
-    "mtime": 1791679162.0527403,
-    "ast_hash": "8cb09c8a4a2898023fe11203ea83f7bd",
+    "mtime": 1791682009.295975,
+    "ast_hash": "f682d9621e005a18c028f178d3af66d9",
     "semantic_hash": ""
   },
   "experiments/V2-0003-topology-block-vertical-slice.md": {
@@ -7370,8 +7370,8 @@
     "semantic_hash": ""
   },
   "experiments/m31-lc-0006/REPORT.md": {
-    "mtime": 1791678943.762491,
-    "ast_hash": "ef4c78f7f1044b8a2f4d099e419b081d",
+    "mtime": 1791681675.1930497,
+    "ast_hash": "83bd942685a7986288a275320c9262c1",
     "semantic_hash": ""
   },
   "results/m31-lc-0002/REPORT.md": {
@@ -8737,6 +8737,131 @@
   "results/m31-lc-0006/z840-layer9-traced-graph/mmq_only-pair-1.record.json": {
     "mtime": 1791678900.95877,
     "ast_hash": "112761728160c5cb972bb2fd26162443",
+    "semantic_hash": ""
+  },
+  "experiments/m31-lc-0006/source-manifest-block2-trace.json": {
+    "mtime": 1791679360.0841522,
+    "ast_hash": "e0483902558eacaa83659f19d87f1444",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-block2-untraced-eager/benchmark.json": {
+    "mtime": 1791681492.1343513,
+    "ast_hash": "a21047afe0cf29121c2ac8f86cfd4dae",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-block2-untraced-eager/control-pair-1.record.json": {
+    "mtime": 1791681493.9833784,
+    "ast_hash": "298cd367e3c378e301c6a76635923dff",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-block2-untraced-eager/cooldown-before-mmq_only-pair-1.json": {
+    "mtime": 1791681493.952378,
+    "ast_hash": "457e5013b9885d7e2fc1b5ddaa215a23",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-block2-untraced-eager/mmq_only-pair-1.record.json": {
+    "mtime": 1791681492.1643517,
+    "ast_hash": "dae77c626e60f96fb62a25b9c5f7fdac",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-block2-untraced-eager/source-identity.json": {
+    "mtime": 1791681495.4253998,
+    "ast_hash": "7a368d7e98c760edfca88335791701a2",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-block2-untraced-eager/source-manifest-block2-trace.json": {
+    "mtime": 1791681495.4484,
+    "ast_hash": "e0483902558eacaa83659f19d87f1444",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-block2-untraced-graph/benchmark.json": {
+    "mtime": 1791681496.8304205,
+    "ast_hash": "747db2029fddd5e033e70e8c3f826fb5",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-block2-untraced-graph/control-pair-1.record.json": {
+    "mtime": 1791681498.3244424,
+    "ast_hash": "08872677de5bd6c90439bf9b19ac9de2",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-block2-untraced-graph/cooldown-before-mmq_only-pair-1.json": {
+    "mtime": 1791681498.300442,
+    "ast_hash": "abe6526bb1f4497b449ebcac8596e4eb",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-block2-untraced-graph/mmq_only-pair-1.record.json": {
+    "mtime": 1791681496.8514206,
+    "ast_hash": "6e159162d07b915224e1e386efc39fbb",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-block2-untraced-graph/source-identity.json": {
+    "mtime": 1791681500.0344677,
+    "ast_hash": "05de0e7a4f3ff5ed7e8f3406a8d9181a",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-block2-untraced-graph/source-manifest-block2-trace.json": {
+    "mtime": 1791681500.051468,
+    "ast_hash": "e0483902558eacaa83659f19d87f1444",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer10-traced-eager/benchmark.json": {
+    "mtime": 1791680380.1988575,
+    "ast_hash": "2f4dff93827c0b3c189cef09daae465c",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer10-traced-eager/control-pair-1.record.json": {
+    "mtime": 1791680389.6239977,
+    "ast_hash": "bcc228bd639c9987d36a72d667044391",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer10-traced-eager/cooldown-before-mmq_only-pair-1.json": {
+    "mtime": 1791680389.5989974,
+    "ast_hash": "a9fd900a55b5bfc2cd8324955f3f3ee3",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer10-traced-eager/mmq_only-pair-1.record.json": {
+    "mtime": 1791680380.216858,
+    "ast_hash": "7ad38acab4337ff96785380308eae746",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer10-traced-eager/source-identity.json": {
+    "mtime": 1791680398.2761264,
+    "ast_hash": "7a368d7e98c760edfca88335791701a2",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer10-traced-eager/source-manifest-block2-trace.json": {
+    "mtime": 1791680398.3041267,
+    "ast_hash": "e0483902558eacaa83659f19d87f1444",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer10-traced-graph/benchmark.json": {
+    "mtime": 1791680399.6941473,
+    "ast_hash": "07359941d7560c016a9a67d2546b45a8",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer10-traced-graph/control-pair-1.record.json": {
+    "mtime": 1791680407.535264,
+    "ast_hash": "e32bfc5a67494e24a089897846556baf",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer10-traced-graph/cooldown-before-mmq_only-pair-1.json": {
+    "mtime": 1791680407.5112636,
+    "ast_hash": "6893babffbb64fa136243cb80df37509",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer10-traced-graph/mmq_only-pair-1.record.json": {
+    "mtime": 1791680399.7151477,
+    "ast_hash": "ae569052daa0c0e19843ea62ddaec179",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer10-traced-graph/source-identity.json": {
+    "mtime": 1791680413.8553576,
+    "ast_hash": "05de0e7a4f3ff5ed7e8f3406a8d9181a",
+    "semantic_hash": ""
+  },
+  "results/m31-lc-0006/z840-layer10-traced-graph/source-manifest-block2-trace.json": {
+    "mtime": 1791680413.8723578,
+    "ast_hash": "e0483902558eacaa83659f19d87f1444",
     "semantic_hash": ""
   }
 }
