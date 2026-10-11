@@ -42,9 +42,9 @@ There is no fixed full-model relative-L2 or top-k cutoff in the existing evidenc
 For all six prompts, run fused GPU, aligned-MMQ GPU (`MIINFER_EXPERIMENTAL_MMQ_GATEUP_QSUM=1`), and pinned CPU llama.cpp. Run each configuration three times from fresh contexts. On GPU, run eager and HIP-graph modes for both routes. For each prompt:
 
 1. Record ordinary greedy output up to 64 tokens for all configurations and retain all output IDs.
-2. Repeat CPU greedy twice first; require exact repeat output and logits before using its first 64 generated IDs as the teacher-forced history.
-3. Capture the complete next-token logit vector after the prompt and after each forced history token on CPU and both GPU routes/modes. Repeat the captures three times.
-4. Capture recurrent and KV state at the prompt boundary and after forced-history positions 1, 4, 16, and 64, using a documented canonical layout mapping.
+2. Repeat CPU greedy twice first; require exact repeat output and logits before using its first four generated IDs as the teacher-forced history.
+3. Capture five complete next-token logit vectors: after the prompt and after each of the four forced history tokens. Repeat the captures three times on CPU and both GPU routes/modes.
+4. Capture recurrent and KV state at the prompt boundary and after forced-history positions 1 and 4, using a documented canonical layout mapping.
 5. Preserve raw arrays, per-run metadata, source/binary/image/model/tokenizer hashes, full commands, and thermal/device telemetry. Run all GPU work serially on the selected MI50.
 
 Use the same model, seed, greedy sampler, stop policy, context settings, and reset semantics. CPU llama.cpp must disable CUDA, HIP, Vulkan, GPU layers, KQV offload, and operation offload. Do not compare logits from divergent histories as if they were matched. The 64-token and 512-token prompts remain within the 512-token prefill tile; 2,048-token prompts use four tiles of 512, matching prior LC-0003 segmentation.
