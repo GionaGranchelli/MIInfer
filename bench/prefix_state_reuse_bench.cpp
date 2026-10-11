@@ -120,7 +120,21 @@ int main(int argc, char** argv) {
     std::cout << "  Model:  Qwen3.8-27B-Q4_K_M (64 Layers: 48 GDN + 16 GQA)\n";
     std::cout << "===================================================================\n\n";
 
-    const std::string model_path = (argc > 1) ? argv[1] : kDefaultModelPath;
+    bool only_64k = false;
+    bool model_path_set = false;
+    std::string model_path = kDefaultModelPath;
+    for (int i = 1; i < argc; ++i) {
+        const std::string arg = argv[i];
+        if (arg == "--64k-only" && !only_64k) {
+            only_64k = true;
+        } else if (!arg.empty() && arg.front() != '-' && !model_path_set) {
+            model_path = arg;
+            model_path_set = true;
+        } else {
+            std::cerr << "usage: miinfer-prefix-state-reuse-bench [--64k-only] [MODEL.gguf]\n";
+            return 2;
+        }
+    }
 
     int device_id = 0;
     MIINFER_HIP_CHECK(hipGetDevice(&device_id));
@@ -150,15 +164,24 @@ int main(int argc, char** argv) {
         std::uint32_t suffix_seed;
     };
 
-    const std::vector<MatrixConfig> matrix_configs = {
+    const std::vector<MatrixConfig> full_matrix_configs = {
         {"Scenario 1: 4K Control",         4096,   512,  128,  32768, 42, 1042},
         {"Scenario 2: 32K Agent History",   32768,   512,  128,  34000, 77, 1077},
         {"Scenario 3: 64K Large History",   65536,   512,  128,  67000, 99, 1099},
         {"Scenario 4: 64K Large Suffix",    65536,  4096,  128,  70000, 99, 2099},
         {"Scenario 5: 128K Frontier",      128000,   512,  128, 131200, 123, 3123},
     };
+    const std::vector<MatrixConfig> matrix_configs = only_64k
+        ? std::vector<MatrixConfig>{full_matrix_configs[2]}
+        : full_matrix_configs;
+    if (only_64k && (matrix_configs.size() != 1 || matrix_configs[0].prefix_len != 65536
+                     || matrix_configs[0].suffix_len != 512)) {
+        std::cerr << "64K-only scenario selection self-check failed\n";
+        return 2;
+    }
 
     std::vector<MatrixScenarioResult> results;
+    bool required_64k_checks_pass = true;
 
     for (const auto& cfg : matrix_configs) {
         std::cout << "\n===================================================================\n";
@@ -263,6 +286,15 @@ int main(int argc, char** argv) {
 
         // Verify greedy parity
         r.parity_pass = (r.cold_generated_tokens == r.reuse_generated_tokens);
+        const bool reuse_contract_pass = r.reuse_hit
+            && r.prefix_tokens_reused == cfg.prefix_len
+            && r.suffix_tokens_dispatched == cfg.suffix_len
+            && r.parity_pass;
+        if (only_64k) {
+            std::cout << "    64K-only Reuse Assertions: "
+                      << (reuse_contract_pass ? "PASS" : "FAIL") << "\n";
+            required_64k_checks_pass = required_64k_checks_pass && reuse_contract_pass;
+        }
 
         std::cout << "    Reuse Hit:           " << (r.reuse_hit ? "YES" : "NO") << "\n";
         std::cout << "    Prefix Tokens Reused:" << r.prefix_tokens_reused << "\n";
@@ -302,5 +334,5 @@ int main(int argc, char** argv) {
     std::cout << "  V2-0014 Qualification Campaign Complete.\n";
     std::cout << "====================================================================================================================================\n";
 
-    return 0;
+    return only_64k && !required_64k_checks_pass ? 1 : 0;
 }
