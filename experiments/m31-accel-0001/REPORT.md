@@ -45,3 +45,7 @@ CPU ordinary-512 evidence was pushed at `a5140f8`; its frozen visitor-use clause
 ## Results and disposition
 
 No performance gain is claimed. The recovered M30 run is diagnostic, not a qualifying 64K-start workload. The campaign remains open pending code review/build and one serialized, guarded 64K persistent-agent execution. Update this report with exact run command, output checksums, source/model/image identity, state/parity outcome, memory/thermal measurements and an explicit disposition.
+
+## Build checkpoint
+
+The pinned ROCm 7.2.1 container successfully compiled both `miinfer-prefix-state-reuse-bench` and `miinfer-v2-0045-qual-bench` from runtime source `dc83f07` using the documented `CMAKE_PREFIX_PATH=/opt/rocm-7.2.1` configuration. The first preset-only attempt failed because it omitted that path; no source change was needed. Build exit was 0. Binary hashes and full log are in `STATUS.md` and Lake's campaign capture directory. The GPU stayed idle during the build.
