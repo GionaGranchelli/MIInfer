@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
@@ -442,9 +443,29 @@ void PrefillV2RecurrentLayer::forward(
 
     const std::uint32_t base_position = incoming_state.position;
     const char* op_trace_prefix = std::getenv("MIINFER_LC_OP_TRACE_PREFIX");
+    std::uint32_t op_trace_position = 0;
+    if (const char* value = std::getenv("MIINFER_LC_OP_TRACE_POSITION")) {
+        const std::string_view input(value);
+        const auto [end, error] = std::from_chars(input.data(), input.data() + input.size(), op_trace_position);
+        if (error != std::errc{} || end != input.data() + input.size())
+            throw std::runtime_error("MIINFER_LC_OP_TRACE_POSITION must be an unsigned integer");
+    }
     static bool op_trace_captured = false;
-    const bool capture_ops = op_trace_prefix != nullptr && layer_index_ == 0
-        && base_position == 0 && token_count == 512 && !op_trace_captured;
+    static std::size_t op_trace_tile_call = 0;
+    const bool trace_this_tile = op_trace_prefix != nullptr && layer_index_ == 0 && token_count == 512;
+    const std::size_t tile_call = trace_this_tile ? op_trace_tile_call++ : 0;
+    const bool capture_ops = trace_this_tile
+        && tile_call == op_trace_position / token_count && !op_trace_captured;
+    const std::size_t op_trace_token = op_trace_position % token_count;
+    if (capture_ops) {
+        const auto path = std::string(op_trace_prefix) + ".gpu.position.txt";
+        if (std::filesystem::exists(path)) throw std::runtime_error("refusing to overwrite GDN trace position: " + path);
+        std::ofstream output(path);
+        output << "requested_position=" << op_trace_position << "\ntile_call=" << tile_call
+               << "\nstate_position=" << base_position << "\ntoken_count=" << token_count
+               << "\nrow_in_tile=" << op_trace_token << "\n";
+        if (!output) throw std::runtime_error("failed writing GDN trace position: " + path);
+    }
     const auto capture_op = [&](const char* name, const float* device, std::size_t count) {
         if (!capture_ops) return;
         const char* replacement_path = nullptr;
@@ -479,7 +500,9 @@ void PrefillV2RecurrentLayer::forward(
         const std::filesystem::path path = std::string(op_trace_prefix) + ".gpu." + name + ".f32";
         if (std::filesystem::exists(path)) throw std::runtime_error("refusing to overwrite GDN operation trace: " + path.string());
         std::vector<float> host(count);
-        MIINFER_HIP_CHECK(hipMemcpy(host.data(), device, count * sizeof(float), hipMemcpyDeviceToHost));
+        const float* row = std::string_view(name) == "state_predelta"
+            ? device : device + op_trace_token * count;
+        MIINFER_HIP_CHECK(hipMemcpy(host.data(), row, count * sizeof(float), hipMemcpyDeviceToHost));
         std::ofstream output(path, std::ios::binary | std::ios::out);
         if (!output) throw std::runtime_error("cannot create GDN operation trace: " + path.string());
         output.write(reinterpret_cast<const char*>(host.data()),
@@ -492,9 +515,15 @@ void PrefillV2RecurrentLayer::forward(
             + ".gpu." + name + ".bin");
         if (std::filesystem::exists(path))
             throw std::runtime_error("refusing to overwrite M31 quantizer trace: " + path.string());
-        const std::size_t bytes = (kHidden / 128) * token_count * sizeof(MxQ8_1MmqBlock);
-        std::vector<std::uint8_t> host(bytes);
-        MIINFER_HIP_CHECK(hipMemcpy(host.data(), ws.mmq_q8, bytes, hipMemcpyDeviceToHost));
+        const std::size_t row_bytes = (kHidden / 128) * sizeof(MxQ8_1MmqBlock);
+        std::vector<std::uint8_t> host(row_bytes);
+        std::vector<std::uint8_t> batch(row_bytes * token_count);
+        MIINFER_HIP_CHECK(hipMemcpy(batch.data(), ws.mmq_q8, batch.size(), hipMemcpyDeviceToHost));
+        for (std::size_t block = 0; block < kHidden / 128; ++block)
+            std::memcpy(host.data() + block * sizeof(MxQ8_1MmqBlock),
+                        batch.data() + (block * token_count + op_trace_token)
+                            * sizeof(MxQ8_1MmqBlock),
+                        sizeof(MxQ8_1MmqBlock));
         std::ofstream output(path, std::ios::binary | std::ios::out);
         if (!output) throw std::runtime_error("cannot create M31 quantizer trace: " + path.string());
         output.write(reinterpret_cast<const char*>(host.data()), static_cast<std::streamsize>(host.size()));
@@ -664,36 +693,103 @@ void PrefillV2RecurrentLayer::forward_profiled(
     }
 
     const std::uint32_t base_position = incoming_state.position;
+    const char* op_trace_prefix = std::getenv("MIINFER_LC_OP_TRACE_PREFIX");
+    std::uint32_t op_trace_position = 0;
+    if (const char* value = std::getenv("MIINFER_LC_OP_TRACE_POSITION")) {
+        const std::string_view input(value);
+        const auto [end, error] = std::from_chars(input.data(), input.data() + input.size(), op_trace_position);
+        if (error != std::errc{} || end != input.data() + input.size())
+            throw std::runtime_error("MIINFER_LC_OP_TRACE_POSITION must be an unsigned integer");
+    }
+    static bool op_trace_captured = false;
+    static std::size_t op_trace_tile_call = 0;
+    const bool trace_this_tile = op_trace_prefix != nullptr && layer_index_ == 0 && token_count == 512;
+    const std::size_t tile_call = trace_this_tile ? op_trace_tile_call++ : 0;
+    const bool capture_ops = trace_this_tile
+        && tile_call == op_trace_position / token_count && !op_trace_captured;
+    const std::size_t op_trace_token = op_trace_position % token_count;
+    if (capture_ops) {
+        const auto path = std::string(op_trace_prefix) + ".gpu.position.txt";
+        if (std::filesystem::exists(path)) throw std::runtime_error("refusing to overwrite GDN trace position: " + path);
+        std::ofstream output(path);
+        output << "requested_position=" << op_trace_position << "\ntile_call=" << tile_call
+               << "\nstate_position=" << base_position << "\ntoken_count=" << token_count
+               << "\nrow_in_tile=" << op_trace_token << "\n";
+        if (!output) throw std::runtime_error("failed writing GDN trace position: " + path);
+    }
+    const auto capture_op = [&](const char* name, const float* device, std::size_t count) {
+        if (!capture_ops) return;
+        const std::filesystem::path path = std::string(op_trace_prefix) + ".gpu." + name + ".f32";
+        if (std::filesystem::exists(path)) throw std::runtime_error("refusing to overwrite GDN operation trace: " + path.string());
+        std::vector<float> host(count);
+        const float* row = std::string_view(name) == "state_predelta"
+            ? device : device + op_trace_token * count;
+        MIINFER_HIP_CHECK(hipMemcpy(host.data(), row, count * sizeof(float), hipMemcpyDeviceToHost));
+        std::ofstream output(path, std::ios::binary | std::ios::out);
+        if (!output) throw std::runtime_error("cannot create GDN operation trace: " + path.string());
+        output.write(reinterpret_cast<const char*>(host.data()),
+                     static_cast<std::streamsize>(host.size() * sizeof(float)));
+        if (!output) throw std::runtime_error("failed writing GDN operation trace: " + path.string());
+    };
+    const auto capture_mx_q8 = [&](const char* name) {
+        if (!capture_ops) return;
+        const std::size_t row_bytes = (kHidden / 128) * sizeof(MxQ8_1MmqBlock);
+        const auto path = std::filesystem::path(std::string(op_trace_prefix)
+            + ".gpu." + name + ".bin");
+        if (std::filesystem::exists(path)) throw std::runtime_error("refusing to overwrite M31 quantizer trace: " + path.string());
+        std::vector<std::uint8_t> host(row_bytes);
+        std::vector<std::uint8_t> batch(row_bytes * token_count);
+        MIINFER_HIP_CHECK(hipMemcpy(batch.data(), ws.mmq_q8, batch.size(), hipMemcpyDeviceToHost));
+        for (std::size_t block = 0; block < kHidden / 128; ++block)
+            std::memcpy(host.data() + block * sizeof(MxQ8_1MmqBlock),
+                        batch.data() + (block * token_count + op_trace_token)
+                            * sizeof(MxQ8_1MmqBlock),
+                        sizeof(MxQ8_1MmqBlock));
+        std::ofstream output(path, std::ios::binary | std::ios::out);
+        if (!output) throw std::runtime_error("cannot create M31 quantizer trace: " + path.string());
+        output.write(reinterpret_cast<const char*>(host.data()), static_cast<std::streamsize>(host.size()));
+        if (!output) throw std::runtime_error("failed writing M31 quantizer trace: " + path.string());
+    };
+    capture_op("state_predelta", incoming_state.d_state, RecurrentLayerState::kStateElements);
 
     // 1 & 2. Norm + Beta/Alpha
     launch_qwen3_rms_norm_batch(
         d_input, d_attn_norm_, ws.normalized, token_count, kHidden, kRmsNormEpsilon, stream);
+    capture_op("attn_norm", ws.normalized, kHidden);
     launch_qwen35_f32_dual_gemm_batch(
         d_ssm_beta_, d_ssm_alpha_, ws.normalized, ws.raw_beta, ws.raw_alpha,
         token_count, kVHeads, kHidden, stream);
+    capture_op("beta", ws.raw_beta, kVHeads);
+    capture_op("alpha", ws.raw_alpha, kVHeads);
     launch_qwen35_prepare_beta_decay(
         ws.raw_beta, ws.raw_alpha, d_ssm_dt_, d_ssm_a_, ws.beta, ws.decay,
         token_count * kVHeads, stream);
+    capture_op("beta_sigmoid", ws.beta, kVHeads);
+    capture_op("gate", ws.decay, kVHeads);
     MIINFER_HIP_CHECK(hipEventRecord(ev_norm, stream));
 
     // 3. QKV & Gate
     if (qkv_type_ == GgufTensorType::q4_k) {
         launch_mx_q8_1_mmq_quantize(
             ws.normalized, ws.mmq_q8, token_count, kHidden, /*affine=*/true, stream);
+        capture_mx_q8("qkv_input_mx_q8");
         launch_mx_q4k_repacked_mmq(
             static_cast<const std::uint8_t*>(d_qkv_mmq_), ws.mmq_q8,
             ws.qkv, kChannels, kHidden, token_count, stream);
     } else {
         launch_mx_q8_1_mmq_quantize(
             ws.normalized, ws.mmq_q8, token_count, kHidden, /*affine=*/false, stream);
+        capture_mx_q8("qkv_input_mx_q8");
         launch_mx_q6k_repacked_mmq(
             static_cast<const std::uint8_t*>(d_qkv_mmq_), ws.mmq_q8,
             ws.qkv, kChannels, kHidden, token_count, stream);
         launch_mx_q8_1_mmq_quantize(
             ws.normalized, ws.mmq_q8, token_count, kHidden, /*affine=*/true, stream);
     }
+    capture_op("linear_attn_qkv_mixed", ws.qkv, kChannels);
     launch_mx_q4k_repacked_mmq(
         d_gate_mmq_, ws.mmq_q8, ws.gate, kInner, kHidden, token_count, stream);
+    capture_op("z", ws.gate, kInner);
     MIINFER_HIP_CHECK(hipEventRecord(ev_qkv, stream));
 
     // 4 & 5. Conv + L2 Norm
@@ -701,9 +797,14 @@ void PrefillV2RecurrentLayer::forward_profiled(
         ws.qkv, d_ssm_conv_, outgoing_state.d_conv_history,
         ws.query, ws.key, ws.value,
         base_position, token_count, kConvKernel, kChannels, kConvKernel, stream);
+    capture_op("q_conv", ws.query, kKHeads * kState);
+    capture_op("k_conv", ws.key, kKHeads * kState);
+    capture_op("v_conv_predelta", ws.value, kVHeads * kState);
     launch_qwen35_dual_head_l2_normalize_batch(
         ws.query, ws.key, ws.query, ws.key,
         token_count, kKHeads, kState, stream);
+    capture_op("q_conv_predelta", ws.query, kKHeads * kState);
+    capture_op("k_conv_predelta", ws.key, kKHeads * kState);
     MIINFER_HIP_CHECK(hipEventRecord(ev_conv, stream));
 
     // 6. Register-resident GDN
@@ -711,17 +812,20 @@ void PrefillV2RecurrentLayer::forward_profiled(
         ws.query, ws.key, ws.value, ws.beta, ws.decay,
         outgoing_state.d_state, ws.gdn_raw_output,
         token_count, kKHeads, kVHeads, kState, stream);
+    capture_op("gdn_raw_output", ws.gdn_raw_output, kVHeads * kState);
     MIINFER_HIP_CHECK(hipEventRecord(ev_gdn, stream));
 
     // 7 & 8. SSM Post + SSM Out
     launch_m12_gdn_postprocess(
         ws.gdn_raw_output, ws.gate, d_ssm_norm_, ws.gated_output,
         token_count, kVHeads, kState, kRmsNormEpsilon, stream);
+    capture_op("final_output", ws.gated_output, kInner);
     launch_mx_q8_1_mmq_quantize(
         ws.gated_output, ws.mmq_q8, token_count, kInner, /*affine=*/true, stream);
     launch_mx_q5k_repacked_mmq(
         d_ssm_out_mmq_, ws.mmq_q8, ws.ssm_output,
         kHidden, kInner, token_count, stream);
+    capture_op("linear_attn_out", ws.ssm_output, kHidden);
     MIINFER_HIP_CHECK(hipEventRecord(ev_ssm, stream));
 
     // 9. Residual + Post Norm
@@ -729,6 +833,8 @@ void PrefillV2RecurrentLayer::forward_profiled(
         d_input, ws.ssm_output, d_post_norm_,
         ws.residual, ws.post_normalized,
         token_count, kHidden, kRmsNormEpsilon, stream);
+    capture_op("attn_residual", ws.residual, kHidden);
+    capture_op("attn_post_norm", ws.post_normalized, kHidden);
     MIINFER_HIP_CHECK(hipEventRecord(ev_res, stream));
 
     // 10. FFN Gate & Up
@@ -740,12 +846,15 @@ void PrefillV2RecurrentLayer::forward_profiled(
     launch_mx_q4k_repacked_mmq(
         d_ffn_up_mmq_, ws.mmq_q8, ws.ffn_up,
         kFfnInner, kHidden, token_count, stream);
+    capture_op("ffn_gate", ws.ffn_gate, kFfnInner);
+    capture_op("ffn_up", ws.ffn_up, kFfnInner);
     MIINFER_HIP_CHECK(hipEventRecord(ev_ffn_up, stream));
 
     // 11, 12, 13. SwiGLU + Down + Final Residual Add
     launch_qwen3_silu_mul(
         ws.ffn_gate, ws.ffn_up, ws.ffn_activation,
         token_count * kFfnInner, stream);
+    capture_op("ffn_activation", ws.ffn_activation, kFfnInner);
     if (ffn_down_type_ == GgufTensorType::q4_k) {
         launch_mx_q8_1_mmq_quantize(
             ws.ffn_activation, ws.mmq_q8, token_count, kFfnInner, /*affine=*/true, stream);
@@ -759,9 +868,12 @@ void PrefillV2RecurrentLayer::forward_profiled(
             static_cast<const std::uint8_t*>(d_ffn_down_mmq_), ws.mmq_q8,
             ws.ffn_down, kHidden, kFfnInner, token_count, stream);
     }
+    capture_op("ffn_out", ws.ffn_down, kHidden);
     launch_qwen3_add(
         ws.residual, ws.ffn_down, d_output,
         token_count * kHidden, stream);
+    capture_op("post_ffn", d_output, kHidden);
+    if (capture_ops) op_trace_captured = true;
 
     MIINFER_HIP_CHECK(hipEventRecord(ev_end, stream));
     MIINFER_HIP_CHECK(hipEventSynchronize(ev_end));

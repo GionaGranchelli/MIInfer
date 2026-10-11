@@ -30,12 +30,21 @@ This localizes the first material boundary; it does not yet identify which GDN l
 
 CPU and fused GPU share the first four generated IDs `[220,248046,198,248045]`, so the captured fifth-decision vectors use the same token history. CPU selects 198 at `14.587840`; GPU selects 271 at `14.833824`. CPU scores 271 at `14.197399`; GPU scores 198 at `14.185873`. Decision-5 relative L2 is `0.182344`, RMSE `0.634609`, max absolute error `3.425908`. This verifies the divergence under common history but does not establish its cause.
 
-## Blockers and next evidence
+## Operation-level findings
 
-1. Capture GDN layer 0 operation tensors at final prompt position 2047 on both runtimes, with identical logical inputs.
-2. Compare the identified operation against a quantization-aware reference using canonical Q4_K weights and the same input; decide whether the discrepancy is expected arithmetic or an implementation error.
-3. Close exact source/binary provenance for the GPU diagnostic executable.
+CPU and GPU operation traces were captured at prompt token 2047. The GPU state storage reports `state_position=0` during each 512-token tile, so the trace selects tile call 3 / row 511 by prompt order. The normalized input is bitwise equal; beta and alpha projection outputs differ by less than `3e-7` relative L2. The QKV output differs by relative L2 `0.003781`.
 
-A fresh pinned-container build attempt stopped at CMake configuration because `find_package(hipblas CONFIG REQUIRED)` could not locate the hipblas package configuration. No repository source was modified for that failed attempt. The next diagnostic change should be limited to final-tile operation trace selection; no broad kernel investigation is authorized by this goal.
+The QKV weight is GGUF `Q6_K` (type 14, `[5120,10240]`, 4,200-byte output-row stride). The captured non-affine MxQ8 activation row was re-gathered from the kernel's block-major workspace. A dequantized Q6_K × captured MxQ8 reference matches GPU QKV at relative L2 `2.797e-7` (RMSE `6.253e-7`, max `1.335e-5`); CPU QKV differs from the same reference by `0.003783` (RMSE `0.008457`, max `0.039657`). GPU4 and corrected GPU5 QKV vectors have identical SHA-256 `acbb9e0b2b0aaad15a241f3d92b3b5c4d92363faac8d6b792999bd60b8745c44`. This supports expected activation-quantization arithmetic as the cause of the QKV difference, not a QKV implementation defect.
 
-Artifacts in [`../../results/m31-lc-0008/z840-prefill/`](../../results/m31-lc-0008/z840-prefill/) contain CPU and GPU logits, layer captures, CPU run log, GPU metrics, and GPU thermal-guard log. Their SHA-256 values are recorded in the commit's file tree; the layer captures are native F32. GPU guard completed cleanly and peak junction temperature remained below 80 C.
+The incoming recurrent state at the final 512-token tile differs by relative L2 `0.03554` after mapping the CPU state layout to GPU layout. This state already contains the preceding prompt history. The final-tile capture therefore does not locate where that state history first separates. Whole-model correctness classification remains **UNRESOLVED**.
+
+The corrected pinned-container GPU5 run reproduced decision-1 raw-logit SHA-256 `78a1e4032a9f3253e7d4bc28926abf9d4939a77a4b86dfd8b5e319eb0737e92f`; the thermal guard exited cleanly, with peak sampled junction temperature 68 C. The instrumented executable SHA-256 is `308635d89fc23ee57033d0b73cdf63e11ee897145603a4b29a568a1c2375df59`.
+
+## Remaining work
+
+1. Localize when CPU and GPU recurrent state first diverge across the prompt tiles, then compare the relevant scan operation with the same logical input and an appropriate quantization-aware reference.
+2. Re-evaluate decision 5 and the whole-model classification after that causal check.
+
+The exact Q6_K tensor bytes were extracted from the pinned model for this calculation (SHA-256 `65b4f6f841cf18b0cc48b1db52868597af45d1f74578f33b010c4cb8c573edce`). They remain a local, ignored artifact because they are a slice of the model weights. The calculator and output reference vector are committed; rerunning it requires that extracted tensor alongside the pinned model identity above.
+
+Artifacts in [`../../results/m31-lc-0008/z840-prefill/`](../../results/m31-lc-0008/z840-prefill/) contain the frozen logits and layer captures. [`../../results/m31-lc-0008/z840-operations/`](../../results/m31-lc-0008/z840-operations/) contains operation tensors, quantized activation bytes, the reference vector, and run metrics; raw thermal guard logs remain local.
