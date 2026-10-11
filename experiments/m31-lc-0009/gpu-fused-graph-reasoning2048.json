@@ -1,0 +1,130 @@
+{
+  "schema": "m31-lc-0009-gpu-cell-v1",
+  "status": "THREE_REPEATS_BITWISE_STABLE",
+  "source_commit": "4ff3697",
+  "remote_checkout_head": "4c00f1d",
+  "source_sha256": "7ffd94238db5c07219a7077d4c8c79be08071eba8baa15dca186f526efbcc7f3",
+  "binary_sha256": "6b635ca1937677f5e05a0667b528c213be5555d4e14865246ecb5a1824af4808",
+  "image": "localhost/miinfer-dev:rocm-7.2.1",
+  "image_digest": "sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e",
+  "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+  "host": {
+    "hostname": "fedora",
+    "pci_bdf": "0000:06:00.0",
+    "gpu": "gfx906",
+    "serial": "692121006383",
+    "rocr_visible_devices": "0"
+  },
+  "configuration": {
+    "prompt": "reasoning-2048-01",
+    "prompt_sha256": "48bf230479b05f72f749b2b784f23dcb58d59b4e9e8564a2147c82fb0129633a",
+    "route": "fused",
+    "mode": "hip-graph",
+    "environment": {
+      "MIINFER_HIP_GRAPH": "1",
+      "MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY": "0",
+      "MIINFER_EXPERIMENTAL_MMQ_GATEUP_QSUM": "0"
+    },
+    "iterations": 3,
+    "warmups": 0,
+    "forced_history": [
+      760,
+      1156,
+      369,
+      9859
+    ],
+    "context_profile": "8K",
+    "context_capacity_tokens": 2304,
+    "generated_tokens": 64
+  },
+  "repeat_evidence": {
+    "teacher_forced_logits_sha256": [
+      "ffc115c6a3dbac69da4ca970c1d6200c364859ac74b3270bdcfe82d65f3a09e9",
+      "ffc115c6a3dbac69da4ca970c1d6200c364859ac74b3270bdcfe82d65f3a09e9",
+      "ffc115c6a3dbac69da4ca970c1d6200c364859ac74b3270bdcfe82d65f3a09e9"
+    ],
+    "forced_ids_sha256": [
+      "1087c24ce54fccdda05dcfac29a2fb5cfabc9f3dccead1247a53c93598221bc6",
+      "1087c24ce54fccdda05dcfac29a2fb5cfabc9f3dccead1247a53c93598221bc6",
+      "1087c24ce54fccdda05dcfac29a2fb5cfabc9f3dccead1247a53c93598221bc6"
+    ],
+    "normal_greedy_ids_sha256": [
+      "1087c24ce54fccdda05dcfac29a2fb5cfabc9f3dccead1247a53c93598221bc6",
+      "1087c24ce54fccdda05dcfac29a2fb5cfabc9f3dccead1247a53c93598221bc6",
+      "1087c24ce54fccdda05dcfac29a2fb5cfabc9f3dccead1247a53c93598221bc6"
+    ],
+    "state_hashes": [
+      {
+        "decision": 1,
+        "active_tokens": 2048,
+        "metadata_sha256": "55308ea137d833d9ca1794e3246ccd278a93da41fe2c87293320260c9b675747",
+        "recurrent_sha256": "1379ae829af155fd48303575f7e6485bc9046a5084125ae5f8ee31335e62ed79",
+        "kv_sha256": "e88140740ba0a6cc57b67317fd2bd5e7d502eaf87071d028d40cef170ff338cd"
+      },
+      {
+        "decision": 2,
+        "active_tokens": 2049,
+        "metadata_sha256": "d3e04e777f6a1f169508286dcf3b0765d5bd8ce9493c91a5292763f2440ed712",
+        "recurrent_sha256": "2bdb6ddf7467906c7d602140d50ddf13d4c1c84c5f67a1fe450092693af180ab",
+        "kv_sha256": "78fe4855718f83c2052a1a16a6cce010875426286382dec10469075e03f132fe"
+      },
+      {
+        "decision": 5,
+        "active_tokens": 2052,
+        "metadata_sha256": "0efb84f6ad1887c1f1b82c4fcffb800246ae70d74dc054ea8bff7c27f15b986c",
+        "recurrent_sha256": "4ba43c0d8a6fa9996006173dbfe75d2793cf6f272b3b201118c0cd00b3387405",
+        "kv_sha256": "362fb390e8d9f8af2e6e60a63a9f2ea1851c62d89a097bf052e80ad88f0b6120"
+      }
+    ],
+    "repeat_ids_and_states_byte_identical": true,
+    "state_repeat_audit_file": "gpu-reasoning2048-repeat-audit.json",
+    "state_repeat_audit_sha256": "2d5f3a4ad59c235d9e5ecfe08f2f2e7c3b874a4ab19c4f037a75ee758f612002",
+    "tokens_valid": true
+  },
+  "cpu_comparison": {
+    "cpu_logits_sha256": "997a82d332ba5d9d69974e7c412fc63042ab69e0a42aa38d7a38168d8fe2a5e4",
+    "comparison_file": "gpu-fused-graph-reasoning2048-comparison.json",
+    "comparison_sha256": "ebfacf41d440576c4972f15c5d547e65451ecd1c3d6decde5b611f23306c1998",
+    "teacher_forced_top1_matches": [
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "relative_l2_range": [
+      0.03929135875635071,
+      0.3242120681746624
+    ],
+    "normal_greedy_common_prefix_tokens": 20,
+    "normal_greedy_first_mismatch_position_1based": 21,
+    "functional_check": "not evaluable at 64 generated tokens; output ends before the frozen final-answer check"
+  },
+  "timing_ms": {
+    "forced_wall": [
+      12258.416,
+      12362.732,
+      12405.81
+    ],
+    "normal_greedy_wall": [
+      10655.876,
+      10666.576,
+      10712.309
+    ]
+  },
+  "device": {
+    "free_vram_before_first_call_bytes": 8334082048,
+    "free_vram_after_calls_bytes": 8254128128,
+    "telemetry_file": "/mnt/lc9-lake/m31-lc-0009-captures/gpu-matrix-telemetry-live.txt",
+    "telemetry_sha256": "aa87f6fd4c06cba297ca7657814668f361bca7c249f489624959aa783ab99f1c",
+    "sampling_interval_seconds": 15,
+    "during_run_thermal_telemetry": "sampled at 15-second intervals; no peak-temperature claim"
+  },
+  "paired_log_sha256": "c17f7cba8dfe2ea54dc3dc09381631c61569cbf84a36632f128ea90b98345f7c",
+  "command": "podman run --rm --init --device /dev/kfd --device /dev/dri --security-opt=label=disable --group-add=keep-groups -e ROCR_VISIBLE_DEVICES=0 -e MIINFER_HIP_GRAPH=1 -e MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY=0 -e MIINFER_EXPERIMENTAL_MMQ_GATEUP_QSUM=0 -v /home/fedora-workstation/Development/mi50-lc0009:/workspace/MIInfer:Z -v /home/fedora-workstation/models:/models:ro -v /home/fedora-workstation/Development/mi50-lc0009-captures/cpu-forced:/cpu:ro -v /mnt/lc9-lake/m31-lc-0009-captures:/captures:rw localhost/miinfer-dev:rocm-7.2.1 /workspace/MIInfer/build/qualification-container-rocm721-gpu/e2-0003-checkpointed-call /models/Qwen3.8-27B-Q4_K_M.gguf 8K --generate 64 --iterations 3 --warmup 0 --prompt-ids /workspace/MIInfer/experiments/m31-lc-0009/prompt_ids/reasoning-2048-01.u32le --forced-token-ids /cpu/reasoning-2048-01.forced.ids --capture-raw-logits /captures/lc9-fused-hip-graph-reasoning-2048-01/reasoning-2048-01.forced.logits.f32 --capture-token-ids /captures/lc9-fused-hip-graph-reasoning-2048-01/reasoning-2048-01.forced.ids --capture-normal-token-ids /captures/lc9-fused-hip-graph-reasoning-2048-01/reasoning-2048-01.greedy.ids --capture-state-prefix /captures/lc9-fused-hip-graph-reasoning-2048-01/reasoning-2048-01.forced.state --output /captures/lc9-fused-hip-graph-reasoning-2048-01/reasoning-2048-01.paired.txt",
+  "raw_capture_storage": {
+    "z840": "/mnt/lc9-lake/m31-lc-0009-captures/lc9-fused-hip-graph-reasoning-2048-01",
+    "raw_files_tracked_in_git": false
+  },
+  "state_mapping": "MIInfer-native recurrent and KV layouts; CPU/GPU canonical mapping remains unestablished"
+}
