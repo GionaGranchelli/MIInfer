@@ -1,0 +1,66 @@
+{
+  "contract": "O",
+  "status": "PASS",
+  "scope": "one layer-0 Q4_K Gate/Up aligned-MMQ prefill row at ordinary-512-01 token position 0",
+  "capture": {
+    "host": "Z840",
+    "lake_path": "/mnt/lc9-lake/m31-lc-0009-contract-o/gateup-prefill-ordinary512-01",
+    "source_commit": "06564a2ad634036aa4e9a8a36bda63eb408862bf",
+    "source_worktree_clean": true,
+    "runner_binary_sha256": "c5352c432e2bf7340ad7f578cba7784f5068288916073f758b6b01577f8f1da1",
+    "image": "localhost/miinfer-dev:rocm-7.2.1",
+    "image_digest": "sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e",
+    "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+    "prompt": "ordinary-512-01",
+    "prompt_tokens": 512,
+    "prompt_ids_sha256": "1ef71fe9b878cca87078c14889cb289343d5c4a01a6db903f2c8259285e7aec8",
+    "trace_position": 0,
+    "iterations": 1,
+    "warmup": 0,
+    "generated_tokens": 1,
+    "hip_graph": false,
+    "relevant_environment": {
+      "MIINFER_HIP_GRAPH": "0",
+      "MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY": "1",
+      "MIINFER_EXPERIMENTAL_MMQ_GATEUP_QSUM": "0",
+      "MIINFER_MX_Q8_BATCH": "0",
+      "MIINFER_LC_OP_TRACE_POSITION": "0"
+    }
+  },
+  "inputs": {
+    "gateup.gpu.attn_post_norm.f32": "71f3f59bc87bb642b6a9073b01cc0bf63701ae31b9a701a96bd4b7e3b354a1c8",
+    "gateup.gpu.gateup_input_mx_q8.bin": "17692a92485fb376bb649806f068c05ebfd39d801e3ea39f3ad27f52ade7bf1d",
+    "gateup.gpu.ffn_gate.f32": "6b5a5b1eae66532950f0eec8a75842748c2bffd45c0aa30ae5b2764774fea3f1",
+    "gateup.gpu.ffn_up.f32": "151f05deea4f2383a071c4af98ef5a90c678da24f41f7b66f738b7eab79c2d28"
+  },
+  "checker": {
+    "source": "tools/m31_lc9_gateup_contract_o.cpp",
+    "source_sha256": "b8a37ffb2e11a3af5ebad790678659c8661e738dab273e3bb3525f836beb9064",
+    "binary_sha256": "aec64e9eb1260779548e9d5868e14fc17dcd002ad876fcb8cea35ab31cbc0b2e",
+    "result_sha256_on_lake": {
+      "summary.json": "53cb5a4f5c1c2d1fe46aebc9ba5fd2bc97b81f024ae84a78466e1447f161978b",
+      "rows.csv": "79f81cae73cf2acbf431683392adb25ab065f0583f35d8f653c5cfefbf6b1417"
+    }
+  },
+  "result": {
+    "q8_groups_matching": "160/160",
+    "gate_rows_within_bound": "17408/17408",
+    "gate_max_error_to_bound": 0.0011880507599926339,
+    "gate_worst_row": 8800,
+    "up_rows_within_bound": "17408/17408",
+    "up_max_error_to_bound": 0.0020826388562238617,
+    "up_worst_row": 9903,
+    "fp32_operation_bound_per_group": 7,
+    "fp64_operation_bound_per_group": 8,
+    "independent_csv_audit": "PASS"
+  },
+  "superseded_attempt": {
+    "status": "INVALID_REFERENCE_IMPLEMENTATION",
+    "cause": "v1 checker multiplied a negative signed integer dot product by an unsigned scale, wrapping the result",
+    "authoritative_result": "v3"
+  },
+  "limitations": [
+    "This is operation-level evidence for one captured prompt, position, route, and GPU.",
+    "It does not qualify other prompt positions, decode/QSUM, SwiGLU, recurrent state, or full-model correctness."
+  ]
+}

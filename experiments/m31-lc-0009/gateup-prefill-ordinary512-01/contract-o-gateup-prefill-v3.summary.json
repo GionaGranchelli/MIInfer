@@ -1,0 +1,10 @@
+{
+  "contract": "O",
+  "operation": "Q4_K Gate/Up x MXQ8 affine MMQ",
+  "rows": 17408, "columns": 5120,
+  "q8_groups": 160, "q8_codes_and_scales_matching": 160,
+  "fp32_rounding_operations_bound": 1120, "gamma_n_fp32": 6.6761658970001131e-05, "fp64_rounding_operations_bound": 1280, "gamma_n_fp64": 3.5527136788006271e-14, "underflow_allowance": 1.5694542800437951e-42,
+  "gate": {"finite": true, "rows_within_bound": 17408, "max_abs_error": 6.4336450122937094e-07, "max_error_to_bound": 0.0011880507599926339, "worst_row": 8800},
+  "up": {"finite": true, "rows_within_bound": 17408, "max_abs_error": 1.3010266002311255e-06, "max_error_to_bound": 0.0020826388562238617, "worst_row": 9903},
+  "status": "PASS"
+}
