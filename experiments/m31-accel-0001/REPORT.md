@@ -144,3 +144,5 @@ Tried to lower the Z840 MI50 cap to 100 W as a reversible load reduction while p
 ## 2026-10-12 01:58 — request metric attribution gate
 
 The production runner now fails closed unless per-request prompt-token and generated-token counters match the corresponding server request log record, with exact integer fields. A no-network self-check covers matching counts and a generated-token mismatch; Python compilation passes. This prevents aggregate decode counts from being attributed to the wrong request. Z840 validation of this latest script revision is pending; no model or GPU request ran.
+
+On Z840, source `284435de2afd989e2677a723ce2e0df7084046d6` passed Python compilation and the tokenizer-backed workload `--self-check`: exact 65,536 initial ChatML tokens, seven source files, and updated no-network metric checks passed. Retained log `/mnt/lc9-lake/m31-accel-0001-captures/gates/request-metrics-284435d-selfcheck.log`, SHA-256 `411305c5104f84aca5aff43517b13465de94fa3846a10a2b464896b94d627cbe`. No server request or GPU inference ran.

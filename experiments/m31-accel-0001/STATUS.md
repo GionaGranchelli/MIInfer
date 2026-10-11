@@ -1,6 +1,6 @@
 # M31-ACCEL-0001 live status
 
-Updated: 2026-10-12 01:58 Europe/Amsterdam
+Updated: 2026-10-12 01:59 Europe/Amsterdam
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
 
 ## Source and ownership
@@ -187,3 +187,8 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 
 - The production workload now requires cumulative prompt- and generated-token metric deltas to match the same server request record; absent or mistyped fields fail closed. Its self-check covers a matching record and a generated-token mismatch.
 - Local Python compilation, no-network self-check, and `git diff --check` pass. This protects per-request decode/turn metrics from aggregate misattribution. Z840 revalidation is pending; no inference ran.
+
+## 2026-10-12 01:59 Z840 runner verification
+
+- The clean position-build worktree was advanced to `284435d`. Python compilation and tokenizer-backed `--self-check` passed on Z840, counting exactly 65,536 initial ChatML tokens with seven source files; the new metric-count mismatch check also passed in the no-network self-check.
+- Retained log: `/mnt/lc9-lake/m31-accel-0001-captures/gates/request-metrics-284435d-selfcheck.log`, SHA-256 `411305c5104f84aca5aff43517b13465de94fa3846a10a2b464896b94d627cbe`. No server request or GPU inference ran.
