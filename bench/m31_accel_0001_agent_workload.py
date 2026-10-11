@@ -13,14 +13,14 @@ import v2_0045_agent_workload as legacy
 
 TARGET_PROMPT_TOKENS = 65536
 TURN_PLANS = (
-    ("README.md", 1, 90, "Map the project mission, supported target, and correctness constraints."),
-    ("docs/architecture.md", 1, 100, "Explain the runtime layers and identify the model execution path."),
-    ("docs/interactive-serving.md", 1, 110, "Trace how a chat request becomes prompt tokens and generated output."),
-    ("include/miinfer/prefill_v2/model.hpp", 1, 130, "Inspect persistent state, generation statistics, and public APIs."),
-    ("src/prefill_v2/model.cpp", 760, 850, "Review prefix restore, suffix prefill, and checkpoint capture."),
-    ("src/openai_api.cpp", 280, 355, "Review ChatML construction and tool-result serialization."),
-    ("tools/miinfer_cli.cpp", 5180, 5270, "Trace server tokenization and request telemetry."),
-    ("docs/M30-0000-agent-workload-v1.md", 1, 90, "Summarize the prior workload contract and propose a bounded follow-up."),
+    ("docs/interactive-serving.md", 1, 80, "Trace how a chat request becomes prompt tokens and generated output."),
+    ("README.md", 1, 30, "Map the project mission, supported target, and correctness constraints."),
+    ("docs/architecture.md", 1, 30, "Explain the runtime layers and identify the model execution path."),
+    ("include/miinfer/prefill_v2/model.hpp", 1, 40, "Inspect persistent state, generation statistics, and public APIs."),
+    ("src/prefill_v2/model.cpp", 760, 800, "Review prefix restore, suffix prefill, and checkpoint capture."),
+    ("src/openai_api.cpp", 280, 320, "Review ChatML construction and tool-result serialization."),
+    ("tools/miinfer_cli.cpp", 5180, 5220, "Trace server tokenization and request telemetry."),
+    ("docs/M30-0000-agent-workload-v1.md", 1, 40, "Summarize the prior workload contract and propose a bounded follow-up."),
 )
 
 
@@ -210,6 +210,17 @@ def stream_completion(url, key, model, messages, tool_choice, max_tokens, server
     }
 
 
+def require_planned_read(response, path, start_line, end_line):
+    calls = response["tool_calls"]
+    if len(calls) != 1 or calls[0]["function"]["name"] != "read_file":
+        raise RuntimeError("expected exactly one planned read_file tool call")
+    arguments = json.loads(calls[0]["function"]["arguments"] or "{}")
+    if (arguments.get("path") != path
+            or int(arguments.get("start_line", 1)) != start_line
+            or int(arguments.get("end_line", start_line + 160)) != end_line):
+        raise RuntimeError(f"agent tool call did not match planned read: {path}:{start_line}-{end_line}")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model-path", required=True, help="pinned Qwen3.8 GGUF used by MIInfer tokenizer")
@@ -258,24 +269,25 @@ def main():
                     f"read_file call for {tool_path} lines {start_line}-{end_line}; do not answer in prose yet."})
             call_response = stream_completion(args.url, args.api_key, args.model,
                                               messages, "required", 192, server_log)
+            require_planned_read(call_response, tool_path, start_line, end_line)
             if index == 1 and call_response["prompt_tokens"] != exact_count:
                 raise RuntimeError("live server token count differs from the exact MIInfer tokenizer check")
             turn["requests"].append(call_response)
             turn["tool_results"].extend(legacy.append_tool_exchange(root, messages, call_response))
             messages.append({"role": "user", "content":
                 f"Turn {index} task: {task} Use source references and distinguish verified behavior "
-                "from inference. Give at least eight numbered observations and a concrete next step, "
-                "with at least 220 words."})
+                "from inference. Give at least five numbered observations and a concrete next step, "
+                "with at least 100 words."})
             completion = None
             for _ in range(3):
                 completion = stream_completion(args.url, args.api_key, args.model,
-                                               messages, "auto", 1024, server_log)
+                                               messages, "auto", 256, server_log)
                 turn["requests"].append(completion)
                 if not completion["tool_calls"]:
                     break
                 turn["tool_results"].extend(legacy.append_tool_exchange(root, messages, completion))
                 messages.append({"role": "user", "content":
-                    "Use the tool result and finish the requested evidence-based report in at least 220 words."})
+                    "Use the tool result and finish the evidence-based report in at least 100 words."})
             if completion is None or completion["tool_calls"]:
                 raise RuntimeError(f"turn {index} did not produce a final assistant response")
             messages.append({"role": "assistant", "content": completion["content"]})

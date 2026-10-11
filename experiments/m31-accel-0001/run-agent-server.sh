@@ -3,10 +3,10 @@ set -euo pipefail
 
 model="/models/${M31_MODEL_FILE:?missing mounted model filename}"
 export MIINFER_API_KEY=miinfer MIINFER_SESSION_REUSE=1
-# The 128K engine capacity only leaves room for the exact 64K start plus turn history.
+# 80K leaves headroom for the exact 64K start and eight short coding-agent turns.
 /workspace/MIInfer/build/m31-accel-0001/miinfer serve \
   --model "$model" --host 127.0.0.1 --port 8087 \
-  --context 131072 --experimental-context --session-dir /captures/session-cache \
+  --context 81920 --experimental-context --session-dir /captures/session-cache \
   > /captures/server.log 2>&1 &
 server_pid=$!
 trap 'kill "$server_pid" 2>/dev/null || true; wait "$server_pid" 2>/dev/null || true' EXIT

@@ -111,9 +111,9 @@ experiments/m31-accel-0001/run-guarded.sh \
   /mnt/lc9-lake/m31-accel-0001-captures/agent64k-01 agent
 ```
 
-The server allocates a 131,072-token capacity so the exact 65,536-token initial
-prompt can generate and retain eight turns; the input, measured prompt, and
-expected ending remain below 128K. This is a 64K-start workload, not a 128K
-prompt or performance run. The runner records 85 C warnings, stops at 90 C or
+The server allocates an 81,920-token capacity so the exact 65,536-token initial
+prompt can generate and retain eight bounded turns within the observed MI50
+memory budget. This is a 64K-start workload, not a 128K prompt or performance
+run. The runner records 85 C warnings, stops at 90 C or
 the VRAM floor, and preserves the server/client output and actual container exit
 status.

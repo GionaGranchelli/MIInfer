@@ -1,6 +1,6 @@
 # M31-ACCEL-0001 live status
 
-Updated: 2026-10-12 00:55 Europe/Amsterdam
+Updated: 2026-10-12 01:05 Europe/Amsterdam
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
 
 ## Source and ownership
@@ -73,6 +73,7 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 - The temporary remote wrapper had an exit/logging race: its marker says 0, while retained Podman inspection showed container exit 137 after the manual stop; stdout was empty because the native harness had not flushed a turn. A tracked replacement, `experiments/m31-accel-0001/run-guarded.sh`, now retains/follows container output, waits for final state before reading the exit code, checks the pinned model SHA, logs a warning at 85 C, hard-stops at 90 C or the VRAM floor, and passes boundary self-checks. Native turn output now flushes immediately.
 - Production-path workload checkpoint: `82f6cd5` adds a CPU-only MIInfer tokenizer counter and an eight-turn M30-style tool workload. On Z840, CPU-only CMake build passed and `--self-check` counted the constructed initial ChatML request at exactly 65,536 tokens from seven repository files; the GPU remained idle at 28 C. Self-check log SHA-256: `a7ad2173803692c76242352c56171899357f323901f7bcccd8010543f4e260a4`.
 - A first attempt to run that counter in Podman could not access the model bind mount and failed before tokenization; running the same self-check directly on the host passed. No production-server/GPU workload has run yet.
-- The `miinfer` serving target now also builds on the clean Z840 worktree (exit 0; binary SHA-256 `106feada3db19dca0d8b02bd9f5612e647b9175efabf3553ebc99a759d77e9a8`). The tracked runner can start the production server, wait for `/readyz`, then run the exact-token workload in the same monitored container. Its 131,072 engine capacity is headroom for the 64K start and turn history only; the workload is not a 128K prompt or performance run.
+- The `miinfer` serving target built on the clean Z840 worktree (exit 0; binary SHA-256 `106feada3db19dca0d8b02bd9f5612e647b9175efabf3553ebc99a759d77e9a8`). A guarded startup at capacity 131,072 reached 34,254,819,328 B of 34,342,961,152 B VRAM and was stopped by the 1 GiB floor (wrapper exit 123) before the first 64K request. No prompt inference occurred.
+- The current candidate uses bounded capacity 81,920, enough for the exact 65,536-token start and eight short turns within the observed MI50 memory budget. The serving whitelist extension is limited to this research-only value; final generation is capped at 256 tokens and each planned read_file call must match its path and line range. No 128K prompt is run.
 - Review found that the initial workload summary recorded prefix counts but did not require reuse for later turns. The integrated script now requires each turn after the first to have both a nonzero reused prefix and a nonzero suffix dispatch; the overall command fails if any turn misses that gate.
-- The production-runner mode and this gate are pushed at the current coordinator checkpoint. Before any new GPU request, inspect thermal behavior and keep an operator on telemetry; the synthetic attempt reached 87 C quickly, so stop if temperature continues rising toward 90 C.
+- The 80K server candidate, shorter tool-turn plan, and fail-closed planned-read check are being prepared. Rebuild before running, verify at least 1 GiB remains after allocation, and keep an operator on telemetry; the synthetic attempt reached 87 C quickly, so stop if temperature continues rising toward 90 C.

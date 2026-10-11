@@ -4996,9 +4996,11 @@ int cmd_serve(int argc, char** argv) {
         }
     }
     if (model_path.empty()) { std::cerr << "missing model; use --model MODEL.gguf\n"; return 2; }
+    // 80K leaves generation and turn-history headroom for a 64K session on gfx906.
     if (context_length != 1024 && context_length != 8192 && context_length != 16384
-        && context_length != 32768 && context_length != 65536 && context_length != 131072) {
-        std::cerr << "context must be one of 1024, 8192, 16384, 32768, 65536, 131072\n";
+        && context_length != 32768 && context_length != 65536 && context_length != 81920
+        && context_length != 131072) {
+        std::cerr << "context must be one of 1024, 8192, 16384, 32768, 65536, 81920, 131072\n";
         return 2;
     }
     (void)experimental_context; // accepted for backwards compatibility; context is a public setting.
