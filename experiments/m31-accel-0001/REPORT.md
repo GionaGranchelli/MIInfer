@@ -1,7 +1,7 @@
 # M31-ACCEL-0001 morning report
 
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
-Status: IN PROGRESS. One guarded synthetic-token 64K prefill attempt was stopped at the thermal warning before a completed turn; the production coding-agent workload remains unqualified.
+Status: IN PROGRESS. The exact 64K production request reached the server but was stopped at the 85 C warning before a response; persistent-agent correctness and performance remain unqualified.
 
 ## Source identity and worktrees
 
@@ -32,6 +32,8 @@ The current experiment uses a bounded 81,920-token capacity, enough for the exac
 
 The next production-path attempt loaded the model at 81,920 context, used at most 31,033,126,912 B VRAM, and remained at 30 C. Before inference, the client failed while calling `git rev-parse HEAD` inside the container: the mounted host worktree uses a host-only `.git` pointer. The launcher now injects the verified host source SHA into the container environment, preserving result provenance without requiring container access to the host Git metadata. The retained failure capture is `/mnt/lc9-lake/m31-accel-0001-captures/agent64k-03/`.
 
+On source `f01f7e9`, the retry at 81,920 context loaded successfully and accepted the initial exact-token request. VRAM peaked at 31,056,838,656 B of 34,342,961,152 B (3,286,122,496 B sampled headroom). Junction temperature reached 85 C under 100% GPU use; sampled power was 147 W and `rocm-smi` reported fan level 25% but 0 RPM. We stopped at the warning rather than continuing toward 90 C. The container exited 137; no completion stream, tool result, or turn metric exists. Junction cooled to 38 C, GPU use returned to 0%, and VRAM returned to 10,854,400 B. Capture: `/mnt/lc9-lake/m31-accel-0001-captures/agent64k-04/`; hashes: environment `26695cdd672f19fd44c17b2853ea80431e7f5f41e03fde34bf519686d075c48d`, server log `b812ba420d866ed4190e420abb9fe861129bafde423e795fe70db39e215475a2`, telemetry `085c502d189ce485bead28086bda2d6c08067f1626db53ad868ab730761f4994`, guard `ba63280fa5b803d26ca2ebb478a821d40e3d021d22409459c8ce579eac5e19ab`. Prior `EXP-0353` records the same 0-RPM fan telemetry and that host-side fan control required sudo. Do not run another sustained GPU workload until Z840 airflow or cooling control is confirmed.
+
 Code review added a fail-closed reuse gate: each turn after the first must report both reused prefix tokens and dispatched suffix tokens on its first request. The production workload returns failure if any later turn lacks either measurement. This is an operational reuse gate, not cold-versus-reuse token-parity evidence; the known M31-0002 divergence remains unresolved.
 
 ## Decode and prefill
@@ -55,7 +57,7 @@ CPU ordinary-512 evidence was pushed at `a5140f8`; its frozen visitor-use clause
 
 ## Results and disposition
 
-No performance gain or 64K persistence pass is claimed. The recovered M30 run is diagnostic, and the campaign-owned synthetic 64K attempt is an **aborted thermal-feasibility diagnostic** with no completed-turn evidence. Exact 65,536-token prompt construction now passes a CPU-only check against the pinned model tokenizer; the production 8-turn GPU session has not run. The campaign remains open pending the actual serving attempt and its exact live token/state/thermal evidence.
+No performance gain or 64K persistence pass is claimed. The recovered M30 run is diagnostic, and the synthetic-token attempt was stopped before a completed turn. The production 8-turn workload constructed an exact 65,536-token initial request, loaded at 81,920 context, and reached `request_id=3 state=queued`; it was manually stopped at the 85 C warning before a response or completed turn. Therefore live token-count agreement, tool-call correctness, multi-turn reuse, state continuity, and performance remain unverified.
 
 ## Build checkpoint
 
