@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "miinfer/prefill_v2/recurrent_layer.hpp"
+#include "miinfer/prefill_v2/experimental_options.hpp"
 #include "miinfer/hip_check.hpp"
 #include "miinfer/kquant_wave_layout.hpp"
 #include "miinfer/m12_gdn_chunk.hpp"
@@ -938,7 +939,9 @@ void PrefillV2RecurrentLayer::decode(
             kFfnInner, kHidden, stream);
     } else {
         launch_mx_q8_1_mmq_quantize(
-            ws.post_normalized, ws.mmq_q8, 1, kHidden, /*affine=*/true, stream);
+            ws.post_normalized, ws.mmq_q8, 1, kHidden, /*affine=*/true, stream,
+            mmq_gateup_quantized_sum_from_env(
+                std::getenv("MIINFER_EXPERIMENTAL_MMQ_GATEUP_QSUM")));
         capture_bytes("gateup_input_mx_q8", ws.mmq_q8,
                       (kHidden / 128) * sizeof(MxQ8_1MmqBlock));
         launch_mx_q4k_repacked_mmq(
@@ -1074,7 +1077,9 @@ void PrefillV2RecurrentLayer::decode_profiled(
             kFfnInner, kHidden, stream);
     } else {
         launch_mx_q8_1_mmq_quantize(
-            ws.post_normalized, ws.mmq_q8, 1, kHidden, /*affine=*/true, stream);
+            ws.post_normalized, ws.mmq_q8, 1, kHidden, /*affine=*/true, stream,
+            mmq_gateup_quantized_sum_from_env(
+                std::getenv("MIINFER_EXPERIMENTAL_MMQ_GATEUP_QSUM")));
         launch_mx_q4k_repacked_mmq(
             d_ffn_gate_mmq_, ws.mmq_q8, ws.ffn_gate, kFfnInner, kHidden, 1, stream);
         launch_mx_q4k_repacked_mmq(

@@ -165,7 +165,8 @@ void launch_mx_q8_1_mmq_quantize(
     std::uint32_t token_count,
     std::uint32_t elements,
     bool affine,
-    hipStream_t stream = nullptr);
+    hipStream_t stream = nullptr,
+    bool use_quantized_sum = false);
 
 // M23 wide Q4_K MMQ prototype.  The launch uses the same 64-row x 128-token
 // tile shape as the pinned gfx906 reference; inputs stay in grouped Q8_1 form.

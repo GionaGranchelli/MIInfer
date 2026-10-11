@@ -217,7 +217,8 @@ def container_command(args, route: str, pair: int, output: Path) -> list[str]:
                "-v", f"{output.resolve()}:/results:Z",
                "--env", f"M31_EXPECTED_GPU_BDF={args.expected_bdf}",
                "--env", f"MIINFER_HIP_GRAPH={'0' if getattr(args, 'disable_hip_graph', False) else '1'}",
-               "--env", f"MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY={'1' if route == 'mmq_only' else '0'}"]
+               "--env", f"MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY={'1' if route == 'mmq_only' else '0'}",
+               "--env", f"MIINFER_EXPERIMENTAL_MMQ_GATEUP_QSUM={'1' if route == 'mmq_only' and args.mmq_gateup_qsum else '0'}"]
     if getattr(args, "capture_layer_zero_trace", False):
         command.extend(["--env", f"MIINFER_LC_OP_TRACE_PREFIX=/results/{route}-optrace",
                         "--env", "MIINFER_LC_DECODE_TRACE=1",
@@ -296,6 +297,8 @@ def call(args, out: Path, route: str, pair: int, order: int) -> dict:
         "pair": pair, "order": order, "route": route,
         "requested_environment": {
             "MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY": "1" if route == "mmq_only" else "0",
+            "MIINFER_EXPERIMENTAL_MMQ_GATEUP_QSUM":
+                "1" if route == "mmq_only" and args.mmq_gateup_qsum else "0",
             "MIINFER_HIP_GRAPH": "0" if getattr(args, "disable_hip_graph", False) else "1",
             "MIINFER_LC_DECODE_TRACE": "1"
                 if getattr(args, "capture_layer_zero_trace", False) else None,
@@ -434,6 +437,8 @@ def main() -> int:
                         help="capture pre-sampling F32 logits for decisions 1-5")
     parser.add_argument("--capture-layer-zero-trace", action="store_true",
                         help="capture one selected recurrent decode layer and quantizer inputs")
+    parser.add_argument("--mmq-gateup-qsum", action="store_true",
+                        help="use FP16(d * sum(q)) for MMQ Gate/Up correction sums")
     parser.add_argument("--trace-layer", type=int, choices=range(48), default=0,
                         help="recurrent layer index to capture (used with --capture-layer-zero-trace)")
     parser.add_argument("--disable-hip-graph", action="store_true",

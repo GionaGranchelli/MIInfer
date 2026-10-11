@@ -2736,7 +2736,7 @@ bool mx_q8_batch_enabled() {
     throw std::runtime_error("MIINFER_MX_Q8_BATCH must be 0 or 1");
 }
 
-template <bool AFFINE>
+template <bool AFFINE, bool QUANTIZED_SUM>
 __launch_bounds__(128, 1) __global__ void mx_q8_1_mmq_quantize_kernel(
     const float* input, miinfer::MxQ8_1MmqBlock* output, std::uint32_t elements) {
     const std::uint32_t token = blockIdx.y;
@@ -2745,6 +2745,7 @@ __launch_bounds__(128, 1) __global__ void mx_q8_1_mmq_quantize_kernel(
     const std::size_t base = static_cast<std::size_t>(token) * elements + block * 128;
     __shared__ float maxima[128];
     __shared__ float sums[128];
+    __shared__ int quantized_sums[QUANTIZED_SUM ? 128 : 1];
     const float value = input[base + lane];
     maxima[lane] = fabsf(value);
     sums[lane] = value;
@@ -2763,11 +2764,24 @@ __launch_bounds__(128, 1) __global__ void mx_q8_1_mmq_quantize_kernel(
     const int quantized = d == 0.0F ? 0 : static_cast<int>(roundf(value / d));
     output[static_cast<std::size_t>(block) * gridDim.y + token].qs[lane]
         = static_cast<std::int8_t>(max(-127, min(127, quantized)));
+    if constexpr (QUANTIZED_SUM) {
+        quantized_sums[lane] = max(-127, min(127, quantized));
+        __syncthreads();
+        for (std::uint32_t stride = 16; stride > 0; stride /= 2) {
+            if (group_lane < stride) quantized_sums[lane] += quantized_sums[lane + stride];
+            __syncthreads();
+        }
+    }
     if (group_lane == 0) {
         auto& destination = output[static_cast<std::size_t>(block) * gridDim.y + token];
         if constexpr (AFFINE) {
             destination.ds4[group].x = __float2half_rn(d);
-            destination.ds4[group].y = __float2half_rn(sums[group * 32]);
+            float sum = sums[group * 32];
+            if constexpr (QUANTIZED_SUM) {
+                sum = __half2float(__float2half_rn(d))
+                    * static_cast<float>(quantized_sums[group * 32]);
+            }
+            destination.ds4[group].y = __float2half_rn(sum);
         } else {
             destination.d4[group] = d;
         }
@@ -2778,12 +2792,15 @@ __launch_bounds__(128, 1) __global__ void mx_q8_1_mmq_quantize_kernel(
 
 void miinfer::launch_mx_q8_1_mmq_quantize(
     const float* input, miinfer::MxQ8_1MmqBlock* output, std::uint32_t token_count,
-    std::uint32_t elements, bool affine, hipStream_t stream) {
+    std::uint32_t elements, bool affine, hipStream_t stream, bool use_quantized_sum) {
     if (input == nullptr || output == nullptr || token_count == 0 || token_count > 512
-        || elements == 0 || elements % 128 != 0) {
+        || elements == 0 || elements % 128 != 0 || (use_quantized_sum && !affine)) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     if (mx_q8_batch_enabled()) {
+        if (use_quantized_sum) {
+            throw std::runtime_error("MIINFER_EXPERIMENTAL_MMQ_GATEUP_QSUM requires MIINFER_MX_Q8_BATCH=0");
+        }
         const dim3 grid(token_count, (elements + 511) / 512);
         if (affine) {
             hipLaunchKernelGGL((mx_q8_1_mmq_quantize_batch_kernel<true>),
@@ -2795,11 +2812,17 @@ void miinfer::launch_mx_q8_1_mmq_quantize(
                                input, output, token_count, elements);
         }
     } else if (affine) {
-        hipLaunchKernelGGL((mx_q8_1_mmq_quantize_kernel<true>),
-                           dim3(elements / 128, token_count), dim3(128), 0, stream,
-                           input, output, elements);
+        if (use_quantized_sum) {
+            hipLaunchKernelGGL((mx_q8_1_mmq_quantize_kernel<true, true>),
+                               dim3(elements / 128, token_count), dim3(128), 0, stream,
+                               input, output, elements);
+        } else {
+            hipLaunchKernelGGL((mx_q8_1_mmq_quantize_kernel<true, false>),
+                               dim3(elements / 128, token_count), dim3(128), 0, stream,
+                               input, output, elements);
+        }
     } else {
-        hipLaunchKernelGGL((mx_q8_1_mmq_quantize_kernel<false>),
+        hipLaunchKernelGGL((mx_q8_1_mmq_quantize_kernel<false, false>),
                            dim3(elements / 128, token_count), dim3(128), 0, stream,
                            input, output, elements);
     }
