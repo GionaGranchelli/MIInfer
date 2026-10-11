@@ -81,6 +81,49 @@ void event(std::ostream& out, const char* name, std::size_t iteration,
     out << '\n' << std::flush;
 }
 
+void write_bytes(const std::filesystem::path& path, const void* data, std::size_t size) {
+    if (std::filesystem::exists(path)) throw std::runtime_error("refusing to overwrite " + path.string());
+    std::ofstream output(path, std::ios::binary);
+    if (!output) throw std::runtime_error("cannot create " + path.string());
+    output.write(static_cast<const char*>(data), static_cast<std::streamsize>(size));
+    if (!output) throw std::runtime_error("failed writing " + path.string());
+}
+
+void capture_state(miinfer::prefill_v2::PrefillV2Model& model,
+                   const std::string& prefix, std::size_t active_tokens) {
+    using miinfer::prefill_v2::RecurrentLayerState;
+    std::vector<float> recurrent;
+    recurrent.reserve(model.recurrent_states().size()
+        * (RecurrentLayerState::kStateElements + RecurrentLayerState::kConvHistoryElements));
+    for (const auto& storage : model.recurrent_states()) {
+        std::vector<float> state, history;
+        storage.download(state, history);
+        recurrent.insert(recurrent.end(), state.begin(), state.end());
+        recurrent.insert(recurrent.end(), history.begin(), history.end());
+    }
+    write_bytes(prefix + ".recurrent.f32", recurrent.data(), recurrent.size() * sizeof(float));
+
+    std::vector<std::uint8_t> kv;
+    for (const auto& cache : model.kv_caches()) {
+        const auto size = cache.raw_tokens_bytes(active_tokens);
+        const auto offset = kv.size();
+        kv.resize(offset + size);
+        cache.download_raw(kv.data() + offset, active_tokens);
+    }
+    write_bytes(prefix + ".kv.raw", kv.data(), kv.size());
+    std::ofstream metadata(prefix + ".json");
+    if (!metadata) throw std::runtime_error("cannot create state metadata: " + prefix + ".json");
+    metadata << "{\"active_tokens\":" << active_tokens
+             << ",\"recurrent_layers\":" << model.recurrent_states().size()
+             << ",\"recurrent_f32_values\":" << recurrent.size()
+             << ",\"recurrent_layout\":\"layer-major state then conv-history, native MIInfer float32 order\""
+             << ",\"kv_layers\":" << model.kv_caches().size()
+             << ",\"kv_raw_bytes\":" << kv.size()
+             << ",\"kv_quant_mode\":" << static_cast<unsigned>(model.kv_quant_mode())
+             << ",\"kv_layout\":\"layer-major raw cache bytes from AttentionLayerKvCacheStorage::download_raw\"}\n";
+    if (!metadata) throw std::runtime_error("failed writing state metadata");
+}
+
 } // namespace
 
 int main(int argc, char** argv) {
@@ -88,7 +131,7 @@ int main(int argc, char** argv) {
         std::cerr << "usage: e2-0003-checkpointed-call MODEL.gguf "
                      "8K|32K|64K|128K [--generate N] [--iterations N] [--warmup N] "
                      "[--prompt-tokens N|--prompt-ids FILE] [--forced-token-ids FILE] "
-                     "[--capture-raw-logits FILE] [--capture-token-ids FILE] "
+                     "[--capture-raw-logits FILE] [--capture-token-ids FILE] [--capture-state-prefix PREFIX] "
                      "[--reference-token-ids FILE] [--output FILE] [--ledger-only]\n";
         return 2;
     }
@@ -112,6 +155,7 @@ int main(int argc, char** argv) {
         std::string output_path;
         std::string raw_logits_path;
         std::string generated_ids_path;
+        std::string state_capture_prefix;
         std::string prompt_ids_path;
         std::string forced_ids_path;
         bool ledger_only = false;
@@ -132,6 +176,7 @@ int main(int argc, char** argv) {
             else if (arg == "--output" && i + 1 < argc) output_path = argv[++i];
             else if (arg == "--capture-raw-logits" && i + 1 < argc) raw_logits_path = argv[++i];
             else if (arg == "--capture-token-ids" && i + 1 < argc) generated_ids_path = argv[++i];
+            else if (arg == "--capture-state-prefix" && i + 1 < argc) state_capture_prefix = argv[++i];
             else if (arg == "--ledger-only") ledger_only = true;
             else throw std::runtime_error("unknown or incomplete option: " + arg);
         }
@@ -169,6 +214,10 @@ int main(int argc, char** argv) {
         if (!generated_ids_path.empty() && (iterations != 1 || warmups != 0)) {
             throw std::runtime_error("token ID capture requires one measured iteration and no warmup");
         }
+        if (!state_capture_prefix.empty()
+            && (iterations != 1 || warmups != 0 || generate_tokens < 5 || forced_ids.size() != 4)) {
+            throw std::runtime_error("state capture requires one run, no warmup, five decisions, and four forced IDs");
+        }
         if (!raw_logits_path.empty() && !forced_ids_path.empty() && forced_ids.size() != 4) {
             throw std::runtime_error("five-decision teacher-forced capture requires four forced token IDs");
         }
@@ -177,6 +226,16 @@ int main(int argc, char** argv) {
         }
         if (!generated_ids_path.empty() && std::filesystem::exists(generated_ids_path)) {
             throw std::runtime_error("refusing to overwrite existing token ID capture: " + generated_ids_path);
+        }
+        if (!state_capture_prefix.empty()) {
+            for (const std::size_t decision : {std::size_t{0}, std::size_t{1}, std::size_t{4}}) {
+                const auto path = state_capture_prefix + ".decision-" + std::to_string(decision + 1);
+                if (std::filesystem::exists(path + ".recurrent.f32")
+                    || std::filesystem::exists(path + ".kv.raw")
+                    || std::filesystem::exists(path + ".json")) {
+                    throw std::runtime_error("refusing to overwrite existing state capture: " + path);
+                }
+            }
         }
         auto& out = *output;
 
@@ -255,10 +314,20 @@ int main(int argc, char** argv) {
             options.seed = 42;
             options.forced_token_ids = forced_ids;
             std::vector<std::vector<float>> raw_logits;
-            if (measured && !raw_logits_path.empty()) {
+            std::size_t logit_decision = 0;
+            if (measured && (!raw_logits_path.empty() || !state_capture_prefix.empty())) {
                 raw_logits.reserve(5);
                 options.on_raw_logits = [&](std::span<const float> logits) {
-                    if (raw_logits.size() < 5) raw_logits.emplace_back(logits.begin(), logits.end());
+                    if (!raw_logits_path.empty() && raw_logits.size() < 5) {
+                        raw_logits.emplace_back(logits.begin(), logits.end());
+                    }
+                    if (!state_capture_prefix.empty()
+                        && (logit_decision == 0 || logit_decision == 1 || logit_decision == 4)) {
+                        const auto prefix = state_capture_prefix + ".decision-"
+                            + std::to_string(logit_decision + 1);
+                        capture_state(model, prefix, prompt.size() + logit_decision);
+                    }
+                    ++logit_decision;
                 };
             }
             std::size_t token_count = 0;
