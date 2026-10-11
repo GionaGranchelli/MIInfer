@@ -51,3 +51,7 @@ LC-0008's common-history decision-5 logits have relative L2 `0.182344` and maxim
 2. Establish or justify the cross-engine recurrent/KV state mapping. Evaluate the prewritten functional checks with an output allowance that reaches the frozen final answers.
 3. Finish Contract O references beyond the selected LC-0008 calibrations, and report the requirement-by-requirement result with defensible error bounds.
 4. Revisit the recommendation only after evidence is complete; any exact-token gate change requires explicit approval.
+
+### QSUM decode handoff (2026-10-12)
+
+The QSUM decode reference remains **OPEN**. The available Contract O capture is prefill-only with QSUM disabled; the QSUM-only ordinary-64 cell is invalid because it omitted the aligned-MMQ selector. Tracked evidence has no raw represented operands for a one-token decode scalar reference. The handoff note [`QSUM-DECODE-HANDOFF.md`](QSUM-DECODE-HANDOFF.md) records the inspected evidence, the preserved dirty Machinist checkout, and the required next capture. Do not treat this as a Contract O pass or close LC-0009.
