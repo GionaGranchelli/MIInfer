@@ -1,0 +1,110 @@
+{
+  "schema": "m31-lc-0009-capture-comparison-v1",
+  "cpu_capture_sha256": "d7fec8eb2490e9ef2bce09858c79099f7679349b30b1965cdd4213c33b9e0089",
+  "decisions": 5,
+  "vocab_size": 248320,
+  "comparisons": {
+    "aligned-mmq-graph": {
+      "capture_sha256": "ee5e4e1fdf93d665f337fab603a25bff6b38384d6a95aba0a6ad311ae8ba8ed9",
+      "decisions": [
+        {
+          "relative_l2": 0.29865340431566967,
+          "rmse": 0.6017819680183789,
+          "max_abs_error": 4.189325332641602,
+          "reference_top1_margin": 5.052377700805664,
+          "route_top1_margin": 7.0742950439453125,
+          "top5_overlap": 4,
+          "top10_overlap": 9,
+          "reference_argmax": 9764,
+          "route_argmax": 9764,
+          "reference_winner_rank_in_route": 1,
+          "route_winner_rank_in_reference": 1
+        },
+        {
+          "relative_l2": 0.0688828655013258,
+          "rmse": 0.28891692301714744,
+          "max_abs_error": 2.1251392364501953,
+          "reference_top1_margin": 19.05819320678711,
+          "route_top1_margin": 19.710643768310547,
+          "top5_overlap": 4,
+          "top10_overlap": 9,
+          "reference_argmax": 728,
+          "route_argmax": 728,
+          "reference_winner_rank_in_route": 1,
+          "route_winner_rank_in_reference": 1
+        },
+        {
+          "relative_l2": 0.07028860461455982,
+          "rmse": 0.24465844785265214,
+          "max_abs_error": 2.0034961700439453,
+          "reference_top1_margin": 7.361888885498047,
+          "route_top1_margin": 8.013103485107422,
+          "top5_overlap": 5,
+          "top10_overlap": 10,
+          "reference_argmax": 944,
+          "route_argmax": 944,
+          "reference_winner_rank_in_route": 1,
+          "route_winner_rank_in_reference": 1
+        },
+        {
+          "relative_l2": 0.07528433045157344,
+          "rmse": 0.24183666482558205,
+          "max_abs_error": 1.4864635467529297,
+          "reference_top1_margin": 17.11720085144043,
+          "route_top1_margin": 17.074005126953125,
+          "top5_overlap": 5,
+          "top10_overlap": 10,
+          "reference_argmax": 1472,
+          "route_argmax": 1472,
+          "reference_winner_rank_in_route": 1,
+          "route_winner_rank_in_reference": 1
+        },
+        {
+          "relative_l2": 0.04688042228010303,
+          "rmse": 0.1748221163149618,
+          "max_abs_error": 1.1343936920166016,
+          "reference_top1_margin": 11.86271858215332,
+          "route_top1_margin": 12.970098495483398,
+          "top5_overlap": 4,
+          "top10_overlap": 8,
+          "reference_argmax": 411,
+          "route_argmax": 411,
+          "reference_winner_rank_in_route": 1,
+          "route_winner_rank_in_reference": 1
+        }
+      ]
+    }
+  },
+  "greedy_mismatches": {
+    "aligned-mmq-graph": {
+      "positions_1based": [
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64
+      ],
+      "cpu_tokens": 64,
+      "route_tokens": 64
+    }
+  },
+  "repeat_bitwise_equal": {
+    "aligned-mmq-graph": {
+      "repeat_count": 3,
+      "each_repeat_matches_first": true,
+      "repeat_sha256": [
+        "ee5e4e1fdf93d665f337fab603a25bff6b38384d6a95aba0a6ad311ae8ba8ed9",
+        "ee5e4e1fdf93d665f337fab603a25bff6b38384d6a95aba0a6ad311ae8ba8ed9"
+      ]
+    }
+  }
+}
