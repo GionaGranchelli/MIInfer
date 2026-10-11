@@ -1,0 +1,105 @@
+{
+  "schema": "m31-lc-0009-gpu-cell-v1",
+  "status": "THREE_REPEATS_BITWISE_STABLE",
+  "source_commit": "4ff3697",
+  "remote_checkout_head": "4c00f1d",
+  "source_sha256": "7ffd94238db5c07219a7077d4c8c79be08071eba8baa15dca186f526efbcc7f3",
+  "binary_sha256": "6b635ca1937677f5e05a0667b528c213be5555d4e14865246ecb5a1824af4808",
+  "image": "localhost/miinfer-dev:rocm-7.2.1",
+  "image_digest": "sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e",
+  "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+  "host": {
+    "hostname": "fedora",
+    "pci_bdf": "0000:06:00.0",
+    "gpu": "gfx906",
+    "serial": "692121006383",
+    "rocr_visible_devices": "0"
+  },
+  "configuration": {
+    "prompt": "ordinary-64-01",
+    "prompt_sha256": "c5c22b5353991655d59e599a074875541dbd8a51bb43a92098be2fdd0ccdc480",
+    "route": "aligned-mmq",
+    "mode": "hip-graph",
+    "environment": {
+      "MIINFER_HIP_GRAPH": "1",
+      "MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY": "1",
+      "MIINFER_EXPERIMENTAL_MMQ_GATEUP_QSUM": "1"
+    },
+    "iterations": 3,
+    "warmups": 0,
+    "forced_history": [760, 1156, 16561, 728],
+    "context_profile": "8K",
+    "context_capacity_tokens": 320,
+    "generated_tokens": 64
+  },
+  "repeat_evidence": {
+    "teacher_forced_logits_sha256": [
+      "aa74e2ec5dd55190469d867c09a6ec08789a6a83727c5884bed7c9c37abc25e9",
+      "aa74e2ec5dd55190469d867c09a6ec08789a6a83727c5884bed7c9c37abc25e9",
+      "aa74e2ec5dd55190469d867c09a6ec08789a6a83727c5884bed7c9c37abc25e9"
+    ],
+    "forced_ids_sha256": [
+      "e1f2cffd0d9378b55449bc7800b0a4fe4808c198e0d42966e04fe5c77cc4fef3",
+      "e1f2cffd0d9378b55449bc7800b0a4fe4808c198e0d42966e04fe5c77cc4fef3",
+      "e1f2cffd0d9378b55449bc7800b0a4fe4808c198e0d42966e04fe5c77cc4fef3"
+    ],
+    "normal_greedy_ids_sha256": [
+      "e1f2cffd0d9378b55449bc7800b0a4fe4808c198e0d42966e04fe5c77cc4fef3",
+      "e1f2cffd0d9378b55449bc7800b0a4fe4808c198e0d42966e04fe5c77cc4fef3",
+      "e1f2cffd0d9378b55449bc7800b0a4fe4808c198e0d42966e04fe5c77cc4fef3"
+    ],
+    "state_hashes": [
+      {
+        "decision": 1,
+        "active_tokens": 64,
+        "recurrent_sha256": "fad03927b58a0dcdf447961df97ec6b0fcd0cd3b6ed24fa56047478aa710e5d6",
+        "kv_sha256": "e2bec4cb7e6b67dbf5b392e9752325f6aa22324768e318d9e71c0711b55baecc"
+      },
+      {
+        "decision": 2,
+        "active_tokens": 65,
+        "recurrent_sha256": "74039f546c5f487e271352282ad59d960a7a7daec017dd333095bb45ad94d4ba",
+        "kv_sha256": "351b3bbc1429c95163a033dea3ec87e8ed17c550c08e5a2654cc0c797f4f7b50"
+      },
+      {
+        "decision": 5,
+        "active_tokens": 68,
+        "recurrent_sha256": "b1bd3ccbb6e706ffb8e6ea0fc9302e497f2be5d706b1fe5ed7e670a73cf972e7",
+        "kv_sha256": "ba5fb11f70c18915cec7a78ae910d63e14b3df8327f75e48fcf32de6bfa51d68"
+      }
+    ],
+    "repeat_ids_and_states_byte_identical": true,
+    "tokens_valid": true
+  },
+  "cpu_comparison": {
+    "cpu_logits_sha256": "30c1da9a3aac145194f207607a777f5a0f619400f5c4ee67b1a74f221544e3cb",
+    "comparison_file": "gpu-aligned-mmq-graph-ordinary64-comparison.json",
+    "comparison_sha256": "752d1e28694fe7d38748ab92aa54b89d440021f9a168949c3c9d411121e14567",
+    "teacher_forced_top1_matches": [true, true, true, true, true],
+    "relative_l2_range": [0.017799980588879813, 0.10143785468795809],
+    "normal_greedy_common_prefix_tokens": 30,
+    "normal_greedy_first_mismatch_position_1based": 31,
+    "functional_check": "not evaluable at 64 generated tokens; output stops before the frozen final-answer check"
+  },
+  "timing_ms": {
+    "forced_wall": [4428.180, 3570.954, 3764.725],
+    "normal_greedy_wall": [2925.845, 2892.150, 2883.539]
+  },
+  "device": {
+    "free_vram_before_first_call_bytes": 15716057088,
+    "free_vram_after_calls_bytes": 15636365312,
+    "pre_run_temperature_junction_c": 29,
+    "post_run_temperature_junction_c": 42,
+    "during_run_thermal_telemetry": "only pre-run and post-run samples; no peak-temperature claim"
+  },
+  "paired_log_sha256": "8b86952f09bd84466fb4851ad0630598fcab7b3145f0b6302643f24333f8639a",
+  "telemetry_sha256": "3079a975cf97a2a3c3551034cb76d395d9a0fb7ad5753f5a9b71d2ef689557cd",
+  "command": "podman run --rm --init --device /dev/kfd --device /dev/dri --security-opt=label=disable --group-add=keep-groups -e ROCR_VISIBLE_DEVICES=0 -e MIINFER_HIP_GRAPH=1 -e MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY=1 -e MIINFER_EXPERIMENTAL_MMQ_GATEUP_QSUM=1 -v /home/fedora-workstation/Development/mi50-lc0009:/workspace/MIInfer:Z -v /home/fedora-workstation/models:/models:ro -v /home/fedora-workstation/Development/mi50-lc0009-captures:/captures:rw localhost/miinfer-dev:rocm-7.2.1 /workspace/MIInfer/build/qualification-container-rocm721-gpu/e2-0003-checkpointed-call /models/Qwen3.8-27B-Q4_K_M.gguf 8K --generate 64 --iterations 3 --warmup 0 --prompt-ids /workspace/MIInfer/experiments/m31-lc-0009/prompt_ids/ordinary-64-01.u32le --forced-token-ids /captures/cpu-forced/ordinary-64-01.forced.ids --capture-raw-logits /captures/gpu/lc9-aligned-mmq-graph-ordinary64/ordinary-64-01.forced.logits.f32 --capture-token-ids /captures/gpu/lc9-aligned-mmq-graph-ordinary64/ordinary-64-01.forced.ids --capture-normal-token-ids /captures/gpu/lc9-aligned-mmq-graph-ordinary64/ordinary-64-01.greedy.ids --capture-normal-token-ids /captures/gpu/lc9-aligned-mmq-graph-ordinary64/ordinary-64-01.greedy.ids --capture-state-prefix /captures/gpu/lc9-aligned-mmq-graph-ordinary64/ordinary-64-01.forced.state --output /captures/gpu/lc9-aligned-mmq-graph-ordinary64/ordinary-64-01.paired.txt",
+  "raw_capture_storage": {
+    "z840": "/mnt/lc9-lake/m31-lc-0009-captures/lc9-aligned-mmq-graph-ordinary64",
+    "raw_files_tracked_in_git": false,
+    "copied_from": "/home/fedora-workstation/Development/mi50-lc0009-captures/gpu/lc9-aligned-mmq-graph-ordinary64",
+    "copy_verified": "rsync checksum dry-run reported no differences before original cleanup"
+  },
+  "state_mapping": "MIInfer-native recurrent and KV layouts; CPU/GPU canonical mapping remains unestablished"
+}
