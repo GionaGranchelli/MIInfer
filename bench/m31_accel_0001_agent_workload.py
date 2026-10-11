@@ -120,11 +120,43 @@ def sse_self_check():
         pass
     else:
         raise RuntimeError("truncated SSE self-check unexpectedly passed")
+    reuse_checks = prefix_reuse_request_gates([
+        {"server_latency": {"request_id": "first", "reused_prefix_tokens": 100,
+                            "suffix_tokens_dispatched": 20}},
+        {"server_latency": {"request_id": "followup", "reused_prefix_tokens": 100,
+                            "suffix_tokens_dispatched": 0}},
+    ], required=True)
+    if [check["passed"] for check in reuse_checks] != [True, False]:
+        raise RuntimeError("per-request prefix reuse self-check failed")
+    if prefix_reuse_request_gates([], required=True)[0]["passed"]:
+        raise RuntimeError("missing prefix reuse telemetry unexpectedly passed")
     with tempfile.TemporaryDirectory() as directory:
         path = Path(directory) / "workload.json"
         write_result(path, {"active_turn": 1, "active_phase": "planned_read_tool_call"})
         if json.loads(path.read_text(encoding="utf-8"))["active_turn"] != 1:
             raise RuntimeError("atomic workload-artifact self-check failed")
+
+
+def prefix_reuse_request_gates(requests, required):
+    if not required:
+        return []
+    if not requests:
+        return [{"request_index": None, "request_id": None,
+                 "reused_prefix_tokens": 0, "suffix_tokens_dispatched": 0,
+                 "passed": False}]
+    checks = []
+    for request_index, request in enumerate(requests, 1):
+        latency = request["server_latency"]
+        reused = latency.get("reused_prefix_tokens", 0)
+        suffix = latency.get("suffix_tokens_dispatched", 0)
+        checks.append({
+            "request_index": request_index,
+            "request_id": latency.get("request_id"),
+            "reused_prefix_tokens": reused,
+            "suffix_tokens_dispatched": suffix,
+            "passed": reused > 0 and suffix > 0,
+        })
+    return checks
 
 
 def write_result(path, result):
@@ -374,8 +406,7 @@ def main():
             decode_times = [(row["generated_tokens"] / row["decode_tokens_per_second"])
                             for row in detail if row.get("decode_tokens_per_second", 0) > 0]
             generated = sum(row["generated_tokens"] for row in detail)
-            first_request_reuse = latency[0]["reused_prefix_tokens"]
-            first_request_suffix = latency[0]["suffix_tokens_dispatched"]
+            reuse_checks = prefix_reuse_request_gates(turn["requests"], required=index > 1)
             turn.update({
                 "context_tokens": detail[0]["prompt_tokens"],
                 "generated_tokens_total": generated,
@@ -388,7 +419,8 @@ def main():
                 "replayed_tokens": sum(row["suffix_tokens_dispatched"] for row in latency),
                 "peak_sampled_vram_bytes": max(vram_samples) if vram_samples else None,
                 "external_vram_samples_complete": len(vram_samples) == 2 * len(turn["requests"]),
-                "prefix_reuse_gate": index == 1 or (first_request_reuse > 0 and first_request_suffix > 0),
+                "prefix_reuse_request_gates": reuse_checks,
+                "prefix_reuse_gate": index == 1 or all(check["passed"] for check in reuse_checks),
                 "minimum_generation_gate": generated >= 128,
                 "minimum_visible_answer_gate": len(completion["content"]) >= 300,
             })
