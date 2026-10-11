@@ -51,6 +51,7 @@ One GPU job at a time on Z840. Preserve all dirty worktrees and existing logs. R
 - On Z840, the host-only production workload self-check passed again: exact initial request 65,536 tokens, seven source files, eight planned turns. The guarded-runner self-check also passed. Neither check accessed the GPU.
 - The first self-check invocation used an incorrect build-directory path and did not launch; locating the existing binary resolved it without rebuilding. No source or host checkout was damaged.
 - Next: hold GPU work for cooling confirmation and continue only host-side preparation or review.
+- The clean Z840 campaign worktree was subsequently fast-forwarded to the latest docs-only checkpoint `e6fa5592770fb7bbc78954cf7acbf1387300b735`; it remains clean.
 
 ## 00:30 checkpoint
 

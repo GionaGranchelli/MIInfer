@@ -76,3 +76,5 @@ Z840 SSH access is restored. Lake is mounted read/write with 1.6 TB available. T
 The bounded LC-0009 QSUM handoff is pushed separately at `f78949cf4f002c72a27de842ef869b6b177dc1b1`. It found no tracked raw one-token QSUM decode operand capture; LC-0009 remains open for that capture and broader Contract O evidence.
 
 The coordinator change is pushed at `fa03664ccf021a2127f9f7110aa350ebc55e9977`, and the isolated Z840 campaign worktree is clean at that SHA. The host-only workload self-check again passed with exactly 65,536 initial ChatML tokens, seven source files, and eight planned turns; the guarded-runner self-check passed as well. Neither check used the GPU. The first invocation pointed at the wrong existing tokenizer binary path and failed before launch; correcting the path resolved it without rebuilding.
+
+The Z840 worktree was subsequently advanced to the latest docs-only coordinator checkpoint `e6fa5592770fb7bbc78954cf7acbf1387300b735`; it remains clean.
