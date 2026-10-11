@@ -143,3 +143,9 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 - The production API workload now requires exact reuse of the preceding request's full prompt-token prefix for every request after the first, plus a nonempty suffix dispatch. It records each expected/observed prefix count and fails on missing telemetry. Commit `529cf3cd84a6c1e5969fa785797d65d23683a74c` is pushed.
 - Local Python compile and self-check passed; Z840 clean worktree synced to `529cf3c`, and tokenizer-backed workload `--self-check` again passed at exactly 65,536 tokens. No inference/GPU was run. Captured output hash is `64ee44bbfffe0cc57bb413a3970d353f1e97ecac59bdfaee5f86d90b36a53b25`.
 - Next: clear cooling and run the guarded 64K production workload; exact-token prefix reuse is now an exit gate, but state/numerical continuity remains unqualified.
+
+## 2026-10-12 01:46 live host recheck
+
+- Z840 SSH works. Lake is mounted read/write with 1.6 TB free; root is 98% full with 11 GB free, so keep large builds and captures on Lake. No MIInfer/build process or tmux session is active.
+- MI50 is idle at 28 C junction, 0% use, 10.9 MB VRAM, and 20 W. Both `rocm-smi` and `sensors` report fan 0 RPM; `ipmitool` is unavailable and no chassis-fan sensor is exposed. This cannot verify physical airflow, so the GPU gate remains closed.
+- Existing isolated decode and suffix64 worktrees are clean at `26b5f07` and `1b477a`; suffix64 is already integrated and its no-device build passed. The campaign worktree remains clean at `529cf3c`. No new inference or performance evidence was produced.
