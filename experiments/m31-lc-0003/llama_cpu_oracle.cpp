@@ -419,8 +419,7 @@ int main(int argc, char** argv) {
         llama_backend_init();
         auto model_params = llama_model_default_params();
         model_params.n_gpu_layers = 0;
-        model_params.use_mmap = true;
-        model_params.use_mlock = false;
+        model_params.load_mode = LLAMA_LOAD_MODE_MMAP;
         std::unique_ptr<llama_model, decltype(&llama_model_free)> model(
             llama_model_load_from_file(model_path.c_str(), model_params), llama_model_free);
         if (!model) throw std::runtime_error("llama_model_load_from_file failed");
@@ -439,7 +438,7 @@ int main(int argc, char** argv) {
 
         constexpr std::int32_t threads = 48;
         std::vector<llama_token> forced;
-        std::array<std::vector<float>, 2> captures;
+        std::array<std::vector<float>, 3> captures;
         if (layer_trace_only || operation_trace_only) {
             forced = read_ids(forced_path);
             if (forced.size() != kExpectedForcedHistory) {
@@ -490,8 +489,10 @@ int main(int argc, char** argv) {
             captures[pass] = capture_pass(model.get(), prompt, forced, vocab_size, threads);
             write_f32(output_prefix + ".run" + std::to_string(pass + 1) + ".logits.f32", captures[pass]);
         }
-        const bool reproducible = captures[0].size() == captures[1].size()
-            && std::equal(captures[0].begin(), captures[0].end(), captures[1].begin());
+        const bool reproducible = std::all_of(captures.begin() + 1, captures.end(), [&](const auto& run) {
+            return run.size() == captures[0].size()
+                && std::equal(captures[0].begin(), captures[0].end(), run.begin());
+        });
 
         std::array<char, 256> description{};
         llama_model_desc(model.get(), description.data(), description.size());
@@ -506,6 +507,7 @@ int main(int argc, char** argv) {
         for (std::size_t i = 0; i < forced.size(); ++i) metadata << (i ? ", " : "") << forced[i];
         metadata << "],\n"
                  << "  \"decisions\": " << kDecisions << ",\n"
+                 << "  \"forced_repeat_count\": " << captures.size() << ",\n"
                  << "  \"vocab_size\": " << vocab_size << ",\n"
                  << "  \"layers\": " << llama_model_n_layer(model.get()) << ",\n"
                  << "  \"embedding_size\": " << llama_model_n_embd(model.get()) << ",\n"
