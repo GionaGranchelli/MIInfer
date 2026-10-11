@@ -1,6 +1,7 @@
 #include "miinfer/gguf.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -206,10 +207,18 @@ int main(int argc, char** argv) {
             const std::size_t q8_block = group / 4, local_group = group % 4;
             const std::size_t begin = group * 32;
             float max_abs = 0.0F;
-            for (std::size_t i = 0; i < 32; ++i) max_abs = std::max(max_abs, std::abs(input[begin + i]));
+            std::array<float, 32> partial_sums{};
+            for (std::size_t lane = 0; lane < partial_sums.size(); ++lane) {
+                partial_sums[lane] = input[begin + lane];
+                max_abs = std::max(max_abs, std::abs(partial_sums[lane]));
+            }
+            for (std::size_t offset : {16U, 8U, 4U, 2U, 1U}) {
+                const auto previous = partial_sums;
+                for (std::size_t lane = 0; lane < partial_sums.size(); ++lane)
+                    partial_sums[lane] = previous[lane] + previous[lane ^ offset];
+            }
             const float d = max_abs == 0.0F ? 0.0F : max_abs / 127.0F;
             const std::uint16_t expected_d = float_to_half(d);
-            int quantized_sum = 0;
             bool group_matches = true;
             const auto* block = q8.data() + q8_block * kQ8BlockBytes;
             for (std::size_t i = 0; i < 32; ++i) {
@@ -218,13 +227,11 @@ int main(int argc, char** argv) {
                 const auto actual = reinterpret_cast<const std::int8_t*>(block + 16)
                     [local_group * 32 + i];
                 group_matches &= actual == quantized;
-                quantized_sum += quantized;
             }
             std::uint16_t actual_d, actual_sum;
             std::memcpy(&actual_d, block + local_group * 4, sizeof(actual_d));
             std::memcpy(&actual_sum, block + local_group * 4 + 2, sizeof(actual_sum));
-            const float sum_f32 = half_to_float(expected_d) * static_cast<float>(quantized_sum);
-            const std::uint16_t expected_sum = float_to_half(sum_f32);
+            const std::uint16_t expected_sum = float_to_half(partial_sums[0]);
             group_matches &= actual_d == expected_d && actual_sum == expected_sum;
             if (group_matches) ++codes_and_scales_match;
         }
