@@ -1,6 +1,6 @@
 # M31-ACCEL-0001 live status
 
-Updated: 2026-10-12 01:50 Europe/Amsterdam
+Updated: 2026-10-12 01:55 Europe/Amsterdam
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
 
 ## Source and ownership
@@ -171,3 +171,9 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 - Source audit found that cold prefill passed `RecurrentLayerState` views by value and never advanced the storage cursor after forward. Eager recurrent decode reads that cursor for convolution indexing. The candidate now advances all 48 cursor values to the prompt end and after each consumed decode position, including stop/cancel paths; it reports min/max final positions.
 - The production workload gates the observed GDN position range against each request's prompt and generated-token bounds. Local Python compilation and no-network self-check pass. C++ build and Z840 no-device build are pending; no GPU run is allowed until cooling is confirmed.
 - This validates cursor bookkeeping, not numerical GDN/KV contents or exact cold/reuse output parity.
+
+## 2026-10-12 01:55 no-device validation
+
+- Pinned ROCm 7.2.1 container built `miinfer` and `miinfer-m31-accel-0001-agent64k` from `0941ae9` with no GPU devices passed. Exit 0; build log SHA-256 `ef06ee966407663b0caeb7607d8d1d34112e6b6c7e8f182647c9a48ef8ccdf59`.
+- Native 64K harness self-check passed; binary SHA-256 `53f3bff20b6e0a57b19468d8bedb0aa28dc49b7ba51f3e72c0a5de84b00f1fd1`; self-check log SHA-256 `b51d580dbd526103240d11197dfdb2b6805567e71a65231bc84ebffd018cd9d9`.
+- The tokenizer-backed production runner self-check also passed at 65,536 tokens from the same source; log SHA-256 `411305c5104f84aca5aff43517b13465de94fa3846a10a2b464896b94d627cbe`. GPU remained idle at 0% use and 10.9 MB VRAM. No inference ran.
