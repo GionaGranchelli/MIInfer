@@ -120,6 +120,11 @@ def sse_self_check():
         pass
     else:
         raise RuntimeError("truncated SSE self-check unexpectedly passed")
+    metric_detail = {"prompt_tokens": 1100, "generated_tokens": 2}
+    if not request_metric_counts_match(1100, 2, metric_detail):
+        raise RuntimeError("matching request metric self-check failed")
+    if request_metric_counts_match(1100, 1, metric_detail):
+        raise RuntimeError("generated-token metric mismatch unexpectedly passed")
     cold_gate = prefix_reuse_request_gates([{
         "server_latency": {"request_id": "cold", "reused_prefix_tokens": 0,
                             "suffix_tokens_dispatched": 1100},
@@ -276,6 +281,14 @@ def write_result(path, result):
             temporary.unlink()
 
 
+def request_metric_counts_match(prompt_delta, generated_delta, detail):
+    prompt_tokens = detail.get("prompt_tokens")
+    generated_tokens = detail.get("generated_tokens")
+    return (type(prompt_delta) is int and type(generated_delta) is int
+            and type(prompt_tokens) is int and type(generated_tokens) is int
+            and prompt_delta == prompt_tokens and generated_delta == generated_tokens)
+
+
 def source_evidence(root):
     parts, manifest = [], []
     for relative, limit in legacy.M30_SOURCES:
@@ -383,14 +396,15 @@ def stream_completion(url, key, model, messages, tool_choice, max_tokens, server
         raise RuntimeError(f"expected one server inference request, observed {request_count}")
     latency, detail = server_log.take_request()
     prompt_tokens = after["miinfer_prompt_tokens_total"] - before["miinfer_prompt_tokens_total"]
-    if prompt_tokens != detail["prompt_tokens"]:
-        raise RuntimeError("metrics prompt-token delta disagrees with its server request record")
+    generated_tokens = after["miinfer_generated_tokens_total"] - before["miinfer_generated_tokens_total"]
+    if not request_metric_counts_match(prompt_tokens, generated_tokens, detail):
+        raise RuntimeError("metrics token deltas disagree with the server request record")
     return {
         "content": "".join(content), "reasoning_content": "".join(reasoning),
         "tool_calls": [calls[index] for index in sorted(calls)],
         "client_ttft_ms": first_delta_ms, "client_wall_ms": wall_ms,
         "prompt_tokens": prompt_tokens,
-        "generated_tokens": after["miinfer_generated_tokens_total"] - before["miinfer_generated_tokens_total"],
+        "generated_tokens": generated_tokens,
         "request_count": request_count, "server_latency": latency,
         "server_request": detail, "gpu_before": gpu_before,
         "gpu_after": legacy.gpu_snapshot(),

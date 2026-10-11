@@ -140,3 +140,7 @@ The candidate then built from `0941ae99d0f7036717538941b7ad3640082aa4b9` in the 
 ## 2026-10-12 01:56 — power-cap access check
 
 Tried to lower the Z840 MI50 cap to 100 W as a reversible load reduction while physical airflow remains unknown. Noninteractive sudo was denied because a password is required; the limit remains at its 225 W stock value. The MI50 is idle at 28 C and 0 RPM. No inference ran. A guarded 64K attempt can resume after physical airflow is confirmed or the user sets a lower cap interactively; the existing thermal stop remains in force.
+
+## 2026-10-12 01:58 — request metric attribution gate
+
+The production runner now fails closed unless per-request prompt-token and generated-token counters match the corresponding server request log record, with exact integer fields. A no-network self-check covers matching counts and a generated-token mismatch; Python compilation passes. This prevents aggregate decode counts from being attributed to the wrong request. Z840 validation of this latest script revision is pending; no model or GPU request ran.

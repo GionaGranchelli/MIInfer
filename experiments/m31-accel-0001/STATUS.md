@@ -1,6 +1,6 @@
 # M31-ACCEL-0001 live status
 
-Updated: 2026-10-12 01:56 Europe/Amsterdam
+Updated: 2026-10-12 01:58 Europe/Amsterdam
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
 
 ## Source and ownership
@@ -182,3 +182,8 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 
 - Checked whether lower power can substitute for unverified physical airflow. `sudo -n rocm-smi --setpoweroverdrive 100` is denied because this SSH account requires an interactive password. The cap was not changed; sysfs still reports the stock 225 W limit.
 - MI50 remains idle at 28 C and 0 RPM. No GPU workload was launched. To proceed, either confirm chassis airflow across the passive card or set a temporary lower cap interactively, then I can run the guarded 64K workload and restore the device default afterward.
+
+## 2026-10-12 01:58 request-metric attribution gate
+
+- The production workload now requires cumulative prompt- and generated-token metric deltas to match the same server request record; absent or mistyped fields fail closed. Its self-check covers a matching record and a generated-token mismatch.
+- Local Python compilation, no-network self-check, and `git diff --check` pass. This protects per-request decode/turn metrics from aggregate misattribution. Z840 revalidation is pending; no inference ran.
