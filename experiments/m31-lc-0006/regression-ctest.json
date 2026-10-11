@@ -1,0 +1,16 @@
+{
+  "host": "Z840 MI50 gfx906 BDF 0000:06:00.0",
+  "image_digest": "sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e",
+  "command": "ctest --test-dir build --output-on-failure",
+  "container_device_access": "rootless keep-id with /dev/kfd, /dev/dri, keep-groups, and SELinux label disabled",
+  "registered": 35,
+  "passed": 34,
+  "failed": 0,
+  "skipped": [
+    {
+      "test": "package-archive-smoke",
+      "reason": "Skipped by test configuration"
+    }
+  ],
+  "result": "PASS"
+}

@@ -2,7 +2,22 @@
 
 ## Status
 
-Phase A instrumentation-free eager and graph runs are complete. Phase B traced the initial mismatch to cold-prefill position metadata: eager used position 0 while graph used prompt position 2048. The position fix is pushed as `1b3a9cbd8fa4f72ec40a66601c0598d5524b7f9c`. Continued same-binary traces now place the fused-control first mismatch at GQA block 2 and the MMQ mismatch at GQA block 0. Exact graph/eager equivalence remains unproven and no corrective change has been made for these GQA differences.
+The initial cold-prefill position defect was fixed in `1b3a9cbd8fa4f72ec40a66601c0598d5524b7f9c`. Follow-up traces isolated a second mismatch to different GQA attention implementations: eager used split-K suffix attention and graph used tiled online dynamic attention. Candidate `8a9caec3366512e459a93bad68adde181225304b` routes eager GQA through the dynamic path while leaving recurrent layers eager. On the frozen 2,048-token prompt and five decode decisions, same-binary eager/graph raw logits are now byte-identical for both routes. This closes the M31-LC-0006 graph/eager gate for this workload; fused/MMQ route equivalence remains a separate unresolved gate.
+
+## Candidate fix and validation
+
+The eager topology now supplies a device decode state only to its GQA layer, with the current decode position. Recurrent layers continue to receive a null decode state and retain the existing eager path. This makes eager and graph use the same dynamic Q/K positioning, KV-store, and tiled online attention dispatch for GQA. The operation traces had shown identical Q/K RoPE and KV inputs before the fix; the first mismatch was the attention output, where the two kernel paths differed by less than `3.6e-7` initially.
+
+The candidate was built in the pinned ROCm 7.2.1 OCI image and run on the Z840 MI50 (`0000:06:00.0`) with the pinned model hash, reset state, deterministic 2,048-token prompt, and five generated tokens. Tracing was disabled. All four guarded calls and raw captures validated; each eager/graph pair has identical bytes across all five 248,320-float logits vectors:
+
+| Route | Eager and graph token IDs | Raw-logit SHA-256 (both modes) | Byte-identical |
+|---|---|---|---|
+| Fused control | `[220, 248046, 198, 248045, 271]` | `78a1e4032a9f3253e7d4bc28926abf9d4939a77a4b86dfd8b5e319eb0737e92f` | Yes |
+| MMQ Gate/Up | `[220, 248046, 198, 248045, 74455]` | `e53a0fe7b54629e437320107ca515c64060ee1ec387055dc3bf9e10719eeb1d4` | Yes |
+
+Run records, full logits, thermal guard logs, telemetry, prompt IDs, and environment snapshots are in [`z840-attn-unified-graph/`](../../results/m31-lc-0006/z840-attn-unified-graph/) and [`z840-attn-unified-eager/`](../../results/m31-lc-0006/z840-attn-unified-eager/). Binary and source provenance are in [`source-manifest-attention-unified.json`](source-manifest-attention-unified.json). The runner prints `BLOCKED_OR_INCONCLUSIVE` because its promotion classification requires fused/MMQ cross-route parity; that is outside this graph/eager gate. The per-call route results, guards, and raw captures are valid.
+
+The full configured CTest suite then completed on the same host and pinned image using the qualified rootless KFD device-group settings: 34 passed, 0 failed, and `package-archive-smoke` was skipped by its test configuration. Qualification details are recorded in [`regression-ctest.json`](regression-ctest.json).
 
 ## Eager baseline
 
@@ -15,7 +30,7 @@ The fused control and MMQ Gate/Up route ran with the same binary, model, determi
 
 The two eager routes produced identical token IDs. This confirms the run pair is comparable at the token level; raw-logit equality has not yet been analyzed. One pair is descriptive evidence, not a statistical performance result.
 
-## Graph comparison
+## Initial graph comparison (before the GQA fix)
 
 The same workload and binary were run with `MIINFER_HIP_GRAPH=1`, with tracing disabled. The first decision's 248,320 raw logits were bitwise identical between eager and graph for each route, and both selected token `220`. At decision 2, after both modes consumed token `220`, every raw logit differed between eager and graph; both routes selected token `248046` in graph mode and token `16` in eager mode.
 
