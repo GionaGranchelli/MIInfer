@@ -16,7 +16,8 @@ states and KV bytes before save and after restore and requires byte identity.
 After model allocation it fails closed unless at least 1 GiB of VRAM remains
 free. It samples HIP free/total VRAM after each turn and reports the largest
 sampled use; this is a discrete in-process sample, not an external telemetry
-peak.
+peak. The guard and each completed turn line flush immediately so an
+externally stopped diagnostic preserves its last completed state.
 The KV API does not expose a logical length counter; continuity is checked
 through the restored state fingerprint, exact token history, successful
 prefix reuse, and continuation after restore.
@@ -54,3 +55,44 @@ mkdir -p /mnt/lc9-lake/m31-accel-0001
 The initial prompt is exactly 65,536 tokens; KV capacity is 65,792 to allow
 eight small continuations and bounded decode. This command performs a GPU
 workload and was not run as part of the source-only implementation.
+
+## Production-path coding-agent workload
+
+`bench/m31_accel_0001_agent_workload.py` reuses the M30 OpenAI streaming and
+repository-tool flow for eight turns. A host-only helper counts the exact
+`build_chatml()` output using MIInfer's Qwen tokenizer; the prompt builder
+extends only with tracked repository excerpts and stops unless the count is
+exactly 65,536. The first live request must report the same count. It never
+constructs or pads token IDs.
+
+Build and run the tokenizer-only self-check without initializing HIP:
+
+```sh
+cmake -S . -B build-agent64k-host \
+  -DMIINFER_ENABLE_HIP=OFF -DMIINFER_BUILD_BENCHMARKS=ON \
+  -DMIINFER_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release
+cmake --build build-agent64k-host --target miinfer-m31-agent-token-count -j
+python3 bench/m31_accel_0001_agent_workload.py \
+  --model-path /home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf \
+  --token-counter build-agent64k-host/miinfer-m31-agent-token-count \
+  --self-check
+```
+
+For the production-path run, use the already guarded 128K serving configuration
+and point `--server-log` at that server's stderr log:
+
+```sh
+python3 bench/m31_accel_0001_agent_workload.py \
+  --model-path /home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf \
+  --token-counter build-agent64k-host/miinfer-m31-agent-token-count \
+  --server-log results/m31-accel-0001/server-128k.log \
+  --output results/m31-accel-0001/agent-workload.json
+```
+
+The report captures per-turn client TTFT and wall time, server decode
+tokens/second, reused-prefix and suffix counts, and the largest VRAM use seen
+in `rocm-smi` samples taken before and after each request. Those are sampled
+observations, not a continuous hardware peak. The serving workload was not run
+for this source-only change; the current workspace has no matching Qwen3.8
+GGUF, so exact 65,536-token prompt construction has not been runtime-verified
+here.
