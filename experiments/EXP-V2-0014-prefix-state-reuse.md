@@ -25,6 +25,11 @@ By introducing an explicit `ReusableContext` abstraction that preserves resident
 - **Base Commit**: `735ee7d10a17629ec2bfb591a94a956fc97920f6`
 - **Implementation Commit**: `227320e43d9bf1eb628bbf14073ae00109968434`
 - **Benchmark Command**: `./build/mi50-release/miinfer-prefix-state-reuse-bench`
+- **Focused 64K Command**: `./build/mi50-release/miinfer-prefix-state-reuse-bench --64k-only MODEL.gguf`
+  runs only the 64K+512 scenario and exits nonzero unless reuse hits the full
+  64K prefix, dispatches exactly 512 suffix tokens, and matches the cold
+  128-token greedy continuation. The no-flag command retains the full matrix
+  and its legacy exit behavior.
 
 ---
 
