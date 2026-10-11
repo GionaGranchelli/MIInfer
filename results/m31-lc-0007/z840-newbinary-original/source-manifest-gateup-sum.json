@@ -1,0 +1,19 @@
+{
+  "milestone": "M31-LC-0007",
+  "source_commit": "6c4dc6a",
+  "binary_sha256": "223dd8b627d4921e4aeb2cdf010585ffb2dc598d41ec945a29fc493f43307ebd",
+  "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+  "image_digest": "sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e",
+  "gpu": "Z840 MI50 gfx906 0000:06:00.0",
+  "build_flags": "Release; MIINFER_ENABLE_HIP=ON; MIINFER_BUILD_TESTS=ON; MIINFER_BUILD_BENCHMARKS=ON; MIINFER_BUILD_RESEARCH_TOOLS=OFF; CMAKE_HIP_ARCHITECTURES=gfx906; ROCm 7.2.1",
+  "build_result": "PASS: e2-0003-checkpointed-call built in pinned OCI; rerun reported all targets built",
+  "selector": "MIINFER_EXPERIMENTAL_MMQ_GATEUP_QSUM; default off; applies only at recurrent MMQ Gate/Up input quantization",
+  "source_files": {
+    "gfx906/kernels/kquant_wave_layout.hip": "77d9b74bf37a2be50c99a055b18a3550c382cdbdd818ed30c7bb7930154b68ee",
+    "include/miinfer/prefill_v2/experimental_options.hpp": "110af316fb0d803e035aad0b3955bffeeb10978d5b619ad1a033676642156af5",
+    "include/miinfer/qwen3_gpu_primitives.hpp": "2dd83e88e483757b64f0ca32ddc8fd86edfdb5f3470c2cf5a9370e0e3403e2f4",
+    "src/prefill_v2/recurrent_layer.cpp": "6a46bd088dc286f30a65fa4faa9a296c568ebcbf4295470a80f3c275f72f90fc",
+    "scripts/e2_0003_same_source_ab.py": "88593685dbdbc94922020c42cb5d9618384ac4563fa4d21e6b028bd19cbc38a8",
+    "tests/prefill_v2_experimental_options_test.cpp": "27d62845635d8bf0abc72e0030cc3e1dd9c929cea94c1f0e482d69ed0c0e858a"
+  }
+}

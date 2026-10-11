@@ -1,0 +1,18 @@
+{
+  "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+  "model_path": "/home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf",
+  "engine": "llama-cpp-python 0.3.34 CPU n_gpu_layers=0",
+  "prompt_ids_sha256": "5acd37f00d9e670f4b4e06d46fa12349e1dee06e356e6e73a186d74672f5bb47",
+  "prompt_tokens": 2048,
+  "n_ctx": 2304,
+  "n_threads": 48,
+  "generated_tokens": [
+    220,
+    248046,
+    198,
+    248045,
+    198
+  ],
+  "logits_sha256": "260c5e349910ef75aeba4d4473d23bf24c0bd31de923137c86e060e42624dda2",
+  "logits_bytes": 4966400
+}
