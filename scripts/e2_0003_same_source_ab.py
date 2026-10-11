@@ -121,6 +121,11 @@ def parse_metrics(metrics: str) -> tuple[dict[str, int], dict[str, str], dict]:
     return events, properties, result
 
 
+def parse_metric_results(metrics: str) -> list[dict]:
+    return [json.loads(line[len("result="):]) for line in metrics.splitlines()
+            if line.startswith("result=")]
+
+
 def nearest_phase_memory(events: dict[str, int], samples: list[dict], event_name: str) -> dict:
     target = events.get(event_name)
     if target is None:
@@ -230,7 +235,8 @@ def container_command(args, route: str, pair: int, output: Path) -> list[str]:
                         "--env", f"MIINFER_LC_TRACE_LAYER={args.trace_layer}"])
     command.extend([args.image, "/bench/run", "/model.gguf", args.context_profile,
                "--generate", str(args.generate_tokens), "--prompt-tokens", str(args.prompt_tokens),
-               "--iterations", "1", "--warmup", str(getattr(args, "warmup", 0)),
+               "--iterations", str(getattr(args, "iterations", 1)),
+               "--warmup", str(getattr(args, "warmup", 0)),
                "--output", f"/results/{route}-pair-{pair}.metrics"])
     if getattr(args, "capture_raw_logits", False):
         command.extend(["--capture-raw-logits", f"/results/{route}-pair-{pair}.logits.f32"])
@@ -276,6 +282,7 @@ def call(args, out: Path, route: str, pair: int, order: int) -> dict:
     metrics_path = out / f"{route}-pair-{pair}.metrics"
     metrics = metrics_path.read_text() if metrics_path.exists() else ""
     events, properties, result = parse_metrics(metrics)
+    iteration_results = parse_metric_results(metrics)
     guard_text = guard_log.read_text() if guard_log.exists() else ""
     telemetry = summarize_telemetry(telemetry_path)
     samples = [json.loads(line) for line in telemetry_path.read_text().splitlines() if line]
@@ -307,11 +314,14 @@ def call(args, out: Path, route: str, pair: int, order: int) -> dict:
             "MIINFER_HIP_GRAPH": "0" if getattr(args, "disable_hip_graph", False) else "1",
             "MIINFER_LC_DECODE_TRACE": "1"
                 if getattr(args, "capture_layer_zero_trace", False) else None,
+            "iterations": str(getattr(args, "iterations", 1)),
             "warmup": str(getattr(args, "warmup", 0)),
         },
         "start_state": before, "end_state": after,
         "result": result, "effective_config": properties,
         "generated_token_ids": generated,
+        "iteration_results": iteration_results,
+        "iteration_token_ids": [item.get("token_ids", []) for item in iteration_results],
         "timings": {
             "model_load_ms": interval(events, "MODEL_LOAD_BEGIN", "MODEL_DATA_READY"),
             "model_alloc_ms": interval(events, "MODEL_ALLOC_BEGIN", "MODEL_ALLOC_READY"),
@@ -349,6 +359,7 @@ class SimpleProcessResult:
 
 def valid_call(record: dict) -> bool:
     result = record["result"] or {}
+    iteration_results = record.get("iteration_results", [result])
     config = record["effective_config"]
     return (record["guard"]["exit_code"] == 0 and record["guard"]["clean_process_group"]
             and not record["guard"]["thermal_or_watchdog_abort"]
@@ -356,9 +367,14 @@ def valid_call(record: dict) -> bool:
             and len(record["generated_token_ids"]) == record["expected_generate_tokens"]
             and config.get("prompt_tokens") == str(record["expected_prompt_tokens"])
             and config.get("generate_tokens") == str(record["expected_generate_tokens"])
+            and config.get("iterations") == record["requested_environment"]["iterations"]
             and config.get("context_capacity_tokens") == str(record["expected_context_capacity_tokens"])
             and config.get("prompt_fingerprint_fnv1a64") == record["expected_prompt_fingerprint"]
             and config.get("warmup") == record["requested_environment"]["warmup"]
+            and len(iteration_results) == int(record["requested_environment"]["iterations"])
+            and all(item.get("tokens_valid") == "PASS"
+                    and len(item.get("token_ids", [])) == record["expected_generate_tokens"]
+                    for item in iteration_results)
             and sampler_config_valid(config, record["requested_environment"]["MIINFER_HIP_GRAPH"])
             and record["telemetry"]["successful_sample_count"] > 0
             and record["telemetry"]["failed_sample_count"] == 0
@@ -405,8 +421,9 @@ def medians(records: list[dict], route: str) -> dict:
     selected = [record for record in records if record["route"] == route and record["result"]]
     result = {}
     for field in ("ttft_ms", "prefill_tok_s", "decode_tok_s"):
-        values = [float(record["result"][field]) for record in selected
-                  if record["result"].get(field) is not None]
+        values = [float(item[field]) for record in selected
+                  for item in record.get("iteration_results", [record["result"]])
+                  if item.get(field) is not None]
         result[field] = {"samples": values,
                          "descriptive_median": statistics.median(values) if values else None}
     peaks = [record["telemetry"]["peak_vram_used_bytes"] for record in selected
@@ -437,6 +454,8 @@ def main() -> int:
     parser.add_argument("--expected-bdf", default=EXPECTED_BDF)
     parser.add_argument("--gpu-index", type=int, default=0)
     parser.add_argument("--pairs", type=int, choices=(1, 2), default=1)
+    parser.add_argument("--iterations", type=int, default=1,
+                        help="measured iterations per route call (1-100; raw-logit capture requires 1)")
     parser.add_argument("--warmup", type=int, default=0,
                         help="in-process warmup iterations for each call (0-20; incompatible with raw-logit capture)")
     parser.add_argument("--context-profile", choices=("8K", "32K", "64K", "128K"), default="8K")
@@ -471,6 +490,10 @@ def main() -> int:
             raise ValueError("warmup must be in [0, 20]")
         if args.capture_raw_logits and args.warmup:
             raise ValueError("raw-logit capture requires warmup=0")
+        if not 1 <= args.iterations <= 100:
+            raise ValueError("iterations must be in [1, 100]")
+        if args.capture_raw_logits and args.iterations != 1:
+            raise ValueError("raw-logit capture requires iterations=1")
         context_limit = int(args.context_profile[:-1]) * 1024
         if not (1 <= args.prompt_tokens <= context_limit and 1 <= args.generate_tokens <= min(args.prompt_tokens, 100)):
             raise ValueError("prompt/generation count exceeds the selected context profile or bounded-run limit")
@@ -585,7 +608,8 @@ def main() -> int:
             if len(pair_records) != 2 or not all(valid_call(record) for record in pair_records):
                 break
             left, right = pair_records[0], pair_records[1]
-            pair_parity[str(pair)] = left["generated_token_ids"] == right["generated_token_ids"]
+            pair_parity[str(pair)] = left.get("iteration_token_ids", [left["generated_token_ids"]]) == right.get(
+                "iteration_token_ids", [right["generated_token_ids"]])
             if left["effective_config"].get("prompt_fingerprint_fnv1a64") != right["effective_config"].get("prompt_fingerprint_fnv1a64"):
                 pair_parity[str(pair)] = False
 
@@ -633,7 +657,7 @@ def main() -> int:
             "workload": {"context_profile": args.context_profile,
                          "prompt_tokens": args.prompt_tokens, "generated_tokens": args.generate_tokens,
                          "context_capacity_tokens": args.context_capacity_tokens, "cold_prefill": True,
-                         "warmups": args.warmup, "repetitions_per_call": 1,
+                         "warmups": args.warmup, "repetitions_per_call": args.iterations,
                          "prompt": "deterministic e2_0003_prompt.hpp seed=77; fingerprint recorded per call",
                          "sampler_config": run_sampler_config,
                          "miinfer_path": "same binary; only MMQ Gate/Up env differs; HIP Graph "

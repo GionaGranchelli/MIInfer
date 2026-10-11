@@ -28,6 +28,13 @@ class SameSourceHarnessTest(unittest.TestCase):
         self.assertEqual(result["token_ids"], [1, 2])
         self.assertEqual(result["ttft_ms"], 12.5)
 
+    def test_all_iteration_results_are_parsed(self):
+        metrics = (
+            'result={"iteration":1,"tokens_valid":"PASS","token_ids":[1]}\n'
+            'result={"iteration":2,"tokens_valid":"PASS","token_ids":[2]}\n'
+        )
+        self.assertEqual([item["iteration"] for item in MODULE.parse_metric_results(metrics)], [1, 2])
+
     def test_model_file_identity_detects_change_after_hash_preflight(self):
         with tempfile.TemporaryDirectory() as directory:
             model = Path(directory) / "model.gguf"
@@ -87,9 +94,10 @@ class SameSourceHarnessTest(unittest.TestCase):
             args = SimpleNamespace(container_runtime="podman", binary=binary, model=model,
                                    expected_bdf="0000:06:00.0", image="image",
                                    context_profile="8K", prompt_tokens=2048, generate_tokens=5,
-                                   warmup=1)
+                                   iterations=2, warmup=1)
             command = MODULE.container_command(args, "control", 1, root)
         self.assertEqual(command[command.index("--warmup") + 1], "1")
+        self.assertEqual(command[command.index("--iterations") + 1], "2")
 
     def test_raw_logit_capture_is_opt_in_and_route_scoped(self):
         with tempfile.TemporaryDirectory() as directory:

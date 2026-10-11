@@ -10,3 +10,5 @@ Both revisions built successfully from separate clean, detached source checkouts
 Both builds used identical CMake settings: Release, HIP enabled for gfx906, tests and benchmarks enabled, research tools disabled, ROCm 7.2.1 prefix paths, and the pinned image's nlohmann_json 3.11.3 source cache mounted read-only. The build target was `e2-0003-checkpointed-call`. The build logs reported two existing HIP compiler warnings and both targets completed successfully.
 
 Per-revision source hashes and build provenance are in [`source-manifest-control.json`](source-manifest-control.json) and [`source-manifest-candidate.json`](source-manifest-candidate.json). Timing runs and the performance disposition are pending.
+
+For the run, each process performs one unmeasured warmup before measured iterations. The measurement harness retains every per-iteration result and token sequence. This batches two measured iterations per route call to limit repeated model setup while preserving interleaved revision order. Raw-logit captures run separately because the benchmark binary requires warmup zero for capture.

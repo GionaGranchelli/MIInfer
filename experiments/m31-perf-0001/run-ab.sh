@@ -12,7 +12,7 @@ build_flags='Release; MIINFER_ENABLE_HIP=ON; MIINFER_BUILD_TESTS=ON; MIINFER_BUI
 
 run_call() {
     local label=$1 role=$2 mode=$3 phase=$4
-    local sha binary pairs=2 warmup=1
+    local sha binary pairs=1 warmup=1 iterations=1
     local -a mode_args=() capture_args=()
     case "$role" in
         control) sha=016472160c295eb1927b1ed6e095719ada6c3d18 ;;
@@ -21,7 +21,7 @@ run_call() {
     esac
     binary="$root/bin/$role"
     if [[ "$mode" == eager ]]; then mode_args+=(--disable-hip-graph); fi
-    if [[ "$phase" == warmup || "$phase" == validation ]]; then pairs=1; fi
+    if [[ "$phase" == measured ]]; then iterations=2; fi
     if [[ "$phase" == validation ]]; then
         warmup=0
         capture_args+=(--capture-raw-logits)
@@ -35,21 +35,32 @@ run_call() {
         --guard "$guard" --output-dir "$root/results/$label" \
         --expected-bdf 0000:06:00.0 --context-profile 8K \
         --prompt-tokens 2048 --generate-tokens 5 --pairs "$pairs" \
-        --warmup "$warmup" --expected-seconds 240 \
+        --iterations "$iterations" --warmup "$warmup" --expected-seconds 240 \
         "${mode_args[@]}" "${capture_args[@]}"
     echo "END $(date -u +%FT%TZ) $label"
 }
 
 for mode in eager graph; do
-    run_call "$mode-control-warmup" control "$mode" warmup
-    run_call "$mode-candidate-warmup" candidate "$mode" warmup
+    if [[ "$mode" == eager && ${M31_PERF_RESUME_EAGER_WARMUPS:-0} != 1 ]]; then
+        # Each warmup call also records its one post-warmup iteration as sample one.
+        run_call "$mode-control-warmup" control "$mode" warmup
+        run_call "$mode-candidate-warmup" candidate "$mode" warmup
+    fi
 
-    run_call "$mode-control-r1" control "$mode" measured
-    run_call "$mode-candidate-r1" candidate "$mode" measured
-    run_call "$mode-candidate-r2" candidate "$mode" measured
-    run_call "$mode-control-r2" control "$mode" measured
-    run_call "$mode-control-r3" control "$mode" measured
-    run_call "$mode-candidate-r3" candidate "$mode" measured
+    if [[ "$mode" == eager ]]; then
+        # The two retained prelude samples are A1/B1; complete A/B/B/A/A/B in two-iteration batches.
+        run_call "$mode-candidate-r1" candidate "$mode" measured
+        run_call "$mode-control-r2" control "$mode" measured
+        run_call "$mode-control-r3" control "$mode" measured
+        run_call "$mode-candidate-r2" candidate "$mode" measured
+    else
+        run_call "$mode-control-r1" control "$mode" measured
+        run_call "$mode-candidate-r1" candidate "$mode" measured
+        run_call "$mode-candidate-r2" candidate "$mode" measured
+        run_call "$mode-control-r2" control "$mode" measured
+        run_call "$mode-control-r3" control "$mode" measured
+        run_call "$mode-candidate-r3" candidate "$mode" measured
+    fi
 
     run_call "$mode-control-validation" control "$mode" validation
     run_call "$mode-candidate-validation" candidate "$mode" validation
