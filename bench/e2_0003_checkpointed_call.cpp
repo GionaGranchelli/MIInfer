@@ -202,8 +202,8 @@ int main(int argc, char** argv) {
             throw std::runtime_error("prompt ID count is outside the selected context profile");
         }
         prompt_tokens = prompt.size();
-        if (generate_tokens > prompt_tokens) {
-            throw std::runtime_error("generation count must not exceed the prompt token count");
+        if (generate_tokens > found->tokens - prompt_tokens) {
+            throw std::runtime_error("generation count exceeds remaining context capacity");
         }
         const auto forced_ids = forced_ids_path.empty() ? std::vector<std::uint32_t>{} : read_tokens(forced_ids_path);
 
