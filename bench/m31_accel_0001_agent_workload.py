@@ -3,6 +3,7 @@
 
 import argparse
 import json
+import os
 import subprocess
 import time
 import urllib.request
@@ -253,7 +254,7 @@ def main():
         server_log = ServerLogTail(root / args.server_log)
         result = {
             "workload": "m31-accel-0001-agent64k-v1",
-            "qualification_sha": subprocess.run(
+            "qualification_sha": os.environ.get("M31_SOURCE_SHA") or subprocess.run(
                 ["git", "rev-parse", "HEAD"], cwd=root, capture_output=True,
                 text=True, check=True).stdout.strip(),
             "initial_context_target_tokens": TARGET_PROMPT_TOKENS,

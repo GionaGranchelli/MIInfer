@@ -34,8 +34,9 @@ temp_warning "$temp" && { echo "preflight is already at warning temperature (85C
 (( used < 1073741824 )) || { echo "preflight VRAM already in use: $used" >&2; exit 5; }
 model_sha=$(sha256sum "$model" | cut -d' ' -f1)
 [[ $model_sha == "$expected_model" ]] || { echo "unexpected model SHA: $model_sha" >&2; exit 6; }
+source_sha=$(git -C "$repo" rev-parse HEAD)
 printf 'source_sha=%s\nmodel_sha=%s\nimage=%s\nimage_id=%s\nrocr_visible_devices=0\nstart_junction_c=%s\nstart_vram_used_bytes=%s\nthermal_warning_c=85\nthermal_stop_c=90\nfree_vram_floor_bytes=1073741824\n' \
-  "$(git -C "$repo" rev-parse HEAD)" "$model_sha" "$image" "$(podman image inspect --format '{{.Id}}' "$image")" "$temp" "$used" > "$run_dir/environment.txt"
+  "$source_sha" "$model_sha" "$image" "$(podman image inspect --format '{{.Id}}' "$image")" "$temp" "$used" > "$run_dir/environment.txt"
 printf '%s %s\n' "$(date -u +%FT%TZ)" "$pre" > "$run_dir/telemetry.log"
 
 case "$mode" in
@@ -49,7 +50,8 @@ case "$mode" in
   *) echo "unknown workload mode: $mode (expected native or agent)" >&2; exit 2 ;;
 esac
 if ! podman run --detach --name "$name" --device /dev/kfd --device /dev/dri \
-  --security-opt=label=disable --group-add=keep-groups -e ROCR_VISIBLE_DEVICES=0 -e "M31_MODEL_FILE=$model_file" \
+  --security-opt=label=disable --group-add=keep-groups -e ROCR_VISIBLE_DEVICES=0 \
+  -e "M31_MODEL_FILE=$model_file" -e "M31_SOURCE_SHA=$source_sha" \
   -v "$repo:/workspace/MIInfer:Z" -v "$(dirname "$model"):/models:ro" \
   -v "$run_dir:/captures:Z" "$image" "${command[@]}" > "$run_dir/container.id"; then
   echo 125 > "$run_dir/exit.status"
