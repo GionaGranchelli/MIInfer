@@ -19,6 +19,8 @@ struct CpuOpTrace {
     std::string prefix;
     bool enabled = false;
     std::size_t token_index = 0;
+    std::size_t tile_start = 0;
+    bool final_prompt_tile = false;
     std::unordered_set<std::string> captured;
     std::vector<float> normalized_input;
     std::string error;
@@ -45,8 +47,10 @@ bool capture_cpu_op(ggml_tensor* tensor, bool ask, void* user_data) {
     };
     const std::string name(tensor->name);
     if (names.find(name) == names.end()) return false;
-    if (ask) return true;
-    if (!trace.captured.insert(name).second) return true;
+    const bool state = name == "state_predelta-0";
+    if (ask) return state || trace.final_prompt_tile;
+    if (!state && !trace.final_prompt_tile) return false;
+    if (!state && !trace.captured.insert(name).second) return true;
     if (tensor->type != GGML_TYPE_F32 || tensor->data == nullptr) {
         trace.error = "unexpected type or null data for " + name;
         return true;
@@ -66,7 +70,10 @@ bool capture_cpu_op(ggml_tensor* tensor, bool ask, void* user_data) {
     try {
         std::vector<float> values(elements);
         std::copy_n(source, elements, values.data());
-        write_f32(trace.prefix + ".cpu." + name + ".f32", values);
+        const std::string path = state
+            ? trace.prefix + ".cpu.state-before-token-" + std::to_string(trace.tile_start) + ".f32"
+            : trace.prefix + ".cpu." + name + ".f32";
+        write_f32(path, values);
         if (name == "attn_norm-0") trace.normalized_input = values;
 
         if (name == "linear_attn_qkv_mixed-0" || name == "beta-0" || name == "alpha-0") {
@@ -168,8 +175,10 @@ int main(int argc, char** argv) {
             batch.logits[j] = pos + j == ids.size() - 1;
         }
         batch.n_tokens = count;
-        trace.enabled = !trace.prefix.empty() && pos + count == ids.size();
-        if (trace.enabled) trace.token_index = count - 1;
+        trace.enabled = !trace.prefix.empty();
+        trace.token_index = count - 1;
+        trace.tile_start = pos;
+        trace.final_prompt_tile = pos + count == ids.size();
         if (llama_decode(context, batch) != 0) return 6;
         trace.enabled = false;
         if (!trace.error.empty()) throw std::runtime_error(trace.error);

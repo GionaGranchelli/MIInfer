@@ -2,7 +2,7 @@
 
 ## Status
 
-In progress; correctness classification remains **UNRESOLVED**. The frozen 2K CPU and fused GPU runs are reproducible, and the first material layer boundary is now localized to the output of GDN layer 0. The operation-level CPU / quantization-aware reference / GPU comparison required to classify this difference is not complete.
+In progress; correctness classification remains **UNRESOLVED**. The frozen 2K CPU and fused GPU runs are reproducible, and the first material layer boundary is localized to the output of GDN layer 0. Operation-level traces now explain the QKV difference as expected activation quantization. The remaining unexplained boundary is the recurrent state entering GDN at later prompt tiles.
 
 ## Frozen run identity
 
@@ -36,13 +36,15 @@ CPU and GPU operation traces were captured at prompt token 2047. The GPU state s
 
 The QKV weight is GGUF `Q6_K` (type 14, `[5120,10240]`, 4,200-byte output-row stride). The captured non-affine MxQ8 activation row was re-gathered from the kernel's block-major workspace. A dequantized Q6_K × captured MxQ8 reference matches GPU QKV at relative L2 `2.797e-7` (RMSE `6.253e-7`, max `1.335e-5`); CPU QKV differs from the same reference by `0.003783` (RMSE `0.008457`, max `0.039657`). GPU4 and corrected GPU5 QKV vectors have identical SHA-256 `acbb9e0b2b0aaad15a241f3d92b3b5c4d92363faac8d6b792999bd60b8745c44`. This supports expected activation-quantization arithmetic as the cause of the QKV difference, not a QKV implementation defect.
 
-The incoming recurrent state at the final 512-token tile differs by relative L2 `0.03554` after mapping the CPU state layout to GPU layout. This state already contains the preceding prompt history. The final-tile capture therefore does not locate where that state history first separates. Whole-model correctness classification remains **UNRESOLVED**.
+The incoming recurrent state at the final 512-token tile differs by relative L2 `0.03554` after mapping the CPU state layout to GPU layout. Source inspection confirms both captures are the state immediately before that tile's recurrent scan: llama.cpp calls the `state_predelta` callback from `build_rs` before `build_recurrent_attn`, and MIInfer captures `incoming_state.d_state` before launching its GDN scan. The mismatch therefore represents accumulated history, but it does not identify which earlier tile first separates. Whole-model correctness classification remains **UNRESOLVED**.
+
+A four-boundary recapture locates the first measured state split. CPU and GPU states are equal at token 0; at token 512 the relative L2 is `0.00346493` (RMSE `0.000794951`, max `0.0538564`), at token 1024 it is `0.0426513` (RMSE `0.0103721`, max `4.32725`), and at token 1536 it is `0.0354858` (RMSE `0.00937576`, max `3.98446`). Thus the earliest observed recurrent-state divergence is produced within the first 512 prompt tokens. CPU and GPU recaptures retained their frozen raw-logit hashes exactly.
 
 The corrected pinned-container GPU5 run reproduced decision-1 raw-logit SHA-256 `78a1e4032a9f3253e7d4bc28926abf9d4939a77a4b86dfd8b5e319eb0737e92f`; the thermal guard exited cleanly, with peak sampled junction temperature 68 C. The instrumented executable SHA-256 is `308635d89fc23ee57033d0b73cdf63e11ee897145603a4b29a568a1c2375df59`.
 
 ## Remaining work
 
-1. Localize when CPU and GPU recurrent state first diverge across the prompt tiles, then compare the relevant scan operation with the same logical input and an appropriate quantization-aware reference.
+1. Compare first-tile CPU and GPU recurrent inputs and scan output under the same logical inputs, to determine whether Q6_K activation quantization explains the state split or whether the scan implementation contributes an additional discrepancy.
 2. Re-evaluate decision 5 and the whole-model classification after that causal check.
 
 The exact Q6_K tensor bytes were extracted from the pinned model for this calculation (SHA-256 `65b4f6f841cf18b0cc48b1db52868597af45d1f74578f33b010c4cb8c573edce`). They remain a local, ignored artifact because they are a slice of the model weights. The calculator and output reference vector are committed; rerunning it requires that extracted tensor alongside the pinned model identity above.

@@ -530,6 +530,19 @@ void PrefillV2RecurrentLayer::forward(
         if (!output) throw std::runtime_error("failed writing M31 quantizer trace: " + path.string());
     };
     capture_op("state_predelta", incoming_state.d_state, RecurrentLayerState::kStateElements);
+    if (trace_this_tile) {
+        const auto path = std::string(op_trace_prefix) + ".gpu.state-before-token-"
+            + std::to_string(tile_call * token_count) + ".f32";
+        if (std::filesystem::exists(path)) throw std::runtime_error("refusing to overwrite recurrent-state trace: " + path);
+        std::vector<float> host(RecurrentLayerState::kStateElements);
+        MIINFER_HIP_CHECK(hipMemcpy(host.data(), incoming_state.d_state,
+                                    RecurrentLayerState::kStateBytes, hipMemcpyDeviceToHost));
+        std::ofstream output(path, std::ios::binary | std::ios::out);
+        if (!output) throw std::runtime_error("cannot create recurrent-state trace: " + path);
+        output.write(reinterpret_cast<const char*>(host.data()),
+                     static_cast<std::streamsize>(host.size() * sizeof(float)));
+        if (!output) throw std::runtime_error("failed writing recurrent-state trace: " + path);
+    }
 
     // 1. Input RMS Normalization
     launch_qwen3_rms_norm_batch(
@@ -751,6 +764,19 @@ void PrefillV2RecurrentLayer::forward_profiled(
         if (!output) throw std::runtime_error("failed writing M31 quantizer trace: " + path.string());
     };
     capture_op("state_predelta", incoming_state.d_state, RecurrentLayerState::kStateElements);
+    if (trace_this_tile) {
+        const auto path = std::string(op_trace_prefix) + ".gpu.state-before-token-"
+            + std::to_string(tile_call * token_count) + ".f32";
+        if (std::filesystem::exists(path)) throw std::runtime_error("refusing to overwrite recurrent-state trace: " + path);
+        std::vector<float> host(RecurrentLayerState::kStateElements);
+        MIINFER_HIP_CHECK(hipMemcpy(host.data(), incoming_state.d_state,
+                                    RecurrentLayerState::kStateBytes, hipMemcpyDeviceToHost));
+        std::ofstream output(path, std::ios::binary | std::ios::out);
+        if (!output) throw std::runtime_error("cannot create recurrent-state trace: " + path);
+        output.write(reinterpret_cast<const char*>(host.data()),
+                     static_cast<std::streamsize>(host.size() * sizeof(float)));
+        if (!output) throw std::runtime_error("failed writing recurrent-state trace: " + path);
+    }
 
     // 1 & 2. Norm + Beta/Alpha
     launch_qwen3_rms_norm_batch(
