@@ -120,3 +120,7 @@ The production runner's reuse gate was tightened again at coordinator commit `52
 ## 2026-10-12 01:46 — Z840 live recheck
 
 SSH succeeded. Lake is mounted read/write with 1.6 TB free; `/` is 98% full with 11 GB free. The MI50 is idle at 28 C junction, 0% use, 10.9 MB VRAM, and 20 W. No MIInfer/build process or tmux session is active. `rocm-smi` and `sensors` report 0 RPM for the MI50 fan sensor; `ipmitool` is unavailable and no chassis-fan sensor is exposed, so software cannot confirm physical airflow. GPU work remains held after the earlier 85 C stop. The isolated suffix64 source is already integrated at `1b477ab` and its no-device build succeeded; this recheck produced no new correctness or performance result.
+
+## 2026-10-12 01:47 — artifact revalidation
+
+The clean Z840 campaign worktree remains at `529cf3c`. The tokenizer-backed self-check log's SHA-256 still matches `64ee44bbfffe0cc57bb413a3970d353f1e97ecac59bdfaee5f86d90b36a53b25`, and the retained guard records the production 64K attempt's operator stop at 85 C (exit 137). Idle telemetry is 28 C, 0% utilization, approximately 10.9 MB VRAM, and 20 W. No new GPU workload was run.

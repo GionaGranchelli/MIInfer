@@ -1,6 +1,6 @@
 # M31-ACCEL-0001 live status
 
-Updated: 2026-10-12 01:20 Europe/Amsterdam
+Updated: 2026-10-12 01:47 Europe/Amsterdam
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
 
 ## Source and ownership
@@ -149,3 +149,8 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 - Z840 SSH works. Lake is mounted read/write with 1.6 TB free; root is 98% full with 11 GB free, so keep large builds and captures on Lake. No MIInfer/build process or tmux session is active.
 - MI50 is idle at 28 C junction, 0% use, 10.9 MB VRAM, and 20 W. Both `rocm-smi` and `sensors` report fan 0 RPM; `ipmitool` is unavailable and no chassis-fan sensor is exposed. This cannot verify physical airflow, so the GPU gate remains closed.
 - Existing isolated decode and suffix64 worktrees are clean at `26b5f07` and `1b477a`; suffix64 is already integrated and its no-device build passed. The campaign worktree remains clean at `529cf3c`. No new inference or performance evidence was produced.
+
+## 2026-10-12 01:47 artifact revalidation
+
+- Z840 campaign worktree remains clean at `529cf3c`. The exact-prefix host self-check log still matches SHA-256 `64ee44bbfffe0cc57bb413a3970d353f1e97ecac59bdfaee5f86d90b36a53b25` and records exit 0.
+- The guarded 64K attempt's retained status is exit 137 with an explicit operator stop at 85 C, fan 0 RPM, 100% GPU use, and 147 W. Idle telemetry now reads 28 C, 0% use, and approximately 10.9 MB VRAM. This confirms the earlier safety stop; no GPU run was repeated.
