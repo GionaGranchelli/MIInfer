@@ -15,7 +15,9 @@
     "configured_tests": 35,
     "passed": 34,
     "failed": 0,
-    "skipped": ["package-archive-smoke"],
+    "skipped": [
+      "package-archive-smoke"
+    ],
     "result": "PASS",
     "device_access": "rootless Podman with /dev/kfd and /dev/dri"
   },
@@ -25,11 +27,13 @@
     "prompt_ids": "PASS",
     "gpu_route_logits": "PASS",
     "cpu_reference_logits": "PASS",
-    "run_records_and_guards": "PASS"
+    "run_records_and_guards": "PASS",
+    "supplemental_cpu_and_llama_cpp_hip_records": "PASS; raw vectors and runner source hashes verified"
   },
   "gitleaks": {
     "current_lc0007_files": "PASS; no findings",
-    "historical_commit_range": "One generic-api-key false positive in an earlier JSON status field; no credential value was present; current field name is corrected"
+    "historical_commit_range": "One generic-api-key false positive in an earlier JSON status field; no credential value was present; current field name is corrected",
+    "latest_report_and_evidence_changes": "PASS; no findings"
   },
   "thermal_guards": {
     "calls": 4,
@@ -37,12 +41,21 @@
     "aborts": 0,
     "successful_telemetry_samples": 607,
     "failed_telemetry_samples": 0,
-    "peak_junction_celsius": [64.0, 65.0, 65.0, 64.0]
+    "peak_junction_celsius": [
+      64.0,
+      65.0,
+      65.0,
+      64.0
+    ]
   },
   "git": {
     "whitespace_check": "PASS",
     "push_policy": "Each completed evidence milestone pushed",
-    "selector_default": "OFF"
+    "selector_default": "OFF",
+    "latest_evidence_commit_push": "pending"
   },
-  "open_correctness_issue": "llama-cpp-python CPU full-model reference agrees for decisions 1-4 but emits token 198 rather than GPU token 271 at decision 5; keep selector opt-in"
+  "open_correctness_issue": "Cross-engine CPU and current llama.cpp backend discrepancies remain unexplained; do not promote selector or advance context ladder",
+  "frozen_2k_candidate_status": "PASS for fused/aligned-MMQ GPU exact-token parity and captured arithmetic checks; selector remains default-off",
+  "cpu_reference_followup": "Two independent CPU paths produce the same tokens and both emit 198 at decision 5 instead of MIInfer GPU token 271; their raw logits are not bitwise equal",
+  "supplemental_llama_cpp_rocm_diagnostic": "Current llama.cpp ROCm full-offload C API emits 248068 at decision 2 after shared token 220; supplemental only, not an acceptance oracle"
 }

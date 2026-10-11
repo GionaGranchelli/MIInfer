@@ -1,0 +1,29 @@
+{
+  "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+  "prompt_ids_sha256": "5acd37f00d9e670f4b4e06d46fa12349e1dee06e356e6e73a186d74672f5bb47",
+  "engine": "llama.cpp direct C API with ROCm backend, commit d1d3c3396aa13a5f239109a822666c4870490ad5",
+  "shared_library_sha256": "451d9d90252db2589561f3bef1149bf2d8e480a9dea5fdeb2770bd93e4411900",
+  "runner_sha256": "2513fcba933d3ac18a7d79eecd196d69918ef22505228d53de70788f35fa27c6",
+  "device": "Z840 MI50 gfx906, BDF 0000:06:00.0",
+  "compute": "n_gpu_layers=999; offload_kqv=true; op_offload=true; n_ctx=2304; n_batch=512; n_ubatch=512; n_threads=48; n_threads_batch=48",
+  "prompt_tokens": 2048,
+  "generated_tokens": [
+    220,
+    248068,
+    198,
+    760,
+    1156
+  ],
+  "first_divergence_from_miinfer_at_decision": 2,
+  "shared_generated_prefix_before_divergence": [
+    220
+  ],
+  "miinfer_fused_and_aligned_decision_2": 248046,
+  "logits_sha256": "182d783819500100117b20b83191dbdc46cd55f327645e7b488ef4ec90fa2102",
+  "logits_bytes": 4966400,
+  "vocab": 248320,
+  "logits_file": "llamacpp-hip-full-offload.logits.f32",
+  "classification": "supplemental cross-engine diagnostic; not an acceptance oracle",
+  "runner_source": "llamacpp-hip-full-offload.cpp",
+  "runner_source_sha256": "6247501e4e9b3a45ad94fd63a6dd0c063a1394a353e6e65a3e7d5261aea2c718"
+}

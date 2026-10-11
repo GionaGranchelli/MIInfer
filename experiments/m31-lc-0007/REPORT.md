@@ -2,7 +2,7 @@
 
 ## Status
 
-The graph baseline, Gate/Up attribution, same-binary A/B, full configured build, and CTest are complete. The opt-in selector produces fused/MMQ token parity on the frozen 2K graph workload. The independent CPU full-model run disagrees at decision five, so this remains an unqualified opt-in experiment.
+The graph baseline, Gate/Up attribution, same-binary A/B, full configured build, and CTest are complete. The opt-in selector passes fused/MMQ exact-token parity on the frozen 2K graph workload and the captured arithmetic references. It remains default-off; the independent CPU full-model mismatch is unresolved, so no production promotion is justified.
 
 ## Baseline reproduction
 
@@ -41,9 +41,11 @@ An additional F64 projection reference using canonical dequantized Q4_K weights 
 
 ## CPU full-model reference discrepancy
 
-The same model and exact prompt token IDs were evaluated first with `llama-cpp-python 0.3.34`, then with a direct C API runner against the Z840's current llama.cpp commit `d1d3c3396aa13a5f239109a822666c4870490ad5` (`0.4.1-dev`, build 162). Both CPU references used zero GPU layers, 48 threads, and greedy argmax; the direct runner also disabled KQV and op offload. Both produced `[220, 248046, 198, 248045, 198]`: the first four tokens agree, but decision five differs from fused and aligned GPU (`271`). The current C API CPU/GPU raw-logit relative L2 is `0.0236–0.1823` against fused and `0.0236–0.1733` against aligned. The two CPU implementations' raw logits are not bitwise equal, so the result does not point to the older Python wrapper alone. The direct C API vectors and metadata are saved as `cpu-upstream-capi.logits.f32` and `cpu-upstream-capi.record.json`; both references are summarized in `aligned-graph-analysis.json`.
+The same model and exact prompt token IDs were evaluated first with `llama-cpp-python 0.3.34`, then with a direct C API runner against the Z840's current llama.cpp commit `d1d3c3396aa13a5f239109a822666c4870490ad5` (`0.4.1-dev`, build 162). Both CPU references used zero GPU layers, 48 threads, and greedy argmax; the direct runner also disabled KQV and op offload. Both produced `[220, 248046, 198, 248045, 198]`: the first four tokens agree, but decision five differs from fused and aligned GPU (`271`). The current C API CPU/GPU raw-logit relative L2 is `0.0236–0.1823` against fused and `0.0236–0.1733` against aligned. The two CPU implementations' raw logits are not bitwise equal, so the result does not point to the older Python wrapper alone. The direct C API vectors, runner source, and metadata are saved as `cpu-upstream-capi.logits.f32`, `cpu-upstream-capi.cpp`, and `cpu-upstream-capi.record.json`; both references are summarized in `aligned-graph-analysis.json`.
 
 The CPU/GPU full-model discrepancy remains unresolved, so the independent CPU reference does not corroborate the fifth-token GPU result. The selected sum matches the requested captured Gate/Up projection and SwiGLU references and restores parity between the fused and aligned GPU routes on this workload, but that does not qualify the change against the CPU run. Keep the selector opt-in and do not promote it until this discrepancy is understood.
+
+As a supplemental diagnostic, the same current llama.cpp revision was run through its ROCm backend with `n_gpu_layers=999`. It produced `[220, 248068, 198, 760, 1156]`, diverging from both MIInfer GPU routes and the llama.cpp CPU route at decision two after the shared first token. This is not an acceptance oracle, but it shows the current llama.cpp CPU and ROCm paths also disagree on this prompt before MIInfer's fifth-token CPU/GPU mismatch. Raw logits, runner source, and runner/library provenance are in `llamacpp-hip-full-offload.logits.f32`, `llamacpp-hip-full-offload.cpp`, `llamacpp-hip-full-offload.record.json`, and `aligned-graph-analysis.json`.
 
 ## Configured build and CTest
 

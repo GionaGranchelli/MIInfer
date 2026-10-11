@@ -16,5 +16,9 @@
   "logits_sha256": "8a23b51338410a30745207545814f9f369d504b287e9ba15aa16f766eb36e56e",
   "logits_bytes": 4966400,
   "vocab": 248320,
-  "logits_file": "cpu-upstream-capi.logits.f32"
+  "logits_file": "cpu-upstream-capi.logits.f32",
+  "runner_sha256": "164a68a501b38ded7e315f26f0dcb3c41aa736103bd290b0bd1537c47ef76331",
+  "runner_source": "cpu-upstream-capi.cpp",
+  "runner_source_sha256": "e5cb0223fd5131b7b563513d1004a6ed3067e4829bb148ffea83bd5092f05633",
+  "shared_library_sha256": "451d9d90252db2589561f3bef1149bf2d8e480a9dea5fdeb2770bd93e4411900"
 }
