@@ -633,6 +633,7 @@ void PrefillV2RecurrentLayer::forward(
     // 10. FFN Gate & Up projections (Q4_K affine)
     launch_mx_q8_1_mmq_quantize(
         ws.post_normalized, ws.mmq_q8, token_count, kHidden, /*affine=*/true, stream);
+    capture_mx_q8("gateup_input_mx_q8");
     launch_mx_q4k_repacked_mmq(
         d_ffn_gate_mmq_, ws.mmq_q8, ws.ffn_gate,
         kFfnInner, kHidden, token_count, stream);
