@@ -121,14 +121,19 @@ def sse_self_check():
     else:
         raise RuntimeError("truncated SSE self-check unexpectedly passed")
     reuse_checks = prefix_reuse_request_gates([
-        {"server_latency": {"request_id": "first", "reused_prefix_tokens": 100,
-                            "suffix_tokens_dispatched": 20}},
-        {"server_latency": {"request_id": "followup", "reused_prefix_tokens": 100,
-                            "suffix_tokens_dispatched": 0}},
-    ], required=True)
-    if [check["passed"] for check in reuse_checks] != [True, False]:
+        {"server_latency": {"request_id": "first", "reused_prefix_tokens": 1000,
+                            "suffix_tokens_dispatched": 100},
+         "server_request": {"prompt_tokens": 1100}},
+        {"server_latency": {"request_id": "short-prefix", "reused_prefix_tokens": 1099,
+                            "suffix_tokens_dispatched": 20},
+         "server_request": {"prompt_tokens": 1120}},
+        {"server_latency": {"request_id": "empty-suffix", "reused_prefix_tokens": 1120,
+                            "suffix_tokens_dispatched": 0},
+         "server_request": {"prompt_tokens": 1120}},
+    ], previous_prompt_tokens=1000)
+    if [check["passed"] for check in reuse_checks] != [True, False, False]:
         raise RuntimeError("per-request prefix reuse self-check failed")
-    if prefix_reuse_request_gates([], required=True)[0]["passed"]:
+    if prefix_reuse_request_gates([], previous_prompt_tokens=1000)[0]["passed"]:
         raise RuntimeError("missing prefix reuse telemetry unexpectedly passed")
     with tempfile.TemporaryDirectory() as directory:
         path = Path(directory) / "workload.json"
@@ -137,25 +142,31 @@ def sse_self_check():
             raise RuntimeError("atomic workload-artifact self-check failed")
 
 
-def prefix_reuse_request_gates(requests, required):
-    if not required:
-        return []
+def prefix_reuse_request_gates(requests, previous_prompt_tokens=None):
     if not requests:
         return [{"request_index": None, "request_id": None,
+                 "expected_reused_prefix_tokens": previous_prompt_tokens,
                  "reused_prefix_tokens": 0, "suffix_tokens_dispatched": 0,
                  "passed": False}]
     checks = []
+    expected_prefix_tokens = previous_prompt_tokens
     for request_index, request in enumerate(requests, 1):
         latency = request["server_latency"]
         reused = latency.get("reused_prefix_tokens", 0)
         suffix = latency.get("suffix_tokens_dispatched", 0)
+        prompt_tokens = request["server_request"].get("prompt_tokens")
+        valid_prompt_tokens = isinstance(prompt_tokens, int) and prompt_tokens > 0
         checks.append({
             "request_index": request_index,
             "request_id": latency.get("request_id"),
+            "expected_reused_prefix_tokens": expected_prefix_tokens,
             "reused_prefix_tokens": reused,
             "suffix_tokens_dispatched": suffix,
-            "passed": reused > 0 and suffix > 0,
+            "passed": valid_prompt_tokens and (
+                expected_prefix_tokens is None
+                or (reused == expected_prefix_tokens and suffix > 0)),
         })
+        expected_prefix_tokens = prompt_tokens if valid_prompt_tokens else -1
     return checks
 
 
@@ -357,6 +368,7 @@ def main():
         output_path = root / args.output
         output_path.parent.mkdir(parents=True, exist_ok=True)
         write_result(output_path, result)
+        previous_prompt_tokens = None
         for index, (tool_path, start_line, end_line, task) in enumerate(TURN_PLANS, 1):
             turn = {"turn": index, "requests": [], "tool_results": []}
             result["active_turn"] = index
@@ -406,7 +418,9 @@ def main():
             decode_times = [(row["generated_tokens"] / row["decode_tokens_per_second"])
                             for row in detail if row.get("decode_tokens_per_second", 0) > 0]
             generated = sum(row["generated_tokens"] for row in detail)
-            reuse_checks = prefix_reuse_request_gates(turn["requests"], required=index > 1)
+            reuse_checks = prefix_reuse_request_gates(
+                turn["requests"], previous_prompt_tokens=previous_prompt_tokens)
+            previous_prompt_tokens = detail[-1]["prompt_tokens"]
             turn.update({
                 "context_tokens": detail[0]["prompt_tokens"],
                 "generated_tokens_total": generated,
