@@ -101,11 +101,11 @@ def initial_messages(evidence):
     system = ("You are a careful coding-agent assistant working in MIInfer. Use repository "
               "evidence, distinguish facts from assumptions, and preserve the prior conversation.")
     user = (
-        "Deterministic repository investigation transcript. The following are source excerpts "
-        "returned by prior read_file tool calls.\n\n" + evidence +
+        "Deterministic repository investigation transcript. The following repository excerpts "
+        "are context already present at session start.\n\n" + evidence +
         "\n\nTask: review MIInfer's production persistent-context serving path. Start by making "
         "exactly one read_file tool call for docs/interactive-serving.md lines 1-80. Do not "
-        "modify files. Use the evidence above as prior coding-agent history."
+        "modify files. Use the evidence above as prior coding-agent context."
     )
     return [{"role": "system", "content": system}, {"role": "user", "content": user}]
 
@@ -247,6 +247,7 @@ def main():
                 text=True, check=True).stdout.strip(),
             "initial_context_target_tokens": TARGET_PROMPT_TOKENS,
             "initial_context_tokenizer_verified": exact_count,
+            "prefix_reuse_correctness": "UNQUALIFIED: no matched cold replay",
             "source_manifest": manifest, "turns": [],
         }
         for index, (tool_path, start_line, end_line, task) in enumerate(TURN_PLANS, 1):

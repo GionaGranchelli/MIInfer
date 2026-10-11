@@ -28,7 +28,7 @@ The production-path workload was then integrated at `82f6cd5`. Its CPU-only MIIn
 
 The clean Z840 worktree also built the `miinfer` API server target with exit 0 (binary SHA-256 `106feada3db19dca0d8b02bd9f5612e647b9175efabf3553ebc99a759d77e9a8`). The tracked agent runner allocates a 131,072-token engine capacity for room around the 64K-start conversation; its prompt and measured workload remain below 128K, so this is not a 128K campaign.
 
-Code review added a fail-closed reuse gate: each turn after the first must report both reused prefix tokens and dispatched suffix tokens on its first request. The production workload returns failure if any later turn lacks either measurement.
+Code review added a fail-closed reuse gate: each turn after the first must report both reused prefix tokens and dispatched suffix tokens on its first request. The production workload returns failure if any later turn lacks either measurement. This is an operational reuse gate, not cold-versus-reuse token-parity evidence; the known M31-0002 divergence remains unresolved.
 
 ## Decode and prefill
 

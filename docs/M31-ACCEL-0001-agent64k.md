@@ -100,6 +100,9 @@ here.
 The final exit gate requires each later turn's first request to have both a
 nonzero reused prefix and a nonzero dispatched suffix, in addition to the
 visible-answer, generation, and telemetry gates.
+This operational gate does not establish cold-versus-reuse token parity; the
+known M31-0002 divergence remains unresolved, so the run cannot qualify exact
+reuse correctness by itself.
 
 On Z840, launch the production-path workload only through the guarded runner:
 
