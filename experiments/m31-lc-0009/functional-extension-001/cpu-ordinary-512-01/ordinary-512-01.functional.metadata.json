@@ -1,0 +1,11 @@
+{
+  "reference": "llama.cpp CPU",
+  "revision": "d1d3c3396aa13a5f239109a822666c4870490ad5",
+  "prompt_tokens": 512,
+  "generated_tokens": 2048,
+  "context": 2560,
+  "threads": 48,
+  "gpu_layers": 0,
+  "repeats": 3,
+  "repeat_ids_equal": true
+}

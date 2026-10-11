@@ -1,0 +1,3 @@
+/tmp/lc9-input/m31-lc-0009-cpu-oracle-functional /home/machinist/models/Qwen3.8-27B-Q4_K_M.gguf /tmp/lc9-input/prompt_ids/ordinary-512-01.u32le - /tmp/lc9-functional-extension-001/ordinary-512-01/ordinary-512-01 --functional-extension 2048
+
+The runner stdout and stderr are redirected to the sibling runner.log on Machinist.
