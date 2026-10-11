@@ -1,0 +1,106 @@
+{
+  "schema": "m31-lc-0009-gpu-cell-v1",
+  "status": "THREE_REPEATS_BITWISE_STABLE",
+  "source_commit": "4ff3697",
+  "remote_checkout_head": "4c00f1d",
+  "source_sha256": "7ffd94238db5c07219a7077d4c8c79be08071eba8baa15dca186f526efbcc7f3",
+  "binary_sha256": "6b635ca1937677f5e05a0667b528c213be5555d4e14865246ecb5a1824af4808",
+  "image": "localhost/miinfer-dev:rocm-7.2.1",
+  "image_digest": "sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e",
+  "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+  "host": {
+    "hostname": "fedora",
+    "pci_bdf": "0000:06:00.0",
+    "gpu": "gfx906",
+    "serial": "692121006383",
+    "rocr_visible_devices": "0"
+  },
+  "configuration": {
+    "prompt": "coding-64-01",
+    "prompt_sha256": "904bb54e7a38465c5362f2c7e6f58b95fff4f2268b5c75c04effa68396ca57d2",
+    "route": "aligned-mmq",
+    "mode": "eager",
+    "environment": {
+      "MIINFER_HIP_GRAPH": "0",
+      "MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY": "1",
+      "MIINFER_EXPERIMENTAL_MMQ_GATEUP_QSUM": "1"
+    },
+    "iterations": 3,
+    "warmups": 0,
+    "forced_history": [
+      760,
+      1156,
+      369,
+      9859
+    ],
+    "context_profile": "8K",
+    "context_capacity_tokens": 320,
+    "generated_tokens": 64
+  },
+  "repeat_evidence": {
+    "teacher_forced_logits_sha256": [
+      "da341ff66c0ccc39528dc00cbb6680b558ceb7a6f1257c20778ea8e5fd384f3b",
+      "da341ff66c0ccc39528dc00cbb6680b558ceb7a6f1257c20778ea8e5fd384f3b",
+      "da341ff66c0ccc39528dc00cbb6680b558ceb7a6f1257c20778ea8e5fd384f3b"
+    ],
+    "forced_ids_sha256": [
+      "a5187d5cfcda115af0de2a86818152c39350899d6d19726f97e3581328efedf9",
+      "a5187d5cfcda115af0de2a86818152c39350899d6d19726f97e3581328efedf9",
+      "a5187d5cfcda115af0de2a86818152c39350899d6d19726f97e3581328efedf9"
+    ],
+    "normal_greedy_ids_sha256": [
+      "a5187d5cfcda115af0de2a86818152c39350899d6d19726f97e3581328efedf9",
+      "a5187d5cfcda115af0de2a86818152c39350899d6d19726f97e3581328efedf9",
+      "a5187d5cfcda115af0de2a86818152c39350899d6d19726f97e3581328efedf9"
+    ],
+    "state_hashes": [],
+    "repeat_ids_and_states_byte_identical": true,
+    "state_repeat_audit": "Z840 SHA-256 audit passed for all recurrent/KV snapshot repeat groups; raw snapshots remain on Lake. Per-file state digests were not copied before SSH timed out and should be regenerated from the retained raw data.",
+    "tokens_valid": true,
+    "state_hashes_persisted": false
+  },
+  "cpu_comparison": {
+    "cpu_logits_sha256": "ef47a1bfe609c0c579abe4c55ab7394e4fdf3cac99ce60cbec836d2848fbb23b",
+    "comparison_file": "gpu-aligned-mmq-eager-coding64-comparison.json",
+    "comparison_sha256": "c3bf9e28c2374adf49c991b7ee5d9f11744808d99709949ab37edc35d6002f61",
+    "teacher_forced_top1_matches": [
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "relative_l2_range": [
+      0.02737921850777689,
+      0.10525800117975202
+    ],
+    "normal_greedy_common_prefix_tokens": 38,
+    "normal_greedy_first_mismatch_position_1based": 39,
+    "functional_check": "not evaluable at 64 generated tokens; output ends before the frozen final-answer check"
+  },
+  "timing_ms": {
+    "forced_wall": [
+      4129.743,
+      3707.649,
+      3547.062
+    ],
+    "normal_greedy_wall": [
+      2955.869,
+      2951.514,
+      2949.191
+    ]
+  },
+  "device": {
+    "free_vram_before_first_call_bytes": 15716057088,
+    "free_vram_after_calls_bytes": 15638462464,
+    "telemetry_file": "/mnt/lc9-lake/m31-lc-0009-captures/gpu-matrix-telemetry.txt",
+    "during_run_thermal_telemetry": "pre-run and post-run samples only; no peak-temperature claim"
+  },
+  "paired_log_sha256": "72e494a809d666a64e8b5288b8787c7e1f099d742615b58e803dfba60daaf420",
+  "command": "podman run --rm --init --device /dev/kfd --device /dev/dri --security-opt=label=disable --group-add=keep-groups -e ROCR_VISIBLE_DEVICES=0 -e MIINFER_HIP_GRAPH=0 -e MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY=1 -e MIINFER_EXPERIMENTAL_MMQ_GATEUP_QSUM=1 -v /home/fedora-workstation/Development/mi50-lc0009:/workspace/MIInfer:Z -v /home/fedora-workstation/models:/models:ro -v /home/fedora-workstation/Development/mi50-lc0009-captures/cpu-forced:/cpu:ro -v /mnt/lc9-lake/m31-lc-0009-captures:/captures:rw localhost/miinfer-dev:rocm-7.2.1 /workspace/MIInfer/build/qualification-container-rocm721-gpu/e2-0003-checkpointed-call /models/Qwen3.8-27B-Q4_K_M.gguf 8K --generate 64 --iterations 3 --warmup 0 --prompt-ids /workspace/MIInfer/experiments/m31-lc-0009/prompt_ids/coding-64-01.u32le --forced-token-ids /cpu/coding-64-01.forced.ids --capture-raw-logits /captures/lc9-aligned-mmq-eager-coding-64-01/coding-64-01.forced.logits.f32 --capture-token-ids /captures/lc9-aligned-mmq-eager-coding-64-01/coding-64-01.forced.ids --capture-normal-token-ids /captures/lc9-aligned-mmq-eager-coding-64-01/coding-64-01.greedy.ids --capture-state-prefix /captures/lc9-aligned-mmq-eager-coding-64-01/coding-64-01.forced.state --output /captures/lc9-aligned-mmq-eager-coding-64-01/coding-64-01.paired.txt",
+  "raw_capture_storage": {
+    "z840": "/mnt/lc9-lake/m31-lc-0009-captures/lc9-aligned-mmq-eager-coding-64-01",
+    "raw_files_tracked_in_git": false
+  },
+  "state_mapping": "MIInfer-native recurrent and KV layouts; CPU/GPU canonical mapping remains unestablished"
+}
