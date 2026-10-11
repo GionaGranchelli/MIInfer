@@ -1,0 +1,35 @@
+{
+  "source_base": "d507c4f",
+  "binary_sha256": "702618e756c2de5a2facc9420a6726b69e3d234054729e9eca3548089d10c2fb",
+  "routes": {
+    "control": {
+      "sha256": "78a1e4032a9f3253e7d4bc28926abf9d4939a77a4b86dfd8b5e319eb0737e92f",
+      "matches_lc0006_bytes": true,
+      "tokens": [
+        220,
+        248046,
+        198,
+        248045,
+        271
+      ],
+      "raw_logits_valid": true,
+      "guard_exit": 0,
+      "clean_process_group": true
+    },
+    "mmq_only": {
+      "sha256": "e53a0fe7b54629e437320107ca515c64060ee1ec387055dc3bf9e10719eeb1d4",
+      "matches_lc0006_bytes": true,
+      "tokens": [
+        220,
+        248046,
+        198,
+        248045,
+        74455
+      ],
+      "raw_logits_valid": true,
+      "guard_exit": 0,
+      "clean_process_group": true
+    }
+  },
+  "result": "PASS"
+}

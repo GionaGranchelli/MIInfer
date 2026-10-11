@@ -1,0 +1,16 @@
+{
+  "milestone": "M31-LC-0006",
+  "binary_source_sha": "8a9caec3366512e459a93bad68adde181225304b",
+  "binary_sha256": "702618e756c2de5a2facc9420a6726b69e3d234054729e9eca3548089d10c2fb",
+  "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+  "image_digest": "sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e",
+  "gpu": "Z840 MI50 gfx906 BDF 0000:06:00.0",
+  "build_flags": "Release; MIINFER_ENABLE_HIP=ON; MIINFER_BUILD_TESTS=ON; MIINFER_BUILD_BENCHMARKS=ON; MIINFER_BUILD_RESEARCH_TOOLS=OFF; CMAKE_HIP_ARCHITECTURES=gfx906; ROCm 7.2.1",
+  "source_file_sha256": {
+    "include/miinfer/prefill_v2/topology_block.hpp": "57eec10a112005432d6f411b341e336d0e76e1f605f082f1f6a961bb77b691b7",
+    "src/prefill_v2/attention_layer.cpp": "bc0faff155ee3b5f291cc4334e4313d6844b3d3c0a3bd977466e4715f80a8e22",
+    "src/prefill_v2/model.cpp": "3390a83c9cc748a70cee3a071cf6c80fe77b931dfe6fc0928eb58ab7969768fe",
+    "src/prefill_v2/topology_block.cpp": "cae7000411bbdf46fb3d5347ca239fc6f6002ced59d4b1a4f76ea2918575b51a"
+  },
+  "build_result": "PASS in pinned OCI image; source includes commit 8a9caec plus only those committed source changes."
+}
