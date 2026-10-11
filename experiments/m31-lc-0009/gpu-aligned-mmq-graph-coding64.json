@@ -53,11 +53,35 @@
       "a5187d5cfcda115af0de2a86818152c39350899d6d19726f97e3581328efedf9",
       "a5187d5cfcda115af0de2a86818152c39350899d6d19726f97e3581328efedf9"
     ],
-    "state_hashes": [],
+    "state_hashes": [
+      {
+        "decision": 1,
+        "active_tokens": 64,
+        "metadata_sha256": "567105c9cfdae4968609970be671e24f0129cfa458bdacdd6729dba280382528",
+        "recurrent_sha256": "5a1e5abee9a8d455af89523064ec87841140c2e156b30d5031d36449a261b7d9",
+        "kv_sha256": "d70a5b1a1d1fc20d61d2500712ce3cb2db20eca12f3cb5ee146439751e2f004d"
+      },
+      {
+        "decision": 2,
+        "active_tokens": 65,
+        "metadata_sha256": "93fa94f9ddeb45f9b694da35613e45c6d3a7a2dceaf219be21c9945fa50d9653",
+        "recurrent_sha256": "3b1085b9dbf10c05f8367b8b37cc3ef2bab13fa976446240db2df57f1de97c2a",
+        "kv_sha256": "f5ebb4a0e67260555439679b6cf418d92463404f20a7c1bbd8afe5c29605b594"
+      },
+      {
+        "decision": 5,
+        "active_tokens": 68,
+        "metadata_sha256": "d9ffb952897bb697bf744510e60b061d9ed8500408ba98817ae0225ba3c39b31",
+        "recurrent_sha256": "f0edafb8bbc77b36cd78bd05d246365e41d4871729c6640df7ab16c648cf2552",
+        "kv_sha256": "a155e642d5f17fe552d3455e2364a5220f8203bcba5dc616e8d78fc8c554710b"
+      }
+    ],
     "repeat_ids_and_states_byte_identical": true,
-    "state_repeat_audit": "Z840 SHA-256 audit passed for all recurrent/KV snapshot repeat groups; raw snapshots remain on Lake. Per-file state digests were not copied before SSH timed out and should be regenerated from the retained raw data.",
     "tokens_valid": true,
-    "state_hashes_persisted": false
+    "state_hashes_persisted": true,
+    "state_repeat_audit_file": "gpu-lake-capture-inventory.json",
+    "state_repeat_audit": "Lake SHA-256 inventory records all three repeat hashes for metadata, recurrent, and KV snapshots at decisions 1, 2, and 5; all repeats are byte-identical. This record persists the shared digest for each state group.",
+    "state_repeat_audit_sha256": "9af747474f7ece1493b1d7a33c8faac178c31ede45acd32057592018b4db8266"
   },
   "cpu_comparison": {
     "cpu_logits_sha256": "ef47a1bfe609c0c579abe4c55ab7394e4fdf3cac99ce60cbec836d2848fbb23b",

@@ -141,17 +141,7 @@
       "all_files_present": true,
       "all_repeat_groups_identical": true,
       "recorded_hash_mismatches": [],
-      "record_hash_groups_without_reference": [
-        "state_1_metadata",
-        "state_1_kv",
-        "state_1_recurrent",
-        "state_2_metadata",
-        "state_2_kv",
-        "state_2_recurrent",
-        "state_5_metadata",
-        "state_5_kv",
-        "state_5_recurrent"
-      ],
+      "record_hash_groups_without_reference": [],
       "file_groups": [
         {
           "group": "forced_logits",
@@ -399,17 +389,7 @@
       "all_files_present": true,
       "all_repeat_groups_identical": true,
       "recorded_hash_mismatches": [],
-      "record_hash_groups_without_reference": [
-        "state_1_metadata",
-        "state_1_kv",
-        "state_1_recurrent",
-        "state_2_metadata",
-        "state_2_kv",
-        "state_2_recurrent",
-        "state_5_metadata",
-        "state_5_kv",
-        "state_5_recurrent"
-      ],
+      "record_hash_groups_without_reference": [],
       "file_groups": [
         {
           "group": "forced_logits",
@@ -781,11 +761,7 @@
       "all_files_present": true,
       "all_repeat_groups_identical": true,
       "recorded_hash_mismatches": [],
-      "record_hash_groups_without_reference": [
-        "state_1_metadata",
-        "state_2_metadata",
-        "state_5_metadata"
-      ],
+      "record_hash_groups_without_reference": [],
       "file_groups": [
         {
           "group": "forced_logits",
@@ -1033,17 +1009,7 @@
       "all_files_present": true,
       "all_repeat_groups_identical": true,
       "recorded_hash_mismatches": [],
-      "record_hash_groups_without_reference": [
-        "state_1_metadata",
-        "state_1_kv",
-        "state_1_recurrent",
-        "state_2_metadata",
-        "state_2_kv",
-        "state_2_recurrent",
-        "state_5_metadata",
-        "state_5_kv",
-        "state_5_recurrent"
-      ],
+      "record_hash_groups_without_reference": [],
       "file_groups": [
         {
           "group": "forced_logits",
@@ -1663,17 +1629,7 @@
       "all_files_present": true,
       "all_repeat_groups_identical": true,
       "recorded_hash_mismatches": [],
-      "record_hash_groups_without_reference": [
-        "state_1_metadata",
-        "state_1_kv",
-        "state_1_recurrent",
-        "state_2_metadata",
-        "state_2_kv",
-        "state_2_recurrent",
-        "state_5_metadata",
-        "state_5_kv",
-        "state_5_recurrent"
-      ],
+      "record_hash_groups_without_reference": [],
       "file_groups": [
         {
           "group": "forced_logits",
@@ -1921,11 +1877,7 @@
       "all_files_present": true,
       "all_repeat_groups_identical": true,
       "recorded_hash_mismatches": [],
-      "record_hash_groups_without_reference": [
-        "state_1_metadata",
-        "state_2_metadata",
-        "state_5_metadata"
-      ],
+      "record_hash_groups_without_reference": [],
       "file_groups": [
         {
           "group": "forced_logits",
@@ -2421,17 +2373,7 @@
       "all_files_present": true,
       "all_repeat_groups_identical": true,
       "recorded_hash_mismatches": [],
-      "record_hash_groups_without_reference": [
-        "state_1_metadata",
-        "state_1_kv",
-        "state_1_recurrent",
-        "state_2_metadata",
-        "state_2_kv",
-        "state_2_recurrent",
-        "state_5_metadata",
-        "state_5_kv",
-        "state_5_recurrent"
-      ],
+      "record_hash_groups_without_reference": [],
       "file_groups": [
         {
           "group": "forced_logits",
@@ -2929,11 +2871,7 @@
       "all_files_present": true,
       "all_repeat_groups_identical": true,
       "recorded_hash_mismatches": [],
-      "record_hash_groups_without_reference": [
-        "state_1_metadata",
-        "state_2_metadata",
-        "state_5_metadata"
-      ],
+      "record_hash_groups_without_reference": [],
       "file_groups": [
         {
           "group": "forced_ids",

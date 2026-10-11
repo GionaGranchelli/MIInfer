@@ -52,23 +52,30 @@
         "decision": 1,
         "active_tokens": 64,
         "recurrent_sha256": "fad03927b58a0dcdf447961df97ec6b0fcd0cd3b6ed24fa56047478aa710e5d6",
-        "kv_sha256": "e2bec4cb7e6b67dbf5b392e9752325f6aa22324768e318d9e71c0711b55baecc"
+        "kv_sha256": "e2bec4cb7e6b67dbf5b392e9752325f6aa22324768e318d9e71c0711b55baecc",
+        "metadata_sha256": "567105c9cfdae4968609970be671e24f0129cfa458bdacdd6729dba280382528"
       },
       {
         "decision": 2,
         "active_tokens": 65,
         "recurrent_sha256": "5eaaf736e81b251bd3ceadf35d789499d30f09574f048c65e62b85fe13cf46d8",
-        "kv_sha256": "482c2390b387d3a80b7c98618dbc2fa6b742763f11b23f49c4d0a533b7097e90"
+        "kv_sha256": "482c2390b387d3a80b7c98618dbc2fa6b742763f11b23f49c4d0a533b7097e90",
+        "metadata_sha256": "93fa94f9ddeb45f9b694da35613e45c6d3a7a2dceaf219be21c9945fa50d9653"
       },
       {
         "decision": 5,
         "active_tokens": 68,
         "recurrent_sha256": "f3f7eda10df31c34965e3bdbecd5ecba3c1deb5cf185d9d7e9c0939295b4da4b",
-        "kv_sha256": "8d08cc4f3eb60383b0fd9747120d0fd5f2ade35255e8669737cc4f1061de5fcc"
+        "kv_sha256": "8d08cc4f3eb60383b0fd9747120d0fd5f2ade35255e8669737cc4f1061de5fcc",
+        "metadata_sha256": "d9ffb952897bb697bf744510e60b061d9ed8500408ba98817ae0225ba3c39b31"
       }
     ],
     "repeat_ids_and_states_byte_identical": true,
-    "tokens_valid": true
+    "tokens_valid": true,
+    "state_hashes_persisted": true,
+    "state_repeat_audit_file": "gpu-lake-capture-inventory.json",
+    "state_repeat_audit": "Lake SHA-256 inventory records all three repeat hashes for metadata, recurrent, and KV snapshots at decisions 1, 2, and 5; all repeats are byte-identical. This record persists the shared digest for each state group.",
+    "state_repeat_audit_sha256": "9af747474f7ece1493b1d7a33c8faac178c31ede45acd32057592018b4db8266"
   },
   "cpu_comparison": {
     "cpu_logits_sha256": "30c1da9a3aac145194f207607a777f5a0f619400f5c4ee67b1a74f221544e3cb",
