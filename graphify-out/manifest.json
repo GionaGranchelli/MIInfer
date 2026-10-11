@@ -4725,13 +4725,13 @@
     "semantic_hash": ""
   },
   "include/miinfer/prefill_v2/topology_block.hpp": {
-    "mtime": 1791661597.328382,
-    "ast_hash": "bd6d73ab0bd7ed7af2ed2d66c4082288",
+    "mtime": 1791683435.3158898,
+    "ast_hash": "5a2c0f1cd5cbfe300c51660fbbd27542",
     "semantic_hash": ""
   },
   "src/prefill_v2/attention_layer.cpp": {
-    "mtime": 1791682133.8208108,
-    "ast_hash": "aaf3f1783e188f0f91b02b5ef70caa6d",
+    "mtime": 1791683435.3158898,
+    "ast_hash": "2b638282c943d82df2622a61ec186a6a",
     "semantic_hash": ""
   },
   "src/prefill_v2/kv_cache.cpp": {
@@ -4740,8 +4740,8 @@
     "semantic_hash": ""
   },
   "src/prefill_v2/topology_block.cpp": {
-    "mtime": 1791682009.295975,
-    "ast_hash": "f682d9621e005a18c028f178d3af66d9",
+    "mtime": 1791683435.3158898,
+    "ast_hash": "0d9aa19ccac4280a7185ba38f8997e2c",
     "semantic_hash": ""
   },
   "experiments/V2-0003-topology-block-vertical-slice.md": {
@@ -4760,8 +4760,8 @@
     "semantic_hash": ""
   },
   "src/prefill_v2/model.cpp": {
-    "mtime": 1791663878.983087,
-    "ast_hash": "797ee1a38734b34632c661b2cc4dbbb9",
+    "mtime": 1791683435.3168898,
+    "ast_hash": "76c4a98377d60429979c61b979f2cf13",
     "semantic_hash": ""
   },
   "experiments/V2-0004-register-resident-gdn-and-full-model.md": {
@@ -8862,6 +8862,11 @@
   "results/m31-lc-0006/z840-layer10-traced-graph/source-manifest-block2-trace.json": {
     "mtime": 1791680413.8723578,
     "ast_hash": "e0483902558eacaa83659f19d87f1444",
+    "semantic_hash": ""
+  },
+  "experiments/m31-lc-0006/source-manifest-gqa-internals.json": {
+    "mtime": 1791682278.777355,
+    "ast_hash": "a98f7fdd601d27dbd0d12866f29c0b3f",
     "semantic_hash": ""
   }
 }

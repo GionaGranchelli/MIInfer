@@ -73,7 +73,8 @@ public:
         std::uint32_t position,
         const DeviceDecodeState* decode_state = nullptr,
         hipStream_t stream = nullptr,
-        RecurrentLayerGraphTrace* graph_trace = nullptr) const;
+        RecurrentLayerGraphTrace* graph_trace = nullptr,
+        const DeviceDecodeState* attention_decode_state = nullptr) const;
 
     // Profiled forward execution
     void forward_profiled(

@@ -573,7 +573,7 @@ void PrefillV2AttentionLayer::decode(
     const char* trace_decode = std::getenv("MIINFER_LC_DECODE_TRACE");
     const bool trace_block = gqa_block == 0 || gqa_block == 2;
     const bool capture_graph = trace_block && graph_trace != nullptr && decode_state != nullptr;
-    const bool capture_eager = trace_block && decode_state == nullptr && trace_prefix != nullptr
+    const bool capture_eager = trace_block && graph_trace == nullptr && trace_prefix != nullptr
         && trace_decode != nullptr && std::string_view(trace_decode) != "0"
         && !(gqa_block == 0 ? block0_trace_captured : block2_trace_captured);
     const std::string block_prefix = capture_graph || capture_eager

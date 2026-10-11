@@ -79,7 +79,8 @@ void PrefillV2TopologyBlock::decode(
     std::uint32_t position,
     const DeviceDecodeState* decode_state,
     hipStream_t stream,
-    RecurrentLayerGraphTrace* graph_trace) const {
+    RecurrentLayerGraphTrace* graph_trace,
+    const DeviceDecodeState* attention_decode_state) const {
 
     // Layer 0 (GDN): d_ping -> d_pong
     gdn0_.decode(d_ping, d_pong, state0, ws, decode_state, stream, graph_trace);
@@ -91,7 +92,8 @@ void PrefillV2TopologyBlock::decode(
     gdn2_.decode(d_ping, d_pong, state2, ws, decode_state, stream, graph_trace);
 
     // Layer 3 (GQA): d_pong -> d_final_output
-    gqa3_.decode(d_pong, d_final_output, kv_cache3, ws, position, decode_state, stream, graph_trace);
+    gqa3_.decode(d_pong, d_final_output, kv_cache3, ws, position,
+        attention_decode_state != nullptr ? attention_decode_state : decode_state, stream, graph_trace);
     const char* trace_prefix = std::getenv("MIINFER_LC_OP_TRACE_PREFIX");
     const char* trace_decode = std::getenv("MIINFER_LC_DECODE_TRACE");
     static bool block_trace_captured = false;

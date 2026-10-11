@@ -252,8 +252,8 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "bench_decode_fast_path_bakeoff_find_tensor",
-      "community": 796,
-      "community_name": "GgufFile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "find_tensor()"
     },
     {
@@ -263,8 +263,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "bench_decode_fast_path_bakeoff_cpp_string",
-      "community": 796,
-      "community_name": "GgufFile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "string"
     },
     {
@@ -2683,8 +2683,8 @@
       "source_location": "L63",
       "_origin": "ast",
       "id": "bench_m13_quant_mm_bench_find_tensor",
-      "community": 796,
-      "community_name": "GgufFile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "find_tensor()"
     },
     {
@@ -2694,8 +2694,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "bench_m13_quant_mm_bench_cpp_gguftensortype",
-      "community": 796,
-      "community_name": "GgufFile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "gguftensortype"
     },
     {
@@ -2705,8 +2705,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "bench_m13_quant_mm_bench_cpp_uint64_t",
-      "community": 796,
-      "community_name": "GgufFile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "uint64_t"
     },
     {
@@ -2782,8 +2782,8 @@
       "source_location": "L170",
       "_origin": "ast",
       "id": "bench_m13_quant_mm_bench_main",
-      "community": 796,
-      "community_name": "GgufFile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "main()"
     },
     {
@@ -15795,8 +15795,8 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "include_miinfer_gguf_gguftensor",
-      "community": 796,
-      "community_name": "GgufFile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "gguftensor"
     },
     {
@@ -15817,8 +15817,8 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "include_miinfer_gguf_gguftensor_name",
-      "community": 796,
-      "community_name": "GgufFile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "name"
     },
     {
@@ -15828,8 +15828,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "include_miinfer_gguf_hpp_uint64_t",
-      "community": 796,
-      "community_name": "GgufFile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "uint64_t"
     },
     {
@@ -15839,8 +15839,8 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "include_miinfer_gguf_gguftensor_dimensions",
-      "community": 796,
-      "community_name": "GgufFile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "dimensions"
     },
     {
@@ -15850,8 +15850,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "include_miinfer_gguf_hpp_gguftensortype",
-      "community": 796,
-      "community_name": "GgufFile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "gguftensortype"
     },
     {
@@ -15861,8 +15861,8 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "include_miinfer_gguf_gguftensor_type",
-      "community": 796,
-      "community_name": "GgufFile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "type"
     },
     {
@@ -15872,8 +15872,8 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "include_miinfer_gguf_gguftensor_offset",
-      "community": 796,
-      "community_name": "GgufFile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "offset"
     },
     {
@@ -15894,8 +15894,8 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "include_miinfer_gguf_gguftensor_byte_size",
-      "community": 796,
-      "community_name": "GgufFile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "byte_size"
     },
     {
@@ -15916,8 +15916,8 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "include_miinfer_gguf_gguftensor_data",
-      "community": 796,
-      "community_name": "GgufFile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "data"
     },
     {
@@ -16246,8 +16246,8 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q4kwaveswiglufusedtile",
-      "community": 822,
-      "community_name": "Q4KWaveSwigluFusedTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "q4kwaveswiglufusedtile"
     },
     {
@@ -16257,8 +16257,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_hpp_uint64_t",
-      "community": 822,
-      "community_name": "Q4KWaveSwigluFusedTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "uint64_t"
     },
     {
@@ -16268,8 +16268,8 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q4kwaveswiglufusedtile_words_p0",
-      "community": 822,
-      "community_name": "Q4KWaveSwigluFusedTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "words_p0"
     },
     {
@@ -16279,8 +16279,8 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q4kwaveswiglufusedtile_words_p1",
-      "community": 822,
-      "community_name": "Q4KWaveSwigluFusedTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "words_p1"
     },
     {
@@ -16290,8 +16290,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "metadata",
-      "community": 822,
-      "community_name": "Q4KWaveSwigluFusedTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "metadata"
     },
     {
@@ -16301,8 +16301,8 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q4kwaveswiglufusedtile_metadata_gate",
-      "community": 822,
-      "community_name": "Q4KWaveSwigluFusedTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "metadata_gate"
     },
     {
@@ -16312,8 +16312,8 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q4kwaveswiglufusedtile_metadata_up",
-      "community": 822,
-      "community_name": "Q4KWaveSwigluFusedTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "metadata_up"
     },
     {
@@ -16334,8 +16334,8 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q4kwaveswiglufusedtile_padding",
-      "community": 822,
-      "community_name": "Q4KWaveSwigluFusedTile",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "padding"
     },
     {
@@ -16499,8 +16499,8 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q4kmmqtile",
-      "community": 899,
-      "community_name": "AGENTS.md",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "q4kmmqtile"
     },
     {
@@ -16510,8 +16510,8 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q4kmmqtile_values",
-      "community": 899,
-      "community_name": "AGENTS.md",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "values"
     },
     {
@@ -16521,8 +16521,8 @@
       "source_location": "L66",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q4kmmqtile_high",
-      "community": 899,
-      "community_name": "AGENTS.md",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "high"
     },
     {
@@ -16532,8 +16532,8 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q4kmmqtile_scale_d",
-      "community": 899,
-      "community_name": "AGENTS.md",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "scale_d"
     },
     {
@@ -16543,8 +16543,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_hpp_uint16_t",
-      "community": 899,
-      "community_name": "AGENTS.md",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "uint16_t"
     },
     {
@@ -16554,8 +16554,8 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "include_miinfer_kquant_wave_layout_q4kmmqtile_dmin",
-      "community": 899,
-      "community_name": "AGENTS.md",
+      "community": 243,
+      "community_name": "GgufTensor",
       "norm_label": "dmin"
     },
     {
@@ -19524,8 +19524,8 @@
       "source_location": "L227",
       "_origin": "ast",
       "id": "include_miinfer_prefill_v2_model_prefillv2model_load_session",
-      "community": 209,
-      "community_name": "PrefillV2Model",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "load_session"
     },
     {
@@ -19601,8 +19601,8 @@
       "source_location": "L247",
       "_origin": "ast",
       "id": "include_miinfer_prefill_v2_model_prefillv2model_clear_snapshots",
-      "community": 772,
-      "community_name": "PrefillV2Model::snapshot",
+      "community": 860,
+      "community_name": "prefill_v2_agent_branch_workload_test.cpp",
       "norm_label": "clear_snapshots"
     },
     {
@@ -19821,8 +19821,8 @@
       "source_location": "L296",
       "_origin": "ast",
       "id": "include_miinfer_prefill_v2_model_prefillv2model_find_longest_snapshot_prefix",
-      "community": 209,
-      "community_name": "PrefillV2Model",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "find_longest_snapshot_prefix"
     },
     {
@@ -19843,8 +19843,8 @@
       "source_location": "L301",
       "_origin": "ast",
       "id": "include_miinfer_prefill_v2_model_prefillv2model_restore_snapshot_backing",
-      "community": 209,
-      "community_name": "PrefillV2Model",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "restore_snapshot_backing"
     },
     {
@@ -20415,8 +20415,8 @@
       "source_location": "L371",
       "_origin": "ast",
       "id": "include_miinfer_prefill_v2_model_prefillv2model_allocate_resources",
-      "community": 772,
-      "community_name": "PrefillV2Model::snapshot",
+      "community": 860,
+      "community_name": "prefill_v2_agent_branch_workload_test.cpp",
       "norm_label": "allocate_resources"
     },
     {
@@ -20426,8 +20426,8 @@
       "source_location": "L372",
       "_origin": "ast",
       "id": "include_miinfer_prefill_v2_model_prefillv2model_free_resources",
-      "community": 772,
-      "community_name": "PrefillV2Model::snapshot",
+      "community": 860,
+      "community_name": "prefill_v2_agent_branch_workload_test.cpp",
       "norm_label": "free_resources"
     },
     {
@@ -20437,8 +20437,8 @@
       "source_location": "L373",
       "_origin": "ast",
       "id": "include_miinfer_prefill_v2_model_prefillv2model_invalidate_runtime_state_cache",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": ".invalidate_runtime_state_cache()"
     },
     {
@@ -21537,8 +21537,8 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "include_miinfer_prefill_v2_reusable_context_compute_token_sequence_hash",
-      "community": 644,
-      "community_name": "ReusableContext",
+      "community": 72,
+      "community_name": "D021 \u2014 Graph Topology Is a Performance Parameter",
       "norm_label": "compute_token_sequence_hash()"
     },
     {
@@ -21636,8 +21636,8 @@
       "source_location": "L79",
       "_origin": "ast",
       "id": "include_miinfer_prefill_v2_reusable_context_gdncheckpointstorage_is_valid",
-      "community": 644,
-      "community_name": "ReusableContext",
+      "community": 684,
+      "community_name": "RecurrentLayerStateStorage",
       "norm_label": ".is_valid()"
     },
     {
@@ -22282,7 +22282,7 @@
       "label": "forward_profiled",
       "file_type": "code",
       "source_file": "include/miinfer/prefill_v2/topology_block.hpp",
-      "source_location": "L79",
+      "source_location": "L80",
       "_origin": "ast",
       "id": "include_miinfer_prefill_v2_topology_block_prefillv2topologyblock_forward_profiled",
       "community": 603,
@@ -22293,7 +22293,7 @@
       "label": ".block_index()",
       "file_type": "code",
       "source_file": "include/miinfer/prefill_v2/topology_block.hpp",
-      "source_location": "L96",
+      "source_location": "L97",
       "_origin": "ast",
       "id": "include_miinfer_prefill_v2_topology_block_prefillv2topologyblock_block_index",
       "community": 603,
@@ -22315,7 +22315,7 @@
       "label": ".persistent_weight_bytes()",
       "file_type": "code",
       "source_file": "include/miinfer/prefill_v2/topology_block.hpp",
-      "source_location": "L97",
+      "source_location": "L98",
       "_origin": "ast",
       "id": "include_miinfer_prefill_v2_topology_block_prefillv2topologyblock_persistent_weight_bytes",
       "community": 603,
@@ -22326,7 +22326,7 @@
       "label": ".append_decode_weight_pointers()",
       "file_type": "code",
       "source_file": "include/miinfer/prefill_v2/topology_block.hpp",
-      "source_location": "L106",
+      "source_location": "L107",
       "_origin": "ast",
       "id": "include_miinfer_prefill_v2_topology_block_prefillv2topologyblock_append_decode_weight_pointers",
       "community": 603,
@@ -22348,7 +22348,7 @@
       "label": "gdn0_",
       "file_type": "code",
       "source_file": "include/miinfer/prefill_v2/topology_block.hpp",
-      "source_location": "L115",
+      "source_location": "L116",
       "_origin": "ast",
       "id": "include_miinfer_prefill_v2_topology_block_prefillv2topologyblock_gdn0",
       "community": 603,
@@ -22359,7 +22359,7 @@
       "label": "gdn1_",
       "file_type": "code",
       "source_file": "include/miinfer/prefill_v2/topology_block.hpp",
-      "source_location": "L116",
+      "source_location": "L117",
       "_origin": "ast",
       "id": "include_miinfer_prefill_v2_topology_block_prefillv2topologyblock_gdn1",
       "community": 603,
@@ -22370,7 +22370,7 @@
       "label": "gdn2_",
       "file_type": "code",
       "source_file": "include/miinfer/prefill_v2/topology_block.hpp",
-      "source_location": "L117",
+      "source_location": "L118",
       "_origin": "ast",
       "id": "include_miinfer_prefill_v2_topology_block_prefillv2topologyblock_gdn2",
       "community": 603,
@@ -22381,7 +22381,7 @@
       "label": "gqa3_",
       "file_type": "code",
       "source_file": "include/miinfer/prefill_v2/topology_block.hpp",
-      "source_location": "L118",
+      "source_location": "L119",
       "_origin": "ast",
       "id": "include_miinfer_prefill_v2_topology_block_prefillv2topologyblock_gqa3",
       "community": 603,
@@ -23638,8 +23638,8 @@
       "source_location": "L108",
       "_origin": "ast",
       "id": "include_miinfer_qwen3_gpu_layer_qwen3gpuprofileevent_copy",
-      "community": 779,
-      "community_name": "hipMemcpyAsync",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "copy"
     },
     {
@@ -24485,8 +24485,8 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "include_miinfer_qwen3_gpu_primitives_q8kdeviceblock",
-      "community": 741,
-      "community_name": "qwen35_gpu_pipeline.hpp",
+      "community": 801,
+      "community_name": "download",
       "norm_label": "q8kdeviceblock"
     },
     {
@@ -24496,8 +24496,8 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "include_miinfer_qwen3_gpu_primitives_q8kdeviceblock_d",
-      "community": 741,
-      "community_name": "qwen35_gpu_pipeline.hpp",
+      "community": 801,
+      "community_name": "download",
       "norm_label": "d"
     },
     {
@@ -24507,8 +24507,8 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "include_miinfer_qwen3_gpu_primitives_q8kdeviceblock_qs",
-      "community": 741,
-      "community_name": "qwen35_gpu_pipeline.hpp",
+      "community": 801,
+      "community_name": "download",
       "norm_label": "qs"
     },
     {
@@ -24518,8 +24518,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "include_miinfer_qwen3_gpu_primitives_hpp_int16_t",
-      "community": 741,
-      "community_name": "qwen35_gpu_pipeline.hpp",
+      "community": 801,
+      "community_name": "download",
       "norm_label": "int16_t"
     },
     {
@@ -24529,8 +24529,8 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "include_miinfer_qwen3_gpu_primitives_q8kdeviceblock_bsums",
-      "community": 741,
-      "community_name": "qwen35_gpu_pipeline.hpp",
+      "community": 801,
+      "community_name": "download",
       "norm_label": "bsums"
     },
     {
@@ -32415,8 +32415,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_prefill_v2_kv_cache",
-      "community": 779,
-      "community_name": "hipMemcpyAsync",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "kv_cache.cpp"
     },
     {
@@ -32426,8 +32426,8 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_prefill_v2_kv_cache_attentionlayerkvcachestorage_attentionlayerkvcachestorage",
-      "community": 779,
-      "community_name": "hipMemcpyAsync",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "attentionlayerkvcachestorage::attentionlayerkvcachestorage()"
     },
     {
@@ -32437,8 +32437,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_prefill_v2_kv_cache_cpp_size_t",
-      "community": 779,
-      "community_name": "hipMemcpyAsync",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "size_t"
     },
     {
@@ -32448,8 +32448,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_prefill_v2_kv_cache_cpp_kvcachequantmode",
-      "community": 779,
-      "community_name": "hipMemcpyAsync",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "kvcachequantmode"
     },
     {
@@ -32459,8 +32459,8 @@
       "source_location": "L127",
       "_origin": "ast",
       "id": "src_prefill_v2_kv_cache_attentionlayerkvcachestorage_reset",
-      "community": 779,
-      "community_name": "hipMemcpyAsync",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "attentionlayerkvcachestorage::reset()"
     },
     {
@@ -32470,8 +32470,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_prefill_v2_kv_cache_cpp_hipstream_t",
-      "community": 779,
-      "community_name": "hipMemcpyAsync",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "hipstream_t"
     },
     {
@@ -32481,8 +32481,8 @@
       "source_location": "L160",
       "_origin": "ast",
       "id": "src_prefill_v2_kv_cache_attentionlayerkvcachestorage_download_key",
-      "community": 779,
-      "community_name": "hipMemcpyAsync",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "attentionlayerkvcachestorage::download_key()"
     },
     {
@@ -32492,8 +32492,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_prefill_v2_kv_cache_cpp_vector",
-      "community": 779,
-      "community_name": "hipMemcpyAsync",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "vector"
     },
     {
@@ -32503,8 +32503,8 @@
       "source_location": "L201",
       "_origin": "ast",
       "id": "src_prefill_v2_kv_cache_attentionlayerkvcachestorage_download_value",
-      "community": 779,
-      "community_name": "hipMemcpyAsync",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "attentionlayerkvcachestorage::download_value()"
     },
     {
@@ -32514,8 +32514,8 @@
       "source_location": "L242",
       "_origin": "ast",
       "id": "src_prefill_v2_kv_cache_attentionlayerkvcachestorage_raw_tokens_bytes",
-      "community": 779,
-      "community_name": "hipMemcpyAsync",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "attentionlayerkvcachestorage::raw_tokens_bytes()"
     },
     {
@@ -32525,8 +32525,8 @@
       "source_location": "L255",
       "_origin": "ast",
       "id": "src_prefill_v2_kv_cache_attentionlayerkvcachestorage_download_raw",
-      "community": 779,
-      "community_name": "hipMemcpyAsync",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "attentionlayerkvcachestorage::download_raw()"
     },
     {
@@ -32536,8 +32536,8 @@
       "source_location": "L327",
       "_origin": "ast",
       "id": "src_prefill_v2_kv_cache_attentionlayerkvcachestorage_upload_raw",
-      "community": 779,
-      "community_name": "hipMemcpyAsync",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "attentionlayerkvcachestorage::upload_raw()"
     },
     {
@@ -32547,8 +32547,8 @@
       "source_location": "L399",
       "_origin": "ast",
       "id": "src_prefill_v2_kv_cache_attentionlayerkvcachestorage_download_raw_range",
-      "community": 779,
-      "community_name": "hipMemcpyAsync",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "attentionlayerkvcachestorage::download_raw_range()"
     },
     {
@@ -32558,8 +32558,8 @@
       "source_location": "L456",
       "_origin": "ast",
       "id": "src_prefill_v2_kv_cache_attentionlayerkvcachestorage_upload_raw_range",
-      "community": 779,
-      "community_name": "hipMemcpyAsync",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "attentionlayerkvcachestorage::upload_raw_range()"
     },
     {
@@ -32569,8 +32569,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_prefill_v2_model",
-      "community": 772,
-      "community_name": "PrefillV2Model::snapshot",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "model.cpp"
     },
     {
@@ -32679,8 +32679,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_prefill_v2_model_cpp_size_t",
-      "community": 772,
-      "community_name": "PrefillV2Model::snapshot",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "size_t"
     },
     {
@@ -32701,8 +32701,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_prefill_v2_model_cpp_uint32_t",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "uint32_t"
     },
     {
@@ -32712,8 +32712,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_prefill_v2_model_cpp_span",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "span"
     },
     {
@@ -32734,8 +32734,8 @@
       "source_location": "L267",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_prefillv2model",
-      "community": 772,
-      "community_name": "PrefillV2Model::snapshot",
+      "community": 860,
+      "community_name": "prefill_v2_agent_branch_workload_test.cpp",
       "norm_label": "prefillv2model::prefillv2model()"
     },
     {
@@ -32745,8 +32745,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_prefill_v2_model_cpp_kvcachequantmode",
-      "community": 772,
-      "community_name": "PrefillV2Model::snapshot",
+      "community": 860,
+      "community_name": "prefill_v2_agent_branch_workload_test.cpp",
       "norm_label": "kvcachequantmode"
     },
     {
@@ -32756,8 +32756,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_prefill_v2_model_cpp_prefillv2model",
-      "community": 772,
-      "community_name": "PrefillV2Model::snapshot",
+      "community": 860,
+      "community_name": "prefill_v2_agent_branch_workload_test.cpp",
       "norm_label": "prefillv2model"
     },
     {
@@ -32767,8 +32767,8 @@
       "source_location": "L454",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_allocate_resources",
-      "community": 772,
-      "community_name": "PrefillV2Model::snapshot",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "prefillv2model::allocate_resources()"
     },
     {
@@ -32789,8 +32789,8 @@
       "source_location": "L531",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_reset_state",
-      "community": 772,
-      "community_name": "PrefillV2Model::snapshot",
+      "community": 860,
+      "community_name": "prefill_v2_agent_branch_workload_test.cpp",
       "norm_label": "prefillv2model::reset_state()"
     },
     {
@@ -32800,8 +32800,8 @@
       "source_location": "L543",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_restore_reusable_context",
-      "community": 772,
-      "community_name": "PrefillV2Model::snapshot",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "prefillv2model::restore_reusable_context()"
     },
     {
@@ -32811,8 +32811,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_prefill_v2_model_cpp_hipstream_t",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "hipstream_t"
     },
     {
@@ -32822,8 +32822,8 @@
       "source_location": "L553",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_forward",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "prefillv2model::forward()"
     },
     {
@@ -32833,8 +32833,8 @@
       "source_location": "L691",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_forward_profiled",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "prefillv2model::forward_profiled()"
     },
     {
@@ -32844,8 +32844,8 @@
       "source_location": "L783",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_prefill_sequence",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "prefillv2model::prefill_sequence()"
     },
     {
@@ -32855,8 +32855,8 @@
       "source_location": "L825",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_compute_logits",
-      "community": 772,
-      "community_name": "PrefillV2Model::snapshot",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "prefillv2model::compute_logits()"
     },
     {
@@ -32866,8 +32866,8 @@
       "source_location": "L855",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_decode_step",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "prefillv2model::decode_step()"
     },
     {
@@ -32885,18 +32885,18 @@
       "label": "PrefillV2Model::cleanup_decode_graph()",
       "file_type": "code",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1449",
+      "source_location": "L1456",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_cleanup_decode_graph",
-      "community": 772,
-      "community_name": "PrefillV2Model::snapshot",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "prefillv2model::cleanup_decode_graph()"
     },
     {
       "label": "PrefillV2Model::capture_decode_graph()",
       "file_type": "code",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1456",
+      "source_location": "L1463",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_capture_decode_graph",
       "community": 793,
@@ -32907,7 +32907,7 @@
       "label": "PrefillV2Model::decode_graph_weight_pointers()",
       "file_type": "code",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1544",
+      "source_location": "L1551",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_decode_graph_weight_pointers",
       "community": 793,
@@ -32918,73 +32918,73 @@
       "label": "PrefillV2Model::cleanup_suffix_graph()",
       "file_type": "code",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1550",
+      "source_location": "L1557",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_cleanup_suffix_graph",
-      "community": 772,
-      "community_name": "PrefillV2Model::snapshot",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "prefillv2model::cleanup_suffix_graph()"
     },
     {
       "label": "PrefillV2Model::capture_suffix_graph()",
       "file_type": "code",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1557",
+      "source_location": "L1564",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_capture_suffix_graph",
-      "community": 772,
-      "community_name": "PrefillV2Model::snapshot",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "prefillv2model::capture_suffix_graph()"
     },
     {
       "label": "PrefillV2Model::persistent_weight_bytes()",
       "file_type": "code",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1579",
+      "source_location": "L1586",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_persistent_weight_bytes",
-      "community": 772,
-      "community_name": "PrefillV2Model::snapshot",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "prefillv2model::persistent_weight_bytes()"
     },
     {
       "label": "PrefillV2Model::persistent_state_bytes()",
       "file_type": "code",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1587",
+      "source_location": "L1594",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_persistent_state_bytes",
-      "community": 772,
-      "community_name": "PrefillV2Model::snapshot",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "prefillv2model::persistent_state_bytes()"
     },
     {
       "label": "PrefillV2Model::workspace_bytes()",
       "file_type": "code",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1595",
+      "source_location": "L1602",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_workspace_bytes",
-      "community": 772,
-      "community_name": "PrefillV2Model::snapshot",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "prefillv2model::workspace_bytes()"
     },
     {
       "label": "PrefillV2Model::activation_bytes()",
       "file_type": "code",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1599",
+      "source_location": "L1606",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_activation_bytes",
-      "community": 772,
-      "community_name": "PrefillV2Model::snapshot",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "prefillv2model::activation_bytes()"
     },
     {
       "label": "PrefillV2Model::total_vram_bytes()",
       "file_type": "code",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1611",
+      "source_location": "L1618",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_total_vram_bytes",
       "community": 209,
@@ -32995,18 +32995,18 @@
       "label": "PrefillV2Model::save_session()",
       "file_type": "code",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1616",
+      "source_location": "L1623",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_save_session",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "prefillv2model::save_session()"
     },
     {
       "label": "PrefillV2Model::load_session()",
       "file_type": "code",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1623",
+      "source_location": "L1630",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_load_session",
       "community": 793,
@@ -33017,22 +33017,22 @@
       "label": "PrefillV2Model::restore_matching_session()",
       "file_type": "code",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1630",
+      "source_location": "L1637",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_restore_matching_session",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "prefillv2model::restore_matching_session()"
     },
     {
       "label": "PrefillV2Model::SnapshotBacking::SnapshotBacking()",
       "file_type": "code",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1644",
+      "source_location": "L1651",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_snapshotbacking_snapshotbacking",
-      "community": 772,
-      "community_name": "PrefillV2Model::snapshot",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "prefillv2model::snapshotbacking::snapshotbacking()"
     },
     {
@@ -33042,19 +33042,19 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_prefill_v2_model_cpp_shared_ptr",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "shared_ptr"
     },
     {
       "label": "PrefillV2Model::find_longest_snapshot_prefix()",
       "file_type": "code",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1656",
+      "source_location": "L1663",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_find_longest_snapshot_prefix",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "prefillv2model::find_longest_snapshot_prefix()"
     },
     {
@@ -33064,19 +33064,19 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_prefill_v2_model_cpp_snapshotrecord",
-      "community": 772,
-      "community_name": "PrefillV2Model::snapshot",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "snapshotrecord"
     },
     {
       "label": "PrefillV2Model::capture_snapshot_backing()",
       "file_type": "code",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1668",
+      "source_location": "L1675",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_capture_snapshot_backing",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "prefillv2model::capture_snapshot_backing()"
     },
     {
@@ -33086,41 +33086,41 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_prefill_v2_model_cpp_snapshotbacking",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "snapshotbacking"
     },
     {
       "label": "PrefillV2Model::restore_snapshot_backing()",
       "file_type": "code",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1730",
+      "source_location": "L1737",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_restore_snapshot_backing",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "prefillv2model::restore_snapshot_backing()"
     },
     {
       "label": "PrefillV2Model::refresh_snapshot_bytes()",
       "file_type": "code",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1781",
+      "source_location": "L1788",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_refresh_snapshot_bytes",
-      "community": 772,
-      "community_name": "PrefillV2Model::snapshot",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "prefillv2model::refresh_snapshot_bytes()"
     },
     {
       "label": "PrefillV2Model::snapshot_telemetry()",
       "file_type": "code",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1793",
+      "source_location": "L1800",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_snapshot_telemetry",
-      "community": 772,
-      "community_name": "PrefillV2Model::snapshot",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "prefillv2model::snapshot_telemetry()"
     },
     {
@@ -33130,26 +33130,26 @@
       "source_location": "",
       "_origin": "ast",
       "id": "snapshottelemetry",
-      "community": 772,
-      "community_name": "PrefillV2Model::snapshot",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "snapshottelemetry"
     },
     {
       "label": "PrefillV2Model::release_snapshot_record()",
       "file_type": "code",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1811",
+      "source_location": "L1818",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_release_snapshot_record",
-      "community": 772,
-      "community_name": "PrefillV2Model::snapshot",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "prefillv2model::release_snapshot_record()"
     },
     {
       "label": "PrefillV2Model::evict_snapshots_except()",
       "file_type": "code",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1816",
+      "source_location": "L1823",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_evict_snapshots_except",
       "community": 772,
@@ -33171,7 +33171,7 @@
       "label": "PrefillV2Model::snapshot()",
       "file_type": "code",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1832",
+      "source_location": "L1839",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_snapshot",
       "community": 772,
@@ -33182,7 +33182,7 @@
       "label": "PrefillV2Model::fork()",
       "file_type": "code",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1869",
+      "source_location": "L1876",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_fork",
       "community": 772,
@@ -33193,18 +33193,18 @@
       "label": "PrefillV2Model::restore_snapshot()",
       "file_type": "code",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1897",
+      "source_location": "L1904",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_restore_snapshot",
-      "community": 143,
-      "community_name": "run_bakeoff_main",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "prefillv2model::restore_snapshot()"
     },
     {
       "label": "PrefillV2Model::rollback_snapshot()",
       "file_type": "code",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1909",
+      "source_location": "L1916",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_rollback_snapshot",
       "community": 772,
@@ -33215,7 +33215,7 @@
       "label": "PrefillV2Model::release_snapshot()",
       "file_type": "code",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1913",
+      "source_location": "L1920",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_release_snapshot",
       "community": 772,
@@ -33226,11 +33226,11 @@
       "label": "PrefillV2Model::clear_snapshots()",
       "file_type": "code",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1922",
+      "source_location": "L1929",
       "_origin": "ast",
       "id": "src_prefill_v2_model_prefillv2model_clear_snapshots",
-      "community": 772,
-      "community_name": "PrefillV2Model::snapshot",
+      "community": 793,
+      "community_name": "model.cpp",
       "norm_label": "prefillv2model::clear_snapshots()"
     },
     {
@@ -33845,8 +33845,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_prefill_v2_state",
-      "community": 860,
-      "community_name": "prefill_v2_agent_branch_workload_test.cpp",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "state.cpp"
     },
     {
@@ -33856,8 +33856,8 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_prefill_v2_state_recurrentlayerstatestorage_recurrentlayerstatestorage",
-      "community": 860,
-      "community_name": "prefill_v2_agent_branch_workload_test.cpp",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "recurrentlayerstatestorage::recurrentlayerstatestorage()"
     },
     {
@@ -33867,8 +33867,8 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "src_prefill_v2_state_recurrentlayerstatestorage_reset",
-      "community": 860,
-      "community_name": "prefill_v2_agent_branch_workload_test.cpp",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "recurrentlayerstatestorage::reset()"
     },
     {
@@ -33878,8 +33878,8 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "src_prefill_v2_state_recurrentlayerstatestorage_upload",
-      "community": 860,
-      "community_name": "prefill_v2_agent_branch_workload_test.cpp",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "recurrentlayerstatestorage::upload()"
     },
     {
@@ -33889,8 +33889,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_prefill_v2_state_cpp_span",
-      "community": 860,
-      "community_name": "prefill_v2_agent_branch_workload_test.cpp",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "span"
     },
     {
@@ -33900,8 +33900,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_prefill_v2_state_cpp_uint32_t",
-      "community": 860,
-      "community_name": "prefill_v2_agent_branch_workload_test.cpp",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "uint32_t"
     },
     {
@@ -33911,8 +33911,8 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "src_prefill_v2_state_recurrentlayerstatestorage_download",
-      "community": 860,
-      "community_name": "prefill_v2_agent_branch_workload_test.cpp",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "recurrentlayerstatestorage::download()"
     },
     {
@@ -33922,8 +33922,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_prefill_v2_state_cpp_vector",
-      "community": 860,
-      "community_name": "prefill_v2_agent_branch_workload_test.cpp",
+      "community": 143,
+      "community_name": "run_bakeoff_main",
       "norm_label": "vector"
     },
     {
@@ -34040,7 +34040,7 @@
       "label": "PrefillV2TopologyBlock::forward_profiled()",
       "file_type": "code",
       "source_file": "src/prefill_v2/topology_block.cpp",
-      "source_location": "L127",
+      "source_location": "L129",
       "_origin": "ast",
       "id": "src_prefill_v2_topology_block_prefillv2topologyblock_forward_profiled",
       "community": 705,
@@ -45003,8 +45003,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tools_m6a21_qwen35_gpu_hybrid_block",
-      "community": 801,
-      "community_name": "download",
+      "community": 741,
+      "community_name": "qwen35_gpu_pipeline.hpp",
       "norm_label": "m6a21_qwen35_gpu_hybrid_block.cpp"
     },
     {
@@ -45014,8 +45014,8 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "tools_m6a21_qwen35_gpu_hybrid_block_main",
-      "community": 801,
-      "community_name": "download",
+      "community": 741,
+      "community_name": "qwen35_gpu_pipeline.hpp",
       "norm_label": "main()"
     },
     {
@@ -49403,8 +49403,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_hpp_uint64_t",
-      "community": 801,
-      "community_name": "download",
+      "community": 741,
+      "community_name": "qwen35_gpu_pipeline.hpp",
       "norm_label": "uint64_t"
     },
     {
@@ -50272,8 +50272,8 @@
       "source_location": "L357",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_project_native_down",
-      "community": 741,
-      "community_name": "qwen35_gpu_pipeline.hpp",
+      "community": 801,
+      "community_name": "download",
       "norm_label": "project_native_down()"
     },
     {
@@ -50283,8 +50283,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_hpp_q8_1block",
-      "community": 741,
-      "community_name": "qwen35_gpu_pipeline.hpp",
+      "community": 801,
+      "community_name": "download",
       "norm_label": "q8_1block"
     },
     {
@@ -50294,8 +50294,8 @@
       "source_location": "L363",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_project_native_q6k_down",
-      "community": 741,
-      "community_name": "qwen35_gpu_pipeline.hpp",
+      "community": 801,
+      "community_name": "download",
       "norm_label": "project_native_q6k_down()"
     },
     {
@@ -50316,8 +50316,8 @@
       "source_location": "L407",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_detailederror",
-      "community": 801,
-      "community_name": "download",
+      "community": 741,
+      "community_name": "qwen35_gpu_pipeline.hpp",
       "norm_label": "detailederror"
     },
     {
@@ -50327,8 +50327,8 @@
       "source_location": "L408",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_detailederror_max_abs",
-      "community": 801,
-      "community_name": "download",
+      "community": 741,
+      "community_name": "qwen35_gpu_pipeline.hpp",
       "norm_label": "max_abs"
     },
     {
@@ -50338,8 +50338,8 @@
       "source_location": "L409",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_detailederror_mean_abs",
-      "community": 801,
-      "community_name": "download",
+      "community": 741,
+      "community_name": "qwen35_gpu_pipeline.hpp",
       "norm_label": "mean_abs"
     },
     {
@@ -50349,8 +50349,8 @@
       "source_location": "L410",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_detailederror_rms",
-      "community": 801,
-      "community_name": "download",
+      "community": 741,
+      "community_name": "qwen35_gpu_pipeline.hpp",
       "norm_label": "rms"
     },
     {
@@ -50360,8 +50360,8 @@
       "source_location": "L411",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_detailederror_reference_rms",
-      "community": 801,
-      "community_name": "download",
+      "community": 741,
+      "community_name": "qwen35_gpu_pipeline.hpp",
       "norm_label": "reference_rms"
     },
     {
@@ -50371,8 +50371,8 @@
       "source_location": "L412",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_detailederror_relative_rms",
-      "community": 801,
-      "community_name": "download",
+      "community": 741,
+      "community_name": "qwen35_gpu_pipeline.hpp",
       "norm_label": "relative_rms"
     },
     {
@@ -50382,8 +50382,8 @@
       "source_location": "L415",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_detailed_compare",
-      "community": 801,
-      "community_name": "download",
+      "community": 741,
+      "community_name": "qwen35_gpu_pipeline.hpp",
       "norm_label": "detailed_compare()"
     },
     {
@@ -50393,8 +50393,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_hpp_span",
-      "community": 801,
-      "community_name": "download",
+      "community": 741,
+      "community_name": "qwen35_gpu_pipeline.hpp",
       "norm_label": "span"
     },
     {
@@ -50404,8 +50404,8 @@
       "source_location": "L442",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_cosine_similarity",
-      "community": 801,
-      "community_name": "download",
+      "community": 741,
+      "community_name": "qwen35_gpu_pipeline.hpp",
       "norm_label": "cosine_similarity()"
     },
     {
@@ -50415,8 +50415,8 @@
       "source_location": "L455",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_first_argmax",
-      "community": 801,
-      "community_name": "download",
+      "community": 741,
+      "community_name": "qwen35_gpu_pipeline.hpp",
       "norm_label": "first_argmax()"
     },
     {
@@ -50426,8 +50426,8 @@
       "source_location": "L463",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_top_indices",
-      "community": 801,
-      "community_name": "download",
+      "community": 741,
+      "community_name": "qwen35_gpu_pipeline.hpp",
       "norm_label": "top_indices()"
     },
     {
@@ -50448,8 +50448,8 @@
       "source_location": "L475",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_rank_of",
-      "community": 801,
-      "community_name": "download",
+      "community": 741,
+      "community_name": "qwen35_gpu_pipeline.hpp",
       "norm_label": "rank_of()"
     },
     {
@@ -50459,8 +50459,8 @@
       "source_location": "L484",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_detailed_device_error",
-      "community": 801,
-      "community_name": "download",
+      "community": 741,
+      "community_name": "qwen35_gpu_pipeline.hpp",
       "norm_label": "detailed_device_error()"
     },
     {
@@ -50470,8 +50470,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_hpp_path",
-      "community": 801,
-      "community_name": "download",
+      "community": 741,
+      "community_name": "qwen35_gpu_pipeline.hpp",
       "norm_label": "path"
     },
     {
@@ -50481,8 +50481,8 @@
       "source_location": "L492",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_locatederror",
-      "community": 801,
-      "community_name": "download",
+      "community": 741,
+      "community_name": "qwen35_gpu_pipeline.hpp",
       "norm_label": "locatederror"
     },
     {
@@ -50503,8 +50503,8 @@
       "source_location": "L494",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_locatederror_index",
-      "community": 801,
-      "community_name": "download",
+      "community": 741,
+      "community_name": "qwen35_gpu_pipeline.hpp",
       "norm_label": "index"
     },
     {
@@ -50514,8 +50514,8 @@
       "source_location": "L495",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_locatederror_actual",
-      "community": 801,
-      "community_name": "download",
+      "community": 741,
+      "community_name": "qwen35_gpu_pipeline.hpp",
       "norm_label": "actual"
     },
     {
@@ -50525,8 +50525,8 @@
       "source_location": "L496",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_locatederror_expected",
-      "community": 801,
-      "community_name": "download",
+      "community": 741,
+      "community_name": "qwen35_gpu_pipeline.hpp",
       "norm_label": "expected"
     },
     {
@@ -50536,8 +50536,8 @@
       "source_location": "L502",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_located_device_error",
-      "community": 801,
-      "community_name": "download",
+      "community": 741,
+      "community_name": "qwen35_gpu_pipeline.hpp",
       "norm_label": "located_device_error()"
     },
     {
@@ -50547,8 +50547,8 @@
       "source_location": "L521",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrenttrace",
-      "community": 801,
-      "community_name": "download",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": "recurrenttrace"
     },
     {
@@ -50580,8 +50580,8 @@
       "source_location": "L524",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrenttrace_position",
-      "community": 801,
-      "community_name": "download",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": "position"
     },
     {
@@ -50591,8 +50591,8 @@
       "source_location": "L526",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrenttrace_report_at",
-      "community": 801,
-      "community_name": "download",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".report_at()"
     },
     {
@@ -50602,8 +50602,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_hpp_string",
-      "community": 801,
-      "community_name": "download",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": "string"
     },
     {
@@ -50613,8 +50613,8 @@
       "source_location": "L541",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrenttrace_report",
-      "community": 801,
-      "community_name": "download",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".report()"
     },
     {
@@ -50624,8 +50624,8 @@
       "source_location": "L546",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrenttrace_report_host",
-      "community": 801,
-      "community_name": "download",
+      "community": 741,
+      "community_name": "qwen35_gpu_pipeline.hpp",
       "norm_label": ".report_host()"
     },
     {
@@ -50635,8 +50635,8 @@
       "source_location": "L561",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrenttrace_kstateelements",
-      "community": 801,
-      "community_name": "download",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": "kstateelements"
     },
     {
@@ -50954,8 +50954,8 @@
       "source_location": "L598",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_layerpathcapture",
-      "community": 801,
-      "community_name": "download",
+      "community": 779,
+      "community_name": "hipMemcpyAsync",
       "norm_label": "layerpathcapture"
     },
     {
@@ -50965,8 +50965,8 @@
       "source_location": "L599",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_layerpathcapture_input",
-      "community": 801,
-      "community_name": "download",
+      "community": 779,
+      "community_name": "hipMemcpyAsync",
       "norm_label": "input"
     },
     {
@@ -50976,8 +50976,8 @@
       "source_location": "L600",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_layerpathcapture_normalized",
-      "community": 801,
-      "community_name": "download",
+      "community": 779,
+      "community_name": "hipMemcpyAsync",
       "norm_label": "normalized"
     },
     {
@@ -50987,8 +50987,8 @@
       "source_location": "L601",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_layerpathcapture_qkv",
-      "community": 801,
-      "community_name": "download",
+      "community": 779,
+      "community_name": "hipMemcpyAsync",
       "norm_label": "qkv"
     },
     {
@@ -50998,8 +50998,8 @@
       "source_location": "L602",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_layerpathcapture_recurrent_output",
-      "community": 801,
-      "community_name": "download",
+      "community": 779,
+      "community_name": "hipMemcpyAsync",
       "norm_label": "recurrent_output"
     },
     {
@@ -51009,8 +51009,8 @@
       "source_location": "L603",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_layerpathcapture_gated",
-      "community": 801,
-      "community_name": "download",
+      "community": 779,
+      "community_name": "hipMemcpyAsync",
       "norm_label": "gated"
     },
     {
@@ -51020,8 +51020,8 @@
       "source_location": "L604",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_layerpathcapture_attention_residual",
-      "community": 801,
-      "community_name": "download",
+      "community": 779,
+      "community_name": "hipMemcpyAsync",
       "norm_label": "attention_residual"
     },
     {
@@ -51031,8 +51031,8 @@
       "source_location": "L605",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_layerpathcapture_post_normalized",
-      "community": 801,
-      "community_name": "download",
+      "community": 779,
+      "community_name": "hipMemcpyAsync",
       "norm_label": "post_normalized"
     },
     {
@@ -51042,8 +51042,8 @@
       "source_location": "L606",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_layerpathcapture_ffn_output",
-      "community": 801,
-      "community_name": "download",
+      "community": 779,
+      "community_name": "hipMemcpyAsync",
       "norm_label": "ffn_output"
     },
     {
@@ -51053,8 +51053,8 @@
       "source_location": "L607",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_layerpathcapture_layer_output",
-      "community": 801,
-      "community_name": "download",
+      "community": 779,
+      "community_name": "hipMemcpyAsync",
       "norm_label": "layer_output"
     },
     {
@@ -51251,8 +51251,8 @@
       "source_location": "L632",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_located_host_error",
-      "community": 801,
-      "community_name": "download",
+      "community": 741,
+      "community_name": "qwen35_gpu_pipeline.hpp",
       "norm_label": "located_host_error()"
     },
     {
@@ -51284,8 +51284,8 @@
       "source_location": "L660",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_host_fingerprint",
-      "community": 801,
-      "community_name": "download",
+      "community": 741,
+      "community_name": "qwen35_gpu_pipeline.hpp",
       "norm_label": "host_fingerprint()"
     },
     {
@@ -51328,8 +51328,8 @@
       "source_location": "L674",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_compare_bytes",
-      "community": 801,
-      "community_name": "download",
+      "community": 741,
+      "community_name": "qwen35_gpu_pipeline.hpp",
       "norm_label": "compare_bytes()"
     },
     {
@@ -51339,8 +51339,8 @@
       "source_location": "L690",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_fingerprint",
-      "community": 801,
-      "community_name": "download",
+      "community": 741,
+      "community_name": "qwen35_gpu_pipeline.hpp",
       "norm_label": "fingerprint()"
     },
     {
@@ -51383,8 +51383,8 @@
       "source_location": "L708",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_project",
-      "community": 741,
-      "community_name": "qwen35_gpu_pipeline.hpp",
+      "community": 801,
+      "community_name": "download",
       "norm_label": "project()"
     },
     {
@@ -51405,8 +51405,8 @@
       "source_location": "L753",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_project_q4_q8_1_prequantized",
-      "community": 741,
-      "community_name": "qwen35_gpu_pipeline.hpp",
+      "community": 801,
+      "community_name": "download",
       "norm_label": "project_q4_q8_1_prequantized()"
     },
     {
@@ -51416,8 +51416,8 @@
       "source_location": "L778",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_project_q4_q8_1_expanded",
-      "community": 741,
-      "community_name": "qwen35_gpu_pipeline.hpp",
+      "community": 801,
+      "community_name": "download",
       "norm_label": "project_q4_q8_1_expanded()"
     },
     {
@@ -51427,8 +51427,8 @@
       "source_location": "L787",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_project_q4_q8_1",
-      "community": 741,
-      "community_name": "qwen35_gpu_pipeline.hpp",
+      "community": 801,
+      "community_name": "download",
       "norm_label": "project_q4_q8_1()"
     },
     {
@@ -51438,8 +51438,8 @@
       "source_location": "L798",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_project_q6_q8_k_dot4",
-      "community": 741,
-      "community_name": "qwen35_gpu_pipeline.hpp",
+      "community": 801,
+      "community_name": "download",
       "norm_label": "project_q6_q8_k_dot4()"
     },
     {
@@ -53506,8 +53506,8 @@
       "source_location": "L1488",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrentlayer_name",
-      "community": 801,
-      "community_name": "download",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".name()"
     },
     {
@@ -53561,8 +53561,8 @@
       "source_location": "L1546",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrentlayer_state_fingerprint",
-      "community": 801,
-      "community_name": "download",
+      "community": 741,
+      "community_name": "qwen35_gpu_pipeline.hpp",
       "norm_label": ".state_fingerprint()"
     },
     {
@@ -53572,8 +53572,8 @@
       "source_location": "L1551",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_recurrentlayer_trace_tensor",
-      "community": 801,
-      "community_name": "download",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".trace_tensor()"
     },
     {
@@ -55563,8 +55563,8 @@
       "source_location": "L4369",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_prefix",
-      "community": 801,
-      "community_name": "download",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".prefix()"
     },
     {
@@ -55717,8 +55717,8 @@
       "source_location": "L4459",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_capture_exp0371_prepare",
-      "community": 801,
-      "community_name": "download",
+      "community": 493,
+      "community_name": "size_t",
       "norm_label": ".capture_exp0371_prepare()"
     },
     {
@@ -55838,8 +55838,8 @@
       "source_location": "L5119",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_fullattentionlayer_run",
-      "community": 741,
-      "community_name": "qwen35_gpu_pipeline.hpp",
+      "community": 801,
+      "community_name": "download",
       "norm_label": ".run()"
     },
     {
@@ -56124,8 +56124,8 @@
       "source_location": "L5867",
       "_origin": "ast",
       "id": "tools_qwen35_gpu_pipeline_read_external_operands",
-      "community": 801,
-      "community_name": "download",
+      "community": 741,
+      "community_name": "qwen35_gpu_pipeline.hpp",
       "norm_label": "read_external_operands()"
     },
     {
@@ -64176,8 +64176,8 @@
       "source_location": "L595",
       "_origin": "ast",
       "id": "docs_decisions_d023_triton_is_a_research_tool_not_a_required_runtime",
-      "community": 921,
-      "community_name": "D023 \u2014 Triton Is a Research Tool, Not a Required Runtime",
+      "community": 19,
+      "community_name": "decisions.md",
       "norm_label": "d023 \u2014 triton is a research tool, not a required runtime"
     },
     {
@@ -64187,8 +64187,8 @@
       "source_location": "L599",
       "_origin": "ast",
       "id": "docs_decisions_decision_599",
-      "community": 921,
-      "community_name": "D023 \u2014 Triton Is a Research Tool, Not a Required Runtime",
+      "community": 19,
+      "community_name": "decisions.md",
       "norm_label": "decision"
     },
     {
@@ -64198,8 +64198,8 @@
       "source_location": "L605",
       "_origin": "ast",
       "id": "docs_decisions_preferred_role",
-      "community": 921,
-      "community_name": "D023 \u2014 Triton Is a Research Tool, Not a Required Runtime",
+      "community": 19,
+      "community_name": "decisions.md",
       "norm_label": "preferred role"
     },
     {
@@ -64319,8 +64319,8 @@
       "source_location": "L687",
       "_origin": "ast",
       "id": "docs_decisions_d027_serving_does_not_define_the_core_runtime",
-      "community": 19,
-      "community_name": "decisions.md",
+      "community": 861,
+      "community_name": "EventPair",
       "norm_label": "d027 \u2014 serving does not define the core runtime"
     },
     {
@@ -64330,8 +64330,8 @@
       "source_location": "L691",
       "_origin": "ast",
       "id": "docs_decisions_decision_691",
-      "community": 19,
-      "community_name": "decisions.md",
+      "community": 861,
+      "community_name": "EventPair",
       "norm_label": "decision"
     },
     {
@@ -64341,8 +64341,8 @@
       "source_location": "L695",
       "_origin": "ast",
       "id": "docs_decisions_reason_695",
-      "community": 19,
-      "community_name": "decisions.md",
+      "community": 861,
+      "community_name": "EventPair",
       "norm_label": "reason"
     },
     {
@@ -71491,8 +71491,8 @@
       "source_location": "L389",
       "_origin": "ast",
       "id": "docs_roadmap_m1_kernel_laboratory",
-      "community": 861,
-      "community_name": "EventPair",
+      "community": 23,
+      "community_name": "roadmap.md",
       "norm_label": "m1 \u2014 kernel laboratory"
     },
     {
@@ -71502,8 +71502,8 @@
       "source_location": "L391",
       "_origin": "ast",
       "id": "docs_roadmap_goal_391",
-      "community": 861,
-      "community_name": "EventPair",
+      "community": 23,
+      "community_name": "roadmap.md",
       "norm_label": "goal"
     },
     {
@@ -71513,8 +71513,8 @@
       "source_location": "L395",
       "_origin": "ast",
       "id": "docs_roadmap_questions_395",
-      "community": 861,
-      "community_name": "EventPair",
+      "community": 23,
+      "community_name": "roadmap.md",
       "norm_label": "questions"
     },
     {
@@ -71524,8 +71524,8 @@
       "source_location": "L404",
       "_origin": "ast",
       "id": "docs_roadmap_initial_kernel_areas",
-      "community": 861,
-      "community_name": "EventPair",
+      "community": 23,
+      "community_name": "roadmap.md",
       "norm_label": "initial kernel areas"
     },
     {
@@ -71535,8 +71535,8 @@
       "source_location": "L416",
       "_origin": "ast",
       "id": "docs_roadmap_benchmark_harness",
-      "community": 861,
-      "community_name": "EventPair",
+      "community": 23,
+      "community_name": "roadmap.md",
       "norm_label": "benchmark harness"
     },
     {
@@ -71546,8 +71546,8 @@
       "source_location": "L429",
       "_origin": "ast",
       "id": "docs_roadmap_initial_representative_shapes",
-      "community": 861,
-      "community_name": "EventPair",
+      "community": 23,
+      "community_name": "roadmap.md",
       "norm_label": "initial representative shapes"
     },
     {
@@ -71557,8 +71557,8 @@
       "source_location": "L435",
       "_origin": "ast",
       "id": "docs_roadmap_exit_criteria_435",
-      "community": 861,
-      "community_name": "EventPair",
+      "community": 23,
+      "community_name": "roadmap.md",
       "norm_label": "exit criteria"
     },
     {
@@ -71733,8 +71733,8 @@
       "source_location": "L576",
       "_origin": "ast",
       "id": "docs_roadmap_m3_minimal_runtime",
-      "community": 23,
-      "community_name": "roadmap.md",
+      "community": 822,
+      "community_name": "Q4KWaveSwigluFusedTile",
       "norm_label": "m3 \u2014 minimal runtime"
     },
     {
@@ -71744,8 +71744,8 @@
       "source_location": "L578",
       "_origin": "ast",
       "id": "docs_roadmap_goal_578",
-      "community": 23,
-      "community_name": "roadmap.md",
+      "community": 822,
+      "community_name": "Q4KWaveSwigluFusedTile",
       "norm_label": "goal"
     },
     {
@@ -71755,8 +71755,8 @@
       "source_location": "L584",
       "_origin": "ast",
       "id": "docs_roadmap_core_runtime_responsibilities",
-      "community": 23,
-      "community_name": "roadmap.md",
+      "community": 822,
+      "community_name": "Q4KWaveSwigluFusedTile",
       "norm_label": "core runtime responsibilities"
     },
     {
@@ -71766,8 +71766,8 @@
       "source_location": "L598",
       "_origin": "ast",
       "id": "docs_roadmap_architectural_rule",
-      "community": 23,
-      "community_name": "roadmap.md",
+      "community": 822,
+      "community_name": "Q4KWaveSwigluFusedTile",
       "norm_label": "architectural rule"
     },
     {
@@ -71777,8 +71777,8 @@
       "source_location": "L612",
       "_origin": "ast",
       "id": "docs_roadmap_model_scope",
-      "community": 23,
-      "community_name": "roadmap.md",
+      "community": 822,
+      "community_name": "Q4KWaveSwigluFusedTile",
       "norm_label": "model scope"
     },
     {
@@ -71788,8 +71788,8 @@
       "source_location": "L620",
       "_origin": "ast",
       "id": "docs_roadmap_quantization_scope",
-      "community": 23,
-      "community_name": "roadmap.md",
+      "community": 822,
+      "community_name": "Q4KWaveSwigluFusedTile",
       "norm_label": "quantization scope"
     },
     {
@@ -71799,8 +71799,8 @@
       "source_location": "L626",
       "_origin": "ast",
       "id": "docs_roadmap_exit_criteria_626",
-      "community": 23,
-      "community_name": "roadmap.md",
+      "community": 822,
+      "community_name": "Q4KWaveSwigluFusedTile",
       "norm_label": "exit criteria"
     },
     {
@@ -144159,7 +144159,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/topology_block.cpp",
-      "source_location": "L177",
+      "source_location": "L179",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_topology_block_prefillv2topologyblock_forward_profiled",
@@ -167881,7 +167881,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "include/miinfer/prefill_v2/topology_block.hpp",
-      "source_location": "L118",
+      "source_location": "L119",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast",
@@ -171781,7 +171781,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1523",
+      "source_location": "L1530",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_capture_decode_graph",
@@ -171817,7 +171817,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1613",
+      "source_location": "L1620",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_total_vram_bytes",
@@ -171841,7 +171841,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1641",
+      "source_location": "L1648",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_restore_matching_session",
@@ -171865,7 +171865,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1876",
+      "source_location": "L1883",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_fork",
@@ -171877,7 +171877,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1910",
+      "source_location": "L1917",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_rollback_snapshot",
@@ -171889,7 +171889,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1828",
+      "source_location": "L1835",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_evict_snapshots_except",
@@ -171925,7 +171925,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1612",
+      "source_location": "L1619",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_total_vram_bytes",
@@ -171937,7 +171937,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1613",
+      "source_location": "L1620",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_total_vram_bytes",
@@ -171997,7 +171997,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1883",
+      "source_location": "L1890",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_fork",
@@ -172009,7 +172009,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1862",
+      "source_location": "L1869",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_snapshot",
@@ -172021,7 +172021,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1672",
+      "source_location": "L1679",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_capture_snapshot_backing",
@@ -172033,7 +172033,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1878",
+      "source_location": "L1885",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_fork",
@@ -172045,7 +172045,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1850",
+      "source_location": "L1857",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_snapshot",
@@ -172057,7 +172057,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1901",
+      "source_location": "L1908",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_restore_snapshot",
@@ -172069,7 +172069,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1916",
+      "source_location": "L1923",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_release_snapshot",
@@ -172081,7 +172081,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1817",
+      "source_location": "L1824",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_evict_snapshots_except",
@@ -172093,7 +172093,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1882",
+      "source_location": "L1889",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_fork",
@@ -172105,7 +172105,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1918",
+      "source_location": "L1925",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_release_snapshot",
@@ -172117,7 +172117,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1861",
+      "source_location": "L1868",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_snapshot",
@@ -172129,7 +172129,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1474",
+      "source_location": "L1481",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_capture_decode_graph",
@@ -172225,7 +172225,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1900",
+      "source_location": "L1907",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_restore_snapshot",
@@ -172558,7 +172558,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1620",
+      "source_location": "L1627",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_save_session",
@@ -172606,7 +172606,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1627",
+      "source_location": "L1634",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_load_session",
@@ -172618,7 +172618,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1636",
+      "source_location": "L1643",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_restore_matching_session",
@@ -173451,7 +173451,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "include/miinfer/prefill_v2/topology_block.hpp",
-      "source_location": "L117",
+      "source_location": "L118",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast",
@@ -174900,7 +174900,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/topology_block.cpp",
-      "source_location": "L127",
+      "source_location": "L129",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -175208,7 +175208,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/topology_block.cpp",
-      "source_location": "L127",
+      "source_location": "L129",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -175220,7 +175220,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "include/miinfer/prefill_v2/topology_block.hpp",
-      "source_location": "L114",
+      "source_location": "L115",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast",
@@ -175232,7 +175232,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "include/miinfer/prefill_v2/topology_block.hpp",
-      "source_location": "L106",
+      "source_location": "L107",
       "weight": 1.0,
       "_origin": "ast",
       "source": "include_miinfer_prefill_v2_topology_block_prefillv2topologyblock",
@@ -175243,7 +175243,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "include/miinfer/prefill_v2/topology_block.hpp",
-      "source_location": "L96",
+      "source_location": "L97",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast",
@@ -175279,7 +175279,7 @@
       "relation": "defines",
       "confidence": "EXTRACTED",
       "source_file": "include/miinfer/prefill_v2/topology_block.hpp",
-      "source_location": "L79",
+      "source_location": "L80",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast",
@@ -175291,7 +175291,7 @@
       "relation": "defines",
       "confidence": "EXTRACTED",
       "source_file": "include/miinfer/prefill_v2/topology_block.hpp",
-      "source_location": "L115",
+      "source_location": "L116",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast",
@@ -175303,7 +175303,7 @@
       "relation": "defines",
       "confidence": "EXTRACTED",
       "source_file": "include/miinfer/prefill_v2/topology_block.hpp",
-      "source_location": "L116",
+      "source_location": "L117",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast",
@@ -175315,7 +175315,7 @@
       "relation": "defines",
       "confidence": "EXTRACTED",
       "source_file": "include/miinfer/prefill_v2/topology_block.hpp",
-      "source_location": "L117",
+      "source_location": "L118",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast",
@@ -175327,7 +175327,7 @@
       "relation": "defines",
       "confidence": "EXTRACTED",
       "source_file": "include/miinfer/prefill_v2/topology_block.hpp",
-      "source_location": "L118",
+      "source_location": "L119",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast",
@@ -175339,7 +175339,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "include/miinfer/prefill_v2/topology_block.hpp",
-      "source_location": "L97",
+      "source_location": "L98",
       "weight": 1.0,
       "_origin": "ast",
       "source": "include_miinfer_prefill_v2_topology_block_prefillv2topologyblock",
@@ -175362,7 +175362,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "include/miinfer/prefill_v2/topology_block.hpp",
-      "source_location": "L96",
+      "source_location": "L97",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast",
@@ -175374,7 +175374,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "include/miinfer/prefill_v2/topology_block.hpp",
-      "source_location": "L97",
+      "source_location": "L98",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast",
@@ -175386,7 +175386,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "include/miinfer/prefill_v2/topology_block.hpp",
-      "source_location": "L106",
+      "source_location": "L107",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -175912,7 +175912,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/topology_block.cpp",
-      "source_location": "L127",
+      "source_location": "L129",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -193611,7 +193611,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1599",
+      "source_location": "L1606",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model",
@@ -193633,7 +193633,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1456",
+      "source_location": "L1463",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model",
@@ -193644,7 +193644,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1668",
+      "source_location": "L1675",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model",
@@ -193655,7 +193655,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1557",
+      "source_location": "L1564",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model",
@@ -193666,7 +193666,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1449",
+      "source_location": "L1456",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model",
@@ -193677,7 +193677,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1550",
+      "source_location": "L1557",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model",
@@ -193688,7 +193688,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1922",
+      "source_location": "L1929",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model",
@@ -193710,7 +193710,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1544",
+      "source_location": "L1551",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model",
@@ -193732,7 +193732,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1816",
+      "source_location": "L1823",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model",
@@ -193743,7 +193743,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1656",
+      "source_location": "L1663",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model",
@@ -193754,7 +193754,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1869",
+      "source_location": "L1876",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model",
@@ -193809,7 +193809,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1623",
+      "source_location": "L1630",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model",
@@ -193820,7 +193820,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1587",
+      "source_location": "L1594",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model",
@@ -193831,7 +193831,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1579",
+      "source_location": "L1586",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model",
@@ -193864,7 +193864,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1781",
+      "source_location": "L1788",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model",
@@ -193875,7 +193875,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1913",
+      "source_location": "L1920",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model",
@@ -193886,7 +193886,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1811",
+      "source_location": "L1818",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model",
@@ -193908,7 +193908,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1630",
+      "source_location": "L1637",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model",
@@ -193930,7 +193930,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1897",
+      "source_location": "L1904",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model",
@@ -193941,7 +193941,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1730",
+      "source_location": "L1737",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model",
@@ -193952,7 +193952,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1909",
+      "source_location": "L1916",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model",
@@ -193963,7 +193963,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1616",
+      "source_location": "L1623",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model",
@@ -193974,7 +193974,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1832",
+      "source_location": "L1839",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model",
@@ -193985,7 +193985,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1793",
+      "source_location": "L1800",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model",
@@ -193996,7 +193996,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1650",
+      "source_location": "L1657",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model",
@@ -194007,7 +194007,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1611",
+      "source_location": "L1618",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model",
@@ -194018,7 +194018,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1595",
+      "source_location": "L1602",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model",
@@ -194063,7 +194063,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1874",
+      "source_location": "L1881",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_fork",
@@ -194075,7 +194075,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1842",
+      "source_location": "L1849",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_snapshot",
@@ -194087,7 +194087,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1472",
+      "source_location": "L1479",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_capture_decode_graph",
@@ -194111,7 +194111,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1475",
+      "source_location": "L1482",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_capture_decode_graph",
@@ -194158,7 +194158,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1544",
+      "source_location": "L1551",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast",
@@ -194170,7 +194170,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1623",
+      "source_location": "L1630",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -194278,7 +194278,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1623",
+      "source_location": "L1630",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -194290,7 +194290,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1630",
+      "source_location": "L1637",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -194302,7 +194302,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1616",
+      "source_location": "L1623",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -194362,7 +194362,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1599",
+      "source_location": "L1606",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast",
@@ -194374,7 +194374,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1587",
+      "source_location": "L1594",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast",
@@ -194386,7 +194386,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1579",
+      "source_location": "L1586",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast",
@@ -194398,7 +194398,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1611",
+      "source_location": "L1618",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast",
@@ -194410,7 +194410,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1595",
+      "source_location": "L1602",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast",
@@ -194470,7 +194470,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1456",
+      "source_location": "L1463",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -194482,7 +194482,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1668",
+      "source_location": "L1675",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast",
@@ -194506,7 +194506,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1656",
+      "source_location": "L1663",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast",
@@ -194554,7 +194554,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1623",
+      "source_location": "L1630",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast",
@@ -194590,7 +194590,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1630",
+      "source_location": "L1637",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -194602,7 +194602,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1616",
+      "source_location": "L1623",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast",
@@ -194614,7 +194614,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1832",
+      "source_location": "L1839",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast",
@@ -194626,7 +194626,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1668",
+      "source_location": "L1675",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -194638,7 +194638,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1656",
+      "source_location": "L1663",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -194686,7 +194686,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1630",
+      "source_location": "L1637",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -194698,7 +194698,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1616",
+      "source_location": "L1623",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -194710,7 +194710,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1832",
+      "source_location": "L1839",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -194782,7 +194782,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1456",
+      "source_location": "L1463",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -194794,7 +194794,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1668",
+      "source_location": "L1675",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -194806,7 +194806,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1557",
+      "source_location": "L1564",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -194878,7 +194878,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1623",
+      "source_location": "L1630",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -194902,7 +194902,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1630",
+      "source_location": "L1637",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -194914,7 +194914,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1897",
+      "source_location": "L1904",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -194926,7 +194926,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1730",
+      "source_location": "L1737",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -194938,7 +194938,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1909",
+      "source_location": "L1916",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -194950,7 +194950,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1616",
+      "source_location": "L1623",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -194962,7 +194962,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1832",
+      "source_location": "L1839",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -195058,7 +195058,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1644",
+      "source_location": "L1651",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -195072,7 +195072,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1651",
+      "source_location": "L1658",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_snapshotbacking_snapshotbacking",
@@ -195082,7 +195082,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1668",
+      "source_location": "L1675",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast",
@@ -195094,7 +195094,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1730",
+      "source_location": "L1737",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -195106,7 +195106,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1656",
+      "source_location": "L1663",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast",
@@ -195118,7 +195118,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1811",
+      "source_location": "L1818",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -195130,7 +195130,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1668",
+      "source_location": "L1675",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast",
@@ -195144,7 +195144,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1699",
+      "source_location": "L1706",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_capture_snapshot_backing",
@@ -195156,7 +195156,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1688",
+      "source_location": "L1695",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_capture_snapshot_backing",
@@ -195168,7 +195168,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1716",
+      "source_location": "L1723",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_capture_snapshot_backing",
@@ -195178,7 +195178,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1730",
+      "source_location": "L1737",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast",
@@ -195192,7 +195192,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1744",
+      "source_location": "L1751",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_restore_snapshot_backing",
@@ -195204,7 +195204,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1758",
+      "source_location": "L1765",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_restore_snapshot_backing",
@@ -195216,7 +195216,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1778",
+      "source_location": "L1785",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_restore_snapshot_backing",
@@ -195226,7 +195226,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1793",
+      "source_location": "L1800",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast",
@@ -195238,7 +195238,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1816",
+      "source_location": "L1823",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -195250,7 +195250,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1869",
+      "source_location": "L1876",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -195262,7 +195262,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1913",
+      "source_location": "L1920",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -195274,7 +195274,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1897",
+      "source_location": "L1904",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -195286,7 +195286,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1909",
+      "source_location": "L1916",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -195298,7 +195298,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1832",
+      "source_location": "L1839",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast",
@@ -195312,7 +195312,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/model.cpp",
-      "source_location": "L1903",
+      "source_location": "L1910",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_model_prefillv2model_restore_snapshot",
@@ -196992,7 +196992,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/topology_block.cpp",
-      "source_location": "L127",
+      "source_location": "L129",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_topology_block",
@@ -197110,7 +197110,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/topology_block.cpp",
-      "source_location": "L127",
+      "source_location": "L129",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -197134,7 +197134,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/topology_block.cpp",
-      "source_location": "L127",
+      "source_location": "L129",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -197158,7 +197158,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/prefill_v2/topology_block.cpp",
-      "source_location": "L127",
+      "source_location": "L129",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast",
@@ -197184,7 +197184,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/prefill_v2/topology_block.cpp",
-      "source_location": "L114",
+      "source_location": "L116",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_prefill_v2_topology_block_prefillv2topologyblock_decode",
@@ -312814,5 +312814,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "e21a39ff9a751a0decaccd0642bab2b2c061749c"
+  "built_at_commit": "016472160c295eb1927b1ed6e095719ada6c3d18"
 }

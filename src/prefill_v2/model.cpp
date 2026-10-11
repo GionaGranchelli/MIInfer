@@ -1349,6 +1349,11 @@ GenerateStats PrefillV2Model::generate(
         }
         if (k == 1) invalidate_runtime_state_cache();
 
+        DeviceDecodeState attention_state{};
+        attention_state.position = position;
+        MIINFER_HIP_CHECK(hipMemcpyAsync(
+            d_decode_state_, &attention_state, sizeof(attention_state), hipMemcpyHostToDevice, stream));
+
         // 1. Copy single input token to device
         MIINFER_HIP_CHECK(hipMemcpyAsync(
             d_temp_tokens_,
@@ -1384,7 +1389,9 @@ GenerateStats PrefillV2Model::generate(
                 ws,
                 position,
                 /*decode_state=*/nullptr,
-                stream);
+                stream,
+                /*graph_trace=*/nullptr,
+                static_cast<const DeviceDecodeState*>(d_decode_state_));
         }
 
         // 4. Final RMS Norm
