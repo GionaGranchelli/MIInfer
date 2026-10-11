@@ -148,6 +148,12 @@ target_link_libraries(miinfer_openai_api PUBLIC nlohmann_json::nlohmann_json)
 target_compile_features(miinfer_openai_api PUBLIC cxx_std_20)
 target_compile_options(miinfer_openai_api PRIVATE -Wall -Wextra -Wpedantic)
 
+if(MIINFER_BUILD_BENCHMARKS)
+    add_executable(miinfer-m31-agent-token-count bench/m31_agent_token_count.cpp)
+    target_link_libraries(miinfer-m31-agent-token-count PRIVATE miinfer_model miinfer_openai_api)
+    target_compile_options(miinfer-m31-agent-token-count PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
 add_library(miinfer_context_space STATIC src/context_space.cpp)
 target_include_directories(miinfer_context_space PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_compile_features(miinfer_context_space PUBLIC cxx_std_20)

@@ -164,7 +164,7 @@ int main(int argc, char** argv) {
                 "less than 1 GiB free VRAM after model allocation");
         std::size_t peak_sampled_vram_bytes = total_vram_bytes - free_vram_bytes;
         std::cout << "post_allocation_free_vram_bytes=" << free_vram_bytes
-                  << " total_vram_bytes=" << total_vram_bytes << '\n';
+                  << " total_vram_bytes=" << total_vram_bytes << std::endl;
         std::vector<std::uint32_t> prompt;
         prompt.reserve(kContextTokens + (kTurns - 1) * kTurnAppendTokens);
         std::vector<std::uint32_t> previous_output;
@@ -220,7 +220,7 @@ int main(int argc, char** argv) {
                       << " restore_ms=" << stats.restore_ms
                       << " suffix_prefill_ms=" << stats.suffix_prefill_ms
                       << " sampled_vram_used_bytes=" << sampled_vram_bytes
-                      << " sampled_vram_free_bytes=" << free_vram_bytes << '\n';
+                      << " sampled_vram_free_bytes=" << free_vram_bytes << std::endl;
 
             if (turn + 1 == kRestoreTurn) {
                 const auto state_before_restore = state_fingerprint(model, prompt.size());
@@ -233,7 +233,7 @@ int main(int argc, char** argv) {
                 require(state_fingerprint(model, restored.size()) == state_before_restore,
                         "GDN/KV state changed during persistent-session restore");
                 std::cout << "session_restore=PASS prefix_tokens=" << restored.size()
-                          << " gdn_kv_state=BYTE_IDENTICAL\n";
+                          << " gdn_kv_state=BYTE_IDENTICAL" << std::endl;
             }
             previous_output = stats.generated_tokens;
         }
@@ -246,7 +246,7 @@ int main(int argc, char** argv) {
                   << " kv_capacity=" << kKvCapacity
                   << " cached_state_bytes=" << model.cached_state_bytes()
                   << " model_accounted_vram_bytes=" << model.total_vram_bytes()
-                  << " peak_sampled_hip_vram_used_bytes=" << peak_sampled_vram_bytes << '\n';
+                  << " peak_sampled_hip_vram_used_bytes=" << peak_sampled_vram_bytes << std::endl;
     } catch (const std::exception& error) {
         std::cerr << "M31-ACCEL-0001 64K persistent multi-turn workload: FAIL: "
                   << error.what() << '\n';
