@@ -45,7 +45,7 @@ There is no fixed full-model relative-L2 or top-k cutoff in the existing evidenc
 
 ## Run matrix
 
-For all six prompts, run fused GPU, aligned-MMQ GPU (`MIINFER_EXPERIMENTAL_MMQ_GATEUP_QSUM=1`), and pinned CPU llama.cpp. Run each configuration three times from fresh contexts. On GPU, run eager and HIP-graph modes for both routes. For each prompt:
+For all six prompts, run fused GPU, aligned-MMQ GPU, and pinned CPU llama.cpp. Select aligned MMQ with both `MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY=1` and `MIINFER_EXPERIMENTAL_MMQ_GATEUP_QSUM=1`; QSUM alone does not select the MMQ route. Run each configuration three times from fresh contexts. On GPU, run eager and HIP-graph modes for both routes. For each prompt:
 
 1. Record ordinary greedy output up to 64 tokens for all configurations and retain all output IDs.
 2. Repeat CPU greedy twice first; require exact repeat output and logits before using its first four generated IDs as the teacher-forced history.

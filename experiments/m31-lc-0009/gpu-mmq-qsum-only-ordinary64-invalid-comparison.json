@@ -1,10 +1,13 @@
 {
   "schema": "m31-lc-0009-capture-comparison-v1",
+  "status": "INVALID_CONFIGURATION_NOT_COUNTED",
+  "route_label_valid": false,
+  "reason": "QSUM was enabled without MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY=1; this capture used the default fused route and is not MMQ evidence.",
   "cpu_capture_sha256": "30c1da9a3aac145194f207607a777f5a0f619400f5c4ee67b1a74f221544e3cb",
   "decisions": 5,
   "vocab_size": 248320,
   "comparisons": {
-    "mmq-graph": {
+    "default-fused-qsum-only-invalid": {
       "capture_sha256": "f48365126faf35fe651d58fdbe779255e8c62e2791811c9d7ca53bb24b188d9f",
       "decisions": [
         {
@@ -76,7 +79,7 @@
     }
   },
   "greedy_mismatches": {
-    "mmq-graph": {
+    "default-fused-qsum-only-invalid": {
       "positions_1based": [
         31,
         32,
