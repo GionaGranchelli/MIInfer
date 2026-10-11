@@ -40,7 +40,9 @@ Code review added a fail-closed reuse gate: each turn after the first must repor
 
 ## Decode and prefill
 
-No campaign A/B or code change yet. The existing direct/eager decode harness can run a fixed P=2048, TG=128, five-sample decode (`miinfer-v2-0045-qual-bench MODEL decode 2048 128 5`), but it lacks logit parity and does not measure the default HIP Graph route. Existing one-token attribution used a different graph-disabled route, so it does not justify a decode implementation. The existing paired prefix-reuse benchmark also runs 128K in the same invocation and does not fail on printed parity errors; it will not be used for the campaign run.
+No campaign A/B or decode implementation yet. The existing direct/eager decode harness can run a fixed P=2048, TG=128, five-sample decode (`miinfer-v2-0045-qual-bench MODEL decode 2048 128 5`), but it lacks logit parity and does not measure the default HIP Graph route. Existing one-token attribution used a different graph-disabled route, so it does not justify a decode implementation.
+
+The suffix worker's 64K-only prefix benchmark parity fix (`60dfa`) was cherry-picked into coordinator commit `1b477ab`. A pinned ROCm 7.2.1 no-device build from that coordinator source passed: log `/mnt/lc9-lake/m31-accel-0001-captures/build/coordinator-1b477ab-prefix-build.log`, SHA-256 `0ded1e258db670cdc76718e921c9a28e2e420b1790a3ff0157514ec95fcecf58`; binary SHA-256 `34541d9e2f37c0598ad818f62b6a1d47c29161648893efab4a5e7a5d374c5c18`. No GPU benchmark was run, so this is build evidence only, not a suffix TTFT result or correctness qualification. The older paired benchmark remains unsuitable because it combines a 128K scenario and did not fail closed on printed parity errors.
 
 The best supported current direction is to finish 64K reliability first. For performance work, collect current matched timings and correctness before selecting a candidate. Historical eager GQA, attention tiling, and integrated prefix-reuse records are not promotion evidence.
 
@@ -78,3 +80,7 @@ The bounded LC-0009 QSUM handoff is pushed separately at `f78949cf4f002c72a27de8
 The coordinator change is pushed at `fa03664ccf021a2127f9f7110aa350ebc55e9977`, and the isolated Z840 campaign worktree is clean at that SHA. The host-only workload self-check again passed with exactly 65,536 initial ChatML tokens, seven source files, and eight planned turns; the guarded-runner self-check passed as well. Neither check used the GPU. The first invocation pointed at the wrong existing tokenizer binary path and failed before launch; correcting the path resolved it without rebuilding.
 
 The Z840 worktree was subsequently advanced to the latest docs-only coordinator checkpoint `e6fa5592770fb7bbc78954cf7acbf1387300b735`; it remains clean.
+
+## 2026-10-12 01:31 checkpoint
+
+The production API workload now rejects an SSE response unless it observes both `[DONE]` and an accepted `finish_reason` (`stop`, `length`, or `tool_calls`). Its self-check covers a valid stream and a truncated stream without network access. Before every API request it atomically writes the active turn and phase to the workload JSON, then saves each completed request; a stop during inference therefore leaves a valid artifact identifying the in-flight operation. Python syntax and the no-network SSE self-check passed locally. No GPU was used. This improves failure evidence, not 64K qualification.

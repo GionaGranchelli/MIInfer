@@ -5,6 +5,7 @@ import argparse
 import json
 import os
 import subprocess
+import tempfile
 import time
 import urllib.request
 from pathlib import Path
@@ -83,6 +84,64 @@ def body_for(model, messages, tool_choice, max_tokens):
         "tool_choice": tool_choice, "max_tokens": max_tokens,
         "temperature": 0.0, "top_p": 1.0, "top_k": 1, "stream": True,
     }
+
+
+def sse_choices(lines):
+    finish_reason = None
+    done = False
+    for raw in lines:
+        line = raw.decode("utf-8", "replace").strip() if isinstance(raw, bytes) else raw.strip()
+        if not line.startswith("data: "):
+            continue
+        data = line[6:]
+        if data == "[DONE]":
+            done = True
+            break
+        choices = (json.loads(data).get("choices") or [{}])
+        choice = choices[0]
+        if choice.get("finish_reason") is not None:
+            finish_reason = choice["finish_reason"]
+        yield choice
+    if not done or finish_reason not in {"stop", "length", "tool_calls"}:
+        raise RuntimeError("incomplete SSE response: missing [DONE] or accepted finish_reason")
+
+
+def sse_self_check():
+    valid = [
+        'data: {"choices":[{"delta":{"content":"ok"},"finish_reason":null}]}',
+        'data: {"choices":[{"delta":{},"finish_reason":"stop"}]}',
+        "data: [DONE]",
+    ]
+    if len(list(sse_choices(valid))) != 2:
+        raise RuntimeError("valid SSE self-check failed")
+    try:
+        list(sse_choices(valid[:-1]))
+    except RuntimeError:
+        pass
+    else:
+        raise RuntimeError("truncated SSE self-check unexpectedly passed")
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "workload.json"
+        write_result(path, {"active_turn": 1, "active_phase": "planned_read_tool_call"})
+        if json.loads(path.read_text(encoding="utf-8"))["active_turn"] != 1:
+            raise RuntimeError("atomic workload-artifact self-check failed")
+
+
+def write_result(path, result):
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=path.parent,
+                                         prefix=f".{path.name}.", suffix=".tmp",
+                                         delete=False) as stream:
+            temporary = Path(stream.name)
+            json.dump(result, stream, indent=2)
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+    finally:
+        if temporary is not None and temporary.exists():
+            temporary.unlink()
 
 
 def source_evidence(root):
@@ -170,12 +229,7 @@ def stream_completion(url, key, model, messages, tool_choice, max_tokens, server
     content, reasoning, calls = [], [], {}
     first_delta_ms = None
     with urllib.request.urlopen(request, timeout=1800) as response:
-        for raw in response:
-            line = raw.decode("utf-8", "replace").strip()
-            if not line.startswith("data: ") or line == "data: [DONE]":
-                continue
-            event = json.loads(line[6:])
-            choice = (event.get("choices") or [{}])[0]
+        for choice in sse_choices(response):
             delta = choice.get("delta") or {}
             if delta.get("content") or delta.get("reasoning_content") or delta.get("tool_calls"):
                 if first_delta_ms is None:
@@ -244,8 +298,10 @@ def main():
                                              for path, start, end, _ in TURN_PLANS)
         assert exact_count == TARGET_PROMPT_TOKENS
         if args.self_check:
+            sse_self_check()
             print(json.dumps({"self_check": "PASS", "turns": len(TURN_PLANS),
                               "initial_prompt_tokens": exact_count,
+                              "sse_completion": "PASS", "atomic_artifact": "PASS",
                               "source_files": len(manifest)}, sort_keys=True))
             return 0
 
@@ -260,35 +316,47 @@ def main():
             "initial_context_target_tokens": TARGET_PROMPT_TOKENS,
             "initial_context_tokenizer_verified": exact_count,
             "expected_turn_count": len(TURN_PLANS), "turns_completed": 0,
-            "workload_complete": False,
+            "workload_complete": False, "status": "in_progress",
+            "active_turn": None, "active_phase": None, "requests_completed": 0,
+            "in_progress_turn": None,
             "prefix_reuse_correctness": "UNQUALIFIED: no matched cold replay",
             "source_manifest": manifest, "turns": [],
         }
         output_path = root / args.output
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+        write_result(output_path, result)
         for index, (tool_path, start_line, end_line, task) in enumerate(TURN_PLANS, 1):
             turn = {"turn": index, "requests": [], "tool_results": []}
+            result["active_turn"] = index
+            result["in_progress_turn"] = turn
             if index > 1:
                 messages.append({"role": "user", "content":
                     f"Turn {index}: continue the same MIInfer coding-agent investigation. Make exactly one "
                     f"read_file call for {tool_path} lines {start_line}-{end_line}; do not answer in prose yet."})
+            result["active_phase"] = "planned_read_tool_call"
+            write_result(output_path, result)
             call_response = stream_completion(args.url, args.api_key, args.model,
                                               messages, "required", 192, server_log)
+            turn["requests"].append(call_response)
+            result["requests_completed"] += 1
+            write_result(output_path, result)
             require_planned_read(call_response, tool_path, start_line, end_line)
             if index == 1 and call_response["prompt_tokens"] != exact_count:
                 raise RuntimeError("live server token count differs from the exact MIInfer tokenizer check")
-            turn["requests"].append(call_response)
             turn["tool_results"].extend(legacy.append_tool_exchange(root, messages, call_response))
             messages.append({"role": "user", "content":
                 f"Turn {index} task: {task} Use source references and distinguish verified behavior "
                 "from inference. Give at least five numbered observations and a concrete next step, "
                 "with at least 100 words."})
             completion = None
-            for _ in range(3):
+            for attempt in range(3):
+                result["active_phase"] = f"report_completion_{attempt + 1}"
+                write_result(output_path, result)
                 completion = stream_completion(args.url, args.api_key, args.model,
                                                messages, "auto", 256, server_log)
                 turn["requests"].append(completion)
+                result["requests_completed"] += 1
+                write_result(output_path, result)
                 if not completion["tool_calls"]:
                     break
                 turn["tool_results"].extend(legacy.append_tool_exchange(root, messages, completion))
@@ -326,8 +394,12 @@ def main():
             })
             result["turns"].append(turn)
             result["turns_completed"] = len(result["turns"])
-            output_path.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+            result["active_turn"] = None
+            result["active_phase"] = None
+            result["in_progress_turn"] = None
+            write_result(output_path, result)
         result["workload_complete"] = len(result["turns"]) == len(TURN_PLANS)
+        result["status"] = "complete" if result["workload_complete"] else "incomplete"
         result["all_turns_minimum_generation_gate"] = all(
             turn["minimum_generation_gate"] for turn in result["turns"])
         result["all_turns_visible_answer_gate"] = all(
@@ -337,7 +409,7 @@ def main():
         result["all_turns_prefix_reuse_gate"] = all(
             turn["prefix_reuse_gate"] for turn in result["turns"])
         result["conversation_message_count"] = len(messages)
-        (root / args.output).write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+        write_result(output_path, result)
         print(json.dumps(result, indent=2))
         return 0 if (result["all_turns_minimum_generation_gate"]
                      and result["all_turns_visible_answer_gate"]

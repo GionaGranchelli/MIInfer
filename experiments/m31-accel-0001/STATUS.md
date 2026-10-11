@@ -53,6 +53,12 @@ One GPU job at a time on Z840. Preserve all dirty worktrees and existing logs. R
 - Next: hold GPU work for cooling confirmation and continue only host-side preparation or review.
 - The clean Z840 campaign worktree was subsequently fast-forwarded to the latest docs-only checkpoint `e6fa5592770fb7bbc78954cf7acbf1387300b735`; it remains clean.
 
+## 01:31 checkpoint
+
+- Coordinator now contains the 64K-only suffix benchmark parity fix from suffix branch `60dfa`, integrated at `1b477ab`. The pinned ROCm 7.2.1 no-device build passed from `1b477ab`; log SHA-256 `0ded1e258db670cdc76718e921c9a28e2e420b1790a3ff0157514ec95fcecf58`, binary SHA-256 `34541d9e2f37c0598ad818f62b6a1d47c29161648893efab4a5e7a5d374c5c18`. No GPU benchmark ran.
+- Production API streaming now requires `[DONE]` plus accepted `finish_reason`; its no-network self-check accepts a complete stream and rejects a truncated one. The workload atomically persists active turn/phase before each API request and saves returned request data immediately afterward. Local Python syntax and SSE self-checks pass. This does not qualify inference or prefix-reuse correctness.
+- Cooling/airflow remains unconfirmed; no GPU work was started.
+
 ## 00:30 checkpoint
 
 - Coordinator checkpoint commit: `66e887f78597898f55cc80a7499e0b71b2ebdc20` (pushed to `origin/experiment/m31-accel-0001-coordinator`). This branch publishes the required Z840 committed M30 source ancestry and campaign notes; Z840/Machinist dirty worktrees remain untouched.

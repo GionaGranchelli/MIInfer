@@ -78,7 +78,11 @@ python3 bench/m31_accel_0001_agent_workload.py \
   --self-check
 ```
 
-For the production-path run, use the already guarded 128K serving configuration
+The self-check also accepts a complete SSE response and rejects one missing
+`[DONE]`. During a live run the JSON artifact is atomically updated before each
+request with its active turn and phase, then again when that request completes.
+
+For the production-path run, use the already guarded 81,920-token serving configuration
 and point `--server-log` at that server's stderr log:
 
 ```sh
