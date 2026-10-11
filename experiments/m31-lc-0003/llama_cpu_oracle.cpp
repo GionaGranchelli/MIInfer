@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <charconv>
 #include <cmath>
 #include <cstdint>
 #include <filesystem>
@@ -109,10 +110,11 @@ struct GreedyCapture {
 };
 
 GreedyCapture capture_greedy(llama_model* model, const std::vector<llama_token>& prompt,
-                             std::size_t vocab, std::int32_t threads) {
-    constexpr std::size_t generated_count = 64;
+                             std::size_t vocab, std::int32_t threads,
+                             std::size_t generated_count, std::size_t context_tokens,
+                             bool retain_logits) {
     auto params = llama_context_default_params();
-    params.n_ctx = 2304;
+    params.n_ctx = static_cast<std::uint32_t>(context_tokens);
     params.n_batch = kPromptTile;
     params.n_ubatch = kPromptTile;
     params.n_seq_max = 1;
@@ -130,7 +132,7 @@ GreedyCapture capture_greedy(llama_model* model, const std::vector<llama_token>&
     BatchOwner batch(static_cast<std::int32_t>(kPromptTile));
     GreedyCapture capture;
     capture.ids.reserve(generated_count);
-    capture.logits.reserve(generated_count * vocab);
+    if (retain_logits) capture.logits.reserve(generated_count * vocab);
     for (std::size_t offset = 0; offset < prompt.size(); offset += kPromptTile) {
         const auto count = std::min(kPromptTile, prompt.size() - offset);
         fill_batch(batch.value, prompt.data() + offset, count,
@@ -144,7 +146,7 @@ GreedyCapture capture_greedy(llama_model* model, const std::vector<llama_token>&
         for (std::size_t token = 0; token < vocab; ++token) {
             if (!std::isfinite(logits[token])) throw std::runtime_error("CPU greedy capture produced a non-finite logit");
         }
-        capture.logits.insert(capture.logits.end(), logits, logits + vocab);
+        if (retain_logits) capture.logits.insert(capture.logits.end(), logits, logits + vocab);
         capture.ids.push_back(static_cast<llama_token>(std::distance(
             logits, std::max_element(logits, logits + vocab))));
         if (i + 1 < generated_count) {
@@ -397,14 +399,26 @@ llama_token top_id(const std::vector<float>& values, std::size_t vocab, std::siz
 int main(int argc, char** argv) {
     const bool layer_trace_only = argc == 6 && std::string(argv[5]) == "--layer-trace-only";
     const bool operation_trace_only = argc == 6 && std::string(argv[5]) == "--operation-trace-only";
-    if (argc != 5 && !layer_trace_only && !operation_trace_only) {
-        std::cerr << "usage: m31-lc-0003-cpu-oracle MODEL.gguf PROMPT.ids FORCED.ids|- OUTPUT_PREFIX [--layer-trace-only|--operation-trace-only]\n";
+    const bool functional_extension = argc == 7 && std::string(argv[5]) == "--functional-extension";
+    if (argc != 5 && !layer_trace_only && !operation_trace_only && !functional_extension) {
+        std::cerr << "usage: m31-lc-0003-cpu-oracle MODEL.gguf PROMPT.ids FORCED.ids|- OUTPUT_PREFIX [--layer-trace-only|--operation-trace-only|--functional-extension TOKENS]\n";
         return 2;
     }
     try {
         const std::string model_path = argv[1];
         const std::string forced_path = argv[3];
         const std::string output_prefix = argv[4];
+        std::size_t functional_extension_tokens = 0;
+        if (functional_extension) {
+            std::size_t parsed = 0;
+            const std::string count = argv[6];
+            const auto [end, error] = std::from_chars(count.data(), count.data() + count.size(), parsed);
+            if (error != std::errc{} || end != count.data() + count.size()
+                || parsed == 0 || parsed > 2048) {
+                throw std::runtime_error("functional extension length must be 1-2,048 tokens");
+            }
+            functional_extension_tokens = parsed;
+        }
         const auto prompt = read_ids(argv[2]);
         if (prompt.empty() || prompt.size() > 2048) {
             throw std::runtime_error("expected 1-2,048 prompt IDs");
@@ -437,6 +451,41 @@ int main(int argc, char** argv) {
         }
 
         constexpr std::int32_t threads = 48;
+        if (functional_extension) {
+            constexpr std::size_t repeats = 3;
+            const auto context_tokens = std::max<std::size_t>(2304, prompt.size() + functional_extension_tokens);
+            if (context_tokens > 8192) throw std::runtime_error("functional extension exceeds 8K context capacity");
+            std::array<std::vector<llama_token>, repeats> outputs;
+            for (std::size_t repeat = 0; repeat < repeats; ++repeat) {
+                const auto capture = capture_greedy(model.get(), prompt, vocab_size, threads,
+                                                    functional_extension_tokens, context_tokens, false);
+                outputs[repeat] = capture.ids;
+                write_ids(output_prefix + ".functional.run" + std::to_string(repeat + 1) + ".ids", capture.ids);
+            }
+            const bool repeat_equal = std::all_of(outputs.begin() + 1, outputs.end(), [&](const auto& ids) {
+                return ids == outputs[0];
+            });
+            std::ofstream metadata(output_prefix + ".functional.metadata.json", std::ios::out);
+            if (!metadata) throw std::runtime_error("cannot write functional extension metadata");
+            metadata << "{\n"
+                     << "  \"reference\": \"llama.cpp CPU\",\n"
+                     << "  \"revision\": \"" << kLlamaRevision << "\",\n"
+                     << "  \"prompt_tokens\": " << prompt.size() << ",\n"
+                     << "  \"generated_tokens\": " << functional_extension_tokens << ",\n"
+                     << "  \"context\": " << context_tokens << ",\n"
+                     << "  \"threads\": " << threads << ",\n"
+                     << "  \"gpu_layers\": 0,\n"
+                     << "  \"repeats\": " << repeats << ",\n"
+                     << "  \"repeat_ids_equal\": " << (repeat_equal ? "true" : "false") << "\n}\n";
+            if (!metadata) throw std::runtime_error("failed writing functional extension metadata");
+            if (!repeat_equal) throw std::runtime_error("CPU functional output IDs were not repeat-identical");
+            std::cout << "reference_revision=" << kLlamaRevision
+                      << " generated_tokens=" << functional_extension_tokens
+                      << " context=" << context_tokens
+                      << " repeat_ids_equal=PASS\n";
+            llama_backend_free();
+            return 0;
+        }
         std::vector<llama_token> forced;
         std::array<std::vector<float>, 3> captures;
         if (layer_trace_only || operation_trace_only) {
@@ -460,7 +509,7 @@ int main(int argc, char** argv) {
 
         std::array<GreedyCapture, 2> greedy;
         for (std::size_t pass = 0; pass < greedy.size(); ++pass) {
-            greedy[pass] = capture_greedy(model.get(), prompt, vocab_size, threads);
+            greedy[pass] = capture_greedy(model.get(), prompt, vocab_size, threads, 64, 2304, true);
             write_f32(output_prefix + ".greedy.run" + std::to_string(pass + 1) + ".logits.f32",
                       greedy[pass].logits);
             write_ids(output_prefix + ".greedy.run" + std::to_string(pass + 1) + ".ids",
