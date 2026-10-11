@@ -19,6 +19,8 @@ The pinned tokenizer vocabulary was checked against the actual GGUF on Machinist
 
 Use `compare_captures.py CPU_FORCED.f32 --route NAME=ROUTE.f32` for each GPU mode. Add two `--repeat NAME=FILE` arguments per route to compare all three captures, and `--greedy cpu=CPU.ids --greedy NAME=ROUTE.ids` to report one-based token mismatch positions. It reports numeric and top-k metrics only; it applies no acceptance threshold.
 
+For paired runs, add `--capture-normal-token-ids FILE`. Each measured iteration captures forced-history output, then runs a separate normal-greedy generation with model state reset. The two ID streams use separate paths. With multiple iterations, output paths receive `.run-N` suffixes and existing files are not overwritten. Result rows label the history as `forced` or `normal-greedy`; paired capture requires zero warmups.
+
 ## Three independent contracts
 
 ### O — Operation agreement with quantization-aware references

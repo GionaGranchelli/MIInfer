@@ -1,0 +1,53 @@
+{
+  "schema": "m31-lc-0009-gpu-paired-smoke-v1",
+  "status": "ONE_CONFIGURATION_THREE_REPEATS_PASS",
+  "source_sha256": "7ffd94238db5c07219a7077d4c8c79be08071eba8baa15dca186f526efbcc7f3",
+  "binary_sha256": null,
+  "binary_sha256_note": "Executable digest was not retained; this is a source and run-log record.",
+  "image": "localhost/miinfer-dev:rocm-7.2.1",
+  "image_digest": "sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e",
+  "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+  "host": {
+    "hostname": "fedora",
+    "pci_bdf": "0000:06:00.0",
+    "gpu": "gfx906",
+    "serial": "692121006383",
+    "rocr_visible_devices": "0"
+  },
+  "configuration": {
+    "prompt": "ordinary-64-01",
+    "route": "fused",
+    "mode": "hip-graph",
+    "iterations": 3,
+    "warmups": 0,
+    "forced_history": [760, 1156, 16561, 728],
+    "raw_logits_decisions": 5,
+    "raw_logits_bytes_per_run": 4966400
+  },
+  "results": {
+    "forced_logits_sha256": [
+      "f48365126faf35fe651d58fdbe779255e8c62e2791811c9d7ca53bb24b188d9f",
+      "f48365126faf35fe651d58fdbe779255e8c62e2791811c9d7ca53bb24b188d9f",
+      "f48365126faf35fe651d58fdbe779255e8c62e2791811c9d7ca53bb24b188d9f"
+    ],
+    "forced_ids_sha256": [
+      "e1f2cffd0d9378b55449bc7800b0a4fe4808c198e0d42966e04fe5c77cc4fef3",
+      "e1f2cffd0d9378b55449bc7800b0a4fe4808c198e0d42966e04fe5c77cc4fef3",
+      "e1f2cffd0d9378b55449bc7800b0a4fe4808c198e0d42966e04fe5c77cc4fef3"
+    ],
+    "normal_greedy_ids_sha256": [
+      "e1f2cffd0d9378b55449bc7800b0a4fe4808c198e0d42966e04fe5c77cc4fef3",
+      "e1f2cffd0d9378b55449bc7800b0a4fe4808c198e0d42966e04fe5c77cc4fef3",
+      "e1f2cffd0d9378b55449bc7800b0a4fe4808c198e0d42966e04fe5c77cc4fef3"
+    ],
+    "paired_run_log_sha256": "bc552412de933c7f6d918dc877925d8ea3727d84b97985dd296ce849e66380bd",
+    "state": "recurrent and KV snapshots at forced-history decisions 1, 2, and 5 were byte-identical across repetitions; hashes match gpu-repeat-smoke.json",
+    "tokens_valid": true,
+    "per_iteration_wall_ms": {
+      "forced": [3590.704, 3364.774, 3204.116],
+      "normal_greedy": [2654.963, 2628.439, 2630.293]
+    }
+  },
+  "raw_capture_directory": "/home/fedora-workstation/Development/mi50-lc0009-captures/gpu/fused-graph-paired",
+  "raw_capture_storage": "Z840 only; the paired raw files are not tracked in Git"
+}

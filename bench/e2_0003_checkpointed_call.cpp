@@ -136,7 +136,8 @@ int main(int argc, char** argv) {
         std::cerr << "usage: e2-0003-checkpointed-call MODEL.gguf "
                      "8K|32K|64K|128K [--generate N] [--iterations N] [--warmup N] "
                      "[--prompt-tokens N|--prompt-ids FILE] [--forced-token-ids FILE] "
-                     "[--capture-raw-logits FILE] [--capture-token-ids FILE] [--capture-state-prefix PREFIX] "
+                     "[--capture-raw-logits FILE] [--capture-token-ids FILE] "
+                     "[--capture-normal-token-ids FILE] [--capture-state-prefix PREFIX] "
                      "[--reference-token-ids FILE] [--output FILE] [--ledger-only]\n";
         return 2;
     }
@@ -160,6 +161,7 @@ int main(int argc, char** argv) {
         std::string output_path;
         std::string raw_logits_path;
         std::string generated_ids_path;
+        std::string normal_generated_ids_path;
         std::string state_capture_prefix;
         std::string prompt_ids_path;
         std::string forced_ids_path;
@@ -181,6 +183,8 @@ int main(int argc, char** argv) {
             else if (arg == "--output" && i + 1 < argc) output_path = argv[++i];
             else if (arg == "--capture-raw-logits" && i + 1 < argc) raw_logits_path = argv[++i];
             else if (arg == "--capture-token-ids" && i + 1 < argc) generated_ids_path = argv[++i];
+            else if (arg == "--capture-normal-token-ids" && i + 1 < argc)
+                normal_generated_ids_path = argv[++i];
             else if (arg == "--capture-state-prefix" && i + 1 < argc) state_capture_prefix = argv[++i];
             else if (arg == "--ledger-only") ledger_only = true;
             else throw std::runtime_error("unknown or incomplete option: " + arg);
@@ -219,6 +223,14 @@ int main(int argc, char** argv) {
         if (!generated_ids_path.empty() && warmups != 0) {
             throw std::runtime_error("token ID capture requires no warmup");
         }
+        if (!normal_generated_ids_path.empty()
+            && (warmups != 0 || forced_ids.size() != 4)) {
+            throw std::runtime_error("normal-greedy capture requires no warmup and four forced-history IDs");
+        }
+        if (!normal_generated_ids_path.empty()
+            && normal_generated_ids_path == generated_ids_path) {
+            throw std::runtime_error("forced and normal-greedy token captures need different paths");
+        }
         if (!state_capture_prefix.empty()
             && (warmups != 0 || generate_tokens < 5 || forced_ids.size() != 4)) {
             throw std::runtime_error("state capture requires no warmup, five decisions, and four forced IDs");
@@ -229,12 +241,16 @@ int main(int argc, char** argv) {
         for (std::size_t iteration = 1; iteration <= iterations; ++iteration) {
             const auto raw_path = iteration_path(raw_logits_path, iteration, iterations);
             const auto ids_path = iteration_path(generated_ids_path, iteration, iterations);
+            const auto normal_ids_path = iteration_path(normal_generated_ids_path, iteration, iterations);
             const auto state_prefix = iteration_path(state_capture_prefix, iteration, iterations);
             if (!raw_logits_path.empty() && std::filesystem::exists(raw_path)) {
                 throw std::runtime_error("refusing to overwrite existing raw-logit capture: " + raw_path);
             }
             if (!generated_ids_path.empty() && std::filesystem::exists(ids_path)) {
                 throw std::runtime_error("refusing to overwrite existing token ID capture: " + ids_path);
+            }
+            if (!normal_generated_ids_path.empty() && std::filesystem::exists(normal_ids_path)) {
+                throw std::runtime_error("refusing to overwrite existing normal-greedy token capture: " + normal_ids_path);
             }
             if (!state_capture_prefix.empty()) {
                 for (const std::size_t decision : {std::size_t{0}, std::size_t{1}, std::size_t{4}}) {
@@ -308,10 +324,13 @@ int main(int argc, char** argv) {
             return 0;
         }
 
-        const auto execute = [&](std::size_t iteration, bool measured) {
+        const auto execute = [&](std::size_t iteration, bool measured, bool normal_greedy) {
             const auto iteration_raw_logits_path = iteration_path(raw_logits_path, iteration, iterations);
             const auto iteration_generated_ids_path = iteration_path(generated_ids_path, iteration, iterations);
+            const auto iteration_normal_ids_path = iteration_path(normal_generated_ids_path, iteration, iterations);
             const auto iteration_state_prefix = iteration_path(state_capture_prefix, iteration, iterations);
+            const bool capture_raw_logits = !normal_greedy && !iteration_raw_logits_path.empty();
+            const bool capture_state_snapshots = !normal_greedy && !iteration_state_prefix.empty();
             miinfer::prefill_v2::GenerateOptions options;
             options.max_new_tokens = generate_tokens;
             options.reset_state_before = true;
@@ -325,16 +344,16 @@ int main(int argc, char** argv) {
             options.repeat_last_n = 256;
             options.stop_token_ids.clear();
             options.seed = 42;
-            options.forced_token_ids = forced_ids;
+            options.forced_token_ids = normal_greedy ? std::vector<std::uint32_t>{} : forced_ids;
             std::vector<std::vector<float>> raw_logits;
             std::size_t logit_decision = 0;
-            if (measured && (!iteration_raw_logits_path.empty() || !iteration_state_prefix.empty())) {
+            if (measured && (capture_raw_logits || capture_state_snapshots)) {
                 raw_logits.reserve(5);
                 options.on_raw_logits = [&](std::span<const float> logits) {
-                    if (!iteration_raw_logits_path.empty() && raw_logits.size() < 5) {
+                    if (capture_raw_logits && raw_logits.size() < 5) {
                         raw_logits.emplace_back(logits.begin(), logits.end());
                     }
-                    if (!iteration_state_prefix.empty()
+                    if (capture_state_snapshots
                         && (logit_decision == 0 || logit_decision == 1 || logit_decision == 4)) {
                         const auto prefix = iteration_state_prefix + ".decision-"
                             + std::to_string(logit_decision + 1);
@@ -355,20 +374,26 @@ int main(int argc, char** argv) {
                 return true;
             };
 
-            event(out, "RUN_BEGIN", iteration, measured ? "mode=measure" : "mode=warmup");
+            const auto history_name = normal_greedy ? "normal-greedy"
+                : (forced_ids.empty() ? "greedy" : "forced");
+            const std::string run_mode = measured
+                ? "mode=measure history=" + std::string(history_name) : "mode=warmup";
+            event(out, "RUN_BEGIN", iteration, run_mode);
             event(out, "PREFILL_BEGIN", iteration);
             std::size_t free_before = 0, total_before = 0;
             if (measured) MIINFER_HIP_CHECK(hipMemGetInfo(&free_before, &total_before));
             const auto wall_start = std::chrono::steady_clock::now();
             const auto stats = model.generate(prompt, options);
             const auto wall_end = std::chrono::steady_clock::now();
-            if (measured && !iteration_generated_ids_path.empty()) {
-                std::ofstream ids_file(iteration_generated_ids_path);
-                if (!ids_file) throw std::runtime_error("cannot create token ID capture: " + iteration_generated_ids_path);
+            const auto& ids_output_path = normal_greedy
+                ? iteration_normal_ids_path : iteration_generated_ids_path;
+            if (measured && !ids_output_path.empty()) {
+                std::ofstream ids_file(ids_output_path);
+                if (!ids_file) throw std::runtime_error("cannot create token ID capture: " + ids_output_path);
                 for (const auto token : stats.generated_tokens) ids_file << token << '\n';
-                if (!ids_file) throw std::runtime_error("failed writing token ID capture: " + iteration_generated_ids_path);
+                if (!ids_file) throw std::runtime_error("failed writing token ID capture: " + ids_output_path);
             }
-            if (!iteration_raw_logits_path.empty()) {
+            if (capture_raw_logits) {
                 if (raw_logits.size() != 5) throw std::runtime_error("raw-logit capture did not contain five decisions");
                 std::ofstream raw_logits_file(iteration_raw_logits_path, std::ios::binary | std::ios::out);
                 if (!raw_logits_file) throw std::runtime_error("cannot create raw-logit capture: " + iteration_raw_logits_path);
@@ -407,6 +432,7 @@ int main(int argc, char** argv) {
             out << std::fixed << std::setprecision(3)
                 << "result={\"context\":\"" << found->name
                 << "\",\"iteration\":" << iteration
+                << ",\"history\":\"" << history_name << "\""
                 << ",\"wall_ms\":" << wall_ms
                 << ",\"ttft_ms\":" << stats.ttft_ms
                 << ",\"prefill_ms\":" << stats.prefill_ms
@@ -430,8 +456,8 @@ int main(int argc, char** argv) {
                 << ",\"device_used_after_bytes\":" << device_used_after
                 << ",\"device_residual_after_bytes\":" << device_residual_after
                 << ",\"device_peak_bytes\":null"
-                << ",\"raw_logits_decisions\":" << (iteration_raw_logits_path.empty() ? 0 : raw_logits.size())
-                << ",\"raw_logits_vocab_size\":" << (iteration_raw_logits_path.empty() ? 0 : model.vocab_size())
+                << ",\"raw_logits_decisions\":" << (capture_raw_logits ? raw_logits.size() : 0)
+                << ",\"raw_logits_vocab_size\":" << (capture_raw_logits ? model.vocab_size() : 0)
                 << ",\"tokens_valid\":\"" << (tokens_valid ? "PASS" : "FAIL")
                 << "\",\"output_parity\":\""
                 << (parity_checked ? (parity ? "PASS" : "FAIL") : "NOT_CHECKED")
@@ -446,10 +472,13 @@ int main(int argc, char** argv) {
         };
 
         for (std::size_t i = 1; i <= warmups; ++i) {
-            if (!execute(i, false)) throw std::runtime_error("warmup produced invalid output length");
+            if (!execute(i, false, false)) throw std::runtime_error("warmup produced invalid output length");
         }
         for (std::size_t i = 1; i <= iterations; ++i) {
-            if (!execute(i, true)) throw std::runtime_error("measured call failed token validity/parity");
+            if (!execute(i, true, false)) throw std::runtime_error("measured call failed token validity/parity");
+            if (!normal_generated_ids_path.empty() && !execute(i, true, true)) {
+                throw std::runtime_error("normal-greedy call failed token validity/parity");
+            }
         }
         return 0;
     } catch (const std::exception& error) {
