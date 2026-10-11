@@ -259,9 +259,14 @@ def main():
                 text=True, check=True).stdout.strip(),
             "initial_context_target_tokens": TARGET_PROMPT_TOKENS,
             "initial_context_tokenizer_verified": exact_count,
+            "expected_turn_count": len(TURN_PLANS), "turns_completed": 0,
+            "workload_complete": False,
             "prefix_reuse_correctness": "UNQUALIFIED: no matched cold replay",
             "source_manifest": manifest, "turns": [],
         }
+        output_path = root / args.output
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
         for index, (tool_path, start_line, end_line, task) in enumerate(TURN_PLANS, 1):
             turn = {"turn": index, "requests": [], "tool_results": []}
             if index > 1:
@@ -312,6 +317,7 @@ def main():
                 "server_total_ms": sum(row["total_ms"] for row in detail),
                 "reused_prefix_tokens": sum(row["reused_prefix_tokens"] for row in latency),
                 "suffix_tokens_dispatched": sum(row["suffix_tokens_dispatched"] for row in latency),
+                "replayed_tokens": sum(row["suffix_tokens_dispatched"] for row in latency),
                 "peak_sampled_vram_bytes": max(vram_samples) if vram_samples else None,
                 "external_vram_samples_complete": len(vram_samples) == 2 * len(turn["requests"]),
                 "prefix_reuse_gate": index == 1 or (first_request_reuse > 0 and first_request_suffix > 0),
@@ -319,9 +325,9 @@ def main():
                 "minimum_visible_answer_gate": len(completion["content"]) >= 300,
             })
             result["turns"].append(turn)
-            output_path = root / args.output
-            output_path.parent.mkdir(parents=True, exist_ok=True)
+            result["turns_completed"] = len(result["turns"])
             output_path.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+        result["workload_complete"] = len(result["turns"]) == len(TURN_PLANS)
         result["all_turns_minimum_generation_gate"] = all(
             turn["minimum_generation_gate"] for turn in result["turns"])
         result["all_turns_visible_answer_gate"] = all(

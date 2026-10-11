@@ -37,6 +37,14 @@ Deadline: 2026-10-12 10:00 Europe/Amsterdam
 
 One GPU job at a time on Z840. Preserve all dirty worktrees and existing logs. Record each run's PID, exact command, source/model/image identity, input IDs, exit status, hashes, temperatures, VRAM and correctness result before starting another.
 
+## 01:22 checkpoint — Z840 access restored
+
+- SSH to `fedora-workstation@100.118.66.80` succeeded. Lake is mounted read/write at `/mnt/lc9-lake` with 1.6 TB available; `/` has 11 GB free. The MI50 is idle at 28 C junction, 0% busy, 10,854,400 B VRAM used, and no MIInfer process was found.
+- Cooling remains unresolved: `rocm-smi` still reports fan level 15% and 0 RPM. This is not physical confirmation of airflow, so no sustained GPU workload was started.
+- Coordinator workload now writes a partial result before the first request, records `expected_turn_count`, `turns_completed`, and `workload_complete`, and exposes `replayed_tokens` as the sum of server `suffix_tokens_dispatched` for each completed turn. Python syntax and `git diff --check` pass. These fields clarify artifacts; they do not establish persistence or correctness.
+- LC-0009 CPU QSUM decode handoff was pushed separately at `f78949cf4f002c72a27de842ef869b6b177dc1b1`; the work confirms the needed raw one-token decode capture is absent, so LC-0009 remains open.
+- Next: push this coordinator checkpoint, update the clean Z840 campaign worktree, then wait for physical airflow/cooling confirmation while advancing host-only checks. Resume GPU only after the cooling condition is resolved.
+
 ## 00:30 checkpoint
 
 - Coordinator checkpoint commit: `66e887f78597898f55cc80a7499e0b71b2ebdc20` (pushed to `origin/experiment/m31-accel-0001-coordinator`). This branch publishes the required Z840 committed M30 source ancestry and campaign notes; Z840/Machinist dirty worktrees remain untouched.
