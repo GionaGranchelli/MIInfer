@@ -1,0 +1,20 @@
+{
+  "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+  "model_path": "/home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf",
+  "engine": "llama.cpp direct C API, commit d1d3c3396aa13a5f239109a822666c4870490ad5, CPU n_gpu_layers=0",
+  "build": "Z840 build/bin, llama.cpp 0.4.1-dev build 162, compiled with HIP backend available",
+  "compute": "n_gpu_layers=0; offload_kqv=false; op_offload=false; n_ctx=2304; n_batch=512; n_ubatch=512; n_threads=48; n_threads_batch=48",
+  "prompt_ids_sha256": "5acd37f00d9e670f4b4e06d46fa12349e1dee06e356e6e73a186d74672f5bb47",
+  "prompt_tokens": 2048,
+  "generated_tokens": [
+    220,
+    248046,
+    198,
+    248045,
+    198
+  ],
+  "logits_sha256": "8a23b51338410a30745207545814f9f369d504b287e9ba15aa16f766eb36e56e",
+  "logits_bytes": 4966400,
+  "vocab": 248320,
+  "logits_file": "cpu-upstream-capi.logits.f32"
+}

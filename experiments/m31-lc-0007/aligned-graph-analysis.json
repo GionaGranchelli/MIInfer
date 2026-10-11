@@ -397,5 +397,129 @@
       }
     ],
     "cpu_reference_match_status": "FAIL_AT_DECISION_5"
+  },
+  "unquantized_projection_fidelity": {
+    "reference": "F64 accumulation of canonical dequantized Q4_K weights times captured unquantized post_normalized F32 input; then F64 SiLU multiply",
+    "weight_sha256": {
+      "gate": "24b815356fe291c7c19023dc600030e67c7c1214b182b4a9bf64c3f4bd8c0c37",
+      "up": "6e7fadc9c058abd6e8962b4a07ea15ccf446d2447329d9e06c2cf31baee39b3e"
+    },
+    "gate_up": {
+      "gate": {
+        "original_sum_vs_unquantized_input_ref": {
+          "rmse": 0.0006976543391915188,
+          "max_abs": 0.005759760737419128,
+          "relative_l2": 0.010296313307604874
+        },
+        "aligned_sum_vs_unquantized_input_ref": {
+          "rmse": 0.00041533801032684605,
+          "max_abs": 0.002122439444065094,
+          "relative_l2": 0.0061297551561683514
+        }
+      },
+      "up": {
+        "original_sum_vs_unquantized_input_ref": {
+          "rmse": 0.0006500997897674476,
+          "max_abs": 0.0023588240146636963,
+          "relative_l2": 0.010594466187641777
+        },
+        "aligned_sum_vs_unquantized_input_ref": {
+          "rmse": 0.00040057703796724485,
+          "max_abs": 0.0016297176480293274,
+          "relative_l2": 0.006528074537307251
+        }
+      }
+    },
+    "swiglu_activation": {
+      "fused_vs_unquantized_reference": {
+        "rmse": 1.8632408308649377e-05,
+        "max_abs": 0.0002363305538892746,
+        "relative_l2": 0.006642416346402312
+      },
+      "original_mmq_vs_unquantized_reference": {
+        "rmse": 3.1037800381238785e-05,
+        "max_abs": 0.00040016183629631996,
+        "relative_l2": 0.011064913842243776
+      },
+      "aligned_mmq_vs_unquantized_reference": {
+        "rmse": 1.863305707293015e-05,
+        "max_abs": 0.00023829564452171326,
+        "relative_l2": 0.006642647629572593
+      },
+      "lower_activation_relative_l2": "fused"
+    }
+  },
+  "cpu_upstream_c_api_reference": {
+    "engine": "llama.cpp direct C API, commit d1d3c3396aa13a5f239109a822666c4870490ad5, CPU n_gpu_layers=0",
+    "build": "Z840 build/bin, llama.cpp 0.4.1-dev build 162, compiled with HIP backend available",
+    "compute": "n_gpu_layers=0; offload_kqv=false; op_offload=false; n_ctx=2304; n_batch=512; n_ubatch=512; n_threads=48; n_threads_batch=48",
+    "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+    "prompt_ids_sha256": "5acd37f00d9e670f4b4e06d46fa12349e1dee06e356e6e73a186d74672f5bb47",
+    "logits_sha256": "8a23b51338410a30745207545814f9f369d504b287e9ba15aa16f766eb36e56e",
+    "token_ids": [
+      220,
+      248046,
+      198,
+      248045,
+      198
+    ],
+    "previous_python_wrapper_logits_bitwise_equal": false,
+    "prefix_first_four_token_parity": true,
+    "fifth_token_matches_gpu": false,
+    "logits_cpu_vs_fused": [
+      {
+        "rmse": 0.08265950720310429,
+        "max_abs": 0.6007605791091919,
+        "relative_l2": 0.023586509854055093
+      },
+      {
+        "rmse": 0.37789519198963567,
+        "max_abs": 1.9674320220947266,
+        "relative_l2": 0.14507835213761563
+      },
+      {
+        "rmse": 0.3243432255261136,
+        "max_abs": 1.7761256694793701,
+        "relative_l2": 0.09354944577448994
+      },
+      {
+        "rmse": 0.34907225327528607,
+        "max_abs": 2.193423271179199,
+        "relative_l2": 0.17889663111185508
+      },
+      {
+        "rmse": 0.6346089134031748,
+        "max_abs": 3.4259076714515686,
+        "relative_l2": 0.18234406329171665
+      }
+    ],
+    "logits_cpu_vs_aligned": [
+      {
+        "rmse": 0.08265950720310429,
+        "max_abs": 0.6007605791091919,
+        "relative_l2": 0.023586509854055093
+      },
+      {
+        "rmse": 0.3381504292675865,
+        "max_abs": 1.9065890312194824,
+        "relative_l2": 0.129819876232017
+      },
+      {
+        "rmse": 0.3135025788860457,
+        "max_abs": 1.6659412384033203,
+        "relative_l2": 0.09042270716797081
+      },
+      {
+        "rmse": 0.3275979418391755,
+        "max_abs": 2.349043846130371,
+        "relative_l2": 0.1678912248232684
+      },
+      {
+        "rmse": 0.6031571374754465,
+        "max_abs": 3.0160083174705505,
+        "relative_l2": 0.17330693113161566
+      }
+    ],
+    "cpu_reference_match_status": "FAIL_AT_DECISION_5; CURRENT_UPSTREAM_C_API_CONFIRMS_TOKEN_MISMATCH"
   }
 }
