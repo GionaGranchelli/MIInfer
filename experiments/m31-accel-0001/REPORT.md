@@ -124,3 +124,7 @@ SSH succeeded. Lake is mounted read/write with 1.6 TB free; `/` is 98% full with
 ## 2026-10-12 01:47 — artifact revalidation
 
 The clean Z840 campaign worktree remains at `529cf3c`. The tokenizer-backed self-check log's SHA-256 still matches `64ee44bbfffe0cc57bb413a3970d353f1e97ecac59bdfaee5f86d90b36a53b25`, and the retained guard records the production 64K attempt's operator stop at 85 C (exit 137). Idle telemetry is 28 C, 0% utilization, approximately 10.9 MB VRAM, and 20 W. No new GPU workload was run.
+
+## 2026-10-12 01:48 — production position and capacity gates
+
+The production runner now checks the API's `gqa_kv_reused_tokens` and `gdn_checkpoint_position` against each request's reused prefix, and requires `runtime_context_capacity >= prompt_tokens`. It records the observed values and per-request gate results. The no-network self-check passes for cold start and exact reuse, and rejects a short prefix, empty suffix, incorrect GDN position, capacity overflow, and missing request telemetry; complete/truncated SSE and atomic artifact checks also pass. Python compilation passes. This is a check of server-reported reuse positions and configured capacity, not numerical recurrent-state continuity or KV content parity. No tokenizer or GPU request was run for this change; the GPU remains held pending airflow confirmation.

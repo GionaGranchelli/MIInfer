@@ -1,6 +1,6 @@
 # M31-ACCEL-0001 live status
 
-Updated: 2026-10-12 01:47 Europe/Amsterdam
+Updated: 2026-10-12 01:48 Europe/Amsterdam
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
 
 ## Source and ownership
@@ -154,3 +154,9 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 
 - Z840 campaign worktree remains clean at `529cf3c`. The exact-prefix host self-check log still matches SHA-256 `64ee44bbfffe0cc57bb413a3970d353f1e97ecac59bdfaee5f86d90b36a53b25` and records exit 0.
 - The guarded 64K attempt's retained status is exit 137 with an explicit operator stop at 85 C, fan 0 RPM, 100% GPU use, and 147 W. Idle telemetry now reads 28 C, 0% use, and approximately 10.9 MB VRAM. This confirms the earlier safety stop; no GPU run was repeated.
+
+## 2026-10-12 01:48 production telemetry gates
+
+- The production workload now also fails closed unless server-reported `gqa_kv_reused_tokens` and `gdn_checkpoint_position` match the reused prefix, and `runtime_context_capacity` covers each prompt. The per-request artifact records these values and check results.
+- Python syntax and no-network workload self-check passed. Self-check covers cold start, exact reuse, short prefix, empty suffix, incorrect GDN position, capacity overflow, missing telemetry, complete/truncated SSE, and atomic result writes.
+- This gates reported positions and capacity, not numerical GDN/KV state equivalence. No GPU or tokenizer process was run; physical cooling remains unverified.

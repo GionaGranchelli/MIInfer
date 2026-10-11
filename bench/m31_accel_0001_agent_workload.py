@@ -120,18 +120,43 @@ def sse_self_check():
         pass
     else:
         raise RuntimeError("truncated SSE self-check unexpectedly passed")
+    cold_gate = prefix_reuse_request_gates([{
+        "server_latency": {"request_id": "cold", "reused_prefix_tokens": 0,
+                            "suffix_tokens_dispatched": 1100},
+        "server_request": {"prompt_tokens": 1100, "gqa_kv_reused_tokens": 0,
+                            "gdn_checkpoint_position": 0,
+                            "runtime_context_capacity": 4096},
+    }])
+    if not cold_gate[0]["passed"]:
+        raise RuntimeError("cold request position/capacity self-check failed")
     reuse_checks = prefix_reuse_request_gates([
         {"server_latency": {"request_id": "first", "reused_prefix_tokens": 1000,
                             "suffix_tokens_dispatched": 100},
-         "server_request": {"prompt_tokens": 1100}},
+         "server_request": {"prompt_tokens": 1100, "gqa_kv_reused_tokens": 1000,
+                             "gdn_checkpoint_position": 1000,
+                             "runtime_context_capacity": 4096}},
         {"server_latency": {"request_id": "short-prefix", "reused_prefix_tokens": 1099,
                             "suffix_tokens_dispatched": 20},
-         "server_request": {"prompt_tokens": 1120}},
+         "server_request": {"prompt_tokens": 1120, "gqa_kv_reused_tokens": 1099,
+                             "gdn_checkpoint_position": 1099,
+                             "runtime_context_capacity": 4096}},
         {"server_latency": {"request_id": "empty-suffix", "reused_prefix_tokens": 1120,
                             "suffix_tokens_dispatched": 0},
-         "server_request": {"prompt_tokens": 1120}},
+         "server_request": {"prompt_tokens": 1120, "gqa_kv_reused_tokens": 1120,
+                             "gdn_checkpoint_position": 1120,
+                             "runtime_context_capacity": 4096}},
+        {"server_latency": {"request_id": "bad-position", "reused_prefix_tokens": 1120,
+                            "suffix_tokens_dispatched": 1},
+         "server_request": {"prompt_tokens": 1121, "gqa_kv_reused_tokens": 1120,
+                             "gdn_checkpoint_position": 1119,
+                             "runtime_context_capacity": 4096}},
+        {"server_latency": {"request_id": "capacity-overflow", "reused_prefix_tokens": 1121,
+                            "suffix_tokens_dispatched": 1},
+         "server_request": {"prompt_tokens": 1122, "gqa_kv_reused_tokens": 1121,
+                             "gdn_checkpoint_position": 1121,
+                             "runtime_context_capacity": 1121}},
     ], previous_prompt_tokens=1000)
-    if [check["passed"] for check in reuse_checks] != [True, False, False]:
+    if [check["passed"] for check in reuse_checks] != [True, False, False, False, False]:
         raise RuntimeError("per-request prefix reuse self-check failed")
     if prefix_reuse_request_gates([], previous_prompt_tokens=1000)[0]["passed"]:
         raise RuntimeError("missing prefix reuse telemetry unexpectedly passed")
@@ -152,19 +177,35 @@ def prefix_reuse_request_gates(requests, previous_prompt_tokens=None):
     expected_prefix_tokens = previous_prompt_tokens
     for request_index, request in enumerate(requests, 1):
         latency = request["server_latency"]
+        detail = request["server_request"]
         reused = latency.get("reused_prefix_tokens", 0)
         suffix = latency.get("suffix_tokens_dispatched", 0)
-        prompt_tokens = request["server_request"].get("prompt_tokens")
-        valid_prompt_tokens = isinstance(prompt_tokens, int) and prompt_tokens > 0
+        prompt_tokens = detail.get("prompt_tokens")
+        gqa_reused = detail.get("gqa_kv_reused_tokens")
+        gdn_position = detail.get("gdn_checkpoint_position")
+        runtime_capacity = detail.get("runtime_context_capacity")
+        valid_prompt_tokens = type(prompt_tokens) is int and prompt_tokens > 0
+        state_position_passed = (
+            type(gqa_reused) is int and type(gdn_position) is int
+            and gqa_reused == reused and gdn_position == reused
+            and (expected_prefix_tokens is None or reused == expected_prefix_tokens))
+        context_capacity_passed = (
+            type(runtime_capacity) is int and valid_prompt_tokens
+            and runtime_capacity >= prompt_tokens)
         checks.append({
             "request_index": request_index,
             "request_id": latency.get("request_id"),
             "expected_reused_prefix_tokens": expected_prefix_tokens,
             "reused_prefix_tokens": reused,
             "suffix_tokens_dispatched": suffix,
-            "passed": valid_prompt_tokens and (
-                expected_prefix_tokens is None
-                or (reused == expected_prefix_tokens and suffix > 0)),
+            "gqa_kv_reused_tokens": gqa_reused,
+            "gdn_checkpoint_position": gdn_position,
+            "runtime_context_capacity": runtime_capacity,
+            "state_position_passed": state_position_passed,
+            "context_capacity_passed": context_capacity_passed,
+            "passed": valid_prompt_tokens and state_position_passed
+                and context_capacity_passed
+                and (expected_prefix_tokens is None or suffix > 0),
         })
         expected_prefix_tokens = prompt_tokens if valid_prompt_tokens else -1
     return checks
