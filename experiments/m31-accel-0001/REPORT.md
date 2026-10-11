@@ -28,6 +28,8 @@ The production-path workload was then integrated at `82f6cd5`. Its CPU-only MIIn
 
 The clean Z840 worktree also built the `miinfer` API server target with exit 0 (binary SHA-256 `106feada3db19dca0d8b02bd9f5612e647b9175efabf3553ebc99a759d77e9a8`). The tracked agent runner allocates a 131,072-token engine capacity for room around the 64K-start conversation; its prompt and measured workload remain below 128K, so this is not a 128K campaign.
 
+Code review added a fail-closed reuse gate: each turn after the first must report both reused prefix tokens and dispatched suffix tokens on its first request. The production workload returns failure if any later turn lacks either measurement.
+
 ## Decode and prefill
 
 No campaign A/B or code change yet. The existing direct/eager decode harness can run a fixed P=2048, TG=128, five-sample decode (`miinfer-v2-0045-qual-bench MODEL decode 2048 128 5`), but it lacks logit parity and does not measure the default HIP Graph route. Existing one-token attribution used a different graph-disabled route, so it does not justify a decode implementation. The existing paired prefix-reuse benchmark also runs 128K in the same invocation and does not fail on printed parity errors; it will not be used for the campaign run.

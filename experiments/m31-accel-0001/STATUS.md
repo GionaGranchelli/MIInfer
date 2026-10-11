@@ -1,6 +1,6 @@
 # M31-ACCEL-0001 live status
 
-Updated: 2026-10-12 00:25 Europe/Amsterdam
+Updated: 2026-10-12 00:55 Europe/Amsterdam
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
 
 ## Source and ownership
@@ -74,4 +74,5 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 - Production-path workload checkpoint: `82f6cd5` adds a CPU-only MIInfer tokenizer counter and an eight-turn M30-style tool workload. On Z840, CPU-only CMake build passed and `--self-check` counted the constructed initial ChatML request at exactly 65,536 tokens from seven repository files; the GPU remained idle at 28 C. Self-check log SHA-256: `a7ad2173803692c76242352c56171899357f323901f7bcccd8010543f4e260a4`.
 - A first attempt to run that counter in Podman could not access the model bind mount and failed before tokenization; running the same self-check directly on the host passed. No production-server/GPU workload has run yet.
 - The `miinfer` serving target now also builds on the clean Z840 worktree (exit 0; binary SHA-256 `106feada3db19dca0d8b02bd9f5612e647b9175efabf3553ebc99a759d77e9a8`). The tracked runner can start the production server, wait for `/readyz`, then run the exact-token workload in the same monitored container. Its 131,072 engine capacity is headroom for the 64K start and turn history only; the workload is not a 128K prompt or performance run.
-- Next: review/push the runner mode and command documentation. Before any new GPU request, inspect thermal behavior and keep an operator on telemetry; the synthetic attempt reached 87 C quickly, so stop if temperature continues rising toward 90 C.
+- Review found that the initial workload summary recorded prefix counts but did not require reuse for later turns. The integrated script now requires each turn after the first to have both a nonzero reused prefix and a nonzero suffix dispatch; the overall command fails if any turn misses that gate.
+- The production-runner mode and this gate are pushed at the current coordinator checkpoint. Before any new GPU request, inspect thermal behavior and keep an operator on telemetry; the synthetic attempt reached 87 C quickly, so stop if temperature continues rising toward 90 C.

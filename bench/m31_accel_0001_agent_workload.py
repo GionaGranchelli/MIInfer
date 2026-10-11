@@ -287,6 +287,8 @@ def main():
             decode_times = [(row["generated_tokens"] / row["decode_tokens_per_second"])
                             for row in detail if row.get("decode_tokens_per_second", 0) > 0]
             generated = sum(row["generated_tokens"] for row in detail)
+            first_request_reuse = latency[0]["reused_prefix_tokens"]
+            first_request_suffix = latency[0]["suffix_tokens_dispatched"]
             turn.update({
                 "context_tokens": detail[0]["prompt_tokens"],
                 "generated_tokens_total": generated,
@@ -298,6 +300,7 @@ def main():
                 "suffix_tokens_dispatched": sum(row["suffix_tokens_dispatched"] for row in latency),
                 "peak_sampled_vram_bytes": max(vram_samples) if vram_samples else None,
                 "external_vram_samples_complete": len(vram_samples) == 2 * len(turn["requests"]),
+                "prefix_reuse_gate": index == 1 or (first_request_reuse > 0 and first_request_suffix > 0),
                 "minimum_generation_gate": generated >= 128,
                 "minimum_visible_answer_gate": len(completion["content"]) >= 300,
             })
@@ -311,12 +314,15 @@ def main():
             turn["minimum_visible_answer_gate"] for turn in result["turns"])
         result["all_turns_external_vram_samples_complete"] = all(
             turn["external_vram_samples_complete"] for turn in result["turns"])
+        result["all_turns_prefix_reuse_gate"] = all(
+            turn["prefix_reuse_gate"] for turn in result["turns"])
         result["conversation_message_count"] = len(messages)
         (root / args.output).write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
         print(json.dumps(result, indent=2))
         return 0 if (result["all_turns_minimum_generation_gate"]
                      and result["all_turns_visible_answer_gate"]
-                     and result["all_turns_external_vram_samples_complete"]) else 1
+                     and result["all_turns_external_vram_samples_complete"]
+                     and result["all_turns_prefix_reuse_gate"]) else 1
     finally:
         counter.close()
 

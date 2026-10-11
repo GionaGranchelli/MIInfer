@@ -97,6 +97,10 @@ for this source-only change; the current workspace has no matching Qwen3.8
 GGUF, so exact 65,536-token prompt construction has not been runtime-verified
 here.
 
+The final exit gate requires each later turn's first request to have both a
+nonzero reused prefix and a nonzero dispatched suffix, in addition to the
+visible-answer, generation, and telemetry gates.
+
 On Z840, launch the production-path workload only through the guarded runner:
 
 ```sh
