@@ -1,0 +1,22 @@
+{
+  "verified_on": "2026-10-11",
+  "host": "machinist",
+  "model": "Qwen3.8-27B-Q4_K_M.gguf",
+  "tokenizer": "Qwen/Qwen3.8-27B@366a23fd246985933964e9d21ac63eb3a93190ab",
+  "model_sha256_verified_against_frozen_manifest": true,
+  "tokenizer_sha256_verified_against_frozen_manifest": true,
+  "gguf_architecture": "qwen35",
+  "gguf_vocab_size": 248320,
+  "tokenizer_defined_ids": 248077,
+  "tokenizer_ids_match_gguf": true,
+  "gguf_reserved_ids": {
+    "range_inclusive": [248077, 248319],
+    "examples": ["[PAD248077]", "[PAD248319]"]
+  },
+  "special_tokens": {
+    "<|im_start|>": 248045,
+    "<|im_end|>": 248046,
+    "<think>": 248068
+  },
+  "method": "Compared every tokenizer JSON model.vocab and added_tokens ID/string pair with tokenizer.ggml.tokens in the GGUF metadata. Also checked complete model and tokenizer SHA-256 values."
+}

@@ -120,7 +120,9 @@ def main() -> None:
     if sha256(args.tokenizer_json) != TOKENIZER_SHA256:
         raise SystemExit("tokenizer SHA-256 does not match the pinned revision")
     tokenizer = Tokenizer.from_file(str(args.tokenizer_json))
-    if tokenizer.token_to_id("<|im_start|>") != 248045 or tokenizer.token_to_id("<|im_end|>") != 248046:
+    if (tokenizer.token_to_id("<|im_start|>") != 248045
+            or tokenizer.token_to_id("<|im_end|>") != 248046
+            or tokenizer.token_to_id("<think>") != 248068):
         raise SystemExit("unexpected Qwen chat token IDs")
 
     records = [freeze(tokenizer, item) for item in PROMPTS]

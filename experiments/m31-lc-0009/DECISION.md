@@ -4,7 +4,9 @@
 
 **Recommendation: retain the exact-token production gate for now.** Quantized inference can in principle be qualified with operation-level arithmetic evidence, deterministic state/logit replay, and independent functional checks without requiring every CPU/GPU greedy trajectory to match. The existing evidence does not yet support replacing the current gate. No selector, default, production gate, or promotion status changed.
 
-**Overall assessment: BLOCKED for adopting a non-exact-token production contract.** The proposed three-contract framework is defined in [`PROTOCOL.md`](PROTOCOL.md). Its six-prompt run matrix has not been executed, and tokenizer identity has not yet been checked against the actual pinned GGUF metadata.
+**Overall assessment: BLOCKED for adopting a non-exact-token production contract.** The proposed three-contract framework is defined in [`PROTOCOL.md`](PROTOCOL.md). Tokenizer identity is now verified against the actual GGUF with the frozen model SHA, but the six-prompt CPU/GPU run matrix has not been completed.
+
+The pinned Qwen tokenizer has 248,077 defined IDs, all of which match the GGUF vocabulary. The GGUF adds 243 reserved `[PAD]` IDs at 248077–248319; the three corpus special tokens match their frozen IDs. See [`tokenizer-gguf-verification.json`](tokenizer-gguf-verification.json).
 
 ## Evidence-based assessment
 
@@ -35,7 +37,6 @@ LC-0008's common-history decision-5 logits have relative L2 `0.182344` and maxim
 
 ## Work still required
 
-1. Verify the official tokenizer revision and special-token mapping against the actual pinned GGUF on Z840.
-2. Runner support for corpus prompt IDs, forced histories, generated-token capture, and MIInfer recurrent/KV boundary snapshots is implemented. The CPU oracle compiles and links against exact llama.cpp commit `d1d3c3396aa13a5f239109a822666c4870490ad5`; changed GPU sources pass HIP syntax checks. The metric analyzer smoke-check passes on existing LC-0003 captures, not LC-0009 data. CPU/GPU canonical state mapping, a full build in the pinned ROCm 7.2.1 image, and live capture checks remain pending.
-3. Run the registered matrix, retain and hash raw captures, compute all listed metrics, and replace the partial assessments above with a requirement-by-requirement result.
-4. Revisit the recommendation only after the evidence is complete; any gate change requires explicit approval.
+1. Runner support for corpus prompt IDs, forced histories, generated-token capture, and MIInfer recurrent/KV boundary snapshots is implemented. The CPU oracle compiles and links against exact llama.cpp commit `d1d3c3396aa13a5f239109a822666c4870490ad5`; changed GPU sources pass HIP syntax checks. The metric analyzer smoke-check passes on existing LC-0003 captures, not LC-0009 data. CPU/GPU canonical state mapping, a full build in the pinned ROCm 7.2.1 image, and live GPU captures remain pending.
+2. Run the registered matrix, retain and hash raw captures, compute all listed metrics, and replace the partial assessments above with a requirement-by-requirement result.
+3. Revisit the recommendation only after the evidence is complete; any gate change requires explicit approval.
