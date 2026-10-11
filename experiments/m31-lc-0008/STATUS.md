@@ -18,7 +18,7 @@ Hard decision: **QUANTIZATION-ONLY NUMERICAL-CONTRACT DIFFERENCE ESTABLISHED at 
 
 The direct CPU runner repeated with the same raw-logit SHA-256 `8a23b51338410a30745207545814f9f369d504b287e9ba15aa16f766eb36e56e`. Both GPU routes are bitwise equal at decision 1 and reproduce fused raw-logit SHA-256 `78a1e4032a9f3253e7d4bc28926abf9d4939a77a4b86dfd8b5e319eb0737e92f`.
 
-CPU versus GPU decision-1 relative L2 is `0.0235865`, RMSE `0.0826595`, max absolute error `0.6007606`. Both choose token 220. CPU's top-1/top-2 margin is `1.04316`; GPU's is `1.14472`. Token 198 scores `2.043241` (CPU) and `1.963192` (GPU); token 271 scores `1.546451` and `1.501432`. Their ranking is unchanged at decision 1, so the first token choice is not marginal.
+The fused and aligned-MMQ decision-1 vectors are bitwise identical. CPU versus either GPU route has relative L2 `0.0235865`, RMSE `0.0826595`, max absolute error `0.6007606`. All choose token 220. CPU's top three are 220 (`3.479820`), 954 (`2.436662`), and 62 (`2.351660`); fused/aligned-MMQ's are 220 (`3.429740`), 197 (`2.285020`), and 62 (`2.226634`). The top-1/top-2 margins are `1.04316` (CPU) and `1.14472` (both GPU routes). Token 198 scores `2.043241` (CPU) and `1.963192` (GPU, CPU−GPU `+0.080050`); token 271 scores `1.546451` and `1.501432` (CPU−GPU `+0.045019`). These values come from the first vector of the frozen five-decision captures; no generated-token transition has occurred yet. The fused and aligned-MMQ vectors are in [`../../results/m31-lc-0007/z840-newbinary-aligned/`](../../results/m31-lc-0007/z840-newbinary-aligned/).
 
 ## Final prompt-position layer boundaries
 
