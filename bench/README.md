@@ -706,3 +706,31 @@ The architectural gate is:
 
 Full details are in
 `experiments/EXP-0041-m5c15-optimization-closure-parity-gate.md`.
+
+## M31-ACCEL-0001 production decode A/B
+
+`miinfer-m31-accel-0001-decode-bench` times `PrefillV2Model::generate()` with
+the production HIP Graph path requested. It uses a fixed seeded prompt, greedy
+generation, disabled stop IDs, and exact token-history equality across samples.
+Each JSON sample includes TTFT, steady-state decode time/rate, route evidence,
+and the generated IDs. With a JSON path, it atomically checkpoints after every
+sample and refuses to overwrite an existing capture. A/B results are comparable
+only when source is clean, model and prompt hashes match, and the complete
+generated-ID sequences match. Run both source revisions with the same P/TG and
+pinned model, then compare the raw per-sample rates; this benchmark does not
+establish 64K agent reliability.
+
+```sh
+cmake --preset mi50-release
+cmake --build --preset mi50-release --target miinfer-m31-accel-0001-decode-bench
+build/mi50-release/miinfer-m31-accel-0001-decode-bench --self-check
+MIINFER_HIP_GRAPH=1 build/mi50-release/miinfer-m31-accel-0001-decode-bench \
+  /path/to/Qwen3.8-27B-Q4_K_M.gguf 2048 128 5 results/m31-decode.json
+```
+
+The KV capacity rounds `P + TG` up to 16,384-token increments and is capped at
+81,920, so the same tool can measure the 64K decode position without opening a
+128K campaign. For example, `65536 128 5` selects capacity 81,920. `--self-check`
+validates deterministic input generation and the capacity guard without
+loading a model or launching GPU work. The benchmark itself requires an
+available GPU and rejects an environment that disables HIP Graph.

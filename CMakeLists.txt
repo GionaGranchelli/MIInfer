@@ -283,6 +283,10 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-v2-0045-qual-bench PRIVATE miinfer_hip)
     target_compile_options(miinfer-v2-0045-qual-bench PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-m31-accel-0001-decode-bench bench/m31_accel_0001_decode_bench.cpp)
+    target_link_libraries(miinfer-m31-accel-0001-decode-bench PRIVATE miinfer_hip)
+    target_compile_options(miinfer-m31-accel-0001-decode-bench PRIVATE -Wall -Wextra -Wpedantic)
+
     add_executable(miinfer-decode-fast-path-bakeoff bench/decode_fast_path_bakeoff.cpp)
     target_link_libraries(miinfer-decode-fast-path-bakeoff PRIVATE miinfer_hip)
     target_compile_options(miinfer-decode-fast-path-bakeoff PRIVATE -Wall -Wextra -Wpedantic)
