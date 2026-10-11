@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "model": "Qwen3.8-27B-Q4_K_M.gguf",
+  "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+  "tokenizer": "Qwen/Qwen3.8-27B@366a23fd246985933964e9d21ac63eb3a93190ab",
+  "tokenizer_sha256": "0997f410c57a1f4e53b09e4be8f4a172d90edd9564368fb0847030937229b9f3",
+  "tokenizer_matches_gguf_metadata": "PENDING Z840 VERIFICATION",
+  "corpus_sha256": "bd75001eb7944b5ab462b6a6d04f99d4aa250a1488fa6705f66b6320b0b92977",
+  "prompt_count": 6,
+  "prompt_id_encoding": "little-endian uint32; raw bytes hashed per prompt",
+  "token_counts": {
+    "ordinary-64-01": 64,
+    "coding-64-01": 64,
+    "reasoning-512-01": 512,
+    "ordinary-512-01": 512,
+    "coding-2048-01": 2048,
+    "reasoning-2048-01": 2048
+  }
+}
