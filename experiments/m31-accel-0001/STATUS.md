@@ -126,3 +126,9 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 - Synced the clean Z840 coordinator worktree from `d22915b` to pushed HEAD `c8c05c57a6902c2f99af41c4dbb5fe8a25f1feea`. It remains detached and clean; the original dirty checkout remains untouched.
 - Separate Lake decode-build worktree remains at source `0ee18e6`, with the successful build, self-check, and retained log/binary hashes documented above.
 - No GPU job was started. Cooling confirmation is still the hardware gate; once cleared, first priority is the guarded 64K production workload before decode/prefill A/B.
+
+## 2026-10-12 01:42 checkpoint
+
+- Fixed the production workload's fail-open reuse check: every request on turns 2–8 now requires both a nonzero reused prefix and nonzero suffix dispatch. Per-request checks and telemetry are saved into the result; absent telemetry fails closed. Commit `260b9ee60355887330869d96ad80d72f3a50660b` is pushed.
+- Local `py_compile` and no-network `sse_self_check` passed. The clean Z840 campaign worktree was synced to `260b9ee`; its full tokenizer-backed `--self-check` passed exact 65,536-token counting, seven-file/eight-turn planning, SSE completion and atomic artifact checks. Log SHA-256: `64ee44bbfffe0cc57bb413a3970d353f1e97ecac59bdfaee5f86d90b36a53b25`. No GPU/server inference.
+- Fan telemetry remains 0 RPM at idle. Cooling confirmation is still the GPU blocker; 64K multi-turn correctness and state continuity remain unqualified.
