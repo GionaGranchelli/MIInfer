@@ -45,3 +45,13 @@ One GPU job at a time on Z840. Preserve all dirty worktrees and existing logs. R
 - A persistent base compile of `miinfer-prefix-state-reuse-bench` and `miinfer-v2-0045-qual-bench` is active in `/mnt/lc9-lake/m31-accel-0001-z840`; tmux session `m31_accel_base_build`, container PID 111693, log `/mnt/lc9-lake/m31-accel-0001-captures/build/base-build.log`, exit marker `.../base-build.exit`. It configures/builds only; no MI50 device is passed to the container.
 - The existing 64K prefix-state benchmark is unsuitable for this campaign run because one invocation also runs a 128K+512 scenario and exits success even if its printed parity gate fails. The campaign workload must have a dedicated 64K-only path and the result must be manually or programmatically gated on exact parity.
 - Decode baseline harness is identified (`miinfer-v2-0045-qual-bench ... decode 2048 128 5`), but it is direct/eager, lacks logits correctness, and current profiling is only a single token on a different graph-disabled route. No decode candidate is authorized from that evidence.
+
+## 00:35 checkpoint — preserved M30 session discovery
+
+The dirty Z840 checkout contains a completed but untracked M30 coding-agent artifact. It has 40 logical turns, passes the minimum-generation gate, fails the visible-answer gate, and reports 66,173 prompt/context tokens by turn 32 and 82,087 by turn 40. It did not start at exactly 65,536, so it does not satisfy the campaign's required setup.
+
+Raw server latency events independently show prefix reuse near turn 40: request 386 had 80,730 prompt / 79,350 reused / 1,380 suffix tokens (1.578 ms restore, 27.717 s suffix prefill); request 390 had 82,087 / 80,730 / 1,357 (1.270 ms restore, 27.933 s suffix prefill). This is better evidence than the script's aggregates, which are misjoined to latency events. The per-turn client completion/exit metadata is absent, and one frozen output gate failed; treat it as diagnostic only.
+
+The original M30 artifacts were copied without modification to `/mnt/lc9-lake/m31-accel-0001-captures/z840-m30-handoff/`; Lake-side SHA-256 inventory is retained there. Z840's dirty source, JSON outputs, logs, graph reflections and 13 GB core dump remain untouched. The worker has been told to avoid that checkout and to collect metrics inline in the campaign harness.
+
+Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; the pinned image does contain `hipblas-dev` and the config at `/opt/rocm-7.2.1/lib/cmake/hipblas`. The documented qualified-host command sets `CMAKE_PREFIX_PATH=/opt/rocm-7.2.1`. A clean, separate build with this path is now active in the coordinator worktree; no GPU device is mounted.
