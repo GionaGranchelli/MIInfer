@@ -13,6 +13,10 @@ log. The harness checks exact turn lengths, prefix-reuse counts,
 generated-token bounds, vocabulary IDs, finite logits, four-token repetition
 runs, and all 48 recurrent position counters. It fingerprints the active GDN
 states and KV bytes before save and after restore and requires byte identity.
+After model allocation it fails closed unless at least 1 GiB of VRAM remains
+free. It samples HIP free/total VRAM after each turn and reports the largest
+sampled use; this is a discrete in-process sample, not an external telemetry
+peak.
 The KV API does not expose a logical length counter; continuity is checked
 through the restored state fingerprint, exact token history, successful
 prefix reuse, and continuation after restore.
