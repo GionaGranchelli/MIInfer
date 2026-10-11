@@ -59,6 +59,11 @@ One GPU job at a time on Z840. Preserve all dirty worktrees and existing logs. R
 - Production API streaming now requires `[DONE]` plus accepted `finish_reason`; its no-network self-check accepts a complete stream and rejects a truncated one. The workload atomically persists active turn/phase before each API request and saves returned request data immediately afterward. Local Python syntax and SSE self-checks pass. This does not qualify inference or prefix-reuse correctness.
 - Cooling/airflow remains unconfirmed; no GPU work was started.
 
+## 01:33 follow-up
+
+- Pushed coordinator commit `d22915b` with the SSE completion gate, atomic in-progress request artifact, workload documentation, and 64K prefill build evidence.
+- The clean isolated Z840 worktree fast-forwarded from `e6fa559` to `d22915b`. Remote Python syntax and the full tokenizer-backed `--self-check` passed: 65,536 initial ChatML tokens, seven source files, eight planned turns, SSE completion PASS, atomic artifact PASS. No GPU was accessed.
+
 ## 00:30 checkpoint
 
 - Coordinator checkpoint commit: `66e887f78597898f55cc80a7499e0b71b2ebdc20` (pushed to `origin/experiment/m31-accel-0001-coordinator`). This branch publishes the required Z840 committed M30 source ancestry and campaign notes; Z840/Machinist dirty worktrees remain untouched.

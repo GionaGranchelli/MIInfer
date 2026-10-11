@@ -84,3 +84,7 @@ The Z840 worktree was subsequently advanced to the latest docs-only coordinator 
 ## 2026-10-12 01:31 checkpoint
 
 The production API workload now rejects an SSE response unless it observes both `[DONE]` and an accepted `finish_reason` (`stop`, `length`, or `tool_calls`). Its self-check covers a valid stream and a truncated stream without network access. Before every API request it atomically writes the active turn and phase to the workload JSON, then saves each completed request; a stop during inference therefore leaves a valid artifact identifying the in-flight operation. Python syntax and the no-network SSE self-check passed locally. No GPU was used. This improves failure evidence, not 64K qualification.
+
+## 2026-10-12 01:33 checkpoint
+
+Safeguards and documentation were pushed at coordinator commit `d22915b`. The clean isolated Z840 worktree fast-forwarded from `e6fa559` to `d22915b`; host `py_compile` and the full tokenizer-backed workload `--self-check` passed. Output confirmed exactly 65,536 initial ChatML tokens, seven source files, eight planned turns, SSE completion checks, and atomic artifact writing. The tokenizer self-check used no GPU. No production inference or qualification claim changed.
