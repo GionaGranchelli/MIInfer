@@ -151,7 +151,7 @@ OperationResult check_projection(const Q4KBlock* weights, const std::vector<std:
                 dot += static_cast<int>(q4k_code(weight, group, i)) * input_codes[i];
 
             const double main = static_cast<double>(half_to_float(weight.d)) * input_d
-                * static_cast<double>(scale * dot);
+                * static_cast<double>(static_cast<int>(scale) * dot);
             const double correction = static_cast<double>(half_to_float(weight.dmin))
                 * static_cast<double>(minimum) * input_sum;
             reference += main - correction;
