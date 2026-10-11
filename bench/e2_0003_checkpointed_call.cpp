@@ -87,7 +87,9 @@ int main(int argc, char** argv) {
     if (argc < 3) {
         std::cerr << "usage: e2-0003-checkpointed-call MODEL.gguf "
                      "8K|32K|64K|128K [--generate N] [--iterations N] [--warmup N] "
-                     "[--prompt-tokens N] [--reference-token-ids FILE] [--output FILE] [--ledger-only]\n";
+                     "[--prompt-tokens N|--prompt-ids FILE] [--forced-token-ids FILE] "
+                     "[--capture-raw-logits FILE] [--capture-token-ids FILE] "
+                     "[--reference-token-ids FILE] [--output FILE] [--ledger-only]\n";
         return 2;
     }
 
@@ -109,6 +111,7 @@ int main(int argc, char** argv) {
         std::string reference_path;
         std::string output_path;
         std::string raw_logits_path;
+        std::string generated_ids_path;
         std::string prompt_ids_path;
         std::string forced_ids_path;
         bool ledger_only = false;
@@ -128,6 +131,7 @@ int main(int argc, char** argv) {
             else if (arg == "--reference-token-ids" && i + 1 < argc) reference_path = argv[++i];
             else if (arg == "--output" && i + 1 < argc) output_path = argv[++i];
             else if (arg == "--capture-raw-logits" && i + 1 < argc) raw_logits_path = argv[++i];
+            else if (arg == "--capture-token-ids" && i + 1 < argc) generated_ids_path = argv[++i];
             else if (arg == "--ledger-only") ledger_only = true;
             else throw std::runtime_error("unknown or incomplete option: " + arg);
         }
@@ -162,11 +166,17 @@ int main(int argc, char** argv) {
         if (!raw_logits_path.empty() && (iterations != 1 || warmups != 0 || generate_tokens < 5)) {
             throw std::runtime_error("raw-logit capture requires one measured iteration, no warmup, and at least five generated tokens");
         }
+        if (!generated_ids_path.empty() && (iterations != 1 || warmups != 0)) {
+            throw std::runtime_error("token ID capture requires one measured iteration and no warmup");
+        }
         if (!raw_logits_path.empty() && !forced_ids_path.empty() && forced_ids.size() != 4) {
             throw std::runtime_error("five-decision teacher-forced capture requires four forced token IDs");
         }
         if (!raw_logits_path.empty() && std::filesystem::exists(raw_logits_path)) {
             throw std::runtime_error("refusing to overwrite existing raw-logit capture: " + raw_logits_path);
+        }
+        if (!generated_ids_path.empty() && std::filesystem::exists(generated_ids_path)) {
+            throw std::runtime_error("refusing to overwrite existing token ID capture: " + generated_ids_path);
         }
         auto& out = *output;
 
@@ -270,6 +280,12 @@ int main(int argc, char** argv) {
             const auto wall_start = std::chrono::steady_clock::now();
             const auto stats = model.generate(prompt, options);
             const auto wall_end = std::chrono::steady_clock::now();
+            if (measured && !generated_ids_path.empty()) {
+                std::ofstream ids_file(generated_ids_path);
+                if (!ids_file) throw std::runtime_error("cannot create token ID capture: " + generated_ids_path);
+                for (const auto token : stats.generated_tokens) ids_file << token << '\n';
+                if (!ids_file) throw std::runtime_error("failed writing token ID capture: " + generated_ids_path);
+            }
             if (!raw_logits_path.empty()) {
                 if (raw_logits.size() != 5) throw std::runtime_error("raw-logit capture did not contain five decisions");
                 std::ofstream raw_logits_file(raw_logits_path, std::ios::binary | std::ios::out);
