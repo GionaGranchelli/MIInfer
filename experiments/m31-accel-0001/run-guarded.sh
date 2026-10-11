@@ -12,10 +12,12 @@ if [[ ${1:-} == --self-check ]]; then
   exit 0
 fi
 run_dir=${1:?usage: run-guarded.sh CAPTURE_DIR}
+mode=${2:-native}
 model=${M31_MODEL:-/home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf}
 image=localhost/miinfer-dev:rocm-7.2.1
 expected_model=7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169
 name=m31-accel-0001-$(basename "$run_dir")
+model_file=$(basename "$model")
 mkdir -p "$run_dir"
 [[ ! -e "$run_dir/exit.status" ]] || { echo "capture directory already used: $run_dir" >&2; exit 2; }
 podman container exists "$name" && { echo "refusing existing container $name" >&2; exit 2; }
@@ -35,12 +37,20 @@ printf 'source_sha=%s\nmodel_sha=%s\nimage=%s\nimage_id=%s\nrocr_visible_devices
   "$(git -C "$repo" rev-parse HEAD)" "$model_sha" "$image" "$(podman image inspect --format '{{.Id}}' "$image")" "$temp" "$used" > "$run_dir/environment.txt"
 printf '%s %s\n' "$(date -u +%FT%TZ)" "$pre" > "$run_dir/telemetry.log"
 
+case "$mode" in
+  native)
+    command=(/workspace/MIInfer/build/m31-accel-0001/miinfer-m31-accel-0001-agent64k
+      "/models/$model_file" /captures/session.miinfer)
+    ;;
+  agent)
+    command=(bash /workspace/MIInfer/experiments/m31-accel-0001/run-agent-server.sh)
+    ;;
+  *) echo "unknown workload mode: $mode (expected native or agent)" >&2; exit 2 ;;
+esac
 if ! podman run --detach --name "$name" --device /dev/kfd --device /dev/dri \
-  --security-opt=label=disable --group-add=keep-groups -e ROCR_VISIBLE_DEVICES=0 \
+  --security-opt=label=disable --group-add=keep-groups -e ROCR_VISIBLE_DEVICES=0 -e "M31_MODEL_FILE=$model_file" \
   -v "$repo:/workspace/MIInfer:Z" -v "$(dirname "$model"):/models:ro" \
-  -v "$run_dir:/captures:Z" "$image" \
-  /workspace/MIInfer/build/m31-accel-0001/miinfer-m31-accel-0001-agent64k \
-  "/models/$(basename "$model")" /captures/session.miinfer > "$run_dir/container.id"; then
+  -v "$run_dir:/captures:Z" "$image" "${command[@]}" > "$run_dir/container.id"; then
   echo 125 > "$run_dir/exit.status"
   exit 125
 fi
