@@ -692,6 +692,10 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(e2-0003-checkpointed-call PRIVATE miinfer_hip miinfer_model)
     target_compile_options(e2-0003-checkpointed-call PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(m31-lc-0008-gdn-input-reference experiments/m31-lc-0008/gdn_input_reference.cpp)
+    target_link_libraries(m31-lc-0008-gdn-input-reference PRIVATE miinfer_hip)
+    target_compile_options(m31-lc-0008-gdn-input-reference PRIVATE -Wall -Wextra -Wpedantic)
+
     add_executable(e2-0003-gateup-operation-reference bench/e2_0003_gateup_operation_reference.cpp)
     target_link_libraries(e2-0003-gateup-operation-reference PRIVATE miinfer_hip miinfer_model)
     target_compile_options(e2-0003-gateup-operation-reference PRIVATE -Wall -Wextra -Wpedantic)

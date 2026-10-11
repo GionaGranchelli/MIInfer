@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -20,7 +21,9 @@ struct CpuOpTrace {
     bool enabled = false;
     std::size_t token_index = 0;
     std::size_t tile_start = 0;
-    bool final_prompt_tile = false;
+    std::size_t selected_prompt_position = 0;
+    bool selected_tile = false;
+    bool capture_full_tile = false;
     std::unordered_set<std::string> captured;
     std::vector<float> normalized_input;
     std::string error;
@@ -33,6 +36,31 @@ void write_f32(const std::string& path, const std::vector<float>& values) {
     output.write(reinterpret_cast<const char*>(values.data()),
                  static_cast<std::streamsize>(values.size() * sizeof(float)));
     if (!output) throw std::runtime_error("failed writing " + path);
+}
+
+std::vector<float> capture_rows(const ggml_tensor* tensor, int token_axis,
+                                std::size_t first_token, std::size_t token_count) {
+    std::size_t elements = 1;
+    for (int axis = 0; axis < GGML_MAX_DIMS; ++axis)
+        if (axis != token_axis) elements *= static_cast<std::size_t>(tensor->ne[axis]);
+    std::vector<float> values(elements * token_count);
+    const auto* data = static_cast<const std::uint8_t*>(tensor->data);
+    for (std::size_t row = 0; row < token_count; ++row) {
+        std::size_t offset = token_axis >= 0
+            ? (first_token + row) * tensor->nb[token_axis] : 0;
+        for (std::size_t flat = 0; flat < elements; ++flat) {
+            std::size_t remaining = flat;
+            std::size_t element_offset = offset;
+            for (int axis = 0; axis < GGML_MAX_DIMS; ++axis) {
+                if (axis == token_axis) continue;
+                const auto index = remaining % static_cast<std::size_t>(tensor->ne[axis]);
+                remaining /= static_cast<std::size_t>(tensor->ne[axis]);
+                element_offset += index * tensor->nb[axis];
+            }
+            std::memcpy(&values[row * elements + flat], data + element_offset, sizeof(float));
+        }
+    }
+    return values;
 }
 
 bool capture_cpu_op(ggml_tensor* tensor, bool ask, void* user_data) {
@@ -48,8 +76,8 @@ bool capture_cpu_op(ggml_tensor* tensor, bool ask, void* user_data) {
     const std::string name(tensor->name);
     if (names.find(name) == names.end()) return false;
     const bool state = name == "state_predelta-0";
-    if (ask) return state || trace.final_prompt_tile;
-    if (!state && !trace.final_prompt_tile) return false;
+    if (ask) return state || trace.selected_tile;
+    if (!state && !trace.selected_tile) return false;
     if (!state && !trace.captured.insert(name).second) return true;
     if (tensor->type != GGML_TYPE_F32 || tensor->data == nullptr) {
         trace.error = "unexpected type or null data for " + name;
@@ -65,16 +93,22 @@ bool capture_cpu_op(ggml_tensor* tensor, bool ask, void* user_data) {
         }
         elements *= static_cast<std::size_t>(tensor->ne[axis]);
     }
-    const std::size_t row_offset = token_axis >= 0 ? trace.token_index * elements : 0;
-    const auto* source = static_cast<const float*>(tensor->data) + row_offset;
     try {
-        std::vector<float> values(elements);
-        std::copy_n(source, elements, values.data());
+        std::vector<float> values = capture_rows(tensor, token_axis, trace.token_index, 1);
         const std::string path = state
             ? trace.prefix + ".cpu.state-before-token-" + std::to_string(trace.tile_start) + ".f32"
             : trace.prefix + ".cpu." + name + ".f32";
         write_f32(path, values);
         if (name == "attn_norm-0") trace.normalized_input = values;
+        if (trace.capture_full_tile && trace.selected_tile && token_axis >= 0
+                && (name == "beta_sigmoid-0" || name == "gate-0"
+                    || name == "q_conv_predelta-0" || name == "k_conv_predelta-0"
+                    || name == "v_conv_predelta-0")) {
+            const auto tokens = static_cast<std::size_t>(tensor->ne[token_axis]);
+            std::vector<float> full = capture_rows(tensor, token_axis, 0, tokens);
+            write_f32(trace.prefix + ".cpu.tile-" + std::to_string(trace.tile_start)
+                      + "." + name + ".full.f32", full);
+        }
 
         if (name == "linear_attn_qkv_mixed-0" || name == "beta-0" || name == "alpha-0") {
             const ggml_tensor* matmul = tensor;
@@ -133,7 +167,7 @@ bool capture_cpu_op(ggml_tensor* tensor, bool ask, void* user_data) {
 } // namespace
 
 int main(int argc, char** argv) {
-    if (argc != 4) return 2;
+    if (argc < 4 || argc > 6) return 2;
     std::ifstream ids_file(argv[2]);
     std::vector<llama_token> ids;
     int id;
@@ -153,6 +187,10 @@ int main(int argc, char** argv) {
     context_params.offload_kqv = false;
     context_params.op_offload = false;
     CpuOpTrace trace;
+    trace.selected_prompt_position = argc == 5
+        || argc == 6 ? static_cast<std::size_t>(std::stoull(argv[4])) : ids.size() - 1;
+    trace.capture_full_tile = argc == 6 && std::string(argv[5]) == "full";
+    if (trace.selected_prompt_position >= ids.size()) return 9;
     if (const char* prefix = std::getenv("MIINFER_LC_CPU_OP_TRACE_PREFIX")) {
         trace.prefix = prefix;
         context_params.cb_eval = capture_cpu_op;
@@ -176,9 +214,11 @@ int main(int argc, char** argv) {
         }
         batch.n_tokens = count;
         trace.enabled = !trace.prefix.empty();
-        trace.token_index = count - 1;
+        trace.token_index = trace.selected_prompt_position >= pos
+            ? trace.selected_prompt_position - pos : 0;
         trace.tile_start = pos;
-        trace.final_prompt_tile = pos + count == ids.size();
+        trace.selected_tile = trace.selected_prompt_position >= pos
+            && trace.selected_prompt_position < pos + count;
         if (llama_decode(context, batch) != 0) return 6;
         trace.enabled = false;
         if (!trace.error.empty()) throw std::runtime_error(trace.error);

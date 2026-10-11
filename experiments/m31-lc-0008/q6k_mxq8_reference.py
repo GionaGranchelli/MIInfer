@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 """Compare CPU/GPU QKV rows to a Q6_K by captured MxQ8 reference."""
+import argparse
 import numpy as np
 from pathlib import Path
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--cpu-prefix", default="cpudirect")
+parser.add_argument("--gpu-prefix", default="gpu5")
+args = parser.parse_args()
 root = Path(__file__).resolve().parents[2]
 data = root / "results/m31-lc-0008/z840-operations"
 weights = (data / "cpudirect.cpu.weight-linear_attn_qkv_mixed-0.bin").read_bytes()
-q8 = (data / "gpu5.gpu.qkv_input_mx_q8.bin").read_bytes()
+q8 = (data / f"{args.gpu_prefix}.gpu.qkv_input_mx_q8.bin").read_bytes()
 assert len(weights) == 10240 * 20 * 210
 assert len(q8) == 40 * 144
 
@@ -45,9 +50,10 @@ for block in range(40):
     activation[block * 128:(block + 1) * 128] = values.astype(np.float32) * np.repeat(scales, 32)
 
 reference = matrix @ activation
-reference.tofile(data / "qkv.q6k-mxq8-reference.f32")
-cpu = np.fromfile(data / "cpudirect.cpu.linear_attn_qkv_mixed-0.f32", dtype=np.float32)
-gpu = np.fromfile(data / "gpu4.gpu.linear_attn_qkv_mixed.f32", dtype=np.float32)
+reference_path = "qkv.q6k-mxq8-reference.f32" if args.gpu_prefix == "gpu5" else f"{args.gpu_prefix}.qkv.q6k-mxq8-reference.f32"
+reference.tofile(data / reference_path)
+cpu = np.fromfile(data / f"{args.cpu_prefix}.cpu.linear_attn_qkv_mixed-0.f32", dtype=np.float32)
+gpu = np.fromfile(data / f"{args.gpu_prefix}.gpu.linear_attn_qkv_mixed.f32", dtype=np.float32)
 assert cpu.shape == gpu.shape == reference.shape == (10240,)
 
 def report(label, actual, expected):
