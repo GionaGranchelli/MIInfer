@@ -28,6 +28,15 @@ class SameSourceHarnessTest(unittest.TestCase):
         self.assertEqual(result["token_ids"], [1, 2])
         self.assertEqual(result["ttft_ms"], 12.5)
 
+    def test_model_file_identity_detects_change_after_hash_preflight(self):
+        with tempfile.TemporaryDirectory() as directory:
+            model = Path(directory) / "model.gguf"
+            model.write_bytes(b"first")
+            before = MODULE.file_identity(model)
+            model.write_bytes(b"changed")
+            after = MODULE.file_identity(model)
+        self.assertNotEqual(before, after)
+
     def test_phase_memory_requires_nearby_successful_sample(self):
         events = {"PREFILL_END": 1000}
         samples = [{"returncode": 0, "epoch_ms": 1100,

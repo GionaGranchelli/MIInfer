@@ -52,6 +52,11 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def file_identity(path: Path) -> tuple[int, int, int, int, int]:
+    stat = path.stat()
+    return stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns
+
+
 def run_capture(command: list[str], timeout: int = 30) -> dict:
     try:
         result = subprocess.run(command, text=True, capture_output=True,
@@ -235,7 +240,7 @@ def container_command(args, route: str, pair: int, output: Path) -> list[str]:
 def call(args, out: Path, route: str, pair: int, order: int) -> dict:
     if sha256_file(args.binary) != args.binary_hash:
         raise RuntimeError("benchmark binary changed after preflight")
-    if sha256_file(args.model) != args.model_hash:
+    if file_identity(args.model) != args.model_identity:
         raise RuntimeError("model changed after preflight")
     label = f"{route}-pair-{pair}"
     before = capture_state(out / "snapshots", f"{label}-before", args.gpu_index)
@@ -471,7 +476,10 @@ def main() -> int:
             raise ValueError("prompt/generation count exceeds the selected context profile or bounded-run limit")
         args.context_capacity_tokens = args.prompt_tokens + 256
         args.expected_prompt_fingerprint = prompt_fingerprint(make_prompt(args.prompt_tokens, seed=77))
+        args.model_identity = file_identity(args.model)
         model_hash = sha256_file(args.model)
+        if file_identity(args.model) != args.model_identity:
+            raise ValueError("model changed while its preflight hash was being computed")
         binary_hash = sha256_file(args.binary)
         args.binary_hash = binary_hash
         args.model_hash = model_hash
