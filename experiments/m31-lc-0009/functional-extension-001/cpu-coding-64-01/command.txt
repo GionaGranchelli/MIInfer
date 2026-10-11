@@ -1,0 +1,3 @@
+/tmp/lc9-input/m31-lc-0009-cpu-oracle-functional /home/machinist/models/Qwen3.8-27B-Q4_K_M.gguf /tmp/lc9-input/prompt_ids/coding-64-01.u32le - /tmp/lc9-functional-extension-001/coding-64-01/coding-64-01 --functional-extension 2048
+
+The original run's stdout and stderr were not redirected to a retained runner log. The completion summary is recorded in coding-64-01.functional.result.json.
