@@ -1,0 +1,141 @@
+{
+  "schema": "m31-lc-0007-graph-trace-analysis-v1",
+  "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+  "source_sha": "8a9caec3366512e459a93bad68adde181225304b",
+  "binary_sha256": "702618e756c2de5a2facc9420a6726b69e3d234054729e9eca3548089d10c2fb",
+  "image_digest": "sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e",
+  "gpu": {
+    "index": 0,
+    "pci_bdf": "0000:06:00.0",
+    "unique_id": "0x21678e17348c2f7",
+    "product": "AMD Instinct MI60 / MI50"
+  },
+  "graph": true,
+  "prompt_tokens": 2048,
+  "generated_tokens": 5,
+  "route_tokens": {
+    "control": [
+      220,
+      248046,
+      198,
+      248045,
+      271
+    ],
+    "mmq_only": [
+      220,
+      248046,
+      198,
+      248045,
+      74455
+    ]
+  },
+  "route_logit_sha256": {
+    "control": "78a1e4032a9f3253e7d4bc28926abf9d4939a77a4b86dfd8b5e319eb0737e92f",
+    "mmq_only": "e53a0fe7b54629e437320107ca515c64060ee1ec387055dc3bf9e10719eeb1d4"
+  },
+  "route_model_vram_bytes": {
+    "control": 25128019968,
+    "mmq_only": 17997703168
+  },
+  "shared_layer0_capture_sha256": {
+    "attn_norm.f32": {
+      "control": "e7a7ccb897dbfdd4b121f2379a578ae2cc598b87e5e7ad511962de76bbfb0efe",
+      "mmq_only": "e7a7ccb897dbfdd4b121f2379a578ae2cc598b87e5e7ad511962de76bbfb0efe"
+    },
+    "beta.f32": {
+      "control": "a76518b7b421d033402b9958fe70522d3a3dcdbffc45ee2247d59351b7152f92",
+      "mmq_only": "a76518b7b421d033402b9958fe70522d3a3dcdbffc45ee2247d59351b7152f92"
+    },
+    "conv_history_before.bin": {
+      "control": "445a8791d92413ea7a8ea3522264d753f3199b5f0e6607c38d24b6392871428f",
+      "mmq_only": "445a8791d92413ea7a8ea3522264d753f3199b5f0e6607c38d24b6392871428f"
+    },
+    "conv_history_after.bin": {
+      "control": "2afdf6c2f4e1461fb2b09ac23583b7588b204409fcb343a0ef0946d332503997",
+      "mmq_only": "2afdf6c2f4e1461fb2b09ac23583b7588b204409fcb343a0ef0946d332503997"
+    },
+    "decay.f32": {
+      "control": "c16868d3ba631916efce839001c246d84d45b2bf69072deb97febce483042c54",
+      "mmq_only": "c16868d3ba631916efce839001c246d84d45b2bf69072deb97febce483042c54"
+    },
+    "gated_output.f32": {
+      "control": "0eef0a0c58ca7107585422fde9dac0bdcef76e6c62ade73ed232c42462adfe3e",
+      "mmq_only": "0eef0a0c58ca7107585422fde9dac0bdcef76e6c62ade73ed232c42462adfe3e"
+    },
+    "layer_input.f32": {
+      "control": "c19153fb7b5ba07f70e85da3afeb799356c1967eacf976a11e8ef0d499bc25e9",
+      "mmq_only": "c19153fb7b5ba07f70e85da3afeb799356c1967eacf976a11e8ef0d499bc25e9"
+    },
+    "post_normalized.f32": {
+      "control": "8bbdb81cac0c00502c10bd4da1b7201dc5b04c513e1d2aac6a2e45aec23d51f8",
+      "mmq_only": "8bbdb81cac0c00502c10bd4da1b7201dc5b04c513e1d2aac6a2e45aec23d51f8"
+    },
+    "q_conv.f32": {
+      "control": "92e68fc14378b3c3235adfa5a0791bd92642dd7c5a2381a27ca464b4946c750a",
+      "mmq_only": "92e68fc14378b3c3235adfa5a0791bd92642dd7c5a2381a27ca464b4946c750a"
+    },
+    "qkv.f32": {
+      "control": "4bb5eeb6b841651d5898879dcc4995bcdd3734ec4ad27dea967f649e4c8fd1f4",
+      "mmq_only": "4bb5eeb6b841651d5898879dcc4995bcdd3734ec4ad27dea967f649e4c8fd1f4"
+    },
+    "qkv_input_mx_q8.bin": {
+      "control": "604711f276945f4a04c1052fecb31acf530f9c85831b21d7cfffbc8b2aad4776",
+      "mmq_only": "604711f276945f4a04c1052fecb31acf530f9c85831b21d7cfffbc8b2aad4776"
+    },
+    "state_before.bin": {
+      "control": "a795ffcf71ddfaaf5d4770b3bc1bfda6210d59ee7ca1552cd3ff50a58ff0c750",
+      "mmq_only": "a795ffcf71ddfaaf5d4770b3bc1bfda6210d59ee7ca1552cd3ff50a58ff0c750"
+    },
+    "state_after_gdn.bin": {
+      "control": "8fdabf5e8cae946286900627ebc67d0cd4d77c9b39b6fd95e6077364fada2263",
+      "mmq_only": "8fdabf5e8cae946286900627ebc67d0cd4d77c9b39b6fd95e6077364fada2263"
+    },
+    "v_conv.f32": {
+      "control": "9ea3bdf776d016f4446e4765fbb99e741eef8d588d046d59d6a26a01ca58ad0a",
+      "mmq_only": "9ea3bdf776d016f4446e4765fbb99e741eef8d588d046d59d6a26a01ca58ad0a"
+    },
+    "z.f32": {
+      "control": "b0eb3917d9e29fd740242057cc57428c7da2bd1ab54857d5930d1faf72ca593e",
+      "mmq_only": "b0eb3917d9e29fd740242057cc57428c7da2bd1ab54857d5930d1faf72ca593e"
+    }
+  },
+  "post_normalized_q8_reproduction": "PASS",
+  "q8_integer_codes_equal": true,
+  "q8_half_scales_equal": true,
+  "q8_sum_groups_differ": 160,
+  "decoded_q_times_d_equal": true,
+  "first_differing_captured_output_fields": [
+    "ffn_activation.f32",
+    "ffn_down.f32",
+    "layer_output.f32"
+  ],
+  "projection_reference": {
+    "gate": {
+      "weight_sha256": "24b815356fe291c7c19023dc600030e67c7c1214b182b4a9bf64c3f4bd8c0c37",
+      "mmq_gpu_vs_original_sum_reference": {
+        "rmse": 5.138582869283336e-09,
+        "max_abs": 2.9802322387695312e-08,
+        "relative_l2": 7.569195092641515e-08
+      },
+      "mmq_gpu_vs_fp16_d_sumq_reference": {
+        "rmse": 0.0005366875240136643,
+        "max_abs": 0.00598752498626709,
+        "relative_l2": 0.00791992510080093
+      }
+    },
+    "up": {
+      "weight_sha256": "6e7fadc9c058abd6e8962b4a07ea15ccf446d2447329d9e06c2cf31baee39b3e",
+      "mmq_gpu_vs_original_sum_reference": {
+        "rmse": 4.843854163604954e-09,
+        "max_abs": 2.9802322387695312e-08,
+        "relative_l2": 7.893615092162192e-08
+      },
+      "mmq_gpu_vs_fp16_d_sumq_reference": {
+        "rmse": 0.0005207949538124263,
+        "max_abs": 0.0017640572041273117,
+        "relative_l2": 0.008487793317084833
+      }
+    }
+  },
+  "self_check": "PASS"
+}

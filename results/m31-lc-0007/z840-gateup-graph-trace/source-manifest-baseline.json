@@ -1,0 +1,11 @@
+{
+  "milestone": "M31-LC-0007",
+  "base_commit": "d507c4f",
+  "binary_source_commit": "8a9caec3366512e459a93bad68adde181225304b",
+  "binary_sha256": "702618e756c2de5a2facc9420a6726b69e3d234054729e9eca3548089d10c2fb",
+  "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+  "prompt_ids_sha256": "5acd37f00d9e670f4b4e06d46fa12349e1dee06e356e6e73a186d74672f5bb47",
+  "image_digest": "sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e",
+  "gpu": "Z840 MI50 gfx906 BDF 0000:06:00.0",
+  "execution": "HIP Graph; 2048 prompt tokens; 2304 capacity; five greedy output tokens; instrumentation disabled"
+}
