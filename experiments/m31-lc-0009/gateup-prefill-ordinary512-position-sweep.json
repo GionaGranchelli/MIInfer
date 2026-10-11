@@ -1,0 +1,83 @@
+{
+  "schema": "m31-lc-0009-contract-o-position-sweep-v1",
+  "status": "PASS",
+  "scope": "layer-0 Q4_K Gate/Up aligned-MMQ prefill at three rows of ordinary-512-01",
+  "capture_identity": {
+    "host": "Z840 / fedora / MI50 gfx906 / 0000:06:00.0",
+    "source_commit": "06564a2ad634036aa4e9a8a36bda63eb408862bf",
+    "source_worktree_clean": true,
+    "runner_binary_sha256": "c5352c432e2bf7340ad7f578cba7784f5068288916073f758b6b01577f8f1da1",
+    "container_image": "localhost/miinfer-dev:rocm-7.2.1",
+    "container_image_id": "50ff28a28cc13a3ca7333cd0c70e322d16245967c5fdf0d30a1bf57bda80a512",
+    "container_digest": "sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e",
+    "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
+    "prompt": "ordinary-512-01",
+    "prompt_tokens": 512,
+    "prompt_ids_sha256": "1ef71fe9b878cca87078c14889cb289343d5c4a01a6db903f2c8259285e7aec8",
+    "hip_graph": false,
+    "iterations": 1,
+    "warmup": 0,
+    "generated_tokens": 1,
+    "environment": {
+      "ROCR_VISIBLE_DEVICES": "0",
+      "MIINFER_HIP_GRAPH": "0",
+      "MIINFER_EXPERIMENTAL_MMQ_GATEUP_ONLY": "1",
+      "MIINFER_EXPERIMENTAL_MMQ_GATEUP_QSUM": "0",
+      "MIINFER_MX_Q8_BATCH": "0"
+    }
+  },
+  "checker": {
+    "version": "v3",
+    "binary_sha256": "aec64e9eb1260779548e9d5868e14fc17dcd002ad876fcb8cea35ab31cbc0b2e",
+    "source": "tools/m31_lc9_gateup_contract_o.cpp",
+    "source_sha256": "b8a37ffb2e11a3af5ebad790678659c8661e738dab273e3bb3525f836beb9064",
+    "checks_per_capture": {
+      "q8_groups_matching": "160/160",
+      "gate_rows_within_bound": "17408/17408",
+      "up_rows_within_bound": "17408/17408"
+    }
+  },
+  "captures": [
+    {
+      "position": 0,
+      "lake_path": "/mnt/lc9-lake/m31-lc-0009-contract-o/gateup-prefill-ordinary512-01",
+      "summary_sha256": "53cb5a4f5c1c2d1fe46aebc9ba5fd2bc97b81f024ae84a78466e1447f161978b",
+      "rows_csv_sha256": "79f81cae73cf2acbf431683392adb25ab065f0583f35d8f653c5cfefbf6b1417",
+      "gate_max_error_to_bound": 0.0011880507599926339,
+      "up_max_error_to_bound": 0.0020826388562238617
+    },
+    {
+      "position": 256,
+      "lake_path": "/mnt/lc9-lake/m31-lc-0009-contract-o/gateup-prefill-ordinary512-pos256",
+      "position_file_sha256": "66708c3286c232f52c30bc1191e857e88a2184de752d76ede54496b5301c808f",
+      "attn_post_norm_sha256": "d9409e16093f3a23bfa3ef85e1f15d9990e095054d754af81ef8fddd923e867a",
+      "q8_input_sha256": "a83ebe175f44889b437466a01746bdcf17ebefc2b39b261e2c0baa340e3b8010",
+      "gate_output_sha256": "f86fec19c1ae34d64fef17521b4a12e33dce13e2f4eb3de1845cffac20b81200",
+      "up_output_sha256": "ad9070b9178b736962c2dd6347ce1f95cc9691901f19d9ec9932784a8de50069",
+      "generation_output_sha256": "6a57bfc840df6f1bbd8171fbb31d3b842c51ce72c06a93cbf0dd067b3dc5f52c",
+      "summary_sha256": "b205661fe8156a9a3be1e1c7c0c145b2a5d45c758a3ceda0ec9055809e6eb940",
+      "rows_csv_sha256": "276620db7897362cccfc7ea75454fe6b8f2f78cbd0b39a2fc7033491f3483614",
+      "gate_max_error_to_bound_approx": 0.00148017,
+      "up_max_error_to_bound_approx": 0.000712987
+    },
+    {
+      "position": 511,
+      "lake_path": "/mnt/lc9-lake/m31-lc-0009-contract-o/gateup-prefill-ordinary512-pos511",
+      "position_file_sha256": "ec7203858c17cb304be585de56503b288d804fc56384066adb5a220223ea394e",
+      "attn_post_norm_sha256": "70ca1215358e8337d956fe0e88d931eeb1aadaa959029d1f35c8398242fa6dac",
+      "q8_input_sha256": "5cdb7ac19a72c6bd2b227a4ffd18f381491c7126e7a6cb1b711fe9253568dfee",
+      "gate_output_sha256": "8dd0d4f04d03c010fa486eedcef29544a0eeec88baf605c93d1e8e376144c7d0",
+      "up_output_sha256": "fd021bb6c1484216a6f57eae5c3d615e52a16a68d45b6180b629e5211ff4415f",
+      "generation_output_sha256": "96122206cfecd3b803fc57bdf423aa7ea6f66cef40377043588b36ca94454a8c",
+      "summary_sha256": "72986152738823ee86846e33d4243b54a53b193ca5f6e4d043fd1858660a5754",
+      "rows_csv_sha256": "4a12f728b8ad17d04773565d55a5748e91e9f8901f19d9ec9932784a8de50069",
+      "gate_max_error_to_bound_approx": 0.000932106,
+      "up_max_error_to_bound_approx": 0.000753765
+    }
+  ],
+  "limitations": [
+    "The additional captures exercise rows 256 and 511 of the same ordinary-512 prompt on the same GPU and prefill path.",
+    "They do not establish bounds for other prompts, other tiles, decode/QSUM, SwiGLU, recurrent state, or full-model correctness.",
+    "Raw traces and row CSV files remain on Lake; this manifest records their SHA-256 digests."
+  ]
+}
