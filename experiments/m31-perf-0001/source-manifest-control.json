@@ -22,6 +22,8 @@
     "hip_clang": "22.0.0",
     "nlohmann_json": "3.11.3"
   },
+  "measurement_harness_sha256": "8e114452add8f584c0e07eafe71fb6c10633b638ecaf56df70969da9e3d272fc",
+  "run_plan_sha256": "cb996be602963f34d704f66006b202b95e103aed55d9ababdf3e5b4edc165bf3",
   "source_files_sha256": {
     "CMakeLists.txt": "5bf36a40851502e2fed624bf8fc654acee898d817968720138887c32eb048f90",
     "bench/e2_0003_checkpointed_call.cpp": "89d5a58cbe8ce6a1c8ba2386f0ebe580b1dd6faed2aaae12c802c7b409657bb7",
