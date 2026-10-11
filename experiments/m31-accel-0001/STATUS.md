@@ -120,3 +120,9 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 - Retained build log `/mnt/lc9-lake/m31-accel-0001-captures/build/decode-0ee18e6-build.log`, SHA-256 `2803889d8959cee46c61c6eee8f9244ee03efd32ec915334afeae05ed06e7f31`; binary SHA-256 `900729a294a61c1a564e7007d5dbf5a381b7f164aae7bd49cd6cdb40b96431b1`. Warnings were HIP compiler diagnostics for an unused parameter, unrolling, and occupancy.
 - No decode timings were collected. The MI50 stayed idle; cooling/airflow is still unconfirmed and remains the blocker to GPU work.
 - Next: obtain cooling confirmation, then schedule the guarded 64K workload before performance A/B runs. The benchmark is ready for that queue after cooling is cleared.
+
+## 2026-10-12 01:40 checkpoint
+
+- Synced the clean Z840 coordinator worktree from `d22915b` to pushed HEAD `c8c05c57a6902c2f99af41c4dbb5fe8a25f1feea`. It remains detached and clean; the original dirty checkout remains untouched.
+- Separate Lake decode-build worktree remains at source `0ee18e6`, with the successful build, self-check, and retained log/binary hashes documented above.
+- No GPU job was started. Cooling confirmation is still the hardware gate; once cleared, first priority is the guarded 64K production workload before decode/prefill A/B.
