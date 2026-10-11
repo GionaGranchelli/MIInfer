@@ -52,7 +52,7 @@
     "whitespace_check": "PASS",
     "push_policy": "Each completed evidence milestone pushed",
     "selector_default": "OFF",
-    "latest_evidence_commit_push": "pending"
+    "latest_evidence_commit_push": "32c119e recorded and pushed to origin"
   },
   "open_correctness_issue": "Cross-engine CPU and current llama.cpp backend discrepancies remain unexplained; do not promote selector or advance context ladder",
   "frozen_2k_candidate_status": "PASS for fused/aligned-MMQ GPU exact-token parity and captured arithmetic checks; selector remains default-off",
