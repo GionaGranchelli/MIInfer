@@ -1,6 +1,6 @@
 # M31-ACCEL-0001 live status
 
-Updated: 2026-10-12 01:05 Europe/Amsterdam
+Updated: 2026-10-12 01:08 Europe/Amsterdam
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
 
 ## Source and ownership
@@ -76,4 +76,4 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 - The `miinfer` serving target built on the clean Z840 worktree (exit 0; binary SHA-256 `106feada3db19dca0d8b02bd9f5612e647b9175efabf3553ebc99a759d77e9a8`). A guarded startup at capacity 131,072 reached 34,254,819,328 B of 34,342,961,152 B VRAM and was stopped by the 1 GiB floor (wrapper exit 123) before the first 64K request. No prompt inference occurred.
 - The current candidate uses bounded capacity 81,920, enough for the exact 65,536-token start and eight short turns within the observed MI50 memory budget. The serving whitelist extension is limited to this research-only value; final generation is capped at 256 tokens and each planned read_file call must match its path and line range. No 128K prompt is run.
 - Review found that the initial workload summary recorded prefix counts but did not require reuse for later turns. The integrated script now requires each turn after the first to have both a nonzero reused prefix and a nonzero suffix dispatch; the overall command fails if any turn misses that gate.
-- The 80K server candidate, shorter tool-turn plan, and fail-closed planned-read check are being prepared. Rebuild before running, verify at least 1 GiB remains after allocation, and keep an operator on telemetry; the synthetic attempt reached 87 C quickly, so stop if temperature continues rising toward 90 C.
+- The 80K server candidate, shorter tool-turn plan, and fail-closed planned-read check are pushed at `b940640`. On the clean Z840 worktree, `miinfer`, `miinfer-m31-accel-0001-agent64k`, and the host tokenizer counter rebuilt successfully. The updated host-only self-check again measured exactly 65,536 initial tokens for eight turns; retained log `/mnt/lc9-lake/m31-accel-0001-captures/agent-host/native-self-check-81920.log` has SHA-256 `a7ad2173803692c76242352c56171899357f323901f7bcccd8010543f4e260a4`. The GPU stayed idle at 28 C. No production request has run at 81,920 capacity. The prior synthetic prefill reached 87 C quickly, so hold the next GPU attempt until the cooling check is resolved; any run must retain live telemetry and stop on renewed rapid heating.
