@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-repo=$(cd "$(dirname "$0")/../../.." && pwd)
+repo=$(cd "$(dirname "$0")/../.." && pwd)
+[[ -f "$repo/CMakeLists.txt" ]] || { echo "invalid repository root: $repo" >&2; exit 2; }
 temp_warning() { awk -v t="$1" 'BEGIN { exit !(t >= 85.0) }'; }
 temp_limit() { awk -v t="$1" 'BEGIN { exit !(t >= 90.0) }'; }
 vram_limit() { awk -v b="$1" 'BEGIN { exit !(b >= 33200000000) }'; }
