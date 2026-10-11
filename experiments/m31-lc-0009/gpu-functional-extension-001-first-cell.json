@@ -39,7 +39,9 @@
     "recorded_warmup": 0,
     "recorded_context_profile": "8K",
     "recorded_sampler": "greedy_argmax",
-    "recorded_stop_token_ids": "disabled"
+    "recorded_stop_token_ids": "disabled",
+    "decoded_output_file_on_lake": "ordinary-64-01.decoded.txt",
+    "decoded_output_sha256": "9876be061184ed1ba10358065015284038a2adc82bb50f5dad9ef24d8ce1e3e8"
   },
   "identity": {
     "model_sha256": "7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169",
