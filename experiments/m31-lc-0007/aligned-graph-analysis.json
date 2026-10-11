@@ -396,6 +396,6 @@
         "relative_l2": 0.16405561271722918
       }
     ],
-    "full_model_cpu_token_parity": "FAIL_AT_DECISION_5"
+    "cpu_reference_match_status": "FAIL_AT_DECISION_5"
   }
 }

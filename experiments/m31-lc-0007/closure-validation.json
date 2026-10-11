@@ -1,0 +1,48 @@
+{
+  "schema": "m31-lc-0007-closure-validation-v1",
+  "verified_date": "2026-10-11",
+  "source_commit": "6c4dc6a1af2e27692eb6586ca4b5e9e2f340e917",
+  "binary_sha256": "223dd8b627d4921e4aeb2cdf010585ffb2dc598d41ec945a29fc493f43307ebd",
+  "image_digest": "sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e",
+  "build": {
+    "all_configured_targets": "PASS",
+    "build_type": "Release",
+    "hip_architecture": "gfx906",
+    "rocm": "7.2.1"
+  },
+  "ctest": {
+    "command": "ctest --test-dir build --output-on-failure --no-tests=error",
+    "configured_tests": 35,
+    "passed": 34,
+    "failed": 0,
+    "skipped": ["package-archive-smoke"],
+    "result": "PASS",
+    "device_access": "rootless Podman with /dev/kfd and /dev/dri"
+  },
+  "checksum_validation": {
+    "source_file_manifest_entries": 6,
+    "source_file_manifest": "PASS",
+    "prompt_ids": "PASS",
+    "gpu_route_logits": "PASS",
+    "cpu_reference_logits": "PASS",
+    "run_records_and_guards": "PASS"
+  },
+  "gitleaks": {
+    "current_lc0007_files": "PASS; no findings",
+    "historical_commit_range": "One generic-api-key false positive in an earlier JSON status field; no credential value was present; current field name is corrected"
+  },
+  "thermal_guards": {
+    "calls": 4,
+    "clean_guards": 4,
+    "aborts": 0,
+    "successful_telemetry_samples": 607,
+    "failed_telemetry_samples": 0,
+    "peak_junction_celsius": [64.0, 65.0, 65.0, 64.0]
+  },
+  "git": {
+    "whitespace_check": "PASS",
+    "push_policy": "Each completed evidence milestone pushed",
+    "selector_default": "OFF"
+  },
+  "open_correctness_issue": "llama-cpp-python CPU full-model reference agrees for decisions 1-4 but emits token 198 rather than GPU token 271 at decision 5; keep selector opt-in"
+}

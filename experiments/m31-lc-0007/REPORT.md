@@ -2,7 +2,7 @@
 
 ## Status
 
-The graph baseline and graph-safe Gate/Up attribution are complete. The opt-in selector produces fused/MMQ token parity on the frozen 2K graph workload and passes the harness's initial selection gates. The independent CPU full-model run disagrees at decision five, so this is not yet a qualified result; full configured tests and integrity checks remain.
+The graph baseline, Gate/Up attribution, same-binary A/B, full configured build, and CTest are complete. The opt-in selector produces fused/MMQ token parity on the frozen 2K graph workload. The independent CPU full-model run disagrees at decision five, so this remains an unqualified opt-in experiment.
 
 ## Baseline reproduction
 
@@ -41,7 +41,13 @@ The layer-0 aligned Gate and Up outputs each match the independent `FP16(d * sum
 
 The same model and exact prompt token IDs were evaluated with `llama-cpp-python 0.3.34`, `n_gpu_layers=0`, and greedy argmax. CPU produced `[220, 248046, 198, 248045, 198]`: the first four tokens agree, but decision five differs from fused and aligned GPU (`271`). CPU/GPU raw-logit relative L2 ranges from `0.0247` to `0.168` across the five decisions. The CPU run's raw vectors and metadata are saved as `cpu-full-model.logits.f32` and `cpu-full-model.record.json` in the original-run directory and summarized in `aligned-graph-analysis.json`.
 
-This is an unresolved independent-reference mismatch. The selected sum is proven to fix the captured Gate/Up arithmetic relative to the requested projection reference and restore GPU route token parity on this workload, but the CPU output does not corroborate the fifth token. Keep the selector opt-in and do not promote it pending resolution and the remaining test/integrity gates.
+This is an unresolved independent-reference mismatch. The selected sum is proven to fix the captured Gate/Up arithmetic relative to the requested projection reference and restore GPU route token parity on this workload, but the CPU output does not corroborate the fifth token. Keep the selector opt-in and do not promote it until the CPU reference discrepancy is understood.
+
+## Configured build and CTest
+
+All configured targets built in the pinned ROCm 7.2.1 image. A fresh full CTest run with the documented KFD/DRI container access passed 34 of 35 tests; `package-archive-smoke` was skipped because no package archive had been built. There were no failed tests. All four GPU route calls passed their thermal/watchdog guards; telemetry had 100% successful samples and peak junction temperatures from 64°C to 65°C.
+
+Prompt, raw-logit, and CPU-logit checksums match their run records. Gitleaks found no secrets in current LC-0007 source, docs, or artifacts. Its commit-range scan flagged one generic-api-key false positive in the earlier JSON status label; it was not a credential and the current field is renamed. Git whitespace and branch checks are in [`closure-validation.json`](closure-validation.json).
 
 ## Contract detail to verify
 
