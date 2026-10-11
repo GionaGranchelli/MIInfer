@@ -36,3 +36,12 @@ Deadline: 2026-10-12 10:00 Europe/Amsterdam
 ## Checkpoint discipline
 
 One GPU job at a time on Z840. Preserve all dirty worktrees and existing logs. Record each run's PID, exact command, source/model/image identity, input IDs, exit status, hashes, temperatures, VRAM and correctness result before starting another.
+
+## 00:30 checkpoint
+
+- Coordinator checkpoint commit: `66e887f78597898f55cc80a7499e0b71b2ebdc20` (pushed to `origin/experiment/m31-accel-0001-coordinator`). This branch publishes the required Z840 committed M30 source ancestry and campaign notes; Z840/Machinist dirty worktrees remain untouched.
+- Z840 model SHA-256 was recomputed live and matches `7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169`.
+- Local OCI image `localhost/miinfer-dev:rocm-7.2.1` has base label `sha256:fb0de294a2919ff6d503b4845e055c7fb80db5861954694ee5228e48a14411ec`, matching `docs/mi50-environment.md`.
+- A persistent base compile of `miinfer-prefix-state-reuse-bench` and `miinfer-v2-0045-qual-bench` is active in `/mnt/lc9-lake/m31-accel-0001-z840`; tmux session `m31_accel_base_build`, container PID 111693, log `/mnt/lc9-lake/m31-accel-0001-captures/build/base-build.log`, exit marker `.../base-build.exit`. It configures/builds only; no MI50 device is passed to the container.
+- The existing 64K prefix-state benchmark is unsuitable for this campaign run because one invocation also runs a 128K+512 scenario and exits success even if its printed parity gate fails. The campaign workload must have a dedicated 64K-only path and the result must be manually or programmatically gated on exact parity.
+- Decode baseline harness is identified (`miinfer-v2-0045-qual-bench ... decode 2048 128 5`), but it is direct/eager, lacks logits correctness, and current profiling is only a single token on a different graph-disabled route. No decode candidate is authorized from that evidence.
