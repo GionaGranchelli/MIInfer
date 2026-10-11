@@ -285,7 +285,9 @@ int main(int argc, char** argv) {
         r.decode_delta_pct = ((r.reuse_decode_step_ms - r.cold_decode_step_ms) / r.cold_decode_step_ms) * 100.0;
 
         // Verify greedy parity
-        r.parity_pass = (r.cold_generated_tokens == r.reuse_generated_tokens);
+        r.parity_pass = !r.cold_generated_tokens.empty()
+            && r.cold_generated_tokens == r.reuse_generated_tokens
+            && cold_stats.stop_reason == reuse_stats.stop_reason;
         const bool reuse_contract_pass = r.reuse_hit
             && r.prefix_tokens_reused == cfg.prefix_len
             && r.suffix_tokens_dispatched == cfg.suffix_len
