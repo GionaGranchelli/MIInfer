@@ -13,14 +13,14 @@ d_weight * d_input * (q4_scale * integer_dot)
 - dmin_weight * q4_minimum * captured_input_sum
 ```
 
-The integer dot and scale product are exact in signed 32-bit arithmetic and convert exactly to FP32 for these bounds. The FP64 reference accumulates all 160 groups. For the GPU result, the conservative bound allows six FP32 rounding steps per group, including both scale products, correction, subtraction, and accumulation:
+The integer dot and signed scale product are exact in signed 32-bit arithmetic and convert exactly to FP32 for these bounds. The FP64 reference accumulates all 160 groups. For the GPU result, the conservative bound allows seven FP32 rounding steps per group: the two Q4 scale/minimum products, input-scale product, dot-scale product, correction product, subtraction, and accumulation. The reference and absolute-term sum allow eight FP64 operations per group:
 
 ```text
-gamma_960 * sum(abs(main_term) + abs(correction_term))
-+ 960 * minimum_FP32_subnormal
-+ gamma_160_FP64 * sum(abs(main_term) + abs(correction_term))
+gamma_1120_FP32 * sum(abs(main_term) + abs(correction_term))
++ 1120 * minimum_FP32_subnormal
++ gamma_1280_FP64 * sum(abs(main_term) + abs(correction_term))
 ```
 
 The checker reports each row's actual error and bound for Gate and Up independently. It passes only if every quantized input code/scale matches the captured output, all outputs are finite, and every row for both projections is within its arithmetic bound. This is operation-level evidence for the captured prompt and route; it does not by itself qualify other prompts, decode, SwiGLU, recurrent state, or the full model.
 
-Current status: checker compiled; representative real-input trace and result are pending. No Contract O pass is claimed.
+Current status: one representative layer-0 aligned-MMQ prefill capture from `ordinary-512-01`, token position 0, passes the input-representation check and both Gate/Up row bounds. This qualifies only the captured operation/input; other positions, prompts, decode, SwiGLU, recurrent state, and full-model behavior remain outside this result.

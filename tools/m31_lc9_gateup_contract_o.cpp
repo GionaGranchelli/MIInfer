@@ -20,7 +20,8 @@ constexpr std::size_t kRows = 17408;
 constexpr std::size_t kGroups = kColumns / 32;
 constexpr std::size_t kQ8BlockBytes = 144;
 constexpr std::size_t kQ8Blocks = kColumns / 128;
-constexpr std::size_t kF32OperationBound = 6 * kGroups;
+constexpr std::size_t kF32OperationBound = 7 * kGroups;
+constexpr std::size_t kF64OperationBound = 8 * kGroups;
 
 struct Q4KBlock {
     std::uint16_t d;
@@ -125,8 +126,8 @@ OperationResult check_projection(const Q4KBlock* weights, const std::vector<std:
     result.bounds.resize(rows);
     constexpr double u = 0x1p-24;
     const double gamma_f32 = kF32OperationBound * u / (1.0 - kF32OperationBound * u);
-    const double gamma_f64 = kGroups * std::numeric_limits<double>::epsilon()
-        / (1.0 - kGroups * std::numeric_limits<double>::epsilon());
+    const double gamma_f64 = kF64OperationBound * std::numeric_limits<double>::epsilon()
+        / (1.0 - kF64OperationBound * std::numeric_limits<double>::epsilon());
     const double underflow = kF32OperationBound * std::numeric_limits<float>::denorm_min();
 
     for (std::size_t row = 0; row < rows; ++row) {
@@ -274,7 +275,9 @@ int main(int argc, char** argv) {
                 << "  \"q8_groups\": " << kGroups << ", \"q8_codes_and_scales_matching\": "
                 << codes_and_scales_match << ",\n"
                 << "  \"fp32_rounding_operations_bound\": " << kF32OperationBound
-                << ", \"gamma_n\": " << gamma_f32
+                << ", \"gamma_n_fp32\": " << gamma_f32
+                << ", \"fp64_rounding_operations_bound\": " << kF64OperationBound
+                << ", \"gamma_n_fp64\": " << gamma_f64
                 << ", \"underflow_allowance\": " << underflow << ",\n"
                 << "  \"gate\": {\"finite\": " << (gate.all_finite ? "true" : "false")
                 << ", \"rows_within_bound\": " << gate.within
