@@ -1,6 +1,6 @@
 # M31-ACCEL-0001 live status
 
-Updated: 2026-10-12 03:13 Europe/Amsterdam
+Updated: 2026-10-12 03:21 Europe/Amsterdam
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
 
 ## 2026-10-12 03:04 Z840 SSH and capture recheck
@@ -63,6 +63,13 @@ One GPU job at a time on Z840. Preserve all dirty worktrees and existing logs. R
 - Z840 SSH succeeded twice. Lake is mounted read/write at `/mnt/lc9-lake` with 1.6 TB free; `/` has 11 GB free. No MIInfer, campaign runner, guarded benchmark, or matching tmux process is active.
 - MI50 is idle at 27 C junction, 0% use, 20 W, and 10.9 MB VRAM. Sysfs exposes only the MI50's own fan input (`0 RPM`) and an HP WMI PWM enable value; no chassis fan RPM is available. The separate `hp_wmi_sensors` driver is installed but unloaded. Loading it was not attempted; even rotor telemetry would not prove airflow through the passive heatsink.
 - `/home/fedora-workstation/Development/mi50` remains dirty with M30 changes and artifacts; it was not touched. No GPU work ran. Cooling clearance remains the gate before guarded 64K inference or timing.
+
+## 2026-10-12 03:21 benchmark gates tightened
+
+- Pushed coordinator `38eccc295b39e8c9db35ea1ab78c13ad870c9855`. The production runner now rejects reuse telemetry unless `reused_prefix_tokens` is within the prompt and reused plus dispatched suffix tokens equals the prompt length. Its no-network SSE/telemetry self-check covers a dispatch gap and passes; `py_compile` passes.
+- The 64K prefix benchmark now rejects cold/reuse samples without HIP Graph or with non-finite/non-positive prefill, TTFT, decode, or total timings; restore/suffix timings must be finite and nonnegative. Its self-check covers graph fallback and NaN TTFT and passes.
+- Machinist built `miinfer-prefix-state-reuse-bench` from exact source `38eccc2` in the pinned ROCm 7.2.1 image with no device passed, then `--self-check` passed. Binary SHA-256 `e71c1f3720a4c189568d22e1de303284d381a48c6457f024c01296b6b1e2cd98`; C++ source SHA-256 `d939692d9d3accded76709095b557b4c625706111c023e786bd3ea826ce4f931`. First fresh-worktree configure hit DNS failure while fetching nlohmann/json; retry reused the existing build dependency cache with network disabled and succeeded. Temporary review worktree: `/tmp/m31-accel-0001-38eccc2-review` on Machinist.
+- Review found the prefix and decode fixtures are synthetic token IDs. These harnesses can characterize the model execution paths but cannot stand in for measurements on the actual coding-agent prompt. No GPU work or live performance measurement ran; airflow remains unconfirmed.
 
 ## 01:22 checkpoint — Z840 access restored
 
