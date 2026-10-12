@@ -7,6 +7,7 @@
 #include <iostream>
 #include <limits>
 #include <numeric>
+#include <optional>
 #include <span>
 #include <string>
 #include <utility>
@@ -17,6 +18,7 @@
 #include "miinfer/prefill_v2/model.hpp"
 #include "miinfer/prefill_v2/reusable_context.hpp"
 #include "miinfer/qwen35_model.hpp"
+#include "m31_token_ids.hpp"
 
 #include <hip/hip_runtime.h>
 
@@ -69,7 +71,7 @@ bool benchmark_self_check() {
     valid_sample.used_hip_graph = true;
     valid_sample.ttft_ms = std::numeric_limits<double>::quiet_NaN();
     if (valid_timing_sample(valid_sample)) return false;
-    return k64kSampleCount >= 5 && median(values) == 3.0
+    return m31_token_ids::self_check() && k64kSampleCount >= 5 && median(values) == 3.0
         && !reuse_first_sample(0) && reuse_first_sample(1)
         && !reuse_first_sample(2) && reuse_first_sample(3)
         && !reuse_first_sample(4);
@@ -188,6 +190,8 @@ int main(int argc, char** argv) {
     bool only_64k = false;
     bool self_check = false;
     bool model_path_set = false;
+    std::string first_token_ids_path;
+    std::string second_token_ids_path;
     std::string model_path = kDefaultModelPath;
     for (int i = 1; i < argc; ++i) {
         const std::string arg = argv[i];
@@ -195,12 +199,17 @@ int main(int argc, char** argv) {
             only_64k = true;
         } else if (arg == "--self-check" && !self_check) {
             self_check = true;
+        } else if (arg == "--request-pair" && first_token_ids_path.empty() && i + 2 < argc) {
+            first_token_ids_path = argv[++i];
+            second_token_ids_path = argv[++i];
+            only_64k = true;
         } else if (!arg.empty() && arg.front() != '-' && !model_path_set) {
             model_path = arg;
             model_path_set = true;
         } else {
             std::cerr << "usage: miinfer-prefix-state-reuse-bench [--self-check]\n"
-                         "       miinfer-prefix-state-reuse-bench [--64k-only] [MODEL.gguf]\n";
+                         "       miinfer-prefix-state-reuse-bench [--64k-only] [MODEL.gguf]\n"
+                         "       miinfer-prefix-state-reuse-bench --request-pair FIRST.tokens.json SECOND.tokens.json [MODEL.gguf]\n";
             return 2;
         }
     }
@@ -225,6 +234,38 @@ int main(int argc, char** argv) {
               << " (" << qwen_model.config().main_layer_count << " layers, hidden="
               << qwen_model.config().hidden_size << ", vocab=" << qwen_model.config().vocab_size << ")\n";
 
+    std::optional<m31_token_ids::Artifact> first_artifact;
+    std::optional<m31_token_ids::Artifact> second_artifact;
+    std::size_t production_prefix_len = 0;
+    if (!first_token_ids_path.empty()) {
+        first_artifact = m31_token_ids::load(first_token_ids_path);
+        second_artifact = m31_token_ids::load(second_token_ids_path);
+        if (first_artifact->model != second_artifact->model
+            || first_artifact->ids.size() != 65536
+            || !std::all_of(first_artifact->ids.begin(), first_artifact->ids.end(), [&](auto id) {
+                return id < qwen_model.config().vocab_size;
+            })
+            || !std::all_of(second_artifact->ids.begin(), second_artifact->ids.end(), [&](auto id) {
+                return id < qwen_model.config().vocab_size;
+            })) {
+            throw std::runtime_error("production request pair must share a model, start with 65,536 IDs, and fit its vocabulary");
+        }
+        while (production_prefix_len < first_artifact->ids.size()
+               && production_prefix_len < second_artifact->ids.size()
+               && first_artifact->ids[production_prefix_len] == second_artifact->ids[production_prefix_len]) {
+            ++production_prefix_len;
+        }
+        if (production_prefix_len == 0 || production_prefix_len >= second_artifact->ids.size()) {
+            throw std::runtime_error("adjacent production requests have no nonempty reused prefix and suffix");
+        }
+        std::cout << "[INFO] Production request SHA-256: " << first_artifact->request_sha256
+                  << " -> " << second_artifact->request_sha256 << "\n"
+                  << "[INFO] Production token-ID SHA-256: " << first_artifact->token_ids_sha256
+                  << " -> " << second_artifact->token_ids_sha256 << "\n"
+                  << "[INFO] Adjacent request LCP: " << production_prefix_len << " tokens; suffix: "
+                  << second_artifact->ids.size() - production_prefix_len << " tokens\n";
+    }
+
     const double to_gib = 1.0 / (1024.0 * 1024.0 * 1024.0);
     const double to_mib = 1.0 / (1024.0 * 1024.0);
 
@@ -248,10 +289,17 @@ int main(int argc, char** argv) {
         {"Scenario 4: 64K Large Suffix",    65536,  4096,  128,  70000, 99, 2099},
         {"Scenario 5: 128K Frontier",      128000,   512,  128, 131200, 123, 3123},
     };
-    const std::vector<MatrixConfig> matrix_configs = only_64k
+    std::vector<MatrixConfig> matrix_configs = only_64k
         ? std::vector<MatrixConfig>{full_matrix_configs[2]}
         : full_matrix_configs;
-    if (only_64k && (matrix_configs.size() != 1 || matrix_configs[0].prefix_len != 65536
+    if (first_artifact) {
+        const auto needed = second_artifact->ids.size() + 128;
+        const auto capacity = ((needed + 16383) / 16384) * 16384;
+        if (capacity > 81920) throw std::runtime_error("production request pair exceeds 81,920-token KV capacity");
+        matrix_configs = {{"Production adjacent request pair", production_prefix_len,
+            second_artifact->ids.size() - production_prefix_len, 128, capacity, 0, 0}};
+    }
+    if (only_64k && !first_artifact && (matrix_configs.size() != 1 || matrix_configs[0].prefix_len != 65536
                      || matrix_configs[0].suffix_len != 512)) {
         std::cerr << "64K-only scenario selection self-check failed\n";
         return 2;
@@ -277,14 +325,18 @@ int main(int argc, char** argv) {
         std::cout << "  GDN Checkpoint Buffer:  " << model.cached_state_bytes() * to_mib << " MiB\n";
         std::cout << "  Observed Free Headroom: " << free_mem * to_gib << " GiB\n\n";
 
-        // Generate synthetic prefix and suffix
-        const auto prefix_tokens = make_synthetic_prompt(cfg.prefix_len, cfg.prefix_seed);
-        const auto suffix_tokens = make_synthetic_prompt(cfg.suffix_len, cfg.suffix_seed);
-
+        std::vector<std::uint32_t> cache_tokens;
         std::vector<std::uint32_t> full_prompt;
-        full_prompt.reserve(cfg.prefix_len + cfg.suffix_len);
-        full_prompt.insert(full_prompt.end(), prefix_tokens.begin(), prefix_tokens.end());
-        full_prompt.insert(full_prompt.end(), suffix_tokens.begin(), suffix_tokens.end());
+        if (first_artifact) {
+            cache_tokens = first_artifact->ids;
+            full_prompt = second_artifact->ids;
+        } else {
+            cache_tokens = make_synthetic_prompt(cfg.prefix_len, cfg.prefix_seed);
+            const auto suffix_tokens = make_synthetic_prompt(cfg.suffix_len, cfg.suffix_seed);
+            full_prompt.reserve(cfg.prefix_len + cfg.suffix_len);
+            full_prompt.insert(full_prompt.end(), cache_tokens.begin(), cache_tokens.end());
+            full_prompt.insert(full_prompt.end(), suffix_tokens.begin(), suffix_tokens.end());
+        }
 
         MatrixScenarioResult r;
         r.name = cfg.name;
@@ -296,13 +348,13 @@ int main(int argc, char** argv) {
         // -----------------------------------------------------------------
         // [B] TURN 1: Prefill Prefix & Cache Reusable State
         // -----------------------------------------------------------------
-        std::cout << "  [Turn 1] Prefilling Prefix (" << prefix_tokens.size() << " tokens) and caching state...\n";
+        std::cout << "  [Turn 1] Prefilling prior request (" << cache_tokens.size() << " tokens) and caching state...\n";
         auto turn1_opt = greedy_options(cfg.gen_tokens, true);
         turn1_opt.enable_prefix_reuse = false;
         turn1_opt.cache_prefix_after = true;
-        turn1_opt.cache_prefix_len = cfg.prefix_len;
+        turn1_opt.cache_prefix_len = cache_tokens.size();
 
-        auto turn1_stats = model.generate(prefix_tokens, turn1_opt);
+        auto turn1_stats = model.generate(cache_tokens, turn1_opt);
         std::cout << "    Turn 1 TTFT:         " << std::fixed << std::setprecision(2)
                   << turn1_stats.ttft_ms << " ms\n";
         std::cout << "    Turn 1 Decode Done:  Generated " << turn1_stats.generated_tokens.size() << " tokens.\n";

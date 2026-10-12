@@ -68,6 +68,11 @@ exact ChatML token IDs; the workload saves these beside the exact request body
 in a `.tokens.json` artifact tied to the request SHA-256 and a canonical
 little-endian token-ID SHA-256. This lets later analysis derive the true common
 token prefix across consecutive requests, including tokenizer boundary effects.
+The decode benchmark accepts one artifact with `--prompt-token-ids`; the prefix
+reuse benchmark accepts two adjacent artifacts with `--request-pair`, derives
+their exact token-ID LCP, and compares cold second-request prefill with reuse of
+the first request's saved state. These modes validate artifact hashes, counts,
+vocabulary bounds, and nonempty prefix/suffix constraints before benchmarking.
 
 Build and run the tokenizer-only self-check without initializing HIP:
 

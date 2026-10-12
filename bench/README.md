@@ -735,6 +735,12 @@ validates deterministic input generation and the capacity guard without
 loading a model or launching GPU work. The benchmark itself requires an
 available GPU and rejects an environment that disables HIP Graph.
 
+Pass `--prompt-token-ids <request.tokens.json>` after the optional output path
+to decode from an exact production ChatML request artifact. The benchmark
+validates its schema, token count, token-ID hash, and vocabulary bounds, and
+records the request and token-ID hashes in its output. Use the 65,536-token
+first request artifact for the campaign decode position.
+
 On Z840, use the campaign guard to retain thermal and VRAM telemetry:
 
 ```sh

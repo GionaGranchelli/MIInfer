@@ -266,7 +266,7 @@ if(MIINFER_ENABLE_HIP)
     target_compile_options(miinfer-v2-0045-qual-bench PRIVATE -Wall -Wextra -Wpedantic)
 
     add_executable(miinfer-m31-accel-0001-decode-bench bench/m31_accel_0001_decode_bench.cpp)
-    target_link_libraries(miinfer-m31-accel-0001-decode-bench PRIVATE miinfer_hip)
+    target_link_libraries(miinfer-m31-accel-0001-decode-bench PRIVATE miinfer_hip nlohmann_json::nlohmann_json)
     target_compile_options(miinfer-m31-accel-0001-decode-bench PRIVATE -Wall -Wextra -Wpedantic)
 
     add_executable(miinfer-decode-fast-path-bakeoff bench/decode_fast_path_bakeoff.cpp)
@@ -286,7 +286,7 @@ if(MIINFER_ENABLE_HIP)
     target_compile_options(miinfer-gdn-kernel-bakeoff PRIVATE -Wall -Wextra -Wpedantic)
 
     add_executable(miinfer-prefix-state-reuse-bench bench/prefix_state_reuse_bench.cpp)
-    target_link_libraries(miinfer-prefix-state-reuse-bench PRIVATE miinfer_hip)
+    target_link_libraries(miinfer-prefix-state-reuse-bench PRIVATE miinfer_hip nlohmann_json::nlohmann_json)
     target_compile_options(miinfer-prefix-state-reuse-bench PRIVATE -Wall -Wextra -Wpedantic)
 
     add_executable(miinfer-m31-accel-0001-agent64k bench/m31_accel_0001_agent64k.cpp)
