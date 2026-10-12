@@ -219,13 +219,14 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 - The timing output now labels decode step values as `ms/token`. Source commit `fea33de7eb0a2a0d1582d297c607692ee308cb66` rebuilt on Z840 in the pinned image and passed `--self-check`. Build log SHA-256 `31c73bf0d8237bd3b0898c598079e301fa46df848244c4a2cf2c99fb0d8cc684`; binary SHA-256 `24d075003138f068f66c9a9273b4f08af51ee361b7db5aa568a827ab3e518a43`.
 - Machinist rebuilt the exact benchmark source file (SHA-256 `c880be8ae7cd06024e7bd5fd488f2200ac31cf906add257edbf577297f9adb94`) on clean base commit `00f0d8e24228bda204ed187f227035ee1b368bd7`; build and self-check passed. Its log and binary hashes match Z840 exactly despite the local image digest difference. No device was passed to either build. Z840 remains idle at 27 C, 0% use; airflow remains unconfirmed.
 
-## 2026-10-12 02:22 production workload revalidation
+## 2026-10-12 02:19 production workload revalidation
 
 - At pushed source `974c17343d0b456822039ef18cd2a7e711978ada`, Z840 rebuilt `miinfer-m31-accel-0001-agent64k` in the pinned image with no device passed; `--self-check` passed (eight turns, 65,536 prompt tokens). Build log SHA-256 `501b5eb5318122d5cafc063807627acc7f32c3bfe65daf8af878854f4299e6db`; binary SHA-256 `2afaac0973ffd437d6be1c14cb6c44cf98a50fcb81d8326444af4f8024d19f83`.
 - Built `miinfer-m31-agent-token-count` and ran the production workload `--self-check` using the pinned model mounted read-only. First try failed because SELinux labeling denied the container read; adding the existing guard's `--security-opt=label=disable` fixed it. The retry passed at exactly 65,536 initial ChatML tokens with seven source files, SSE completion, and atomic artifact checks. Tokenizer binary SHA-256 `66ca05ebd5d5932991e3fd6f88976d800b001dc817d128c57f2b710007d96b42`; retained retry log SHA-256 `411305c5104f84aca5aff43517b13465de94fa3846a10a2b464896b94d627cbe`.
 - No API/server request or GPU device was used. Idle MI50 remains at 27 C, 0% utilization, and 10.9 MB VRAM. This verifies workload construction and harness checks only; multi-turn persistence remains unqualified pending a safe live run.
 
-## 2026-10-12 02:24 persistent exit-marker audit
+## 2026-10-12 02:20 persistent exit-marker audit
 
 - Found an error in the detached tmux commands used for CPU-only builds: `$?` was expanded by the launching shell before tmux started, so their `.exit` marker files are not authoritative. The captured build logs themselves show completed targets and explicit self-check PASS output; the first tokenizer failure has a clear model-open traceback, and its misleading marker was not used to classify it as a pass.
 - Verified corrected `\$?` escaping with a deliberate `false` probe: its retained marker contained `1` and the tmux session exited. Future persistent jobs will use the corrected capture or the tracked guarded runner. Probe marker: `/mnt/lc9-lake/m31-accel-0001-captures/build/exit-capture-probe.txt`.
+- Reconciled Z840's Lake worktree to current pushed coordinator `a1f84e3`; it is clean and detached. No MIInfer process or tmux session is active. The MI50 is idle at 28 C, 0% use, and 10.9 MB VRAM; cooling/airflow remains unconfirmed.
