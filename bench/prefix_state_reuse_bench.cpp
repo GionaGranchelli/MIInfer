@@ -360,18 +360,20 @@ int main(int argc, char** argv) {
                 return !cold.generated_tokens.empty() && cold.generated_tokens == reuse.generated_tokens
                     && cold.stop_reason == reuse.stop_reason;
             });
-        auto print_spread = [&](const char* label, const std::vector<GenerateStats>& samples, auto field) {
+        auto print_spread = [&](const char* label, const std::vector<GenerateStats>& samples,
+                                auto field, const char* unit) {
             std::vector<double> values;
             values.reserve(samples.size());
             for (const auto& sample : samples) values.push_back(field(sample));
             const auto [minimum, maximum] = std::minmax_element(values.begin(), values.end());
             std::cout << "    " << label << " median/range: " << std::fixed << std::setprecision(2)
-                      << median(values) << " ms / [" << *minimum << ", " << *maximum << "] ms\n";
+                      << median(values) << ' ' << unit << " / [" << *minimum << ", " << *maximum << "] "
+                      << unit << "\n";
         };
-        print_spread("Cold TTFT", cold_samples, [](const auto& s) { return s.ttft_ms; });
-        print_spread("Reuse TTFT", reuse_samples, [](const auto& s) { return s.ttft_ms; });
-        print_spread("Cold decode step", cold_samples, [](const auto& s) { return s.avg_decode_latency_ms; });
-        print_spread("Reuse decode step", reuse_samples, [](const auto& s) { return s.avg_decode_latency_ms; });
+        print_spread("Cold TTFT", cold_samples, [](const auto& s) { return s.ttft_ms; }, "ms");
+        print_spread("Reuse TTFT", reuse_samples, [](const auto& s) { return s.ttft_ms; }, "ms");
+        print_spread("Cold decode step", cold_samples, [](const auto& s) { return s.avg_decode_latency_ms; }, "ms/token");
+        print_spread("Reuse decode step", reuse_samples, [](const auto& s) { return s.avg_decode_latency_ms; }, "ms/token");
         const bool reuse_contract_pass = r.reuse_hit
             && std::all_of(reuse_samples.begin(), reuse_samples.end(), [&](const auto& s) {
                 return s.prefix_tokens_reused == cfg.prefix_len
