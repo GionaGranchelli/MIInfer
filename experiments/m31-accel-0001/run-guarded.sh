@@ -45,7 +45,7 @@ source_sha=$(git -C "$repo" rev-parse HEAD)
 [[ -z $(git -C "$repo" status --porcelain) ]] || { echo 'refusing dirty source worktree' >&2; exit 7; }
 case "$mode" in
   native) binaries=(build/m31-accel-0001/miinfer-m31-accel-0001-agent64k) ;;
-  agent) binaries=(build/m31-accel-0001/miinfer build/m31-agent64k-host/miinfer-m31-agent-token-count) ;;
+  agent) binaries=(build/m31-accel-0001/miinfer build/m31-accel-0001/miinfer-m31-agent-token-count) ;;
   prefix64k) binaries=(build/m31-accel-0001/miinfer-prefix-state-reuse-bench) ;;
   decode) binaries=(build/m31-accel-0001/miinfer-m31-accel-0001-decode-bench) ;;
 esac

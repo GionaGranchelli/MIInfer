@@ -366,3 +366,9 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 - The guard now refuses a dirty source worktree, verifies the mode-specific executable files are present, and records SHA-256 for every executable used. The documented Z840 command launches it in tmux and records the pane PID, so SSH loss does not remove the monitor.
 - `bash -n`, `run-guarded.sh --self-check`, and `git diff --check` pass. No GPU workload or test of live signal/thermal behavior was run.
 - Remaining acceptance gaps: only the separate synthetic native harness inspects logits, repeated-token loops, and GDN/KV byte continuity; the production-agent path checks token/state telemetry but not those values. Per-turn VRAM still uses before/after samples; the guard's 2 s samples remain in a separate file. No full 64K run or performance A/B exists, and airflow remains unconfirmed.
+
+## 2026-10-12 03:51 tokenizer target launch-path repair
+
+- Fast-forwarded Z840's clean Lake worktree to `1550ec2`. The guard syntax/self-check passed, but the new agent-mode preflight exposed that its prior tokenizer-counter path `build/m31-agent64k-host/...` is absent there; it would refuse to launch before touching the GPU.
+- Unified production server and guard to use `build/m31-accel-0001/miinfer-m31-agent-token-count`, the same configured build tree as the server. Machinist fast-forwarded to `1550ec2`, built that target in the pinned no-device ROCm container, and confirmed it executable with SHA-256 `900f5dfafc886d7f5e9f2d6389634bda92aa1e9cac0f33c6db5b1d3316b10614`. Build log: `/home/machinist/Development/MIInfer-m31-captures/token-counter-main-build.log`.
+- Z840's corrected-path binary is not yet verified. No GPU ran. Next safe check: sync the follow-up commit and build/check all agent-mode executables on Z840 without device passthrough; actual inference remains gated on airflow confirmation.

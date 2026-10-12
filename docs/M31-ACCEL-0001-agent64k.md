@@ -103,6 +103,13 @@ model SHA; the workload records it with the source and runner-script hashes.
 If a request fails, the JSON artifact is marked `failed` and retains the active
 request identity and failure details.
 
+Before a guarded agent run, build the tokenizer counter into the shared
+production build directory used by the server:
+
+```sh
+cmake --build build/m31-accel-0001 --target miinfer-m31-agent-token-count -j
+```
+
 For the production-path run, use the already guarded 81,920-token serving configuration
 and point `--server-log` at that server's stderr log:
 

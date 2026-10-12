@@ -24,5 +24,5 @@ done
 
 python3 /workspace/MIInfer/bench/m31_accel_0001_agent_workload.py \
   --model-path "$model" --model Qwen3.8-27B-Q4_K_M \
-  --token-counter /workspace/MIInfer/build/m31-agent64k-host/miinfer-m31-agent-token-count \
+  --token-counter /workspace/MIInfer/build/m31-accel-0001/miinfer-m31-agent-token-count \
   --server-log /captures/server.log --output /captures/agent-workload.json
