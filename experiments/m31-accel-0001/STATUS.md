@@ -1,11 +1,12 @@
 # M31-ACCEL-0001 live status
 
-Updated: 2026-10-12 05:02 Europe/Amsterdam
+Updated: 2026-10-12 05:06 Europe/Amsterdam
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
 
 ## 2026-10-12 05:02 SSH restored and GQA A/B branches published
 
 - Z840 SSH succeeded. Lake is mounted at `/mnt/lc9-lake` with 1.6 TB free. The MI50 reports 25 C, 0% use, and 10.9 MB VRAM; no inference was started. `/home/fedora-workstation/Development/mi50` is still dirty and untouched.
+- Fresh ROCm SMI reports 25 C edge / 26 C junction, 0% use, and 0 RPM. No process has `/dev/kfd` open. A `pgrep` match was the retained tmux wrapper for `agent64k-05`; inspecting the pane confirms it is dead with guard exit 122 at 04:04:41, not an active run.
 - Published the prepared benchmark-overlay branches to `origin`: control `7ee6b3dedf16c1f3a25794ac46e3779e6f91b2cb` and candidate `7bcca14a205dab71923b3d24611db162172f3eb5`. `ls-remote` verified both exact SHAs. Each branch uses the same benchmark source overlay on its approved runtime base; both pinned ROCm no-device builds and self-checks passed.
 - Direct push from Z840 is unavailable because its GitHub SSH key is rejected (`Permission denied (publickey)`). Transferred only the two branch commits with a small Git bundle whose required base commits were already present locally, then pushed through the coordinator's HTTPS remote.
 - Airflow through the MI50 passive heatsink remains physically unconfirmed. Keep the GPU gate closed. After cooling is verified, run a fresh guarded 64K correctness capture first; then run the matched control/candidate A/B. Existing 85 C-stopped capture is terminal. Correctness and performance remain unqualified.
