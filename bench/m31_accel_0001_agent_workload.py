@@ -223,6 +223,18 @@ def sse_self_check():
         write_result(path, {"active_turn": 1, "active_phase": "planned_read_tool_call"})
         if json.loads(path.read_text(encoding="utf-8"))["active_turn"] != 1:
             raise RuntimeError("atomic workload-artifact self-check failed")
+        failed = json.loads(path.read_text(encoding="utf-8"))
+        mark_workload_failed(path, failed, RuntimeError("injected self-check failure"))
+        failure = json.loads(path.read_text(encoding="utf-8"))
+        if failure.get("status") != "failed" or failure.get("failure", {}).get("message") != "injected self-check failure":
+            raise RuntimeError("failure-artifact self-check failed")
+        payload = body_for("test", [{"role": "user", "content": "frozen"}], "required", 2)
+        record = save_request_input(path, 1, 1, payload, 7)
+        saved = path.parent / record["path"]
+        if (saved.read_bytes() != json.dumps(payload).encode("utf-8")
+                or legacy.sha256(saved.read_bytes()) != record["sha256"]
+                or json.loads(saved.read_text(encoding="utf-8")) != payload):
+            raise RuntimeError("request-input artifact round-trip self-check failed")
 
 
 def prefix_reuse_request_gates(requests, previous_prompt_tokens=None):
@@ -310,6 +322,44 @@ def write_result(path, result):
     finally:
         if temporary is not None and temporary.exists():
             temporary.unlink()
+
+
+def save_request_input(output_path, turn, request, payload, tokenizer_prompt_tokens):
+    data = json.dumps(payload).encode("utf-8")
+    artifact_dir = output_path.parent / f"{output_path.stem}.inputs"
+    artifact_dir.mkdir(parents=True, exist_ok=True)
+    artifact_path = artifact_dir / f"turn-{turn:02d}-request-{request:02d}.json"
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile("wb", dir=artifact_dir,
+                                         prefix=f".{artifact_path.name}.", suffix=".tmp",
+                                         delete=False) as stream:
+            temporary = Path(stream.name)
+            stream.write(data)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, artifact_path)
+    finally:
+        if temporary is not None and temporary.exists():
+            temporary.unlink()
+    return {
+        "path": str(artifact_path.relative_to(output_path.parent)),
+        "sha256": legacy.sha256(data),
+        "bytes": len(data),
+        "tokenizer_prompt_tokens": tokenizer_prompt_tokens,
+    }
+
+
+def mark_workload_failed(output_path, result, error):
+    result["status"] = "failed"
+    result["workload_complete"] = False
+    result["failure"] = {
+        "type": type(error).__name__, "message": str(error),
+        "active_turn": result.get("active_turn"),
+        "active_phase": result.get("active_phase"),
+        "active_request": result.get("active_request"),
+    }
+    write_result(output_path, result)
 
 
 def request_metric_counts_match(prompt_delta, generated_delta, detail, tokenizer_prompt_tokens=None):
@@ -402,13 +452,12 @@ def exact_initial_request(root, model_id, counter):
     )
 
 
-def stream_completion(url, key, model, messages, tool_choice, max_tokens, server_log, counter):
-    payload = body_for(model, messages, tool_choice, max_tokens)
-    tokenizer_prompt_tokens = counter.count(payload)
+def stream_completion(url, key, payload, request_input, server_log):
+    tokenizer_prompt_tokens = request_input["tokenizer_prompt_tokens"]
     before = legacy.metrics(url, key)
     gpu_before = legacy.gpu_snapshot()
     started = time.perf_counter()
-    request = urllib.request.Request(url, data=json.dumps(payload).encode(), headers={
+    request = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers={
         "Authorization": f"Bearer {key}", "Content-Type": "application/json",
         "Accept": "text/event-stream",
     })
@@ -449,7 +498,7 @@ def stream_completion(url, key, model, messages, tool_choice, max_tokens, server
         "generated_tokens": generated_tokens,
         "request_count": request_count, "server_latency": latency,
         "server_request": detail, "gpu_before": gpu_before,
-        "gpu_after": legacy.gpu_snapshot(),
+        "gpu_after": legacy.gpu_snapshot(), "request_input": request_input,
     }
 
 
@@ -479,6 +528,8 @@ def main():
     model_path = (root / args.model_path).resolve()
     counter_path = (root / args.token_counter).resolve()
     counter = TokenCounter(counter_path, model_path)
+    result = None
+    output_path = None
     try:
         messages, manifest, exact_count = exact_initial_request(root, args.model, counter)
         assert len(TURN_PLANS) == 8 and all(start > 0 and end >= start
@@ -496,6 +547,7 @@ def main():
         if not args.server_log:
             parser.error("--server-log is required unless --self-check is selected")
         server_log = ServerLogTail(root / args.server_log)
+        output_path = root / args.output
         result = {
             "workload": "m31-accel-0001-agent64k-v1",
             "qualification_sha": os.environ.get("M31_SOURCE_SHA") or subprocess.run(
@@ -503,14 +555,16 @@ def main():
                 text=True, check=True).stdout.strip(),
             "initial_context_target_tokens": TARGET_PROMPT_TOKENS,
             "initial_context_tokenizer_verified": exact_count,
+            "model_path": str(model_path),
+            "model_sha256": os.environ.get("M31_MODEL_SHA256"),
+            "runner_sha256": legacy.sha256(Path(__file__).read_bytes()),
             "expected_turn_count": len(TURN_PLANS), "turns_completed": 0,
             "workload_complete": False, "status": "in_progress",
             "active_turn": None, "active_phase": None, "requests_completed": 0,
-            "in_progress_turn": None,
+            "in_progress_turn": None, "active_request": None,
             "prefix_reuse_correctness": "UNQUALIFIED: no matched cold replay",
             "source_manifest": manifest, "turns": [],
         }
-        output_path = root / args.output
         output_path.parent.mkdir(parents=True, exist_ok=True)
         write_result(output_path, result)
         previous_prompt_tokens = None
@@ -523,11 +577,18 @@ def main():
                     f"Turn {index}: continue the same MIInfer coding-agent investigation. Make exactly one "
                     f"read_file call for {tool_path} lines {start_line}-{end_line}; do not answer in prose yet."})
             result["active_phase"] = "planned_read_tool_call"
+            payload = body_for(args.model, messages, "required", 192)
+            request_input = save_request_input(output_path, index, 1, payload,
+                                               counter.count(payload))
+            if index == 1 and request_input["tokenizer_prompt_tokens"] != exact_count:
+                raise RuntimeError("frozen initial request count changed after prompt construction")
+            result["active_request"] = request_input
             write_result(output_path, result)
-            call_response = stream_completion(args.url, args.api_key, args.model,
-                                              messages, "required", 192, server_log, counter)
+            call_response = stream_completion(args.url, args.api_key, payload,
+                                              request_input, server_log)
             turn["requests"].append(call_response)
             result["requests_completed"] += 1
+            result["active_request"] = None
             write_result(output_path, result)
             require_planned_read(call_response, tool_path, start_line, end_line)
             if index == 1 and call_response["prompt_tokens"] != exact_count:
@@ -540,11 +601,16 @@ def main():
             completion = None
             for attempt in range(3):
                 result["active_phase"] = f"report_completion_{attempt + 1}"
+                payload = body_for(args.model, messages, "auto", 256)
+                request_input = save_request_input(
+                    output_path, index, attempt + 2, payload, counter.count(payload))
+                result["active_request"] = request_input
                 write_result(output_path, result)
-                completion = stream_completion(args.url, args.api_key, args.model,
-                                               messages, "auto", 256, server_log, counter)
+                completion = stream_completion(args.url, args.api_key, payload,
+                                               request_input, server_log)
                 turn["requests"].append(completion)
                 result["requests_completed"] += 1
+                result["active_request"] = None
                 write_result(output_path, result)
                 if not completion["tool_calls"]:
                     break
@@ -604,6 +670,10 @@ def main():
                      and result["all_turns_visible_answer_gate"]
                      and result["all_turns_external_vram_samples_complete"]
                      and result["all_turns_prefix_reuse_gate"]) else 1
+    except Exception as error:
+        if output_path is not None and result is not None and output_path.exists():
+            mark_workload_failed(output_path, result, error)
+        raise
     finally:
         counter.close()
 

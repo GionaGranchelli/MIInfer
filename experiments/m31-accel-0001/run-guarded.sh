@@ -59,7 +59,8 @@ case "$mode" in
 esac
 if ! podman run --detach --name "$name" --device /dev/kfd --device /dev/dri \
   --security-opt=label=disable --group-add=keep-groups -e ROCR_VISIBLE_DEVICES=0 \
-  -e "M31_MODEL_FILE=$model_file" -e "M31_SOURCE_SHA=$source_sha" \
+  -e "M31_MODEL_FILE=$model_file" -e "M31_MODEL_SHA256=$model_sha" \
+  -e "M31_SOURCE_SHA=$source_sha" \
   -v "$repo:/workspace/MIInfer:Z" -v "$(dirname "$model"):/models:ro" \
   -v "$run_dir:/captures:Z" "$image" "${command[@]}" > "$run_dir/container.id"; then
   echo 125 > "$run_dir/exit.status"
