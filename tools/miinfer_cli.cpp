@@ -47,6 +47,7 @@
 #include "miinfer/prefill_v2/persistent_session.hpp"
 #include "miinfer/build_info.hpp"
 #include "miinfer/openai_api.hpp"
+#include "miinfer/detail/repeated_token_run.hpp"
 #include "miinfer/sha256.hpp"
 
 extern char** environ;
@@ -526,6 +527,7 @@ struct RuntimeGenerateStats {
     std::size_t prompt_tokens = 0;
     std::size_t prefill_processed_tokens = 0;
     std::size_t generated_tokens = 0;
+    bool repeated_token_loop_detected = false;
     bool reuse_hit = false;
     std::size_t reused_prefix_tokens = 0;
     std::size_t common_prefix_tokens = 0;
@@ -5475,6 +5477,8 @@ int cmd_serve(int argc, char** argv) {
                 }
                 stats.prompt_tokens = v2_stats.prompt_tokens.size();
                 stats.generated_tokens = v2_stats.generated_tokens.size();
+                stats.repeated_token_loop_detected =
+                    miinfer::detail::has_repeated_token_run(v2_stats.generated_tokens);
                 stats.stop_reason = v2_stats.stop_reason;
                 stats.cancelled = stats.stop_reason == miinfer::GenerationStopReason::kCancelled;
                 stats.reuse_hit = v2_stats.reuse_hit;
@@ -5532,6 +5536,8 @@ int cmd_serve(int argc, char** argv) {
                           << ",\"first_decode_token_ms\":" << stats.first_token_ms
                           << ",\"time_to_first_token_ms\":" << stats.prefill_ms + stats.first_token_ms
                           << ",\"generated_tokens\":" << stats.generated_tokens
+                          << ",\"repeated_token_loop_detected\":"
+                          << (stats.repeated_token_loop_detected ? "true" : "false")
                           << ",\"decode_ms\":" << stats.decode_ms
                           << ",\"decode_tokens_per_second\":" << stats.decode_tok_s
                           << ",\"total_ms\":" << stats.total_ms
@@ -5623,6 +5629,8 @@ int cmd_serve(int argc, char** argv) {
             RuntimeGenerateStats stats;
             stats.prompt_tokens = v2_stats.prompt_tokens.size();
             stats.generated_tokens = v2_stats.generated_tokens.size();
+            stats.repeated_token_loop_detected =
+                miinfer::detail::has_repeated_token_run(v2_stats.generated_tokens);
             stats.stop_reason = v2_stats.stop_reason;
             stats.cancelled = stats.stop_reason == miinfer::GenerationStopReason::kCancelled;
             stats.reuse_hit = v2_stats.reuse_hit;
@@ -5694,6 +5702,8 @@ int cmd_serve(int argc, char** argv) {
                       << ",\"first_decode_token_ms\":" << stats.first_token_ms
                       << ",\"time_to_first_token_ms\":" << stats.prefill_ms + stats.first_token_ms
                       << ",\"generated_tokens\":" << stats.generated_tokens
+                      << ",\"repeated_token_loop_detected\":"
+                      << (stats.repeated_token_loop_detected ? "true" : "false")
                       << ",\"decode_ms\":" << stats.decode_ms
                       << ",\"decode_tokens_per_second\":" << stats.decode_tok_s
                       << ",\"total_ms\":" << stats.total_ms
