@@ -1,6 +1,6 @@
 # M31-ACCEL-0001 live status
 
-Updated: 2026-10-12 03:21 Europe/Amsterdam
+Updated: 2026-10-12 03:22 Europe/Amsterdam
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
 
 ## 2026-10-12 03:04 Z840 SSH and capture recheck
@@ -70,6 +70,12 @@ One GPU job at a time on Z840. Preserve all dirty worktrees and existing logs. R
 - The 64K prefix benchmark now rejects cold/reuse samples without HIP Graph or with non-finite/non-positive prefill, TTFT, decode, or total timings; restore/suffix timings must be finite and nonnegative. Its self-check covers graph fallback and NaN TTFT and passes.
 - Machinist built `miinfer-prefix-state-reuse-bench` from exact source `38eccc2` in the pinned ROCm 7.2.1 image with no device passed, then `--self-check` passed. Binary SHA-256 `e71c1f3720a4c189568d22e1de303284d381a48c6457f024c01296b6b1e2cd98`; C++ source SHA-256 `d939692d9d3accded76709095b557b4c625706111c023e786bd3ea826ce4f931`. First fresh-worktree configure hit DNS failure while fetching nlohmann/json; retry reused the existing build dependency cache with network disabled and succeeded. Temporary review worktree: `/tmp/m31-accel-0001-38eccc2-review` on Machinist.
 - Review found the prefix and decode fixtures are synthetic token IDs. These harnesses can characterize the model execution paths but cannot stand in for measurements on the actual coding-agent prompt. No GPU work or live performance measurement ran; airflow remains unconfirmed.
+
+## 2026-10-12 03:22 decode benchmark gate
+
+- Pushed `27c3ab3`; the decode benchmark now requires HIP Graph, finite positive TTFT, decode time, and decode throughput on every sample. Its self-check rejects graph fallback and infinite decode time.
+- Machinist rebuilt `miinfer-m31-accel-0001-decode-bench` from exact source `27c3ab3` in the cached pinned ROCm 7.2.1 build with no device passed. `--self-check` passed. Binary SHA-256 `3fa0b094cf0bb06539e66c59ff7343a32f9a4497d927e8a73d33721cf4eb095a`; source SHA-256 `615c480819a7a68c951732844273df90495a40878d3b37b5e1e66d30365b6463`.
+- No inference or performance sample ran. Decode remains synthetic-input evidence until run on a workload-derived token history; 64K correctness and cooling remain open.
 
 ## 01:22 checkpoint — Z840 access restored
 
