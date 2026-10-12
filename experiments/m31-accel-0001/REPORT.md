@@ -17,6 +17,14 @@ The clean Z840 worktree built both changes in the pinned ROCm 7.2.1 container wi
 
 At 02:34, MI50 telemetry was idle at 27 C junction and 0% utilization, with fan telemetry at 15% / 0 RPM. Physical airflow remains unconfirmed, so the prior 85 C stop still blocks inference and performance measurement. After cooling is confirmed, the next run remains the guarded production 64K multi-turn correctness workload.
 
+## 2026-10-12 02:41 — decode_step recurrent cursor fix
+
+A call-site audit after the eager-prefill cursor fix found that public `PrefillV2Model::decode_step()` still left the storage cursor unchanged. The GDN recurrent layer reads its position from a by-value `RecurrentLayerState` view; GQA instead receives the explicit `position` argument. The function now sets the 48 stored cursors to `position` before the block loop and to `position + 1` after it. This covers repeated direct `decode_step()` callers, including the end-to-end, V2-0045, and decode-stage profiling benchmarks. The production `generate()` path already synchronized recurrent cursors separately.
+
+The source change is pushed at `b06bffd648bfb8258dc115b7584b1842cfb03883`. Z840 rebuilt the pinned ROCm 7.2.1 targets without passing a GPU device (exit 0; build log SHA-256 `dc52e1f4b87042f885f3fa4ceea4656136dd46f84ec1ce359b8f126125a619fc`). The native 64K, prefix, and decode harness self-checks passed, as did the exact tokenizer-backed 65,536-token workload self-check (check log SHA-256 `71b47d65bbb1057d8eadc683f8b0b8b75c10c08eae83d1b6956638b1cf2aa3ea`). These runs do not execute `decode_step()` or prove numerical state continuity.
+
+Read-only performance review found no current-source phase profile that supports a decode or prefill kernel choice. The ready next performance comparison is the existing five-pair cold 65,536-token prefill versus 65,536-token prefix reuse with a 512-token suffix; it requires parity and cooling clearance and changes no default. MI50 cooling/airflow remains unconfirmed (27 C idle, 15% / 0 RPM fan telemetry), so no GPU workload or performance measurement ran.
+
 ## 64K persistent-agent workload
 
 Recovered pre-campaign Z840 M30 artifact (`qualification_sha=dc83f07`) describes a 40-turn coding-agent session. It reports 40 turns, all-turn minimum-generation gate PASS, visible-answer gate FAIL, prompt/context count 66,173 by turn 32 and 82,087 by turn 40. This demonstrates a session that grew past 64K, but it did not begin with exactly 65,536 tokens and is not the required campaign qualification.
