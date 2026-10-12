@@ -10,6 +10,14 @@ Status: IN PROGRESS. The exact 64K production request reached the server but was
 - At the warning, sampled VRAM was 31,057,162,240 / 34,342,961,152 B and socket power was 206 W. The telemetry log SHA-256 is `276c80acc359c906814da825ff69c57758c293ff1830d2d9ed73ca7efd0073a1`; the workload JSON SHA-256 is `25164ddb5b44578d3c4d47640375a59f81b3ac8630a235cf731af826ca7d6251`.
 - Next action: verify chassis airflow/cooling physically before any fresh GPU capture. Do not resume this capture; it is terminal. 64K state correctness, matched performance A/B, and LC-0009 QSUM decode evidence remain outstanding.
 
+## 2026-10-12 04:45 — host regressions, queue analysis, and LC-0009 handoff
+
+- The captured server IDs are expected, not three generation attempts: request 1 is `/readyz`, request 2 is the runner's pre-request metrics GET, and request 3 is the single intended chat POST. The guard stopped that POST before SSE completion. The persisted `in_progress` state is therefore an interrupted request, not a retry loop. No runner/API code change is indicated by this capture.
+- Z840 exposed `amdgpu` fan telemetry at 0 RPM and HP hwmon PWM mode, but no chassis fan RPM inputs; `ipmitool` is not installed. Current junction remains 26 C and GPU use 0%. Software still cannot confirm airflow through the passive heatsink.
+- Rebuilt the 12 host-only test executables from capture source `1ac1be27174227a93c9515716290e590f0612c9b` in the pinned ROCm container with no network and no `/dev/kfd` or `/dev/dri`. CTest passed 13/13 host-only cases in 1.53 s. Build log SHA-256 `cf9134c38f95aa5a3908efef6e9ca7845d71c006cbd05164a362bf42b852892e`; CTest log SHA-256 `128683ab0ce5de0b3d8a36737267596f7f5480cae3fd5a39d77a8a8998aa491b`.
+- Machinist completed a separate host-only LC-0009 QSUM checker build/self-check at `c00136d`; `sum_mode_self_check=PASS`, binary SHA-256 `04a8da582cb50978c850ee3e2dab4032b272b1fbe8c6c846695bf2f7abd7c08c`. Evidence is pushed at `524bece`. This does not provide the missing one-token GPU decode QSUM capture; LC-0009 remains OPEN/BLOCKED.
+- The next GPU action remains a fresh capture after physical airflow/cooling is confirmed. Independently, 64K state correctness and decode/prefill performance measurements remain unqualified.
+
 ## Current status — 2026-10-12 03:08 Europe/Amsterdam
 
 - At this 03:08 checkpoint, the coordinator branch was clean and pushed at `2961d7c25d7791339373a081307e60821279b98d`; integrated runtime code remains `a9480ae062bb83def6bb2f60e3b68a74b377bf9b`, followed by documentation-only commits.
