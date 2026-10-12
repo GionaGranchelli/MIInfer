@@ -123,6 +123,10 @@ The first OMP resume attempt at this context size did not reuse that checkpoint.
 
 On GPU2, neither a fresh OMP process nor a resumed OMP transcript demonstrated a fast follow-up. Two requests entered prefill and remained active for about three minutes before I stopped the GPU2 container, which exited with code 137. The resumed transcript ID was `01a131bf-1af4-734d-9113-f0da8b510ec9`. An exact no-session replay of the original print-mode request also entered prefill and stayed active for one minute before I stopped it. Disk checkpoint restore did not produce a fast response in these attempts. The eight-turn task and a cached follow-up on GPU2 remain unproven.
 
+### MIInfer service recovery after forced stop
+
+After stopping the repeated cold prefill, the first forced container stop ended the process with exit code 139 and a ROCm memory-access fault during model reload. A subsequent `podman start` loaded the same model successfully without changing the container configuration. The API returned `{"status":"ok","ready":true}`; ROCm reported MIInfer using GPU0 only, with GPU2 idle. This establishes service recovery, not checkpoint restoration across an MIInfer server restart.
+
 ## Decision
 
 **RETEST.** OMP tool execution and disk-checkpoint restore across OMP process restart are demonstrated at 13K context: the restored turn reached a real tool call in 6.13 seconds. At 78K context, MIInfer processed 65K new relevant tokens and saved a checkpoint, but the next OMP process reused only 13,785 tokens and replayed 65,185 tokens, taking 24.5 minutes; its 3-minute client timeout prevented tool execution. This cache-prefix mismatch is the current integration blocker. Resolve it with a captured prompt comparison or keep one OMP process alive through the turn-four checkpoint, then verify the required process-resume path at 65K before continuing the eight-turn task. Keep GPU2 idle.
