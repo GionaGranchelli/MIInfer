@@ -1,15 +1,16 @@
 # M31-ACCEL-0001 live status
 
-Updated: 2026-10-12 06:07 Europe/Amsterdam
+Updated: 2026-10-12 06:08 Europe/Amsterdam
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
 
-## 2026-10-12 06:07 Guard telemetry now binds to the Z840 MI50 BDF
+## 2026-10-12 06:08 Guard BDF binding pushed and synced
 
 - A static acceptance audit found the guard sampled the first unscoped `rocm-smi` GPU row while the container selected runtime device 0. Fresh Z840 inventory shows its only ROCm device is GPU[0], BDF `0000:06:00.0`, MI50/gfx906; no mis-targeted run was observed.
-- Updated `run-guarded.sh` to require exactly one ROCm device at the qualified BDF, resolve its `rocm-smi` index, query telemetry only for that index, pass the resolved index to `ROCR_VISIBLE_DEVICES`, and record BDF/index in `environment.txt`. It refuses absent, wrong, or ambiguous inventories before model inference.
-- The no-device guard self-check now tests correct BDF, wrong BDF, and ambiguous multi-device inventory. `bash -n`, guard self-check, and `git diff --check` passed locally. This correction is not yet pushed or synced to Z840.
+- Updated `run-guarded.sh` to require exactly one ROCm device at the qualified BDF, resolve its `rocm-smi` index, query telemetry only for that index, pass the resolved index to `ROCR_VISIBLE_DEVICES`, and record BDF/index in `environment.txt`. It refuses absent, wrong, or ambiguous inventories before model inference. Commit `0477436f13c443fed89a11a1131e0e7d799049e9` is pushed and remote-verified.
+- The no-device guard self-check tests correct BDF, wrong BDF, and ambiguous multi-device inventory. `bash -n`, guard self-check, and `git diff --check` passed locally; host `bash -n` and guard self-check also passed after syncing the clean Lake worktree to `0477436`.
+- Live `rocm-smi --showbus --showproductname` confirmed a single GPU[0] at `0000:06:00.0`, MI50/gfx906. `rocm-smi -d 0 --showtemp --showmeminfo vram` read that device at 25 C junction and 10.9 MB VRAM. All five staged binary hashes remain unchanged. No inference ran.
 - Machinist is reachable and idle. Its primary checkout at `d8b8336` is dirty and was left untouched; no persistent jobs or containers were present. Its available RAM/disk and branch status are documented in this update's evidence.
-- Airflow remains unconfirmed; no GPU run is allowed yet. Next: push the device-binding correction, sync it to the clean Z840 Lake worktree, re-run no-GPU preflight, then wait for cooling clearance before the 64K production attempt.
+- Airflow remains unconfirmed; no GPU run is allowed yet. After cooling clearance, run the guarded production 64K attempt first.
 
 ## 2026-10-12 06:00 Z840 launch worktree synchronized
 
