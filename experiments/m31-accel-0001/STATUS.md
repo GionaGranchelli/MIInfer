@@ -1,7 +1,13 @@
 # M31-ACCEL-0001 live status
 
-Updated: 2026-10-12 07:45 Europe/Amsterdam
+Updated: 2026-10-12 07:52 Europe/Amsterdam
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
+
+## 2026-10-12 07:52 Machinist QSUM capture preparation built
+
+- On Machinist, used a separate clean clone at LC-0009 source `c00136d00c4e5a00c4b5460a1e31f793d4fd435e` to avoid the linked worktree's external Git metadata path. Pinned ROCm 7.2.1 image config ID matches Z840 (`50ff28a28cc13a3ca7333cd0c70e322d16245967c5fdf0d30a1bf57bda80a512`). HIP gfx906 Release build passed for `e2-0003-checkpointed-call` and `e2-0003-gateup-operation-reference`, with `--network=none`, read-only source/dependencies, and no `/dev/kfd` or `/dev/dri`; embedded SHA is `c00136d00c4e`, dirty=false. Build log SHA-256 `bb542960cefdd7e905c4e2693ae47cc1af9362111ad2f44d3241bd6a98a05526`, exit 0. The host checker self-check passed.
+- Verified Machinist model SHA-256 equals the pinned `7e78da5d...6c6fe169`; frozen `ordinary-64-01` prompt IDs SHA-256 is `c5c22b5353991655d59e599a074875541dbd8a51bb43a92098be2fdd0ccdc480`. Machinist exposes MI50/gfx906 at GPU[1], BDF `0000:85:00.0`; GPU[0] is gfx1200, so the Z840 `ROCR_VISIBLE_DEVICES=0` command must not be reused.
+- Podman image config ID is identical on the two hosts, but `.Digest` differs: Machinist `sha256:447907c697fb2c39ce9657401e354a70753d5672ad955d4ceb12de976b91224a`; Z840 `sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e`. Treat the build as compile preparation, not a Machinist hardware qualification. The 4 KiB copy probe does not establish production-run qualification. No GPU capture was run; physical cooling/airflow and exact ROCr device selection remain necessary before any capture.
 
 ## 2026-10-12 07:45 GQA capture identity gate tightened
 
