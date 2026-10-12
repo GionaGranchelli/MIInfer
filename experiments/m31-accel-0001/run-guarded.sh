@@ -6,18 +6,18 @@ repo=$(cd "$(dirname "$0")/../.." && pwd)
 temp_warning() { awk -v t="$1" 'BEGIN { exit !(t >= 85.0) }'; }
 temp_limit() { awk -v t="$1" 'BEGIN { exit !(t >= 90.0) }'; }
 vram_limit() { awk -v b="$1" 'BEGIN { exit !(b >= 33200000000) }'; }
-valid_mode() { case "$1" in native|agent|prefix64k) return 0 ;; *) return 1 ;; esac; }
+valid_mode() { case "$1" in native|agent|prefix64k|decode) return 0 ;; *) return 1 ;; esac; }
 if [[ ${1:-} == --self-check ]]; then
   ! temp_warning 84.9 && temp_warning 85 && ! temp_limit 89.9 && temp_limit 90 \
     && ! vram_limit 33199999999 && vram_limit 33200000000 \
-    && valid_mode native && valid_mode agent && valid_mode prefix64k \
+    && valid_mode native && valid_mode agent && valid_mode prefix64k && valid_mode decode \
     && ! valid_mode unknown
   echo 'guard self-check: PASS'
   exit 0
 fi
 run_dir=${1:?usage: run-guarded.sh CAPTURE_DIR}
 mode=${2:-native}
-valid_mode "$mode" || { echo "unknown workload mode: $mode (expected native, agent, or prefix64k)" >&2; exit 2; }
+valid_mode "$mode" || { echo "unknown workload mode: $mode (expected native, agent, prefix64k, or decode)" >&2; exit 2; }
 model=${M31_MODEL:-/home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf}
 image=localhost/miinfer-dev:rocm-7.2.1
 expected_model=7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169
@@ -55,7 +55,12 @@ case "$mode" in
     command=(/workspace/MIInfer/build/m31-accel-0001/miinfer-prefix-state-reuse-bench
       --64k-only "/models/$model_file")
     ;;
-  *) echo "unknown workload mode: $mode (expected native, agent, or prefix64k)" >&2; exit 2 ;;
+  decode)
+    command=(/workspace/MIInfer/build/m31-accel-0001/miinfer-m31-accel-0001-decode-bench
+      "/models/$model_file" "${M31_DECODE_PROMPT_TOKENS:-65536}"
+      "${M31_DECODE_TOKENS:-128}" "${M31_DECODE_ITERATIONS:-5}" /captures/decode.json)
+    ;;
+  *) echo "unknown workload mode: $mode (expected native, agent, prefix64k, or decode)" >&2; exit 2 ;;
 esac
 if ! podman run --detach --name "$name" --device /dev/kfd --device /dev/dri \
   --security-opt=label=disable --group-add=keep-groups -e ROCR_VISIBLE_DEVICES=0 \

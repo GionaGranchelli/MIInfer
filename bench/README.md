@@ -734,3 +734,16 @@ The KV capacity rounds `P + TG` up to 16,384-token increments and is capped at
 validates deterministic input generation and the capacity guard without
 loading a model or launching GPU work. The benchmark itself requires an
 available GPU and rejects an environment that disables HIP Graph.
+
+On Z840, use the campaign guard to retain thermal and VRAM telemetry:
+
+```sh
+experiments/m31-accel-0001/run-guarded.sh \
+  /mnt/lc9-lake/m31-accel-0001-captures/decode-baseline decode
+```
+
+`decode` defaults to P=65,536, TG=128, and five samples. Override these with
+`M31_DECODE_PROMPT_TOKENS`, `M31_DECODE_TOKENS`, or
+`M31_DECODE_ITERATIONS`. Run baseline and candidate revisions in separate
+capture directories with the same settings; compare only captures with equal
+model and prompt hashes and identical generated token IDs.

@@ -1,6 +1,6 @@
 # M31-ACCEL-0001 live status
 
-Updated: 2026-10-12 03:22 Europe/Amsterdam
+Updated: 2026-10-12 03:24 Europe/Amsterdam
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
 
 ## 2026-10-12 03:04 Z840 SSH and capture recheck
@@ -76,6 +76,11 @@ One GPU job at a time on Z840. Preserve all dirty worktrees and existing logs. R
 - Pushed `27c3ab3`; the decode benchmark now requires HIP Graph, finite positive TTFT, decode time, and decode throughput on every sample. Its self-check rejects graph fallback and infinite decode time.
 - Machinist rebuilt `miinfer-m31-accel-0001-decode-bench` from exact source `27c3ab3` in the cached pinned ROCm 7.2.1 build with no device passed. `--self-check` passed. Binary SHA-256 `3fa0b094cf0bb06539e66c59ff7343a32f9a4497d927e8a73d33721cf4eb095a`; source SHA-256 `615c480819a7a68c951732844273df90495a40878d3b37b5e1e66d30365b6463`.
 - No inference or performance sample ran. Decode remains synthetic-input evidence until run on a workload-derived token history; 64K correctness and cooling remain open.
+
+## 2026-10-12 03:24 guarded decode launch
+
+- `run-guarded.sh` now accepts `decode` mode and launches the compiled production-path benchmark with defaults P=65,536, TG=128, and five samples. It writes `/captures/decode.json` while preserving the existing temperature/VRAM log and stop checks. `bench/README.md` documents baseline/candidate capture commands and matching requirements.
+- Local `bash -n`, guard `--self-check`, and `git diff --check` passed. No inference ran. Exact Z840 source sync/build remains pending; airflow confirmation still gates all GPU work.
 
 ## 01:22 checkpoint — Z840 access restored
 
