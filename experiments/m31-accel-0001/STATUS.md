@@ -213,3 +213,8 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 
 - The existing Machinist `Development/MIInfer` checkout has unrelated dirty M30 changes and was left untouched. A separate clean checkout at `00f0d8e24228bda204ed187f227035ee1b368bd7` built the prefix benchmark with no GPU devices passed to Podman; build exit 0 and `--self-check` passed. Build log SHA-256 `ba572163f04ed20dbd0d7fa7a8e0c1fb14d7691adf2f5798cc59699403fd6c12`.
 - Its binary SHA-256 matches Z840 exactly: `94b155e2b30f321c32f209e19e3a4ba16132ab146b53e8ad7694a562d36a5a7f`. Machinist's image digest is `sha256:447907c697fb2c39ce9657401e354a70753d5672ad955d4ceb12de976b91224a`, different from Z840's pinned image; treat this only as a cross-host compile check. No Machinist GPU or H→D operation ran.
+
+## 2026-10-12 02:18 final benchmark-source rebuild
+
+- The timing output now labels decode step values as `ms/token`. Source commit `fea33de7eb0a2a0d1582d297c607692ee308cb66` rebuilt on Z840 in the pinned image and passed `--self-check`. Build log SHA-256 `31c73bf0d8237bd3b0898c598079e301fa46df848244c4a2cf2c99fb0d8cc684`; binary SHA-256 `24d075003138f068f66c9a9273b4f08af51ee361b7db5aa568a827ab3e518a43`.
+- Machinist rebuilt the exact benchmark source file (SHA-256 `c880be8ae7cd06024e7bd5fd488f2200ac31cf906add257edbf577297f9adb94`) on clean base commit `00f0d8e24228bda204ed187f227035ee1b368bd7`; build and self-check passed. Its log and binary hashes match Z840 exactly despite the local image digest difference. No device was passed to either build. Z840 remains idle at 27 C, 0% use; airflow remains unconfirmed.

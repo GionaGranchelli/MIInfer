@@ -81,6 +81,8 @@ The benchmark was also built at the wrapper's expected `build/m31-accel-0001/` p
 
 Machinist independently built the same benchmark from source `00f0d8e24228bda204ed187f227035ee1b368bd7` without passing GPU devices; build and self-check passed. Its binary SHA-256 matches Z840 (`94b155e2b30f321c32f209e19e3a4ba16132ab146b53e8ad7694a562d36a5a7f`). The local Machinist image digest differs from Z840's pin, so this is a compile portability check only. Machinist's pre-existing dirty checkout was not modified, and its MI50 was not used.
 
+After correcting the decode timing unit label, source `fea33de7eb0a2a0d1582d297c607692ee308cb66` rebuilt on Z840 in the pinned image and passed `--self-check`. The updated binary SHA-256 is `24d075003138f068f66c9a9273b4f08af51ee361b7db5aa568a827ab3e518a43`; build log SHA-256 is `31c73bf0d8237bd3b0898c598079e301fa46df848244c4a2cf2c99fb0d8cc684`. Machinist rebuilt the exact changed source file (SHA-256 `c880be8ae7cd06024e7bd5fd488f2200ac31cf906add257edbf577297f9adb94`) on clean base `00f0d8e24228bda204ed187f227035ee1b368bd7`, and produced matching log and binary hashes. Its ROCm image digest differs, so this remains a CPU-only compile check. Neither host ran inference.
+
 SSH access and the read/write Lake mount are confirmed. After the build, the MI50 remained idle at 27 C junction, 0% utilization, and about 10.9 MB VRAM. Fan telemetry remains 15% / 0 RPM, so physical airflow is still unconfirmed. The 64K production workload, state continuity, decode performance, and suffix performance remain unqualified. The next action remains a guarded production 64K run after cooling is confirmed.
 
 ## 2026-10-12 01:22 checkpoint
