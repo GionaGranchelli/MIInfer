@@ -434,3 +434,9 @@ At 07:13, idle MI50 telemetry was 25 C junction, 0% utilization, 10.9 MB VRAM, a
 At 07:15, the Z840 exposed no chassis-fan telemetry: `ipmitool` and `/dev/ipmi*` were absent, and hwmon showed only the amdgpu `fan1_input` counter (3 RPM). Software checks cannot confirm airflow through the passive heatsink; physical inspection remains the safety gate.
 
 At 07:19, the matched eager GQA control/candidate preflight was rechecked without a GPU. Clean source revisions `16662fcbc22c478e897705a3eb6c59ee390fd88c` / `527baba9f1f3915a6dc2507d1b8973089fb54827` and their binary hashes matched the approved artifacts; both no-device benchmark self-checks passed in pinned image `50ff28a28cc13a3ca7333cd0c70e322d16245967c5fdf0d30a1bf57bda80a512`. The controls and candidate are ready for the five-round matched capture, but no performance result exists. Logs and hashes are in STATUS.md.
+
+### 07:25 Z840 reconnect and test branch validation
+
+SSH recovered and Lake remains mounted with 1.6 TB free. At 07:21 the idle MI50 reported 25 C junction, 0% use, 10.9 MB VRAM, and 14 RPM fan tach. Host software still cannot establish passive-heatsink airflow; no GPU workload was launched.
+
+The isolated, pushed disk-restore header test candidate is `5227712c09f148208d69ff21781ca8486d480d33`. Its focused no-HIP CTest passed 1/1 (log SHA-256 `f33f3b9350a66d59ac00b3973b220731476127c145acc859045f73a3ab4886f3`). The Z840 pinned ROCm 7.2.1 container detected HIP but could not configure the server because it lacks `hipblasConfig.cmake`; the host package is ROCm 7.1.0, so versions were not mixed. No server compile or test ran. Configure log SHA-256 `0b79d4f3d3ce3caf6d721b36be5ab0ec783937c07e14fdac81798611e3c73440`; initial offline FetchContent stall log SHA-256 `8dc7175c09369a3ca8511f510df6f8dce1055989be29f1a6c4e94da3f9189e68`. Server integration remains unverified.
