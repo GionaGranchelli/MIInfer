@@ -9,6 +9,7 @@
 #include <filesystem>
 
 #include "miinfer/prefill_v2/model.hpp"
+#include "miinfer/prefill_v2/logit_validation.hpp"
 #include "miinfer/prefill_v2/persistent_session.hpp"
 #include "miinfer/hip_check.hpp"
 #include "miinfer/qwen3_gpu_primitives.hpp"
@@ -80,8 +81,10 @@ std::uint32_t sample_token_from_logits(
     // 2. Greedy Argmax
     if (options.temperature <= 0.001f) {
         float max_val = logits_buf[0];
+        miinfer::prefill_v2::detail::require_finite_logit(max_val);
         std::uint32_t max_idx = 0;
         for (std::size_t i = 1; i < vocab_size; ++i) {
+            miinfer::prefill_v2::detail::require_finite_logit(logits_buf[i]);
             if (logits_buf[i] > max_val) {
                 max_val = logits_buf[i];
                 max_idx = static_cast<std::uint32_t>(i);
@@ -94,6 +97,7 @@ std::uint32_t sample_token_from_logits(
     const float inv_temp = 1.0f / options.temperature;
     for (std::size_t i = 0; i < vocab_size; ++i) {
         logits_buf[i] *= inv_temp;
+        miinfer::prefill_v2::detail::require_finite_logit(logits_buf[i]);
     }
 
     // 4. Top-K candidates
