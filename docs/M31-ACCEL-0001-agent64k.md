@@ -80,7 +80,13 @@ python3 bench/m31_accel_0001_agent_workload.py \
 
 The self-check also accepts a complete SSE response and rejects one missing
 `[DONE]`. During a live run the JSON artifact is atomically updated before each
-request with its active turn and phase, then again when that request completes.
+request with its active turn, phase, request hash, and tokenizer count; the
+exact serialized API body is saved atomically under a sibling
+`agent-workload.inputs/` directory before it is sent. Completed request records
+keep the artifact path and SHA-256. The guarded launcher supplies the verified
+model SHA; the workload records it with the source and runner-script hashes.
+If a request fails, the JSON artifact is marked `failed` and retains the active
+request identity and failure details.
 
 For the production-path run, use the already guarded 81,920-token serving configuration
 and point `--server-log` at that server's stderr log:
