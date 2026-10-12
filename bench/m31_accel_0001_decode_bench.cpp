@@ -5,6 +5,7 @@
 #include "miinfer/sha256.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
@@ -69,6 +70,13 @@ void validate_workload(std::size_t prompt, std::size_t decode, std::size_t itera
     }
 }
 
+bool valid_timing_sample(const miinfer::prefill_v2::GenerateStats& sample) {
+    return sample.used_hip_graph
+        && std::isfinite(sample.ttft_ms) && sample.ttft_ms > 0.0
+        && std::isfinite(sample.decode_ms) && sample.decode_ms > 0.0
+        && std::isfinite(sample.decode_tok_per_sec) && sample.decode_tok_per_sec > 0.0;
+}
+
 std::size_t kv_capacity(std::size_t prompt, std::size_t decode) {
     const auto needed = prompt + decode;
     const auto aligned = ((needed + kKvCapacityAlignment - 1) / kKvCapacityAlignment)
@@ -84,6 +92,17 @@ void self_check() {
     require(std::all_of(left.begin(), left.end(), [](auto id) { return id < 32000; }),
             "prompt contains an out-of-vocabulary token");
     validate_workload(2048, 128, 5);
+    miinfer::prefill_v2::GenerateStats valid_sample;
+    valid_sample.used_hip_graph = true;
+    valid_sample.ttft_ms = 1.0;
+    valid_sample.decode_ms = 1.0;
+    valid_sample.decode_tok_per_sec = 1.0;
+    require(valid_timing_sample(valid_sample), "valid HIP Graph timing was rejected");
+    valid_sample.used_hip_graph = false;
+    require(!valid_timing_sample(valid_sample), "HIP Graph fallback was accepted");
+    valid_sample.used_hip_graph = true;
+    valid_sample.decode_ms = std::numeric_limits<double>::infinity();
+    require(!valid_timing_sample(valid_sample), "non-finite decode time was accepted");
     require(kv_capacity(65536, 128) == 81920,
             "64K decode workload did not select the campaign KV capacity");
     bool rejected = false;
@@ -216,10 +235,10 @@ int main(int argc, char** argv) {
         samples.reserve(options.iterations);
         for (std::size_t iteration = 0; iteration < options.iterations; ++iteration) {
             auto sample = model.generate(prompt, generation);
-            require(sample.used_hip_graph, "production HIP Graph path was not used");
+            require(valid_timing_sample(sample),
+                    "sample did not use HIP Graph or returned invalid timing metrics");
             require(sample.generated_tokens.size() == options.decode_tokens + 1,
                     "generation ended before the requested decode count");
-            require(sample.decode_ms > 0.0, "decode timer returned a non-positive duration");
             if (!samples.empty()) {
                 require(sample.generated_tokens == samples.front().generated_tokens,
                         "repeated deterministic generation produced different token histories");
