@@ -142,13 +142,21 @@ the guarded 64K GPU correctness run yet.
 On Z840, launch the production-path workload only through the guarded runner:
 
 ```sh
-experiments/m31-accel-0001/run-guarded.sh \
-  /mnt/lc9-lake/m31-accel-0001-captures/agent64k-01 agent
+capture=/mnt/lc9-lake/m31-accel-0001-captures/agent64k-01
+session=m31-accel-0001-agent64k-01
+mkdir -p "$capture"
+tmux new-session -d -s "$session" \
+  "cd /mnt/lc9-lake/m31-accel-0001-cursor-build && exec ./experiments/m31-accel-0001/run-guarded.sh '$capture' agent"
+tmux set-option -w -t "$session" remain-on-exit on
+tmux list-panes -t "$session" -F '#{pane_pid}' > "$capture/guard.pid"
 ```
 
 The server allocates an 81,920-token capacity so the exact 65,536-token initial
 prompt can generate and retain eight bounded turns within the observed MI50
 memory budget. This is a 64K-start workload, not a 128K prompt or performance
-run. The runner records 85 C warnings, stops at 90 C or
-the VRAM floor, and preserves the server/client output and actual container exit
-status.
+run. The tmux session keeps the thermal monitor attached to the detached
+container if SSH disconnects; the pane PID, runner logs, telemetry, and container
+exit status are retained in the capture directory. A signal to the monitor stops
+the container. The guard stops at the 85 C warning threshold pending operator
+inspection, at 90 C, or at the VRAM floor; use a new capture directory after
+inspection/cooldown.
