@@ -4951,6 +4951,7 @@ int cmd_serve(int argc, char** argv) {
     std::string host = configured("host", "127.0.0.1");
     std::size_t context_length = static_cast<std::size_t>(std::stoull(configured("context", "8192")));
     bool experimental_context = false;
+    bool quantized_kv_cache = false;
     std::optional<std::filesystem::path> api_key_file;
     bool allow_insecure = false;
     std::optional<bool> session_reuse_flag;
@@ -4971,6 +4972,8 @@ int cmd_serve(int argc, char** argv) {
             catch (...) { std::cerr << "context must be a positive integer\n"; return 2; }
         } else if (arg == "--experimental-context") {
             experimental_context = true;
+        } else if (arg == "--kv-cache-q8") {
+            quantized_kv_cache = true;
         } else if (arg == "--verbose") {
             g_verbose = true;
         } else if (arg == "--api-key-file" && i + 1 < argc) {
@@ -4986,13 +4989,14 @@ int cmd_serve(int argc, char** argv) {
         } else if (model_path.empty() && !arg.starts_with("--")) {
             model_path = arg;
         } else {
-            std::cerr << "usage: miinfer serve --model MODEL.gguf [--port PORT] [--host HOST] [--context N] [--experimental-context] [--api-key-file PATH] [--allow-insecure] [--session-reuse|--no-session-reuse] [--session-dir PATH]\n"; return 2;
+            std::cerr << "usage: miinfer serve --model MODEL.gguf [--port PORT] [--host HOST] [--context N] [--experimental-context] [--kv-cache-q8] [--api-key-file PATH] [--allow-insecure] [--session-reuse|--no-session-reuse] [--session-dir PATH]\n"; return 2;
         }
     }
     if (model_path.empty()) { std::cerr << "missing model; use --model MODEL.gguf\n"; return 2; }
     if (context_length != 1024 && context_length != 8192 && context_length != 16384
-        && context_length != 32768 && context_length != 65536 && context_length != 131072) {
-        std::cerr << "context must be one of 1024, 8192, 16384, 32768, 65536, 131072\n";
+        && context_length != 32768 && context_length != 65536
+        && context_length != 98304 && context_length != 131072) {
+        std::cerr << "context must be one of 1024, 8192, 16384, 32768, 65536, 98304, 131072\n";
         return 2;
     }
     (void)experimental_context; // accepted for backwards compatibility; context is a public setting.
@@ -5036,12 +5040,16 @@ int cmd_serve(int argc, char** argv) {
     std::cerr << "Loading model " << std::filesystem::path(model_path).filename().string() << "...\n";
     const auto model = miinfer::Qwen35Model::load(model_path);
     const auto tokenizer = miinfer::Qwen3Tokenizer::load(*model.file());
-    miinfer::prefill_v2::PrefillV2Model engine(model, context_length, true, miinfer::prefill_v2::KvCacheQuantMode::kFp16Fp16);
+    const auto kv_cache_mode = quantized_kv_cache
+        ? miinfer::prefill_v2::KvCacheQuantMode::kQ8Q8
+        : miinfer::prefill_v2::KvCacheQuantMode::kFp16Fp16;
+    miinfer::prefill_v2::PrefillV2Model engine(model, context_length, true, kv_cache_mode);
     hipDeviceProp_t server_gpu{};
     const bool have_gpu = hipGetDeviceProperties(&server_gpu, 0) == hipSuccess;
     if (g_verbose) {
         std::cerr << "model_context_length=" << model.config().context_length << "\n"
                   << "runtime_context_capacity=" << g_cache_capacity << "\n"
+                  << "kv_cache_mode=" << (quantized_kv_cache ? "q8q8" : "fp16fp16") << "\n"
                   << "session_reuse=" << (session_reuse ? "enabled" : "disabled") << "\n"
                   << "session_dir=" << (session_dir ? session_dir->string() : "disabled") << "\n"
                   << "device_allocation_count=" << g_device_allocations << "\n"

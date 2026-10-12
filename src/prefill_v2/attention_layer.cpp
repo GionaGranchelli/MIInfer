@@ -328,7 +328,9 @@ void PrefillV2AttentionLayer::forward(
                 ws.attn_q_rope, ws.attn_gated_output, ws.attn_qfull,
                 static_cast<std::size_t>(token_count) * 24 * 256, stream);
         }
-    } else if (((token_count <= 512 && base_position > 0) || prefill_state != nullptr)
+    } else if (((token_count <= 512
+                 && (base_position > 0 || kv_cache.is_k_q8() || kv_cache.is_v_q8()))
+                || prefill_state != nullptr)
         && ws.splitk_attn_workspace != nullptr) {
         launch_qwen35_splitk_suffix_attention_quant(
             ws.attn_q_rope,
@@ -459,7 +461,9 @@ void PrefillV2AttentionLayer::forward_profiled(
             ws.gate, ws.attn_gated_output, ws.splitk_attn_workspace,
             token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
             24, 4, 256, 1.0F / std::sqrt(256.0F), 3, stream);
-    } else if (token_count <= 512 && base_position > 0 && ws.splitk_attn_workspace != nullptr) {
+    } else if (token_count <= 512
+               && (base_position > 0 || kv_cache.is_k_q8() || kv_cache.is_v_q8())
+               && ws.splitk_attn_workspace != nullptr) {
         launch_qwen35_splitk_suffix_attention_quant(
             ws.attn_q_rope,
             kv_cache.key_cache, kv_cache.value_cache,
