@@ -530,6 +530,10 @@ struct RuntimeGenerateStats {
     std::size_t common_prefix_tokens = 0;
     std::size_t session_checkpoint_count = 0;
     std::size_t session_checkpoint_bytes = 0;
+    std::size_t persistent_session_bytes = 0;
+    double restore_ms = 0.0;
+    double suffix_prefill_ms = 0.0;
+    bool persistent_session_restored = false;
     double graph_capture_ms = 0.0;
     double prefill_ms = 0.0;
     double decode_ms = 0.0;
@@ -5209,6 +5213,10 @@ int cmd_serve(int argc, char** argv) {
                       << ",\"session_checkpoint_bytes\":" << stats.session_checkpoint_bytes
                       << ",\"new_prefill_tokens\":" << stats.prefill_processed_tokens
                       << ",\"prefill_ms\":" << stats.prefill_ms
+                      << ",\"restore_ms\":" << stats.restore_ms
+                      << ",\"suffix_prefill_ms\":" << stats.suffix_prefill_ms
+                      << ",\"persistent_session_restored\":" << (stats.persistent_session_restored ? "true" : "false")
+                      << ",\"persistent_session_bytes\":" << stats.persistent_session_bytes
                       << ",\"graph_capture_ms\":" << stats.graph_capture_ms
                       << ",\"first_decode_token_ms\":" << stats.first_token_ms
                       << ",\"TTFT_wall_ms\":" << (first_delta_ms ? std::to_string(*first_delta_ms) : "null")
@@ -5467,18 +5475,22 @@ int cmd_serve(int argc, char** argv) {
                 stats.generated_tokens = v2_stats.generated_tokens.size();
                 stats.stop_reason = v2_stats.stop_reason;
                 stats.cancelled = stats.stop_reason == miinfer::GenerationStopReason::kCancelled;
-                stats.prefill_processed_tokens = v2_stats.prompt_tokens.size();
+                stats.prefill_processed_tokens = v2_stats.suffix_tokens_dispatched;
                 stats.reused_prefix_tokens = v2_stats.prefix_tokens_reused;
                 stats.common_prefix_tokens = v2_stats.prefix_tokens_reused;
-                if (v2_stats.prefix_tokens_reused > 0) {
-                    stats.session_checkpoint_count = 1;
-                    stats.session_checkpoint_bytes = engine.persistent_state_bytes();
-                }
+                stats.persistent_session_restored = v2_stats.persistent_session_restored;
+                stats.persistent_session_bytes = v2_stats.persistent_session_bytes;
+                stats.session_checkpoint_count = engine.cached_state_bytes() > 0 ? 1 : 0;
+                stats.session_checkpoint_bytes = engine.cached_state_bytes();
+                stats.restore_ms = v2_stats.restore_ms;
+                stats.suffix_prefill_ms = v2_stats.suffix_prefill_ms;
+                stats.prefill_tok_s = v2_stats.suffix_prefill_ms > 0.0
+                    ? 1000.0 * v2_stats.suffix_tokens_dispatched / v2_stats.suffix_prefill_ms
+                    : v2_stats.prefill_tok_per_sec;
                 stats.prefill_ms = v2_stats.prefill_ms;
                 stats.decode_ms = v2_stats.decode_ms;
                 stats.first_token_ms = v2_stats.ttft_ms;
                 stats.total_ms = v2_stats.total_ms;
-                stats.prefill_tok_s = v2_stats.prefill_tok_per_sec;
                 stats.decode_tok_s = v2_stats.decode_tok_per_sec;
                 stats.text = tokenizer.decode(v2_stats.generated_tokens);
 
@@ -5502,7 +5514,11 @@ int cmd_serve(int argc, char** argv) {
                           << ",\"prefill_processed_tokens\":" << stats.prefill_processed_tokens
                           << ",\"prefill_tokens_per_second\":" << stats.prefill_tok_s
                           << ",\"first_decode_token_ms\":" << stats.first_token_ms
-                          << ",\"time_to_first_token_ms\":" << stats.prefill_ms + stats.first_token_ms
+                          << ",\"time_to_first_token_ms\":" << stats.first_token_ms
+                          << ",\"restore_ms\":" << stats.restore_ms
+                          << ",\"suffix_prefill_ms\":" << stats.suffix_prefill_ms
+                          << ",\"persistent_session_restored\":" << (stats.persistent_session_restored ? "true" : "false")
+                          << ",\"persistent_session_bytes\":" << stats.persistent_session_bytes
                           << ",\"generated_tokens\":" << stats.generated_tokens
                           << ",\"decode_ms\":" << stats.decode_ms
                           << ",\"decode_tokens_per_second\":" << stats.decode_tok_s
@@ -5597,18 +5613,22 @@ int cmd_serve(int argc, char** argv) {
             stats.generated_tokens = v2_stats.generated_tokens.size();
             stats.stop_reason = v2_stats.stop_reason;
             stats.cancelled = stats.stop_reason == miinfer::GenerationStopReason::kCancelled;
-            stats.prefill_processed_tokens = v2_stats.prompt_tokens.size();
+            stats.prefill_processed_tokens = v2_stats.suffix_tokens_dispatched;
             stats.reused_prefix_tokens = v2_stats.prefix_tokens_reused;
             stats.common_prefix_tokens = v2_stats.prefix_tokens_reused;
-            if (v2_stats.prefix_tokens_reused > 0) {
-                stats.session_checkpoint_count = 1;
-                stats.session_checkpoint_bytes = engine.persistent_state_bytes();
-            }
+            stats.persistent_session_restored = v2_stats.persistent_session_restored;
+            stats.persistent_session_bytes = v2_stats.persistent_session_bytes;
+            stats.session_checkpoint_count = engine.cached_state_bytes() > 0 ? 1 : 0;
+            stats.session_checkpoint_bytes = engine.cached_state_bytes();
+            stats.restore_ms = v2_stats.restore_ms;
+            stats.suffix_prefill_ms = v2_stats.suffix_prefill_ms;
+            stats.prefill_tok_s = v2_stats.suffix_prefill_ms > 0.0
+                ? 1000.0 * v2_stats.suffix_tokens_dispatched / v2_stats.suffix_prefill_ms
+                : v2_stats.prefill_tok_per_sec;
             stats.prefill_ms = v2_stats.prefill_ms;
             stats.decode_ms = v2_stats.decode_ms;
             stats.first_token_ms = v2_stats.ttft_ms;
             stats.total_ms = v2_stats.total_ms;
-            stats.prefill_tok_s = v2_stats.prefill_tok_per_sec;
             stats.decode_tok_s = v2_stats.decode_tok_per_sec;
             stats.text = tokenizer.decode(v2_stats.generated_tokens);
 
@@ -5646,7 +5666,11 @@ int cmd_serve(int argc, char** argv) {
                       << ",\"prefill_processed_tokens\":" << stats.prefill_processed_tokens
                       << ",\"prefill_tokens_per_second\":" << stats.prefill_tok_s
                       << ",\"first_decode_token_ms\":" << stats.first_token_ms
-                      << ",\"time_to_first_token_ms\":" << stats.prefill_ms + stats.first_token_ms
+                      << ",\"time_to_first_token_ms\":" << stats.first_token_ms
+                      << ",\"restore_ms\":" << stats.restore_ms
+                      << ",\"suffix_prefill_ms\":" << stats.suffix_prefill_ms
+                      << ",\"persistent_session_restored\":" << (stats.persistent_session_restored ? "true" : "false")
+                      << ",\"persistent_session_bytes\":" << stats.persistent_session_bytes
                       << ",\"generated_tokens\":" << stats.generated_tokens
                       << ",\"decode_ms\":" << stats.decode_ms
                       << ",\"decode_tokens_per_second\":" << stats.decode_tok_s

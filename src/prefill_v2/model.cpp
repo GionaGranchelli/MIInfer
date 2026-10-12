@@ -750,6 +750,9 @@ GenerateStats PrefillV2Model::generate(
 
     const std::uint32_t prompt_len = static_cast<std::uint32_t>(prompt.size());
     bool is_reuse = false;
+    bool persistent_session_restored = false;
+    std::uint64_t persistent_session_bytes = 0;
+    double persistent_restore_ms = 0.0;
     std::uint32_t prefix_len = 0;
     std::uint32_t suffix_len = prompt_len;
 
@@ -766,7 +769,12 @@ GenerateStats PrefillV2Model::generate(
 
     if (!is_reuse && options.enable_prefix_reuse && !options.persistent_session_dir.empty()) {
         std::uint32_t disk_prefix = 0;
-        if (restore_matching_session(options.persistent_session_dir, prompt, disk_prefix, stream)) {
+        const auto restore_start = std::chrono::steady_clock::now();
+        if (restore_matching_session(options.persistent_session_dir, prompt, disk_prefix,
+                                     persistent_session_bytes, stream)) {
+            persistent_restore_ms = std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - restore_start).count();
+            persistent_session_restored = true;
             is_reuse = true;
             prefix_len = disk_prefix;
             suffix_len = prompt_len - prefix_len;
@@ -774,6 +782,8 @@ GenerateStats PrefillV2Model::generate(
     }
 
     GenerateStats stats;
+    stats.persistent_session_restored = persistent_session_restored;
+    stats.persistent_session_bytes = persistent_session_bytes;
     stats.prompt_tokens.assign(prompt.begin(), prompt.end());
     stats.generated_tokens.reserve(options.max_new_tokens);
 
@@ -791,7 +801,8 @@ GenerateStats PrefillV2Model::generate(
         reusable_context_.restore_gdn_states(recurrent_states_, stream);
         MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
         const auto t_restore_end = std::chrono::steady_clock::now();
-        stats.restore_ms = std::chrono::duration<double, std::milli>(t_restore_end - t_restore_start).count();
+        stats.restore_ms = persistent_restore_ms
+            + std::chrono::duration<double, std::milli>(t_restore_end - t_restore_start).count();
 
         const auto t_suffix_start = std::chrono::steady_clock::now();
         const char* env_graph = std::getenv("MIINFER_HIP_GRAPH");
@@ -1279,6 +1290,7 @@ bool PrefillV2Model::restore_matching_session(
     const std::string& session_dir,
     std::span<const std::uint32_t> full_prompt,
     std::uint32_t& out_prefix_length,
+    std::uint64_t& out_session_bytes,
     hipStream_t stream) {
     std::string session_path;
     if (!PersistentSession::find_matching_session(
@@ -1286,7 +1298,11 @@ bool PrefillV2Model::restore_matching_session(
         return false;
     }
     std::vector<std::uint32_t> loaded_tokens;
-    return load_session(session_path, loaded_tokens, stream);
+    if (!load_session(session_path, loaded_tokens, stream)) return false;
+    std::error_code error;
+    out_session_bytes = std::filesystem::file_size(session_path, error);
+    if (error) out_session_bytes = 0;
+    return true;
 }
 
 } // namespace miinfer::prefill_v2

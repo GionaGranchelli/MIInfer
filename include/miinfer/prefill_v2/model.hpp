@@ -59,6 +59,8 @@ struct GenerateStats {
 
     // Reuse telemetry & observability
     bool reuse_hit = false;
+    bool persistent_session_restored = false;
+    std::uint64_t persistent_session_bytes = 0;
     std::uint32_t prefix_tokens_reused = 0;
     std::uint32_t suffix_tokens_dispatched = 0;
     std::uint32_t gqa_kv_reused_tokens = 0;
@@ -210,6 +212,7 @@ public:
         const std::string& session_dir,
         std::span<const std::uint32_t> full_prompt,
         std::uint32_t& out_prefix_length,
+        std::uint64_t& out_session_bytes,
         hipStream_t stream = nullptr);
 
     // Memory footprints

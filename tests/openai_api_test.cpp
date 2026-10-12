@@ -61,6 +61,8 @@ int main() {
     CHECK(generated.calls.size() == 1);
     CHECK(generated.calls[0].name == "read_file");
     CHECK(generated.calls[0].arguments == R"({"path":"a.txt"})");
+    CHECK(miinfer::parse_generated_tool_calls(
+        "Quoted example: <function=read_file><parameter=path>a.txt</parameter></function>").calls.empty());
 
     for (const char* invalid : {"{", "{}", R"({"messages":[]})", R"({"messages":{}})", R"({"messages":[{"role":"tool","content":"x"}]})", R"({"messages":[{"role":"user","content":1}]})", R"({"messages":[{"role":"user","content":"x"}],"stream":1})", R"({"messages":[{"role":"user","content":"x"}],"max_tokens":-1})", R"({"messages":[{"role":"user","content":"x"}],"max_tokens":0})", R"({"messages":[{"role":"user","content":"x"}],"max_tokens":65537})", R"({"messages":[{"role":"user","content":"x"}],"max_completion_tokens":0})"}) {
         CHECK(!miinfer::parse_openai_chat_request(invalid).request);

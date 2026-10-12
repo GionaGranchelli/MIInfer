@@ -101,7 +101,7 @@ void append_tool_result_messages(std::string& prompt, const std::vector<ChatMess
     prompt += "<|im_end|>\n";
 }
 
-void append_generated_xml_calls(std::string_view text, OpenAiGeneratedToolCalls& result) {
+void append_xml_function_calls(std::string_view text, OpenAiGeneratedToolCalls& result) {
     std::size_t position = 0;
     while ((position = text.find("<function=", position)) != std::string_view::npos) {
         const std::size_t name_end = text.find('>', position + 10);
@@ -131,6 +131,17 @@ void append_generated_xml_calls(std::string_view text, OpenAiGeneratedToolCalls&
         }
         result.calls.push_back({"call_" + std::to_string(result.calls.size()), name, arguments.dump()});
         position = function_end + 11;
+    }
+}
+
+void append_generated_xml_calls(std::string_view text, OpenAiGeneratedToolCalls& result) {
+    std::size_t position = 0;
+    while ((position = text.find("<tool_call>", position)) != std::string_view::npos) {
+        const std::size_t body_start = position + 11;
+        const std::size_t body_end = text.find("</tool_call>", body_start);
+        if (body_end == std::string_view::npos) return;
+        append_xml_function_calls(text.substr(body_start, body_end - body_start), result);
+        position = body_end + 12;
     }
 }
 
