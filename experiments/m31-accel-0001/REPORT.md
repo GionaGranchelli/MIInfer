@@ -1,7 +1,14 @@
 # M31-ACCEL-0001 morning report
 
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
-Status: IN PROGRESS. The exact 64K production request reached the server but was stopped at the 85 C warning before a response; persistent-agent correctness and performance remain unqualified.
+Status: IN PROGRESS. The exact 64K production request reached the server but was stopped at the 85 C guard threshold before any response; persistent-agent correctness and performance remain unqualified.
+
+## Current status — 2026-10-12 04:42 Europe/Amsterdam
+
+- Z840 SSH is available. The guarded production-agent attempt `agent64k-05` stopped at 04:04:41 when junction temperature reached 85 C. The guard recorded `STOP junction=85.0C warning_threshold=85C; operator inspection and a fresh capture are required` and exited 122, as designed. No container remains active; current junction temperature is 26 C, GPU use is 0%, and fan telemetry still reads 0 RPM. Physical airflow through the passive heatsink is not verified.
+- The pinned model and server started; the server received requests 1 and 2 and queued request 3. The runner produced no output: 0/8 turns and 0 requests completed. The capture preserved `agent-workload.json`, the exact 65,536-token request and token-ID files, environment, server, guard, and telemetry logs. Initial request SHA-256: `54c6575412fb6a1d15431603fa9886488c3f55b0c2453b4327b923b24c6af1d3`; token-ID SHA-256: `e95d256169a1882a8708d7c511d271d03edc4973e912111284844be4a533bf5d`. Capture directory: `/mnt/lc9-lake/m31-accel-0001-captures/agent64k-05`.
+- At the warning, sampled VRAM was 31,057,162,240 / 34,342,961,152 B and socket power was 206 W. The telemetry log SHA-256 is `276c80acc359c906814da825ff69c57758c293ff1830d2d9ed73ca7efd0073a1`; the workload JSON SHA-256 is `25164ddb5b44578d3c4d47640375a59f81b3ac8630a235cf731af826ca7d6251`.
+- Next action: verify chassis airflow/cooling physically before any fresh GPU capture. Do not resume this capture; it is terminal. 64K state correctness, matched performance A/B, and LC-0009 QSUM decode evidence remain outstanding.
 
 ## Current status — 2026-10-12 03:08 Europe/Amsterdam
 
