@@ -73,6 +73,11 @@ reuse benchmark accepts two adjacent artifacts with `--request-pair`, derives
 their exact token-ID LCP, and compares cold second-request prefill with reuse of
 the first request's saved state. These modes validate artifact hashes, counts,
 vocabulary bounds, and nonempty prefix/suffix constraints before benchmarking.
+For guarded execution, stage the `.tokens.json` files in a new capture
+directory. Set `M31_DECODE_TOKEN_IDS` to one filename for `decode`; set
+`M31_PREFIX_FIRST_TOKEN_IDS` and `M31_PREFIX_SECOND_TOKEN_IDS` to two
+consecutive filenames for `prefix64k`. The guard validates that both files are
+inside the capture directory before starting the GPU container.
 
 Build and run the tokenizer-only self-check without initializing HIP:
 

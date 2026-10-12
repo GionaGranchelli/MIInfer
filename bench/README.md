@@ -748,6 +748,13 @@ experiments/m31-accel-0001/run-guarded.sh \
   /mnt/lc9-lake/m31-accel-0001-captures/decode-baseline decode
 ```
 
+For production-token A/B, copy one request's `.tokens.json` artifact into the
+new capture directory and set `M31_DECODE_TOKEN_IDS` to its filename. For the
+prefix comparison, copy two consecutive request artifacts there and set
+`M31_PREFIX_FIRST_TOKEN_IDS` and `M31_PREFIX_SECOND_TOKEN_IDS` to their
+filenames before invoking guarded `decode` or `prefix64k`. The guarded launcher
+rejects missing or nonlocal filenames before starting the GPU container.
+
 `decode` defaults to P=65,536, TG=128, and five samples. Override these with
 `M31_DECODE_PROMPT_TOKENS`, `M31_DECODE_TOKENS`, or
 `M31_DECODE_ITERATIONS`. Run baseline and candidate revisions in separate

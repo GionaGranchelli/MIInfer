@@ -52,13 +52,28 @@ case "$mode" in
     command=(bash /workspace/MIInfer/experiments/m31-accel-0001/run-agent-server.sh)
     ;;
   prefix64k)
-    command=(/workspace/MIInfer/build/m31-accel-0001/miinfer-prefix-state-reuse-bench
-      --64k-only "/models/$model_file")
+    if [[ -n ${M31_PREFIX_FIRST_TOKEN_IDS:-} || -n ${M31_PREFIX_SECOND_TOKEN_IDS:-} ]]; then
+      [[ -n ${M31_PREFIX_FIRST_TOKEN_IDS:-} && -n ${M31_PREFIX_SECOND_TOKEN_IDS:-}
+        && ${M31_PREFIX_FIRST_TOKEN_IDS:-} != */* && ${M31_PREFIX_SECOND_TOKEN_IDS:-} != */*
+        && -f "$run_dir/${M31_PREFIX_FIRST_TOKEN_IDS:-}" && -f "$run_dir/${M31_PREFIX_SECOND_TOKEN_IDS:-}" ]] \
+        || { echo 'both production token-ID artifacts must exist inside CAPTURE_DIR' >&2; exit 2; }
+      command=(/workspace/MIInfer/build/m31-accel-0001/miinfer-prefix-state-reuse-bench
+        --request-pair "/captures/$M31_PREFIX_FIRST_TOKEN_IDS" "/captures/$M31_PREFIX_SECOND_TOKEN_IDS"
+        "/models/$model_file")
+    else
+      command=(/workspace/MIInfer/build/m31-accel-0001/miinfer-prefix-state-reuse-bench
+        --64k-only "/models/$model_file")
+    fi
     ;;
   decode)
     command=(/workspace/MIInfer/build/m31-accel-0001/miinfer-m31-accel-0001-decode-bench
       "/models/$model_file" "${M31_DECODE_PROMPT_TOKENS:-65536}"
       "${M31_DECODE_TOKENS:-128}" "${M31_DECODE_ITERATIONS:-5}" /captures/decode.json)
+    if [[ -n ${M31_DECODE_TOKEN_IDS:-} ]]; then
+      [[ $M31_DECODE_TOKEN_IDS != */* && -f "$run_dir/$M31_DECODE_TOKEN_IDS" ]] \
+        || { echo 'production token-ID artifact must exist inside CAPTURE_DIR' >&2; exit 2; }
+      command+=(--prompt-token-ids "/captures/$M31_DECODE_TOKEN_IDS")
+    fi
     ;;
   *) echo "unknown workload mode: $mode (expected native, agent, prefix64k, or decode)" >&2; exit 2 ;;
 esac
