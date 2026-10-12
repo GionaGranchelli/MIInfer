@@ -354,3 +354,11 @@ Build logs are retained as `gqa-ab-control-eager-route-build-v5.log` and
 route mismatch in the benchmark setup; there are still no live decode timings
 or cross-revision token-trajectory results. Physical airflow confirmation
 remains the blocker for guarded GPU work.
+
+
+## 2026-10-12 05:25 — host work and stale-run reconciliation
+
+- Z840 is reachable; Lake is mounted read/write with 1.6 TB free. MI50 telemetry reads 26 C junction and 0% use. The campaign tmux pane is terminal (`agent64k-05`, exit 122). Podman container `m31-accel-0001-agent64k-01` is only `created` with PID 0; it is not a live job. Existing `agent64k-05` capture records exit 122, 0 completed responses and 0/8 turns. No capture was resumed or overwritten.
+- The clean Z840 runtime worktree `/mnt/lc9-lake/m31-accel-0001-cursor-build` remains at `1ac1be27174227a93c9515716290e590f0612c9b`; both GQA A/B worktrees are clean at their documented SHAs. Primary Z840 `m30/agent-workload-baseline` and Machinist `m30/exact-prefix-kv-reuse` checkouts contain uncommitted M30 changes and artifacts; preserved untouched.
+- Machinist has no active Podman workload, named MIInfer process, or tmux server. Its primary branch has no upstream configured; do not infer campaign source identity from that dirty M30 checkout.
+- Coordinator docs/evidence commit `619fc06b7f1df5b11df70ae5bca4cdd6dac7c57a` is pushed and the worktree is clean. Physical airflow through Z840's passive MI50 heatsink is still unconfirmed, so no GPU work was started. Next: after airflow is confirmed, make a fresh guarded 64K run; otherwise continue with isolated CPU-side review/build preparation and preserve all dirty M30 work.
