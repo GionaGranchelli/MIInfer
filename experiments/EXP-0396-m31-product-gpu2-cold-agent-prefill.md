@@ -72,11 +72,24 @@ A later interactive OMP run on GPU0 produced additional server-side evidence. It
 
 The first follow-up request (10,782 tokens) returned `finish_reason=tool_calls` in 68.6 seconds, but it reported no prefix reuse. The next request reused those 10,782 tokens and completed in 3.52 seconds. This demonstrates fast same-server prefix reuse for this shorter follow-up. The logs do not establish that OMP executed the tool call, that state survived a server restart, or that a 64K eight-turn session worked. The cold request stopped at the generation limit before its task outcome was verified.
 
-On GPU2, neither a fresh OMP process nor a resumed OMP transcript demonstrated a fast follow-up. Two requests entered prefill and remained active for about three minutes before I stopped the GPU2 container, which exited with code 137. The resumed transcript ID was `01a131bf-1af4-734d-9113-f0da8b510ec9`. An exact no-session replay of the original print-mode request also entered prefill and stayed active for one minute before I stopped it. Disk checkpoint restore did not produce a fast response in these attempts. The campaign still has not demonstrated OMP tool execution, a cached follow-up on GPU2, or the eight-turn task.
+### OMP tool execution and follow-up gate
+
+On 2026-10-13, a controlled OMP v18.10.2 run used the `m31-product` profile, GPU0 (`0000:04:00.0`, UUID `0x21678e17348c2f7`), the same model and MIInfer server configuration, and disabled only title generation. OMP called `bash` to run `git status --short --branch && git rev-parse --short HEAD`; the tool result was `## m31-product-agent-task...origin/m31-product-agent-task` and `c840482`. This verifies one actual OMP tool call and its returned result.
+
+| Request | Prompt tokens | Reused tokens | Restore | Request wall | Outcome |
+| --- | ---: | ---: | ---: | ---: | --- |
+| 7, initial OMP turn | 13,278 | 0 | No | 92.1 s | `tool_calls`; bash ran successfully |
+| 8, OMP turn after tool result | 13,457 | 0 | No | 135.1 s | Full prefill; answer returned |
+
+The post-tool prompt processed all 13,457 tokens again (`prefill_ms=89,514`, `cache_hit=false`, `persistent_session_restored=false`). Its end-to-end response exceeded the 15-second target. This print-mode run had no title-generation traffic, so the cache miss is not explained by the earlier title-generator queue. A separate interactive attempt did restore 14,021 tokens and reported `persistent_session_restored=true`, but its total wall time was 109.4 seconds, including about 99.7 seconds of queue wait after a cancelled duplicate request. It also missed the responsiveness target.
+
+The controlled run's OMP transcript and request logs prove tool invocation, result delivery, and the follow-up re-prefill. They do not yet identify why the OMP follow-up prompt fails MIInfer's token-prefix match. Temperatures stayed below the 80°C warning threshold; the 90°C stop guard did not fire.
+
+On GPU2, neither a fresh OMP process nor a resumed OMP transcript demonstrated a fast follow-up. Two requests entered prefill and remained active for about three minutes before I stopped the GPU2 container, which exited with code 137. The resumed transcript ID was `01a131bf-1af4-734d-9113-f0da8b510ec9`. An exact no-session replay of the original print-mode request also entered prefill and stayed active for one minute before I stopped it. Disk checkpoint restore did not produce a fast response in these attempts. The eight-turn task and a cached follow-up on GPU2 remain unproven.
 
 ## Decision
 
-**RETEST.** Same-server prefix reuse is now demonstrated on GPU0 at 10,782 tokens, but the product gate remains unmet: there is no verified OMP tool execution, eight-turn task, restore across agent sessions, or 64K persistent workload. Next, continue the interactive OMP session from the verified cache state and capture the actual tool result; keep the full task context and its processed-token count visible. Do not treat either GPU's single cold sample as a hardware winner.
+**RETEST.** OMP tool execution works, and MIInfer has restored a 14,021-token checkpoint in an interactive continuation. The target still fails: the controlled OMP follow-up processed its full 13,457-token prompt and took 135.1 seconds; the restored interactive response took 109.4 seconds including queueing. Next, identify the prompt-prefix divergence or session handoff causing the OMP cache miss, then rerun this same two-turn gate with unchanged tools and no title traffic. Keep GPU0 as the current test card based on continuity of evidence, not a comparative speed claim. The 64K eight-turn task is still not proven.
 
 ## Evidence
 
@@ -85,3 +98,5 @@ On GPU2, neither a fresh OMP process nor a resumed OMP transcript demonstrated a
 - Temperature and power samples: `gpu2/telemetry.csv`.
 - Local OMP print-mode capture: `/tmp/m31-product-gpu2-first-turn.log`.
 - GPU0 interactive server requests: request IDs 2, 13, and 15 in container `m31-product-20261012retry180`; telemetry in `retry180/telemetry.csv`.
+- Controlled OMP transcript: `/tmp/m31-product-omp-controlled-20261013/2026-10-12T22-16-31-033Z_01a13230-5639-7565-9945-6f570fd98e46.jsonl`; first-turn output: `/tmp/m31-product-omp-controlled-20261013-first.log`.
+- Controlled OMP server requests: IDs 7 and 8 in `m31-product-20261012retry180`; telemetry in `retry180/telemetry.csv`.
