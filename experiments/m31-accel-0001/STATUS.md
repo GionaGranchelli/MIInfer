@@ -1,7 +1,14 @@
 # M31-ACCEL-0001 live status
 
-Updated: 2026-10-12 06:54 Europe/Amsterdam
+Updated: 2026-10-12 07:43 Europe/Amsterdam
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
+
+## 2026-10-12 07:43 Integrated-source Z840 preflight passed
+
+- Reconnected to Z840; Lake is mounted read/write with 1.6 TB free. Clean source `3aa66d3d1e925b77ad21d68e3af6ca6bc7cf7784` built in the pinned ROCm 7.2.1 image with HIP enabled for gfx906, `--network=none`, read-only source/dependency/model mounts, and `/dev/kfd` and `/dev/dri` absent. Build provenance embeds `3aa66d3d1e92`, `dirty=false`.
+- Server, disk-restore header test, token counter, 64K harness, decode harness, and prefix-reuse harness all built. Focused disk-restore header CTest passed 1/1; server `--version`, the 64K/decode/prefix self-checks, and the tokenizer-backed production-runner self-check passed. The production runner reported exactly 65,536 prompt tokens and token IDs. Guarded launch scripts passed `bash -n` and `run-guarded.sh --self-check` passed.
+- Successful combined build/preflight log SHA-256 `b9b886a3ca979bcf66e732aab08ec4ace1e88c403e469e9c6cb9223ddbfcc343`, exit 0. Server SHA-256 `761a09d61b32cf7bb1db9e47fae7e7f6fd004d9aa03111dccb406beff73be93a`; 64K harness `67c0886aeca31b2061221b8a138aa24b005ba27eb662f1d04389f781e32c80a0`; decode harness `75e1e2b7784d38d5d0b367fd66a811c35fd6610ea418e7d513d8c1e1d95e90b1`; prefix harness `20a4e4017567e87be8d63c46c9ae7d3cb18a5734f4741b36745c8bbdacae1d54`. Self-check log SHA-256 `3ee6c01a48d20dac46fe149d466ef8c1a06a20bd6d222098da64a0c9ccb2dc7c`, exit 0.
+- Staged the verified binaries into `/mnt/lc9-lake/m31-accel-0001-integrated-3aa66d3/build/m31-accel-0001/`; staged source checkout is clean and at the exact integrated SHA. The 07:43 idle MI50 sample was 25 C junction, 0% use, and 10.9 MB VRAM. Passive-heatsink airflow is still not confirmed, so this was host/build validation only; no inference or performance sample ran.
 
 ## 2026-10-12 06:08 Guard BDF binding pushed and synced
 
