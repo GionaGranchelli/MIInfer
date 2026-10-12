@@ -257,3 +257,8 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 - The dirty `/home/machinist/Development/MIInfer` checkout remains untouched. A separate clean HTTPS clone at `/home/machinist/Development/MIInfer-m31-b06bffd` is detached at `b06bffd648bfb8258dc115b7584b1842cfb03883`.
 - Machinist's `localhost/miinfer-dev:rocm-7.2.1` image (`sha256:50ff28a28cc13a3ca7333cd0c70e322d16245967c5fdf0d30a1bf57bda80a512`) built `miinfer` and the native 64K harness with no GPU device passed; exit 0. The 64K harness self-check and thermal-guard self-check passed. Build log SHA-256 `9be32e63d2d174343848e1d04cda603c081159914348ac54b88411462635f4cc`; check log SHA-256 `a44a04e89101059c71c8f2a4452428d316488a894bfef023e3339d49f79b0b30`.
 - Machinist reports two adapters; target MI50 GPU[1] remained at 0% utilization and 0% VRAM use. No GPU was passed to Podman and no GPU workload ran. This is cross-host compile validation only, not MI50 qualification. Z840 cooling remains unconfirmed; the 64K production GPU run is still held.
+
+## 2026-10-12 02:53 Machinist host-only tests
+
+- On the same clean `b06bffd` clone, built the registered host-test targets and ran CTest `-L host-only` in the no-device ROCm container. All 13/13 host-only tests passed (1.34 s total); exit marker 0. Log SHA-256 `48b95d08352ddb7a50cc35884f737800eeb089a9d2382454bafcd834ed79a714`.
+- These are repository host regressions and do not exercise MI50 GDN cursor behavior, GPU kernels, or 64K numerical state continuity. No GPU work ran.

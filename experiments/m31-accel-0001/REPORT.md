@@ -31,6 +31,8 @@ The pre-existing dirty Machinist checkout was left unchanged. A separate clean c
 
 This is a cross-host compile check only. Machinist reported its MI50 as GPU[1] at 0% utilization and 0% VRAM; no GPU workload was launched there. This does not resolve the host-to-device qualification blocker or qualify Machinist benchmark results. Z840 remains the only planned GPU execution host, and its cooling clearance is still pending.
 
+The same clean `b06bffd` clone also built all registered host-test targets and passed all 13/13 CTest cases labeled `host-only` in the no-device ROCm container (1.34 s total, exit 0). The retained log SHA-256 is `48b95d08352ddb7a50cc35884f737800eeb089a9d2382454bafcd834ed79a714`. These tests provide general host regression coverage; they do not exercise `decode_step()` state mutation or qualify GDN/KV GPU state continuity.
+
 ## 64K persistent-agent workload
 
 Recovered pre-campaign Z840 M30 artifact (`qualification_sha=dc83f07`) describes a 40-turn coding-agent session. It reports 40 turns, all-turn minimum-generation gate PASS, visible-answer gate FAIL, prompt/context count 66,173 by turn 32 and 82,087 by turn 40. This demonstrates a session that grew past 64K, but it did not begin with exactly 65,536 tokens and is not the required campaign qualification.
