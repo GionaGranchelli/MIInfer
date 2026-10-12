@@ -19,6 +19,18 @@ The two-attempt Machinist preflight found its checkout at `d8b833637f85537d6205c
 
 GPU work was out of scope for this CPU-only handoff, and the campaign report currently pauses sustained Z840 GPU work after its thermal warning. Therefore no missing decode capture could be generated here. Do not close LC-0009 based on this note.
 
+## Machinist host-only checker verification (2026-10-12)
+
+A clean detached worktree at checker source `c00136d00c4e5a00c4b5460a1e31f793d4fd435e` was created at `/home/machinist/Development/MIInfer-lc0009-qsum-checker`. The dirty `/home/machinist/Development/MIInfer` checkout was not touched, and no GPU device or GPU operation was used. The standalone checker is not registered as a CMake target, so it was compiled directly with the host compiler:
+
+```text
+cd /home/machinist/Development/MIInfer-lc0009-qsum-checker
+g++ -std=c++20 -O2 -Wall -Wextra -Wpedantic -I include tools/m31_lc9_gateup_contract_o.cpp src/gguf.cpp -o build/lc0009-host-check/m31-lc9-gateup-contract-o
+build/lc0009-host-check/m31-lc9-gateup-contract-o --self-check
+```
+
+The command exited 0 and printed `sum_mode_self_check=PASS`. Checker binary SHA-256: `04a8da582cb50978c850ee3e2dab4032b272b1fbe8c6c846695bf2f7abd7c08c`; retained build/self-check log at `build/lc0009-host-check/build-self-check.log`, SHA-256 `c8a0ffafd5a16be15613106d77e98dc98111b4ab8b347ec737a1f55b1d450192`. This verifies compilation and the checker's small ordinary-versus-QSUM sum-mode self-check only. It does not execute the scalar projection reference, validate a raw QSUM capture, or change the OPEN/BLOCKED disposition.
+
 ## Required next run
 
 Use the existing eager decode trace hook; no new capture code is needed. Set `MIINFER_LC_OP_TRACE_PREFIX` to a new Lake path and enable `MIINFER_LC_DECODE_TRACE=1`, with `MIINFER_LC_TRACE_LAYER=0`. It writes the exact post-normalized floats, Q8 codes/scales/sum, Gate and Up outputs, and decode position into separate files, refusing to overwrite them. After GPU operation is cleared to resume, execute the frozen `ordinary-64-01` prompt with the MMQ route and QSUM both selected, eager mode, and at least two generated tokens so the capture includes a one-token decode invocation. The required selectors are:
