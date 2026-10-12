@@ -9,6 +9,14 @@ Status: IN PROGRESS. The exact 64K production request reached the server but was
 - Coordinator branch `experiment/m31-accel-0001-coordinator` is pushed through the current status checkpoint. Agent workload branch `experiment/m31-accel-0001-agent64k` is based on the same anchor.
 - The Z840 and Machinist source checkouts both contain unrelated dirty/untracked work. They remain untouched. A separate clean Z840 worktree is at `/mnt/lc9-lake/m31-accel-0001-z840`.
 
+## 2026-10-12 02:34 — cursor and cold-start gate validation
+
+Source review found two correctness gaps before another live attempt. Recurrent storage cursors could remain stale during multi-chunk prefill because they were synchronized only after the chunk loop; the cursor fix at `bf5f6d0bd991939bf23ac5af6878350c6ac9621b` synchronizes cursors around ordinary and profiled forward calls. Separately, the production runner treated turn one's prefix gate as passed without requiring a cold request. Coordinator commit `e145b71` now requires zero reused prefix/GQA/GDN checkpoint and full prompt dispatch on the first request, with failing self-check fixtures for stale-session reuse and short cold dispatch.
+
+The clean Z840 worktree built both changes in the pinned ROCm 7.2.1 container with no GPU devices passed (exit 0). Build log SHA-256: `86272bd30fd1b3f7102a1658b9bb3ffaeeca962e7635725fd059fcac19c82e68`. The native 64K harness self-check passed for eight turns and 65,536 initial prompt tokens; prefix and decode benchmark self-checks also passed. The tokenizer-backed production workload self-check passed at exactly 65,536 tokens across seven source files, with SSE and atomic artifact checks. None of these runs started a server request or used the GPU. The GDN cursor change still needs live multi-chunk numerical/state validation, and the 64K production session still has no completed run.
+
+At 02:34, MI50 telemetry was idle at 27 C junction and 0% utilization, with fan telemetry at 15% / 0 RPM. Physical airflow remains unconfirmed, so the prior 85 C stop still blocks inference and performance measurement. After cooling is confirmed, the next run remains the guarded production 64K multi-turn correctness workload.
+
 ## 64K persistent-agent workload
 
 Recovered pre-campaign Z840 M30 artifact (`qualification_sha=dc83f07`) describes a 40-turn coding-agent session. It reports 40 turns, all-turn minimum-generation gate PASS, visible-answer gate FAIL, prompt/context count 66,173 by turn 32 and 82,087 by turn 40. This demonstrates a session that grew past 64K, but it did not begin with exactly 65,536 tokens and is not the required campaign qualification.
