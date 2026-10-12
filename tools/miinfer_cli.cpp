@@ -49,6 +49,7 @@
 #include "miinfer/openai_api.hpp"
 #include "miinfer/detail/repeated_token_run.hpp"
 #include "miinfer/sha256.hpp"
+#include "disk_session_restore_header.hpp"
 
 extern char** environ;
 
@@ -5153,16 +5154,15 @@ int cmd_serve(int argc, char** argv) {
             return;
         }
         state("parsed");
-        const auto disk_restore_header = http_header(
-            std::string_view(request.raw).substr(0, body_start),
-            "x-miinfer-require-disk-session-restore");
-        if (disk_restore_header && *disk_restore_header != "0" && *disk_restore_header != "1") {
+        const auto disk_restore_header = miinfer::server::parse_disk_session_restore_header(
+            std::string_view(request.raw).substr(0, body_start));
+        if (!disk_restore_header.valid) {
             ++http_errors;
             send_http_error(client_fd, 400, "invalid disk session restore header");
             state("rejected");
             return;
         }
-        const bool require_disk_restore = disk_restore_header && *disk_restore_header == "1";
+        const bool require_disk_restore = disk_restore_header.required;
         const bool is_stream = parsed.request->stream;
         const bool defer_tool_output = !parsed.request->tools.empty()
             && parsed.request->tool_choice != "none";

@@ -18,6 +18,7 @@ endif()
 set(MIINFER_RELEASE_TEST_TARGETS
     miinfer-host-test
     miinfer-openai-api-test
+    miinfer-disk-session-restore-header-test
     miinfer-m12-gdn-oracle
     miinfer-model-loader-test
     miinfer-qwen3-primitives-host-test
@@ -176,6 +177,11 @@ target_compile_options(miinfer-device-kv-shard-placement-test PRIVATE -Wall -Wex
 add_executable(miinfer-openai-api-test tests/openai_api_test.cpp)
 target_link_libraries(miinfer-openai-api-test PRIVATE miinfer_openai_api)
 target_compile_options(miinfer-openai-api-test PRIVATE -Wall -Wextra -Wpedantic)
+
+add_executable(miinfer-disk-session-restore-header-test tests/disk_session_restore_header_test.cpp)
+target_include_directories(miinfer-disk-session-restore-header-test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/tools")
+target_compile_features(miinfer-disk-session-restore-header-test PRIVATE cxx_std_20)
+target_compile_options(miinfer-disk-session-restore-header-test PRIVATE -Wall -Wextra -Wpedantic)
 
 if(MIINFER_ENABLE_HIP)
     add_library(miinfer_hip STATIC
@@ -728,6 +734,8 @@ if(MIINFER_BUILD_TESTS)
     set_tests_properties(host-only PROPERTIES LABELS "host-only")
     add_test(NAME openai-api-host COMMAND miinfer-openai-api-test)
     set_tests_properties(openai-api-host PROPERTIES LABELS "host-only")
+    add_test(NAME disk-session-restore-header-host COMMAND miinfer-disk-session-restore-header-test)
+    set_tests_properties(disk-session-restore-header-host PROPERTIES LABELS "host-only")
     add_test(NAME m12-gdn-oracle COMMAND miinfer-m12-gdn-oracle)
     set_tests_properties(m12-gdn-oracle PROPERTIES LABELS "host-only")
     add_test(NAME model-loader-host COMMAND miinfer-model-loader-test)
