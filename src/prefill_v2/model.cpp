@@ -694,6 +694,8 @@ std::uint32_t PrefillV2Model::decode_step(
         throw std::runtime_error("PrefillV2Model::decode_step: null logits destination buffer");
     }
 
+    for (auto& state : recurrent_states_) state.set_position(position);
+
     auto& ws = const_cast<PrefillV2Workspace&>(ws_mgr_->workspace());
 
     // 1. Copy single input token to device
@@ -733,6 +735,8 @@ std::uint32_t PrefillV2Model::decode_step(
             /*decode_state=*/nullptr,
             stream);
     }
+
+    for (auto& state : recurrent_states_) state.set_position(position + 1);
 
     // 4. Final RMS Norm: d_ping_ -> d_pong_
     launch_qwen3_rms_norm(
