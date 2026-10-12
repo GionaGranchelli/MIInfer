@@ -131,15 +131,21 @@ and point `--server-log` at that server's stderr log:
 ```sh
 python3 bench/m31_accel_0001_agent_workload.py \
   --model-path /home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf \
-  --token-counter build-agent64k-host/miinfer-m31-agent-token-count \
-  --server-log results/m31-accel-0001/server-128k.log \
+  --token-counter build/m31-accel-0001/miinfer-m31-agent-token-count \
+  --server-log results/m31-accel-0001/server.log \
+  --guard-telemetry results/m31-accel-0001/telemetry.log \
   --output results/m31-accel-0001/agent-workload.json
 ```
 
 The report captures per-turn client TTFT and wall time, server decode
 tokens/second, reused-prefix and suffix counts, and the largest VRAM use seen
-in `rocm-smi` samples taken before and after each request. Those are sampled
-observations, not a continuous hardware peak. The serving workload was not run
+in request-boundary samples plus the guarded runner's timestamped `rocm-smi`
+samples that fall within each request window. Each turn records its request
+window timestamps, in-window guard sample count, boundary sample count, and
+sample sources. This is a sampled maximum, not a continuous hardware peak; the
+guard still retains its complete 2-second telemetry log separately. Live runs
+fail closed if the structured guard telemetry is absent, malformed, or has no
+sample inside a request window. The serving workload was not run
 for this source-only change; the current workspace has no matching Qwen3.8
 GGUF, so exact 65,536-token prompt construction has not been runtime-verified
 here.
