@@ -1,7 +1,15 @@
 # M31-ACCEL-0001 live status
 
-Updated: 2026-10-12 05:09 Europe/Amsterdam
+Updated: 2026-10-12 05:17 Europe/Amsterdam
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
+
+## 2026-10-12 05:17 GQA eager-route benchmark repair
+
+- The route-aware harness is pushed at `dcd51cb1ae732f9c5dbd6da623b82a5873b90b37` (`experiment/m31-accel-0001-gqa-eager-route`). It selects eager or HIP Graph explicitly, rejects route mismatches, records the route, and allows the existing thermal guard to validate/run a clean external source worktree.
+- Applied the same benchmark-only route change to the GQA A/B branches; runtime bases remain the approved control/candidate. Both branches are published and `ls-remote` verified: control `16662fcbc22c478e897705a3eb6c59ee390fd88c`; candidate `527baba9f1f3915a6dc2507d1b8973089fb54827`.
+- Both route-enabled targets rebuilt in pinned image ID `50ff28a28cc13a3ca7333cd0c70e322d16245967c5fdf0d30a1bf57bda80a512`, with `--network=none` and no GPU device nodes. Control/candidate self-checks passed. Build metadata embeds exact clean source SHAs `16662fcbc22c` / `527baba9f1f`; binary hashes `ed631a655d2c4c802de026ef0cdde705b7ee583ed8334fefa84d956fe2df3c08` / `026ff260630d4a7e63a3ea4d02ead847699d4cf31191d4d3d6805ef2ce7097a9`. Log hashes: `129a859cdf0495cd2ce0a0feca3f4433bf1ad8e8988ec590fb079e2b5e7da472` / `707bee05ba2ced1a83f6b6f34d9c7249e1964e53ca97c8c1e28f55e2c9f14781`.
+- The local ROCm 6.2 configure failed because `lld` could not load `libxml2.so.2`; the pinned Z840 ROCm 7.2.1 no-device build succeeded. Z840 GitHub SSH authentication is unavailable, so the updated branch commits were transferred as thin bundles and pushed through coordinator HTTPS.
+- No GPU sample ran. The physical airflow confirmation remains pending; `sudo -n modprobe hp_wmi_sensors` was denied, so chassis fan telemetry remains unavailable. After airflow is confirmed, use the exact retained production prompt artifact, run both branches in eager mode under the guard, and reject timing comparisons if generated histories differ.
 
 ## 2026-10-12 05:09 GQA A/B validity audit
 

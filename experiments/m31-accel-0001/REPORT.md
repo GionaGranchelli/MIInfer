@@ -3,6 +3,14 @@
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
 Status: IN PROGRESS. The exact 64K production request reached the server but was stopped at the 85 C guard threshold before any response; persistent-agent correctness and performance remain unqualified.
 
+## Current status — 2026-10-12 05:17 Europe/Amsterdam
+
+- Corrected the GQA A/B harness after review found it forced HIP Graph while the candidate change is in eager decode. The route-aware harness is published on `experiment/m31-accel-0001-gqa-eager-route` (`dcd51cb1ae732f9c5dbd6da623b82a5873b90b37`) and supports explicit `--route eager|hip_graph`, route-matched sample validation, and the existing thermal guard pointed at an external clean source worktree.
+- Applied the identical benchmark-only change to the prepared A/B worktrees. The approved runtime control and candidate remain unchanged. Current published heads: control `16662fcbc22c478e897705a3eb6c59ee390fd88c`; candidate `527baba9f1f3915a6dc2507d1b8973089fb54827`. Both built in the pinned ROCm 7.2.1 image with no network and no GPU device nodes, passed the route-aware `--self-check`, and embed their exact clean source SHA in generated build metadata. No inference/timing sample has run.
+- Control/candidate binary SHA-256: `ed631a655d2c4c802de026ef0cdde705b7ee583ed8334fefa84d956fe2df3c08` / `026ff260630d4a7e63a3ea4d02ead847699d4cf31191d4d3d6805ef2ce7097a9`. Build log SHA-256: `129a859cdf0495cd2ce0a0feca3f4433bf1ad8e8988ec590fb079e2b5e7da472` / `707bee05ba2ced1a83f6b6f34d9c7249e1964e53ca97c8c1e28f55e2c9f14781`.
+- The exact first-turn production token artifact is verified at 65,536 IDs with the expected model and token-ID hashes. Z840 remains idle at 26 C junction; no process has `/dev/kfd` open. The HP sensor module could not be loaded without sudo, and software still cannot verify airflow through the passive heatsink. GPU work remains held pending physical cooling confirmation.
+- Next: after that confirmation, run the guarded 64K correctness workload, then eager-route GQA control/candidate measurements on identical prompt and settings. Compare full generated token histories before attributing timing differences. Persistent 64K correctness, decode/prefill performance, and LC-0009 QSUM decode remain unqualified.
+
 ## Current status — 2026-10-12 05:09 Europe/Amsterdam
 
 - The exact first-request token artifact from `agent64k-05` is retained and independently verified: 65,536 IDs, expected model SHA-256 `7e78da5d…fe169`, and matching recomputed ID hash `e95d2561…3bf5d`. It is suitable as a shared fixed prompt for the next decode comparison; the stopped run has no generated follow-up history.
