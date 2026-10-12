@@ -1,7 +1,13 @@
 # M31-ACCEL-0001 live status
 
-Updated: 2026-10-12 07:43 Europe/Amsterdam
+Updated: 2026-10-12 07:45 Europe/Amsterdam
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
+
+## 2026-10-12 07:45 GQA capture identity gate tightened
+
+- Added exact image ID, GPU BDF, ROCm SMI index, and `ROCR_VISIBLE_DEVICES` checks to the documented ten-capture eager GQA gate. Each of the ten `environment.txt` files must match the prepared Z840 image `50ff28a28cc13a3ca7333cd0c70e322d16245967c5fdf0d30a1bf57bda80a512`, BDF `0000:06:00.0`, and index/visibility `0` before medians are reported.
+- Synthetic metadata matrix passed: ten matching capture files were accepted; independently mismatched image ID, BDF, SMI index, or visibility values were each rejected. `git diff --check` passed. No GPU was used.
+- Live reconciliation at 07:43: Z840/Lake accessible and mounted read/write with 1.6 TB free; MI50 at 25 C junction, 0% use, and 10.9 MB VRAM. The old `agent64k-05` tmux pane is dead with guard exit 122; no KFD process was present. Machinist is idle with 761 GB free; its dirty primary checkout remains untouched. Passive heatsink airflow remains unconfirmed, so guarded GPU inference is still held.
 
 ## 2026-10-12 07:43 Integrated-source Z840 preflight passed
 

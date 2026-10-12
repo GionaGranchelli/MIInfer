@@ -816,6 +816,9 @@ control_sha=16662fcbc22c478e897705a3eb6c59ee390fd88c
 candidate_sha=527baba9f1f3915a6dc2507d1b8973089fb54827
 control_binary_sha=ed631a655d2c4c802de026ef0cdde705b7ee583ed8334fefa84d956fe2df3c08
 candidate_binary_sha=026ff260630d4a7e63a3ea4d02ead847699d4cf31191d4d3d6805ef2ce7097a9
+expected_image_id=50ff28a28cc13a3ca7333cd0c70e322d16245967c5fdf0d30a1bf57bda80a512
+expected_gpu_bdf=0000:06:00.0
+expected_gpu_index=0
 control_files=("$capture_root"/control-r*/decode.json)
 candidate_files=("$capture_root"/candidate-r*/decode.json)
 [[ ${#control_files[@]} == 5 && ${#candidate_files[@]} == 5 ]] || exit 1
@@ -834,6 +837,10 @@ for revision in control candidate; do
   expected_binary_sha=$control_binary_sha; [[ $revision == candidate ]] && expected_binary_sha=$candidate_binary_sha
   for environment in "$capture_root"/"$revision"-r*/environment.txt; do
     grep -Fx "binary_miinfer-m31-accel-0001-decode-bench_sha256=$expected_binary_sha" "$environment"
+    grep -Fx "image_id=$expected_image_id" "$environment"
+    grep -Fx "gpu_bdf=$expected_gpu_bdf" "$environment"
+    grep -Fx "gpu_rocm_smi_index=$expected_gpu_index" "$environment"
+    grep -Fx "rocr_visible_devices=$expected_gpu_index" "$environment"
   done
 done
 for status in "$capture_root"/{control,candidate}-r*/exit.status; do
