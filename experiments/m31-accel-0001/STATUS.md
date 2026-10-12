@@ -208,3 +208,8 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 
 - Built the benchmark at the exact `build/m31-accel-0001/miinfer-prefix-state-reuse-bench` path expected by `prefix64k`, from pushed source `f621596f8c721ea0699f98d80514eebb80e52438`, in the pinned ROCm 7.2.1 image with no GPU device passed. Build and `--self-check` exited 0. Build log SHA-256 `91a0f50e8973244eb7f95c650cbff79e8edfa12b999d449a50f6a120cac528ff`; binary SHA-256 `94b155e2b30f321c32f209e19e3a4ba16132ab146b53e8ad7694a562d36a5a7f`.
 - Z840 remained idle afterward at 27 C junction, 0% use, 10.9 MB VRAM. The guarded suffix command is now build-ready, but no inference was run and cooling still blocks GPU execution.
+
+## 2026-10-12 02:14 Machinist CPU-only portability build
+
+- The existing Machinist `Development/MIInfer` checkout has unrelated dirty M30 changes and was left untouched. A separate clean checkout at `00f0d8e24228bda204ed187f227035ee1b368bd7` built the prefix benchmark with no GPU devices passed to Podman; build exit 0 and `--self-check` passed. Build log SHA-256 `ba572163f04ed20dbd0d7fa7a8e0c1fb14d7691adf2f5798cc59699403fd6c12`.
+- Its binary SHA-256 matches Z840 exactly: `94b155e2b30f321c32f209e19e3a4ba16132ab146b53e8ad7694a562d36a5a7f`. Machinist's image digest is `sha256:447907c697fb2c39ce9657401e354a70753d5672ad955d4ceb12de976b91224a`, different from Z840's pinned image; treat this only as a cross-host compile check. No Machinist GPU or H→D operation ran.
