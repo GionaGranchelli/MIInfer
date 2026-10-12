@@ -127,6 +127,14 @@ def sse_self_check():
     ]
     if len(list(sse_choices(valid))) != 2:
         raise RuntimeError("valid SSE self-check failed")
+    require_no_repeated_token_loop({"repeated_token_loop_detected": False})
+    for telemetry in ({"repeated_token_loop_detected": True}, {}):
+        try:
+            require_no_repeated_token_loop(telemetry)
+        except RuntimeError:
+            pass
+        else:
+            raise RuntimeError("missing or detected repeated-token loop unexpectedly passed")
     try:
         list(sse_choices(valid[:-1]))
     except RuntimeError:
@@ -544,6 +552,7 @@ def stream_completion(url, key, payload, request_input, server_log):
     if request_count != 1:
         raise RuntimeError(f"expected one server inference request, observed {request_count}")
     latency, detail = server_log.take_request()
+    require_no_repeated_token_loop(detail)
     prompt_tokens = after["miinfer_prompt_tokens_total"] - before["miinfer_prompt_tokens_total"]
     generated_tokens = after["miinfer_generated_tokens_total"] - before["miinfer_generated_tokens_total"]
     if not request_metric_counts_match(prompt_tokens, generated_tokens, detail,
@@ -559,6 +568,11 @@ def stream_completion(url, key, payload, request_input, server_log):
         "server_request": detail, "gpu_before": gpu_before,
         "gpu_after": legacy.gpu_snapshot(), "request_input": request_input,
     }
+
+
+def require_no_repeated_token_loop(server_request):
+    if server_request.get("repeated_token_loop_detected") is not False:
+        raise RuntimeError("server did not prove the request was free of a repeated-token loop")
 
 
 def require_planned_read(response, path, start_line, end_line):

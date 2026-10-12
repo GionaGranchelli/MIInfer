@@ -1,10 +1,18 @@
 #include "miinfer/openai_api.hpp"
+#include "miinfer/detail/repeated_token_run.hpp"
 
 #include <iostream>
 
 #define CHECK(condition) do { if (!(condition)) { std::cerr << "check failed: " #condition "\n"; return 1; } } while (false)
 
 int main() {
+    constexpr std::uint32_t loop_tokens[] = {1, 2, 7, 7, 7, 7};
+    CHECK(miinfer::detail::has_repeated_token_run(loop_tokens));
+    constexpr std::uint32_t short_run[] = {7, 7, 7};
+    CHECK(!miinfer::detail::has_repeated_token_run(short_run));
+    constexpr std::uint32_t interrupted_run[] = {7, 7, 3, 7, 7};
+    CHECK(!miinfer::detail::has_repeated_token_run(interrupted_run));
+
     const auto default_budget = miinfer::parse_openai_chat_request(
         R"({"messages":[{"role":"user","content":"hi"}]})");
     CHECK(default_budget.request);

@@ -1,6 +1,7 @@
 #include "miinfer/hip_check.hpp"
 #include "miinfer/prefill_v2/logit_validation.hpp"
 #include "miinfer/prefill_v2/model.hpp"
+#include "miinfer/detail/repeated_token_run.hpp"
 #include "miinfer/qwen35_model.hpp"
 
 #include <hip/hip_runtime.h>
@@ -87,12 +88,6 @@ std::uint64_t state_fingerprint(PrefillV2Model& model, std::size_t kv_tokens) {
     return hash;
 }
 
-bool observe_token(std::uint32_t token, std::uint32_t& previous, std::size_t& run) {
-    run = (run == 0 || token != previous) ? 1 : run + 1;
-    previous = token;
-    return run >= 4;
-}
-
 void self_check() {
     miinfer::prefill_v2::detail::require_finite_logit(0.0f);
     for (const float value : {NAN, INFINITY, -INFINITY}) {
@@ -123,10 +118,9 @@ void self_check() {
     require(kKvCapacity > kContextTokens, "KV capacity must leave room for bounded generation");
 
     constexpr std::array<std::uint32_t, 5> repeated{7, 7, 7, 7, 7};
-    std::uint32_t previous = 0;
-    std::size_t run = 0;
+    miinfer::detail::RepeatedTokenRunDetector detector;
     bool detected = false;
-    for (const auto token : repeated) detected |= observe_token(token, previous, run);
+    for (const auto token : repeated) detected |= detector.observe(token);
     require(detected, "repetition-loop self-check did not detect a repeated-token run");
 }
 
@@ -177,8 +171,7 @@ int main(int argc, char** argv) {
         std::vector<std::uint32_t> prompt;
         prompt.reserve(kContextTokens + (kTurns - 1) * kTurnAppendTokens);
         std::vector<std::uint32_t> previous_output;
-        std::size_t repeated_run = 0;
-        std::uint32_t previous_token = 0;
+        miinfer::detail::RepeatedTokenRunDetector repeated_tokens;
 
         for (std::size_t turn = 0; turn < kTurns; ++turn) {
             const auto previous_prompt_size = prompt.size();
@@ -206,7 +199,7 @@ int main(int argc, char** argv) {
                     "bounded generation returned an unexpected token count");
             for (const auto token : stats.generated_tokens) {
                 require(token < model.vocab_size(), "generated token ID is outside the vocabulary");
-                require(!observe_token(token, previous_token, repeated_run),
+                require(!repeated_tokens.observe(token),
                         "four-token repetition loop detected");
             }
             const auto expected_position = static_cast<std::uint32_t>(
