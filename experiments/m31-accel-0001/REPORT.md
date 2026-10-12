@@ -3,6 +3,13 @@
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
 Status: IN PROGRESS. The exact 64K production request reached the server but was stopped at the 85 C warning before a response; persistent-agent correctness and performance remain unqualified.
 
+## Current status — 2026-10-12 03:04 Europe/Amsterdam
+
+- Coordinator branch is clean and pushed at `6a32d8b69f981b842c3fd0c52ab5df328fdfe433`; integrated runtime code remains `a9480ae062bb83def6bb2f60e3b68a74b377bf9b` with later documentation-only commits.
+- Z840 SSH is available. Lake is mounted read/write with 1.6 TB free. The MI50 is idle at 27 C, 0% utilization, 20 W, and 10.9 MB VRAM; fan telemetry is 15% / 0 RPM. This does not verify airflow through the passive heatsink, so GPU work remains paused after the earlier 85 C stop.
+- Re-inspected `agent64k-04`: its capture contains environment, server, telemetry, and guard logs, but no saved request JSON or completed runner output. Source was `f01f7e9a210489139d7aa36e4391ede48e723464`; server requests 1–2 were received, request 3 was queued, and the container ended with exit 137 before a response. Exact request artifacts are now saved by runner `a9480ae` for a future safe attempt.
+- Completed 64K state correctness, decode/prefill A/B measurements, and LC-0009 QSUM decode evidence remain outstanding. Next: establish safe airflow/cooling, run the guarded production 64K correctness workload, then perform the prepared matched cold/suffix comparison.
+
 ## Source identity and worktrees
 
 - Clean campaign source anchor: `dc83f07f6adaaeec75a344b0155fa049553f2f7b`, fetched from Z840's committed `m30/agent-workload-baseline` branch. It descends from `origin/main` at `3991b6bf40f810b63a100c46981e16964bb5434b`.
@@ -225,3 +232,7 @@ Tried to lower the Z840 MI50 cap to 100 W as a reversible load reduction while p
 The production runner now fails closed unless per-request prompt-token and generated-token counters match the corresponding server request log record, with exact integer fields. A no-network self-check covers matching counts and a generated-token mismatch; Python compilation passes. This prevents aggregate decode counts from being attributed to the wrong request. Z840 validation of this latest script revision is pending; no model or GPU request ran.
 
 On Z840, source `284435de2afd989e2677a723ce2e0df7084046d6` passed Python compilation and the tokenizer-backed workload `--self-check`: exact 65,536 initial ChatML tokens, seven source files, and updated no-network metric checks passed. Retained log `/mnt/lc9-lake/m31-accel-0001-captures/gates/request-metrics-284435d-selfcheck.log`, SHA-256 `411305c5104f84aca5aff43517b13465de94fa3846a10a2b464896b94d627cbe`. No server request or GPU inference ran.
+
+## 2026-10-12 03:04 — Z840 SSH and capture recheck
+
+SSH succeeded on the first attempt. Lake remains mounted read/write with 1.6 TB free. Re-enumerated `agent64k-04`; it contains no `.json` request artifact, and its server log ends after request 3 entered the queue. Recorded exit status is 137; no runner result or completed response exists. The MI50 is idle at 27 C junction, 0% GPU use, 20 W, and 10.9 MB VRAM; fan telemetry reads 15% / 0 RPM. No workload ran; physical airflow through the passive heatsink remains unconfirmed.
