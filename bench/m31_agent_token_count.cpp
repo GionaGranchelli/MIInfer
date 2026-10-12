@@ -17,10 +17,19 @@ int main(int argc, char** argv) {
         std::string body;
         while (std::getline(std::cin, body)) {
             try {
+                const bool dump_ids = body.compare(0, 4, "IDS ") == 0;
+                if (dump_ids) body.erase(0, 4);
                 const auto parsed = miinfer::parse_openai_chat_request(body);
                 if (!parsed.request) throw std::runtime_error(parsed.error);
                 const auto prompt = miinfer::build_chatml(*parsed.request);
-                std::cout << tokenizer.encode(prompt).size() << '\n';
+                const auto ids = tokenizer.encode(prompt);
+                if (dump_ids) {
+                    std::cout << "IDS";
+                    for (const auto id : ids) std::cout << ' ' << id;
+                    std::cout << '\n';
+                } else {
+                    std::cout << ids.size() << '\n';
+                }
             } catch (const std::exception& error) {
                 std::cout << "ERROR " << error.what() << '\n';
             }

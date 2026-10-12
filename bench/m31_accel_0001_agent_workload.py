@@ -4,6 +4,7 @@
 import argparse
 import json
 import os
+import struct
 import subprocess
 import tempfile
 import time
@@ -41,6 +42,17 @@ class TokenCounter:
         if not result or result.startswith("ERROR "):
             raise RuntimeError(f"MIInfer tokenizer failed: {result or 'counter exited'}")
         return int(result)
+
+    def ids(self, payload):
+        self.process.stdin.write("IDS " + json.dumps(payload, separators=(",", ":")) + "\n")
+        self.process.stdin.flush()
+        result = self.process.stdout.readline().strip().split()
+        if not result or result[0] != "IDS":
+            raise RuntimeError(f"MIInfer tokenizer failed to return IDs: {' '.join(result) or 'counter exited'}")
+        ids = [int(value) for value in result[1:]]
+        if not ids or any(value < 0 or value > 0xFFFFFFFF for value in ids):
+            raise RuntimeError("MIInfer tokenizer returned invalid token IDs")
+        return ids
 
     def close(self):
         if self.process.stdin:
@@ -241,11 +253,16 @@ def sse_self_check():
         if failure.get("status") != "failed" or failure.get("failure", {}).get("message") != "injected self-check failure":
             raise RuntimeError("failure-artifact self-check failed")
         payload = body_for("test", [{"role": "user", "content": "frozen"}], "required", 2)
-        record = save_request_input(path, 1, 1, payload, 7)
+        record = save_request_input(path, 1, 1, payload, list(range(7)))
         saved = path.parent / record["path"]
+        token_ids = json.loads((path.parent / record["token_ids_path"]).read_text(encoding="utf-8"))
         if (saved.read_bytes() != json.dumps(payload).encode("utf-8")
                 or legacy.sha256(saved.read_bytes()) != record["sha256"]
-                or json.loads(saved.read_text(encoding="utf-8")) != payload):
+                or json.loads(saved.read_text(encoding="utf-8")) != payload
+                or token_ids["request_sha256"] != record["sha256"]
+                or token_ids["token_count"] != 7
+                or token_ids["token_ids"] != list(range(7))
+                or token_ids["token_ids_sha256"] != legacy.sha256(struct.pack("<7I", *range(7)))):
             raise RuntimeError("request-input artifact round-trip self-check failed")
 
 
@@ -341,8 +358,9 @@ def write_result(path, result):
             temporary.unlink()
 
 
-def save_request_input(output_path, turn, request, payload, tokenizer_prompt_tokens):
+def save_request_input(output_path, turn, request, payload, token_ids):
     data = json.dumps(payload).encode("utf-8")
+    token_bytes = struct.pack(f"<{len(token_ids)}I", *token_ids)
     artifact_dir = output_path.parent / f"{output_path.stem}.inputs"
     artifact_dir.mkdir(parents=True, exist_ok=True)
     artifact_path = artifact_dir / f"turn-{turn:02d}-request-{request:02d}.json"
@@ -359,11 +377,23 @@ def save_request_input(output_path, turn, request, payload, tokenizer_prompt_tok
     finally:
         if temporary is not None and temporary.exists():
             temporary.unlink()
+    token_ids_path = artifact_dir / f"turn-{turn:02d}-request-{request:02d}.tokens.json"
+    token_ids_data = {
+        "schema": "miinfer-chatml-token-ids-v1",
+        "model": payload.get("model"),
+        "request_sha256": legacy.sha256(data),
+        "token_count": len(token_ids),
+        "token_ids_sha256": legacy.sha256(token_bytes),
+        "token_ids": token_ids,
+    }
+    write_result(token_ids_path, token_ids_data)
     return {
         "path": str(artifact_path.relative_to(output_path.parent)),
         "sha256": legacy.sha256(data),
         "bytes": len(data),
-        "tokenizer_prompt_tokens": tokenizer_prompt_tokens,
+        "token_ids_path": str(token_ids_path.relative_to(output_path.parent)),
+        "token_ids_sha256": token_ids_data["token_ids_sha256"],
+        "tokenizer_prompt_tokens": len(token_ids),
     }
 
 
@@ -554,9 +584,13 @@ def main():
                                              for path, start, end, _ in TURN_PLANS)
         assert exact_count == TARGET_PROMPT_TOKENS
         if args.self_check:
+            initial_ids = counter.ids(body_for(args.model, messages, "required", 192))
+            if len(initial_ids) != exact_count:
+                raise RuntimeError("token-ID self-check disagrees with the exact initial prompt count")
             sse_self_check()
             print(json.dumps({"self_check": "PASS", "turns": len(TURN_PLANS),
                               "initial_prompt_tokens": exact_count,
+                              "initial_token_ids": len(initial_ids),
                               "sse_completion": "PASS", "atomic_artifact": "PASS",
                               "source_files": len(manifest)}, sort_keys=True))
             return 0
@@ -596,7 +630,7 @@ def main():
             result["active_phase"] = "planned_read_tool_call"
             payload = body_for(args.model, messages, "required", 192)
             request_input = save_request_input(output_path, index, 1, payload,
-                                               counter.count(payload))
+                                               counter.ids(payload))
             if index == 1 and request_input["tokenizer_prompt_tokens"] != exact_count:
                 raise RuntimeError("frozen initial request count changed after prompt construction")
             result["active_request"] = request_input
@@ -620,7 +654,7 @@ def main():
                 result["active_phase"] = f"report_completion_{attempt + 1}"
                 payload = body_for(args.model, messages, "auto", 256)
                 request_input = save_request_input(
-                    output_path, index, attempt + 2, payload, counter.count(payload))
+                    output_path, index, attempt + 2, payload, counter.ids(payload))
                 result["active_request"] = request_input
                 write_result(output_path, result)
                 completion = stream_completion(args.url, args.api_key, payload,
