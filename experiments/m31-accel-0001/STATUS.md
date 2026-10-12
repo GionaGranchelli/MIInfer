@@ -1,6 +1,6 @@
 # M31-ACCEL-0001 live status
 
-Updated: 2026-10-12 03:08 Europe/Amsterdam
+Updated: 2026-10-12 03:10 Europe/Amsterdam
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
 
 ## 2026-10-12 03:04 Z840 SSH and capture recheck
@@ -18,6 +18,11 @@ Deadline: 2026-10-12 10:00 Europe/Amsterdam
 
 - Production launcher enables `MIINFER_SESSION_REUSE=1` and a persistent `--session-dir`; the streaming handler captures processed prompts and restores matching prefixes. Per-request logs expose restore time, GQA reused tokens, and GDN checkpoint/final positions. This is ready for the guarded agent run but not live-qualified.
 - Z840 remained idle at 27 C/0% use with fan telemetry 15%/0 RPM; Lake has 1.6 TB free. No GPU work ran.
+
+## 2026-10-12 03:10 cooling configuration check
+
+- Live sysfs confirms the host is an HP Z840. HP's manual says the 1125 W PSU configuration has two front system fans and supports up to two 300 W compute GPUs; AMD lists the MI50 as passive-cooled at 300 W peak.
+- These specifications do not verify this unit's PSU/fan configuration or current airflow through the card. The MI50 remains idle at 27 C with fan telemetry 15% / 0 RPM. Waiting for physical airflow confirmation; no GPU run started.
 
 ## Source and ownership
 

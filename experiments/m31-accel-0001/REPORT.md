@@ -17,6 +17,12 @@ Z840 recheck at 03:08 found no active MIInfer process or container. The MI50 is 
 
 Source review verified the production snapshot path end-to-end: `run-agent-server.sh` sets session reuse and a persistent session directory; the streaming API handler enables prefix reuse and checkpoint capture; `PrefillV2Model::generate()` restores matching prefixes and persists the processed prompt. Runtime request logs expose restore time, reused GQA tokens, and GDN checkpoint/final positions. This prepares the evidence contract for the next run; no live snapshot/restore or 64K response has yet been observed.
 
+## 2026-10-12 03:10 — Z840 cooling configuration check
+
+Live sysfs identifies the remote host as an HP Z840. HP's service guide says the optional 1125 W configuration includes two front system fans and supports up to two 300 W GPU/compute cards; AMD lists the MI50 as passive-cooled with 300 W peak TDP. This shows the chassis family has an appropriate high-power configuration, but it does not establish which PSU/fan configuration is installed or that air is moving through this MI50 now. The live card remains idle at 27 C and its fan reads 0 RPM. Awaiting the requested physical check of chassis airflow before GPU work.
+
+Sources: [HP Z840 maintenance and service guide](https://h10032.www1.hp.com/ctg/Manual/c04823811.pdf), [AMD MI50 specifications](https://www.amd.com/en/support/downloads/drivers.html/accelerators/instinct/instinct-mi-series/instinct-mi50-32gb.html).
+
 ## Source identity and worktrees
 
 - Clean campaign source anchor: `dc83f07f6adaaeec75a344b0155fa049553f2f7b`, fetched from Z840's committed `m30/agent-workload-baseline` branch. It descends from `origin/main` at `3991b6bf40f810b63a100c46981e16964bb5434b`.
