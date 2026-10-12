@@ -102,11 +102,28 @@ Request 17's first token arrived at 1.71 seconds, although the complete 595-toke
 
 The run used the same frozen MIInfer image/model and GPU0; GPU2 stayed idle. GPU0 returned to 35°C junction after the run. No thermal guard event occurred.
 
+### 64K relevant-context prefill
+
+I assembled 246,640 characters of relevant MIInfer project context: project guidance, serving/architecture/CLI docs, API and persistent-session implementation, an API test, and this experiment report. OMP submitted that context to the same server. I caught that the OMP process had started from the main checkout rather than the campaign branch and canceled it before any repository tool action or edit. The server finishes prefill after a client disconnect; it reported:
+
+| Measure | Result |
+| --- | ---: |
+| Total prompt tokens | 78,852 |
+| New prompt tokens processed | 65,067 |
+| Prefix restored from disk | 13,785 tokens / 614,150,401 bytes |
+| Suffix prefill time | 1,464,290 ms |
+| Total prefill time | 1,467,320 ms |
+| Configured context | 98,304 tokens |
+| Headroom at this prompt size | 19,452 tokens |
+| Client result | Canceled after 4 generated tokens; no useful response/tool action |
+
+MIInfer saved checkpoint `sess_c484a78843ec60f8_p78852.miinfer`. This is evidence that the runtime processed 65,067 new, relevant repository-context tokens and retained headroom; it is not a completed 64K agent turn. GPU0 peaked at 76°C junction during prefill and returned to 32°C afterward. GPU2 remained idle.
+
 On GPU2, neither a fresh OMP process nor a resumed OMP transcript demonstrated a fast follow-up. Two requests entered prefill and remained active for about three minutes before I stopped the GPU2 container, which exited with code 137. The resumed transcript ID was `01a131bf-1af4-734d-9113-f0da8b510ec9`. An exact no-session replay of the original print-mode request also entered prefill and stayed active for one minute before I stopped it. Disk checkpoint restore did not produce a fast response in these attempts. The eight-turn task and a cached follow-up on GPU2 remain unproven.
 
 ## Decision
 
-**RETEST.** OMP tool execution, same-process prefix reuse, and a disk-checkpoint restore across OMP process restart are now demonstrated at 13K context. Restored follow-up reached a tool call in 6.13 seconds; the following response completed in 6.92 seconds with 88 new prompt tokens. This clears the narrow restore/latency probe, not the product gate: no real 64K coding task, eight-turn workflow, or median latency is established. Continue with one representative repository task at 65,536+ processed tokens on GPU0, checkpoint after turn four, and preserve the same OMP tools and prompt across resume. Keep GPU2 idle and make no hardware speed comparison.
+**RETEST.** OMP tool execution, same-process prefix reuse, and disk-checkpoint restore across OMP process restart are demonstrated at 13K context. A separate OMP request processed a 78,852-token prompt (65,067 new relevant tokens) and MIInfer saved the corresponding checkpoint, but the client was canceled before a useful response because it started from the wrong checkout. The narrow restore/latency probe reached a tool call in 6.13 seconds; a post-tool answer completed in 6.92 seconds. The product gate remains open: the 78,852-token context has not yet completed a useful agent action, and the real eight-turn workflow and median latency are not established. Resume from the saved checkpoint, point all OMP tools at the campaign branch checkout, then complete the same repository task and turn-four restore. Keep GPU2 idle.
 
 ## Evidence
 
@@ -118,3 +135,4 @@ On GPU2, neither a fresh OMP process nor a resumed OMP transcript demonstrated a
 - Controlled OMP transcript: `/tmp/m31-product-omp-controlled-20261013/2026-10-12T22-16-31-033Z_01a13230-5639-7565-9945-6f570fd98e46.jsonl`; first-turn output: `/tmp/m31-product-omp-controlled-20261013-first.log`.
 - Controlled OMP server requests: IDs 7 and 8 in `m31-product-20261012retry180`; telemetry in `retry180/telemetry.csv`.
 - OMP process-resume transcript: same session ID `01a13230-5639-7565-9945-6f570fd98e46`; server requests 16–19 in `m31-product-20261012retry180`; exact request bodies in local-only `/tmp/m31-omp-api-captures.jsonl` (contains private system/tool prompt text; do not publish).
+- Relevant-context bundle: `/tmp/m31-product-agent-task-context.md` (246,640 characters; local temporary artifact). Server request 20 processed it and saved `sess_c484a78843ec60f8_p78852.miinfer` under the campaign `stop90/sessions` directory.
