@@ -8,6 +8,7 @@ Status: IN PROGRESS. The exact 64K production request reached the server but was
 - Coordinator branch is clean and pushed at `6a32d8b69f981b842c3fd0c52ab5df328fdfe433`; integrated runtime code remains `a9480ae062bb83def6bb2f60e3b68a74b377bf9b` with later documentation-only commits.
 - Z840 SSH is available. Lake is mounted read/write with 1.6 TB free. The MI50 is idle at 27 C, 0% utilization, 20 W, and 10.9 MB VRAM; fan telemetry is 15% / 0 RPM. This does not verify airflow through the passive heatsink, so GPU work remains paused after the earlier 85 C stop.
 - Re-inspected `agent64k-04`: its capture contains environment, server, telemetry, and guard logs, but no saved request JSON or completed runner output. Source was `f01f7e9a210489139d7aa36e4391ede48e723464`; server requests 1–2 were received, request 3 was queued, and the container ended with exit 137 before a response. Exact request artifacts are now saved by runner `a9480ae` for a future safe attempt.
+- A recursive scan also found no files in the old `session-cache` and no request/prompt JSON anywhere in the capture, so the old input cannot be recovered. Source review confirms there is no direct `decode_step()` test: recurrent views copy cursor metadata, while the fix affects the HIP convolution-history address. A host-only assertion would not validate that behavior; GPU state validation remains required.
 - Completed 64K state correctness, decode/prefill A/B measurements, and LC-0009 QSUM decode evidence remain outstanding. Next: establish safe airflow/cooling, run the guarded production 64K correctness workload, then perform the prepared matched cold/suffix comparison.
 
 ## Source identity and worktrees
@@ -236,3 +237,7 @@ On Z840, source `284435de2afd989e2677a723ce2e0df7084046d6` passed Python compila
 ## 2026-10-12 03:04 — Z840 SSH and capture recheck
 
 SSH succeeded on the first attempt. Lake remains mounted read/write with 1.6 TB free. Re-enumerated `agent64k-04`; it contains no `.json` request artifact, and its server log ends after request 3 entered the queue. Recorded exit status is 137; no runner result or completed response exists. The MI50 is idle at 27 C junction, 0% GPU use, 20 W, and 10.9 MB VRAM; fan telemetry reads 15% / 0 RPM. No workload ran; physical airflow through the passive heatsink remains unconfirmed.
+
+## 2026-10-12 03:07 — cursor validation boundary
+
+Read-only source/call-site audit found no test directly invokes `PrefillV2Model::decode_step()`. `RecurrentLayerStateStorage::view()` copies the cursor, and recurrent decode passes it to the HIP convolution-history update; therefore a host-only cursor assertion would not exercise the changed behavior. Existing no-device build and 13/13 host-only CTests validate compilation/general host regressions only. The fix needs a guarded Z840 GPU check against fixed token history once cooling is confirmed. A recursive scan also confirms the old `agent64k-04/session-cache` and request/prompt artifact paths contain no recoverable files.

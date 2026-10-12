@@ -1,6 +1,6 @@
 # M31-ACCEL-0001 live status
 
-Updated: 2026-10-12 03:04 Europe/Amsterdam
+Updated: 2026-10-12 03:07 Europe/Amsterdam
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
 
 ## 2026-10-12 03:04 Z840 SSH and capture recheck
@@ -8,6 +8,11 @@ Deadline: 2026-10-12 10:00 Europe/Amsterdam
 - SSH succeeded on the first attempt. Lake is mounted read/write with 1.6 TB free. The `agent64k-04` capture contains no saved request JSON or completed runner result; server request 3 was queued and the recorded container exit is 137.
 - MI50 is idle at 27 C junction, 0% GPU use, 20 W, and 10.9 MB VRAM. Fan telemetry remains 15% / 0 RPM. No inference ran; airflow through the passive heatsink remains unconfirmed, so the GPU gate stays closed.
 - Next: establish safe airflow/cooling, run guarded production 64K correctness, then collect the prepared cold/suffix performance comparison. Decode/prefill results, 64K state continuity, and LC-0009 QSUM decode evidence remain unqualified.
+
+## 2026-10-12 03:07 cursor validation boundary
+
+- Source/call-site audit found no direct `decode_step()` test. The recurrent state view copies its cursor, and HIP recurrent decode uses that cursor for convolution-history addressing. Host-only checks cannot validate the fix; it requires a guarded GPU state check on Z840 after cooling is confirmed.
+- Recursive scan found no recoverable files in the old `agent64k-04/session-cache` or request/prompt artifact paths. The new runner records request bodies for the next attempt.
 
 ## Source and ownership
 
