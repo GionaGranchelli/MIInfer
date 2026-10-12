@@ -203,3 +203,8 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 
 - Commit `7c50a7ac5d5621232f2580781f42ef2cdd4f95a5` adds `prefix64k` mode to `run-guarded.sh`, invoking the five-pair 64K suffix benchmark under retained temperature/VRAM monitoring. Workload mode validation happens before hardware preflight. The self-check now verifies accepted/rejected modes as well as thermal and VRAM thresholds.
 - `bash -n` and the guard self-check passed locally and on Z840 at this exact source. No GPU device or inference was used. The live 64K production workload remains first in the queue after cooling clearance; fan is still 15% / 0 RPM and physical airflow is unconfirmed.
+
+## 2026-10-12 02:10 guarded-path build
+
+- Built the benchmark at the exact `build/m31-accel-0001/miinfer-prefix-state-reuse-bench` path expected by `prefix64k`, from pushed source `f621596f8c721ea0699f98d80514eebb80e52438`, in the pinned ROCm 7.2.1 image with no GPU device passed. Build and `--self-check` exited 0. Build log SHA-256 `91a0f50e8973244eb7f95c650cbff79e8edfa12b999d449a50f6a120cac528ff`; binary SHA-256 `94b155e2b30f321c32f209e19e3a4ba16132ab146b53e8ad7694a562d36a5a7f`.
+- Z840 remained idle afterward at 27 C junction, 0% use, 10.9 MB VRAM. The guarded suffix command is now build-ready, but no inference was run and cooling still blocks GPU execution.

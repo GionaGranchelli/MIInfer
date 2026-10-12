@@ -77,6 +77,8 @@ The focused suffix benchmark was updated and pushed at `a8fe7c1cb7ac1de0e16e9598
 
 The campaign thermal wrapper now supports `prefix64k` and launches that benchmark with retained temperature and VRAM monitoring. Workload mode is checked before hardware preflight. Shell syntax and the guard self-check passed locally and on Z840 at `7c50a7a`; this remains CPU-only validation.
 
+The benchmark was also built at the wrapper's expected `build/m31-accel-0001/` path from `f621596f8c721ea0699f98d80514eebb80e52438`, with no GPU device passed. Build and `--self-check` exited 0 (build log SHA-256 `91a0f50e8973244eb7f95c650cbff79e8edfa12b999d449a50f6a120cac528ff`; binary SHA-256 `94b155e2b30f321c32f209e19e3a4ba16132ab146b53e8ad7694a562d36a5a7f`). It is ready to run under the guard after cooling clearance; no performance result has been measured.
+
 SSH access and the read/write Lake mount are confirmed. After the build, the MI50 remained idle at 27 C junction, 0% utilization, and about 10.9 MB VRAM. Fan telemetry remains 15% / 0 RPM, so physical airflow is still unconfirmed. The 64K production workload, state continuity, decode performance, and suffix performance remain unqualified. The next action remains a guarded production 64K run after cooling is confirmed.
 
 ## 2026-10-12 01:22 checkpoint
