@@ -9,6 +9,19 @@ Status: IN PROGRESS. The exact 64K production request reached the server but was
 - Coordinator branch `experiment/m31-accel-0001-coordinator` is pushed through the current status checkpoint. Agent workload branch `experiment/m31-accel-0001-agent64k` is based on the same anchor.
 - The Z840 and Machinist source checkouts both contain unrelated dirty/untracked work. They remain untouched. A separate clean Z840 worktree is at `/mnt/lc9-lake/m31-accel-0001-z840`.
 
+## Implementation provenance
+
+The integrated campaign implementation is coordinator code SHA `a9480ae062bb83def6bb2f60e3b68a74b377bf9b`, based on the anchor above. Relative to that anchor, the changed-file inventory is: `CMakeLists.txt`; `bench/README.md`; `bench/m31_accel_0001_agent64k.cpp`; `bench/m31_accel_0001_agent_workload.py`; `bench/m31_accel_0001_decode_bench.cpp`; `bench/m31_agent_token_count.cpp`; `bench/prefix_state_reuse_bench.cpp`; `docs/M31-ACCEL-0001-agent64k.md`; `experiments/EXP-V2-0014-prefix-state-reuse.md`; `experiments/m31-accel-0001/REPORT.md`; `experiments/m31-accel-0001/STATUS.md`; `experiments/m31-accel-0001/run-agent-server.sh`; `experiments/m31-accel-0001/run-guarded.sh`; `include/miinfer/prefill_v2/model.hpp`; `src/prefill_v2/model.cpp`; and `tools/miinfer_cli.cpp`.
+
+Published worker branches and reviewed integration commits:
+
+- [Agent 64K branch](https://github.com/GionaGranchelli/MIInfer/tree/experiment/m31-accel-0001-agent64k), tip `9f2900cd42f48f4d6869e2afda2239f099238a98`; its tokenizer-verified workload change was cherry-picked into coordinator `82f6cd5`.
+- [Decode benchmark branch](https://github.com/GionaGranchelli/MIInfer/tree/experiment/m31-accel-0001-decode), tip `26b5f076e22ec29cdfd5609cacc7526ee2773b33`; reviewed and cherry-picked as coordinator `0ee18e6`.
+- [64K suffix benchmark branch](https://github.com/GionaGranchelli/MIInfer/tree/experiment/m31-accel-0001-suffix64), tip `60dfa93554ad2124368c0db84190a60fa55e82ff`; its fail-closed parity fix was cherry-picked as coordinator `1b477ab`.
+- [LC-0009 QSUM checker branch](https://github.com/GionaGranchelli/MIInfer/tree/experiment/m31-lc-0009-qsum-checker), tip `c00136d00c4e5a00c4b5460a1e31f793d4fd435e`; kept separate. Checker and ordinary-capture validation passed, but no raw one-token QSUM decode capture exists, so LC-0009 remains open.
+
+The coordinator fixes and harnesses are not performance results: the GDN cursor changes still need GPU state validation, and no current-source decode or cold/suffix timing has been measured.
+
 ## 2026-10-12 02:34 — cursor and cold-start gate validation
 
 Source review found two correctness gaps before another live attempt. Recurrent storage cursors could remain stale during multi-chunk prefill because they were synchronized only after the chunk loop; the cursor fix at `bf5f6d0bd991939bf23ac5af6878350c6ac9621b` synchronizes cursors around ordinary and profiled forward calls. Separately, the production runner treated turn one's prefix gate as passed without requiring a cold request. Coordinator commit `e145b71` now requires zero reused prefix/GQA/GDN checkpoint and full prompt dispatch on the first request, with failing self-check fixtures for stale-session reuse and short cold dispatch.
