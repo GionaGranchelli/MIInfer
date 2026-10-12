@@ -3,6 +3,7 @@
 
 import argparse
 import json
+import math
 import os
 import struct
 import subprocess
@@ -153,6 +154,40 @@ def sse_self_check():
             {"generated_tokens": 5, "decode_ms": 200, "decode_tokens_per_second": 20},
     ]) - 50.0 / 3.0) > 1e-9:
         raise RuntimeError("decode-rate aggregation self-check failed")
+    guard_samples = parse_guard_vram_samples(
+        'M31_GPU_SAMPLE {"timestamp_unix_ns":100,"junction_temperature_c":40,"vram_used_bytes":1200}\n'
+        'M31_GPU_SAMPLE {"timestamp_unix_ns":200,"junction_temperature_c":41,"vram_used_bytes":1800}\n'
+        'M31_GPU_SAMPLE {"timestamp_unix_ns":300,"junction_temperature_c":42,"vram_used_bytes":900}\n')
+    summary = request_vram_summary(
+        {"request_start_unix_ns": 150, "request_end_unix_ns": 250,
+         "gpu_before": {"vram_used_bytes": 1000},
+         "gpu_after": {"vram_used_bytes": 1100}}, guard_samples)
+    if (summary["peak_sampled_vram_bytes"] != 1800
+            or summary["guard_telemetry_samples_in_window"] != 1
+            or summary["boundary_vram_sample_count"] != 2
+            or summary["vram_sample_count"] != 3):
+        raise RuntimeError("guard telemetry request-window peak self-check failed")
+    for invalid in ("", "M31_GPU_SAMPLE {bad json}\n",
+                    ' prefix M31_GPU_SAMPLE {"timestamp_unix_ns":100,"junction_temperature_c":40,"vram_used_bytes":1}\n',
+                    'M31_GPU_SAMPLE {"timestamp_unix_ns":100,"junction_temperature_c":40,"vram_used_bytes":-1}\n',
+                    'M31_GPU_SAMPLE {"timestamp_unix_ns":100,"vram_used_bytes":1}\n'):
+        try:
+            parse_guard_vram_samples(invalid)
+        except RuntimeError:
+            pass
+        else:
+            raise RuntimeError("absent or malformed guard telemetry unexpectedly passed")
+    try:
+        request_vram_summary(
+            {"request_start_unix_ns": 150, "request_end_unix_ns": 250,
+             "gpu_before": {"vram_used_bytes": 1000},
+             "gpu_after": {"vram_used_bytes": 1100}},
+            [{"timestamp_unix_ns": 100, "junction_temperature_c": 40,
+              "vram_used_bytes": 1200}])
+    except RuntimeError:
+        pass
+    else:
+        raise RuntimeError("request without in-window guard samples unexpectedly passed")
     cold_gate = prefix_reuse_request_gates([{
         "server_latency": {"request_id": "cold", "reused_prefix_tokens": 0,
                             "suffix_tokens_dispatched": 1100},
@@ -353,6 +388,57 @@ def prefix_reuse_request_gates(requests, previous_prompt_tokens=None):
     return checks
 
 
+def parse_guard_vram_samples(text):
+    samples = []
+    for line_number, line in enumerate(text.splitlines(), 1):
+        if not line.startswith("M31_GPU_SAMPLE "):
+            if "M31_GPU_SAMPLE" in line:
+                raise RuntimeError(f"malformed guarded telemetry record on line {line_number}")
+            continue
+        try:
+            sample = json.loads(line[len("M31_GPU_SAMPLE "):])
+        except json.JSONDecodeError as error:
+            raise RuntimeError(f"malformed guarded telemetry on line {line_number}") from error
+        timestamp = sample.get("timestamp_unix_ns")
+        temperature = sample.get("junction_temperature_c")
+        used = sample.get("vram_used_bytes")
+        if (type(timestamp) is not int or timestamp < 0
+                or type(temperature) not in (int, float) or not math.isfinite(temperature)
+                or temperature < 0
+                or type(used) is not int or used < 0):
+            raise RuntimeError(f"invalid guarded telemetry fields on line {line_number}")
+        samples.append({"timestamp_unix_ns": timestamp,
+                        "junction_temperature_c": temperature,
+                        "vram_used_bytes": used})
+    if not samples:
+        raise RuntimeError("guarded telemetry contains no valid VRAM samples")
+    return samples
+
+
+def request_vram_summary(request, guard_samples):
+    start = request.get("request_start_unix_ns")
+    end = request.get("request_end_unix_ns")
+    if type(start) is not int or type(end) is not int or start < 0 or end < start:
+        raise RuntimeError("request has invalid Unix-nanosecond window")
+    in_window = [sample for sample in guard_samples
+                 if start <= sample["timestamp_unix_ns"] <= end]
+    if not in_window:
+        raise RuntimeError("guarded telemetry has no VRAM sample in the request window")
+    boundary = [snapshot["vram_used_bytes"]
+                for snapshot in (request.get("gpu_before"), request.get("gpu_after"))
+                if isinstance(snapshot, dict)
+                and type(snapshot.get("vram_used_bytes")) is int
+                and snapshot["vram_used_bytes"] >= 0]
+    window_values = [sample["vram_used_bytes"] for sample in in_window]
+    return {
+        "peak_sampled_vram_bytes": max(boundary + window_values),
+        "guard_telemetry_samples_in_window": len(in_window),
+        "boundary_vram_sample_count": len(boundary),
+        "vram_sample_count": len(boundary) + len(window_values),
+        "vram_sample_sources": ["request_boundary", "guard_telemetry_window"],
+    }
+
+
 def write_result(path, result):
     temporary = None
     try:
@@ -519,7 +605,7 @@ def exact_initial_request(root, model_id, counter):
     )
 
 
-def stream_completion(url, key, payload, request_input, server_log):
+def stream_completion(url, key, payload, request_input, server_log, guard_telemetry):
     tokenizer_prompt_tokens = request_input["tokenizer_prompt_tokens"]
     before = legacy.metrics(url, key)
     gpu_before = legacy.gpu_snapshot()
@@ -530,6 +616,7 @@ def stream_completion(url, key, payload, request_input, server_log):
     })
     content, reasoning, calls = [], [], {}
     first_delta_ms = None
+    request_start_unix_ns = time.time_ns()
     with urllib.request.urlopen(request, timeout=1800) as response:
         for choice in sse_choices(response):
             delta = choice.get("delta") or {}
@@ -546,6 +633,7 @@ def stream_completion(url, key, payload, request_input, server_log):
                 function = item.get("function", {})
                 call["function"]["name"] += function.get("name", "")
                 call["function"]["arguments"] += function.get("arguments", "")
+    request_end_unix_ns = time.time_ns()
     wall_ms = (time.perf_counter() - started) * 1000.0
     after = legacy.metrics(url, key)
     request_count = after["miinfer_inference_requests_total"] - before["miinfer_inference_requests_total"]
@@ -558,6 +646,13 @@ def stream_completion(url, key, payload, request_input, server_log):
     if not request_metric_counts_match(prompt_tokens, generated_tokens, detail,
                                        tokenizer_prompt_tokens):
         raise RuntimeError("tokenizer, metrics, and server request token counts disagree")
+    gpu_after = legacy.gpu_snapshot()
+    vram_summary = request_vram_summary({
+        "request_start_unix_ns": request_start_unix_ns,
+        "request_end_unix_ns": request_end_unix_ns,
+        "gpu_before": gpu_before,
+        "gpu_after": gpu_after,
+    }, guard_telemetry())
     return {
         "content": "".join(content), "reasoning_content": "".join(reasoning),
         "tool_calls": [calls[index] for index in sorted(calls)],
@@ -566,7 +661,10 @@ def stream_completion(url, key, payload, request_input, server_log):
         "generated_tokens": generated_tokens,
         "request_count": request_count, "server_latency": latency,
         "server_request": detail, "gpu_before": gpu_before,
-        "gpu_after": legacy.gpu_snapshot(), "request_input": request_input,
+        "gpu_after": gpu_after, "request_input": request_input,
+        "request_start_unix_ns": request_start_unix_ns,
+        "request_end_unix_ns": request_end_unix_ns,
+        "vram_samples": vram_summary,
     }
 
 
@@ -591,6 +689,7 @@ def main():
     parser.add_argument("--model-path", required=True, help="pinned Qwen3.8 GGUF used by MIInfer tokenizer")
     parser.add_argument("--token-counter", default="build/miinfer-m31-agent-token-count")
     parser.add_argument("--server-log", help="read-only MIInfer server stderr log")
+    parser.add_argument("--guard-telemetry", help="run-guarded.sh telemetry.log with structured samples")
     parser.add_argument("--url", default="http://127.0.0.1:8087/v1/chat/completions")
     parser.add_argument("--api-key", default="miinfer")
     parser.add_argument("--model", default="qwen3.8-27b")
@@ -623,11 +722,20 @@ def main():
 
         if not args.server_log:
             parser.error("--server-log is required unless --self-check is selected")
+        if not args.guard_telemetry:
+            parser.error("--guard-telemetry is required unless --self-check is selected")
         model_sha256 = os.environ.get("M31_MODEL_SHA256")
         if not model_sha256 or len(model_sha256) != 64:
             raise RuntimeError("guarded launcher must provide the verified M31_MODEL_SHA256")
         workload_id = uuid.uuid4().hex
         server_log = ServerLogTail(root / args.server_log)
+        guard_telemetry_path = root / args.guard_telemetry
+        if not guard_telemetry_path.is_file():
+            raise RuntimeError(f"guarded telemetry does not exist: {guard_telemetry_path}")
+        # Fail before inference if the host guard did not provide its preflight sample.
+        parse_guard_vram_samples(guard_telemetry_path.read_text(encoding="utf-8"))
+        guard_telemetry = lambda: parse_guard_vram_samples(
+            guard_telemetry_path.read_text(encoding="utf-8"))
         output_path = root / args.output
         result = {
             "workload": "m31-accel-0001-agent64k-v1",
@@ -670,7 +778,7 @@ def main():
             result["active_request"] = request_input
             write_result(output_path, result)
             call_response = stream_completion(args.url, args.api_key, payload,
-                                              request_input, server_log)
+                                              request_input, server_log, guard_telemetry)
             turn["requests"].append(call_response)
             result["requests_completed"] += 1
             result["active_request"] = None
@@ -694,7 +802,7 @@ def main():
                 result["active_request"] = request_input
                 write_result(output_path, result)
                 completion = stream_completion(args.url, args.api_key, payload,
-                                               request_input, server_log)
+                                               request_input, server_log, guard_telemetry)
                 turn["requests"].append(completion)
                 result["requests_completed"] += 1
                 result["active_request"] = None
@@ -709,10 +817,7 @@ def main():
             messages.append({"role": "assistant", "content": completion["content"]})
             detail = [item["server_request"] for item in turn["requests"]]
             latency = [item["server_latency"] for item in turn["requests"]]
-            vram_samples = [snapshot.get("vram_used_bytes")
-                            for item in turn["requests"]
-                            for snapshot in (item["gpu_before"], item["gpu_after"])
-                            if isinstance(snapshot.get("vram_used_bytes"), int)]
+            vram_summaries = [item["vram_samples"] for item in turn["requests"]]
             generated = sum(row["generated_tokens"] for row in detail)
             reuse_checks = prefix_reuse_request_gates(
                 turn["requests"], previous_prompt_tokens=previous_prompt_tokens)
@@ -727,8 +832,18 @@ def main():
                 "reused_prefix_tokens": sum(row["reused_prefix_tokens"] for row in latency),
                 "suffix_tokens_dispatched": sum(row["suffix_tokens_dispatched"] for row in latency),
                 "replayed_tokens": sum(row["suffix_tokens_dispatched"] for row in latency),
-                "peak_sampled_vram_bytes": max(vram_samples) if vram_samples else None,
-                "external_vram_samples_complete": len(vram_samples) == 2 * len(turn["requests"]),
+                "peak_sampled_vram_bytes": max(
+                    summary["peak_sampled_vram_bytes"] for summary in vram_summaries),
+                "guard_telemetry_samples_in_window": sum(
+                    summary["guard_telemetry_samples_in_window"] for summary in vram_summaries),
+                "boundary_vram_sample_count": sum(
+                    summary["boundary_vram_sample_count"] for summary in vram_summaries),
+                "vram_sample_count": sum(summary["vram_sample_count"] for summary in vram_summaries),
+                "vram_sample_sources": ["request_boundary", "guard_telemetry_window"],
+                "external_vram_samples_complete": all(
+                    summary["guard_telemetry_samples_in_window"] > 0
+                    and summary["boundary_vram_sample_count"] == 2
+                    for summary in vram_summaries),
                 "prefix_reuse_request_gates": reuse_checks,
                 "prefix_reuse_gate": bool(reuse_checks) and all(check["passed"] for check in reuse_checks),
                 "minimum_generation_gate": generated >= 128,

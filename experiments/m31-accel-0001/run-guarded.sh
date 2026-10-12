@@ -40,6 +40,16 @@ podman container exists "$name" && { echo "refusing existing container $name" >&
 read_snapshot() { rocm-smi --showtemp --showmeminfo vram --showpower --showclocks 2>&1; }
 parse_temp() { awk '/Temperature \(Sensor junction\)/ { print $NF; exit }'; }
 parse_used() { awk '/VRAM Total Used Memory \(B\)/ { print $NF; exit }'; }
+append_guard_sample() {
+  local snapshot="$1" temp used timestamp
+  temp=$(printf '%s\n' "$snapshot" | parse_temp)
+  used=$(printf '%s\n' "$snapshot" | parse_used)
+  [[ $temp =~ ^[0-9]+([.][0-9]+)?$ && $used =~ ^[0-9]+$ ]] || return 1
+  timestamp=$(date +%s%N)
+  [[ $timestamp =~ ^[0-9]+$ ]] || return 1
+  printf 'M31_GPU_SAMPLE {"timestamp_unix_ns":%s,"junction_temperature_c":%s,"vram_used_bytes":%s}\n' \
+    "$timestamp" "$temp" "$used" >> "$run_dir/telemetry.log"
+}
 pre=$(read_snapshot)
 temp=$(printf '%s\n' "$pre" | parse_temp)
 used=$(printf '%s\n' "$pre" | parse_used)
@@ -65,6 +75,7 @@ for binary in "${binaries[@]}"; do
   printf 'binary_%s_sha256=%s\n' "$(basename "$binary")" "$(sha256sum "$repo/$binary" | cut -d' ' -f1)" >> "$run_dir/environment.txt"
 done
 printf '%s %s\n' "$(date -u +%FT%TZ)" "$pre" > "$run_dir/telemetry.log"
+append_guard_sample "$pre" || { echo 'failed to record structured preflight telemetry' >&2; exit 3; }
 
 case "$mode" in
   native)
@@ -142,6 +153,9 @@ while :; do
   elif vram_limit "$used"; then
     echo "STOP used_vram=${used} threshold=33200000000 at $now" >> "$run_dir/guard.log"; rc=123
   fi
+  append_guard_sample "$snapshot" || {
+    echo "ABORT structured telemetry malformed at $now" >> "$run_dir/guard.log"; rc=125
+  }
   if (( rc != 0 )); then
     podman stop --time 10 "$name" >/dev/null 2>&1 || true
     for _ in {1..12}; do
