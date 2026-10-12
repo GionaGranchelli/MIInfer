@@ -334,3 +334,8 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 
 - The clean `/home/machinist/Development/MIInfer-m31-b06bffd` clone was fast-forwarded to the exact runner source `a9480ae062bb83def6bb2f60e3b68a74b377bf9b`. Its no-device ROCm container built `miinfer-m31-agent-token-count`; Python compilation and tokenizer-backed workload self-check passed at 65,536 tokens/eight turns/seven source files. Log SHA-256 `05d50d96d701751a74ed75a60cb9a229f36ea7e44944de1e47f3836439566067`.
 - No GPU was passed to Podman and no server request ran. Together with Z840's matching check, this verifies the replayable input artifact path on both hosts, but does not prove GPU context continuity, inference correctness, or performance.
+
+## 2026-10-12 03:25 Z840 decode launch-path build
+
+- SSH succeeded; Lake is mounted read/write with 1.6 TB free. The clean remote worktree is at pushed `c30bcdeb8081fb0d7832d4ecc78b1df2e16fb7c3`. Pinned ROCm 7.2.1 no-device build log SHA-256: `942192a2218f2e9247c659e0e29ac7c2cbcfc0f5304369d8eefc12848f5e560a`. Prefix and decode benchmark binary SHA-256: `e71c1f3720a4c189568d22e1de303284d381a48c6457f024c01296b6b1e2cd98` and `3fa0b094cf0bb06539e66c59ff7343a32f9a4497d927e8a73d33721cf4eb095a`. Prefix, decode, and guard self-checks pass.
+- The MI50 is idle at 27 C, 0% use, and 0% VRAM use; fan telemetry remains 15% / 0 RPM. This is build/harness evidence only. Physical airflow is unconfirmed; no inference or performance run was made.
