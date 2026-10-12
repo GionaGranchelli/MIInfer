@@ -437,6 +437,10 @@ void PrefillV2Model::forward(
                                  + " (max physical tile is " + std::to_string(kMaxPrefillBatch) + ")");
     }
 
+    if (prefill_state == nullptr) {
+        for (auto& state : recurrent_states_) state.set_position(base_position);
+    }
+
     auto& ws = const_cast<PrefillV2Workspace&>(ws_mgr_->workspace());
 
     // 1. Embed tokens: d_tokens -> d_ping_ [token_count, kHidden]
@@ -482,6 +486,10 @@ void PrefillV2Model::forward(
         kHidden,
         rms_epsilon_,
         stream);
+
+    if (prefill_state == nullptr) {
+        for (auto& state : recurrent_states_) state.set_position(base_position + token_count);
+    }
 }
 
 void PrefillV2Model::forward(
@@ -516,6 +524,8 @@ void PrefillV2Model::forward_profiled(
     if (token_count == 0 || token_count > kMaxPrefillBatch) {
         throw std::runtime_error("PrefillV2Model::forward_profiled: invalid token_count " + std::to_string(token_count));
     }
+
+    for (auto& state : recurrent_states_) state.set_position(base_position);
 
     auto& ws = const_cast<PrefillV2Workspace&>(ws_mgr_->workspace());
 
@@ -589,6 +599,8 @@ void PrefillV2Model::forward_profiled(
     breakdown.embedding_ms = elapsed(ev_start, ev_emb);
     breakdown.final_norm_ms = elapsed(ev_blocks_end, ev_final);
     breakdown.total_model_ms = elapsed(ev_start, ev_final);
+
+    for (auto& state : recurrent_states_) state.set_position(base_position + token_count);
 
     MIINFER_HIP_CHECK(hipEventDestroy(ev_start));
     MIINFER_HIP_CHECK(hipEventDestroy(ev_emb));
