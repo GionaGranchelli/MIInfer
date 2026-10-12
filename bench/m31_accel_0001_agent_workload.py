@@ -9,6 +9,7 @@ import subprocess
 import tempfile
 import time
 import urllib.request
+import uuid
 from pathlib import Path
 
 import v2_0045_agent_workload as legacy
@@ -253,13 +254,16 @@ def sse_self_check():
         if failure.get("status") != "failed" or failure.get("failure", {}).get("message") != "injected self-check failure":
             raise RuntimeError("failure-artifact self-check failed")
         payload = body_for("test", [{"role": "user", "content": "frozen"}], "required", 2)
-        record = save_request_input(path, 1, 1, payload, list(range(7)))
+        record = save_request_input(path, 1, 1, payload, list(range(7)), "self-check", 1, "b" * 64)
         saved = path.parent / record["path"]
         token_ids = json.loads((path.parent / record["token_ids_path"]).read_text(encoding="utf-8"))
         if (saved.read_bytes() != json.dumps(payload).encode("utf-8")
                 or legacy.sha256(saved.read_bytes()) != record["sha256"]
                 or json.loads(saved.read_text(encoding="utf-8")) != payload
                 or token_ids["request_sha256"] != record["sha256"]
+                or token_ids["workload_id"] != "self-check"
+                or token_ids["sequence_index"] != 1
+                or token_ids["model_sha256"] != "b" * 64
                 or token_ids["token_count"] != 7
                 or token_ids["token_ids"] != list(range(7))
                 or token_ids["token_ids_sha256"] != legacy.sha256(struct.pack("<7I", *range(7)))):
@@ -358,7 +362,8 @@ def write_result(path, result):
             temporary.unlink()
 
 
-def save_request_input(output_path, turn, request, payload, token_ids):
+def save_request_input(output_path, turn, request, payload, token_ids,
+                       workload_id, sequence_index, model_sha256):
     data = json.dumps(payload).encode("utf-8")
     token_bytes = struct.pack(f"<{len(token_ids)}I", *token_ids)
     artifact_dir = output_path.parent / f"{output_path.stem}.inputs"
@@ -379,8 +384,13 @@ def save_request_input(output_path, turn, request, payload, token_ids):
             temporary.unlink()
     token_ids_path = artifact_dir / f"turn-{turn:02d}-request-{request:02d}.tokens.json"
     token_ids_data = {
-        "schema": "miinfer-chatml-token-ids-v1",
+        "schema": "miinfer-chatml-token-ids-v2",
         "model": payload.get("model"),
+        "model_sha256": model_sha256,
+        "workload_id": workload_id,
+        "sequence_index": sequence_index,
+        "turn": turn,
+        "request": request,
         "request_sha256": legacy.sha256(data),
         "token_count": len(token_ids),
         "token_ids_sha256": legacy.sha256(token_bytes),
@@ -393,6 +403,8 @@ def save_request_input(output_path, turn, request, payload, token_ids):
         "bytes": len(data),
         "token_ids_path": str(token_ids_path.relative_to(output_path.parent)),
         "token_ids_sha256": token_ids_data["token_ids_sha256"],
+        "workload_id": workload_id,
+        "sequence_index": sequence_index,
         "tokenizer_prompt_tokens": len(token_ids),
     }
 
@@ -597,17 +609,22 @@ def main():
 
         if not args.server_log:
             parser.error("--server-log is required unless --self-check is selected")
+        model_sha256 = os.environ.get("M31_MODEL_SHA256")
+        if not model_sha256 or len(model_sha256) != 64:
+            raise RuntimeError("guarded launcher must provide the verified M31_MODEL_SHA256")
+        workload_id = uuid.uuid4().hex
         server_log = ServerLogTail(root / args.server_log)
         output_path = root / args.output
         result = {
             "workload": "m31-accel-0001-agent64k-v1",
+            "workload_id": workload_id,
             "qualification_sha": os.environ.get("M31_SOURCE_SHA") or subprocess.run(
                 ["git", "rev-parse", "HEAD"], cwd=root, capture_output=True,
                 text=True, check=True).stdout.strip(),
             "initial_context_target_tokens": TARGET_PROMPT_TOKENS,
             "initial_context_tokenizer_verified": exact_count,
             "model_path": str(model_path),
-            "model_sha256": os.environ.get("M31_MODEL_SHA256"),
+            "model_sha256": model_sha256,
             "runner_sha256": legacy.sha256(Path(__file__).read_bytes()),
             "expected_turn_count": len(TURN_PLANS), "turns_completed": 0,
             "workload_complete": False, "status": "in_progress",
@@ -619,6 +636,7 @@ def main():
         output_path.parent.mkdir(parents=True, exist_ok=True)
         write_result(output_path, result)
         previous_prompt_tokens = None
+        request_sequence = 0
         for index, (tool_path, start_line, end_line, task) in enumerate(TURN_PLANS, 1):
             turn = {"turn": index, "requests": [], "tool_results": []}
             result["active_turn"] = index
@@ -629,8 +647,10 @@ def main():
                     f"read_file call for {tool_path} lines {start_line}-{end_line}; do not answer in prose yet."})
             result["active_phase"] = "planned_read_tool_call"
             payload = body_for(args.model, messages, "required", 192)
+            request_sequence += 1
             request_input = save_request_input(output_path, index, 1, payload,
-                                               counter.ids(payload))
+                                               counter.ids(payload), workload_id,
+                                               request_sequence, model_sha256)
             if index == 1 and request_input["tokenizer_prompt_tokens"] != exact_count:
                 raise RuntimeError("frozen initial request count changed after prompt construction")
             result["active_request"] = request_input
@@ -653,8 +673,10 @@ def main():
             for attempt in range(3):
                 result["active_phase"] = f"report_completion_{attempt + 1}"
                 payload = body_for(args.model, messages, "auto", 256)
+                request_sequence += 1
                 request_input = save_request_input(
-                    output_path, index, attempt + 2, payload, counter.ids(payload))
+                    output_path, index, attempt + 2, payload, counter.ids(payload),
+                    workload_id, request_sequence, model_sha256)
                 result["active_request"] = request_input
                 write_result(output_path, result)
                 completion = stream_completion(args.url, args.api_key, payload,

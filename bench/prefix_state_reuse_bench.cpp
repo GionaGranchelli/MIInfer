@@ -240,8 +240,8 @@ int main(int argc, char** argv) {
     if (!first_token_ids_path.empty()) {
         first_artifact = m31_token_ids::load(first_token_ids_path);
         second_artifact = m31_token_ids::load(second_token_ids_path);
-        if (first_artifact->model != second_artifact->model
-            || first_artifact->ids.size() != 65536
+        const auto model_sha = sha256_file(model_path);
+        if (first_artifact->ids.size() != 65536
             || !std::all_of(first_artifact->ids.begin(), first_artifact->ids.end(), [&](auto id) {
                 return id < qwen_model.config().vocab_size;
             })
@@ -250,14 +250,8 @@ int main(int argc, char** argv) {
             })) {
             throw std::runtime_error("production request pair must share a model, start with 65,536 IDs, and fit its vocabulary");
         }
-        while (production_prefix_len < first_artifact->ids.size()
-               && production_prefix_len < second_artifact->ids.size()
-               && first_artifact->ids[production_prefix_len] == second_artifact->ids[production_prefix_len]) {
-            ++production_prefix_len;
-        }
-        if (production_prefix_len == 0 || production_prefix_len >= second_artifact->ids.size()) {
-            throw std::runtime_error("adjacent production requests have no nonempty reused prefix and suffix");
-        }
+        production_prefix_len = m31_token_ids::adjacent_prefix(
+            *first_artifact, *second_artifact, model_sha);
         std::cout << "[INFO] Production request SHA-256: " << first_artifact->request_sha256
                   << " -> " << second_artifact->request_sha256 << "\n"
                   << "[INFO] Production token-ID SHA-256: " << first_artifact->token_ids_sha256

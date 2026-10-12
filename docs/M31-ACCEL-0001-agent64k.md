@@ -65,8 +65,9 @@ extends only with tracked repository excerpts and stops unless the count is
 exactly 65,536. The first live request must report the same count. It never
 pads token IDs. For each request sent, the tokenizer helper can also emit the
 exact ChatML token IDs; the workload saves these beside the exact request body
-in a `.tokens.json` artifact tied to the request SHA-256 and a canonical
-little-endian token-ID SHA-256. This lets later analysis derive the true common
+in a `.tokens.json` artifact tied to the request SHA-256, pinned GGUF SHA-256,
+workload UUID, request sequence, and canonical little-endian token-ID SHA-256.
+This lets later analysis derive the true common
 token prefix across consecutive requests, including tokenizer boundary effects.
 The decode benchmark accepts one artifact with `--prompt-token-ids`; the prefix
 reuse benchmark accepts two adjacent artifacts with `--request-pair`, derives

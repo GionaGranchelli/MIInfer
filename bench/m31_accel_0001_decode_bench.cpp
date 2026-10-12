@@ -228,6 +228,7 @@ int main(int argc, char** argv) {
         if (tokenizer.vocabulary_size() > std::numeric_limits<std::uint32_t>::max()) {
             throw std::runtime_error("tokenizer vocabulary exceeds the token ID range");
         }
+        const auto model_sha = miinfer::sha256_file(options.model_path);
         std::vector<std::uint32_t> prompt;
         if (options.prompt_token_ids_path.empty()) {
             prompt = make_prompt(options.prompt_tokens,
@@ -235,7 +236,7 @@ int main(int argc, char** argv) {
                 tokenizer.add_bos(), tokenizer.bos_id());
         } else {
             const auto artifact = m31_token_ids::load(options.prompt_token_ids_path);
-            if (artifact.ids.size() != options.prompt_tokens
+            if (artifact.model_sha256 != model_sha || artifact.ids.size() != options.prompt_tokens
                 || !std::all_of(artifact.ids.begin(), artifact.ids.end(), [&](auto id) {
                     return id < tokenizer.vocabulary_size();
                 })) {
@@ -248,7 +249,6 @@ int main(int argc, char** argv) {
         }
         const auto capacity = kv_capacity(options.prompt_tokens, options.decode_tokens);
         miinfer::prefill_v2::PrefillV2Model model(model_data, capacity, true);
-        const auto model_sha = miinfer::sha256_file(options.model_path);
 
         miinfer::prefill_v2::GenerateOptions generation;
         generation.max_new_tokens = options.decode_tokens + 1;
