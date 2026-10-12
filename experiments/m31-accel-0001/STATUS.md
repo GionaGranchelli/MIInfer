@@ -1,7 +1,15 @@
 # M31-ACCEL-0001 live status
 
-Updated: 2026-10-12 07:52 Europe/Amsterdam
+Updated: 2026-10-12 08:32 Europe/Amsterdam
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
+
+## 2026-10-12 08:32 Machinist 64K prefill capture stopped by thermal guard
+
+- Corrected the stale Machinist copy-test blocker: the 4 KiB H2D+D2H probe passes. Updated the clean Machinist campaign worktree to pushed source `357f1f99141a7bb3e93785b5a6dd0696be373825`; rebuilt `miinfer` and `miinfer-m31-agent-token-count` in the pinned ROCm 7.2.1 container with `--network=none` and no GPU device nodes. `miinfer --version` reports exact source `357f1f99141a`, clean Release, HIP enabled for gfx906. Guard self-check passed for BDF `0000:85:00.0` resolving to GPU[1] and limits 80/85 C. Production runner self-check verified exactly 65,536 prompt tokens and IDs.
+- Ran the production `agent` mode, selecting GPU[1] by BDF and using the exact model SHA. The server logged request 3 with `prompt_tokens=65536`, `prefill_ms=459226`, `TTFT_wall_ms=459377`, `total_request_ms=468708`, `gdn_final_position_max/min=65692`, `gqa_kv_reused_tokens=0`, and `disk_session_restore=false` (expected for the cold first request). Peak sampled VRAM was `31,128,956,928 B`; 225 structured samples peaked at 80.0 C. A 4,454,088,861-byte session file was written.
+- At exactly 80.0 C the configured Machinist warning guard stopped the container (exit 122). The server had logged final request latency, but the Python runner then failed its required post-response `/metrics` read with `ConnectionRefusedError`; its retained JSON says failed, 0 completed requests and 0/8 turns. Therefore this is a real 64K prefill observation, not a successful workload/correctness or persistent-session result. The disk cache file alone does not establish restore parity. The card cooled to 29 C junction and returned idle.
+- Capture directory: `/home/machinist/experiments/m31-accel-0001-captures/agent64k-machinist-357f1f9-20261012T0845Z` (the directory's `0845Z` label is inaccurate; use timestamps in structured telemetry). SHA-256: workload JSON `8bce1c4f53151b935767f5824c1b4a9671e2e0e54953452527e559ce2ba0075e`; server log `3d4270b9dc8557902aae6a73dd7c6e490c2716ca0b6b4ac2ae2b026a33b0f6fb`; runner log `092e726a718779cd1dcbc6918ea7d311c87c4648b1c22c4f0311b2fae0605e86`; telemetry `e79f25449f372f488305bc951267ec720e97b1f419d5bd25b5252df79c4ac5e5`; guard log `cea81afa6cb32d5ef909ee226f3358bdcbd314671b309dfbfe8cf7274800c201`.
+- Next: confirm/improve airflow on Machinist so the cold 64K prefill stays below the existing 80 C warning; preserve this capture and retry into a fresh directory. Do not infer 8-turn correctness or compare this Machinist-only timing with Z840 results.
 
 ## 2026-10-12 07:52 Machinist QSUM capture preparation built
 
