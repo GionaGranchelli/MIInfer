@@ -3,7 +3,13 @@
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
 Status: IN PROGRESS. The exact 64K production request reached the server but was stopped at the 85 C guard threshold before any response; persistent-agent correctness and performance remain unqualified.
 
-## Current status — 2026-10-12 05:17 Europe/Amsterdam
+## Current status — 2026-10-12 07:55 Europe/Amsterdam
+
+- Both SSH hosts are reachable. Z840's MI50 is idle at 25 C junction; the preserved `agent64k-05` attempt is terminal at exit 122 with 0/8 turns and 0 completed requests. No campaign GPU process is active.
+- The integrated 64K server/workload, disk-restore diagnostic, and matched GQA binaries are built and pass no-device checks, but there is still no successful 64K response, disk restore, suffix/decode measurement, or QSUM operation capture.
+- Physical airflow through the Z840 passive MI50 heatsink remains unconfirmed. The prepared guarded 64K correctness run is first in queue after that physical safety check; no thermal guard was weakened.
+
+### 05:17 checkpoint
 
 - Corrected the GQA A/B harness after review found it forced HIP Graph while the candidate change is in eager decode. The route-aware harness is published on `experiment/m31-accel-0001-gqa-eager-route` (`dcd51cb1ae732f9c5dbd6da623b82a5873b90b37`) and supports explicit `--route eager|hip_graph`, route-matched sample validation, and the existing thermal guard pointed at an external clean source worktree.
 - Applied the identical benchmark-only change to the prepared A/B worktrees. The approved runtime control and candidate remain unchanged. Current published heads: control `16662fcbc22c478e897705a3eb6c59ee390fd88c`; candidate `527baba9f1f3915a6dc2507d1b8973089fb54827`. Both built in the pinned ROCm 7.2.1 image with no network and no GPU device nodes, passed the route-aware `--self-check`, and embed their exact clean source SHA in generated build metadata. No inference/timing sample has run.
