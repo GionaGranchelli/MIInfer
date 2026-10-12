@@ -489,3 +489,8 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 ## 2026-10-12 06:19 — no-device GQA binary preflight
 
 - Ran both staged control and candidate binaries' `--self-check` in the pinned ROCm container with `--network=none`, read-only source mounts, and verified absence of `/dev/kfd` and `/dev/dri`; both printed `PASS` and exited zero. The first check attempt omitted the guard's `--security-opt=label=disable` option and exited 139 without output; repeating with the guard's label option succeeded. No GPU workload ran. This validates the preflight binaries only, not inference or performance.
+
+## 2026-10-12 06:22 — stopped capture and state-continuity review
+
+- Read the Z840 `agent64k-05` capture directly. It records exit 122, 0/8 turns, 0 completed requests, and retains the 65,536-token request and token-ID artifacts. Rehashed request JSON (`54c657...`) and semantic token IDs (`e95d...`); the token artifact's file hash is separate. Its 94 full ROCm snapshots span 212 seconds from 26 C to 85 C; peak sampled VRAM was 31,057,162,240 B and peak socket power 238 W. The thermal guard stop remains the demonstrated blocker.
+- Independent source review at `ed8da6a` found no deterministic request-loop defect to fix before retry. The production agent checks token counts, prefix-reuse counters and GDN positions, but does not force a disk restore or verify raw KV/GDN byte parity; the native harness's synthetic snapshot/restore check is separate. Treat production restore/content continuity as unqualified. Its `urlopen(timeout=1800)` is an inactivity timeout, but this was not shown to cause the stopped run; bounded generation and guard abort remain in place.
