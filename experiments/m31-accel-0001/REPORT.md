@@ -71,6 +71,12 @@ The pinned ROCm 7.2.1 container successfully compiled `miinfer-prefix-state-reus
 
 Confirm Z840 airflow across the passive MI50 or provide authorized host-side cooling control, then resume the guarded 64K production request in a fresh capture. Preserve the 85 C warning and stop on unresolved cooling behavior; after a completed first turn, continue the eight-turn reuse and state gates before starting decode or prefill A/B work.
 
+## 2026-10-12 02:05 checkpoint
+
+The focused suffix benchmark was updated and pushed at `a8fe7c1cb7ac1de0e16e95980fdd782faa772259`. Its 64K-only mode warms suffix graph capture, runs five alternating cold/reuse pairs, checks token-history and stop-reason parity per pair, and reports medians and observed ranges. The updated source built successfully on Z840 in the pinned ROCm 7.2.1 container without a GPU device; the benchmark `--self-check` passed. This is harness validation only, not a suffix or decode measurement.
+
+SSH access and the read/write Lake mount are confirmed. After the build, the MI50 remained idle at 27 C junction, 0% utilization, and about 10.9 MB VRAM. Fan telemetry remains 15% / 0 RPM, so physical airflow is still unconfirmed. The 64K production workload, state continuity, decode performance, and suffix performance remain unqualified. The next action remains a guarded production 64K run after cooling is confirmed.
+
 ## 2026-10-12 01:22 checkpoint
 
 Z840 SSH access is restored. Lake is mounted read/write with 1.6 TB available. The MI50 is idle at 28 C junction with 0% utilization and 10,854,400 B VRAM in use; its fan telemetry remains 15% / 0 RPM, so physical airflow is still unverified and no new GPU run was started. The production workload now persists a partial artifact before requests, reports expected/completed turns and overall workload completion, and records `replayed_tokens` from the server's `suffix_tokens_dispatched` metric. This is an artifact-quality improvement only; 64K persistence remains unqualified.

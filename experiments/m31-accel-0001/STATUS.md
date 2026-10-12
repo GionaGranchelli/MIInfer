@@ -192,3 +192,9 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 
 - The clean position-build worktree was advanced to `284435d`. Python compilation and tokenizer-backed `--self-check` passed on Z840, counting exactly 65,536 initial ChatML tokens with seven source files; the new metric-count mismatch check also passed in the no-network self-check.
 - Retained log: `/mnt/lc9-lake/m31-accel-0001-captures/gates/request-metrics-284435d-selfcheck.log`, SHA-256 `411305c5104f84aca5aff43517b13465de94fa3846a10a2b464896b94d627cbe`. No server request or GPU inference ran.
+
+## 2026-10-12 02:05 paired 64K suffix benchmark
+
+- Commit `a8fe7c1cb7ac1de0e16e95980fdd782faa772259` is pushed. The focused 64K prefix-reuse benchmark warms suffix graph capture, runs five alternating cold/reuse pairs, checks exact generated-token and stop-reason parity for every pair, and reports per-pair TTFT plus median/observed range for TTFT and decode step time. Its CPU-only `--self-check` covers the five-sample count, median, and order schedule.
+- Z840 built `miinfer-prefix-state-reuse-bench` from the exact pushed source in `localhost/miinfer-dev:rocm-7.2.1` (`sha256:bdc5ed42c985a6a333083e023225f248825a6e1511f38b6b50fbc7d5ace3fe9e`). No GPU device was passed. Build exit 0; self-check passed. Build log SHA-256 `4763a05116376334618023849cbc100167c9813d2c5c3e98beddb925b9b926a1`; binary SHA-256 `49654be84fe5e4dc25a148767ddb4b460e33f4036ba9c7840cf7c1e09dc0ef15`.
+- The Lake disk is mounted read/write with 1.6 TB free. Post-build MI50 telemetry remained idle at 27 C junction, 0% use, and 10.9 MB VRAM. Its fan reports 15% / 0 RPM; physical airflow is still unconfirmed. This validates the benchmark build and self-check only; no suffix performance or 64K inference result exists. Next: after cooling clearance, prioritize the guarded production 64K workload.
