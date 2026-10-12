@@ -1,6 +1,6 @@
 # M31-ACCEL-0001 live status
 
-Updated: 2026-10-12 01:59 Europe/Amsterdam
+Updated: 2026-10-12 02:26 Europe/Amsterdam
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
 
 ## Source and ownership
@@ -230,3 +230,10 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 - Found an error in the detached tmux commands used for CPU-only builds: `$?` was expanded by the launching shell before tmux started, so their `.exit` marker files are not authoritative. The captured build logs themselves show completed targets and explicit self-check PASS output; the first tokenizer failure has a clear model-open traceback, and its misleading marker was not used to classify it as a pass.
 - Verified corrected `\$?` escaping with a deliberate `false` probe: its retained marker contained `1` and the tmux session exited. Future persistent jobs will use the corrected capture or the tracked guarded runner. Probe marker: `/mnt/lc9-lake/m31-accel-0001-captures/build/exit-capture-probe.txt`.
 - Reconciled Z840's Lake worktree to current pushed coordinator `a1f84e3`; it is clean and detached. No MIInfer process or tmux session is active. The MI50 is idle at 28 C, 0% use, and 10.9 MB VRAM; cooling/airflow remains unconfirmed.
+
+## 2026-10-12 02:26 remote recovery and QSUM checker
+
+- Z840 SSH is available. Lake is mounted read/write with 1.6 TB free; `/home` has 11 GB free. No MIInfer/GPU workload or tmux session was active. MI50 is idle at 27 C junction, 0% use, 20 W, and 10.9 MB VRAM. Fan telemetry remains 15% / 0 RPM, so physical airflow is unconfirmed and GPU inference stays paused.
+- Verified the clean detached Lake source worktree at `a1f84e3180a93f416ef72621df3a5e40cba46ac8`; the dirty `~/Development/mi50` checkout remains untouched.
+- LC-0009 already has a one-shot eager decode trace hook for post-normalized inputs, Q8 blocks, and Gate/Up outputs. The isolated branch `experiment/m31-lc-0009-qsum-checker` (`c00136d00c4e5a00c4b5460a1e31f793d4fd435e`) adds the missing checker QSUM mode and corrects the handoff. `--self-check` passed, and the default ordinary mode reproduced the Lake reference result: 160/160 Q8 groups and 17,408/17,408 rows each for Gate and Up within bounds. Branch pushed. No QSUM GPU capture was run; LC-0009 remains open.
+- Decode/prefill timings and the 64K persistent-agent workload remain unmeasured on GPU. Next: continue source/build review and remote CPU checks; resume one guarded MI50 run only after airflow or equivalent cooling safety is confirmed.

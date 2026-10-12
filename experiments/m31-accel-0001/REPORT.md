@@ -119,6 +119,12 @@ The pinned ROCm 7.2.1 build completed with exit 0 from source `0ee18e610f25ce0ea
 
 At 01:40, the clean Z840 coordinator worktree was fast-forwarded from `d22915b` to pushed HEAD `c8c05c57a6902c2f99af41c4dbb5fe8a25f1feea`; it remains detached and clean. The separate build worktree at `0ee18e6` and its hashed binary/log are retained.
 
+## 2026-10-12 02:26 — SSH recovery and LC-0009 QSUM checker
+
+Z840 SSH is available again. Lake is mounted read/write with 1.6 TB free; `/home` has 11 GB free. No MIInfer/GPU workload or tmux session was active. The MI50 was idle at 27 C junction, 0% use, 20 W, and 10.9 MB VRAM. Fan telemetry remains 15% / 0 RPM, so physical airflow is still unconfirmed and no GPU workload was launched. The clean detached Lake source worktree is at `a1f84e3180a93f416ef72621df3a5e40cba46ac8`; the dirty `~/Development/mi50` checkout was left untouched.
+
+The isolated LC-0009 branch [`experiment/m31-lc-0009-qsum-checker`](https://github.com/GionaGranchelli/MIInfer/tree/experiment/m31-lc-0009-qsum-checker) at `c00136d00c4e5a00c4b5460a1e31f793d4fd435e` adds a `--qsum` mode to the Contract O Gate/Up checker. It validates the QSUM field as FP16-rounded `half(d) * sum(q8_codes)` while preserving ordinary mode as the default, adds a no-model sum-mode self-check, and corrects the handoff to use the existing eager decode capture hook. The checker compiled with C++20 warnings enabled; `--self-check` passed; ordinary mode reproduced the saved Lake capture result with 160/160 Q8 groups and all 17,408 Gate and 17,408 Up rows within their bounds. The check used existing ordinary-prefill data, so QSUM decode correctness remains open until a guarded GPU capture is available.
+
 ## 2026-10-12 01:42 — per-request reuse gate
 
 Code review found that the production agent workload only required prefix reuse on the first request of turns 2–8. A later tool-followup request could miss reuse while the turn still passed. Coordinator commit `260b9ee60355887330869d96ad80d72f3a50660b` now records a reuse gate for every request on turns 2–8 and fails the turn if any request lacks either reused-prefix tokens or dispatched suffix tokens; missing request telemetry also fails closed. Its no-network self-check exercises a passing first request followed by a failing follow-up and the no-telemetry case. The commit is pushed.
