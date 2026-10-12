@@ -1,4 +1,5 @@
 #include "miinfer/hip_check.hpp"
+#include "miinfer/prefill_v2/logit_validation.hpp"
 #include "miinfer/prefill_v2/model.hpp"
 #include "miinfer/qwen35_model.hpp"
 
@@ -51,9 +52,7 @@ void require_finite_logits(PrefillV2Model& model) {
     std::vector<float> logits(model.vocab_size());
     MIINFER_HIP_CHECK(hipMemcpy(logits.data(), model.logits_buffer(),
                                 logits.size() * sizeof(float), hipMemcpyDeviceToHost));
-    require(std::all_of(logits.begin(), logits.end(), [](float value) {
-        return std::isfinite(value);
-    }), "non-finite logits");
+    for (const float value : logits) miinfer::prefill_v2::detail::require_finite_logit(value);
 }
 
 void require_positions(const PrefillV2Model& model, std::uint32_t expected) {
@@ -95,6 +94,16 @@ bool observe_token(std::uint32_t token, std::uint32_t& previous, std::size_t& ru
 }
 
 void self_check() {
+    miinfer::prefill_v2::detail::require_finite_logit(0.0f);
+    for (const float value : {NAN, INFINITY, -INFINITY}) {
+        bool rejected = false;
+        try {
+            miinfer::prefill_v2::detail::require_finite_logit(value);
+        } catch (const std::runtime_error&) {
+            rejected = true;
+        }
+        require(rejected, "non-finite logit self-check unexpectedly passed");
+    }
     static_assert(kTurns >= 8);
     static_assert(kKvCapacity > kContextTokens + (kTurns - 1) * kTurnAppendTokens);
     std::size_t prompt_size = kContextTokens;
