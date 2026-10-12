@@ -121,10 +121,17 @@ def sse_self_check():
     else:
         raise RuntimeError("truncated SSE self-check unexpectedly passed")
     metric_detail = {"prompt_tokens": 1100, "generated_tokens": 2}
-    if not request_metric_counts_match(1100, 2, metric_detail):
+    if not request_metric_counts_match(1100, 2, metric_detail, 1100):
         raise RuntimeError("matching request metric self-check failed")
-    if request_metric_counts_match(1100, 1, metric_detail):
+    if request_metric_counts_match(1100, 1, metric_detail, 1100):
         raise RuntimeError("generated-token metric mismatch unexpectedly passed")
+    if request_metric_counts_match(1100, 2, metric_detail, 1099):
+        raise RuntimeError("tokenizer/server prompt mismatch unexpectedly passed")
+    if abs(aggregate_decode_rate([
+            {"generated_tokens": 2, "decode_ms": 100, "decode_tokens_per_second": 10},
+            {"generated_tokens": 5, "decode_ms": 200, "decode_tokens_per_second": 20},
+    ]) - 50.0 / 3.0) > 1e-9:
+        raise RuntimeError("decode-rate aggregation self-check failed")
     cold_gate = prefix_reuse_request_gates([{
         "server_latency": {"request_id": "cold", "reused_prefix_tokens": 0,
                             "suffix_tokens_dispatched": 1100},
@@ -305,12 +312,21 @@ def write_result(path, result):
             temporary.unlink()
 
 
-def request_metric_counts_match(prompt_delta, generated_delta, detail):
+def request_metric_counts_match(prompt_delta, generated_delta, detail, tokenizer_prompt_tokens=None):
     prompt_tokens = detail.get("prompt_tokens")
     generated_tokens = detail.get("generated_tokens")
     return (type(prompt_delta) is int and type(generated_delta) is int
             and type(prompt_tokens) is int and type(generated_tokens) is int
-            and prompt_delta == prompt_tokens and generated_delta == generated_tokens)
+            and prompt_delta == prompt_tokens and generated_delta == generated_tokens
+            and (tokenizer_prompt_tokens is None or tokenizer_prompt_tokens == prompt_tokens))
+
+
+def aggregate_decode_rate(requests):
+    timed = [(row["decode_tokens_per_second"], row["decode_ms"])
+             for row in requests
+             if row.get("decode_tokens_per_second", 0) > 0 and row.get("decode_ms", 0) > 0]
+    elapsed_ms = sum(ms for _, ms in timed)
+    return sum(rate * ms for rate, ms in timed) / elapsed_ms if elapsed_ms else 0.0
 
 
 def source_evidence(root):
@@ -386,8 +402,9 @@ def exact_initial_request(root, model_id, counter):
     )
 
 
-def stream_completion(url, key, model, messages, tool_choice, max_tokens, server_log):
+def stream_completion(url, key, model, messages, tool_choice, max_tokens, server_log, counter):
     payload = body_for(model, messages, tool_choice, max_tokens)
+    tokenizer_prompt_tokens = counter.count(payload)
     before = legacy.metrics(url, key)
     gpu_before = legacy.gpu_snapshot()
     started = time.perf_counter()
@@ -421,8 +438,9 @@ def stream_completion(url, key, model, messages, tool_choice, max_tokens, server
     latency, detail = server_log.take_request()
     prompt_tokens = after["miinfer_prompt_tokens_total"] - before["miinfer_prompt_tokens_total"]
     generated_tokens = after["miinfer_generated_tokens_total"] - before["miinfer_generated_tokens_total"]
-    if not request_metric_counts_match(prompt_tokens, generated_tokens, detail):
-        raise RuntimeError("metrics token deltas disagree with the server request record")
+    if not request_metric_counts_match(prompt_tokens, generated_tokens, detail,
+                                       tokenizer_prompt_tokens):
+        raise RuntimeError("tokenizer, metrics, and server request token counts disagree")
     return {
         "content": "".join(content), "reasoning_content": "".join(reasoning),
         "tool_calls": [calls[index] for index in sorted(calls)],
@@ -507,7 +525,7 @@ def main():
             result["active_phase"] = "planned_read_tool_call"
             write_result(output_path, result)
             call_response = stream_completion(args.url, args.api_key, args.model,
-                                              messages, "required", 192, server_log)
+                                              messages, "required", 192, server_log, counter)
             turn["requests"].append(call_response)
             result["requests_completed"] += 1
             write_result(output_path, result)
@@ -524,7 +542,7 @@ def main():
                 result["active_phase"] = f"report_completion_{attempt + 1}"
                 write_result(output_path, result)
                 completion = stream_completion(args.url, args.api_key, args.model,
-                                               messages, "auto", 256, server_log)
+                                               messages, "auto", 256, server_log, counter)
                 turn["requests"].append(completion)
                 result["requests_completed"] += 1
                 write_result(output_path, result)
@@ -542,8 +560,6 @@ def main():
                             for item in turn["requests"]
                             for snapshot in (item["gpu_before"], item["gpu_after"])
                             if isinstance(snapshot.get("vram_used_bytes"), int)]
-            decode_times = [(row["generated_tokens"] / row["decode_tokens_per_second"])
-                            for row in detail if row.get("decode_tokens_per_second", 0) > 0]
             generated = sum(row["generated_tokens"] for row in detail)
             reuse_checks = prefix_reuse_request_gates(
                 turn["requests"], previous_prompt_tokens=previous_prompt_tokens)
@@ -552,7 +568,7 @@ def main():
                 "context_tokens": detail[0]["prompt_tokens"],
                 "generated_tokens_total": generated,
                 "ttft_ms": turn["requests"][0]["client_ttft_ms"],
-                "decode_tok_per_sec": generated / sum(decode_times) if decode_times else 0.0,
+                "decode_tok_per_sec": aggregate_decode_rate(detail),
                 "wall_ms": sum(item["client_wall_ms"] for item in turn["requests"]),
                 "server_total_ms": sum(row["total_ms"] for row in detail),
                 "reused_prefix_tokens": sum(row["reused_prefix_tokens"] for row in latency),
