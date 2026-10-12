@@ -75,6 +75,8 @@ Confirm Z840 airflow across the passive MI50 or provide authorized host-side coo
 
 The focused suffix benchmark was updated and pushed at `a8fe7c1cb7ac1de0e16e95980fdd782faa772259`. Its 64K-only mode warms suffix graph capture, runs five alternating cold/reuse pairs, checks token-history and stop-reason parity per pair, and reports medians and observed ranges. The updated source built successfully on Z840 in the pinned ROCm 7.2.1 container without a GPU device; the benchmark `--self-check` passed. This is harness validation only, not a suffix or decode measurement.
 
+The campaign thermal wrapper now supports `prefix64k` and launches that benchmark with retained temperature and VRAM monitoring. Workload mode is checked before hardware preflight. Shell syntax and the guard self-check passed locally and on Z840 at `7c50a7a`; this remains CPU-only validation.
+
 SSH access and the read/write Lake mount are confirmed. After the build, the MI50 remained idle at 27 C junction, 0% utilization, and about 10.9 MB VRAM. Fan telemetry remains 15% / 0 RPM, so physical airflow is still unconfirmed. The 64K production workload, state continuity, decode performance, and suffix performance remain unqualified. The next action remains a guarded production 64K run after cooling is confirmed.
 
 ## 2026-10-12 01:22 checkpoint
