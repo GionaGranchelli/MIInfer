@@ -3,8 +3,10 @@
 #include "miinfer/qwen3_tokenizer.hpp"
 #include "miinfer/qwen35_model.hpp"
 #include "miinfer/sha256.hpp"
+#include "m31_token_ids.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
@@ -30,6 +32,10 @@ struct Options {
     std::size_t prompt_tokens = 0;
     std::size_t decode_tokens = 0;
     std::size_t iterations = 0;
+    std::string prompt_token_ids_path;
+    std::string prompt_kind = "seeded_token_ids";
+    std::string prompt_request_sha256;
+    std::string prompt_token_ids_sha256;
 };
 
 void require(bool condition, const char* message) {
@@ -69,6 +75,13 @@ void validate_workload(std::size_t prompt, std::size_t decode, std::size_t itera
     }
 }
 
+bool valid_timing_sample(const miinfer::prefill_v2::GenerateStats& sample) {
+    return sample.used_hip_graph
+        && std::isfinite(sample.ttft_ms) && sample.ttft_ms > 0.0
+        && std::isfinite(sample.decode_ms) && sample.decode_ms > 0.0
+        && std::isfinite(sample.decode_tok_per_sec) && sample.decode_tok_per_sec > 0.0;
+}
+
 std::size_t kv_capacity(std::size_t prompt, std::size_t decode) {
     const auto needed = prompt + decode;
     const auto aligned = ((needed + kKvCapacityAlignment - 1) / kKvCapacityAlignment)
@@ -84,8 +97,20 @@ void self_check() {
     require(std::all_of(left.begin(), left.end(), [](auto id) { return id < 32000; }),
             "prompt contains an out-of-vocabulary token");
     validate_workload(2048, 128, 5);
+    miinfer::prefill_v2::GenerateStats valid_sample;
+    valid_sample.used_hip_graph = true;
+    valid_sample.ttft_ms = 1.0;
+    valid_sample.decode_ms = 1.0;
+    valid_sample.decode_tok_per_sec = 1.0;
+    require(valid_timing_sample(valid_sample), "valid HIP Graph timing was rejected");
+    valid_sample.used_hip_graph = false;
+    require(!valid_timing_sample(valid_sample), "HIP Graph fallback was accepted");
+    valid_sample.used_hip_graph = true;
+    valid_sample.decode_ms = std::numeric_limits<double>::infinity();
+    require(!valid_timing_sample(valid_sample), "non-finite decode time was accepted");
     require(kv_capacity(65536, 128) == 81920,
             "64K decode workload did not select the campaign KV capacity");
+    require(m31_token_ids::self_check(), "production token-ID artifact checks failed");
     bool rejected = false;
     try { validate_workload(81920, 1, 1); }
     catch (const std::invalid_argument&) { rejected = true; }
@@ -95,17 +120,25 @@ void self_check() {
 
 Options parse(int argc, char** argv) {
     if (argc < 2 || std::string(argv[1]) == "--help") {
-        std::cerr << "usage: miinfer-m31-accel-0001-decode-bench MODEL.gguf P TG ITERATIONS [JSON]\n"
+        std::cerr << "usage: miinfer-m31-accel-0001-decode-bench MODEL.gguf P TG ITERATIONS [JSON] [--prompt-token-ids FILE]\n"
                      "       miinfer-m31-accel-0001-decode-bench --self-check\n";
         throw std::invalid_argument("usage");
     }
-    if (argc < 5 || argc > 6) throw std::invalid_argument("expected MODEL.gguf P TG ITERATIONS [JSON]");
+    if (argc < 5) throw std::invalid_argument("expected MODEL.gguf P TG ITERATIONS [JSON] [--prompt-token-ids FILE]");
     Options result;
     result.model_path = argv[1];
     result.prompt_tokens = std::stoull(argv[2]);
     result.decode_tokens = std::stoull(argv[3]);
     result.iterations = std::stoull(argv[4]);
-    if (argc == 6) result.json_path = argv[5];
+    int index = 5;
+    if (index < argc && std::string(argv[index]) != "--prompt-token-ids")
+        result.json_path = argv[index++];
+    if (index < argc) {
+        if (std::string(argv[index++]) != "--prompt-token-ids" || index >= argc)
+            throw std::invalid_argument("expected --prompt-token-ids FILE");
+        result.prompt_token_ids_path = argv[index++];
+    }
+    if (index != argc) throw std::invalid_argument("unexpected decode benchmark argument");
     validate_workload(result.prompt_tokens, result.decode_tokens, result.iterations);
     return result;
 }
@@ -131,7 +164,9 @@ std::string result_json(
         << "\"source_dirty\":\"" << MIINFER_GIT_DIRTY << "\","
         << "\"build_type\":\"" << MIINFER_BUILD_TYPE << "\","
         << "\"model_sha256\":\"" << model_sha << "\","
-        << "\"prompt_kind\":\"seeded_token_ids\","
+        << "\"prompt_kind\":\"" << options.prompt_kind << "\","
+        << "\"prompt_request_sha256\":\"" << options.prompt_request_sha256 << "\","
+        << "\"prompt_token_ids_sha256\":\"" << options.prompt_token_ids_sha256 << "\","
         << "\"prompt_tokens\":" << prompt.size() << ','
         << "\"kv_capacity\":" << capacity << ','
         << "\"decode_tokens\":" << options.decode_tokens << ','
@@ -181,7 +216,7 @@ int main(int argc, char** argv) {
     }
 
     try {
-        const auto options = parse(argc, argv);
+        auto options = parse(argc, argv);
         if (!options.json_path.empty() && std::filesystem::exists(options.json_path)) {
             throw std::runtime_error("JSON output already exists; choose a fresh capture path");
         }
@@ -193,12 +228,27 @@ int main(int argc, char** argv) {
         if (tokenizer.vocabulary_size() > std::numeric_limits<std::uint32_t>::max()) {
             throw std::runtime_error("tokenizer vocabulary exceeds the token ID range");
         }
-        const auto prompt = make_prompt(options.prompt_tokens,
-            static_cast<std::uint32_t>(tokenizer.vocabulary_size()),
-            tokenizer.add_bos(), tokenizer.bos_id());
+        const auto model_sha = miinfer::sha256_file(options.model_path);
+        std::vector<std::uint32_t> prompt;
+        if (options.prompt_token_ids_path.empty()) {
+            prompt = make_prompt(options.prompt_tokens,
+                static_cast<std::uint32_t>(tokenizer.vocabulary_size()),
+                tokenizer.add_bos(), tokenizer.bos_id());
+        } else {
+            const auto artifact = m31_token_ids::load(options.prompt_token_ids_path);
+            if (artifact.model_sha256 != model_sha || artifact.ids.size() != options.prompt_tokens
+                || !std::all_of(artifact.ids.begin(), artifact.ids.end(), [&](auto id) {
+                    return id < tokenizer.vocabulary_size();
+                })) {
+                throw std::runtime_error("production token-ID artifact length or vocabulary does not match the model");
+            }
+            prompt = artifact.ids;
+            options.prompt_kind = "production_chatml_token_ids";
+            options.prompt_request_sha256 = artifact.request_sha256;
+            options.prompt_token_ids_sha256 = artifact.token_ids_sha256;
+        }
         const auto capacity = kv_capacity(options.prompt_tokens, options.decode_tokens);
         miinfer::prefill_v2::PrefillV2Model model(model_data, capacity, true);
-        const auto model_sha = miinfer::sha256_file(options.model_path);
 
         miinfer::prefill_v2::GenerateOptions generation;
         generation.max_new_tokens = options.decode_tokens + 1;
@@ -216,10 +266,10 @@ int main(int argc, char** argv) {
         samples.reserve(options.iterations);
         for (std::size_t iteration = 0; iteration < options.iterations; ++iteration) {
             auto sample = model.generate(prompt, generation);
-            require(sample.used_hip_graph, "production HIP Graph path was not used");
+            require(valid_timing_sample(sample),
+                    "sample did not use HIP Graph or returned invalid timing metrics");
             require(sample.generated_tokens.size() == options.decode_tokens + 1,
                     "generation ended before the requested decode count");
-            require(sample.decode_ms > 0.0, "decode timer returned a non-positive duration");
             if (!samples.empty()) {
                 require(sample.generated_tokens == samples.front().generated_tokens,
                         "repeated deterministic generation produced different token histories");
