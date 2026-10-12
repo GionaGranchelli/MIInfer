@@ -137,6 +137,26 @@ def sse_self_check():
     }])
     if not cold_gate[0]["passed"]:
         raise RuntimeError("cold request position/capacity self-check failed")
+    cold_start_checks = prefix_reuse_request_gates([
+        {"server_latency": {"request_id": "stale-session", "reused_prefix_tokens": 1,
+                            "suffix_tokens_dispatched": 1099},
+         "server_request": {"prompt_tokens": 1100, "generated_tokens": 0,
+                            "finish_reason": "stop", "gqa_kv_reused_tokens": 1,
+                            "gdn_checkpoint_position": 1,
+                            "runtime_context_capacity": 4096,
+                            "gdn_final_position_min": 1100,
+                            "gdn_final_position_max": 1100}},
+        {"server_latency": {"request_id": "short-cold-dispatch", "reused_prefix_tokens": 0,
+                            "suffix_tokens_dispatched": 1099},
+         "server_request": {"prompt_tokens": 1100, "generated_tokens": 0,
+                            "finish_reason": "stop", "gqa_kv_reused_tokens": 0,
+                            "gdn_checkpoint_position": 0,
+                            "runtime_context_capacity": 4096,
+                            "gdn_final_position_min": 1100,
+                            "gdn_final_position_max": 1100}},
+    ])
+    if [check["passed"] for check in cold_start_checks] != [False, False]:
+        raise RuntimeError("cold-start dispatch self-check failed")
     reuse_checks = prefix_reuse_request_gates([
         {"server_latency": {"request_id": "first", "reused_prefix_tokens": 1000,
                             "suffix_tokens_dispatched": 100},
@@ -239,6 +259,9 @@ def prefix_reuse_request_gates(requests, previous_prompt_tokens=None):
             and type(gdn_final_min) is int and type(gdn_final_max) is int
             and gdn_final_min == gdn_final_max
             and expected_final_position_min <= gdn_final_min <= expected_final_position_max)
+        cold_start_passed = (expected_prefix_tokens is not None or (
+            valid_prompt_tokens and reused == 0 and suffix == prompt_tokens
+            and gqa_reused == 0 and gdn_position == 0))
         checks.append({
             "request_index": request_index,
             "request_id": latency.get("request_id"),
@@ -255,7 +278,8 @@ def prefix_reuse_request_gates(requests, previous_prompt_tokens=None):
             "gdn_final_position_min": gdn_final_min,
             "gdn_final_position_max": gdn_final_max,
             "gdn_final_position_passed": gdn_final_position_passed,
-            "passed": valid_prompt_tokens and state_position_passed
+            "cold_start_passed": cold_start_passed,
+            "passed": valid_prompt_tokens and cold_start_passed and state_position_passed
                 and context_capacity_passed
                 and gdn_final_position_passed
                 and (expected_prefix_tokens is None or suffix > 0),
@@ -537,7 +561,7 @@ def main():
                 "peak_sampled_vram_bytes": max(vram_samples) if vram_samples else None,
                 "external_vram_samples_complete": len(vram_samples) == 2 * len(turn["requests"]),
                 "prefix_reuse_request_gates": reuse_checks,
-                "prefix_reuse_gate": index == 1 or all(check["passed"] for check in reuse_checks),
+                "prefix_reuse_gate": bool(reuse_checks) and all(check["passed"] for check in reuse_checks),
                 "minimum_generation_gate": generated >= 128,
                 "minimum_visible_answer_gate": len(completion["content"]) >= 300,
             })
