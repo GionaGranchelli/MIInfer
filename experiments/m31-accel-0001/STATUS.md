@@ -494,3 +494,9 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 
 - Read the Z840 `agent64k-05` capture directly. It records exit 122, 0/8 turns, 0 completed requests, and retains the 65,536-token request and token-ID artifacts. Rehashed request JSON (`54c657...`) and semantic token IDs (`e95d...`); the token artifact's file hash is separate. Its 94 full ROCm snapshots span 212 seconds from 26 C to 85 C; peak sampled VRAM was 31,057,162,240 B and peak socket power 238 W. The thermal guard stop remains the demonstrated blocker.
 - Independent source review at `ed8da6a` found no deterministic request-loop defect to fix before retry. The production agent checks token counts, prefix-reuse counters and GDN positions, but does not force a disk restore or verify raw KV/GDN byte parity; the native harness's synthetic snapshot/restore check is separate. Treat production restore/content continuity as unqualified. Its `urlopen(timeout=1800)` is an inactivity timeout, but this was not shown to cause the stopped run; bounded generation and guard abort remain in place.
+
+## 2026-10-12 06:23 SSH restored; cooling gate unchanged
+
+- Z840 SSH is reachable. Lake is mounted read/write at `/mnt/lc9-lake` with 1.6 TB free; `/home` has 11 GB free. MI50 identity remains unique ID `0x21678e17348c2f7`, gfx906; it is idle at 25 C junction, 19 W, and 10.9 MB VRAM.
+- No MIInfer process is active. The prior `agent64k-05` container remains `Created` with PID 0; its stopped capture is preserved on Lake.
+- Fresh sysfs inventory shows MI50 `fan1_input=0`, `pwm1_enable=1`, HP `pwm1_enable=2`, and no chassis-fan RPM input. `ipmitool` is absent. These readings do not establish airflow through the passive heatsink. No GPU workload was launched; 64K correctness and decode/prefill measurements remain unqualified until safe airflow is confirmed.
