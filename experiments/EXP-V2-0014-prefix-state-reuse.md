@@ -31,8 +31,10 @@ By introducing an explicit `ReusableContext` abstraction that preserves resident
   128-token greedy continuation in every measured pair. It warms the suffix
   graph before five alternating cold/reuse pairs and reports per-sample TTFT,
   median, and observed range. `--self-check` exercises the sample-order and
-  median helpers without opening a GPU. The no-flag command retains the full
-  matrix and its legacy exit behavior.
+  median helpers without opening a GPU. For a live campaign run, launch it via
+  `experiments/m31-accel-0001/run-guarded.sh CAPTURE_DIR prefix64k` so temperature
+  and VRAM telemetry are retained and enforced. The no-flag command retains
+  the full matrix and its legacy exit behavior.
 
 ---
 
