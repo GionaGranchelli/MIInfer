@@ -53,7 +53,7 @@ The run completed without a thermal warning. The guard file also contains 80–8
 
 GPU2 stayed cooler than GPU0 had in the earlier run, but this run did not show a latency benefit. The earlier GPU0 run measured 73,066 prompt tokens, 53.8335 tokens/s prefill, and 22.394 seconds for a cached follow-up. Only one cold-prefill sample per GPU is available, so these values do not establish a hardware winner.
 
-A second OMP process did not resume the first session. It began another prefill and was stopped after about three minutes. The GPU2 container exited with code 137 after that stop. The campaign has not demonstrated a useful OMP tool action, a cached follow-up on GPU2, checkpoint restore, or the eight-turn task.
+Neither a fresh OMP process nor a resumed OMP transcript demonstrated a fast follow-up. Both requests entered prefill and remained active for about three minutes before I stopped the GPU2 container, which exited with code 137. The resumed transcript ID was `01a131bf-1af4-734d-9113-f0da8b510ec9`. The campaign has not demonstrated a useful OMP tool action, a cached follow-up on GPU2, checkpoint restore, or the eight-turn task.
 
 ## Decision
 
