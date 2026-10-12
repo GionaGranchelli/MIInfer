@@ -1,7 +1,14 @@
 # M31-ACCEL-0001 live status
 
-Updated: 2026-10-12 05:17 Europe/Amsterdam
+Updated: 2026-10-12 05:52 Europe/Amsterdam
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
+
+## 2026-10-12 05:52 Z840 preflight and guarded-VRAM integration
+
+- Z840 SSH succeeded. Lake is mounted read/write at `/mnt/lc9-lake` with 1.6 TB free; `/home` has 11 GB free. MI50 is idle at 26 C junction, 0% use, with 10.9 MB VRAM sampled and no active Podman containers. No GPU workload was started.
+- Reviewed the pushed VRAM-window candidate and its callers. Host checks passed: Python compilation, agent workload self-check, structured telemetry window/peak self-check, both shell syntax checks, guard self-check, and `git diff --check`.
+- Integrated candidate `543629d31581ef39e788180b1b9742d30ea0d273` as coordinator commit `f8974d0`. Per-request sampled VRAM now includes guard samples inside the request time window plus boundary snapshots; it remains a sampled maximum, not a continuous peak.
+- Physical airflow through the passive MI50 heatsink is still unconfirmed. Keep guarded GPU work held until airflow is verified. Next after clearance: run the already-built production 64K workload, then the matched eager GQA A/B.
 
 ## 2026-10-12 05:17 GQA eager-route benchmark repair
 
