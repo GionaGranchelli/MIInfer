@@ -733,7 +733,10 @@ The KV capacity rounds `P + TG` up to 16,384-token increments and is capped at
 128K campaign. For example, `65536 128 5` selects capacity 81,920. `--self-check`
 validates deterministic input generation and the capacity guard without
 loading a model or launching GPU work. The benchmark itself requires an
-available GPU and rejects an environment that disables HIP Graph.
+available GPU. `--route hip_graph` selects HIP Graph (the default);
+`--route eager` selects eager decode. Each sample must report the requested
+execution route, and the JSON records `requested_route`. The CPU-only
+`--self-check` validates both route/sample matches and mismatches.
 
 Pass `--prompt-token-ids <request.tokens.json>` after the optional output path
 to decode from an exact production ChatML request artifact. The benchmark
@@ -755,8 +758,56 @@ prefix comparison, copy two consecutive request artifacts there and set
 filenames before invoking guarded `decode` or `prefix64k`. The guarded launcher
 rejects missing or nonlocal filenames before starting the GPU container.
 
-`decode` defaults to P=65,536, TG=128, and five samples. Override these with
-`M31_DECODE_PROMPT_TOKENS`, `M31_DECODE_TOKENS`, or
-`M31_DECODE_ITERATIONS`. Run baseline and candidate revisions in separate
-capture directories with the same settings; compare only captures with equal
-model and prompt hashes and identical generated token IDs.
+`decode` defaults to P=65,536, TG=128, five samples, and the HIP Graph route.
+Override these with `M31_DECODE_PROMPT_TOKENS`, `M31_DECODE_TOKENS`,
+`M31_DECODE_ITERATIONS`, or `M31_DECODE_ROUTE=hip_graph|eager`. Run baseline
+and candidate revisions in separate capture directories with the same route
+and settings; compare only captures with equal model and prompt hashes and
+identical generated token IDs. To compare the published eager GQA change, use
+the eager route on both source revisions.
+
+## GQA eager control/candidate capture
+
+The prepared GQA source worktrees are
+`/mnt/lc9-lake/m31-gqa-ab-control` and
+`/mnt/lc9-lake/m31-gqa-ab-candidate`. Stage the retained exact initial request
+token artifact in each fresh capture directory; it is
+`/mnt/lc9-lake/m31-accel-0001-captures/agent64k-05/agent-workload.inputs/turn-01-request-01.tokens.json`.
+Build the route-enabled benchmark in each clean worktree first:
+
+```sh
+for source in /mnt/lc9-lake/m31-gqa-ab-control /mnt/lc9-lake/m31-gqa-ab-candidate; do
+  cmake -S "$source" -B "$source/build/m31-accel-0001" \
+    -DCMAKE_BUILD_TYPE=Release -DCMAKE_HIP_ARCHITECTURES=gfx906 \
+    -DMIINFER_HIP_ARCHITECTURE=gfx906 -DMIINFER_TARGET_ARCH=gfx906 \
+    -DMIINFER_ENABLE_HIP=ON -DMIINFER_BUILD_BENCHMARKS=ON -DMIINFER_BUILD_TESTS=OFF
+  cmake --build "$source/build/m31-accel-0001" --target miinfer-m31-accel-0001-decode-bench -j
+  "$source/build/m31-accel-0001/miinfer-m31-accel-0001-decode-bench" --self-check
+done
+```
+
+The clean worktrees must include this benchmark-only route-selection change
+before that build; keep their GQA runtime commits unchanged. Then run the same
+eager route against both trees from this campaign checkout.
+`M31_SOURCE_DIR` directs the guard's clean-source validation, source identity,
+binary checks, and container mount to that worktree:
+
+```sh
+control=/mnt/lc9-lake/m31-gqa-ab-control
+candidate=/mnt/lc9-lake/m31-gqa-ab-candidate
+artifact=/mnt/lc9-lake/m31-accel-0001-captures/agent64k-05/agent-workload.inputs/turn-01-request-01.tokens.json
+control_capture=/mnt/lc9-lake/m31-accel-0001-captures/gqa-eager-control
+candidate_capture=/mnt/lc9-lake/m31-accel-0001-captures/gqa-eager-candidate
+install -d "$control_capture" "$candidate_capture"
+install -m 0644 "$artifact" "$control_capture/request.tokens.json"
+install -m 0644 "$artifact" "$candidate_capture/request.tokens.json"
+M31_SOURCE_DIR="$control" M31_DECODE_ROUTE=eager M31_DECODE_TOKEN_IDS=request.tokens.json \
+  experiments/m31-accel-0001/run-guarded.sh "$control_capture" decode
+M31_SOURCE_DIR="$candidate" M31_DECODE_ROUTE=eager M31_DECODE_TOKEN_IDS=request.tokens.json \
+  experiments/m31-accel-0001/run-guarded.sh "$candidate_capture" decode
+```
+
+Build the decode benchmark in each source worktree before capture. The JSON
+records the requested route, source/build identity, request hash, and token-ID
+hash. Each fresh capture directory must be unused and contain its own artifact
+copy before `run-guarded.sh` starts.
