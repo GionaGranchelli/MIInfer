@@ -32,6 +32,7 @@ struct Options {
     std::size_t prompt_tokens = 0;
     std::size_t decode_tokens = 0;
     std::size_t iterations = 0;
+    std::string route = "hip_graph";
     std::string prompt_token_ids_path;
     std::string prompt_kind = "seeded_token_ids";
     std::string prompt_request_sha256;
@@ -75,8 +76,13 @@ void validate_workload(std::size_t prompt, std::size_t decode, std::size_t itera
     }
 }
 
-bool valid_timing_sample(const miinfer::prefill_v2::GenerateStats& sample) {
-    return sample.used_hip_graph
+bool valid_route(const std::string& route) {
+    return route == "hip_graph" || route == "eager";
+}
+
+bool valid_timing_sample(
+    const miinfer::prefill_v2::GenerateStats& sample, const std::string& route) {
+    return sample.used_hip_graph == (route == "hip_graph")
         && std::isfinite(sample.ttft_ms) && sample.ttft_ms > 0.0
         && std::isfinite(sample.decode_ms) && sample.decode_ms > 0.0
         && std::isfinite(sample.decode_tok_per_sec) && sample.decode_tok_per_sec > 0.0;
@@ -102,12 +108,16 @@ void self_check() {
     valid_sample.ttft_ms = 1.0;
     valid_sample.decode_ms = 1.0;
     valid_sample.decode_tok_per_sec = 1.0;
-    require(valid_timing_sample(valid_sample), "valid HIP Graph timing was rejected");
+    require(valid_route("hip_graph") && valid_route("eager") && !valid_route("invalid"),
+            "decode route validation is wrong");
+    require(valid_timing_sample(valid_sample, "hip_graph"), "valid HIP Graph timing was rejected");
+    require(!valid_timing_sample(valid_sample, "eager"), "HIP Graph sample was accepted for eager route");
     valid_sample.used_hip_graph = false;
-    require(!valid_timing_sample(valid_sample), "HIP Graph fallback was accepted");
+    require(!valid_timing_sample(valid_sample, "hip_graph"), "eager fallback was accepted for HIP Graph route");
+    require(valid_timing_sample(valid_sample, "eager"), "valid eager timing was rejected");
     valid_sample.used_hip_graph = true;
     valid_sample.decode_ms = std::numeric_limits<double>::infinity();
-    require(!valid_timing_sample(valid_sample), "non-finite decode time was accepted");
+    require(!valid_timing_sample(valid_sample, "hip_graph"), "non-finite decode time was accepted");
     require(kv_capacity(65536, 128) == 81920,
             "64K decode workload did not select the campaign KV capacity");
     require(m31_token_ids::self_check(), "production token-ID artifact checks failed");
@@ -115,12 +125,12 @@ void self_check() {
     try { validate_workload(81920, 1, 1); }
     catch (const std::invalid_argument&) { rejected = true; }
     require(rejected, "KV-capacity overflow was not rejected");
-    std::cout << "M31 decode benchmark self-check: PASS (deterministic prompt, bounds)\n";
+    std::cout << "M31 decode benchmark self-check: PASS (routes, deterministic prompt, bounds)\n";
 }
 
 Options parse(int argc, char** argv) {
     if (argc < 2 || std::string(argv[1]) == "--help") {
-        std::cerr << "usage: miinfer-m31-accel-0001-decode-bench MODEL.gguf P TG ITERATIONS [JSON] [--prompt-token-ids FILE]\n"
+        std::cerr << "usage: miinfer-m31-accel-0001-decode-bench MODEL.gguf P TG ITERATIONS [JSON] [--route hip_graph|eager] [--prompt-token-ids FILE]\n"
                      "       miinfer-m31-accel-0001-decode-bench --self-check\n";
         throw std::invalid_argument("usage");
     }
@@ -131,14 +141,20 @@ Options parse(int argc, char** argv) {
     result.decode_tokens = std::stoull(argv[3]);
     result.iterations = std::stoull(argv[4]);
     int index = 5;
-    if (index < argc && std::string(argv[index]) != "--prompt-token-ids")
+    if (index < argc && !std::string(argv[index]).starts_with("--"))
         result.json_path = argv[index++];
-    if (index < argc) {
-        if (std::string(argv[index++]) != "--prompt-token-ids" || index >= argc)
-            throw std::invalid_argument("expected --prompt-token-ids FILE");
-        result.prompt_token_ids_path = argv[index++];
+    while (index < argc) {
+        const std::string argument = argv[index++];
+        if (argument == "--prompt-token-ids" && index < argc) {
+            result.prompt_token_ids_path = argv[index++];
+        } else if (argument == "--route" && index < argc) {
+            result.route = argv[index++];
+            if (!valid_route(result.route))
+                throw std::invalid_argument("route must be hip_graph or eager");
+        } else {
+            throw std::invalid_argument("unexpected decode benchmark argument: " + argument);
+        }
     }
-    if (index != argc) throw std::invalid_argument("unexpected decode benchmark argument");
     validate_workload(result.prompt_tokens, result.decode_tokens, result.iterations);
     return result;
 }
@@ -159,7 +175,7 @@ std::string result_json(
     const std::vector<miinfer::prefill_v2::GenerateStats>& samples) {
     std::ostringstream out;
     out << std::fixed << std::setprecision(6)
-        << "{\"benchmark\":\"m31-accel-0001-production-graph-decode\","
+        << "{\"benchmark\":\"m31-accel-0001-production-decode\","
         << "\"source_sha\":\"" << MIINFER_GIT_COMMIT << "\","
         << "\"source_dirty\":\"" << MIINFER_GIT_DIRTY << "\","
         << "\"build_type\":\"" << MIINFER_BUILD_TYPE << "\","
@@ -171,7 +187,7 @@ std::string result_json(
         << "\"kv_capacity\":" << capacity << ','
         << "\"decode_tokens\":" << options.decode_tokens << ','
         << "\"iterations\":" << samples.size() << ','
-        << "\"requested_route\":\"hip_graph\","
+        << "\"requested_route\":\"" << options.route << "\","
         << "\"prompt_id_sha256\":\"" << ids_sha256(prompt) << "\","
         << "\"samples\":[";
     for (std::size_t index = 0; index < samples.size(); ++index) {
@@ -252,7 +268,7 @@ int main(int argc, char** argv) {
 
         miinfer::prefill_v2::GenerateOptions generation;
         generation.max_new_tokens = options.decode_tokens + 1;
-        generation.use_hip_graph = true;
+        generation.use_hip_graph = options.route == "hip_graph";
         generation.temperature = 0.0f;
         generation.top_p = 1.0f;
         generation.top_k = 1;
@@ -266,8 +282,8 @@ int main(int argc, char** argv) {
         samples.reserve(options.iterations);
         for (std::size_t iteration = 0; iteration < options.iterations; ++iteration) {
             auto sample = model.generate(prompt, generation);
-            require(valid_timing_sample(sample),
-                    "sample did not use HIP Graph or returned invalid timing metrics");
+            require(valid_timing_sample(sample, options.route),
+                    "sample route did not match the requested route or timing metrics were invalid");
             require(sample.generated_tokens.size() == options.decode_tokens + 1,
                     "generation ended before the requested decode count");
             if (!samples.empty()) {
