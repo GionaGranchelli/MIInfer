@@ -779,23 +779,29 @@ on Z840, using the pinned `localhost/miinfer-dev:rocm-7.2.1` image with
 `gqa-ab-control-eager-route-build-v5.log` and
 `gqa-ab-candidate-eager-route-build-v5.log` under
 `/mnt/lc9-lake/m31-accel-0001-captures/`; both end with a passing `--self-check`.
-The binaries are in each tree's `build/m31-gqa-ab/` directory. The earlier
-host-side CMake recipe is not applicable on Z840: these builds need the pinned
-container and cached nlohmann dependency, with FetchContent kept offline.
+The binaries are in each tree's `build/m31-gqa-ab/` directory and are also
+staged at the guarded runner's expected `build/m31-accel-0001/` path. On the
+current Z840 checkout, both paths have identical hashes within each revision.
+The earlier host-side CMake recipe is not applicable on Z840: these builds need
+the pinned container and cached nlohmann dependency, with FetchContent kept
+offline.
 
 Interleave one guarded sample per revision in each round. This uses the same
 production 65,536-token request for both revisions and reduces thermal or clock
 drift between a control-then-candidate sequence:
 
 ```sh
+set -euo pipefail
 control=/mnt/lc9-lake/m31-gqa-ab-control
 candidate=/mnt/lc9-lake/m31-gqa-ab-candidate
 artifact=/mnt/lc9-lake/m31-accel-0001-captures/agent64k-05/agent-workload.inputs/turn-01-request-01.tokens.json
 captures=/mnt/lc9-lake/m31-accel-0001-captures
+capture_root=$(mktemp -d "$captures/gqa-eager-run-XXXXXXXX")
 for round in 1 2 3 4 5; do
-  for revision in control candidate; do
+  if (( round % 2 )); then revisions=(control candidate); else revisions=(candidate control); fi
+  for revision in "${revisions[@]}"; do
     source=$control; [[ $revision == candidate ]] && source=$candidate
-    capture="$captures/gqa-eager-${revision}-r${round}"
+    capture="$capture_root/${revision}-r${round}"
     install -d "$capture"
     install -m 0644 "$artifact" "$capture/request.tokens.json"
     M31_SOURCE_DIR="$source" M31_DECODE_ROUTE=eager M31_DECODE_ITERATIONS=1 \
@@ -804,24 +810,53 @@ for round in 1 2 3 4 5; do
   done
 done
 
+# Require exactly five fresh, eager, one-sample captures per expected source,
+# with matching model and production-input hashes, before calculating medians.
+control_sha=16662fcbc22c478e897705a3eb6c59ee390fd88c
+candidate_sha=527baba9f1f3915a6dc2507d1b8973089fb54827
+control_binary_sha=ed631a655d2c4c802de026ef0cdde705b7ee583ed8334fefa84d956fe2df3c08
+candidate_binary_sha=026ff260630d4a7e63a3ea4d02ead847699d4cf31191d4d3d6805ef2ce7097a9
+control_files=("$capture_root"/control-r*/decode.json)
+candidate_files=("$capture_root"/candidate-r*/decode.json)
+[[ ${#control_files[@]} == 5 && ${#candidate_files[@]} == 5 ]] || exit 1
+jq -s -e --arg control "$control_sha" --arg candidate "$candidate_sha" '
+  length == 10
+  and ([.[] | select(.source_sha == $control)] | length) == 5
+  and ([.[] | select(.source_sha == $candidate)] | length) == 5
+  and all(.[]; .requested_route == "eager" and .prompt_tokens == 65536
+    and .iterations == 1 and (.samples | length) == 1)
+  and ([.[].model_sha256] | unique | length) == 1
+  and ([.[].prompt_request_sha256] | unique | length) == 1
+  and ([.[].prompt_token_ids_sha256] | unique | length) == 1
+  and ([.[].prompt_id_sha256] | unique | length) == 1
+' "${control_files[@]}" "${candidate_files[@]}"
+for revision in control candidate; do
+  expected_binary_sha=$control_binary_sha; [[ $revision == candidate ]] && expected_binary_sha=$candidate_binary_sha
+  for environment in "$capture_root"/"$revision"-r*/environment.txt; do
+    grep -Fx "binary_miinfer-m31-accel-0001-decode-bench_sha256=$expected_binary_sha" "$environment"
+  done
+done
+for status in "$capture_root"/{control,candidate}-r*/exit.status; do
+  [[ -f $status && $(<"$status") == 0 ]]
+done
+
 # Fail unless every sample across both revisions has the same generated IDs.
-jq -s -e '.[0].samples[0].generated_ids as $ids | all(.[]; .samples[0].generated_ids == $ids)' \
-  "$captures"/gqa-eager-{control,candidate}-r*/decode.json
+jq -s -e '[.[].samples[0].generated_ids] | unique | length == 1' \
+  "${control_files[@]}" "${candidate_files[@]}"
 
 # The two commands print the control and candidate five-sample median rates.
-jq -s '[.[].samples[0].decode_tok_per_sec] | sort | .[length/2|floor]' \
-  "$captures"/gqa-eager-control-r*/decode.json
-jq -s '[.[].samples[0].decode_tok_per_sec] | sort | .[length/2|floor]' \
-  "$captures"/gqa-eager-candidate-r*/decode.json
+jq -s '[.[].samples[0].decode_tok_per_sec] | sort | .[2]' "${control_files[@]}"
+jq -s '[.[].samples[0].decode_tok_per_sec] | sort | .[2]' "${candidate_files[@]}"
 ```
 
 The approved A/B source identities are control
 `16662fcbc22c478e897705a3eb6c59ee390fd88c` and candidate
 `527baba9f1f3915a6dc2507d1b8973089fb54827`; both worktrees are clean and their
 route-enabled benchmark builds passed. Their build logs and binary hashes are
-recorded in the campaign report. Each fresh capture directory must be new. The
-JSON records route, source/build identity, request and token-ID hashes, every
-generated ID, and sample rates. Review guard telemetry and keep the 85 C
+recorded in the campaign report. A fresh capture root is created for every
+attempt; failed attempts remain available as evidence and require a new root on
+retry. The JSON records route, source/build identity, request and token-ID
+hashes, every generated ID, and sample rates. Review guard telemetry and keep the 85 C
 inspect and 90 C stop thresholds in force. Any token mismatch invalidates the
 performance comparison; report correctness separately. This decode experiment
 does not establish persistent-agent or 64K cache-state correctness.
