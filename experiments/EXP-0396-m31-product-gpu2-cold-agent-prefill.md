@@ -53,11 +53,11 @@ The run completed without a thermal warning. The guard file also contains 80–8
 
 GPU2 stayed cooler than GPU0 had in the earlier run, but this run did not show a latency benefit. The earlier GPU0 run measured 73,066 prompt tokens, 53.8335 tokens/s prefill, and 22.394 seconds for a cached follow-up. Only one cold-prefill sample per GPU is available, so these values do not establish a hardware winner.
 
-Neither a fresh OMP process nor a resumed OMP transcript demonstrated a fast follow-up. Both requests entered prefill and remained active for about three minutes before I stopped the GPU2 container, which exited with code 137. The resumed transcript ID was `01a131bf-1af4-734d-9113-f0da8b510ec9`. The campaign has not demonstrated a useful OMP tool action, a cached follow-up on GPU2, checkpoint restore, or the eight-turn task.
+Neither a fresh OMP process nor a resumed OMP transcript demonstrated a fast follow-up. Two requests entered prefill and remained active for about three minutes before I stopped the GPU2 container, which exited with code 137. The resumed transcript ID was `01a131bf-1af4-734d-9113-f0da8b510ec9`. An exact no-session replay of the original print-mode request also entered prefill and stayed active for one minute before I stopped it. Disk checkpoint restore did not produce a fast response in these attempts. The campaign has not demonstrated a useful OMP tool action, a cached follow-up on GPU2, or the eight-turn task.
 
 ## Decision
 
-**RETEST.** Keep GPU2 out of the product decision until an interactive OMP session completes a tool action and a follow-up in the same saved session. Use one sequential run. Record the exact processed context and the returned tool name. Do not treat the cooler junction temperature as a speed win.
+**RETEST.** Keep GPU2 out of the product decision until an interactive OMP session completes a tool action and a follow-up in the same saved session. Before another long run, establish how OMP can continue the same in-memory MIInfer session. Record the exact processed context and the returned tool name. Do not treat the cooler junction temperature as a speed win.
 
 ## Evidence
 
