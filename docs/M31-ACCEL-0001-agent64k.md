@@ -11,7 +11,11 @@ Each line of output is emitted directly from its corresponding native request,
 so per-turn timings and state counts need no request-ID join against a server
 log. The harness checks exact turn lengths, prefix-reuse counts,
 generated-token bounds, vocabulary IDs, finite logits, four-token repetition
-runs, and all 48 recurrent position counters. It fingerprints the active GDN
+runs, and all 48 recurrent position counters. The shared production sampler now
+fails the request on any non-finite logit; the no-GPU self-check covers finite
+values, NaN, and both infinities. The HTTP streaming workload does not receive
+generated token IDs, so repeated-token detection applies to the native harness,
+not the production agent stream. The harness fingerprints active GDN
 states and KV bytes before save and after restore and requires byte identity.
 After model allocation it fails closed unless at least 1 GiB of VRAM remains
 free. It samples HIP free/total VRAM after each turn and reports the largest
