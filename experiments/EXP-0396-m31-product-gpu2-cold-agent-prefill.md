@@ -85,11 +85,28 @@ The post-tool prompt processed all 13,457 tokens again (`prefill_ms=89,514`, `ca
 
 The controlled run's OMP transcript and request logs prove tool invocation, result delivery, and the follow-up re-prefill. They do not yet identify why the OMP follow-up prompt fails MIInfer's token-prefix match. Temperatures stayed below the 80°C warning threshold; the 90°C stop guard did not fire.
 
+### OMP process-resume and disk-checkpoint follow-up
+
+To isolate the resume path, I routed OMP through a temporary local HTTP capture proxy and resumed the same saved OMP session twice. The proxy retained request bodies locally for comparison; no captured prompt content is committed. OMP called `bash` to print `M31_CAPTURE_TURN` and later `M31_SECOND_TOOL`; both commands executed and their exact stdout was returned.
+
+| Request | Prompt tokens | Reused tokens | Disk restore | TTFT | Total request | Outcome |
+| --- | ---: | ---: | --- | ---: | ---: | --- |
+| 16, resumed OMP tool request | 13,628 | 0 | No | 90.6 s | 94.6 s | `tool_calls`; bash ran |
+| 17, response after tool result | 13,716 | 13,628 | No | 1.71 s | 29.1 s | 88-token suffix; answer returned |
+| 18, second OMP process resume | 13,785 | 13,628 | Yes, 608,965,005 bytes | 3.24 s | 6.13 s | `tool_calls`; bash ran |
+| 19, response after second tool result | 13,873 | 13,785 | No | 1.69 s | 6.92 s | 88-token suffix; answer returned |
+
+Request 18 is the first controlled evidence that the saved MIInfer checkpoint restores after the OMP client process exits: telemetry reports `persistent_session_restored=true`, a 13,628-token common prefix, 157 newly prefetched tokens, 670.9 ms restore time, and a 3.24-second wall TTFT. OMP then executed the requested tool. Request 19 reused all 13,785 tokens and prefetched only 88 new tokens. The MIInfer server remained running throughout, so this proves disk-checkpoint restore across OMP process restart, not inference-server restart or crash recovery.
+
+Request 17's first token arrived at 1.71 seconds, although the complete 595-token answer took 29.1 seconds. Request 18 reached a tool call in 6.13 seconds total. These are one-sample results below the 15-second first-action target at 13K context; they do not yet establish a median or 64K responsiveness. This controlled extension shows cache matching works when OMP supplies an exact prompt continuation. Earlier misses remain attributable to a different prompt/session state, but the exact mismatch in those older requests was not captured.
+
+The run used the same frozen MIInfer image/model and GPU0; GPU2 stayed idle. GPU0 returned to 35°C junction after the run. No thermal guard event occurred.
+
 On GPU2, neither a fresh OMP process nor a resumed OMP transcript demonstrated a fast follow-up. Two requests entered prefill and remained active for about three minutes before I stopped the GPU2 container, which exited with code 137. The resumed transcript ID was `01a131bf-1af4-734d-9113-f0da8b510ec9`. An exact no-session replay of the original print-mode request also entered prefill and stayed active for one minute before I stopped it. Disk checkpoint restore did not produce a fast response in these attempts. The eight-turn task and a cached follow-up on GPU2 remain unproven.
 
 ## Decision
 
-**RETEST.** OMP tool execution works, and MIInfer has restored a 14,021-token checkpoint in an interactive continuation. The target still fails: the controlled OMP follow-up processed its full 13,457-token prompt and took 135.1 seconds; the restored interactive response took 109.4 seconds including queueing. Next, identify the prompt-prefix divergence or session handoff causing the OMP cache miss, then rerun this same two-turn gate with unchanged tools and no title traffic. Keep GPU0 as the current test card based on continuity of evidence, not a comparative speed claim. The 64K eight-turn task is still not proven.
+**RETEST.** OMP tool execution, same-process prefix reuse, and a disk-checkpoint restore across OMP process restart are now demonstrated at 13K context. Restored follow-up reached a tool call in 6.13 seconds; the following response completed in 6.92 seconds with 88 new prompt tokens. This clears the narrow restore/latency probe, not the product gate: no real 64K coding task, eight-turn workflow, or median latency is established. Continue with one representative repository task at 65,536+ processed tokens on GPU0, checkpoint after turn four, and preserve the same OMP tools and prompt across resume. Keep GPU2 idle and make no hardware speed comparison.
 
 ## Evidence
 
@@ -100,3 +117,4 @@ On GPU2, neither a fresh OMP process nor a resumed OMP transcript demonstrated a
 - GPU0 interactive server requests: request IDs 2, 13, and 15 in container `m31-product-20261012retry180`; telemetry in `retry180/telemetry.csv`.
 - Controlled OMP transcript: `/tmp/m31-product-omp-controlled-20261013/2026-10-12T22-16-31-033Z_01a13230-5639-7565-9945-6f570fd98e46.jsonl`; first-turn output: `/tmp/m31-product-omp-controlled-20261013-first.log`.
 - Controlled OMP server requests: IDs 7 and 8 in `m31-product-20261012retry180`; telemetry in `retry180/telemetry.csv`.
+- OMP process-resume transcript: same session ID `01a13230-5639-7565-9945-6f570fd98e46`; server requests 16–19 in `m31-product-20261012retry180`; exact request bodies in local-only `/tmp/m31-omp-api-captures.jsonl` (contains private system/tool prompt text; do not publish).
