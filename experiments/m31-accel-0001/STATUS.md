@@ -1,6 +1,6 @@
 # M31-ACCEL-0001 live status
 
-Updated: 2026-10-12 03:10 Europe/Amsterdam
+Updated: 2026-10-12 03:13 Europe/Amsterdam
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
 
 ## 2026-10-12 03:04 Z840 SSH and capture recheck
@@ -57,6 +57,12 @@ Deadline: 2026-10-12 10:00 Europe/Amsterdam
 ## Checkpoint discipline
 
 One GPU job at a time on Z840. Preserve all dirty worktrees and existing logs. Record each run's PID, exact command, source/model/image identity, input IDs, exit status, hashes, temperatures, VRAM and correctness result before starting another.
+
+## 2026-10-12 03:13 SSH restored
+
+- Z840 SSH succeeded twice. Lake is mounted read/write at `/mnt/lc9-lake` with 1.6 TB free; `/` has 11 GB free. No MIInfer, campaign runner, guarded benchmark, or matching tmux process is active.
+- MI50 is idle at 27 C junction, 0% use, 20 W, and 10.9 MB VRAM. Sysfs exposes only the MI50's own fan input (`0 RPM`) and an HP WMI PWM enable value; no chassis fan RPM is available. The separate `hp_wmi_sensors` driver is installed but unloaded. Loading it was not attempted; even rotor telemetry would not prove airflow through the passive heatsink.
+- `/home/fedora-workstation/Development/mi50` remains dirty with M30 changes and artifacts; it was not touched. No GPU work ran. Cooling clearance remains the gate before guarded 64K inference or timing.
 
 ## 01:22 checkpoint — Z840 access restored
 

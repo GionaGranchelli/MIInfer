@@ -253,3 +253,7 @@ SSH succeeded on the first attempt. Lake remains mounted read/write with 1.6 TB 
 ## 2026-10-12 03:07 — cursor validation boundary
 
 Read-only source/call-site audit found no test directly invokes `PrefillV2Model::decode_step()`. `RecurrentLayerStateStorage::view()` copies the cursor, and recurrent decode passes it to the HIP convolution-history update; therefore a host-only cursor assertion would not exercise the changed behavior. Existing no-device build and 13/13 host-only CTests validate compilation/general host regressions only. The fix needs a guarded Z840 GPU check against fixed token history once cooling is confirmed. A recursive scan also confirms the old `agent64k-04/session-cache` and request/prompt artifact paths contain no recoverable files.
+
+## 2026-10-12 03:13 — Z840 SSH restored
+
+SSH succeeded twice. Lake is mounted read/write with 1.6 TB free; no MIInfer or campaign process is active. The MI50 remains idle at 27 C junction, 0% utilization, 20 W, and 10.9 MB VRAM. Current Linux hwmon exposes no chassis fan RPM; the separate `hp_wmi_sensors` module is installed but unloaded and was not loaded. This does not establish airflow through the MI50 passive heatsink, so guarded inference and performance runs remain held. The existing dirty M30 checkout was left untouched. No correctness or performance result changed.
