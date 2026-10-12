@@ -773,41 +773,55 @@ The prepared GQA source worktrees are
 `/mnt/lc9-lake/m31-gqa-ab-candidate`. Stage the retained exact initial request
 token artifact in each fresh capture directory; it is
 `/mnt/lc9-lake/m31-accel-0001-captures/agent64k-05/agent-workload.inputs/turn-01-request-01.tokens.json`.
-Build the route-enabled benchmark in each clean worktree first:
+The route-enabled benchmark has already been built in both clean source trees
+on Z840, using the pinned `localhost/miinfer-dev:rocm-7.2.1` image with
+`--network=none` and no device passthrough. Retained build logs are
+`gqa-ab-control-eager-route-build-v5.log` and
+`gqa-ab-candidate-eager-route-build-v5.log` under
+`/mnt/lc9-lake/m31-accel-0001-captures/`; both end with a passing `--self-check`.
+The binaries are in each tree's `build/m31-gqa-ab/` directory. The earlier
+host-side CMake recipe is not applicable on Z840: these builds need the pinned
+container and cached nlohmann dependency, with FetchContent kept offline.
 
-```sh
-for source in /mnt/lc9-lake/m31-gqa-ab-control /mnt/lc9-lake/m31-gqa-ab-candidate; do
-  cmake -S "$source" -B "$source/build/m31-accel-0001" \
-    -DCMAKE_BUILD_TYPE=Release -DCMAKE_HIP_ARCHITECTURES=gfx906 \
-    -DMIINFER_HIP_ARCHITECTURE=gfx906 -DMIINFER_TARGET_ARCH=gfx906 \
-    -DMIINFER_ENABLE_HIP=ON -DMIINFER_BUILD_BENCHMARKS=ON -DMIINFER_BUILD_TESTS=OFF
-  cmake --build "$source/build/m31-accel-0001" --target miinfer-m31-accel-0001-decode-bench -j
-  "$source/build/m31-accel-0001/miinfer-m31-accel-0001-decode-bench" --self-check
-done
-```
-
-The clean worktrees must include this benchmark-only route-selection change
-before that build; keep their GQA runtime commits unchanged. Then run the same
-eager route against both trees from this campaign checkout.
-`M31_SOURCE_DIR` directs the guard's clean-source validation, source identity,
-binary checks, and container mount to that worktree:
+Interleave one guarded sample per revision in each round. This uses the same
+production 65,536-token request for both revisions and reduces thermal or clock
+drift between a control-then-candidate sequence:
 
 ```sh
 control=/mnt/lc9-lake/m31-gqa-ab-control
 candidate=/mnt/lc9-lake/m31-gqa-ab-candidate
 artifact=/mnt/lc9-lake/m31-accel-0001-captures/agent64k-05/agent-workload.inputs/turn-01-request-01.tokens.json
-control_capture=/mnt/lc9-lake/m31-accel-0001-captures/gqa-eager-control
-candidate_capture=/mnt/lc9-lake/m31-accel-0001-captures/gqa-eager-candidate
-install -d "$control_capture" "$candidate_capture"
-install -m 0644 "$artifact" "$control_capture/request.tokens.json"
-install -m 0644 "$artifact" "$candidate_capture/request.tokens.json"
-M31_SOURCE_DIR="$control" M31_DECODE_ROUTE=eager M31_DECODE_TOKEN_IDS=request.tokens.json \
-  experiments/m31-accel-0001/run-guarded.sh "$control_capture" decode
-M31_SOURCE_DIR="$candidate" M31_DECODE_ROUTE=eager M31_DECODE_TOKEN_IDS=request.tokens.json \
-  experiments/m31-accel-0001/run-guarded.sh "$candidate_capture" decode
+captures=/mnt/lc9-lake/m31-accel-0001-captures
+for round in 1 2 3 4 5; do
+  for revision in control candidate; do
+    source=$control; [[ $revision == candidate ]] && source=$candidate
+    capture="$captures/gqa-eager-${revision}-r${round}"
+    install -d "$capture"
+    install -m 0644 "$artifact" "$capture/request.tokens.json"
+    M31_SOURCE_DIR="$source" M31_DECODE_ROUTE=eager M31_DECODE_ITERATIONS=1 \
+      M31_DECODE_TOKEN_IDS=request.tokens.json \
+      experiments/m31-accel-0001/run-guarded.sh "$capture" decode
+  done
+done
+
+# Fail unless every sample across both revisions has the same generated IDs.
+jq -s -e '.[0].samples[0].generated_ids as $ids | all(.[]; .samples[0].generated_ids == $ids)' \
+  "$captures"/gqa-eager-{control,candidate}-r*/decode.json
+
+# The two commands print the control and candidate five-sample median rates.
+jq -s '[.[].samples[0].decode_tok_per_sec] | sort | .[length/2|floor]' \
+  "$captures"/gqa-eager-control-r*/decode.json
+jq -s '[.[].samples[0].decode_tok_per_sec] | sort | .[length/2|floor]' \
+  "$captures"/gqa-eager-candidate-r*/decode.json
 ```
 
-Build the decode benchmark in each source worktree before capture. The JSON
-records the requested route, source/build identity, request hash, and token-ID
-hash. Each fresh capture directory must be unused and contain its own artifact
-copy before `run-guarded.sh` starts.
+The approved A/B source identities are control
+`16662fcbc22c478e897705a3eb6c59ee390fd88c` and candidate
+`527baba9f1f3915a6dc2507d1b8973089fb54827`; both worktrees are clean and their
+route-enabled benchmark builds passed. Their build logs and binary hashes are
+recorded in the campaign report. Each fresh capture directory must be new. The
+JSON records route, source/build identity, request and token-ID hashes, every
+generated ID, and sample rates. Review guard telemetry and keep the 85 C
+inspect and 90 C stop thresholds in force. Any token mismatch invalidates the
+performance comparison; report correctness separately. This decode experiment
+does not establish persistent-agent or 64K cache-state correctness.

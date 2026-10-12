@@ -335,3 +335,22 @@ Fast-forwarding Z840 to `1550ec2` and checking the new guard found that the expe
 Z840 then fast-forwarded to `909698e22309510e26bcc50ea0b146f7778fc221`. The tokenizer target built in the shared production build directory in the pinned ROCm 7.2.1 container with no network and no device nodes; binary SHA-256 matched Machinist at `900f5dfafc886d7f5e9f2d6389634bda92aa1e9cac0f33c6db5b1d3316b10614`. The tokenizer-backed workload self-check passed with exactly 65,536 initial prompt tokens and IDs. Retained log SHA-256: `b8e9f5e3c31b9868479408d706dd1abdd2fdd9f3f65bf79e9dec4e7b1a00c2c2`. The first attempt omitted the SELinux label override and could not open the model; rerunning with `--security-opt=label=disable` passed. No API request, inference, or GPU timing ran. Physical airflow through the passive MI50 heatsink remains unverified.
 
 Z840 then synced to `f2590dc02543808e902f6927344d18cb6e0d5d6e`. Its clean worktree passes both launcher syntax checks and the guard self-check. All five mode-required executables are present: server SHA-256 `6b8beebca9fcd2c08e10d2d890c9a9796c945e5813de99f22329f0e51378ba21`, tokenizer `900f5dfafc886d7f5e9f2d6389634bda92aa1e9cac0f33c6db5b1d3316b10614`, native harness `651a307f54e2761afdf3438dbce13605f6e97dbb1cc22566dc12d2244a8453c6`, prefix benchmark `132a36d5bf8902b05c6b6cdba9d3aed9ce1759f46c1c16215dd6a2d21d0c1eda`, and decode benchmark `6e49f10b3e6a1865bd9926211ff4226058af57df287979524e3b1085d3638884`. No GPU workload ran; airflow remains unverified and gates inference.
+
+
+## 2026-10-12 05:20 — SSH restored and eager GQA harness rebuilt
+
+Z840 SSH succeeded. Lake is mounted read/write with 1.6 TB free. The MI50 is
+idle at 26 C junction and 0% utilization; telemetry alone still cannot confirm
+airflow through its passive heatsink, so no GPU workload was run. A stale tmux
+wrapper has a dead pane (exit 122); it is not an active benchmark. The two
+GQA A/B source worktrees are clean at control `16662fcbc22c478e897705a3eb6c59ee390fd88c`
+and candidate `527baba9f1f3915a6dc2507d1b8973089fb54827`. Both route-aware
+decode binaries passed `--self-check` in the pinned ROCm 7.2.1 no-device
+container. Control binary SHA-256 is
+`ed631a655d2c4c802de026ef0cdde705b7ee583ed8334fefa84d956fe2df3c08`; candidate
+is `026ff260630d4a7e63a3ea4d02ead847699d4cf31191d4d3d6805ef2ce7097a9`.
+Build logs are retained as `gqa-ab-control-eager-route-build-v5.log` and
+`gqa-ab-candidate-eager-route-build-v5.log`. This corrects the earlier graph
+route mismatch in the benchmark setup; there are still no live decode timings
+or cross-revision token-trajectory results. Physical airflow confirmation
+remains the blocker for guarded GPU work.
