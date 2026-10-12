@@ -1,6 +1,6 @@
 # M31-ACCEL-0001 live status
 
-Updated: 2026-10-12 06:08 Europe/Amsterdam
+Updated: 2026-10-12 06:54 Europe/Amsterdam
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
 
 ## 2026-10-12 06:08 Guard BDF binding pushed and synced
@@ -513,3 +513,10 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 - The runner self-check accepts valid restore telemetry and rejects an absent disk-source flag, a short prefix, missing fields, NaN, and negative duration. In the pinned ROCm 7.2.1 container with `--network=none` and no GPU devices, the updated `miinfer` built and host-only CTest passed 13/13 in 1.39 seconds. Log `/mnt/lc9-lake/m31-accel-0001-captures/gates/disk-restore-no-device-build-v2.log`, SHA-256 `03be49376fb7cd5d578f50eb06a6b2da6b28ca6a8a7d8eaded8ed70d761d5697`.
 - The tokenizer-backed runner self-check passed at exactly 65,536 prompt tokens and 65,536 token IDs, exercising the disk-restore telemetry checks without a server or GPU request. Log `/mnt/lc9-lake/m31-accel-0001-captures/gates/disk-restore-runner-selfcheck-v3.log`, SHA-256 `b8e9f5e3c31b9868479408d706dd1abdd2fdd9f3f65bf79e9dec4e7b1a00c2c2`; runner SHA-256 `f1c7773e70c007fa5b7dfe730d5e570045a8046aa1441fc58c7e663e485e088e`. This probe demonstrates disk-loader use and prefix length only; it does not prove restored tensor identity or numerical parity.
 - The first build attempt targeted a cache directory without a generated Makefile and therefore did not build; the corrected attempt used the configured host-regression directory. Airflow remains unconfirmed, so the guarded GPU workload remains held.
+
+## 2026-10-12 06:50 current-source rebuild and provenance finding
+
+- Fresh Z840 inspection found no active MIInfer/Podman work, Lake mounted read/write with 1.6 TB free, and the retained `agent64k-05` tmux pane dead at exit 122. MI50 remains idle at 25 C junction, 0% use, 10.9 MB VRAM; `fan1_input=0` still cannot confirm heatsink airflow. Machinist has no active campaign jobs; its primary M30 worktree remains dirty and untouched.
+- Rebuilt `miinfer`, tokenizer, native 64K harness, decode benchmark, and prefix-reuse benchmark from clean source `2b41e9b` in the pinned ROCm 7.2.1 container with networking disabled and no `/dev/kfd` or `/dev/dri`. All four no-GPU self-checks passed; the agent runner again counted exactly 65,536 prompt tokens and IDs. Build log `/mnt/lc9-lake/m31-accel-0001-captures/gates/current-2b41e9b-build.log`, SHA-256 `bafb5ae4bea9ef23d38c5ab4181f21143e16084ae56c096d165ed78bbc68fb76`; self-check log `/mnt/lc9-lake/m31-accel-0001-captures/gates/current-2b41e9b-selfchecks.log`, SHA-256 `5afd815246812b280c7f4d0c69af0d1ff5c0a8afffc2dccb41d77c09a3e66fd0`.
+- Staged binary SHA-256: server `6a3e5d2b3016c7d4c988499c89a533a799760c1d9616163516b719e79573da70`; tokenizer `900f5dfafc886d7f5e9f2d6389634bda92aa1e9cac0f33c6db5b1d3316b10614`; native harness `3737348cbbf71bf343cc75ebc9a69f965a54bc947a3f35d800e1913670135bab`; decode `41fbf60b43ceb0d124a16a1e78654d4af0c24d14329aeb3348cd01d5771fe75c`; prefix `a56b5daa22cde365eaebb8853b70f1d2b04f436dc906e374ca9bd28bf8ec8eb3`.
+- Review then found the generated build config embeds `MIINFER_GIT_COMMIT "UNAVAILABLE"`: the container cannot follow the source worktree's host-side `.git` pointer. These binaries pass self-checks but must not produce measurement evidence. The next no-device step is to reconfigure with the shared Git metadata mounted read-only, verify the generated commit is `2b41e9b6cf2d`, rebuild and restage. Z840 SSH timed out on two bounded attempts; no more remote polling was started. Passive-heatsink airflow independently still gates GPU work.
