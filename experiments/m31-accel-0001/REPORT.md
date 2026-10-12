@@ -77,13 +77,13 @@ The best supported current direction is to finish 64K reliability first. For per
 - Z840 model SHA-256 verified live: `7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169`.
 - Local ROCm 7.2.1 development image base digest matches the documented pin: `sha256:fb0de294a2919ff6d503b4845e055c7fb80db5861954694ee5228e48a14411ec`.
 - Z840 was idle before the campaign build: 29 C junction, 0% use, approximately 10.9 MB VRAM used. Lake is mounted read/write with 1.6 TB free.
-- Initial build using the preset alone failed at CMake `find_package(hipblas)` because `CMAKE_PREFIX_PATH` was absent. The qualified-host script sets `/opt/rocm-7.2.1`; a corrected, persistent compile is underway in isolated `build/m31-accel-0001`, with output at `/mnt/lc9-lake/m31-accel-0001-captures/build/release-build.log`. No GPU device was passed to the build container.
+- Initial build using the preset alone failed at CMake `find_package(hipblas)` because `CMAKE_PREFIX_PATH` was absent. The qualified-host script sets `/opt/rocm-7.2.1`; corrected no-device builds later completed successfully, as recorded in the 02:34 and 02:41 checkpoints below. No GPU device was passed to those build containers.
 - The guarded diagnostic sampled 30,387,605,504 B of 34,342,961,152 B total VRAM (approximately 4.0 GB free). Sampled junction temperature peaked at 87 C after the 85 C warning threshold; the run was stopped before the 90 C hard limit. Following the stop, the GPU returned to idle at 34 C with 10,854,400 B in use. The recorded telemetry is at `/mnt/lc9-lake/m31-accel-0001-captures/native64k/telemetry.log` (SHA-256 `741006b9528a19d97b5c021d3790c765c83ebf713a3c29144bdc54910b55d593`).
 - The first temporary guard wrapper recorded exit 0 despite the retained container inspection showing exit 137 after manual stop, and captured no flushed workload output. The tracked replacement checks shell threshold boundaries, follows container logs and waits for final exit status. Native per-turn output now flushes immediately. The GPU remains idle; no repeat should run without active operator review of the 85 C warning trend.
 
 ## LC-0009 handoff
 
-CPU ordinary-512 evidence was pushed at `a5140f8`; its frozen visitor-use clause failed because output omitted visitor-use facts. Full Contract O QSUM decode coverage remains open. The 24-cell Lake inventory and verified raw hashes are preserved.
+CPU ordinary-512 evidence was pushed at `a5140f8`; its frozen visitor-use clause failed because output omitted visitor-use facts. Full Contract O QSUM decode coverage remains open because no raw one-token QSUM decode operand capture is present. The 24-cell Lake inventory and verified raw hashes are preserved.
 
 ## Results and disposition
 
@@ -144,6 +144,16 @@ Z840 SSH is live, Lake is read/write with 1.6 TB free, and the MI50 was idle at 
 The pinned ROCm 7.2.1 build completed with exit 0 from source `0ee18e610f25ce0ea1f5f4a82ea018c6bcbc082f`, and `miinfer-m31-accel-0001-decode-bench --self-check` passed. Build log: `/mnt/lc9-lake/m31-accel-0001-captures/build/decode-0ee18e6-build.log`, SHA-256 `2803889d8959cee46c61c6eee8f9244ee03efd32ec915334afeae05ed06e7f31`; binary SHA-256 `900729a294a61c1a564e7007d5dbf5a381b7f164aae7bd49cd6cdb40b96431b1`. The container exited 0 and had no host devices configured. The only build warnings were existing HIP warnings about an unused parameter, loop unrolling, and occupancy. This establishes a compiled and self-checked benchmark only; there are still no decode timings. Cooling confirmation is still required before GPU execution.
 
 At 01:40, the clean Z840 coordinator worktree was fast-forwarded from `d22915b` to pushed HEAD `c8c05c57a6902c2f99af41c4dbb5fe8a25f1feea`; it remains detached and clean. The separate build worktree at `0ee18e6` and its hashed binary/log are retained.
+
+## 2026-10-12 02:56 — SSH recovery and runner gate correction
+
+Z840 SSH is available again. Lake is mounted read/write with 1.6 TB free; `/home` has 11 GB free. The MI50 is idle at 27 C, 0% use, 20 W, and 10.9 MB VRAM; fan telemetry remains 15% / 0 RPM. This does not establish airflow through the passive heatsink, so the 85 C stop remains in force.
+
+The stopped production capture `agent64k-04` contains environment, server log, guard, telemetry, and after-run cooling snapshot, but no workload JSON or captured prompt manifest/hash. Its exact run source is `f01f7e9a210489139d7aa36e4391ede48e723464`. Server log shows request 3 queued and operator stop at 85 C; the container exited 137 before a response. These missing artifacts limit reproduction and the exact prompt/token count was only host-constructed, not live-verified.
+
+An audit found the workload runner independently tokenized only its first request and aggregated decode rate using a different token basis from the server's `decode_ms` and `decode_tokens_per_second`. Coordinator commit `0e9d612` now checks every actual request payload with the MIInfer tokenizer against per-request server telemetry, and time-weights the server decode rate by `decode_ms`. Python compilation and the no-network runner self-check passed locally; the change is pushed. Z840 tokenizer-backed validation of this newest Python revision is pending. It makes no GPU request and records no performance result.
+
+Current campaign source is pushed on `experiment/m31-accel-0001-coordinator` at `0e9d6123f22d157db7a97bb250b04f405ee9591b`. No completed 64K production workload, matched decode/prefill measurement, or performance candidate result is established. Next: obtain physical airflow/cooling confirmation, rebuild/sync the current source on Z840, run guarded 64K correctness first, then the prepared five-pair cold-versus-prefix suffix benchmark.
 
 ## 2026-10-12 02:26 — SSH recovery and LC-0009 QSUM checker
 

@@ -266,3 +266,10 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 ## 2026-10-12 02:54 cooling telemetry interpretation
 
 - AMD's MI50 product specification lists the board as passively cooled with 300 W peak TDP ([AMD MI50 specifications](https://www.amd.com/en/support/downloads/drivers.html/accelerators/instinct/instinct-mi-series/instinct-mi50-32gb.html)). Therefore the card's 0 RPM fan sensor does not tell us whether chassis airflow is adequate. Physical airflow through the passive heatsink remains unconfirmed; the prior 85 C operator stop remains in force until that is clarified.
+
+## 2026-10-12 02:56 SSH recovery and runner correction
+
+- Z840 SSH succeeded; Lake is mounted read/write with 1.6 TB free, while `/home` has 11 GB free. MI50 is idle at 27 C, 0% use, 20 W and 10.9 MB VRAM; fan telemetry remains 15% / 0 RPM. Physical heatsink airflow remains unconfirmed, so no GPU work ran.
+- The stopped `agent64k-04` directory has no workload JSON or saved prompt manifest/hash. Its environment identifies run source `f01f7e9a210489139d7aa36e4391ede48e723464`; the server log shows request 3 queued and operator stop at 85 C, container exit 137. No response was completed.
+- Coordinator commit `0e9d6123f22d157db7a97bb250b04f405ee9591b` independently tokenizes each actual API payload and checks the result against per-request server token telemetry. Its per-turn aggregate decode rate now time-weights server `decode_tokens_per_second` by `decode_ms`, keeping the same token/time basis. Python compilation and no-network runner self-check passed locally; `git diff --check` passed before this report edit. Z840 tokenizer-backed validation of this newest script is pending; no inference or GPU request was made.
+- Decode/prefill A/B results and completed production 64K qualification remain absent. Next: confirm passive-card airflow, sync/build the current source, run guarded 64K correctness, then run the prepared five-pair cold/suffix prefill comparison.
