@@ -33,6 +33,8 @@ This is a cross-host compile check only. Machinist reported its MI50 as GPU[1] a
 
 The same clean `b06bffd` clone also built all registered host-test targets and passed all 13/13 CTest cases labeled `host-only` in the no-device ROCm container (1.34 s total, exit 0). The retained log SHA-256 is `48b95d08352ddb7a50cc35884f737800eeb089a9d2382454bafcd834ed79a714`. These tests provide general host regression coverage; they do not exercise `decode_step()` state mutation or qualify GDN/KV GPU state continuity.
 
+AMD identifies the MI50 as passively cooled with 300 W peak TDP ([official MI50 specifications](https://www.amd.com/en/support/downloads/drivers.html/accelerators/instinct/instinct-mi-series/instinct-mi50-32gb.html)). The board's 0 RPM sensor therefore does not establish chassis airflow. Physical airflow through the heatsink remains unverified, and the earlier 85 C stop continues to gate GPU work.
+
 ## 64K persistent-agent workload
 
 Recovered pre-campaign Z840 M30 artifact (`qualification_sha=dc83f07`) describes a 40-turn coding-agent session. It reports 40 turns, all-turn minimum-generation gate PASS, visible-answer gate FAIL, prompt/context count 66,173 by turn 32 and 82,087 by turn 40. This demonstrates a session that grew past 64K, but it did not begin with exactly 65,536 tokens and is not the required campaign qualification.

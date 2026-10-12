@@ -262,3 +262,7 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 
 - On the same clean `b06bffd` clone, built the registered host-test targets and ran CTest `-L host-only` in the no-device ROCm container. All 13/13 host-only tests passed (1.34 s total); exit marker 0. Log SHA-256 `48b95d08352ddb7a50cc35884f737800eeb089a9d2382454bafcd834ed79a714`.
 - These are repository host regressions and do not exercise MI50 GDN cursor behavior, GPU kernels, or 64K numerical state continuity. No GPU work ran.
+
+## 2026-10-12 02:54 cooling telemetry interpretation
+
+- AMD's MI50 product specification lists the board as passively cooled with 300 W peak TDP ([AMD MI50 specifications](https://www.amd.com/en/support/downloads/drivers.html/accelerators/instinct/instinct-mi-series/instinct-mi50-32gb.html)). Therefore the card's 0 RPM fan sensor does not tell us whether chassis airflow is adequate. Physical airflow through the passive heatsink remains unconfirmed; the prior 85 C operator stop remains in force until that is clarified.
