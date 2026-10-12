@@ -500,3 +500,9 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 - Z840 SSH is reachable. Lake is mounted read/write at `/mnt/lc9-lake` with 1.6 TB free; `/home` has 11 GB free. MI50 identity remains unique ID `0x21678e17348c2f7`, gfx906; it is idle at 25 C junction, 19 W, and 10.9 MB VRAM.
 - No MIInfer process is active. The prior `agent64k-05` container remains `Created` with PID 0; its stopped capture is preserved on Lake.
 - Fresh sysfs inventory shows MI50 `fan1_input=0`, `pwm1_enable=1`, HP `pwm1_enable=2`, and no chassis-fan RPM input. `ipmitool` is absent. These readings do not establish airflow through the passive heatsink. No GPU workload was launched; 64K correctness and decode/prefill measurements remain unqualified until safe airflow is confirmed.
+
+## 2026-10-12 06:28 current-source host regression
+
+- Configured the clean Lake campaign worktree at runtime source `0477436f13c443fed89a11a1131e0e7d799049e9` with `MIINFER_BUILD_TESTS=ON` in the pinned ROCm 7.2.1 container. The container ran with `--network=none`, source mounted read-only, and no GPU devices passed. Reused the already-cached nlohmann/json source from Lake; the first attempt's absent dependency mount was corrected without changing source.
+- Built the 12 host-only test targets and ran `ctest -L host-only`: 13/13 passed in 1.40 s. Retained log `/mnt/lc9-lake/m31-accel-0001-captures/gates/host-only-0477436-20261012T042700Z.log`, SHA-256 `9b84dbd74467abb7381dfcea0474bedbe36e89ebae9f5fd4321c6268d826c457`.
+- The tested runtime SHA is an ancestor of current coordinator HEAD `89c58227`; commits after it are documentation-only. This is host regression evidence, not GPU, 64K workload, or performance qualification. Airflow is still unconfirmed, so GPU work remains held.
