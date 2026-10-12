@@ -216,6 +216,18 @@ def sse_self_check():
     ], previous_prompt_tokens=1000)
     if [check["passed"] for check in reuse_checks] != [True, False, False, False, False, False]:
         raise RuntimeError("per-request prefix reuse self-check failed")
+    bad_dispatch = prefix_reuse_request_gates([{
+        "server_latency": {"request_id": "dispatch-gap", "reused_prefix_tokens": 1000,
+                            "suffix_tokens_dispatched": 119},
+        "server_request": {"prompt_tokens": 1120, "generated_tokens": 1,
+                            "finish_reason": "length", "gqa_kv_reused_tokens": 1000,
+                            "gdn_checkpoint_position": 1000,
+                            "runtime_context_capacity": 4096,
+                            "gdn_final_position_min": 1121,
+                            "gdn_final_position_max": 1121},
+    }], previous_prompt_tokens=1000)
+    if bad_dispatch[0]["passed"] or bad_dispatch[0]["dispatch_accounting_passed"]:
+        raise RuntimeError("incomplete prompt dispatch unexpectedly passed")
     if prefix_reuse_request_gates([], previous_prompt_tokens=1000)[0]["passed"]:
         raise RuntimeError("missing prefix reuse telemetry unexpectedly passed")
     with tempfile.TemporaryDirectory() as directory:
@@ -259,6 +271,10 @@ def prefix_reuse_request_gates(requests, previous_prompt_tokens=None):
         gdn_final_min = detail.get("gdn_final_position_min")
         gdn_final_max = detail.get("gdn_final_position_max")
         valid_prompt_tokens = type(prompt_tokens) is int and prompt_tokens > 0
+        dispatch_accounting_passed = (
+            valid_prompt_tokens and type(reused) is int and type(suffix) is int
+            and 0 <= reused <= prompt_tokens and suffix >= 0
+            and reused + suffix == prompt_tokens)
         state_position_passed = (
             type(gqa_reused) is int and type(gdn_position) is int
             and gqa_reused == reused and gdn_position == reused
@@ -287,6 +303,7 @@ def prefix_reuse_request_gates(requests, previous_prompt_tokens=None):
             "expected_reused_prefix_tokens": expected_prefix_tokens,
             "reused_prefix_tokens": reused,
             "suffix_tokens_dispatched": suffix,
+            "dispatch_accounting_passed": dispatch_accounting_passed,
             "gqa_kv_reused_tokens": gqa_reused,
             "gdn_checkpoint_position": gdn_position,
             "runtime_context_capacity": runtime_capacity,
@@ -299,7 +316,7 @@ def prefix_reuse_request_gates(requests, previous_prompt_tokens=None):
             "gdn_final_position_passed": gdn_final_position_passed,
             "cold_start_passed": cold_start_passed,
             "passed": valid_prompt_tokens and cold_start_passed and state_position_passed
-                and context_capacity_passed
+                and dispatch_accounting_passed and context_capacity_passed
                 and gdn_final_position_passed
                 and (expected_prefix_tokens is None or suffix > 0),
         })

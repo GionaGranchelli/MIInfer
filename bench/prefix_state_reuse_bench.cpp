@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <numeric>
 #include <span>
 #include <string>
@@ -38,8 +39,36 @@ double median(std::vector<double> values) {
     return values.size() % 2 == 0 ? (values[middle - 1] + values[middle]) / 2.0 : values[middle];
 }
 
+bool valid_timing_sample(const GenerateStats& sample) {
+    return sample.used_hip_graph
+        && std::isfinite(sample.prefill_ms) && sample.prefill_ms > 0.0
+        && std::isfinite(sample.ttft_ms) && sample.ttft_ms > 0.0
+        && std::isfinite(sample.decode_ms) && sample.decode_ms > 0.0
+        && std::isfinite(sample.total_ms) && sample.total_ms > 0.0
+        && std::isfinite(sample.prefill_tok_per_sec) && sample.prefill_tok_per_sec > 0.0
+        && std::isfinite(sample.decode_tok_per_sec) && sample.decode_tok_per_sec > 0.0
+        && std::isfinite(sample.avg_decode_latency_ms) && sample.avg_decode_latency_ms > 0.0
+        && std::isfinite(sample.restore_ms) && sample.restore_ms >= 0.0
+        && std::isfinite(sample.suffix_prefill_ms) && sample.suffix_prefill_ms >= 0.0;
+}
+
 bool benchmark_self_check() {
     const std::vector<double> values{5.0, 1.0, 4.0, 2.0, 3.0};
+    GenerateStats valid_sample;
+    valid_sample.used_hip_graph = true;
+    valid_sample.prefill_ms = 1.0;
+    valid_sample.ttft_ms = 1.0;
+    valid_sample.decode_ms = 1.0;
+    valid_sample.total_ms = 2.0;
+    valid_sample.prefill_tok_per_sec = 1.0;
+    valid_sample.decode_tok_per_sec = 1.0;
+    valid_sample.avg_decode_latency_ms = 1.0;
+    if (!valid_timing_sample(valid_sample)) return false;
+    valid_sample.used_hip_graph = false;
+    if (valid_timing_sample(valid_sample)) return false;
+    valid_sample.used_hip_graph = true;
+    valid_sample.ttft_ms = std::numeric_limits<double>::quiet_NaN();
+    if (valid_timing_sample(valid_sample)) return false;
     return k64kSampleCount >= 5 && median(values) == 3.0
         && !reuse_first_sample(0) && reuse_first_sample(1)
         && !reuse_first_sample(2) && reuse_first_sample(3)
@@ -296,8 +325,9 @@ int main(int argc, char** argv) {
         // Warm the suffix graph outside the measured pairs.
         const auto warmup = reuse_run();
         if (!warmup.reuse_hit || warmup.prefix_tokens_reused != cfg.prefix_len
-            || warmup.suffix_tokens_dispatched != cfg.suffix_len) {
-            std::cerr << "    Prefix reuse warmup failed its dispatch contract\n";
+            || warmup.suffix_tokens_dispatched != cfg.suffix_len
+            || !valid_timing_sample(warmup)) {
+            std::cerr << "    Prefix reuse warmup failed its route, timing, or dispatch contract\n";
             required_64k_checks_pass = false;
             if (only_64k) return 1;
         }
@@ -320,6 +350,11 @@ int main(int argc, char** argv) {
             reuse_samples.push_back(std::move(reuse_stats));
             const auto& cold = cold_samples.back();
             const auto& reuse = reuse_samples.back();
+            if (!valid_timing_sample(cold) || !valid_timing_sample(reuse)) {
+                std::cerr << "    Sample did not use HIP Graph or produced invalid timings\n";
+                required_64k_checks_pass = false;
+                if (only_64k) return 1;
+            }
             const bool pair_parity = !cold.generated_tokens.empty()
                 && cold.generated_tokens == reuse.generated_tokens
                 && cold.stop_reason == reuse.stop_reason;
