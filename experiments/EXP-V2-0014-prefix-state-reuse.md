@@ -28,8 +28,11 @@ By introducing an explicit `ReusableContext` abstraction that preserves resident
 - **Focused 64K Command**: `./build/mi50-release/miinfer-prefix-state-reuse-bench --64k-only MODEL.gguf`
   runs only the 64K+512 scenario and exits nonzero unless reuse hits the full
   64K prefix, dispatches exactly 512 suffix tokens, and matches the cold
-  128-token greedy continuation. The no-flag command retains the full matrix
-  and its legacy exit behavior.
+  128-token greedy continuation in every measured pair. It warms the suffix
+  graph before five alternating cold/reuse pairs and reports per-sample TTFT,
+  median, and observed range. `--self-check` exercises the sample-order and
+  median helpers without opening a GPU. The no-flag command retains the full
+  matrix and its legacy exit behavior.
 
 ---
 

@@ -8,6 +8,7 @@
 #include <numeric>
 #include <span>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "miinfer/device_validation.hpp"
@@ -24,6 +25,26 @@ using namespace miinfer::prefill_v2;
 namespace {
 
 const char* kDefaultModelPath = "/home/fedora-workstation/models/Qwen3.8-27B-Q4_K_M.gguf";
+constexpr std::size_t k64kSampleCount = 5;
+
+bool reuse_first_sample(std::size_t sample_index) {
+    return sample_index % 2 == 1;
+}
+
+double median(std::vector<double> values) {
+    if (values.empty()) return 0.0;
+    std::sort(values.begin(), values.end());
+    const std::size_t middle = values.size() / 2;
+    return values.size() % 2 == 0 ? (values[middle - 1] + values[middle]) / 2.0 : values[middle];
+}
+
+bool benchmark_self_check() {
+    const std::vector<double> values{5.0, 1.0, 4.0, 2.0, 3.0};
+    return k64kSampleCount >= 5 && median(values) == 3.0
+        && !reuse_first_sample(0) && reuse_first_sample(1)
+        && !reuse_first_sample(2) && reuse_first_sample(3)
+        && !reuse_first_sample(4);
+}
 
 struct MatrixScenarioResult {
     std::string name;
@@ -136,19 +157,31 @@ int main(int argc, char** argv) {
     std::cout << "===================================================================\n\n";
 
     bool only_64k = false;
+    bool self_check = false;
     bool model_path_set = false;
     std::string model_path = kDefaultModelPath;
     for (int i = 1; i < argc; ++i) {
         const std::string arg = argv[i];
         if (arg == "--64k-only" && !only_64k) {
             only_64k = true;
+        } else if (arg == "--self-check" && !self_check) {
+            self_check = true;
         } else if (!arg.empty() && arg.front() != '-' && !model_path_set) {
             model_path = arg;
             model_path_set = true;
         } else {
-            std::cerr << "usage: miinfer-prefix-state-reuse-bench [--64k-only] [MODEL.gguf]\n";
+            std::cerr << "usage: miinfer-prefix-state-reuse-bench [--self-check]\n"
+                         "       miinfer-prefix-state-reuse-bench [--64k-only] [MODEL.gguf]\n";
             return 2;
         }
+    }
+    if (self_check) {
+        if (argc != 2 || !benchmark_self_check()) {
+            std::cerr << "prefix benchmark self-check failed\n";
+            return 1;
+        }
+        std::cout << "prefix benchmark self-check: PASS (5 paired samples, alternating order)\n";
+        return 0;
     }
 
     int device_id = 0;
@@ -232,26 +265,6 @@ int main(int argc, char** argv) {
         r.kv_capacity = cfg.kv_capacity;
 
         // -----------------------------------------------------------------
-        // [A] COLD BASELINE RUN: Prefill full_prompt (Prefix + Suffix)
-        // -----------------------------------------------------------------
-        std::cout << "  [Cold Run] Prefilling full prompt (" << full_prompt.size() << " tokens)...\n";
-        auto cold_opt = greedy_options(cfg.gen_tokens, true);
-        cold_opt.enable_prefix_reuse = false;
-        cold_opt.cache_prefix_after = false;
-
-        auto cold_stats = model.generate(full_prompt, cold_opt);
-        r.cold_ttft_ms = cold_stats.ttft_ms;
-        r.cold_prefill_tok_s = cold_stats.prefill_tok_per_sec;
-        r.cold_decode_step_ms = cold_stats.avg_decode_latency_ms;
-        r.cold_decode_tok_s = cold_stats.decode_tok_per_sec;
-        r.cold_generated_tokens = cold_stats.generated_tokens;
-
-        std::cout << "    Cold TTFT:           " << std::fixed << std::setprecision(2)
-                  << r.cold_ttft_ms << " ms (" << std::setprecision(1) << r.cold_prefill_tok_s << " tok/s)\n";
-        std::cout << "    Cold Decode Latency: " << std::fixed << std::setprecision(2)
-                  << r.cold_decode_step_ms << " ms/token (" << std::setprecision(1) << r.cold_decode_tok_s << " tok/s)\n\n";
-
-        // -----------------------------------------------------------------
         // [B] TURN 1: Prefill Prefix & Cache Reusable State
         // -----------------------------------------------------------------
         std::cout << "  [Turn 1] Prefilling Prefix (" << prefix_tokens.size() << " tokens) and caching state...\n";
@@ -267,36 +280,103 @@ int main(int argc, char** argv) {
         std::cout << "    ReusableContext has: " << model.reusable_context().prefix_length()
                   << " prefix tokens cached (" << (model.reusable_context().has_valid_prefix() ? "VALID" : "INVALID") << ")\n\n";
 
-        // -----------------------------------------------------------------
-        // [C] TURN 2: Reuse Prefix & Prefill ONLY Suffix
-        // -----------------------------------------------------------------
-        std::cout << "  [Turn 2 (Reuse)] Suffix-only prefill on Full Prompt (" << full_prompt.size() << " tokens)...\n";
-        auto turn2_opt = greedy_options(cfg.gen_tokens, false);
-        turn2_opt.enable_prefix_reuse = true;
-        turn2_opt.cache_prefix_after = false;
+        auto cold_run = [&]() {
+            auto options = greedy_options(cfg.gen_tokens, true);
+            options.enable_prefix_reuse = false;
+            options.cache_prefix_after = false;
+            return model.generate(full_prompt, options);
+        };
+        auto reuse_run = [&]() {
+            auto options = greedy_options(cfg.gen_tokens, false);
+            options.enable_prefix_reuse = true;
+            options.cache_prefix_after = false;
+            return model.generate(full_prompt, options);
+        };
 
-        auto reuse_stats = model.generate(full_prompt, turn2_opt);
-        r.reuse_hit = reuse_stats.reuse_hit;
-        r.prefix_tokens_reused = reuse_stats.prefix_tokens_reused;
-        r.suffix_tokens_dispatched = reuse_stats.suffix_tokens_dispatched;
-        r.restore_ms = reuse_stats.restore_ms;
-        r.suffix_prefill_ms = reuse_stats.suffix_prefill_ms;
-        r.reuse_ttft_ms = reuse_stats.ttft_ms;
-        r.suffix_tok_s = (r.reuse_ttft_ms > 0.0) ? (cfg.suffix_len * 1000.0 / r.reuse_ttft_ms) : 0.0;
-        r.reuse_decode_step_ms = reuse_stats.avg_decode_latency_ms;
-        r.reuse_decode_tok_s = reuse_stats.decode_tok_per_sec;
-        r.reuse_generated_tokens = reuse_stats.generated_tokens;
+        // Warm the suffix graph outside the measured pairs.
+        const auto warmup = reuse_run();
+        if (!warmup.reuse_hit || warmup.prefix_tokens_reused != cfg.prefix_len
+            || warmup.suffix_tokens_dispatched != cfg.suffix_len) {
+            std::cerr << "    Prefix reuse warmup failed its dispatch contract\n";
+            required_64k_checks_pass = false;
+            if (only_64k) return 1;
+        }
 
-        r.speedup_ratio = (r.reuse_ttft_ms > 0.0) ? (r.cold_ttft_ms / r.reuse_ttft_ms) : 1.0;
-        r.decode_delta_pct = ((r.reuse_decode_step_ms - r.cold_decode_step_ms) / r.cold_decode_step_ms) * 100.0;
+        const std::size_t sample_count = only_64k ? k64kSampleCount : 1;
+        std::vector<GenerateStats> cold_samples;
+        std::vector<GenerateStats> reuse_samples;
+        for (std::size_t sample = 0; sample < sample_count; ++sample) {
+            const bool reuse_first = reuse_first_sample(sample);
+            GenerateStats cold_stats;
+            GenerateStats reuse_stats;
+            if (reuse_first) {
+                reuse_stats = reuse_run();
+                cold_stats = cold_run();
+            } else {
+                cold_stats = cold_run();
+                reuse_stats = reuse_run();
+            }
+            cold_samples.push_back(std::move(cold_stats));
+            reuse_samples.push_back(std::move(reuse_stats));
+            const auto& cold = cold_samples.back();
+            const auto& reuse = reuse_samples.back();
+            const bool pair_parity = !cold.generated_tokens.empty()
+                && cold.generated_tokens == reuse.generated_tokens
+                && cold.stop_reason == reuse.stop_reason;
+            std::cout << "    Pair " << (sample + 1) << "/" << sample_count << " ("
+                      << (reuse_first ? "reuse->cold" : "cold->reuse") << "): cold="
+                      << std::fixed << std::setprecision(2) << cold.ttft_ms
+                      << " ms, reuse=" << reuse.ttft_ms << " ms, parity="
+                      << (pair_parity ? "PASS" : "FAIL") << "\n";
+        }
 
-        // Verify greedy parity
-        r.parity_pass = !r.cold_generated_tokens.empty()
-            && r.cold_generated_tokens == r.reuse_generated_tokens
-            && cold_stats.stop_reason == reuse_stats.stop_reason;
+        auto metric = [](const std::vector<GenerateStats>& samples, auto field) {
+            std::vector<double> values;
+            values.reserve(samples.size());
+            for (const auto& sample : samples) values.push_back(field(sample));
+            return median(std::move(values));
+        };
+        r.cold_ttft_ms = metric(cold_samples, [](const auto& s) { return s.ttft_ms; });
+        r.cold_prefill_tok_s = metric(cold_samples, [](const auto& s) { return s.prefill_tok_per_sec; });
+        r.cold_decode_step_ms = metric(cold_samples, [](const auto& s) { return s.avg_decode_latency_ms; });
+        r.cold_decode_tok_s = metric(cold_samples, [](const auto& s) { return s.decode_tok_per_sec; });
+        r.reuse_ttft_ms = metric(reuse_samples, [](const auto& s) { return s.ttft_ms; });
+        r.restore_ms = metric(reuse_samples, [](const auto& s) { return s.restore_ms; });
+        r.suffix_prefill_ms = metric(reuse_samples, [](const auto& s) { return s.suffix_prefill_ms; });
+        r.reuse_decode_step_ms = metric(reuse_samples, [](const auto& s) { return s.avg_decode_latency_ms; });
+        r.reuse_decode_tok_s = metric(reuse_samples, [](const auto& s) { return s.decode_tok_per_sec; });
+        r.suffix_tok_s = r.reuse_ttft_ms > 0.0 ? cfg.suffix_len * 1000.0 / r.reuse_ttft_ms : 0.0;
+        r.reuse_hit = std::all_of(reuse_samples.begin(), reuse_samples.end(), [](const auto& s) { return s.reuse_hit; });
+        r.prefix_tokens_reused = reuse_samples.front().prefix_tokens_reused;
+        r.suffix_tokens_dispatched = reuse_samples.front().suffix_tokens_dispatched;
+        r.cold_generated_tokens = cold_samples.front().generated_tokens;
+        r.reuse_generated_tokens = reuse_samples.front().generated_tokens;
+        r.speedup_ratio = r.reuse_ttft_ms > 0.0 ? r.cold_ttft_ms / r.reuse_ttft_ms : 1.0;
+        r.decode_delta_pct = r.cold_decode_step_ms > 0.0
+            ? ((r.reuse_decode_step_ms - r.cold_decode_step_ms) / r.cold_decode_step_ms) * 100.0 : 0.0;
+
+        r.parity_pass = std::equal(cold_samples.begin(), cold_samples.end(), reuse_samples.begin(),
+            [](const auto& cold, const auto& reuse) {
+                return !cold.generated_tokens.empty() && cold.generated_tokens == reuse.generated_tokens
+                    && cold.stop_reason == reuse.stop_reason;
+            });
+        auto print_spread = [&](const char* label, const std::vector<GenerateStats>& samples, auto field) {
+            std::vector<double> values;
+            values.reserve(samples.size());
+            for (const auto& sample : samples) values.push_back(field(sample));
+            const auto [minimum, maximum] = std::minmax_element(values.begin(), values.end());
+            std::cout << "    " << label << " median/range: " << std::fixed << std::setprecision(2)
+                      << median(values) << " ms / [" << *minimum << ", " << *maximum << "] ms\n";
+        };
+        print_spread("Cold TTFT", cold_samples, [](const auto& s) { return s.ttft_ms; });
+        print_spread("Reuse TTFT", reuse_samples, [](const auto& s) { return s.ttft_ms; });
+        print_spread("Cold decode step", cold_samples, [](const auto& s) { return s.avg_decode_latency_ms; });
+        print_spread("Reuse decode step", reuse_samples, [](const auto& s) { return s.avg_decode_latency_ms; });
         const bool reuse_contract_pass = r.reuse_hit
-            && r.prefix_tokens_reused == cfg.prefix_len
-            && r.suffix_tokens_dispatched == cfg.suffix_len
+            && std::all_of(reuse_samples.begin(), reuse_samples.end(), [&](const auto& s) {
+                return s.prefix_tokens_reused == cfg.prefix_len
+                    && s.suffix_tokens_dispatched == cfg.suffix_len;
+            })
             && r.parity_pass;
         if (only_64k) {
             std::cout << "    64K-only Reuse Assertions: "
