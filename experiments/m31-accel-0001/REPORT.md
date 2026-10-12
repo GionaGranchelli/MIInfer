@@ -25,6 +25,12 @@ The source change is pushed at `b06bffd648bfb8258dc115b7584b1842cfb03883`. Z840 
 
 Read-only performance review found no current-source phase profile that supports a decode or prefill kernel choice. The ready next performance comparison is the existing five-pair cold 65,536-token prefill versus 65,536-token prefix reuse with a 512-token suffix; it requires parity and cooling clearance and changes no default. MI50 cooling/airflow remains unconfirmed (27 C idle, 15% / 0 RPM fan telemetry), so no GPU workload or performance measurement ran.
 
+## 2026-10-12 02:51 — Machinist cross-host CPU build
+
+The pre-existing dirty Machinist checkout was left unchanged. A separate clean clone was checked out at the exact pushed source `b06bffd648bfb8258dc115b7584b1842cfb03883`. In Machinist's local ROCm 7.2.1 container image (`sha256:50ff28a28cc13a3ca7333cd0c70e322d16245967c5fdf0d30a1bf57bda80a512`), the `miinfer` server and 64K harness targets built successfully without passing device nodes (exit 0). The native 64K harness self-check and guard self-check passed. Build log SHA-256: `9be32e63d2d174343848e1d04cda603c081159914348ac54b88411462635f4cc`; self-check log SHA-256: `a44a04e89101059c71c8f2a4452428d316488a894bfef023e3339d49f79b0b30`.
+
+This is a cross-host compile check only. Machinist reported its MI50 as GPU[1] at 0% utilization and 0% VRAM; no GPU workload was launched there. This does not resolve the host-to-device qualification blocker or qualify Machinist benchmark results. Z840 remains the only planned GPU execution host, and its cooling clearance is still pending.
+
 ## 64K persistent-agent workload
 
 Recovered pre-campaign Z840 M30 artifact (`qualification_sha=dc83f07`) describes a 40-turn coding-agent session. It reports 40 turns, all-turn minimum-generation gate PASS, visible-answer gate FAIL, prompt/context count 66,173 by turn 32 and 82,087 by turn 40. This demonstrates a session that grew past 64K, but it did not begin with exactly 65,536 tokens and is not the required campaign qualification.
