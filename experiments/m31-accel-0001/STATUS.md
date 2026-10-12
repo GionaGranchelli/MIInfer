@@ -1,7 +1,13 @@
 # M31-ACCEL-0001 live status
 
-Updated: 2026-10-12 05:06 Europe/Amsterdam
+Updated: 2026-10-12 05:09 Europe/Amsterdam
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
+
+## 2026-10-12 05:09 GQA A/B validity audit
+
+- The published A/B worktrees and no-device build/self-check evidence are real, but the current benchmark is invalid for the intended GQA change: candidate `8a9caec` modifies the eager decode path, while the harness unconditionally requests HIP Graph and rejects eager samples. Do not use these captures to claim a GQA result. A route-selectable harness and guarded external-worktree handoff are being prepared.
+- The stopped production run retained a valid shared 65,536-token prompt artifact at `/mnt/lc9-lake/m31-accel-0001-captures/agent64k-05/agent-workload.inputs/turn-01-request-01.tokens.json`. Verified model SHA matches the pinned model; token count is exactly 65,536 and recomputed token-ID SHA-256 matches `e95d256169a1882a8708d7c511d271d03edc4973e912111284844be4a533bf5d`. No second-request history exists because the run stopped before responding.
+- Latest host preflight: Z840 and Machinist are reachable and idle; MI50 is 26 C junction, 0% busy, and no process has `/dev/kfd` open. Physical airflow remains unconfirmed, so no GPU workload is allowed yet.
 
 ## 2026-10-12 05:02 SSH restored and GQA A/B branches published
 

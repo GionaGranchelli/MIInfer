@@ -3,6 +3,12 @@
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
 Status: IN PROGRESS. The exact 64K production request reached the server but was stopped at the 85 C guard threshold before any response; persistent-agent correctness and performance remain unqualified.
 
+## Current status — 2026-10-12 05:09 Europe/Amsterdam
+
+- The exact first-request token artifact from `agent64k-05` is retained and independently verified: 65,536 IDs, expected model SHA-256 `7e78da5d…fe169`, and matching recomputed ID hash `e95d2561…3bf5d`. It is suitable as a shared fixed prompt for the next decode comparison; the stopped run has no generated follow-up history.
+- A read-only audit found that the published GQA A/B comparison as currently wired cannot measure the candidate change. Commit `8a9caec` changes eager GQA decode after the HIP Graph path returns, while the benchmark always requests HIP Graph and rejects non-graph samples. The branch builds and self-checks remain valid, but no GQA performance claim can come from that setup. Harness/guard tooling is being revised for an explicit eager route before any GPU timing.
+- Z840 and Machinist are reachable and idle. Z840 reports 26 C junction, 0% GPU use, and no `/dev/kfd` users. Software cannot verify chassis airflow through the passive heatsink; GPU work remains held pending physical confirmation.
+
 ## Current status — 2026-10-12 05:02 Europe/Amsterdam
 
 - Z840 SSH is back. Lake is mounted with 1.6 TB free; the MI50 is idle at 25 C, 0% use, and 10.9 MB sampled VRAM. No GPU run started. Software still cannot establish physical airflow through the passive heatsink, so the cooling gate remains closed.
