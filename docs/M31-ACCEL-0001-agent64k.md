@@ -114,6 +114,16 @@ This operational gate does not establish cold-versus-reuse token parity; the
 known M31-0002 divergence remains unresolved, so the run cannot qualify exact
 reuse correctness by itself.
 
+The production server enables the supported persistent snapshot path for this
+workload: `run-agent-server.sh` sets `MIINFER_SESSION_REUSE=1` and a writable
+`--session-dir`; the streaming API handler enables prefix reuse and
+`cache_prefix_after`. `PrefillV2Model::generate()` saves the processed prompt
+checkpoint and restores a matching prefix for a later request. The live
+request log exposes `restore_ms`, reused GQA tokens, and GDN checkpoint/final
+positions. The separate native harness checks byte identity across an explicit
+turn-four save/load, but with synthetic token IDs. Neither path has completed
+the guarded 64K GPU correctness run yet.
+
 On Z840, launch the production-path workload only through the guarded runner:
 
 ```sh

@@ -1,6 +1,6 @@
 # M31-ACCEL-0001 live status
 
-Updated: 2026-10-12 03:07 Europe/Amsterdam
+Updated: 2026-10-12 03:08 Europe/Amsterdam
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
 
 ## 2026-10-12 03:04 Z840 SSH and capture recheck
@@ -13,6 +13,11 @@ Deadline: 2026-10-12 10:00 Europe/Amsterdam
 
 - Source/call-site audit found no direct `decode_step()` test. The recurrent state view copies its cursor, and HIP recurrent decode uses that cursor for convolution-history addressing. Host-only checks cannot validate the fix; it requires a guarded GPU state check on Z840 after cooling is confirmed.
 - Recursive scan found no recoverable files in the old `agent64k-04/session-cache` or request/prompt artifact paths. The new runner records request bodies for the next attempt.
+
+## 2026-10-12 03:08 persistent-session path review
+
+- Production launcher enables `MIINFER_SESSION_REUSE=1` and a persistent `--session-dir`; the streaming handler captures processed prompts and restores matching prefixes. Per-request logs expose restore time, GQA reused tokens, and GDN checkpoint/final positions. This is ready for the guarded agent run but not live-qualified.
+- Z840 remained idle at 27 C/0% use with fan telemetry 15%/0 RPM; Lake has 1.6 TB free. No GPU work ran.
 
 ## Source and ownership
 

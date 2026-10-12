@@ -3,13 +3,19 @@
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
 Status: IN PROGRESS. The exact 64K production request reached the server but was stopped at the 85 C warning before a response; persistent-agent correctness and performance remain unqualified.
 
-## Current status — 2026-10-12 03:04 Europe/Amsterdam
+## Current status — 2026-10-12 03:08 Europe/Amsterdam
 
 - Coordinator branch is clean and pushed at `6a32d8b69f981b842c3fd0c52ab5df328fdfe433`; integrated runtime code remains `a9480ae062bb83def6bb2f60e3b68a74b377bf9b` with later documentation-only commits.
 - Z840 SSH is available. Lake is mounted read/write with 1.6 TB free. The MI50 is idle at 27 C, 0% utilization, 20 W, and 10.9 MB VRAM; fan telemetry is 15% / 0 RPM. This does not verify airflow through the passive heatsink, so GPU work remains paused after the earlier 85 C stop.
 - Re-inspected `agent64k-04`: its capture contains environment, server, telemetry, and guard logs, but no saved request JSON or completed runner output. Source was `f01f7e9a210489139d7aa36e4391ede48e723464`; server requests 1–2 were received, request 3 was queued, and the container ended with exit 137 before a response. Exact request artifacts are now saved by runner `a9480ae` for a future safe attempt.
 - A recursive scan also found no files in the old `session-cache` and no request/prompt JSON anywhere in the capture, so the old input cannot be recovered. Source review confirms there is no direct `decode_step()` test: recurrent views copy cursor metadata, while the fix affects the HIP convolution-history address. A host-only assertion would not validate that behavior; GPU state validation remains required.
 - Completed 64K state correctness, decode/prefill A/B measurements, and LC-0009 QSUM decode evidence remain outstanding. Next: establish safe airflow/cooling, run the guarded production 64K correctness workload, then perform the prepared matched cold/suffix comparison.
+
+## 2026-10-12 03:08 — live cooling and persistent-session path
+
+Z840 recheck at 03:08 found no active MIInfer process or container. The MI50 is idle at 27 C junction, 0% use, 20 W; both `rocm-smi` and `sensors` still report 0 RPM. Lake remains mounted with 1.6 TB free. The airflow gate remains unresolved.
+
+Source review verified the production snapshot path end-to-end: `run-agent-server.sh` sets session reuse and a persistent session directory; the streaming API handler enables prefix reuse and checkpoint capture; `PrefillV2Model::generate()` restores matching prefixes and persists the processed prompt. Runtime request logs expose restore time, reused GQA tokens, and GDN checkpoint/final positions. This prepares the evidence contract for the next run; no live snapshot/restore or 64K response has yet been observed.
 
 ## Source identity and worktrees
 
