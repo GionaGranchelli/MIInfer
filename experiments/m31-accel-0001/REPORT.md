@@ -432,3 +432,5 @@ At 07:11, read-only inspection recovered the prior `agent64k-05` stop cause. The
 At 07:13, idle MI50 telemetry was 25 C junction, 0% utilization, 10.9 MB VRAM, and fan tach 8 RPM, with no campaign process running. This is an idle check only and does not establish adequate cooling under model load.
 
 At 07:15, the Z840 exposed no chassis-fan telemetry: `ipmitool` and `/dev/ipmi*` were absent, and hwmon showed only the amdgpu `fan1_input` counter (3 RPM). Software checks cannot confirm airflow through the passive heatsink; physical inspection remains the safety gate.
+
+At 07:19, the matched eager GQA control/candidate preflight was rechecked without a GPU. Clean source revisions `16662fcbc22c478e897705a3eb6c59ee390fd88c` / `527baba9f1f3915a6dc2507d1b8973089fb54827` and their binary hashes matched the approved artifacts; both no-device benchmark self-checks passed in pinned image `50ff28a28cc13a3ca7333cd0c70e322d16245967c5fdf0d30a1bf57bda80a512`. The controls and candidate are ready for the five-round matched capture, but no performance result exists. Logs and hashes are in STATUS.md.
