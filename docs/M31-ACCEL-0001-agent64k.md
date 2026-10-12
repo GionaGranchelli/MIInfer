@@ -63,7 +63,11 @@ repository-tool flow for eight turns. A host-only helper counts the exact
 `build_chatml()` output using MIInfer's Qwen tokenizer; the prompt builder
 extends only with tracked repository excerpts and stops unless the count is
 exactly 65,536. The first live request must report the same count. It never
-constructs or pads token IDs.
+pads token IDs. For each request sent, the tokenizer helper can also emit the
+exact ChatML token IDs; the workload saves these beside the exact request body
+in a `.tokens.json` artifact tied to the request SHA-256 and a canonical
+little-endian token-ID SHA-256. This lets later analysis derive the true common
+token prefix across consecutive requests, including tokenizer boundary effects.
 
 Build and run the tokenizer-only self-check without initializing HIP:
 
@@ -81,7 +85,7 @@ python3 bench/m31_accel_0001_agent_workload.py \
 The self-check also accepts a complete SSE response and rejects one missing
 `[DONE]`. During a live run the JSON artifact is atomically updated before each
 request with its active turn, phase, request hash, and tokenizer count; the
-exact serialized API body is saved atomically under a sibling
+exact serialized API body and corresponding token-ID artifact are saved under a sibling
 `agent-workload.inputs/` directory before it is sent. Completed request records
 keep the artifact path and SHA-256. The guarded launcher supplies the verified
 model SHA; the workload records it with the source and runner-script hashes.
