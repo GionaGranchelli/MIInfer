@@ -13,7 +13,7 @@ Status: **OPEN**. This work did not produce a decode/QSUM reference, and LC-0009
 
 ## Why it remains open
 
-Contract O requires the actual represented operands and GPU result for the selected operation. The available prefill checker cannot establish the one-token decode QSUM bound. The invalid QSUM-only matrix cell cannot be relabeled or reused as MMQ evidence. The current runner's registered captures do not export the quantized decode activation (codes, scales, and sum) alongside the layer-0 Gate/Up decode output, so the scalar comparison cannot be reconstructed from the tracked evidence.
+Contract O requires the actual represented operands and GPU result for the selected operation. The committed evidence still has no one-token decode QSUM capture, and the invalid QSUM-only matrix cell cannot be relabeled or reused as MMQ evidence. The eager `PrefillV2RecurrentLayer::decode` path already has a one-shot trace hook for the layer input, post-normalized Gate/Up input, captured Q8 blocks, and both projection outputs; this handoff did not run it. The scalar checker now supports QSUM captures with `--qsum`.
 
 The two-attempt Machinist preflight found its checkout at `d8b833637f85537d6205c9480129d95c819e6d61`, branch `m30/exact-prefix-kv-reuse`, with dirty tracked edits in `CMakeLists.txt`, `include/miinfer/prefill_v2/model.hpp`, `src/prefill_v2/model.cpp`, and `tools/miinfer_cli.cpp`, plus untracked M30 files. It was left untouched. No active LC-0009 process or tmux session was visible. The remote login shell does not provide `rtk`; the first read-only command therefore failed to run its `rtk` subcommands. No third SSH attempt was made. This inspection did not establish that the remote model/oracle files are absent; it established that no clean isolated worktree was prepared or run during this handoff.
 
@@ -21,7 +21,7 @@ GPU work was out of scope for this CPU-only handoff, and the campaign report cur
 
 ## Required next run
 
-First add a narrowly scoped capture hook around the actual one-token recurrent-MMQ Gate/Up decode call. It must retain the exact input floats, quantized Q8 codes, scale and quantized-sum values, both GPU projection outputs, prompt/token position, selected layer, binary/source/model identity, and hashes. Then, after GPU operation is cleared to resume, execute the frozen `ordinary-64-01` prompt with the MMQ route and QSUM both selected, eager mode, and at least two generated tokens so the capture includes a one-token decode invocation. The required selectors are:
+Use the existing eager decode trace hook; no new capture code is needed. Set `MIINFER_LC_OP_TRACE_PREFIX` to a new Lake path and enable `MIINFER_LC_DECODE_TRACE=1`, with `MIINFER_LC_TRACE_LAYER=0`. It writes the exact post-normalized floats, Q8 codes/scales/sum, Gate and Up outputs, and decode position into separate files, refusing to overwrite them. After GPU operation is cleared to resume, execute the frozen `ordinary-64-01` prompt with the MMQ route and QSUM both selected, eager mode, and at least two generated tokens so the capture includes a one-token decode invocation. The required selectors are:
 
 ```text
 ROCR_VISIBLE_DEVICES=0

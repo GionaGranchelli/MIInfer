@@ -94,6 +94,20 @@ std::uint16_t float_to_half(float value) {
                                       | (mantissa >> 13));
 }
 
+std::uint16_t expected_input_sum(bool quantized_sum, float input_sum, std::uint16_t d,
+                                int quantized_codes_sum) {
+    const float sum = quantized_sum
+        ? half_to_float(d) * static_cast<float>(quantized_codes_sum)
+        : input_sum;
+    return float_to_half(sum);
+}
+
+bool sum_mode_self_check() {
+    const auto d = float_to_half(0.5F);
+    return expected_input_sum(false, 1.5F, d, -5) == float_to_half(1.5F)
+        && expected_input_sum(true, 1.5F, d, -5) == float_to_half(-2.5F);
+}
+
 std::pair<unsigned, unsigned> q4k_scale_min(const Q4KBlock& block, std::size_t group) {
     if (group < 4) return {block.scales[group] & 63U, block.scales[group + 4] & 63U};
     const std::size_t i = group - 4;
@@ -180,9 +194,15 @@ OperationResult check_projection(const Q4KBlock* weights, const std::vector<std:
 } // namespace
 
 int main(int argc, char** argv) {
-    if (argc != 7) {
+    const bool qsum = argc == 8 && std::string(argv[7]) == "--qsum";
+    if (argc == 2 && std::string(argv[1]) == "--self-check") {
+        const bool pass = sum_mode_self_check();
+        std::cout << "sum_mode_self_check=" << (pass ? "PASS" : "FAIL") << '\n';
+        return pass ? 0 : 1;
+    }
+    if ((argc != 7 && argc != 8) || (argc == 8 && !qsum)) {
         std::cerr << "usage: m31-lc9-gateup-contract-o MODEL.gguf POST_NORMALIZED.f32 "
-                     "GATEUP_MX_Q8.bin GATE.f32 UP.f32 OUTPUT_PREFIX\n";
+                     "GATEUP_MX_Q8.bin GATE.f32 UP.f32 OUTPUT_PREFIX [--qsum]\n";
         return 2;
     }
     try {
@@ -221,10 +241,12 @@ int main(int argc, char** argv) {
             const float d = max_abs == 0.0F ? 0.0F : max_abs / 127.0F;
             const std::uint16_t expected_d = float_to_half(d);
             bool group_matches = true;
+            int quantized_codes_sum = 0;
             const auto* block = q8.data() + q8_block * kQ8BlockBytes;
             for (std::size_t i = 0; i < 32; ++i) {
                 const int quantized = d == 0.0F ? 0 : std::clamp(
                     static_cast<int>(std::round(input[begin + i] / d)), -127, 127);
+                quantized_codes_sum += quantized;
                 const auto actual = reinterpret_cast<const std::int8_t*>(block + 16)
                     [local_group * 32 + i];
                 group_matches &= actual == quantized;
@@ -232,7 +254,8 @@ int main(int argc, char** argv) {
             std::uint16_t actual_d, actual_sum;
             std::memcpy(&actual_d, block + local_group * 4, sizeof(actual_d));
             std::memcpy(&actual_sum, block + local_group * 4 + 2, sizeof(actual_sum));
-            const std::uint16_t expected_sum = float_to_half(partial_sums[0]);
+            const std::uint16_t expected_sum = expected_input_sum(
+                qsum, partial_sums[0], expected_d, quantized_codes_sum);
             group_matches &= actual_d == expected_d && actual_sum == expected_sum;
             if (group_matches) ++codes_and_scales_match;
         }
@@ -272,6 +295,7 @@ int main(int argc, char** argv) {
         summary << std::setprecision(17)
                 << "{\n  \"contract\": \"O\",\n  \"operation\": \"Q4_K Gate/Up x MXQ8 affine MMQ\",\n"
                 << "  \"rows\": " << kRows << ", \"columns\": " << kColumns << ",\n"
+                << "  \"input_sum_mode\": \"" << (qsum ? "qsum" : "ordinary") << "\",\n"
                 << "  \"q8_groups\": " << kGroups << ", \"q8_codes_and_scales_matching\": "
                 << codes_and_scales_match << ",\n"
                 << "  \"fp32_rounding_operations_bound\": " << kF32OperationBound
@@ -291,6 +315,7 @@ int main(int argc, char** argv) {
                 << ", \"worst_row\": " << up.worst_row << "},\n"
                 << "  \"status\": \"" << (pass ? "PASS" : "FAIL") << "\"\n}\n";
         std::cout << "contract_o=" << (pass ? "PASS" : "FAIL")
+                  << " input_sum_mode=" << (qsum ? "qsum" : "ordinary")
                   << " q8_groups=" << codes_and_scales_match << '/' << kGroups
                   << " gate_rows=" << gate.within << '/' << kRows
                   << " gate_max_ratio=" << gate.max_bound_ratio
