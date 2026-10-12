@@ -14,9 +14,11 @@ generated-token bounds, vocabulary IDs, finite logits, four-token repetition
 runs, and all 48 recurrent position counters. The shared production sampler now
 fails the request on any non-finite logit; the no-GPU self-check covers finite
 values, NaN, and both infinities. The HTTP streaming workload does not receive
-generated token IDs, so repeated-token detection applies to the native harness,
-not the production agent stream. The harness fingerprints active GDN
-states and KV bytes before save and after restore and requires byte identity.
+generated token IDs. The server checks the IDs it already holds and writes
+only a repeated-run boolean to its private request telemetry; the production
+runner fails closed if a loop is detected or that signal is missing. No token
+IDs are exposed. The harness fingerprints active GDN states and KV bytes
+before save and after restore and requires byte identity.
 After model allocation it fails closed unless at least 1 GiB of VRAM remains
 free. It samples HIP free/total VRAM after each turn and reports the largest
 sampled use; this is a discrete in-process sample, not an external telemetry
@@ -35,10 +37,19 @@ save/load API provides the restore checkpoint.
 ## Build and self-check
 
 ```sh
-cmake -S . -B build -DMIINFER_ENABLE_HIP=ON -DMIINFER_BUILD_BENCHMARKS=ON
-cmake --build build --target miinfer-m31-accel-0001-agent64k -j
-./build/miinfer-m31-accel-0001-agent64k --self-check
+cmake -S . -B build/m31-accel-0001 \
+  -DCMAKE_PREFIX_PATH=/opt/rocm-7.2.1 -DCMAKE_CXX_COMPILER=clang++ \
+  -DCMAKE_HIP_ARCHITECTURES=gfx906 -DMIINFER_HIP_ARCHITECTURE=gfx906 \
+  -DMIINFER_TARGET_ARCH=gfx906 -DMIINFER_ENABLE_HIP=ON \
+  -DMIINFER_BUILD_BENCHMARKS=ON -DCMAKE_BUILD_TYPE=Release
+cmake --build build/m31-accel-0001 \
+  --target miinfer miinfer-m31-accel-0001-agent64k -j4
+./build/m31-accel-0001/miinfer-m31-accel-0001-agent64k --self-check
 ```
+
+Run these commands in the pinned ROCm 7.2.1 container. For an offline build,
+mount a populated nlohmann/json source directory at `/deps/nlohmann_json` and
+add `-DFETCHCONTENT_SOURCE_DIR_NLOHMANN_JSON=/deps/nlohmann_json` to configure.
 
 The self-check does not load a model or initialize a GPU. It verifies the
 initial 65,536-token prompt, eight-turn append plan, final prompt length,
