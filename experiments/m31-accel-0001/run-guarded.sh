@@ -10,13 +10,28 @@ thermal_action() { awk -v t="$1" 'BEGIN { print (t >= 90 ? "stop" : t >= 85 ? "i
 vram_limit() { awk -v b="$1" 'BEGIN { exit !(b >= 33200000000) }'; }
 valid_mode() { case "$1" in native|agent|prefix64k|decode) return 0 ;; *) return 1 ;; esac; }
 valid_decode_route() { case "$1" in hip_graph|eager) return 0 ;; *) return 1 ;; esac; }
+gpu_index_for_bdf() {
+  awk -v want="$1" '
+    $1 ~ /^GPU\[[0-9]+\]$/ && $2 == ":" && $3 == "PCI" && $4 == "Bus:" {
+      device_id = $1; sub(/^GPU\[/, "", device_id); sub(/\]$/, "", device_id)
+      rows++
+      if ($5 == want) { matches++; selected = device_id }
+    }
+    END { if (rows == 1 && matches == 1) print selected; else exit 1 }
+  ' <<< "$2"
+}
 if [[ ${1:-} == --self-check ]]; then
+  sample_bus='GPU[0] : PCI Bus: 0000:06:00.0'
+  multi_bus=$'GPU[0] : PCI Bus: 0000:06:00.0\nGPU[1] : PCI Bus: 0000:08:00.0'
   ! temp_warning 84.9 && temp_warning 85 && ! temp_limit 89.9 && temp_limit 90 \
     && [[ $(thermal_action 84.9) == continue && $(thermal_action 85) == inspect && $(thermal_action 90) == stop ]] \
     && ! vram_limit 33199999999 && vram_limit 33200000000 \
     && valid_mode native && valid_mode agent && valid_mode prefix64k && valid_mode decode \
     && valid_decode_route hip_graph && valid_decode_route eager && ! valid_decode_route invalid \
-    && ! valid_mode unknown
+    && [[ $(gpu_index_for_bdf 0000:06:00.0 "$sample_bus") == 0 ]] \
+    && ! gpu_index_for_bdf 0000:06:00.1 "$sample_bus" \
+    && ! gpu_index_for_bdf 0000:06:00.0 "$multi_bus" \
+    && ! valid_mode unknown || { echo 'guard self-check failed' >&2; exit 1; }
   echo 'guard self-check: PASS'
   exit 0
 fi
@@ -37,7 +52,13 @@ mkdir -p "$run_dir"
 [[ ! -e "$run_dir/exit.status" ]] || { echo "capture directory already used: $run_dir" >&2; exit 2; }
 podman container exists "$name" && { echo "refusing existing container $name" >&2; exit 2; }
 
-read_snapshot() { rocm-smi --showtemp --showmeminfo vram --showpower --showclocks 2>&1; }
+gpu_bdf=0000:06:00.0
+gpu_inventory=$(rocm-smi --showbus 2>&1) || { echo 'GPU inventory unavailable' >&2; exit 3; }
+gpu_index=$(gpu_index_for_bdf "$gpu_bdf" "$gpu_inventory") || {
+  echo "expected exactly one ROCm GPU at BDF $gpu_bdf; refusing ambiguous device selection" >&2
+  exit 3
+}
+read_snapshot() { rocm-smi -d "$gpu_index" --showtemp --showmeminfo vram --showpower --showclocks 2>&1; }
 parse_temp() { awk '/Temperature \(Sensor junction\)/ { print $NF; exit }'; }
 parse_used() { awk '/VRAM Total Used Memory \(B\)/ { print $NF; exit }'; }
 append_guard_sample() {
@@ -69,8 +90,9 @@ esac
 for binary in "${binaries[@]}"; do
   [[ -x "$repo/$binary" ]] || { echo "required built executable missing: $binary" >&2; exit 8; }
 done
-printf 'source_sha=%s\nmodel_sha=%s\nimage=%s\nimage_id=%s\nrocr_visible_devices=0\nstart_junction_c=%s\nstart_vram_used_bytes=%s\nthermal_warning_c=85\nthermal_stop_c=90\nfree_vram_floor_bytes=1073741824\n' \
-  "$source_sha" "$model_sha" "$image" "$(podman image inspect --format '{{.Id}}' "$image")" "$temp" "$used" > "$run_dir/environment.txt"
+printf 'source_sha=%s\nmodel_sha=%s\nimage=%s\nimage_id=%s\ngpu_bdf=%s\ngpu_rocm_smi_index=%s\nrocr_visible_devices=%s\nstart_junction_c=%s\nstart_vram_used_bytes=%s\nthermal_warning_c=85\nthermal_stop_c=90\nfree_vram_floor_bytes=1073741824\n' \
+  "$source_sha" "$model_sha" "$image" "$(podman image inspect --format '{{.Id}}' "$image")" \
+  "$gpu_bdf" "$gpu_index" "$gpu_index" "$temp" "$used" > "$run_dir/environment.txt"
 for binary in "${binaries[@]}"; do
   printf 'binary_%s_sha256=%s\n' "$(basename "$binary")" "$(sha256sum "$repo/$binary" | cut -d' ' -f1)" >> "$run_dir/environment.txt"
 done
@@ -113,7 +135,7 @@ case "$mode" in
   *) echo "unknown workload mode: $mode (expected native, agent, prefix64k, or decode)" >&2; exit 2 ;;
 esac
 if ! podman run --detach --name "$name" --device /dev/kfd --device /dev/dri \
-  --security-opt=label=disable --group-add=keep-groups -e ROCR_VISIBLE_DEVICES=0 \
+  --security-opt=label=disable --group-add=keep-groups -e "ROCR_VISIBLE_DEVICES=$gpu_index" \
   -e "M31_MODEL_FILE=$model_file" -e "M31_MODEL_SHA256=$model_sha" \
   -e "M31_SOURCE_SHA=$source_sha" \
   -v "$repo:/workspace/MIInfer:Z" -v "$(dirname "$model"):/models:ro" \
