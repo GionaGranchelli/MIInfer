@@ -790,10 +790,18 @@ GenerateStats PrefillV2Model::generate(
 
     const std::uint32_t prompt_len = static_cast<std::uint32_t>(prompt.size());
     bool is_reuse = false;
+    bool disk_session_restore = false;
     std::uint32_t prefix_len = 0;
+    double disk_restore_ms = 0.0;
     std::uint32_t suffix_len = prompt_len;
 
-    if (options.enable_prefix_reuse && reusable_context_.has_valid_prefix()) {
+    if (options.require_disk_session_restore
+        && (!options.enable_prefix_reuse || options.persistent_session_dir.empty())) {
+        throw std::runtime_error("disk session restore required but persistent session reuse is unavailable");
+    }
+
+    if (!options.require_disk_session_restore
+        && options.enable_prefix_reuse && reusable_context_.has_valid_prefix()) {
         auto match = reusable_context_.check_match(prompt, model_name_, quantization_);
         // Exact-prefix checkpoints keep recurrent/KV state, not the final hidden vector for logits.
         if (match == ReusableContext::MatchResult::ExactMatch
@@ -806,14 +814,24 @@ GenerateStats PrefillV2Model::generate(
 
     if (!is_reuse && options.enable_prefix_reuse && !options.persistent_session_dir.empty()) {
         std::uint32_t disk_prefix = 0;
+        const auto disk_restore_start = std::chrono::steady_clock::now();
         if (restore_matching_session(options.persistent_session_dir, prompt, disk_prefix, stream)) {
             is_reuse = true;
+            disk_session_restore = true;
             prefix_len = disk_prefix;
             suffix_len = prompt_len - prefix_len;
         }
+        disk_restore_ms = std::chrono::duration<double, std::milli>(
+            std::chrono::steady_clock::now() - disk_restore_start).count();
+    }
+    if (options.require_disk_session_restore && !disk_session_restore) {
+        throw std::runtime_error("required disk session restore found no matching persisted prefix");
     }
 
     GenerateStats stats;
+    stats.disk_session_restore = disk_session_restore;
+    stats.disk_restore_prefix_tokens = disk_session_restore ? prefix_len : 0;
+    stats.disk_restore_ms = disk_restore_ms;
     stats.prompt_tokens.assign(prompt.begin(), prompt.end());
     stats.generated_tokens.reserve(options.max_new_tokens);
 

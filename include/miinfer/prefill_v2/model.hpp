@@ -30,6 +30,7 @@ struct GenerateOptions {
     bool use_hip_graph = true;
     bool enable_prefix_reuse = false;   // When true, attempts to reuse cached prefix if matching
     bool cache_prefix_after = false;    // When true, caches prefix state after prefill
+    bool require_disk_session_restore = false; // Diagnostic gate: skip memory cache and fail on disk miss
     std::size_t cache_prefix_len = 0;   // If 0, caches entire prompt; otherwise first N tokens
     std::vector<std::uint32_t> stop_token_ids = {151643, 151645};
     float temperature = 0.7f;
@@ -59,13 +60,16 @@ struct GenerateStats {
 
     // Reuse telemetry & observability
     bool reuse_hit = false;
+    bool disk_session_restore = false;
     std::uint32_t prefix_tokens_reused = 0;
+    std::uint32_t disk_restore_prefix_tokens = 0;
     std::uint32_t suffix_tokens_dispatched = 0;
     std::uint32_t gqa_kv_reused_tokens = 0;
     std::uint32_t gdn_checkpoint_position = 0;
     std::uint32_t gdn_final_position_min = 0;
     std::uint32_t gdn_final_position_max = 0;
     double restore_ms = 0.0;
+    double disk_restore_ms = 0.0;
     double suffix_prefill_ms = 0.0;
 };
 

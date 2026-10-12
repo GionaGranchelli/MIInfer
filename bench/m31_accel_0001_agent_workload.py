@@ -136,6 +136,22 @@ def sse_self_check():
             pass
         else:
             raise RuntimeError("missing or detected repeated-token loop unexpectedly passed")
+    require_disk_session_restore({
+        "disk_session_restore": True, "disk_restore_prefix_tokens": 1100,
+        "disk_restore_ms": 1.5,
+    }, 1100)
+    for telemetry in (
+            {"disk_session_restore": False, "disk_restore_prefix_tokens": 1100, "disk_restore_ms": 1.5},
+            {"disk_session_restore": True, "disk_restore_prefix_tokens": 1099, "disk_restore_ms": 1.5},
+            {"disk_session_restore": True, "disk_restore_prefix_tokens": 1100, "disk_restore_ms": float("nan")},
+            {"disk_session_restore": True, "disk_restore_prefix_tokens": 1100, "disk_restore_ms": -1.0},
+            {}):
+        try:
+            require_disk_session_restore(telemetry, 1100)
+        except RuntimeError:
+            pass
+        else:
+            raise RuntimeError("invalid disk-restore telemetry unexpectedly passed")
     try:
         list(sse_choices(valid[:-1]))
     except RuntimeError:
@@ -605,15 +621,21 @@ def exact_initial_request(root, model_id, counter):
     )
 
 
-def stream_completion(url, key, payload, request_input, server_log, guard_telemetry):
+def stream_completion(url, key, payload, request_input, server_log, guard_telemetry,
+                      required_disk_restore_prefix_tokens=None):
     tokenizer_prompt_tokens = request_input["tokenizer_prompt_tokens"]
+    headers = {
+        "Authorization": f"Bearer {key}", "Content-Type": "application/json",
+        "Accept": "text/event-stream",
+    }
+    if required_disk_restore_prefix_tokens is not None:
+        if type(required_disk_restore_prefix_tokens) is not int or required_disk_restore_prefix_tokens <= 0:
+            raise RuntimeError("required disk-restore prefix must be a positive integer")
+        headers["X-MIInfer-Require-Disk-Session-Restore"] = "1"
     before = legacy.metrics(url, key)
     gpu_before = legacy.gpu_snapshot()
     started = time.perf_counter()
-    request = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers={
-        "Authorization": f"Bearer {key}", "Content-Type": "application/json",
-        "Accept": "text/event-stream",
-    })
+    request = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers)
     content, reasoning, calls = [], [], {}
     first_delta_ms = None
     request_start_unix_ns = time.time_ns()
@@ -641,6 +663,8 @@ def stream_completion(url, key, payload, request_input, server_log, guard_teleme
         raise RuntimeError(f"expected one server inference request, observed {request_count}")
     latency, detail = server_log.take_request()
     require_no_repeated_token_loop(detail)
+    if required_disk_restore_prefix_tokens is not None:
+        require_disk_session_restore(detail, required_disk_restore_prefix_tokens)
     prompt_tokens = after["miinfer_prompt_tokens_total"] - before["miinfer_prompt_tokens_total"]
     generated_tokens = after["miinfer_generated_tokens_total"] - before["miinfer_generated_tokens_total"]
     if not request_metric_counts_match(prompt_tokens, generated_tokens, detail,
@@ -671,6 +695,15 @@ def stream_completion(url, key, payload, request_input, server_log, guard_teleme
 def require_no_repeated_token_loop(server_request):
     if server_request.get("repeated_token_loop_detected") is not False:
         raise RuntimeError("server did not prove the request was free of a repeated-token loop")
+
+
+def require_disk_session_restore(server_request, expected_prefix_tokens):
+    prefix_tokens = server_request.get("disk_restore_prefix_tokens")
+    restore_ms = server_request.get("disk_restore_ms")
+    if (server_request.get("disk_session_restore") is not True
+            or type(prefix_tokens) is not int or prefix_tokens != expected_prefix_tokens
+            or type(restore_ms) not in (int, float) or not math.isfinite(restore_ms) or restore_ms < 0):
+        raise RuntimeError("server did not prove the required persisted-session prefix was restored from disk")
 
 
 def require_planned_read(response, path, start_line, end_line):
@@ -796,13 +829,19 @@ def main():
                 result["active_phase"] = f"report_completion_{attempt + 1}"
                 payload = body_for(args.model, messages, "auto", 256)
                 request_sequence += 1
+                required_disk_restore_prefix_tokens = None
+                if request_sequence == 2:
+                    required_disk_restore_prefix_tokens = turn["requests"][0]["server_request"]["prompt_tokens"]
                 request_input = save_request_input(
                     output_path, index, attempt + 2, payload, counter.ids(payload),
                     workload_id, request_sequence, model_sha256)
+                if required_disk_restore_prefix_tokens is not None:
+                    request_input["required_disk_restore_prefix_tokens"] = required_disk_restore_prefix_tokens
                 result["active_request"] = request_input
                 write_result(output_path, result)
                 completion = stream_completion(args.url, args.api_key, payload,
-                                               request_input, server_log, guard_telemetry)
+                                               request_input, server_log, guard_telemetry,
+                                               required_disk_restore_prefix_tokens)
                 turn["requests"].append(completion)
                 result["requests_completed"] += 1
                 result["active_request"] = None

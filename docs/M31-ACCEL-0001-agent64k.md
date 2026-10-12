@@ -157,6 +157,15 @@ This operational gate does not establish cold-versus-reuse token parity; the
 known M31-0002 divergence remains unresolved, so the run cannot qualify exact
 reuse correctness by itself.
 
+The first report-completion request also requires a persisted-session restore:
+it sends `X-MIInfer-Require-Disk-Session-Restore: 1`, which skips the in-memory
+reuse match and fails if the disk session has no matching prefix. The runner
+requires the server's private telemetry to report a disk restore, the full
+65,536-token first-request prefix, and a finite nonnegative disk-load duration.
+This proves that the production disk loader supplied the prefix; it does not
+prove restored KV/GDN byte identity or numerical parity. This diagnostic has
+not completed on the GPU.
+
 The production server enables the supported persistent snapshot path for this
 workload: `run-agent-server.sh` sets `MIINFER_SESSION_REUSE=1` and a writable
 `--session-dir`; the streaming API handler enables prefix reuse and

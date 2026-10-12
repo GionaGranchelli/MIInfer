@@ -529,7 +529,9 @@ struct RuntimeGenerateStats {
     std::size_t generated_tokens = 0;
     bool repeated_token_loop_detected = false;
     bool reuse_hit = false;
+    bool disk_session_restore = false;
     std::size_t reused_prefix_tokens = 0;
+    std::size_t disk_restore_prefix_tokens = 0;
     std::size_t common_prefix_tokens = 0;
     std::size_t suffix_tokens_dispatched = 0;
     std::size_t gqa_kv_reused_tokens = 0;
@@ -537,6 +539,7 @@ struct RuntimeGenerateStats {
     std::size_t gdn_final_position_min = 0;
     std::size_t gdn_final_position_max = 0;
     double restore_ms = 0.0;
+    double disk_restore_ms = 0.0;
     double suffix_prefill_ms = 0.0;
     std::size_t session_checkpoint_count = 0;
     std::size_t session_checkpoint_bytes = 0;
@@ -5150,6 +5153,16 @@ int cmd_serve(int argc, char** argv) {
             return;
         }
         state("parsed");
+        const auto disk_restore_header = http_header(
+            std::string_view(request.raw).substr(0, body_start),
+            "x-miinfer-require-disk-session-restore");
+        if (disk_restore_header && *disk_restore_header != "0" && *disk_restore_header != "1") {
+            ++http_errors;
+            send_http_error(client_fd, 400, "invalid disk session restore header");
+            state("rejected");
+            return;
+        }
+        const bool require_disk_restore = disk_restore_header && *disk_restore_header == "1";
         const bool is_stream = parsed.request->stream;
         const bool defer_tool_output = !parsed.request->tools.empty()
             && parsed.request->tool_choice != "none";
@@ -5216,6 +5229,9 @@ int cmd_serve(int argc, char** argv) {
                       << ",\"gdn_final_position_min\":" << stats.gdn_final_position_min
                       << ",\"gdn_final_position_max\":" << stats.gdn_final_position_max
                       << ",\"restore_ms\":" << stats.restore_ms
+                      << ",\"disk_session_restore\":" << (stats.disk_session_restore ? "true" : "false")
+                      << ",\"disk_restore_prefix_tokens\":" << stats.disk_restore_prefix_tokens
+                      << ",\"disk_restore_ms\":" << stats.disk_restore_ms
                       << ",\"suffix_prefill_ms\":" << stats.suffix_prefill_ms
                       << ",\"session_checkpoint_count\":" << stats.session_checkpoint_count
                       << ",\"session_checkpoint_bytes\":" << stats.session_checkpoint_bytes
@@ -5238,6 +5254,7 @@ int cmd_serve(int argc, char** argv) {
             opt.use_hip_graph = true;
             opt.enable_prefix_reuse = session_reuse;
             opt.cache_prefix_after = session_reuse;
+            opt.require_disk_session_restore = require_disk_restore;
             if (session_dir) {
                 opt.persistent_session_dir = session_dir->string();
             }
@@ -5482,9 +5499,11 @@ int cmd_serve(int argc, char** argv) {
                 stats.stop_reason = v2_stats.stop_reason;
                 stats.cancelled = stats.stop_reason == miinfer::GenerationStopReason::kCancelled;
                 stats.reuse_hit = v2_stats.reuse_hit;
+                stats.disk_session_restore = v2_stats.disk_session_restore;
                 stats.prefill_processed_tokens = v2_stats.reuse_hit
                     ? v2_stats.suffix_tokens_dispatched : v2_stats.prompt_tokens.size();
                 stats.reused_prefix_tokens = v2_stats.prefix_tokens_reused;
+                stats.disk_restore_prefix_tokens = v2_stats.disk_restore_prefix_tokens;
                 stats.common_prefix_tokens = v2_stats.prefix_tokens_reused;
                 stats.suffix_tokens_dispatched = v2_stats.suffix_tokens_dispatched;
                 stats.gqa_kv_reused_tokens = v2_stats.gqa_kv_reused_tokens;
@@ -5492,6 +5511,7 @@ int cmd_serve(int argc, char** argv) {
                 stats.gdn_final_position_min = v2_stats.gdn_final_position_min;
                 stats.gdn_final_position_max = v2_stats.gdn_final_position_max;
                 stats.restore_ms = v2_stats.restore_ms;
+                stats.disk_restore_ms = v2_stats.disk_restore_ms;
                 stats.suffix_prefill_ms = v2_stats.suffix_prefill_ms;
                 if (v2_stats.prefix_tokens_reused > 0) {
                     stats.session_checkpoint_count = 1;
@@ -5531,6 +5551,9 @@ int cmd_serve(int argc, char** argv) {
                           << ",\"gdn_final_position_min\":" << stats.gdn_final_position_min
                           << ",\"gdn_final_position_max\":" << stats.gdn_final_position_max
                           << ",\"restore_ms\":" << stats.restore_ms
+                          << ",\"disk_session_restore\":" << (stats.disk_session_restore ? "true" : "false")
+                          << ",\"disk_restore_prefix_tokens\":" << stats.disk_restore_prefix_tokens
+                          << ",\"disk_restore_ms\":" << stats.disk_restore_ms
                           << ",\"suffix_prefill_ms\":" << stats.suffix_prefill_ms
                           << ",\"prefill_tokens_per_second\":" << stats.prefill_tok_s
                           << ",\"first_decode_token_ms\":" << stats.first_token_ms
@@ -5601,6 +5624,7 @@ int cmd_serve(int argc, char** argv) {
             opt.use_hip_graph = true;
             opt.enable_prefix_reuse = session_reuse;
             opt.cache_prefix_after = session_reuse;
+            opt.require_disk_session_restore = require_disk_restore;
             if (session_dir) {
                 opt.persistent_session_dir = session_dir->string();
             }
@@ -5634,9 +5658,11 @@ int cmd_serve(int argc, char** argv) {
             stats.stop_reason = v2_stats.stop_reason;
             stats.cancelled = stats.stop_reason == miinfer::GenerationStopReason::kCancelled;
             stats.reuse_hit = v2_stats.reuse_hit;
+            stats.disk_session_restore = v2_stats.disk_session_restore;
             stats.prefill_processed_tokens = v2_stats.reuse_hit
                 ? v2_stats.suffix_tokens_dispatched : v2_stats.prompt_tokens.size();
             stats.reused_prefix_tokens = v2_stats.prefix_tokens_reused;
+            stats.disk_restore_prefix_tokens = v2_stats.disk_restore_prefix_tokens;
             stats.common_prefix_tokens = v2_stats.prefix_tokens_reused;
             stats.suffix_tokens_dispatched = v2_stats.suffix_tokens_dispatched;
             stats.gqa_kv_reused_tokens = v2_stats.gqa_kv_reused_tokens;
@@ -5644,6 +5670,7 @@ int cmd_serve(int argc, char** argv) {
             stats.gdn_final_position_min = v2_stats.gdn_final_position_min;
             stats.gdn_final_position_max = v2_stats.gdn_final_position_max;
             stats.restore_ms = v2_stats.restore_ms;
+            stats.disk_restore_ms = v2_stats.disk_restore_ms;
             stats.suffix_prefill_ms = v2_stats.suffix_prefill_ms;
             if (v2_stats.prefix_tokens_reused > 0) {
                 stats.session_checkpoint_count = 1;
@@ -5697,6 +5724,9 @@ int cmd_serve(int argc, char** argv) {
                       << ",\"gdn_final_position_min\":" << stats.gdn_final_position_min
                       << ",\"gdn_final_position_max\":" << stats.gdn_final_position_max
                       << ",\"restore_ms\":" << stats.restore_ms
+                      << ",\"disk_session_restore\":" << (stats.disk_session_restore ? "true" : "false")
+                      << ",\"disk_restore_prefix_tokens\":" << stats.disk_restore_prefix_tokens
+                      << ",\"disk_restore_ms\":" << stats.disk_restore_ms
                       << ",\"suffix_prefill_ms\":" << stats.suffix_prefill_ms
                       << ",\"prefill_tokens_per_second\":" << stats.prefill_tok_s
                       << ",\"first_decode_token_ms\":" << stats.first_token_ms
