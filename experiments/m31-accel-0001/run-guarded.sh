@@ -4,9 +4,12 @@ set -euo pipefail
 repo=${M31_SOURCE_DIR:-$(cd "$(dirname "$0")/../.." && pwd)}
 repo=$(cd "$repo" && pwd)
 [[ -f "$repo/CMakeLists.txt" ]] || { echo "invalid repository root: $repo" >&2; exit 2; }
-temp_warning() { awk -v t="$1" 'BEGIN { exit !(t >= 85.0) }'; }
-temp_limit() { awk -v t="$1" 'BEGIN { exit !(t >= 90.0) }'; }
-thermal_action() { awk -v t="$1" 'BEGIN { print (t >= 90 ? "stop" : t >= 85 ? "inspect" : "continue") }'; }
+gpu_bdf=${M31_GPU_BDF:-0000:06:00.0}
+warning_c=${M31_THERMAL_WARNING_C:-85}
+stop_c=${M31_THERMAL_STOP_C:-90}
+temp_warning() { awk -v t="$1" -v limit="$warning_c" 'BEGIN { exit !(t >= limit) }'; }
+temp_limit() { awk -v t="$1" -v limit="$stop_c" 'BEGIN { exit !(t >= limit) }'; }
+thermal_action() { awk -v t="$1" -v warning="$warning_c" -v stop="$stop_c" 'BEGIN { print (t >= stop ? "stop" : t >= warning ? "inspect" : "continue") }'; }
 vram_limit() { awk -v b="$1" 'BEGIN { exit !(b >= 33200000000) }'; }
 valid_mode() { case "$1" in native|agent|prefix64k|decode) return 0 ;; *) return 1 ;; esac; }
 valid_decode_route() { case "$1" in hip_graph|eager) return 0 ;; *) return 1 ;; esac; }
@@ -14,23 +17,25 @@ gpu_index_for_bdf() {
   awk -v want="$1" '
     $1 ~ /^GPU\[[0-9]+\]$/ && $2 == ":" && $3 == "PCI" && $4 == "Bus:" {
       device_id = $1; sub(/^GPU\[/, "", device_id); sub(/\]$/, "", device_id)
-      rows++
       if ($5 == want) { matches++; selected = device_id }
     }
-    END { if (rows == 1 && matches == 1) print selected; else exit 1 }
+    END { if (matches == 1) print selected; else exit 1 }
   ' <<< "$2"
 }
 if [[ ${1:-} == --self-check ]]; then
   sample_bus='GPU[0] : PCI Bus: 0000:06:00.0'
-  multi_bus=$'GPU[0] : PCI Bus: 0000:06:00.0\nGPU[1] : PCI Bus: 0000:08:00.0'
-  ! temp_warning 84.9 && temp_warning 85 && ! temp_limit 89.9 && temp_limit 90 \
-    && [[ $(thermal_action 84.9) == continue && $(thermal_action 85) == inspect && $(thermal_action 90) == stop ]] \
+  multi_bus=$'GPU[0] : PCI Bus: 0000:06:00.0\nGPU[1] : PCI Bus: 0000:85:00.0'
+  warning_below=$(awk -v t="$warning_c" 'BEGIN { print t - 0.1 }')
+  stop_below=$(awk -v t="$stop_c" 'BEGIN { print t - 0.1 }')
+  ! temp_warning "$warning_below" && temp_warning "$warning_c" && ! temp_limit "$stop_below" && temp_limit "$stop_c" \
+    && [[ $(thermal_action "$warning_below") == continue && $(thermal_action "$warning_c") == inspect && $(thermal_action "$stop_c") == stop ]] \
     && ! vram_limit 33199999999 && vram_limit 33200000000 \
     && valid_mode native && valid_mode agent && valid_mode prefix64k && valid_mode decode \
     && valid_decode_route hip_graph && valid_decode_route eager && ! valid_decode_route invalid \
     && [[ $(gpu_index_for_bdf 0000:06:00.0 "$sample_bus") == 0 ]] \
     && ! gpu_index_for_bdf 0000:06:00.1 "$sample_bus" \
-    && ! gpu_index_for_bdf 0000:06:00.0 "$multi_bus" \
+    && [[ $(gpu_index_for_bdf 0000:85:00.0 "$multi_bus") == 1 ]] \
+    && ! gpu_index_for_bdf 0000:06:00.0 $'GPU[0] : PCI Bus: 0000:06:00.0\nGPU[1] : PCI Bus: 0000:06:00.0' \
     && ! valid_mode unknown || { echo 'guard self-check failed' >&2; exit 1; }
   echo 'guard self-check: PASS'
   exit 0
@@ -52,10 +57,9 @@ mkdir -p "$run_dir"
 [[ ! -e "$run_dir/exit.status" ]] || { echo "capture directory already used: $run_dir" >&2; exit 2; }
 podman container exists "$name" && { echo "refusing existing container $name" >&2; exit 2; }
 
-gpu_bdf=0000:06:00.0
 gpu_inventory=$(rocm-smi --showbus 2>&1) || { echo 'GPU inventory unavailable' >&2; exit 3; }
 gpu_index=$(gpu_index_for_bdf "$gpu_bdf" "$gpu_inventory") || {
-  echo "expected exactly one ROCm GPU at BDF $gpu_bdf; refusing ambiguous device selection" >&2
+  echo "expected exactly one ROCm GPU at BDF $gpu_bdf; refusing missing or ambiguous device selection" >&2
   exit 3
 }
 read_snapshot() { rocm-smi -d "$gpu_index" --showtemp --showmeminfo vram --showpower --showclocks 2>&1; }
@@ -75,7 +79,7 @@ pre=$(read_snapshot)
 temp=$(printf '%s\n' "$pre" | parse_temp)
 used=$(printf '%s\n' "$pre" | parse_used)
 [[ $temp =~ ^[0-9]+([.][0-9]+)?$ && $used =~ ^[0-9]+$ ]] || { echo 'preflight telemetry unavailable' >&2; exit 3; }
-temp_warning "$temp" && { echo "preflight is already at warning temperature (85C): $temp" >&2; exit 4; }
+  temp_warning "$temp" && { echo "preflight is already at warning temperature (${warning_c}C): $temp" >&2; exit 4; }
 (( used < 1073741824 )) || { echo "preflight VRAM already in use: $used" >&2; exit 5; }
 model_sha=$(sha256sum "$model" | cut -d' ' -f1)
 [[ $model_sha == "$expected_model" ]] || { echo "unexpected model SHA: $model_sha" >&2; exit 6; }
@@ -90,9 +94,9 @@ esac
 for binary in "${binaries[@]}"; do
   [[ -x "$repo/$binary" ]] || { echo "required built executable missing: $binary" >&2; exit 8; }
 done
-printf 'source_sha=%s\nmodel_sha=%s\nimage=%s\nimage_id=%s\ngpu_bdf=%s\ngpu_rocm_smi_index=%s\nrocr_visible_devices=%s\nstart_junction_c=%s\nstart_vram_used_bytes=%s\nthermal_warning_c=85\nthermal_stop_c=90\nfree_vram_floor_bytes=1073741824\n' \
+printf 'source_sha=%s\nmodel_sha=%s\nimage=%s\nimage_id=%s\ngpu_bdf=%s\ngpu_rocm_smi_index=%s\nrocr_visible_devices=%s\nstart_junction_c=%s\nstart_vram_used_bytes=%s\nthermal_warning_c=%s\nthermal_stop_c=%s\nfree_vram_floor_bytes=1073741824\n' \
   "$source_sha" "$model_sha" "$image" "$(podman image inspect --format '{{.Id}}' "$image")" \
-  "$gpu_bdf" "$gpu_index" "$gpu_index" "$temp" "$used" > "$run_dir/environment.txt"
+  "$gpu_bdf" "$gpu_index" "$gpu_index" "$temp" "$used" "$warning_c" "$stop_c" > "$run_dir/environment.txt"
 for binary in "${binaries[@]}"; do
   printf 'binary_%s_sha256=%s\n' "$(basename "$binary")" "$(sha256sum "$repo/$binary" | cut -d' ' -f1)" >> "$run_dir/environment.txt"
 done
@@ -169,9 +173,9 @@ while :; do
   if [[ ! $temp =~ ^[0-9]+([.][0-9]+)?$ || ! $used =~ ^[0-9]+$ ]]; then
     echo "ABORT telemetry missing at $now" >> "$run_dir/guard.log"; rc=125
   elif [[ $(thermal_action "$temp") == stop ]]; then
-    echo "STOP junction=${temp}C threshold=90C at $now" >> "$run_dir/guard.log"; rc=124
+    echo "STOP junction=${temp}C threshold=${stop_c}C at $now" >> "$run_dir/guard.log"; rc=124
   elif [[ $(thermal_action "$temp") == inspect ]]; then
-    echo "STOP junction=${temp}C warning_threshold=85C; operator inspection and a fresh capture are required" >> "$run_dir/guard.log"; rc=122
+    echo "STOP junction=${temp}C warning_threshold=${warning_c}C; operator inspection and a fresh capture are required" >> "$run_dir/guard.log"; rc=122
   elif vram_limit "$used"; then
     echo "STOP used_vram=${used} threshold=33200000000 at $now" >> "$run_dir/guard.log"; rc=123
   fi
