@@ -439,3 +439,9 @@ Build note: preset-only CMake configure failed to find `hipblasConfig.cmake`; th
 - Host checks passed: warning-enabled C++ syntax-only compilation of both changed translation units against local ROCm 6.2 headers; an executable self-check using the exact shared helper accepted finite input and rejected NaN/+Inf/-Inf; `git diff --check` passed. A full CMake build was attempted but local ROCm 6.2's linker lacks `libxml2.so.2`; it did not reach compilation/link. No GPU was used.
 - The HTTP production workload still cannot detect repeated-token loops because it receives streamed text rather than raw generated IDs. The native harness's four-token repeat detector covers only its synthetic diagnostic path. The production workload's token-count, failure, exact-prefix and recurrent-position gates remain intact, but 64K state continuity still requires a live run.
 - Z840 passive-heatsink airflow is unconfirmed. No GPU inference or A/B run was started; prepared eager GQA and cold/suffix captures remain next after airflow confirmation.
+
+## 2026-10-12 05:30 — Z840 access restored
+
+- SSH preflight succeeded. Lake is mounted read/write with 1.6 TB free. MI50 reports 26 C junction, 0% use, and 10.9 MB VRAM; `podman ps` shows no active container.
+- The retained `m31-accel-0001-agent64k-05` tmux pane is dead with exit 122 (04:04:41); the remaining tmux wrapper is stale. No inference was resumed or started.
+- Physical airflow through the passive heatsink remains unconfirmed, so guarded GPU work stays held. Next: after confirmation, start a fresh 64K production capture, then run the prepared matched eager GQA A/B and cold/suffix comparison.
