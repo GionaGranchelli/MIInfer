@@ -1,7 +1,14 @@
 # M31-ACCEL-0001 live status
 
-Updated: 2026-10-12 05:52 Europe/Amsterdam
+Updated: 2026-10-12 06:00 Europe/Amsterdam
 Deadline: 2026-10-12 10:00 Europe/Amsterdam
+
+## 2026-10-12 06:00 Z840 launch worktree synchronized
+
+- Updated only the clean Lake worktree `/mnt/lc9-lake/m31-accel-0001-integrated` to the pushed coordinator SHA `630ce335da474f321f0f529f66ca1039003a829d`. Direct Z840-to-GitHub HTTPS fetch was stuck in `SYN-SENT`; stopped that fetch and transferred a verified 9 KB bundle over SSH. The user's dirty primary checkout was untouched.
+- On Z840, `bash -n` for both launch scripts and `run-guarded.sh --self-check` passed at the integrated SHA. All five staged binary hashes match the earlier pinned build outputs.
+- Ran the integrated production runner self-check in the pinned container with `--network=none`, model mounted read-only, and no GPU devices. It passed and confirmed exactly 65,536 prompt tokens and 65,536 token IDs.
+- No GPU inference or performance sample ran. Physical airflow remains unconfirmed; after clearance, the prepared production 64K run is first in the queue.
 
 ## 2026-10-12 05:52 Z840 preflight and guarded-VRAM integration
 
