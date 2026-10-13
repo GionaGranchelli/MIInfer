@@ -2936,24 +2936,6 @@ __launch_bounds__(256, 1) __global__ void qwen35_spillfree_query_tiled_attention
 // each K tile is loaded once into kv_tmp, consumed into a tile-local KQ
 // fragment for all 32 rows, then the same workspace is overwritten once with
 // V and consumed across those rows before the next K tile.
-__device__ __forceinline__ uint4 q8_row_8_to_f16x8(
-    const std::int8_t* values, const __half* scale) {
-    union HalfPack {
-        __half2 pair[4];
-        uint4 bits;
-    } packed{};
-    const std::uint64_t raw = *reinterpret_cast<const std::uint64_t*>(values);
-    const auto* bytes = reinterpret_cast<const std::int8_t*>(&raw);
-    const float row_scale = __half2float(*scale);
-#pragma unroll
-    for (std::uint32_t pair = 0; pair < 4; ++pair) {
-        packed.pair[pair] = __floats2half2_rn(
-            static_cast<float>(bytes[pair * 2]) * row_scale,
-            static_cast<float>(bytes[pair * 2 + 1]) * row_scale);
-    }
-    return packed.bits;
-}
-
 template <bool KEY_Q8, bool VALUE_Q8, bool FP32_ACCUM>
 __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_batch_kernel(
     const float* __restrict__ q, const __half* __restrict__ key_cache,
