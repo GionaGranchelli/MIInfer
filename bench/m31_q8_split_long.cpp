@@ -61,7 +61,8 @@ int main() {
     constexpr std::size_t q_count = static_cast<std::size_t>(kQueries) * kHeads * kDim;
     constexpr std::size_t kv_count = static_cast<std::size_t>(kKvHeads) * kCapacity * kDim;
     constexpr std::size_t scale_count = static_cast<std::size_t>(kKvHeads) * kCapacity;
-    constexpr std::size_t workspace_count = static_cast<std::size_t>(kReferenceSplits) * kQueries * kHeads * (kDim + 2);
+    constexpr std::size_t workspace_count = static_cast<std::size_t>(std::max(kReferenceSplits, kCandidateSplits))
+        * kQueries * kHeads * (kDim + 2);
 
     miinfer::DeviceInfo device{};
     std::string error;
@@ -131,7 +132,7 @@ int main() {
               << "correctness_max_abs=" << max_abs << " cosine=" << cosine << '\n';
     if (!finite || !std::isfinite(max_abs) || !std::isfinite(cosine)
             || max_abs > 0.01 || cosine < 0.9999) {
-        std::cerr << "3-split Q8/Q8 output diverged from 32-split control\n";
+        std::cerr << "64-split Q8/Q8 output diverged from 32-split control\n";
         return 1;
     }
 

@@ -21,4 +21,7 @@ is a distinct long-context point and doubles scratch to about 800 MB.
 
 ## Result
 
-Pending.
+The first run is invalid: the benchmark allocated scratch for 32 splits while
+launching 64, causing a GPU out-of-bounds memory fault. No kernel timing or
+correctness result was produced. The allocation now covers the larger split
+count; the guarded rerun is pending.
