@@ -691,27 +691,6 @@ void launch_qwen35_splitk_suffix_attention_quant(
     hipStream_t stream = nullptr,
     const DevicePrefillState* prefill_state = nullptr);
 
-// Experimental Q8/Q8 path: two query heads in one GQA group share each K/V load.
-void launch_qwen35_splitk_suffix_attention_q8_headpair(
-    const float* q,
-    const int8_t* key_cache_q8,
-    const __half* key_scales,
-    const int8_t* value_cache_q8,
-    const __half* value_scales,
-    const float* gate,
-    float* gated_output,
-    float* d_split_workspace,
-    std::uint32_t token_count,
-    std::uint32_t base_position,
-    std::uint32_t cache_capacity,
-    std::uint32_t query_heads,
-    std::uint32_t kv_heads,
-    std::uint32_t head_dim,
-    float scale,
-    std::uint32_t num_splits = 32,
-    hipStream_t stream = nullptr,
-    const DevicePrefillState* prefill_state = nullptr);
-
 // V2-0019: Decoupled K Norm, RoPE, and Store K + V with Online Q8 Quantization
 void launch_qwen35_decoupled_k_norm_rope_kv_store_batch_quant(
     const float* key,

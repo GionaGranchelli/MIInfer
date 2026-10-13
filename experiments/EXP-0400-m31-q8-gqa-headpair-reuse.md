@@ -1,6 +1,6 @@
 # EXP-0400 — M31 Q8/Q8 GQA head-pair KV reuse
 
-**Status:** IN PROGRESS
+**Status:** REJECTED
 
 **Baseline:** `88fd63eb0cf8b765f37e5f52168c80783df62e7b`
 
@@ -36,10 +36,10 @@ K/V rows for a Q-head pair in LDS. The normal template path and runtime
 dispatch remain unchanged. A focused benchmark compares the specialization
 with the established Q8/Q8 path.
 
-The first specialization kept the generic four-position temporaries live and
-reported 13 VGPR spills. It was rejected before timing. The current version
-consumes one staged position at a time to reduce live state; its compiler
-resource report is still pending.
+The first specialization kept generic four-position temporaries live and
+reported 13 VGPR spills. A second sequential-consume rewrite reported 22 VGPR
+spills (both at 2,080 B LDS), so it too was rejected before timing. No runtime
+dispatch changed. The changes were removed from the working branch.
 
 ## Results
 
