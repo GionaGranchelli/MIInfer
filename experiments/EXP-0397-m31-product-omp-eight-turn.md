@@ -1,6 +1,6 @@
 # EXP-0397 — Oh My Pi persistent eight-turn task on MI50
 
-**Status:** PARTIAL — explicit XML tool dispatch works, and six short warm follow-up probes have a 14.329 s median first-action time (three of six were at or below 15 s). The full eight-turn coding task, reliable coding-action latency, and sufficient context headroom are not yet proven; do not mark the product gate passed.
+**Status:** PARTIAL — explicit XML tool dispatch works, and seven short warm follow-up probes have a 14.023 s median first-action time (four of seven were at or below 15 s). The full eight-turn coding task, reliable coding-action latency, and sufficient context headroom are not yet proven; do not mark the product gate passed.
 **Milestone:** M31-PRODUCT-0001  
 **Host:** Machinist X99 only; Z840 excluded.  
 **GPU:** MI50 GPU0, `0000:04:00.0`, UUID `0x21678e17348c2f7`; GPU2 idle.  
@@ -130,10 +130,11 @@ With XML kept enabled and the prefix warm, six useful repository follow-up actio
 | `git diff --name-only` | 95,993 / 95,921 | 7.72 s | 30.35 s | Command returned both expected paths; OMP attached the result after its stop sequence |
 | `git diff --check` | 96,350 / 96,262 | 8.30 s | 12.58 s | Passed |
 | `git diff --check` | 96,494 / 96,430 | 7.41 s | 11.78 s | Passed |
+| `curl -fsS http://127.0.0.1:28080/readyz` | 96,667 / 96,574 | 8.58 s | 14.02 s | Passed; `ready:true` |
 
-The six user-message-to-tool-start measurements sort to 11.78, 12.58, 13.22, 15.44, 19.66, and 30.35 seconds; the median is 14.33 seconds. Three of six are over 15 seconds, and one result arrived after OMP's stop sequence. Treat this as a short-command smoke sample, not proof that real coding follow-ups meet the target reliably. OMP's transcript records the tool calls and results in `/tmp/m31-product-omp-eight-turn-retry/2026-10-13T03-43-31-875Z_01a1335b-ba23-75f2-91d3-5cecef8df00e.jsonl`.
+The seven user-message-to-tool-start measurements sort to 11.78, 12.58, 13.22, 14.02, 15.44, 19.66, and 30.35 seconds; the median is 14.02 seconds. Three of seven are over 15 seconds, and one result arrived after OMP's stop sequence. Treat these as short-command smoke samples, not proof that real coding follow-ups meet the target reliably. OMP's transcript records the tool calls and results in `/tmp/m31-product-omp-eight-turn-retry/2026-10-13T03-43-31-875Z_01a1335b-ba23-75f2-91d3-5cecef8df00e.jsonl`.
 
-The original profile was restored after the cold request, then XML was re-enabled to preserve the new prompt prefix for warm follow-ups. The active profile currently has `tools.format: xml`; the original auto-format file remains backed up at `/tmp/m31-product-config.yml.before-xml-retry`. Keep XML for this OMP session because auto had emitted literal tool markup without dispatch. The latest processed prompt was 96,577 tokens, leaving 1,727 tokens under the configured 98,304-token context; capacity for a further eight-turn sequence is not proven.
+The original profile was restored after the cold request, then XML was re-enabled to preserve the new prompt prefix for warm follow-ups. The active profile currently has `tools.format: xml`; the original auto-format file remains backed up at `/tmp/m31-product-config.yml.before-xml-retry`. The OMP setup guidance was updated in pushed commit `3ab76af` to include this setting and the tested 4096-token output limit. The latest processed prompt was 96,774 tokens, leaving 1,530 tokens under the configured 98,304-token context; capacity for a further eight-turn sequence is not proven.
 
 ## Evidence locations
 
