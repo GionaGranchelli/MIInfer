@@ -41,6 +41,8 @@ struct PrefillV2Workspace {
     // Attention Activations
     float* attn_qfull = nullptr;          // [max_tokens, kQFullDim (12288)]
     float* attn_q_rope = nullptr;         // [max_tokens, kQDim (6144)]
+    std::int8_t* attn_q8_query = nullptr; // [max_tokens, kQDim] dot4 attention scratch
+    float* attn_q8_query_scales = nullptr; // [max_tokens, 24] dot4 attention scratch
     float* attn_k = nullptr;              // [max_tokens, kKvDim (1024)]
     float* attn_v = nullptr;              // [max_tokens, kKvDim (1024)]
     float* attn_gated_output = nullptr;   // [max_tokens, kQDim (6144)]

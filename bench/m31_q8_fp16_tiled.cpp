@@ -82,6 +82,27 @@ double run_q8_tiled(const float* q, const std::int8_t* k, const __half* ks,
     return ms;
 }
 
+double run_q8_dot4(const float* q, std::int8_t* q_q8, float* q_scales,
+                   const std::int8_t* k, const __half* ks,
+                   const std::int8_t* v, const __half* vs, const float* gate,
+                   float* output, float* workspace, std::uint32_t queries,
+                   std::uint32_t prefix, std::uint32_t capacity) {
+    hipEvent_t start{}, end{};
+    MIINFER_HIP_CHECK(hipEventCreate(&start));
+    MIINFER_HIP_CHECK(hipEventCreate(&end));
+    MIINFER_HIP_CHECK(hipEventRecord(start));
+    miinfer::launch_qwen35_kq_fragment_reuse_attention_batch_q8_dot4(
+        q, q_q8, q_scales, k, ks, v, vs, gate, output, workspace,
+        queries, prefix, capacity, 24, 4, 256, 1.0F / 16.0F, 32);
+    MIINFER_HIP_CHECK(hipEventRecord(end));
+    MIINFER_HIP_CHECK(hipEventSynchronize(end));
+    float ms = 0.0F;
+    MIINFER_HIP_CHECK(hipEventElapsedTime(&ms, start, end));
+    MIINFER_HIP_CHECK(hipEventDestroy(start));
+    MIINFER_HIP_CHECK(hipEventDestroy(end));
+    return ms;
+}
+
 double median(std::vector<double> values) {
     std::sort(values.begin(), values.end());
     return values[values.size() / 2];
@@ -153,7 +174,10 @@ int main(int argc, char** argv) {
     float* d_q8 = allocate_device<float>(q_count);
     float* d_q8_split = allocate_device<float>(q_count);
     float* d_q8_tiled = allocate_device<float>(q_count);
+    float* d_q8_dot4 = allocate_device<float>(q_count);
     float* d_fp16 = allocate_device<float>(q_count);
+    std::int8_t* d_q8_query = allocate_device<std::int8_t>(q_count);
+    float* d_q8_query_scales = allocate_device<float>(static_cast<std::size_t>(kQueries) * kHeads);
     std::int8_t* d_k_q8 = allocate_device<std::int8_t>(kv_count);
     std::int8_t* d_v_q8 = allocate_device<std::int8_t>(kv_count);
     __half* d_k_scale = allocate_device<__half>(scale_count);
@@ -183,21 +207,27 @@ int main(int argc, char** argv) {
     }
     run_q8_tiled(d_q, d_k_q8, d_k_scale, d_v_q8, d_v_scale, d_gate, d_q8_tiled,
                  d_workspace, kQueries, kPrefix, kCapacity);
+    run_q8_dot4(d_q, d_q8_query, d_q8_query_scales, d_k_q8, d_k_scale,
+                d_v_q8, d_v_scale, d_gate, d_q8_dot4, d_workspace,
+                kQueries, kPrefix, kCapacity);
     run_fp16(d_q, d_k_f16, d_v_f16, d_gate, d_fp16, d_workspace,
              kQueries, kPrefix, kCapacity);
     std::vector<float> q8_output(q_count), q8_split_output(q_count);
-    std::vector<float> q8_tiled_output(q_count), fp16_output(q_count);
+    std::vector<float> q8_tiled_output(q_count), q8_dot4_output(q_count), fp16_output(q_count);
     MIINFER_HIP_CHECK(hipMemcpy(q8_output.data(), d_q8, q_count * sizeof(float), hipMemcpyDeviceToHost));
     MIINFER_HIP_CHECK(hipMemcpy(q8_split_output.data(), d_q8_split, q_count * sizeof(float), hipMemcpyDeviceToHost));
     MIINFER_HIP_CHECK(hipMemcpy(q8_tiled_output.data(), d_q8_tiled, q_count * sizeof(float), hipMemcpyDeviceToHost));
+    MIINFER_HIP_CHECK(hipMemcpy(q8_dot4_output.data(), d_q8_dot4, q_count * sizeof(float), hipMemcpyDeviceToHost));
     MIINFER_HIP_CHECK(hipMemcpy(fp16_output.data(), d_fp16, q_count * sizeof(float), hipMemcpyDeviceToHost));
     double max_abs = 0.0, dot = 0.0, q8_norm = 0.0, fp16_norm = 0.0;
     double split_max_abs = 0.0, split_dot = 0.0, split_norm = 0.0;
     double tiled_max_abs = 0.0, tiled_dot = 0.0, tiled_norm = 0.0;
+    double dot4_max_abs = 0.0, dot4_dot = 0.0, dot4_norm = 0.0;
     bool finite = true;
     for (std::size_t i = 0; i < q_count; ++i) {
         finite = finite && std::isfinite(q8_output[i]) && std::isfinite(q8_tiled_output[i])
-            && std::isfinite(fp16_output[i]) && std::isfinite(q8_split_output[i]);
+            && std::isfinite(fp16_output[i]) && std::isfinite(q8_split_output[i])
+            && std::isfinite(q8_dot4_output[i]);
         max_abs = std::max(max_abs, std::abs(static_cast<double>(q8_output[i]) - fp16_output[i]));
         dot += static_cast<double>(q8_output[i]) * fp16_output[i];
         q8_norm += static_cast<double>(q8_output[i]) * q8_output[i];
@@ -206,6 +236,10 @@ int main(int argc, char** argv) {
             std::abs(static_cast<double>(q8_output[i]) - q8_tiled_output[i]));
         tiled_dot += static_cast<double>(q8_output[i]) * q8_tiled_output[i];
         tiled_norm += static_cast<double>(q8_tiled_output[i]) * q8_tiled_output[i];
+        dot4_max_abs = std::max(dot4_max_abs,
+            std::abs(static_cast<double>(q8_output[i]) - q8_dot4_output[i]));
+        dot4_dot += static_cast<double>(q8_output[i]) * q8_dot4_output[i];
+        dot4_norm += static_cast<double>(q8_dot4_output[i]) * q8_dot4_output[i];
         split_max_abs = std::max(split_max_abs,
             std::abs(static_cast<double>(q8_output[i]) - q8_split_output[i]));
         split_dot += static_cast<double>(q8_output[i]) * q8_split_output[i];
@@ -214,23 +248,28 @@ int main(int argc, char** argv) {
     const double cosine = dot / (std::sqrt(q8_norm * fp16_norm) + 1e-30);
     const double tiled_cosine = tiled_dot / (std::sqrt(q8_norm * tiled_norm) + 1e-30);
     const double split_cosine = split_dot / (std::sqrt(q8_norm * split_norm) + 1e-30);
+    const double dot4_cosine = dot4_dot / (std::sqrt(q8_norm * dot4_norm) + 1e-30);
     std::cout << std::fixed << std::setprecision(7)
               << "fp16_correctness_max_abs=" << max_abs << " cosine=" << cosine << '\n'
               << "q8_split512_correctness_max_abs=" << split_max_abs
               << " cosine=" << split_cosine << '\n'
               << "q8_tiled_correctness_max_abs=" << tiled_max_abs
-              << " cosine=" << tiled_cosine << '\n';
+              << " cosine=" << tiled_cosine << '\n'
+              << "q8_dot4_correctness_max_abs=" << dot4_max_abs
+              << " cosine=" << dot4_cosine << '\n';
     if (!finite || !std::isfinite(max_abs) || !std::isfinite(cosine)
             || !std::isfinite(tiled_max_abs) || !std::isfinite(tiled_cosine)
             || !std::isfinite(split_max_abs) || !std::isfinite(split_cosine)
+            || !std::isfinite(dot4_max_abs) || !std::isfinite(dot4_cosine)
             || max_abs > 0.01 || cosine < 0.9999
             || split_max_abs > 0.01 || split_cosine < 0.9999
-            || tiled_max_abs > 0.01 || tiled_cosine < 0.9999) {
+            || tiled_max_abs > 0.01 || tiled_cosine < 0.9999
+            || dot4_max_abs > 0.01 || dot4_cosine < 0.9999) {
         std::cerr << "tiled output diverged from direct Q8 attention\n";
         return 1;
     }
 
-    std::vector<double> q8_ms, q8_tiled_ms;
+    std::vector<double> q8_ms, q8_tiled_ms, q8_dot4_ms;
     for (int i = 0; i < 5; ++i) {
         if (i % 2 == 0) {
             q8_ms.push_back(run_q8(d_q, d_k_q8, d_k_scale, d_v_q8, d_v_scale, d_gate, d_q8,
@@ -238,7 +277,15 @@ int main(int argc, char** argv) {
             q8_tiled_ms.push_back(run_q8_tiled(d_q, d_k_q8, d_k_scale, d_v_q8, d_v_scale,
                                                d_gate, d_q8_tiled, d_workspace,
                                                kQueries, kPrefix, kCapacity));
+            q8_dot4_ms.push_back(run_q8_dot4(d_q, d_q8_query, d_q8_query_scales,
+                                             d_k_q8, d_k_scale, d_v_q8, d_v_scale,
+                                             d_gate, d_q8_dot4, d_workspace,
+                                             kQueries, kPrefix, kCapacity));
         } else {
+            q8_dot4_ms.push_back(run_q8_dot4(d_q, d_q8_query, d_q8_query_scales,
+                                             d_k_q8, d_k_scale, d_v_q8, d_v_scale,
+                                             d_gate, d_q8_dot4, d_workspace,
+                                             kQueries, kPrefix, kCapacity));
             q8_tiled_ms.push_back(run_q8_tiled(d_q, d_k_q8, d_k_scale, d_v_q8, d_v_scale,
                                                d_gate, d_q8_tiled, d_workspace,
                                                kQueries, kPrefix, kCapacity));
@@ -248,19 +295,30 @@ int main(int argc, char** argv) {
     }
     const double q8_median = median(q8_ms);
     const double q8_tiled_median = median(q8_tiled_ms);
+    const double q8_dot4_median = median(q8_dot4_ms);
     std::cout << "q8_ms=";
     for (double ms : q8_ms) std::cout << ms << ',';
-    std::cout << " q8_query_tiled_ms=";
+    std::cout << " q8_tiled_ms=";
     for (double ms : q8_tiled_ms) std::cout << ms << ',';
-    std::cout << "\nmedian_q8_ms=" << q8_median << " median_q8_query_tiled_ms=" << q8_tiled_median
-              << " speedup=" << q8_median / q8_tiled_median << '\n';
+    std::cout << " q8_dot4_ms=";
+    for (double ms : q8_dot4_ms) std::cout << ms << ',';
+    const double tiled_speedup = q8_tiled_median / q8_dot4_median;
+    const double production_speedup = q8_median / q8_dot4_median;
+    std::cout << "\nmedian_q8_ms=" << q8_median
+              << " median_q8_tiled_ms=" << q8_tiled_median
+              << " median_q8_dot4_ms=" << q8_dot4_median
+              << " speedup_vs_tiled=" << tiled_speedup
+              << " speedup_vs_production=" << production_speedup << '\n';
 
     MIINFER_HIP_CHECK(hipFree(d_q));
     MIINFER_HIP_CHECK(hipFree(d_gate));
     MIINFER_HIP_CHECK(hipFree(d_q8));
     MIINFER_HIP_CHECK(hipFree(d_q8_split));
     MIINFER_HIP_CHECK(hipFree(d_q8_tiled));
+    MIINFER_HIP_CHECK(hipFree(d_q8_dot4));
     MIINFER_HIP_CHECK(hipFree(d_fp16));
+    MIINFER_HIP_CHECK(hipFree(d_q8_query));
+    MIINFER_HIP_CHECK(hipFree(d_q8_query_scales));
     MIINFER_HIP_CHECK(hipFree(d_k_q8));
     MIINFER_HIP_CHECK(hipFree(d_v_q8));
     MIINFER_HIP_CHECK(hipFree(d_k_scale));
@@ -268,5 +326,5 @@ int main(int argc, char** argv) {
     MIINFER_HIP_CHECK(hipFree(d_k_f16));
     MIINFER_HIP_CHECK(hipFree(d_v_f16));
     MIINFER_HIP_CHECK(hipFree(d_workspace));
-    return 0;
+    return kQueries != 512 || (tiled_speedup >= 1.20 && production_speedup >= 1.0) ? 0 : 3;
 }
