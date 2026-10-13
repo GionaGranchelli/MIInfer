@@ -5170,6 +5170,16 @@ int cmd_serve(int argc, char** argv) {
             return;
         }
         const auto prompt_tokens = tokenizer.encode(prompt);
+        std::size_t stable_prefix_tokens = 0;
+        constexpr std::string_view assistant_header = "<|im_start|>assistant\n";
+        if (session_reuse && prompt.ends_with(assistant_header)) {
+            const auto stable_tokens = tokenizer.encode(
+                std::string_view(prompt).substr(0, prompt.size() - assistant_header.size()));
+            if (stable_tokens.size() < prompt_tokens.size()
+                && std::equal(stable_tokens.begin(), stable_tokens.end(), prompt_tokens.begin())) {
+                stable_prefix_tokens = stable_tokens.size();
+            }
+        }
         const double tokenization_ms = std::chrono::duration<double, std::milli>(
             std::chrono::steady_clock::now() - tokenization_start).count();
         tokenization_us += static_cast<std::uint64_t>(tokenization_ms * 1000.0);
@@ -5234,6 +5244,7 @@ int cmd_serve(int argc, char** argv) {
             opt.use_hip_graph = true;
             opt.enable_prefix_reuse = session_reuse;
             opt.cache_prefix_after = session_reuse;
+            opt.cache_prefix_len = stable_prefix_tokens;
             if (session_dir) {
                 opt.persistent_session_dir = session_dir->string();
             }
@@ -5583,6 +5594,7 @@ int cmd_serve(int argc, char** argv) {
             opt.use_hip_graph = true;
             opt.enable_prefix_reuse = session_reuse;
             opt.cache_prefix_after = session_reuse;
+            opt.cache_prefix_len = stable_prefix_tokens;
             if (session_dir) {
                 opt.persistent_session_dir = session_dir->string();
             }

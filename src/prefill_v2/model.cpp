@@ -789,6 +789,29 @@ GenerateStats PrefillV2Model::generate(
 
     const auto t_start = std::chrono::steady_clock::now();
     std::uint32_t last_chunk = 0;
+    const std::uint32_t cache_prefix_len = options.cache_prefix_after
+        ? static_cast<std::uint32_t>(options.cache_prefix_len > 0
+            ? std::min<std::size_t>(options.cache_prefix_len, prompt.size())
+            : prompt.size())
+        : 0;
+    const auto save_checkpoint_at = [&](std::uint32_t position) {
+        if (cache_prefix_len == 0 || position != cache_prefix_len) return;
+        for (auto& state : recurrent_states_) state.set_position(position);
+        reusable_context_.save(prompt.first(position), recurrent_states_, stream);
+        if (!options.persistent_session_dir.empty() && position >= 256) {
+            const auto prefix = prompt.first(position);
+            const auto token_hash = compute_token_sequence_hash(prefix);
+            const auto filename = PersistentSession::format_session_filename(token_hash, position);
+            const auto path = std::filesystem::path(options.persistent_session_dir) / filename;
+            if (!std::filesystem::exists(path)) {
+                try {
+                    save_session(path.string(), prefix, stream);
+                } catch (...) {
+                    // non-fatal disk write error
+                }
+            }
+        }
+    };
 
     if (is_reuse) {
         stats.reuse_hit = true;
@@ -813,6 +836,9 @@ GenerateStats PrefillV2Model::generate(
         std::uint32_t pos = prefix_len;
         while (pos < prompt_len) {
             std::uint32_t chunk = std::min<std::uint32_t>(kPrefillV2MacroTile, prompt_len - pos);
+            if (cache_prefix_len > pos) {
+                chunk = std::min(chunk, cache_prefix_len - pos);
+            }
             if (enable_graph && chunk == kPrefillV2MacroTile) {
                 capture_suffix_graph(exec_stream);
                 DevicePrefillState prefill_state_host{};
@@ -845,6 +871,7 @@ GenerateStats PrefillV2Model::generate(
             }
             pos += chunk;
             last_chunk = chunk;
+            save_checkpoint_at(pos);
         }
         for (auto& st : recurrent_states_) {
             st.set_position(pos);
@@ -864,6 +891,9 @@ GenerateStats PrefillV2Model::generate(
         std::uint32_t pos = 0;
         while (pos < prompt_len) {
             std::uint32_t chunk = std::min<std::uint32_t>(kPrefillV2MacroTile, prompt_len - pos);
+            if (cache_prefix_len > pos) {
+                chunk = std::min(chunk, cache_prefix_len - pos);
+            }
             MIINFER_HIP_CHECK(hipMemcpyAsync(
                 d_temp_tokens_,
                 prompt.data() + pos,
@@ -873,27 +903,7 @@ GenerateStats PrefillV2Model::generate(
             forward(d_temp_tokens_, pos, chunk, d_pong_, stream);
             pos += chunk;
             last_chunk = chunk;
-        }
-    }
-
-    // 1b. If requested, capture/update the prefix checkpoint immediately after prefill
-    if (options.cache_prefix_after) {
-        std::size_t save_len = (options.cache_prefix_len > 0) ? std::min(options.cache_prefix_len, prompt.size()) : prompt.size();
-        reusable_context_.save(prompt.subspan(0, save_len), recurrent_states_, stream);
-        if (!options.persistent_session_dir.empty() && save_len >= 256) {
-            const auto prefix_sub = prompt.subspan(0, save_len);
-            const std::uint64_t token_hash = compute_token_sequence_hash(prefix_sub);
-            const std::string filename = PersistentSession::format_session_filename(
-                token_hash, static_cast<std::uint32_t>(save_len));
-            const std::filesystem::path sdir(options.persistent_session_dir);
-            const std::filesystem::path save_path = sdir / filename;
-            if (!std::filesystem::exists(save_path)) {
-                try {
-                    save_session(save_path.string(), prefix_sub, stream);
-                } catch (...) {
-                    // non-fatal disk write error
-                }
-            }
+            save_checkpoint_at(pos);
         }
     }
 
