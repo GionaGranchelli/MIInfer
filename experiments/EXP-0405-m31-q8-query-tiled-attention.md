@@ -99,8 +99,16 @@ GPU2 HIP execution blocker, not evidence about the 3-split candidate.
 Commit `5646459` adds a second opt-in precision change: Q8 attention weights
 and V accumulation remain FP32 instead of being rounded into half fragments and
 half accumulators. The FP16 specialization retains its prior half behavior.
-The updated gfx906 target compiles with the pinned ROCm 7.2.1 image. Neither
-this precision change nor the 3-split setting has GPU correctness or performance
-evidence yet. Keep the whole route opt-in. Once GPU2's HIP copy path works
-again, resume with the 1,024-token matched correctness check, then the same 8K
-gate only if the short check passes.
+The updated gfx906 target compiles with the pinned ROCm 7.2.1 image. Its Q8
+specialization uses 88 VGPR, 49 SGPR, no scratch or spills, two waves/SIMD, and
+requests 29,056 bytes of dynamic LDS. Neither this precision change nor the
+3-split setting has GPU correctness or performance evidence yet. Keep the
+whole route opt-in.
+
+The failed HIP copy was confirmed to target the intended card: inside the
+container, `ROCR_VISIBLE_DEVICES=2` exposes GPU UUID
+`GPU-2152414173497dd3` (GPU2, BDF `0000:88:00.0`, gfx906). `rocminfo` can
+enumerate the agent, but both the model run and a 4 KiB vector-transfer run
+fail when executing HIP work. Once GPU2's HIP copy path works again, resume
+with the 1,024-token matched correctness check, then the same 8K gate only if
+the short check passes.
