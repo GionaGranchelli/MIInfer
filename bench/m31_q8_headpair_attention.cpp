@@ -27,7 +27,7 @@ double median(std::vector<double> values) {
     return values[values.size() / 2];
 }
 
-double run(bool tiled, const float* q, const std::int8_t* k, const __half* ks,
+double run(bool shared_headpair, const float* q, const std::int8_t* k, const __half* ks,
            const std::int8_t* v, const __half* vs, const float* gate, float* output,
            float* workspace, std::uint32_t query_count, std::uint32_t prefix,
            std::uint32_t capacity) {
@@ -35,8 +35,8 @@ double run(bool tiled, const float* q, const std::int8_t* k, const __half* ks,
     MIINFER_HIP_CHECK(hipEventCreate(&start));
     MIINFER_HIP_CHECK(hipEventCreate(&end));
     MIINFER_HIP_CHECK(hipEventRecord(start));
-    if (tiled) {
-        miinfer::launch_qwen35_splitk_suffix_attention_q8_q2(
+    if (shared_headpair) {
+        miinfer::launch_qwen35_splitk_suffix_attention_q8_headpair(
             q, k, ks, v, vs, gate, output, workspace, query_count, prefix,
             capacity, 24, 4, 256, 1.0F / 16.0F, 32);
     } else {

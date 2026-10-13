@@ -691,8 +691,8 @@ void launch_qwen35_splitk_suffix_attention_quant(
     hipStream_t stream = nullptr,
     const DevicePrefillState* prefill_state = nullptr);
 
-// Experimental Q8/Q8 path: two adjacent query positions share one staged KV tile.
-void launch_qwen35_splitk_suffix_attention_q8_q2(
+// Experimental Q8/Q8 path: two query heads in one GQA group share each K/V load.
+void launch_qwen35_splitk_suffix_attention_q8_headpair(
     const float* q,
     const int8_t* key_cache_q8,
     const __half* key_scales,

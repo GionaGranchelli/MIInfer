@@ -6785,185 +6785,7 @@ void launch_qwen35_splitk_suffix_attention_f16(
 // V2-0019: Direct-Consumption Quantized Split-K Suffix Attention (FP16 / Q8 K / Q8 V)
 // -----------------------------------------------------------------------------
 
-__device__ __forceinline__ void qwen35_q8_q2_online_update(
-    const float4 q0,
-    const float4 q1,
-    const uint2 key_raw,
-    const uint2 value_raw,
-    const float key_scale,
-    const float value_scale,
-    const float scale,
-    const std::uint32_t sub_wave,
-    const std::uint32_t sub_lane,
-    float4& acc0,
-    float4& acc1,
-    float& running_max,
-    float& running_sum) {
-
-    const auto* k = reinterpret_cast<const int8_t*>(&key_raw);
-    float dot = q0.x * static_cast<float>(k[0]) + q0.y * static_cast<float>(k[1])
-              + q0.z * static_cast<float>(k[2]) + q0.w * static_cast<float>(k[3])
-              + q1.x * static_cast<float>(k[4]) + q1.y * static_cast<float>(k[5])
-              + q1.z * static_cast<float>(k[6]) + q1.w * static_cast<float>(k[7]);
-    #pragma unroll
-    for (int offset = 16; offset > 0; offset /= 2) {
-        dot += __shfl_xor(dot, offset, 32);
-    }
-    const float score = __shfl(dot * (key_scale * scale), sub_wave * 32, 64);
-
-    float alpha = 1.0f;
-    float weight = 0.0f;
-    if (sub_lane == 0) {
-        if (score > running_max) {
-            alpha = expf(running_max - score);
-            running_sum = running_sum * alpha + 1.0f;
-            running_max = score;
-            weight = 1.0f;
-        } else {
-            weight = expf(score - running_max);
-            running_sum += weight;
-        }
-    }
-    alpha = __shfl(alpha, sub_wave * 32, 64);
-    weight = __shfl(weight, sub_wave * 32, 64);
-
-    const auto* v = reinterpret_cast<const int8_t*>(&value_raw);
-    const float w = weight * value_scale;
-    acc0.x = acc0.x * alpha + w * static_cast<float>(v[0]);
-    acc0.y = acc0.y * alpha + w * static_cast<float>(v[1]);
-    acc0.z = acc0.z * alpha + w * static_cast<float>(v[2]);
-    acc0.w = acc0.w * alpha + w * static_cast<float>(v[3]);
-    acc1.x = acc1.x * alpha + w * static_cast<float>(v[4]);
-    acc1.y = acc1.y * alpha + w * static_cast<float>(v[5]);
-    acc1.z = acc1.z * alpha + w * static_cast<float>(v[6]);
-    acc1.w = acc1.w * alpha + w * static_cast<float>(v[7]);
-}
-
-__global__ void qwen35_splitk_suffix_attn_q8_q2_stage1_kernel(
-    const float* __restrict__ q,
-    const int8_t* __restrict__ key_cache_q8,
-    const __half* __restrict__ key_scales,
-    const int8_t* __restrict__ value_cache_q8,
-    const __half* __restrict__ value_scales,
-    float* __restrict__ partial_max,
-    float* __restrict__ partial_sum,
-    float* __restrict__ partial_acc,
-    std::uint32_t token_count,
-    std::uint32_t base_position,
-    std::uint32_t cache_capacity,
-    std::uint32_t query_heads,
-    std::uint32_t kv_heads,
-    std::uint32_t head_dim,
-    float scale,
-    std::uint32_t num_splits,
-    const DevicePrefillState* __restrict__ prefill_state) {
-
-    if (prefill_state != nullptr) {
-        base_position = prefill_state->base_position;
-        token_count = prefill_state->token_count;
-        cache_capacity = prefill_state->kv_capacity > 0 ? prefill_state->kv_capacity : cache_capacity;
-    }
-
-    const std::uint32_t head = blockIdx.x;
-    const std::uint32_t token_start = blockIdx.y * 2;
-    const std::uint32_t sub_wave = threadIdx.x / 32;
-    const std::uint32_t sub_lane = threadIdx.x % 32;
-    const std::uint32_t token = token_start + sub_wave;
-    const std::uint32_t split_id = blockIdx.z;
-    const std::uint32_t dim_offset = sub_lane * 8;
-
-    if (head >= query_heads || token_start + 1 >= token_count || head_dim != 256) return;
-
-    const std::uint32_t kv_head = head / (query_heads / kv_heads);
-    const std::uint32_t total_length0 = base_position + token_start + 1;
-    const std::uint32_t total_length1 = total_length0 + 1;
-    const std::uint32_t pair_chunk = (total_length1 + num_splits - 1) / num_splits;
-    const std::uint32_t k_start = split_id * pair_chunk;
-    const std::uint32_t k_end = min(k_start + pair_chunk, token == token_start ? total_length0 : total_length1);
-    const std::uint32_t common_end = min(k_start + pair_chunk, total_length0);
-    const std::size_t split_head_idx =
-        (static_cast<std::size_t>(split_id) * token_count + token) * query_heads + head;
-    const std::size_t acc_base = split_head_idx * head_dim + dim_offset;
-
-    const std::size_t q_base =
-        (static_cast<std::size_t>(token) * query_heads + head) * head_dim + dim_offset;
-    const float4 q_vec0 = *reinterpret_cast<const float4*>(q + q_base + 0);
-    const float4 q_vec1 = *reinterpret_cast<const float4*>(q + q_base + 4);
-
-    float4 acc0 = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
-    float4 acc1 = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
-    float running_max = -INFINITY;
-    float running_sum = 0.0f;
-
-    __shared__ alignas(8) int8_t staged_key[32 * 256];
-    __shared__ alignas(8) int8_t staged_value[32 * 256];
-    __shared__ float staged_key_scale[32];
-    __shared__ float staged_value_scale[32];
-
-    const std::size_t kv_head_stride = static_cast<std::size_t>(cache_capacity) * head_dim;
-    const std::size_t kv_base = static_cast<std::size_t>(kv_head) * kv_head_stride;
-
-    for (std::uint32_t tile_start = k_start; tile_start < common_end; tile_start += 32) {
-        const std::uint32_t tile_count = min(32u, common_end - tile_start);
-        if (sub_wave == 0) {
-            for (std::uint32_t i = 0; i < tile_count; ++i) {
-                const std::size_t offset = kv_base + static_cast<std::size_t>(tile_start + i) * head_dim + dim_offset;
-                const uint2 key_raw = *reinterpret_cast<const uint2*>(key_cache_q8 + offset);
-                const uint2 value_raw = *reinterpret_cast<const uint2*>(value_cache_q8 + offset);
-                *reinterpret_cast<uint2*>(staged_key + static_cast<std::size_t>(i) * head_dim + dim_offset) = key_raw;
-                *reinterpret_cast<uint2*>(staged_value + static_cast<std::size_t>(i) * head_dim + dim_offset) = value_raw;
-                if (sub_lane == 0) {
-                    const std::size_t scale_idx = static_cast<std::size_t>(kv_head) * cache_capacity + tile_start + i;
-                    staged_key_scale[i] = __half2float(key_scales[scale_idx]);
-                    staged_value_scale[i] = __half2float(value_scales[scale_idx]);
-                }
-            }
-        }
-        __syncthreads();
-
-        for (std::uint32_t i = 0; i < tile_count; ++i) {
-            const std::size_t offset = static_cast<std::size_t>(i) * head_dim + dim_offset;
-            const uint2 key_raw = *reinterpret_cast<const uint2*>(staged_key + offset);
-            const uint2 value_raw = *reinterpret_cast<const uint2*>(staged_value + offset);
-            qwen35_q8_q2_online_update(
-                q_vec0, q_vec1, key_raw, value_raw,
-                staged_key_scale[i], staged_value_scale[i], scale,
-                sub_wave, sub_lane, acc0, acc1, running_max, running_sum);
-        }
-        __syncthreads();
-    }
-
-    // The second query can have one causal KV position beyond the shared range.
-    const std::uint32_t tail_start = max(k_start, common_end);
-    if (token == token_start + 1 && k_end > tail_start) {
-        for (std::uint32_t pos = tail_start; pos < k_end; ++pos) {
-            const std::size_t offset = kv_base + static_cast<std::size_t>(pos) * head_dim + dim_offset;
-            const uint2 key_raw = *reinterpret_cast<const uint2*>(key_cache_q8 + offset);
-            const uint2 value_raw = *reinterpret_cast<const uint2*>(value_cache_q8 + offset);
-            float key_scale = 0.0f;
-            float value_scale = 0.0f;
-            if (sub_lane == 0) {
-                const std::size_t scale_idx = static_cast<std::size_t>(kv_head) * cache_capacity + pos;
-                key_scale = __half2float(key_scales[scale_idx]);
-                value_scale = __half2float(value_scales[scale_idx]);
-            }
-            key_scale = __shfl(key_scale, sub_wave * 32, 64);
-            value_scale = __shfl(value_scale, sub_wave * 32, 64);
-            qwen35_q8_q2_online_update(
-                q_vec0, q_vec1, key_raw, value_raw, key_scale, value_scale, scale,
-                sub_wave, sub_lane, acc0, acc1, running_max, running_sum);
-        }
-    }
-
-    if (sub_lane == 0) {
-        partial_max[split_head_idx] = running_max;
-        partial_sum[split_head_idx] = running_sum;
-    }
-    *reinterpret_cast<float4*>(partial_acc + acc_base + 0) = acc0;
-    *reinterpret_cast<float4*>(partial_acc + acc_base + 4) = acc1;
-}
-
-template <bool K_IS_Q8, bool V_IS_Q8, int UNROLL = 4>
+template <bool K_IS_Q8, bool V_IS_Q8, int UNROLL = 4, bool SHARE_Q8_KV_ACROSS_HEADS = false>
 __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
     const float* __restrict__ q,
     const __half* __restrict__ key_cache_f16,
@@ -7061,6 +6883,10 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
     }
 
     std::uint32_t pos = k_start;
+    __shared__ alignas(8) int8_t shared_key_q8[UNROLL][256];
+    __shared__ alignas(8) int8_t shared_value_q8[UNROLL][256];
+    __shared__ float shared_key_scales[UNROLL];
+    __shared__ float shared_value_scales[UNROLL];
 
     for (; pos + UNROLL <= k_end; pos += UNROLL) {
         uint4 k_raw_f16[UNROLL];
@@ -7071,46 +6897,59 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
         uint2 v_raw_q8[UNROLL];
         float v_scales[UNROLL];
 
-        #pragma unroll
-        for (int u = 0; u < UNROLL; ++u) {
+        if constexpr (SHARE_Q8_KV_ACROSS_HEADS && K_IS_Q8 && V_IS_Q8) {
+            if (sub_wave == 0) {
+                #pragma unroll
+                for (int u = 0; u < UNROLL; ++u) {
+                    const uint2 k_raw = *reinterpret_cast<const uint2*>(k_q8_ptr + static_cast<std::size_t>(u) * head_dim);
+                    const uint2 v_raw = *reinterpret_cast<const uint2*>(v_q8_ptr + static_cast<std::size_t>(u) * head_dim);
+                    *reinterpret_cast<uint2*>(shared_key_q8[u] + dim_offset) = k_raw;
+                    *reinterpret_cast<uint2*>(shared_value_q8[u] + dim_offset) = v_raw;
+                    if (sub_lane == 0) {
+                        shared_key_scales[u] = __half2float(k_scale_ptr[pos - k_start + u]);
+                        shared_value_scales[u] = __half2float(v_scale_ptr[pos - k_start + u]);
+                    }
+                }
+            }
+            __syncthreads();
+            #pragma unroll
+            for (int u = 0; u < UNROLL; ++u) {
+                k_raw_q8[u] = *reinterpret_cast<const uint2*>(shared_key_q8[u] + dim_offset);
+                v_raw_q8[u] = *reinterpret_cast<const uint2*>(shared_value_q8[u] + dim_offset);
+                k_scales[u] = shared_key_scales[u];
+                v_scales[u] = shared_value_scales[u];
+            }
+        } else {
+            #pragma unroll
+            for (int u = 0; u < UNROLL; ++u) {
+                if constexpr (K_IS_Q8) {
+                    k_raw_q8[u] = *reinterpret_cast<const uint2*>(k_q8_ptr + static_cast<std::size_t>(u) * head_dim);
+                } else {
+                    k_raw_f16[u] = *reinterpret_cast<const uint4*>(k_f16_ptr + static_cast<std::size_t>(u) * head_dim);
+                }
+                if constexpr (V_IS_Q8) {
+                    v_raw_q8[u] = *reinterpret_cast<const uint2*>(v_q8_ptr + static_cast<std::size_t>(u) * head_dim);
+                } else {
+                    v_raw_f16[u] = *reinterpret_cast<const uint4*>(v_f16_ptr + static_cast<std::size_t>(u) * head_dim);
+                }
+            }
             if constexpr (K_IS_Q8) {
-                k_raw_q8[u] = *reinterpret_cast<const uint2*>(k_q8_ptr + static_cast<std::size_t>(u) * head_dim);
-            } else {
-                k_raw_f16[u] = *reinterpret_cast<const uint4*>(k_f16_ptr + static_cast<std::size_t>(u) * head_dim);
+                if (sub_lane == 0) {
+                    const auto* s_ptr = k_scale_ptr + (pos - k_start);
+                    #pragma unroll
+                    for (int u = 0; u < UNROLL; ++u) k_scales[u] = __half2float(s_ptr[u]);
+                }
+                #pragma unroll
+                for (int u = 0; u < UNROLL; ++u) k_scales[u] = __shfl(k_scales[u], sub_wave * 32, 64);
             }
-
             if constexpr (V_IS_Q8) {
-                v_raw_q8[u] = *reinterpret_cast<const uint2*>(v_q8_ptr + static_cast<std::size_t>(u) * head_dim);
-            } else {
-                v_raw_f16[u] = *reinterpret_cast<const uint4*>(v_f16_ptr + static_cast<std::size_t>(u) * head_dim);
-            }
-        }
-
-        if constexpr (K_IS_Q8) {
-            if (sub_lane == 0) {
-                const auto* s_ptr = k_scale_ptr + (pos - k_start);
-                #pragma unroll
-                for (int u = 0; u < UNROLL; ++u) {
-                    k_scales[u] = __half2float(s_ptr[u]);
+                if (sub_lane == 0) {
+                    const auto* s_ptr = v_scale_ptr + (pos - k_start);
+                    #pragma unroll
+                    for (int u = 0; u < UNROLL; ++u) v_scales[u] = __half2float(s_ptr[u]);
                 }
-            }
-            #pragma unroll
-            for (int u = 0; u < UNROLL; ++u) {
-                k_scales[u] = __shfl(k_scales[u], sub_wave * 32, 64);
-            }
-        }
-
-        if constexpr (V_IS_Q8) {
-            if (sub_lane == 0) {
-                const auto* s_ptr = v_scale_ptr + (pos - k_start);
                 #pragma unroll
-                for (int u = 0; u < UNROLL; ++u) {
-                    v_scales[u] = __half2float(s_ptr[u]);
-                }
-            }
-            #pragma unroll
-            for (int u = 0; u < UNROLL; ++u) {
-                v_scales[u] = __shfl(v_scales[u], sub_wave * 32, 64);
+                for (int u = 0; u < UNROLL; ++u) v_scales[u] = __shfl(v_scales[u], sub_wave * 32, 64);
             }
         }
 
@@ -7191,6 +7030,8 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
                 acc1.w = acc1.w * alpha + weight * __half2float(vh[7]);
             }
         }
+
+        if constexpr (SHARE_Q8_KV_ACROSS_HEADS && K_IS_Q8 && V_IS_Q8) __syncthreads();
 
         if constexpr (K_IS_Q8) k_q8_ptr += UNROLL * head_dim;
         else                   k_f16_ptr += UNROLL * head_dim;
@@ -7384,7 +7225,7 @@ void launch_qwen35_splitk_suffix_attention_quant(
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 
-void launch_qwen35_splitk_suffix_attention_q8_q2(
+void launch_qwen35_splitk_suffix_attention_q8_headpair(
     const float* q,
     const int8_t* key_cache_q8,
     const __half* key_scales,
@@ -7407,7 +7248,7 @@ void launch_qwen35_splitk_suffix_attention_q8_q2(
     if (q == nullptr || key_cache_q8 == nullptr || key_scales == nullptr ||
         value_cache_q8 == nullptr || value_scales == nullptr || gate == nullptr ||
         gated_output == nullptr || d_split_workspace == nullptr || token_count == 0 ||
-        token_count % 2 != 0 || query_heads == 0 || kv_heads == 0 ||
+        query_heads < 2 || query_heads % 2 != 0 || kv_heads == 0 ||
         query_heads % kv_heads != 0 || head_dim != 256 || !std::isfinite(scale)) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
@@ -7420,10 +7261,10 @@ void launch_qwen35_splitk_suffix_attention_q8_q2(
     float* d_partial_sum = d_split_workspace + total_meta;
     float* d_partial_acc = d_split_workspace + total_meta * 2;
 
-    dim3 grid1(query_heads, token_count / 2, num_splits);
+    dim3 grid1(query_heads / 2, token_count, num_splits);
     dim3 block1(64);
     hipLaunchKernelGGL(
-        qwen35_splitk_suffix_attn_q8_q2_stage1_kernel,
+        (qwen35_splitk_suffix_attn_stage1_quant_kernel<true, true, 4, true>),
         grid1, block1, 0, stream,
         q, key_cache_q8, key_scales, value_cache_q8, value_scales,
         d_partial_max, d_partial_sum, d_partial_acc,
