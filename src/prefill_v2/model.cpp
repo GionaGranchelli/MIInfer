@@ -257,7 +257,8 @@ PrefillV2Model::PrefillV2Model(PrefillV2Model&& other) noexcept
       d_decode_tokens_(other.d_decode_tokens_),
       decode_graph_exec_(other.decode_graph_exec_),
       d_prefill_state_(other.d_prefill_state_),
-      suffix_graph_exec_(other.suffix_graph_exec_) {
+      suffix_graph_exec_(other.suffix_graph_exec_),
+      suffix_graph_q8_dot4_enabled_(other.suffix_graph_q8_dot4_enabled_) {
     other.d_embedding_weights_ = nullptr;
     other.d_final_norm_weights_ = nullptr;
     other.d_output_weights_ = nullptr;
@@ -272,6 +273,7 @@ PrefillV2Model::PrefillV2Model(PrefillV2Model&& other) noexcept
     other.decode_graph_exec_ = nullptr;
     other.d_prefill_state_ = nullptr;
     other.suffix_graph_exec_ = nullptr;
+    other.suffix_graph_q8_dot4_enabled_ = false;
 }
 
 PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
@@ -302,6 +304,7 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
         decode_graph_exec_ = other.decode_graph_exec_;
         d_prefill_state_ = other.d_prefill_state_;
         suffix_graph_exec_ = other.suffix_graph_exec_;
+        suffix_graph_q8_dot4_enabled_ = other.suffix_graph_q8_dot4_enabled_;
 
         other.d_embedding_weights_ = nullptr;
         other.d_final_norm_weights_ = nullptr;
@@ -317,6 +320,7 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
         other.decode_graph_exec_ = nullptr;
         other.d_prefill_state_ = nullptr;
         other.suffix_graph_exec_ = nullptr;
+        other.suffix_graph_q8_dot4_enabled_ = false;
     }
     return *this;
 }
@@ -1228,12 +1232,16 @@ void PrefillV2Model::cleanup_suffix_graph() {
         (void)hipGraphExecDestroy(suffix_graph_exec_);
         suffix_graph_exec_ = nullptr;
     }
+    suffix_graph_q8_dot4_enabled_ = false;
 }
 
 void PrefillV2Model::capture_suffix_graph(hipStream_t stream) {
-    if (suffix_graph_exec_ != nullptr) {
+    const char* dot4_env = std::getenv("MIINFER_M31_Q8_DOT4_ATTENTION");
+    const bool dot4_enabled = dot4_env != nullptr && std::string_view(dot4_env) != "0";
+    if (suffix_graph_exec_ != nullptr && suffix_graph_q8_dot4_enabled_ == dot4_enabled) {
         return;
     }
+    cleanup_suffix_graph();
     if (d_embedding_weights_ == nullptr || d_final_norm_weights_ == nullptr ||
         d_temp_tokens_ == nullptr || d_prefill_state_ == nullptr || ws_mgr_ == nullptr) {
         throw std::runtime_error("PrefillV2Model::capture_suffix_graph: required weights/buffers not allocated");
@@ -1250,6 +1258,7 @@ void PrefillV2Model::capture_suffix_graph(hipStream_t stream) {
     MIINFER_HIP_CHECK(hipStreamEndCapture(capture_stream, &graph));
     MIINFER_HIP_CHECK(hipGraphInstantiate(&suffix_graph_exec_, graph, nullptr, nullptr, 0));
     MIINFER_HIP_CHECK(hipGraphDestroy(graph));
+    suffix_graph_q8_dot4_enabled_ = dot4_enabled;
 }
 
 std::size_t PrefillV2Model::persistent_weight_bytes() const noexcept {

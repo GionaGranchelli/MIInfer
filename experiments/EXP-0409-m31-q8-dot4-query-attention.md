@@ -1,6 +1,6 @@
 # EXP-0409 — Q8 query × Q8 key dot4 attention
 
-**Status:** FOCUSED GPU CORRECTNESS PASSES; KERNEL TIMINGS INCONCLUSIVE; PREFILLV2 AND GRAPH-STATE OPT-IN BUILDS PASS; GUARDED REPEAT ABORTED ON LIVE TRAFFIC; FULL-MODEL VALIDATION PENDING
+**Status:** FOCUSED GPU CORRECTNESS PASSES; KERNEL TIMINGS INCONCLUSIVE; ROCM 7.14 GRAPH-DISPATCH FIX BUILDS; INFERENCE-IDLE WINDOW CONFIRMED; GRAPH REPLAY AND FULL-MODEL VALIDATION PENDING
 **Baseline:** `d834d9a` on `perf/m31-perf-recovery-0001`
 
 ## Question and hypothesis
@@ -159,6 +159,11 @@ result will decide whether to continue or discard the candidate.
   Request counters advanced from 183/29 to 244/90, so no 8-second quiet window
   existed and the benchmark was not started. No server was stopped and no
   session files were touched.
+- 2026-10-13 18:43 UTC+2 repeat of the guarded quiet-window check began at
+  counters 247/93 and observed 307/153 after 18 seconds, with no 8-second
+  quiet period. The latest ROCm 7.14 binary hash was staged and verified inside
+  the existing container, but the GPU benchmark was not started. No server or
+  saved session was changed.
 - Extended the opt-in kernel to read `DevicePrefillState` during HIP Graph
   replay, and passed that state through the matching PrefillV2 dispatch. The
   ordinary kernel specializations retain their compile-time no-state path.
@@ -173,3 +178,27 @@ result will decide whether to continue or discard the candidate.
   unchanged. ROCm 7.14 rebuilt and linked the benchmark target with the
   PrefillV2 workspace and dispatch changes. An 8K full-model correctness and
   timing comparison has not yet run; no production qualification is claimed.
+- 2026-10-14 source review confirmed that `/metrics` is counted by
+  `http_requests`, and `miinfer_requests_total` is an alias of that HTTP-wide
+  counter. Both include monitoring requests. The quiet-window check now uses
+  `miinfer_inference_requests_total`, `miinfer_active_requests`, and
+  `miinfer_queue_depth`; it ignores the HTTP-wide counters. Across 16 seconds,
+  inference totals stayed at 55/2 on ports 18080/18081, and both active and
+  queued gauges stayed at zero. ROCm-SMI reported 0% GPU utilization at the
+  sample. This shows the previous counter movement was not evidence of
+  inference overlap; it does not identify every source of those HTTP requests.
+  VRAM remained 85%/97% occupied, so this does not make either GPU available
+  for a full-model process.
+- Source review found that suffix-graph capture passes `prefill_state` while
+  calling `forward` with host `base_position == 0`. The Q8 dot4 dispatch had
+  required `base_position > 0`, selecting Split-K during graph capture. The
+  opt-in dot4 route now also accepts a non-null dynamic prefill state; ordinary
+  cold prefill at position zero still uses its existing route. The suffix graph
+  cache records the dot4 selection and recaptures if that setting changes.
+  Kernel state reads already supply the replay-time base position, token count,
+  and capacity, including position zero's causal bounds.
+- The graph-dispatch/cache fix, the existing dot4 benchmark target, and the
+  main `miinfer` executable compile and link with the pinned ROCm 7.14 / AMD
+  clang 23 toolchain for `gfx906`. This build did not use a GPU. Graph kernel
+  tracing, graph replay correctness, and the matched full-model 8K comparison
+  remain pending.

@@ -351,7 +351,8 @@ void PrefillV2AttentionLayer::forward(
                 ws.attn_q_rope, ws.attn_gated_output, ws.attn_qfull,
                 static_cast<std::size_t>(token_count) * 24 * 256, stream);
         }
-    } else if (m31_q8_dot4_attention_enabled() && base_position > 0
+    } else if (m31_q8_dot4_attention_enabled()
+        && (base_position > 0 || prefill_state != nullptr)
         && kv_cache.is_k_q8() && kv_cache.is_v_q8()
         && token_count >= 16 && token_count % 16 == 0
         && ws.splitk_attn_workspace != nullptr) {
