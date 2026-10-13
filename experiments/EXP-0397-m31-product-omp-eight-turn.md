@@ -39,7 +39,9 @@ GPU0 reached 75°C junction during the recorded workload; the warning/stop thres
 
 **Do not mark M31-PRODUCT-0001 passed.** The cold 64K+ run, real tool execution, a turn-four checkpoint, and one disk restore are demonstrated. The latency gate fails by at least 2.5× on the first post-restart response and the later stale-prefix fallback shows restoration is not consistently selecting the newest state.
 
-Next, inspect the MIInfer checkpoint selection/reuse path for why a later prompt in this same OMP session restored the 84,366-token checkpoint after the 86,688-token restore. Then rerun only the turn-four restart/follow-up boundary with a concise prompt; keep the 15-second target unchanged. Do not expand model, GPU, or kernel scope.
+Code inspection found that MIInfer tries an exact in-memory prefix first, then scans disk checkpoints and selects the longest checkpoint whose token IDs exactly match the new prompt. The later 84,366-token restore therefore most likely means the OMP prompt diverged from the 86,688-token checkpoint after token 84,366; the logs do not show state-file corruption. This is an inference from the restore algorithm and reported prefix lengths.
+
+Next, capture the tokenized prompt for the first follow-up that fell back and compare it with the `p86688` checkpoint. Focus on OMP's serialized conversation between tokens 84,366 and 86,688. Then rerun only the turn-four restart/follow-up boundary with a concise prompt; keep the 15-second target unchanged. Do not expand model, GPU, or kernel scope.
 
 ## Evidence locations
 
