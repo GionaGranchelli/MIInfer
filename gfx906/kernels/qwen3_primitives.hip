@@ -2959,7 +2959,8 @@ __global__ void qwen35_quantize_q8_query_kernel(
 // each K tile is loaded once into kv_tmp, consumed into a tile-local KQ
 // fragment for all 32 rows, then the same workspace is overwritten once with
 // V and consumed across those rows before the next K tile.
-template <bool KEY_Q8, bool VALUE_Q8, bool FP32_ACCUM, bool QUERY_Q8 = false>
+template <bool KEY_Q8, bool VALUE_Q8, bool FP32_ACCUM, bool QUERY_Q8 = false,
+          bool USE_PREFILL_STATE = false>
 __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_batch_kernel(
     const float* __restrict__ q, const __half* __restrict__ key_cache,
     const __half* __restrict__ value_cache,
@@ -2971,7 +2972,8 @@ __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_bat
     const float* __restrict__ query_scales,
     float* __restrict__ split_workspace,
     std::uint32_t token_count, std::uint32_t base_position,
-    std::uint32_t cache_capacity, std::uint32_t num_splits, float scale) {
+    std::uint32_t cache_capacity, std::uint32_t num_splits, float scale,
+    const DevicePrefillState* prefill_state) {
     constexpr std::uint32_t kQueryTokens = 16;
     constexpr std::uint32_t kRowsPerWarp = 4;
     constexpr std::uint32_t kTileK = 32;
@@ -2999,6 +3001,14 @@ __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_bat
     const std::uint32_t group = blockIdx.z;
     const std::uint32_t kv_head = group % kKvHeads;
     const std::uint32_t head_group = group / kKvHeads;
+    if constexpr (USE_PREFILL_STATE) {
+        if (prefill_state != nullptr) {
+            base_position = prefill_state->base_position;
+            token_count = prefill_state->token_count;
+            cache_capacity = prefill_state->kv_capacity > 0
+                ? prefill_state->kv_capacity : cache_capacity;
+        }
+    }
     if (num_splits == 0 || num_splits > 64 || warp >= 8 || lane >= 32) return;
     const std::size_t total_meta =
         static_cast<std::size_t>(num_splits) * token_count * kQueryHeads;
@@ -5680,7 +5690,7 @@ void launch_qwen35_kq_fragment_reuse_attention_batch_f16(
         dim3(blocks, num_splits, groups), dim3(32, 8), shared_bytes, stream,
         q, key_cache, value_cache, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
         split_workspace, token_count,
-        base_position, cache_capacity, num_splits, scale);
+        base_position, cache_capacity, num_splits, scale, nullptr);
     MIINFER_HIP_CHECK(hipGetLastError());
     hipLaunchKernelGGL(qwen35_splitk_suffix_attn_stage2_kernel,
         dim3(token_count * query_heads), dim3(64), 0, stream,
@@ -5716,7 +5726,7 @@ void launch_qwen35_kq_fragment_reuse_attention_batch_f16_fp32(
     hipLaunchKernelGGL((qwen35_kq_fragment_reuse_attention_batch_kernel<false, false, true>),
         dim3(blocks, num_splits, groups), dim3(32, 8), shared_bytes, stream,
         q, key_cache, value_cache, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-        split_workspace, token_count, base_position, cache_capacity, num_splits, scale);
+        split_workspace, token_count, base_position, cache_capacity, num_splits, scale, nullptr);
     MIINFER_HIP_CHECK(hipGetLastError());
     hipLaunchKernelGGL(qwen35_splitk_suffix_attn_stage2_kernel,
         dim3(token_count * query_heads), dim3(64), 0, stream,
@@ -5805,7 +5815,7 @@ void launch_qwen35_kq_fragment_reuse_attention_batch_q8(
             + 32 * 32 * sizeof(float) + 4 * 32 * sizeof(float), stream,
         q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,
         nullptr, nullptr,
-        split_workspace, token_count, base_position, cache_capacity, num_splits, scale);
+        split_workspace, token_count, base_position, cache_capacity, num_splits, scale, nullptr);
     MIINFER_HIP_CHECK(hipGetLastError());
     hipLaunchKernelGGL(qwen35_splitk_suffix_attn_stage2_kernel,
         dim3(token_count * query_heads), dim3(64), 0, stream,
@@ -5823,7 +5833,8 @@ void launch_qwen35_kq_fragment_reuse_attention_batch_q8_dot4(
     std::uint32_t token_count, std::uint32_t base_position,
     std::uint32_t cache_capacity, std::uint32_t query_heads,
     std::uint32_t kv_heads, std::uint32_t head_dim, float scale,
-    std::uint32_t num_splits, hipStream_t stream) {
+    std::uint32_t num_splits, hipStream_t stream,
+    const DevicePrefillState* prefill_state) {
     if (q == nullptr || query_cache_q8 == nullptr || query_scales == nullptr
         || key_cache_q8 == nullptr || key_scales == nullptr || value_cache_q8 == nullptr
         || value_scales == nullptr || gate == nullptr || gated_output == nullptr
@@ -5847,17 +5858,17 @@ void launch_qwen35_kq_fragment_reuse_attention_batch_q8_dot4(
     constexpr std::size_t shared_bytes = 32 * 256 * sizeof(std::int8_t)
         + 32 * sizeof(float) + 32 * 128 * sizeof(__half)
         + 32 * 32 * sizeof(float) + 5 * 32 * sizeof(float);
-    hipLaunchKernelGGL((qwen35_kq_fragment_reuse_attention_batch_kernel<true, true, true, true>),
+    hipLaunchKernelGGL((qwen35_kq_fragment_reuse_attention_batch_kernel<true, true, true, true, true>),
         dim3(blocks, num_splits, groups), dim3(32, 8), shared_bytes, stream,
         q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,
         query_cache_q8, query_scales, split_workspace,
-        token_count, base_position, cache_capacity, num_splits, scale);
+        token_count, base_position, cache_capacity, num_splits, scale, prefill_state);
     MIINFER_HIP_CHECK(hipGetLastError());
     hipLaunchKernelGGL(qwen35_splitk_suffix_attn_stage2_kernel,
         dim3(token_count * query_heads), dim3(64), 0, stream,
         partial_max, partial_sum, partial_acc, gate, gated_output,
         token_count, query_heads, head_dim, num_splits,
-        static_cast<const DevicePrefillState*>(nullptr));
+        prefill_state);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

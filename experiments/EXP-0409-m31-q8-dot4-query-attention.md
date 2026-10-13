@@ -1,6 +1,6 @@
 # EXP-0409 — Q8 query × Q8 key dot4 attention
 
-**Status:** FOCUSED GPU CORRECTNESS PASSES; KERNEL TIMINGS PROMISING BUT INCONCLUSIVE; PREFILLV2 OPT-IN BUILD PASSES; FULL-MODEL VALIDATION PENDING
+**Status:** FOCUSED GPU CORRECTNESS PASSES; KERNEL TIMINGS INCONCLUSIVE; PREFILLV2 AND GRAPH-STATE OPT-IN BUILDS PASS; GUARDED REPEAT ABORTED ON LIVE TRAFFIC; FULL-MODEL VALIDATION PENDING
 **Baseline:** `d834d9a` on `perf/m31-perf-recovery-0001`
 
 ## Question and hypothesis
@@ -146,6 +146,27 @@ result will decide whether to continue or discard the candidate.
   Therefore the measured speedup is inconclusive as a qualified performance
   claim despite passing the numeric threshold. Inspect server logs and repeat
   the five-sample A/B in a quiet window before deciding whether to promote.
+- 2026-10-13 18:32 UTC+2 server logs identify the request-counter movement:
+  both servers received request IDs 172–175 at 18:27:09.628, 18:27:14.458,
+  18:27:25.830, and 18:27:48.923. The last event is at the prior benchmark's
+  completion boundary, so exact overlap cannot be determined from the current
+  log level. A guarded 512-query repeat began at 18:34:30 with both active
+  gauges zero and no established clients, then observed both request counters
+  increase by two within 248 ms; it terminated before collecting benchmark
+  output. This confirms the endpoints are receiving live campaign traffic and
+  the original speed samples cannot be treated as isolated.
+- 2026-10-13 18:36 UTC+2 quiet-window check sampled both endpoints for 18 seconds.
+  Request counters advanced from 183/29 to 244/90, so no 8-second quiet window
+  existed and the benchmark was not started. No server was stopped and no
+  session files were touched.
+- Extended the opt-in kernel to read `DevicePrefillState` during HIP Graph
+  replay, and passed that state through the matching PrefillV2 dispatch. The
+  ordinary kernel specializations retain their compile-time no-state path.
+  ROCm 7.14 rebuilt and linked the benchmark target. The graph-state dot4
+  specialization remains 56 SGPR / 119 VGPR, zero scratch and spills, and two
+  waves/SIMD; the matched Q8 control remains 56 SGPR / 85 VGPR with zero spills.
+  Generated gfx906 assembly still contains `v_dot4_i32_i8`. Runtime graph replay
+  correctness and the full-model path have not been tested.
 - Added `MIINFER_M31_Q8_DOT4_ATTENTION=1` as an opt-in PrefillV2 route for Q8
   attention and dedicated reusable Q8-query/scale buffers in the existing
   workspace arena (about 3.05 MiB at 512 tokens). The default dispatch remains
