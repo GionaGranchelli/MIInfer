@@ -144,3 +144,9 @@ The original profile was restored after the cold request, then XML was re-enable
 - MIInfer logs and telemetry: Machinist container `m31-product-20261012retry180`; mounted checkpoints at `/home/machinist/m31-product-campaign/20261012T163632Z/stop90/sessions/`.
 - Relevant context bundle: `/tmp/m31-product-agent-task-context.md`.
 - The interrupted final agent request completed on the server as request 30 (95,516 prompt tokens, 95,431 reused, 13,681.8 ms TTFT wall, `finish_reason=tool_calls`); OMP was stopped before that tool action could be dispatched or returned as a result.
+
+### Machinist and endpoint recheck (2026-10-13 06:38 UTC)
+
+The live host mapping confirms the selected card: GPU0 is MI50 BDF `0000:04:00.0`, unique ID `0x21678e17348c2f7`. GPU1 is BDF `0000:85:00.0`; GPU2 is BDF `0000:88:00.0`. All three reported 0% GPU use. VRAM use was 29,389,008,896 B on GPU0, 493,998,080 B on GPU1, and 10,919,936 B on GPU2. The earlier host note that labeled GPU1's BDF as the Machinist MI50 is stale; the current report's GPU0 pin is correct.
+
+The `m31-product-agent-candidate` container was running its server process for about 1h04m. The host's existing SSH tunnel on `127.0.0.1:28080` reached `/readyz` (`ready:true`); `/v1/models` returned the generic ID `model`. The isolated Oh My Pi `m31-product` profile has `tools.format: xml`; the global default remains `auto`. No OMP process was running during this check. This verifies server readiness and the intended profile configuration, not an additional agent turn.
