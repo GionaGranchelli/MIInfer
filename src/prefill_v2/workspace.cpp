@@ -51,6 +51,8 @@ PrefillV2WorkspaceManager::PrefillV2WorkspaceManager(std::size_t max_tokens)
     const std::size_t attn_q8_query_scales_bytes = align128(max_tokens_ * 24 * sizeof(float));
     const std::size_t attn_q8_query_residual_bytes = align128(max_tokens_ * kQDim * sizeof(std::int8_t));
     const std::size_t attn_q8_query_residual_scales_bytes = align128(max_tokens_ * 24 * sizeof(float));
+    const std::size_t attn_q8_query_residual2_bytes = align128(max_tokens_ * kQDim * sizeof(std::int8_t));
+    const std::size_t attn_q8_query_residual2_scales_bytes = align128(max_tokens_ * 24 * sizeof(float));
     const std::size_t attn_k_bytes = align128(max_tokens_ * kKvDim * sizeof(float));
     const std::size_t attn_v_bytes = align128(max_tokens_ * kKvDim * sizeof(float));
     const std::size_t attn_gated_bytes = align128(max_tokens_ * kQDim * sizeof(float));
@@ -78,6 +80,7 @@ PrefillV2WorkspaceManager::PrefillV2WorkspaceManager(std::size_t max_tokens)
         + gdn_raw_bytes + gated_bytes + ssm_out_bytes + residual_bytes + post_norm_bytes
         + attn_qfull_bytes + attn_q_rope_bytes + attn_q8_query_bytes + attn_q8_query_scales_bytes
         + attn_q8_query_residual_bytes + attn_q8_query_residual_scales_bytes
+        + attn_q8_query_residual2_bytes + attn_q8_query_residual2_scales_bytes
         + attn_k_bytes + attn_v_bytes + attn_gated_bytes
         + mmq_q8_bytes + q8_1_bytes + ffn_gate_bytes + ffn_up_bytes + ffn_act_bytes + ffn_down_bytes
         + splitk_attn_bytes;
@@ -119,6 +122,8 @@ PrefillV2WorkspaceManager::PrefillV2WorkspaceManager(std::size_t max_tokens)
     workspace_.attn_q8_query_scales = reinterpret_cast<float*>(ptr); ptr += attn_q8_query_scales_bytes;
     workspace_.attn_q8_query_residual = reinterpret_cast<std::int8_t*>(ptr); ptr += attn_q8_query_residual_bytes;
     workspace_.attn_q8_query_residual_scales = reinterpret_cast<float*>(ptr); ptr += attn_q8_query_residual_scales_bytes;
+    workspace_.attn_q8_query_residual2 = reinterpret_cast<std::int8_t*>(ptr); ptr += attn_q8_query_residual2_bytes;
+    workspace_.attn_q8_query_residual2_scales = reinterpret_cast<float*>(ptr); ptr += attn_q8_query_residual2_scales_bytes;
     workspace_.attn_k = reinterpret_cast<float*>(ptr); ptr += attn_k_bytes;
     workspace_.attn_v = reinterpret_cast<float*>(ptr); ptr += attn_v_bytes;
     workspace_.attn_gated_output = reinterpret_cast<float*>(ptr); ptr += attn_gated_bytes;
