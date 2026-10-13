@@ -101,3 +101,19 @@ The output's finite logits and two generated tokens establish execution, not
 equivalence to the Q8 route. Before promotion, compare the candidate and control
 on a tokenizer-backed shorter prefix, preserve decode behavior, and profile the
 late 64K tile to identify the next limiting stage. EXP-0404 remains in progress.
+
+### 65,024-position late-tile attribution
+
+The existing profiler replayed a tokenizer-backed 65,536-token prompt on the
+same GPU2 and timed the final 512-token tile at base position 65,024. The run
+completed successfully with FP16 KV and the opt-in tiled route. On the verified
+BDF `0000:88:00.0`, GPU event time for the tile was 5,518.430 ms; the GQA
+blocks accounted for 3,733.061 ms, including 3,225.407 ms (58.448%) in causal
+attention. All 16 GQA blocks spent about 200–208 ms in causal attention. The
+final hidden state was finite. The thermal supervisor sampled 266 times, peaked
+at 67 C, and reported `supervisor_failed=0 benchmark_exit=0`.
+
+This is a late-tile FP16-KV profile, not a Q8 full-model attribution or a
+512-versus-1024 tile comparison. It identifies attention as a large current
+cost, so the next implementation targets Q8 K/V reuse inside the already
+query-tiled attention schedule; it does not change the outer macro tile.

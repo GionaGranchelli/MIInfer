@@ -59,6 +59,25 @@ double run_fp16(const float* q, const __half* k, const __half* v,
     return ms;
 }
 
+double run_q8_tiled(const float* q, const std::int8_t* k, const __half* ks,
+                    const std::int8_t* v, const __half* vs, const float* gate,
+                    float* output, float* workspace) {
+    hipEvent_t start{}, end{};
+    MIINFER_HIP_CHECK(hipEventCreate(&start));
+    MIINFER_HIP_CHECK(hipEventCreate(&end));
+    MIINFER_HIP_CHECK(hipEventRecord(start));
+    miinfer::launch_qwen35_kq_fragment_reuse_attention_batch_q8(
+        q, k, ks, v, vs, gate, output, workspace,
+        512, 65024, 65536, 24, 4, 256, 1.0F / 16.0F, 32);
+    MIINFER_HIP_CHECK(hipEventRecord(end));
+    MIINFER_HIP_CHECK(hipEventSynchronize(end));
+    float ms = 0.0F;
+    MIINFER_HIP_CHECK(hipEventElapsedTime(&ms, start, end));
+    MIINFER_HIP_CHECK(hipEventDestroy(start));
+    MIINFER_HIP_CHECK(hipEventDestroy(end));
+    return ms;
+}
+
 double median(std::vector<double> values) {
     std::sort(values.begin(), values.end());
     return values[values.size() / 2];
@@ -122,6 +141,7 @@ int main() {
     float* d_q = allocate_device<float>(q_count);
     float* d_gate = allocate_device<float>(q_count);
     float* d_q8 = allocate_device<float>(q_count);
+    float* d_q8_tiled = allocate_device<float>(q_count);
     float* d_fp16 = allocate_device<float>(q_count);
     std::int8_t* d_k_q8 = allocate_device<std::int8_t>(kv_count);
     std::int8_t* d_v_q8 = allocate_device<std::int8_t>(kv_count);
@@ -140,50 +160,64 @@ int main() {
     MIINFER_HIP_CHECK(hipMemcpy(d_v_f16, host_v_f16.data(), kv_count * sizeof(__half), hipMemcpyHostToDevice));
 
     run_q8(d_q, d_k_q8, d_k_scale, d_v_q8, d_v_scale, d_gate, d_q8, d_workspace);
+    run_q8_tiled(d_q, d_k_q8, d_k_scale, d_v_q8, d_v_scale, d_gate, d_q8_tiled, d_workspace);
     run_fp16(d_q, d_k_f16, d_v_f16, d_gate, d_fp16, d_workspace);
-    std::vector<float> q8_output(q_count), fp16_output(q_count);
+    std::vector<float> q8_output(q_count), q8_tiled_output(q_count), fp16_output(q_count);
     MIINFER_HIP_CHECK(hipMemcpy(q8_output.data(), d_q8, q_count * sizeof(float), hipMemcpyDeviceToHost));
+    MIINFER_HIP_CHECK(hipMemcpy(q8_tiled_output.data(), d_q8_tiled, q_count * sizeof(float), hipMemcpyDeviceToHost));
     MIINFER_HIP_CHECK(hipMemcpy(fp16_output.data(), d_fp16, q_count * sizeof(float), hipMemcpyDeviceToHost));
     double max_abs = 0.0, dot = 0.0, q8_norm = 0.0, fp16_norm = 0.0;
+    double tiled_max_abs = 0.0, tiled_dot = 0.0, tiled_norm = 0.0;
     bool finite = true;
     for (std::size_t i = 0; i < q_count; ++i) {
-        finite = finite && std::isfinite(q8_output[i]) && std::isfinite(fp16_output[i]);
+        finite = finite && std::isfinite(q8_output[i]) && std::isfinite(q8_tiled_output[i])
+            && std::isfinite(fp16_output[i]);
         max_abs = std::max(max_abs, std::abs(static_cast<double>(q8_output[i]) - fp16_output[i]));
         dot += static_cast<double>(q8_output[i]) * fp16_output[i];
         q8_norm += static_cast<double>(q8_output[i]) * q8_output[i];
         fp16_norm += static_cast<double>(fp16_output[i]) * fp16_output[i];
+        tiled_max_abs = std::max(tiled_max_abs,
+            std::abs(static_cast<double>(q8_output[i]) - q8_tiled_output[i]));
+        tiled_dot += static_cast<double>(q8_output[i]) * q8_tiled_output[i];
+        tiled_norm += static_cast<double>(q8_tiled_output[i]) * q8_tiled_output[i];
     }
     const double cosine = dot / (std::sqrt(q8_norm * fp16_norm) + 1e-30);
+    const double tiled_cosine = tiled_dot / (std::sqrt(q8_norm * tiled_norm) + 1e-30);
     std::cout << std::fixed << std::setprecision(7)
-              << "correctness_max_abs=" << max_abs << " cosine=" << cosine << '\n';
+              << "fp16_correctness_max_abs=" << max_abs << " cosine=" << cosine << '\n'
+              << "q8_tiled_correctness_max_abs=" << tiled_max_abs
+              << " cosine=" << tiled_cosine << '\n';
     if (!finite || !std::isfinite(max_abs) || !std::isfinite(cosine)
-            || max_abs > 0.01 || cosine < 0.9999) {
-        std::cerr << "FP16 tiled output diverged from direct Q8 attention\n";
+            || !std::isfinite(tiled_max_abs) || !std::isfinite(tiled_cosine)
+            || max_abs > 0.01 || cosine < 0.9999
+            || tiled_max_abs > 0.01 || tiled_cosine < 0.9999) {
+        std::cerr << "tiled output diverged from direct Q8 attention\n";
         return 1;
     }
 
-    std::vector<double> q8_ms, fp16_ms;
+    std::vector<double> q8_ms, q8_tiled_ms;
     for (int i = 0; i < 5; ++i) {
         if (i % 2 == 0) {
             q8_ms.push_back(run_q8(d_q, d_k_q8, d_k_scale, d_v_q8, d_v_scale, d_gate, d_q8, d_workspace));
-            fp16_ms.push_back(run_fp16(d_q, d_k_f16, d_v_f16, d_gate, d_fp16, d_workspace));
+            q8_tiled_ms.push_back(run_q8_tiled(d_q, d_k_q8, d_k_scale, d_v_q8, d_v_scale, d_gate, d_q8_tiled, d_workspace));
         } else {
-            fp16_ms.push_back(run_fp16(d_q, d_k_f16, d_v_f16, d_gate, d_fp16, d_workspace));
+            q8_tiled_ms.push_back(run_q8_tiled(d_q, d_k_q8, d_k_scale, d_v_q8, d_v_scale, d_gate, d_q8_tiled, d_workspace));
             q8_ms.push_back(run_q8(d_q, d_k_q8, d_k_scale, d_v_q8, d_v_scale, d_gate, d_q8, d_workspace));
         }
     }
     const double q8_median = median(q8_ms);
-    const double fp16_median = median(fp16_ms);
+    const double q8_tiled_median = median(q8_tiled_ms);
     std::cout << "q8_ms=";
     for (double ms : q8_ms) std::cout << ms << ',';
-    std::cout << " fp16_tiled_ms=";
-    for (double ms : fp16_ms) std::cout << ms << ',';
-    std::cout << "\nmedian_q8_ms=" << q8_median << " median_fp16_tiled_ms=" << fp16_median
-              << " speedup=" << q8_median / fp16_median << '\n';
+    std::cout << " q8_query_tiled_ms=";
+    for (double ms : q8_tiled_ms) std::cout << ms << ',';
+    std::cout << "\nmedian_q8_ms=" << q8_median << " median_q8_query_tiled_ms=" << q8_tiled_median
+              << " speedup=" << q8_median / q8_tiled_median << '\n';
 
     MIINFER_HIP_CHECK(hipFree(d_q));
     MIINFER_HIP_CHECK(hipFree(d_gate));
     MIINFER_HIP_CHECK(hipFree(d_q8));
+    MIINFER_HIP_CHECK(hipFree(d_q8_tiled));
     MIINFER_HIP_CHECK(hipFree(d_fp16));
     MIINFER_HIP_CHECK(hipFree(d_k_q8));
     MIINFER_HIP_CHECK(hipFree(d_v_q8));
