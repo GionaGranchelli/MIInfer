@@ -59,10 +59,45 @@ invalid run is excluded. The corrected run selected GPU2
 (`0000:88:00.0`, UUID `0x2152414173497dd3`); its junction temperature peaked
 at 63 C during the five-pair series, with no thermal warning.
 
-### Next gate
+### Long-context acceptance gate
 
-Run the FP16 tiled route on exactly 65,536 tokenizer-produced tokens from a
-deterministic, relevant MIInfer source-context corpus. Record processed and
-available token counts, prompt-file hash, BDF, wall time, logits finiteness,
-first two greedy tokens and VRAM. Then assess decode and task-level correctness;
-the exploratory 8K logit similarity is not a qualification threshold.
+The 65,536-token candidate-only execution is complete and recorded below. The
+remaining correctness gate is a matched tokenizer-backed shorter prefix and a
+late-tile stage profile; the 8K exploratory logit similarity is not a
+qualification threshold.
+
+### 65,536-token cold prefill
+
+The pushed benchmark source `504675e` built with the pinned ROCm 7.2.1 image
+and ran on Machinist GPU2 (`0000:88:00.0`, UUID `0x2152414173497dd3`). The
+model SHA-256 was
+`7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169`.
+The tokenizer encoded 198,637 tokens from 31 tracked project-context files;
+the benchmark processed the first 65,536. Context file SHA-256:
+`fa4a0de5db813f5f06b58de5b4b7df8f234c4c808e0965bd44c545e9087c462c`.
+
+| Measure | FP16 tiled candidate |
+| --- | ---: |
+| Processed prompt tokens | 65,536 |
+| Capacity, including 4K suffix headroom | 69,632 |
+| Prefill wall time | 501.057 s |
+| Throughput | 130.8 tok/s |
+| First / second greedy token | `17872 / 1420` |
+| Logits | finite |
+| Static VRAM allocation | 29,699,287,040 B |
+| Weights / state / workspace | 24,068,487,168 / 4,722,262,016 / 727,711,744 B |
+| Peak sampled junction temperature | 66 C (257 samples) |
+| 80 C warning / 85 C stop | neither triggered |
+
+This proves that the candidate completes a genuine tokenizer-backed 64K prefill
+with decode headroom. It misses the 180-second target by 2.78x. The prior GPU2
+Q8 product run processed 73,099 tokens in 2,298.230 s (31.8 tok/s); the current
+run has about 4.1x that throughput, but the prompt and capacity differ, so this
+is directional evidence rather than a matched A/B result. No same-prefix 64K
+Q8 run was attempted because reproducing the multi-minute control is not needed
+to establish the candidate's current latency.
+
+The output's finite logits and two generated tokens establish execution, not
+equivalence to the Q8 route. Before promotion, compare the candidate and control
+on a tokenizer-backed shorter prefix, preserve decode behavior, and profile the
+late 64K tile to identify the next limiting stage. EXP-0404 remains in progress.
