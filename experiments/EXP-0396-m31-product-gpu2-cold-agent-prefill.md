@@ -127,6 +127,12 @@ On GPU2, neither a fresh OMP process nor a resumed OMP transcript demonstrated a
 
 After stopping the repeated cold prefill, the first forced container stop ended the process with exit code 139 and a ROCm memory-access fault during model reload. A subsequent `podman start` loaded the same model successfully without changing the container configuration. The API returned `{"status":"ok","ready":true}`; ROCm reported MIInfer using GPU0 only, with GPU2 idle. This establishes service recovery, not checkpoint restoration across an MIInfer server restart.
 
+### Fresh OMP session deadline
+
+A fresh OMP session (`01a13284-0eda-7421-9944-59683def7297`) submitted the 246,640-character relevant-context bundle and the read-only first-turn task. The client was configured with a 45-minute maximum. At that deadline OMP recorded `Deadline exceeded`, with no assistant content or tool result. MIInfer request 3 had reached `prefill_started`; after the client exited, the server still reported one active request, GPU0 at 100% utilization, and 67°C junction. The thermal watchdog remained active, with no warning or stop. Requests 4 and 5 had been received but not completed. The OMP transcript is retained locally under `/tmp/m31-product-8turn-sessions/`; its prompt contents are not committed.
+
+This attempt did not reach a tool call. Its failure is a client deadline shorter than the fresh full-context prefill, not an observed model or tool error. Let request 3 finish, then resume this same OMP session with a longer deadline and verify whether MIInfer reuses the resulting high-context checkpoint.
+
 ## Decision
 
 **RETEST.** OMP tool execution and disk-checkpoint restore across OMP process restart are demonstrated at 13K context: the restored turn reached a real tool call in 6.13 seconds. At 78K context, MIInfer processed 65K new relevant tokens and saved a checkpoint, but the next OMP process reused only 13,785 tokens and replayed 65,185 tokens, taking 24.5 minutes; its 3-minute client timeout prevented tool execution. This cache-prefix mismatch is the current integration blocker. Resolve it with a captured prompt comparison or keep one OMP process alive through the turn-four checkpoint, then verify the required process-resume path at 65K before continuing the eight-turn task. Keep GPU2 idle.
