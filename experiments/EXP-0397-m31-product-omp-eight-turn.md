@@ -1,6 +1,6 @@
 # EXP-0397 — Oh My Pi persistent eight-turn task on MI50
 
-**Status:** RETEST — submitted eight user turns; the final validation turn did not settle after a bad assertion triggered repeated retries. Latency and repeatable state continuity failed the product gate.  
+**Status:** RETEST — product gate not passed. The candidate source fix and cross-process restore are demonstrated, but OMP dispatch is intermittent and useful-action latency is not reliably at or below 15 seconds.
 **Milestone:** M31-PRODUCT-0001  
 **Host:** Machinist X99 only; Z840 excluded.  
 **GPU:** MI50 GPU0, `0000:04:00.0`, UUID `0x21678e17348c2f7`; GPU2 idle.  
@@ -95,6 +95,18 @@ The resumed session completed another concrete Turn 7 action through MIInfer. It
 The next prompt (the eighth user prompt in this resumed sequence) produced literal tool-call markup and exited without dispatching the requested verification. I retried with a simpler prompt; MIInfer dispatched the bash command successfully, `git diff --check` passed, the two expected paths were listed, and `95516b7` resolved to `95516b722493b5bada1f3d4eb726c8e4b1f4dd9b`. The retry's first tool action began 33.8 seconds after submission. OMP then returned a concise summary, but the original eighth prompt did not complete as requested. Count this as seven completed prompts plus one failed dispatch and a successful retry, not as a clean eight-turn pass.
 
 The retry transcript is in `/tmp/m31-product-omp-eight-turn-retry/2026-10-13T03-43-31-875Z_01a1335b-ba23-75f2-91d3-5cecef8df00e.jsonl`. The additional measured first-action times (53.7 s and 33.8 s) also exceed the 15-second target. This run still lacks a completed eight-turn coding outcome, and M31-PRODUCT-0001 remains not passed.
+
+### Post-restart latency and tool-format diagnostics
+
+Three short follow-ups were tried on the same long OMP session. With the original 4096-token profile, a `date -u +%s` bash call started 11.6 s after submission; this is a diagnostic action, not evidence of coding-task responsiveness. A useful `git diff --check` call started 16.4 s after submission. Another `git diff --stat` request returned literal `<tool_calls><invoke ...>` markup as assistant text and did not dispatch. The success and failure are both visible in the OMP transcript; do not treat the 11.6 s diagnostic as proof that the coding workflow meets the target.
+
+The OMP profile temporarily lowered `maxTokens` from 4096 to 512. The associated request was rejected before inference (inference request count stayed at 16 while HTTP error and rejection counters each increased); no performance result can be attributed to that setting. The saved profile was restored to `maxTokens: 4096`.
+
+OMP 18.10.2's official configuration documents `tools.format: xml` for the `<tool_calls><invoke>` in-band format. I tried it only in the isolated M31 profile. The first inference processed prompt 91,070 with a 91-token suffix in 16.46 s, generated 106 tokens, and ended with `finish_reason=stop`; it did not yield a completed OMP tool action. OMP then opened another request that stayed active without a tool result. Interrupting OMP did not stop that server-side GPU request. A 30-second container stop escalated to SIGKILL; the first model start exited 139 with a ROCm memory access fault, and a subsequent start recovered and reached ready state. The original profile was restored before further work.
+
+After that server restart, OMP submitted the `git diff --check` recovery action. MIInfer request 4 processed a 91,221-token prompt, restored a 3,166,620,297-byte persistent session, reused 91,067 tokens, and prefilled 154 new tokens in 16.51 s; request TTFT was 20.23 s and total 22.55 s. The OMP bash action began 26.21 s after the user message and returned exit 0. A follow-up request processed 108 new tokens, took 12.97 s total, and ended normally. This verifies persistent continuation after another server restart, but misses the user-visible latency target.
+
+The candidate container is currently ready on Machinist; GPU0 is selected and GPU2 remains idle. The profile is back to its original settings. The strongest unresolved blocker is reliable dispatch of the model's in-band XML tool calls, followed by the long suffix-prefill cost at roughly 90K context. Next action: reproduce the exact raw assistant response under the controlled OMP XML dialect and capture scanner/dispatch events and MIInfer telemetry in one short checkpoint-backed call, fixing only the dialect selection or parser path if that observation proves the mismatch.
 
 ## Evidence locations
 
