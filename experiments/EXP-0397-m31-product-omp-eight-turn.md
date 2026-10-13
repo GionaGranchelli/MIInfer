@@ -53,6 +53,25 @@ The source also shows a likely cause: [`build_chatml()`](../src/openai_api.cpp) 
 
 Next, prove the prompt-boundary explanation with a small tokenizer-level check, then assess the smallest safe way to checkpoint an append-stable boundary for OMP tool turns. Rerun only the turn-four restart/follow-up boundary after that correction; keep the 15-second target unchanged. Do not expand model, GPU, or kernel scope.
 
+## 2026-10-13 candidate boundary retest
+
+The candidate binary was built from pushed source commit `95516b722493b5bada1f3d4eb726c8e4b1f4dd9b` plus temporary diagnostic logging in `qwen3_primitives.hip` (binary SHA-256 `5a0d7c82b9704490f4b9db21989875a8831250fb73589c8c5da19746a06014d2`). It ran in the existing ROCm 7.2.1 candidate container on Machinist GPU0; GPU2 remained idle. This is a diagnostic candidate build, not the final production binary.
+
+Oh My Pi v18.10.2 submitted the 78,245-token request through MIInfer. It executed real `bash` and `grep` tool calls against the clean `m31-omp-eight-turn` worktree and received both tool results. MIInfer completed the cold prefill in 2,908,130 ms (26.91 tokens/s), then generated 250 tokens and returned `finish_reason=tool_calls`. The request wrote persistent checkpoint `sess_604982ec315821e4_p78242.miinfer` (about 2.74 GB), exactly three tokens before the open assistant header. This confirms the requested stable boundary was captured while processing the prompt. GPU0 reached 52°C junction; no fault or thermal stop occurred.
+
+Subsequent same-process requests reused the checkpoint boundary and did not replay the full prefix:
+
+| Request | Prompt | Reused | New suffix | Restore | TTFT wall | Total | Finish |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| 3 | 82,737 | 78,242 | 4,495 | 1.19 ms | 173.73 s | 195.78 s | stop |
+| 4 | 82,805 | 82,734 | 71 | 1.38 ms | 6.81 s | 19.28 s | stop |
+| 5 | 82,873 | 82,802 | 71 | 1.20 ms | 6.83 s | 50.98 s | stop |
+| 6 | 82,941 | 82,870 | 71 | 1.39 ms | 6.86 s | 38.49 s | stop |
+
+The larger suffix in request 3 came from the returned inspection output. Requests 4–6 show fast first-token latency with only 71 new tokens, while total time still includes generation. These are internal OMP tool-cycle requests, not three distinct user follow-up samples. No MIInfer process restart or disk restore has yet been tested in this retest.
+
+The OMP session executed the requested read-only Turn 1 tool calls, but ended normally after several reasoning-only responses without a visible user-facing findings/plan message. The session transcript is `/tmp/m31-product-omp-eight-turn-retry/2026-10-13T03-43-31-875Z_01a1335b-ba23-75f2-91d3-5cecef8df00e.jsonl`. A resumed Turn 2 is now implementing the focused fix in its isolated worktree. The eight-turn workload, restart restore, and follow-up usability gate remain unproven.
+
 ## Evidence locations
 
 - OMP transcript: `/tmp/m31-product-omp-rpc-eight-turn/2026-10-13T01-31-21-420Z_01a132e2-b7cc-744c-b0ec-6bd423af3459.jsonl`.
