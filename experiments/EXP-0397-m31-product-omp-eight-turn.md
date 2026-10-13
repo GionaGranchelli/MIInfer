@@ -70,7 +70,17 @@ Subsequent same-process requests reused the checkpoint boundary and did not repl
 
 The larger suffix in request 3 came from the returned inspection output. Requests 4–6 show fast first-token latency with only 71 new tokens, while total time still includes generation. These are internal OMP tool-cycle requests, not three distinct user follow-up samples. No MIInfer process restart or disk restore has yet been tested in this retest.
 
-The OMP session executed the requested read-only Turn 1 tool calls, but ended normally after several reasoning-only responses without a visible user-facing findings/plan message. The session transcript is `/tmp/m31-product-omp-eight-turn-retry/2026-10-13T03-43-31-875Z_01a1335b-ba23-75f2-91d3-5cecef8df00e.jsonl`. A resumed Turn 2 is now implementing the focused fix in its isolated worktree. The eight-turn workload, restart restore, and follow-up usability gate remain unproven.
+The OMP session executed the requested read-only Turn 1 tool calls, but ended normally after several reasoning-only responses without a visible user-facing findings/plan message. The session transcript is `/tmp/m31-product-omp-eight-turn-retry/2026-10-13T03-43-31-875Z_01a1335b-ba23-75f2-91d3-5cecef8df00e.jsonl`. The eight-turn workload, restart restore, and follow-up usability gate remain unproven.
+
+The resumed OMP session then received two additional user turns. It issued read/grep tool calls but made no repository edits and exited normally after reasoning-only output. Their first actionable tool calls arrived 195.6 s and 142.7 s after the respective user messages, despite short MIInfer first-token times on one request. Thus the 15-second product gate fails at the agent level.
+
+| Request | Prompt | Reused | New suffix | Disk restore | TTFT wall | Total |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 7 | 82,875 | 82,734 | 141 | 2.999 s | 12.61 s | 136.74 s |
+| 11 | 86,030 | 82,872 | 3,158 | 2.960 s | 131.67 s | 142.62 s |
+| 12 | 87,471 | 86,027 | 1,444 | 0 | 67.24 s | 67.24 s |
+
+The request 7 disk restore happened while MIInfer itself stayed running; this does not prove process-restart recovery. A persistent checkpoint at 85,482 tokens existed before request 11, but request 11 matched only 82,872 tokens. The cause of that prompt mismatch remains unknown. The OMP worktree is still clean at `29fbc26`; turn four, an MIInfer restart, and a correct coding outcome have not been reached.
 
 ## Evidence locations
 
