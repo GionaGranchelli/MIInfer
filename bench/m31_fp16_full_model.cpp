@@ -3,8 +3,10 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <iterator>
 #include <span>
 #include <string>
 #include <vector>
@@ -12,6 +14,7 @@
 #include "miinfer/device_validation.hpp"
 #include "miinfer/hip_check.hpp"
 #include "miinfer/prefill_v2/model.hpp"
+#include "miinfer/qwen3_tokenizer.hpp"
 #include "miinfer/qwen35_model.hpp"
 
 #include <hip/hip_runtime.h>
@@ -76,11 +79,37 @@ Result run_mode(const miinfer::Qwen35Model& model,
 }  // namespace
 
 int main(int argc, char** argv) {
-    if (argc < 2 || argc > 3 || (argc == 3 && std::string(argv[2]) != "--fp16-first")) {
-        std::cerr << "usage: miinfer-m31-fp16-full-model MODEL.gguf [--fp16-first]\n";
+    bool fp16_first = false;
+    bool fp16_only = false;
+    std::uint32_t prompt_tokens = 8192;
+    std::string prompt_file;
+    for (int i = 2; i < argc; ++i) {
+        const std::string arg(argv[i]);
+        if (arg == "--fp16-first") {
+            fp16_first = true;
+        } else if (arg == "--fp16-only") {
+            fp16_only = true;
+        } else if (arg == "--tokens" && i + 1 < argc) {
+            char* end = nullptr;
+            const auto parsed = std::strtoul(argv[++i], &end, 10);
+            if (end == argv[i] || *end != '\0' || parsed == 0 || parsed > 65536) {
+                std::cerr << "--tokens must be between 1 and 65536\n";
+                return 2;
+            }
+            prompt_tokens = static_cast<std::uint32_t>(parsed);
+        } else if (arg == "--prompt-file" && i + 1 < argc) {
+            prompt_file = argv[++i];
+        } else {
+            std::cerr << "usage: miinfer-m31-fp16-full-model MODEL.gguf "
+                         "[--fp16-first] [--fp16-only] [--tokens N] [--prompt-file PATH]\n";
+            return 2;
+        }
+    }
+    if (argc < 2 || (fp16_first && fp16_only)) {
+        std::cerr << "usage: miinfer-m31-fp16-full-model MODEL.gguf "
+                     "[--fp16-first] [--fp16-only] [--tokens N] [--prompt-file PATH]\n";
         return 2;
     }
-    const bool fp16_first = argc == 3;
     miinfer::DeviceInfo device{};
     std::string error;
     if (!miinfer::validate_gfx906_device(0, device, error)) {
@@ -91,17 +120,43 @@ int main(int argc, char** argv) {
     MIINFER_HIP_CHECK(hipDeviceGetPCIBusId(bdf, sizeof(bdf), 0));
     std::cout << "device_bdf=" << bdf << " architecture=" << device.architecture << '\n';
 
-    constexpr std::uint32_t kPromptTokens = 8192;
     constexpr std::uint32_t kCapacity = 65536;
     const auto model = miinfer::Qwen35Model::load(argv[1]);
-    std::vector<std::uint32_t> tokens(kPromptTokens);
-    for (std::uint32_t i = 0; i < kPromptTokens; ++i) {
-        tokens[i] = (i * 37U + 101U) % model.config().vocab_size;
+    std::vector<std::uint32_t> tokens(prompt_tokens);
+    if (prompt_file.empty()) {
+        for (std::uint32_t i = 0; i < prompt_tokens; ++i) {
+            tokens[i] = (i * 37U + 101U) % model.config().vocab_size;
+        }
+    } else {
+        std::ifstream input(prompt_file, std::ios::binary);
+        if (!input) {
+            std::cerr << "failed to open prompt file: " << prompt_file << '\n';
+            return 2;
+        }
+        const std::string text(std::istreambuf_iterator<char>(input), {});
+        const auto encoded = miinfer::Qwen3Tokenizer::load(*model.file()).encode(text);
+        if (encoded.size() < prompt_tokens) {
+            std::cerr << "prompt file encodes to " << encoded.size()
+                      << " tokens, fewer than requested " << prompt_tokens << '\n';
+            return 2;
+        }
+        std::copy_n(encoded.begin(), prompt_tokens, tokens.begin());
+        std::cout << "prompt_text_bytes=" << text.size()
+                  << " prompt_tokens_available=" << encoded.size()
+                  << " prompt_tokens_processed=" << prompt_tokens << '\n';
     }
 
     if (::setenv("MIINFER_V2_0043_GQA_ATTENTION", "1", 1) != 0) {
         std::cerr << "failed to enable existing opt-in GQA attention path\n";
         return 1;
+    }
+    if (fp16_only) {
+        const auto fp16 = run_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kFp16Fp16,
+                                   "fp16_tiled_candidate", tokens, kCapacity);
+        const bool finite = std::all_of(fp16.logits.begin(), fp16.logits.end(),
+                                        [](float value) { return std::isfinite(value); });
+        std::cout << "logits_finite=" << finite << '\n';
+        return finite ? 0 : 1;
     }
     Result q8;
     Result fp16;
