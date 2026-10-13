@@ -77,11 +77,38 @@ Result run_mode(const miinfer::Qwen35Model& model,
     return result;
 }
 
+double median(std::vector<double> values) {
+    std::sort(values.begin(), values.end());
+    return values[values.size() / 2];
+}
+
+bool compare_results(const Result& control, const Result& candidate, int pair) {
+    if (control.logits.size() != candidate.logits.size()) return false;
+    double dot = 0.0, control_norm = 0.0, candidate_norm = 0.0, max_abs = 0.0;
+    bool finite = true;
+    for (std::size_t i = 0; i < control.logits.size(); ++i) {
+        finite = finite && std::isfinite(control.logits[i]) && std::isfinite(candidate.logits[i]);
+        max_abs = std::max(max_abs, std::abs(static_cast<double>(control.logits[i]) - candidate.logits[i]));
+        dot += static_cast<double>(control.logits[i]) * candidate.logits[i];
+        control_norm += static_cast<double>(control.logits[i]) * control.logits[i];
+        candidate_norm += static_cast<double>(candidate.logits[i]) * candidate.logits[i];
+    }
+    const double cosine = dot / (std::sqrt(control_norm * candidate_norm) + 1e-30);
+    const bool first_equal = control.top1 == candidate.top1;
+    const bool second_equal = control.second_token == candidate.second_token;
+    std::cout << std::setprecision(9) << "q8_pair=" << pair
+              << " logits_max_abs=" << max_abs << " logits_cosine=" << cosine
+              << " first_token_equal=" << first_equal
+              << " second_token_equal=" << second_equal << '\n';
+    return finite && std::isfinite(cosine) && cosine >= 0.9999 && first_equal && second_equal;
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
     bool fp16_first = false;
     bool fp16_only = false;
+    bool q8_query_tiled_pair = false;
     std::uint32_t prompt_tokens = 8192;
     std::string prompt_file;
     for (int i = 2; i < argc; ++i) {
@@ -90,6 +117,8 @@ int main(int argc, char** argv) {
             fp16_first = true;
         } else if (arg == "--fp16-only") {
             fp16_only = true;
+        } else if (arg == "--q8-query-tiled-pair") {
+            q8_query_tiled_pair = true;
         } else if (arg == "--tokens" && i + 1 < argc) {
             char* end = nullptr;
             const auto parsed = std::strtoul(argv[++i], &end, 10);
@@ -102,13 +131,16 @@ int main(int argc, char** argv) {
             prompt_file = argv[++i];
         } else {
             std::cerr << "usage: miinfer-m31-fp16-full-model MODEL.gguf "
-                         "[--fp16-first] [--fp16-only] [--tokens N] [--prompt-file PATH]\n";
+                         "[--fp16-first] [--fp16-only] [--q8-query-tiled-pair] "
+                         "[--tokens N] [--prompt-file PATH]\n";
             return 2;
         }
     }
-    if (argc < 2 || (fp16_first && fp16_only)) {
+    if (argc < 2 || (fp16_first && fp16_only)
+        || (q8_query_tiled_pair && (fp16_first || fp16_only))) {
         std::cerr << "usage: miinfer-m31-fp16-full-model MODEL.gguf "
-                     "[--fp16-first] [--fp16-only] [--tokens N] [--prompt-file PATH]\n";
+                     "[--fp16-first] [--fp16-only] [--q8-query-tiled-pair] "
+                     "[--tokens N] [--prompt-file PATH]\n";
         return 2;
     }
     miinfer::DeviceInfo device{};
@@ -150,6 +182,36 @@ int main(int argc, char** argv) {
     if (::setenv("MIINFER_V2_0043_GQA_ATTENTION", "1", 1) != 0) {
         std::cerr << "failed to enable existing opt-in GQA attention path\n";
         return 1;
+    }
+    if (q8_query_tiled_pair) {
+        std::vector<double> control_times, candidate_times;
+        bool correct = true;
+        for (int pair = 0; pair < 3; ++pair) {
+            Result control, candidate;
+            if (pair == 1) {
+                if (::setenv("MIINFER_M31_Q8_QUERY_TILED", "1", 1) != 0) return 1;
+                candidate = run_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kQ8Q8,
+                                     "q8_query_tiled_candidate", tokens, capacity);
+                if (::setenv("MIINFER_M31_Q8_QUERY_TILED", "0", 1) != 0) return 1;
+                control = run_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kQ8Q8,
+                                   "q8_control", tokens, capacity);
+            } else {
+                if (::setenv("MIINFER_M31_Q8_QUERY_TILED", "0", 1) != 0) return 1;
+                control = run_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kQ8Q8,
+                                   "q8_control", tokens, capacity);
+                if (::setenv("MIINFER_M31_Q8_QUERY_TILED", "1", 1) != 0) return 1;
+                candidate = run_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kQ8Q8,
+                                     "q8_query_tiled_candidate", tokens, capacity);
+            }
+            correct = compare_results(control, candidate, pair) && correct;
+            control_times.push_back(control.prefill_seconds);
+            candidate_times.push_back(candidate.prefill_seconds);
+        }
+        std::cout << std::fixed << std::setprecision(3)
+                  << "median_q8_control_seconds=" << median(control_times)
+                  << " median_q8_query_tiled_seconds=" << median(candidate_times)
+                  << " speedup=" << median(control_times) / median(candidate_times) << '\n';
+        return correct ? 0 : 3;
     }
     if (fp16_only) {
         const auto fp16 = run_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kFp16Fp16,
