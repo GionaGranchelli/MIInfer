@@ -152,7 +152,7 @@ int main() {
     for (double ms : candidate_ms) std::cout << ms << ',';
     const double ref_median = median(reference_ms);
     const double candidate_median = median(candidate_ms);
-    std::cout << "\nmedian_split32_ms=" << ref_median << " median_split3_ms=" << candidate_median
+    std::cout << "\nmedian_split32_ms=" << ref_median << " median_split64_ms=" << candidate_median
               << " speedup=" << (ref_median / candidate_median) << '\n';
 
     MIINFER_HIP_CHECK(hipFree(d_q));
