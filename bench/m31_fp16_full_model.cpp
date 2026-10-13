@@ -42,7 +42,8 @@ Result run_mode(const miinfer::Qwen35Model& model,
                 std::uint32_t capacity) {
     using namespace miinfer::prefill_v2;
     PrefillV2Model runtime(model, capacity, true, mode);
-    std::cout << label << " static_vram_bytes=" << runtime.total_vram_bytes()
+    std::cout << label << " capacity_tokens=" << capacity
+              << " static_vram_bytes=" << runtime.total_vram_bytes()
               << " weights_bytes=" << runtime.persistent_weight_bytes()
               << " state_bytes=" << runtime.persistent_state_bytes()
               << " workspace_bytes=" << runtime.workspace_bytes() << '\n';
@@ -120,7 +121,7 @@ int main(int argc, char** argv) {
     MIINFER_HIP_CHECK(hipDeviceGetPCIBusId(bdf, sizeof(bdf), 0));
     std::cout << "device_bdf=" << bdf << " architecture=" << device.architecture << '\n';
 
-    constexpr std::uint32_t kCapacity = 65536;
+    const std::uint32_t capacity = std::max<std::uint32_t>(65536, prompt_tokens + 4096);
     const auto model = miinfer::Qwen35Model::load(argv[1]);
     std::vector<std::uint32_t> tokens(prompt_tokens);
     if (prompt_file.empty()) {
@@ -152,7 +153,7 @@ int main(int argc, char** argv) {
     }
     if (fp16_only) {
         const auto fp16 = run_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kFp16Fp16,
-                                   "fp16_tiled_candidate", tokens, kCapacity);
+                                   "fp16_tiled_candidate", tokens, capacity);
         const bool finite = std::all_of(fp16.logits.begin(), fp16.logits.end(),
                                         [](float value) { return std::isfinite(value); });
         std::cout << "logits_finite=" << finite << '\n';
@@ -162,14 +163,14 @@ int main(int argc, char** argv) {
     Result fp16;
     if (fp16_first) {
         fp16 = run_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kFp16Fp16,
-                        "fp16_tiled_candidate", tokens, kCapacity);
+                        "fp16_tiled_candidate", tokens, capacity);
         q8 = run_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kQ8Q8,
-                      "q8_control", tokens, kCapacity);
+                      "q8_control", tokens, capacity);
     } else {
         q8 = run_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kQ8Q8,
-                      "q8_control", tokens, kCapacity);
+                      "q8_control", tokens, capacity);
         fp16 = run_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kFp16Fp16,
-                        "fp16_tiled_candidate", tokens, kCapacity);
+                        "fp16_tiled_candidate", tokens, capacity);
     }
     if (q8.logits.size() != fp16.logits.size()) return 1;
     double dot = 0.0, q8_norm = 0.0, fp16_norm = 0.0;
