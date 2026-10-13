@@ -1,7 +1,8 @@
 # EXP-0398 — M31 Q8 cold-prefill attribution
 
-**Status:** IN PROGRESS  
-**Baseline:** `88fd63eb0cf8b765f37e5f52168c80783df62e7b`  
+**Status:** LEARN
+
+**Baseline:** `88fd63eb0cf8b765f37e5f52168c80783df62e7b`
 **Question:** Does the current Q8/Q8 causal-attention stage account for a material portion of late-context PrefillV2 tile time?
 
 ## Evidence motivating the measurement
@@ -49,4 +50,31 @@ tokens and Q8/Q8 KV. The output checks the final hidden vector for finite values
 
 ## Results
 
-Pending the focused MI50 run.
+The profiler was built with the pinned ROCm 7.2.1 image and run on Machinist
+GPU2. It processed 7,680 prefix tokens using ordinary forward calls, then
+profiled the final 512-token tile:
+
+| Item | Result |
+| --- | ---: |
+| Source | `4d169b4` |
+| Model SHA-256 | `7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169` |
+| GPU BDF / unique ID | `0000:88:00.0` / `0x2152414173497dd3` |
+| Profile tile base / shape | `7680` / `512` |
+| Full profiled tile GPU time | `4944.550 ms` |
+| All 16 GQA block time | `3160.662 ms` |
+| Q8/Q8 causal-attention time | `2644.759 ms` |
+| Attention share of full tile | `53.488%` |
+| Attention share of GQA blocks | `83.68%` |
+| Final hidden values | finite |
+| Peak sampled junction temperature | `61 C` (49 samples; initial `29 C`) |
+
+This is direct stage timing on the current Q8/Q8 PrefillV2 path. Attention has
+a material Amdahl ceiling at this shape, so the next attempt is a Q8-specific
+two-query schedule: map one wave to each of two neighboring query positions,
+stage each shared 32-position Q8 K/V tile once in LDS, and keep one online
+softmax state per wave. The earlier FP16 multi-query candidates do not use this
+data type or state mapping and do not decide this candidate.
+
+The measurement covers one late-context tile, not a full 64K cold request. It
+selects the next implementation; it is not a performance win or product-level
+speedup claim.
