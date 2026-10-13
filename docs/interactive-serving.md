@@ -133,11 +133,26 @@ providers:
     models:
       - id: qwen3.8-27b
         contextWindow: 98304
-        maxTokens: 2048
+        maxTokens: 4096
 ```
+
+For the tested Qwen3.8 profile, also set `tools.format: xml` in the profile's
+`agent/config.yml`:
+
+```yaml
+tools:
+  format: xml
+```
+
+In this integration run, `auto` left the model's `<tool_calls><invoke>` output
+as plain text; `xml` dispatched it as a bash call. Changing this setting on an
+existing long session caused a cold full-prefix prefill, so set it before
+starting a session. A 4,096-token output limit also avoided the premature
+generation stops observed with 2,048 tokens in this task.
 
 `auth: none` is suitable only on loopback or through an SSH tunnel; for LAN
 serving use `--api-key-file`. Verify that OMP executes one real bash tool call
-and returns its output before relying on this setup. A passing short-context
-tool-call smoke demonstrates compatibility only; it does not establish 64K
-persistence, checkpoint restore, or latency (see EXP-0396).
+and returns its output before relying on this setup. The 95K-token retry and
+warm follow-ups are documented in
+[`EXP-0397`](../experiments/EXP-0397-m31-product-omp-eight-turn.md); they do not
+yet establish a complete eight-turn coding task or reliable ≤15-second actions.
