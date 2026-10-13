@@ -43,6 +43,8 @@ struct PrefillV2Workspace {
     float* attn_q_rope = nullptr;         // [max_tokens, kQDim (6144)]
     std::int8_t* attn_q8_query = nullptr; // [max_tokens, kQDim] dot4 attention scratch
     float* attn_q8_query_scales = nullptr; // [max_tokens, 24] dot4 attention scratch
+    std::int8_t* attn_q8_query_residual = nullptr; // [max_tokens, kQDim] optional high-low query residual
+    float* attn_q8_query_residual_scales = nullptr; // [max_tokens, 24] optional residual scales
     float* attn_k = nullptr;              // [max_tokens, kKvDim (1024)]
     float* attn_v = nullptr;              // [max_tokens, kKvDim (1024)]
     float* attn_gated_output = nullptr;   // [max_tokens, kQDim (6144)]
