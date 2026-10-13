@@ -131,7 +131,9 @@ After stopping the repeated cold prefill, the first forced container stop ended 
 
 A fresh OMP session (`01a13284-0eda-7421-9944-59683def7297`) submitted the 246,640-character relevant-context bundle and the read-only first-turn task. The client was configured with a 45-minute maximum. At that deadline OMP recorded `Deadline exceeded`, with no assistant content or tool result. MIInfer request 3 had reached `prefill_started`; after the client exited, the server still reported one active request, GPU0 at 100% utilization, and 67°C junction. The thermal watchdog remained active, with no warning or stop. Requests 4 and 5 had been received but not completed. The OMP transcript is retained locally under `/tmp/m31-product-8turn-sessions/`; its prompt contents are not committed.
 
-This attempt did not reach a tool call. Its failure is a client deadline shorter than the fresh full-context prefill, not an observed model or tool error. Let request 3 finish, then resume this same OMP session with a longer deadline and verify whether MIInfer reuses the resulting high-context checkpoint.
+Request 3 later completed at 02:33:56 CEST: 78,142 prompt tokens, 78,142 newly prefetched, zero reused, 2,747,940 ms prefill at 28.44 tokens/s, and 2,757,910 ms total. MIInfer generated 130 tokens with `finish_reason=tool_calls` and saved checkpoint `sess_3cb1819307571240_p78142.miinfer` (2,739,733,397 bytes). The server did not cancel the request. OMP had already exited about one minute earlier, so its transcript still has no tool execution or result.
+
+The same OMP session was then resumed with a longer client deadline. Request 8 entered prefill at 02:35:15 CEST and remained active more than 15 minutes later; at the latest sample GPU0 was 100% busy at 76°C junction, GPU2 idle, and the watchdog active. Request-level reuse statistics are not available until it completes. This resumed turn has already missed the 15-second first-useful-action target; its final telemetry will show whether the full 78K prefix was replayed again.
 
 ## Decision
 
