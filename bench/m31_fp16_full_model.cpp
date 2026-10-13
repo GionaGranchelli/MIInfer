@@ -14,6 +14,7 @@
 #include "miinfer/device_validation.hpp"
 #include "miinfer/hip_check.hpp"
 #include "miinfer/prefill_v2/model.hpp"
+#include "miinfer/prefill_v2/persistent_session.hpp"
 #include "miinfer/qwen3_tokenizer.hpp"
 #include "miinfer/qwen35_model.hpp"
 
@@ -31,6 +32,7 @@ T* allocate_device(std::size_t count) {
 struct Result {
     double prefill_seconds = 0.0;
     double decode_seconds = 0.0;
+    double restore_seconds = 0.0;
     std::uint32_t top1 = 0;
     std::uint32_t second_token = 0;
     std::vector<float> logits;
@@ -77,6 +79,59 @@ Result run_mode(const miinfer::Qwen35Model& model,
     return result;
 }
 
+Result run_session_mode(const miinfer::Qwen35Model& model,
+                        miinfer::prefill_v2::KvCacheQuantMode mode,
+                        const char* label,
+                        const std::string& session_path,
+                        const std::vector<std::uint32_t>& suffix,
+                        std::uint32_t capacity) {
+    using namespace miinfer::prefill_v2;
+    PrefillV2Model runtime(model, capacity, true, mode);
+    std::vector<std::uint32_t> restored_tokens;
+    auto restore_start = std::chrono::steady_clock::now();
+    if (!runtime.load_session(session_path, restored_tokens) || restored_tokens.empty()) {
+        throw std::runtime_error(std::string(label) + " failed to restore the prefix session");
+    }
+    auto restore_stop = std::chrono::steady_clock::now();
+
+    float* hidden = allocate_device<float>(kPrefillV2MacroTile * kHidden);
+    float* logits = allocate_device<float>(model.config().vocab_size);
+    const auto prefill_start = std::chrono::steady_clock::now();
+    std::size_t offset = 0;
+    std::uint32_t final_chunk = 0;
+    while (offset < suffix.size()) {
+        final_chunk = static_cast<std::uint32_t>(std::min<std::size_t>(
+            kPrefillV2MacroTile, suffix.size() - offset));
+        runtime.forward(std::span<const std::uint32_t>(suffix).subspan(offset, final_chunk),
+                        static_cast<std::uint32_t>(restored_tokens.size() + offset), hidden);
+        offset += final_chunk;
+    }
+    runtime.compute_logits(hidden + (final_chunk - 1) * kHidden, logits);
+    MIINFER_HIP_CHECK(hipDeviceSynchronize());
+    const auto prefill_stop = std::chrono::steady_clock::now();
+
+    Result result;
+    result.restore_seconds = std::chrono::duration<double>(restore_stop - restore_start).count();
+    result.prefill_seconds = std::chrono::duration<double>(prefill_stop - prefill_start).count();
+    result.logits.resize(model.config().vocab_size);
+    MIINFER_HIP_CHECK(hipMemcpy(result.logits.data(), logits,
+        result.logits.size() * sizeof(float), hipMemcpyDeviceToHost));
+    result.top1 = static_cast<std::uint32_t>(std::distance(
+        result.logits.begin(), std::max_element(result.logits.begin(), result.logits.end())));
+    const auto decode_start = std::chrono::steady_clock::now();
+    result.second_token = runtime.decode_step(
+        result.top1, static_cast<std::uint32_t>(restored_tokens.size() + suffix.size()));
+    result.decode_seconds = std::chrono::duration<double>(
+        std::chrono::steady_clock::now() - decode_start).count();
+    MIINFER_HIP_CHECK(hipFree(hidden));
+    MIINFER_HIP_CHECK(hipFree(logits));
+    std::cout << label << " restore_seconds=" << std::fixed << std::setprecision(3)
+              << result.restore_seconds << " suffix_seconds=" << result.prefill_seconds
+              << " first_token=" << result.top1 << " decode_seconds=" << result.decode_seconds
+              << " second_token=" << result.second_token << '\n';
+    return result;
+}
+
 double median(std::vector<double> values) {
     std::sort(values.begin(), values.end());
     return values[values.size() / 2];
@@ -109,8 +164,10 @@ int main(int argc, char** argv) {
     bool fp16_first = false;
     bool fp16_only = false;
     bool q8_query_tiled_pair = false;
+    bool fp16_fp32_attention = false;
     std::uint32_t prompt_tokens = 8192;
     std::string prompt_file;
+    std::string session_path;
     for (int i = 2; i < argc; ++i) {
         const std::string arg(argv[i]);
         if (arg == "--fp16-first") {
@@ -119,6 +176,8 @@ int main(int argc, char** argv) {
             fp16_only = true;
         } else if (arg == "--q8-query-tiled-pair") {
             q8_query_tiled_pair = true;
+        } else if (arg == "--fp16-fp32-attn") {
+            fp16_fp32_attention = true;
         } else if (arg == "--tokens" && i + 1 < argc) {
             char* end = nullptr;
             const auto parsed = std::strtoul(argv[++i], &end, 10);
@@ -129,10 +188,12 @@ int main(int argc, char** argv) {
             prompt_tokens = static_cast<std::uint32_t>(parsed);
         } else if (arg == "--prompt-file" && i + 1 < argc) {
             prompt_file = argv[++i];
+        } else if (arg == "--session" && i + 1 < argc) {
+            session_path = argv[++i];
         } else {
             std::cerr << "usage: miinfer-m31-fp16-full-model MODEL.gguf "
                          "[--fp16-first] [--fp16-only] [--q8-query-tiled-pair] "
-                         "[--tokens N] [--prompt-file PATH]\n";
+                         "[--fp16-fp32-attn] [--tokens N] [--prompt-file PATH] [--session PATH]\n";
             return 2;
         }
     }
@@ -140,7 +201,7 @@ int main(int argc, char** argv) {
         || (q8_query_tiled_pair && (fp16_first || fp16_only))) {
         std::cerr << "usage: miinfer-m31-fp16-full-model MODEL.gguf "
                      "[--fp16-first] [--fp16-only] [--q8-query-tiled-pair] "
-                     "[--tokens N] [--prompt-file PATH]\n";
+                     "[--fp16-fp32-attn] [--tokens N] [--prompt-file PATH] [--session PATH]\n";
         return 2;
     }
     miinfer::DeviceInfo device{};
@@ -183,6 +244,14 @@ int main(int argc, char** argv) {
         std::cerr << "failed to enable existing opt-in GQA attention path\n";
         return 1;
     }
+    if (::setenv("MIINFER_M31_FP16_ATTN_FP32", fp16_fp32_attention ? "1" : "0", 1) != 0) {
+        std::cerr << "failed to set FP16 attention accumulation mode\n";
+        return 1;
+    }
+    if (::setenv("MIINFER_M31_Q8_TO_FP16_RESTORE", session_path.empty() ? "0" : "1", 1) != 0) {
+        std::cerr << "failed to set Q8-to-FP16 session restore mode\n";
+        return 1;
+    }
     if (q8_query_tiled_pair) {
         std::vector<double> control_times, candidate_times;
         bool correct = true;
@@ -211,6 +280,36 @@ int main(int argc, char** argv) {
                   << "median_q8_control_seconds=" << median(control_times)
                   << " median_q8_query_tiled_seconds=" << median(candidate_times)
                   << " speedup=" << median(control_times) / median(candidate_times) << '\n';
+        return correct ? 0 : 3;
+    }
+    if (!session_path.empty()) {
+        miinfer::prefill_v2::PersistentSessionHeader header{};
+        if (!miinfer::prefill_v2::PersistentSession::inspect_file(session_path, header) ||
+            header.kv_quant_mode != static_cast<std::uint8_t>(
+                miinfer::prefill_v2::KvCacheQuantMode::kQ8Q8) || prompt_tokens == 0) {
+            std::cerr << "--session requires a valid Q8/Q8 session and positive --tokens suffix\n";
+            return 2;
+        }
+        const std::uint32_t session_capacity = std::max<std::uint32_t>(
+            capacity, header.prefix_length + prompt_tokens + 4096);
+        std::vector<std::uint32_t> suffix(prompt_tokens);
+        for (std::uint32_t i = 0; i < prompt_tokens; ++i) {
+            suffix[i] = (i * 37U + 101U) % model.config().vocab_size;
+        }
+        std::cout << "session_prefix_tokens=" << header.prefix_length
+                  << " suffix_tokens=" << prompt_tokens
+                  << " suffix_source=deterministic_synthetic\n";
+        const auto q8 = run_session_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kQ8Q8,
+                                         "q8_session", session_path, suffix, session_capacity);
+        const auto fp16 = run_session_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kFp16Fp16,
+                                           fp16_fp32_attention ? "fp16_session_fp32" : "fp16_session",
+                                           session_path, suffix, session_capacity);
+        const bool correct = compare_results(q8, fp16, 0);
+        std::cout << std::fixed << std::setprecision(3)
+                  << "q8_total_resume_seconds=" << (q8.restore_seconds + q8.prefill_seconds + q8.decode_seconds)
+                  << " fp16_total_resume_seconds=" << (fp16.restore_seconds + fp16.prefill_seconds + fp16.decode_seconds)
+                  << " q8_to_fp16_suffix_speedup=" << q8.prefill_seconds / fp16.prefill_seconds
+                  << " session_match=" << (correct ? "yes" : "no") << '\n';
         return correct ? 0 : 3;
     }
     if (fp16_only) {

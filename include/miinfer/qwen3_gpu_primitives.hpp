@@ -715,6 +715,17 @@ void launch_qwen35_decoupled_k_norm_rope_kv_store_batch_quant(
     const DevicePrefillState* prefill_state = nullptr,
     const DeviceDecodeState* decode_state = nullptr);
 
+// Restore a compact Q8/Q8 session layer into the FP16 runtime cache.
+void launch_q8q8_session_layer_to_fp16(
+    const std::uint8_t* q8q8_raw,
+    __half* key_cache_f16,
+    __half* value_cache_f16,
+    std::uint32_t tokens,
+    std::uint32_t cache_capacity,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    hipStream_t stream = nullptr);
+
 // V2-0019: Single-Token Quantized Decode Attention (FP16 / Q8 K / Q8 V)
 void launch_qwen35_tiled_online_attention_quant_dynamic(
     const float* q,
@@ -813,6 +824,14 @@ void launch_qwen35_spillfree_query_tiled_attention_v2_batch_f16(
 
 // V2-0043: reference-shaped 16-token x 2-head KQ/KV-reuse prototype.
 void launch_qwen35_kq_fragment_reuse_attention_batch_f16(
+    const float* q, const __half* key_cache, const __half* value_cache,
+    const float* gate, float* gated_output, float* split_workspace,
+    std::uint32_t token_count,
+    std::uint32_t base_position, std::uint32_t cache_capacity,
+    std::uint32_t query_heads, std::uint32_t kv_heads, std::uint32_t head_dim,
+    float scale, std::uint32_t num_splits, hipStream_t stream = nullptr);
+
+void launch_qwen35_kq_fragment_reuse_attention_batch_f16_fp32(
     const float* q, const __half* key_cache, const __half* value_cache,
     const float* gate, float* gated_output, float* split_workspace,
     std::uint32_t token_count,

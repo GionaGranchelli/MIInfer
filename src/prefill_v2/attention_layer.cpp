@@ -30,6 +30,11 @@ bool m31_q8_query_tiled_enabled() {
     return value != nullptr && std::strcmp(value, "0") != 0;
 }
 
+bool m31_fp16_attention_fp32_enabled() {
+    const char* value = std::getenv("MIINFER_M31_FP16_ATTN_FP32");
+    return value != nullptr && std::strcmp(value, "0") != 0;
+}
+
 bool v2_0043_real_compare_enabled() {
     const char* value = std::getenv("MIINFER_V2_0043_COMPARE_REAL");
     return value != nullptr && std::strcmp(value, "0") != 0;
@@ -315,11 +320,19 @@ void PrefillV2AttentionLayer::forward(
         && token_count >= 16 && token_count % 16 == 0
         && ws.splitk_attn_workspace != nullptr) {
         const auto launch_iteration26 = [&](float* attention_output) {
-            launch_qwen35_kq_fragment_reuse_attention_batch_f16(
-                ws.attn_q_rope, kv_cache.key_cache, kv_cache.value_cache,
-                ws.gate, attention_output, ws.splitk_attn_workspace,
-                token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
-                24, 4, 256, 1.0F / std::sqrt(256.0F), 3, stream);
+            if (m31_fp16_attention_fp32_enabled()) {
+                launch_qwen35_kq_fragment_reuse_attention_batch_f16_fp32(
+                    ws.attn_q_rope, kv_cache.key_cache, kv_cache.value_cache,
+                    ws.gate, attention_output, ws.splitk_attn_workspace,
+                    token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
+                    24, 4, 256, 1.0F / std::sqrt(256.0F), 32, stream);
+            } else {
+                launch_qwen35_kq_fragment_reuse_attention_batch_f16(
+                    ws.attn_q_rope, kv_cache.key_cache, kv_cache.value_cache,
+                    ws.gate, attention_output, ws.splitk_attn_workspace,
+                    token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
+                    24, 4, 256, 1.0F / std::sqrt(256.0F), 3, stream);
+            }
         };
         launch_iteration26(ws.attn_gated_output);
         if (v2_0043_real_compare_enabled() && layer_index_ == 3) {
@@ -472,11 +485,19 @@ void PrefillV2AttentionLayer::forward_profiled(
         && !kv_cache.is_k_q8() && !kv_cache.is_v_q8()
         && token_count >= 16 && token_count % 16 == 0
         && ws.splitk_attn_workspace != nullptr) {
-        launch_qwen35_kq_fragment_reuse_attention_batch_f16(
-            ws.attn_q_rope, kv_cache.key_cache, kv_cache.value_cache,
-            ws.gate, ws.attn_gated_output, ws.splitk_attn_workspace,
-            token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
-            24, 4, 256, 1.0F / std::sqrt(256.0F), 3, stream);
+        if (m31_fp16_attention_fp32_enabled()) {
+            launch_qwen35_kq_fragment_reuse_attention_batch_f16_fp32(
+                ws.attn_q_rope, kv_cache.key_cache, kv_cache.value_cache,
+                ws.gate, ws.attn_gated_output, ws.splitk_attn_workspace,
+                token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
+                24, 4, 256, 1.0F / std::sqrt(256.0F), 32, stream);
+        } else {
+            launch_qwen35_kq_fragment_reuse_attention_batch_f16(
+                ws.attn_q_rope, kv_cache.key_cache, kv_cache.value_cache,
+                ws.gate, ws.attn_gated_output, ws.splitk_attn_workspace,
+                token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
+                24, 4, 256, 1.0F / std::sqrt(256.0F), 3, stream);
+        }
     } else if (m31_q8_query_tiled_enabled() && base_position > 0
         && kv_cache.is_k_q8() && kv_cache.is_v_q8()
         && token_count >= 16 && token_count % 16 == 0

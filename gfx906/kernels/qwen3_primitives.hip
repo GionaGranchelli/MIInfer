@@ -3041,7 +3041,7 @@ __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_bat
 
     for (std::uint32_t tile_start = split_start; tile_start < work_end; tile_start += kTileK) {
         float dot[kRowsPerWarp] = {};
-        if constexpr (FP32_ACCUM) {
+        if constexpr (KEY_Q8) {
             std::int8_t* kq8_tmp = reinterpret_cast<std::int8_t*>(kv_tmp);
             for (std::uint32_t i = tid; i < kTileK * 256; i += 256) {
                 const std::uint32_t position = i / 256;
@@ -3099,15 +3099,23 @@ __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_bat
 #pragma unroll
                     for (std::uint32_t r = 0; r < kRowsPerWarp; ++r) {
                         const std::uint32_t row = warp * kRowsPerWarp + r;
-                        const __half2* k_pairs = reinterpret_cast<const __half2*>(&k_bits);
-                        const uint4 q_bits = *reinterpret_cast<const uint4*>(
-                            reinterpret_cast<const __half*>(shared) + row * 256
-                            + d_base + fragment * 8);
-                        const __half2* q_pairs = reinterpret_cast<const __half2*>(&q_bits);
+                        if constexpr (FP32_ACCUM) {
+                            const float* q_values = q_tmp_f32 + row * 256 + d_base + fragment * 8;
 #pragma unroll
-                        for (std::uint32_t pair = 0; pair < 4; ++pair) {
-                            asm volatile("v_dot2_f32_f16 %0, %1, %2, %0"
-                                : "+v"(dot[r]) : "v"(k_pairs[pair]), "v"(q_pairs[pair]));
+                            for (std::uint32_t d = 0; d < 8; ++d) {
+                                dot[r] = fmaf(q_values[d], __half2float(reinterpret_cast<const __half*>(&k_bits)[d]), dot[r]);
+                            }
+                        } else {
+                            const __half2* k_pairs = reinterpret_cast<const __half2*>(&k_bits);
+                            const uint4 q_bits = *reinterpret_cast<const uint4*>(
+                                reinterpret_cast<const __half*>(shared) + row * 256
+                                + d_base + fragment * 8);
+                            const __half2* q_pairs = reinterpret_cast<const __half2*>(&q_bits);
+#pragma unroll
+                            for (std::uint32_t pair = 0; pair < 4; ++pair) {
+                                asm volatile("v_dot2_f32_f16 %0, %1, %2, %0"
+                                    : "+v"(dot[r]) : "v"(k_pairs[pair]), "v"(q_pairs[pair]));
+                            }
                         }
                     }
                 }
@@ -3168,7 +3176,7 @@ __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_bat
         }
 
         for (std::uint32_t v_tile = 0; v_tile < kTileK; v_tile += 16) {
-            if constexpr (FP32_ACCUM) {
+            if constexpr (VALUE_Q8) {
                 if (tid < 16) {
                     const std::uint32_t cache_position = tile_start + v_tile + tid;
                     q8_scale_tmp[tid] = cache_position < work_end && cache_position < cache_capacity
@@ -3184,7 +3192,7 @@ __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_bat
                 const std::size_t cache_index =
                     (static_cast<std::size_t>(kv_head) * cache_capacity + cache_position) * 256
                     + dimension;
-                if constexpr (FP32_ACCUM) {
+                if constexpr (VALUE_Q8) {
                     uint2 packed = make_uint2(0, 0);
                     if (cache_position < work_end && cache_position < cache_capacity) {
                         packed = *reinterpret_cast<const uint2*>(value_cache_q8 + cache_index);
@@ -3212,7 +3220,7 @@ __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_bat
                     const std::uint32_t row_split_end = min(row_split_start + row_chunk, row_length);
                     if (token >= token_count || cache_position < row_split_start
                             || cache_position >= row_split_end || cache_position >= work_end) continue;
-                    if constexpr (FP32_ACCUM) {
+                    if constexpr (VALUE_Q8) {
                         const auto* v = reinterpret_cast<const std::int8_t*>(kv_tmp)
                             + (p - v_tile) * 256 + lane * 8;
                         const float weight = kq_fragment[row * kTileK + p]
@@ -3221,6 +3229,13 @@ __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_bat
                         acc[r][1] = make_float2(fmaf(static_cast<float>(v[2]), weight, acc[r][1].x), fmaf(static_cast<float>(v[3]), weight, acc[r][1].y));
                         acc[r][2] = make_float2(fmaf(static_cast<float>(v[4]), weight, acc[r][2].x), fmaf(static_cast<float>(v[5]), weight, acc[r][2].y));
                         acc[r][3] = make_float2(fmaf(static_cast<float>(v[6]), weight, acc[r][3].x), fmaf(static_cast<float>(v[7]), weight, acc[r][3].y));
+                    } else if constexpr (FP32_ACCUM) {
+                        const __half* v = kv_tmp + (p - v_tile) * 256 + lane * 8;
+                        const float weight = kq_fragment[row * kTileK + p];
+                        acc[r][0] = make_float2(fmaf(__half2float(v[0]), weight, acc[r][0].x), fmaf(__half2float(v[1]), weight, acc[r][0].y));
+                        acc[r][1] = make_float2(fmaf(__half2float(v[2]), weight, acc[r][1].x), fmaf(__half2float(v[3]), weight, acc[r][1].y));
+                        acc[r][2] = make_float2(fmaf(__half2float(v[4]), weight, acc[r][2].x), fmaf(__half2float(v[5]), weight, acc[r][2].y));
+                        acc[r][3] = make_float2(fmaf(__half2float(v[6]), weight, acc[r][3].x), fmaf(__half2float(v[7]), weight, acc[r][3].y));
                     } else {
                         const __half* v = kv_tmp + (p - v_tile) * 256 + lane * 8;
                         const __half2 v01 = *reinterpret_cast<const __half2*>(v + 0);
@@ -5587,6 +5602,92 @@ void launch_qwen35_kq_fragment_reuse_attention_batch_f16(
         partial_max, partial_sum, partial_acc, gate, gated_output,
         token_count, query_heads, head_dim, num_splits,
         static_cast<const DevicePrefillState*>(nullptr));
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_kq_fragment_reuse_attention_batch_f16_fp32(
+    const float* q, const __half* key_cache, const __half* value_cache,
+    const float* gate, float* gated_output, float* split_workspace,
+    std::uint32_t token_count,
+    std::uint32_t base_position, std::uint32_t cache_capacity,
+    std::uint32_t query_heads, std::uint32_t kv_heads, std::uint32_t head_dim,
+    float scale, std::uint32_t num_splits, hipStream_t stream) {
+    if (q == nullptr || key_cache == nullptr || value_cache == nullptr || gate == nullptr
+        || gated_output == nullptr || split_workspace == nullptr || token_count == 0
+        || base_position > cache_capacity
+        || token_count > cache_capacity - base_position || query_heads != 24
+        || kv_heads != 4 || head_dim != 256 || !std::isfinite(scale)
+        || num_splits == 0 || num_splits > 64) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    const std::uint32_t groups = kv_heads * (query_heads / kv_heads / 2);
+    const std::size_t total_meta = static_cast<std::size_t>(num_splits) * token_count * query_heads;
+    float* partial_max = split_workspace;
+    float* partial_sum = partial_max + total_meta;
+    float* partial_acc = partial_sum + total_meta;
+    const std::uint32_t blocks = (token_count + 15) / 16;
+    const std::size_t shared_bytes = 32 * 256 * sizeof(float)
+        + 32 * 128 * sizeof(__half) + 32 * 32 * sizeof(float) + 4 * 32 * sizeof(float);
+    hipLaunchKernelGGL((qwen35_kq_fragment_reuse_attention_batch_kernel<false, false, true>),
+        dim3(blocks, num_splits, groups), dim3(32, 8), shared_bytes, stream,
+        q, key_cache, value_cache, nullptr, nullptr, nullptr, nullptr,
+        split_workspace, token_count, base_position, cache_capacity, num_splits, scale);
+    MIINFER_HIP_CHECK(hipGetLastError());
+    hipLaunchKernelGGL(qwen35_splitk_suffix_attn_stage2_kernel,
+        dim3(token_count * query_heads), dim3(64), 0, stream,
+        partial_max, partial_sum, partial_acc, gate, gated_output,
+        token_count, query_heads, head_dim, num_splits,
+        static_cast<const DevicePrefillState*>(nullptr));
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+__global__ void q8q8_session_layer_to_fp16_kernel(
+    const std::uint8_t* __restrict__ raw,
+    __half* __restrict__ key_cache,
+    __half* __restrict__ value_cache,
+    std::uint32_t tokens,
+    std::uint32_t cache_capacity,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim) {
+    const std::size_t head_elements = static_cast<std::size_t>(tokens) * head_dim;
+    const std::size_t matrix_elements = static_cast<std::size_t>(kv_heads) * head_elements;
+    const std::size_t index = static_cast<std::size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
+    if (index >= 2 * matrix_elements) return;
+
+    const bool is_value = index >= matrix_elements;
+    const std::size_t matrix_index = index - (is_value ? matrix_elements : 0);
+    const std::uint32_t head = static_cast<std::uint32_t>(matrix_index / head_elements);
+    const std::size_t row_offset = matrix_index % head_elements;
+    const std::uint32_t token = static_cast<std::uint32_t>(row_offset / head_dim);
+
+    const std::size_t source_head_stride = static_cast<std::size_t>(tokens) * (head_dim + sizeof(__half));
+    const std::size_t source_matrix_stride = static_cast<std::size_t>(kv_heads) * source_head_stride;
+    const std::uint8_t* source_head = raw + (is_value ? source_matrix_stride : 0) + head * source_head_stride;
+    const auto* q8 = reinterpret_cast<const std::int8_t*>(source_head);
+    const auto* scales = reinterpret_cast<const __half*>(source_head + head_elements);
+    const float value = static_cast<float>(q8[row_offset]) * __half2float(scales[token]);
+    __half* output = is_value ? value_cache : key_cache;
+    output[static_cast<std::size_t>(head) * cache_capacity * head_dim + row_offset] = __float2half_rn(value);
+}
+
+void launch_q8q8_session_layer_to_fp16(
+    const std::uint8_t* q8q8_raw,
+    __half* key_cache_f16,
+    __half* value_cache_f16,
+    std::uint32_t tokens,
+    std::uint32_t cache_capacity,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    hipStream_t stream) {
+    if (q8q8_raw == nullptr || key_cache_f16 == nullptr || value_cache_f16 == nullptr ||
+        tokens == 0 || tokens > cache_capacity || kv_heads == 0 || head_dim == 0) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    const std::size_t total = 2 * static_cast<std::size_t>(kv_heads) * tokens * head_dim;
+    const std::uint32_t blocks = static_cast<std::uint32_t>((total + 255) / 256);
+    hipLaunchKernelGGL(q8q8_session_layer_to_fp16_kernel,
+        dim3(blocks), dim3(256), 0, stream,
+        q8q8_raw, key_cache_f16, value_cache_f16, tokens, cache_capacity, kv_heads, head_dim);
     MIINFER_HIP_CHECK(hipGetLastError());
 }
 

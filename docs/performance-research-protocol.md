@@ -21,14 +21,27 @@ freeze target
 
 This is process and evidence work. It does not authorize a new kernel or a new experiment by itself.
 
-## Current frontier status — 2026-09-29
+## Current frontier status — 2026-10-13
 
-V2-0043 is closed **PRIMARY GOAL PASS** on immutable production checkpoint
-`e68c0f20`. V2-0044's one evidence-backed precision correction failed the
-real production-path attention-output tolerance and was not timed; the stretch
-is closed REJECTED. There is no active performance `PRIMARY` until a new goal
-is selected. Do not alter the accepted checkpoint or reopen precision/schedule
-variants without materially new causal evidence.
+M31 performance recovery is the active goal. Its **PRIMARY** is a materially
+faster, correct long-context GQA attention path for Qwen3.8-27B on one MI50,
+serving both cold 64K prefill and persistent suffixes. EXP-0404 measured a
+501.057 s cold 65,536-token FP16-KV prefill, with attention taking 58.448% of
+the final 512-token tile. EXP-0406 found that increasing the physical macro
+tile to 1,024 tokens has negligible effect at a restored 73K prefix (1.007x).
+
+Do not repeat split-count or 512/1,024 tile-size tuning. EXP-0405's Q8
+query-tiled route either failed full-model parity or remained slower in the
+exact path. EXP-0407's Q8-session-to-FP16 path reduced 4K suffix time from
+88.551 s to 52.643 s, but missed both the 10 s target and the 0.9999 logit
+cosine gate. The fast path is not production-qualified. The next candidate
+must change the attention dataflow materially and preserve model correctness.
+
+V2-0043 remains closed **PRIMARY GOAL PASS** on immutable production
+checkpoint `e68c0f20`. V2-0044's evidence-backed precision correction failed
+the real production-path attention-output tolerance and remains rejected. Do
+not alter that qualified checkpoint; the active M31 work is isolated on its
+own branch.
 
 The request-window traces and exact source comparison are recorded in
 [`EXP-V2-0042`](../experiments/EXP-V2-0042-p8192-trace-and-sampling-regression.md)

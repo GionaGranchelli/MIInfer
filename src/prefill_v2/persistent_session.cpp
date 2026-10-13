@@ -1,5 +1,6 @@
 #include <chrono>
 #include <ctime>
+#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -187,8 +188,21 @@ bool PersistentSession::load_from_file(
     if (header.gdn_layers != kExpectedGdnLayers || header.gqa_layers != kExpectedGqaLayers) {
         return false;
     }
+    const auto session_kv_mode = static_cast<KvCacheQuantMode>(header.kv_quant_mode);
+    const char* convert_q8_to_fp16_env = std::getenv("MIINFER_M31_Q8_TO_FP16_RESTORE");
+    const bool convert_q8_to_fp16 = session_kv_mode == KvCacheQuantMode::kQ8Q8 &&
+        model.kv_quant_mode() == KvCacheQuantMode::kFp16Fp16 &&
+        convert_q8_to_fp16_env != nullptr && std::strcmp(convert_q8_to_fp16_env, "0") != 0;
+    if (session_kv_mode != model.kv_quant_mode() && !convert_q8_to_fp16) return false;
 
     const std::uint32_t P = header.prefix_length;
+    const std::size_t layer_kv_bytes = convert_q8_to_fp16
+        ? 2 * static_cast<std::size_t>(P) * kKvHeads * (kHeadDim * sizeof(std::int8_t) + sizeof(__half))
+        : model.kv_storage(0).raw_tokens_bytes(P);
+    if (header.tokens_bytes != static_cast<std::uint64_t>(P) * sizeof(std::uint32_t) ||
+        header.kv_bytes != static_cast<std::uint64_t>(layer_kv_bytes) * kExpectedGqaLayers) {
+        return false;
+    }
     out_prefix_tokens.resize(P);
     if (!in.read(reinterpret_cast<char*>(out_prefix_tokens.data()), header.tokens_bytes)) {
         return false;
@@ -248,12 +262,13 @@ bool PersistentSession::load_from_file(
         return false;
     }
 
-    const std::size_t single_layer_kv_bytes = header.kv_bytes / kExpectedGqaLayers;
     for (std::size_t j = 0; j < kExpectedGqaLayers; ++j) {
-        model.kv_storage(j).upload_raw(
-            kv_host_buf.data() + j * single_layer_kv_bytes,
-            P,
-            stream);
+        const auto* layer_kv = kv_host_buf.data() + j * layer_kv_bytes;
+        if (convert_q8_to_fp16) {
+            model.kv_storage(j).upload_q8q8_raw_as_fp16(layer_kv, P, stream);
+        } else {
+            model.kv_storage(j).upload_raw(layer_kv, P, stream);
+        }
     }
 
     if (stream != nullptr) {

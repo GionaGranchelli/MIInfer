@@ -1,5 +1,6 @@
 #include "miinfer/prefill_v2/kv_cache.hpp"
 #include "miinfer/hip_check.hpp"
+#include "miinfer/qwen3_gpu_primitives.hpp"
 
 #include <hip/hip_runtime.h>
 #include <stdexcept>
@@ -366,6 +367,32 @@ void AttentionLayerKvCacheStorage::upload_raw(const void* host_src, std::size_t 
             }
         }
     }
+}
+
+void AttentionLayerKvCacheStorage::upload_q8q8_raw_as_fp16(
+    const void* host_src, std::size_t tokens, hipStream_t stream) {
+    if (quant_mode_ != KvCacheQuantMode::kFp16Fp16 || d_key_cache_ == nullptr || d_value_cache_ == nullptr) {
+        throw std::runtime_error("AttentionLayerKvCacheStorage: Q8/Q8 restore requires FP16/FP16 destination");
+    }
+    if (tokens > capacity_) {
+        throw std::runtime_error("AttentionLayerKvCacheStorage: tokens exceeds capacity");
+    }
+    if (tokens == 0 || host_src == nullptr) return;
+
+    const std::size_t raw_bytes = 2 * tokens * kKvHeads * (kHeadDim * sizeof(std::int8_t) + sizeof(__half));
+    std::uint8_t* d_raw = nullptr;
+    MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&d_raw), raw_bytes));
+    try {
+        MIINFER_HIP_CHECK(hipMemcpyAsync(d_raw, host_src, raw_bytes, hipMemcpyHostToDevice, stream));
+        launch_q8q8_session_layer_to_fp16(
+            d_raw, d_key_cache_, d_value_cache_, static_cast<std::uint32_t>(tokens),
+            static_cast<std::uint32_t>(capacity_), kKvHeads, kHeadDim, stream);
+        MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
+    } catch (...) {
+        (void)hipFree(d_raw);
+        throw;
+    }
+    MIINFER_HIP_CHECK(hipFree(d_raw));
 }
 
 } // namespace miinfer::prefill_v2
