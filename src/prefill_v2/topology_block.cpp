@@ -96,15 +96,18 @@ void PrefillV2TopologyBlock::forward_profiled(
     MIINFER_HIP_CHECK(hipEventRecord(ev_start, stream));
 
     // Layer 0 (GDN): d_ping -> d_pong
-    gdn0_.forward(d_ping, d_pong, state0_in, state0_out, ws, token_count, stream);
+    gdn0_.forward_profiled(d_ping, d_pong, state0_in, state0_out, ws, token_count,
+                           breakdown.gdn0_detail, stream);
     MIINFER_HIP_CHECK(hipEventRecord(ev_l0, stream));
 
     // Layer 1 (GDN): d_pong -> d_ping
-    gdn1_.forward(d_pong, d_ping, state1_in, state1_out, ws, token_count, stream);
+    gdn1_.forward_profiled(d_pong, d_ping, state1_in, state1_out, ws, token_count,
+                           breakdown.gdn1_detail, stream);
     MIINFER_HIP_CHECK(hipEventRecord(ev_l1, stream));
 
     // Layer 2 (GDN): d_ping -> d_pong
-    gdn2_.forward(d_ping, d_pong, state2_in, state2_out, ws, token_count, stream);
+    gdn2_.forward_profiled(d_ping, d_pong, state2_in, state2_out, ws, token_count,
+                           breakdown.gdn2_detail, stream);
     MIINFER_HIP_CHECK(hipEventRecord(ev_l2, stream));
 
     // Layer 3 (GQA): d_pong -> d_final_output

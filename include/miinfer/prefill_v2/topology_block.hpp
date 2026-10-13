@@ -22,6 +22,9 @@ struct TopologyBlockProfileBreakdown {
     double gdn2_ms = 0.0;
     double gqa3_ms = 0.0;
     double total_block_ms = 0.0;
+    RecurrentLayerPhaseTimings gdn0_detail;
+    RecurrentLayerPhaseTimings gdn1_detail;
+    RecurrentLayerPhaseTimings gdn2_detail;
     AttentionLayerProfileBreakdown gqa3_detail;
 };
 

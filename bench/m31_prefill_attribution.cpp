@@ -149,7 +149,20 @@ int main(int argc, char** argv) {
             const auto& b = profile.block_breakdowns[i];
             std::cout << "block=" << i << " gdn_ms=" << (b.gdn0_ms + b.gdn1_ms + b.gdn2_ms)
                       << " gqa_ms=" << b.gqa3_ms
-                      << " causal_attention_ms=" << b.gqa3_detail.causal_attn_ms << '\n';
+                      << " causal_attention_ms=" << b.gqa3_detail.causal_attn_ms
+                      << " gdn0_mmq_qkv_gate_ms=" << b.gdn0_detail.qkv_gate_proj_ms
+                      << " gdn0_mmq_ffn_gate_up_ms=" << b.gdn0_detail.ffn_gate_up_ms
+                      << " gdn0_mmq_down_ms=" << b.gdn0_detail.swiglu_down_residual_ms
+                      << " gdn1_mmq_qkv_gate_ms=" << b.gdn1_detail.qkv_gate_proj_ms
+                      << " gdn1_mmq_ffn_gate_up_ms=" << b.gdn1_detail.ffn_gate_up_ms
+                      << " gdn1_mmq_down_ms=" << b.gdn1_detail.swiglu_down_residual_ms
+                      << " gdn2_mmq_qkv_gate_ms=" << b.gdn2_detail.qkv_gate_proj_ms
+                      << " gdn2_mmq_ffn_gate_up_ms=" << b.gdn2_detail.ffn_gate_up_ms
+                      << " gdn2_mmq_down_ms=" << b.gdn2_detail.swiglu_down_residual_ms
+                      << " gqa_qkv_proj_ms=" << b.gqa3_detail.qkv_proj_ms
+                      << " gqa_o_proj_ms=" << b.gqa3_detail.o_proj_ms
+                      << " gqa_ffn_gate_up_ms=" << b.gqa3_detail.ffn_gate_up_ms
+                      << " gqa_ffn_down_ms=" << b.gqa3_detail.swiglu_down_res_ms << '\n';
         }
 
         MIINFER_HIP_CHECK(hipFree(d_tokens));
