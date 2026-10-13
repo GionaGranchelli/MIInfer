@@ -36,6 +36,11 @@ K/V rows for a Q-head pair in LDS. The normal template path and runtime
 dispatch remain unchanged. A focused benchmark compares the specialization
 with the established Q8/Q8 path.
 
+The first specialization kept the generic four-position temporaries live and
+reported 13 VGPR spills. It was rejected before timing. The current version
+consumes one staged position at a time to reduce live state; its compiler
+resource report is still pending.
+
 ## Results
 
 Pending.

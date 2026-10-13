@@ -143,7 +143,7 @@ int main() {
     std::cout << std::fixed << std::setprecision(7)
               << "correctness_max_abs=" << max_abs << " rmse=" << rmse << " cosine=" << cosine << '\n';
     if (!std::isfinite(max_abs) || max_abs > 0.01 || cosine < 0.9999) {
-        std::cerr << "Q8 Q=2 candidate diverged from the existing Q8/Q8 control\n";
+        std::cerr << "Q8 head-pair candidate diverged from the existing Q8/Q8 control\n";
         return 1;
     }
 
