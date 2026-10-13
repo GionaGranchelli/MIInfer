@@ -135,6 +135,14 @@ A live OMP v18.10.2 print-mode smoke on the rebuilt server asked for the same tw
 
 After restarting the MIInfer server, I resumed the old high-context OMP session. OMP sent 13,321- and 15,542-token prompts; both requests reported zero reused tokens and `persistent_session_restored=false`. This resume path did not carry the 65K context into the restarted client session, so it cannot prove high-context restore. A single long-lived OMP RPC session is the next candidate: keep the full conversation in memory through eight prompts, then restart only MIInfer after turn four and inspect the disk-restore telemetry on the next message.
 
+### Long-lived OMP RPC high-context turn
+
+I launched Oh My Pi v18.10.2 in its JSONL RPC mode and sent the 246,640-character relevant-context bundle (SHA-256 `2ed2d7b915f45a1951909a5c6664fb09f2e0813bbbad07ab1d5e4dcc80350478`) with a one-turn inspect-only task. MIInfer request 7 fully prefetched 74,992 prompt tokens with zero reused tokens. Configured capacity was 98,304, leaving 23,312 tokens of initial headroom. The turn took 2,132.78 seconds end to end and executed seven bash calls with seven returned tool-result messages; it made no file edits.
+
+The same OMP RPC session then issued requests 8–13. MIInfer reused the complete prior prefix on every request: prompt size grew from 79,897 to 84,654 tokens, with each request matching the previous prompt length. The final context headroom after this tool exchange was 13,650 tokens. MIInfer saved checkpoint `sess_ecbc6e016ddd265f_p84654.miinfer` (2,954,811,733 bytes). The OMP session transcript is saved locally as `01a132e2-b7cc-744c-b0ec-6bd423af3459.jsonl`; the raw RPC frame capture is local-only because it contains the full prompt and tool outputs.
+
+The RPC driver received `session_settled` and closed OMP normally after turn one because its parent stdin reached EOF. This did not corrupt the saved transcript or MIInfer checkpoint, but it means turns two through eight still need to resume from that saved session. The next check is whether RPC resume preserves the 84K prompt and restores the checkpoint; if it does, continue with small tool outputs to protect remaining context headroom.
+
 On GPU2, neither a fresh OMP process nor a resumed OMP transcript demonstrated a fast follow-up. Two requests entered prefill and remained active for about three minutes before I stopped the GPU2 container, which exited with code 137. The resumed transcript ID was `01a131bf-1af4-734d-9113-f0da8b510ec9`. An exact no-session replay of the original print-mode request also entered prefill and stayed active for one minute before I stopped it. Disk checkpoint restore did not produce a fast response in these attempts. The eight-turn task and a cached follow-up on GPU2 remain unproven.
 
 ### MIInfer service recovery after forced stop
@@ -151,7 +159,7 @@ The same OMP session was then resumed with a longer client deadline. Request 8 e
 
 ## Decision
 
-**RETEST.** OMP tool execution and disk-checkpoint restore across OMP client-process restart are demonstrated at 13K context: the restored turn reached a real tool call in 6.13 seconds. At 78K context, MIInfer processed 65K new relevant tokens and saved a checkpoint, but the next OMP process reused only 13,785 tokens and replayed 65,185 tokens, taking 24.5 minutes; its 3-minute client timeout prevented tool execution. The plural-wrapper parser fix is now built and verified end to end with two real short-context OMP tools. High-context state still does not survive this OMP resume path: the post-server-restart attempt sent only 13K/15K prompts with no restore. Next, run OMP in one persistent RPC process with the relevant context, complete the eight-turn task, save the MIInfer checkpoint after turn four, restart MIInfer while OMP stays live, and measure the first follow-up action plus restore telemetry. Keep GPU2 idle.
+**RETEST.** OMP tool execution and disk-checkpoint restore across OMP client-process restart are demonstrated at 13K context: the restored turn reached a real tool call in 6.13 seconds. A fresh long-lived RPC session has now processed 74,992 prompt tokens, executed seven real bash calls/results, and reused its full growing prefix through 84,654 tokens. Its disk checkpoint is 2.95 GB. The RPC transcript was saved after turn one; next verify that resuming this saved session retains the 84K context and MIInfer state. If it does, continue the coding task through eight turns, checkpoint after turn four, restart MIInfer at that boundary, and measure the restored follow-up action. If it again resumes at 13K, the exact client-persistence gap remains the blocker. Keep GPU2 idle.
 
 ## Evidence
 
