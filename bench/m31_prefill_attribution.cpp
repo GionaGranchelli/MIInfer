@@ -2,6 +2,8 @@
 #include <cmath>
 #include <cstdint>
 #include <iomanip>
+#include <fstream>
+#include <iterator>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -10,6 +12,7 @@
 #include "miinfer/device_validation.hpp"
 #include "miinfer/hip_check.hpp"
 #include "miinfer/prefill_v2/model.hpp"
+#include "miinfer/qwen3_tokenizer.hpp"
 #include "miinfer/qwen35_model.hpp"
 
 #include <hip/hip_runtime.h>
@@ -21,6 +24,14 @@ int main(int argc, char** argv) {
     try {
         const std::string model_path = argc > 1 ? argv[1] : "/models/Qwen3.8-27B-Q4_K_M.gguf";
         const std::uint32_t context = argc > 2 ? static_cast<std::uint32_t>(std::stoul(argv[2])) : 8192;
+        bool fp16 = false;
+        std::string prompt_file;
+        for (int i = 3; i < argc; ++i) {
+            const std::string arg(argv[i]);
+            if (arg == "--fp16") fp16 = true;
+            else if (arg == "--prompt-file" && i + 1 < argc) prompt_file = argv[++i];
+            else throw std::runtime_error("usage: miinfer-m31-prefill-attribution MODEL.gguf CONTEXT [--fp16] [--prompt-file PATH]");
+        }
         if (context < 1024 || context % kMaxPrefillBatch != 0) {
             throw std::runtime_error("context must be a multiple of 512 and at least 1024");
         }
@@ -36,10 +47,28 @@ int main(int argc, char** argv) {
         std::cout << "profile_device_bdf=" << pci_bus_id << '\n';
 
         const auto source = Qwen35Model::load(model_path);
-        PrefillV2Model model(source, context, false, KvCacheQuantMode::kQ8Q8);
+        if (fp16 && ::setenv("MIINFER_V2_0043_GQA_ATTENTION", "1", 1) != 0) {
+            throw std::runtime_error("failed to enable the existing tiled attention path");
+        }
+        const auto kv_mode = fp16 ? KvCacheQuantMode::kFp16Fp16 : KvCacheQuantMode::kQ8Q8;
+        PrefillV2Model model(source, context + 4096, false, kv_mode);
         std::vector<std::uint32_t> host_tokens(context);
-        for (std::uint32_t i = 0; i < context; ++i) {
-            host_tokens[i] = (i * 37u + 101u) % source.config().vocab_size;
+        if (prompt_file.empty()) {
+            for (std::uint32_t i = 0; i < context; ++i) {
+                host_tokens[i] = (i * 37u + 101u) % source.config().vocab_size;
+            }
+        } else {
+            std::ifstream input(prompt_file, std::ios::binary);
+            if (!input) throw std::runtime_error("failed to open prompt file: " + prompt_file);
+            const std::string text(std::istreambuf_iterator<char>(input), {});
+            const auto encoded = Qwen3Tokenizer::load(*source.file()).encode(text);
+            if (encoded.size() < context) {
+                throw std::runtime_error("prompt file has fewer tokens than the requested context");
+            }
+            std::copy_n(encoded.begin(), context, host_tokens.begin());
+            std::cout << "prompt_text_bytes=" << text.size()
+                      << " prompt_tokens_available=" << encoded.size()
+                      << " prompt_tokens_processed=" << context << '\n';
         }
 
         std::uint32_t* d_tokens = nullptr;
@@ -78,19 +107,19 @@ int main(int argc, char** argv) {
 
         std::cout << std::fixed << std::setprecision(3)
                   << "profile_context=" << context << " tile=" << kMaxPrefillBatch
-                  << " profile_base=" << profile_pos << " kv=Q8/Q8\n"
+                  << " profile_base=" << profile_pos << " kv=" << (fp16 ? "FP16/FP16" : "Q8/Q8") << '\n'
                   << "profile_tile_gpu_ms=" << profile.total_model_ms
                   << " embedding_ms=" << profile.embedding_ms
                   << " final_norm_ms=" << profile.final_norm_ms
                   << " gqa_blocks_ms=" << gqa_total
-                  << " q8_attention_ms=" << attention_total
-                  << " q8_attention_pct=" << (profile.total_model_ms > 0.0 ? 100.0 * attention_total / profile.total_model_ms : 0.0)
+                  << " causal_attention_ms=" << attention_total
+                  << " causal_attention_pct=" << (profile.total_model_ms > 0.0 ? 100.0 * attention_total / profile.total_model_ms : 0.0)
                   << " finite_final_hidden=yes\n";
         for (std::size_t i = 0; i < profile.block_breakdowns.size(); ++i) {
             const auto& b = profile.block_breakdowns[i];
             std::cout << "block=" << i << " gdn_ms=" << (b.gdn0_ms + b.gdn1_ms + b.gdn2_ms)
                       << " gqa_ms=" << b.gqa3_ms
-                      << " q8_attention_ms=" << b.gqa3_detail.causal_attn_ms << '\n';
+                      << " causal_attention_ms=" << b.gqa3_detail.causal_attn_ms << '\n';
         }
 
         MIINFER_HIP_CHECK(hipFree(d_tokens));
