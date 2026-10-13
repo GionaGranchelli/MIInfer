@@ -2960,7 +2960,7 @@ __global__ void qwen35_quantize_q8_query_kernel(
 // fragment for all 32 rows, then the same workspace is overwritten once with
 // V and consumed across those rows before the next K tile.
 template <bool KEY_Q8, bool VALUE_Q8, bool FP32_ACCUM, bool QUERY_Q8 = false,
-          bool USE_PREFILL_STATE = false>
+          bool USE_PREFILL_STATE = false, bool DOT4_ILP2 = false>
 __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_batch_kernel(
     const float* __restrict__ q, const __half* __restrict__ key_cache,
     const __half* __restrict__ value_cache,
@@ -3096,7 +3096,53 @@ __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_bat
     for (std::uint32_t tile_start = split_start; tile_start < work_end; tile_start += kTileK) {
         float dot[kRowsPerWarp] = {};
         std::int32_t integer_dot[kRowsPerWarp] = {};
-        if constexpr (KEY_Q8 && QUERY_Q8) {
+        std::int32_t integer_dot_odd[kRowsPerWarp] = {};
+        if constexpr (KEY_Q8 && QUERY_Q8 && DOT4_ILP2) {
+            // Interleave two independent 32-step accumulators instead of one 64-step chain.
+            std::uint32_t* kq8_packed_tmp = reinterpret_cast<std::uint32_t*>(kv_tmp);
+            for (std::uint32_t i = tid; i < kTileK * 64; i += 256) {
+                const std::uint32_t position = i / 64;
+                const std::uint32_t dword = i % 64;
+                const std::uint32_t cache_position = tile_start + position;
+                std::uint32_t key = 0U;
+                if (cache_position < work_end && cache_position < cache_capacity) {
+                    const std::size_t cache_index =
+                        (static_cast<std::size_t>(kv_head) * cache_capacity + cache_position) * 256
+                        + dword * 4;
+                    key = *reinterpret_cast<const std::uint32_t*>(key_cache_q8 + cache_index);
+                }
+                kq8_packed_tmp[dword * kTileK + position] = key;
+            }
+            if (tid < kTileK) {
+                const std::uint32_t cache_position = tile_start + tid;
+                q8_scale_tmp[tid] = cache_position < work_end && cache_position < cache_capacity
+                    ? __half2float(key_scales[static_cast<std::size_t>(kv_head) * cache_capacity + cache_position])
+                    : 0.0f;
+            }
+            __syncthreads();
+            for (std::uint32_t dword = 0; dword < 64; dword += 2) {
+                const std::uint32_t even_key = kq8_packed_tmp[dword * kTileK + lane];
+                const std::uint32_t odd_key = kq8_packed_tmp[(dword + 1) * kTileK + lane];
+                #pragma unroll
+                for (std::uint32_t r = 0; r < kRowsPerWarp; ++r) {
+                    const std::uint32_t row = warp * kRowsPerWarp + r;
+                    const std::uint32_t* packed_query = q_tmp_q8 + row * 64 + dword;
+                    integer_dot[r] = __builtin_amdgcn_sdot4(
+                        static_cast<int>(packed_query[0]), static_cast<int>(even_key),
+                        integer_dot[r], false);
+                    integer_dot_odd[r] = __builtin_amdgcn_sdot4(
+                        static_cast<int>(packed_query[1]), static_cast<int>(odd_key),
+                        integer_dot_odd[r], false);
+                }
+            }
+            #pragma unroll
+            for (std::uint32_t r = 0; r < kRowsPerWarp; ++r) {
+                const std::uint32_t row = warp * kRowsPerWarp + r;
+                dot[r] = static_cast<float>(integer_dot[r] + integer_dot_odd[r])
+                    * q8_query_scale_tmp[row] * q8_scale_tmp[lane];
+            }
+            __syncthreads();
+        } else if constexpr (KEY_Q8 && QUERY_Q8) {
             std::uint32_t* kq8_packed_tmp = reinterpret_cast<std::uint32_t*>(kv_tmp);
             for (std::uint32_t i = tid; i < kTileK * 64; i += 256) {
                 const std::uint32_t position = i / 64;
@@ -5834,7 +5880,7 @@ void launch_qwen35_kq_fragment_reuse_attention_batch_q8_dot4(
     std::uint32_t cache_capacity, std::uint32_t query_heads,
     std::uint32_t kv_heads, std::uint32_t head_dim, float scale,
     std::uint32_t num_splits, hipStream_t stream,
-    const DevicePrefillState* prefill_state) {
+    const DevicePrefillState* prefill_state, bool ilp2) {
     if (q == nullptr || query_cache_q8 == nullptr || query_scales == nullptr
         || key_cache_q8 == nullptr || key_scales == nullptr || value_cache_q8 == nullptr
         || value_scales == nullptr || gate == nullptr || gated_output == nullptr
@@ -5858,11 +5904,19 @@ void launch_qwen35_kq_fragment_reuse_attention_batch_q8_dot4(
     constexpr std::size_t shared_bytes = 32 * 256 * sizeof(std::int8_t)
         + 32 * sizeof(float) + 32 * 128 * sizeof(__half)
         + 32 * 32 * sizeof(float) + 5 * 32 * sizeof(float);
-    hipLaunchKernelGGL((qwen35_kq_fragment_reuse_attention_batch_kernel<true, true, true, true, true>),
-        dim3(blocks, num_splits, groups), dim3(32, 8), shared_bytes, stream,
-        q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,
-        query_cache_q8, query_scales, split_workspace,
-        token_count, base_position, cache_capacity, num_splits, scale, prefill_state);
+    if (ilp2) {
+        hipLaunchKernelGGL((qwen35_kq_fragment_reuse_attention_batch_kernel<true, true, true, true, true, true>),
+            dim3(blocks, num_splits, groups), dim3(32, 8), shared_bytes, stream,
+            q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,
+            query_cache_q8, query_scales, split_workspace,
+            token_count, base_position, cache_capacity, num_splits, scale, prefill_state);
+    } else {
+        hipLaunchKernelGGL((qwen35_kq_fragment_reuse_attention_batch_kernel<true, true, true, true, true>),
+            dim3(blocks, num_splits, groups), dim3(32, 8), shared_bytes, stream,
+            q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,
+            query_cache_q8, query_scales, split_workspace,
+            token_count, base_position, cache_capacity, num_splits, scale, prefill_state);
+    }
     MIINFER_HIP_CHECK(hipGetLastError());
     hipLaunchKernelGGL(qwen35_splitk_suffix_attn_stage2_kernel,
         dim3(token_count * query_heads), dim3(64), 0, stream,

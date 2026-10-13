@@ -258,7 +258,8 @@ PrefillV2Model::PrefillV2Model(PrefillV2Model&& other) noexcept
       decode_graph_exec_(other.decode_graph_exec_),
       d_prefill_state_(other.d_prefill_state_),
       suffix_graph_exec_(other.suffix_graph_exec_),
-      suffix_graph_q8_dot4_enabled_(other.suffix_graph_q8_dot4_enabled_) {
+      suffix_graph_q8_dot4_enabled_(other.suffix_graph_q8_dot4_enabled_),
+      suffix_graph_q8_dot4_ilp2_enabled_(other.suffix_graph_q8_dot4_ilp2_enabled_) {
     other.d_embedding_weights_ = nullptr;
     other.d_final_norm_weights_ = nullptr;
     other.d_output_weights_ = nullptr;
@@ -274,6 +275,7 @@ PrefillV2Model::PrefillV2Model(PrefillV2Model&& other) noexcept
     other.d_prefill_state_ = nullptr;
     other.suffix_graph_exec_ = nullptr;
     other.suffix_graph_q8_dot4_enabled_ = false;
+    other.suffix_graph_q8_dot4_ilp2_enabled_ = false;
 }
 
 PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
@@ -305,6 +307,7 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
         d_prefill_state_ = other.d_prefill_state_;
         suffix_graph_exec_ = other.suffix_graph_exec_;
         suffix_graph_q8_dot4_enabled_ = other.suffix_graph_q8_dot4_enabled_;
+        suffix_graph_q8_dot4_ilp2_enabled_ = other.suffix_graph_q8_dot4_ilp2_enabled_;
 
         other.d_embedding_weights_ = nullptr;
         other.d_final_norm_weights_ = nullptr;
@@ -321,6 +324,7 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
         other.d_prefill_state_ = nullptr;
         other.suffix_graph_exec_ = nullptr;
         other.suffix_graph_q8_dot4_enabled_ = false;
+        other.suffix_graph_q8_dot4_ilp2_enabled_ = false;
     }
     return *this;
 }
@@ -1233,12 +1237,16 @@ void PrefillV2Model::cleanup_suffix_graph() {
         suffix_graph_exec_ = nullptr;
     }
     suffix_graph_q8_dot4_enabled_ = false;
+    suffix_graph_q8_dot4_ilp2_enabled_ = false;
 }
 
 void PrefillV2Model::capture_suffix_graph(hipStream_t stream) {
     const char* dot4_env = std::getenv("MIINFER_M31_Q8_DOT4_ATTENTION");
     const bool dot4_enabled = dot4_env != nullptr && std::string_view(dot4_env) != "0";
-    if (suffix_graph_exec_ != nullptr && suffix_graph_q8_dot4_enabled_ == dot4_enabled) {
+    const char* ilp2_env = std::getenv("MIINFER_M31_Q8_DOT4_ILP2");
+    const bool ilp2_enabled = ilp2_env != nullptr && std::string_view(ilp2_env) != "0";
+    if (suffix_graph_exec_ != nullptr && suffix_graph_q8_dot4_enabled_ == dot4_enabled
+        && suffix_graph_q8_dot4_ilp2_enabled_ == ilp2_enabled) {
         return;
     }
     cleanup_suffix_graph();
@@ -1259,6 +1267,7 @@ void PrefillV2Model::capture_suffix_graph(hipStream_t stream) {
     MIINFER_HIP_CHECK(hipGraphInstantiate(&suffix_graph_exec_, graph, nullptr, nullptr, 0));
     MIINFER_HIP_CHECK(hipGraphDestroy(graph));
     suffix_graph_q8_dot4_enabled_ = dot4_enabled;
+    suffix_graph_q8_dot4_ilp2_enabled_ = ilp2_enabled;
 }
 
 std::size_t PrefillV2Model::persistent_weight_bytes() const noexcept {

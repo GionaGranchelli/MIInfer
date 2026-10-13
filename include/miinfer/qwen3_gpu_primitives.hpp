@@ -858,7 +858,7 @@ void launch_qwen35_kq_fragment_reuse_attention_batch_q8_dot4(
     std::uint32_t cache_capacity, std::uint32_t query_heads,
     std::uint32_t kv_heads, std::uint32_t head_dim, float scale,
     std::uint32_t num_splits, hipStream_t stream = nullptr,
-    const DevicePrefillState* prefill_state = nullptr);
+    const DevicePrefillState* prefill_state = nullptr, bool ilp2 = false);
 
 void launch_qwen35_fused_q_split_norm_rope_batch(
     const float* qfull,
