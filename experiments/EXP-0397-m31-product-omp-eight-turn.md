@@ -116,6 +116,21 @@ At 06:11 UTC, the same request was still active after about 29 minutes and the c
 
 At 06:18 UTC, timestamped container logs still showed request 8 in `prefill_started`, beginning at 05:42 UTC (about 36 minutes earlier). There was no completion record; counters remained at 3 requests, 1 active, 262 completed prefill tokens, and 126 generated tokens. GPU0 remained at 100% use and 74–75 C junction temperature. This is consistent with the earlier roughly 48-minute cold-prefill observation, but the current request's prompt size and prefix-reuse count remain unreported until completion.
 
+### Explicit XML dispatch and warm follow-ups (2026-10-13 06:23 UTC)
+
+The long XML-format request completed. MIInfer request 8 processed the full 95,162-token prompt with no prefix reuse; prefill took 2,222.68 s (37 min 03 s), TTFT wall time was 2,223.07 s, and it generated 48 tokens. OMP parsed the in-band XML call, ran `git diff --check`, and received exit 0. The first useful action began 37 min 07 s after submission, so this cold format-transition request fails the responsiveness target. It also confirms the change from auto to XML invalidated the reusable prompt prefix.
+
+With XML kept enabled and the prefix warm, two useful follow-up actions ran in the same OMP session:
+
+| Action | Prompt tokens / reused | MIInfer TTFT wall | User message to tool start | Result |
+| --- | ---: | ---: | ---: | --- |
+| `git status --short` | 95,320 / 95,236 | 8.13 s | 19.66 s | Passed; two expected modified paths |
+| `git diff --stat` | 95,569 / 95,454 | 9.43 s | 13.22 s | Passed; expected two-file diff |
+
+The second action meets the 15-second first-useful-action threshold; the first does not. One passing sample is not enough to claim repeatable responsiveness, so collect one more warm useful-action sample before deciding the performance gate. OMP's transcript records both tool calls and results in `/tmp/m31-product-omp-eight-turn-retry/2026-10-13T03-43-31-875Z_01a1335b-ba23-75f2-91d3-5cecef8df00e.jsonl`.
+
+The original profile was restored after the cold request, then XML was re-enabled to preserve the new prompt prefix for warm follow-ups. The active profile currently has `tools.format: xml`; the original auto-format file remains backed up at `/tmp/m31-product-config.yml.before-xml-retry`. Restore it after the final warm sample. The 95,696-token prompt leaves 2,608 tokens under the configured 98,304-token context; capacity for all remaining session turns is not yet proven.
+
 ## Evidence locations
 
 - OMP transcript: `/tmp/m31-product-omp-rpc-eight-turn/2026-10-13T01-31-21-420Z_01a132e2-b7cc-744c-b0ec-6bd423af3459.jsonl`.
