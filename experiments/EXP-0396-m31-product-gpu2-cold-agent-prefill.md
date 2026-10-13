@@ -133,7 +133,7 @@ A fresh OMP session (`01a13284-0eda-7421-9944-59683def7297`) submitted the 246,6
 
 Request 3 later completed at 02:33:56 CEST: 78,142 prompt tokens, 78,142 newly prefetched, zero reused, 2,747,940 ms prefill at 28.44 tokens/s, and 2,757,910 ms total. MIInfer generated 130 tokens with `finish_reason=tool_calls` and saved checkpoint `sess_3cb1819307571240_p78142.miinfer` (2,739,733,397 bytes). The server did not cancel the request. OMP had already exited about one minute earlier, so its transcript still has no tool execution or result.
 
-The same OMP session was then resumed with a longer client deadline. Request 8 entered prefill at 02:35:15 CEST and remained active more than 15 minutes later; at the latest sample GPU0 was 100% busy at 76°C junction, GPU2 idle, and the watchdog active. Request-level reuse statistics are not available until it completes. This resumed turn has already missed the 15-second first-useful-action target; its final telemetry will show whether the full 78K prefix was replayed again.
+The same OMP session was then resumed with a longer client deadline. Request 8 entered prefill at 02:35:15 CEST and completed at 03:01:10 CEST: 78,260 prompt tokens, zero reused, 78,260 newly prefetched, 1,548,130 ms prefill at 50.55 tokens/s, and 1,555,860 ms total. `persistent_session_restored=false`. GPU0 peaked at 76°C junction; GPU2 stayed idle. OMP received 98 tokens, but the assistant returned literal `<tool_calls>...` markup as text with `finish_reason=stop`; the OMP transcript has no tool execution or result. The high-context checkpoint was present, but the resumed prompt did not match it and the intended inspection action did not run.
 
 ## Decision
 
