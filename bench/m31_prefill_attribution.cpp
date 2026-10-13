@@ -31,6 +31,9 @@ int main(int argc, char** argv) {
             throw std::runtime_error("device validation failed: " + error);
         }
         print_device_info(device, std::cout);
+        char pci_bus_id[32]{};
+        MIINFER_HIP_CHECK(hipDeviceGetPCIBusId(pci_bus_id, sizeof(pci_bus_id), 0));
+        std::cout << "profile_device_bdf=" << pci_bus_id << '\n';
 
         const auto source = Qwen35Model::load(model_path);
         PrefillV2Model model(source, context, false, KvCacheQuantMode::kQ8Q8);
