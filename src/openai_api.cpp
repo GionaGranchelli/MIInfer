@@ -135,13 +135,26 @@ void append_xml_function_calls(std::string_view text, OpenAiGeneratedToolCalls& 
 }
 
 void append_generated_xml_calls(std::string_view text, OpenAiGeneratedToolCalls& result) {
+    constexpr std::string_view plural_open = "<tool_calls>";
+    constexpr std::string_view plural_close = "</tool_calls>";
+    constexpr std::string_view single_open = "<tool_call>";
     std::size_t position = 0;
-    while ((position = text.find("<tool_call>", position)) != std::string_view::npos) {
-        const std::size_t body_start = position + 11;
+    while ((position = text.find(single_open, position)) != std::string_view::npos) {
+        const std::size_t body_start = position + single_open.size();
         const std::size_t body_end = text.find("</tool_call>", body_start);
         if (body_end == std::string_view::npos) return;
         append_xml_function_calls(text.substr(body_start, body_end - body_start), result);
         position = body_end + 12;
+    }
+
+    position = 0;
+    while ((position = text.find(plural_open, position)) != std::string_view::npos) {
+        const std::size_t body_start = position + plural_open.size();
+        const std::size_t body_end = text.find(plural_close, body_start);
+        if (body_end == std::string_view::npos) return;
+        const auto body = text.substr(body_start, body_end - body_start);
+        if (body.find(single_open) == std::string_view::npos) append_xml_function_calls(body, result);
+        position = body_end + plural_close.size();
     }
 }
 

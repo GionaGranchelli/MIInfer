@@ -61,6 +61,18 @@ int main() {
     CHECK(generated.calls.size() == 1);
     CHECK(generated.calls[0].name == "read_file");
     CHECK(generated.calls[0].arguments == R"({"path":"a.txt"})");
+    const auto omp_generated = miinfer::parse_generated_tool_calls(
+        "<tool_calls>\n<function=bash>\n<parameter=command>\n"
+        "git status --short --branch && git rev-parse --short HEAD\n</parameter>\n"
+        "<parameter=i>\nChecking campaign branch state\n</parameter>\n"
+        "</function>\n</tool_call>\n<function=read>\n<parameter=path>\n"
+        "docs/interactive-serving.md\n</parameter>\n</function>\n</tool_call>\n</tool_calls>");
+    CHECK(omp_generated.calls.size() == 2);
+    CHECK(omp_generated.calls[0].name == "bash");
+    CHECK(omp_generated.calls[0].arguments ==
+          R"({"command":"git status --short --branch && git rev-parse --short HEAD","i":"Checking campaign branch state"})");
+    CHECK(omp_generated.calls[1].name == "read");
+    CHECK(omp_generated.calls[1].arguments == R"({"path":"docs/interactive-serving.md"})");
     CHECK(miinfer::parse_generated_tool_calls(
         "Quoted example: <function=read_file><parameter=path>a.txt</parameter></function>").calls.empty());
 
