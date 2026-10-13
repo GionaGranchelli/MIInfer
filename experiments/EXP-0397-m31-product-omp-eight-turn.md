@@ -1,6 +1,6 @@
 # EXP-0397 — Oh My Pi persistent eight-turn task on MI50
 
-**Status:** RETEST — product gate not passed. The candidate source fix and cross-process restore are demonstrated, but OMP dispatch is intermittent and useful-action latency is not reliably at or below 15 seconds.
+**Status:** PARTIAL — explicit XML tool dispatch works, and six short warm follow-up probes have a 14.329 s median first-action time (three of six were at or below 15 s). The full eight-turn coding task, reliable coding-action latency, and sufficient context headroom are not yet proven; do not mark the product gate passed.
 **Milestone:** M31-PRODUCT-0001  
 **Host:** Machinist X99 only; Z840 excluded.  
 **GPU:** MI50 GPU0, `0000:04:00.0`, UUID `0x21678e17348c2f7`; GPU2 idle.  
@@ -120,16 +120,20 @@ At 06:18 UTC, timestamped container logs still showed request 8 in `prefill_star
 
 The long XML-format request completed. MIInfer request 8 processed the full 95,162-token prompt with no prefix reuse; prefill took 2,222.68 s (37 min 03 s), TTFT wall time was 2,223.07 s, and it generated 48 tokens. OMP parsed the in-band XML call, ran `git diff --check`, and received exit 0. The first useful action began 37 min 07 s after submission, so this cold format-transition request fails the responsiveness target. It also confirms the change from auto to XML invalidated the reusable prompt prefix.
 
-With XML kept enabled and the prefix warm, two useful follow-up actions ran in the same OMP session:
+With XML kept enabled and the prefix warm, six useful repository follow-up actions ran in the same OMP session:
 
 | Action | Prompt tokens / reused | MIInfer TTFT wall | User message to tool start | Result |
 | --- | ---: | ---: | ---: | --- |
 | `git status --short` | 95,320 / 95,236 | 8.13 s | 19.66 s | Passed; two expected modified paths |
 | `git diff --stat` | 95,569 / 95,454 | 9.43 s | 13.22 s | Passed; expected two-file diff |
+| `git diff --check` | 95,924 / 95,838 | 8.27 s | 15.44 s | Passed; narrowly over the target |
+| `git diff --name-only` | 95,993 / 95,921 | 7.72 s | 30.35 s | Command returned both expected paths; OMP attached the result after its stop sequence |
+| `git diff --check` | 96,350 / 96,262 | 8.30 s | 12.58 s | Passed |
+| `git diff --check` | 96,494 / 96,430 | 7.41 s | 11.78 s | Passed |
 
-The second action meets the 15-second first-useful-action threshold; the first does not. One passing sample is not enough to claim repeatable responsiveness, so collect one more warm useful-action sample before deciding the performance gate. OMP's transcript records both tool calls and results in `/tmp/m31-product-omp-eight-turn-retry/2026-10-13T03-43-31-875Z_01a1335b-ba23-75f2-91d3-5cecef8df00e.jsonl`.
+The six user-message-to-tool-start measurements sort to 11.78, 12.58, 13.22, 15.44, 19.66, and 30.35 seconds; the median is 14.33 seconds. Three of six are over 15 seconds, and one result arrived after OMP's stop sequence. Treat this as a short-command smoke sample, not proof that real coding follow-ups meet the target reliably. OMP's transcript records the tool calls and results in `/tmp/m31-product-omp-eight-turn-retry/2026-10-13T03-43-31-875Z_01a1335b-ba23-75f2-91d3-5cecef8df00e.jsonl`.
 
-The original profile was restored after the cold request, then XML was re-enabled to preserve the new prompt prefix for warm follow-ups. The active profile currently has `tools.format: xml`; the original auto-format file remains backed up at `/tmp/m31-product-config.yml.before-xml-retry`. Restore it after the final warm sample. The 95,696-token prompt leaves 2,608 tokens under the configured 98,304-token context; capacity for all remaining session turns is not yet proven.
+The original profile was restored after the cold request, then XML was re-enabled to preserve the new prompt prefix for warm follow-ups. The active profile currently has `tools.format: xml`; the original auto-format file remains backed up at `/tmp/m31-product-config.yml.before-xml-retry`. Keep XML for this OMP session because auto had emitted literal tool markup without dispatch. The latest processed prompt was 96,577 tokens, leaving 1,727 tokens under the configured 98,304-token context; capacity for a further eight-turn sequence is not proven.
 
 ## Evidence locations
 
