@@ -1,6 +1,6 @@
 # EXP-0405 — M31 query-tiled Q8 attention with K-fragment reuse
 
-**Status:** FOCUSED KERNEL PASSED — FULL-MODEL GATE PENDING
+**Status:** FOCUSED KERNEL PASSED — INITIAL FULL-MODEL CORRECTNESS FAILED — RETEST BLOCKED BY MACHINIST GPU2 HIP FAULT
 
 **Baseline:** `2779a3c` on branch `perf/m31-perf-recovery-0001`
 
@@ -75,3 +75,32 @@ The thermal supervisor sampled seven times, peaked at 54 C, and reported
 `supervisor_failed=0 benchmark_exit=0`. The focused kernel gate passes. This
 does not prove full-model logits, token behavior, or end-to-end prefill; keep
 the route opt-in until a matched full-model Q8/Q8 check passes.
+
+## Full-model integration failure and precision follow-up
+
+On a tokenizer-backed 8,192-token prompt at capacity 65,536, three interleaved
+Q8/Q8 pairs on GPU2 (`0000:88:00.0`) produced a repeatable logit mismatch:
+`max_abs=0.657086372`, cosine `0.999395058`; top-1 and second token IDs matched.
+Median prefill was 49.996 s for the control and 40.537 s for the tiled route
+(1.233x), but the candidate fails the predeclared `cosine >= 0.9999` gate and
+must not be promoted.
+
+The Q8 tiled route had used 32 splits while the existing full-model FP16 tiled
+route uses 3. Commit `0aabba9` changed only the opt-in Q8 route to 3 splits to
+test whether partial-output grouping caused the accumulated difference. That
+candidate compiled. Its tokenizer-backed 1,024-token full-model rerun did not
+reach model output: ROCr reported `Memory critical error ... Reason: Memory in
+use` on GPU2. A separate 1,024-element `miinfer-bench` run, which transfers
+4 KiB vectors, failed with the same ROCr fault and exit 139. GPU2 telemetry
+remained available at 30–31 C. The live MIInfer service on GPU0 was using
+29,304,508,416 bytes; it was left untouched. This is a current Machinist
+GPU2 HIP execution blocker, not evidence about the 3-split candidate.
+
+Commit `5646459` adds a second opt-in precision change: Q8 attention weights
+and V accumulation remain FP32 instead of being rounded into half fragments and
+half accumulators. The FP16 specialization retains its prior half behavior.
+The updated gfx906 target compiles with the pinned ROCm 7.2.1 image. Neither
+this precision change nor the 3-split setting has GPU correctness or performance
+evidence yet. Keep the whole route opt-in. Once GPU2's HIP copy path works
+again, resume with the 1,024-token matched correctness check, then the same 8K
+gate only if the short check passes.
