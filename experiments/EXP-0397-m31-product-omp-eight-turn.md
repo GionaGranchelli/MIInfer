@@ -1,6 +1,6 @@
 # EXP-0397 — Oh My Pi persistent eight-turn task on MI50
 
-**Status:** PARTIAL — explicit XML tool dispatch works, and seven short warm follow-up probes have a 14.023 s median first-action time (four of seven were at or below 15 s). The full eight-turn coding task, reliable coding-action latency, and sufficient context headroom are not yet proven; do not mark the product gate passed.
+**Status:** PARTIAL — explicit XML tool dispatch works, and eight consecutive short warm follow-up calls have a 14.46 s median first-action time (five of eight were at or below 15 s). The full eight-turn coding task, reliable coding-action latency, and sufficient context headroom are not yet proven; do not mark the product gate passed.
 **Milestone:** M31-PRODUCT-0001  
 **Host:** Machinist X99 only; Z840 excluded.  
 **GPU:** MI50 GPU0, `0000:04:00.0`, UUID `0x21678e17348c2f7`; GPU2 idle.  
@@ -131,10 +131,11 @@ With XML kept enabled and the prefix warm, six useful repository follow-up actio
 | `git diff --check` | 96,350 / 96,262 | 8.30 s | 12.58 s | Passed |
 | `git diff --check` | 96,494 / 96,430 | 7.41 s | 11.78 s | Passed |
 | `curl -fsS http://127.0.0.1:28080/readyz` | 96,667 / 96,574 | 8.58 s | 14.02 s | Passed; `ready:true` |
+| `curl -fsS http://127.0.0.1:28080/v1/models` | 96,882 / 96,771 | 9.39 s | 14.89 s | Passed; one model listed |
 
-The seven user-message-to-tool-start measurements sort to 11.78, 12.58, 13.22, 14.02, 15.44, 19.66, and 30.35 seconds; the median is 14.02 seconds. Three of seven are over 15 seconds, and one result arrived after OMP's stop sequence. Treat these as short-command smoke samples, not proof that real coding follow-ups meet the target reliably. OMP's transcript records the tool calls and results in `/tmp/m31-product-omp-eight-turn-retry/2026-10-13T03-43-31-875Z_01a1335b-ba23-75f2-91d3-5cecef8df00e.jsonl`.
+The eight user-message-to-tool-start measurements sort to 11.78, 12.58, 13.22, 14.02, 14.89, 15.44, 19.66, and 30.35 seconds; the median is 14.46 seconds. Three of eight are over 15 seconds, and one result arrived after OMP's stop sequence. Treat these as short-command smoke samples, not proof that real coding follow-ups meet the target reliably. OMP's transcript records the tool calls and results in `/tmp/m31-product-omp-eight-turn-retry/2026-10-13T03-43-31-875Z_01a1335b-ba23-75f2-91d3-5cecef8df00e.jsonl`.
 
-The original profile was restored after the cold request, then XML was re-enabled to preserve the new prompt prefix for warm follow-ups. The active profile currently has `tools.format: xml`; the original auto-format file remains backed up at `/tmp/m31-product-config.yml.before-xml-retry`. The OMP setup guidance was updated in pushed commit `3ab76af` to include this setting and the tested 4096-token output limit. The latest processed prompt was 96,774 tokens, leaving 1,530 tokens under the configured 98,304-token context; capacity for a further eight-turn sequence is not proven.
+The original profile was restored after the cold request, then XML was re-enabled to preserve the new prompt prefix for warm follow-ups. The active profile currently has `tools.format: xml`; the original auto-format file remains backed up at `/tmp/m31-product-config.yml.before-xml-retry`. The OMP setup guidance was updated in pushed commit `3ab76af` to include this setting and the tested 4096-token output limit. The latest processed prompt was 97,002 tokens, leaving 1,302 tokens under the configured 98,304-token context; capacity for a further eight-turn sequence is not proven. `/v1/models` reported the generic id `model`, while the OMP profile uses `qwen3.8-27b`; the live OMP request still succeeded, but the id mismatch should be checked before claiming general client compatibility.
 
 ## Evidence locations
 
