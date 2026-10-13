@@ -114,6 +114,8 @@ The isolated profile now has only one delta from `/tmp/m31-product-config.yml.be
 
 At 06:11 UTC, the same request was still active after about 29 minutes and the completion counters were unchanged. Machinist's socket table showed one established connection to the MIInfer API, forwarded by the local SSH tunnel; the local side showed one OMP process connected to that tunnel. No separate API client explains the newer `received` request IDs. Their cause remains unknown, and they are not inference completions.
 
+At 06:18 UTC, timestamped container logs still showed request 8 in `prefill_started`, beginning at 05:42 UTC (about 36 minutes earlier). There was no completion record; counters remained at 3 requests, 1 active, 262 completed prefill tokens, and 126 generated tokens. GPU0 remained at 100% use and 74–75 C junction temperature. This is consistent with the earlier roughly 48-minute cold-prefill observation, but the current request's prompt size and prefix-reuse count remain unreported until completion.
+
 ## Evidence locations
 
 - OMP transcript: `/tmp/m31-product-omp-rpc-eight-turn/2026-10-13T01-31-21-420Z_01a132e2-b7cc-744c-b0ec-6bd423af3459.jsonl`.
