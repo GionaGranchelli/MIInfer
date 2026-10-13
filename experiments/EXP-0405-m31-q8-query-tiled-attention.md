@@ -112,3 +112,21 @@ enumerate the agent, but both the model run and a 4 KiB vector-transfer run
 fail when executing HIP work. Once GPU2's HIP copy path works again, resume
 with the 1,024-token matched correctness check, then the same 8K gate only if
 the short check passes.
+
+## Exact Q8 QK/V candidate
+
+Source comparison showed that the direct Q8 kernel uses FP32 queries and
+multiplies the quantized K values by their stored row scales during QK, while
+the first tiled Q8 candidate rounded both Q and dequantized K to FP16. The
+follow-up specialization keeps Q and K in FP32/int8 form for QK, stages the
+transposed int8 K tile and its row scales in LDS, and accumulates V directly
+from int8 values with row scales into FP32 outputs. It still reuses each K/V
+tile across neighboring queries; the FP16 specialization is unchanged.
+
+Commit `f394f87` removes the now-unused half-dequantization helper. The
+correctness-gated benchmark target builds with the pinned ROCm 7.2.1 image.
+Compiler remarks for the Q8 specialization report 116 VGPR, 60 SGPR, no
+scratch or spills, and two waves/SIMD. The launch requests 45,568 bytes of
+dynamic LDS per block. This higher resource use is within MI50 LDS capacity,
+but the candidate has no GPU correctness or timing result because GPU2's HIP
+execution fault remains unresolved. It remains opt-in.
