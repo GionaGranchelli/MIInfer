@@ -1,6 +1,6 @@
 # EXP-0409 — Q8 query × Q8 key dot4 attention
 
-**Status:** FOCUSED GPU CORRECTNESS PASSES; KERNEL TIMINGS INCONCLUSIVE; ROCM 7.14 GRAPH-DISPATCH FIX BUILDS; INFERENCE-IDLE WINDOW CONFIRMED; GRAPH REPLAY AND FULL-MODEL VALIDATION PENDING
+**Status:** FOCUSED GPU CORRECTNESS PASSES; KERNEL TIMINGS INCONCLUSIVE; ROCM 7.14 GRAPH-DISPATCH FIX BUILDS; DYNAMIC GRAPH REPLAY SMOKE PASSES; FULL-MODEL VALIDATION PENDING
 **Baseline:** `d834d9a` on `perf/m31-perf-recovery-0001`
 
 ## Question and hypothesis
@@ -178,7 +178,7 @@ result will decide whether to continue or discard the candidate.
   unchanged. ROCm 7.14 rebuilt and linked the benchmark target with the
   PrefillV2 workspace and dispatch changes. An 8K full-model correctness and
   timing comparison has not yet run; no production qualification is claimed.
-- 2026-10-14 source review confirmed that `/metrics` is counted by
+- 2026-10-13 source review confirmed that `/metrics` is counted by
   `http_requests`, and `miinfer_requests_total` is an alias of that HTTP-wide
   counter. Both include monitoring requests. The quiet-window check now uses
   `miinfer_inference_requests_total`, `miinfer_active_requests`, and
@@ -199,6 +199,16 @@ result will decide whether to continue or discard the candidate.
   and capacity, including position zero's causal bounds.
 - The graph-dispatch/cache fix, the existing dot4 benchmark target, and the
   main `miinfer` executable compile and link with the pinned ROCm 7.14 / AMD
-  clang 23 toolchain for `gfx906`. This build did not use a GPU. Graph kernel
-  tracing, graph replay correctness, and the matched full-model 8K comparison
-  remain pending.
+  clang 23 toolchain for `gfx906`. The build itself did not use a GPU.
+- 2026-10-13 18:51 UTC+2: added a focused GPU graph smoke that captures the
+  stateful Q8 dot4 wrapper at host base position zero, then replays it at base
+  positions 0 and 64. On Machinist GPU2 (`0000:88:00.0`), both graph outputs
+  matched direct dot4 execution bit-for-bit (`max_abs=0`, cosine `1.0`). A
+  ROCProfiler kernel trace contains the Q8 query quantizer, the
+  `qwen35_kq_fragment_reuse_attention_batch_kernel<true, true, true, true,
+  true>` specialization, and the Split-K combine kernel. The server inference
+  counters remained at 55/2 with active and queued requests at zero. Junction
+  temperature moved from 29 C to 30 C under an 80 C warning / 85 C stop guard.
+  No service process or session file was changed. This verifies dynamic state
+  in a captured dot4 kernel graph; the full PrefillV2 model graph and matched
+  8K comparison remain pending.
