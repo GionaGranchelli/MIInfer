@@ -68,10 +68,11 @@ Result run_mode(const miinfer::Qwen35Model& model,
 }  // namespace
 
 int main(int argc, char** argv) {
-    if (argc != 2) {
-        std::cerr << "usage: miinfer-m31-fp16-full-model MODEL.gguf\n";
+    if (argc < 2 || argc > 3 || (argc == 3 && std::string(argv[2]) != "--fp16-first")) {
+        std::cerr << "usage: miinfer-m31-fp16-full-model MODEL.gguf [--fp16-first]\n";
         return 2;
     }
+    const bool fp16_first = argc == 3;
     miinfer::DeviceInfo device{};
     std::string error;
     if (!miinfer::validate_gfx906_device(0, device, error)) {
@@ -94,10 +95,19 @@ int main(int argc, char** argv) {
         std::cerr << "failed to enable existing opt-in GQA attention path\n";
         return 1;
     }
-    const auto q8 = run_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kQ8Q8,
-                             "q8_control", tokens, kCapacity);
-    const auto fp16 = run_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kFp16Fp16,
-                               "fp16_tiled_candidate", tokens, kCapacity);
+    Result q8;
+    Result fp16;
+    if (fp16_first) {
+        fp16 = run_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kFp16Fp16,
+                        "fp16_tiled_candidate", tokens, kCapacity);
+        q8 = run_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kQ8Q8,
+                      "q8_control", tokens, kCapacity);
+    } else {
+        q8 = run_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kQ8Q8,
+                      "q8_control", tokens, kCapacity);
+        fp16 = run_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kFp16Fp16,
+                        "fp16_tiled_candidate", tokens, kCapacity);
+    }
     if (q8.logits.size() != fp16.logits.size()) return 1;
     double dot = 0.0, q8_norm = 0.0, fp16_norm = 0.0;
     double max_abs = 0.0;
