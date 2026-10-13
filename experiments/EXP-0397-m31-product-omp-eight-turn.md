@@ -88,6 +88,14 @@ After Turn 4, the idle candidate server was stopped cleanly and restarted. The s
 
 Turn 6 ran additional bash checks through OMP. Its first tool action arrived 34.2 s after the user message. MIInfer request 9 reused 87,239 tokens, prefetched 3 tokens, and reached first token in 0.94 s; that server TTFT is not the OMP user-to-action latency. The session still has not completed eight turns or a validated coding outcome.
 
+### Final turns and verification retry
+
+The resumed session completed another concrete Turn 7 action through MIInfer. It compared each edited worktree blob with commit `95516b7`, checked the original base blobs, and ran `git diff --check`. Both edited files matched the compiled candidate commit byte for byte; only `src/prefill_v2/model.cpp` and `tools/miinfer_cli.cpp` were modified. The first bash action began 53.7 seconds after that user prompt.
+
+The next prompt (the eighth user prompt in this resumed sequence) produced literal tool-call markup and exited without dispatching the requested verification. I retried with a simpler prompt; MIInfer dispatched the bash command successfully, `git diff --check` passed, the two expected paths were listed, and `95516b7` resolved to `95516b722493b5bada1f3d4eb726c8e4b1f4dd9b`. The retry's first tool action began 33.8 seconds after submission. OMP then returned a concise summary, but the original eighth prompt did not complete as requested. Count this as seven completed prompts plus one failed dispatch and a successful retry, not as a clean eight-turn pass.
+
+The retry transcript is in `/tmp/m31-product-omp-eight-turn-retry/2026-10-13T03-43-31-875Z_01a1335b-ba23-75f2-91d3-5cecef8df00e.jsonl`. The additional measured first-action times (53.7 s and 33.8 s) also exceed the 15-second target. This run still lacks a completed eight-turn coding outcome, and M31-PRODUCT-0001 remains not passed.
+
 ## Evidence locations
 
 - OMP transcript: `/tmp/m31-product-omp-rpc-eight-turn/2026-10-13T01-31-21-420Z_01a132e2-b7cc-744c-b0ec-6bd423af3459.jsonl`.
