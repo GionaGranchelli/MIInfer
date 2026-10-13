@@ -24,14 +24,15 @@ T* allocate_device(std::size_t count) {
 
 double run_q8(const float* q, const std::int8_t* k, const __half* ks,
               const std::int8_t* v, const __half* vs, const float* gate,
-              float* output, float* workspace) {
+              float* output, float* workspace, std::uint32_t queries,
+              std::uint32_t prefix, std::uint32_t capacity) {
     hipEvent_t start{}, end{};
     MIINFER_HIP_CHECK(hipEventCreate(&start));
     MIINFER_HIP_CHECK(hipEventCreate(&end));
     MIINFER_HIP_CHECK(hipEventRecord(start));
     miinfer::launch_qwen35_splitk_suffix_attention_quant(
         q, nullptr, nullptr, k, ks, v, vs, gate, output, workspace,
-        512, 65024, 65536, 24, 4, 256, 1.0F / 16.0F, true, true, 32);
+        queries, prefix, capacity, 24, 4, 256, 1.0F / 16.0F, true, true, 32);
     MIINFER_HIP_CHECK(hipEventRecord(end));
     MIINFER_HIP_CHECK(hipEventSynchronize(end));
     float ms = 0.0F;
@@ -42,13 +43,15 @@ double run_q8(const float* q, const std::int8_t* k, const __half* ks,
 }
 
 double run_fp16(const float* q, const __half* k, const __half* v,
-                const float* gate, float* output, float* workspace) {
+                const float* gate, float* output, float* workspace,
+                std::uint32_t queries, std::uint32_t prefix,
+                std::uint32_t capacity) {
     hipEvent_t start{}, end{};
     MIINFER_HIP_CHECK(hipEventCreate(&start));
     MIINFER_HIP_CHECK(hipEventCreate(&end));
     MIINFER_HIP_CHECK(hipEventRecord(start));
     miinfer::launch_qwen35_kq_fragment_reuse_attention_batch_f16(
-        q, k, v, gate, output, workspace, 512, 65024, 65536,
+        q, k, v, gate, output, workspace, queries, prefix, capacity,
         24, 4, 256, 1.0F / 16.0F, 32);
     MIINFER_HIP_CHECK(hipEventRecord(end));
     MIINFER_HIP_CHECK(hipEventSynchronize(end));
@@ -61,14 +64,15 @@ double run_fp16(const float* q, const __half* k, const __half* v,
 
 double run_q8_tiled(const float* q, const std::int8_t* k, const __half* ks,
                     const std::int8_t* v, const __half* vs, const float* gate,
-                    float* output, float* workspace) {
+                    float* output, float* workspace, std::uint32_t queries,
+                    std::uint32_t prefix, std::uint32_t capacity) {
     hipEvent_t start{}, end{};
     MIINFER_HIP_CHECK(hipEventCreate(&start));
     MIINFER_HIP_CHECK(hipEventCreate(&end));
     MIINFER_HIP_CHECK(hipEventRecord(start));
     miinfer::launch_qwen35_kq_fragment_reuse_attention_batch_q8(
         q, k, ks, v, vs, gate, output, workspace,
-        512, 65024, 65536, 24, 4, 256, 1.0F / 16.0F, 32);
+        queries, prefix, capacity, 24, 4, 256, 1.0F / 16.0F, 32);
     MIINFER_HIP_CHECK(hipEventRecord(end));
     MIINFER_HIP_CHECK(hipEventSynchronize(end));
     float ms = 0.0F;
@@ -85,18 +89,22 @@ double median(std::vector<double> values) {
 
 }  // namespace
 
-int main() {
-    constexpr std::uint32_t kPrefix = 65024;
-    constexpr std::uint32_t kQueries = 512;
+int main(int argc, char** argv) {
     constexpr std::uint32_t kCapacity = 65536;
     constexpr std::uint32_t kHeads = 24;
     constexpr std::uint32_t kKvHeads = 4;
     constexpr std::uint32_t kDim = 256;
     constexpr std::uint32_t kSplits = 32;
-    constexpr std::size_t q_count = static_cast<std::size_t>(kQueries) * kHeads * kDim;
+    const std::uint32_t kQueries = argc > 1 ? static_cast<std::uint32_t>(std::stoul(argv[1])) : 512;
+    if (kQueries < 16 || kQueries > 2048 || kQueries % 16 != 0) {
+        std::cerr << "queries must be a multiple of 16 in [16, 2048]\n";
+        return 2;
+    }
+    const std::uint32_t kPrefix = kCapacity - kQueries;
+    const std::size_t q_count = static_cast<std::size_t>(kQueries) * kHeads * kDim;
     constexpr std::size_t kv_count = static_cast<std::size_t>(kKvHeads) * kCapacity * kDim;
     constexpr std::size_t scale_count = static_cast<std::size_t>(kKvHeads) * kCapacity;
-    constexpr std::size_t workspace_count = static_cast<std::size_t>(kSplits) * kQueries * kHeads * (kDim + 2);
+    const std::size_t workspace_count = static_cast<std::size_t>(kSplits) * kQueries * kHeads * (kDim + 2);
 
     miinfer::DeviceInfo device{};
     std::string error;
@@ -106,7 +114,9 @@ int main() {
     }
     char bdf[32]{};
     MIINFER_HIP_CHECK(hipDeviceGetPCIBusId(bdf, sizeof(bdf), 0));
-    std::cout << "device_bdf=" << bdf << " architecture=" << device.architecture << '\n';
+    std::cout << "device_bdf=" << bdf << " architecture=" << device.architecture
+              << " prefix=" << kPrefix << " queries=" << kQueries
+              << " capacity=" << kCapacity << '\n';
 
     std::mt19937 rng(20261013);
     std::normal_distribution<float> normal(0.0F, 0.5F);
@@ -120,7 +130,7 @@ int main() {
         host_gate[i] = normal(rng);
     }
     for (std::uint32_t h = 0; h < kKvHeads; ++h) {
-        for (std::uint32_t p = 0; p < kPrefix + kQueries; ++p) {
+        for (std::uint32_t p = 0; p < kCapacity; ++p) {
             const std::size_t row = (static_cast<std::size_t>(h) * kCapacity + p) * kDim;
             const std::size_t scale_index = static_cast<std::size_t>(h) * kCapacity + p;
             host_ks[scale_index] = __float2half(0.01F);
@@ -159,9 +169,12 @@ int main() {
     MIINFER_HIP_CHECK(hipMemcpy(d_k_f16, host_k_f16.data(), kv_count * sizeof(__half), hipMemcpyHostToDevice));
     MIINFER_HIP_CHECK(hipMemcpy(d_v_f16, host_v_f16.data(), kv_count * sizeof(__half), hipMemcpyHostToDevice));
 
-    run_q8(d_q, d_k_q8, d_k_scale, d_v_q8, d_v_scale, d_gate, d_q8, d_workspace);
-    run_q8_tiled(d_q, d_k_q8, d_k_scale, d_v_q8, d_v_scale, d_gate, d_q8_tiled, d_workspace);
-    run_fp16(d_q, d_k_f16, d_v_f16, d_gate, d_fp16, d_workspace);
+    run_q8(d_q, d_k_q8, d_k_scale, d_v_q8, d_v_scale, d_gate, d_q8, d_workspace,
+           kQueries, kPrefix, kCapacity);
+    run_q8_tiled(d_q, d_k_q8, d_k_scale, d_v_q8, d_v_scale, d_gate, d_q8_tiled,
+                 d_workspace, kQueries, kPrefix, kCapacity);
+    run_fp16(d_q, d_k_f16, d_v_f16, d_gate, d_fp16, d_workspace,
+             kQueries, kPrefix, kCapacity);
     std::vector<float> q8_output(q_count), q8_tiled_output(q_count), fp16_output(q_count);
     MIINFER_HIP_CHECK(hipMemcpy(q8_output.data(), d_q8, q_count * sizeof(float), hipMemcpyDeviceToHost));
     MIINFER_HIP_CHECK(hipMemcpy(q8_tiled_output.data(), d_q8_tiled, q_count * sizeof(float), hipMemcpyDeviceToHost));
@@ -198,11 +211,17 @@ int main() {
     std::vector<double> q8_ms, q8_tiled_ms;
     for (int i = 0; i < 5; ++i) {
         if (i % 2 == 0) {
-            q8_ms.push_back(run_q8(d_q, d_k_q8, d_k_scale, d_v_q8, d_v_scale, d_gate, d_q8, d_workspace));
-            q8_tiled_ms.push_back(run_q8_tiled(d_q, d_k_q8, d_k_scale, d_v_q8, d_v_scale, d_gate, d_q8_tiled, d_workspace));
+            q8_ms.push_back(run_q8(d_q, d_k_q8, d_k_scale, d_v_q8, d_v_scale, d_gate, d_q8,
+                                   d_workspace, kQueries, kPrefix, kCapacity));
+            q8_tiled_ms.push_back(run_q8_tiled(d_q, d_k_q8, d_k_scale, d_v_q8, d_v_scale,
+                                               d_gate, d_q8_tiled, d_workspace,
+                                               kQueries, kPrefix, kCapacity));
         } else {
-            q8_tiled_ms.push_back(run_q8_tiled(d_q, d_k_q8, d_k_scale, d_v_q8, d_v_scale, d_gate, d_q8_tiled, d_workspace));
-            q8_ms.push_back(run_q8(d_q, d_k_q8, d_k_scale, d_v_q8, d_v_scale, d_gate, d_q8, d_workspace));
+            q8_tiled_ms.push_back(run_q8_tiled(d_q, d_k_q8, d_k_scale, d_v_q8, d_v_scale,
+                                               d_gate, d_q8_tiled, d_workspace,
+                                               kQueries, kPrefix, kCapacity));
+            q8_ms.push_back(run_q8(d_q, d_k_q8, d_k_scale, d_v_q8, d_v_scale, d_gate, d_q8,
+                                   d_workspace, kQueries, kPrefix, kCapacity));
         }
     }
     const double q8_median = median(q8_ms);

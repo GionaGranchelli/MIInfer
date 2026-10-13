@@ -113,6 +113,39 @@ fail when executing HIP work. Once GPU2's HIP copy path works again, resume
 with the 1,024-token matched correctness check, then the same 8K gate only if
 the short check passes.
 
+## ROCm 7.14 recovery and larger attention-batch check
+
+The ROCm 7.14 gfx906 image restored HIP execution on isolated GPU2. With the
+same synthetic 64K endpoint (`capacity=65536`, `prefix=capacity-queries`), the
+focused harness now accepts query batches of 512 and 1024. Five alternating
+direct-Q8 / exact-tiled-Q8 timings were collected per batch under the 80/85 C
+thermal guard. The harness confirmed BDF `0000:88:00.0`; both candidates
+returned finite values, and exact tiled Q8 matched direct Q8 (`max_abs=0`,
+cosine `1.0`).
+
+| Queries | Direct Q8 median (range) | Exact tiled Q8 median (range) | Direct / tiled |
+| ---: | ---: | ---: | ---: |
+| 512 | 480.850 ms (474.443–494.086) | 671.403 ms (639.030–688.409) | 0.716x |
+| 1024 | 967.073 ms (955.322–991.760) | 1278.403 ms (1267.027–1293.650) | 0.756x |
+
+Direct attention cost per query was 0.939 ms at 512 and 0.944 ms at 1024,
+effectively unchanged. The exact tiled path improved from 1.311 to 1.248 ms per
+query, but remained 32% slower than direct Q8 at 1024. Junction temperature
+peaked at 55 C and 59 C respectively; no guard fired. The image/toolchain is
+ROCm 7.14 / Clang 23, so these measurements are valid as a same-stack A/B and
+must not be merged numerically with ROCm 7.2.1 records.
+
+This only tests attention query-batch scaling; it does not exercise the
+full-model macro scheduler. It provides no evidence that a 1024-token
+full-model tile reduces dispatch overhead. No utilization or instruction
+profile was collected, so the bottleneck within the attention kernels remains
+unattributed. Keep exact tiled Q8 rejected for promotion. Next, fix the
+full-model Q8 dispatch/workspace contract before attempting a 1024-token
+physical tile: the default attention-layer route selects Q8 Split-K only for
+`token_count <= 512` and falls through to FP16 online attention above that;
+the opt-in Q8 tiled route is separate and currently slower. Several other
+primitive/workspace limits are also hard-coded at 512.
+
 ## Exact Q8 QK/V candidate
 
 Source comparison showed that the direct Q8 kernel uses FP32 queries and
