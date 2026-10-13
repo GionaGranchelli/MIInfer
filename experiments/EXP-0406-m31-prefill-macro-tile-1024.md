@@ -1,6 +1,6 @@
 # EXP-0406 — Correct 1024-token PrefillV2 Macro Tile
 
-**Status:** CORRECTNESS PASSED; SMALL PREFILL WIN; COLD 64K NOT YET MEASURED
+**Status:** CORRECTNESS PASSED; 2K WIN; 73K FOLLOW-UP EFFECT NEGLIGIBLE
 
 ## Change
 
@@ -35,9 +35,33 @@ matched two sequential direct-Q8 512 calls exactly. The exact query-tiled Q8
 candidate remained slower: median 1278.032 ms versus 958.901 ms direct Q8. It
 is not selected for production dispatch.
 
+## Restored long-context check
+
+Machinist GPU2, ROCm 7.14, same model and Q8/Q8 KV. To avoid another cold
+prefill, the benchmark restored the existing `sess_43c5693dd01fbab1_p73099`
+checkpoint (73,099 cached tokens), then processed the same 1,024 synthetic
+suffix tokens using five interleaved pairs. The 1024-token-capacity path is
+correct, but its long-context speed advantage is negligible:
+
+| Path | Wall samples (ms) | Median (ms) |
+|---|---|---:|
+| 2 × 512 | 21893.403, 21920.462, 21916.483, 21915.984, 21892.503 | 21915.984 |
+| 1 × 1024 | 21754.684, 21773.613, 21824.815, 21802.999, 21763.410 | 21773.613 |
+
+Speedup was 1.007×. Hidden states, logits, and the teacher-forced next token
+matched exactly. The 85°C thermal guard remained clear; peak observed junction
+temperature was 67°C, and the container exited 0. The suffix is synthetic, so
+this isolates tile behavior on a real restored long-context state; it is not an
+agent-workload result.
+
+Profiling one 1,024-token suffix at that state reported 21,685.674 ms total
+model GPU time, of which GQA blocks consumed 18,355.050 ms and causal attention
+alone consumed 17,411.093 ms (80.3%). Session restore was 2,402.436 ms and is
+outside the profiled suffix time. This makes long-context attention the next
+optimization target; raising the macro tile is not a meaningful 64K remedy.
+
 ## Next
 
-Use the corrected recurrent-position behavior and 1024 tile for the next
-representative long-context suffix workload. Reuse an existing 64K state if
-available; do not repeat the known 48-minute cold-prefill run just to retest
-this tile change.
+Keep the 1024 tile for correctness and small-prefill gains. Prioritize one
+attention-path experiment against the restored long-context state. Do not
+repeat the known 48-minute cold-prefill run just to retest this tile change.

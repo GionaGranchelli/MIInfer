@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <iomanip>
@@ -12,6 +13,7 @@
 #include "miinfer/device_validation.hpp"
 #include "miinfer/hip_check.hpp"
 #include "miinfer/prefill_v2/model.hpp"
+#include "miinfer/prefill_v2/persistent_session.hpp"
 #include "miinfer/qwen3_tokenizer.hpp"
 #include "miinfer/qwen35_model.hpp"
 
@@ -23,16 +25,31 @@ using namespace miinfer::prefill_v2;
 int main(int argc, char** argv) {
     try {
         const std::string model_path = argc > 1 ? argv[1] : "/models/Qwen3.8-27B-Q4_K_M.gguf";
-        const std::uint32_t context = argc > 2 ? static_cast<std::uint32_t>(std::stoul(argv[2])) : 8192;
+        std::uint32_t context = argc > 2 ? static_cast<std::uint32_t>(std::stoul(argv[2])) : 8192;
         bool fp16 = false;
         std::string prompt_file;
+        std::string session_path;
         for (int i = 3; i < argc; ++i) {
             const std::string arg(argv[i]);
             if (arg == "--fp16") fp16 = true;
             else if (arg == "--prompt-file" && i + 1 < argc) prompt_file = argv[++i];
-            else throw std::runtime_error("usage: miinfer-m31-prefill-attribution MODEL.gguf CONTEXT [--fp16] [--prompt-file PATH]");
+            else if (arg == "--session" && i + 1 < argc) session_path = argv[++i];
+            else throw std::runtime_error("usage: miinfer-m31-prefill-attribution MODEL.gguf CONTEXT [--fp16] [--prompt-file PATH] [--session PATH]");
         }
-        if (context < 1024 || context % kMaxPrefillBatch != 0) {
+        std::uint32_t cached_prefix = 0;
+        if (!session_path.empty()) {
+            if (fp16 || !prompt_file.empty()) {
+                throw std::runtime_error("--session cannot be combined with --fp16 or --prompt-file");
+            }
+            PersistentSessionHeader header{};
+            if (!PersistentSession::inspect_file(session_path, header) ||
+                header.kv_quant_mode != static_cast<std::uint8_t>(KvCacheQuantMode::kQ8Q8)) {
+                throw std::runtime_error("session must be a valid Q8/Q8 MIInfer checkpoint");
+            }
+            cached_prefix = header.prefix_length;
+            context = cached_prefix + kMaxPrefillBatch;
+        }
+        if (session_path.empty() && (context < 1024 || context % kMaxPrefillBatch != 0)) {
             throw std::runtime_error("context must be a multiple of 512 and at least 1024");
         }
 
@@ -77,14 +94,25 @@ int main(int argc, char** argv) {
         MIINFER_HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&d_hidden), kMaxPrefillBatch * kHidden * sizeof(*d_hidden)));
 
         model.reset_state();
-        for (std::uint32_t pos = 0; pos + kMaxPrefillBatch < context; pos += kMaxPrefillBatch) {
-            MIINFER_HIP_CHECK(hipMemcpy(
-                d_tokens, host_tokens.data() + pos, kMaxPrefillBatch * sizeof(*d_tokens), hipMemcpyHostToDevice));
-            model.forward(d_tokens, pos, kMaxPrefillBatch, d_hidden);
+        double session_restore_ms = 0.0;
+        if (!session_path.empty()) {
+            std::vector<std::uint32_t> restored_tokens;
+            const auto restore_start = std::chrono::steady_clock::now();
+            if (!model.load_session(session_path, restored_tokens) || restored_tokens.size() != cached_prefix) {
+                throw std::runtime_error("failed to restore the expected persistent prefix session");
+            }
+            session_restore_ms = std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - restore_start).count();
+        } else {
+            for (std::uint32_t pos = 0; pos + kMaxPrefillBatch < context; pos += kMaxPrefillBatch) {
+                MIINFER_HIP_CHECK(hipMemcpy(
+                    d_tokens, host_tokens.data() + pos, kMaxPrefillBatch * sizeof(*d_tokens), hipMemcpyHostToDevice));
+                model.forward(d_tokens, pos, kMaxPrefillBatch, d_hidden);
+            }
         }
         MIINFER_HIP_CHECK(hipDeviceSynchronize());
 
-        const std::uint32_t profile_pos = context - kMaxPrefillBatch;
+        const std::uint32_t profile_pos = session_path.empty() ? context - kMaxPrefillBatch : cached_prefix;
         MIINFER_HIP_CHECK(hipMemcpy(
             d_tokens, host_tokens.data() + profile_pos, kMaxPrefillBatch * sizeof(*d_tokens), hipMemcpyHostToDevice));
         ModelProfileBreakdown profile;
@@ -107,7 +135,9 @@ int main(int argc, char** argv) {
 
         std::cout << std::fixed << std::setprecision(3)
                   << "profile_context=" << context << " tile=" << kMaxPrefillBatch
-                  << " profile_base=" << profile_pos << " kv=" << (fp16 ? "FP16/FP16" : "Q8/Q8") << '\n'
+                  << " cached_prefix=" << cached_prefix << " profile_base=" << profile_pos
+                  << " session_restore_ms=" << session_restore_ms
+                  << " kv=" << (fp16 ? "FP16/FP16" : "Q8/Q8") << '\n'
                   << "profile_tile_gpu_ms=" << profile.total_model_ms
                   << " embedding_ms=" << profile.embedding_ms
                   << " final_norm_ms=" << profile.final_norm_ms

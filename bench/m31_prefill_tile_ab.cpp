@@ -14,6 +14,7 @@
 #include "miinfer/device_validation.hpp"
 #include "miinfer/hip_check.hpp"
 #include "miinfer/prefill_v2/model.hpp"
+#include "miinfer/prefill_v2/persistent_session.hpp"
 #include "miinfer/qwen35_model.hpp"
 
 #include <hip/hip_runtime.h>
@@ -49,12 +50,22 @@ Run run_suffix(
     const std::uint32_t* d_tokens,
     float* d_prefix_hidden,
     float* d_suffix_hidden,
+    std::uint32_t prefix,
+    std::uint32_t suffix,
     std::uint32_t tile,
-    std::uint32_t vocab_size) {
+    std::uint32_t vocab_size,
+    const std::string& session_path) {
 
     model.reset_state();
-    for (std::uint32_t pos = 0; pos < kPrefix; pos += kCandidateTile) {
-        model.forward(d_tokens + pos, pos, kCandidateTile, d_prefix_hidden);
+    if (session_path.empty()) {
+        for (std::uint32_t pos = 0; pos < prefix; pos += kCandidateTile) {
+            model.forward(d_tokens + pos, pos, std::min(kCandidateTile, prefix - pos), d_prefix_hidden);
+        }
+    } else {
+        std::vector<std::uint32_t> restored_tokens;
+        if (!model.load_session(session_path, restored_tokens) || restored_tokens.size() != prefix) {
+            throw std::runtime_error("failed to restore the expected persistent prefix session");
+        }
     }
     MIINFER_HIP_CHECK(hipDeviceSynchronize());
 
@@ -63,11 +74,11 @@ Run run_suffix(
     MIINFER_HIP_CHECK(hipEventCreate(&end));
     MIINFER_HIP_CHECK(hipEventRecord(start));
     const auto wall_start = std::chrono::steady_clock::now();
-    for (std::uint32_t offset = 0; offset < kSuffix; offset += tile) {
-        const std::uint32_t count = std::min(tile, kSuffix - offset);
+    for (std::uint32_t offset = 0; offset < suffix; offset += tile) {
+        const std::uint32_t count = std::min(tile, suffix - offset);
         model.forward(
-            d_tokens + kPrefix + offset,
-            kPrefix + offset,
+            d_tokens + prefix + offset,
+            prefix + offset,
             count,
             d_suffix_hidden + static_cast<std::size_t>(offset) * kHidden);
     }
@@ -82,7 +93,7 @@ Run run_suffix(
     Run result;
     result.wall_ms = std::chrono::duration<double, std::milli>(wall_end - wall_start).count();
     result.gpu_ms = gpu_ms;
-    result.hidden.resize(static_cast<std::size_t>(kSuffix) * kHidden);
+    result.hidden.resize(static_cast<std::size_t>(suffix) * kHidden);
     MIINFER_HIP_CHECK(hipMemcpy(
         result.hidden.data(), d_suffix_hidden,
         result.hidden.size() * sizeof(float), hipMemcpyDeviceToHost));
@@ -94,7 +105,7 @@ Run run_suffix(
         result.logits.size() * sizeof(float), hipMemcpyDeviceToHost));
     result.first_token = static_cast<std::uint32_t>(
         std::distance(result.logits.begin(), std::max_element(result.logits.begin(), result.logits.end())));
-    result.next_token = model.decode_step(42, kPrefix + kSuffix);
+    result.next_token = model.decode_step(42, prefix + suffix);
     return result;
 }
 
@@ -137,6 +148,20 @@ void record_run(const Run& run, std::vector<double>& wall_ms, std::vector<double
 int main(int argc, char** argv) {
     try {
         const std::string model_path = argc > 1 ? argv[1] : "/models/Qwen3.8-27B-Q4_K_M.gguf";
+        const std::string session_path = argc > 2 ? argv[2] : "";
+        std::uint32_t prefix = kPrefix;
+        std::uint32_t capacity = kCapacity;
+        if (!session_path.empty()) {
+            PersistentSessionHeader header{};
+            if (!PersistentSession::inspect_file(session_path, header)) {
+                throw std::runtime_error("invalid persistent session: " + session_path);
+            }
+            if (header.kv_quant_mode != static_cast<std::uint8_t>(KvCacheQuantMode::kQ8Q8)) {
+                throw std::runtime_error("persistent session is not Q8/Q8 KV");
+            }
+            prefix = header.prefix_length;
+            capacity = std::max(capacity, prefix + kSuffix);
+        }
         DeviceInfo device{};
         std::string error;
         if (!validate_gfx906_device(0, device, error)) {
@@ -146,11 +171,11 @@ int main(int argc, char** argv) {
         MIINFER_HIP_CHECK(hipDeviceGetPCIBusId(bdf, sizeof(bdf), 0));
 
         const auto source = Qwen35Model::load(model_path);
-        PrefillV2Model model(source, kCapacity, true, KvCacheQuantMode::kQ8Q8);
+        PrefillV2Model model(source, capacity, true, KvCacheQuantMode::kQ8Q8);
         std::size_t free_bytes = 0, total_bytes = 0;
         MIINFER_HIP_CHECK(hipMemGetInfo(&free_bytes, &total_bytes));
 
-        std::vector<std::uint32_t> tokens(kPrefix + kSuffix);
+        std::vector<std::uint32_t> tokens(static_cast<std::size_t>(prefix) + kSuffix);
         for (std::size_t i = 0; i < tokens.size(); ++i) {
             tokens[i] = static_cast<std::uint32_t>((i * 37 + 101) % source.config().vocab_size);
         }
@@ -168,8 +193,9 @@ int main(int argc, char** argv) {
             d_tokens, tokens.data(), tokens.size() * sizeof(*d_tokens), hipMemcpyHostToDevice));
 
         std::cout << "device_bdf=" << bdf << " arch=" << device.architecture
-                  << " prefix=" << kPrefix << " suffix=" << kSuffix
-                  << " capacity=" << kCapacity << " kv=Q8/Q8\n"
+                  << " prefix=" << prefix << " suffix=" << kSuffix
+                  << " capacity=" << capacity << " kv=Q8/Q8"
+                  << (session_path.empty() ? " session=none\n" : " session=restored\n")
                   << "model_vram_gib=" << std::fixed << std::setprecision(3)
                   << static_cast<double>(model.total_vram_bytes()) / (1024.0 * 1024.0 * 1024.0)
                   << " free_after_model_gib="
@@ -182,18 +208,18 @@ int main(int argc, char** argv) {
         std::uint32_t control_first_token = 0, candidate_first_token = 0;
         std::uint32_t control_next_token = 0, candidate_next_token = 0;
         std::vector<double> warm_wall, warm_gpu;
-        record_run(run_suffix(model, d_tokens, d_prefix_hidden, d_suffix_hidden, kControlTile,
-                              source.config().vocab_size), warm_wall, warm_gpu);
-        record_run(run_suffix(model, d_tokens, d_prefix_hidden, d_suffix_hidden, kCandidateTile,
-                              source.config().vocab_size), warm_wall, warm_gpu);
+        record_run(run_suffix(model, d_tokens, d_prefix_hidden, d_suffix_hidden, prefix, kSuffix,
+                              kControlTile, source.config().vocab_size, session_path), warm_wall, warm_gpu);
+        record_run(run_suffix(model, d_tokens, d_prefix_hidden, d_suffix_hidden, prefix, kSuffix,
+                              kCandidateTile, source.config().vocab_size, session_path), warm_wall, warm_gpu);
         const int samples = std::getenv("MIINFER_PREFILL_BLOCK_TRACE_START") != nullptr ? 1 : kSamples;
         for (int i = 0; i < samples; ++i) {
             const bool control_first = (i % 2) == 0;
             if (control_first) {
-                Run control = run_suffix(model, d_tokens, d_prefix_hidden, d_suffix_hidden, kControlTile,
-                                         source.config().vocab_size);
-                Run candidate = run_suffix(model, d_tokens, d_prefix_hidden, d_suffix_hidden, kCandidateTile,
-                                           source.config().vocab_size);
+                Run control = run_suffix(model, d_tokens, d_prefix_hidden, d_suffix_hidden, prefix, kSuffix,
+                                         kControlTile, source.config().vocab_size, session_path);
+                Run candidate = run_suffix(model, d_tokens, d_prefix_hidden, d_suffix_hidden, prefix, kSuffix,
+                                           kCandidateTile, source.config().vocab_size, session_path);
                 record_run(control, control_wall, control_gpu);
                 record_run(candidate, candidate_wall, candidate_gpu);
                 if (i == 0) {
@@ -207,10 +233,10 @@ int main(int argc, char** argv) {
                     candidate_next_token = candidate.next_token;
                 }
             } else {
-                Run candidate = run_suffix(model, d_tokens, d_prefix_hidden, d_suffix_hidden, kCandidateTile,
-                                           source.config().vocab_size);
-                Run control = run_suffix(model, d_tokens, d_prefix_hidden, d_suffix_hidden, kControlTile,
-                                         source.config().vocab_size);
+                Run candidate = run_suffix(model, d_tokens, d_prefix_hidden, d_suffix_hidden, prefix, kSuffix,
+                                           kCandidateTile, source.config().vocab_size, session_path);
+                Run control = run_suffix(model, d_tokens, d_prefix_hidden, d_suffix_hidden, prefix, kSuffix,
+                                         kControlTile, source.config().vocab_size, session_path);
                 record_run(candidate, candidate_wall, candidate_gpu);
                 record_run(control, control_wall, control_gpu);
             }
