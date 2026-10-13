@@ -216,6 +216,10 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-m31-q8-fp16-tiled PRIVATE miinfer_hip)
     target_compile_options(miinfer-m31-q8-fp16-tiled PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-m31-fp16-full-model bench/m31_fp16_full_model.cpp)
+    target_link_libraries(miinfer-m31-fp16-full-model PRIVATE miinfer_hip)
+    target_compile_options(miinfer-m31-fp16-full-model PRIVATE -Wall -Wextra -Wpedantic)
+
     add_executable(miinfer-prefill-v2-attention-bakeoff bench/prefill_v2_attention_bakeoff.cpp)
     target_link_libraries(miinfer-prefill-v2-attention-bakeoff PRIVATE miinfer_hip)
     target_compile_options(miinfer-prefill-v2-attention-bakeoff PRIVATE -Wall -Wextra -Wpedantic)
