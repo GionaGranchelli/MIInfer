@@ -92,7 +92,7 @@ double run_q8_dot4(const float* q, std::int8_t* q_q8, float* q_scales,
     MIINFER_HIP_CHECK(hipEventCreate(&end));
     MIINFER_HIP_CHECK(hipEventRecord(start));
     miinfer::launch_qwen35_kq_fragment_reuse_attention_batch_q8_dot4(
-        q, q_q8, q_scales, nullptr, nullptr, nullptr, nullptr, k, ks, v, vs, gate, output, workspace,
+        q, q_q8, q_scales, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, k, ks, v, vs, gate, output, workspace,
         queries, prefix, capacity, 24, 4, 256, 1.0F / 16.0F, 32);
     MIINFER_HIP_CHECK(hipEventRecord(end));
     MIINFER_HIP_CHECK(hipEventSynchronize(end));

@@ -47,6 +47,8 @@ struct PrefillV2Workspace {
     float* attn_q8_query_residual_scales = nullptr; // [max_tokens, 24] optional residual scales
     std::int8_t* attn_q8_query_residual2 = nullptr; // [max_tokens, kQDim] optional third query plane
     float* attn_q8_query_residual2_scales = nullptr; // [max_tokens, 24] optional third-plane scales
+    std::int8_t* attn_q8_query_residual3 = nullptr; // [max_tokens, kQDim] optional fourth query plane
+    float* attn_q8_query_residual3_scales = nullptr; // [max_tokens, 24] optional fourth-plane scales
     float* attn_k = nullptr;              // [max_tokens, kKvDim (1024)]
     float* attn_v = nullptr;              // [max_tokens, kKvDim (1024)]
     float* attn_gated_output = nullptr;   // [max_tokens, kQDim (6144)]

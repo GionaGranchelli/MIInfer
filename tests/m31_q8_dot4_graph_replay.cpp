@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -45,15 +46,19 @@ int main() {
     const char* ilp2_env = std::getenv("MIINFER_M31_Q8_DOT4_ILP2");
     const bool ilp2 = ilp2_env != nullptr && std::strcmp(ilp2_env, "0") != 0;
     const char* residual_env = std::getenv("MIINFER_M31_Q8_DOT4_QUERY_RESIDUAL");
-    const bool query_residual = residual_env != nullptr && std::strcmp(residual_env, "0") != 0;
     const char* residual2_env = std::getenv("MIINFER_M31_Q8_DOT4_QUERY_RESIDUAL2");
-    const bool query_residual2 = residual2_env != nullptr && std::strcmp(residual2_env, "0") != 0;
+    const char* residual3_env = std::getenv("MIINFER_M31_Q8_DOT4_QUERY_RESIDUAL3");
+    const bool query_residual3 = residual3_env != nullptr && std::strcmp(residual3_env, "0") != 0;
+    const bool query_residual2 = query_residual3
+        || (residual2_env != nullptr && std::strcmp(residual2_env, "0") != 0);
+    const bool query_residual = query_residual2
+        || (residual_env != nullptr && std::strcmp(residual_env, "0") != 0);
     constexpr std::uint32_t kQueries = 32;
     constexpr std::uint32_t kHeads = 24;
     constexpr std::uint32_t kKvHeads = 4;
     constexpr std::uint32_t kDim = 256;
     constexpr std::uint32_t kCapacity = 256;
-    constexpr std::uint32_t kSplits = 3;
+    constexpr std::uint32_t kSplits = 32;
     constexpr std::size_t q_count = static_cast<std::size_t>(kQueries) * kHeads * kDim;
     constexpr std::size_t kv_count = static_cast<std::size_t>(kKvHeads) * kCapacity * kDim;
     constexpr std::size_t scale_count = static_cast<std::size_t>(kKvHeads) * kCapacity;
@@ -71,9 +76,13 @@ int main() {
     std::vector<std::int8_t> host_k(kv_count), host_v(kv_count);
     std::vector<__half> host_ks(scale_count, __float2half(0.01F));
     std::vector<__half> host_vs(scale_count, __float2half(0.01F));
+    std::mt19937 rng(0x4d493530U);
+    std::normal_distribution<float> normal(0.0F, 0.7F);
+    std::uniform_real_distribution<float> uniform(-1.0F, 1.0F);
     for (std::size_t i = 0; i < q_count; ++i) {
-        host_q[i] = std::sin(static_cast<float>(i) * 0.003F);
-        host_gate[i] = std::cos(static_cast<float>(i) * 0.002F);
+        host_q[i] = normal(rng);
+        if (i % 97 == 0) host_q[i] *= 8.0F;
+        host_gate[i] = uniform(rng);
     }
     for (std::size_t i = 0; i < kv_count; ++i) {
         host_k[i] = static_cast<std::int8_t>(static_cast<int>(i % 127) - 63);
@@ -87,14 +96,17 @@ int main() {
     std::int8_t* d_query_q8 = allocate_device<std::int8_t>(q_count);
     std::int8_t* d_query_q8_residual = allocate_device<std::int8_t>(q_count);
     std::int8_t* d_query_q8_residual2 = allocate_device<std::int8_t>(q_count);
+    std::int8_t* d_query_q8_residual3 = allocate_device<std::int8_t>(q_count);
     float* d_query_scales = allocate_device<float>(static_cast<std::size_t>(kQueries) * kHeads);
     float* d_query_residual_scales = allocate_device<float>(static_cast<std::size_t>(kQueries) * kHeads);
     float* d_query_residual2_scales = allocate_device<float>(static_cast<std::size_t>(kQueries) * kHeads);
+    float* d_query_residual3_scales = allocate_device<float>(static_cast<std::size_t>(kQueries) * kHeads);
     std::int8_t* d_k = allocate_device<std::int8_t>(kv_count);
     std::int8_t* d_v = allocate_device<std::int8_t>(kv_count);
     __half* d_ks = allocate_device<__half>(scale_count);
     __half* d_vs = allocate_device<__half>(scale_count);
     float* d_workspace = allocate_device<float>(workspace_count);
+    float* d_production_output = allocate_device<float>(q_count);
     auto* d_state = allocate_device<miinfer::DevicePrefillState>(1);
 
     MIINFER_HIP_CHECK(hipMemcpy(d_q, host_q.data(), q_count * sizeof(float), hipMemcpyHostToDevice));
@@ -111,10 +123,11 @@ int main() {
     miinfer::launch_qwen35_kq_fragment_reuse_attention_batch_q8_dot4(
         d_q, d_query_q8, d_query_scales, d_query_q8_residual, d_query_residual_scales,
         d_query_q8_residual2, d_query_residual2_scales,
+        d_query_q8_residual3, d_query_residual3_scales,
         d_k, d_ks, d_v, d_vs, d_gate,
         d_graph_output, d_workspace, kQueries, 0, kCapacity, kHeads, kKvHeads,
         kDim, 1.0F / 16.0F, kSplits, stream, d_state, ilp2,
-        query_residual || query_residual2, query_residual2);
+        query_residual, query_residual2, query_residual3);
     MIINFER_HIP_CHECK(hipStreamEndCapture(stream, &graph));
     MIINFER_HIP_CHECK(hipGraphInstantiate(&graph_exec, graph, nullptr, nullptr, 0));
 
@@ -129,10 +142,16 @@ int main() {
         miinfer::launch_qwen35_kq_fragment_reuse_attention_batch_q8_dot4(
             d_q, d_query_q8, d_query_scales, d_query_q8_residual, d_query_residual_scales,
             d_query_q8_residual2, d_query_residual2_scales,
+            d_query_q8_residual3, d_query_residual3_scales,
             d_k, d_ks, d_v, d_vs, d_gate,
             d_direct_output, d_workspace, kQueries, base_position, kCapacity,
             kHeads, kKvHeads, kDim, 1.0F / 16.0F, kSplits, stream, nullptr, ilp2,
-            query_residual || query_residual2, query_residual2);
+            query_residual, query_residual2, query_residual3);
+        MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
+        miinfer::launch_qwen35_kq_fragment_reuse_attention_batch_q8(
+            d_q, d_k, d_ks, d_v, d_vs, d_gate, d_production_output, d_workspace,
+            kQueries, base_position, kCapacity, kHeads, kKvHeads, kDim,
+            1.0F / 16.0F, kSplits, stream);
         MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
         MIINFER_HIP_CHECK(hipMemcpy(graph_output.data(), d_graph_output,
                                     q_count * sizeof(float), hipMemcpyDeviceToHost));
@@ -142,13 +161,24 @@ int main() {
         double cosine = 0.0;
         const bool current_pass = compare(graph_output.data(), direct_output.data(),
                                           q_count, max_abs, cosine);
+        std::vector<float> production_output(q_count);
+        MIINFER_HIP_CHECK(hipMemcpy(production_output.data(), d_production_output,
+                                    q_count * sizeof(float), hipMemcpyDeviceToHost));
+        double production_max_abs = 0.0;
+        double production_cosine = 0.0;
+        const bool production_pass = compare(graph_output.data(), production_output.data(),
+                                             q_count, production_max_abs, production_cosine);
         std::cout << "graph_replay_base=" << base_position
                   << " ilp2=" << ilp2
                   << " query_residual=" << query_residual
                   << " query_residual2=" << query_residual2
+                  << " query_residual3=" << query_residual3
                   << " max_abs=" << max_abs << " cosine=" << cosine
-                  << " pass=" << current_pass << '\n';
-        passed = passed && current_pass;
+                  << " graph_direct_pass=" << current_pass
+                  << " production_max_abs=" << production_max_abs
+                  << " production_cosine=" << production_cosine
+                  << " production_pass=" << production_pass << '\n';
+        passed = passed && current_pass && production_pass;
     }
 
     MIINFER_HIP_CHECK(hipGraphExecDestroy(graph_exec));
@@ -160,14 +190,17 @@ int main() {
     MIINFER_HIP_CHECK(hipFree(d_query_q8));
     MIINFER_HIP_CHECK(hipFree(d_query_q8_residual));
     MIINFER_HIP_CHECK(hipFree(d_query_q8_residual2));
+    MIINFER_HIP_CHECK(hipFree(d_query_q8_residual3));
     MIINFER_HIP_CHECK(hipFree(d_query_scales));
     MIINFER_HIP_CHECK(hipFree(d_query_residual_scales));
     MIINFER_HIP_CHECK(hipFree(d_query_residual2_scales));
+    MIINFER_HIP_CHECK(hipFree(d_query_residual3_scales));
     MIINFER_HIP_CHECK(hipFree(d_k));
     MIINFER_HIP_CHECK(hipFree(d_v));
     MIINFER_HIP_CHECK(hipFree(d_ks));
     MIINFER_HIP_CHECK(hipFree(d_vs));
     MIINFER_HIP_CHECK(hipFree(d_workspace));
+    MIINFER_HIP_CHECK(hipFree(d_production_output));
     MIINFER_HIP_CHECK(hipFree(d_state));
     return passed ? 0 : 1;
 }
