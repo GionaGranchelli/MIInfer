@@ -164,10 +164,12 @@ int main(int argc, char** argv) {
     bool fp16_first = false;
     bool fp16_only = false;
     bool q8_query_tiled_pair = false;
+    bool q8_only = false;
     bool fp16_fp32_attention = false;
     std::uint32_t prompt_tokens = 8192;
     std::string prompt_file;
     std::string session_path;
+    std::string logits_output;
     for (int i = 2; i < argc; ++i) {
         const std::string arg(argv[i]);
         if (arg == "--fp16-first") {
@@ -176,6 +178,8 @@ int main(int argc, char** argv) {
             fp16_only = true;
         } else if (arg == "--q8-query-tiled-pair") {
             q8_query_tiled_pair = true;
+        } else if (arg == "--q8-only") {
+            q8_only = true;
         } else if (arg == "--fp16-fp32-attn") {
             fp16_fp32_attention = true;
         } else if (arg == "--tokens" && i + 1 < argc) {
@@ -190,18 +194,24 @@ int main(int argc, char** argv) {
             prompt_file = argv[++i];
         } else if (arg == "--session" && i + 1 < argc) {
             session_path = argv[++i];
+        } else if (arg == "--logits-out" && i + 1 < argc) {
+            logits_output = argv[++i];
         } else {
             std::cerr << "usage: miinfer-m31-fp16-full-model MODEL.gguf "
-                         "[--fp16-first] [--fp16-only] [--q8-query-tiled-pair] "
-                         "[--fp16-fp32-attn] [--tokens N] [--prompt-file PATH] [--session PATH]\n";
+                         "[--fp16-first] [--fp16-only] [--q8-only] [--logits-out PATH] "
+                         "[--q8-query-tiled-pair] [--fp16-fp32-attn] [--tokens N] "
+                         "[--prompt-file PATH] [--session PATH]\n";
             return 2;
         }
     }
-    if (argc < 2 || (fp16_first && fp16_only)
+    if (argc < 2 || (fp16_first && fp16_only) || (q8_only && (fp16_first || fp16_only))
+        || (q8_only && q8_query_tiled_pair)
+        || (!logits_output.empty() && !(q8_only || fp16_only))
         || (q8_query_tiled_pair && (fp16_first || fp16_only))) {
         std::cerr << "usage: miinfer-m31-fp16-full-model MODEL.gguf "
-                     "[--fp16-first] [--fp16-only] [--q8-query-tiled-pair] "
-                     "[--fp16-fp32-attn] [--tokens N] [--prompt-file PATH] [--session PATH]\n";
+                     "[--fp16-first] [--fp16-only] [--q8-only] [--logits-out PATH] "
+                     "[--q8-query-tiled-pair] [--fp16-fp32-attn] [--tokens N] "
+                     "[--prompt-file PATH] [--session PATH]\n";
         return 2;
     }
     miinfer::DeviceInfo device{};
@@ -251,6 +261,22 @@ int main(int argc, char** argv) {
     if (::setenv("MIINFER_M31_Q8_TO_FP16_RESTORE", session_path.empty() ? "0" : "1", 1) != 0) {
         std::cerr << "failed to set Q8-to-FP16 session restore mode\n";
         return 1;
+    }
+    if (q8_only) {
+        const auto q8 = run_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kQ8Q8,
+                                 "q8_only", tokens, capacity);
+        const bool finite = std::all_of(q8.logits.begin(), q8.logits.end(),
+                                        [](float value) { return std::isfinite(value); });
+        if (!logits_output.empty()) {
+            std::ofstream output(logits_output, std::ios::binary);
+            if (!output || !output.write(reinterpret_cast<const char*>(q8.logits.data()),
+                                         static_cast<std::streamsize>(q8.logits.size() * sizeof(float)))) {
+                std::cerr << "failed to write logits to " << logits_output << '\n';
+                return 1;
+            }
+        }
+        std::cout << "q8_logits_finite=" << finite << " q8_logits_count=" << q8.logits.size() << '\n';
+        return finite ? 0 : 1;
     }
     if (q8_query_tiled_pair) {
         std::vector<double> control_times, candidate_times;
@@ -317,6 +343,14 @@ int main(int argc, char** argv) {
                                    "fp16_tiled_candidate", tokens, capacity);
         const bool finite = std::all_of(fp16.logits.begin(), fp16.logits.end(),
                                         [](float value) { return std::isfinite(value); });
+        if (!logits_output.empty()) {
+            std::ofstream output(logits_output, std::ios::binary);
+            if (!output || !output.write(reinterpret_cast<const char*>(fp16.logits.data()),
+                                         static_cast<std::streamsize>(fp16.logits.size() * sizeof(float)))) {
+                std::cerr << "failed to write logits to " << logits_output << '\n';
+                return 1;
+            }
+        }
         std::cout << "logits_finite=" << finite << '\n';
         return finite ? 0 : 1;
     }
