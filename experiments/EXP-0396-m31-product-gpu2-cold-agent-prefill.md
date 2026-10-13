@@ -121,6 +121,14 @@ MIInfer saved checkpoint `sess_c484a78843ec60f8_p78852.miinfer`. This is evidenc
 
 The first OMP resume attempt at this context size did not reuse that checkpoint. Request 21 processed 78,970 prompt tokens but restored only the older 13,785-token checkpoint, then prefetched 65,185 tokens in 1,472,020 ms. The OMP client had a 3-minute limit and exited with `Deadline exceeded`; the server later generated 85 tokens with `finish_reason=tool_calls`, but the OMP transcript contains no corresponding tool execution or result. Request 21 wrote checkpoint `sess_80a0fab81090393c_p78970.miinfer`. The reason the 78,852-token checkpoint did not match after OMP resume is not yet identified; prompt-token divergence after 13,785 tokens is the current blocker.
 
+### OMP plural tool-call parser diagnosis
+
+The current GPU0 serving container's generated `build_config.hpp` identifies source commit `7bd18de66948`; its running executable hash is `e239b48a1fbeaec46b865a247d0500e14ea8ef5f2a9279fafd579728fbbbae0a`. This corrects the earlier attribution of the current GPU0 service to `3991b6b` and binary hash `6fbcd70f...`; those values do not identify the executable now serving OMP requests.
+
+At `7bd18de`, `append_generated_xml_calls` was changed to parse functions only inside singular `<tool_call>...</tool_call>` wrappers. OMP request 8's transcript contains two function calls enclosed by the plural `<tool_calls>...</tool_calls>` wrapper, followed by MIInfer `finish_reason=stop`; OMP treated the markup as assistant text and ran neither call. The pushed `ee911e2` change adds plural-wrapper parsing and a regression assertion for the exact two-call shape.
+
+I copied only `src/openai_api.cpp` and `tests/openai_api_test.cpp` into a temporary Machinist worktree based on the runtime source, then built and ran `miinfer-openai-api-test` with the pinned ROCm image. Result: `openai API host test passed`. This verifies the parser fix with the serving toolchain; the running server still uses the pre-fix executable. The earlier 65K resume cache miss remains a separate issue: even with valid tool parsing, request 21 replayed 65,185 tokens and exceeded the latency target.
+
 On GPU2, neither a fresh OMP process nor a resumed OMP transcript demonstrated a fast follow-up. Two requests entered prefill and remained active for about three minutes before I stopped the GPU2 container, which exited with code 137. The resumed transcript ID was `01a131bf-1af4-734d-9113-f0da8b510ec9`. An exact no-session replay of the original print-mode request also entered prefill and stayed active for one minute before I stopped it. Disk checkpoint restore did not produce a fast response in these attempts. The eight-turn task and a cached follow-up on GPU2 remain unproven.
 
 ### MIInfer service recovery after forced stop
@@ -137,7 +145,7 @@ The same OMP session was then resumed with a longer client deadline. Request 8 e
 
 ## Decision
 
-**RETEST.** OMP tool execution and disk-checkpoint restore across OMP process restart are demonstrated at 13K context: the restored turn reached a real tool call in 6.13 seconds. At 78K context, MIInfer processed 65K new relevant tokens and saved a checkpoint, but the next OMP process reused only 13,785 tokens and replayed 65,185 tokens, taking 24.5 minutes; its 3-minute client timeout prevented tool execution. This cache-prefix mismatch is the current integration blocker. Resolve it with a captured prompt comparison or keep one OMP process alive through the turn-four checkpoint, then verify the required process-resume path at 65K before continuing the eight-turn task. Keep GPU2 idle.
+**RETEST.** OMP tool execution and disk-checkpoint restore across OMP process restart are demonstrated at 13K context: the restored turn reached a real tool call in 6.13 seconds. At 78K context, MIInfer processed 65K new relevant tokens and saved a checkpoint, but the next OMP process reused only 13,785 tokens and replayed 65,185 tokens, taking 24.5 minutes; its 3-minute client timeout prevented tool execution. The current GPU0 executable also misses OMP's plural tool-call wrapper, so the already-pushed parser fix must be built and activated before another agent run. After that, complete a 65K OMP turn with its tool result saved in the transcript, restart OMP, and inspect the actual prefix reuse and restore time. Continue the eight-turn task only if this follow-up is usable; keep GPU2 idle.
 
 ## Evidence
 
