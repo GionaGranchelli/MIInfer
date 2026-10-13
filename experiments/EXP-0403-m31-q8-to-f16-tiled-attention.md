@@ -1,6 +1,6 @@
 # EXP-0403 — M31 Q8-derived FP16 tiled attention
 
-**Status:** IN PROGRESS
+**Status:** ATTENTION GATE PASSED — FULL MODEL PENDING
 
 **Baseline:** `88fd63eb0cf8b765f37e5f52168c80783df62e7b`
 
@@ -23,4 +23,17 @@ Both routes use 32 KV splits.
 
 ## Result
 
-Pending.
+On Machinist GPU2 (`0000:88:00.0`, gfx906), the Q8-derived FP16 route passed
+the output gate: maximum absolute difference `0.0000573`, cosine `0.9999782`.
+Five interleaved GPU-event samples were:
+
+- Direct Q8/Q8: `1650.706, 1604.902, 1632.943, 1587.101, 1586.676 ms`; median
+  `1604.902 ms`.
+- FP16 tiled, 32 splits: `191.513, 191.811, 193.871, 191.941, 192.119 ms`;
+  median `191.941 ms`, an 8.36x speedup.
+
+Independent GPU2 junction polling peaked at 53 C. This is a synthetic attention
+microbenchmark; it excludes model KV production, cache conversion/storage cost,
+whole-model execution, logits and token behavior. The next gate is a matched
+full-model prefill comparison using the built-in FP16 KV mode and the existing
+opt-in tiled route. No production selector is enabled by this result alone.
