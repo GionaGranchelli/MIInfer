@@ -108,6 +108,10 @@ After that server restart, OMP submitted the `git diff --check` recovery action.
 
 The candidate container is currently ready on Machinist; GPU0 is selected and GPU2 remains idle. The profile is back to its original settings. The strongest unresolved blocker is reliable dispatch of the model's in-band XML tool calls, followed by the long suffix-prefill cost at roughly 90K context. Next action: reproduce the exact raw assistant response under the controlled OMP XML dialect and capture scanner/dispatch events and MIInfer telemetry in one short checkpoint-backed call, fixing only the dialect selection or parser path if that observation proves the mismatch.
 
+### Explicit XML retry in progress (2026-10-13 06:03 UTC)
+
+The isolated profile now has only one delta from `/tmp/m31-product-config.yml.before-xml-retry`: `tools.format: xml`. `maxTokens` remains 4096. OMP is running the one-command `git diff --check` request against the resumed session. The request has been active for about 22 minutes and is still in `prefill_started`; the client and MIInfer container are both live. MIInfer metrics remain at 3 inference requests, 1 active request, 262 completed prefill tokens, and 126 generated tokens. GPU0 is at 100% use and 75 C junction temperature; GPUs1 and 2 are idle. Additional request IDs have reached the server, but none has completed while this inference remains active. This is an in-flight observation, not evidence of tool dispatch or a latency result. The pre-XML profile is preserved at `/tmp/m31-product-config.yml.before-xml-retry` and must be restored after this attempt terminates.
+
 ## Evidence locations
 
 - OMP transcript: `/tmp/m31-product-omp-rpc-eight-turn/2026-10-13T01-31-21-420Z_01a132e2-b7cc-744c-b0ec-6bd423af3459.jsonl`.
