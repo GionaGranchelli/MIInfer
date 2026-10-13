@@ -7266,7 +7266,7 @@ void launch_qwen35_splitk_suffix_attention_q8_headpair(
     hipLaunchKernelGGL(
         (qwen35_splitk_suffix_attn_stage1_quant_kernel<true, true, 4, true>),
         grid1, block1, 0, stream,
-        q, key_cache_q8, key_scales, value_cache_q8, value_scales,
+        q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,
         d_partial_max, d_partial_sum, d_partial_acc,
         token_count, base_position, cache_capacity,
         query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
