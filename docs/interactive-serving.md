@@ -118,3 +118,26 @@ For the targeted wide-versus-scalar recurrent-state diagnostic, add
 `MIINFER_INTERACTIVE_VALIDATE=1`. It enables validation for the first recurrent
 layer, including the Mx wide path, and prints maximum output, state, and convolution-history errors;
 it is intentionally too slow for serving.
+
+## Oh My Pi
+
+Oh My Pi consumes `miinfer serve` as any local OpenAI-compatible endpoint. Use
+a profile such as:
+
+```yaml
+providers:
+  miinfer-m31:
+    baseUrl: http://127.0.0.1:8080/v1
+    api: openai-completions
+    auth: none
+    models:
+      - id: qwen3.8-27b
+        contextWindow: 98304
+        maxTokens: 2048
+```
+
+`auth: none` is suitable only on loopback or through an SSH tunnel; for LAN
+serving use `--api-key-file`. Verify that OMP executes one real bash tool call
+and returns its output before relying on this setup. A passing short-context
+tool-call smoke demonstrates compatibility only; it does not establish 64K
+persistence, checkpoint restore, or latency (see EXP-0396).
