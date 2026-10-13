@@ -27,7 +27,9 @@ T* allocate_device(std::size_t count) {
 
 struct Result {
     double prefill_seconds = 0.0;
+    double decode_seconds = 0.0;
     std::uint32_t top1 = 0;
+    std::uint32_t second_token = 0;
     std::vector<float> logits;
 };
 
@@ -58,10 +60,16 @@ Result run_mode(const miinfer::Qwen35Model& model,
         result.logits.size() * sizeof(float), hipMemcpyDeviceToHost));
     result.top1 = static_cast<std::uint32_t>(std::distance(
         result.logits.begin(), std::max_element(result.logits.begin(), result.logits.end())));
+    const auto decode_start = std::chrono::steady_clock::now();
+    result.second_token = runtime.decode_step(result.top1, static_cast<std::uint32_t>(tokens.size()));
+    result.decode_seconds = std::chrono::duration<double>(
+        std::chrono::steady_clock::now() - decode_start).count();
     MIINFER_HIP_CHECK(hipFree(hidden));
     MIINFER_HIP_CHECK(hipFree(logits));
     std::cout << label << " prefill_seconds=" << std::fixed << std::setprecision(3)
-              << result.prefill_seconds << " top1=" << result.top1 << '\n';
+              << result.prefill_seconds << " first_token=" << result.top1
+              << " decode_seconds=" << result.decode_seconds
+              << " second_token=" << result.second_token << '\n';
     return result;
 }
 
@@ -122,6 +130,7 @@ int main(int argc, char** argv) {
     const double cosine = dot / (std::sqrt(q8_norm * fp16_norm) + 1e-30);
     std::cout << std::setprecision(9) << "logits_max_abs=" << max_abs
               << " logits_cosine=" << cosine
-              << " top1_equal=" << (q8.top1 == fp16.top1) << '\n';
+              << " first_token_equal=" << (q8.top1 == fp16.top1)
+              << " second_token_equal=" << (q8.second_token == fp16.second_token) << '\n';
     return finite && std::isfinite(max_abs) && std::isfinite(cosine) ? 0 : 1;
 }
