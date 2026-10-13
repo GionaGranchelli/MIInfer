@@ -24,7 +24,15 @@ After turn 4, I restarted MIInfer while keeping the OMP RPC session alive. The f
 | First request after turn-four server restart (new request 2) | 87,092 | 86,688 | 2,884.88 ms | 34,873.3 ms | 37,970.5 ms | 64,210.3 ms |
 | Later request that restored the older prefix (new request 5) | 88,021 | 84,366 | 2,815.36 ms | 151,473 ms | 154,533.9 ms | 159,089 ms |
 
-The 15-second first-useful-action target failed on both post-restart samples. Even the later same-process cached request reached 15.54 seconds TTFT before tool execution. These timings are far above the target; no competitive engine claim is made.
+The OMP transcript gives the direct user-message-to-tool-result measurement:
+
+| Turn | First successful action | Time |
+| --- | --- | ---: |
+| 5, first turn after MIInfer restart | Read result | 64.376 s |
+| 6 | Read result | 159.270 s |
+| 7 | Successful bash replacement, after one failed call | 246.878 s |
+
+Each is one distinct turn, not a repeated sample of an identical task; the observed span is 64.376–246.878 seconds, with no median claim. The 15-second gate fails on all three. Request-level MIInfer TTFT in the measurement table is a diagnostic metric, not a substitute for this user-visible action time. The dominant costs are suffix prefill (34.9 seconds on the first post-restart request; 151.5 seconds on the later stale-prefix restore) plus model generation/tool-call handling. No competitive engine claim is made.
 
 GPU0 reached 75°C junction during the recorded workload; the warning/stop thresholds were 80/90°C and neither triggered. GPU2 remained idle. The user-set 180 W cap was in place.
 
