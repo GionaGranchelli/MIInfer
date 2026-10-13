@@ -68,9 +68,9 @@ Subsequent same-process requests reused the checkpoint boundary and did not repl
 | 5 | 82,873 | 82,802 | 71 | 1.20 ms | 6.83 s | 50.98 s | stop |
 | 6 | 82,941 | 82,870 | 71 | 1.39 ms | 6.86 s | 38.49 s | stop |
 
-The larger suffix in request 3 came from the returned inspection output. Requests 4–6 show fast first-token latency with only 71 new tokens, while total time still includes generation. These are internal OMP tool-cycle requests, not three distinct user follow-up samples. No MIInfer process restart or disk restore has yet been tested in this retest.
+The larger suffix in request 3 came from the returned inspection output. Requests 4–6 show fast first-token latency with only 71 new tokens, while total time still includes generation. These are internal OMP tool-cycle requests, not three distinct user follow-up samples. No process restart occurred in this subset; the later restart test is recorded below.
 
-The OMP session executed the requested read-only Turn 1 tool calls, but ended normally after several reasoning-only responses without a visible user-facing findings/plan message. The session transcript is `/tmp/m31-product-omp-eight-turn-retry/2026-10-13T03-43-31-875Z_01a1335b-ba23-75f2-91d3-5cecef8df00e.jsonl`. The eight-turn workload, restart restore, and follow-up usability gate remain unproven.
+The OMP session executed the requested read-only Turn 1 tool calls, but ended normally after several reasoning-only responses without a visible user-facing findings/plan message. The session transcript is `/tmp/m31-product-omp-eight-turn-retry/2026-10-13T03-43-31-875Z_01a1335b-ba23-75f2-91d3-5cecef8df00e.jsonl`.
 
 The resumed OMP session then received two additional user turns. It issued read/grep tool calls but made no repository edits and exited normally after reasoning-only output. Their first actionable tool calls arrived 195.6 s and 142.7 s after the respective user messages, despite short MIInfer first-token times on one request. Thus the 15-second product gate fails at the agent level.
 
@@ -80,7 +80,13 @@ The resumed OMP session then received two additional user turns. It issued read/
 | 11 | 86,030 | 82,872 | 3,158 | 2.960 s | 131.67 s | 142.62 s |
 | 12 | 87,471 | 86,027 | 1,444 | 0 | 67.24 s | 67.24 s |
 
-The request 7 disk restore happened while MIInfer itself stayed running; this does not prove process-restart recovery. A persistent checkpoint at 85,482 tokens existed before request 11, but request 11 matched only 82,872 tokens. The cause of that prompt mismatch remains unknown. The OMP worktree is still clean at `29fbc26`; turn four, an MIInfer restart, and a correct coding outcome have not been reached.
+The request 7 disk restore happened while MIInfer itself stayed running; it did not prove process-restart recovery. A persistent checkpoint at 85,482 tokens existed before request 11, but request 11 matched only 82,872 tokens. The cause of that prompt mismatch remains unknown.
+
+Turn 4's `git apply` tool action arrived 138.2 s after its user message. It applied the already-built two-file fix to the isolated OMP worktree; `git diff --check` passed. The resulting change touched only `src/prefill_v2/model.cpp` and `tools/miinfer_cli.cpp` (43 insertions, 21 deletions). It has not yet been committed or built in that worktree.
+
+After Turn 4, the idle candidate server was stopped cleanly and restarted. The saved checkpoint at 86,252 tokens was present. OMP resumed and its first post-restart request restored that persistent snapshot: 86,466 prompt tokens, 86,252 reused, 214 new suffix, 2.872 s restore, 23.76 s TTFT, and 41.25 s total. The OMP bash tool call started 41.4 s after the Turn 5 user message. This proves state continuity across an MIInfer process restart, but misses the 15-second useful-action target. A newer 86,297-token checkpoint existed but did not match this prompt; why the prompt diverged remains open.
+
+Turn 6 ran additional bash checks through OMP. Its first tool action arrived 34.2 s after the user message. MIInfer request 9 reused 87,239 tokens, prefetched 3 tokens, and reached first token in 0.94 s; that server TTFT is not the OMP user-to-action latency. The session still has not completed eight turns or a validated coding outcome.
 
 ## Evidence locations
 
