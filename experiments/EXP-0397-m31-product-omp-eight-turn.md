@@ -112,6 +112,8 @@ The candidate container is currently ready on Machinist; GPU0 is selected and GP
 
 The isolated profile now has only one delta from `/tmp/m31-product-config.yml.before-xml-retry`: `tools.format: xml`. `maxTokens` remains 4096. OMP is running the one-command `git diff --check` request against the resumed session. The request has been active for about 22 minutes and is still in `prefill_started`; the client and MIInfer container are both live. MIInfer metrics remain at 3 inference requests, 1 active request, 262 completed prefill tokens, and 126 generated tokens. GPU0 is at 100% use and 75 C junction temperature; GPUs1 and 2 are idle. Additional request IDs have reached the server, but none has completed while this inference remains active. This is an in-flight observation, not evidence of tool dispatch or a latency result. The pre-XML profile is preserved at `/tmp/m31-product-config.yml.before-xml-retry` and must be restored after this attempt terminates.
 
+At 06:11 UTC, the same request was still active after about 29 minutes and the completion counters were unchanged. Machinist's socket table showed one established connection to the MIInfer API, forwarded by the local SSH tunnel; the local side showed one OMP process connected to that tunnel. No separate API client explains the newer `received` request IDs. Their cause remains unknown, and they are not inference completions.
+
 ## Evidence locations
 
 - OMP transcript: `/tmp/m31-product-omp-rpc-eight-turn/2026-10-13T01-31-21-420Z_01a132e2-b7cc-744c-b0ec-6bd423af3459.jsonl`.
