@@ -529,7 +529,7 @@ void launch_m12_gdn_direct(
     std::uint32_t value_heads, std::uint32_t state_size, hipStream_t stream) {
     if (query == nullptr || key == nullptr || value == nullptr || beta == nullptr
         || decay == nullptr || state == nullptr || output == nullptr
-        || token_count == 0 || token_count > 512 || key_heads == 0 || value_heads == 0
+        || token_count == 0 || token_count > 1024 || key_heads == 0 || value_heads == 0
         || state_size != 128 || value_heads % key_heads != 0) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
@@ -549,7 +549,7 @@ void launch_mx_gdn_chunk_impl(
     std::uint32_t value_heads, std::uint32_t state_size, hipStream_t stream) {
     if (query == nullptr || key == nullptr || value == nullptr || beta == nullptr
         || decay == nullptr || state == nullptr || output == nullptr
-        || token_count == 0 || token_count > 512
+        || token_count == 0 || token_count > 1024
         || key_heads == 0 || value_heads == 0 || value_heads % key_heads != 0
         || state_size != 128) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);

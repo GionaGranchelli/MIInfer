@@ -204,6 +204,10 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-m31-prefill-attribution PRIVATE miinfer_hip)
     target_compile_options(miinfer-m31-prefill-attribution PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-m31-prefill-tile-ab bench/m31_prefill_tile_ab.cpp)
+    target_link_libraries(miinfer-m31-prefill-tile-ab PRIVATE miinfer_hip miinfer_model)
+    target_compile_options(miinfer-m31-prefill-tile-ab PRIVATE -Wall -Wextra -Wpedantic)
+
     add_executable(miinfer-m31-q8-split-count bench/m31_q8_split_count.cpp)
     target_link_libraries(miinfer-m31-q8-split-count PRIVATE miinfer_hip)
     target_compile_options(miinfer-m31-q8-split-count PRIVATE -Wall -Wextra -Wpedantic)

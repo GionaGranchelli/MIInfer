@@ -151,6 +151,7 @@ int main(int argc, char** argv) {
     float* d_q = allocate_device<float>(q_count);
     float* d_gate = allocate_device<float>(q_count);
     float* d_q8 = allocate_device<float>(q_count);
+    float* d_q8_split = allocate_device<float>(q_count);
     float* d_q8_tiled = allocate_device<float>(q_count);
     float* d_fp16 = allocate_device<float>(q_count);
     std::int8_t* d_k_q8 = allocate_device<std::int8_t>(kv_count);
@@ -171,20 +172,32 @@ int main(int argc, char** argv) {
 
     run_q8(d_q, d_k_q8, d_k_scale, d_v_q8, d_v_scale, d_gate, d_q8, d_workspace,
            kQueries, kPrefix, kCapacity);
+    if (kQueries % 2 == 0) {
+        const std::uint32_t half_queries = kQueries / 2;
+        const std::size_t half_offset = static_cast<std::size_t>(half_queries) * kHeads * kDim;
+        run_q8(d_q, d_k_q8, d_k_scale, d_v_q8, d_v_scale, d_gate, d_q8_split, d_workspace,
+               half_queries, kPrefix, kCapacity);
+        run_q8(d_q + half_offset, d_k_q8, d_k_scale, d_v_q8, d_v_scale,
+               d_gate + half_offset, d_q8_split + half_offset, d_workspace,
+               half_queries, kPrefix + half_queries, kCapacity);
+    }
     run_q8_tiled(d_q, d_k_q8, d_k_scale, d_v_q8, d_v_scale, d_gate, d_q8_tiled,
                  d_workspace, kQueries, kPrefix, kCapacity);
     run_fp16(d_q, d_k_f16, d_v_f16, d_gate, d_fp16, d_workspace,
              kQueries, kPrefix, kCapacity);
-    std::vector<float> q8_output(q_count), q8_tiled_output(q_count), fp16_output(q_count);
+    std::vector<float> q8_output(q_count), q8_split_output(q_count);
+    std::vector<float> q8_tiled_output(q_count), fp16_output(q_count);
     MIINFER_HIP_CHECK(hipMemcpy(q8_output.data(), d_q8, q_count * sizeof(float), hipMemcpyDeviceToHost));
+    MIINFER_HIP_CHECK(hipMemcpy(q8_split_output.data(), d_q8_split, q_count * sizeof(float), hipMemcpyDeviceToHost));
     MIINFER_HIP_CHECK(hipMemcpy(q8_tiled_output.data(), d_q8_tiled, q_count * sizeof(float), hipMemcpyDeviceToHost));
     MIINFER_HIP_CHECK(hipMemcpy(fp16_output.data(), d_fp16, q_count * sizeof(float), hipMemcpyDeviceToHost));
     double max_abs = 0.0, dot = 0.0, q8_norm = 0.0, fp16_norm = 0.0;
+    double split_max_abs = 0.0, split_dot = 0.0, split_norm = 0.0;
     double tiled_max_abs = 0.0, tiled_dot = 0.0, tiled_norm = 0.0;
     bool finite = true;
     for (std::size_t i = 0; i < q_count; ++i) {
         finite = finite && std::isfinite(q8_output[i]) && std::isfinite(q8_tiled_output[i])
-            && std::isfinite(fp16_output[i]);
+            && std::isfinite(fp16_output[i]) && std::isfinite(q8_split_output[i]);
         max_abs = std::max(max_abs, std::abs(static_cast<double>(q8_output[i]) - fp16_output[i]));
         dot += static_cast<double>(q8_output[i]) * fp16_output[i];
         q8_norm += static_cast<double>(q8_output[i]) * q8_output[i];
@@ -193,16 +206,25 @@ int main(int argc, char** argv) {
             std::abs(static_cast<double>(q8_output[i]) - q8_tiled_output[i]));
         tiled_dot += static_cast<double>(q8_output[i]) * q8_tiled_output[i];
         tiled_norm += static_cast<double>(q8_tiled_output[i]) * q8_tiled_output[i];
+        split_max_abs = std::max(split_max_abs,
+            std::abs(static_cast<double>(q8_output[i]) - q8_split_output[i]));
+        split_dot += static_cast<double>(q8_output[i]) * q8_split_output[i];
+        split_norm += static_cast<double>(q8_split_output[i]) * q8_split_output[i];
     }
     const double cosine = dot / (std::sqrt(q8_norm * fp16_norm) + 1e-30);
     const double tiled_cosine = tiled_dot / (std::sqrt(q8_norm * tiled_norm) + 1e-30);
+    const double split_cosine = split_dot / (std::sqrt(q8_norm * split_norm) + 1e-30);
     std::cout << std::fixed << std::setprecision(7)
               << "fp16_correctness_max_abs=" << max_abs << " cosine=" << cosine << '\n'
+              << "q8_split512_correctness_max_abs=" << split_max_abs
+              << " cosine=" << split_cosine << '\n'
               << "q8_tiled_correctness_max_abs=" << tiled_max_abs
               << " cosine=" << tiled_cosine << '\n';
     if (!finite || !std::isfinite(max_abs) || !std::isfinite(cosine)
             || !std::isfinite(tiled_max_abs) || !std::isfinite(tiled_cosine)
+            || !std::isfinite(split_max_abs) || !std::isfinite(split_cosine)
             || max_abs > 0.01 || cosine < 0.9999
+            || split_max_abs > 0.01 || split_cosine < 0.9999
             || tiled_max_abs > 0.01 || tiled_cosine < 0.9999) {
         std::cerr << "tiled output diverged from direct Q8 attention\n";
         return 1;
@@ -236,6 +258,7 @@ int main(int argc, char** argv) {
     MIINFER_HIP_CHECK(hipFree(d_q));
     MIINFER_HIP_CHECK(hipFree(d_gate));
     MIINFER_HIP_CHECK(hipFree(d_q8));
+    MIINFER_HIP_CHECK(hipFree(d_q8_split));
     MIINFER_HIP_CHECK(hipFree(d_q8_tiled));
     MIINFER_HIP_CHECK(hipFree(d_fp16));
     MIINFER_HIP_CHECK(hipFree(d_k_q8));

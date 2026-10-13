@@ -2779,7 +2779,7 @@ __launch_bounds__(128, 1) __global__ void mx_q8_1_mmq_quantize_kernel(
 void miinfer::launch_mx_q8_1_mmq_quantize(
     const float* input, miinfer::MxQ8_1MmqBlock* output, std::uint32_t token_count,
     std::uint32_t elements, bool affine, hipStream_t stream) {
-    if (input == nullptr || output == nullptr || token_count == 0 || token_count > 512
+    if (input == nullptr || output == nullptr || token_count == 0 || token_count > 1024
         || elements == 0 || elements % 128 != 0) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
@@ -2810,7 +2810,7 @@ void launch_mx_q4k_repacked_mmq(
     const std::uint8_t* weights, const miinfer::MxQ8_1MmqBlock* input, float* output,
     std::uint32_t rows, std::uint32_t columns, std::uint32_t token_count, hipStream_t stream) {
     if (weights == nullptr || input == nullptr || output == nullptr || rows == 0
-        || columns == 0 || columns % 128 != 0 || token_count == 0 || token_count > 512) {
+        || columns == 0 || columns % 128 != 0 || token_count == 0 || token_count > 1024) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     if (token_count == 1 && mx_mmv_enabled()) {
@@ -2841,7 +2841,7 @@ void launch_mx_q5k_repacked_mmq(
     const std::uint8_t* weights, const miinfer::MxQ8_1MmqBlock* input, float* output,
     std::uint32_t rows, std::uint32_t columns, std::uint32_t token_count, hipStream_t stream) {
     if (weights == nullptr || input == nullptr || output == nullptr || rows == 0
-        || columns == 0 || columns % 128 != 0 || token_count == 0 || token_count > 512) {
+        || columns == 0 || columns % 128 != 0 || token_count == 0 || token_count > 1024) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     if (token_count == 1 && mx_mmv_enabled()) {
@@ -2873,7 +2873,7 @@ void launch_mx_q6k_repacked_mmq_impl(
     std::uint32_t rows, std::uint32_t columns, std::uint32_t token_count,
     hipStream_t stream, bool force_pinned) {
     if (weights == nullptr || input == nullptr || output == nullptr || rows == 0
-        || columns == 0 || columns % 128 != 0 || token_count == 0 || token_count > 512) {
+        || columns == 0 || columns % 128 != 0 || token_count == 0 || token_count > 1024) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     if (token_count == 1 && mx_mmv_enabled() && !force_pinned) {
@@ -3247,7 +3247,7 @@ void launch_m23_q6k_repacked_mmq(
     const Q6KMmqTile* weights, const miinfer::M23Q8_1MmqBlock* input, float* output,
     std::uint32_t rows, std::uint32_t columns, std::uint32_t token_count, hipStream_t stream) {
     if (!weights || !input || !output || rows == 0 || rows % 64 != 0 || columns == 0
-        || columns % 128 != 0 || token_count == 0 || token_count > 512) {
+        || columns % 128 != 0 || token_count == 0 || token_count > 1024) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     if (m23_repacked_row128_enabled() && rows % 128 == 0) {
@@ -3266,7 +3266,7 @@ void launch_m23_q4k_repacked_mmq(
     const Q4KMmqTile* weights, const miinfer::M23Q8_1MmqBlock* input, float* output,
     std::uint32_t rows, std::uint32_t columns, std::uint32_t token_count, hipStream_t stream) {
     if (!weights || !input || !output || rows == 0 || rows % 64 != 0 || columns == 0
-        || columns % 128 != 0 || token_count == 0 || token_count > 512) {
+        || columns % 128 != 0 || token_count == 0 || token_count > 1024) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     if (m23_repacked_row128_enabled() && rows % 128 == 0) {
@@ -3285,7 +3285,7 @@ void launch_m23_q5k_repacked_mmq(
     const Q5KMmqTile* weights, const miinfer::M23Q8_1MmqBlock* input, float* output,
     std::uint32_t rows, std::uint32_t columns, std::uint32_t token_count, hipStream_t stream) {
     if (!weights || !input || !output || rows == 0 || rows % 64 != 0 || columns == 0
-        || columns % 128 != 0 || token_count == 0 || token_count > 512) {
+        || columns % 128 != 0 || token_count == 0 || token_count > 1024) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     if (m23_repacked_row128_enabled() && rows % 128 == 0) {

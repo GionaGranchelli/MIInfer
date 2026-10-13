@@ -118,7 +118,8 @@ int main(int argc, char** argv) {
         opt.reset_state_before = true;
         opt.use_hip_graph = true;
 
-        std::cout << "  Executing Prefill (" << cfg.prompt_tokens << " tokens in Macro-512 tiles)...\n";
+        std::cout << "  Executing Prefill (" << cfg.prompt_tokens << " tokens in Macro-"
+                  << kPrefillV2MacroTile << " tiles)...\n";
         auto gen_stats = model.generate(prompt, opt);
 
         BenchmarkResult r;

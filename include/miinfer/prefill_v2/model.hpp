@@ -83,7 +83,7 @@ struct ModelProfileBreakdown {
 // - LM Head Output Projection (Q6_K)
 // - 48 Persistent RecurrentLayerStateStorage instances
 // - 16 Persistent AttentionLayerKvCacheStorage instances
-// - Monolithic Shared Workspace (sized for kMaxPrefillBatch = 512)
+// - Monolithic Shared Workspace (sized for kMaxPrefillBatch)
 // - Ping-pong activation buffers
 class PrefillV2Model {
 public:
@@ -104,7 +104,7 @@ public:
     // Reset all 48 recurrent states and 16 KV caches
     void reset_state();
 
-    // Physical single-chunk forward execution through the 64-layer pipeline (token_count <= 512)
+    // Physical single-chunk forward execution through the 64-layer pipeline.
     // d_tokens: device pointer to token IDs [token_count]
     // base_position: starting token index in the sequence
     // token_count: number of tokens to process (must be <= kMaxPrefillBatch)
@@ -124,7 +124,7 @@ public:
         float* d_final_hidden_out,
         hipStream_t stream = nullptr);
 
-    // Profiled forward for a single chunk (token_count <= 512)
+    // Profiled forward for a single chunk.
     void forward_profiled(
         const std::uint32_t* d_tokens,
         std::uint32_t base_position,
@@ -133,8 +133,8 @@ public:
         ModelProfileBreakdown& breakdown,
         hipStream_t stream = nullptr);
 
-    // Native Full-Model Macro Scheduler (V2 Macro Tile = 512)
-    // Sequentially executes arbitrarily long sequences in 512-token full-model macro tiles,
+    // Native Full-Model Macro Scheduler (V2 Macro Tile = 1024)
+    // Sequentially executes arbitrarily long sequences in full-model macro tiles,
     // seamlessly advancing base_position and persisting all 48 recurrent states and 16 KV caches.
     void prefill_sequence(
         const std::uint32_t* d_tokens,
@@ -166,7 +166,7 @@ public:
         hipStream_t stream = nullptr);
 
     // End-to-End Generation Pipeline:
-    // 1. Prefills the full prompt using native 512-token macro-tiling.
+    // 1. Prefills the full prompt using the native macro tile.
     // 2. Evaluates the initial token logits (TTFT).
     // 3. Hands off persistent recurrent states and KV caches directly to the autoregressive decode loop with ZERO device copies.
     // 4. Decodes up to max_new_tokens sequentially.
@@ -232,7 +232,7 @@ public:
     void cleanup_decode_graph();
     [[nodiscard]] bool is_decode_graph_captured() const noexcept { return decode_graph_exec_ != nullptr; }
 
-    // Reusable Suffix Prefill Graph Capture & Replay (512-token macro tile)
+    // Reusable Suffix Prefill Graph Capture & Replay (macro tile)
     void capture_suffix_graph(hipStream_t stream = nullptr);
     void cleanup_suffix_graph();
     [[nodiscard]] bool is_suffix_graph_captured() const noexcept { return suffix_graph_exec_ != nullptr; }

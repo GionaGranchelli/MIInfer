@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <cstdlib>
 #include <iostream>
 #include <random>
 #include <stdexcept>
@@ -422,6 +423,7 @@ void PrefillV2Model::forward(
     }
 
     auto& ws = const_cast<PrefillV2Workspace&>(ws_mgr_->workspace());
+    for (auto& state : recurrent_states_) state.set_position(base_position);
 
     // 1. Embed tokens: d_tokens -> d_ping_ [token_count, kHidden]
     launch_qwen35_q4_k_embedding_batch(
@@ -466,6 +468,7 @@ void PrefillV2Model::forward(
         kHidden,
         rms_epsilon_,
         stream);
+    for (auto& state : recurrent_states_) state.set_position(base_position + token_count);
 }
 
 void PrefillV2Model::forward(
@@ -502,6 +505,7 @@ void PrefillV2Model::forward_profiled(
     }
 
     auto& ws = const_cast<PrefillV2Workspace&>(ws_mgr_->workspace());
+    for (auto& state : recurrent_states_) state.set_position(base_position);
 
     hipEvent_t ev_start, ev_emb, ev_blocks_end, ev_final;
     MIINFER_HIP_CHECK(hipEventCreate(&ev_start));
@@ -573,6 +577,8 @@ void PrefillV2Model::forward_profiled(
     breakdown.embedding_ms = elapsed(ev_start, ev_emb);
     breakdown.final_norm_ms = elapsed(ev_blocks_end, ev_final);
     breakdown.total_model_ms = elapsed(ev_start, ev_final);
+
+    for (auto& state : recurrent_states_) state.set_position(base_position + token_count);
 
     MIINFER_HIP_CHECK(hipEventDestroy(ev_start));
     MIINFER_HIP_CHECK(hipEventDestroy(ev_emb));
@@ -887,7 +893,7 @@ GenerateStats PrefillV2Model::generate(
         stats.prefix_tokens_reused = 0;
         stats.suffix_tokens_dispatched = prompt_len;
 
-        // Cold prefill sequence using native macro scheduler (Macro Tile = 512)
+        // Cold prefill sequence using the native macro scheduler.
         std::uint32_t pos = 0;
         while (pos < prompt_len) {
             std::uint32_t chunk = std::min<std::uint32_t>(kPrefillV2MacroTile, prompt_len - pos);

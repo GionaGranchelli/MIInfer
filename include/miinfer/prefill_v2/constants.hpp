@@ -35,10 +35,10 @@ constexpr std::size_t kRecurrentPerBlock = 3;
 constexpr std::size_t kAttentionPerBlock = 1;
 constexpr std::size_t kLayersPerBlock = 4;
 
-// Native full-model macro tile size for long sequences
-constexpr std::uint32_t kPrefillV2MacroTile = 512;
+// Full-model tile size; currently shares its bound with the physical workspace batch.
+constexpr std::uint32_t kPrefillV2MacroTile = 1024;
 
-// Maximum physical prefill batch width executed in one kernel launch (Macro Tile = 512)
-constexpr std::size_t kMaxPrefillBatch = 512;
+// Maximum token count accepted by the PrefillV2 forward path and its workspaces.
+constexpr std::size_t kMaxPrefillBatch = 1024;
 
 } // namespace miinfer::prefill_v2
