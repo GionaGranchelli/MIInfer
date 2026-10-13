@@ -22,6 +22,7 @@ struct TopologyBlockProfileBreakdown {
     double gdn2_ms = 0.0;
     double gqa3_ms = 0.0;
     double total_block_ms = 0.0;
+    AttentionLayerProfileBreakdown gqa3_detail;
 };
 
 // Represents one canonical 4-layer repeating topology block in Qwen3.8-27B:

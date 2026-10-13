@@ -200,6 +200,10 @@ if(MIINFER_ENABLE_HIP)
     target_link_libraries(miinfer-prefill-v2-model-bench PRIVATE miinfer_hip)
     target_compile_options(miinfer-prefill-v2-model-bench PRIVATE -Wall -Wextra -Wpedantic)
 
+    add_executable(miinfer-m31-prefill-attribution bench/m31_prefill_attribution.cpp)
+    target_link_libraries(miinfer-m31-prefill-attribution PRIVATE miinfer_hip)
+    target_compile_options(miinfer-m31-prefill-attribution PRIVATE -Wall -Wextra -Wpedantic)
+
     add_executable(miinfer-prefill-v2-attention-bakeoff bench/prefill_v2_attention_bakeoff.cpp)
     target_link_libraries(miinfer-prefill-v2-attention-bakeoff PRIVATE miinfer_hip)
     target_compile_options(miinfer-prefill-v2-attention-bakeoff PRIVATE -Wall -Wextra -Wpedantic)

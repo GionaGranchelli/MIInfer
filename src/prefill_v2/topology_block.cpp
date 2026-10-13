@@ -108,7 +108,9 @@ void PrefillV2TopologyBlock::forward_profiled(
     MIINFER_HIP_CHECK(hipEventRecord(ev_l2, stream));
 
     // Layer 3 (GQA): d_pong -> d_final_output
-    gqa3_.forward(d_pong, d_final_output, kv_cache3, ws, base_position, token_count, stream);
+    gqa3_.forward_profiled(
+        d_pong, d_final_output, kv_cache3, ws, base_position, token_count,
+        breakdown.gqa3_detail, stream);
     MIINFER_HIP_CHECK(hipEventRecord(ev_l3, stream));
 
     MIINFER_HIP_CHECK(hipEventSynchronize(ev_l3));
