@@ -343,7 +343,7 @@ void PrefillV2AttentionLayer::forward(
             kv_cache.value_cache_q8, kv_cache.value_scales,
             ws.gate, ws.attn_gated_output, ws.splitk_attn_workspace,
             token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
-            24, 4, 256, 1.0F / std::sqrt(256.0F), 32, stream);
+            24, 4, 256, 1.0F / std::sqrt(256.0F), 3, stream);
     } else if (((token_count <= 512
                  && (base_position > 0 || kv_cache.is_k_q8() || kv_cache.is_v_q8()))
                 || prefill_state != nullptr)
@@ -487,7 +487,7 @@ void PrefillV2AttentionLayer::forward_profiled(
             kv_cache.value_cache_q8, kv_cache.value_scales,
             ws.gate, ws.attn_gated_output, ws.splitk_attn_workspace,
             token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
-            24, 4, 256, 1.0F / std::sqrt(256.0F), 32, stream);
+            24, 4, 256, 1.0F / std::sqrt(256.0F), 3, stream);
     } else if (token_count <= 512
                && (base_position > 0 || kv_cache.is_k_q8() || kv_cache.is_v_q8())
                && ws.splitk_attn_workspace != nullptr) {
