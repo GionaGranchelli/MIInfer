@@ -3040,7 +3040,7 @@ __global__ void qwen35_quantize_q8_query_kernel(
 template <bool KEY_Q8, bool VALUE_Q8, bool FP32_ACCUM, bool QUERY_Q8 = false,
           bool USE_PREFILL_STATE = false, bool DOT4_ILP2 = false,
           bool QUERY_RESIDUAL = false, bool QUERY_RESIDUAL2 = false,
-          bool QUERY_RESIDUAL3 = false>
+          bool QUERY_RESIDUAL3 = false, bool KQ_REGISTER_PIPELINE = false>
 __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_batch_kernel(
     const float* __restrict__ q, const __half* __restrict__ key_cache,
     const __half* __restrict__ value_cache,
@@ -3451,29 +3451,72 @@ __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_bat
                     *reinterpret_cast<uint4*>(kv_tmp + position * kKRowStride + fragment * 8) = packed;
                 }
                 __syncthreads();
-                for (std::uint32_t fragment = 0; fragment < 16; ++fragment) {
-                    const std::uint32_t swizzled_fragment = fragment ^ (lane & 7);
-                    const uint4 k_bits = *reinterpret_cast<const uint4*>(
-                        kv_tmp + lane * kKRowStride + swizzled_fragment * 8);
+                if constexpr (KQ_REGISTER_PIPELINE && !FP32_ACCUM) {
+                    // Scheduling idea reimplemented independently from the register ping-pong
+                    // in milpster/gfx906-llama-cpp (MIT, 1373e889; fattn-tile.cuh:725-779).
+                    uint4 k_bits[2];
+                    uint4 q_bits[2][kRowsPerWarp];
+                    const std::uint32_t swizzled_zero = lane & 7;
+                    k_bits[0] = *reinterpret_cast<const uint4*>(
+                        kv_tmp + lane * kKRowStride + swizzled_zero * 8);
 #pragma unroll
                     for (std::uint32_t r = 0; r < kRowsPerWarp; ++r) {
                         const std::uint32_t row = warp * kRowsPerWarp + r;
-                        if constexpr (FP32_ACCUM) {
-                            const float* q_values = q_tmp_f32 + row * 256 + d_base + fragment * 8;
+                        q_bits[0][r] = *reinterpret_cast<const uint4*>(
+                            reinterpret_cast<const __half*>(shared) + row * 256 + d_base);
+                    }
+                    for (std::uint32_t fragment = 0; fragment < 16; ++fragment) {
+                        const std::uint32_t cur = fragment & 1;
+                        const std::uint32_t nxt = cur ^ 1;
+                        if (fragment + 1 < 16) {
+                            const std::uint32_t next_fragment = fragment + 1;
+                            const std::uint32_t swizzled_next = next_fragment ^ (lane & 7);
+                            k_bits[nxt] = *reinterpret_cast<const uint4*>(
+                                kv_tmp + lane * kKRowStride + swizzled_next * 8);
 #pragma unroll
-                            for (std::uint32_t d = 0; d < 8; ++d) {
-                                dot[r] = fmaf(q_values[d], __half2float(reinterpret_cast<const __half*>(&k_bits)[d]), dot[r]);
+                            for (std::uint32_t r = 0; r < kRowsPerWarp; ++r) {
+                                const std::uint32_t row = warp * kRowsPerWarp + r;
+                                q_bits[nxt][r] = *reinterpret_cast<const uint4*>(
+                                    reinterpret_cast<const __half*>(shared) + row * 256
+                                    + d_base + next_fragment * 8);
                             }
-                        } else {
-                            const __half2* k_pairs = reinterpret_cast<const __half2*>(&k_bits);
-                            const uint4 q_bits = *reinterpret_cast<const uint4*>(
-                                reinterpret_cast<const __half*>(shared) + row * 256
-                                + d_base + fragment * 8);
-                            const __half2* q_pairs = reinterpret_cast<const __half2*>(&q_bits);
+                        }
+                        const __half2* k_pairs = reinterpret_cast<const __half2*>(&k_bits[cur]);
+#pragma unroll
+                        for (std::uint32_t r = 0; r < kRowsPerWarp; ++r) {
+                            const __half2* q_pairs = reinterpret_cast<const __half2*>(&q_bits[cur][r]);
 #pragma unroll
                             for (std::uint32_t pair = 0; pair < 4; ++pair) {
                                 asm volatile("v_dot2_f32_f16 %0, %1, %2, %0"
                                     : "+v"(dot[r]) : "v"(k_pairs[pair]), "v"(q_pairs[pair]));
+                            }
+                        }
+                    }
+                } else {
+                    for (std::uint32_t fragment = 0; fragment < 16; ++fragment) {
+                        const std::uint32_t swizzled_fragment = fragment ^ (lane & 7);
+                        const uint4 k_bits = *reinterpret_cast<const uint4*>(
+                            kv_tmp + lane * kKRowStride + swizzled_fragment * 8);
+#pragma unroll
+                        for (std::uint32_t r = 0; r < kRowsPerWarp; ++r) {
+                            const std::uint32_t row = warp * kRowsPerWarp + r;
+                            if constexpr (FP32_ACCUM) {
+                                const float* q_values = q_tmp_f32 + row * 256 + d_base + fragment * 8;
+#pragma unroll
+                                for (std::uint32_t d = 0; d < 8; ++d) {
+                                    dot[r] = fmaf(q_values[d], __half2float(reinterpret_cast<const __half*>(&k_bits)[d]), dot[r]);
+                                }
+                            } else {
+                                const __half2* k_pairs = reinterpret_cast<const __half2*>(&k_bits);
+                                const uint4 q_bits = *reinterpret_cast<const uint4*>(
+                                    reinterpret_cast<const __half*>(shared) + row * 256
+                                    + d_base + fragment * 8);
+                                const __half2* q_pairs = reinterpret_cast<const __half2*>(&q_bits);
+#pragma unroll
+                                for (std::uint32_t pair = 0; pair < 4; ++pair) {
+                                    asm volatile("v_dot2_f32_f16 %0, %1, %2, %0"
+                                        : "+v"(dot[r]) : "v"(k_pairs[pair]), "v"(q_pairs[pair]));
+                                }
                             }
                         }
                     }
@@ -5933,7 +5976,8 @@ void launch_qwen35_kq_fragment_reuse_attention_batch_f16(
     std::uint32_t token_count,
     std::uint32_t base_position, std::uint32_t cache_capacity,
     std::uint32_t query_heads, std::uint32_t kv_heads, std::uint32_t head_dim,
-    float scale, std::uint32_t num_splits, hipStream_t stream) {
+    float scale, std::uint32_t num_splits, hipStream_t stream,
+    bool kq_register_pipeline) {
     if (q == nullptr || key_cache == nullptr || value_cache == nullptr || gate == nullptr
         || gated_output == nullptr || split_workspace == nullptr || token_count == 0
         || base_position > cache_capacity
@@ -5950,11 +5994,20 @@ void launch_qwen35_kq_fragment_reuse_attention_batch_f16(
     const std::uint32_t blocks = (token_count + 15) / 16;
     const std::size_t shared_bytes = 32 * 256 * sizeof(__half)
         + 32 * 128 * sizeof(__half) + 32 * 32 * sizeof(__half) + 3 * 32 * sizeof(float);
-    hipLaunchKernelGGL((qwen35_kq_fragment_reuse_attention_batch_kernel<false, false, false>),
-        dim3(blocks, num_splits, groups), dim3(32, 8), shared_bytes, stream,
-        q, key_cache, value_cache, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-        split_workspace, token_count,
-        base_position, cache_capacity, num_splits, scale, nullptr);
+    if (kq_register_pipeline) {
+        hipLaunchKernelGGL((qwen35_kq_fragment_reuse_attention_batch_kernel<
+                false, false, false, false, false, false, false, false, false, true>),
+            dim3(blocks, num_splits, groups), dim3(32, 8), shared_bytes, stream,
+            q, key_cache, value_cache, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+            split_workspace, token_count,
+            base_position, cache_capacity, num_splits, scale, nullptr);
+    } else {
+        hipLaunchKernelGGL((qwen35_kq_fragment_reuse_attention_batch_kernel<false, false, false>),
+            dim3(blocks, num_splits, groups), dim3(32, 8), shared_bytes, stream,
+            q, key_cache, value_cache, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+            split_workspace, token_count,
+            base_position, cache_capacity, num_splits, scale, nullptr);
+    }
     MIINFER_HIP_CHECK(hipGetLastError());
     hipLaunchKernelGGL(qwen35_splitk_suffix_attn_stage2_kernel,
         dim3(token_count * query_heads), dim3(64), 0, stream,
