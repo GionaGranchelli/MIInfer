@@ -119,3 +119,20 @@ but only after MIInfer profiling confirms LDS return stalls; its reported
 Repeat the matched same-card pair only if another stable timing sample is
 needed. The implementation and first 64K result are now pushed; the screen
 remains separate from the same-card timing claim.
+
+### Independent GPU0 correctness replication
+
+The same pushed binary and GQA6 production-arithmetic selector were then run
+on GPU0 (`0000:04:00.0`) as an independent-card correctness replication. The
+guarded run processed 65,536 prompt tokens at capacity 69,632, emitted
+248,320 finite logits, and completed in `939.799 s` with first token `271`.
+The logits file was 993,280 bytes and byte-for-byte matched the retained Q8
+production reference (`cmp` exit 0); both SHA-256 values are
+`9a33d3f3b190126806dee63074189df0f83b78503eac9f2f80e881babb16f482`. This
+confirms exact candidate output on the second MI50. It is not a paired timing
+comparison: the reference timing is from GPU2, and the two cards differ.
+Temperature monitoring recorded the configured 80°C warning, a maximum near
+80°C, and no 85°C stop. The run exited 0 and GPU0 was idle with no KFD process
+after cleanup. Logs, raw logits, hash comparison, guard, and temperature
+captures are retained at
+`/home/machinist/m31-q8-gqa6-prodarith-64k-gpu0-20261014/`.
