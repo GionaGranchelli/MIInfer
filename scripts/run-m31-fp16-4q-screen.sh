@@ -30,7 +30,7 @@ fi
 timeout --signal=TERM --kill-after=5s "${runtime_limit}s" podman run "${args[@]}" \
   localhost/miinfer-dev:rocm-7.2.1 \
   /build/miinfer-m31-fp16-full-model /models/Qwen3.8-27B-Q4_K_M.gguf \
-  --tokens "$tokens" --prompt-file /prompts/m31-64k-context.txt \
+  --fp16-only --tokens "$tokens" --prompt-file /prompts/m31-64k-context.txt \
   --logits-out "/evidence/$name.f32" >"$log" 2>&1 &
 run_pid=$!
 warned=0
