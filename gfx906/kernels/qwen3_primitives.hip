@@ -7600,7 +7600,7 @@ void launch_qwen35_splitk_suffix_attention_f16(
 // -----------------------------------------------------------------------------
 
 template <bool K_IS_Q8, bool V_IS_Q8, int UNROLL = 4, bool GQA6_SHARED_KV = false,
-          bool PACKED_Q8_LDS = false>
+          bool PACKED_Q8_LDS = false, bool PACKED_Q8_LDS_128 = false>
 __launch_bounds__(GQA6_SHARED_KV ? 192 : 1024, 1)
 __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
     const float* __restrict__ q,
@@ -7712,7 +7712,19 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
     for (; pos + UNROLL <= k_end; pos += UNROLL) {
         if constexpr (GQA6_SHARED_KV) {
             const std::uint32_t cta_tid = threadIdx.y * 64 + lane;
-            if constexpr (PACKED_Q8_LDS && K_IS_Q8 && V_IS_Q8) {
+            if constexpr (PACKED_Q8_LDS_128 && K_IS_Q8 && V_IS_Q8) {
+                constexpr std::uint32_t kPackedVectors = UNROLL * 256 / sizeof(uint4);
+                const auto* key_vectors = reinterpret_cast<const uint4*>(
+                    key_cache_q8 + kv_base + static_cast<std::size_t>(pos) * head_dim);
+                const auto* value_vectors = reinterpret_cast<const uint4*>(
+                    value_cache_q8 + kv_base + static_cast<std::size_t>(pos) * head_dim);
+                if (cta_tid < kPackedVectors) {
+                    const uint4 key_vector = key_vectors[cta_tid];
+                    *reinterpret_cast<uint4*>(shared_key + cta_tid * sizeof(uint4)) = key_vector;
+                    const uint4 value_vector = value_vectors[cta_tid];
+                    *reinterpret_cast<uint4*>(shared_value + cta_tid * sizeof(uint4)) = value_vector;
+                }
+            } else if constexpr (PACKED_Q8_LDS && K_IS_Q8 && V_IS_Q8) {
                 constexpr std::uint32_t kPackedVectors = UNROLL * 256 / sizeof(uint2);
                 const auto* key_vectors = reinterpret_cast<const uint2*>(
                     key_cache_q8 + kv_base + static_cast<std::size_t>(pos) * head_dim);
@@ -8104,13 +8116,14 @@ void launch_qwen35_gqa6_production_q8_attention_batch(
     std::uint32_t kv_heads, std::uint32_t head_dim, float scale,
     std::uint32_t num_splits, hipStream_t stream,
     const DevicePrefillState* prefill_state,
-    float* stage1_ms, float* stage2_ms, bool packed_q8_lds) {
+    float* stage1_ms, float* stage2_ms, bool packed_q8_lds, bool packed_q8_lds_128) {
     if (q == nullptr || key_cache_q8 == nullptr || key_scales == nullptr
         || value_cache_q8 == nullptr || value_scales == nullptr || gate == nullptr
         || gated_output == nullptr || split_workspace == nullptr || token_count == 0
         || base_position > cache_capacity || token_count > cache_capacity - base_position
         || query_heads != 24 || kv_heads != 4 || head_dim != 256
-        || !std::isfinite(scale) || num_splits == 0 || num_splits > 64) {
+        || !std::isfinite(scale) || num_splits == 0 || num_splits > 64
+        || (packed_q8_lds_128 && !packed_q8_lds)) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     const std::size_t total_meta = static_cast<std::size_t>(num_splits) * token_count * query_heads;
@@ -8128,7 +8141,13 @@ void launch_qwen35_gqa6_production_q8_attention_batch(
         MIINFER_HIP_CHECK(hipEventCreate(&stage2_done));
         MIINFER_HIP_CHECK(hipEventRecord(stage_start, stream));
     }
-    if (packed_q8_lds) {
+    if (packed_q8_lds_128) {
+        hipLaunchKernelGGL((qwen35_splitk_suffix_attn_stage1_quant_kernel<true, true, 4, true, true, true>),
+            dim3(token_count, num_splits, kv_heads), dim3(64, 3), shared_bytes, stream,
+            q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,
+            partial_max, partial_sum, partial_acc, token_count, base_position, cache_capacity,
+            query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
+    } else if (packed_q8_lds) {
         hipLaunchKernelGGL((qwen35_splitk_suffix_attn_stage1_quant_kernel<true, true, 4, true, true>),
             dim3(token_count, num_splits, kv_heads), dim3(64, 3), shared_bytes, stream,
             q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,

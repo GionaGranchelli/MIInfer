@@ -293,6 +293,7 @@ private:
     bool suffix_graph_q8_gqa6_native_tiled_enabled_ = false;
     bool suffix_graph_q8_gqa6_prod_arith_enabled_ = false;
     bool suffix_graph_q8_gqa6_packed_lds_enabled_ = false;
+    bool suffix_graph_q8_gqa6_packed_lds_128_enabled_ = false;
 
     // Sampling state
     mutable std::vector<float> host_logits_;
