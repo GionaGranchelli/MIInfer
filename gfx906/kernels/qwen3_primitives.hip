@@ -7371,7 +7371,8 @@ __global__ void qwen35_splitk_suffix_attn_stage1_q8_4q_lds_kernel(
     }
 }
 
-__global__ void qwen35_splitk_suffix_attn_stage1_f16_4q_lds_kernel(
+template <std::uint32_t QUERY_ROWS>
+__global__ void qwen35_splitk_suffix_attn_stage1_f16_qrows_lds_kernel(
     const float* __restrict__ q,
     const __half* __restrict__ key_cache_f16,
     const __half* __restrict__ value_cache_f16,
@@ -7387,7 +7388,7 @@ __global__ void qwen35_splitk_suffix_attn_stage1_f16_4q_lds_kernel(
     float scale,
     std::uint32_t num_splits,
     const DevicePrefillState* __restrict__ prefill_state) {
-    constexpr std::uint32_t kQueryRows = 4;
+    constexpr std::uint32_t kQueryRows = QUERY_ROWS;
     constexpr std::uint32_t kTileKeys = 4;
     __shared__ uint4 staged_k[kTileKeys][32];
     __shared__ uint4 staged_v[kTileKeys][32];
@@ -7925,12 +7926,26 @@ void launch_qwen35_splitk_suffix_attention_quant(
     const char* f16_4q_lds_env = std::getenv("MIINFER_M31_FP16_4Q_LDS_REUSE");
     const bool f16_4q_lds_enabled = f16_4q_lds_env != nullptr
         && std::strcmp(f16_4q_lds_env, "0") != 0;
-    if (f16_4q_lds_enabled && !is_k_q8 && !is_v_q8
+    const char* f16_8q_lds_env = std::getenv("MIINFER_M31_FP16_8Q_LDS_REUSE");
+    const bool f16_8q_lds_enabled = f16_8q_lds_env != nullptr
+        && std::strcmp(f16_8q_lds_env, "0") != 0;
+    if (f16_8q_lds_enabled && !is_k_q8 && !is_v_q8
+        && query_heads == 24 && kv_heads == 4 && head_dim == 256
+        && num_splits == 32) {
+        const dim3 f16_grid(query_heads / 2, (token_count + 7) / 8, num_splits);
+        hipLaunchKernelGGL(
+            (qwen35_splitk_suffix_attn_stage1_f16_qrows_lds_kernel<8>),
+            f16_grid, dim3(512), 0, stream,
+            q, key_cache_f16, value_cache_f16,
+            d_partial_max, d_partial_sum, d_partial_acc,
+            token_count, base_position, cache_capacity,
+            query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
+    } else if (f16_4q_lds_enabled && !is_k_q8 && !is_v_q8
         && query_heads == 24 && kv_heads == 4 && head_dim == 256
         && num_splits == 32) {
         const dim3 f16_grid(query_heads / 2, (token_count + 3) / 4, num_splits);
         hipLaunchKernelGGL(
-            qwen35_splitk_suffix_attn_stage1_f16_4q_lds_kernel,
+            (qwen35_splitk_suffix_attn_stage1_f16_qrows_lds_kernel<4>),
             f16_grid, dim3(256), 0, stream,
             q, key_cache_f16, value_cache_f16,
             d_partial_max, d_partial_sum, d_partial_acc,

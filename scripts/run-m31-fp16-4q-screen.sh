@@ -25,6 +25,11 @@ args=(
 )
 if [[ "$candidate" == 1 ]]; then
   args+=(-e MIINFER_M31_FP16_4Q_LDS_REUSE=1)
+elif [[ "$candidate" == 8 ]]; then
+  args+=(-e MIINFER_M31_FP16_8Q_LDS_REUSE=1)
+elif [[ "$candidate" != 0 ]]; then
+  printf 'candidate must be 0, 1, or 8\n' >&2
+  exit 2
 fi
 
 timeout --signal=TERM --kill-after=5s "${runtime_limit}s" podman run "${args[@]}" \
