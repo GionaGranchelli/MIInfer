@@ -270,3 +270,33 @@ is retained alongside the run artifacts in
 Do not treat the failed paired wrapper exit as candidate failure; only the
 production control was terminated. The residual-plane candidate remains under
 its separate guard and was not touched.
+
+### 2026-10-14 rebuilt candidate: corrected frozen-input 64K run
+
+The dot4 selector was retested from source commit `4e5105a66a3c02119f9e56aff4f1a4904b695224`
+using the exact frozen tokenized prompt, model, executable, image, and GPU2
+production-Q8 reference logits. The first invocation in this follow-up omitted
+`--prompt-file`; it was stopped after about 40 seconds and marked invalid. It
+did not produce evidence and is excluded here.
+
+The corrected run used binary SHA-256
+`881063b3b275a3a51b0f2d42c57a08339db70e714aa94d2d76ac2eedd7721895`, model
+SHA-256 `7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169`,
+prompt SHA-256 `fa4a0de5db813f5f06b58de5b4b7df8f234c4c808e0965bd44c545e9087c462c`,
+and GPU2 BDF `0000:88:00.0` / UUID `GPU-2152414173497dd3`. It processed 65,536
+prompt tokens at capacity 69,632 and produced 248,320 finite logits in
+`501.607 s`; the guard sampled 69°C maximum and exited 0. The candidate logits
+SHA-256 is
+`7637bf2fc51f7ee3227fa59741922f4703d73845edcea5e3749380a2f47aee4b`.
+
+Against the exact production-Q8 logits
+`9a33d3f3b190126806dee63074189df0f83b78503eac9f2f80e881babb16f482`, the
+candidate has max absolute error `28.4721289`, cosine `0.687129296209`, and
+top-1 token `20245` versus `271`. Independent hash and manifest review
+confirmed the model, prompt, binary, and reference identities. Source dispatch
+selects the dot4 path for this run with the GQA6 selectors disabled. This is a
+full-model correctness failure; its elapsed time is not a performance result.
+The likely cause is Q8 query approximation with residual correction disabled;
+there is no profiler trace proving the exact first divergent operation. Raw
+artifacts are retained at
+`/home/machinist/m31-q32-exec-20261014T092831Z/dot4-q8-4e5105a-tokenized-gpu2-64k-20261014T142554Z`.
