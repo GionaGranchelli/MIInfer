@@ -53,10 +53,10 @@ reported LDS allocation is zero; the kernel may use dynamically supplied LDS,
 so this field does not establish that the kernel uses no LDS.
 
 Counter definitions and units are architecture-specific. AMD documents
-`SQ_WAIT_INST_LDS` as per-SIMD wave-cycles in 4-cycle units and `SQ_ACTIVE_INST_VALU`
-as a per-SIMD issue-cycle counter; raw totals cannot be divided directly to
-claim an LDS-stall percentage. `SQ_WAVES` and a valid normalization are still
-needed. See [AMD ROCprof counter definitions](https://rocm.docs.amd.com/projects/rocprofiler/en/docs-5.6.0/rocprof.html).
+`SQ_WAIT_INST_LDS` as per-SIMD wave-cycles in 4-cycle units and
+`SQ_ACTIVE_INST_VALU` as a per-SIMD issue-cycle counter. The reported 94% is
+their aggregate ratio after converting wait units; it is not a wall-time
+stall percentage. See [AMD ROCprof counter definitions](https://rocm.docs.amd.com/projects/rocprofiler/en/docs-5.6.0/rocprof.html).
 
 ## Decision
 
@@ -74,6 +74,31 @@ VALU-active cycle while preserving the exact GQA6 path as control. Require
 full-model numerical parity before performance claims. If the rewrite is
 rejected, test whether direct register loads can avoid LDS traffic before
 reopening tile-size or prefetch sweeps.
+
+## Source-level reference delta
+
+The GQA6 kernel's `UNROLL=4` loop gathers four K/V rows, but still performs
+four ordered score/online-softmax/value updates. It stages packed Q8 rows in
+LDS, then each query head reads those rows from LDS again. The counter result
+therefore points at the same operation the source repeats: per-key state
+updates plus repeated shared-memory operand reads.
+
+The gfx906 `fattn-tile` path in [milpster/gfx906-llama-cpp](https://github.com/milpster/gfx906-llama-cpp)
+computes a tile of query rows against a tile of keys, then updates softmax and
+value accumulators at tile granularity. Its AMD config uses 256 threads,
+64 query rows and 128 keys for the `(DKQ,DV,ncols)=(256,256,4)` case. That
+geometry is not a direct transplant: MIInfer's query/KV mapping, exactness
+contract and Q8 cache layout differ. The useful idea is to move work across
+the key dimension and amortize softmax state updates, not to copy its tile
+constants. The fork's own matched multi-GPU A/B reports +16% at a 120K deep
+fill and +37% on a 16K prefill versus upstream; this is not a matched
+single-MI50 result for this campaign.
+
+The fork also reports that a hand-pipelined FlashAttention loop regressed
+5.8% despite targeting LDS wait; its kernel sweep found table-selected tile
+geometry more useful than another loop rewrite. Treat that as a caution, not
+a reason to abandon the current distinct key-parallel dataflow candidate.
+Evidence: [fork benchmark findings](https://github.com/milpster/gfx906-llama-cpp/blob/master/bench/FINDINGS.md).
 
 ## Reproduction artifacts
 
