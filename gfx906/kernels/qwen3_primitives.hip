@@ -3040,8 +3040,9 @@ __global__ void qwen35_quantize_q8_query_kernel(
 template <bool KEY_Q8, bool VALUE_Q8, bool FP32_ACCUM, bool QUERY_Q8 = false,
           bool USE_PREFILL_STATE = false, bool DOT4_ILP2 = false,
           bool QUERY_RESIDUAL = false, bool QUERY_RESIDUAL2 = false,
-          bool QUERY_RESIDUAL3 = false, bool GQA6_WIDE_CTA = false>
-__launch_bounds__(GQA6_WIDE_CTA ? 512 : 256, 1) __global__ void qwen35_kq_fragment_reuse_attention_batch_kernel(
+          bool QUERY_RESIDUAL3 = false, bool GQA6_WIDE_CTA = false,
+          bool GQA6_Q32_CTA = false>
+__launch_bounds__((GQA6_WIDE_CTA || GQA6_Q32_CTA) ? 512 : 256, 1) __global__ void qwen35_kq_fragment_reuse_attention_batch_kernel(
     const float* __restrict__ q, const __half* __restrict__ key_cache,
     const __half* __restrict__ value_cache,
     const std::int8_t* __restrict__ key_cache_q8,
@@ -3060,14 +3061,14 @@ __launch_bounds__(GQA6_WIDE_CTA ? 512 : 256, 1) __global__ void qwen35_kq_fragme
     std::uint32_t token_count, std::uint32_t base_position,
     std::uint32_t cache_capacity, std::uint32_t num_splits, float scale,
     const DevicePrefillState* prefill_state) {
-    constexpr std::uint32_t kQueryTokens = 16;
+    constexpr std::uint32_t kQueryTokens = GQA6_Q32_CTA ? 32 : 16;
     constexpr std::uint32_t kRowsPerWarp = 4;
     constexpr std::uint32_t kTileK = 32;
     constexpr std::uint32_t kKRowStride = 128;
     constexpr std::uint32_t kQueryHeads = 24;
     constexpr std::uint32_t kKvHeads = 4;
-    constexpr std::uint32_t kRows = GQA6_WIDE_CTA ? 64 : 32;
-    constexpr std::uint32_t kWarps = GQA6_WIDE_CTA ? 16 : 8;
+    constexpr std::uint32_t kRows = GQA6_WIDE_CTA || GQA6_Q32_CTA ? 64 : 32;
+    constexpr std::uint32_t kWarps = kRows / kRowsPerWarp;
     constexpr std::uint32_t kThreads = kWarps * 32;
     constexpr std::uint32_t kHeadsPerToken = GQA6_WIDE_CTA ? 4 : 2;
     using AttentionAccum = std::conditional_t<FP32_ACCUM, float2, __half2>;
@@ -5956,18 +5957,28 @@ void launch_qwen35_kq_fragment_reuse_attention_batch_f16(
     const char* gqa6_wide_cta_env = std::getenv("MIINFER_M31_FP16_GQA6_WIDE_CTA");
     const bool gqa6_wide_cta = gqa6_wide_cta_env != nullptr
         && std::strcmp(gqa6_wide_cta_env, "0") != 0;
-    const std::uint32_t groups = gqa6_wide_cta
-        ? kv_heads * 2 : kv_heads * (query_heads / kv_heads / 2);
+    const char* gqa6_q32_cta_env = std::getenv("MIINFER_M31_FP16_GQA_Q32_CTA");
+    const bool gqa6_q32_cta = gqa6_q32_cta_env != nullptr
+        && std::strcmp(gqa6_q32_cta_env, "0") != 0;
+    if (gqa6_wide_cta && gqa6_q32_cta) MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    const std::uint32_t groups = kv_heads * (gqa6_wide_cta ? 2
+        : gqa6_q32_cta ? 3 : query_heads / kv_heads / 2);
     const std::size_t total_meta = static_cast<std::size_t>(num_splits) * token_count * query_heads;
     float* partial_max = split_workspace;
     float* partial_sum = partial_max + total_meta;
     float* partial_acc = partial_sum + total_meta;
-    const std::uint32_t blocks = (token_count + 15) / 16;
-    const std::uint32_t rows = gqa6_wide_cta ? 64 : 32;
+    const std::uint32_t query_tile = gqa6_q32_cta ? 32 : 16;
+    const std::uint32_t blocks = (token_count + query_tile - 1) / query_tile;
+    const std::uint32_t rows = gqa6_wide_cta || gqa6_q32_cta ? 64 : 32;
     const std::size_t shared_bytes = rows * 256 * sizeof(__half)
         + 32 * 128 * sizeof(__half) + rows * 32 * sizeof(__half) + 3 * rows * sizeof(float);
     if (gqa6_wide_cta) {
         hipLaunchKernelGGL((qwen35_kq_fragment_reuse_attention_batch_kernel<false, false, false, false, false, false, false, false, false, true>),
+            dim3(blocks, num_splits, groups), dim3(32, 16), shared_bytes, stream,
+            q, key_cache, value_cache, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+            split_workspace, token_count, base_position, cache_capacity, num_splits, scale, nullptr);
+    } else if (gqa6_q32_cta) {
+        hipLaunchKernelGGL((qwen35_kq_fragment_reuse_attention_batch_kernel<false, false, false, false, false, false, false, false, false, false, true>),
             dim3(blocks, num_splits, groups), dim3(32, 16), shared_bytes, stream,
             q, key_cache, value_cache, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
             split_workspace, token_count, base_position, cache_capacity, num_splits, scale, nullptr);
