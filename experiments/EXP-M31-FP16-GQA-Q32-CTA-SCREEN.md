@@ -45,3 +45,21 @@ The Q32 candidate therefore remains compile-screened only. A matched
 65,536-token control/candidate run, full-logit comparison, and dispatch trace
 remain outstanding; the failure was source access, not candidate correctness
 or performance.
+
+### HTTPS execution attempt — 2026-10-14
+
+HTTPS fetch succeeded and created a clean detached checkout at
+`13418958b5f5146276dc819d59b35418bb911159`. The frozen ROCm 7.2.1 image,
+model checksum, GPU identities, and idle state matched preflight. CMake
+configuration stopped at `find_package(hipblas CONFIG REQUIRED)` before build
+or GPU execution. Evidence is in
+`/home/machinist/m31-q32-exec-20261014T092831Z`.
+
+A read-only diagnostic then found the package in that exact image at
+`/opt/rocm-7.2.1/lib/cmake/hipblas/hipblas-config.cmake`, with
+`libhipblas.so` present. This indicates a CMake search-path issue rather than
+an absent dependency. The next configure should pass
+`-Dhipblas_DIR=/opt/rocm-7.2.1/lib/cmake/hipblas`. The corrected configure has
+not been run; no dispatch trace, full-model correctness result, or timing is
+available. Diagnostic evidence is in
+`/home/machinist/m31-hipblas-diagnostic-20261014T093053Z`.
