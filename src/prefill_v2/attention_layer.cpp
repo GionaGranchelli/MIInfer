@@ -502,6 +502,13 @@ void PrefillV2AttentionLayer::forward_profiled(
         && !kv_cache.is_k_q8() && !kv_cache.is_v_q8()
         && token_count >= 16 && token_count % 16 == 0
         && ws.splitk_attn_workspace != nullptr) {
+        if (std::getenv("MIINFER_M31_FP16_QK_MFMA") != nullptr) {
+            static bool route_logged = false;
+            if (!route_logged) {
+                std::cerr << "miinfer_v2_0043_gqa_dispatch=fp16_cached_suffix\n";
+                route_logged = true;
+            }
+        }
         if (m31_fp16_attention_fp32_enabled()) {
             launch_qwen35_kq_fragment_reuse_attention_batch_f16_fp32(
                 ws.attn_q_rope, kv_cache.key_cache, kv_cache.value_cache,
