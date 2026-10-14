@@ -238,6 +238,27 @@ candidate is also running on GPU2 against the same production reference. Both
 runs use independent GPUs and thermal guards; the dot4 candidate remains
 opt-in.
 
+### 2026-10-14 one-plane query-residual check
+
+To reduce query quantization error without changing the attention data path, a
+second guarded 64K run enabled `MIINFER_M31_Q8_DOT4_QUERY_RESIDUAL=1` on GPU2.
+It processed 65,536 tokens at capacity 69,632 and emitted 248,320 finite logits
+in `524.220 s`. Source, binary, model, and input match the dot4/control run.
+Peak sampled junction temperature was 70 C; neither warning nor stop fired.
+
+Against the exact stored production Q8 control logits, max absolute error was
+`0.934224844`, cosine `0.992028804163`, and top-1 matched (`174830`); the first
+two generated tokens also matched. It still fails the full-logit gate and was
+4.96% slower than the earlier single-plane dot4 run on GPU2. Reject this
+residual variant; do not promote it.
+
+The separate paired production control on GPU0 exceeded 20:51 without producing
+output despite 100% GPU busy, so it was stopped. Its container required
+SIGKILL after the 10-second SIGTERM timeout. The original matching production
+control artifact remains the comparator; no paired timing claim is available.
+Guard and stop artifacts for the residual run are under
+`/home/machinist/m31-q32-exec-20261014T092831Z/final-q8-dot4-query-residual-64k-20261014T101817Z`.
+
 The paired GPU0 production control did not produce logits or timing. After
 20:51 elapsed with the MI50 busy at 100%, it was stopped as an anomalously
 slow run. `podman stop --time 10` did not terminate the tagged campaign
