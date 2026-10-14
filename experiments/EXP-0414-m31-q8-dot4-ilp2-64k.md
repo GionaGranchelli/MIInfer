@@ -21,7 +21,8 @@ token does not qualify the output. Keep the path opt-in and disabled by default.
 - Processed tokens: exactly 65,536; capacity: 69,632; Q8 KV mode.
 - GPU: Machinist MI50, BDF `0000:88:00.0`, unique ID
   `0x2152414173497dd3`, gfx906 `sramecc-:xnack-`.
-- Runtime image: `localhost/miinfer-dev:rocm-7.2.1`.
+- Runtime image: `localhost/miinfer-dev:rocm-7.2.1`, digest
+  `sha256:447907c697fb2c39ce9657401e354a70753d5672ad955d4ceb12de976b91224a`.
 - Environment: `MIINFER_M31_Q8_DOT4_ATTENTION=1`,
   `MIINFER_M31_Q8_DOT4_ILP2=1`, `ROCR_VISIBLE_DEVICES=2`.
 - Binary mounted when the process started: SHA-256
@@ -76,11 +77,11 @@ by Q8 query quantization or the changed attention/reduction arithmetic.
 
 ## Resource and run status
 
-The 64K candidate completed on its own with exit status 0. The paired GPU0
-control was stopped early and exited 137; it produced no valid timing and is
-not used in this comparison. The candidate's thermal samples stayed well
-below the 80 C warning and 85 C stop thresholds. Final telemetry showed the
-GPU idle after completion.
+The 64K candidate completed on its own with exit status 0 at
+`2026-10-14T08:36:04Z`. The paired GPU0 control was stopped early and exited
+137; it produced no valid timing and is not used in this comparison. The
+candidate's junction samples peaked at 62 C, below the 80 C warning and 85 C
+stop thresholds. Final telemetry showed the GPU idle after completion.
 
 ## Next step
 
