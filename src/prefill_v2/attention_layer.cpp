@@ -40,6 +40,13 @@ bool m31_fp16_attention_fp32_enabled() {
     return value != nullptr && std::strcmp(value, "0") != 0;
 }
 
+bool m31_fp16_lds_reuse_enabled() {
+    const char* four_query = std::getenv("MIINFER_M31_FP16_4Q_LDS_REUSE");
+    const char* eight_query = std::getenv("MIINFER_M31_FP16_8Q_LDS_REUSE");
+    return (four_query != nullptr && std::strcmp(four_query, "0") != 0)
+        || (eight_query != nullptr && std::strcmp(eight_query, "0") != 0);
+}
+
 bool v2_0043_real_compare_enabled() {
     const char* value = std::getenv("MIINFER_V2_0043_COMPARE_REAL");
     return value != nullptr && std::strcmp(value, "0") != 0;
@@ -320,7 +327,8 @@ void PrefillV2AttentionLayer::forward(
         stream, prefill_state);
 
     // 5. Tiled Online Causal Attention with Sigmoid Gating.
-    if (v2_0043_gqa_attention_enabled() && base_position > 0 && prefill_state == nullptr
+    if (v2_0043_gqa_attention_enabled() && !m31_fp16_lds_reuse_enabled()
+        && base_position > 0 && prefill_state == nullptr
         && !kv_cache.is_k_q8() && !kv_cache.is_v_q8()
         && token_count >= 16 && token_count % 16 == 0
         && ws.splitk_attn_workspace != nullptr) {
@@ -378,6 +386,12 @@ void PrefillV2AttentionLayer::forward(
                  && (base_position > 0 || kv_cache.is_k_q8() || kv_cache.is_v_q8()))
                 || prefill_state != nullptr)
         && ws.splitk_attn_workspace != nullptr) {
+        static bool fp16_lds_dispatch_logged = false;
+        if (m31_fp16_lds_reuse_enabled() && !fp16_lds_dispatch_logged) {
+            std::cerr << "miinfer_m31_fp16_lds_splitk_dispatch base_position="
+                      << base_position << " token_count=" << token_count << '\n';
+            fp16_lds_dispatch_logged = true;
+        }
         launch_qwen35_splitk_suffix_attention_quant(
             ws.attn_q_rope,
             kv_cache.key_cache, kv_cache.value_cache,
