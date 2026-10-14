@@ -66,6 +66,10 @@ scratch 0 bytes/lane, dynamic stack false, SGPR spills 0, VGPR spills 0, LDS
 launch is 768 threads (12 Wave64s), below the gfx906 1,024-thread limit. Build
 completed; no GPU run has started.
 
+An offline mapping assertion enumerated 96 `(KV head, query row, query head)`
+states: all four rows and 24 heads were covered exactly once, and every query
+head mapped to its expected KV head.
+
 After GPU2's guarded 64K control exits, run production then candidate on that
 same selector and require byte-identical logits before proceeding:
 
@@ -74,4 +78,12 @@ same selector and require byte-identical logits before proceeding:
 /tmp/m31-q8-kvhead-4q-reuse/scripts/run-m31-q8-4q-screen.sh q8-gqa4-candidate-p2k 2 2048 240 2 && \
 cmp /tmp/m31-q8-kvhead-4q-reuse/evidence/q8-gqa4-prod-p2k.f32 \
     /tmp/m31-q8-kvhead-4q-reuse/evidence/q8-gqa4-candidate-p2k.f32
+```
+
+If the P2K comparison is byte-identical, compare the candidate's full-model
+P8K time and logits against the existing four-row control on that same device:
+
+```bash
+/tmp/m31-q8-kvhead-4q-reuse/scripts/run-m31-q8-4q-screen.sh q8-gqa4-4q-control-p8k 1 8192 600 2 && \
+/tmp/m31-q8-kvhead-4q-reuse/scripts/run-m31-q8-4q-screen.sh q8-gqa4-candidate-p8k 2 8192 600 2
 ```
