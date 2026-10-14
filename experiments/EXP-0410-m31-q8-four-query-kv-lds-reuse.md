@@ -1,6 +1,6 @@
 # EXP-0410 — Q8 four-query KV-tile LDS reuse
 
-**Status:** SHORT GATES PASS; 64K COLD PREFILL IN PROGRESS  
+**Status:** SHORT GATES PASS; 64K CANDIDATE COMPLETED; SAME-BDF CONTROL IN PROGRESS  
 **Baseline:** `f91fd42072113108a9bfa5c1afd96e989ef29a2a`
 
 ## Gate definition
@@ -40,6 +40,31 @@ TotalSGPRs=57, VGPRs=50, scratch=0 bytes/lane, SGPR spill=0,
 VGPR spill=0, LDS=2112 bytes/block, occupancy=4 waves/SIMD.
 ```
 
-The exact 65,536-token cold candidate is now running on GPU0 under the 80/85 C
-thermal guard. Its command, telemetry, output logits, and final result will be
-appended here after completion.
+The exact 65,536-token cold candidate completed on GPU0 under the 80/85 C
+thermal guard. It processed 65,536 tokens in 867.841 s, produced 248,320
+finite logits (SHA-256
+`9a33d3f3b190126806dee63074189df0f83b78503eac9f2f80e881babb16f482`), and
+peaked at 76 C junction. The production control on the same BDF is running;
+no 64K speedup or output-equivalence claim is made until it completes.
+
+## Exact 64K reproduction commands
+
+Candidate (completed):
+
+```bash
+/tmp/m31-q8-lds-gpu0/scripts/run-m31-q8-4q-screen.sh q8-4q-lds-candidate-64k 1 65536 4000
+```
+
+Same-BDF production control (currently running):
+
+```bash
+/tmp/m31-q8-lds-gpu0/scripts/run-m31-q8-4q-screen.sh q8-4q-production-64k 0 65536 4000
+```
+
+Both use the same release binary, image digest
+`sha256:447907c697fb2c39ce9657401e354a70753d5672ad955d4ceb12de976b91224a`,
+model path, 65,536-token prompt, Q8/Q8 path, and GPU0 selector. The candidate
+alone sets `MIINFER_M31_Q8_4Q_LDS_REUSE=1`. The completed candidate's output,
+timing, and GPU0 telemetry are retained under
+`/tmp/m31-q8-lds-gpu0/evidence/` and on Machinist at
+`/home/machinist/m31-prefill-0002-20261014/`.
