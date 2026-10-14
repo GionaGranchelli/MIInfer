@@ -7177,6 +7177,7 @@ void launch_qwen35_splitk_suffix_attention_f16(
 // Four adjacent query rows share the Q8 K/V rows for one GQA head pair. The
 // per-row math intentionally mirrors the production Split-K kernel; only the
 // CTA mapping and KV movement through LDS differ.
+template <bool GROUP_GQA>
 __global__ void qwen35_splitk_suffix_attn_stage1_q8_4q_lds_kernel(
     const float* __restrict__ q,
     const int8_t* __restrict__ key_cache_q8,
@@ -7211,10 +7212,15 @@ __global__ void qwen35_splitk_suffix_attn_stage1_q8_4q_lds_kernel(
             ? prefill_state->kv_capacity : cache_capacity;
     }
 
-    const std::uint32_t head_pair = blockIdx.x;
+    const std::uint32_t physical_wave = threadIdx.x / 64;
+    const std::uint32_t head_pair_in_group = GROUP_GQA ? physical_wave / kQueryRows : 0;
+    const std::uint32_t head_pair = GROUP_GQA
+        ? blockIdx.x * (query_heads / kv_heads / 2) + head_pair_in_group
+        : blockIdx.x;
     const std::uint32_t query_group = blockIdx.y;
     const std::uint32_t split_id = blockIdx.z;
-    const std::uint32_t query_row = threadIdx.x / 64;
+    const std::uint32_t query_row = GROUP_GQA
+        ? physical_wave % kQueryRows : physical_wave;
     const std::uint32_t lane = threadIdx.x % 64;
     const std::uint32_t sub_wave = lane / 32;
     const std::uint32_t sub_lane = lane % 32;
@@ -7236,7 +7242,7 @@ __global__ void qwen35_splitk_suffix_attn_stage1_q8_4q_lds_kernel(
         }
     }
 
-    if (lane == 0 && query_row < kQueryRows) {
+    if (lane == 0 && head_pair_in_group == 0 && query_row < kQueryRows) {
         row_start[query_row] = k_start;
         row_end[query_row] = k_end;
     }
@@ -7257,7 +7263,8 @@ __global__ void qwen35_splitk_suffix_attn_stage1_q8_4q_lds_kernel(
         union_end = 0;
     }
 
-    const std::uint32_t kv_head = (head_pair * 2) / (query_heads / kv_heads);
+    const std::uint32_t kv_head = GROUP_GQA
+        ? blockIdx.x : (head_pair * 2) / (query_heads / kv_heads);
     const std::size_t kv_base = static_cast<std::size_t>(kv_head)
         * cache_capacity * head_dim;
     float4 q_vec0 = make_float4(0, 0, 0, 0);
@@ -7278,7 +7285,8 @@ __global__ void qwen35_splitk_suffix_attn_stage1_q8_4q_lds_kernel(
          tile_start += kTileKeys) {
         // All readers from the previous tile must finish before LDS is reused.
         __syncthreads();
-        if (query_row == 0 && sub_wave == 0 && sub_lane < 32) {
+        if (query_row == 0 && head_pair_in_group == 0
+            && sub_wave == 0 && sub_lane < 32) {
             const std::uint32_t key_pos = sub_lane * 8;
             #pragma unroll
             for (std::uint32_t u = 0; u < kTileKeys; ++u) {
@@ -7745,15 +7753,31 @@ void launch_qwen35_splitk_suffix_attention_quant(
     dim3 grid1(query_heads / 2, token_count, num_splits);
     dim3 block1(64);
 
+    const char* q8_gqa_4q_lds_env =
+        std::getenv("MIINFER_M31_Q8_GQA_4Q_LDS_REUSE");
+    const bool q8_gqa_4q_lds_enabled = q8_gqa_4q_lds_env != nullptr
+        && std::strcmp(q8_gqa_4q_lds_env, "0") != 0;
     const char* q8_4q_lds_env = std::getenv("MIINFER_M31_Q8_4Q_LDS_REUSE");
     const bool q8_4q_lds_enabled = q8_4q_lds_env != nullptr
         && std::strcmp(q8_4q_lds_env, "0") != 0;
-    if (q8_4q_lds_enabled && is_k_q8 && is_v_q8
+    if (q8_gqa_4q_lds_enabled && is_k_q8 && is_v_q8
+        && query_heads == 24 && kv_heads == 4 && head_dim == 256
+        && num_splits == 32) {
+        const std::uint32_t query_pairs_per_kv = query_heads / kv_heads / 2;
+        const dim3 q8_grid(kv_heads, (token_count + 3) / 4, num_splits);
+        hipLaunchKernelGGL(
+            (qwen35_splitk_suffix_attn_stage1_q8_4q_lds_kernel<true>),
+            q8_grid, dim3(query_pairs_per_kv * 4 * 64), 0, stream,
+            q, key_cache_q8, key_scales, value_cache_q8, value_scales,
+            d_partial_max, d_partial_sum, d_partial_acc,
+            token_count, base_position, cache_capacity,
+            query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
+    } else if (q8_4q_lds_enabled && is_k_q8 && is_v_q8
         && query_heads == 24 && kv_heads == 4 && head_dim == 256
         && num_splits == 32) {
         const dim3 q8_grid(query_heads / 2, (token_count + 3) / 4, num_splits);
         hipLaunchKernelGGL(
-            qwen35_splitk_suffix_attn_stage1_q8_4q_lds_kernel,
+            (qwen35_splitk_suffix_attn_stage1_q8_4q_lds_kernel<false>),
             q8_grid, dim3(256), 0, stream,
             q, key_cache_q8, key_scales, value_cache_q8, value_scales,
             d_partial_max, d_partial_sum, d_partial_acc,

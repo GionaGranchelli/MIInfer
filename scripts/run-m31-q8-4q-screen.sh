@@ -5,7 +5,8 @@ name=${1:?run name required}
 candidate=${2:-0}
 tokens=${3:-2048}
 runtime_limit=${4:-240}
-root=/tmp/m31-q8-lds-gpu0
+device=${5:-0}
+root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 evidence=$root/evidence
 mkdir -p "$evidence"
 log=$evidence/$name.log
@@ -20,10 +21,12 @@ args=(
   -v /home/machinist/models:/models:ro,Z
   -v /home/machinist/m31-perf-recovery-0001/build/mi50-release:/prompts:ro,Z
   -v "$evidence:/evidence:Z"
-  -w /build -e ROCR_VISIBLE_DEVICES=0
+  -w /build -e ROCR_VISIBLE_DEVICES="$device"
 )
 if [[ "$candidate" == 1 ]]; then
   args+=(-e MIINFER_M31_Q8_4Q_LDS_REUSE=1)
+elif [[ "$candidate" == 2 ]]; then
+  args+=(-e MIINFER_M31_Q8_GQA_4Q_LDS_REUSE=1)
 fi
 
 timeout --signal=TERM --kill-after=5s "${runtime_limit}s" podman run "${args[@]}" \
@@ -34,7 +37,7 @@ timeout --signal=TERM --kill-after=5s "${runtime_limit}s" podman run "${args[@]}
 run_pid=$!
 warned=0
 while kill -0 "$run_pid" 2>/dev/null; do
-  if ! telemetry=$(rocm-smi -d 0 --showtemp 2>&1); then
+  if ! telemetry=$(rocm-smi -d "$device" --showtemp 2>&1); then
     printf 'guard_error_%s telemetry_command_failed\n' "$name" >&2
     podman stop --time 2 "$name" >/dev/null 2>&1 || true
     break
