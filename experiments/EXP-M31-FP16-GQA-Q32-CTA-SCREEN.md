@@ -116,3 +116,25 @@ the mounted binary was visible, `ldd -r` resolved all dependencies including
 status. The GPU script then stopped before tracing because host `amd-smi` is
 not installed. No trace or inference ran. Use the available `rocm-smi` or
 sysfs temperature telemetry for the guard; do not require `amd-smi`.
+
+### Guarded 64K full-model result — 2026-10-14
+
+The matched-input pair completed on the frozen ROCm 7.2.1 build and derived
+runtime. Both runs used the same deterministic 65,536 token IDs, reported
+capacity 69,632, and produced finite full-vocabulary logits. The control ran
+on GPU0 (`0000:04:00.0`, UUID `GPU-021678e17348c2f7`); Q32 ran on GPU2
+(`0000:88:00.0`, UUID `GPU-2152414173497dd3`). No thermal guard warning or stop
+occurred. Artifacts, logits, and thermal samples are in
+`/home/machinist/m31-q32-exec-20261014T092831Z/final-q32-64k-ab-20261014T095104Z`.
+
+| Mode | Prefill | First token | Second token |
+|---|---:|---:|---:|
+| 16×2 control | 486.268 s | 174830 | 1789 |
+| 32×2 Q32 | 532.831 s | 30350 | 148452 |
+
+Full-logit comparison failed: max absolute error `0.397895336`, cosine
+`0.998683356732`, and first-token mismatch. Reject Q32; it does not preserve
+the project's correctness gate. The cross-card timing is also `9.58%` slower
+for Q32, but card-to-card variation prevents treating that as a clean speed
+comparison. The correctness failure is sufficient to keep this candidate
+disabled; do not scale it to another long-context run.
