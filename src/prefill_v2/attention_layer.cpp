@@ -5,6 +5,7 @@
 
 #include <hip/hip_runtime.h>
 #include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -38,6 +39,20 @@ bool m31_q8_dot4_attention_enabled() {
 bool m31_fp16_attention_fp32_enabled() {
     const char* value = std::getenv("MIINFER_M31_FP16_ATTN_FP32");
     return value != nullptr && std::strcmp(value, "0") != 0;
+}
+
+std::uint32_t m31_fp16_attention_splits(std::uint32_t base_position,
+                                        std::uint32_t token_count) {
+    const char* value = std::getenv("MIINFER_M31_FP16_ADAPTIVE_SPLITS");
+    if (value == nullptr || std::strcmp(value, "0") == 0) return 3;
+    const std::uint32_t splits =
+        std::min(32u, std::max(3u, (base_position + token_count + 2047u) / 2048u));
+    static std::atomic<std::uint32_t> last_reported{0};
+    if (last_reported.exchange(splits, std::memory_order_relaxed) != splits) {
+        std::cerr << "miinfer_m31_fp16_adaptive_splits context_end="
+                  << base_position + token_count << " num_splits=" << splits << '\n';
+    }
+    return splits;
 }
 
 bool v2_0043_real_compare_enabled() {
@@ -336,7 +351,8 @@ void PrefillV2AttentionLayer::forward(
                     ws.attn_q_rope, kv_cache.key_cache, kv_cache.value_cache,
                     ws.gate, attention_output, ws.splitk_attn_workspace,
                     token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
-                    24, 4, 256, 1.0F / std::sqrt(256.0F), 3, stream);
+                    24, 4, 256, 1.0F / std::sqrt(256.0F),
+                    m31_fp16_attention_splits(base_position, token_count), stream);
             }
         };
         launch_iteration26(ws.attn_gated_output);
@@ -513,7 +529,8 @@ void PrefillV2AttentionLayer::forward_profiled(
                 ws.attn_q_rope, kv_cache.key_cache, kv_cache.value_cache,
                 ws.gate, ws.attn_gated_output, ws.splitk_attn_workspace,
                 token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
-                24, 4, 256, 1.0F / std::sqrt(256.0F), 3, stream);
+                24, 4, 256, 1.0F / std::sqrt(256.0F),
+                m31_fp16_attention_splits(base_position, token_count), stream);
         }
     } else if (m31_q8_dot4_attention_enabled() && base_position > 0
         && kv_cache.is_k_q8() && kv_cache.is_v_q8()
