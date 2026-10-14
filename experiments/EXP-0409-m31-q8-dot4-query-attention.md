@@ -212,3 +212,28 @@ result will decide whether to continue or discard the candidate.
   No service process or session file was changed. This verifies dynamic state
   in a captured dot4 kernel graph; the full PrefillV2 model graph and matched
   8K comparison remain pending.
+
+### 2026-10-14 guarded 64K full-model check
+
+The opt-in Q8 dot4 path completed the same deterministic 65,536-token prompt
+with capacity 69,632 and finite full logits on Machinist GPU2 (`0000:88:00.0`,
+UUID `GPU-2152414173497dd3`). It took `499.420 s`; the first and second token
+IDs were `16467` and `39427`. Source revision
+`13418958b5f5146276dc819d59b35418bb911159`, executable SHA-256
+`57ec6d1cd975e2d7d0ba770eb592f8997e49dfe9acfab2ae02caf68ea4f4031f`, and
+model SHA-256 `7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169`
+match the preceding production-control artifact. The prompt sequence and
+capacity also match.
+
+Comparing all 248,320 logits with that production control gave max absolute
+error `0.9121723`, cosine `0.9935138`, and a different top-1 token (`16467`
+versus `174830`). This fails the existing full-logit correctness gate. Reject
+the single-plane Q8 query-dot4 candidate regardless of its timing.
+
+The raw `499.420 s` candidate time versus the earlier production control's
+`486.268 s` is not a valid speed comparison because the runs used different
+MI50 cards. A same-prompt paired production control on GPU0 is still running;
+its result will be recorded separately. A focused one-residual-plane query
+candidate is also running on GPU2 against the same production reference. Both
+runs use independent GPUs and thermal guards; the dot4 candidate remains
+opt-in.
