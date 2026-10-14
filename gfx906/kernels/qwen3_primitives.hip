@@ -7599,7 +7599,7 @@ void launch_qwen35_splitk_suffix_attention_f16(
 // V2-0019: Direct-Consumption Quantized Split-K Suffix Attention (FP16 / Q8 K / Q8 V)
 // -----------------------------------------------------------------------------
 
-template <bool K_IS_Q8, bool V_IS_Q8, int UNROLL = 4>
+template <bool K_IS_Q8, bool V_IS_Q8, int UNROLL = 4, bool GQA6_SHARED_KV = false>
 __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
     const float* __restrict__ q,
     const __half* __restrict__ key_cache_f16,
@@ -7627,19 +7627,22 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
         cache_capacity = prefill_state->kv_capacity > 0 ? prefill_state->kv_capacity : cache_capacity;
     }
 
-    const std::uint32_t head_pair = blockIdx.x;        // [0, query_heads / 2)
-    const std::uint32_t token = blockIdx.y;            // [0, token_count)
-    const std::uint32_t split_id = blockIdx.z;         // [0, num_splits)
+    const std::uint32_t head_pair = GQA6_SHARED_KV ? 0 : blockIdx.x;
+    const std::uint32_t token = GQA6_SHARED_KV ? blockIdx.x : blockIdx.y;
+    const std::uint32_t split_id = GQA6_SHARED_KV ? blockIdx.y : blockIdx.z;
     const std::uint32_t lane = threadIdx.x;            // [0, 64)
 
     const std::uint32_t sub_wave = lane / 32;          // 0 or 1
     const std::uint32_t sub_lane = lane % 32;          // [0, 31]
-    const std::uint32_t head = head_pair * 2 + sub_wave;
+    const std::uint32_t head = GQA6_SHARED_KV
+        ? blockIdx.z * 6 + threadIdx.y * 2 + sub_wave
+        : head_pair * 2 + sub_wave;
     const std::uint32_t dim_offset = sub_lane * 8;     // 8 elements
 
     if (token >= token_count || head >= query_heads || lane >= 64) return;
 
-    const std::uint32_t kv_head = head / (query_heads / kv_heads);
+    const std::uint32_t kv_head = GQA6_SHARED_KV
+        ? blockIdx.z : head / (query_heads / kv_heads);
     const std::uint32_t total_length = base_position + token + 1;
     if (total_length > cache_capacity) return;
 
@@ -7674,6 +7677,12 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
     const std::size_t kv_head_stride = static_cast<std::size_t>(cache_capacity) * head_dim;
     const std::size_t kv_base = static_cast<std::size_t>(kv_head) * kv_head_stride;
 
+    extern __shared__ unsigned char shared[];
+    std::int8_t* shared_key = reinterpret_cast<std::int8_t*>(shared);
+    std::int8_t* shared_value = shared_key + UNROLL * head_dim;
+    __half* shared_key_scales = reinterpret_cast<__half*>(shared_value + UNROLL * head_dim);
+    __half* shared_value_scales = shared_key_scales + UNROLL;
+
     const __half* k_f16_ptr = nullptr;
     const int8_t* k_q8_ptr = nullptr;
     const __half* k_scale_ptr = nullptr;
@@ -7699,6 +7708,24 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
     std::uint32_t pos = k_start;
 
     for (; pos + UNROLL <= k_end; pos += UNROLL) {
+        if constexpr (GQA6_SHARED_KV) {
+            const std::uint32_t cta_tid = threadIdx.y * 64 + lane;
+            for (std::uint32_t i = cta_tid; i < UNROLL * head_dim; i += 192) {
+                const std::uint32_t u = i / head_dim;
+                const std::uint32_t d = i % head_dim;
+                const std::size_t cache_index = kv_base
+                    + static_cast<std::size_t>(pos + u) * head_dim + d;
+                shared_key[i] = key_cache_q8[cache_index];
+                shared_value[i] = value_cache_q8[cache_index];
+            }
+            if (cta_tid < UNROLL) {
+                const std::size_t scale_index = static_cast<std::size_t>(kv_head) * cache_capacity + pos + cta_tid;
+                shared_key_scales[cta_tid] = key_scales[scale_index];
+                shared_value_scales[cta_tid] = value_scales[scale_index];
+            }
+            __syncthreads();
+        }
+
         uint4 k_raw_f16[UNROLL];
         uint2 k_raw_q8[UNROLL];
         float k_scales[UNROLL];
@@ -7710,13 +7737,21 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
         #pragma unroll
         for (int u = 0; u < UNROLL; ++u) {
             if constexpr (K_IS_Q8) {
-                k_raw_q8[u] = *reinterpret_cast<const uint2*>(k_q8_ptr + static_cast<std::size_t>(u) * head_dim);
+                if constexpr (GQA6_SHARED_KV) {
+                    k_raw_q8[u] = *reinterpret_cast<const uint2*>(shared_key + static_cast<std::size_t>(u) * head_dim + dim_offset);
+                } else {
+                    k_raw_q8[u] = *reinterpret_cast<const uint2*>(k_q8_ptr + static_cast<std::size_t>(u) * head_dim);
+                }
             } else {
                 k_raw_f16[u] = *reinterpret_cast<const uint4*>(k_f16_ptr + static_cast<std::size_t>(u) * head_dim);
             }
 
             if constexpr (V_IS_Q8) {
-                v_raw_q8[u] = *reinterpret_cast<const uint2*>(v_q8_ptr + static_cast<std::size_t>(u) * head_dim);
+                if constexpr (GQA6_SHARED_KV) {
+                    v_raw_q8[u] = *reinterpret_cast<const uint2*>(shared_value + static_cast<std::size_t>(u) * head_dim + dim_offset);
+                } else {
+                    v_raw_q8[u] = *reinterpret_cast<const uint2*>(v_q8_ptr + static_cast<std::size_t>(u) * head_dim);
+                }
             } else {
                 v_raw_f16[u] = *reinterpret_cast<const uint4*>(v_f16_ptr + static_cast<std::size_t>(u) * head_dim);
             }
@@ -7724,7 +7759,8 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
 
         if constexpr (K_IS_Q8) {
             if (sub_lane == 0) {
-                const auto* s_ptr = k_scale_ptr + (pos - k_start);
+                const auto* s_ptr = GQA6_SHARED_KV
+                    ? shared_key_scales : k_scale_ptr + (pos - k_start);
                 #pragma unroll
                 for (int u = 0; u < UNROLL; ++u) {
                     k_scales[u] = __half2float(s_ptr[u]);
@@ -7738,7 +7774,8 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
 
         if constexpr (V_IS_Q8) {
             if (sub_lane == 0) {
-                const auto* s_ptr = v_scale_ptr + (pos - k_start);
+                const auto* s_ptr = GQA6_SHARED_KV
+                    ? shared_value_scales : v_scale_ptr + (pos - k_start);
                 #pragma unroll
                 for (int u = 0; u < UNROLL; ++u) {
                     v_scales[u] = __half2float(s_ptr[u]);
@@ -7833,21 +7870,39 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
 
         if constexpr (V_IS_Q8) v_q8_ptr += UNROLL * head_dim;
         else                   v_f16_ptr += UNROLL * head_dim;
+        if constexpr (GQA6_SHARED_KV) __syncthreads();
     }
 
     // Tail loop
     for (; pos < k_end; ++pos) {
+        if constexpr (GQA6_SHARED_KV) {
+            const std::uint32_t cta_tid = threadIdx.y * 64 + lane;
+            for (std::uint32_t d = cta_tid; d < head_dim; d += 192) {
+                const std::size_t cache_index = kv_base + static_cast<std::size_t>(pos) * head_dim + d;
+                shared_key[d] = key_cache_q8[cache_index];
+                shared_value[d] = value_cache_q8[cache_index];
+            }
+            if (cta_tid == 0) {
+                const std::size_t scale_index = static_cast<std::size_t>(kv_head) * cache_capacity + pos;
+                shared_key_scales[0] = key_scales[scale_index];
+                shared_value_scales[0] = value_scales[scale_index];
+            }
+            __syncthreads();
+        }
         float dot = 0.0f;
         float k_scale_val = 1.0f;
         if constexpr (K_IS_Q8) {
-            const uint2 k_raw_q8 = *reinterpret_cast<const uint2*>(k_q8_ptr);
+            const uint2 k_raw_q8 = GQA6_SHARED_KV
+                ? *reinterpret_cast<const uint2*>(shared_key + dim_offset)
+                : *reinterpret_cast<const uint2*>(k_q8_ptr);
             const auto* kb = reinterpret_cast<const int8_t*>(&k_raw_q8);
             dot = q_vec0.x * static_cast<float>(kb[0]) + q_vec0.y * static_cast<float>(kb[1])
                 + q_vec0.z * static_cast<float>(kb[2]) + q_vec0.w * static_cast<float>(kb[3])
                 + q_vec1.x * static_cast<float>(kb[4]) + q_vec1.y * static_cast<float>(kb[5])
                 + q_vec1.z * static_cast<float>(kb[6]) + q_vec1.w * static_cast<float>(kb[7]);
             if (sub_lane == 0) {
-                k_scale_val = __half2float(k_scale_ptr[pos - k_start]);
+                k_scale_val = __half2float(GQA6_SHARED_KV
+                    ? shared_key_scales[0] : k_scale_ptr[pos - k_start]);
             }
             k_scale_val = __shfl(k_scale_val, sub_wave * 32, 64);
             k_q8_ptr += head_dim;
@@ -7887,11 +7942,14 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
         if constexpr (V_IS_Q8) {
             float v_scale_val = 1.0f;
             if (sub_lane == 0) {
-                v_scale_val = __half2float(v_scale_ptr[pos - k_start]);
+                v_scale_val = __half2float(GQA6_SHARED_KV
+                    ? shared_value_scales[0] : v_scale_ptr[pos - k_start]);
             }
             v_scale_val = __shfl(v_scale_val, sub_wave * 32, 64);
             const float w = weight * v_scale_val;
-            const uint2 v_raw_q8 = *reinterpret_cast<const uint2*>(v_q8_ptr);
+            const uint2 v_raw_q8 = GQA6_SHARED_KV
+                ? *reinterpret_cast<const uint2*>(shared_value + dim_offset)
+                : *reinterpret_cast<const uint2*>(v_q8_ptr);
             const auto* vb = reinterpret_cast<const int8_t*>(&v_raw_q8);
 
             acc0.x = acc0.x * alpha + w * static_cast<float>(vb[0]);
@@ -7921,6 +7979,7 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
 
             v_f16_ptr += head_dim;
         }
+        if constexpr (GQA6_SHARED_KV) __syncthreads();
     }
 
     if (sub_lane == 0) {
@@ -8016,6 +8075,42 @@ void launch_qwen35_splitk_suffix_attention_quant(
         grid2, block2, 0, stream,
         d_partial_max, d_partial_sum, d_partial_acc,
         gate, gated_output,
+        token_count, query_heads, head_dim, num_splits, prefill_state);
+    MIINFER_HIP_CHECK(hipGetLastError());
+}
+
+void launch_qwen35_gqa6_production_q8_attention_batch(
+    const float* q, const std::int8_t* key_cache_q8, const __half* key_scales,
+    const std::int8_t* value_cache_q8, const __half* value_scales,
+    const float* gate, float* gated_output, float* split_workspace,
+    std::uint32_t token_count, std::uint32_t base_position,
+    std::uint32_t cache_capacity, std::uint32_t query_heads,
+    std::uint32_t kv_heads, std::uint32_t head_dim, float scale,
+    std::uint32_t num_splits, hipStream_t stream,
+    const DevicePrefillState* prefill_state) {
+    if (q == nullptr || key_cache_q8 == nullptr || key_scales == nullptr
+        || value_cache_q8 == nullptr || value_scales == nullptr || gate == nullptr
+        || gated_output == nullptr || split_workspace == nullptr || token_count == 0
+        || base_position > cache_capacity || token_count > cache_capacity - base_position
+        || query_heads != 24 || kv_heads != 4 || head_dim != 256
+        || !std::isfinite(scale) || num_splits == 0 || num_splits > 64) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    const std::size_t total_meta = static_cast<std::size_t>(num_splits) * token_count * query_heads;
+    float* partial_max = split_workspace;
+    float* partial_sum = partial_max + total_meta;
+    float* partial_acc = partial_sum + total_meta;
+    constexpr std::size_t shared_bytes = 2 * 4 * 256 * sizeof(std::int8_t)
+        + 2 * 4 * sizeof(__half);
+    hipLaunchKernelGGL((qwen35_splitk_suffix_attn_stage1_quant_kernel<true, true, 4, true>),
+        dim3(token_count, num_splits, kv_heads), dim3(64, 3), shared_bytes, stream,
+        q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,
+        partial_max, partial_sum, partial_acc, token_count, base_position, cache_capacity,
+        query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
+    MIINFER_HIP_CHECK(hipGetLastError());
+    hipLaunchKernelGGL(qwen35_splitk_suffix_attn_stage2_kernel,
+        dim3(token_count * query_heads), dim3(64), 0, stream,
+        partial_max, partial_sum, partial_acc, gate, gated_output,
         token_count, query_heads, head_dim, num_splits, prefill_state);
     MIINFER_HIP_CHECK(hipGetLastError());
 }

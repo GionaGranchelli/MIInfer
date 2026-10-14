@@ -35,6 +35,11 @@ bool m31_q8_gqa6_native_tiled_enabled() {
     return value != nullptr && std::strcmp(value, "0") != 0;
 }
 
+bool m31_q8_gqa6_production_arith_enabled() {
+    const char* value = std::getenv("MIINFER_M31_Q8_GQA6_PROD_ARITH");
+    return value != nullptr && std::strcmp(value, "0") != 0;
+}
+
 bool m31_q8_dot4_attention_enabled() {
     const char* value = std::getenv("MIINFER_M31_Q8_DOT4_ATTENTION");
     return value != nullptr && std::strcmp(value, "0") != 0;
@@ -376,6 +381,16 @@ void PrefillV2AttentionLayer::forward(
                 ws.attn_q_rope, ws.attn_gated_output, ws.attn_qfull,
                 static_cast<std::size_t>(token_count) * 24 * 256, stream);
         }
+    } else if (m31_q8_gqa6_production_arith_enabled()
+        && (base_position > 0 || prefill_state != nullptr)
+        && kv_cache.is_k_q8() && kv_cache.is_v_q8()
+        && token_count > 0 && ws.splitk_attn_workspace != nullptr) {
+        launch_qwen35_gqa6_production_q8_attention_batch(
+            ws.attn_q_rope, kv_cache.key_cache_q8, kv_cache.key_scales,
+            kv_cache.value_cache_q8, kv_cache.value_scales,
+            ws.gate, ws.attn_gated_output, ws.splitk_attn_workspace,
+            token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
+            24, 4, 256, 1.0F / std::sqrt(256.0F), 32, stream, prefill_state);
     } else if (m31_q8_gqa6_native_tiled_enabled()
         && (base_position > 0 || prefill_state != nullptr)
         && kv_cache.is_k_q8() && kv_cache.is_v_q8()

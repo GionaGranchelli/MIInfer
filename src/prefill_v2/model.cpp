@@ -263,7 +263,8 @@ PrefillV2Model::PrefillV2Model(PrefillV2Model&& other) noexcept
       suffix_graph_q8_dot4_query_residual_enabled_(other.suffix_graph_q8_dot4_query_residual_enabled_),
       suffix_graph_q8_dot4_query_residual2_enabled_(other.suffix_graph_q8_dot4_query_residual2_enabled_),
       suffix_graph_q8_dot4_query_residual3_enabled_(other.suffix_graph_q8_dot4_query_residual3_enabled_),
-      suffix_graph_q8_gqa6_native_tiled_enabled_(other.suffix_graph_q8_gqa6_native_tiled_enabled_) {
+      suffix_graph_q8_gqa6_native_tiled_enabled_(other.suffix_graph_q8_gqa6_native_tiled_enabled_),
+      suffix_graph_q8_gqa6_prod_arith_enabled_(other.suffix_graph_q8_gqa6_prod_arith_enabled_) {
     other.d_embedding_weights_ = nullptr;
     other.d_final_norm_weights_ = nullptr;
     other.d_output_weights_ = nullptr;
@@ -284,6 +285,7 @@ PrefillV2Model::PrefillV2Model(PrefillV2Model&& other) noexcept
     other.suffix_graph_q8_dot4_query_residual2_enabled_ = false;
     other.suffix_graph_q8_dot4_query_residual3_enabled_ = false;
     other.suffix_graph_q8_gqa6_native_tiled_enabled_ = false;
+    other.suffix_graph_q8_gqa6_prod_arith_enabled_ = false;
 }
 
 PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
@@ -320,6 +322,7 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
         suffix_graph_q8_dot4_query_residual2_enabled_ = other.suffix_graph_q8_dot4_query_residual2_enabled_;
         suffix_graph_q8_dot4_query_residual3_enabled_ = other.suffix_graph_q8_dot4_query_residual3_enabled_;
         suffix_graph_q8_gqa6_native_tiled_enabled_ = other.suffix_graph_q8_gqa6_native_tiled_enabled_;
+        suffix_graph_q8_gqa6_prod_arith_enabled_ = other.suffix_graph_q8_gqa6_prod_arith_enabled_;
 
         other.d_embedding_weights_ = nullptr;
         other.d_final_norm_weights_ = nullptr;
@@ -341,6 +344,7 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
         other.suffix_graph_q8_dot4_query_residual2_enabled_ = false;
         other.suffix_graph_q8_dot4_query_residual3_enabled_ = false;
         other.suffix_graph_q8_gqa6_native_tiled_enabled_ = false;
+        other.suffix_graph_q8_gqa6_prod_arith_enabled_ = false;
     }
     return *this;
 }
@@ -1258,6 +1262,7 @@ void PrefillV2Model::cleanup_suffix_graph() {
     suffix_graph_q8_dot4_query_residual2_enabled_ = false;
     suffix_graph_q8_dot4_query_residual3_enabled_ = false;
     suffix_graph_q8_gqa6_native_tiled_enabled_ = false;
+    suffix_graph_q8_gqa6_prod_arith_enabled_ = false;
 }
 
 void PrefillV2Model::capture_suffix_graph(hipStream_t stream) {
@@ -1277,12 +1282,16 @@ void PrefillV2Model::capture_suffix_graph(hipStream_t stream) {
     const char* gqa6_native_env = std::getenv("MIINFER_M31_Q8_GQA6_NATIVE_TILED");
     const bool gqa6_native_enabled =
         gqa6_native_env != nullptr && std::string_view(gqa6_native_env) != "0";
+    const char* gqa6_prod_arith_env = std::getenv("MIINFER_M31_Q8_GQA6_PROD_ARITH");
+    const bool gqa6_prod_arith_enabled =
+        gqa6_prod_arith_env != nullptr && std::string_view(gqa6_prod_arith_env) != "0";
     if (suffix_graph_exec_ != nullptr && suffix_graph_q8_dot4_enabled_ == dot4_enabled
         && suffix_graph_q8_dot4_ilp2_enabled_ == ilp2_enabled
         && suffix_graph_q8_dot4_query_residual_enabled_ == query_residual_enabled
         && suffix_graph_q8_dot4_query_residual2_enabled_ == query_residual2_enabled
         && suffix_graph_q8_dot4_query_residual3_enabled_ == query_residual3_enabled
-        && suffix_graph_q8_gqa6_native_tiled_enabled_ == gqa6_native_enabled) {
+        && suffix_graph_q8_gqa6_native_tiled_enabled_ == gqa6_native_enabled
+        && suffix_graph_q8_gqa6_prod_arith_enabled_ == gqa6_prod_arith_enabled) {
         return;
     }
     cleanup_suffix_graph();
@@ -1308,6 +1317,7 @@ void PrefillV2Model::capture_suffix_graph(hipStream_t stream) {
     suffix_graph_q8_dot4_query_residual2_enabled_ = query_residual2_enabled;
     suffix_graph_q8_dot4_query_residual3_enabled_ = query_residual3_enabled;
     suffix_graph_q8_gqa6_native_tiled_enabled_ = gqa6_native_enabled;
+    suffix_graph_q8_gqa6_prod_arith_enabled_ = gqa6_prod_arith_enabled;
 }
 
 std::size_t PrefillV2Model::persistent_weight_bytes() const noexcept {
