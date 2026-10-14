@@ -71,15 +71,40 @@ control and candidate with identical build, model, prompt, and capacity.
 - The first separate candidate-only 64K launch used
   `ROCR_VISIBLE_DEVICES=GPU-02152414173497dd3` inside the container and failed
   before model load with `hipGetDeviceCount failed: no ROCm-capable device is
-  detected`; no candidate logits were written. GPU2 remained idle at 0% use
-  and about `31 C` junction. This was a selector-format mistake, not evidence
-  of a kernel or model failure.
-- Existing repo run records select this card with numeric
-  `ROCR_VISIBLE_DEVICES=2` passed to the container (`EXP-0404`, `EXP-0405`,
-  and `EXP-0409`). Host mapping confirms ROCm index 2 is MI50 BDF
-  `0000:88:00.0`, unique ID `0x2152414173497dd3`; the corrected candidate
-  launch must use that in-container numeric selector and assert the BDF from
-  the inference process before accepting the run.
+  detected`; no candidate logits were written. This first attempt omitted the
+  complete GPU device mapping. Follow-up preflights using only `/dev/kfd`
+  exposed CPU agents but no GPU, while adding individual card/render nodes
+  returned HSA `OUT_OF_RESOURCES`.
+- Existing successful run scripts use the complete shape
+  `--device /dev/kfd --device /dev/dri --security-opt label=disable`, and pass
+  `ROCR_VISIBLE_DEVICES=2` inside the container. A pinned-image `rocminfo`
+  preflight with the complete device shape and `ROCR_VISIBLE_DEVICES=0`
+  exposed gfx906 UUID `GPU-021678e17348c2f7` (GPU0); the full inference process
+  independently confirmed BDF `0000:04:00.0`. GPU2 was not retried after this
+  correction, so its availability under the pinned image remains unverified.
+
+## 64K GPU0 native-Q8 candidate-only attempt (stopped at bound)
+
+- Used the pinned image and binary above, model SHA-256
+  `7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169`, the
+  existing tokenizer-backed prompt, 65,536 processed tokens, and 69,632-token
+  capacity. The feature environment was confirmed in the live process:
+  `MIINFER_M31_Q8_GQA6_NATIVE_TILED=1` and `ROCR_VISIBLE_DEVICES=0`.
+- The inference process printed BDF `0000:04:00.0` and entered `q8_only`. It
+  remained runnable and compute-bound through 15:01 elapsed (about 29:24 CPU
+  time, 195% CPU, GPU0 100% busy, 30.48 GB VRAM). It produced no completed
+  timing/logit line or logits file before the 15-minute cap, so there is no
+  correctness or performance result from this run.
+- The wrapper stopped the tagged container at the cap. SIGTERM did not stop
+  inference; Podman escalated to SIGKILL. Exit was 137. Thermal sampling
+  recorded a maximum junction of `71 C`; no 80 C warning or 85 C stop fired.
+  GPU0 returned to 0% busy, about 10.9 MB VRAM, and `39 C` junction after
+  cleanup.
+- The candidate-only run cannot be compared against the prior
+  `486.268 s` GPU0 control as a valid speed result: the historical control was
+  built from a different source revision and used a different attention/KV
+  mode. The planned full-logit comparison against the stored Q8 reference
+  could not run because this candidate did not produce logits.
 
 ## Pinned 2K full-model gate
 
