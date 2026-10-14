@@ -1,4 +1,4 @@
-# EXP-0410 — V2-0043 next-K register prefetch
+# EXP-0412 — V2-0043 next-K register prefetch
 
 **Status: REJECTED for promotion.** The candidate preserved exact 64K logits,
 but did not improve full-model cold prefill on the same MI50.
