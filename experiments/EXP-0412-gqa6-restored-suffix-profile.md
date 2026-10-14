@@ -1,6 +1,6 @@
 # EXP-0412 — GQA6 on restored long-context suffixes
 
-**Status:** IN PROGRESS  
+**Status:** SCREEN PASSED; NEXT OPTIMIZATION IN PROGRESS
 **Control:** `c64e52d` production Q8 attention  
 **Candidate:** `c64e52d` with `MIINFER_M31_Q8_GQA6_PROD_ARITH=1`
 
@@ -13,10 +13,33 @@ prefix is not yet measured for that implementation.
 
 ## Bottleneck evidence
 
-EXP-0406 measured one restored 73,099-prefix / 1,024-token Q8 suffix. GQA
-blocks took 18,355.050 ms, including 17,411.093 ms causal attention (80.3% of
-profiled model GPU time). That is the previous production route; attribution
-must be refreshed with GQA6 before choosing a second kernel change.
+The original profile path omitted production-arithmetic GQA6 dispatch, so its
+first 93.3% attention attribution was the old route and is invalid for GQA6.
+The profile dispatch was fixed and now fails unless all 16 attention layers
+report GQA6.
+
+On the restored 73,099-token prefix, one 1,024-token GQA6 tile took 30,164.812
+ms model GPU time on BDF `0000:88:00.0`. GQA blocks account for 26,746.720 ms;
+causal attention accounts for 25,780.040 ms (85.464%). Stage 1 accounts for
+25,758.596 ms and Stage 2 for 20.269 ms. Other reported work: QKV projection
+193.997 ms, RoPE/KV store 6.539 ms, output projection 79.310 ms, post norm
+3.005 ms, FFN gate/up 434.009 ms, and SwiGLU/down/residual 247.108 ms. All 16
+profiled layers used production-arithmetic GQA6. This makes Stage 1 the clear
+next target; Stage 2 reduction is not the bottleneck.
+
+The actual graph-replay suffix comparison used the same restored session,
+tokenized text and MI50 for each control/candidate pair:
+
+| Suffix | Production Q8 | GQA6 | Speedup | Graph replay and correctness |
+| --- | ---: | ---: | ---: | --- |
+| 1,024 | 65.923 s | 30.189 s | 2.184x | 1 tile; all recurrent state/history, logits, and checked greedy tokens exact |
+| 4,096 | 269.408 s | 123.400 s | 2.183x | 4 tiles; same exact checks |
+
+These are one sequential matched sample per path and suffix length, suitable
+for screening rather than a repeated-sample performance claim. Guarded peak
+temperature was 64 C for 1,024 and 67 C for 4,096; the profile run peaked at
+61 C junction. All guards exited successfully. Results are on the remote host
+under `/home/machinist/m31-gqa6-longctx-results/EXP-0412-20261014/`.
 
 ## Workload and one variable
 
@@ -44,16 +67,21 @@ stop active. Stop a run at 85 C, on GPU/process loss, or if it exceeds 3x the
 previous Q8 duration without progress. One matched pair per suffix length is
 a screening result; repeat only if the comparison is close or noisy.
 
-## Expected impact and next decision
+## Next decision
 
-The previous 73K profile places 80.3% of 1,024-suffix GPU time in attention;
-that is the upper bound for an attention-only improvement on that path. The
-new GQA6 contribution is unknown until measured. If exact and materially
-faster, use a low-overhead GQA6 profile to select the next stage. If attention
-still dominates, implement a bounded cross-token reuse schedule that avoids
-the previously rejected register-resident Q2/Q4 design and preserves each
-query's Split-K bounds and arithmetic. If it does not dominate, redirect the
-next change to the measured bottleneck.
+Keep bit-identical production-arithmetic GQA6 as the best-known path, with the
+old Q8 path available for comparison and fallback. The measured GQA6 Stage 1
+share justifies a bounded cross-token reuse candidate. Pair adjacent queries
+inside one CTA, share only the Q8 LDS K/V tile, and preserve each query's own
+Split-K bounds and ordered arithmetic updates. Reject it on any numerical
+mismatch, register spill, or lack of material speedup. The candidate must
+continue through the restored graph path before a broader context claim is
+made.
+
+This experiment does not establish a fast 64K cold prefill: the last known
+result remains 1,023.715 s against the 180 s target. It also does not establish
+coding-agent usability. A cold run should follow only after a Stage 1 change
+shows meaningful end-to-end impact.
 
 ## Prior designs to avoid repeating
 
