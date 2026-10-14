@@ -34,19 +34,26 @@ timeout --signal=TERM --kill-after=5s "${runtime_limit}s" podman run "${args[@]}
 run_pid=$!
 warned=0
 while kill -0 "$run_pid" 2>/dev/null; do
-  junction=$(rocm-smi -d 0 --showtemp 2>/dev/null \
-    | sed -n 's/.*junction.*: \([0-9.]*\).*/\1/pI' | head -n 1)
-  if [[ -n "$junction" ]]; then
-    printf '%s\n' "$junction" >>"$temps"
-    if (( ${junction%%.*} >= 80 )) && (( warned == 0 )); then
-      printf 'warning_%s_c=%s\n' "$name" "$junction"
-      warned=1
-    fi
-    if (( ${junction%%.*} >= 85 )); then
-      printf 'hard_stop_%s_c=%s\n' "$name" "$junction"
-      podman stop --time 2 "$name" >/dev/null 2>&1 || true
-      break
-    fi
+  if ! telemetry=$(rocm-smi -d 0 --showtemp 2>&1); then
+    printf 'guard_error_%s telemetry_command_failed\n' "$name" >&2
+    podman stop --time 2 "$name" >/dev/null 2>&1 || true
+    break
+  fi
+  junction=$(awk '/Sensor junction/ {gsub(/[^0-9.]/, "", $NF); print $NF; exit}' <<<"$telemetry")
+  if [[ -z "$junction" ]]; then
+    printf 'guard_error_%s junction_temperature_missing\n' "$name" >&2
+    podman stop --time 2 "$name" >/dev/null 2>&1 || true
+    break
+  fi
+  printf '%s\n' "$junction" >>"$temps"
+  if (( ${junction%%.*} >= 80 )) && (( warned == 0 )); then
+    printf 'warning_%s_c=%s\n' "$name" "$junction"
+    warned=1
+  fi
+  if (( ${junction%%.*} >= 85 )); then
+    printf 'hard_stop_%s_c=%s\n' "$name" "$junction"
+    podman stop --time 2 "$name" >/dev/null 2>&1 || true
+    break
   fi
   sleep 2
 done
