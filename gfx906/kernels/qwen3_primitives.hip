@@ -2962,7 +2962,7 @@ __global__ void qwen35_quantize_q8_query_kernel(
 // fragment for all 32 rows, then the same workspace is overwritten once with
 // V and consumed across those rows before the next K tile.
 template <bool KEY_Q8, bool VALUE_Q8, bool FP32_ACCUM, bool QUERY_Q8 = false,
-          bool USE_PREFILL_STATE = false>
+          bool USE_PREFILL_STATE = false, bool MFMA_QK = false>
 __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_batch_kernel(
     const float* __restrict__ q, const __half* __restrict__ key_cache,
     const __half* __restrict__ value_cache,
@@ -2989,7 +2989,10 @@ __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_bat
         : 32 * 256 * (FP32_ACCUM ? sizeof(float) : sizeof(__half));
     __half* kv_tmp = reinterpret_cast<__half*>(shared + q_tmp_bytes);
     AttentionWeight* kq_fragment = reinterpret_cast<AttentionWeight*>(kv_tmp + kTileK * kKRowStride);
-    float* row_max = reinterpret_cast<float*>(kq_fragment + 32 * kTileK);
+    constexpr std::size_t score_storage_bytes = MFMA_QK
+        ? 32 * kTileK * sizeof(float) : 32 * kTileK * sizeof(AttentionWeight);
+    float* row_max = reinterpret_cast<float*>(reinterpret_cast<unsigned char*>(kq_fragment)
+        + score_storage_bytes);
     float* row_sum = row_max + 32;
     float* row_alpha = row_sum + 32;
     float* q8_scale_tmp = row_alpha + 32;
@@ -3170,6 +3173,72 @@ __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_bat
                 }
             }
             __syncthreads();
+        } else if constexpr (MFMA_QK) {
+            // MFMA KQ tile: each Wave64 computes one 16-key x 16-query output
+            // tile. Two key tiles x two query tiles cover this CTA's 32x32
+            // score matrix. Input layout follows ggml's MIT-licensed gfx906
+            // MFMA mapping (llama.cpp ggml-cuda/mma.cuh and fattn-mma-f16.cuh):
+            // A lane owns row=lane%16 and K=4*(lane/16)+[0..3]; B owns
+            // K=lane%16 and column=4*(lane/16)+[0..3]; four FP32 outputs per
+            // lane own row=lane%16 and column=4*(lane/16)+[0..3].
+            using halfx4_t = __attribute__((ext_vector_type(4))) _Float16;
+            using floatx4_t = __attribute__((ext_vector_type(4))) float;
+            const std::uint32_t wave = warp / 2;
+            const std::uint32_t lane64 = lane + 32 * (warp & 1);
+            const std::uint32_t tile_m = wave / 2;
+            const std::uint32_t tile_n = wave % 2;
+            floatx4_t mfma_acc = {0.0f, 0.0f, 0.0f, 0.0f};
+            for (std::uint32_t d_base = 0; d_base < 256; d_base += 128) {
+                for (std::uint32_t i = tid; i < 32 * 16; i += 256) {
+                    const std::uint32_t position = i / 16;
+                    const std::uint32_t dimension = d_base + (i % 16) * 8;
+                    const std::uint32_t cache_position = tile_start + position;
+                    const std::size_t cache_index =
+                        (static_cast<std::size_t>(kv_head) * cache_capacity + cache_position) * 256
+                        + dimension;
+                    uint4 packed = make_uint4(0, 0, 0, 0);
+                    if (cache_position < work_end && cache_position < cache_capacity) {
+                        packed = *reinterpret_cast<const uint4*>(key_cache + cache_index);
+                    }
+                    const std::uint32_t fragment = (i % 16) ^ (position & 7);
+                    *reinterpret_cast<uint4*>(kv_tmp + position * kKRowStride + fragment * 8) = packed;
+                }
+                __syncthreads();
+                for (std::uint32_t d_sub = 0; d_sub < 128; d_sub += 16) {
+                    halfx4_t a_frag;
+                    halfx4_t b_frag;
+#pragma unroll
+                    for (std::uint32_t item = 0; item < 4; ++item) {
+                        const std::uint32_t key_row = tile_m * 16 + lane64 % 16;
+                        const std::uint32_t key_dim = d_sub + 4 * (lane64 / 16) + item;
+                        const std::uint32_t key_fragment = (key_dim / 8) ^ (key_row & 7);
+                        a_frag[item] = reinterpret_cast<const __half*>(kv_tmp
+                            + key_row * kKRowStride + key_fragment * 8)[key_dim % 8];
+                        const std::uint32_t query_col = tile_n * 16
+                            + 4 * (lane64 / 16) + item;
+                        const std::uint32_t query_dim = d_base + d_sub + lane64 % 16;
+                        b_frag[item] = reinterpret_cast<const __half*>(shared)[query_col * 256
+                            + query_dim];
+                    }
+                    mfma_acc = __builtin_amdgcn_mfma_f32_16x16x16f16(
+                        a_frag, b_frag, mfma_acc, 0, 0, 0);
+                }
+                __syncthreads();
+            }
+#pragma unroll
+            for (std::uint32_t item = 0; item < 4; ++item) {
+                const std::uint32_t key_row = tile_m * 16 + lane64 % 16;
+                const std::uint32_t query_col = tile_n * 16
+                    + 4 * (lane64 / 16) + item;
+                reinterpret_cast<float*>(kq_fragment)[query_col * 32 + key_row]
+                    = mfma_acc[item];
+            }
+            __syncthreads();
+#pragma unroll
+            for (std::uint32_t r = 0; r < kRowsPerWarp; ++r) {
+                const std::uint32_t row = warp * kRowsPerWarp + r;
+                dot[r] = reinterpret_cast<float*>(kq_fragment)[row * 32 + lane];
+            }
         } else {
             // Pinned gfx906 config: stage K in 128-wide FP16 fragments and
             // reuse each fragment across the query rows in this CTA.
@@ -5691,6 +5760,31 @@ void launch_qwen35_kq_fragment_reuse_attention_batch_f16(
     float* partial_max = split_workspace;
     float* partial_sum = partial_max + total_meta;
     float* partial_acc = partial_sum + total_meta;
+
+    const char* mfma_env = std::getenv("MIINFER_M31_FP16_QK_MFMA");
+    if (mfma_env != nullptr && std::strcmp(mfma_env, "0") != 0) {
+        static bool dispatch_logged = false;
+        if (!dispatch_logged) {
+            std::fprintf(stderr, "miinfer_m31_fp16_qk_mfma_dispatch=1\n");
+            dispatch_logged = true;
+        }
+        const std::uint32_t blocks = (token_count + 15) / 16;
+        const std::size_t shared_bytes = 32 * 256 * sizeof(__half)
+            + 32 * 128 * sizeof(__half) + 32 * 32 * sizeof(float) + 3 * 32 * sizeof(float);
+        hipLaunchKernelGGL((qwen35_kq_fragment_reuse_attention_batch_kernel<
+                false, false, false, false, false, true>),
+            dim3(blocks, num_splits, groups), dim3(32, 8), shared_bytes, stream,
+            q, key_cache, value_cache, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+            split_workspace, token_count, base_position, cache_capacity, num_splits, scale, nullptr);
+        MIINFER_HIP_CHECK(hipGetLastError());
+        hipLaunchKernelGGL(qwen35_splitk_suffix_attn_stage2_kernel,
+            dim3(token_count * query_heads), dim3(64), 0, stream,
+            partial_max, partial_sum, partial_acc, gate, gated_output,
+            token_count, query_heads, head_dim, num_splits,
+            static_cast<const DevicePrefillState*>(nullptr));
+        MIINFER_HIP_CHECK(hipGetLastError());
+        return;
+    }
 
     const char* reuse_env = std::getenv("MIINFER_M31_FP16_4Q_LDS_REUSE");
     if (reuse_env != nullptr && std::strcmp(reuse_env, "0") != 0 && num_splits == 3) {
