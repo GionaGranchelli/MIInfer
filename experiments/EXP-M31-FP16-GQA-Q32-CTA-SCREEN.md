@@ -70,3 +70,24 @@ hipBLAS could not locate its `hip` CMake dependency (`hipConfig.cmake` or
 configure input is `-Dhip_DIR=/opt/rocm-7.2.1/lib/cmake/hip`, but that path is
 not verified in the image. Raw retry output is in
 `/home/machinist/m31-q32-exec-20261014T092831Z/retry-build-run.log`.
+
+### Reference-engine review — 2026-10-14
+
+Reviewed clean local checkouts: mx-llama `71a0624fb36aaaa2df24ccf428236493c813a441`,
+gfx906-llama-cpp `1373e889a4d5c69f453fe82c96332585f3d2b960`, and Strata
+`a0116b2782a5b82622358c04a06496485d12b2d6`.
+
+- The gfx906 fork gates MFMA on CDNA; MI50 is Vega/gfx906, so an MFMA port is
+  not a viable MI50 route. Strata's gfx906 sparse QSA is also a different
+  attention algorithm and does not replace dense exact attention.
+- The relevant gfx906 reference is the fork's native quantized TILE attention
+  (`ggml/src/ggml-cuda/fattn-tile.cuh`, MIT). It avoids a full FP16 KV shadow
+  when memory headroom favors native Q8. Its K/V reuse overlaps the current
+  MIInfer Q8 dot4 design, so a port is deferred until dot4 is measured.
+- The fork's own tuning notes report a bit-identical KQ software pipeline
+  regression of 5.8% and geometry/occupancy changes at +0.5%, treated as noise.
+  This argues against spending the campaign on manual loop pipelining or a
+  speculative geometry sweep.
+- No reference source was copied. Strata, the gfx906 fork, and mx-llama are
+  MIT. If dot4 fails correctness or speed, the next distinct candidate is the
+  fork's compact native-Q8 TILE data path, evaluated on the same 64K prompt.
