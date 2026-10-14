@@ -1,6 +1,6 @@
 # EXP-0418 — Packed Q8 staging for production-arithmetic GQA6
 
-**Status:** SCREEN PASSED — exact and 1.36x faster; repeated timing gate pending
+**Status:** REPEATED SCREEN PASSED — exact and 1.361x faster across three pairs
 **Control:** production-arithmetic GQA6, restored 73,099-token suffix ~30.2 s
 
 ## Objective and bottleneck
@@ -70,9 +70,27 @@ used GPU2/BDF `0000:88:00.0` and the pinned ROCm 7.2.1 image:
 | GQA6 control | 2.456 s | 30.520 s |
 | Packed GQA6 | 2.444 s | 22.434 s |
 
-This is 1.360x faster in one screening pair. Full logits and recurrent-state
-trace were bit-exact; both checked greedy tokens matched; the session position
-reached 74,123; the graph route trace confirmed packed dispatch with dynamic
-state in all 16 attention layers. The guard passed; junction temperature
-peaked at 57 C. No cold-prefill claim is made. Repeat the matched pair before
-promoting the opt-in selector beyond this experiment.
+This first pair is 1.360x faster. Full logits and recurrent-state trace were
+bit-exact; both checked greedy tokens matched; the session position reached
+74,123; the graph route trace confirmed packed dispatch with dynamic state in
+all 16 attention layers. Junction temperature peaked at 57 C in this screen.
+
+The three-pair repeat used the same restored session, prompt, pinned image and
+GPU. Each pair was run control then candidate in one process:
+
+| Pair | GQA6 control | Packed GQA6 | Exact logits/state/tokens |
+| ---: | ---: | ---: | :---: |
+| 1 | 30.517 s | 22.431 s | yes |
+| 2 | 30.544 s | 22.414 s | yes |
+| 3 | 30.528 s | 22.424 s | yes |
+| Median | 30.528 s | 22.424 s | yes |
+
+The repeated median speedup is 1.361x. The process exited successfully, the
+GPU2 thermal guard completed without warning or stop, and route traces
+confirmed packed dynamic-state graph dispatch in all 16 attention layers for
+each candidate replay. Evidence is on Machinist at
+`/home/machinist/m31-gqa6-longctx-results/EXP-0418-repeat3-20261014T173244Z/`.
+
+This remains a restored-suffix result only. No cold 64K prefill result has
+been measured with this candidate; keep the selector opt-in until cold-path
+impact and broader long-context correctness are measured.
