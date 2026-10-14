@@ -91,3 +91,14 @@ gfx906-llama-cpp `1373e889a4d5c69f453fe82c96332585f3d2b960`, and Strata
 - No reference source was copied. Strata, the gfx906 fork, and mx-llama are
   MIT. If dot4 fails correctness or speed, the next distinct candidate is the
   fork's compact native-Q8 TILE data path, evaluated on the same 64K prompt.
+
+### Corrected pinned-image build — 2026-10-14
+
+Passing both `hip_DIR=/opt/rocm-7.2.1/lib/cmake/hip` and
+`hipblas_DIR=/opt/rocm-7.2.1/lib/cmake/hipblas`, with
+`CMAKE_PREFIX_PATH=/opt/rocm-7.2.1`, allowed configure and
+`miinfer-m31-fp16-full-model` build to complete in the frozen image. Binary
+SHA-256: `57ec6d1cd975e2d7d0ba770eb592f8997e49dfe9acfab2ae02caf68ea4f4031f`.
+The trace attempt then stopped before program startup because `libdw.so.1`
+was not found. No dispatch trace or inference ran. Logs are under
+`/home/machinist/m31-q32-exec-20261014T092831Z`.
