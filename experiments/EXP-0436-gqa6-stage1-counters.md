@@ -16,7 +16,7 @@ attention schedule?
 - Restored session: 73,099-token prefix; profile tile: 1,024 tokens
 - GPU: Machinist GPU2, PCI BDF `0000:88:00.0` (gfx906); GPU0 was not used
 - Route: `MIINFER_M31_Q8_GQA6_PROD_ARITH=1`, packed LDS and LDS128 enabled
-- Four successful profiled runs; each collected all 16 attention-layer
+- Five successful profiled runs; each collected all 16 attention-layer
   Stage1 dispatches. This is an instrumented profiling workload, not a timing
   comparison. It does not measure cold 64K prefill.
 - Thermal guard: no warning or stop; sampled junction temperatures were
@@ -39,7 +39,15 @@ Per Stage1 dispatch, across 16 dispatch samples per counter group:
 
 `TCC_EA_RDREQ_32B_sum` returned zero for all 16 dispatches despite a successful
 process exit. Treat this metric as invalid or unsupported in this collection;
-it is not evidence of zero external-memory traffic. The rocprof code-object
+it is not evidence of zero external-memory traffic. A follow-up run added
+`SQ_WAVES` to the LDS-wait/VALU group; it reported 393,216 waves per dispatch.
+Dividing the aggregate counters by waves gives about 40,868 LDS-wait counter
+units per wave and 174,000 VALU-active issue cycles per wave. Converting the
+wait counter's four-cycle units gives an aggregate LDS-wait/VALU-active ratio
+of about 94%. This is a ratio of overlapping per-SIMD counters, **not** a
+claim that 94% of kernel wall time is stalled.
+
+The rocprof code-object
 metadata reports 192 threads, 72 VGPR, 48 SGPR, and zero scratch bytes. The
 reported LDS allocation is zero; the kernel may use dynamically supplied LDS,
 so this field does not establish that the kernel uses no LDS.
@@ -53,18 +61,19 @@ needed. See [AMD ROCprof counter definitions](https://rocm.docs.amd.com/projects
 ## Decision
 
 The high L2 hit ratio and zero reported bank conflicts make an obvious
-L2-miss or bank-conflict explanation less likely. The large VALU and LDS-wait
-totals are compatible with instruction pressure, dependency stalls, or LDS
-latency, but this collection cannot separate those causes. It does **not**
-prove that the kernel is compute-bound or LDS-bound. The zero EA request metric
-cannot support an HBM conclusion.
+L2-miss or bank-conflict explanation less likely. The normalized LDS-wait
+counter is large relative to VALU-active issue cycles, so reducing LDS issue
+pressure is a strong candidate direction. The metric does not measure the
+fraction of wall time lost, and LDS bank conflicts remain zero; do not equate
+the ratio with a measured speedup ceiling. The zero EA request metric cannot
+support an HBM conclusion.
 
 Do not tune HBM prefetch or LDS padding from these counters. Continue with the
-separate key-parallel attention schedule candidate; preserve the exact GQA6
-path as control and require full-model numerical parity before performance
-claims. If that candidate is rejected, collect a normalized LDS-wait metric
-with `SQ_WAVES` and a valid external-memory request counter before picking the
-next schedule.
+key-parallel attention rewrite, and measure whether it reduces LDS-wait per
+VALU-active cycle while preserving the exact GQA6 path as control. Require
+full-model numerical parity before performance claims. If the rewrite is
+rejected, test whether direct register loads can avoid LDS traffic before
+reopening tile-size or prefetch sweeps.
 
 ## Reproduction artifacts
 
