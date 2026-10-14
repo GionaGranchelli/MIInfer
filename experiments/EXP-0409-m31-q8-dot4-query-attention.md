@@ -237,3 +237,15 @@ its result will be recorded separately. A focused one-residual-plane query
 candidate is also running on GPU2 against the same production reference. Both
 runs use independent GPUs and thermal guards; the dot4 candidate remains
 opt-in.
+
+The paired GPU0 production control did not produce logits or timing. After
+20:51 elapsed with the MI50 busy at 100%, it was stopped as an anomalously
+slow run. `podman stop --time 10` did not terminate the tagged campaign
+container; Podman escalated to SIGKILL (exit 137). The Q8 dot4 candidate had
+already completed successfully, and its correctness rejection above uses the
+matching production-control logits from the earlier run. Stop/cleanup evidence
+is retained alongside the run artifacts in
+`/home/machinist/m31-q32-exec-20261014T092831Z/final-q8-dot4-64k-20261014T100302Z`.
+Do not treat the failed paired wrapper exit as candidate failure; only the
+production control was terminated. The residual-plane candidate remains under
+its separate guard and was not touched.
