@@ -83,6 +83,25 @@ result, environment, raw logits, and guard samples were preserved. The runner
 then returned 1 because its cleanup attempted to remove each container twice;
 this did not change either workload exit status.
 
+The exact pushed commit was rebuilt in the pinned image; binary SHA-256:
+`881063b3b275a3a51b0f2d42c57a08339db70e714aa94d2d76ac2eedd7721895`.
+Using this binary, a sequential 64K A/B on the same GPU2
+(`0000:88:00.0`) completed with both workload exits 0:
+
+| Path | Prefill time | Peak junction | Tokens processed |
+| --- | ---: | ---: | ---: |
+| Production Q8 | 1,897.949 s | 67°C | 65,536 |
+| Production-arithmetic GQA6 | 1,023.715 s | 68°C | 65,536 |
+
+The candidate is 1.8549x faster (46.1% less prefill time) in this one matched
+same-card pair. Both produced 248,320 finite logits, and both 993,280-byte
+files have SHA-256
+`9a33d3f3b190126806dee63074189df0f83b78503eac9f2f80e881babb16f482`.
+This is the first qualified same-GPU 64K timing comparison; it is one pair,
+not a multi-sample estimate. Full logs and temperature captures are retained
+on Machinist at
+`/home/machinist/m31-q8-prod-arith-64k-seq-ab-20261014/`.
+
 ### Reference-engine screening
 
 No external kernel code was copied. Relevant source revisions inspected were
@@ -97,6 +116,6 @@ but only after MIInfer profiling confirms LDS return stalls; its reported
 
 ### Next gate
 
-Run production and candidate sequentially on one MI50 at 65,536 tokens to
-qualify the timing. Keep the two-card measurements as correctness and early
-screening evidence only. Then push the verified implementation and evidence.
+Repeat the matched same-card pair only if another stable timing sample is
+needed. The implementation and first 64K result are now pushed; the screen
+remains separate from the same-card timing claim.
