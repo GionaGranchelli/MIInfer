@@ -164,6 +164,7 @@ int main(int argc, char** argv) {
     bool fp16_first = false;
     bool fp16_only = false;
     bool q8_query_tiled_pair = false;
+    bool q8_native_gqa6_pair = false;
     bool q8_only = false;
     bool fp16_fp32_attention = false;
     std::uint32_t prompt_tokens = 8192;
@@ -178,6 +179,8 @@ int main(int argc, char** argv) {
             fp16_only = true;
         } else if (arg == "--q8-query-tiled-pair") {
             q8_query_tiled_pair = true;
+        } else if (arg == "--q8-native-gqa6-pair") {
+            q8_native_gqa6_pair = true;
         } else if (arg == "--q8-only") {
             q8_only = true;
         } else if (arg == "--fp16-fp32-attn") {
@@ -199,7 +202,7 @@ int main(int argc, char** argv) {
         } else {
             std::cerr << "usage: miinfer-m31-fp16-full-model MODEL.gguf "
                          "[--fp16-first] [--fp16-only] [--q8-only] [--logits-out PATH] "
-                         "[--q8-query-tiled-pair] [--fp16-fp32-attn] [--tokens N] "
+                         "[--q8-query-tiled-pair] [--q8-native-gqa6-pair] [--fp16-fp32-attn] [--tokens N] "
                          "[--prompt-file PATH] [--session PATH]\n";
             return 2;
         }
@@ -207,10 +210,12 @@ int main(int argc, char** argv) {
     if (argc < 2 || (fp16_first && fp16_only) || (q8_only && (fp16_first || fp16_only))
         || (q8_only && q8_query_tiled_pair)
         || (!logits_output.empty() && !(q8_only || fp16_only))
-        || (q8_query_tiled_pair && (fp16_first || fp16_only))) {
+        || (q8_query_tiled_pair && (fp16_first || fp16_only))
+        || (q8_native_gqa6_pair && (fp16_first || fp16_only || q8_only
+            || q8_query_tiled_pair))) {
         std::cerr << "usage: miinfer-m31-fp16-full-model MODEL.gguf "
                      "[--fp16-first] [--fp16-only] [--q8-only] [--logits-out PATH] "
-                     "[--q8-query-tiled-pair] [--fp16-fp32-attn] [--tokens N] "
+                     "[--q8-query-tiled-pair] [--q8-native-gqa6-pair] [--fp16-fp32-attn] [--tokens N] "
                      "[--prompt-file PATH] [--session PATH]\n";
         return 2;
     }
@@ -306,6 +311,22 @@ int main(int argc, char** argv) {
                   << "median_q8_control_seconds=" << median(control_times)
                   << " median_q8_query_tiled_seconds=" << median(candidate_times)
                   << " speedup=" << median(control_times) / median(candidate_times) << '\n';
+        return correct ? 0 : 3;
+    }
+    if (q8_native_gqa6_pair) {
+        if (::setenv("MIINFER_M31_Q8_DOT4_ATTENTION", "0", 1) != 0
+            || ::setenv("MIINFER_M31_Q8_QUERY_TILED", "0", 1) != 0
+            || ::setenv("MIINFER_M31_Q8_GQA6_NATIVE_TILED", "0", 1) != 0) return 1;
+        const Result control = run_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kQ8Q8,
+                                        "q8_production_control", tokens, capacity);
+        if (::setenv("MIINFER_M31_Q8_GQA6_NATIVE_TILED", "1", 1) != 0) return 1;
+        const Result candidate = run_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kQ8Q8,
+                                          "q8_native_gqa6_candidate", tokens, capacity);
+        const bool correct = compare_results(control, candidate, 0);
+        std::cout << std::fixed << std::setprecision(3)
+                  << "q8_production_seconds=" << control.prefill_seconds
+                  << " q8_native_gqa6_seconds=" << candidate.prefill_seconds
+                  << " speedup=" << control.prefill_seconds / candidate.prefill_seconds << '\n';
         return correct ? 0 : 3;
     }
     if (!session_path.empty()) {
