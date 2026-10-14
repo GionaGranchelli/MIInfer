@@ -1,6 +1,7 @@
 # EXP-0443 — GQA6 direct-global Q8 K/V consumption
 
-**Status:** IN PROGRESS — GPU result pending
+**Status:** SCREEN COMPLETE — exact and repeatably faster, but below the
+predeclared 10% retain threshold
 **Control:** packed-U128 production-arithmetic GQA6 at `1e5b473`
 **Candidate branch:** `perf/m31-gqa6-cross-token-gpu0`
 
@@ -39,11 +40,49 @@ included in HIP Graph cache identity.
 - **Correctness:** one restored 73,099-token session plus a tokenizer-backed
   1,024-token graph suffix. Require exact full logits and recurrent-state
   trace, equal checked tokens, finite output and correct final position.
-- **Performance:** one matched session pair against packed-U128 GQA6. Keep
-  only for exactness and at least 10% suffix improvement. Otherwise reject.
+- **Performance:** matched session pairs against packed-U128 GQA6. The
+  predeclared retain threshold was at least 10% suffix improvement.
 - **Safety:** GPU0 only, BDF `0000:04:00.0`, telemetry active, warning at 80 C,
   stop at 85 C.
 
 ## Result
 
-Pending.
+The candidate code is committed on this branch as
+`8b90661ea8ca0d1930749b761f0085efba5067f7` and was rebuilt with pinned ROCm 7.2.1 image
+`localhost/miinfer-m31-rocm721-libdw:20261014T094012Z`. The gfx906 code object
+metadata for direct-global GQA6 shows 60 VGPR, 50 SGPR, zero VGPR/SGPR spills,
+and zero private bytes; packed-U128 control uses 71 VGPR and 46 SGPR, also with
+no spills/private bytes. Disassembly of the candidate function contains 16
+direct global load instructions and no `ds_read`, `ds_write`, or `s_barrier`.
+Executable SHA-256:
+`4d28196fa670a5cf5d193aab9e5a3ece639c4f9b4d8b633d75c3e7a5188e23ba`.
+
+Three paired samples ran serially on MI50 GPU0, BDF `0000:04:00.0`, with the
+same Qwen3.8-27B Q4_K_M model, 73,099-token restored Q8/Q8 session, and the
+first 1,024 tokens of the tokenizer-backed 663,758-byte prompt. Each path
+executed one HIP Graph suffix tile and reached position 74,123.
+
+| Pair | Packed-U128 control | Direct-global candidate | Exact logits/state/tokens | First / second token |
+| --- | ---: | ---: | --- | --- |
+| 1 | 20.394 s | 18.806 s | yes | 18369 / 198 |
+| 2 | 20.405 s | 18.795 s | yes | 18369 / 198 |
+| 3 | 20.411 s | 18.805 s | yes | 18369 / 198 |
+
+Across all three pairs, control median was 20.405 s and candidate median was
+18.805 s, a 1.085x ratio (7.8% lower suffix time). Control range was
+20.394–20.411 s; candidate range was 18.795–18.806 s. All comparisons had
+exact full logits and recurrent-state traces, equal checked tokens, finite
+values, and all 16 attention layers dispatched through the intended control or
+candidate route. This confirms a reproducible gain, but it remains below the
+predeclared 10% threshold. No cold-prefill or multi-GPU claim is made.
+
+Peak junction temperature was 68 C. The 80 C warning / 85 C stop guard sampled
+normally and did not act; both run containers and guard supervisors exited 0.
+
+Raw run and telemetry records are on Machinist at
+`/home/machinist/m31-gqa6-longctx-results/EXP-0443-direct-global-gpu0/`.
+The first pair is in `run.log` and `telemetry.log`; pairs 2–3 are in
+`repeat-r2-r3/run.log` and `repeat-r2-r3/telemetry.log`. The candidate remains
+opt-in and isolated on this branch. It is a repeatable suffix improvement, but
+it missed the original ≥10% gate and is not production-default or cold-64K
+qualified.
