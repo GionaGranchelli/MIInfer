@@ -63,3 +63,10 @@ an absent dependency. The next configure should pass
 not been run; no dispatch trace, full-model correctness result, or timing is
 available. Diagnostic evidence is in
 `/home/machinist/m31-hipblas-diagnostic-20261014T093053Z`.
+
+The retry with that hipBLAS path advanced one step, then failed because
+hipBLAS could not locate its `hip` CMake dependency (`hipConfig.cmake` or
+`hip-config.cmake`). No build, trace, or inference started. The next likely
+configure input is `-Dhip_DIR=/opt/rocm-7.2.1/lib/cmake/hip`, but that path is
+not verified in the image. Raw retry output is in
+`/home/machinist/m31-q32-exec-20261014T092831Z/retry-build-run.log`.
