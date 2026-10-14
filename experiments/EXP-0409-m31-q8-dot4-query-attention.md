@@ -270,3 +270,20 @@ is retained alongside the run artifacts in
 Do not treat the failed paired wrapper exit as candidate failure; only the
 production control was terminated. The residual-plane candidate remains under
 its separate guard and was not touched.
+
+### 2026-10-14 three-residual-plane correctness screen
+
+A guarded 2,048-token screen on Machinist GPU2 (`0000:88:00.0`, UUID
+`GPU-2152414173497dd3`) compared production Q8 attention with Q8 dot4 enabled
+alongside all three query-residual planes. Both paths used the same source,
+binary, model, input, capacity (65,536), and GPU; the control ran first.
+Control prefill took `10.030 s`; the candidate took `9.537 s`. Both emitted
+the same first two token IDs (`14`, `16`) and matching top-1/top-2, but full
+logits failed the max-absolute-error gate: `0.177886486` versus the `0.01`
+limit (cosine `0.999953496339`). Peak sampled junction temperature was 52 C;
+the guard did not fire.
+
+Reject the all-residual candidate and skip its 64K run. The small 2K timing
+difference is not a performance result because correctness failed. Artifacts,
+including `decision.txt`, are under
+`/home/machinist/m31-q32-exec-20261014T092831Z/final-q8-dot4-all-residuals-screen-20261014T103306Z`.
