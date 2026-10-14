@@ -32,19 +32,43 @@ selector so a graph captured with another attention path is not reused.
   two waves per SIMD. The compiler reports zero statically allocated LDS;
   launch-time dynamic shared memory is supplied by the wrapper.
 - `git diff --check`: PASS.
-- No GPU run has been performed yet. The local build image is not the pinned
-  runtime image and is used only for the compile/resource gate.
+- Initial pinned-image configure failed because CMake did not search the
+  image's `/opt/rocm-7.2.1` prefix. Re-running with
+  `CMAKE_PREFIX_PATH=/opt/rocm-7.2.1` fixed discovery; no source or build-image
+  changes were needed.
 
 ## GPU gate
 
-Next: build this commit in the pinned Machinist image and run one tokenizer-
-backed 2K production-Q8 versus candidate pair on MI50 GPU0, PCI BDF
-`0000:04:00.0`, unique ID `0x21678e17348c2f7`. Before launch, verify the card
-from inside the process and check the host reports it idle. Keep the existing
-thermal guard. Stop on non-finite logits, cosine below `0.9999`, top-1 or
-second-token mismatch, or the thermal stop threshold. Report latency only if
-the correctness gate passes. A 64K run requires the same-GPU production
+For every full-model gate, stop on non-finite logits, cosine below `0.9999`,
+top-1 or second-token mismatch, or the thermal stop threshold. Report latency
+only if the correctness gate passes. A 64K run requires the same-GPU production
 control and candidate with identical build, model, prompt, and capacity.
+
+## Pinned 2K full-model gate
+
+- Machinist GPU0 was idle before launch: BDF `0000:04:00.0`, gfx906, unique ID
+  `0x21678e17348c2f7`. The process itself printed
+  `device_bdf=0000:04:00.0 architecture=gfx906:sramecc+:xnack-`.
+- Image digest:
+  `localhost/miinfer-m31-rocm721-libdw@sha256:422b5d15d384d78cab724a0190ef739d31212674ebc1ae8f0f6cf538b1f5ea8f`;
+  local image ID `f5f33d8e8efbe77f0a08335140f9c9a162202067189499be9dbddd2eb214afa4`.
+  Runtime HIP reports ROCm 7.2.53211; pinned image uses Clang 22.0.0.
+- Model SHA-256:
+  `7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169`.
+- Binary SHA-256:
+  `7453c42f11a4773ab427f8e74cae8e2505a45f2d9b558722bcf5abb05761bb82`.
+- The pair used 2,048 deterministic token IDs from the benchmark's existing
+  sequence and capacity 65,536. Q8/Q8 control ran first, then the candidate.
+- Correctness passed: finite logits, max absolute difference `0.181160450`,
+  cosine `0.999952746`, and matching first/second token IDs (`14` / `16`).
+- Prefill: production control `9.344 s`; candidate `8.949 s`; one-pair ratio
+  `1.044x` (4.4% faster). This is a single short-prompt pair, so it is not a
+  qualified speed claim. The difference is modest and order-sensitive; a
+  long-context paired run is needed to tell whether GQA load reuse matters at
+  the target context length.
+- Thermal wrapper sampled junction temperature 99 times, max `58 C`; no 80 C
+  warning, 85 C stop, telemetry failure, or timeout. GPU0 returned to 0% use
+  and about 10.9 MB VRAM after the run.
 
 ## Provenance
 
