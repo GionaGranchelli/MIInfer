@@ -285,6 +285,7 @@ private:
     void* d_prefill_state_ = nullptr; // DevicePrefillState
     hipGraphExec_t suffix_graph_exec_ = nullptr;
     bool suffix_graph_q8_dot4_enabled_ = false;
+    bool suffix_graph_q8_dot4_ilp2_enabled_ = false;
 
     // Sampling state
     mutable std::vector<float> host_logits_;
