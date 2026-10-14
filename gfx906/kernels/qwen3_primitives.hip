@@ -8087,7 +8087,8 @@ void launch_qwen35_gqa6_production_q8_attention_batch(
     std::uint32_t cache_capacity, std::uint32_t query_heads,
     std::uint32_t kv_heads, std::uint32_t head_dim, float scale,
     std::uint32_t num_splits, hipStream_t stream,
-    const DevicePrefillState* prefill_state) {
+    const DevicePrefillState* prefill_state,
+    float* stage1_ms, float* stage2_ms) {
     if (q == nullptr || key_cache_q8 == nullptr || key_scales == nullptr
         || value_cache_q8 == nullptr || value_scales == nullptr || gate == nullptr
         || gated_output == nullptr || split_workspace == nullptr || token_count == 0
@@ -8102,17 +8103,36 @@ void launch_qwen35_gqa6_production_q8_attention_batch(
     float* partial_acc = partial_sum + total_meta;
     constexpr std::size_t shared_bytes = 2 * 4 * 256 * sizeof(std::int8_t)
         + 2 * 4 * sizeof(__half);
+    const bool measure_stages = stage1_ms != nullptr && stage2_ms != nullptr;
+    hipEvent_t stage_start = nullptr, stage1_done = nullptr, stage2_done = nullptr;
+    if ((stage1_ms == nullptr) != (stage2_ms == nullptr)) MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    if (measure_stages) {
+        MIINFER_HIP_CHECK(hipEventCreate(&stage_start));
+        MIINFER_HIP_CHECK(hipEventCreate(&stage1_done));
+        MIINFER_HIP_CHECK(hipEventCreate(&stage2_done));
+        MIINFER_HIP_CHECK(hipEventRecord(stage_start, stream));
+    }
     hipLaunchKernelGGL((qwen35_splitk_suffix_attn_stage1_quant_kernel<true, true, 4, true>),
         dim3(token_count, num_splits, kv_heads), dim3(64, 3), shared_bytes, stream,
         q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,
         partial_max, partial_sum, partial_acc, token_count, base_position, cache_capacity,
         query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
     MIINFER_HIP_CHECK(hipGetLastError());
+    if (measure_stages) MIINFER_HIP_CHECK(hipEventRecord(stage1_done, stream));
     hipLaunchKernelGGL(qwen35_splitk_suffix_attn_stage2_kernel,
         dim3(token_count * query_heads), dim3(64), 0, stream,
         partial_max, partial_sum, partial_acc, gate, gated_output,
         token_count, query_heads, head_dim, num_splits, prefill_state);
     MIINFER_HIP_CHECK(hipGetLastError());
+    if (measure_stages) {
+        MIINFER_HIP_CHECK(hipEventRecord(stage2_done, stream));
+        MIINFER_HIP_CHECK(hipEventSynchronize(stage2_done));
+        MIINFER_HIP_CHECK(hipEventElapsedTime(stage1_ms, stage_start, stage1_done));
+        MIINFER_HIP_CHECK(hipEventElapsedTime(stage2_ms, stage1_done, stage2_done));
+        MIINFER_HIP_CHECK(hipEventDestroy(stage_start));
+        MIINFER_HIP_CHECK(hipEventDestroy(stage1_done));
+        MIINFER_HIP_CHECK(hipEventDestroy(stage2_done));
+    }
 }
 
 // -----------------------------------------------------------------------------

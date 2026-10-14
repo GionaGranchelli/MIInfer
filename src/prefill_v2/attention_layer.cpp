@@ -572,6 +572,20 @@ void PrefillV2AttentionLayer::forward_profiled(
                 token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
                 24, 4, 256, 1.0F / std::sqrt(256.0F), 3, stream);
         }
+    } else if (m31_q8_gqa6_production_arith_enabled() && base_position > 0
+        && kv_cache.is_k_q8() && kv_cache.is_v_q8()
+        && ws.splitk_attn_workspace != nullptr) {
+        float stage1_ms = 0.0F, stage2_ms = 0.0F;
+        launch_qwen35_gqa6_production_q8_attention_batch(
+            ws.attn_q_rope, kv_cache.key_cache_q8, kv_cache.key_scales,
+            kv_cache.value_cache_q8, kv_cache.value_scales,
+            ws.gate, ws.attn_gated_output, ws.splitk_attn_workspace,
+            token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
+            24, 4, 256, 1.0F / std::sqrt(256.0F), 32, stream, nullptr,
+            &stage1_ms, &stage2_ms);
+        breakdown.causal_attn_stage1_ms = stage1_ms;
+        breakdown.causal_attn_stage2_ms = stage2_ms;
+        breakdown.used_q8_gqa6_production_arithmetic = true;
     } else if (m31_q8_dot4_attention_enabled() && base_position > 0
         && kv_cache.is_k_q8() && kv_cache.is_v_q8()
         && token_count >= 16 && token_count % 16 == 0

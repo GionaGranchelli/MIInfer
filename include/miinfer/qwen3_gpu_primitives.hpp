@@ -869,7 +869,8 @@ void launch_qwen35_gqa6_production_q8_attention_batch(
     std::uint32_t cache_capacity, std::uint32_t query_heads,
     std::uint32_t kv_heads, std::uint32_t head_dim, float scale,
     std::uint32_t num_splits, hipStream_t stream = nullptr,
-    const DevicePrefillState* prefill_state = nullptr);
+    const DevicePrefillState* prefill_state = nullptr,
+    float* stage1_ms = nullptr, float* stage2_ms = nullptr);
 
 // EXP-0409: Q8 cache attention with quantized queries and gfx906 dot4 QK.
 void launch_qwen35_kq_fragment_reuse_attention_batch_q8_dot4(

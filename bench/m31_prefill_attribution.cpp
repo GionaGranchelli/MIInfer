@@ -128,9 +128,26 @@ int main(int argc, char** argv) {
 
         double gqa_total = 0.0;
         double attention_total = 0.0;
+        double attention_stage1_total = 0.0;
+        double attention_stage2_total = 0.0;
+        double qkv_total = 0.0, rope_kv_total = 0.0, o_proj_total = 0.0;
+        double post_norm_total = 0.0, ffn_gate_up_total = 0.0, swiglu_down_total = 0.0;
+        std::uint32_t gqa6_profiled_layers = 0;
         for (const auto& block : profile.block_breakdowns) {
             gqa_total += block.gqa3_ms;
             attention_total += block.gqa3_detail.causal_attn_ms;
+            attention_stage1_total += block.gqa3_detail.causal_attn_stage1_ms;
+            attention_stage2_total += block.gqa3_detail.causal_attn_stage2_ms;
+            qkv_total += block.gqa3_detail.qkv_proj_ms;
+            rope_kv_total += block.gqa3_detail.rope_kv_store_ms;
+            o_proj_total += block.gqa3_detail.o_proj_ms;
+            post_norm_total += block.gqa3_detail.post_norm_ms;
+            ffn_gate_up_total += block.gqa3_detail.ffn_gate_up_ms;
+            swiglu_down_total += block.gqa3_detail.swiglu_down_res_ms;
+            gqa6_profiled_layers += block.gqa3_detail.used_q8_gqa6_production_arithmetic;
+        }
+        if (!session_path.empty() && !fp16 && gqa6_profiled_layers != 16) {
+            throw std::runtime_error("profile did not dispatch production-arithmetic GQA6 in all 16 layers");
         }
 
         std::cout << std::fixed << std::setprecision(3)
@@ -143,6 +160,15 @@ int main(int argc, char** argv) {
                   << " final_norm_ms=" << profile.final_norm_ms
                   << " gqa_blocks_ms=" << gqa_total
                   << " causal_attention_ms=" << attention_total
+                  << " splitk_stage1_ms=" << attention_stage1_total
+                  << " splitk_stage2_ms=" << attention_stage2_total
+                  << " gqa6_production_layers=" << gqa6_profiled_layers
+                  << " qkv_projection_ms=" << qkv_total
+                  << " rope_kv_store_ms=" << rope_kv_total
+                  << " output_projection_ms=" << o_proj_total
+                  << " post_norm_ms=" << post_norm_total
+                  << " ffn_gate_up_ms=" << ffn_gate_up_total
+                  << " swiglu_down_residual_ms=" << swiglu_down_total
                   << " causal_attention_pct=" << (profile.total_model_ms > 0.0 ? 100.0 * attention_total / profile.total_model_ms : 0.0)
                   << " finite_final_hidden=yes\n";
         for (std::size_t i = 0; i < profile.block_breakdowns.size(); ++i) {

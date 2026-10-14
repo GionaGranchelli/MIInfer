@@ -20,6 +20,9 @@ struct AttentionLayerProfileBreakdown {
     double qkv_proj_ms = 0.0;
     double rope_kv_store_ms = 0.0;
     double causal_attn_ms = 0.0;
+    double causal_attn_stage1_ms = 0.0;
+    double causal_attn_stage2_ms = 0.0;
+    bool used_q8_gqa6_production_arithmetic = false;
     double o_proj_ms = 0.0;
     double post_norm_ms = 0.0;
     double ffn_gate_up_ms = 0.0;
