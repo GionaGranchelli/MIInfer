@@ -68,3 +68,12 @@ alone sets `MIINFER_M31_Q8_4Q_LDS_REUSE=1`. The completed candidate's output,
 timing, and GPU0 telemetry are retained under
 `/tmp/m31-q8-lds-gpu0/evidence/` and on Machinist at
 `/home/machinist/m31-prefill-0002-20261014/`.
+
+An independent production control also completed on GPU2 (`0000:88:00.0`,
+unique ID `0x2152414173497dd3`): 65,536 processed tokens, 1,883.543 s prefill,
+finite 248,320 logits. Its full-logit SHA-256 is the same
+`9a33d3f3b190126806dee63074189df0f83b78503eac9f2f80e881babb16f482` as the
+GPU0 candidate. This establishes exact output agreement across these two
+runs. Since they used different physical cards, their elapsed times are not a
+matched speedup result; the same-BDF GPU0 production control remains the
+performance comparison.
