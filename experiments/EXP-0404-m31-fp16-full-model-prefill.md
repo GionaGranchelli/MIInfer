@@ -117,3 +117,31 @@ This is a late-tile FP16-KV profile, not a Q8 full-model attribution or a
 512-versus-1024 tile comparison. It identifies attention as a large current
 cost, so the next implementation targets Q8 K/V reuse inside the already
 query-tiled attention schedule; it does not change the outer macro tile.
+
+### 2026-10-14 64K Q8 comparison
+
+A follow-up used the same frozen tokenizer-backed prompt, model, binary,
+capacity, and ROCm image as the production Q8 run. The FP16 candidate ran on
+GPU0 (`0000:04:00.0`); its Q8 reference ran on GPU2 (`0000:88:00.0`). Both
+processed 65,536 of the prompt's 198,637 available tokens at capacity 69,632.
+The candidate took 487.044 s and produced finite logits. Its saved
+`/home/machinist/m31-fp16-64k-gpu0-20261014/logits.f32` has SHA-256
+`acc091b9dbe66370599a67b1d427167272e256959218534d24a63c1ff83462fe`.
+
+Against the Q8 production logits, the 248,320 float32 outputs had maximum
+absolute error 5.49554348, RMSE 0.851955624, and cosine similarity 0.958059372.
+Top-1 changed from Q8 token `271` to FP16 token `248046`. The candidate is
+therefore not numerically interchangeable with Q8 under the existing
+full-logit/top-token comparison. This is a completed prefill and a timing
+screen, not a qualified Q8 performance win or evidence that either result is
+closer to a separate model reference. The two runs were on different cards
+and only one sample per mode was collected, so their elapsed times are not a
+matched performance claim. The FP16 guard recorded 233 samples and peaked at
+77 C; no warning or stop threshold was reached. Comparison metrics are
+preserved in
+`/home/machinist/m31-fp16-64k-gpu0-20261014/q8-logits-comparison.json`.
+
+The one cross-card timing screen recorded 487.044 s for FP16 and 1,897.949 s
+for Q8, but that ratio is not a qualified performance claim. Keep the
+production-arithmetic Q8 GQA6 route as the fastest validated candidate until
+the FP16 route is checked against the project's authoritative reference.
