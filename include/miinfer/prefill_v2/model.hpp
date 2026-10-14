@@ -56,6 +56,7 @@ struct GenerateStats {
     double decode_tok_per_sec = 0.0;
     double avg_decode_latency_ms = 0.0;
     bool used_hip_graph = false;
+    std::uint32_t suffix_graph_replay_tiles = 0;
 
     // Reuse telemetry & observability
     bool reuse_hit = false;

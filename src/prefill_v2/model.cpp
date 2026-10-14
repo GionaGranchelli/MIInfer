@@ -894,6 +894,8 @@ GenerateStats PrefillV2Model::generate(
                     hipMemcpyHostToDevice,
                     exec_stream));
                 MIINFER_HIP_CHECK(hipGraphLaunch(suffix_graph_exec_, exec_stream));
+                ++stats.suffix_graph_replay_tiles;
+                stats.used_hip_graph = true;
             } else {
                 MIINFER_HIP_CHECK(hipMemcpyAsync(
                     d_temp_tokens_,

@@ -3,6 +3,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -37,6 +38,7 @@ struct Result {
     std::uint32_t second_token = 0;
     std::vector<float> logits;
     std::vector<float> suffix_hidden;
+    std::vector<float> recurrent_state_trace;
 };
 
 Result run_mode(const miinfer::Qwen35Model& model,
@@ -146,6 +148,74 @@ Result run_session_mode(const miinfer::Qwen35Model& model,
               << " position_after_suffix=" << restored_tokens.size() + suffix.size()
               << " first_token=" << result.top1 << " decode_seconds=" << result.decode_seconds
               << " second_token=" << result.second_token << '\n';
+    return result;
+}
+
+Result run_session_graph_mode(const miinfer::Qwen35Model& model,
+                              const char* label,
+                              const std::string& session_path,
+                              const std::vector<std::uint32_t>& suffix,
+                              std::uint32_t capacity) {
+    using namespace miinfer::prefill_v2;
+    PersistentSessionHeader header{};
+    std::vector<std::uint32_t> prefix;
+    if (!PersistentSession::inspect_file(session_path, header, &prefix)
+        || header.kv_quant_mode != static_cast<std::uint8_t>(KvCacheQuantMode::kQ8Q8)
+        || prefix.size() != header.prefix_length || suffix.empty()
+        || suffix.size() % kPrefillV2MacroTile != 0) {
+        throw std::runtime_error(std::string(label) + " found an incompatible prefix session or empty suffix");
+    }
+    std::vector<std::uint32_t> prompt;
+    prompt.reserve(prefix.size() + suffix.size());
+    prompt.insert(prompt.end(), prefix.begin(), prefix.end());
+    prompt.insert(prompt.end(), suffix.begin(), suffix.end());
+
+    PrefillV2Model runtime(model, capacity, true, KvCacheQuantMode::kQ8Q8);
+    GenerateOptions options;
+    options.max_new_tokens = 1;
+    options.reset_state_before = true;
+    options.use_hip_graph = true;
+    options.enable_prefix_reuse = true;
+    options.persistent_session_dir = std::filesystem::path(session_path).parent_path().string();
+    options.temperature = 0.0F;
+    options.top_k = 1;
+    options.repetition_penalty = 1.0F;
+    options.stop_token_ids.clear();
+    const GenerateStats stats = runtime.generate(prompt, options);
+    const std::uint32_t expected_tiles = static_cast<std::uint32_t>(
+        suffix.size() / kPrefillV2MacroTile);
+    if (!stats.persistent_session_restored || stats.prefix_tokens_reused != prefix.size()
+        || stats.suffix_tokens_dispatched != suffix.size()
+        || stats.suffix_graph_replay_tiles != expected_tiles
+        || !stats.used_hip_graph
+        || stats.generated_tokens.size() != 1) {
+        throw std::runtime_error(std::string(label) + " did not restore/replay the expected full suffix tiles");
+    }
+
+    Result result;
+    result.restore_seconds = stats.restore_ms / 1000.0;
+    result.prefill_seconds = stats.suffix_prefill_ms / 1000.0;
+    result.top1 = stats.generated_tokens.front();
+    result.logits.resize(model.config().vocab_size);
+    MIINFER_HIP_CHECK(hipMemcpy(result.logits.data(), runtime.logits_buffer(),
+        result.logits.size() * sizeof(float), hipMemcpyDeviceToHost));
+    for (const auto& state : runtime.recurrent_states()) {
+        if (state.position() != prompt.size()) {
+            throw std::runtime_error(std::string(label) + " recurrent position did not reach suffix end");
+        }
+        std::vector<float> values, history;
+        state.download(values, history);
+        result.recurrent_state_trace.insert(result.recurrent_state_trace.end(), values.begin(), values.end());
+        result.recurrent_state_trace.insert(result.recurrent_state_trace.end(), history.begin(), history.end());
+    }
+    result.second_token = runtime.decode_step(result.top1, static_cast<std::uint32_t>(prompt.size()));
+    std::cout << label << " restore_seconds=" << std::fixed << std::setprecision(3)
+              << result.restore_seconds << " suffix_seconds=" << result.prefill_seconds
+              << " restored_prefix_tokens=" << stats.prefix_tokens_reused
+              << " suffix_tokens=" << stats.suffix_tokens_dispatched
+              << " graph_replay_tiles=" << stats.suffix_graph_replay_tiles
+              << " position_after_suffix=" << prompt.size()
+              << " first_token=" << result.top1 << " second_token=" << result.second_token << '\n';
     return result;
 }
 
@@ -372,7 +442,7 @@ int main(int argc, char** argv) {
         std::cout << "session_prefix_tokens=" << header.prefix_length
                   << " suffix_tokens=" << prompt_tokens
                   << " suffix_source=" << (prompt_file.empty() ? "deterministic_synthetic" : "tokenized_text_file")
-                  << " graph_enabled=1 expected_replay_tiles="
+                  << " graph_requested=1 expected_replay_tiles="
                   << (prompt_tokens + miinfer::prefill_v2::kPrefillV2MacroTile - 1)
                       / miinfer::prefill_v2::kPrefillV2MacroTile << '\n';
         if (q8_gqa6_session_pair) {
@@ -381,13 +451,13 @@ int main(int argc, char** argv) {
                 || ::setenv("MIINFER_M31_Q8_QUERY_TILED", "0", 1) != 0
                 || ::setenv("MIINFER_M31_Q8_GQA6_NATIVE_TILED", "0", 1) != 0
                 || ::setenv("MIINFER_M31_Q8_GQA6_PROD_ARITH", "0", 1) != 0) return 1;
-            const Result control = run_session_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kQ8Q8,
-                "q8_production_session", session_path, suffix, session_capacity, true);
+            const Result control = run_session_graph_mode(model, "q8_production_session",
+                session_path, suffix, session_capacity);
             if (::setenv("MIINFER_M31_Q8_GQA6_PROD_ARITH", "1", 1) != 0) return 1;
-            const Result candidate = run_session_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kQ8Q8,
-                "q8_gqa6_production_arith_session", session_path, suffix, session_capacity, true);
+            const Result candidate = run_session_graph_mode(model, "q8_gqa6_production_arith_session",
+                session_path, suffix, session_capacity);
             const bool logits_exact = control.logits == candidate.logits;
-            const bool hidden_exact = control.suffix_hidden == candidate.suffix_hidden;
+            const bool state_exact = control.recurrent_state_trace == candidate.recurrent_state_trace;
             const bool generated_equal = control.top1 == candidate.top1
                 && control.second_token == candidate.second_token;
             const bool finite = std::all_of(control.logits.begin(), control.logits.end(),
@@ -397,12 +467,16 @@ int main(int argc, char** argv) {
                 && std::all_of(control.suffix_hidden.begin(), control.suffix_hidden.end(),
                     [](float value) { return std::isfinite(value); })
                 && std::all_of(candidate.suffix_hidden.begin(), candidate.suffix_hidden.end(),
+                    [](float value) { return std::isfinite(value); })
+                && std::all_of(control.recurrent_state_trace.begin(), control.recurrent_state_trace.end(),
+                    [](float value) { return std::isfinite(value); })
+                && std::all_of(candidate.recurrent_state_trace.begin(), candidate.recurrent_state_trace.end(),
                     [](float value) { return std::isfinite(value); });
             std::cout << "session_logits_exact=" << logits_exact
-                      << " suffix_hidden_trace_exact=" << hidden_exact
+                      << " recurrent_state_trace_exact=" << state_exact
                       << " generated_tokens_equal=" << generated_equal
                       << " logits_count=" << candidate.logits.size()
-                      << " hidden_values=" << candidate.suffix_hidden.size()
+                      << " recurrent_state_values=" << candidate.recurrent_state_trace.size()
                       << " finite=" << finite << '\n';
             std::cout << std::fixed << std::setprecision(3)
                       << "q8_production_suffix_seconds=" << control.prefill_seconds
@@ -410,7 +484,7 @@ int main(int argc, char** argv) {
                       << " suffix_speedup=" << control.prefill_seconds / candidate.prefill_seconds
                       << " production_restore_seconds=" << control.restore_seconds
                       << " gqa6_restore_seconds=" << candidate.restore_seconds << '\n';
-            return logits_exact && hidden_exact && generated_equal && finite ? 0 : 3;
+            return logits_exact && state_exact && generated_equal && finite ? 0 : 3;
         }
         const auto q8 = run_session_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kQ8Q8,
                                          "q8_session", session_path, suffix, session_capacity);
