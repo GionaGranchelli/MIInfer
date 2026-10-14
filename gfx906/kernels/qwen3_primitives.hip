@@ -8,6 +8,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <type_traits>
@@ -5664,6 +5665,12 @@ __global__ void qwen35_splitk_suffix_attn_stage2_kernel(
     std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t,
     const DevicePrefillState*);
 
+__global__ void qwen35_splitk_suffix_attn_stage1_f16_4q_lds_kernel(
+    const float*, const __half*, const __half*, float*, float*, float*,
+    std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t,
+    std::uint32_t, std::uint32_t, float, std::uint32_t,
+    const DevicePrefillState*);
+
 void launch_qwen35_kq_fragment_reuse_attention_batch_f16(
     const float* q, const __half* key_cache, const __half* value_cache,
     const float* gate, float* gated_output, float* split_workspace,
@@ -5684,6 +5691,29 @@ void launch_qwen35_kq_fragment_reuse_attention_batch_f16(
     float* partial_max = split_workspace;
     float* partial_sum = partial_max + total_meta;
     float* partial_acc = partial_sum + total_meta;
+
+    const char* reuse_env = std::getenv("MIINFER_M31_FP16_4Q_LDS_REUSE");
+    if (reuse_env != nullptr && std::strcmp(reuse_env, "0") != 0 && num_splits == 3) {
+        static bool dispatch_logged = false;
+        if (!dispatch_logged) {
+            std::fprintf(stderr, "miinfer_m31_fp16_4q_lds_dispatch=1\n");
+            dispatch_logged = true;
+        }
+        hipLaunchKernelGGL(qwen35_splitk_suffix_attn_stage1_f16_4q_lds_kernel,
+            dim3(query_heads / 2, (token_count + 3) / 4, num_splits), dim3(256), 0, stream,
+            q, key_cache, value_cache, partial_max, partial_sum, partial_acc,
+            token_count, base_position, cache_capacity, query_heads, kv_heads,
+            head_dim, scale, num_splits, static_cast<const DevicePrefillState*>(nullptr));
+        MIINFER_HIP_CHECK(hipGetLastError());
+        hipLaunchKernelGGL(qwen35_splitk_suffix_attn_stage2_kernel,
+            dim3(token_count * query_heads), dim3(64), 0, stream,
+            partial_max, partial_sum, partial_acc, gate, gated_output,
+            token_count, query_heads, head_dim, num_splits,
+            static_cast<const DevicePrefillState*>(nullptr));
+        MIINFER_HIP_CHECK(hipGetLastError());
+        return;
+    }
+
     const std::uint32_t blocks = (token_count + 15) / 16;
     const std::size_t shared_bytes = 32 * 256 * sizeof(__half)
         + 32 * 128 * sizeof(__half) + 32 * 32 * sizeof(__half) + 3 * 32 * sizeof(float);
@@ -7922,21 +7952,7 @@ void launch_qwen35_splitk_suffix_attention_quant(
     const char* q8_4q_lds_env = std::getenv("MIINFER_M31_Q8_4Q_LDS_REUSE");
     const bool q8_4q_lds_enabled = q8_4q_lds_env != nullptr
         && std::strcmp(q8_4q_lds_env, "0") != 0;
-    const char* f16_4q_lds_env = std::getenv("MIINFER_M31_FP16_4Q_LDS_REUSE");
-    const bool f16_4q_lds_enabled = f16_4q_lds_env != nullptr
-        && std::strcmp(f16_4q_lds_env, "0") != 0;
-    if (f16_4q_lds_enabled && !is_k_q8 && !is_v_q8
-        && query_heads == 24 && kv_heads == 4 && head_dim == 256
-        && num_splits == 32) {
-        const dim3 f16_grid(query_heads / 2, (token_count + 3) / 4, num_splits);
-        hipLaunchKernelGGL(
-            qwen35_splitk_suffix_attn_stage1_f16_4q_lds_kernel,
-            f16_grid, dim3(256), 0, stream,
-            q, key_cache_f16, value_cache_f16,
-            d_partial_max, d_partial_sum, d_partial_acc,
-            token_count, base_position, cache_capacity,
-            query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
-    } else if (q8_4q_lds_enabled && is_k_q8 && is_v_q8
+    if (q8_4q_lds_enabled && is_k_q8 && is_v_q8
         && query_heads == 24 && kv_heads == 4 && head_dim == 256
         && num_splits == 32) {
         const dim3 q8_grid(query_heads / 2, (token_count + 3) / 4, num_splits);

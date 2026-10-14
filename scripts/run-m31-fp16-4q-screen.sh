@@ -25,6 +25,8 @@ args=(
 )
 if [[ "$candidate" == 1 ]]; then
   args+=(-e MIINFER_M31_FP16_4Q_LDS_REUSE=1)
+else
+  args+=(-e MIINFER_M31_FP16_4Q_LDS_REUSE=0)
 fi
 
 timeout --signal=TERM --kill-after=5s "${runtime_limit}s" podman run "${args[@]}" \
