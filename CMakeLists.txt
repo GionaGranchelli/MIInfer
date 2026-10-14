@@ -187,6 +187,9 @@ if(MIINFER_ENABLE_HIP)
         $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Wpedantic>
         $<$<COMPILE_LANGUAGE:HIP>:-Wall;-Wextra;-fgpu-default-stream=per-thread>
     )
+    set_source_files_properties(gfx906/kernels/qwen3_primitives.hip PROPERTIES
+        COMPILE_OPTIONS "-Xarch_device;-target-feature;-Xarch_device;+mai-insts"
+    )
 
     add_executable(miinfer-prefill-v2-recurrent-layer-bakeoff bench/prefill_v2_recurrent_layer_bakeoff.cpp)
     target_link_libraries(miinfer-prefill-v2-recurrent-layer-bakeoff PRIVATE miinfer_hip)
