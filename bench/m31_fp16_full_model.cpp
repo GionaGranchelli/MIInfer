@@ -446,45 +446,66 @@ int main(int argc, char** argv) {
                   << (prompt_tokens + miinfer::prefill_v2::kPrefillV2MacroTile - 1)
                       / miinfer::prefill_v2::kPrefillV2MacroTile << '\n';
         if (q8_gqa6_session_pair) {
+            const char* packed_env = std::getenv("MIINFER_M31_Q8_GQA6_PACKED_LDS_PAIR");
+            const bool packed_pair = packed_env != nullptr && std::strcmp(packed_env, "0") != 0;
+            const char* reps_env = std::getenv("MIINFER_M31_Q8_GQA6_PAIR_REPS");
+            char* reps_end = nullptr;
+            const unsigned long parsed_reps = reps_env == nullptr ? 1 : std::strtoul(reps_env, &reps_end, 10);
+            if ((reps_env != nullptr && (reps_end == reps_env || *reps_end != '\0'))
+                || parsed_reps == 0 || parsed_reps > 5) {
+                std::cerr << "MIINFER_M31_Q8_GQA6_PAIR_REPS must be between 1 and 5\n";
+                return 2;
+            }
             if (::setenv("MIINFER_HIP_GRAPH", "1", 1) != 0
                 || ::setenv("MIINFER_M31_Q8_DOT4_ATTENTION", "0", 1) != 0
                 || ::setenv("MIINFER_M31_Q8_QUERY_TILED", "0", 1) != 0
-                || ::setenv("MIINFER_M31_Q8_GQA6_NATIVE_TILED", "0", 1) != 0
-                || ::setenv("MIINFER_M31_Q8_GQA6_PROD_ARITH", "0", 1) != 0) return 1;
-            const Result control = run_session_graph_mode(model, "q8_production_session",
-                session_path, suffix, session_capacity);
-            if (::setenv("MIINFER_M31_Q8_GQA6_PROD_ARITH", "1", 1) != 0) return 1;
-            const Result candidate = run_session_graph_mode(model, "q8_gqa6_production_arith_session",
-                session_path, suffix, session_capacity);
-            const bool logits_exact = control.logits == candidate.logits;
-            const bool state_exact = control.recurrent_state_trace == candidate.recurrent_state_trace;
-            const bool generated_equal = control.top1 == candidate.top1
-                && control.second_token == candidate.second_token;
-            const bool finite = std::all_of(control.logits.begin(), control.logits.end(),
-                    [](float value) { return std::isfinite(value); })
-                && std::all_of(candidate.logits.begin(), candidate.logits.end(),
-                    [](float value) { return std::isfinite(value); })
-                && std::all_of(control.suffix_hidden.begin(), control.suffix_hidden.end(),
-                    [](float value) { return std::isfinite(value); })
-                && std::all_of(candidate.suffix_hidden.begin(), candidate.suffix_hidden.end(),
-                    [](float value) { return std::isfinite(value); })
-                && std::all_of(control.recurrent_state_trace.begin(), control.recurrent_state_trace.end(),
-                    [](float value) { return std::isfinite(value); })
-                && std::all_of(candidate.recurrent_state_trace.begin(), candidate.recurrent_state_trace.end(),
-                    [](float value) { return std::isfinite(value); });
-            std::cout << "session_logits_exact=" << logits_exact
-                      << " recurrent_state_trace_exact=" << state_exact
-                      << " generated_tokens_equal=" << generated_equal
-                      << " logits_count=" << candidate.logits.size()
-                      << " recurrent_state_values=" << candidate.recurrent_state_trace.size()
-                      << " finite=" << finite << '\n';
+                || ::setenv("MIINFER_M31_Q8_GQA6_NATIVE_TILED", "0", 1) != 0) return 1;
+            std::vector<double> control_times, candidate_times;
+            bool all_correct = true;
+            for (unsigned long rep = 0; rep < parsed_reps; ++rep) {
+                if (::setenv("MIINFER_M31_Q8_GQA6_PACKED_LDS", "0", 1) != 0
+                    || ::setenv("MIINFER_M31_Q8_GQA6_PROD_ARITH", packed_pair ? "1" : "0", 1) != 0) return 1;
+                const Result control = run_session_graph_mode(model,
+                    packed_pair ? "q8_gqa6_production_arith_session" : "q8_production_session",
+                    session_path, suffix, session_capacity);
+                if (::setenv("MIINFER_M31_Q8_GQA6_PROD_ARITH", "1", 1) != 0
+                    || ::setenv("MIINFER_M31_Q8_GQA6_PACKED_LDS", packed_pair ? "1" : "0", 1) != 0) return 1;
+                const Result candidate = run_session_graph_mode(model,
+                    packed_pair ? "q8_gqa6_packed_lds_session" : "q8_gqa6_production_arith_session",
+                    session_path, suffix, session_capacity);
+                const bool logits_exact = control.logits == candidate.logits;
+                const bool state_exact = control.recurrent_state_trace == candidate.recurrent_state_trace;
+                const bool generated_equal = control.top1 == candidate.top1
+                    && control.second_token == candidate.second_token;
+                const bool finite = std::all_of(control.logits.begin(), control.logits.end(),
+                        [](float value) { return std::isfinite(value); })
+                    && std::all_of(candidate.logits.begin(), candidate.logits.end(),
+                        [](float value) { return std::isfinite(value); })
+                    && std::all_of(control.suffix_hidden.begin(), control.suffix_hidden.end(),
+                        [](float value) { return std::isfinite(value); })
+                    && std::all_of(candidate.suffix_hidden.begin(), candidate.suffix_hidden.end(),
+                        [](float value) { return std::isfinite(value); })
+                    && std::all_of(control.recurrent_state_trace.begin(), control.recurrent_state_trace.end(),
+                        [](float value) { return std::isfinite(value); })
+                    && std::all_of(candidate.recurrent_state_trace.begin(), candidate.recurrent_state_trace.end(),
+                        [](float value) { return std::isfinite(value); });
+                control_times.push_back(control.prefill_seconds);
+                candidate_times.push_back(candidate.prefill_seconds);
+                all_correct = all_correct && logits_exact && state_exact && generated_equal && finite;
+                std::cout << "pair_sample=" << (rep + 1)
+                          << " session_logits_exact=" << logits_exact
+                          << " recurrent_state_trace_exact=" << state_exact
+                          << " generated_tokens_equal=" << generated_equal
+                          << " finite=" << finite << '\n';
+            }
             std::cout << std::fixed << std::setprecision(3)
-                      << "q8_production_suffix_seconds=" << control.prefill_seconds
-                      << " q8_gqa6_suffix_seconds=" << candidate.prefill_seconds
-                      << " suffix_speedup=" << control.prefill_seconds / candidate.prefill_seconds
-                      << " production_restore_seconds=" << control.restore_seconds
-                      << " gqa6_restore_seconds=" << candidate.restore_seconds << '\n';
-            return logits_exact && state_exact && generated_equal && finite ? 0 : 3;
+                      << (packed_pair ? "q8_gqa6_suffix_median_seconds=" : "q8_production_suffix_median_seconds=")
+                      << median(control_times)
+                      << (packed_pair ? " q8_gqa6_packed_lds_suffix_median_seconds=" : " q8_gqa6_suffix_median_seconds=")
+                      << median(candidate_times)
+                      << " suffix_median_speedup=" << median(control_times) / median(candidate_times)
+                      << " samples=" << parsed_reps << " all_correct=" << all_correct << '\n';
+            return all_correct ? 0 : 3;
         }
         const auto q8 = run_session_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kQ8Q8,
                                          "q8_session", session_path, suffix, session_capacity);
