@@ -1,6 +1,6 @@
 # EXP-0411 — Q8 GQA-head grouping with four query rows
 
-**Status:** BUILD/RESOURCE GATE PASS; 2K GPU gate pending.
+**Status:** REJECT at the P8K screen; production dispatch unchanged.
 **Base:** `f50abbf` on `codex/m31-q8-lds-gpu0`.
 
 ## Hypothesis
@@ -79,6 +79,28 @@ same selector and require byte-identical logits before proceeding:
 cmp /tmp/m31-q8-kvhead-4q-reuse/evidence/q8-gqa4-prod-p2k.f32 \
     /tmp/m31-q8-kvhead-4q-reuse/evidence/q8-gqa4-candidate-p2k.f32
 ```
+
+## GPU screening result
+
+Both matched checks ran on Machinist GPU2, BDF `0000:88:00.0`, in the pinned
+image with the same Qwen3.8-27B-Q4_K_M model, tokenizer-backed prompt, Q8/Q8 KV,
+and 65,536-token capacity. Each timing is one screening sample. All logits were
+finite and byte-identical within each pair.
+
+| Tokens | Path A | A prefill | Path B | B prefill | B vs A | Logits SHA-256 | Peak junction |
+| ---: | --- | ---: | --- | ---: | ---: | --- | ---: |
+| 2,048 | Production | 10.045 s | Grouped GQA | 9.677 s | 1.038x faster | `6540fa47b0c88586b1fcc46de8fae25837a4ed051e292da39edcbac1e17f8d80` | 53 / 54 C |
+| 8,192 | Existing 4Q | 45.507 s | Grouped GQA | 48.598 s | 6.8% slower | `13d62d4b8f9a5869879e00ce875081a1df445ac460e18795f770abc9d78a431b` | 61 / 62 C |
+
+The candidate passes exact P2K and P8K logits, but fails the predeclared P8K
+performance gate. Do not run it at 64K. Keep the selector opt-in for any later
+reconsideration; the grouped topology is rejected for this campaign. The small
+P2K timing difference is a single sample and does not offset the P8K regression.
+
+Raw logits, runner logs, and guarded temperature samples are committed under
+[`results/EXP-0411/raw`](../results/EXP-0411/raw/). The GPU2 production 64K
+control remains a distinct result: 1,883.543 s, finite logits, SHA-256
+`9a33d3f3b190126806dee63074189df0f83b78503eac9f2f80e881babb16f482`.
 
 If the P2K comparison is byte-identical, compare the candidate's full-model
 P8K time and logits against the existing four-row control on that same device:
