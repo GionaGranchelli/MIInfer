@@ -1,6 +1,6 @@
 # EXP-0411 — Q8 GQA-head grouping with four query rows
 
-**Status:** IMPLEMENTED; build/resource gate pending; no GPU run started.
+**Status:** BUILD/RESOURCE GATE PASS; 2K GPU gate pending.
 **Base:** `f50abbf` on `codex/m31-q8-lds-gpu0`.
 
 ## Hypothesis
@@ -53,3 +53,25 @@ separate and unchanged when the new selector is unset.
   cold prefill against the matched production control.
 - **Kill:** compiler resource failure, numerical gate failure, or slower 8K
   than the 4Q control. GPU timing is deferred until a guarded MI50 is free.
+
+## Build/resource result
+
+Built `miinfer` from commit `794f7d037fb00d632cd01a92caca6d1ad717734a` with
+`localhost/miinfer-dev:rocm-7.2.1`
+(`sha256:447907c697fb2c39ce9657401e354a70753d5672ad955d4ceb12de976b91224a`),
+HIP 7.2.53211 and AMD clang 22.0.0git for `gfx906`. The HIP resource remark
+reports for both `<true>` and `<false>` specializations: VGPR 50, SGPR 57,
+scratch 0 bytes/lane, dynamic stack false, SGPR spills 0, VGPR spills 0, LDS
+2,112 bytes/block, and compiler-estimated occupancy 4 waves/SIMD. The candidate
+launch is 768 threads (12 Wave64s), below the gfx906 1,024-thread limit. Build
+completed; no GPU run has started.
+
+After GPU2's guarded 64K control exits, run production then candidate on that
+same selector and require byte-identical logits before proceeding:
+
+```bash
+/tmp/m31-q8-kvhead-4q-reuse/scripts/run-m31-q8-4q-screen.sh q8-gqa4-prod-p2k 0 2048 240 2 && \
+/tmp/m31-q8-kvhead-4q-reuse/scripts/run-m31-q8-4q-screen.sh q8-gqa4-candidate-p2k 2 2048 240 2 && \
+cmp /tmp/m31-q8-kvhead-4q-reuse/evidence/q8-gqa4-prod-p2k.f32 \
+    /tmp/m31-q8-kvhead-4q-reuse/evidence/q8-gqa4-candidate-p2k.f32
+```
