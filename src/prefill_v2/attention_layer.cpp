@@ -372,7 +372,7 @@ void PrefillV2AttentionLayer::forward(
         };
         launch_iteration26(ws.attn_gated_output);
         if (m31_gqa_production_compare_enabled()
-            && base_position == 512 && token_count == 512) {
+            && base_position == 1024 && token_count == 1024) {
             std::cerr << "miinfer_m31_gqa_production_compare layer=" << layer_index_
                       << " base_position=" << base_position << " token_count=" << token_count << '\n';
             launch_qwen35_splitk_suffix_attention_quant(
@@ -393,7 +393,7 @@ void PrefillV2AttentionLayer::forward(
                       << " token_count=" << token_count << '\n';
         }
         if (v2_0043_real_compare_enabled() && layer_index_ == 3
-            && base_position == 512 && token_count == 512) {
+            && base_position == 1024 && token_count == 1024) {
             launch_iteration26(ws.attn_qfull);
             compare_iteration26_real_operands(
                 ws.attn_q_rope, ws.attn_gated_output, ws.attn_qfull,
