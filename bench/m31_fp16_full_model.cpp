@@ -36,6 +36,7 @@ struct Result {
     std::uint32_t top1 = 0;
     std::uint32_t second_token = 0;
     std::vector<float> logits;
+    std::vector<float> suffix_hidden;
 };
 
 Result run_mode(const miinfer::Qwen35Model& model,
@@ -84,17 +85,23 @@ Result run_session_mode(const miinfer::Qwen35Model& model,
                         const char* label,
                         const std::string& session_path,
                         const std::vector<std::uint32_t>& suffix,
-                        std::uint32_t capacity) {
+                        std::uint32_t capacity,
+                        bool retain_suffix_hidden = false) {
     using namespace miinfer::prefill_v2;
     PrefillV2Model runtime(model, capacity, true, mode);
     std::vector<std::uint32_t> restored_tokens;
+    PersistentSessionHeader session_header{};
     auto restore_start = std::chrono::steady_clock::now();
-    if (!runtime.load_session(session_path, restored_tokens) || restored_tokens.empty()) {
+    if (!PersistentSession::inspect_file(session_path, session_header)
+        || !runtime.load_session(session_path, restored_tokens)
+        || restored_tokens.size() != session_header.prefix_length) {
         throw std::runtime_error(std::string(label) + " failed to restore the prefix session");
     }
     auto restore_stop = std::chrono::steady_clock::now();
 
-    float* hidden = allocate_device<float>(kPrefillV2MacroTile * kHidden);
+    const std::size_t hidden_count = retain_suffix_hidden
+        ? suffix.size() * kHidden : static_cast<std::size_t>(kPrefillV2MacroTile) * kHidden;
+    float* hidden = allocate_device<float>(hidden_count);
     float* logits = allocate_device<float>(model.config().vocab_size);
     const auto prefill_start = std::chrono::steady_clock::now();
     std::size_t offset = 0;
@@ -103,10 +110,13 @@ Result run_session_mode(const miinfer::Qwen35Model& model,
         final_chunk = static_cast<std::uint32_t>(std::min<std::size_t>(
             kPrefillV2MacroTile, suffix.size() - offset));
         runtime.forward(std::span<const std::uint32_t>(suffix).subspan(offset, final_chunk),
-                        static_cast<std::uint32_t>(restored_tokens.size() + offset), hidden);
+                        static_cast<std::uint32_t>(restored_tokens.size() + offset),
+                        retain_suffix_hidden ? hidden + offset * kHidden : hidden);
         offset += final_chunk;
     }
-    runtime.compute_logits(hidden + (final_chunk - 1) * kHidden, logits);
+    const float* final_hidden = retain_suffix_hidden
+        ? hidden + (suffix.size() - 1) * kHidden : hidden + (final_chunk - 1) * kHidden;
+    runtime.compute_logits(final_hidden, logits);
     MIINFER_HIP_CHECK(hipDeviceSynchronize());
     const auto prefill_stop = std::chrono::steady_clock::now();
 
@@ -116,6 +126,11 @@ Result run_session_mode(const miinfer::Qwen35Model& model,
     result.logits.resize(model.config().vocab_size);
     MIINFER_HIP_CHECK(hipMemcpy(result.logits.data(), logits,
         result.logits.size() * sizeof(float), hipMemcpyDeviceToHost));
+    if (retain_suffix_hidden) {
+        result.suffix_hidden.resize(suffix.size() * kHidden);
+        MIINFER_HIP_CHECK(hipMemcpy(result.suffix_hidden.data(), hidden,
+            result.suffix_hidden.size() * sizeof(float), hipMemcpyDeviceToHost));
+    }
     result.top1 = static_cast<std::uint32_t>(std::distance(
         result.logits.begin(), std::max_element(result.logits.begin(), result.logits.end())));
     const auto decode_start = std::chrono::steady_clock::now();
@@ -127,6 +142,8 @@ Result run_session_mode(const miinfer::Qwen35Model& model,
     MIINFER_HIP_CHECK(hipFree(logits));
     std::cout << label << " restore_seconds=" << std::fixed << std::setprecision(3)
               << result.restore_seconds << " suffix_seconds=" << result.prefill_seconds
+              << " restored_prefix_tokens=" << restored_tokens.size()
+              << " position_after_suffix=" << restored_tokens.size() + suffix.size()
               << " first_token=" << result.top1 << " decode_seconds=" << result.decode_seconds
               << " second_token=" << result.second_token << '\n';
     return result;
@@ -165,6 +182,7 @@ int main(int argc, char** argv) {
     bool fp16_only = false;
     bool q8_query_tiled_pair = false;
     bool q8_native_gqa6_pair = false;
+    bool q8_gqa6_session_pair = false;
     bool q8_only = false;
     bool fp16_fp32_attention = false;
     std::uint32_t prompt_tokens = 8192;
@@ -181,6 +199,8 @@ int main(int argc, char** argv) {
             q8_query_tiled_pair = true;
         } else if (arg == "--q8-native-gqa6-pair") {
             q8_native_gqa6_pair = true;
+        } else if (arg == "--q8-gqa6-session-pair") {
+            q8_gqa6_session_pair = true;
         } else if (arg == "--q8-only") {
             q8_only = true;
         } else if (arg == "--fp16-fp32-attn") {
@@ -202,7 +222,8 @@ int main(int argc, char** argv) {
         } else {
             std::cerr << "usage: miinfer-m31-fp16-full-model MODEL.gguf "
                          "[--fp16-first] [--fp16-only] [--q8-only] [--logits-out PATH] "
-                         "[--q8-query-tiled-pair] [--q8-native-gqa6-pair] [--fp16-fp32-attn] [--tokens N] "
+                         "[--q8-query-tiled-pair] [--q8-native-gqa6-pair] [--q8-gqa6-session-pair] "
+                         "[--fp16-fp32-attn] [--tokens N] "
                          "[--prompt-file PATH] [--session PATH]\n";
             return 2;
         }
@@ -212,10 +233,13 @@ int main(int argc, char** argv) {
         || (!logits_output.empty() && !(q8_only || fp16_only))
         || (q8_query_tiled_pair && (fp16_first || fp16_only))
         || (q8_native_gqa6_pair && (fp16_first || fp16_only || q8_only
-            || q8_query_tiled_pair))) {
+            || q8_query_tiled_pair))
+        || (q8_gqa6_session_pair && (session_path.empty() || prompt_file.empty() || fp16_first || fp16_only
+            || q8_only || q8_query_tiled_pair || q8_native_gqa6_pair))) {
         std::cerr << "usage: miinfer-m31-fp16-full-model MODEL.gguf "
                      "[--fp16-first] [--fp16-only] [--q8-only] [--logits-out PATH] "
-                     "[--q8-query-tiled-pair] [--q8-native-gqa6-pair] [--fp16-fp32-attn] [--tokens N] "
+                     "[--q8-query-tiled-pair] [--q8-native-gqa6-pair] [--q8-gqa6-session-pair] "
+                     "[--fp16-fp32-attn] [--tokens N] "
                      "[--prompt-file PATH] [--session PATH]\n";
         return 2;
     }
@@ -339,13 +363,55 @@ int main(int argc, char** argv) {
         }
         const std::uint32_t session_capacity = std::max<std::uint32_t>(
             capacity, header.prefix_length + prompt_tokens + 4096);
-        std::vector<std::uint32_t> suffix(prompt_tokens);
-        for (std::uint32_t i = 0; i < prompt_tokens; ++i) {
-            suffix[i] = (i * 37U + 101U) % model.config().vocab_size;
+        std::vector<std::uint32_t> suffix = tokens;
+        if (prompt_file.empty()) {
+            for (std::uint32_t i = 0; i < prompt_tokens; ++i) {
+                suffix[i] = (i * 37U + 101U) % model.config().vocab_size;
+            }
         }
         std::cout << "session_prefix_tokens=" << header.prefix_length
                   << " suffix_tokens=" << prompt_tokens
-                  << " suffix_source=deterministic_synthetic\n";
+                  << " suffix_source=" << (prompt_file.empty() ? "deterministic_synthetic" : "tokenized_text_file")
+                  << " graph_enabled=1 expected_replay_tiles="
+                  << (prompt_tokens + miinfer::prefill_v2::kPrefillV2MacroTile - 1)
+                      / miinfer::prefill_v2::kPrefillV2MacroTile << '\n';
+        if (q8_gqa6_session_pair) {
+            if (::setenv("MIINFER_HIP_GRAPH", "1", 1) != 0
+                || ::setenv("MIINFER_M31_Q8_DOT4_ATTENTION", "0", 1) != 0
+                || ::setenv("MIINFER_M31_Q8_QUERY_TILED", "0", 1) != 0
+                || ::setenv("MIINFER_M31_Q8_GQA6_NATIVE_TILED", "0", 1) != 0
+                || ::setenv("MIINFER_M31_Q8_GQA6_PROD_ARITH", "0", 1) != 0) return 1;
+            const Result control = run_session_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kQ8Q8,
+                "q8_production_session", session_path, suffix, session_capacity, true);
+            if (::setenv("MIINFER_M31_Q8_GQA6_PROD_ARITH", "1", 1) != 0) return 1;
+            const Result candidate = run_session_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kQ8Q8,
+                "q8_gqa6_production_arith_session", session_path, suffix, session_capacity, true);
+            const bool logits_exact = control.logits == candidate.logits;
+            const bool hidden_exact = control.suffix_hidden == candidate.suffix_hidden;
+            const bool generated_equal = control.top1 == candidate.top1
+                && control.second_token == candidate.second_token;
+            const bool finite = std::all_of(control.logits.begin(), control.logits.end(),
+                    [](float value) { return std::isfinite(value); })
+                && std::all_of(candidate.logits.begin(), candidate.logits.end(),
+                    [](float value) { return std::isfinite(value); })
+                && std::all_of(control.suffix_hidden.begin(), control.suffix_hidden.end(),
+                    [](float value) { return std::isfinite(value); })
+                && std::all_of(candidate.suffix_hidden.begin(), candidate.suffix_hidden.end(),
+                    [](float value) { return std::isfinite(value); });
+            std::cout << "session_logits_exact=" << logits_exact
+                      << " suffix_hidden_trace_exact=" << hidden_exact
+                      << " generated_tokens_equal=" << generated_equal
+                      << " logits_count=" << candidate.logits.size()
+                      << " hidden_values=" << candidate.suffix_hidden.size()
+                      << " finite=" << finite << '\n';
+            std::cout << std::fixed << std::setprecision(3)
+                      << "q8_production_suffix_seconds=" << control.prefill_seconds
+                      << " q8_gqa6_suffix_seconds=" << candidate.prefill_seconds
+                      << " suffix_speedup=" << control.prefill_seconds / candidate.prefill_seconds
+                      << " production_restore_seconds=" << control.restore_seconds
+                      << " gqa6_restore_seconds=" << candidate.restore_seconds << '\n';
+            return logits_exact && hidden_exact && generated_equal && finite ? 0 : 3;
+        }
         const auto q8 = run_session_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kQ8Q8,
                                          "q8_session", session_path, suffix, session_capacity);
         const auto fp16 = run_session_mode(model, miinfer::prefill_v2::KvCacheQuantMode::kFp16Fp16,
