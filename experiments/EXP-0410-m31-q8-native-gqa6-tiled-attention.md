@@ -44,6 +44,43 @@ top-1 or second-token mismatch, or the thermal stop threshold. Report latency
 only if the correctness gate passes. A 64K run requires the same-GPU production
 control and candidate with identical build, model, prompt, and capacity.
 
+## 64K GPU0 production-control attempt (stopped)
+
+- The pinned binary `7453c42f...` ran the production Q8-only full-model path
+  for `--tokens 65536` against `Qwen3.8-27B-Q4_K_M.gguf` on GPU0
+  (`0000:04:00.0`). The configured capacity was 69,632 tokens. The process
+  stayed runnable at 196% CPU while GPU0 remained 100% busy, but emitted no
+  progress/result line after the binary SHA; stdout was buffered. It held
+  about 30.48 GB VRAM.
+- After 17:18 elapsed (34:00 process CPU time), this exceeded the agreed
+  runtime review bound and was stopped with `podman stop --time 10`. SIGTERM
+  did not stop it, so Podman escalated to SIGKILL. Wrapper/guard exit was 137.
+  The guard recorded 911 temperature samples, max junction `72 C`; neither
+  80 C warning nor 85 C hard stop fired. GPU0 returned to 0% use, about
+  10.9 MB VRAM and `37 C` junction after cleanup.
+- No control logits or completed timing were produced by this attempt. The
+  existing production Q8 64K logits artifact is
+  `/home/machinist/m31-prefill-0002-20261014/q8-control-gpu2-64k.f32`;
+  its run log reports 65,536 processed prompt tokens, capacity 69,632,
+  finite logits, and 1,883.543 s prefill on GPU2 BDF `0000:88:00.0`. It is a
+  prior build/run and therefore can only serve as a preliminary numerical
+  reference for the candidate, not a matched performance control.
+
+## GPU2 visibility preflight failure
+
+- The first separate candidate-only 64K launch used
+  `ROCR_VISIBLE_DEVICES=GPU-02152414173497dd3` inside the container and failed
+  before model load with `hipGetDeviceCount failed: no ROCm-capable device is
+  detected`; no candidate logits were written. GPU2 remained idle at 0% use
+  and about `31 C` junction. This was a selector-format mistake, not evidence
+  of a kernel or model failure.
+- Existing repo run records select this card with numeric
+  `ROCR_VISIBLE_DEVICES=2` passed to the container (`EXP-0404`, `EXP-0405`,
+  and `EXP-0409`). Host mapping confirms ROCm index 2 is MI50 BDF
+  `0000:88:00.0`, unique ID `0x2152414173497dd3`; the corrected candidate
+  launch must use that in-container numeric selector and assert the BDF from
+  the inference process before accepting the run.
+
 ## Pinned 2K full-model gate
 
 - Machinist GPU0 was idle before launch: BDF `0000:04:00.0`, gfx906, unique ID
