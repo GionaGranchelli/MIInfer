@@ -1,6 +1,6 @@
 # EXP-0410 — Q8 four-query KV-tile LDS reuse
 
-**Status:** Q8 64K SAME-BDF OUTPUT/PERFORMANCE PAIR COMPLETE; SOLO REPEAT IN PROGRESS
+**Status:** Q8 64K SAME-BDF OUTPUT/PERFORMANCE PAIR COMPLETE; REPEAT CONFIRMED
 **Baseline:** `f91fd42072113108a9bfa5c1afd96e989ef29a2a`
 
 ## Gate definition
@@ -55,8 +55,12 @@ control took 1,883.543 s alone, while the 4Q candidate took 939.534 s
 (2.005x) with the GPU0 production control active. Both processed 65,536
 tokens and produced identical SHA-256
 `9a33d3f3b190126806dee63074189df0f83b78503eac9f2f80e881babb16f482`.
-The candidate therefore won despite shared-host contention; a candidate-only
-GPU2 rerun is underway to remove that timing caveat.
+The candidate therefore won despite shared-host contention. A later GPU2
+repeat completed in 937.597 s with the same full-logit SHA, 65,536 processed
+tokens, finite 248,320 logits, and 62 C peak junction. The repeat overlapped
+short GPU0 FP16 screens and the first two minutes of a GPU0 64K candidate, so
+it was not completely isolated. Its timing is consistent with the earlier
+939.534 s candidate result; the 2.009x same-BDF Q8 improvement is confirmed.
 
 This is a real Q8/Q8 path improvement, not a speedup over MIInfer's default
 FP16-KV path. A separate same-BDF FP16 control processed the same 65,536
@@ -96,6 +100,8 @@ GPU0 candidate. GPU2 4Q candidate (same-BDF as the GPU2 production control):
 /tmp/m31-q8-kvhead-4q-reuse/scripts/run-m31-q8-4q-screen.sh exp0411-gpu2-4q-64k-solo 1 65536 2400 2
 ```
 
-The candidate-only GPU2 timing and its thermal samples will be added after
-that run exits. GPU0 and GPU2 use different physical cards, so only each
-same-BDF pair is compared.
+The GPU2 repeat completed at 937.597 s (2.009x versus the 1,883.543 s GPU2
+production control), with the same SHA-256 and a 62 C peak junction. Its
+captured output and temperature samples are `evidence/q8-4q-solo-gpu2-64k.*`;
+the raw logits remain on Machinist. GPU0 and GPU2 use different physical
+cards, so only each same-BDF pair is compared.

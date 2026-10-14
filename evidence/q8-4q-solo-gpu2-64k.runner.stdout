@@ -1,0 +1,7 @@
+run=exp0411-gpu2-4q-64k-solo exit=0 max_junction_c=62.0
+device_bdf=0000:88:00.0 architecture=gfx906:sramecc-:xnack-
+prompt_text_bytes=663758 prompt_tokens_available=198637 prompt_tokens_processed=65536
+q8_only capacity_tokens=69632 static_vram_bytes=28182622208 weights_bytes=24068487168 state_bytes=2458386432 workspace_bytes=1453948928
+q8_only prefill_seconds=937.597 first_token=271 decode_seconds=0.120 second_token=248068
+q8_logits_finite=1 q8_logits_count=248320
+9a33d3f3b190126806dee63074189df0f83b78503eac9f2f80e881babb16f482  /tmp/m31-q8-kvhead-4q-reuse/evidence/exp0411-gpu2-4q-64k-solo.f32
