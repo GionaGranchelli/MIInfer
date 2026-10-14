@@ -19,3 +19,29 @@ Added opt-in `MIINFER_M31_FP16_GQA_Q32_CTA=1` to the existing FP16 fragment-reus
 ## Correctness and performance status
 
 The row/token/head mapping and split coverage passed an assert-based host-side check. A source review found no uncovered or duplicated valid query rows. No MI50 execution, full-model logits comparison, or timing has been performed; local ROCm reports no initialized AMDGPU driver. Keep this candidate opt-in until a pinned-host 2K/full-logit gate and matched prefill measurement pass.
+
+## Machinist execution preflight — 2026-10-14
+
+The live Machinist preflight identified two idle `gfx906` MI50s: GPU0 at
+`0000:04:00.0` (UUID `0x21678e17348c2f7`) and GPU2 at `0000:88:00.0` (UUID
+`0x2152414173497dd3`). Both were at 180 W power caps and 22–24 °C, with no
+KFD compute PIDs. The device at `0000:85:00.0` is not an MI50. The model
+SHA-256 matched `7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169`.
+
+The available container reports ROCm 7.2.1 / HIP 7.2.53211, image ID
+`50ff28a28cc13a3ca7333cd0c70e322d16245967c5fdf0d30a1bf57bda80a512`, and
+repo digest
+`sha256:447907c697fb2c39ce9657401e354a70753d5672ad955d4ceb12de976b91224a`.
+This exact image identity can be frozen for a matched pair.
+
+No build, trace, or inference run started. Fetching the pushed source branch
+from the Machinist checkout failed because its `origin` uses GitHub SSH and
+the host returned `Permission denied (publickey)`. The existing remote
+worktrees are dirty and are not at this candidate SHA. The preflight evidence
+is stored on Machinist at
+`/home/machinist/m31-pq32-final-20261014T092317Z`.
+
+The Q32 candidate therefore remains compile-screened only. A matched
+65,536-token control/candidate run, full-logit comparison, and dispatch trace
+remain outstanding; the failure was source access, not candidate correctness
+or performance.
