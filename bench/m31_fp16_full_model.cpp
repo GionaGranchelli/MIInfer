@@ -166,6 +166,7 @@ int main(int argc, char** argv) {
     bool q8_query_tiled_pair = false;
     bool q8_only = false;
     bool fp16_fp32_attention = false;
+    bool production_fp16_only = false;
     std::uint32_t prompt_tokens = 8192;
     std::string prompt_file;
     std::string session_path;
@@ -182,6 +183,8 @@ int main(int argc, char** argv) {
             q8_only = true;
         } else if (arg == "--fp16-fp32-attn") {
             fp16_fp32_attention = true;
+        } else if (arg == "--production-fp16-only") {
+            production_fp16_only = true;
         } else if (arg == "--tokens" && i + 1 < argc) {
             char* end = nullptr;
             const auto parsed = std::strtoul(argv[++i], &end, 10);
@@ -250,8 +253,8 @@ int main(int argc, char** argv) {
                   << " prompt_tokens_processed=" << prompt_tokens << '\n';
     }
 
-    if (::setenv("MIINFER_V2_0043_GQA_ATTENTION", "1", 1) != 0) {
-        std::cerr << "failed to enable existing opt-in GQA attention path\n";
+    if (::setenv("MIINFER_V2_0043_GQA_ATTENTION", production_fp16_only ? "0" : "1", 1) != 0) {
+        std::cerr << "failed to set GQA attention path\n";
         return 1;
     }
     if (::setenv("MIINFER_M31_FP16_ATTN_FP32", fp16_fp32_attention ? "1" : "0", 1) != 0) {
