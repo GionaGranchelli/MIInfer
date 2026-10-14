@@ -8,6 +8,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
 #include <type_traits>
 
@@ -7173,6 +7174,203 @@ void launch_qwen35_splitk_suffix_attention_f16(
 // V2-0019: Direct-Consumption Quantized Split-K Suffix Attention (FP16 / Q8 K / Q8 V)
 // -----------------------------------------------------------------------------
 
+// Four adjacent query rows share the Q8 K/V rows for one GQA head pair. The
+// per-row math intentionally mirrors the production Split-K kernel; only the
+// CTA mapping and KV movement through LDS differ.
+__global__ void qwen35_splitk_suffix_attn_stage1_q8_4q_lds_kernel(
+    const float* __restrict__ q,
+    const int8_t* __restrict__ key_cache_q8,
+    const __half* __restrict__ key_scales,
+    const int8_t* __restrict__ value_cache_q8,
+    const __half* __restrict__ value_scales,
+    float* __restrict__ partial_max,
+    float* __restrict__ partial_sum,
+    float* __restrict__ partial_acc,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t cache_capacity,
+    std::uint32_t query_heads,
+    std::uint32_t kv_heads,
+    std::uint32_t head_dim,
+    float scale,
+    std::uint32_t num_splits,
+    const DevicePrefillState* __restrict__ prefill_state) {
+    constexpr std::uint32_t kQueryRows = 4;
+    constexpr std::uint32_t kTileKeys = 4;
+    __shared__ int8_t staged_k[kTileKeys][256];
+    __shared__ int8_t staged_v[kTileKeys][256];
+    __shared__ float staged_k_scale[kTileKeys];
+    __shared__ float staged_v_scale[kTileKeys];
+    __shared__ std::uint32_t row_start[kQueryRows];
+    __shared__ std::uint32_t row_end[kQueryRows];
+
+    if (prefill_state != nullptr) {
+        base_position = prefill_state->base_position;
+        token_count = prefill_state->token_count;
+        cache_capacity = prefill_state->kv_capacity > 0
+            ? prefill_state->kv_capacity : cache_capacity;
+    }
+
+    const std::uint32_t head_pair = blockIdx.x;
+    const std::uint32_t query_group = blockIdx.y;
+    const std::uint32_t split_id = blockIdx.z;
+    const std::uint32_t query_row = threadIdx.x / 64;
+    const std::uint32_t lane = threadIdx.x % 64;
+    const std::uint32_t sub_wave = lane / 32;
+    const std::uint32_t sub_lane = lane % 32;
+    const std::uint32_t token = query_group * kQueryRows + query_row;
+    const std::uint32_t head = head_pair * 2 + sub_wave;
+    const std::uint32_t dim_offset = sub_lane * 8;
+    const bool row_valid = token < token_count && head < query_heads;
+
+    std::uint32_t total_length = 0;
+    std::uint32_t k_start = 0;
+    std::uint32_t k_end = 0;
+    if (row_valid) {
+        total_length = base_position + token + 1;
+        if (total_length <= cache_capacity) {
+            const std::uint32_t chunk_size =
+                (total_length + num_splits - 1) / num_splits;
+            k_start = split_id * chunk_size;
+            k_end = min(k_start + chunk_size, total_length);
+        }
+    }
+
+    if (lane == 0 && query_row < kQueryRows) {
+        row_start[query_row] = k_start;
+        row_end[query_row] = k_end;
+    }
+    __syncthreads();
+
+    std::uint32_t union_start = 0xffffffffU;
+    std::uint32_t union_end = 0;
+    const std::uint32_t first_token = query_group * kQueryRows;
+    const std::uint32_t rows_in_group = min(token_count - first_token, kQueryRows);
+    for (std::uint32_t r = 0; r < rows_in_group; ++r) {
+        if (row_start[r] < row_end[r]) {
+            union_start = min(union_start, row_start[r]);
+            union_end = max(union_end, row_end[r]);
+        }
+    }
+    if (union_start == 0xffffffffU) {
+        union_start = 0;
+        union_end = 0;
+    }
+
+    const std::uint32_t kv_head = (head_pair * 2) / (query_heads / kv_heads);
+    const std::size_t kv_base = static_cast<std::size_t>(kv_head)
+        * cache_capacity * head_dim;
+    float4 q_vec0 = make_float4(0, 0, 0, 0);
+    float4 q_vec1 = make_float4(0, 0, 0, 0);
+    if (row_valid && total_length <= cache_capacity) {
+        const std::size_t q_base =
+            (static_cast<std::size_t>(token) * query_heads + head) * head_dim + dim_offset;
+        q_vec0 = *reinterpret_cast<const float4*>(q + q_base);
+        q_vec1 = *reinterpret_cast<const float4*>(q + q_base + 4);
+    }
+
+    float4 acc0 = make_float4(0, 0, 0, 0);
+    float4 acc1 = make_float4(0, 0, 0, 0);
+    float running_max = -INFINITY;
+    float running_sum = 0.0f;
+
+    for (std::uint32_t tile_start = union_start; tile_start < union_end;
+         tile_start += kTileKeys) {
+        // All readers from the previous tile must finish before LDS is reused.
+        __syncthreads();
+        if (query_row == 0 && sub_wave == 0 && sub_lane < 32) {
+            const std::uint32_t key_pos = sub_lane * 8;
+            #pragma unroll
+            for (std::uint32_t u = 0; u < kTileKeys; ++u) {
+                const std::uint32_t position = tile_start + u;
+                uint2 k_raw = make_uint2(0, 0);
+                uint2 v_raw = make_uint2(0, 0);
+                if (position < cache_capacity) {
+                    const std::size_t offset = kv_base
+                        + static_cast<std::size_t>(position) * head_dim + key_pos;
+                    k_raw = *reinterpret_cast<const uint2*>(key_cache_q8 + offset);
+                    v_raw = *reinterpret_cast<const uint2*>(value_cache_q8 + offset);
+                }
+                *reinterpret_cast<uint2*>(staged_k[u] + key_pos) = k_raw;
+                *reinterpret_cast<uint2*>(staged_v[u] + key_pos) = v_raw;
+                if (sub_lane == 0) {
+                    if (position < cache_capacity) {
+                        const std::size_t scale_offset =
+                            static_cast<std::size_t>(kv_head) * cache_capacity + position;
+                        staged_k_scale[u] = __half2float(key_scales[scale_offset]);
+                        staged_v_scale[u] = __half2float(value_scales[scale_offset]);
+                    } else {
+                        staged_k_scale[u] = 1.0f;
+                        staged_v_scale[u] = 1.0f;
+                    }
+                }
+            }
+        }
+        __syncthreads();
+
+        if (row_valid && total_length <= cache_capacity) {
+            const std::uint32_t begin = max(tile_start, k_start);
+            const std::uint32_t end = min(tile_start + kTileKeys, k_end);
+            for (std::uint32_t position = begin; position < end; ++position) {
+                const std::uint32_t u = position - tile_start;
+                const auto* kb = reinterpret_cast<const int8_t*>(
+                    reinterpret_cast<const uint2*>(staged_k[u] + dim_offset));
+                float dot = q_vec0.x * static_cast<float>(kb[0])
+                          + q_vec0.y * static_cast<float>(kb[1])
+                          + q_vec0.z * static_cast<float>(kb[2])
+                          + q_vec0.w * static_cast<float>(kb[3])
+                          + q_vec1.x * static_cast<float>(kb[4])
+                          + q_vec1.y * static_cast<float>(kb[5])
+                          + q_vec1.z * static_cast<float>(kb[6])
+                          + q_vec1.w * static_cast<float>(kb[7]);
+                #pragma unroll
+                for (int offset = 16; offset > 0; offset /= 2) {
+                    dot += __shfl_xor(dot, offset, 32);
+                }
+                const float score = dot * (staged_k_scale[u] * scale);
+                float alpha = 1.0f;
+                float weight = 0.0f;
+                if (sub_lane == 0) {
+                    if (score > running_max) {
+                        alpha = expf(running_max - score);
+                        running_sum = running_sum * alpha + 1.0f;
+                        running_max = score;
+                        weight = 1.0f;
+                    } else {
+                        weight = expf(score - running_max);
+                        running_sum += weight;
+                    }
+                }
+                alpha = __shfl(alpha, sub_wave * 32, 64);
+                weight = __shfl(weight, sub_wave * 32, 64);
+                const float w = weight * staged_v_scale[u];
+                const auto* vb = reinterpret_cast<const int8_t*>(
+                    reinterpret_cast<const uint2*>(staged_v[u] + dim_offset));
+                acc0.x = acc0.x * alpha + w * static_cast<float>(vb[0]);
+                acc0.y = acc0.y * alpha + w * static_cast<float>(vb[1]);
+                acc0.z = acc0.z * alpha + w * static_cast<float>(vb[2]);
+                acc0.w = acc0.w * alpha + w * static_cast<float>(vb[3]);
+                acc1.x = acc1.x * alpha + w * static_cast<float>(vb[4]);
+                acc1.y = acc1.y * alpha + w * static_cast<float>(vb[5]);
+                acc1.z = acc1.z * alpha + w * static_cast<float>(vb[6]);
+                acc1.w = acc1.w * alpha + w * static_cast<float>(vb[7]);
+            }
+        }
+    }
+
+    if (row_valid && total_length <= cache_capacity) {
+        const std::size_t split_head_idx =
+            (static_cast<std::size_t>(split_id) * token_count + token) * query_heads + head;
+        if (sub_lane == 0) {
+            partial_max[split_head_idx] = running_max;
+            partial_sum[split_head_idx] = running_sum;
+        }
+        const std::size_t acc_base = split_head_idx * head_dim + dim_offset;
+        *reinterpret_cast<float4*>(partial_acc + acc_base) = acc0;
+        *reinterpret_cast<float4*>(partial_acc + acc_base + 4) = acc1;
+    }
+}
+
 template <bool K_IS_Q8, bool V_IS_Q8, int UNROLL = 4>
 __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
     const float* __restrict__ q,
@@ -7547,7 +7745,21 @@ void launch_qwen35_splitk_suffix_attention_quant(
     dim3 grid1(query_heads / 2, token_count, num_splits);
     dim3 block1(64);
 
-    if (!is_k_q8 && !is_v_q8) {
+    const char* q8_4q_lds_env = std::getenv("MIINFER_M31_Q8_4Q_LDS_REUSE");
+    const bool q8_4q_lds_enabled = q8_4q_lds_env != nullptr
+        && std::strcmp(q8_4q_lds_env, "0") != 0;
+    if (q8_4q_lds_enabled && is_k_q8 && is_v_q8
+        && query_heads == 24 && kv_heads == 4 && head_dim == 256
+        && num_splits == 32) {
+        const dim3 q8_grid(query_heads / 2, (token_count + 3) / 4, num_splits);
+        hipLaunchKernelGGL(
+            qwen35_splitk_suffix_attn_stage1_q8_4q_lds_kernel,
+            q8_grid, dim3(256), 0, stream,
+            q, key_cache_q8, key_scales, value_cache_q8, value_scales,
+            d_partial_max, d_partial_sum, d_partial_acc,
+            token_count, base_position, cache_capacity,
+            query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
+    } else if (!is_k_q8 && !is_v_q8) {
         hipLaunchKernelGGL(
             (qwen35_splitk_suffix_attn_stage1_quant_kernel<false, false, 4>),
             grid1, block1, 0, stream,
