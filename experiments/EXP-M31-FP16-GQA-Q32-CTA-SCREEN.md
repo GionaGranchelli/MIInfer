@@ -109,3 +109,10 @@ Ubuntu Noble `libdw1t64` `0.190-1.1ubuntu0.1`. Derived image digest:
 `sha256:422b5d15d384d78cab724a0190ef739d31212674ebc1ae8f0f6cf538b1f5ea8f`.
 This derived runtime has not yet passed an executable probe; no GPU run is
 claimed.
+
+The corrected rootless Podman probe with SELinux labeling disabled passed:
+the mounted binary was visible, `ldd -r` resolved all dependencies including
+`libdw.so.1`, and the no-argument invocation returned the expected usage
+status. The GPU script then stopped before tracing because host `amd-smi` is
+not installed. No trace or inference ran. Use the available `rocm-smi` or
+sysfs temperature telemetry for the guard; do not require `amd-smi`.
