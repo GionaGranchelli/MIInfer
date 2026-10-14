@@ -1,0 +1,5 @@
+device_bdf=0000:88:00.0 architecture=gfx906:sramecc-:xnack-
+prompt_text_bytes=663758 prompt_tokens_available=198637 prompt_tokens_processed=65536
+q8_only capacity_tokens=69632 static_vram_bytes=28201791488 weights_bytes=24068487168 state_bytes=2458386432 workspace_bytes=1473118208
+q8_only prefill_seconds=1954.231 first_token=271 decode_seconds=0.083 second_token=248068
+q8_logits_finite=1 q8_logits_count=248320

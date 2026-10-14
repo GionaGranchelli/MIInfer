@@ -132,6 +132,42 @@ control and candidate with identical build, model, prompt, and capacity.
   warning, 85 C stop, telemetry failure, or timeout. GPU0 returned to 0% use
   and about 10.9 MB VRAM after the run.
 
+## Concurrent 64K full-model screen (candidate fails correctness)
+
+- Ran production Q8/Q8 control and native GQA6 Q8 candidate concurrently from
+  the same pushed source/binary and pinned image, using the same model,
+  tokenizer-backed prompt, 65,536 processed prompt tokens, and 69,632-token
+  capacity. Control ran on GPU2 BDF `0000:88:00.0`; candidate ran on GPU0 BDF
+  `0000:04:00.0`. Both inference processes printed their own BDF and
+  `prompt_tokens_processed=65536`. This is a concurrent cross-card screen,
+  not a definitive same-card A/B timing comparison.
+- Both wrappers exited `0`; no timeout or thermal guard fired. Candidate
+  completed at 945.473 s prefill (69.3 processed prompt tokens/s), first token
+  `94450`, 0.078 s decode, and second token `76`. Production control completed
+  at 1,954.231 s prefill (33.5 tokens/s), first token `271`, 0.083 s decode,
+  and second token `248068`. The raw timing ratio is `2.067x` in favor of the
+  candidate, but correctness failed, so this speed result is not actionable.
+- Both full logit arrays contained 248,320 finite `float32` values. Compared
+  candidate to this run's concurrent production control: maximum absolute
+  difference `9.979642868`, RMSE `1.264166975`, cosine `0.908032863`, and
+  top-1 indices `94450` versus `271`. The generated first-token IDs also
+  differ (`94450` versus `271`). Reject this candidate for production use;
+  do not present its timing as a valid improvement.
+- Thermal telemetry sampled 313 times for the candidate (maximum junction
+  `71 C`) and 630 times for control (maximum `68 C`); both remained below the
+  80 C warning and 85 C stop thresholds. At completion GPU0 and GPU2 returned
+  to idle utilization and about 10.9 MB VRAM each.
+- The complete run logs, guard records, exit codes, thermal samples, and raw
+  logits are preserved under
+  `results/m31-native-q8-tile/parallel-64k-20261014/`. SHA-256:
+  candidate logits `9ed191a625f26f0183f0b79b3b2941921da388276f7a4b8373d97d719bcd922d`;
+  control logits `9a33d3f3b190126806dee63074189df0f83b78503eac9f2f80e881babb16f482`.
+- Next gate: localize the earliest context length where full logits diverge,
+  using matched builds, token prefixes, model, and capacity. Start with the
+  already available 8K/16K checkpoints on separate MI50 cards, verify each
+  process BDF, and use the same thermal guard. Do not perform another timing
+  sweep unless correctness passes.
+
 ## Provenance
 
 Prior source review examined the public gfx906 llama.cpp fork at
