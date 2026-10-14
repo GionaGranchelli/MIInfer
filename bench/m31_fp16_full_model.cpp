@@ -448,8 +448,11 @@ int main(int argc, char** argv) {
         if (q8_gqa6_session_pair) {
             const char* packed_env = std::getenv("MIINFER_M31_Q8_GQA6_PACKED_LDS_PAIR");
             const char* wide128_pair_env = std::getenv("MIINFER_M31_Q8_GQA6_PACKED_LDS128_PAIR");
+            const char* paired_token_env = std::getenv("MIINFER_M31_Q8_GQA6_PAIRED_TOKEN_PAIR");
             const bool wide128_pair = wide128_pair_env != nullptr && std::strcmp(wide128_pair_env, "0") != 0;
-            const bool packed_pair = wide128_pair || (packed_env != nullptr && std::strcmp(packed_env, "0") != 0);
+            const bool paired_token_pair = paired_token_env != nullptr && std::strcmp(paired_token_env, "0") != 0;
+            const bool packed_pair = wide128_pair || paired_token_pair
+                || (packed_env != nullptr && std::strcmp(packed_env, "0") != 0);
             const char* reps_env = std::getenv("MIINFER_M31_Q8_GQA6_PAIR_REPS");
             char* reps_end = nullptr;
             const unsigned long parsed_reps = reps_env == nullptr ? 1 : std::strtoul(reps_env, &reps_end, 10);
@@ -465,18 +468,24 @@ int main(int argc, char** argv) {
             std::vector<double> control_times, candidate_times;
             bool all_correct = true;
             for (unsigned long rep = 0; rep < parsed_reps; ++rep) {
-                if (::setenv("MIINFER_M31_Q8_GQA6_PACKED_LDS", wide128_pair ? "1" : "0", 1) != 0
-                    || ::setenv("MIINFER_M31_Q8_GQA6_PACKED_LDS128", "0", 1) != 0
-                    || ::setenv("MIINFER_M31_Q8_GQA6_PROD_ARITH", packed_pair ? "1" : "0", 1) != 0) return 1;
+                if (::setenv("MIINFER_M31_Q8_GQA6_PACKED_LDS",
+                        (wide128_pair || paired_token_pair) ? "1" : "0", 1) != 0
+                    || ::setenv("MIINFER_M31_Q8_GQA6_PACKED_LDS128",
+                        (wide128_pair || paired_token_pair) ? "1" : "0", 1) != 0
+                    || ::setenv("MIINFER_M31_Q8_GQA6_PROD_ARITH", packed_pair ? "1" : "0", 1) != 0
+                    || ::setenv("MIINFER_M31_Q8_GQA6_PAIRED_TOKEN", "0", 1) != 0) return 1;
                 const Result control = run_session_graph_mode(model,
-                    wide128_pair ? "q8_gqa6_packed_u4_u64_session"
+                    paired_token_pair ? "q8_gqa6_packed_u128_session"
+                        : wide128_pair ? "q8_gqa6_packed_u4_u64_session"
                         : packed_pair ? "q8_gqa6_production_arith_session" : "q8_production_session",
                     session_path, suffix, session_capacity);
                 if (::setenv("MIINFER_M31_Q8_GQA6_PROD_ARITH", "1", 1) != 0
                     || ::setenv("MIINFER_M31_Q8_GQA6_PACKED_LDS", packed_pair ? "1" : "0", 1) != 0
-                    || ::setenv("MIINFER_M31_Q8_GQA6_PACKED_LDS128", wide128_pair ? "1" : "0", 1) != 0) return 1;
+                    || ::setenv("MIINFER_M31_Q8_GQA6_PACKED_LDS128", wide128_pair ? "1" : "0", 1) != 0
+                    || ::setenv("MIINFER_M31_Q8_GQA6_PAIRED_TOKEN", paired_token_pair ? "1" : "0", 1) != 0) return 1;
                 const Result candidate = run_session_graph_mode(model,
-                    wide128_pair ? "q8_gqa6_packed_u4_u128_session"
+                    paired_token_pair ? "q8_gqa6_paired_token_session"
+                        : wide128_pair ? "q8_gqa6_packed_u4_u128_session"
                         : packed_pair ? "q8_gqa6_packed_lds_session" : "q8_gqa6_production_arith_session",
                     session_path, suffix, session_capacity);
                 const bool logits_exact = control.logits == candidate.logits;
@@ -505,10 +514,12 @@ int main(int argc, char** argv) {
                           << " finite=" << finite << '\n';
             }
             std::cout << std::fixed << std::setprecision(3)
-                      << (wide128_pair ? "q8_gqa6_packed_u4_u64_median_seconds="
+                      << (paired_token_pair ? "q8_gqa6_packed_u128_median_seconds="
+                          : wide128_pair ? "q8_gqa6_packed_u4_u64_median_seconds="
                           : packed_pair ? "q8_gqa6_suffix_median_seconds=" : "q8_production_suffix_median_seconds=")
                       << median(control_times)
-                      << (wide128_pair ? " q8_gqa6_packed_u4_u128_median_seconds="
+                      << (paired_token_pair ? " q8_gqa6_paired_token_median_seconds="
+                          : wide128_pair ? " q8_gqa6_packed_u4_u128_median_seconds="
                           : packed_pair ? " q8_gqa6_packed_lds_suffix_median_seconds=" : " q8_gqa6_suffix_median_seconds=")
                       << median(candidate_times)
                       << " suffix_median_speedup=" << median(control_times) / median(candidate_times)
