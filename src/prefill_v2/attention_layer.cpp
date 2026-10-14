@@ -70,6 +70,11 @@ bool v2_0043_real_compare_enabled() {
     return value != nullptr && std::strcmp(value, "0") != 0;
 }
 
+bool m31_gqa_production_compare_enabled() {
+    const char* value = std::getenv("MIINFER_M31_GQA_PRODUCTION_COMPARE");
+    return value != nullptr && std::strcmp(value, "0") != 0;
+}
+
 void compare_iteration26_real_operands(
     const float* q, const float* candidate, const float* control,
     std::size_t elements, hipStream_t stream) {
@@ -366,6 +371,23 @@ void PrefillV2AttentionLayer::forward(
             }
         };
         launch_iteration26(ws.attn_gated_output);
+        if (m31_gqa_production_compare_enabled()
+            && base_position == 512 && token_count == 512) {
+            std::cerr << "miinfer_m31_gqa_production_compare layer=" << layer_index_
+                      << " base_position=" << base_position << " token_count=" << token_count << '\n';
+            launch_qwen35_splitk_suffix_attention_quant(
+                ws.attn_q_rope,
+                kv_cache.key_cache, kv_cache.value_cache,
+                kv_cache.key_cache_q8, kv_cache.key_scales,
+                kv_cache.value_cache_q8, kv_cache.value_scales,
+                ws.gate, ws.attn_qfull, ws.splitk_attn_workspace,
+                token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
+                24, 4, 256, 1.0F / std::sqrt(256.0F),
+                false, false, 32, stream, nullptr);
+            compare_iteration26_real_operands(
+                ws.attn_q_rope, ws.attn_gated_output, ws.attn_qfull,
+                static_cast<std::size_t>(token_count) * 24 * 256, stream);
+        }
         if (v2_0043_real_compare_enabled() && layer_index_ == 3) {
             std::cerr << "miinfer_v2_0043_candidate_call base_position=" << base_position
                       << " token_count=" << token_count << '\n';

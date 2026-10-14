@@ -201,18 +201,19 @@ int main(int argc, char** argv) {
             logits_output = argv[++i];
         } else {
             std::cerr << "usage: miinfer-m31-fp16-full-model MODEL.gguf "
-                         "[--fp16-first] [--fp16-only] [--q8-only] [--logits-out PATH] "
+                         "[--fp16-first] [--fp16-only [--production-fp16-only]] [--q8-only] [--logits-out PATH] "
                          "[--q8-query-tiled-pair] [--fp16-fp32-attn] [--tokens N] "
                          "[--prompt-file PATH] [--session PATH]\n";
             return 2;
         }
     }
-    if (argc < 2 || (fp16_first && fp16_only) || (q8_only && (fp16_first || fp16_only))
+    if (argc < 2 || (fp16_first && fp16_only) || (production_fp16_only && !fp16_only)
+        || (q8_only && (fp16_first || fp16_only))
         || (q8_only && q8_query_tiled_pair)
         || (!logits_output.empty() && !(q8_only || fp16_only))
         || (q8_query_tiled_pair && (fp16_first || fp16_only))) {
         std::cerr << "usage: miinfer-m31-fp16-full-model MODEL.gguf "
-                     "[--fp16-first] [--fp16-only] [--q8-only] [--logits-out PATH] "
+                     "[--fp16-first] [--fp16-only [--production-fp16-only]] [--q8-only] [--logits-out PATH] "
                      "[--q8-query-tiled-pair] [--fp16-fp32-attn] [--tokens N] "
                      "[--prompt-file PATH] [--session PATH]\n";
         return 2;
