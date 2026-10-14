@@ -102,3 +102,10 @@ SHA-256: `57ec6d1cd975e2d7d0ba770eb592f8997e49dfe9acfab2ae02caf68ea4f4031f`.
 The trace attempt then stopped before program startup because `libdw.so.1`
 was not found. No dispatch trace or inference ran. Logs are under
 `/home/machinist/m31-q32-exec-20261014T092831Z`.
+
+To supply that runtime library without changing the ROCm base, Machinist built
+an image extending the frozen base digest `sha256:447907c697fb2c39ce9657401e354a70753d5672ad955d4ceb12de976b91224a` with only
+Ubuntu Noble `libdw1t64` `0.190-1.1ubuntu0.1`. Derived image digest:
+`sha256:422b5d15d384d78cab724a0190ef739d31212674ebc1ae8f0f6cf538b1f5ea8f`.
+This derived runtime has not yet passed an executable probe; no GPU run is
+claimed.
