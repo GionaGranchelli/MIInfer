@@ -1,6 +1,6 @@
 # EXP-0410 — Q8 four-query KV-tile LDS reuse
 
-**Status:** SHORT GATES PASS; 64K CANDIDATE COMPLETED; SAME-BDF CONTROL IN PROGRESS  
+**Status:** Q8 64K SAME-BDF OUTPUT/PERFORMANCE PAIR COMPLETE; SOLO REPEAT IN PROGRESS
 **Baseline:** `f91fd42072113108a9bfa5c1afd96e989ef29a2a`
 
 ## Gate definition
@@ -45,7 +45,24 @@ thermal guard. It processed 65,536 tokens in 867.841 s, produced 248,320
 finite logits (SHA-256
 `9a33d3f3b190126806dee63074189df0f83b78503eac9f2f80e881babb16f482`), and
 peaked at 76 C junction. The production control on the same BDF is running;
-no 64K speedup or output-equivalence claim is made until it completes.
+the same-BDF control/candidate pair is now complete. On GPU0, production Q8
+processed 65,536 tokens in 2,106.361 s and produced the same full-logit SHA as
+the 867.841 s candidate. The GPU0 control overlapped an independent GPU2
+candidate run, so this 2.427x ratio is not used as the isolated timing result.
+
+The stronger timing pair is GPU2 BDF `0000:88:00.0`: its production Q8
+control took 1,883.543 s alone, while the 4Q candidate took 939.534 s
+(2.005x) with the GPU0 production control active. Both processed 65,536
+tokens and produced identical SHA-256
+`9a33d3f3b190126806dee63074189df0f83b78503eac9f2f80e881babb16f482`.
+The candidate therefore won despite shared-host contention; a candidate-only
+GPU2 rerun is underway to remove that timing caveat.
+
+This is a real Q8/Q8 path improvement, not a speedup over MIInfer's default
+FP16-KV path. A separate same-BDF FP16 control processed the same 65,536
+tokens in 487.521 s with byte-identical logits across three controls. Since
+that default is faster than Q8 4Q, this Q8 result does not establish an
+overall default-path prefill improvement. See the campaign `decisions.tsv`.
 
 ## Exact 64K reproduction commands
 
@@ -55,7 +72,7 @@ Candidate (completed):
 /tmp/m31-q8-lds-gpu0/scripts/run-m31-q8-4q-screen.sh q8-4q-lds-candidate-64k 1 65536 4000
 ```
 
-Same-BDF production control (currently running):
+Same-BDF GPU0 production control (completed):
 
 ```bash
 /tmp/m31-q8-lds-gpu0/scripts/run-m31-q8-4q-screen.sh q8-4q-production-64k 0 65536 4000
@@ -73,7 +90,12 @@ An independent production control also completed on GPU2 (`0000:88:00.0`,
 unique ID `0x2152414173497dd3`): 65,536 processed tokens, 1,883.543 s prefill,
 finite 248,320 logits. Its full-logit SHA-256 is the same
 `9a33d3f3b190126806dee63074189df0f83b78503eac9f2f80e881babb16f482` as the
-GPU0 candidate. This establishes exact output agreement across these two
-runs. Since they used different physical cards, their elapsed times are not a
-matched speedup result; the same-BDF GPU0 production control remains the
-performance comparison.
+GPU0 candidate. GPU2 4Q candidate (same-BDF as the GPU2 production control):
+
+```bash
+/tmp/m31-q8-kvhead-4q-reuse/scripts/run-m31-q8-4q-screen.sh exp0411-gpu2-4q-64k-solo 1 65536 2400 2
+```
+
+The candidate-only GPU2 timing and its thermal samples will be added after
+that run exits. GPU0 and GPU2 use different physical cards, so only each
+same-BDF pair is compared.
