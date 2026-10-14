@@ -8,6 +8,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <type_traits>
@@ -2961,7 +2962,7 @@ __global__ void qwen35_quantize_q8_query_kernel(
 // fragment for all 32 rows, then the same workspace is overwritten once with
 // V and consumed across those rows before the next K tile.
 template <bool KEY_Q8, bool VALUE_Q8, bool FP32_ACCUM, bool QUERY_Q8 = false,
-          bool USE_PREFILL_STATE = false>
+          bool USE_PREFILL_STATE = false, bool PREFETCH_K = false>
 __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_batch_kernel(
     const float* __restrict__ q, const __half* __restrict__ key_cache,
     const __half* __restrict__ value_cache,
@@ -3093,6 +3094,8 @@ __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_bat
     const std::uint32_t last_chunk = (last_length + num_splits - 1) / num_splits;
     const std::uint32_t split_start = split * first_chunk;
     const std::uint32_t work_end = min(split * last_chunk + last_chunk, last_length);
+    uint4 prefetched_k[4]{};
+    bool key_is_prefetched = false;
 
     for (std::uint32_t tile_start = split_start; tile_start < work_end; tile_start += kTileK) {
         float dot[kRowsPerWarp] = {};
@@ -3177,11 +3180,21 @@ __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_bat
                     const std::uint32_t position = i / 16;
                     const std::uint32_t dimension = d_base + (i % 16) * 8;
                     const std::uint32_t cache_position = tile_start + position;
-                    const std::size_t cache_index =
-                        (static_cast<std::size_t>(kv_head) * cache_capacity + cache_position) * 256
-                        + dimension;
                     uint4 packed = make_uint4(0, 0, 0, 0);
-                    if (cache_position < work_end && cache_position < cache_capacity) {
+                    if constexpr (PREFETCH_K) {
+                        const std::uint32_t prefetch_slot = (d_base / 128) * 2 + (i - tid) / 256;
+                        if (key_is_prefetched) {
+                            packed = prefetched_k[prefetch_slot];
+                        } else if (cache_position < work_end && cache_position < cache_capacity) {
+                            const std::size_t cache_index =
+                                (static_cast<std::size_t>(kv_head) * cache_capacity + cache_position) * 256
+                                + dimension;
+                            packed = *reinterpret_cast<const uint4*>(key_cache + cache_index);
+                        }
+                    } else if (cache_position < work_end && cache_position < cache_capacity) {
+                        const std::size_t cache_index =
+                            (static_cast<std::size_t>(kv_head) * cache_capacity + cache_position) * 256
+                            + dimension;
                         packed = *reinterpret_cast<const uint4*>(key_cache + cache_index);
                     }
                     const std::uint32_t fragment = (i % 16) ^ (position & 7);
@@ -3344,6 +3357,30 @@ __launch_bounds__(256, 1) __global__ void qwen35_kq_fragment_reuse_attention_bat
                         acc[r][1] = __hfma2(v23, weight, acc[r][1]);
                         acc[r][2] = __hfma2(v45, weight, acc[r][2]);
                         acc[r][3] = __hfma2(v67, weight, acc[r][3]);
+                    }
+                }
+            }
+            if constexpr (PREFETCH_K) {
+                if (v_tile == 0) {
+                    key_is_prefetched = tile_start + kTileK < work_end;
+                    if (key_is_prefetched) {
+                        const std::uint32_t next_tile = tile_start + kTileK;
+                        for (std::uint32_t d_base = 0; d_base < 256; d_base += 128) {
+                            for (std::uint32_t iteration = 0; iteration < 2; ++iteration) {
+                                const std::uint32_t i = tid + iteration * 256;
+                                const std::uint32_t position = i / 16;
+                                const std::uint32_t dimension = d_base + (i % 16) * 8;
+                                const std::uint32_t cache_position = next_tile + position;
+                                uint4 packed = make_uint4(0, 0, 0, 0);
+                                if (cache_position < work_end && cache_position < cache_capacity) {
+                                    const std::size_t cache_index =
+                                        (static_cast<std::size_t>(kv_head) * cache_capacity + cache_position) * 256
+                                        + dimension;
+                                    packed = *reinterpret_cast<const uint4*>(key_cache + cache_index);
+                                }
+                                prefetched_k[(d_base / 128) * 2 + iteration] = packed;
+                            }
+                        }
                     }
                 }
             }
@@ -5687,11 +5724,27 @@ void launch_qwen35_kq_fragment_reuse_attention_batch_f16(
     const std::uint32_t blocks = (token_count + 15) / 16;
     const std::size_t shared_bytes = 32 * 256 * sizeof(__half)
         + 32 * 128 * sizeof(__half) + 32 * 32 * sizeof(__half) + 3 * 32 * sizeof(float);
-    hipLaunchKernelGGL((qwen35_kq_fragment_reuse_attention_batch_kernel<false, false, false>),
-        dim3(blocks, num_splits, groups), dim3(32, 8), shared_bytes, stream,
-        q, key_cache, value_cache, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-        split_workspace, token_count,
-        base_position, cache_capacity, num_splits, scale, nullptr);
+    static const bool prefetch_k = [] {
+        const char* value = std::getenv("MIINFER_M31_V2_0043_K_PREFETCH");
+        return value != nullptr && std::strcmp(value, "0") != 0;
+    }();
+    if (prefetch_k) {
+        std::fprintf(stderr,
+            "miinfer_m31_v2_0043_k_prefetch=enabled base_position=%u token_count=%u\n",
+            base_position, token_count);
+        hipLaunchKernelGGL((qwen35_kq_fragment_reuse_attention_batch_kernel<false, false, false,
+            false, false, true>),
+            dim3(blocks, num_splits, groups), dim3(32, 8), shared_bytes, stream,
+            q, key_cache, value_cache, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+            split_workspace, token_count,
+            base_position, cache_capacity, num_splits, scale, nullptr);
+    } else {
+        hipLaunchKernelGGL((qwen35_kq_fragment_reuse_attention_batch_kernel<false, false, false>),
+            dim3(blocks, num_splits, groups), dim3(32, 8), shared_bytes, stream,
+            q, key_cache, value_cache, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+            split_workspace, token_count,
+            base_position, cache_capacity, num_splits, scale, nullptr);
+    }
     MIINFER_HIP_CHECK(hipGetLastError());
     hipLaunchKernelGGL(qwen35_splitk_suffix_attn_stage2_kernel,
         dim3(token_count * query_heads), dim3(64), 0, stream,
