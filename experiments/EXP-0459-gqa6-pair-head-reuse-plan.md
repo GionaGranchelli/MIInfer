@@ -75,3 +75,19 @@ pairwise16 reduction (EXP-0432), parallel CTA K/V staging (EXP-0429), a
 cross-token tile (EXP-0425/0427), or changed online-softmax association
 (EXP-0458). It reassigns the 64 lanes so one Wave64 shares each loaded K/V
 fragment across a query-head pair.
+
+## Result: reject
+
+The candidate compiled for gfx906 with 81 VGPR, 44 SGPR and no spills. On
+GPU2/BDF `0000:88:00.0`, the restored session reached 74,123 tokens and the
+HIP Graph trace confirmed pair-head dispatch on all 16 attention layers.
+The matched 1,024-token suffix took 22.239 s on packed-U128 GQA6 and 31.537 s
+on pair-head reuse: the candidate was 1.42x slower. Both outputs were finite
+and the checked generated tokens matched, but final logits and recurrent
+state were not exact (`logits_max_abs=0.643235207`,
+`logits_cosine=0.999692678`). The screen checked only generated-token
+agreement, not a coding task, so it establishes no task-correctness result.
+
+Reject this lane remapping. Do not repeat the suffix run or proceed to cold
+64K with it. Raw run and telemetry are preserved on Machinist under
+`/home/machinist/m31-gqa6-longctx-results/EXP-0459-pair-head-reuse-gpu2/`.
