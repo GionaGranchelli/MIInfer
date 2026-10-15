@@ -451,7 +451,6 @@ void PrefillV2AttentionLayer::forward(
                 ws.gate, ws.attn_gated_output, ws.splitk_attn_workspace,
                 token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
                 24, 4, 256, 1.0F / std::sqrt(256.0F), 32, stream, prefill_state);
-            breakdown.used_q8_gqa6_production_arithmetic = true;
         } else {
         if ((packed_lds || direct_global) && std::getenv("MIINFER_M31_TRACE_ATTENTION_ROUTE") != nullptr) {
             std::cerr << "miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=" << packed_lds_128
