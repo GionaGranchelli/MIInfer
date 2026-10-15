@@ -69,7 +69,9 @@ that row's own original `[k_start,k_end)`.
   error stops the work.
 - **Runtime correctness:** correct route observed in all 16 layers, finite
   full logits/state, logit max-abs <= 0.01 and cosine >= 0.9999, recurrent
-  state max-abs <= 0.01, checked generated tokens recorded.
+  state max-abs <= 0.01 and cosine >= 0.9999, checked generated tokens
+  recorded. Exact logit/state equality is diagnostic, since the tiled
+  FP32-softmax association differs from the production sequence.
 - **Performance:** one same-GPU2 direct-global/candidate pair on the restored
   suffix. Candidate must pass numerical gate and reduce suffix time by >=10%
   before any repeat or cold-64K run.
@@ -79,3 +81,11 @@ that row's own original `[k_start,k_end)`.
 
 Pending implementation and gates. Revert code on resource, oracle, runtime
 numerical, or performance failure; retain the report and raw evidence.
+
+## Harness
+
+The restored-session pair mode adds `MIINFER_M31_Q8_GQA6_FLASH_TILE_PAIR=1`.
+It explicitly uses direct-global GQA6 for the control and toggles only the
+flash-tile selector for the candidate. It emits per-layer route traces,
+compares complete logits and recurrent state with the numeric bounds above,
+and records exact equality and generated-token agreement as diagnostics.

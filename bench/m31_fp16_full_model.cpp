@@ -245,6 +245,40 @@ bool compare_results(const Result& control, const Result& candidate, int pair) {
     return finite && std::isfinite(cosine) && cosine >= 0.9999 && first_equal && second_equal;
 }
 
+bool compare_flash_tile_results(const Result& control, const Result& candidate, int pair) {
+    struct Metrics { double max_abs; double cosine; bool finite; bool same_size; };
+    const auto measure = [](const std::vector<float>& a, const std::vector<float>& b) {
+        Metrics m{0.0, 1.0, true, a.size() == b.size()};
+        if (!m.same_size) return m;
+        double dot = 0.0, norm_a = 0.0, norm_b = 0.0;
+        for (std::size_t i = 0; i < a.size(); ++i) {
+            m.finite = m.finite && std::isfinite(a[i]) && std::isfinite(b[i]);
+            m.max_abs = std::max(m.max_abs, std::abs(static_cast<double>(a[i]) - b[i]));
+            dot += static_cast<double>(a[i]) * b[i];
+            norm_a += static_cast<double>(a[i]) * a[i];
+            norm_b += static_cast<double>(b[i]) * b[i];
+        }
+        m.cosine = dot / (std::sqrt(norm_a * norm_b) + 1e-30);
+        return m;
+    };
+    const Metrics logits = measure(control.logits, candidate.logits);
+    const Metrics state = measure(control.recurrent_state_trace, candidate.recurrent_state_trace);
+    const bool tokens_equal = control.top1 == candidate.top1
+        && control.second_token == candidate.second_token;
+    const bool logits_exact = control.logits == candidate.logits;
+    const bool state_exact = control.recurrent_state_trace == candidate.recurrent_state_trace;
+    const bool pass = logits.same_size && state.same_size && logits.finite && state.finite
+        && logits.max_abs <= 0.01 && logits.cosine >= 0.9999
+        && state.max_abs <= 0.01 && state.cosine >= 0.9999 && tokens_equal;
+    std::cout << std::setprecision(9) << "flash_tile_pair=" << pair
+              << " logits_max_abs=" << logits.max_abs << " logits_cosine=" << logits.cosine
+              << " state_max_abs=" << state.max_abs << " state_cosine=" << state.cosine
+              << " logits_exact=" << logits_exact << " state_exact=" << state_exact
+              << " tokens_equal=" << tokens_equal << " finite=" << (logits.finite && state.finite)
+              << " numeric_pass=" << pass << '\n';
+    return pass;
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -458,10 +492,14 @@ int main(int argc, char** argv) {
             const char* wide128_pair_env = std::getenv("MIINFER_M31_Q8_GQA6_PACKED_LDS128_PAIR");
             const char* paired_token_env = std::getenv("MIINFER_M31_Q8_GQA6_PAIRED_TOKEN_PAIR");
             const char* direct_global_env = std::getenv("MIINFER_M31_Q8_GQA6_DIRECT_GLOBAL_PAIR");
+            const char* flash_tile_env = std::getenv("MIINFER_M31_Q8_GQA6_FLASH_TILE_PAIR");
             const bool wide128_pair = wide128_pair_env != nullptr && std::strcmp(wide128_pair_env, "0") != 0;
             const bool paired_token_pair = paired_token_env != nullptr && std::strcmp(paired_token_env, "0") != 0;
             const bool direct_global_pair = direct_global_env != nullptr && std::strcmp(direct_global_env, "0") != 0;
+            const bool flash_tile_pair = flash_tile_env != nullptr && std::strcmp(flash_tile_env, "0") != 0;
+            const bool direct_global_control = dpp_pair || direct_global_pair || flash_tile_pair;
             const bool packed_pair = dpp_pair || wide128_pair || paired_token_pair || direct_global_pair
+                || flash_tile_pair
                 || (packed_env != nullptr && std::strcmp(packed_env, "0") != 0);
             const char* reps_env = std::getenv("MIINFER_M31_Q8_GQA6_PAIR_REPS");
             char* reps_end = nullptr;
@@ -484,23 +522,28 @@ int main(int argc, char** argv) {
                         (wide128_pair || paired_token_pair || direct_global_pair || dpp_pair) ? "1" : "0", 1) != 0
                     || ::setenv("MIINFER_M31_Q8_GQA6_PROD_ARITH", packed_pair ? "1" : "0", 1) != 0
                     || ::setenv("MIINFER_M31_Q8_GQA6_PAIRED_TOKEN", "0", 1) != 0
-                    || ::setenv("MIINFER_M31_Q8_GQA6_DIRECT_GLOBAL", dpp_pair ? "1" : "0", 1) != 0
-                    || ::setenv("MIINFER_M31_Q8_GQA6_DPP_REDUCE", "0", 1) != 0) return 1;
+                    || ::setenv("MIINFER_M31_Q8_GQA6_DIRECT_GLOBAL",
+                        direct_global_control ? "1" : "0", 1) != 0
+                    || ::setenv("MIINFER_M31_Q8_GQA6_DPP_REDUCE", "0", 1) != 0
+                    || ::setenv("MIINFER_M31_Q8_GQA6_FLASH_TILE", "0", 1) != 0) return 1;
                 const Result control = run_session_graph_mode(model,
-                    dpp_pair ? "q8_gqa6_direct_global_control_session"
+                    direct_global_control ? "q8_gqa6_direct_global_control_session"
                         : (paired_token_pair || direct_global_pair) ? "q8_gqa6_packed_u128_session"
                         : wide128_pair ? "q8_gqa6_packed_u4_u64_session"
                         : packed_pair ? "q8_gqa6_production_arith_session" : "q8_production_session",
                     session_path, suffix, session_capacity);
                 if (::setenv("MIINFER_M31_Q8_GQA6_PROD_ARITH", "1", 1) != 0
-                    || ::setenv("MIINFER_M31_Q8_GQA6_PACKED_LDS", packed_pair ? "1" : "0", 1) != 0
+                    || ::setenv("MIINFER_M31_Q8_GQA6_PACKED_LDS",
+                        packed_pair && !flash_tile_pair ? "1" : "0", 1) != 0
                     || ::setenv("MIINFER_M31_Q8_GQA6_PACKED_LDS128", wide128_pair ? "1" : "0", 1) != 0
                     || ::setenv("MIINFER_M31_Q8_GQA6_PAIRED_TOKEN", paired_token_pair ? "1" : "0", 1) != 0
                     || ::setenv("MIINFER_M31_Q8_GQA6_DIRECT_GLOBAL",
-                        (direct_global_pair || dpp_pair) ? "1" : "0", 1) != 0
-                    || ::setenv("MIINFER_M31_Q8_GQA6_DPP_REDUCE", dpp_pair ? "1" : "0", 1) != 0) return 1;
+                        direct_global_control ? "1" : "0", 1) != 0
+                    || ::setenv("MIINFER_M31_Q8_GQA6_DPP_REDUCE", dpp_pair ? "1" : "0", 1) != 0
+                    || ::setenv("MIINFER_M31_Q8_GQA6_FLASH_TILE", flash_tile_pair ? "1" : "0", 1) != 0) return 1;
                 const Result candidate = run_session_graph_mode(model,
-                    dpp_pair ? "q8_gqa6_dpp_session"
+                    flash_tile_pair ? "q8_gqa6_flash_tile_session"
+                        : dpp_pair ? "q8_gqa6_dpp_session"
                         : direct_global_pair ? "q8_gqa6_direct_global_session"
                         : paired_token_pair ? "q8_gqa6_paired_token_session"
                         : wide128_pair ? "q8_gqa6_packed_u4_u128_session"
@@ -524,20 +567,24 @@ int main(int argc, char** argv) {
                         [](float value) { return std::isfinite(value); });
                 control_times.push_back(control.prefill_seconds);
                 candidate_times.push_back(candidate.prefill_seconds);
-                all_correct = all_correct && logits_exact && state_exact && generated_equal && finite;
+                const bool sample_correct = flash_tile_pair
+                    ? compare_flash_tile_results(control, candidate, static_cast<int>(rep + 1))
+                    : logits_exact && state_exact && generated_equal && finite;
+                all_correct = all_correct && sample_correct;
                 std::cout << "pair_sample=" << (rep + 1)
                           << " session_logits_exact=" << logits_exact
                           << " recurrent_state_trace_exact=" << state_exact
                           << " generated_tokens_equal=" << generated_equal
-                          << " finite=" << finite << '\n';
+                          << " finite=" << finite << " accepted=" << sample_correct << '\n';
             }
             std::cout << std::fixed << std::setprecision(3)
-                      << (dpp_pair ? "q8_gqa6_direct_global_control_median_seconds="
+                      << (flash_tile_pair || dpp_pair ? "q8_gqa6_direct_global_control_median_seconds="
                           : (paired_token_pair || direct_global_pair) ? "q8_gqa6_packed_u128_median_seconds="
                           : wide128_pair ? "q8_gqa6_packed_u4_u64_median_seconds="
                           : packed_pair ? "q8_gqa6_suffix_median_seconds=" : "q8_production_suffix_median_seconds=")
                       << median(control_times)
-                      << (dpp_pair ? " q8_gqa6_dpp_median_seconds="
+                      << (flash_tile_pair ? " q8_gqa6_flash_tile_median_seconds="
+                          : dpp_pair ? " q8_gqa6_dpp_median_seconds="
                           : direct_global_pair ? " q8_gqa6_direct_global_median_seconds="
                           : paired_token_pair ? " q8_gqa6_paired_token_median_seconds="
                           : wide128_pair ? " q8_gqa6_packed_u4_u128_median_seconds="
