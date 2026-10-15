@@ -7610,7 +7610,8 @@ __device__ __forceinline__ float qwen35_gqa6_reduce_qk_dpp(float dot) {
 
 template <bool K_IS_Q8, bool V_IS_Q8, int UNROLL = 4, bool GQA6_SHARED_KV = false,
           bool PACKED_Q8_LDS = false, bool PACKED_Q8_LDS_128 = false,
-          bool GQA6_DIRECT_GLOBAL_Q8 = false, bool GQA6_DPP_REDUCE = false>
+          bool GQA6_DIRECT_GLOBAL_Q8 = false, bool GQA6_DPP_REDUCE = false,
+          bool GQA6_BLOCK_SOFTMAX4 = false>
 __launch_bounds__(GQA6_SHARED_KV ? 192 : 1024, 1)
 __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
     const float* __restrict__ q,
@@ -7632,6 +7633,9 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
     float scale,
     std::uint32_t num_splits,
     const DevicePrefillState* __restrict__ prefill_state) {
+
+    static_assert(!GQA6_BLOCK_SOFTMAX4
+        || (UNROLL == 4 && K_IS_Q8 && V_IS_Q8 && GQA6_DIRECT_GLOBAL_Q8));
 
     if (prefill_state != nullptr) {
         base_position = prefill_state->base_position;
@@ -7862,48 +7866,89 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
             }
         }
 
-        #pragma unroll
-        for (int u = 0; u < UNROLL; ++u) {
-            const float score = scores[u];
-            float alpha = 1.0f;
-            float weight = 0.0f;
-            if (sub_lane == 0) {
-                if (score > running_max) {
-                    alpha = expf(running_max - score);
-                    running_sum = running_sum * alpha + 1.0f;
-                    running_max = score;
-                    weight = 1.0f;
-                } else {
-                    weight = expf(score - running_max);
-                    running_sum += weight;
-                }
+        if constexpr (GQA6_BLOCK_SOFTMAX4) {
+            const float tile_max = fmaxf(fmaxf(scores[0], scores[1]),
+                fmaxf(scores[2], scores[3]));
+            const float old_max = __shfl(running_max, sub_wave * 32, 64);
+            const float new_max = fmaxf(old_max, tile_max);
+            const float alpha = expf(old_max - new_max);
+            float weights[4];
+            #pragma unroll
+            for (int u = 0; u < 4; ++u) {
+                weights[u] = expf(scores[u] - new_max);
             }
-            alpha = __shfl(alpha, sub_wave * 32, 64);
-            weight = __shfl(weight, sub_wave * 32, 64);
+            const float tile_sum = (weights[0] + weights[1])
+                + (weights[2] + weights[3]);
+            if (sub_lane == 0) {
+                running_max = new_max;
+                running_sum = running_sum * alpha + tile_sum;
+            }
 
-            if constexpr (V_IS_Q8) {
-                const float w = weight * v_scales[u];
+            float4 tile_acc0 = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+            float4 tile_acc1 = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+            #pragma unroll
+            for (int u = 0; u < 4; ++u) {
+                const float w = weights[u] * v_scales[u];
                 const auto* vb = reinterpret_cast<const int8_t*>(&v_raw_q8[u]);
-                acc0.x = acc0.x * alpha + w * static_cast<float>(vb[0]);
-                acc0.y = acc0.y * alpha + w * static_cast<float>(vb[1]);
-                acc0.z = acc0.z * alpha + w * static_cast<float>(vb[2]);
-                acc0.w = acc0.w * alpha + w * static_cast<float>(vb[3]);
+                tile_acc0.x += w * static_cast<float>(vb[0]);
+                tile_acc0.y += w * static_cast<float>(vb[1]);
+                tile_acc0.z += w * static_cast<float>(vb[2]);
+                tile_acc0.w += w * static_cast<float>(vb[3]);
+                tile_acc1.x += w * static_cast<float>(vb[4]);
+                tile_acc1.y += w * static_cast<float>(vb[5]);
+                tile_acc1.z += w * static_cast<float>(vb[6]);
+                tile_acc1.w += w * static_cast<float>(vb[7]);
+            }
+            acc0.x = acc0.x * alpha + tile_acc0.x;
+            acc0.y = acc0.y * alpha + tile_acc0.y;
+            acc0.z = acc0.z * alpha + tile_acc0.z;
+            acc0.w = acc0.w * alpha + tile_acc0.w;
+            acc1.x = acc1.x * alpha + tile_acc1.x;
+            acc1.y = acc1.y * alpha + tile_acc1.y;
+            acc1.z = acc1.z * alpha + tile_acc1.z;
+            acc1.w = acc1.w * alpha + tile_acc1.w;
+        } else {
+            #pragma unroll
+            for (int u = 0; u < UNROLL; ++u) {
+                const float score = scores[u];
+                float alpha = 1.0f;
+                float weight = 0.0f;
+                if (sub_lane == 0) {
+                    if (score > running_max) {
+                        alpha = expf(running_max - score);
+                        running_sum = running_sum * alpha + 1.0f;
+                        running_max = score;
+                        weight = 1.0f;
+                    } else {
+                        weight = expf(score - running_max);
+                        running_sum += weight;
+                    }
+                }
+                alpha = __shfl(alpha, sub_wave * 32, 64);
+                weight = __shfl(weight, sub_wave * 32, 64);
 
-                acc1.x = acc1.x * alpha + w * static_cast<float>(vb[4]);
-                acc1.y = acc1.y * alpha + w * static_cast<float>(vb[5]);
-                acc1.z = acc1.z * alpha + w * static_cast<float>(vb[6]);
-                acc1.w = acc1.w * alpha + w * static_cast<float>(vb[7]);
-            } else {
-                const auto* vh = reinterpret_cast<const __half*>(&v_raw_f16[u]);
-                acc0.x = acc0.x * alpha + weight * __half2float(vh[0]);
-                acc0.y = acc0.y * alpha + weight * __half2float(vh[1]);
-                acc0.z = acc0.z * alpha + weight * __half2float(vh[2]);
-                acc0.w = acc0.w * alpha + weight * __half2float(vh[3]);
-
-                acc1.x = acc1.x * alpha + weight * __half2float(vh[4]);
-                acc1.y = acc1.y * alpha + weight * __half2float(vh[5]);
-                acc1.z = acc1.z * alpha + weight * __half2float(vh[6]);
-                acc1.w = acc1.w * alpha + weight * __half2float(vh[7]);
+                if constexpr (V_IS_Q8) {
+                    const float w = weight * v_scales[u];
+                    const auto* vb = reinterpret_cast<const int8_t*>(&v_raw_q8[u]);
+                    acc0.x = acc0.x * alpha + w * static_cast<float>(vb[0]);
+                    acc0.y = acc0.y * alpha + w * static_cast<float>(vb[1]);
+                    acc0.z = acc0.z * alpha + w * static_cast<float>(vb[2]);
+                    acc0.w = acc0.w * alpha + w * static_cast<float>(vb[3]);
+                    acc1.x = acc1.x * alpha + w * static_cast<float>(vb[4]);
+                    acc1.y = acc1.y * alpha + w * static_cast<float>(vb[5]);
+                    acc1.z = acc1.z * alpha + w * static_cast<float>(vb[6]);
+                    acc1.w = acc1.w * alpha + w * static_cast<float>(vb[7]);
+                } else {
+                    const auto* vh = reinterpret_cast<const __half*>(&v_raw_f16[u]);
+                    acc0.x = acc0.x * alpha + weight * __half2float(vh[0]);
+                    acc0.y = acc0.y * alpha + weight * __half2float(vh[1]);
+                    acc0.z = acc0.z * alpha + weight * __half2float(vh[2]);
+                    acc0.w = acc0.w * alpha + weight * __half2float(vh[3]);
+                    acc1.x = acc1.x * alpha + weight * __half2float(vh[4]);
+                    acc1.y = acc1.y * alpha + weight * __half2float(vh[5]);
+                    acc1.z = acc1.z * alpha + weight * __half2float(vh[6]);
+                    acc1.w = acc1.w * alpha + weight * __half2float(vh[7]);
+                }
             }
         }
 
@@ -8349,7 +8394,7 @@ void launch_qwen35_gqa6_production_q8_attention_batch(
     std::uint32_t num_splits, hipStream_t stream,
     const DevicePrefillState* prefill_state,
     float* stage1_ms, float* stage2_ms, bool packed_q8_lds, bool packed_q8_lds_128,
-    bool direct_global_q8, bool dpp_reduce) {
+    bool direct_global_q8, bool dpp_reduce, bool block_softmax4) {
     if (q == nullptr || key_cache_q8 == nullptr || key_scales == nullptr
         || value_cache_q8 == nullptr || value_scales == nullptr || gate == nullptr
         || gated_output == nullptr || split_workspace == nullptr || token_count == 0
@@ -8357,7 +8402,9 @@ void launch_qwen35_gqa6_production_q8_attention_batch(
         || query_heads != 24 || kv_heads != 4 || head_dim != 256
         || !std::isfinite(scale) || num_splits == 0 || num_splits > 64
         || (packed_q8_lds_128 && !packed_q8_lds)
-        || (dpp_reduce && !direct_global_q8)) {
+        || (dpp_reduce && !direct_global_q8)
+        || (block_softmax4 && (!direct_global_q8 || dpp_reduce
+            || packed_q8_lds || packed_q8_lds_128))) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     const std::size_t total_meta = static_cast<std::size_t>(num_splits) * token_count * query_heads;
@@ -8379,6 +8426,12 @@ void launch_qwen35_gqa6_production_q8_attention_batch(
     if (direct_global_q8) {
         if (dpp_reduce) {
             hipLaunchKernelGGL((qwen35_splitk_suffix_attn_stage1_quant_kernel<true, true, 4, true, false, false, true, true>),
+                dim3(token_count, num_splits, kv_heads), dim3(64, 3), 0, stream,
+                q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,
+                partial_max, partial_sum, partial_acc, token_count, base_position, cache_capacity,
+                query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
+        } else if (block_softmax4) {
+            hipLaunchKernelGGL((qwen35_splitk_suffix_attn_stage1_quant_kernel<true, true, 4, true, false, false, true, false, true>),
                 dim3(token_count, num_splits, kv_heads), dim3(64, 3), 0, stream,
                 q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,
                 partial_max, partial_sum, partial_acc, token_count, base_position, cache_capacity,
