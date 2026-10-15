@@ -1,4 +1,4 @@
-# EXP-0471 — GQA6 16-lane Q8 vectorization screen — REJECTED
+# EXP-0471 — GQA6 16-lane Q8 vectorization screen — A/B INVALID
 
 ## Hypothesis
 
@@ -45,10 +45,13 @@ cross-row reuse.
 
 ## Outcome
 
-**Rejected.** The bounded full-model screen produced finite logits and matched
-the top-1 and next generated token, but changed the top-two logit indices and
-was slower. No restored 73K suffix run was made. The opt-in kernel, selector,
-and dispatch plumbing were removed from source after this result.
+**A/B invalid; no schedule conclusion.** The first bounded full-model screen
+used unequal attention routes: the control dispatched direct-global Stage1 112
+times, while the candidate dispatched the dim16 Stage1 128 times. The candidate
+also replaced the cold position-zero tile, while the control retained the
+existing cold path. The measured slowdown and logits difference therefore do
+not isolate the lane mapping. No restored 73K suffix run was made. Candidate
+source was removed pending a corrected, matched rerun.
 
 ## Build and resource gate
 
@@ -88,15 +91,17 @@ and dispatch plumbing were removed from source after this result.
 - Both processes printed `device_bdf=0000:88:00.0`, processed exactly 8,192
   tokens, wrote 248,320 finite logits, and exited 0. Route trace showed 112
   direct-global control dispatches (the cold position-zero tile uses the
-  existing cold path) and 128 dim16 candidate dispatches.
+  existing cold path) and 128 dim16 candidate dispatches (including the cold
+  position-zero tile). This dispatch mismatch invalidates the A/B.
 - Control: 42.887 s prefill, first generated token 11, following token 443.
-- Candidate: 45.628 s prefill, first generated token 11, following token 443;
-  **6.4% slower** than control.
+- Candidate: 45.628 s prefill, first generated token 11, following token 443.
+  The observed 6.4% slowdown is confounded and is not a schedule result.
 - Final-logit comparison: finite on both sides; max absolute difference
   0.9532957; RMS difference 0.1441769; cosine 0.998938424. The top-1 token
   matched at 11 and the next generated token matched at 443. Top-two logit
-  indices changed from `[11, 271]` to `[11, 17044]`. This misses the existing
-  full-model screen (`cosine >= 0.9999`, `max_abs <= 0.01`).
+  indices changed from `[11, 271]` to `[11, 17044]`. This output difference
+  is also confounded by the cold-route mismatch; it must not be used to reject
+  the suffix schedule.
 - GPU2 junction temperature ranged from 32 C to 64 C; no 80 C warning or 85 C
   stop occurred.
 - Raw logs, thermal samples, input hashes, and logits remain on Machinist at
@@ -108,9 +113,10 @@ and dispatch plumbing were removed from source after this result.
 
 ## Decision
 
-The `UNROLL=1` specialization passed compilation and resource limits but was
-slower on the matched 8K workload and failed the established numerical gate.
-Do not run the expensive 73K restored suffix. Keep production attention
-unchanged and remove this candidate from source. This rejects the tested
-16-lane mapping with vectorized loads and ordered-softmax; it does not test all
-possible 16-lane schedules.
+The `UNROLL=1` specialization passed compilation and resource limits. The
+8K experiment does not establish its speed or correctness because the cold
+tile route differed. Reintroduce the opt-in selector only behind the same
+`base_position > 0 || prefill_state != nullptr` guard as production direct
+global. Rebuild and require equal candidate/control route counts before
+accepting another 8K comparison. Do not run the 73K restored suffix unless the
+corrected screen passes numerical and speed gates.
