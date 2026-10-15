@@ -452,6 +452,50 @@ void PrefillV2AttentionLayer::forward(
             nullptr, nullptr, direct_global ? false : packed_lds,
             direct_global ? false : packed_lds_128, direct_global, dpp_reduce,
             block_softmax4);
+        const char* compare_layers_env =
+            std::getenv("MIINFER_M31_Q8_GQA6_BLOCK_COMPARE_LAYERS");
+        if (block_softmax4 && compare_layers_env != nullptr
+            && std::strcmp(compare_layers_env, "0") != 0) {
+            hipStreamCaptureStatus capture_status{};
+            MIINFER_HIP_CHECK(hipStreamIsCapturing(stream, &capture_status));
+            if (capture_status != hipStreamCaptureStatusNone) {
+                throw std::runtime_error("block-softmax layer comparison cannot run during graph capture");
+            }
+            const std::size_t elements = static_cast<std::size_t>(token_count) * 24 * 256;
+            const std::size_t bytes = elements * sizeof(float);
+            MIINFER_HIP_CHECK(hipMemcpyAsync(ws.attn_qfull, ws.attn_gated_output, bytes,
+                                             hipMemcpyDeviceToDevice, stream));
+            launch_qwen35_gqa6_production_q8_attention_batch(
+                ws.attn_q_rope, kv_cache.key_cache_q8, kv_cache.key_scales,
+                kv_cache.value_cache_q8, kv_cache.value_scales,
+                ws.gate, ws.attn_gated_output, ws.splitk_attn_workspace,
+                token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
+                24, 4, 256, 1.0F / std::sqrt(256.0F), 32, stream, prefill_state,
+                nullptr, nullptr, false, false, true, false, false);
+            std::vector<float> candidate_output(elements), control_output(elements);
+            MIINFER_HIP_CHECK(hipMemcpyAsync(candidate_output.data(), ws.attn_qfull, bytes,
+                                             hipMemcpyDeviceToHost, stream));
+            MIINFER_HIP_CHECK(hipMemcpyAsync(control_output.data(), ws.attn_gated_output, bytes,
+                                             hipMemcpyDeviceToHost, stream));
+            MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
+            double max_abs = 0.0, dot = 0.0, candidate_norm = 0.0, control_norm = 0.0;
+            bool finite = true;
+            for (std::size_t i = 0; i < elements; ++i) {
+                finite = finite && std::isfinite(candidate_output[i])
+                    && std::isfinite(control_output[i]);
+                max_abs = std::max(max_abs, std::abs(
+                    static_cast<double>(candidate_output[i]) - control_output[i]));
+                dot += static_cast<double>(candidate_output[i]) * control_output[i];
+                candidate_norm += static_cast<double>(candidate_output[i]) * candidate_output[i];
+                control_norm += static_cast<double>(control_output[i]) * control_output[i];
+            }
+            const double cosine = dot / std::sqrt(candidate_norm * control_norm + 1e-30);
+            std::cerr << "block_softmax4_layer_compare layer=" << layer_index_
+                      << " token_count=" << token_count << " max_abs=" << max_abs
+                      << " cosine=" << cosine << " finite=" << finite << '\n';
+            MIINFER_HIP_CHECK(hipMemcpyAsync(ws.attn_gated_output, ws.attn_qfull, bytes,
+                                             hipMemcpyDeviceToDevice, stream));
+        }
     } else if (m31_q8_gqa6_native_tiled_enabled()
         && (base_position > 0 || prefill_state != nullptr)
         && kv_cache.is_k_q8() && kv_cache.is_v_q8()
