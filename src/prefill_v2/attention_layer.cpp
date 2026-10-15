@@ -428,7 +428,7 @@ void PrefillV2AttentionLayer::forward(
         const char* compare_first_layer =
             std::getenv("MIINFER_M31_Q8_GQA6_FLASH_COMPARE_FIRST_LAYER");
         if (compare_first_layer != nullptr && std::strcmp(compare_first_layer, "0") != 0
-            && layer_index_ == 0) {
+            && layer_index_ == 3) {
             hipStreamCaptureStatus capture_status{};
             MIINFER_HIP_CHECK(hipStreamIsCapturing(stream, &capture_status));
             if (capture_status != hipStreamCaptureStatusNone) {
