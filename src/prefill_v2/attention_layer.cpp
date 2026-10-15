@@ -425,6 +425,48 @@ void PrefillV2AttentionLayer::forward(
             ws.gate, ws.attn_gated_output, ws.splitk_attn_workspace,
             token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
             24, 4, 256, 1.0F / std::sqrt(256.0F), 32, stream, prefill_state);
+        const char* compare_first_layer =
+            std::getenv("MIINFER_M31_Q8_GQA6_FLASH_COMPARE_FIRST_LAYER");
+        if (compare_first_layer != nullptr && std::strcmp(compare_first_layer, "0") != 0
+            && layer_index_ == 0) {
+            hipStreamCaptureStatus capture_status{};
+            MIINFER_HIP_CHECK(hipStreamIsCapturing(stream, &capture_status));
+            if (capture_status != hipStreamCaptureStatusNone) {
+                throw std::runtime_error("first-layer flash comparison cannot run during graph capture");
+            }
+            const std::size_t elements = static_cast<std::size_t>(token_count) * 24 * 256;
+            const std::size_t bytes = elements * sizeof(float);
+            MIINFER_HIP_CHECK(hipMemcpyAsync(ws.attn_qfull, ws.attn_gated_output, bytes,
+                                             hipMemcpyDeviceToDevice, stream));
+            launch_qwen35_gqa6_production_q8_attention_batch(
+                ws.attn_q_rope, kv_cache.key_cache_q8, kv_cache.key_scales,
+                kv_cache.value_cache_q8, kv_cache.value_scales,
+                ws.gate, ws.attn_gated_output, ws.splitk_attn_workspace,
+                token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
+                24, 4, 256, 1.0F / std::sqrt(256.0F), 32, stream, prefill_state,
+                nullptr, nullptr, false, false, true, false);
+            std::vector<float> flash(elements), direct(elements);
+            MIINFER_HIP_CHECK(hipMemcpyAsync(flash.data(), ws.attn_qfull, bytes,
+                                             hipMemcpyDeviceToHost, stream));
+            MIINFER_HIP_CHECK(hipMemcpyAsync(direct.data(), ws.attn_gated_output, bytes,
+                                             hipMemcpyDeviceToHost, stream));
+            MIINFER_HIP_CHECK(hipStreamSynchronize(stream));
+            double max_abs = 0.0, dot = 0.0, flash_norm = 0.0, direct_norm = 0.0;
+            bool finite = true;
+            for (std::size_t i = 0; i < elements; ++i) {
+                finite = finite && std::isfinite(flash[i]) && std::isfinite(direct[i]);
+                max_abs = std::max(max_abs, std::abs(static_cast<double>(flash[i]) - direct[i]));
+                dot += static_cast<double>(flash[i]) * direct[i];
+                flash_norm += static_cast<double>(flash[i]) * flash[i];
+                direct_norm += static_cast<double>(direct[i]) * direct[i];
+            }
+            const double cosine = dot / std::sqrt(flash_norm * direct_norm);
+            std::cerr << "flash_first_attention_output_compare layer=" << layer_index_
+                      << " token_count=" << token_count << " max_abs=" << max_abs
+                      << " cosine=" << cosine << " finite=" << finite << '\n';
+            MIINFER_HIP_CHECK(hipMemcpyAsync(ws.attn_gated_output, ws.attn_qfull, bytes,
+                                             hipMemcpyDeviceToDevice, stream));
+        }
     } else if (m31_q8_gqa6_paired_token_enabled()
         && (base_position > 0 || prefill_state != nullptr)
         && kv_cache.is_k_q8() && kv_cache.is_v_q8()

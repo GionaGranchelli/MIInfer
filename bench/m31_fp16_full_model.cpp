@@ -175,7 +175,11 @@ Result run_session_graph_mode(const miinfer::Qwen35Model& model,
     GenerateOptions options;
     options.max_new_tokens = 1;
     options.reset_state_before = true;
-    options.use_hip_graph = true;
+    const char* compare_first_layer_env =
+        std::getenv("MIINFER_M31_Q8_GQA6_FLASH_COMPARE_FIRST_LAYER");
+    const bool compare_first_layer = compare_first_layer_env != nullptr
+        && std::strcmp(compare_first_layer_env, "0") != 0;
+    options.use_hip_graph = !compare_first_layer;
     options.enable_prefix_reuse = true;
     options.persistent_session_dir = std::filesystem::path(session_path).parent_path().string();
     options.temperature = 0.0F;
@@ -183,12 +187,13 @@ Result run_session_graph_mode(const miinfer::Qwen35Model& model,
     options.repetition_penalty = 1.0F;
     options.stop_token_ids.clear();
     const GenerateStats stats = runtime.generate(prompt, options);
-    const std::uint32_t expected_tiles = static_cast<std::uint32_t>(
-        suffix.size() / kPrefillV2MacroTile);
+    const std::uint32_t expected_tiles = options.use_hip_graph
+        ? static_cast<std::uint32_t>(suffix.size() / kPrefillV2MacroTile)
+        : 0;
     if (!stats.persistent_session_restored || stats.prefix_tokens_reused != prefix.size()
         || stats.suffix_tokens_dispatched != suffix.size()
         || stats.suffix_graph_replay_tiles != expected_tiles
-        || !stats.used_hip_graph
+        || stats.used_hip_graph != options.use_hip_graph
         || stats.generated_tokens.size() != 1) {
         throw std::runtime_error(std::string(label) + " did not restore/replay the expected full suffix tiles");
     }
@@ -219,6 +224,7 @@ Result run_session_graph_mode(const miinfer::Qwen35Model& model,
               << " restored_prefix_tokens=" << stats.prefix_tokens_reused
               << " suffix_tokens=" << stats.suffix_tokens_dispatched
               << " graph_replay_tiles=" << stats.suffix_graph_replay_tiles
+              << " graph_used=" << stats.used_hip_graph
               << " position_after_suffix=" << prompt.size()
               << " first_token=" << result.top1 << " second_token=" << result.second_token << '\n';
     return result;
