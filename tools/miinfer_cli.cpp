@@ -4955,6 +4955,7 @@ int cmd_serve(int argc, char** argv) {
     std::string host = configured("host", "127.0.0.1");
     std::size_t context_length = static_cast<std::size_t>(std::stoull(configured("context", "8192")));
     bool experimental_context = false;
+    bool experimental_q8_gqa6_sparse_window = false;
     bool quantized_kv_cache = false;
     std::optional<std::filesystem::path> api_key_file;
     bool allow_insecure = false;
@@ -4976,6 +4977,8 @@ int cmd_serve(int argc, char** argv) {
             catch (...) { std::cerr << "context must be a positive integer\n"; return 2; }
         } else if (arg == "--experimental-context") {
             experimental_context = true;
+        } else if (arg == "--experimental-m31-q8-gqa6-sparse-window") {
+            experimental_q8_gqa6_sparse_window = true;
         } else if (arg == "--kv-cache-q8") {
             quantized_kv_cache = true;
         } else if (arg == "--verbose") {
@@ -4993,7 +4996,18 @@ int cmd_serve(int argc, char** argv) {
         } else if (model_path.empty() && !arg.starts_with("--")) {
             model_path = arg;
         } else {
-            std::cerr << "usage: miinfer serve --model MODEL.gguf [--port PORT] [--host HOST] [--context N] [--experimental-context] [--kv-cache-q8] [--api-key-file PATH] [--allow-insecure] [--session-reuse|--no-session-reuse] [--session-dir PATH]\n"; return 2;
+            std::cerr << "usage: miinfer serve --model MODEL.gguf [--port PORT] [--host HOST] [--context N] [--experimental-context] [--kv-cache-q8] [--experimental-m31-q8-gqa6-sparse-window] [--api-key-file PATH] [--allow-insecure] [--session-reuse|--no-session-reuse] [--session-dir PATH]\n"; return 2;
+        }
+    }
+    if (experimental_q8_gqa6_sparse_window) {
+        if (!quantized_kv_cache) {
+            std::cerr << "--experimental-m31-q8-gqa6-sparse-window requires --kv-cache-q8\n";
+            return 2;
+        }
+        if (::setenv("MIINFER_M31_Q8_GQA6_SPARSE_WINDOW", "1", 1) != 0
+            || ::setenv("MIINFER_M31_TRACE_ATTENTION_ROUTE", "1", 1) != 0) {
+            std::cerr << "unable to enable experimental GQA6 sparse-window attention\n";
+            return 1;
         }
     }
     if (model_path.empty()) { std::cerr << "missing model; use --model MODEL.gguf\n"; return 2; }
@@ -5920,7 +5934,7 @@ void print_command_help(std::string_view command) {
     else if (command == "inspect") std::cout << "Usage: miinfer inspect MODEL [--json] [--verbose]\nInspect a local GGUF model and its production compatibility.\n";
     else if (command == "run") std::cout << "Usage: miinfer run MODEL [PROMPT] [options]\n\nOptions:\n  -p, --prompt TEXT      Prompt text\n  -n, --max-tokens N     Maximum generated tokens (default 4096, context-limited)\n      --context N        Context capacity (default from config)\n      --temperature N    Sampling temperature (default 0.7; 0 is greedy)\n      --top-p N           Nucleus sampling (default 0.9)\n      --top-k N           Top-k sampling (default 40)\n      --seed N            Reproducible sampling seed\n      --no-stream         Buffer output until generation completes\n      --verbose           Show model/runtime diagnostics\n      --stats             Print timing summary\n\nIf PROMPT is omitted, read it from standard input.\n";
     else if (command == "chat") std::cout << "Usage: miinfer chat [MODEL] [--context N] [--max-tokens N (default 4096, context-limited)] [--stats]\nStart a multi-turn terminal conversation. Type /exit or /quit to leave.\n";
-    else if (command == "serve") std::cout << "Usage: miinfer serve [MODEL] [--host HOST] [--port PORT] [--context N] [--api-key-file PATH] [--verbose]\nStart the OpenAI-compatible API and bundled web UI (localhost:8080 by default).\n";
+    else if (command == "serve") std::cout << "Usage: miinfer serve [MODEL] [--host HOST] [--port PORT] [--context N] [--api-key-file PATH] [--verbose] [--experimental-m31-q8-gqa6-sparse-window --kv-cache-q8]\nStart the OpenAI-compatible API and bundled web UI (localhost:8080 by default).\n";
     else if (command == "config") std::cout << "Usage: miinfer config [--json]\n       miinfer config set KEY VALUE\nStable keys: model-dir, default-model, host, port, context, api-key-file.\n";
     else std::cout << "Usage: miinfer models [DIRECTORY]\n";
 }
