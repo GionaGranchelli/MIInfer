@@ -1,6 +1,7 @@
 #include "miinfer/prefill_v2/attention_layer.hpp"
 #include "miinfer/hip_check.hpp"
 #include "miinfer/kquant_wave_layout.hpp"
+#include "miinfer/gqa6_sparse_window.hpp"
 #include "miinfer/qwen3_gpu_primitives.hpp"
 
 #include <hip/hip_runtime.h>
@@ -37,6 +38,11 @@ bool m31_q8_gqa6_native_tiled_enabled() {
 
 bool m31_q8_gqa6_production_arith_enabled() {
     const char* value = std::getenv("MIINFER_M31_Q8_GQA6_PROD_ARITH");
+    return value != nullptr && std::strcmp(value, "0") != 0;
+}
+
+bool m31_q8_gqa6_sparse_window_enabled() {
+    const char* value = std::getenv("MIINFER_M31_Q8_GQA6_SPARSE_WINDOW");
     return value != nullptr && std::strcmp(value, "0") != 0;
 }
 
@@ -426,6 +432,23 @@ void PrefillV2AttentionLayer::forward(
                 ws.attn_q_rope, ws.attn_gated_output, ws.attn_qfull,
                 static_cast<std::size_t>(token_count) * 24 * 256, stream);
         }
+    } else if (m31_q8_gqa6_sparse_window_enabled()
+        && (base_position > 0 || prefill_state != nullptr)
+        && kv_cache.is_k_q8() && kv_cache.is_v_q8()
+        && ws.splitk_attn_workspace != nullptr) {
+        if (std::getenv("MIINFER_M31_TRACE_ATTENTION_ROUTE") != nullptr) {
+            std::cerr << "miinfer_q8_gqa6_sparse_window_dispatch=1 graph_state="
+                      << (prefill_state != nullptr) << " token_count=" << token_count
+                      << " window=" << kGqa6SparseWindow << " anchor_stride="
+                      << kGqa6SparseAnchorStride << '\n';
+        }
+        launch_qwen35_gqa6_production_q8_attention_batch(
+            ws.attn_q_rope, kv_cache.key_cache_q8, kv_cache.key_scales,
+            kv_cache.value_cache_q8, kv_cache.value_scales,
+            ws.gate, ws.attn_gated_output, ws.splitk_attn_workspace,
+            token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
+            24, 4, 256, 1.0F / std::sqrt(256.0F), 32, stream, prefill_state,
+            nullptr, nullptr, false, false, true, false, false, false, false, true);
     } else if (m31_q8_gqa6_paired_token_enabled()
         && (base_position > 0 || prefill_state != nullptr)
         && kv_cache.is_k_q8() && kv_cache.is_v_q8()
@@ -716,6 +739,24 @@ void PrefillV2AttentionLayer::forward_profiled(
                 token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
                 24, 4, 256, 1.0F / std::sqrt(256.0F), 3, stream);
         }
+    } else if (m31_q8_gqa6_sparse_window_enabled() && base_position > 0
+        && kv_cache.is_k_q8() && kv_cache.is_v_q8()
+        && ws.splitk_attn_workspace != nullptr) {
+        float stage1_ms = 0.0F, stage2_ms = 0.0F;
+        launch_qwen35_gqa6_production_q8_attention_batch(
+            ws.attn_q_rope, kv_cache.key_cache_q8, kv_cache.key_scales,
+            kv_cache.value_cache_q8, kv_cache.value_scales,
+            ws.gate, ws.attn_gated_output, ws.splitk_attn_workspace,
+            token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
+            24, 4, 256, 1.0F / std::sqrt(256.0F), 32, stream, nullptr,
+            &stage1_ms, &stage2_ms, false, false, true, false, false, false, false, true);
+        if (std::getenv("MIINFER_M31_TRACE_ATTENTION_ROUTE") != nullptr) {
+            std::cerr << "miinfer_q8_gqa6_sparse_window_profile_dispatch=1 graph_state=0 token_count="
+                      << token_count << " window=" << kGqa6SparseWindow
+                      << " anchor_stride=" << kGqa6SparseAnchorStride << '\n';
+        }
+        breakdown.causal_attn_stage1_ms = stage1_ms;
+        breakdown.causal_attn_stage2_ms = stage2_ms;
     } else if (m31_q8_gqa6_paired_token_enabled() && base_position > 0
         && kv_cache.is_k_q8() && kv_cache.is_v_q8()
         && ws.splitk_attn_workspace != nullptr) {

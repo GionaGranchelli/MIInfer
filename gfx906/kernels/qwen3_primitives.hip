@@ -1,5 +1,6 @@
 #include "miinfer/qwen3_gpu_primitives.hpp"
 #include "miinfer/q4_q8_gemv.hpp"
+#include "miinfer/gqa6_sparse_window.hpp"
 
 #include "miinfer/hip_check.hpp"
 
@@ -7612,7 +7613,7 @@ template <bool K_IS_Q8, bool V_IS_Q8, int UNROLL = 4, bool GQA6_SHARED_KV = fals
           bool PACKED_Q8_LDS = false, bool PACKED_Q8_LDS_128 = false,
           bool GQA6_DIRECT_GLOBAL_Q8 = false, bool GQA6_DPP_REDUCE = false,
           bool GQA6_BLOCK_SOFTMAX4 = false, bool GQA6_WAVE64_KV_BROADCAST = false,
-          bool GQA6_DUAL_KEY_WAVE64 = false>
+          bool GQA6_DUAL_KEY_WAVE64 = false, bool GQA6_SPARSE_WINDOW = false>
 __launch_bounds__(GQA6_DUAL_KEY_WAVE64 ? 384 : (GQA6_SHARED_KV ? 192 : 1024), 1)
 __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
     const float* __restrict__ q,
@@ -7671,9 +7672,11 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
     const std::uint32_t total_length = base_position + token + 1;
     if (total_length > cache_capacity) return;
 
-    const std::uint32_t chunk_size = (total_length + num_splits - 1) / num_splits;
+    const std::uint32_t key_count = GQA6_SPARSE_WINDOW
+        ? gqa6_sparse_key_count(total_length) : total_length;
+    const std::uint32_t chunk_size = (key_count + num_splits - 1) / num_splits;
     const std::uint32_t k_start = split_id * chunk_size;
-    const std::uint32_t k_end = min(k_start + chunk_size, total_length);
+    const std::uint32_t k_end = min(k_start + chunk_size, key_count);
 
     const std::size_t split_head_idx =
         (static_cast<std::size_t>(split_id) * token_count + token) * query_heads + head;
@@ -7813,7 +7816,7 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
         return;
     }
 
-    if (k_start >= total_length) {
+    if (k_start >= key_count) {
         if (sub_lane == 0) {
             partial_max[split_head_idx] = -INFINITY;
             partial_sum[split_head_idx] = 0.0f;
@@ -7852,15 +7855,19 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
     const __half* v_scale_ptr = nullptr;
 
     if constexpr (K_IS_Q8) {
-        k_q8_ptr = key_cache_q8 + kv_base + static_cast<std::size_t>(k_start) * head_dim + dim_offset;
-        k_scale_ptr = key_scales + static_cast<std::size_t>(kv_head) * cache_capacity + k_start;
+        k_q8_ptr = key_cache_q8 + kv_base + (GQA6_SPARSE_WINDOW ? 0
+            : static_cast<std::size_t>(k_start) * head_dim) + dim_offset;
+        k_scale_ptr = key_scales + static_cast<std::size_t>(kv_head) * cache_capacity
+            + (GQA6_SPARSE_WINDOW ? 0 : k_start);
     } else {
         k_f16_ptr = key_cache_f16 + kv_base + static_cast<std::size_t>(k_start) * head_dim + dim_offset;
     }
 
     if constexpr (V_IS_Q8) {
-        v_q8_ptr = value_cache_q8 + kv_base + static_cast<std::size_t>(k_start) * head_dim + dim_offset;
-        v_scale_ptr = value_scales + static_cast<std::size_t>(kv_head) * cache_capacity + k_start;
+        v_q8_ptr = value_cache_q8 + kv_base + (GQA6_SPARSE_WINDOW ? 0
+            : static_cast<std::size_t>(k_start) * head_dim) + dim_offset;
+        v_scale_ptr = value_scales + static_cast<std::size_t>(kv_head) * cache_capacity
+            + (GQA6_SPARSE_WINDOW ? 0 : k_start);
     } else {
         v_f16_ptr = value_cache_f16 + kv_base + static_cast<std::size_t>(k_start) * head_dim + dim_offset;
     }
@@ -7868,6 +7875,14 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
     std::uint32_t pos = k_start;
 
     for (; pos + UNROLL <= k_end; pos += UNROLL) {
+        const std::uint32_t key_pos = GQA6_SPARSE_WINDOW
+            ? gqa6_sparse_key_at(total_length, pos) : pos;
+        if constexpr (GQA6_SPARSE_WINDOW) {
+            k_q8_ptr = key_cache_q8 + kv_base + static_cast<std::size_t>(key_pos) * head_dim + dim_offset;
+            k_scale_ptr = key_scales + static_cast<std::size_t>(kv_head) * cache_capacity + key_pos;
+            v_q8_ptr = value_cache_q8 + kv_base + static_cast<std::size_t>(key_pos) * head_dim + dim_offset;
+            v_scale_ptr = value_scales + static_cast<std::size_t>(kv_head) * cache_capacity + key_pos;
+        }
         if constexpr (GQA6_SHARED_KV && !GQA6_DIRECT_GLOBAL_Q8) {
             const std::uint32_t cta_tid = threadIdx.y * 64 + lane;
             if constexpr (PACKED_Q8_LDS_128 && K_IS_Q8 && V_IS_Q8) {
@@ -7960,7 +7975,7 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
         if constexpr (K_IS_Q8) {
             if (sub_lane == 0) {
                 const auto* s_ptr = GQA6_SHARED_KV && !GQA6_DIRECT_GLOBAL_Q8
-                    ? shared_key_scales : k_scale_ptr + (pos - k_start);
+                    ? shared_key_scales : k_scale_ptr + (GQA6_SPARSE_WINDOW ? 0 : pos - k_start);
                 #pragma unroll
                 for (int u = 0; u < UNROLL; ++u) {
                     k_scales[u] = __half2float(s_ptr[u]);
@@ -7975,7 +7990,7 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
         if constexpr (V_IS_Q8) {
             if (sub_lane == 0) {
                 const auto* s_ptr = GQA6_SHARED_KV && !GQA6_DIRECT_GLOBAL_Q8
-                    ? shared_value_scales : v_scale_ptr + (pos - k_start);
+                    ? shared_value_scales : v_scale_ptr + (GQA6_SPARSE_WINDOW ? 0 : pos - k_start);
                 #pragma unroll
                 for (int u = 0; u < UNROLL; ++u) {
                     v_scales[u] = __half2float(s_ptr[u]);
@@ -8763,7 +8778,7 @@ void launch_qwen35_gqa6_production_q8_attention_batch(
     const DevicePrefillState* prefill_state,
     float* stage1_ms, float* stage2_ms, bool packed_q8_lds, bool packed_q8_lds_128,
     bool direct_global_q8, bool dpp_reduce, bool block_softmax4,
-    bool wave64_kv_broadcast, bool dual_key_wave64) {
+    bool wave64_kv_broadcast, bool dual_key_wave64, bool sparse_window) {
     if (q == nullptr || key_cache_q8 == nullptr || key_scales == nullptr
         || value_cache_q8 == nullptr || value_scales == nullptr || gate == nullptr
         || gated_output == nullptr || split_workspace == nullptr || token_count == 0
@@ -8776,6 +8791,9 @@ void launch_qwen35_gqa6_production_q8_attention_batch(
         || (dual_key_wave64 && (!direct_global_q8 || dpp_reduce || block_softmax4
             || wave64_kv_broadcast || packed_q8_lds || packed_q8_lds_128))
         || (block_softmax4 && (!direct_global_q8 || dpp_reduce
+            || packed_q8_lds || packed_q8_lds_128))
+        || (sparse_window && (!direct_global_q8
+            || dpp_reduce || block_softmax4 || wave64_kv_broadcast || dual_key_wave64
             || packed_q8_lds || packed_q8_lds_128))) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
@@ -8796,7 +8814,13 @@ void launch_qwen35_gqa6_production_q8_attention_batch(
         MIINFER_HIP_CHECK(hipEventRecord(stage_start, stream));
     }
     if (direct_global_q8) {
-        if (dual_key_wave64) {
+        if (sparse_window) {
+            hipLaunchKernelGGL((qwen35_splitk_suffix_attn_stage1_quant_kernel<true, true, 1, true, false, false, true, false, false, false, false, true>),
+                dim3(token_count, num_splits, kv_heads), dim3(64, 3), 0, stream,
+                q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,
+                partial_max, partial_sum, partial_acc, token_count, base_position, cache_capacity,
+                query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
+        } else if (dual_key_wave64) {
             hipLaunchKernelGGL((qwen35_splitk_suffix_attn_stage1_quant_kernel<true, true, 4, true, false, false, true, false, false, false, true>),
                 dim3(token_count, num_splits, kv_heads), dim3(64, 6), 0, stream,
                 q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,
