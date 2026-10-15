@@ -49,4 +49,22 @@ L2-hot, VALU-heavy schedule.
 
 ## Result
 
-Pending compiler/resource gate.
+Rejected at the compiler/resource gate; no GPU run was made. The candidate
+code object reports 59 VGPR, 50 SGPR, zero VGPR/SGPR spills, zero private
+bytes, zero LDS bytes, maximum workgroup 192, and wave64. The exact
+direct-global control specialization in the same object reports 60 VGPR and
+the same SGPR, spill, private, LDS, workgroup, and wave values. Saving one
+VGPR is too small to justify this candidate.
+
+ISA inspection confirms the key schedule risk. After the current alpha update
+at `0xC66C4`, the deferred V row load issues at `0xC66EC`; only two
+`ds_bpermute` instructions and scale-address setup precede its scale load at
+`0xC6718`. `s_waitcnt vmcnt(0)` at `0xC6720` immediately precedes V conversion
+at `0xC6724` and V `ds_bpermute` at `0xC672C`. The VMEM wait therefore blocks
+V consumption on the ordered recurrence, with no QK or softmax work hiding
+it. The candidate is rejected on this schedule risk as well as its negligible
+VGPR reduction. The same-GPU2 kill screen, 64K run, and performance claim are
+not applicable.
+
+The opt-in specialization remains available for inspection on the experiment
+branch, but this result does not recommend enabling it.
