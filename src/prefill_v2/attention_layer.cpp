@@ -734,7 +734,7 @@ void PrefillV2AttentionLayer::forward_profiled(
             breakdown.causal_attn_stage1_ms = stage1_ms;
             breakdown.causal_attn_stage2_ms = stage2_ms;
             breakdown.used_q8_gqa6_production_arithmetic = true;
-        }
+        } else {
         const bool packed_lds = m31_q8_gqa6_packed_lds_enabled();
         const bool packed_lds_128 = m31_q8_gqa6_packed_lds_128_enabled();
         const bool direct_global = m31_q8_gqa6_direct_global_enabled();
@@ -756,6 +756,7 @@ void PrefillV2AttentionLayer::forward_profiled(
         breakdown.causal_attn_stage1_ms = stage1_ms;
         breakdown.causal_attn_stage2_ms = stage2_ms;
         breakdown.used_q8_gqa6_production_arithmetic = true;
+        }
     } else if (m31_q8_dot4_attention_enabled() && base_position > 0
         && kv_cache.is_k_q8() && kv_cache.is_v_q8()
         && token_count >= 16 && token_count % 16 == 0
