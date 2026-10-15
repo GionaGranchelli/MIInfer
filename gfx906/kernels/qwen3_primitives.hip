@@ -8550,10 +8550,11 @@ __launch_bounds__(192, 1) __global__ void qwen35_gqa6_pair_token_q8_stage1_kerne
 
     const std::size_t kv_base = static_cast<std::size_t>(kv_head) * cache_capacity * 256;
     extern __shared__ unsigned char shared[];
+    constexpr std::uint32_t kKeyTile = 32;
     auto* shared_key = reinterpret_cast<int8_t*>(shared);
-    auto* shared_value = shared_key + 4 * 256;
-    auto* shared_key_scales = reinterpret_cast<__half*>(shared_value + 4 * 256);
-    auto* shared_value_scales = shared_key_scales + 4;
+    auto* shared_value = shared_key + kKeyTile * 256;
+    auto* shared_key_scales = reinterpret_cast<__half*>(shared_value + kKeyTile * 256);
+    auto* shared_value_scales = shared_key_scales + kKeyTile;
     const std::uint32_t cta_tid = threadIdx.y * 64 + lane;
 
     if (!row0_active && !row1_active) {
@@ -8578,24 +8579,23 @@ __launch_bounds__(192, 1) __global__ void qwen35_gqa6_pair_token_q8_stage1_kerne
         ? min(starts[0], starts[1]) : (row0_active ? starts[0] : starts[1]);
     const std::uint32_t union_end = row0_active && row1_active
         ? max(ends[0], ends[1]) : (row0_active ? ends[0] : ends[1]);
-    const std::uint32_t full_end = union_start + ((union_end - union_start) / 4) * 4;
-    for (std::uint32_t pos = union_start; pos < full_end; pos += 4) {
-        constexpr std::uint32_t packed_vectors = 4 * 256 / sizeof(uint4);
+    const std::uint32_t full_end = union_start + ((union_end - union_start) / kKeyTile) * kKeyTile;
+    for (std::uint32_t pos = union_start; pos < full_end; pos += kKeyTile) {
+        constexpr std::uint32_t packed_vectors = kKeyTile * 256 / sizeof(uint4);
         const auto* key_vectors = reinterpret_cast<const uint4*>(key_cache_q8 + kv_base + pos * 256);
         const auto* value_vectors = reinterpret_cast<const uint4*>(value_cache_q8 + kv_base + pos * 256);
-        if (cta_tid < packed_vectors) {
-            *reinterpret_cast<uint4*>(shared_key + cta_tid * sizeof(uint4)) = key_vectors[cta_tid];
-            *reinterpret_cast<uint4*>(shared_value + cta_tid * sizeof(uint4)) = value_vectors[cta_tid];
+        for (std::uint32_t i = cta_tid; i < packed_vectors; i += 192) {
+            *reinterpret_cast<uint4*>(shared_key + i * sizeof(uint4)) = key_vectors[i];
+            *reinterpret_cast<uint4*>(shared_value + i * sizeof(uint4)) = value_vectors[i];
         }
-        if (cta_tid < 4) {
+        if (cta_tid < kKeyTile) {
             const std::size_t scale_index = static_cast<std::size_t>(kv_head) * cache_capacity + pos + cta_tid;
             shared_key_scales[cta_tid] = key_scales[scale_index];
             shared_value_scales[cta_tid] = value_scales[scale_index];
         }
         __syncthreads();
 
-        #pragma unroll
-        for (int u = 0; u < 4; ++u) {
+        for (std::uint32_t u = 0; u < kKeyTile; ++u) {
             const std::uint32_t key_pos = pos + u;
             const uint2 k_raw = *reinterpret_cast<const uint2*>(shared_key + static_cast<std::size_t>(u) * 256 + dim_offset);
             const uint2 v_raw = *reinterpret_cast<const uint2*>(shared_value + static_cast<std::size_t>(u) * 256 + dim_offset);
@@ -8940,8 +8940,8 @@ void launch_qwen35_gqa6_paired_token_q8_attention_batch(
     float* partial_max = split_workspace;
     float* partial_sum = partial_max + total_meta;
     float* partial_acc = partial_sum + total_meta;
-    constexpr std::size_t shared_bytes = 2 * 4 * 256 * sizeof(std::int8_t)
-        + 2 * 4 * sizeof(__half);
+    constexpr std::size_t shared_bytes = 2 * 32 * 256 * sizeof(std::int8_t)
+        + 2 * 32 * sizeof(__half);
     const bool measure_stages = stage1_ms != nullptr && stage2_ms != nullptr;
     hipEvent_t stage_start = nullptr, stage1_done = nullptr, stage2_done = nullptr;
     if ((stage1_ms == nullptr) != (stage2_ms == nullptr)) MIINFER_HIP_CHECK(hipErrorInvalidValue);
