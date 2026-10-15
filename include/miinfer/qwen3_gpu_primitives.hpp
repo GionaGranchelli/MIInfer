@@ -874,15 +874,6 @@ void launch_qwen35_gqa6_production_q8_attention_batch(
     bool packed_q8_lds = false, bool packed_q8_lds_128 = false,
     bool direct_global_q8 = false);
 
-// Exact-order query-row reuse for Q8 GQA6 suffix attention.
-void launch_qwen35_gqa6_row_reuse_q8_attention_batch(
-    const float* q, const std::int8_t* key_cache_q8, const __half* key_scales,
-    const std::int8_t* value_cache_q8, const __half* value_scales,
-    const float* gate, float* gated_output, float* split_workspace, std::uint32_t token_count,
-    std::uint32_t base_position, std::uint32_t cache_capacity,
-    std::uint32_t num_splits, float scale, hipStream_t stream = nullptr,
-    const DevicePrefillState* prefill_state = nullptr);
-
 void launch_qwen35_gqa6_paired_token_q8_attention_batch(
     const float* q, const std::int8_t* key_cache_q8, const __half* key_scales,
     const std::int8_t* value_cache_q8, const __half* value_scales,
