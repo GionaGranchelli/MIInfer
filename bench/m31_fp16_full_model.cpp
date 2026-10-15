@@ -375,7 +375,7 @@ int main(int argc, char** argv) {
             && (session_path.empty() || prompt_file.empty() || fp16_first || fp16_only
                 || q8_only || q8_query_tiled_pair || q8_native_gqa6_pair
                 || static_cast<int>(q8_gqa6_session_pair) + static_cast<int>(q8_gqa6_dpp_session_pair)
-                    + static_cast<int>(q8_gqa6_pair_head_reuse_pair) > 1)) {
+                    + static_cast<int>(q8_gqa6_pair_head_reuse_pair) > 1))) {
         std::cerr << "usage: miinfer-m31-fp16-full-model MODEL.gguf "
                      "[--fp16-first] [--fp16-only] [--q8-only] [--logits-out PATH] "
                      "[--q8-query-tiled-pair] [--q8-native-gqa6-pair] [--q8-gqa6-session-pair] "
@@ -575,7 +575,7 @@ int main(int argc, char** argv) {
                 if (::setenv("MIINFER_M31_Q8_GQA6_BLOCK_SOFTMAX4", block_softmax4_pair ? "1" : "0", 1) != 0
                     || ::setenv("MIINFER_M31_Q8_GQA6_PROD_ARITH", "1", 1) != 0
                     || ::setenv("MIINFER_M31_Q8_GQA6_PACKED_LDS",
-                        (pair_head_reuse_pair || packed_pair && !flash_tile_pair && !block_softmax4_pair) ? "1" : "0", 1) != 0
+                        (pair_head_reuse_pair || (packed_pair && !flash_tile_pair && !block_softmax4_pair)) ? "1" : "0", 1) != 0
                     || ::setenv("MIINFER_M31_Q8_GQA6_PACKED_LDS128",
                         (pair_head_reuse_pair || wide128_pair) ? "1" : "0", 1) != 0
                     || ::setenv("MIINFER_M31_Q8_GQA6_PAIRED_TOKEN", paired_token_pair ? "1" : "0", 1) != 0
