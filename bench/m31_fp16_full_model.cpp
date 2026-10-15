@@ -450,10 +450,12 @@ int main(int argc, char** argv) {
             const char* wide128_pair_env = std::getenv("MIINFER_M31_Q8_GQA6_PACKED_LDS128_PAIR");
             const char* paired_token_env = std::getenv("MIINFER_M31_Q8_GQA6_PAIRED_TOKEN_PAIR");
             const char* direct_global_env = std::getenv("MIINFER_M31_Q8_GQA6_DIRECT_GLOBAL_PAIR");
+            const char* row_reuse_env = std::getenv("MIINFER_M31_Q8_GQA6_ROW_REUSE_PAIR");
             const bool wide128_pair = wide128_pair_env != nullptr && std::strcmp(wide128_pair_env, "0") != 0;
             const bool paired_token_pair = paired_token_env != nullptr && std::strcmp(paired_token_env, "0") != 0;
             const bool direct_global_pair = direct_global_env != nullptr && std::strcmp(direct_global_env, "0") != 0;
-            const bool packed_pair = wide128_pair || paired_token_pair || direct_global_pair
+            const bool row_reuse_pair = row_reuse_env != nullptr && std::strcmp(row_reuse_env, "0") != 0;
+            const bool packed_pair = wide128_pair || paired_token_pair || direct_global_pair || row_reuse_pair
                 || (packed_env != nullptr && std::strcmp(packed_env, "0") != 0);
             const char* reps_env = std::getenv("MIINFER_M31_Q8_GQA6_PAIR_REPS");
             char* reps_end = nullptr;
@@ -470,6 +472,45 @@ int main(int argc, char** argv) {
             std::vector<double> control_times, candidate_times;
             bool all_correct = true;
             for (unsigned long rep = 0; rep < parsed_reps; ++rep) {
+                if (row_reuse_pair) {
+                    if (::setenv("MIINFER_M31_Q8_GQA6_PROD_ARITH", "1", 1) != 0
+                        || ::setenv("MIINFER_M31_Q8_GQA6_PACKED_LDS", "0", 1) != 0
+                        || ::setenv("MIINFER_M31_Q8_GQA6_PACKED_LDS128", "0", 1) != 0
+                        || ::setenv("MIINFER_M31_Q8_GQA6_PAIRED_TOKEN", "0", 1) != 0
+                        || ::setenv("MIINFER_M31_Q8_GQA6_DIRECT_GLOBAL", "1", 1) != 0
+                        || ::setenv("MIINFER_M31_Q8_GQA6_ROW_REUSE", "0", 1) != 0) return 1;
+                    const Result control = run_session_graph_mode(model,
+                        "q8_gqa6_direct_global_session", session_path, suffix, session_capacity);
+                    if (::setenv("MIINFER_M31_Q8_GQA6_DIRECT_GLOBAL", "0", 1) != 0
+                        || ::setenv("MIINFER_M31_Q8_GQA6_ROW_REUSE", "1", 1) != 0) return 1;
+                    const Result candidate = run_session_graph_mode(model,
+                        "q8_gqa6_row_reuse_session", session_path, suffix, session_capacity);
+                    const bool logits_exact = control.logits == candidate.logits;
+                    const bool state_exact = control.recurrent_state_trace == candidate.recurrent_state_trace;
+                    const bool generated_equal = control.top1 == candidate.top1
+                        && control.second_token == candidate.second_token;
+                    const bool finite = std::all_of(control.logits.begin(), control.logits.end(),
+                            [](float value) { return std::isfinite(value); })
+                        && std::all_of(candidate.logits.begin(), candidate.logits.end(),
+                            [](float value) { return std::isfinite(value); })
+                        && std::all_of(control.suffix_hidden.begin(), control.suffix_hidden.end(),
+                            [](float value) { return std::isfinite(value); })
+                        && std::all_of(candidate.suffix_hidden.begin(), candidate.suffix_hidden.end(),
+                            [](float value) { return std::isfinite(value); })
+                        && std::all_of(control.recurrent_state_trace.begin(), control.recurrent_state_trace.end(),
+                            [](float value) { return std::isfinite(value); })
+                        && std::all_of(candidate.recurrent_state_trace.begin(), candidate.recurrent_state_trace.end(),
+                            [](float value) { return std::isfinite(value); });
+                    control_times.push_back(control.prefill_seconds);
+                    candidate_times.push_back(candidate.prefill_seconds);
+                    all_correct = all_correct && logits_exact && state_exact && generated_equal && finite;
+                    std::cout << "pair_sample=" << (rep + 1)
+                              << " session_logits_exact=" << logits_exact
+                              << " recurrent_state_trace_exact=" << state_exact
+                              << " generated_tokens_equal=" << generated_equal
+                              << " finite=" << finite << '\n';
+                    continue;
+                }
                 if (::setenv("MIINFER_M31_Q8_GQA6_PACKED_LDS",
                         (wide128_pair || paired_token_pair || direct_global_pair) ? "1" : "0", 1) != 0
                     || ::setenv("MIINFER_M31_Q8_GQA6_PACKED_LDS128",
@@ -519,11 +560,13 @@ int main(int argc, char** argv) {
                           << " finite=" << finite << '\n';
             }
             std::cout << std::fixed << std::setprecision(3)
-                      << ((paired_token_pair || direct_global_pair) ? "q8_gqa6_packed_u128_median_seconds="
+                      << (row_reuse_pair ? "q8_gqa6_direct_global_median_seconds="
+                          : (paired_token_pair || direct_global_pair) ? "q8_gqa6_packed_u128_median_seconds="
                           : wide128_pair ? "q8_gqa6_packed_u4_u64_median_seconds="
                           : packed_pair ? "q8_gqa6_suffix_median_seconds=" : "q8_production_suffix_median_seconds=")
                       << median(control_times)
-                      << (direct_global_pair ? " q8_gqa6_direct_global_median_seconds="
+                      << (row_reuse_pair ? " q8_gqa6_row_reuse_median_seconds="
+                          : direct_global_pair ? " q8_gqa6_direct_global_median_seconds="
                           : paired_token_pair ? " q8_gqa6_paired_token_median_seconds="
                           : wide128_pair ? " q8_gqa6_packed_u4_u128_median_seconds="
                           : packed_pair ? " q8_gqa6_packed_lds_suffix_median_seconds=" : " q8_gqa6_suffix_median_seconds=")
