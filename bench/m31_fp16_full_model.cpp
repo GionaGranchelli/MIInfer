@@ -176,7 +176,7 @@ Result run_session_graph_mode(const miinfer::Qwen35Model& model,
     options.max_new_tokens = 1;
     options.reset_state_before = true;
     const char* block_compare_env =
-        std::getenv("MIINFER_M31_Q8_GQA6_BLOCK_COMPARE_FIRST_LAYER");
+        std::getenv("MIINFER_M31_Q8_GQA6_BLOCK_COMPARE_LAYERS");
     options.use_hip_graph = block_compare_env == nullptr
         || std::strcmp(block_compare_env, "0") == 0;
     options.enable_prefix_reuse = true;

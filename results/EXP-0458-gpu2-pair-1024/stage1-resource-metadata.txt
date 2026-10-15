@@ -1,0 +1,61 @@
+object_path=/tmp/m31-gqa6-attention-rewrite-v2-gpu2/build/mi50-release/CMakeFiles/miinfer_hip.dir/gfx906/kernels/qwen3_primitives.hip.o.0.hipv4-amdgcn-amd-amdhsa--gfx906
+737a733664e58e752d8b1848e7368b23c2b5efd38538f94394f4966d869c56f4  /tmp/m31-gqa6-attention-rewrite-v2-gpu2/build/mi50-release/CMakeFiles/miinfer_hip.dir/gfx906/kernels/qwen3_primitives.hip.o.0.hipv4-amdgcn-amd-amdhsa--gfx906
+393d8119f4b790df1b5eef53c345d53ce425e54f174f7b2da21abc027be6259e  /tmp/m31-gqa6-attention-rewrite-v2-gpu2/build/mi50-release/miinfer-m31-fp16-full-model
+image_id=50ff28a28cc13a3ca7333cd0c70e322d16245967c5fdf0d30a1bf57bda80a512 repo_digests=["localhost/miinfer-dev@sha256:447907c697fb2c39ce9657401e354a70753d5672ad955d4ceb12de976b91224a","localhost/miinfer-m31-99840@sha256:447907c697fb2c39ce9657401e354a70753d5672ad955d4ceb12de976b91224a"]
+        .size:           4
+        .value_kind:     by_value
+      - .actual_access:  read_only
+        .address_space:  global
+        .offset:         112
+        .size:           8
+        .value_kind:     global_buffer
+    .group_segment_fixed_size: 0
+    .kernarg_segment_align: 8
+    .kernarg_segment_size: 120
+    .language:       OpenCL C
+    .language_version:
+      - 2
+      - 0
+    .max_flat_workgroup_size: 192
+    .name:           _ZN7miinfer45qwen35_splitk_suffix_attn_stage1_quant_kernelILb1ELb1ELi4ELb1ELb0ELb0ELb1ELb0ELb1EEEvPKfPK6__halfS5_PKaS5_S7_S5_PfS8_S8_jjjjjjfjPKNS_18DevicePrefillStateE
+    .private_segment_fixed_size: 0
+    .sgpr_count:     48
+    .sgpr_spill_count: 0
+    .symbol:         _ZN7miinfer45qwen35_splitk_suffix_attn_stage1_quant_kernelILb1ELb1ELi4ELb1ELb0ELb0ELb1ELb0ELb1EEEvPKfPK6__halfS5_PKaS5_S7_S5_PfS8_S8_jjjjjjfjPKNS_18DevicePrefillStateE.kd
+    .uniform_work_group_size: 1
+    .uses_dynamic_stack: false
+    .vgpr_count:     60
+    .vgpr_spill_count: 0
+    .wavefront_size: 64
+  - .args:
+      - .actual_access:  read_only
+        .address_space:  global
+--
+        .size:           4
+        .value_kind:     by_value
+      - .actual_access:  read_only
+        .address_space:  global
+        .offset:         112
+        .size:           8
+        .value_kind:     global_buffer
+    .group_segment_fixed_size: 0
+    .kernarg_segment_align: 8
+    .kernarg_segment_size: 120
+    .language:       OpenCL C
+    .language_version:
+      - 2
+      - 0
+    .max_flat_workgroup_size: 192
+    .name:           _ZN7miinfer45qwen35_splitk_suffix_attn_stage1_quant_kernelILb1ELb1ELi4ELb1ELb0ELb0ELb1ELb0ELb0EEEvPKfPK6__halfS5_PKaS5_S7_S5_PfS8_S8_jjjjjjfjPKNS_18DevicePrefillStateE
+    .private_segment_fixed_size: 0
+    .sgpr_count:     50
+    .sgpr_spill_count: 0
+    .symbol:         _ZN7miinfer45qwen35_splitk_suffix_attn_stage1_quant_kernelILb1ELb1ELi4ELb1ELb0ELb0ELb1ELb0ELb0EEEvPKfPK6__halfS5_PKaS5_S7_S5_PfS8_S8_jjjjjjfjPKNS_18DevicePrefillStateE.kd
+    .uniform_work_group_size: 1
+    .uses_dynamic_stack: false
+    .vgpr_count:     60
+    .vgpr_spill_count: 0
+    .wavefront_size: 64
+  - .args:
+      - .actual_access:  read_only
+        .address_space:  global
