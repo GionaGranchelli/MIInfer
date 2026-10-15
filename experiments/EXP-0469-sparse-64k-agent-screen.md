@@ -74,6 +74,30 @@ and prefetched the remaining 50. Exact prefill took 5.254 s and sparse took
 visible content or a tool call; total follow-up wall times were 40.77 s and
 42.10 s, respectively.
 
+### Process-restart restore
+
+I restarted both candidate-binary servers with the preserved session files
+and restored the 66,572-token state. The restore path reported
+`persistent_session_restored=true` for both sessions, with 2,357,500,353
+bytes of state, 66,569 reused prefix tokens, and three newly prefetched
+tokens. Restore took 2.491 s on exact GPU0 and 2.348 s on sparse GPU2. The
+first post-restore generation was empty at the 512-token cap, so I continued
+each session from that same restored state with a request asking for the
+specific boundary-oracle edit.
+
+| Restored path | Follow-up TTFT | Follow-up wall | Generated tokens | Returned edit |
+| --- | ---: | ---: | ---: | --- |
+| Exact GPU0 | 6.117 s | 14.843 s | 131 | Correct replacement with 65,535, 65,536 and 65,537 boundaries |
+| Sparse GPU2 | 4.334 s | 12.936 s | 121 | Incorrect duplicate 65,536 boundary; no tool call |
+
+Both follow-ups reused the same restored 66,569-token prefix and prefetched
+61 additional tokens. The exact response contained the intended patch in
+plain text. The sparse response did not: it repeated `65536U` and omitted the
+adjacent boundaries. Neither response executed a tool call. This proves the
+session can be restored across server restart and retain long context, but
+does not establish a correct autonomous coding-agent workflow on the sparse
+path.
+
 After the tool-call failure, the candidate returned the exact intended patch
 in plain text: add `65536U` to the large-total loop in
 `tests/gqa6_sparse_window_oracle.cpp`. I applied that one-line change and
@@ -85,13 +109,16 @@ The test change is pushed in commit `1f92202` on
 `perf/m31-gqa6-sparse-window-screen`.
 
 The candidate did not execute the edit through its tool call. A correct
-plain-text patch was returned after explicit correction, then applied and
-validated by the harness operator. This is evidence that the candidate can
-recover the old task requirement and provide a valid edit, but it is not an
-autonomous tool-executed coding session. Persistent restore across a process
-restart and graph-replay semantics were not tested in this 64K screen.
+plain-text patch was returned by the exact path after explicit correction,
+then applied and validated by the harness operator. This is evidence that the
+exact path can recover the old task requirement and provide a valid edit, but
+it is not an autonomous tool-executed coding session. Graph-replay semantics
+were not tested in this 64K screen.
 
 Raw logs and thermal telemetry are on Machinist under
 `/home/machinist/m31-gqa6-longctx-results/EXP-0469-sparse-semantic/`,
 `/home/machinist/m31-gqa6-longctx-results/EXP-0469-matched-exact/`, and
-`/home/machinist/m31-gqa6-longctx-results/EXP-0469-sparse-repeat1/`.
+`/home/machinist/m31-gqa6-longctx-results/EXP-0469-sparse-repeat1/`. Restart
+restore requests, server logs, and thermal telemetry are in
+`/home/machinist/m31-gqa6-longctx-results/EXP-0469-restore-exact/` and
+`/home/machinist/m31-gqa6-longctx-results/EXP-0469-restore-sparse/`.
