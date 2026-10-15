@@ -102,6 +102,61 @@ shuffles, or drops resident-wave capacity materially relative to baseline.
 
 ## Result
 
-Implementation is pushed in `7b4088e`. The full target compiled in the pinned
-ROCm 7.2.1 image. The exact candidate code object and binary SHA-256 plus the
-restored-session result are pending.
+Implementation and pair-harness changes are pushed in `7b4088e` and `8dbae74`.
+The full target compiled in the pinned ROCm 7.2.1 image. The final benchmark
+binary SHA-256 is
+`bb6ce430bcdbb8dac962f46e3e744778cd7d883040e06ebffad7aacd1fbcbd0f`; the
+candidate gfx906 code object SHA-256 is
+`3e01f6055a9aac9c402ed23459f7303f739b8067d61ecac3c1fcc26f5603ce0d`.
+
+The candidate kernel has maximum workgroup size 384 and wave size 64, with
+46 VGPR and 42 SGPR. It uses no private segment, spills, or LDS. The direct-
+global control uses 60 VGPR and 50 SGPR, also with no spills/private segment/
+LDS. The candidate object has 17 static `ds_bpermute_b32` and 4
+`v_exp_f32` instructions; the control has 50 and 10 respectively. The static
+counts are not dynamic instruction counts, but show that the cross-half
+exchanges add instructions to a path that already performs four keys per
+iteration.
+
+One same-GPU2 restored-session kill-screen ran on BDF `0000:88:00.0` in the
+pinned image digest
+`sha256:447907c697fb2c39ce9657401e354a70753d5672ad955d4ceb12de976b91224a`.
+It restored the 73,099-token checkpoint and processed the tokenizer-backed
+1,024-token suffix, ending at position 74,123 with one graph replay tile.
+The control traced direct-global in 16/16 attention layers; the candidate
+traced dual-key Wave64 in 16/16 layers. The prompt SHA-256 is
+`fa4a0de5db813f5f06b58de5b4b7df8f234c4c808e0965bd44c545e9087c462c`, and the
+session SHA-256 is
+`bbbe9543d7ccbb740cc3db1cda7bc959e8e95926587a31b9cb8e3510c557de96`.
+
+Correctness passed both the strict numerical screen and exact diagnostic:
+logits and recurrent-state max error were 0, cosine was 1.0, all 48 recurrent
+layers were observed, outputs were finite, top two generated tokens matched,
+and both runs ended at the expected position. Restore took 2.889 s for control
+and 2.873 s for candidate. Suffix time was 20.882 s for control and 43.072 s
+for candidate, a single-sample speed ratio of 0.485. This fails the predeclared
+10% improvement gate decisively; no cold-64K run is justified. The run is a
+kill-screen, not a stable timing estimate. Thermal telemetry peaked at 59 C,
+below the 80 C warning threshold, and the run exited successfully.
+
+**Decision:** reject dual-key Wave64 as a performance candidate. Keep the
+selector disabled by default and retain this report as negative evidence; do
+not run another timing sample or cold-64K test for this schedule.
+
+Raw run artifacts are under
+`/home/machinist/m31-gqa6-longctx-results/EXP-0461-dual-key-wave64-gpu2/pair-1024/`.
+The runner was the built `miinfer-m31-fp16-full-model` with
+`ROCR_VISIBLE_DEVICES=2`, `--q8-gqa6-dual-key-wave64 --tokens 1024`, and the
+artifact `session.miinfer` plus `prompt.txt`; the pair harness selected
+direct-global for control and dual-key for candidate. Model SHA-256 was
+`7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169`. The
+thermal guard sampled every three seconds, warned at 80 C and stopped at 85 C;
+maximum observed junction temperature was 59 C, and the process exited 0.
+
+The measured result is consistent with, but does not prove, a schedule-cost
+hypothesis: each CTA grows from three to six Wave64s for the same six query
+heads, while peer-half exchanges add score and value shuffles. The design also
+keeps independent direct-global K/V loads for the two key producers. These
+costs may outweigh concurrent QK work or reduce resident CTA capacity. No
+profiler attribution was collected, so these remain hypotheses rather than
+measured causes.
