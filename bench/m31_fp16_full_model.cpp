@@ -673,12 +673,13 @@ int main(int argc, char** argv) {
                           << " finite=" << finite << " accepted=" << sample_correct << '\n';
             }
             std::cout << std::fixed << std::setprecision(3)
-                      << (flash_tile_pair || dpp_pair || block_softmax4_pair ? "q8_gqa6_direct_global_control_median_seconds="
+                      << (flash_tile_pair || dpp_pair || block_softmax4_pair || sparse_window_pair ? "q8_gqa6_direct_global_control_median_seconds="
                           : (paired_token_pair || direct_global_pair) ? "q8_gqa6_packed_u128_median_seconds="
                           : (wide128_pair || pair_head_reuse_pair) ? "q8_gqa6_packed_u4_u128_median_seconds="
                           : packed_pair ? "q8_gqa6_suffix_median_seconds=" : "q8_production_suffix_median_seconds=")
                       << median(control_times)
-                      << (pair_head_reuse_pair ? " q8_gqa6_pair_head_reuse_median_seconds="
+                      << (sparse_window_pair ? " q8_gqa6_sparse_window_median_seconds="
+                          : pair_head_reuse_pair ? " q8_gqa6_pair_head_reuse_median_seconds="
                           : dual_key_wave64_pair ? " q8_gqa6_dual_key_wave64_median_seconds="
                           : wave64_kv_broadcast_pair ? " q8_gqa6_wave64_kv_broadcast_median_seconds="
                           : block_softmax4_pair ? " q8_gqa6_block_softmax4_median_seconds="
