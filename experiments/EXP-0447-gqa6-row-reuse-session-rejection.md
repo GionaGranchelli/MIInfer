@@ -10,8 +10,14 @@ Each K/V vector was shared across four rows: two adjacent tokens by two query
 heads. A CTA covered 16 tokens and two query heads. The route was opt-in under
 `MIINFER_M31_Q8_GQA6_ROW_REUSE`; the production default was not changed.
 
-The pinned ROCm 7.2.1 build completed. The gfx906 kernel used 124 VGPR and 47
-SGPR, with zero spills and no LDS allocation.
+The pinned ROCm 7.2.1 build completed. The gfx906 row-reuse kernel used 124
+VGPR and 47 SGPR, with zero spills and no LDS allocation. The directly
+comparable direct-global production specialization in the same object used 60
+VGPR and 50 SGPR, also with zero spills. The candidate therefore more than
+doubled VGPR use. That can reduce register-limited resident waves; together
+with the larger per-CTA row tile, it is a plausible contributor to the slower
+suffix. No occupancy or hardware-counter profile was collected, so this is a
+resource-based hypothesis, not an established root cause.
 
 ## Restored-session screen
 
@@ -25,7 +31,8 @@ SGPR, with zero spills and no LDS allocation.
   restored Q8/Q8 prefix of 73,099 tokens plus 1,024 tokenizer-backed suffix
   tokens, one HIP Graph replay tile.
 - Both paths reported position 74,123 and dispatched the expected route on all
-  16 layers with graph state present.
+  16 layers with graph state present (16 direct-global and 16 row-reuse route
+  trace entries).
 
 | Path | Restore | Suffix | First / second token |
 | --- | ---: | ---: | --- |
