@@ -1,4 +1,4 @@
-# EXP-0471 — GQA6 16-lane Q8 vectorization screen — A/B INVALID
+# EXP-0471 — GQA6 16-lane Q8 vectorization screen — corrected A/B rejected
 
 ## Hypothesis
 
@@ -148,7 +148,7 @@ completed matched run documented below.
 - Review found a candidate mapping error before the completed run: the old formula
   assigned four 16-lane groups per wave to a six-query-head KV group, causing
   overlapping and misrouted heads. The source now assigns three heads per
--  wave and masks the fourth group. The corrected build passed the resource
+  wave and masks the fourth group. The corrected build passed the resource
   gate above.
 - The corrected run completed in control-then-candidate order. Control prefill
   was 42.912 s; candidate prefill was 45.396 s (one sample per side), so the
