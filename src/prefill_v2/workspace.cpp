@@ -1,5 +1,6 @@
 #include "miinfer/prefill_v2/workspace.hpp"
 #include "miinfer/hip_check.hpp"
+#include "miinfer/gqa6_query_block_sparse.hpp"
 
 #include <hip/hip_runtime.h>
 #include <algorithm>
@@ -76,6 +77,8 @@ PrefillV2WorkspaceManager::PrefillV2WorkspaceManager(std::size_t max_tokens)
     constexpr std::size_t kMaxSplitK = 32;
     const std::size_t splitk_attn_floats = kMaxSplitK * max_tokens_ * 24 * (256 + 2);
     const std::size_t splitk_attn_bytes = align128(splitk_attn_floats * sizeof(float));
+    const std::size_t selected_blocks_bytes = align128(max_tokens_ * 24
+        * (kGqa6QuerySparseTopBlocks + 1) * sizeof(std::uint32_t));
 
     total_bytes_ = norm_bytes + qkv_bytes + gate_bytes + 4 * beta_decay_bytes
         + query_bytes + key_bytes + value_bytes + gdn_scratch_bytes
@@ -86,7 +89,7 @@ PrefillV2WorkspaceManager::PrefillV2WorkspaceManager(std::size_t max_tokens)
         + attn_q8_query_residual3_bytes + attn_q8_query_residual3_scales_bytes
         + attn_k_bytes + attn_v_bytes + attn_gated_bytes
         + mmq_q8_bytes + q8_1_bytes + ffn_gate_bytes + ffn_up_bytes + ffn_act_bytes + ffn_down_bytes
-        + splitk_attn_bytes;
+        + splitk_attn_bytes + selected_blocks_bytes;
 
     MIINFER_HIP_CHECK(hipMalloc(&d_buffer_, total_bytes_));
 
@@ -141,6 +144,7 @@ PrefillV2WorkspaceManager::PrefillV2WorkspaceManager(std::size_t max_tokens)
     workspace_.ffn_up = reinterpret_cast<float*>(ptr); ptr += ffn_up_bytes;
     workspace_.ffn_activation = reinterpret_cast<float*>(ptr); ptr += ffn_act_bytes;
     workspace_.ffn_down = reinterpret_cast<float*>(ptr); ptr += ffn_down_bytes;
+    workspace_.attn_selected_blocks = reinterpret_cast<std::uint32_t*>(ptr);
 }
 
 PrefillV2WorkspaceManager::~PrefillV2WorkspaceManager() {

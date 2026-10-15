@@ -1,6 +1,7 @@
 #include "miinfer/qwen3_gpu_primitives.hpp"
 #include "miinfer/q4_q8_gemv.hpp"
 #include "miinfer/gqa6_sparse_window.hpp"
+#include "miinfer/gqa6_query_block_sparse.hpp"
 
 #include "miinfer/hip_check.hpp"
 
@@ -7609,6 +7610,102 @@ __device__ __forceinline__ float qwen35_gqa6_reduce_qk_dpp(float dot) {
     return dot;
 }
 
+__global__ void qwen35_gqa6_query_block_selector_kernel(
+    const float* __restrict__ q,
+    const int8_t* __restrict__ key_cache_q8,
+    const __half* __restrict__ key_scales,
+    std::uint32_t* __restrict__ selected_blocks,
+    std::uint32_t token_count,
+    std::uint32_t base_position,
+    std::uint32_t cache_capacity,
+    std::uint32_t query_heads,
+    std::uint32_t head_dim,
+    float scale,
+    const DevicePrefillState* __restrict__ prefill_state) {
+    const std::uint32_t token = blockIdx.x;
+    const std::uint32_t head = blockIdx.y;
+    const std::uint32_t lane = threadIdx.x;
+    if (prefill_state != nullptr) {
+        base_position = prefill_state->base_position;
+        token_count = prefill_state->token_count;
+        cache_capacity = prefill_state->kv_capacity > 0
+            ? prefill_state->kv_capacity : cache_capacity;
+    }
+    if (token >= token_count || head >= query_heads || lane >= 64) return;
+    const std::uint32_t total_length = base_position + token + 1;
+    if (total_length > cache_capacity) return;
+
+    const std::uint32_t kv_head = head / 6;
+    const std::uint32_t local_start = gqa6_query_sparse_local_start(total_length);
+    const std::uint32_t candidate_blocks = local_start / kGqa6QuerySparseBlock;
+    const std::uint32_t selected_count = min(candidate_blocks, kGqa6QuerySparseTopBlocks);
+    const std::uint32_t dim = lane * 4;
+    const float* q_row = q + (static_cast<std::size_t>(token) * query_heads + head) * head_dim + dim;
+    const float q0 = q_row[0], q1 = q_row[1], q2 = q_row[2], q3 = q_row[3];
+    const std::size_t kv_base = static_cast<std::size_t>(kv_head) * cache_capacity * head_dim;
+    __shared__ float scores[kGqa6QuerySparseBlock];
+
+    for (std::uint32_t block = 0; block < candidate_blocks; ++block) {
+        float block_score = -INFINITY;
+        #pragma unroll
+        for (std::uint32_t sample = 0; sample < kGqa6QuerySparseSamples; ++sample) {
+            const std::uint32_t key_pos = block * kGqa6QuerySparseBlock
+                + sample * (kGqa6QuerySparseBlock / kGqa6QuerySparseSamples)
+                + (kGqa6QuerySparseBlock / kGqa6QuerySparseSamples / 2);
+            const std::size_t key_index = kv_base
+                + static_cast<std::size_t>(key_pos) * head_dim + dim;
+            const std::uint32_t packed = *reinterpret_cast<const std::uint32_t*>(
+                key_cache_q8 + key_index);
+            const auto* kb = reinterpret_cast<const int8_t*>(&packed);
+            const float local_dot = q0 * static_cast<float>(kb[0])
+                + q1 * static_cast<float>(kb[1])
+                + q2 * static_cast<float>(kb[2])
+                + q3 * static_cast<float>(kb[3]);
+            const float dot = qwen3_wave_sum(local_dot);
+            if (lane == 0) {
+                const float key_scale = __half2float(key_scales[
+                    static_cast<std::size_t>(kv_head) * cache_capacity + key_pos]);
+                block_score = fmaxf(block_score, dot * key_scale * scale);
+            }
+        }
+        if (lane == 0) scores[block] = block_score;
+    }
+
+    if (lane == 0) {
+        const std::size_t output_base =
+            (static_cast<std::size_t>(token) * query_heads + head)
+            * (kGqa6QuerySparseTopBlocks + 1);
+        std::uint32_t chosen[kGqa6QuerySparseTopBlocks];
+        for (std::uint32_t rank = 0; rank < selected_count; ++rank) {
+            float best_score = -INFINITY;
+            std::uint32_t best_block = 0;
+            for (std::uint32_t block = 0; block < candidate_blocks; ++block) {
+                const float score_value = scores[block];
+                if (score_value > best_score
+                    || (score_value == best_score && block < best_block)) {
+                    best_score = score_value;
+                    best_block = block;
+                }
+            }
+            chosen[rank] = best_block;
+            scores[best_block] = -INFINITY;
+        }
+        for (std::uint32_t i = 1; i < selected_count; ++i) {
+            const std::uint32_t value = chosen[i];
+            std::uint32_t j = i;
+            while (j > 0 && chosen[j - 1] > value) {
+                chosen[j] = chosen[j - 1];
+                --j;
+            }
+            chosen[j] = value;
+        }
+        for (std::uint32_t i = 0; i < kGqa6QuerySparseTopBlocks; ++i) {
+            selected_blocks[output_base + i] = i < selected_count ? chosen[i] : 0;
+        }
+        selected_blocks[output_base + kGqa6QuerySparseTopBlocks] = selected_count;
+    }
+}
+
 __device__ __forceinline__ void qwen35_gqa6_q8_dim16_consume_key(
     const uint4& k_raw, const uint4& v_raw,
     const float4& q0, const float4& q1, const float4& q2, const float4& q3,
@@ -7670,7 +7767,7 @@ template <bool K_IS_Q8, bool V_IS_Q8, int UNROLL = 4, bool GQA6_SHARED_KV = fals
           bool GQA6_DIRECT_GLOBAL_Q8 = false, bool GQA6_DPP_REDUCE = false,
           bool GQA6_BLOCK_SOFTMAX4 = false, bool GQA6_WAVE64_KV_BROADCAST = false,
           bool GQA6_DUAL_KEY_WAVE64 = false, bool GQA6_SPARSE_WINDOW = false,
-          bool GQA6_Q8_DIM16_LANES = false>
+          bool GQA6_Q8_DIM16_LANES = false, bool GQA6_QUERY_BLOCK_SPARSE = false>
 __launch_bounds__(GQA6_DUAL_KEY_WAVE64 ? 384 : (GQA6_Q8_DIM16_LANES ? 128 : (GQA6_SHARED_KV ? 192 : 1024)), 1)
 __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
     const float* __restrict__ q,
@@ -7691,6 +7788,7 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
     std::uint32_t head_dim,
     float scale,
     std::uint32_t num_splits,
+    const std::uint32_t* __restrict__ selected_blocks,
     const DevicePrefillState* __restrict__ prefill_state) {
 
     static_assert(!GQA6_BLOCK_SOFTMAX4
@@ -7705,6 +7803,11 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
         || (K_IS_Q8 && V_IS_Q8 && GQA6_SHARED_KV && GQA6_DIRECT_GLOBAL_Q8
             && !GQA6_SPARSE_WINDOW && !GQA6_DUAL_KEY_WAVE64
             && !GQA6_WAVE64_KV_BROADCAST && !GQA6_BLOCK_SOFTMAX4));
+    static_assert(!GQA6_QUERY_BLOCK_SPARSE
+        || (K_IS_Q8 && V_IS_Q8 && GQA6_SHARED_KV && GQA6_DIRECT_GLOBAL_Q8
+            && !GQA6_DPP_REDUCE && !GQA6_BLOCK_SOFTMAX4
+            && !GQA6_WAVE64_KV_BROADCAST && !GQA6_DUAL_KEY_WAVE64
+            && !GQA6_SPARSE_WINDOW && !GQA6_Q8_DIM16_LANES && UNROLL == 1));
 
     if (prefill_state != nullptr) {
         base_position = prefill_state->base_position;
@@ -7736,8 +7839,14 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
     const std::uint32_t total_length = base_position + token + 1;
     if (total_length > cache_capacity) return;
 
-    const std::uint32_t key_count = GQA6_SPARSE_WINDOW
-        ? gqa6_sparse_key_count(total_length) : total_length;
+    const std::size_t selected_base =
+        (static_cast<std::size_t>(token) * query_heads + head)
+        * (kGqa6QuerySparseTopBlocks + 1);
+    const std::uint32_t selected_count = GQA6_QUERY_BLOCK_SPARSE
+        ? selected_blocks[selected_base + kGqa6QuerySparseTopBlocks] : 0;
+    const std::uint32_t key_count = GQA6_QUERY_BLOCK_SPARSE
+        ? gqa6_query_sparse_key_count(total_length, selected_count)
+        : (GQA6_SPARSE_WINDOW ? gqa6_sparse_key_count(total_length) : total_length);
     const std::uint32_t chunk_size = (key_count + num_splits - 1) / num_splits;
     const std::uint32_t k_start = split_id * chunk_size;
     const std::uint32_t k_end = min(k_start + chunk_size, key_count);
@@ -7992,19 +8101,19 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
     const __half* v_scale_ptr = nullptr;
 
     if constexpr (K_IS_Q8) {
-        k_q8_ptr = key_cache_q8 + kv_base + (GQA6_SPARSE_WINDOW ? 0
+        k_q8_ptr = key_cache_q8 + kv_base + ((GQA6_SPARSE_WINDOW || GQA6_QUERY_BLOCK_SPARSE) ? 0
             : static_cast<std::size_t>(k_start) * head_dim) + dim_offset;
         k_scale_ptr = key_scales + static_cast<std::size_t>(kv_head) * cache_capacity
-            + (GQA6_SPARSE_WINDOW ? 0 : k_start);
+            + ((GQA6_SPARSE_WINDOW || GQA6_QUERY_BLOCK_SPARSE) ? 0 : k_start);
     } else {
         k_f16_ptr = key_cache_f16 + kv_base + static_cast<std::size_t>(k_start) * head_dim + dim_offset;
     }
 
     if constexpr (V_IS_Q8) {
-        v_q8_ptr = value_cache_q8 + kv_base + (GQA6_SPARSE_WINDOW ? 0
+        v_q8_ptr = value_cache_q8 + kv_base + ((GQA6_SPARSE_WINDOW || GQA6_QUERY_BLOCK_SPARSE) ? 0
             : static_cast<std::size_t>(k_start) * head_dim) + dim_offset;
         v_scale_ptr = value_scales + static_cast<std::size_t>(kv_head) * cache_capacity
-            + (GQA6_SPARSE_WINDOW ? 0 : k_start);
+            + ((GQA6_SPARSE_WINDOW || GQA6_QUERY_BLOCK_SPARSE) ? 0 : k_start);
     } else {
         v_f16_ptr = value_cache_f16 + kv_base + static_cast<std::size_t>(k_start) * head_dim + dim_offset;
     }
@@ -8012,9 +8121,11 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
     std::uint32_t pos = k_start;
 
     for (; pos + UNROLL <= k_end; pos += UNROLL) {
-        const std::uint32_t key_pos = GQA6_SPARSE_WINDOW
-            ? gqa6_sparse_key_at(total_length, pos) : pos;
-        if constexpr (GQA6_SPARSE_WINDOW) {
+        const std::uint32_t key_pos = GQA6_QUERY_BLOCK_SPARSE
+            ? gqa6_query_sparse_key_at(total_length,
+                selected_blocks + selected_base, selected_count, pos)
+            : (GQA6_SPARSE_WINDOW ? gqa6_sparse_key_at(total_length, pos) : pos);
+        if constexpr (GQA6_SPARSE_WINDOW || GQA6_QUERY_BLOCK_SPARSE) {
             k_q8_ptr = key_cache_q8 + kv_base + static_cast<std::size_t>(key_pos) * head_dim + dim_offset;
             k_scale_ptr = key_scales + static_cast<std::size_t>(kv_head) * cache_capacity + key_pos;
             v_q8_ptr = value_cache_q8 + kv_base + static_cast<std::size_t>(key_pos) * head_dim + dim_offset;
@@ -8864,7 +8975,7 @@ void launch_qwen35_splitk_suffix_attention_quant(
             q, key_cache_f16, value_cache_f16, key_cache_q8, key_scales, value_cache_q8, value_scales,
             d_partial_max, d_partial_sum, d_partial_acc,
             token_count, base_position, cache_capacity,
-            query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
+            query_heads, kv_heads, head_dim, scale, num_splits, nullptr, prefill_state);
     } else if (is_k_q8 && !is_v_q8) {
         hipLaunchKernelGGL(
             (qwen35_splitk_suffix_attn_stage1_quant_kernel<true, false, 4>),
@@ -8872,7 +8983,7 @@ void launch_qwen35_splitk_suffix_attention_quant(
             q, key_cache_f16, value_cache_f16, key_cache_q8, key_scales, value_cache_q8, value_scales,
             d_partial_max, d_partial_sum, d_partial_acc,
             token_count, base_position, cache_capacity,
-            query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
+            query_heads, kv_heads, head_dim, scale, num_splits, nullptr, prefill_state);
     } else if (!is_k_q8 && is_v_q8) {
         hipLaunchKernelGGL(
             (qwen35_splitk_suffix_attn_stage1_quant_kernel<false, true, 4>),
@@ -8880,7 +8991,7 @@ void launch_qwen35_splitk_suffix_attention_quant(
             q, key_cache_f16, value_cache_f16, key_cache_q8, key_scales, value_cache_q8, value_scales,
             d_partial_max, d_partial_sum, d_partial_acc,
             token_count, base_position, cache_capacity,
-            query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
+            query_heads, kv_heads, head_dim, scale, num_splits, nullptr, prefill_state);
     } else {
         hipLaunchKernelGGL(
             (qwen35_splitk_suffix_attn_stage1_quant_kernel<true, true, 4>),
@@ -8888,7 +8999,7 @@ void launch_qwen35_splitk_suffix_attention_quant(
             q, key_cache_f16, value_cache_f16, key_cache_q8, key_scales, value_cache_q8, value_scales,
             d_partial_max, d_partial_sum, d_partial_acc,
             token_count, base_position, cache_capacity,
-            query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
+            query_heads, kv_heads, head_dim, scale, num_splits, nullptr, prefill_state);
     }
     MIINFER_HIP_CHECK(hipGetLastError());
 
@@ -8916,7 +9027,8 @@ void launch_qwen35_gqa6_production_q8_attention_batch(
     float* stage1_ms, float* stage2_ms, bool packed_q8_lds, bool packed_q8_lds_128,
     bool direct_global_q8, bool dpp_reduce, bool block_softmax4,
     bool wave64_kv_broadcast, bool dual_key_wave64, bool sparse_window,
-    bool q8_dim16_lanes) {
+    bool q8_dim16_lanes, bool query_block_sparse,
+    std::uint32_t* selected_blocks) {
     if (q == nullptr || key_cache_q8 == nullptr || key_scales == nullptr
         || value_cache_q8 == nullptr || value_scales == nullptr || gate == nullptr
         || gated_output == nullptr || split_workspace == nullptr || token_count == 0
@@ -8932,10 +9044,14 @@ void launch_qwen35_gqa6_production_q8_attention_batch(
             || packed_q8_lds || packed_q8_lds_128))
         || (sparse_window && (!direct_global_q8
             || dpp_reduce || block_softmax4 || wave64_kv_broadcast || dual_key_wave64
-            || packed_q8_lds || packed_q8_lds_128))
+            || packed_q8_lds || packed_q8_lds_128 || query_block_sparse))
         || (q8_dim16_lanes && (!direct_global_q8 || dpp_reduce || block_softmax4
             || wave64_kv_broadcast || dual_key_wave64 || sparse_window
-            || packed_q8_lds || packed_q8_lds_128))) {
+            || packed_q8_lds || packed_q8_lds_128 || query_block_sparse))
+        || (query_block_sparse && (!direct_global_q8 || dpp_reduce || block_softmax4
+            || wave64_kv_broadcast || dual_key_wave64 || sparse_window || q8_dim16_lanes
+            || packed_q8_lds || packed_q8_lds_128 || selected_blocks == nullptr
+            || num_splits != 32))) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     const std::size_t total_meta = static_cast<std::size_t>(num_splits) * token_count * query_heads;
@@ -8960,62 +9076,76 @@ void launch_qwen35_gqa6_production_q8_attention_batch(
                 dim3(token_count, num_splits, kv_heads), dim3(64, 2), 0, stream,
                 q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,
                 partial_max, partial_sum, partial_acc, token_count, base_position, cache_capacity,
-                query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
+                query_heads, kv_heads, head_dim, scale, num_splits, selected_blocks, prefill_state);
+        } else if (query_block_sparse) {
+            hipLaunchKernelGGL(qwen35_gqa6_query_block_selector_kernel,
+                dim3(token_count, query_heads), dim3(64), 0, stream,
+                q, key_cache_q8, key_scales, selected_blocks,
+                token_count, base_position, cache_capacity, query_heads,
+                head_dim, scale, prefill_state);
+            hipLaunchKernelGGL((qwen35_splitk_suffix_attn_stage1_quant_kernel<
+                true, true, 1, true, false, false, true, false, false, false,
+                false, false, false, true>),
+                dim3(token_count, num_splits, kv_heads), dim3(64, 3), 0, stream,
+                q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,
+                partial_max, partial_sum, partial_acc, token_count, base_position,
+                cache_capacity, query_heads, kv_heads, head_dim, scale, num_splits,
+                selected_blocks, prefill_state);
         } else if (sparse_window) {
             hipLaunchKernelGGL((qwen35_splitk_suffix_attn_stage1_quant_kernel<true, true, 1, true, false, false, true, false, false, false, false, true>),
                 dim3(token_count, num_splits, kv_heads), dim3(64, 3), 0, stream,
                 q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,
                 partial_max, partial_sum, partial_acc, token_count, base_position, cache_capacity,
-                query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
+                query_heads, kv_heads, head_dim, scale, num_splits, selected_blocks, prefill_state);
         } else if (dual_key_wave64) {
             hipLaunchKernelGGL((qwen35_splitk_suffix_attn_stage1_quant_kernel<true, true, 4, true, false, false, true, false, false, false, true>),
                 dim3(token_count, num_splits, kv_heads), dim3(64, 6), 0, stream,
                 q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,
                 partial_max, partial_sum, partial_acc, token_count, base_position, cache_capacity,
-                query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
+                query_heads, kv_heads, head_dim, scale, num_splits, selected_blocks, prefill_state);
         } else if (wave64_kv_broadcast) {
             hipLaunchKernelGGL((qwen35_splitk_suffix_attn_stage1_quant_kernel<true, true, 4, true, false, false, true, false, false, true>),
                 dim3(token_count, num_splits, kv_heads), dim3(64, 3), 0, stream,
                 q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,
                 partial_max, partial_sum, partial_acc, token_count, base_position, cache_capacity,
-                query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
+                query_heads, kv_heads, head_dim, scale, num_splits, selected_blocks, prefill_state);
         } else if (dpp_reduce) {
             hipLaunchKernelGGL((qwen35_splitk_suffix_attn_stage1_quant_kernel<true, true, 4, true, false, false, true, true>),
                 dim3(token_count, num_splits, kv_heads), dim3(64, 3), 0, stream,
                 q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,
                 partial_max, partial_sum, partial_acc, token_count, base_position, cache_capacity,
-                query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
+                query_heads, kv_heads, head_dim, scale, num_splits, selected_blocks, prefill_state);
         } else if (block_softmax4) {
             hipLaunchKernelGGL((qwen35_splitk_suffix_attn_stage1_quant_kernel<true, true, 4, true, false, false, true, false, true>),
                 dim3(token_count, num_splits, kv_heads), dim3(64, 3), 0, stream,
                 q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,
                 partial_max, partial_sum, partial_acc, token_count, base_position, cache_capacity,
-                query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
+                query_heads, kv_heads, head_dim, scale, num_splits, selected_blocks, prefill_state);
         } else {
             hipLaunchKernelGGL((qwen35_splitk_suffix_attn_stage1_quant_kernel<true, true, 4, true, false, false, true>),
                 dim3(token_count, num_splits, kv_heads), dim3(64, 3), 0, stream,
                 q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,
                 partial_max, partial_sum, partial_acc, token_count, base_position, cache_capacity,
-                query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
+                query_heads, kv_heads, head_dim, scale, num_splits, selected_blocks, prefill_state);
         }
     } else if (packed_q8_lds_128) {
         hipLaunchKernelGGL((qwen35_splitk_suffix_attn_stage1_quant_kernel<true, true, 4, true, true, true>),
             dim3(token_count, num_splits, kv_heads), dim3(64, 3), shared_bytes, stream,
             q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,
             partial_max, partial_sum, partial_acc, token_count, base_position, cache_capacity,
-            query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
+            query_heads, kv_heads, head_dim, scale, num_splits, selected_blocks, prefill_state);
     } else if (packed_q8_lds) {
         hipLaunchKernelGGL((qwen35_splitk_suffix_attn_stage1_quant_kernel<true, true, 4, true, true>),
             dim3(token_count, num_splits, kv_heads), dim3(64, 3), shared_bytes, stream,
             q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,
             partial_max, partial_sum, partial_acc, token_count, base_position, cache_capacity,
-            query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
+            query_heads, kv_heads, head_dim, scale, num_splits, selected_blocks, prefill_state);
     } else {
         hipLaunchKernelGGL((qwen35_splitk_suffix_attn_stage1_quant_kernel<true, true, 4, true>),
             dim3(token_count, num_splits, kv_heads), dim3(64, 3), shared_bytes, stream,
             q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,
             partial_max, partial_sum, partial_acc, token_count, base_position, cache_capacity,
-            query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
+            query_heads, kv_heads, head_dim, scale, num_splits, selected_blocks, prefill_state);
     }
     MIINFER_HIP_CHECK(hipGetLastError());
     if (measure_stages) MIINFER_HIP_CHECK(hipEventRecord(stage1_done, stream));

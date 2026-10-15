@@ -296,6 +296,7 @@ private:
     bool suffix_graph_q8_gqa6_packed_lds_128_enabled_ = false;
     bool suffix_graph_q8_gqa6_paired_token_enabled_ = false;
     bool suffix_graph_q8_gqa6_sparse_window_enabled_ = false;
+    bool suffix_graph_q8_gqa6_query_block_sparse_enabled_ = false;
     bool suffix_graph_q8_gqa6_direct_global_enabled_ = false;
     bool suffix_graph_q8_gqa6_dpp_reduce_enabled_ = false;
     bool suffix_graph_q8_gqa6_block_softmax4_enabled_ = false;
