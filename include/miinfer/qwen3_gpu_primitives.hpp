@@ -875,6 +875,17 @@ void launch_qwen35_gqa6_production_q8_attention_batch(
     bool direct_global_q8 = false, bool dpp_reduce = false,
     bool block_softmax4 = false);
 
+void launch_qwen35_gqa6_pair_head_reuse_q8_attention_batch(
+    const float* q, const std::int8_t* key_cache_q8, const __half* key_scales,
+    const std::int8_t* value_cache_q8, const __half* value_scales,
+    const float* gate, float* gated_output, float* split_workspace,
+    std::uint32_t token_count, std::uint32_t base_position,
+    std::uint32_t cache_capacity, std::uint32_t query_heads,
+    std::uint32_t kv_heads, std::uint32_t head_dim, float scale,
+    std::uint32_t num_splits, hipStream_t stream = nullptr,
+    const DevicePrefillState* prefill_state = nullptr,
+    float* stage1_ms = nullptr, float* stage2_ms = nullptr);
+
 void launch_qwen35_gqa6_paired_token_q8_attention_batch(
     const float* q, const std::int8_t* key_cache_q8, const __half* key_scales,
     const std::int8_t* value_cache_q8, const __half* value_scales,
