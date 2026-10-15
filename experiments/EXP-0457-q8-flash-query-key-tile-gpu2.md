@@ -129,6 +129,31 @@ and [`results/EXP-0457-gpu2-1024-telemetry.log`](results/EXP-0457-gpu2-1024-tele
 The rejected 512-token precheck is in
 [`results/EXP-0457-gpu2-512-precheck.log`](results/EXP-0457-gpu2-512-precheck.log).
 
+## First-layer attribution
+
+To localize the large final drift, a separate non-graph diagnostic repeated
+the same restored 1,024-token prompt once. HIP Graph was disabled only for this
+diagnostic so the host could compare outputs outside capture. At the first GQA
+layer (`layer_index=3`), the flash-tile output after Stage1, Stage2, and the
+sigmoid gate was saved, then direct-global recomputed from the same Q/K/V,
+cache, and prefill state. The candidate output was restored before model
+execution continued. The layer-3 comparison was finite with max-abs
+`3.69549e-06` and cosine `1.0`. This rules out a large first-GQA-layer output
+error; the large mismatch appears later in the model. This single probe does
+not distinguish accumulated FP32 ordering drift from an error in a later
+attention layer, and no further per-layer scan was run.
+
+The diagnostic still reached position 74,123 with 48 recurrent layers
+observed; final logits/state and generated-token agreement matched the graph
+screen's failure pattern. Its non-graph control and candidate suffix times
+were 20.848 s and 66.560 s and are not used for the performance gate. Raw
+output and telemetry are in
+[`results/EXP-0457-gpu2-layer3-diagnostic.log`](results/EXP-0457-gpu2-layer3-diagnostic.log)
+and [`results/EXP-0457-gpu2-layer3-telemetry.log`](results/EXP-0457-gpu2-layer3-telemetry.log).
+Junction temperature peaked at 56 C. An initial diagnostic attempt targeted
+index 0, but the topology's first GQA block is index 3; that run was stopped
+before producing comparison evidence and is excluded.
+
 ## Harness
 
 The restored-session pair mode adds `MIINFER_M31_Q8_GQA6_FLASH_TILE_PAIR=1`.
@@ -138,4 +163,4 @@ requires a nonempty recurrent-state trace with matching, nonzero recurrent
 layer counts, compares complete logits and recurrent state with the numeric
 bounds above, and records exact equality and generated-token agreement as
 diagnostics. This experiment rejected the candidate; no repeat or cold-64K run
-was performed.
+was performed. A one-layer non-graph attribution probe was the only follow-up.
