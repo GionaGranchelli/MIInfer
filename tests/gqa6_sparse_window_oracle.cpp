@@ -11,7 +11,7 @@ int main() {
             assert(miinfer::gqa6_sparse_key_at(total, i) == i);
         }
     }
-    for (const std::uint32_t total : {2049U, 2560U, 2561U, 65536U, 73099U}) {
+    for (const std::uint32_t total : {2049U, 2560U, 2561U, 65535U, 65536U, 65537U, 73099U}) {
         const std::uint32_t count = miinfer::gqa6_sparse_key_count(total);
         const std::uint32_t start = total - miinfer::kGqa6SparseWindow;
         const std::uint32_t anchors = (start + 511U) / 512U;
