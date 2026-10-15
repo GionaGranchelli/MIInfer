@@ -43,7 +43,7 @@ logical payload, yet the existing reuse schedule families lost on the full
 model. This candidate tests a different instruction width without relying on
 cross-row reuse.
 
-## Outcome
+## Initial screen (invalid A/B)
 
 **A/B invalid; no schedule conclusion.** The first bounded full-model screen
 used unequal attention routes: the control dispatched direct-global Stage1 112
@@ -51,7 +51,8 @@ times, while the candidate dispatched the dim16 Stage1 128 times. The candidate
 also replaced the cold position-zero tile, while the control retained the
 existing cold path. The measured slowdown and logits difference therefore do
 not isolate the lane mapping. No restored 73K suffix run was made. Candidate
-source was removed pending a corrected, matched rerun.
+source remained opt-in while the corrected matched rerun was prepared;
+production dispatch remained unchanged.
 
 ## Build and resource gate
 
@@ -67,8 +68,16 @@ source was removed pending a corrected, matched rerun.
 - Fresh `UNROLL=1` gfx906 object:
   `/home/machinist/m31-gqa6-16lane-rewrite/build/CMakeFiles/miinfer_hip.dir/gfx906/kernels/qwen3_primitives.hip.o.0.hipv4-amdgcn-amd-amdhsa--gfx906`
   SHA-256 `e3d5161f0f8814fc1327e11352a0655064b556eb1dc15eaee0a65e1c9021d77c`.
+- After correcting per-KV query-head assignment, the pinned target rebuilt
+  and linked successfully. Corrected code object SHA-256:
+  `f4c915572d28a078be1d846bd25d85c13be3835c30caf9cdfba6ce864d881ce7`;
+  host HIP object SHA-256:
+  `e544a2a21ce80abc0617814f4d015fb4949e31df9acf1cc4aee67037a1f63a17`.
+  The candidate specialization is VGPR 76, SGPR 45, zero spills/private bytes,
+  zero LDS, maximum workgroup 128. The linked benchmark binary SHA-256 is
+  `37827b37728b8a8ceed924ae41cafe4847a947cdfef5067c68a535bd0573e5b8`.
 
-## Bounded 8K screen
+## Initial bounded 8K screen
 
 - Device: GPU2, PCI BDF `0000:88:00.0`, unique ID `0x2152414173497dd3`,
   architecture `gfx906:sramecc-:xnack-`. GPU0 was not used.
@@ -111,12 +120,63 @@ source was removed pending a corrected, matched rerun.
   Candidate logits SHA-256:
   `39026c41525ace7f3356ff5b0f5bb6fbf25caadbfc847c6265e8951240f697ea`.
 
-## Decision
+## Interim decision (before corrected rerun)
 
-The `UNROLL=1` specialization passed compilation and resource limits. The
-8K experiment does not establish its speed or correctness because the cold
-tile route differed. Reintroduce the opt-in selector only behind the same
-`base_position > 0 || prefill_state != nullptr` guard as production direct
-global. Rebuild and require equal candidate/control route counts before
-accepting another 8K comparison. Do not run the 73K restored suffix unless the
-corrected screen passes numerical and speed gates.
+The first A/B is invalid. A second attempt was stopped before control
+completion after an incorrect interpretation of `rocm-smi` GPU counts. The
+candidate also had a head-mapping bug that was fixed and rebuilt before the
+completed matched run documented below.
+
+## Corrected rerun (completed)
+
+- The opt-in dispatch uses the same `(base_position > 0 || prefill_state != nullptr)`
+  condition as production. The runner pins index 2 and checks it resolves to
+  BDF `0000:88:00.0` before each case.
+- The runner checks every KFD PID with `rocm-smi --showpidgpus`; it refuses to
+  launch if a PID maps to the selected device, if the mapping cannot be parsed,
+  or if selected-device VRAM exceeds 1 GiB. It requires both logits files and
+  equal nonzero control/candidate route counts before reporting a valid run.
+- The first invocation was deliberately stopped by the agent at the parent's
+  direction after 92 s, while control was active, based on a mistaken reading
+  of the `rocm-smi` `GPU(s)` column. It exited 137, wrote no logits, and did
+  not start the candidate. Preserve that attempt as aborted; it has no timing
+  or correctness result.
+- The persistent restore server PID 2631926 maps through `rocm-smi
+  --showpidgpus` to GPU index 0 / BDF `0000:04:00.0`, while the candidate is
+  pinned to GPU index 2 / BDF `0000:88:00.0`. Its 30.1 GB allocation does not
+  establish contention on the candidate GPU. The server was not stopped.
+- Review found a candidate mapping error before the completed run: the old formula
+  assigned four 16-lane groups per wave to a six-query-head KV group, causing
+  overlapping and misrouted heads. The source now assigns three heads per
+-  wave and masks the fourth group. The corrected build passed the resource
+  gate above.
+- The corrected run completed in control-then-candidate order. Control prefill
+  was 42.912 s; candidate prefill was 45.396 s (one sample per side), so the
+  candidate was 5.8% slower. Both exited 0, processed 8,192 tokens, and
+  reported 248,320 finite logits. The first generated token was 11 and the
+  second was 443 on both sides. Route counts matched at 112/112.
+- Logit comparison: max absolute difference 0.7885966, RMS difference
+  0.1105030, cosine similarity 0.99933815. Top-1 stayed token 11; top-2
+  changed from token 271 to 17044. Thus generated tokens matched in this
+  sample, while the numeric difference remains visible in the evidence.
+- The corrected run's inputs, control/candidate logs, thermal samples and
+  logits are under
+  `/home/machinist/m31-gqa6-16lane-rewrite/results/EXP-0471-unroll1-8k-matched/`.
+  Input hashes: model `7e78da5d7e3ae28d178121f58646953305f3e5bd3cb46f4a75584e8b6c6fe169`,
+  prompt `fa4a0de5db813f5f06b58de5b4b7df8f234c4c808e0965bd44c545e9087c462c`.
+  Control/candidate logits hashes:
+  `13d62d4b8f9a5869879e00ce875081a1df445ac460e18795f770abc9d78a431b`,
+  `653cf72be5294dbf207ab5c72bf8f2f78893c68c9d888e007a3feb884018bc00`.
+  Control/candidate logs hashes:
+  `b987e7b4b078201be177349de3ef55cacd64b6b79f2a79eb30d077633e740479`,
+  `b1bbb3598c8752accc960e91454e804c6c655a3de091b5887c4301ffaac98f8e`.
+  The interrupted run is separately preserved at
+  `/home/machinist/m31-gqa6-16lane-rewrite/results/EXP-0471-unroll1-8k-matched-aborted-20261015T151235/`.
+
+## Final decision
+
+**Reject the DIM16 schedule for performance.** The corrected route-matched
+screen was 5.8% slower, one sample per side. It passed finite-logit and route
+count checks and generated the same two tokens, but it did not meet the
+required clear speed-gain gate. No 73K restored suffix run was made. Production
+dispatch remains unchanged; do not promote this schedule.

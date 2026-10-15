@@ -874,7 +874,8 @@ void launch_qwen35_gqa6_production_q8_attention_batch(
     bool packed_q8_lds = false, bool packed_q8_lds_128 = false,
     bool direct_global_q8 = false, bool dpp_reduce = false,
     bool block_softmax4 = false, bool wave64_kv_broadcast = false,
-    bool dual_key_wave64 = false, bool sparse_window = false);
+    bool dual_key_wave64 = false, bool sparse_window = false,
+    bool q8_dim16_lanes = false);
 
 void launch_qwen35_gqa6_pair_head_reuse_q8_attention_batch(
     const float* q, const std::int8_t* key_cache_q8, const __half* key_scales,
