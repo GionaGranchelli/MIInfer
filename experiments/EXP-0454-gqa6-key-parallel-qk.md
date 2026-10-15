@@ -13,12 +13,13 @@ and the sequential online-softmax/value-update order.
 EXP-0412 attributes 25.759 s of a 30.165 s restored 1,024-token tile to
 GQA6 Stage1 (85.4%). EXP-0436 measured high aggregate LDS-wait counters but
 did not establish a wall-time stall fraction. EXP-0443 removed LDS staging
-and improved the exact restored suffix by 7.8%; this experiment builds on its
-direct-global Q8 path.
+and improved the exact restored suffix by 7.8%. The intended control for this
+screen was that direct-global Q8 path, but the session-pair harness did not
+select it for the recorded control.
 
 ## Reference and difference
 
-Control: production-arithmetic GQA6, direct-global Q8 K/V, 32 splits,
+Intended control: production-arithmetic GQA6, direct-global Q8 K/V, 32 splits,
 UNROLL=4, on `perf/m31-gqa6-cold64k-gpu0` base `3beb2bd4`.
 
 Candidate: one query warp maps 32 lanes as four key groups of eight lanes.
@@ -77,19 +78,22 @@ sibling had 60 VGPR and 46 SGPR, also with no spills or LDS. The candidate
 passed the hard spill/scratch gate but nearly doubled its vector register use.
 
 One matched pair ran on physical GPU2, BDF `0000:88:00.0`, with the same
-direct-global Q8/Q8 control and candidate binary, restored Q8 session prefix
-of 73,099 tokens, and tokenizer-backed 1,024-token suffix. Both used one graph
-replay tile and ended at position 74,123:
+restored Q8 session prefix of 73,099 tokens and tokenizer-backed 1,024-token
+suffix. Both used one graph replay tile and ended at position 74,123. **Erratum:
+the control was packed-U128 GQA6, not direct-global GQA6.** The harness set
+`MIINFER_M31_Q8_GQA6_PROD_ARITH=1`, `PACKED_LDS=1`, and `PACKED_LDS128=1`,
+while leaving `DIRECT_GLOBAL=0`. The candidate toggled key-parallel4 on.
 
 | Path | Restore | Suffix | Final logits/state/tokens |
 | --- | ---: | ---: | --- |
-| Direct-global control | 2.411 s | 20.885 s | exact, finite; tokens 18369 / 198 |
+| Packed-U128 GQA6 control | 2.411 s | 20.885 s | exact, finite; tokens 18369 / 198 |
 | Key-parallel4 candidate | 2.443 s | 25.418 s | exact, finite; tokens 18369 / 198 |
 
-This single sequential pair makes the candidate 21.7% slower (control /
-candidate = 0.822x). It is not a repeatable performance estimate, but the
-large regression rejects the candidate for this screen. The measured exactness
-confirms the arithmetic contract for this one restored suffix.
+This single sequential pair makes the candidate 21.7% slower than packed-U128
+(control / candidate = 0.822x). It is not a direct-global comparison or a
+repeatable performance estimate. It still rejects the candidate against the
+control actually executed, and measured exactness confirms the arithmetic
+contract for this one restored suffix.
 
 Route-trace logging was not enabled, so no explicit 16/16 dispatch count is
 claimed. The harness set key-parallel4 off for control and on for the
@@ -102,7 +106,8 @@ not act. The container exited 0 and GPU2 returned to zero KFD processes.
 ## Decision
 
 **REJECT.** Revert the key-parallel4 source and harness changes. Keep this
-report as the negative result. The dataflow reduced the intended QK shuffle
-work in source but doubled VGPR use and did not offset that cost in the
-restored-suffix run. The next candidate must test a materially different
-cross-token KV-sharing schedule and enable route tracing before it runs.
+report as the negative result, with the comparator corrected above. The
+dataflow reduced the intended QK shuffle work in source but doubled VGPR use
+and did not offset that cost against packed-U128 in the restored-suffix run.
+The next candidate must compare against direct-global and enable explicit
+route tracing before its performance result is interpreted.
