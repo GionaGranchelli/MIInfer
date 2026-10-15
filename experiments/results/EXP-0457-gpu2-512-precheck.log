@@ -1,0 +1,2 @@
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  q8_gqa6_direct_global_control_session found an incompatible prefix session or empty suffix
