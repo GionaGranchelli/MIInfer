@@ -83,4 +83,33 @@ candidate; it cannot establish repeatability or prove a limiter.
 
 ## Result
 
-Pending the one preflighted GPU2 A→B kill-screen.
+**REJECT — exact but slower.** One same-GPU2 A→B kill-screen completed with
+exit code 0. The executable reported BDF `0000:88:00.0`, gfx906. Both sides
+restored 73,099 tokens, dispatched 1,024 tokenizer-backed suffix tokens,
+replayed one HIP Graph tile, and ended at position 74,123. Route traces show
+16/16 direct-global control dispatches and 16/16 paired-token candidate
+dispatches, all with `graph_state=1`.
+
+The measured suffix prefill times were 20.869 s for direct-global and 24.848 s
+for Q2×K32. The candidate took 3.979 s longer (19.1% more latency); the
+control/candidate ratio was 0.840. This misses the required 10% suffix-time
+improvement. The pair harness printed its candidate label as
+`q8_gqa6_direct_global_session` because both selectors were set for the pair;
+the 16/16 route trace confirms the candidate actually dispatched paired-token
+Stage1. The final pair summary's first duration is control and second is
+candidate.
+
+Correctness passed exactly: logits and recurrent-state trace were byte-for-
+byte equal, generated tokens matched (`18369`, then `198`), all compared
+values were finite, and the harness accepted the pair. Peak observed GPU2
+junction temperature was 57 C, below the warning threshold; the run ended at
+32 C with SCLK 1000 MHz and MCLK 1000 MHz. GPU0 remained excluded. There was
+no concurrent KFD process during preflight. The initial delay before the
+control timing was session-file inspect/restore work; it is outside the
+suffix timing. No cold 64K run or repeat was performed.
+
+The one-pair result establishes that Q2×K32 is not a performance candidate
+under this workload, but it does not prove which hardware resource caused the
+regression. EXP-0436's high LDS issue counters remain a hypothesis about the
+cost; they are not wall-time attribution. Raw output and telemetry are at
+`/home/machinist/m31-gqa6-longctx-results/EXP-0466-q2-k32-gpu2/pair-1024/`.
