@@ -470,11 +470,6 @@ void PrefillV2AttentionLayer::forward(
                 || m31_q8_dot4_query_residual2_enabled() || m31_q8_dot4_query_residual3_enabled(),
             m31_q8_dot4_query_residual2_enabled() || m31_q8_dot4_query_residual3_enabled(),
             m31_q8_dot4_query_residual3_enabled());
-        if (std::getenv("MIINFER_M31_TRACE_ATTENTION_ROUTE") != nullptr) {
-            std::cerr << "miinfer_q8_dot4_attention_dispatch=1 graph_state="
-                      << (prefill_state != nullptr)
-                      << " token_count=" << token_count << '\n';
-        }
     } else if (m31_q8_query_tiled_enabled() && base_position > 0
         && prefill_state == nullptr && kv_cache.is_k_q8() && kv_cache.is_v_q8()
         && token_count >= 16 && token_count % 16 == 0
