@@ -254,7 +254,8 @@ bool compare_results(const Result& control, const Result& candidate, int pair) {
     return finite && std::isfinite(cosine) && cosine >= 0.9999 && first_equal && second_equal;
 }
 
-bool compare_flash_tile_results(const Result& control, const Result& candidate, int pair) {
+bool compare_flash_tile_results(const Result& control, const Result& candidate, int pair,
+                                bool dual_key_wave64_pair = false) {
     struct Metrics { double max_abs; double cosine; bool finite; bool same_size; };
     const auto measure = [](const std::vector<float>& a, const std::vector<float>& b) {
         Metrics m{0.0, 1.0, true, a.size() == b.size()};
@@ -293,7 +294,8 @@ bool compare_flash_tile_results(const Result& control, const Result& candidate, 
         ? logits.same_size && state.same_size && state_observed && logits.finite && state.finite
         : exact_numeric_pass;
     std::cout << std::setprecision(9)
-              << (pair_head_reuse_pair ? "pair_head_reuse_pair="
+              << (dual_key_wave64_pair ? "dual_key_wave64_pair="
+                  : pair_head_reuse_pair ? "pair_head_reuse_pair="
                   : block_softmax4_pair ? "block_softmax4_pair=" : "flash_tile_pair=") << pair
               << " logits_max_abs=" << logits.max_abs << " logits_cosine=" << logits.cosine
               << " state_max_abs=" << state.max_abs << " state_cosine=" << state.cosine
@@ -316,6 +318,7 @@ int main(int argc, char** argv) {
     bool q8_gqa6_dpp_session_pair = false;
     bool q8_gqa6_pair_head_reuse_pair = false;
     bool q8_gqa6_wave64_kv_broadcast_pair = false;
+    bool q8_gqa6_dual_key_wave64_pair = false;
     bool q8_only = false;
     bool fp16_fp32_attention = false;
     std::uint32_t prompt_tokens = 8192;
@@ -340,6 +343,8 @@ int main(int argc, char** argv) {
             q8_gqa6_pair_head_reuse_pair = true;
         } else if (arg == "--q8-gqa6-wave64-kv-broadcast") {
             q8_gqa6_wave64_kv_broadcast_pair = true;
+        } else if (arg == "--q8-gqa6-dual-key-wave64") {
+            q8_gqa6_dual_key_wave64_pair = true;
         } else if (arg == "--q8-only") {
             q8_only = true;
         } else if (arg == "--fp16-fp32-attn") {
@@ -363,7 +368,7 @@ int main(int argc, char** argv) {
                          "[--fp16-first] [--fp16-only] [--q8-only] [--logits-out PATH] "
                          "[--q8-query-tiled-pair] [--q8-native-gqa6-pair] [--q8-gqa6-session-pair] "
                          "[--q8-gqa6-dpp-session-pair] [--q8-gqa6-pair-head-reuse] "
-                         "[--q8-gqa6-wave64-kv-broadcast] "
+                         "[--q8-gqa6-wave64-kv-broadcast] [--q8-gqa6-dual-key-wave64] "
                          "[--fp16-fp32-attn] [--tokens N] "
                          "[--prompt-file PATH] [--session PATH]\n";
             return 2;
@@ -376,17 +381,18 @@ int main(int argc, char** argv) {
         || (q8_native_gqa6_pair && (fp16_first || fp16_only || q8_only
             || q8_query_tiled_pair))
         || ((q8_gqa6_session_pair || q8_gqa6_dpp_session_pair || q8_gqa6_pair_head_reuse_pair
-                || q8_gqa6_wave64_kv_broadcast_pair)
+                || q8_gqa6_wave64_kv_broadcast_pair || q8_gqa6_dual_key_wave64_pair)
             && (session_path.empty() || prompt_file.empty() || fp16_first || fp16_only
                 || q8_only || q8_query_tiled_pair || q8_native_gqa6_pair
                 || static_cast<int>(q8_gqa6_session_pair) + static_cast<int>(q8_gqa6_dpp_session_pair)
                     + static_cast<int>(q8_gqa6_pair_head_reuse_pair)
-                    + static_cast<int>(q8_gqa6_wave64_kv_broadcast_pair) > 1))) {
+                    + static_cast<int>(q8_gqa6_wave64_kv_broadcast_pair)
+                    + static_cast<int>(q8_gqa6_dual_key_wave64_pair) > 1))) {
         std::cerr << "usage: miinfer-m31-fp16-full-model MODEL.gguf "
                      "[--fp16-first] [--fp16-only] [--q8-only] [--logits-out PATH] "
                      "[--q8-query-tiled-pair] [--q8-native-gqa6-pair] [--q8-gqa6-session-pair] "
                      "[--q8-gqa6-dpp-session-pair] [--q8-gqa6-pair-head-reuse] "
-                     "[--q8-gqa6-wave64-kv-broadcast] "
+                     "[--q8-gqa6-wave64-kv-broadcast] [--q8-gqa6-dual-key-wave64] "
                      "[--fp16-fp32-attn] [--tokens N] "
                      "[--prompt-file PATH] [--session PATH]\n";
         return 2;
@@ -524,10 +530,11 @@ int main(int argc, char** argv) {
                   << (prompt_tokens + miinfer::prefill_v2::kPrefillV2MacroTile - 1)
                       / miinfer::prefill_v2::kPrefillV2MacroTile << '\n';
         if (q8_gqa6_session_pair || q8_gqa6_dpp_session_pair || q8_gqa6_pair_head_reuse_pair
-            || q8_gqa6_wave64_kv_broadcast_pair) {
+            || q8_gqa6_wave64_kv_broadcast_pair || q8_gqa6_dual_key_wave64_pair) {
             const bool dpp_pair = q8_gqa6_dpp_session_pair;
             const bool pair_head_reuse_pair = q8_gqa6_pair_head_reuse_pair;
             const bool wave64_kv_broadcast_pair = q8_gqa6_wave64_kv_broadcast_pair;
+            const bool dual_key_wave64_pair = q8_gqa6_dual_key_wave64_pair;
             if (pair_head_reuse_pair
                 && ::setenv("MIINFER_M31_Q8_GQA6_PAIR_HEAD_REUSE_PAIR", "1", 1) != 0) return 1;
             const char* packed_env = std::getenv("MIINFER_M31_Q8_GQA6_PACKED_LDS_PAIR");
@@ -543,11 +550,11 @@ int main(int argc, char** argv) {
             const bool block_softmax4_pair = block_softmax4_env != nullptr
                 && std::strcmp(block_softmax4_env, "0") != 0;
             const bool direct_global_control = dpp_pair || direct_global_pair || flash_tile_pair
-                || wave64_kv_broadcast_pair
+                || wave64_kv_broadcast_pair || dual_key_wave64_pair
                 || block_softmax4_pair;
             const bool packed_pair = dpp_pair || wide128_pair || paired_token_pair || direct_global_pair
                 || flash_tile_pair || block_softmax4_pair || pair_head_reuse_pair
-                || wave64_kv_broadcast_pair
+                || wave64_kv_broadcast_pair || dual_key_wave64_pair
                 || (packed_env != nullptr && std::strcmp(packed_env, "0") != 0);
             const char* reps_env = std::getenv("MIINFER_M31_Q8_GQA6_PAIR_REPS");
             char* reps_end = nullptr;
@@ -577,6 +584,7 @@ int main(int argc, char** argv) {
                         direct_global_control ? "1" : "0", 1) != 0
                     || ::setenv("MIINFER_M31_Q8_GQA6_DPP_REDUCE", "0", 1) != 0
                     || ::setenv("MIINFER_M31_Q8_GQA6_WAVE64_KV_BROADCAST", "0", 1) != 0
+                    || ::setenv("MIINFER_M31_Q8_GQA6_DUAL_KEY_WAVE64", "0", 1) != 0
                     || ::setenv("MIINFER_M31_Q8_GQA6_FLASH_TILE", "0", 1) != 0) return 1;
                 const Result control = run_session_graph_mode(model,
                     direct_global_control ? "q8_gqa6_direct_global_control_session"
@@ -597,9 +605,12 @@ int main(int argc, char** argv) {
                     || ::setenv("MIINFER_M31_Q8_GQA6_DPP_REDUCE", dpp_pair ? "1" : "0", 1) != 0
                     || ::setenv("MIINFER_M31_Q8_GQA6_WAVE64_KV_BROADCAST",
                         wave64_kv_broadcast_pair ? "1" : "0", 1) != 0
+                    || ::setenv("MIINFER_M31_Q8_GQA6_DUAL_KEY_WAVE64",
+                        dual_key_wave64_pair ? "1" : "0", 1) != 0
                     || ::setenv("MIINFER_M31_Q8_GQA6_FLASH_TILE", flash_tile_pair ? "1" : "0", 1) != 0) return 1;
                 const Result candidate = run_session_graph_mode(model,
                     pair_head_reuse_pair ? "q8_gqa6_pair_head_reuse_session"
+                        : dual_key_wave64_pair ? "q8_gqa6_dual_key_wave64_session"
                         : wave64_kv_broadcast_pair ? "q8_gqa6_wave64_kv_broadcast_session"
                         : block_softmax4_pair ? "q8_gqa6_block_softmax4_session"
                         : flash_tile_pair ? "q8_gqa6_flash_tile_session"
@@ -628,7 +639,9 @@ int main(int argc, char** argv) {
                 control_times.push_back(control.prefill_seconds);
                 candidate_times.push_back(candidate.prefill_seconds);
                 const bool numeric_comparison = flash_tile_pair || block_softmax4_pair || pair_head_reuse_pair
-                    ? compare_flash_tile_results(control, candidate, static_cast<int>(rep + 1))
+                    || dual_key_wave64_pair
+                    ? compare_flash_tile_results(control, candidate, static_cast<int>(rep + 1),
+                                                 dual_key_wave64_pair)
                     : logits_exact && state_exact && generated_equal && finite;
                 const bool sample_correct = pair_head_reuse_pair ? finite : numeric_comparison;
                 all_correct = all_correct && sample_correct;
@@ -645,6 +658,7 @@ int main(int argc, char** argv) {
                           : packed_pair ? "q8_gqa6_suffix_median_seconds=" : "q8_production_suffix_median_seconds=")
                       << median(control_times)
                       << (pair_head_reuse_pair ? " q8_gqa6_pair_head_reuse_median_seconds="
+                          : dual_key_wave64_pair ? " q8_gqa6_dual_key_wave64_median_seconds="
                           : wave64_kv_broadcast_pair ? " q8_gqa6_wave64_kv_broadcast_median_seconds="
                           : block_softmax4_pair ? " q8_gqa6_block_softmax4_median_seconds="
                           : flash_tile_pair ? " q8_gqa6_flash_tile_median_seconds="

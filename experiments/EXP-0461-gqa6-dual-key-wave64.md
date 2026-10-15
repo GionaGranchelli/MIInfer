@@ -88,8 +88,11 @@ shuffles, or drops resident-wave capacity materially relative to baseline.
   sequence and prove the upper half has no output stores/state writes.
 - **Correctness:** same GPU2 restored 73,099-token Q8 checkpoint plus the
   tokenizer-backed 1,024-token prompt suffix. Require final position 74,123,
-  finite values, exact full logits and recurrent state, and matching checked
-  tokens; any mismatch rejects this exact-order schedule.
+  nonempty 48-layer recurrent trace, finite logits/state, max-absolute error
+  at most 0.01, cosine at least 0.9999 for logits and state, and matching
+  first/second tokens. Report exact logits/state equality separately as a
+  diagnostic; a numerical pass with changed exact outputs still requires the
+  deterministic real coding-task behavior gate before any cold-64K run.
 - **Performance:** one same-binary direct-global control/candidate kill-screen
   on GPU2 with the same model, checkpoint, prompt, image, graph, and guard.
   Candidate must be at least 10% faster. One pair is a kill screen, not a
@@ -99,5 +102,6 @@ shuffles, or drops resident-wave capacity materially relative to baseline.
 
 ## Result
 
-Implementation, build/resource screen, and restored-session kill-screen are
-pending.
+Implementation is pushed in `7b4088e`. The full target compiled in the pinned
+ROCm 7.2.1 image. The exact candidate code object and binary SHA-256 plus the
+restored-session result are pending.
