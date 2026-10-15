@@ -54,3 +54,27 @@ The maximum possible full-suffix improvement is bounded by Stage 1's measured
 therefore no larger gain is assumed. Stop if route, arithmetic exactness,
 resource or >=10% timing gate fails. If it passes, run the defined coding task
 before any cold 64K claim. Record and push either result.
+
+## Result — rejected
+
+GPU2/BDF `0000:88:00.0`, restored 73,099-token prefix plus 1,024-token suffix,
+same binary, model, prompt, and graph-state path. The route trace confirmed all
+16 layers used the direct-global control, then all 16 used Wave64 broadcast.
+The single paired kill-screen measured 20.877 s control and 25.070 s candidate
+(candidate/control 1.201; 4.193 s slower). This is one A/B pair, not a repeated
+median or a stable estimate of regression size; it fails the predeclared 10%
+keep gate and is rejected without further repeats.
+
+Correctness passed: final position 74,123, exact logits, exact recurrent-state
+trace, same checked generated tokens, finite output, and `accepted=1`. The
+thermal guard remained below its 80 C warning threshold (reported peak 56 C).
+No cold 64K run or coding-agent task was attempted. The feature remains opt-in
+and must not be promoted.
+
+The result falsifies the narrow hypothesis that removing duplicate per-half
+K/V loads is sufficient to accelerate this restored suffix. It does not
+identify the limiting instruction/resource. Next work should change the CTA
+schedule to reuse each K/V tile across multiple query positions as well as GQA
+heads, then compare that design against this exact control. Inspect generated
+ISA and stage timing before deciding whether the tile is limited by shuffle,
+softmax/dequantization, register occupancy, or split/merge overhead.
