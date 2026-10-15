@@ -39,6 +39,7 @@ struct Result {
     std::vector<float> logits;
     std::vector<float> suffix_hidden;
     std::vector<float> recurrent_state_trace;
+    std::size_t recurrent_layer_count = 0;
 };
 
 Result run_mode(const miinfer::Qwen35Model& model,
@@ -208,6 +209,10 @@ Result run_session_graph_mode(const miinfer::Qwen35Model& model,
         result.recurrent_state_trace.insert(result.recurrent_state_trace.end(), values.begin(), values.end());
         result.recurrent_state_trace.insert(result.recurrent_state_trace.end(), history.begin(), history.end());
     }
+    result.recurrent_layer_count = runtime.recurrent_states().size();
+    if (result.recurrent_layer_count == 0 || result.recurrent_state_trace.empty()) {
+        throw std::runtime_error(std::string(label) + " restored no recurrent-state trace");
+    }
     result.second_token = runtime.decode_step(result.top1, static_cast<std::uint32_t>(prompt.size()));
     std::cout << label << " restore_seconds=" << std::fixed << std::setprecision(3)
               << result.restore_seconds << " suffix_seconds=" << result.prefill_seconds
@@ -267,12 +272,17 @@ bool compare_flash_tile_results(const Result& control, const Result& candidate, 
         && control.second_token == candidate.second_token;
     const bool logits_exact = control.logits == candidate.logits;
     const bool state_exact = control.recurrent_state_trace == candidate.recurrent_state_trace;
-    const bool pass = logits.same_size && state.same_size && logits.finite && state.finite
+    const bool state_observed = control.recurrent_layer_count > 0
+        && control.recurrent_layer_count == candidate.recurrent_layer_count
+        && !control.recurrent_state_trace.empty() && !candidate.recurrent_state_trace.empty();
+    const bool pass = logits.same_size && state.same_size && state_observed
+        && logits.finite && state.finite
         && logits.max_abs <= 0.01 && logits.cosine >= 0.9999
         && state.max_abs <= 0.01 && state.cosine >= 0.9999 && tokens_equal;
     std::cout << std::setprecision(9) << "flash_tile_pair=" << pair
               << " logits_max_abs=" << logits.max_abs << " logits_cosine=" << logits.cosine
               << " state_max_abs=" << state.max_abs << " state_cosine=" << state.cosine
+              << " recurrent_layers=" << candidate.recurrent_layer_count
               << " logits_exact=" << logits_exact << " state_exact=" << state_exact
               << " tokens_equal=" << tokens_equal << " finite=" << (logits.finite && state.finite)
               << " numeric_pass=" << pass << '\n';

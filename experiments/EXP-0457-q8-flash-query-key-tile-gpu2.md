@@ -87,5 +87,7 @@ numerical, or performance failure; retain the report and raw evidence.
 The restored-session pair mode adds `MIINFER_M31_Q8_GQA6_FLASH_TILE_PAIR=1`.
 It explicitly uses direct-global GQA6 for the control and toggles only the
 flash-tile selector for the candidate. It emits per-layer route traces,
-compares complete logits and recurrent state with the numeric bounds above,
-and records exact equality and generated-token agreement as diagnostics.
+requires a nonempty recurrent-state trace with matching, nonzero recurrent
+layer counts, compares complete logits and recurrent state with the numeric
+bounds above, and records exact equality and generated-token agreement as
+diagnostics.
