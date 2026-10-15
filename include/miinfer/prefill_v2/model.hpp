@@ -301,6 +301,7 @@ private:
     bool suffix_graph_q8_gqa6_pair_head_reuse_enabled_ = false;
     bool suffix_graph_q8_gqa6_wave64_kv_broadcast_enabled_ = false;
     bool suffix_graph_q8_gqa6_dual_key_wave64_enabled_ = false;
+    bool suffix_graph_q8_gqa6_defer_v_loads_enabled_ = false;
 
     // Sampling state
     mutable std::vector<float> host_logits_;

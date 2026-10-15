@@ -543,18 +543,21 @@ int main(int argc, char** argv) {
             const char* direct_global_env = std::getenv("MIINFER_M31_Q8_GQA6_DIRECT_GLOBAL_PAIR");
             const char* flash_tile_env = std::getenv("MIINFER_M31_Q8_GQA6_FLASH_TILE_PAIR");
             const char* block_softmax4_env = std::getenv("MIINFER_M31_Q8_GQA6_BLOCK_SOFTMAX4_PAIR");
+            const char* defer_v_loads_env = std::getenv("MIINFER_M31_Q8_GQA6_DEFER_V_LOADS_PAIR");
             const bool wide128_pair = wide128_pair_env != nullptr && std::strcmp(wide128_pair_env, "0") != 0;
             const bool paired_token_pair = paired_token_env != nullptr && std::strcmp(paired_token_env, "0") != 0;
             const bool direct_global_pair = direct_global_env != nullptr && std::strcmp(direct_global_env, "0") != 0;
             const bool flash_tile_pair = flash_tile_env != nullptr && std::strcmp(flash_tile_env, "0") != 0;
             const bool block_softmax4_pair = block_softmax4_env != nullptr
                 && std::strcmp(block_softmax4_env, "0") != 0;
+            const bool defer_v_loads_pair = defer_v_loads_env != nullptr
+                && std::strcmp(defer_v_loads_env, "0") != 0;
             const bool direct_global_control = dpp_pair || direct_global_pair || flash_tile_pair
                 || wave64_kv_broadcast_pair || dual_key_wave64_pair
-                || block_softmax4_pair;
+                || block_softmax4_pair || defer_v_loads_pair;
             const bool packed_pair = dpp_pair || wide128_pair || paired_token_pair || direct_global_pair
                 || flash_tile_pair || block_softmax4_pair || pair_head_reuse_pair
-                || wave64_kv_broadcast_pair || dual_key_wave64_pair
+                || wave64_kv_broadcast_pair || dual_key_wave64_pair || defer_v_loads_pair
                 || (packed_env != nullptr && std::strcmp(packed_env, "0") != 0);
             const char* reps_env = std::getenv("MIINFER_M31_Q8_GQA6_PAIR_REPS");
             char* reps_end = nullptr;
@@ -585,6 +588,7 @@ int main(int argc, char** argv) {
                     || ::setenv("MIINFER_M31_Q8_GQA6_DPP_REDUCE", "0", 1) != 0
                     || ::setenv("MIINFER_M31_Q8_GQA6_WAVE64_KV_BROADCAST", "0", 1) != 0
                     || ::setenv("MIINFER_M31_Q8_GQA6_DUAL_KEY_WAVE64", "0", 1) != 0
+                    || ::setenv("MIINFER_M31_Q8_GQA6_DEFER_V_LOADS", "0", 1) != 0
                     || ::setenv("MIINFER_M31_Q8_GQA6_FLASH_TILE", "0", 1) != 0) return 1;
                 const Result control = run_session_graph_mode(model,
                     direct_global_control ? "q8_gqa6_direct_global_control_session"
@@ -607,10 +611,13 @@ int main(int argc, char** argv) {
                         wave64_kv_broadcast_pair ? "1" : "0", 1) != 0
                     || ::setenv("MIINFER_M31_Q8_GQA6_DUAL_KEY_WAVE64",
                         dual_key_wave64_pair ? "1" : "0", 1) != 0
+                    || ::setenv("MIINFER_M31_Q8_GQA6_DEFER_V_LOADS",
+                        defer_v_loads_pair ? "1" : "0", 1) != 0
                     || ::setenv("MIINFER_M31_Q8_GQA6_FLASH_TILE", flash_tile_pair ? "1" : "0", 1) != 0) return 1;
                 const Result candidate = run_session_graph_mode(model,
                     pair_head_reuse_pair ? "q8_gqa6_pair_head_reuse_session"
                         : dual_key_wave64_pair ? "q8_gqa6_dual_key_wave64_session"
+                        : defer_v_loads_pair ? "q8_gqa6_defer_v_loads_session"
                         : wave64_kv_broadcast_pair ? "q8_gqa6_wave64_kv_broadcast_session"
                         : block_softmax4_pair ? "q8_gqa6_block_softmax4_session"
                         : flash_tile_pair ? "q8_gqa6_flash_tile_session"
