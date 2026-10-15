@@ -7599,9 +7599,18 @@ void launch_qwen35_splitk_suffix_attention_f16(
 // V2-0019: Direct-Consumption Quantized Split-K Suffix Attention (FP16 / Q8 K / Q8 V)
 // -----------------------------------------------------------------------------
 
+__device__ __forceinline__ float qwen35_gqa6_reduce_qk_dpp(float dot) {
+    dot += __shfl_xor(dot, 16, 32);
+    dot += __builtin_amdgcn_update_dpp(0.0f, dot, 0x108, 0xf, 0xf, false);
+    dot += __builtin_amdgcn_update_dpp(0.0f, dot, 0x104, 0xf, 0xf, false);
+    dot += __builtin_amdgcn_update_dpp(0.0f, dot, 0x04e, 0xf, 0xf, false);
+    dot += __builtin_amdgcn_update_dpp(0.0f, dot, 0x0b1, 0xf, 0xf, false);
+    return dot;
+}
+
 template <bool K_IS_Q8, bool V_IS_Q8, int UNROLL = 4, bool GQA6_SHARED_KV = false,
           bool PACKED_Q8_LDS = false, bool PACKED_Q8_LDS_128 = false,
-          bool GQA6_DIRECT_GLOBAL_Q8 = false>
+          bool GQA6_DIRECT_GLOBAL_Q8 = false, bool GQA6_DPP_REDUCE = false>
 __launch_bounds__(GQA6_SHARED_KV ? 192 : 1024, 1)
 __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
     const float* __restrict__ q,
@@ -7838,9 +7847,13 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
         #pragma unroll
         for (int u = 0; u < UNROLL; ++u) {
             float d = dots[u];
-            #pragma unroll
-            for (int offset = 16; offset > 0; offset /= 2) {
-                d += __shfl_xor(d, offset, 32);
+            if constexpr (GQA6_DPP_REDUCE) {
+                d = qwen35_gqa6_reduce_qk_dpp(d);
+            } else {
+                #pragma unroll
+                for (int offset = 16; offset > 0; offset /= 2) {
+                    d += __shfl_xor(d, offset, 32);
+                }
             }
             if constexpr (K_IS_Q8) {
                 scores[u] = __shfl(d * (k_scales[u] * scale), sub_wave * 32, 64);
@@ -7945,9 +7958,13 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
             k_f16_ptr += head_dim;
         }
 
-        #pragma unroll
-        for (int offset = 16; offset > 0; offset /= 2) {
-            dot += __shfl_xor(dot, offset, 32);
+        if constexpr (GQA6_DPP_REDUCE) {
+            dot = qwen35_gqa6_reduce_qk_dpp(dot);
+        } else {
+            #pragma unroll
+            for (int offset = 16; offset > 0; offset /= 2) {
+                dot += __shfl_xor(dot, offset, 32);
+            }
         }
         float score = (K_IS_Q8) ? __shfl(dot * (k_scale_val * scale), sub_wave * 32, 64)
                                 : __shfl(dot * scale, sub_wave * 32, 64);
@@ -8332,14 +8349,15 @@ void launch_qwen35_gqa6_production_q8_attention_batch(
     std::uint32_t num_splits, hipStream_t stream,
     const DevicePrefillState* prefill_state,
     float* stage1_ms, float* stage2_ms, bool packed_q8_lds, bool packed_q8_lds_128,
-    bool direct_global_q8) {
+    bool direct_global_q8, bool dpp_reduce) {
     if (q == nullptr || key_cache_q8 == nullptr || key_scales == nullptr
         || value_cache_q8 == nullptr || value_scales == nullptr || gate == nullptr
         || gated_output == nullptr || split_workspace == nullptr || token_count == 0
         || base_position > cache_capacity || token_count > cache_capacity - base_position
         || query_heads != 24 || kv_heads != 4 || head_dim != 256
         || !std::isfinite(scale) || num_splits == 0 || num_splits > 64
-        || (packed_q8_lds_128 && !packed_q8_lds)) {
+        || (packed_q8_lds_128 && !packed_q8_lds)
+        || (dpp_reduce && !direct_global_q8)) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
     }
     const std::size_t total_meta = static_cast<std::size_t>(num_splits) * token_count * query_heads;
@@ -8359,11 +8377,19 @@ void launch_qwen35_gqa6_production_q8_attention_batch(
         MIINFER_HIP_CHECK(hipEventRecord(stage_start, stream));
     }
     if (direct_global_q8) {
-        hipLaunchKernelGGL((qwen35_splitk_suffix_attn_stage1_quant_kernel<true, true, 4, true, false, false, true>),
-            dim3(token_count, num_splits, kv_heads), dim3(64, 3), 0, stream,
-            q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,
-            partial_max, partial_sum, partial_acc, token_count, base_position, cache_capacity,
-            query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
+        if (dpp_reduce) {
+            hipLaunchKernelGGL((qwen35_splitk_suffix_attn_stage1_quant_kernel<true, true, 4, true, false, false, true, true>),
+                dim3(token_count, num_splits, kv_heads), dim3(64, 3), 0, stream,
+                q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,
+                partial_max, partial_sum, partial_acc, token_count, base_position, cache_capacity,
+                query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
+        } else {
+            hipLaunchKernelGGL((qwen35_splitk_suffix_attn_stage1_quant_kernel<true, true, 4, true, false, false, true>),
+                dim3(token_count, num_splits, kv_heads), dim3(64, 3), 0, stream,
+                q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,
+                partial_max, partial_sum, partial_acc, token_count, base_position, cache_capacity,
+                query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
+        }
     } else if (packed_q8_lds_128) {
         hipLaunchKernelGGL((qwen35_splitk_suffix_attn_stage1_quant_kernel<true, true, 4, true, true, true>),
             dim3(token_count, num_splits, kv_heads), dim3(64, 3), shared_bytes, stream,

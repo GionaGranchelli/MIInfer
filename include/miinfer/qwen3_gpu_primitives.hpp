@@ -872,7 +872,7 @@ void launch_qwen35_gqa6_production_q8_attention_batch(
     const DevicePrefillState* prefill_state = nullptr,
     float* stage1_ms = nullptr, float* stage2_ms = nullptr,
     bool packed_q8_lds = false, bool packed_q8_lds_128 = false,
-    bool direct_global_q8 = false);
+    bool direct_global_q8 = false, bool dpp_reduce = false);
 
 void launch_qwen35_gqa6_paired_token_q8_attention_batch(
     const float* q, const std::int8_t* key_cache_q8, const __half* key_scales,
