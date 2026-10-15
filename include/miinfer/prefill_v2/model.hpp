@@ -295,7 +295,6 @@ private:
     bool suffix_graph_q8_gqa6_packed_lds_enabled_ = false;
     bool suffix_graph_q8_gqa6_packed_lds_128_enabled_ = false;
     bool suffix_graph_q8_gqa6_paired_token_enabled_ = false;
-    bool suffix_graph_q8_gqa6_four_wave_enabled_ = false;
     bool suffix_graph_q8_gqa6_direct_global_enabled_ = false;
 
     // Sampling state

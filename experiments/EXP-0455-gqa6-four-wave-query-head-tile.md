@@ -1,55 +1,66 @@
 # EXP-0455 — Four-wave GQA6 query/head tile
 
-**Status:** IN PROGRESS — compiler/resource gate pending
+**Status: REJECTED — exact, but slower than direct-global GQA6.**
 
-## Objective
+## Question
 
-Test one source-shaped gfx906 mapping for the active GQA6 Q8/Q8 attention
-frontier. An CTA handles four adjacent queries and two adjacent query heads
-from one KV group (eight independent query rows), using four Wave64s. One Q8
-K/V tile is staged once in LDS and consumed by all eight rows.
+Can one 256-thread CTA share one staged Q8 K/V tile across four adjacent
+queries and two query heads per KV group, while preserving each row's original
+Split-K interval and ordered online-softmax updates?
 
-This changes the workgroup geometry and head grouping relative to the rejected
-EXP-0427 tile4 (384 threads / six waves) while keeping its exact cross-query
-reuse premise. This is a bounded re-evaluation of that geometry, not a tile
-size sweep. Prior evidence remains adverse: EXP-0413/0427 rejected cooperative
-query tiling, EXP-0435 found split-boundary overhead negligible, and EXP-0443
-found the current direct-global one-token GQA6 route faster than LDS staging.
+## Resource screen
 
-## Hypothesis and one variable
+Built for gfx906 with the pinned ROCm 7.2.1 image
+`localhost/miinfer-m31-rocm721-libdw@sha256:422b5d15d384d78cab724a0190ef739d31212674ebc1ae8f0f6cf538b1f5ea8f`.
+Compiler metadata confirmed a 256-thread workgroup (four Wave64s), 53 VGPR,
+57 SGPR, 2,080 bytes of LDS, zero register spills, zero private bytes, and
+four static barriers across the full and tail loops. The direct-global control
+reported 60 VGPR, 50 SGPR, no LDS, and zero spills/private bytes. This passed
+the compile/resource gate.
 
-Four Wave64s may keep a tile4 CTA at the natural 256-thread gfx906 width and
-reduce per-CTA query/head state enough to improve occupancy and amortize one
-barrier across the eight query rows. The sole variable is this Stage1 row
-mapping; Q8 arithmetic, per-query Split-K intervals, key order, online softmax,
-stage2, model/session, graph and suffix remain fixed.
+## Restored suffix screen
 
-The candidate stages the union of the four query intervals once, masks each
-row to its own original interval, and consumes valid keys in increasing order.
-The direct-global GQA6 path remains the control.
+One paired run used GPU2, BDF `0000:88:00.0`, on the pinned image and identical
+Qwen3.8-27B Q4_K_M model, restored session, tokenized prompt, and 1,024-token
+suffix. The session had 73,099 tokens before the suffix and 74,123 afterward.
+The in-process identity was `gfx906:sramecc-:xnack-` at the expected BDF.
 
-## Gates
+| Route | Restore | 1,024-token suffix |
+|---|---:|---:|
+| Direct-global control | 2.845 s | 20.905 s |
+| Four-wave candidate | 2.938 s | 25.182 s |
 
-- **Resource:** compile for gfx906 in the pinned ROCm image; require an actual
-  256-thread / four-wave launch, zero register spills, zero private bytes, and
-  no extra barrier loop beyond the existing one-barrier-per-four-key tile.
-  Reject if resource use/codegen is no better than the rejected six-wave tile.
-- **Correctness and route:** one restored 73,099-token Q8 session plus the
-  tokenized 1,024-token suffix. Require graph route trace on all 16 layers,
-  exact full logits and recurrent state, equal checked tokens, finite values,
-  and position 74,123.
-- **Performance:** one direct-global control/candidate pair on GPU2
-  `0000:88:00.0`; continue only with exactness and at least 10% lower suffix
-  latency. No repeat or cold-64K run unless the first pair passes.
-- **Safety:** use the verified pinned image/model/session, confirm GPU2 BDF and
-  idle KFD workloads, retain the 80 C warning / 85 C hard stop, and do not use
-  GPU0.
+The candidate took 1.205x the control time, a 20.5% regression (speed ratio
+0.830x). It is rejected; no repeat or cold-prefill run is justified.
 
-## Expected impact and kill rule
+Correctness passed in the same pair: full session logits exact, recurrent-state
+trace exact, generated tokens equal, output finite, and final position 74,123.
+Explicit route tracing showed 16/16 layers on direct-global for control and
+16/16 on four-wave for candidate, both with `graph_state=1` and
+`token_count=1024`.
 
-The tested object is the measured dominant attention Stage1 path. Stop if the
-compiler recreates a six-wave/high-pressure schedule, adds spills/private
-state, dispatch is not selected on all layers, any correctness check fails, or
-the suffix improvement is below 10%. If rejected, keep the direct-global
-production arithmetic path and record the geometry result; do not try another
-tile or wave count.
+Temperature peaked at 57 C against the 80 C warning / 85 C stop guard. The
+final GPU2 temperature was 33 C, and the KFD workload was idle after the run.
+
+## Launcher correction
+
+The first attempted launch exited before inference because it passed only
+`/dev/dri/renderD130` to the container, so HIP found no GPU. This was a setup
+failure, not a candidate result. The successful rerun used the known-good
+campaign passthrough: `--device /dev/kfd --device /dev/dri --group-add
+keep-groups --security-opt label=disable`, with `ROCR_VISIBLE_DEVICES=2`.
+Container `rocminfo` exposed exactly one GPU agent (gfx906, chip `0x66a3`,
+BDFID `0x8800`), and the inference process itself reported
+`device_bdf=0000:88:00.0`.
+
+Raw logs and thermal telemetry are retained on Machinist at
+`/home/machinist/m31-attn-rewrite-gpu2-0455/results/EXP-0455-four-wave-gpu2-r2/`.
+
+## Decision
+
+The four-wave geometry and its source implementation were removed from this
+branch after the measured regression. Keep direct-global GQA6 as the control
+and production route. This experiment does not justify another wave-count or
+tile-size variant; a future attention candidate must change the dataflow in a
+meaningful way and must clear an initial resource/performance screen before
+long-context work.

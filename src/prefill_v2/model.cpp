@@ -267,8 +267,7 @@ PrefillV2Model::PrefillV2Model(PrefillV2Model&& other) noexcept
       suffix_graph_q8_gqa6_prod_arith_enabled_(other.suffix_graph_q8_gqa6_prod_arith_enabled_),
       suffix_graph_q8_gqa6_packed_lds_enabled_(other.suffix_graph_q8_gqa6_packed_lds_enabled_),
       suffix_graph_q8_gqa6_packed_lds_128_enabled_(other.suffix_graph_q8_gqa6_packed_lds_128_enabled_),
-      suffix_graph_q8_gqa6_paired_token_enabled_(other.suffix_graph_q8_gqa6_paired_token_enabled_),
-      suffix_graph_q8_gqa6_four_wave_enabled_(other.suffix_graph_q8_gqa6_four_wave_enabled_) {
+      suffix_graph_q8_gqa6_paired_token_enabled_(other.suffix_graph_q8_gqa6_paired_token_enabled_) {
     suffix_graph_q8_gqa6_direct_global_enabled_ = other.suffix_graph_q8_gqa6_direct_global_enabled_;
     other.d_embedding_weights_ = nullptr;
     other.d_final_norm_weights_ = nullptr;
@@ -294,7 +293,6 @@ PrefillV2Model::PrefillV2Model(PrefillV2Model&& other) noexcept
     other.suffix_graph_q8_gqa6_packed_lds_enabled_ = false;
     other.suffix_graph_q8_gqa6_packed_lds_128_enabled_ = false;
     other.suffix_graph_q8_gqa6_paired_token_enabled_ = false;
-    other.suffix_graph_q8_gqa6_four_wave_enabled_ = false;
     other.suffix_graph_q8_gqa6_direct_global_enabled_ = false;
 }
 
@@ -336,7 +334,6 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
         suffix_graph_q8_gqa6_packed_lds_enabled_ = other.suffix_graph_q8_gqa6_packed_lds_enabled_;
         suffix_graph_q8_gqa6_packed_lds_128_enabled_ = other.suffix_graph_q8_gqa6_packed_lds_128_enabled_;
         suffix_graph_q8_gqa6_paired_token_enabled_ = other.suffix_graph_q8_gqa6_paired_token_enabled_;
-        suffix_graph_q8_gqa6_four_wave_enabled_ = other.suffix_graph_q8_gqa6_four_wave_enabled_;
         suffix_graph_q8_gqa6_direct_global_enabled_ = other.suffix_graph_q8_gqa6_direct_global_enabled_;
 
         other.d_embedding_weights_ = nullptr;
@@ -363,7 +360,6 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
         other.suffix_graph_q8_gqa6_packed_lds_enabled_ = false;
         other.suffix_graph_q8_gqa6_packed_lds_128_enabled_ = false;
         other.suffix_graph_q8_gqa6_paired_token_enabled_ = false;
-        other.suffix_graph_q8_gqa6_four_wave_enabled_ = false;
         other.suffix_graph_q8_gqa6_direct_global_enabled_ = false;
     }
     return *this;
@@ -1288,7 +1284,6 @@ void PrefillV2Model::cleanup_suffix_graph() {
     suffix_graph_q8_gqa6_packed_lds_enabled_ = false;
     suffix_graph_q8_gqa6_packed_lds_128_enabled_ = false;
     suffix_graph_q8_gqa6_paired_token_enabled_ = false;
-    suffix_graph_q8_gqa6_four_wave_enabled_ = false;
     suffix_graph_q8_gqa6_direct_global_enabled_ = false;
 }
 
@@ -1321,9 +1316,6 @@ void PrefillV2Model::capture_suffix_graph(hipStream_t stream) {
     const char* gqa6_paired_token_env = std::getenv("MIINFER_M31_Q8_GQA6_PAIRED_TOKEN");
     const bool gqa6_paired_token_enabled =
         gqa6_paired_token_env != nullptr && std::string_view(gqa6_paired_token_env) != "0";
-    const char* gqa6_four_wave_env = std::getenv("MIINFER_M31_Q8_GQA6_FOUR_WAVE");
-    const bool gqa6_four_wave_enabled =
-        gqa6_four_wave_env != nullptr && std::string_view(gqa6_four_wave_env) != "0";
     const char* gqa6_direct_global_env = std::getenv("MIINFER_M31_Q8_GQA6_DIRECT_GLOBAL");
     const bool gqa6_direct_global_enabled = gqa6_direct_global_env != nullptr
         && std::string_view(gqa6_direct_global_env) != "0";
@@ -1337,7 +1329,6 @@ void PrefillV2Model::capture_suffix_graph(hipStream_t stream) {
         && suffix_graph_q8_gqa6_packed_lds_enabled_ == gqa6_packed_lds_enabled
         && suffix_graph_q8_gqa6_packed_lds_128_enabled_ == gqa6_packed_lds_128_enabled
         && suffix_graph_q8_gqa6_paired_token_enabled_ == gqa6_paired_token_enabled
-        && suffix_graph_q8_gqa6_four_wave_enabled_ == gqa6_four_wave_enabled
         && suffix_graph_q8_gqa6_direct_global_enabled_ == gqa6_direct_global_enabled) {
         return;
     }
@@ -1368,7 +1359,6 @@ void PrefillV2Model::capture_suffix_graph(hipStream_t stream) {
     suffix_graph_q8_gqa6_packed_lds_enabled_ = gqa6_packed_lds_enabled;
     suffix_graph_q8_gqa6_packed_lds_128_enabled_ = gqa6_packed_lds_128_enabled;
     suffix_graph_q8_gqa6_paired_token_enabled_ = gqa6_paired_token_enabled;
-    suffix_graph_q8_gqa6_four_wave_enabled_ = gqa6_four_wave_enabled;
     suffix_graph_q8_gqa6_direct_global_enabled_ = gqa6_direct_global_enabled;
 }
 
