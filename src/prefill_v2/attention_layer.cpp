@@ -80,6 +80,11 @@ bool m31_q8_gqa6_wave64_kv_broadcast_enabled() {
     return value != nullptr && std::strcmp(value, "0") != 0;
 }
 
+bool m31_q8_gqa6_dual_key_wave64_enabled() {
+    const char* value = std::getenv("MIINFER_M31_Q8_GQA6_DUAL_KEY_WAVE64");
+    return value != nullptr && std::strcmp(value, "0") != 0;
+}
+
 bool m31_q8_dot4_attention_enabled() {
     const char* value = std::getenv("MIINFER_M31_Q8_DOT4_ATTENTION");
     return value != nullptr && std::strcmp(value, "0") != 0;
@@ -442,7 +447,9 @@ void PrefillV2AttentionLayer::forward(
         const bool packed_lds = m31_q8_gqa6_packed_lds_enabled();
         const bool packed_lds_128 = m31_q8_gqa6_packed_lds_128_enabled();
         const bool wave64_kv_broadcast = m31_q8_gqa6_wave64_kv_broadcast_enabled();
-        const bool direct_global = wave64_kv_broadcast || m31_q8_gqa6_direct_global_enabled();
+        const bool dual_key_wave64 = m31_q8_gqa6_dual_key_wave64_enabled();
+        const bool direct_global = dual_key_wave64 || wave64_kv_broadcast
+            || m31_q8_gqa6_direct_global_enabled();
         const bool dpp_reduce = direct_global && !wave64_kv_broadcast
             && m31_q8_gqa6_dpp_reduce_enabled();
         const bool block_softmax4 = direct_global && !wave64_kv_broadcast
@@ -470,6 +477,10 @@ void PrefillV2AttentionLayer::forward(
             std::cerr << "miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state="
                       << (prefill_state != nullptr) << " token_count=" << token_count << '\n';
         }
+        if (dual_key_wave64 && std::getenv("MIINFER_M31_TRACE_ATTENTION_ROUTE") != nullptr) {
+            std::cerr << "miinfer_q8_gqa6_dual_key_wave64_dispatch=1 graph_state="
+                      << (prefill_state != nullptr) << " token_count=" << token_count << '\n';
+        }
         launch_qwen35_gqa6_production_q8_attention_batch(
             ws.attn_q_rope, kv_cache.key_cache_q8, kv_cache.key_scales,
             kv_cache.value_cache_q8, kv_cache.value_scales,
@@ -478,7 +489,7 @@ void PrefillV2AttentionLayer::forward(
             24, 4, 256, 1.0F / std::sqrt(256.0F), 32, stream, prefill_state,
             nullptr, nullptr, direct_global ? false : packed_lds,
             direct_global ? false : packed_lds_128, direct_global, dpp_reduce,
-            block_softmax4, wave64_kv_broadcast);
+            block_softmax4, wave64_kv_broadcast, dual_key_wave64);
         const char* compare_layers_env =
             std::getenv("MIINFER_M31_Q8_GQA6_BLOCK_COMPARE_LAYERS");
         if (block_softmax4 && compare_layers_env != nullptr

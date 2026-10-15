@@ -7611,8 +7611,9 @@ __device__ __forceinline__ float qwen35_gqa6_reduce_qk_dpp(float dot) {
 template <bool K_IS_Q8, bool V_IS_Q8, int UNROLL = 4, bool GQA6_SHARED_KV = false,
           bool PACKED_Q8_LDS = false, bool PACKED_Q8_LDS_128 = false,
           bool GQA6_DIRECT_GLOBAL_Q8 = false, bool GQA6_DPP_REDUCE = false,
-          bool GQA6_BLOCK_SOFTMAX4 = false, bool GQA6_WAVE64_KV_BROADCAST = false>
-__launch_bounds__(GQA6_SHARED_KV ? 192 : 1024, 1)
+          bool GQA6_BLOCK_SOFTMAX4 = false, bool GQA6_WAVE64_KV_BROADCAST = false,
+          bool GQA6_DUAL_KEY_WAVE64 = false>
+__launch_bounds__(GQA6_DUAL_KEY_WAVE64 ? 384 : (GQA6_SHARED_KV ? 192 : 1024), 1)
 __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
     const float* __restrict__ q,
     const __half* __restrict__ key_cache_f16,
@@ -7638,6 +7639,10 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
         || (UNROLL == 4 && K_IS_Q8 && V_IS_Q8 && GQA6_DIRECT_GLOBAL_Q8));
     static_assert(!GQA6_WAVE64_KV_BROADCAST
         || (K_IS_Q8 && V_IS_Q8 && GQA6_SHARED_KV && GQA6_DIRECT_GLOBAL_Q8));
+    static_assert(!GQA6_DUAL_KEY_WAVE64
+        || (K_IS_Q8 && V_IS_Q8 && GQA6_SHARED_KV && GQA6_DIRECT_GLOBAL_Q8
+            && !GQA6_DPP_REDUCE && !GQA6_BLOCK_SOFTMAX4
+            && !GQA6_WAVE64_KV_BROADCAST && UNROLL == 4));
 
     if (prefill_state != nullptr) {
         base_position = prefill_state->base_position;
@@ -7652,9 +7657,11 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
 
     const std::uint32_t sub_wave = lane / 32;          // 0 or 1
     const std::uint32_t sub_lane = lane % 32;          // [0, 31]
-    const std::uint32_t head = GQA6_SHARED_KV
+    const std::uint32_t head = GQA6_DUAL_KEY_WAVE64
+        ? blockIdx.z * 6 + threadIdx.y
+        : (GQA6_SHARED_KV
         ? blockIdx.z * 6 + threadIdx.y * 2 + sub_wave
-        : head_pair * 2 + sub_wave;
+        : head_pair * 2 + sub_wave);
     const std::uint32_t dim_offset = sub_lane * 8;     // 8 elements
 
     if (token >= token_count || head >= query_heads || lane >= 64) return;
@@ -7670,6 +7677,141 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
 
     const std::size_t split_head_idx =
         (static_cast<std::size_t>(split_id) * token_count + token) * query_heads + head;
+
+    if constexpr (GQA6_DUAL_KEY_WAVE64) {
+        // One Wave64 owns one Q head. Its two 32-lane halves calculate QK for
+        // adjacent keys concurrently; only the lower half owns online-softmax,
+        // PV state, and stores. The two keys are still applied in source order.
+        if (k_start >= total_length) {
+            if (lane == 0) {
+                partial_max[split_head_idx] = -INFINITY;
+                partial_sum[split_head_idx] = 0.0f;
+            }
+            if (sub_wave == 0) {
+                const std::size_t acc_base = split_head_idx * head_dim + dim_offset;
+                *reinterpret_cast<float4*>(partial_acc + acc_base + 0) = make_float4(0, 0, 0, 0);
+                *reinterpret_cast<float4*>(partial_acc + acc_base + 4) = make_float4(0, 0, 0, 0);
+            }
+            return;
+        }
+
+        const std::size_t q_base =
+            (static_cast<std::size_t>(token) * query_heads + head) * head_dim + dim_offset;
+        const float4 q_vec0 = *reinterpret_cast<const float4*>(q + q_base + 0);
+        const float4 q_vec1 = *reinterpret_cast<const float4*>(q + q_base + 4);
+        float4 acc0 = make_float4(0, 0, 0, 0);
+        float4 acc1 = make_float4(0, 0, 0, 0);
+        float running_max = -INFINITY;
+        float running_sum = 0.0f;
+        const std::size_t kv_head_stride = static_cast<std::size_t>(cache_capacity) * head_dim;
+        const std::size_t kv_base = static_cast<std::size_t>(kv_head) * kv_head_stride;
+
+        for (std::uint32_t pair_pos = k_start; pair_pos < k_end; pair_pos += 2) {
+            const std::uint32_t key_pos = pair_pos + sub_wave;
+            const bool key_valid = key_pos < k_end;
+            float score_local = -INFINITY;
+            uint2 v_raw_local = make_uint2(0U, 0U);
+            float v_scale_local = 0.0f;
+            if (key_valid) {
+                const std::size_t kv_offset = kv_base + static_cast<std::size_t>(key_pos) * head_dim + dim_offset;
+                const uint2 k_raw = *reinterpret_cast<const uint2*>(key_cache_q8 + kv_offset);
+                const auto* kb = reinterpret_cast<const int8_t*>(&k_raw);
+                float dot = q_vec0.x * static_cast<float>(kb[0]) + q_vec0.y * static_cast<float>(kb[1])
+                    + q_vec0.z * static_cast<float>(kb[2]) + q_vec0.w * static_cast<float>(kb[3])
+                    + q_vec1.x * static_cast<float>(kb[4]) + q_vec1.y * static_cast<float>(kb[5])
+                    + q_vec1.z * static_cast<float>(kb[6]) + q_vec1.w * static_cast<float>(kb[7]);
+                #pragma unroll
+                for (int offset = 16; offset > 0; offset /= 2) {
+                    dot += __shfl_xor(dot, offset, 32);
+                }
+                float k_scale_local = 0.0f;
+                if (sub_lane == 0) {
+                    k_scale_local = __half2float(key_scales[
+                        static_cast<std::size_t>(kv_head) * cache_capacity + key_pos]);
+                }
+                k_scale_local = __shfl(k_scale_local, sub_wave * 32, 64);
+                score_local = dot * (k_scale_local * scale);
+                v_raw_local = *reinterpret_cast<const uint2*>(value_cache_q8 + kv_offset);
+                if (sub_lane == 0) {
+                    v_scale_local = __half2float(value_scales[
+                        static_cast<std::size_t>(kv_head) * cache_capacity + key_pos]);
+                }
+                v_scale_local = __shfl(v_scale_local, sub_wave * 32, 64);
+            }
+
+            const float score0 = __shfl(score_local, 0, 64);
+            const float score1 = __shfl(score_local, 32, 64);
+            const float v_scale0 = __shfl(v_scale_local, 0, 64);
+            const float v_scale1 = __shfl(v_scale_local, 32, 64);
+            float alpha0 = 1.0f, weight0 = 0.0f;
+            float alpha1 = 1.0f, weight1 = 0.0f;
+            if (sub_wave == 0 && sub_lane == 0) {
+                if (score0 > running_max) {
+                    alpha0 = expf(running_max - score0);
+                    running_sum = running_sum * alpha0 + 1.0f;
+                    running_max = score0;
+                    weight0 = 1.0f;
+                } else {
+                    weight0 = expf(score0 - running_max);
+                    running_sum += weight0;
+                }
+            }
+            alpha0 = __shfl(alpha0, 0, 64);
+            weight0 = __shfl(weight0, 0, 64);
+            const uint2 v_raw1 = make_uint2(
+                __shfl(v_raw_local.x, sub_lane + 32, 64),
+                __shfl(v_raw_local.y, sub_lane + 32, 64));
+            if (sub_wave == 0) {
+                const auto* vb0 = reinterpret_cast<const int8_t*>(&v_raw_local);
+                const float w0 = weight0 * v_scale0;
+                acc0.x = acc0.x * alpha0 + w0 * static_cast<float>(vb0[0]);
+                acc0.y = acc0.y * alpha0 + w0 * static_cast<float>(vb0[1]);
+                acc0.z = acc0.z * alpha0 + w0 * static_cast<float>(vb0[2]);
+                acc0.w = acc0.w * alpha0 + w0 * static_cast<float>(vb0[3]);
+                acc1.x = acc1.x * alpha0 + w0 * static_cast<float>(vb0[4]);
+                acc1.y = acc1.y * alpha0 + w0 * static_cast<float>(vb0[5]);
+                acc1.z = acc1.z * alpha0 + w0 * static_cast<float>(vb0[6]);
+                acc1.w = acc1.w * alpha0 + w0 * static_cast<float>(vb0[7]);
+            }
+
+            if (key_valid && sub_wave == 0 && sub_lane == 0) {
+                if (score1 > running_max) {
+                    alpha1 = expf(running_max - score1);
+                    running_sum = running_sum * alpha1 + 1.0f;
+                    running_max = score1;
+                    weight1 = 1.0f;
+                } else {
+                    weight1 = expf(score1 - running_max);
+                    running_sum += weight1;
+                }
+            }
+            alpha1 = __shfl(alpha1, 0, 64);
+            weight1 = __shfl(weight1, 0, 64);
+            if (key_valid && sub_wave == 0) {
+                const auto* vb1 = reinterpret_cast<const int8_t*>(&v_raw1);
+                const float w1 = weight1 * v_scale1;
+                acc0.x = acc0.x * alpha1 + w1 * static_cast<float>(vb1[0]);
+                acc0.y = acc0.y * alpha1 + w1 * static_cast<float>(vb1[1]);
+                acc0.z = acc0.z * alpha1 + w1 * static_cast<float>(vb1[2]);
+                acc0.w = acc0.w * alpha1 + w1 * static_cast<float>(vb1[3]);
+                acc1.x = acc1.x * alpha1 + w1 * static_cast<float>(vb1[4]);
+                acc1.y = acc1.y * alpha1 + w1 * static_cast<float>(vb1[5]);
+                acc1.z = acc1.z * alpha1 + w1 * static_cast<float>(vb1[6]);
+                acc1.w = acc1.w * alpha1 + w1 * static_cast<float>(vb1[7]);
+            }
+        }
+
+        if (lane == 0) {
+            partial_max[split_head_idx] = running_max;
+            partial_sum[split_head_idx] = running_sum;
+        }
+        if (sub_wave == 0) {
+            const std::size_t acc_base = split_head_idx * head_dim + dim_offset;
+            *reinterpret_cast<float4*>(partial_acc + acc_base + 0) = acc0;
+            *reinterpret_cast<float4*>(partial_acc + acc_base + 4) = acc1;
+        }
+        return;
+    }
 
     if (k_start >= total_length) {
         if (sub_lane == 0) {
@@ -8621,7 +8763,7 @@ void launch_qwen35_gqa6_production_q8_attention_batch(
     const DevicePrefillState* prefill_state,
     float* stage1_ms, float* stage2_ms, bool packed_q8_lds, bool packed_q8_lds_128,
     bool direct_global_q8, bool dpp_reduce, bool block_softmax4,
-    bool wave64_kv_broadcast) {
+    bool wave64_kv_broadcast, bool dual_key_wave64) {
     if (q == nullptr || key_cache_q8 == nullptr || key_scales == nullptr
         || value_cache_q8 == nullptr || value_scales == nullptr || gate == nullptr
         || gated_output == nullptr || split_workspace == nullptr || token_count == 0
@@ -8631,6 +8773,8 @@ void launch_qwen35_gqa6_production_q8_attention_batch(
         || (packed_q8_lds_128 && !packed_q8_lds)
         || (dpp_reduce && !direct_global_q8)
         || (wave64_kv_broadcast && (!direct_global_q8 || dpp_reduce || block_softmax4))
+        || (dual_key_wave64 && (!direct_global_q8 || dpp_reduce || block_softmax4
+            || wave64_kv_broadcast || packed_q8_lds || packed_q8_lds_128))
         || (block_softmax4 && (!direct_global_q8 || dpp_reduce
             || packed_q8_lds || packed_q8_lds_128))) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
@@ -8652,7 +8796,13 @@ void launch_qwen35_gqa6_production_q8_attention_batch(
         MIINFER_HIP_CHECK(hipEventRecord(stage_start, stream));
     }
     if (direct_global_q8) {
-        if (wave64_kv_broadcast) {
+        if (dual_key_wave64) {
+            hipLaunchKernelGGL((qwen35_splitk_suffix_attn_stage1_quant_kernel<true, true, 4, true, false, false, true, false, false, false, true>),
+                dim3(token_count, num_splits, kv_heads), dim3(64, 6), 0, stream,
+                q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,
+                partial_max, partial_sum, partial_acc, token_count, base_position, cache_capacity,
+                query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
+        } else if (wave64_kv_broadcast) {
             hipLaunchKernelGGL((qwen35_splitk_suffix_attn_stage1_quant_kernel<true, true, 4, true, false, false, true, false, false, true>),
                 dim3(token_count, num_splits, kv_heads), dim3(64, 3), 0, stream,
                 q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,

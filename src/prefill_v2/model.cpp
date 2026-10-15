@@ -273,6 +273,7 @@ PrefillV2Model::PrefillV2Model(PrefillV2Model&& other) noexcept
     suffix_graph_q8_gqa6_block_softmax4_enabled_ = other.suffix_graph_q8_gqa6_block_softmax4_enabled_;
     suffix_graph_q8_gqa6_pair_head_reuse_enabled_ = other.suffix_graph_q8_gqa6_pair_head_reuse_enabled_;
     suffix_graph_q8_gqa6_wave64_kv_broadcast_enabled_ = other.suffix_graph_q8_gqa6_wave64_kv_broadcast_enabled_;
+    suffix_graph_q8_gqa6_dual_key_wave64_enabled_ = other.suffix_graph_q8_gqa6_dual_key_wave64_enabled_;
     other.d_embedding_weights_ = nullptr;
     other.d_final_norm_weights_ = nullptr;
     other.d_output_weights_ = nullptr;
@@ -302,6 +303,7 @@ PrefillV2Model::PrefillV2Model(PrefillV2Model&& other) noexcept
     other.suffix_graph_q8_gqa6_block_softmax4_enabled_ = false;
     other.suffix_graph_q8_gqa6_pair_head_reuse_enabled_ = false;
     other.suffix_graph_q8_gqa6_wave64_kv_broadcast_enabled_ = false;
+    other.suffix_graph_q8_gqa6_dual_key_wave64_enabled_ = false;
 }
 
 PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
@@ -347,6 +349,7 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
         suffix_graph_q8_gqa6_block_softmax4_enabled_ = other.suffix_graph_q8_gqa6_block_softmax4_enabled_;
         suffix_graph_q8_gqa6_pair_head_reuse_enabled_ = other.suffix_graph_q8_gqa6_pair_head_reuse_enabled_;
         suffix_graph_q8_gqa6_wave64_kv_broadcast_enabled_ = other.suffix_graph_q8_gqa6_wave64_kv_broadcast_enabled_;
+        suffix_graph_q8_gqa6_dual_key_wave64_enabled_ = other.suffix_graph_q8_gqa6_dual_key_wave64_enabled_;
 
         other.d_embedding_weights_ = nullptr;
         other.d_final_norm_weights_ = nullptr;
@@ -377,6 +380,7 @@ PrefillV2Model& PrefillV2Model::operator=(PrefillV2Model&& other) noexcept {
         other.suffix_graph_q8_gqa6_block_softmax4_enabled_ = false;
         other.suffix_graph_q8_gqa6_pair_head_reuse_enabled_ = false;
         other.suffix_graph_q8_gqa6_wave64_kv_broadcast_enabled_ = false;
+        other.suffix_graph_q8_gqa6_dual_key_wave64_enabled_ = false;
     }
     return *this;
 }
@@ -1351,6 +1355,9 @@ void PrefillV2Model::capture_suffix_graph(hipStream_t stream) {
         std::getenv("MIINFER_M31_Q8_GQA6_WAVE64_KV_BROADCAST");
     const bool gqa6_wave64_kv_broadcast_enabled = gqa6_wave64_kv_broadcast_env != nullptr
         && std::string_view(gqa6_wave64_kv_broadcast_env) != "0";
+    const char* gqa6_dual_key_wave64_env = std::getenv("MIINFER_M31_Q8_GQA6_DUAL_KEY_WAVE64");
+    const bool gqa6_dual_key_wave64_enabled = gqa6_dual_key_wave64_env != nullptr
+        && std::string_view(gqa6_dual_key_wave64_env) != "0";
     if (suffix_graph_exec_ != nullptr && suffix_graph_q8_dot4_enabled_ == dot4_enabled
         && suffix_graph_q8_dot4_ilp2_enabled_ == ilp2_enabled
         && suffix_graph_q8_dot4_query_residual_enabled_ == query_residual_enabled
@@ -1365,7 +1372,8 @@ void PrefillV2Model::capture_suffix_graph(hipStream_t stream) {
         && suffix_graph_q8_gqa6_dpp_reduce_enabled_ == gqa6_dpp_reduce_enabled
         && suffix_graph_q8_gqa6_block_softmax4_enabled_ == gqa6_block_softmax4_enabled
         && suffix_graph_q8_gqa6_pair_head_reuse_enabled_ == gqa6_pair_head_reuse_enabled
-        && suffix_graph_q8_gqa6_wave64_kv_broadcast_enabled_ == gqa6_wave64_kv_broadcast_enabled) {
+        && suffix_graph_q8_gqa6_wave64_kv_broadcast_enabled_ == gqa6_wave64_kv_broadcast_enabled
+        && suffix_graph_q8_gqa6_dual_key_wave64_enabled_ == gqa6_dual_key_wave64_enabled) {
         return;
     }
     cleanup_suffix_graph();
@@ -1400,6 +1408,7 @@ void PrefillV2Model::capture_suffix_graph(hipStream_t stream) {
     suffix_graph_q8_gqa6_block_softmax4_enabled_ = gqa6_block_softmax4_enabled;
     suffix_graph_q8_gqa6_pair_head_reuse_enabled_ = gqa6_pair_head_reuse_enabled;
     suffix_graph_q8_gqa6_wave64_kv_broadcast_enabled_ = gqa6_wave64_kv_broadcast_enabled;
+    suffix_graph_q8_gqa6_dual_key_wave64_enabled_ = gqa6_dual_key_wave64_enabled;
 }
 
 std::size_t PrefillV2Model::persistent_weight_bytes() const noexcept {
