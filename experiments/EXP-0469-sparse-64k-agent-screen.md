@@ -18,7 +18,7 @@ Machinist. The prompt was built from 755 MIInfer source/documentation files;
 its context bytes SHA-256 was
 `98755b381bffd786553916aa419cdd06a8dd008cfd8710787364640ffb0e7c74`.
 
-The first exact control used binary SHA-256
+An initial, non-matched screen used binary SHA-256
 `9a9cbf89bac759e6ce8c18de3ca7282ff391015ea0ef54c8b75241c0e6e1b157` on GPU0
 (BDF `0000:04:00.0`). It processed 65,483 prompt tokens with no prefix reuse:
 prefill took 2,041.670 seconds (32.06 tok/s); first-token wall time was
@@ -31,21 +31,48 @@ The first sparse candidate used binary SHA-256
 `miinfer_q8_gqa6_sparse_window_dispatch=1`. It processed 66,517 prompt tokens
 with no prefix reuse: prefill took 331.595 seconds (200.60 tok/s), with
 331.842-second wall time to the first visible delta. The request generated
-384 tokens and stopped at the output limit without a tool call.
+384 tokens and stopped at the output limit without a tool call. This first
+comparison is superseded by the matched pair below; its binaries and token
+counts differed.
 
-The raw ratio against the earlier exact request is 6.16x faster for prefill,
-despite 1,034 more tokens. This is a promising signal, not a qualified
-speedup: prompt token counts differ, the binaries differ, and the exact
-control's generated tool call was malformed.
+### Matched simultaneous pair
+
+Both paths then used the same candidate binary
+`2b90a5ce898c205c60ef3f502bc1d08dd42bb1b5abb3b08bae3b597564437544`, the same
+model and exact 66,525-token prompt, fresh session directories, 384-token
+output limit, and 98,304-token runtime capacity. They ran simultaneously on
+GPU0 BDF `0000:04:00.0` (exact, sparse flag omitted) and GPU2 BDF
+`0000:88:00.0` (sparse enabled). Both processed all prompt tokens, had zero
+prefix reuse, and completed without runtime errors.
+
+| Path | Prefill | Throughput | Whole request | Generated tokens | Result |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Exact | 2,050.280 s | 32.45 tok/s | 2,076.810 s | 384 | Output limit; no content or tool call |
+| Sparse | 331.315 s | 200.79 tok/s | 359.771 s | 384 | Output limit; no content or tool call |
+
+This one simultaneous pair measured **6.19x faster prefill** for the sparse
+route. The route trace confirmed sparse dispatch. The result is a matched
+single-run measurement, not a repeated or general speed claim. Both GPUs were
+configured with 180 W power caps. The exact route evaluates the full causal
+KV range; at the final 66K position the sparse selector uses 2,174 of 66,525
+keys (about 3.3%). Both cards showed 100% GPU utilization in monitoring
+snapshots. Peak junction temperatures were 75 C on GPU0 and 68 C on GPU2,
+below the 80 C warning threshold.
 
 ## Agent behavior and task check
 
-Repeated candidate continuations reused 66,514 of 66,517 prompt tokens, with
-only three new prefill tokens. At output caps of 1,024 and 2,048, the model
-did not produce a useful action. At a 4,096-token cap it named `replace_once`
-but emitted `{}` arguments. The exact control also emitted `{}` for its
-`read_file` call, so the malformed tool arguments do not isolate an attention
-regression.
+Repeated candidate continuations of the first candidate prompt reused 66,514
+of 66,517 prompt tokens, with only three new prefill tokens. At output caps of
+1,024 and 2,048, the model did not produce a useful action. At a 4,096-token
+cap it named `replace_once` but emitted `{}` arguments. The earlier exact
+control also emitted `{}` for its `read_file` call, so the malformed tool
+arguments do not isolate an attention regression.
+
+For the matched pair, both follow-up requests reused 66,522 of 66,572 tokens
+and prefetched the remaining 50. Exact prefill took 5.254 s and sparse took
+4.139 s. Each generated 512 tokens and reached the output limit without
+visible content or a tool call; total follow-up wall times were 40.77 s and
+42.10 s, respectively.
 
 After the tool-call failure, the candidate returned the exact intended patch
 in plain text: add `65536U` to the large-total loop in
@@ -57,19 +84,14 @@ boundary oracle, but the model did not execute the edit through its tool call.
 The test change is pushed in commit `1f92202` on
 `perf/m31-gqa6-sparse-window-screen`.
 
-## Same-binary control in progress
-
-The old exact server completed before it was stopped; its logs and session
-files were preserved. A fresh exact server now uses the candidate binary
-`2b90a5ce898c205c60ef3f502bc1d08dd42bb1b5abb3b08bae3b597564437544` on GPU0,
-with the sparse flag omitted. It receives the identical 66,517-token prompt
-and output limit used by the cold candidate request. Its dedicated guard
-monitors GPU0 by the verified bus mapping and stops at 85 C (warning at 80 C).
-
-The same-binary exact run has not completed yet. Until it does, the 6.16x
-ratio remains preliminary. The candidate also has not passed an autonomous
-tool-executed coding task, persistent restore, or graph-replay semantic gate.
+The candidate did not execute the edit through its tool call. A correct
+plain-text patch was returned after explicit correction, then applied and
+validated by the harness operator. This is evidence that the candidate can
+recover the old task requirement and provide a valid edit, but it is not an
+autonomous tool-executed coding session. Persistent restore across a process
+restart and graph-replay semantics were not tested in this 64K screen.
 
 Raw logs and thermal telemetry are on Machinist under
-`/home/machinist/m31-gqa6-longctx-results/EXP-0469-sparse-semantic/` and
-`/home/machinist/m31-gqa6-longctx-results/EXP-0469-matched-exact/`.
+`/home/machinist/m31-gqa6-longctx-results/EXP-0469-sparse-semantic/`,
+`/home/machinist/m31-gqa6-longctx-results/EXP-0469-matched-exact/`, and
+`/home/machinist/m31-gqa6-longctx-results/EXP-0469-sparse-repeat1/`.
