@@ -503,13 +503,17 @@ int main(int argc, char** argv) {
             const char* paired_token_env = std::getenv("MIINFER_M31_Q8_GQA6_PAIRED_TOKEN_PAIR");
             const char* direct_global_env = std::getenv("MIINFER_M31_Q8_GQA6_DIRECT_GLOBAL_PAIR");
             const char* flash_tile_env = std::getenv("MIINFER_M31_Q8_GQA6_FLASH_TILE_PAIR");
+            const char* dot4_attention_env = std::getenv("MIINFER_M31_Q8_DOT4_ATTENTION_PAIR");
             const bool wide128_pair = wide128_pair_env != nullptr && std::strcmp(wide128_pair_env, "0") != 0;
             const bool paired_token_pair = paired_token_env != nullptr && std::strcmp(paired_token_env, "0") != 0;
             const bool direct_global_pair = direct_global_env != nullptr && std::strcmp(direct_global_env, "0") != 0;
             const bool flash_tile_pair = flash_tile_env != nullptr && std::strcmp(flash_tile_env, "0") != 0;
-            const bool direct_global_control = dpp_pair || direct_global_pair || flash_tile_pair;
+            const bool dot4_attention_pair = dot4_attention_env != nullptr
+                && std::strcmp(dot4_attention_env, "0") != 0;
+            const bool direct_global_control = dpp_pair || direct_global_pair || flash_tile_pair
+                || dot4_attention_pair;
             const bool packed_pair = dpp_pair || wide128_pair || paired_token_pair || direct_global_pair
-                || flash_tile_pair
+                || flash_tile_pair || dot4_attention_pair
                 || (packed_env != nullptr && std::strcmp(packed_env, "0") != 0);
             const char* reps_env = std::getenv("MIINFER_M31_Q8_GQA6_PAIR_REPS");
             char* reps_end = nullptr;
@@ -521,6 +525,10 @@ int main(int argc, char** argv) {
             }
             if (::setenv("MIINFER_HIP_GRAPH", "1", 1) != 0
                 || ::setenv("MIINFER_M31_Q8_DOT4_ATTENTION", "0", 1) != 0
+                || ::setenv("MIINFER_M31_Q8_DOT4_ILP2", "0", 1) != 0
+                || ::setenv("MIINFER_M31_Q8_DOT4_QUERY_RESIDUAL", "0", 1) != 0
+                || ::setenv("MIINFER_M31_Q8_DOT4_QUERY_RESIDUAL2", "0", 1) != 0
+                || ::setenv("MIINFER_M31_Q8_DOT4_QUERY_RESIDUAL3", "0", 1) != 0
                 || ::setenv("MIINFER_M31_Q8_QUERY_TILED", "0", 1) != 0
                 || ::setenv("MIINFER_M31_Q8_GQA6_NATIVE_TILED", "0", 1) != 0) return 1;
             std::vector<double> control_times, candidate_times;
@@ -542,17 +550,23 @@ int main(int argc, char** argv) {
                         : wide128_pair ? "q8_gqa6_packed_u4_u64_session"
                         : packed_pair ? "q8_gqa6_production_arith_session" : "q8_production_session",
                     session_path, suffix, session_capacity);
-                if (::setenv("MIINFER_M31_Q8_GQA6_PROD_ARITH", "1", 1) != 0
+                if (::setenv("MIINFER_M31_Q8_DOT4_ATTENTION", dot4_attention_pair ? "1" : "0", 1) != 0
+                    || ::setenv("MIINFER_M31_Q8_DOT4_ILP2", "0", 1) != 0
+                    || ::setenv("MIINFER_M31_Q8_DOT4_QUERY_RESIDUAL", "0", 1) != 0
+                    || ::setenv("MIINFER_M31_Q8_DOT4_QUERY_RESIDUAL2", "0", 1) != 0
+                    || ::setenv("MIINFER_M31_Q8_DOT4_QUERY_RESIDUAL3", "0", 1) != 0
+                    || ::setenv("MIINFER_M31_Q8_GQA6_PROD_ARITH", dot4_attention_pair ? "0" : "1", 1) != 0
                     || ::setenv("MIINFER_M31_Q8_GQA6_PACKED_LDS",
-                        packed_pair && !flash_tile_pair ? "1" : "0", 1) != 0
+                        packed_pair && !flash_tile_pair && !dot4_attention_pair ? "1" : "0", 1) != 0
                     || ::setenv("MIINFER_M31_Q8_GQA6_PACKED_LDS128", wide128_pair ? "1" : "0", 1) != 0
                     || ::setenv("MIINFER_M31_Q8_GQA6_PAIRED_TOKEN", paired_token_pair ? "1" : "0", 1) != 0
                     || ::setenv("MIINFER_M31_Q8_GQA6_DIRECT_GLOBAL",
-                        direct_global_control ? "1" : "0", 1) != 0
+                        direct_global_control && !dot4_attention_pair ? "1" : "0", 1) != 0
                     || ::setenv("MIINFER_M31_Q8_GQA6_DPP_REDUCE", dpp_pair ? "1" : "0", 1) != 0
                     || ::setenv("MIINFER_M31_Q8_GQA6_FLASH_TILE", flash_tile_pair ? "1" : "0", 1) != 0) return 1;
                 const Result candidate = run_session_graph_mode(model,
-                    flash_tile_pair ? "q8_gqa6_flash_tile_session"
+                    dot4_attention_pair ? "q8_dot4_attention_session"
+                        : flash_tile_pair ? "q8_gqa6_flash_tile_session"
                         : dpp_pair ? "q8_gqa6_dpp_session"
                         : direct_global_pair ? "q8_gqa6_direct_global_session"
                         : paired_token_pair ? "q8_gqa6_paired_token_session"
@@ -577,7 +591,7 @@ int main(int argc, char** argv) {
                         [](float value) { return std::isfinite(value); });
                 control_times.push_back(control.prefill_seconds);
                 candidate_times.push_back(candidate.prefill_seconds);
-                const bool sample_correct = flash_tile_pair
+                const bool sample_correct = flash_tile_pair || dot4_attention_pair
                     ? compare_flash_tile_results(control, candidate, static_cast<int>(rep + 1))
                     : logits_exact && state_exact && generated_equal && finite;
                 all_correct = all_correct && sample_correct;
@@ -588,12 +602,13 @@ int main(int argc, char** argv) {
                           << " finite=" << finite << " accepted=" << sample_correct << '\n';
             }
             std::cout << std::fixed << std::setprecision(3)
-                      << (flash_tile_pair || dpp_pair ? "q8_gqa6_direct_global_control_median_seconds="
+                      << (flash_tile_pair || dpp_pair || dot4_attention_pair ? "q8_gqa6_direct_global_control_median_seconds="
                           : (paired_token_pair || direct_global_pair) ? "q8_gqa6_packed_u128_median_seconds="
                           : wide128_pair ? "q8_gqa6_packed_u4_u64_median_seconds="
                           : packed_pair ? "q8_gqa6_suffix_median_seconds=" : "q8_production_suffix_median_seconds=")
                       << median(control_times)
-                      << (flash_tile_pair ? " q8_gqa6_flash_tile_median_seconds="
+                      << (dot4_attention_pair ? " q8_dot4_attention_median_seconds="
+                          : flash_tile_pair ? " q8_gqa6_flash_tile_median_seconds="
                           : dpp_pair ? " q8_gqa6_dpp_median_seconds="
                           : direct_global_pair ? " q8_gqa6_direct_global_median_seconds="
                           : paired_token_pair ? " q8_gqa6_paired_token_median_seconds="
