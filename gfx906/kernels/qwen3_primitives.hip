@@ -7611,7 +7611,7 @@ __device__ __forceinline__ float qwen35_gqa6_reduce_qk_dpp(float dot) {
 template <bool K_IS_Q8, bool V_IS_Q8, int UNROLL = 4, bool GQA6_SHARED_KV = false,
           bool PACKED_Q8_LDS = false, bool PACKED_Q8_LDS_128 = false,
           bool GQA6_DIRECT_GLOBAL_Q8 = false, bool GQA6_DPP_REDUCE = false,
-          bool GQA6_BLOCK_SOFTMAX4 = false>
+          bool GQA6_BLOCK_SOFTMAX4 = false, bool GQA6_WAVE64_KV_BROADCAST = false>
 __launch_bounds__(GQA6_SHARED_KV ? 192 : 1024, 1)
 __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
     const float* __restrict__ q,
@@ -7636,6 +7636,8 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
 
     static_assert(!GQA6_BLOCK_SOFTMAX4
         || (UNROLL == 4 && K_IS_Q8 && V_IS_Q8 && GQA6_DIRECT_GLOBAL_Q8));
+    static_assert(!GQA6_WAVE64_KV_BROADCAST
+        || (K_IS_Q8 && V_IS_Q8 && GQA6_SHARED_KV && GQA6_DIRECT_GLOBAL_Q8));
 
     if (prefill_state != nullptr) {
         base_position = prefill_state->base_position;
@@ -7781,6 +7783,13 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
             if constexpr (K_IS_Q8) {
                 if constexpr (GQA6_SHARED_KV && !GQA6_DIRECT_GLOBAL_Q8) {
                     k_raw_q8[u] = *reinterpret_cast<const uint2*>(shared_key + static_cast<std::size_t>(u) * head_dim + dim_offset);
+                } else if constexpr (GQA6_WAVE64_KV_BROADCAST) {
+                    uint2 loaded = make_uint2(0U, 0U);
+                    if (sub_wave == 0) {
+                        loaded = *reinterpret_cast<const uint2*>(k_q8_ptr + static_cast<std::size_t>(u) * head_dim);
+                    }
+                    k_raw_q8[u].x = __shfl(loaded.x, sub_lane, 64);
+                    k_raw_q8[u].y = __shfl(loaded.y, sub_lane, 64);
                 } else {
                     k_raw_q8[u] = *reinterpret_cast<const uint2*>(k_q8_ptr + static_cast<std::size_t>(u) * head_dim);
                 }
@@ -7791,6 +7800,13 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
             if constexpr (V_IS_Q8) {
                 if constexpr (GQA6_SHARED_KV && !GQA6_DIRECT_GLOBAL_Q8) {
                     v_raw_q8[u] = *reinterpret_cast<const uint2*>(shared_value + static_cast<std::size_t>(u) * head_dim + dim_offset);
+                } else if constexpr (GQA6_WAVE64_KV_BROADCAST) {
+                    uint2 loaded = make_uint2(0U, 0U);
+                    if (sub_wave == 0) {
+                        loaded = *reinterpret_cast<const uint2*>(v_q8_ptr + static_cast<std::size_t>(u) * head_dim);
+                    }
+                    v_raw_q8[u].x = __shfl(loaded.x, sub_lane, 64);
+                    v_raw_q8[u].y = __shfl(loaded.y, sub_lane, 64);
                 } else {
                     v_raw_q8[u] = *reinterpret_cast<const uint2*>(v_q8_ptr + static_cast<std::size_t>(u) * head_dim);
                 }
@@ -7979,9 +7995,17 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
         float dot = 0.0f;
         float k_scale_val = 1.0f;
         if constexpr (K_IS_Q8) {
-            const uint2 k_raw_q8 = GQA6_SHARED_KV && !GQA6_DIRECT_GLOBAL_Q8
-                ? *reinterpret_cast<const uint2*>(shared_key + dim_offset)
-                : *reinterpret_cast<const uint2*>(k_q8_ptr);
+            uint2 k_raw_q8;
+            if constexpr (GQA6_WAVE64_KV_BROADCAST) {
+                uint2 loaded = make_uint2(0U, 0U);
+                if (sub_wave == 0) loaded = *reinterpret_cast<const uint2*>(k_q8_ptr);
+                k_raw_q8.x = __shfl(loaded.x, sub_lane, 64);
+                k_raw_q8.y = __shfl(loaded.y, sub_lane, 64);
+            } else {
+                k_raw_q8 = GQA6_SHARED_KV && !GQA6_DIRECT_GLOBAL_Q8
+                    ? *reinterpret_cast<const uint2*>(shared_key + dim_offset)
+                    : *reinterpret_cast<const uint2*>(k_q8_ptr);
+            }
             const auto* kb = reinterpret_cast<const int8_t*>(&k_raw_q8);
             dot = q_vec0.x * static_cast<float>(kb[0]) + q_vec0.y * static_cast<float>(kb[1])
                 + q_vec0.z * static_cast<float>(kb[2]) + q_vec0.w * static_cast<float>(kb[3])
@@ -8038,9 +8062,17 @@ __global__ void qwen35_splitk_suffix_attn_stage1_quant_kernel(
             }
             v_scale_val = __shfl(v_scale_val, sub_wave * 32, 64);
             const float w = weight * v_scale_val;
-            const uint2 v_raw_q8 = GQA6_SHARED_KV && !GQA6_DIRECT_GLOBAL_Q8
-                ? *reinterpret_cast<const uint2*>(shared_value + dim_offset)
-                : *reinterpret_cast<const uint2*>(v_q8_ptr);
+            uint2 v_raw_q8;
+            if constexpr (GQA6_WAVE64_KV_BROADCAST) {
+                uint2 loaded = make_uint2(0U, 0U);
+                if (sub_wave == 0) loaded = *reinterpret_cast<const uint2*>(v_q8_ptr);
+                v_raw_q8.x = __shfl(loaded.x, sub_lane, 64);
+                v_raw_q8.y = __shfl(loaded.y, sub_lane, 64);
+            } else {
+                v_raw_q8 = GQA6_SHARED_KV && !GQA6_DIRECT_GLOBAL_Q8
+                    ? *reinterpret_cast<const uint2*>(shared_value + dim_offset)
+                    : *reinterpret_cast<const uint2*>(v_q8_ptr);
+            }
             const auto* vb = reinterpret_cast<const int8_t*>(&v_raw_q8);
 
             acc0.x = acc0.x * alpha + w * static_cast<float>(vb[0]);
@@ -8588,7 +8620,8 @@ void launch_qwen35_gqa6_production_q8_attention_batch(
     std::uint32_t num_splits, hipStream_t stream,
     const DevicePrefillState* prefill_state,
     float* stage1_ms, float* stage2_ms, bool packed_q8_lds, bool packed_q8_lds_128,
-    bool direct_global_q8, bool dpp_reduce, bool block_softmax4) {
+    bool direct_global_q8, bool dpp_reduce, bool block_softmax4,
+    bool wave64_kv_broadcast) {
     if (q == nullptr || key_cache_q8 == nullptr || key_scales == nullptr
         || value_cache_q8 == nullptr || value_scales == nullptr || gate == nullptr
         || gated_output == nullptr || split_workspace == nullptr || token_count == 0
@@ -8597,6 +8630,7 @@ void launch_qwen35_gqa6_production_q8_attention_batch(
         || !std::isfinite(scale) || num_splits == 0 || num_splits > 64
         || (packed_q8_lds_128 && !packed_q8_lds)
         || (dpp_reduce && !direct_global_q8)
+        || (wave64_kv_broadcast && (!direct_global_q8 || dpp_reduce || block_softmax4))
         || (block_softmax4 && (!direct_global_q8 || dpp_reduce
             || packed_q8_lds || packed_q8_lds_128))) {
         MIINFER_HIP_CHECK(hipErrorInvalidValue);
@@ -8618,7 +8652,13 @@ void launch_qwen35_gqa6_production_q8_attention_batch(
         MIINFER_HIP_CHECK(hipEventRecord(stage_start, stream));
     }
     if (direct_global_q8) {
-        if (dpp_reduce) {
+        if (wave64_kv_broadcast) {
+            hipLaunchKernelGGL((qwen35_splitk_suffix_attn_stage1_quant_kernel<true, true, 4, true, false, false, true, false, false, true>),
+                dim3(token_count, num_splits, kv_heads), dim3(64, 3), 0, stream,
+                q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,
+                partial_max, partial_sum, partial_acc, token_count, base_position, cache_capacity,
+                query_heads, kv_heads, head_dim, scale, num_splits, prefill_state);
+        } else if (dpp_reduce) {
             hipLaunchKernelGGL((qwen35_splitk_suffix_attn_stage1_quant_kernel<true, true, 4, true, false, false, true, true>),
                 dim3(token_count, num_splits, kv_heads), dim3(64, 3), 0, stream,
                 q, nullptr, nullptr, key_cache_q8, key_scales, value_cache_q8, value_scales,

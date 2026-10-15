@@ -75,6 +75,11 @@ bool m31_q8_gqa6_pair_head_reuse_enabled() {
     return value != nullptr && std::strcmp(value, "0") != 0;
 }
 
+bool m31_q8_gqa6_wave64_kv_broadcast_enabled() {
+    const char* value = std::getenv("MIINFER_M31_Q8_GQA6_WAVE64_KV_BROADCAST");
+    return value != nullptr && std::strcmp(value, "0") != 0;
+}
+
 bool m31_q8_dot4_attention_enabled() {
     const char* value = std::getenv("MIINFER_M31_Q8_DOT4_ATTENTION");
     return value != nullptr && std::strcmp(value, "0") != 0;
@@ -436,9 +441,12 @@ void PrefillV2AttentionLayer::forward(
         && token_count > 0 && ws.splitk_attn_workspace != nullptr) {
         const bool packed_lds = m31_q8_gqa6_packed_lds_enabled();
         const bool packed_lds_128 = m31_q8_gqa6_packed_lds_128_enabled();
-        const bool direct_global = m31_q8_gqa6_direct_global_enabled();
-        const bool dpp_reduce = direct_global && m31_q8_gqa6_dpp_reduce_enabled();
-        const bool block_softmax4 = direct_global && m31_q8_gqa6_block_softmax4_enabled();
+        const bool wave64_kv_broadcast = m31_q8_gqa6_wave64_kv_broadcast_enabled();
+        const bool direct_global = wave64_kv_broadcast || m31_q8_gqa6_direct_global_enabled();
+        const bool dpp_reduce = direct_global && !wave64_kv_broadcast
+            && m31_q8_gqa6_dpp_reduce_enabled();
+        const bool block_softmax4 = direct_global && !wave64_kv_broadcast
+            && m31_q8_gqa6_block_softmax4_enabled();
         const bool pair_head_reuse = m31_q8_gqa6_pair_head_reuse_enabled();
         if (pair_head_reuse) {
             if (std::getenv("MIINFER_M31_TRACE_ATTENTION_ROUTE") != nullptr) {
@@ -455,7 +463,8 @@ void PrefillV2AttentionLayer::forward(
         if ((packed_lds || direct_global) && std::getenv("MIINFER_M31_TRACE_ATTENTION_ROUTE") != nullptr) {
             std::cerr << "miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=" << packed_lds_128
                       << " direct_global=" << direct_global << " dpp_reduce=" << dpp_reduce << " graph_state="
-                      << (prefill_state != nullptr) << " token_count=" << token_count << '\n';
+                      << (prefill_state != nullptr) << " wave64_kv_broadcast="
+                      << wave64_kv_broadcast << " token_count=" << token_count << '\n';
         }
         if (block_softmax4 && std::getenv("MIINFER_M31_TRACE_ATTENTION_ROUTE") != nullptr) {
             std::cerr << "miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state="
@@ -469,7 +478,7 @@ void PrefillV2AttentionLayer::forward(
             24, 4, 256, 1.0F / std::sqrt(256.0F), 32, stream, prefill_state,
             nullptr, nullptr, direct_global ? false : packed_lds,
             direct_global ? false : packed_lds_128, direct_global, dpp_reduce,
-            block_softmax4);
+            block_softmax4, wave64_kv_broadcast);
         const char* compare_layers_env =
             std::getenv("MIINFER_M31_Q8_GQA6_BLOCK_COMPARE_LAYERS");
         if (block_softmax4 && compare_layers_env != nullptr
@@ -736,8 +745,10 @@ void PrefillV2AttentionLayer::forward_profiled(
         } else {
         const bool packed_lds = m31_q8_gqa6_packed_lds_enabled();
         const bool packed_lds_128 = m31_q8_gqa6_packed_lds_128_enabled();
-        const bool direct_global = m31_q8_gqa6_direct_global_enabled();
-        const bool dpp_reduce = direct_global && m31_q8_gqa6_dpp_reduce_enabled();
+        const bool wave64_kv_broadcast = m31_q8_gqa6_wave64_kv_broadcast_enabled();
+        const bool direct_global = wave64_kv_broadcast || m31_q8_gqa6_direct_global_enabled();
+        const bool dpp_reduce = direct_global && !wave64_kv_broadcast
+            && m31_q8_gqa6_dpp_reduce_enabled();
         float stage1_ms = 0.0F, stage2_ms = 0.0F;
         launch_qwen35_gqa6_production_q8_attention_batch(
             ws.attn_q_rope, kv_cache.key_cache_q8, kv_cache.key_scales,
@@ -746,10 +757,12 @@ void PrefillV2AttentionLayer::forward_profiled(
             token_count, base_position, static_cast<std::uint32_t>(kv_cache.capacity),
             24, 4, 256, 1.0F / std::sqrt(256.0F), 32, stream, nullptr,
             &stage1_ms, &stage2_ms, direct_global ? false : packed_lds,
-            direct_global ? false : packed_lds_128, direct_global, dpp_reduce);
+            direct_global ? false : packed_lds_128, direct_global, dpp_reduce,
+            false, wave64_kv_broadcast);
         if ((packed_lds || direct_global) && std::getenv("MIINFER_M31_TRACE_ATTENTION_ROUTE") != nullptr) {
             std::cerr << "miinfer_q8_gqa6_packed_lds_profile_dispatch=1 wide128=" << packed_lds_128
                       << " direct_global=" << direct_global << " dpp_reduce=" << dpp_reduce
+                      << " wave64_kv_broadcast=" << wave64_kv_broadcast
                       << " graph_state=0 token_count=" << token_count << '\n';
         }
         breakdown.causal_attn_stage1_ms = stage1_ms;
