@@ -98,6 +98,38 @@ session can be restored across server restart and retain long context, but
 does not establish a correct autonomous coding-agent workflow on the sparse
 path.
 
+### Fresh tool-driven follow-up
+
+I sent the same 230,766-byte, 755-file repository context to the sparse server
+with a restricted `read_file` / `replace_once` / `run_check` tool set. The
+context SHA-256 remained
+`98755b381bffd786553916aa419cdd06a8dd008cfd8710787364640ffb0e7c74`. The
+request had no matching prefix (`common_prefix_tokens=0`) and processed
+65,574 new prompt tokens. The sparse route returned a correctly formed
+`read_file` call after 335.055 s (about 195.7 tok/s); the harness read the
+test file from the isolated candidate checkout.
+
+The first edit continuation reused 65,571 of 66,408 tokens, prefetched 837,
+and stopped at a 256-token output cap after 26.90 s without a tool call. A
+2,048-token retry changed the tool schema, got no prefix match, and was still
+in inference when stopped at five minutes—shorter than the measured 335 s
+cold-prefill time. It therefore did not test edit generation.
+
+A later 1,024-token retry restored the original tool schema but forced a
+specific tool choice, which also changed the serialized request. It was
+stopped after five minutes with no result; the candidate container was
+restarted to cancel the still-active request. That restart reported a GPU
+page-not-present fault on GPU2 (`0000:88:00.0`) and exited 139. A manual
+container start then loaded the model and returned `/readyz` successfully.
+The exact-control container stayed up throughout. The fault's cause is
+unresolved; it occurred during restart after terminating an active inference.
+
+This proves the sparse path can issue a correct file read from a cold 65K
+context. It does not prove a correct coding edit. Exact prefix reuse depends
+on preserving the request/tool serialization: the changed schema was directly
+observed with zero common-prefix tokens; the forced tool-choice retry also
+failed to return within the bounded window.
+
 After the tool-call failure, the candidate returned the exact intended patch
 in plain text: add `65536U` to the large-total loop in
 `tests/gqa6_sparse_window_oracle.cpp`. I applied that one-line change and
@@ -121,4 +153,5 @@ Raw logs and thermal telemetry are on Machinist under
 `/home/machinist/m31-gqa6-longctx-results/EXP-0469-sparse-repeat1/`. Restart
 restore requests, server logs, and thermal telemetry are in
 `/home/machinist/m31-gqa6-longctx-results/EXP-0469-restore-exact/` and
-`/home/machinist/m31-gqa6-longctx-results/EXP-0469-restore-sparse/`.
+`/home/machinist/m31-gqa6-longctx-results/EXP-0469-restore-sparse/`; this
+directory also holds the tool-driven request JSON, scripts, logs, and telemetry.
