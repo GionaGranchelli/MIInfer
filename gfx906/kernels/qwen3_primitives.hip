@@ -8251,6 +8251,233 @@ __launch_bounds__(192, 1) __global__ void qwen35_gqa6_pair_token_q8_stage1_kerne
     }
 }
 
+// EXP-0457: a query-row × key tile. Each logical 32-lane row maps lanes across
+// D and computes four QK keys in ILP, then reuses the staged tile for PV.
+__launch_bounds__(128, 1) __global__ void qwen35_gqa6_flash_tile_q8_stage1_kernel(
+    const float* __restrict__ q, const int8_t* __restrict__ key_cache_q8,
+    const __half* __restrict__ key_scales, const int8_t* __restrict__ value_cache_q8,
+    const __half* __restrict__ value_scales, float* __restrict__ partial_max,
+    float* __restrict__ partial_sum, float* __restrict__ partial_acc,
+    std::uint32_t token_count, std::uint32_t base_position,
+    std::uint32_t cache_capacity, std::uint32_t num_splits, float scale,
+    const DevicePrefillState* __restrict__ prefill_state) {
+    constexpr std::uint32_t kQueryRows = 4;
+    constexpr std::uint32_t kTileK = 32;
+    constexpr std::uint32_t kHeadDim = 256;
+    if (prefill_state != nullptr) {
+        base_position = prefill_state->base_position;
+        token_count = prefill_state->token_count;
+        cache_capacity = prefill_state->kv_capacity > 0
+            ? prefill_state->kv_capacity : cache_capacity;
+    }
+
+    const std::uint32_t pair = blockIdx.x;
+    const std::uint32_t split = blockIdx.y;
+    const std::uint32_t group = blockIdx.z;
+    const std::uint32_t kv_head = group / 3;
+    const std::uint32_t head_pair = group % 3;
+    const std::uint32_t row = threadIdx.y;
+    const std::uint32_t lane = threadIdx.x;
+    const std::uint32_t token0 = pair * 2;
+    const std::uint32_t token1 = token0 + 1;
+    const bool token0_valid = token0 < token_count;
+    const bool token1_valid = token1 < token_count;
+    const std::uint32_t length0 = token0_valid ? base_position + token0 + 1 : 0;
+    const std::uint32_t length1 = token1_valid ? base_position + token1 + 1 : 0;
+    const std::uint32_t chunk0 = token0_valid ? (length0 + num_splits - 1) / num_splits : 0;
+    const std::uint32_t chunk1 = token1_valid ? (length1 + num_splits - 1) / num_splits : 0;
+    const std::uint32_t start0 = split * chunk0;
+    const std::uint32_t start1 = split * chunk1;
+    const std::uint32_t end0 = min(start0 + chunk0, length0);
+    const std::uint32_t end1 = min(start1 + chunk1, length1);
+    const bool active0 = token0_valid && start0 < end0;
+    const bool active1 = token1_valid && start1 < end1;
+    const std::uint32_t union_start = active0 && active1 ? min(start0, start1)
+        : (active0 ? start0 : start1);
+    const std::uint32_t union_end = active0 && active1 ? max(end0, end1)
+        : (active0 ? end0 : end1);
+
+    extern __shared__ unsigned char shared[];
+    float* shared_q = reinterpret_cast<float*>(shared);
+    int8_t* shared_key = reinterpret_cast<int8_t*>(shared_q + kQueryRows * kHeadDim);
+    int8_t* shared_value = shared_key + kHeadDim * kTileK;
+    float* shared_key_scale = reinterpret_cast<float*>(shared_value + kHeadDim * kTileK);
+    float* shared_value_scale = shared_key_scale + kTileK;
+    float* shared_score = shared_value_scale + kTileK;
+    float* shared_weight = shared_score + kQueryRows * kTileK;
+    const std::uint32_t tid = row * 32 + lane;
+    const std::size_t kv_base = static_cast<std::size_t>(kv_head) * cache_capacity * kHeadDim;
+
+    const std::uint32_t token = token0 + row / 2;
+    const std::uint32_t head = kv_head * 6 + head_pair * 2 + row % 2;
+    const bool row_valid = token < token_count;
+    const std::uint32_t row_length = row_valid ? base_position + token + 1 : 0;
+    const std::uint32_t row_chunk = row_valid ? (row_length + num_splits - 1) / num_splits : 0;
+    const std::uint32_t row_start = split * row_chunk;
+    const std::uint32_t row_end = min(row_start + row_chunk, row_length);
+    const bool row_active = row_valid && row_start < row_end;
+
+    for (std::uint32_t i = tid; i < kQueryRows * kHeadDim / 4; i += 128) {
+        const std::uint32_t qrow = i / (kHeadDim / 4);
+        const std::uint32_t dim = (i % (kHeadDim / 4)) * 4;
+        const std::uint32_t qtoken = token0 + qrow / 2;
+        const std::uint32_t qhead = kv_head * 6 + head_pair * 2 + qrow % 2;
+        float4 qv = make_float4(0, 0, 0, 0);
+        if (qtoken < token_count) {
+            const std::size_t qbase = (static_cast<std::size_t>(qtoken) * 24 + qhead)
+                * kHeadDim + dim;
+            qv = *reinterpret_cast<const float4*>(q + qbase);
+        }
+        *reinterpret_cast<float4*>(shared_q + qrow * kHeadDim + dim) = qv;
+    }
+
+    float running_max = -INFINITY;
+    float running_sum = 0.0f;
+    float4 acc0 = make_float4(0, 0, 0, 0);
+    float4 acc1 = make_float4(0, 0, 0, 0);
+    if (union_start < union_end) {
+        for (std::uint32_t tile_start = union_start; tile_start < union_end;
+             tile_start += kTileK) {
+            const std::uint32_t vectors = kTileK * kHeadDim / 8;
+            for (std::uint32_t i = tid; i < vectors; i += 128) {
+                const std::uint32_t key_pos = i / (kHeadDim / 8);
+                const std::uint32_t dim = (i % (kHeadDim / 8)) * 8;
+                const std::uint32_t cache_pos = tile_start + key_pos;
+                uint2 packed = make_uint2(0, 0);
+                if (cache_pos < union_end && cache_pos < cache_capacity) {
+                    const std::size_t index = kv_base
+                        + static_cast<std::size_t>(cache_pos) * kHeadDim + dim;
+                    packed = *reinterpret_cast<const uint2*>(key_cache_q8 + index);
+                }
+                *reinterpret_cast<uint2*>(shared_key
+                    + static_cast<std::size_t>(key_pos) * kHeadDim + dim) = packed;
+            }
+            for (std::uint32_t key_pos = tid; key_pos < kTileK; key_pos += 128) {
+                const std::uint32_t cache_pos = tile_start + key_pos;
+                shared_key_scale[key_pos] = cache_pos < union_end && cache_pos < cache_capacity
+                    ? __half2float(key_scales[static_cast<std::size_t>(kv_head)
+                        * cache_capacity + cache_pos]) : 0.0f;
+            }
+            __syncthreads();
+
+            constexpr std::uint32_t kKeysPerDot = 4;
+            for (std::uint32_t key_base = 0; key_base < kTileK; key_base += kKeysPerDot) {
+                float score[kKeysPerDot] = {0.0f, 0.0f, 0.0f, 0.0f};
+#pragma unroll
+                for (std::uint32_t d = 0; d < kHeadDim / 32; ++d) {
+                    const std::uint32_t dim = lane * (kHeadDim / 32) + d;
+#pragma unroll
+                    for (std::uint32_t k = 0; k < kKeysPerDot; ++k) {
+                        const std::uint32_t key_pos = key_base + k;
+                        const std::uint32_t cache_pos = tile_start + key_pos;
+                        const bool key_valid = row_active && cache_pos >= row_start
+                            && cache_pos < row_end;
+                        const int8_t kv = key_valid
+                            ? shared_key[static_cast<std::size_t>(key_pos) * kHeadDim + dim]
+                            : 0;
+                        score[k] = fmaf(shared_q[row * kHeadDim + dim],
+                            static_cast<float>(kv), score[k]);
+                    }
+                }
+#pragma unroll
+                for (int offset = 16; offset > 0; offset >>= 1) {
+#pragma unroll
+                    for (std::uint32_t k = 0; k < kKeysPerDot; ++k) {
+                        score[k] += __shfl_xor(score[k], offset, 32);
+                    }
+                }
+                if (lane == 0) {
+#pragma unroll
+                    for (std::uint32_t k = 0; k < kKeysPerDot; ++k) {
+                        const std::uint32_t key_pos = key_base + k;
+                        const std::uint32_t cache_pos = tile_start + key_pos;
+                        const bool key_valid = row_active && cache_pos >= row_start
+                            && cache_pos < row_end;
+                        shared_score[row * kTileK + key_pos] = key_valid
+                            ? score[k] * (shared_key_scale[key_pos] * scale) : -INFINITY;
+                    }
+                }
+            }
+            __syncthreads();
+            float tile_max = -INFINITY;
+            for (std::uint32_t key_pos = 0; key_pos < kTileK; ++key_pos) {
+                tile_max = fmaxf(tile_max, shared_score[row * kTileK + key_pos]);
+            }
+            float tile_sum = 0.0f;
+            for (std::uint32_t key_pos = 0; key_pos < kTileK; ++key_pos) {
+                const float score = shared_score[row * kTileK + key_pos];
+                tile_sum += isfinite(score) ? expf(score - tile_max) : 0.0f;
+            }
+            const float next_max = fmaxf(running_max, tile_max);
+            const float alpha = running_sum > 0.0f ? expf(running_max - next_max) : 0.0f;
+            const float beta = isfinite(tile_max) ? expf(tile_max - next_max) : 0.0f;
+            running_sum = running_sum * alpha + tile_sum * beta;
+            running_max = next_max;
+            if (lane == 0) {
+                for (std::uint32_t key_pos = 0; key_pos < kTileK; ++key_pos) {
+                    const float score = shared_score[row * kTileK + key_pos];
+                    shared_weight[row * kTileK + key_pos] = isfinite(score)
+                        ? expf(score - next_max) : 0.0f;
+                }
+            }
+            __syncthreads();
+
+            const std::uint32_t value_vectors = kTileK * kHeadDim / 8;
+            for (std::uint32_t i = tid; i < value_vectors; i += 128) {
+                const std::uint32_t value_pos = i / (kHeadDim / 8);
+                const std::uint32_t dim = (i % (kHeadDim / 8)) * 8;
+                const std::uint32_t cache_pos = tile_start + value_pos;
+                uint2 packed = make_uint2(0, 0);
+                if (cache_pos < union_end && cache_pos < cache_capacity) {
+                    const std::size_t index = kv_base
+                        + static_cast<std::size_t>(cache_pos) * kHeadDim + dim;
+                    packed = *reinterpret_cast<const uint2*>(value_cache_q8 + index);
+                }
+                *reinterpret_cast<uint2*>(shared_value
+                    + static_cast<std::size_t>(value_pos) * kHeadDim + dim) = packed;
+            }
+            for (std::uint32_t value_pos = tid; value_pos < kTileK; value_pos += 128) {
+                const std::uint32_t cache_pos = tile_start + value_pos;
+                shared_value_scale[value_pos] = cache_pos < union_end && cache_pos < cache_capacity
+                    ? __half2float(value_scales[static_cast<std::size_t>(kv_head)
+                        * cache_capacity + cache_pos]) : 0.0f;
+            }
+            __syncthreads();
+
+            acc0.x *= alpha; acc0.y *= alpha; acc0.z *= alpha; acc0.w *= alpha;
+            acc1.x *= alpha; acc1.y *= alpha; acc1.z *= alpha; acc1.w *= alpha;
+#pragma unroll 1
+            for (std::uint32_t value_pos = 0; value_pos < kTileK; ++value_pos) {
+                const float weight = shared_weight[row * kTileK + value_pos]
+                    * shared_value_scale[value_pos];
+                const auto* vb = reinterpret_cast<const int8_t*>(shared_value
+                    + static_cast<std::size_t>(value_pos) * kHeadDim + lane * 8);
+                acc0.x = fmaf(weight, static_cast<float>(vb[0]), acc0.x);
+                acc0.y = fmaf(weight, static_cast<float>(vb[1]), acc0.y);
+                acc0.z = fmaf(weight, static_cast<float>(vb[2]), acc0.z);
+                acc0.w = fmaf(weight, static_cast<float>(vb[3]), acc0.w);
+                acc1.x = fmaf(weight, static_cast<float>(vb[4]), acc1.x);
+                acc1.y = fmaf(weight, static_cast<float>(vb[5]), acc1.y);
+                acc1.z = fmaf(weight, static_cast<float>(vb[6]), acc1.z);
+                acc1.w = fmaf(weight, static_cast<float>(vb[7]), acc1.w);
+            }
+            __syncthreads();
+        }
+    }
+
+    if (row_valid) {
+        const std::size_t split_head_idx =
+            (static_cast<std::size_t>(split) * token_count + token) * 24 + head;
+        if (lane == 0) {
+            partial_max[split_head_idx] = running_max;
+            partial_sum[split_head_idx] = running_sum;
+        }
+        const std::size_t acc_base = split_head_idx * kHeadDim + lane * 8;
+        *reinterpret_cast<float4*>(partial_acc + acc_base) = acc0;
+        *reinterpret_cast<float4*>(partial_acc + acc_base + 4) = acc1;
+    }
+}
+
 void launch_qwen35_splitk_suffix_attention_quant(
     const float* q,
     const __half* key_cache_f16,
@@ -8465,6 +8692,62 @@ void launch_qwen35_gqa6_paired_token_q8_attention_batch(
         q, key_cache_q8, key_scales, value_cache_q8, value_scales,
         partial_max, partial_sum, partial_acc,
         token_count, base_position, cache_capacity, num_splits, scale, prefill_state);
+    MIINFER_HIP_CHECK(hipGetLastError());
+    if (measure_stages) MIINFER_HIP_CHECK(hipEventRecord(stage1_done, stream));
+    hipLaunchKernelGGL(qwen35_splitk_suffix_attn_stage2_kernel,
+        dim3(token_count * query_heads), dim3(64), 0, stream,
+        partial_max, partial_sum, partial_acc, gate, gated_output,
+        token_count, query_heads, head_dim, num_splits, prefill_state);
+    MIINFER_HIP_CHECK(hipGetLastError());
+    if (measure_stages) {
+        MIINFER_HIP_CHECK(hipEventRecord(stage2_done, stream));
+        MIINFER_HIP_CHECK(hipEventSynchronize(stage2_done));
+        MIINFER_HIP_CHECK(hipEventElapsedTime(stage1_ms, stage_start, stage1_done));
+        MIINFER_HIP_CHECK(hipEventElapsedTime(stage2_ms, stage1_done, stage2_done));
+        MIINFER_HIP_CHECK(hipEventDestroy(stage_start));
+        MIINFER_HIP_CHECK(hipEventDestroy(stage1_done));
+        MIINFER_HIP_CHECK(hipEventDestroy(stage2_done));
+    }
+}
+
+void launch_qwen35_gqa6_flash_tile_q8_attention_batch(
+    const float* q, const std::int8_t* key_cache_q8, const __half* key_scales,
+    const std::int8_t* value_cache_q8, const __half* value_scales,
+    const float* gate, float* gated_output, float* split_workspace,
+    std::uint32_t token_count, std::uint32_t base_position,
+    std::uint32_t cache_capacity, std::uint32_t query_heads,
+    std::uint32_t kv_heads, std::uint32_t head_dim, float scale,
+    std::uint32_t num_splits, hipStream_t stream,
+    const DevicePrefillState* prefill_state, float* stage1_ms, float* stage2_ms) {
+    if (q == nullptr || key_cache_q8 == nullptr || key_scales == nullptr
+        || value_cache_q8 == nullptr || value_scales == nullptr || gate == nullptr
+        || gated_output == nullptr || split_workspace == nullptr || token_count == 0
+        || base_position > cache_capacity || token_count > cache_capacity - base_position
+        || query_heads != 24 || kv_heads != 4 || head_dim != 256
+        || !std::isfinite(scale) || num_splits == 0 || num_splits > 64) {
+        MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    }
+    const std::size_t total_meta = static_cast<std::size_t>(num_splits) * token_count * query_heads;
+    float* partial_max = split_workspace;
+    float* partial_sum = partial_max + total_meta;
+    float* partial_acc = partial_sum + total_meta;
+    constexpr std::size_t shared_bytes = 4 * 256 * sizeof(float)
+        + 2 * 32 * 256 * sizeof(std::int8_t)
+        + 2 * 32 * sizeof(float) + 2 * 4 * 32 * sizeof(float);
+    const bool measure_stages = stage1_ms != nullptr && stage2_ms != nullptr;
+    hipEvent_t stage_start = nullptr, stage1_done = nullptr, stage2_done = nullptr;
+    if ((stage1_ms == nullptr) != (stage2_ms == nullptr)) MIINFER_HIP_CHECK(hipErrorInvalidValue);
+    if (measure_stages) {
+        MIINFER_HIP_CHECK(hipEventCreate(&stage_start));
+        MIINFER_HIP_CHECK(hipEventCreate(&stage1_done));
+        MIINFER_HIP_CHECK(hipEventCreate(&stage2_done));
+        MIINFER_HIP_CHECK(hipEventRecord(stage_start, stream));
+    }
+    hipLaunchKernelGGL(qwen35_gqa6_flash_tile_q8_stage1_kernel,
+        dim3((token_count + 1) / 2, num_splits, kv_heads * 3), dim3(32, 4),
+        shared_bytes, stream, q, key_cache_q8, key_scales, value_cache_q8,
+        value_scales, partial_max, partial_sum, partial_acc, token_count,
+        base_position, cache_capacity, num_splits, scale, prefill_state);
     MIINFER_HIP_CHECK(hipGetLastError());
     if (measure_stages) MIINFER_HIP_CHECK(hipEventRecord(stage1_done, stream));
     hipLaunchKernelGGL(qwen35_splitk_suffix_attn_stage2_kernel,
