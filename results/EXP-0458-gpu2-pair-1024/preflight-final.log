@@ -1,0 +1,69 @@
+2026-10-15T07:12:44Z
+2026-10-15T07:12:06Z
+50ff28a28cc13a3ca7333cd0c70e322d16245967c5fdf0d30a1bf57bda80a512 ["localhost/miinfer-dev@sha256:447907c697fb2c39ce9657401e354a70753d5672ad955d4ceb12de976b91224a","localhost/miinfer-m31-99840@sha256:447907c697fb2c39ce9657401e354a70753d5672ad955d4ceb12de976b91224a"]
+d73cfdd99f6d8bc3be8811e82b2df7f9be08c44c945d0dfc4bbc0b1deafd251b  /tmp/m31-gqa6-attention-rewrite-v2-gpu2/build/mi50-release/miinfer-m31-fp16-full-model
+fa4a0de5db813f5f06b58de5b4b7df8f234c4c808e0965bd44c545e9087c462c  /home/machinist/m31-gqa6-longctx-results/EXP-0443-direct-global-gpu0/prompt.txt
+bbbe9543d7ccbb740cc3db1cda7bc959e8e95926587a31b9cb8e3510c557de96  /home/machinist/m31-gqa6-longctx-results/EXP-0429-parallel-kv-stage/session-gpu2/sess_43c5693dd01fbab1_p73099.miinfer
+WARNING: AMD GPU device(s) is/are in a low-power state. Check power control/runtime_status
+
+
+
+============================ ROCm System Management Interface ============================
+======================================= Unique ID ========================================
+GPU[0]		: Unique ID: 0x21678e17348c2f7
+GPU[1]		: Unique ID: 0x896befe51f2b7232
+GPU[2]		: Unique ID: 0x2152414173497dd3
+==========================================================================================
+====================================== Temperature =======================================
+GPU[0]		: Temperature (Sensor edge) (C): 21.0
+GPU[0]		: Temperature (Sensor junction) (C): 22.0
+GPU[0]		: Temperature (Sensor memory) (C): 22.0
+GPU[1]		: Temperature (Sensor edge) (C): 29.0
+GPU[1]		: Temperature (Sensor junction) (C): 31.0
+GPU[1]		: Temperature (Sensor memory) (C): 26.0
+GPU[2]		: Temperature (Sensor edge) (C): 23.0
+GPU[2]		: Temperature (Sensor junction) (C): 27.0
+GPU[2]		: Temperature (Sensor memory) (C): 23.0
+==========================================================================================
+======================================= PCI Bus ID =======================================
+GPU[0]		: PCI Bus: 0000:04:00.0
+GPU[1]		: PCI Bus: 0000:85:00.0
+GPU[2]		: PCI Bus: 0000:88:00.0
+Fail to open libdrm_amdgpu.so: libdrm_amdgpu.so: cannot open shared object file: No such file or directory
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: get_name, Failed to load a library
+GPU[0]		: Card Series: 		N/A
+GPU[0]		: Card Model: 		0x66a1
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D1631700
+GPU[0]		: Subsystem ID: 	0x0834
+GPU[0]		: Device Rev: 		0x02
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		29631
+GPU[0]		: GFX Version: 		gfx906
+Fail to open libdrm_amdgpu.so: libdrm_amdgpu.so: cannot open shared object file: No such file or directory
+GPU[1]		: get_name, Failed to load a library
+GPU[1]		: Card Series: 		N/A
+GPU[1]		: Card Model: 		0x7590
+GPU[1]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[1]		: Card SKU: 		R906XTGO
+GPU[1]		: Subsystem ID: 	0x2429
+GPU[1]		: Device Rev: 		0xc0
+GPU[1]		: Node ID: 		3
+GPU[1]		: GUID: 		7359
+GPU[1]		: GFX Version: 		gfx1200
+Fail to open libdrm_amdgpu.so: libdrm_amdgpu.so: cannot open shared object file: No such file or directory
+GPU[2]		: get_name, Failed to load a library
+GPU[2]		: Card Series: 		N/A
+GPU[2]		: Card Model: 		0x66a3
+GPU[2]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[2]		: Card SKU: 		D163A1XT
+GPU[2]		: Subsystem ID: 	0x0201
+GPU[2]		: Device Rev: 		0x00
+GPU[2]		: Node ID: 		4
+GPU[2]		: GUID: 		19700
+GPU[2]		: GFX Version: 		gfx906
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+2188169 zsh -c set -e; OUT=/home/machinist/m31-gqa6-longctx-results/EXP-0458-block-softmax4-gpu2; mkdir -p "$OUT"; { date -u +%FT%TZ; podman image inspect localhost/miinfer-dev:rocm-7.2.1 --format "{{.Id}} {{json .RepoDigests}}"; sha256sum /tmp/m31-gqa6-attention-rewrite-v2-gpu2/build/mi50-release/miinfer-m31-fp16-full-model /home/machinist/m31-gqa6-longctx-results/EXP-0443-direct-global-gpu0/prompt.txt /home/machinist/m31-gqa6-longctx-results/EXP-0429-parallel-kv-stage/session-gpu2/sess_43c5693dd01fbab1_p73099.miinfer; rocm-smi --showtemp --showproductname --showuniqueid --showbus; podman ps --format "{{.Names}} {{.Status}}"; pgrep -af "miinfer|hipcc|rocprof" || true; fuser -v /dev/kfd 2>&1 || true; } > "$OUT/preflight.log" 2>&1; cat "$OUT/preflight.log"

@@ -1,0 +1,57 @@
+device_bdf=0000:88:00.0 architecture=gfx906:sramecc-:xnack-
+prompt_text_bytes=663758 prompt_tokens_available=198637 prompt_tokens_processed=1024
+session_prefix_tokens=73099 suffix_tokens=1024 suffix_source=tokenized_text_file graph_requested=1 expected_replay_tiles=1
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+q8_gqa6_direct_global_control_session restore_seconds=2.856 suffix_seconds=20.888 restored_prefix_tokens=73099 suffix_tokens=1024 graph_replay_tiles=1 position_after_suffix=74123 first_token=18369 second_token=198
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=1 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=1 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=1 token_count=1024
+q8_gqa6_block_softmax4_session restore_seconds=2.928 suffix_seconds=20.303 restored_prefix_tokens=73099 suffix_tokens=1024 graph_replay_tiles=1 position_after_suffix=74123 first_token=18369 second_token=198
+flash_tile_pair=1 logits_max_abs=0.733937979 logits_cosine=0.999650309 state_max_abs=6.523668110 state_cosine=0.993032655 recurrent_layers=48 logits_exact=0 state_exact=0 tokens_equal=1 finite=1 numeric_pass=0
+pair_sample=1 session_logits_exact=0 recurrent_state_trace_exact=0 generated_tokens_equal=1 finite=1 accepted=0
+q8_gqa6_direct_global_control_median_seconds=20.888 q8_gqa6_block_softmax4_median_seconds=20.303 suffix_median_speedup=1.029 samples=1 all_correct=0
+container_exit=3

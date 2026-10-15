@@ -1,0 +1,73 @@
+device_bdf=0000:88:00.0 architecture=gfx906:sramecc-:xnack-
+prompt_text_bytes=663758 prompt_tokens_available=198637 prompt_tokens_processed=1024
+session_prefix_tokens=73099 suffix_tokens=1024 suffix_source=tokenized_text_file graph_requested=1 expected_replay_tiles=1
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+q8_gqa6_direct_global_control_session restore_seconds=2.833 suffix_seconds=20.871 restored_prefix_tokens=73099 suffix_tokens=1024 graph_replay_tiles=0 graph_used=0 position_after_suffix=74123 first_token=18369 second_token=198
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=0 token_count=1024
+block_softmax4_layer_compare layer=3 token_count=1024 max_abs=5.48363e-06 cosine=1 finite=1
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=0 token_count=1024
+block_softmax4_layer_compare layer=7 token_count=1024 max_abs=1.87159e-05 cosine=1 finite=1
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=0 token_count=1024
+block_softmax4_layer_compare layer=11 token_count=1024 max_abs=1.21593e-05 cosine=1 finite=1
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=0 token_count=1024
+block_softmax4_layer_compare layer=15 token_count=1024 max_abs=1.3113e-05 cosine=1 finite=1
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=0 token_count=1024
+block_softmax4_layer_compare layer=19 token_count=1024 max_abs=3.21865e-05 cosine=1 finite=1
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=0 token_count=1024
+block_softmax4_layer_compare layer=23 token_count=1024 max_abs=3.40939e-05 cosine=1 finite=1
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=0 token_count=1024
+block_softmax4_layer_compare layer=27 token_count=1024 max_abs=5.72205e-05 cosine=1 finite=1
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=0 token_count=1024
+block_softmax4_layer_compare layer=31 token_count=1024 max_abs=3.00407e-05 cosine=1 finite=1
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=0 token_count=1024
+block_softmax4_layer_compare layer=35 token_count=1024 max_abs=3.86238e-05 cosine=1 finite=1
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=0 token_count=1024
+block_softmax4_layer_compare layer=39 token_count=1024 max_abs=3.52859e-05 cosine=1 finite=1
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=0 token_count=1024
+block_softmax4_layer_compare layer=43 token_count=1024 max_abs=3.0756e-05 cosine=1 finite=1
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=0 token_count=1024
+block_softmax4_layer_compare layer=47 token_count=1024 max_abs=5.91278e-05 cosine=1 finite=1
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=0 token_count=1024
+block_softmax4_layer_compare layer=51 token_count=1024 max_abs=8.7738e-05 cosine=1 finite=1
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=0 token_count=1024
+block_softmax4_layer_compare layer=55 token_count=1024 max_abs=6.29425e-05 cosine=1 finite=1
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=0 token_count=1024
+block_softmax4_layer_compare layer=59 token_count=1024 max_abs=0.000141144 cosine=1 finite=1
+miinfer_q8_gqa6_packed_lds_dispatch=1 wide128=0 direct_global=1 dpp_reduce=0 graph_state=0 token_count=1024
+miinfer_q8_gqa6_block_softmax4_dispatch=1 graph_state=0 token_count=1024
+block_softmax4_layer_compare layer=63 token_count=1024 max_abs=0.000189781 cosine=1 finite=1
+q8_gqa6_block_softmax4_session restore_seconds=2.993 suffix_seconds=37.137 restored_prefix_tokens=73099 suffix_tokens=1024 graph_replay_tiles=0 graph_used=0 position_after_suffix=74123 first_token=18369 second_token=198
+block_softmax4_pair=1 logits_max_abs=0.733937979 logits_cosine=0.999650309 state_max_abs=6.523668110 state_cosine=0.993032655 recurrent_layers=48 logits_exact=0 state_exact=0 tokens_equal=1 finite=1 numeric_pass=0
+pair_sample=1 session_logits_exact=0 recurrent_state_trace_exact=0 generated_tokens_equal=1 finite=1 accepted=0
+q8_gqa6_direct_global_control_median_seconds=20.871 q8_gqa6_block_softmax4_median_seconds=37.137 suffix_median_speedup=0.562 samples=1 all_correct=0
+container_exit=3

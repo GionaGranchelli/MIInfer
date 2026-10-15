@@ -1,0 +1,22 @@
+2026-10-15T07:17:37Z
+50ff28a28cc13a3ca7333cd0c70e322d16245967c5fdf0d30a1bf57bda80a512 ["localhost/miinfer-dev@sha256:447907c697fb2c39ce9657401e354a70753d5672ad955d4ceb12de976b91224a","localhost/miinfer-m31-99840@sha256:447907c697fb2c39ce9657401e354a70753d5672ad955d4ceb12de976b91224a"]
+393d8119f4b790df1b5eef53c345d53ce425e54f174f7b2da21abc027be6259e  /tmp/m31-gqa6-attention-rewrite-v2-gpu2/build/mi50-release/miinfer-m31-fp16-full-model
+fa4a0de5db813f5f06b58de5b4b7df8f234c4c808e0965bd44c545e9087c462c  /home/machinist/m31-gqa6-longctx-results/EXP-0443-direct-global-gpu0/prompt.txt
+bbbe9543d7ccbb740cc3db1cda7bc959e8e95926587a31b9cb8e3510c557de96  /home/machinist/m31-gqa6-longctx-results/EXP-0429-parallel-kv-stage/session-gpu2/sess_43c5693dd01fbab1_p73099.miinfer
+WARNING: AMD GPU device(s) is/are in a low-power state. Check power control/runtime_status
+
+
+
+============================ ROCm System Management Interface ============================
+====================================== Temperature =======================================
+GPU[2]		: Temperature (Sensor edge) (C): 23.0
+GPU[2]		: Temperature (Sensor junction) (C): 27.0
+GPU[2]		: Temperature (Sensor memory) (C): 24.0
+==========================================================================================
+=================================== % time GPU is busy ===================================
+GPU[2]		: GPU use (%): 0
+==========================================================================================
+======================================= PCI Bus ID =======================================
+GPU[2]		: PCI Bus: 0000:88:00.0
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
